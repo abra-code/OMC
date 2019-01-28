@@ -8,7 +8,7 @@
 
 #import <Cocoa/Cocoa.h>
 #import "OMCInputDialog.h"
-#include "OnMyCommandCM.h"
+#include "OnMyCommand.h"
 #include "OMCInputDialogController.h"
 
 //returns true if OKeyed and outStringRef is retained so caller responsible for releasing it

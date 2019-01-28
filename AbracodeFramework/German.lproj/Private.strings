@@ -1,0 +1,16 @@
+/* Version warning strings */
+"Cancel" = "Abbrechen";
+"Try Anyway" = "Trotzdem probieren";
+"TOO_LOW_OMC" = "Dieses Kommando benötigt mindestens OnMyCommand %@. Die installierte Version ist %@.";
+"TOO_LOW_MAC_OS" = "Dieses Kommando benötigt mindestens Mac OS %@. Es läuft Mac OS X Version %@.";
+"TOO_HIGH_MAC_OS" = "Dieses Kommando wurde für ältere Mac OS X Versionen entworfen, es funktioniert bis Version %@. Es läuft Mac OS X Version %@.";
+
+/* Default submenu */
+"/On My Command" = "/On My Command";
+
+/* Warning Dialog default button */
+"Execute" = "Execute";
+
+/*Alert strings*/
+"OK" = "OK";
+"CARBON_NIB_64_BIT" = "This command uses a Carbon nib dialog. Carbon is not supported in 64-bit. Try running in 32 bit or replace Carbon nib with Cocoa.";

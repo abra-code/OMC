@@ -1,0 +1,378 @@
+/*
+ *  OMC.cpp
+ *  Abracode
+ *
+ *  Created by Tomasz Kukielka on 12/18/07.
+ *  Copyright 2007 Abracode. All rights reserved.
+ *
+ */
+
+#include "OMC.h"
+#include "CFObj.h"
+#include "ACFType.h"
+#include "StAEDesc.h"
+#include "CMUtils.h"
+#include "OnMyCommand.h"
+
+const OMCCommandRef kOmcUnspecifiedCommand = -1;
+
+extern "C" UInt32 OMCGetCurrentVersion(void)
+{
+	return CURRENT_OMC_VERSION;
+}
+
+
+//helper function to create AEContext from CoreFoundation object
+extern "C" OSStatus		OMCCreateAEContextFromCFContext( CFTypeRef inContext, AEDesc *outContextDesc );
+
+extern "C" OSStatus OMCCreateAEContextFromCFContext(CFTypeRef inContext, AEDesc *outDesc)
+{
+	OSStatus err = noErr;
+
+	if(outDesc == NULL)
+		return paramErr;
+
+	StAEDesc contextDesc;
+	if(inContext != NULL)
+	{
+		CFTypeID contextType = ::CFGetTypeID( inContext );
+		if( contextType == ACFType<CFStringRef>::GetTypeID() )//text
+		{
+			err = CMUtils::CreateUniTextDescFromCFString((CFStringRef)inContext, contextDesc);
+		}
+		else if( contextType == ACFType<CFArrayRef>::GetTypeID() ) //list of files
+		{
+			CFArrayRef fileArray = (CFArrayRef)inContext;
+			CFIndex fileCount = ::CFArrayGetCount(fileArray);
+			if(fileCount > 0)
+			{
+				err = ::AECreateList( NULL, 0, false, contextDesc );
+				if(err == noErr)
+				{
+					for(CFIndex i = 0; i < fileCount; i++)
+					{
+						CFTypeRef oneItemRef = ::CFArrayGetValueAtIndex(fileArray, i);
+						if(oneItemRef != NULL)
+						{
+							CFObj<CFURLRef> oneUrl;
+							contextType = ::CFGetTypeID( oneItemRef );
+
+							if( contextType == ACFType<CFStringRef>::GetTypeID() )//text
+							{
+								//somebody was lazy and gave us a path - we accept only POSIX paths
+								CFURLRef newURL = ::CFURLCreateWithFileSystemPath (
+														kCFAllocatorDefault,
+														(CFStringRef)oneItemRef,
+														kCFURLPOSIXPathStyle,
+														false);
+								if(newURL == NULL)
+									continue;//most likely incorrectly formed path, we skip it
+
+								oneUrl.Adopt(newURL, kCFObjDontRetain);//auto release
+
+								//fall through to URL case with the following params:
+								oneItemRef = (CFTypeRef)newURL;
+								contextType = ACFType<CFURLRef>::GetTypeID();
+							}
+
+							if( contextType == ACFType<CFURLRef>::GetTypeID() )
+							{
+								StAEDesc fileDesc;
+								err = CMUtils::CreateFSRefDesc( (CFURLRef)oneItemRef, fileDesc );
+								if(err == noErr)
+								{
+									err = ::AEPutDesc(	contextDesc, // the list
+														0, // put at the end of our list
+														fileDesc );
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		else if( contextType == ACFType<CFURLRef>::GetTypeID() )
+		{//make a list even if single file. preferrable because Finder in 10.3 or higher does that
+			err = ::AECreateList( NULL, 0, false, contextDesc );
+			if(err == noErr)
+			{
+				StAEDesc fileDesc;
+				err = CMUtils::CreateFSRefDesc( (CFURLRef)inContext, fileDesc );
+				if(err == noErr)
+				{
+					err = ::AEPutDesc(	contextDesc, // the list
+										0, // put at the end of our list
+										fileDesc );
+				}
+			}
+		}
+	}
+
+	if(err == noErr)
+	{
+		*outDesc = contextDesc;
+		contextDesc.Detach();
+	}
+	
+	return err;
+}
+
+//inPlistRef can either be:
+//	1. A CFURLRef pointing to command description plist or .omc external bundle. If NULL, the default
+//		plist file is used:	~/Library/Preferences/com.abracode.OnMyCommandCMPrefs.plist 
+//	2. A CFDictionaryRef with content of command description plist already loaded
+//inCommandName should be command name in plist or unique command ID. If NULL first command is executed
+//inContext should be CFStringRef for text context, CFURLRef for one file or CFArrayRef for a list of files.
+//		If CFArray is used it should contain CFURLRef items or CFStringRef items which will be interpreted as paths and translated into CFURLRefs
+
+extern "C" OSStatus OMCRunCommand(CFTypeRef inPlistRef, CFStringRef inCommandNameOrID, CFTypeRef inContext)
+{
+	OSStatus err = noErr;
+
+	try
+	{
+		ARefCountedObj<OnMyCommandCM> omcPlugin( new OnMyCommandCM(inPlistRef), kARefCountDontRetain );
+		omcPlugin->SetCMPluginMode(false);
+		omcPlugin->Init(NULL);
+		SInt32 commandIndex = omcPlugin->FindCommandIndex(inCommandNameOrID);
+		if( commandIndex < 0 )
+			return fnfErr;
+
+		err = omcPlugin->ExamineContext(inContext, kCMCommandStart+commandIndex);
+		if( err == noErr )
+		{
+			err = omcPlugin->HandleSelection(NULL, kCMCommandStart+commandIndex);
+			omcPlugin->PostMenuCleanup();//currently doing nothing, just for completeness
+		}
+
+//		StAEDesc contextDesc;
+//		err = OMCCreateAEContextFromCFContext(inContext, contextDesc);
+//		err = OMCRunCommandAE(inPlistRef, inCommandNameOrID, contextDesc);
+	}
+	catch(...)
+	{
+		err = -1;
+	}
+
+#if _DEBUG_
+	if( err != noErr )
+	{
+		CFObj<CFStringRef> debugStr( ::CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("OMCRunCommand error = %d"), (int)err) );
+		::CFShow( (CFStringRef)debugStr );
+	}
+#endif
+
+	return err;
+}
+
+//the same as OMCRunCommand() but takes AEDesc which may be text, file or a list of files
+
+extern "C" OSStatus OMCRunCommandAE(CFTypeRef inPlistRef, CFStringRef inCommandNameOrID, AEDesc *inContext)
+{
+	OSStatus err = noErr;
+
+	try
+	{
+		ARefCountedObj<OnMyCommandCM> omcPlugin( new OnMyCommandCM(inPlistRef), kARefCountDontRetain );
+		omcPlugin->SetCMPluginMode(false);
+		omcPlugin->Init(NULL);
+		SInt32 commandIndex = omcPlugin->FindCommandIndex(inCommandNameOrID);
+		if( commandIndex < 0 )
+			return fnfErr;
+
+		StAEDesc replacementContext;
+		if( (inContext != NULL) && (inContext->dataHandle != NULL) )
+		{
+			if( (inContext->descriptorType != typeAEList) &&
+				(inContext->descriptorType != typeUnicodeText) &&
+				(inContext->descriptorType != typeChar) &&
+				(inContext->descriptorType != typeCString) &&
+				(inContext->descriptorType != typePString) &&
+				(inContext->descriptorType != typeUTF16ExternalRepresentation) &&
+				(inContext->descriptorType != typeUTF8Text) )
+			{//try to coerce to see if it might be a single file ref
+			//make a list even if single file. preferrable because Finder in 10.3 or higher does that
+				StAEDesc coercedRef;
+				err = ::AECoerceDesc( inContext, typeFSRef, coercedRef );
+				if(err == noErr)
+				{
+					err = ::AECreateList( NULL, 0, false, replacementContext );
+					if(err == noErr)
+					{
+						err = ::AEPutDesc(	replacementContext, // the list
+											0, // put at the end of our list
+											coercedRef );
+						inContext = replacementContext;
+					}				
+				}
+			}
+		}
+
+		err = omcPlugin->ExamineContext(inContext, NULL);
+		if( err == noErr )
+		{
+			err = omcPlugin->HandleSelection(inContext, kCMCommandStart+commandIndex);
+			omcPlugin->PostMenuCleanup();//currently doing nothing, just for completeness
+		}
+	}
+	catch(...)
+	{
+		err = -1;
+	}
+
+	return err;
+}
+
+
+extern "C" OMCExecutorRef OMCCreateExecutor(CFTypeRef inPlistRef)
+{
+	OMCExecutorRef omcPlugin = NULL;
+	try
+	{
+		omcPlugin = new OnMyCommandCM(inPlistRef);
+		omcPlugin->SetCMPluginMode(false);
+		omcPlugin->Init(NULL);
+	}
+	catch(...)
+	{
+	
+	}
+
+	return omcPlugin;
+}
+
+extern "C" OSStatus OMCExamineContextAE( OMCExecutorRef inOMCExecutor, OMCCommandRef inCmdRef, const AEDesc *inContext, AEDescList *outCommandPairs )
+{
+	try
+	{
+		if(inOMCExecutor != NULL)
+			return inOMCExecutor->ExamineContext(inContext, inCmdRef, outCommandPairs);
+	}
+	catch(...)
+	{
+	
+	}
+	return paramErr;
+}
+
+extern "C" OSStatus OMCExamineContext( OMCExecutorRef inOMCExecutor, OMCCommandRef inCmdRef, CFTypeRef inContext )
+{
+	try
+	{
+		if(inOMCExecutor != NULL)
+			return inOMCExecutor->ExamineContext( inContext, inCmdRef );
+	}
+	catch(...)
+	{
+	
+	}
+	return paramErr;
+}
+
+
+extern "C" OMCCommandRef OMCFindCommand( OMCExecutorRef inOMCExecutor, CFStringRef inNameOrId )
+{
+	OMCCommandRef outCommandRef = -1;
+
+	try
+	{
+		if(inOMCExecutor != NULL)
+			outCommandRef = inOMCExecutor->FindCommandIndex(inNameOrId);
+
+		if(outCommandRef >= 0)
+			return (kCMCommandStart+outCommandRef);
+	}
+	catch(...)
+	{
+	
+	}
+
+	return -1;
+}
+
+extern "C" OSStatus OMCGetCommandInfo(OMCExecutorRef inOMCExecutor, OMCCommandRef inCommandRef, OMCInfoType infoType, void *outInfo)
+{
+	OSStatus err = paramErr;
+	
+	try
+	{
+		if(inOMCExecutor != NULL)
+		{
+			if( OMCIsValidCommandRef(inCommandRef) )
+				err = inOMCExecutor->GetCommandInfo(inCommandRef, infoType, outInfo);
+		}
+	}
+	catch(...)
+	{
+		err = -1;
+	}
+	
+	return err;
+}
+
+extern "C" OSStatus OMCExecuteCommandAE( OMCExecutorRef inOMCExecutor, AEDesc *inContext, OMCCommandRef inCommandRef )
+{
+	OSStatus err = paramErr;
+
+	try
+	{
+		if(inOMCExecutor != NULL)
+		{
+			if( OMCIsValidCommandRef(inCommandRef) )
+				err = inOMCExecutor->HandleSelection(inContext, inCommandRef);
+			inOMCExecutor->PostMenuCleanup();//currently does nothing
+		}
+	}
+	catch(...)
+	{
+		err = -1;
+	}
+
+	return err;
+}
+
+extern "C" OSStatus OMCExecuteCommand( OMCExecutorRef inOMCExecutor, OMCCommandRef inCommandRef )
+{
+	OSStatus err = paramErr;
+
+	try
+	{
+		if(inOMCExecutor != NULL)
+		{
+			if( OMCIsValidCommandRef(inCommandRef) )
+				err = inOMCExecutor->HandleSelection(NULL, inCommandRef);
+			inOMCExecutor->PostMenuCleanup();//currently does nothing
+		}
+	}
+	catch(...)
+	{
+		err = -1;
+	}
+
+	return err;
+}
+
+
+extern "C" void OMCReleaseExecutor( OMCExecutorRef inOMCExecutor )
+{
+	try
+	{
+		if(inOMCExecutor != NULL)
+			inOMCExecutor->Release();
+	}
+	catch(...)
+	{
+	}
+}
+
+extern "C" void OMCRetainExecutor( OMCExecutorRef inOMCExecutor )
+{
+	try
+	{
+		if(inOMCExecutor != NULL)
+			inOMCExecutor->Retain();
+	}
+	catch(...)
+	{
+	}
+}

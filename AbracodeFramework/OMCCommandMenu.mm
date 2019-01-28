@@ -7,7 +7,7 @@
 //
 
 #import "OMCCommandMenu.h"
-#include "OnMyCommandCM.h"
+#include "OnMyCommand.h"
 #import "OMCCommandExecutor.h"
 #import "OMCMenuItem.h"
 #include "ARefCounted.h"

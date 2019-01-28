@@ -10,7 +10,7 @@
 #include "OMCObserver.h"
 #include "OmcTaskNotification.h"
 #include <CFObj.h>
-#include "OnMyCommandCM.h"
+#include "OnMyCommand.h"
 
 void
 OMCObserver::ReceiveNotification(void *ioData)
