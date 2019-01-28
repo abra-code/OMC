@@ -1,4 +1,4 @@
-# omc
+# OMC
 OnMyCommand
 
 OnMyCommand has been available for macOS for over 15 years. See more information at:
