@@ -1,0 +1,592 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>COMMAND_LIST</key>
+	<array>
+		<dict>
+			<key>COMMAND_ID</key>
+			<string>Diff</string>
+			<key>COMMAND</key>
+			<array>
+				<string>echo "just testing output window"</string>
+			</array>
+			<key>ESCAPE_SPECIAL_CHARS</key>
+			<string>esc_none</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_popen_with_output_window</string>
+			<key>NAME</key>
+			<string>Output Window position</string>
+			<key>NOTES</key>
+			<string>Simple Diff command handler</string>
+			<key>OUTPUT_WINDOW_SETTINGS</key>
+			<dict>
+				<key>LINE_OUTPUT_INTERVAL</key>
+				<real>0.0</real>
+				<key>WINDOW_ALPHA</key>
+				<real>1</real>
+				<key>WINDOW_CLOSE_FADE_OUT</key>
+				<false/>
+				<key>WINDOW_HEIGHT</key>
+				<integer>332</integer>
+				<key>WINDOW_OPEN_FADE_IN</key>
+				<false/>
+				<key>WINDOW_POSITION</key>
+				<string>cascade</string>
+				<key>WINDOW_TITLE</key>
+				<string>Diff</string>
+				<key>WINDOW_TYPE</key>
+				<string>regular</string>
+				<key>WINDOW_WIDTH</key>
+				<integer>881</integer>
+			</dict>
+			<key>PROGRESS</key>
+			<dict>
+				<key>DELAY</key>
+				<real>1.0</real>
+			</dict>
+			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
+			<string>10.4</string>
+			<key>REQUIRED_OMC_VERSION</key>
+			<string>1.7</string>
+			<key>VERSION</key>
+			<integer>1</integer>
+		</dict>
+
+		<dict>
+			<key>ACTIVATION_MODE</key>
+			<string>act_always</string>
+			<key>COMMAND</key>
+			<array>
+				<string>echo "Hello New Cocoa Output Window"; sleep 1; echo "More text here"; sleep 1; echo "And the last line";</string>
+			</array>
+			<key>ESCAPE_SPECIAL_CHARS</key>
+			<string>esc_with_backslash</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_popen_with_output_window</string>
+			<key>NAME</key>
+			<array>
+				<string>Cocoa Output Window</string>
+			</array>
+			<key>OUTPUT_WINDOW_SETTINGS</key>
+			<dict>
+				<key>ABSOLUTE_POSITION_LEFT</key>
+				<integer>50</integer>
+				<key>ABSOLUTE_POSITION_TOP</key>
+				<integer>50</integer>
+				<key>AUTO_CLOSE_ON_SUCCESS_ONLY</key>
+				<true/>
+				<key>AUTO_CLOSE_TIMEOUT</key>
+				<real>4</real>
+				<key>BACKGROUND_COLOR</key>
+				<string>FF3333</string>
+				<key>FRACT_POSITION_LEFT</key>
+				<real>0.10000000149011612</real>
+				<key>FRACT_POSITION_TOP</key>
+				<real>0.30000001192092896</real>
+				<key>TEXT_COLOR</key>
+				<string>000080</string>
+				<key>TEXT_FONT</key>
+				<string>Monaco</string>
+				<key>TEXT_SIZE</key>
+				<integer>10</integer>
+				<key>WINDOW_ALPHA</key>
+				<real>0.80000001192092896</real>
+				<key>WINDOW_CLOSE_FADE_OUT</key>
+				<true/>
+				<key>WINDOW_HEIGHT</key>
+				<integer>250</integer>
+				<key>WINDOW_OPEN_FADE_IN</key>
+				<true/>
+				<key>WINDOW_POSITION</key>
+				<string>absolute</string>
+				<key>WINDOW_TYPE</key>
+				<string>global_floating</string>
+				<key>WINDOW_WIDTH</key>
+				<integer>600</integer>
+			</dict>
+			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
+			<string>10.3.9</string>
+			<key>REQUIRED_OMC_VERSION</key>
+			<string>1.8</string>
+			<key>SEND_TASK_TO_BACKGROUND_APP</key>
+			<false/>
+			<key>VERSION</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>ACTIVATION_MODE</key>
+			<string>act_always</string>
+			<key>CHOOSE_FILE_DIALOG</key>
+			<dict>
+				<key>DEFAULT_FILE_NAME</key>
+				<array>
+					<string>Select me</string>
+				</array>
+				<key>DEFAULT_LOCATION</key>
+				<array>
+					<string>/Users/tom/Documents</string>
+				</array>
+				<key>MESSAGE</key>
+				<string>Choosing one file</string>
+				<key>SHOW_INVISIBLE_ITEMS</key>
+				<true/>
+			</dict>
+			<key>CHOOSE_FOLDER_DIALOG</key>
+			<dict>
+				<key>DEFAULT_FILE_NAME</key>
+				<array>
+					<string>Select me </string>
+				</array>
+				<key>DEFAULT_LOCATION</key>
+				<array>
+					<string>/Users/tom/Music</string>
+				</array>
+				<key>MESSAGE</key>
+				<string>Choosing one folder</string>
+				<key>SHOW_INVISIBLE_ITEMS</key>
+				<true/>
+			</dict>
+			<key>CHOOSE_OBJECT_DIALOG</key>
+			<dict>
+				<key>DEFAULT_FILE_NAME</key>
+				<array>
+					<string>Select me</string>
+				</array>
+				<key>DEFAULT_LOCATION</key>
+				<array>
+					<string>/Users/tom/Pictures</string>
+				</array>
+				<key>MESSAGE</key>
+				<string>Choosing one file or folder</string>
+				<key>SHOW_INVISIBLE_ITEMS</key>
+				<true/>
+			</dict>
+			<key>COMMAND</key>
+			<array>
+				<string>echo "$OMC_DLG_CHOOSE_FILE_PATH"; echo "$OMC_DLG_CHOOSE_FOLDER_PATH"; echo "$OMC_DLG_CHOOSE_OBJECT_PATH"; echo "$OMC_DLG_SAVE_AS_PATH"</string>
+			</array>
+			<key>ESCAPE_SPECIAL_CHARS</key>
+			<string>esc_with_backslash</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_popen_with_output_window</string>
+			<key>NAME</key>
+			<array>
+				<string>Test File Panels</string>
+			</array>
+			<key>OUTPUT_WINDOW_SETTINGS</key>
+			<dict>
+				<key>AUTO_CLOSE_ON_SUCCESS_ONLY</key>
+				<true/>
+				<key>AUTO_CLOSE_TIMEOUT</key>
+				<real>-1</real>
+				<key>BACKGROUND_COLOR</key>
+				<string>FFFFFF</string>
+				<key>TEXT_COLOR</key>
+				<string>000000</string>
+				<key>TEXT_FONT</key>
+				<string>Monaco</string>
+				<key>TEXT_SIZE</key>
+				<integer>10</integer>
+				<key>WINDOW_ALPHA</key>
+				<real>1</real>
+				<key>WINDOW_CLOSE_FADE_OUT</key>
+				<false/>
+				<key>WINDOW_HEIGHT</key>
+				<integer>200</integer>
+				<key>WINDOW_OPEN_FADE_IN</key>
+				<false/>
+				<key>WINDOW_POSITION</key>
+				<string>alert</string>
+				<key>WINDOW_TITLE</key>
+				<string>Untitled</string>
+				<key>WINDOW_TYPE</key>
+				<string>floating</string>
+				<key>WINDOW_WIDTH</key>
+				<integer>400</integer>
+			</dict>
+			<key>SAVE_AS_DIALOG</key>
+			<dict>
+				<key>DEFAULT_FILE_NAME</key>
+				<array>
+					<string>Default Save Filename</string>
+				</array>
+				<key>DEFAULT_LOCATION</key>
+				<array>
+					<string>/Users/</string>
+				</array>
+				<key>MESSAGE</key>
+				<string>Saving new file</string>
+				<key>SHOW_INVISIBLE_ITEMS</key>
+				<true/>
+			</dict>
+			<key>SUBMENU_NAME</key>
+			<string>/</string>
+			<key>VERSION</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>ACTIVATION_MODE</key>
+			<string>act_always</string>
+			<key>COMMAND</key>
+			<array>
+				<string>
+				echo "101 = $OMC_NIB_DIALOG_CONTROL_101_VALUE";
+				echo "102 = $OMC_NIB_DIALOG_CONTROL_102_VALUE";
+				echo "111 = $OMC_NIB_DIALOG_CONTROL_111_VALUE";
+				echo "121 = $OMC_NIB_DIALOG_CONTROL_121_VALUE";
+				echo "122 = $OMC_NIB_DIALOG_CONTROL_122_VALUE";
+				echo "200 = $OMC_NIB_DIALOG_CONTROL_200_VALUE";
+				echo "201 = $OMC_NIB_DIALOG_CONTROL_201_VALUE";
+				echo "202 = $OMC_NIB_DIALOG_CONTROL_202_VALUE";
+				echo "222 = $OMC_NIB_DIALOG_CONTROL_222_VALUE";
+				echo "223 = $OMC_NIB_DIALOG_CONTROL_223_VALUE";
+				</string>
+			</array>
+			<key>ESCAPE_SPECIAL_CHARS</key>
+			<string>esc_with_backslash</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_popen_with_output_window</string>
+			<key>NAME</key>
+			<array>
+				<string>Cocoa Dialog</string>
+			</array>
+			<key>NIB_DIALOG</key>
+			<dict>
+				<key>IS_BLOCKING</key>
+				<true/>
+				<key>IS_COCOA</key>
+				<true/>
+				<key>NIB_NAME</key>
+				<string>Example1</string>
+			</dict>
+			<key>OUTPUT_WINDOW_SETTINGS</key>
+			<dict>
+				<key>AUTO_CLOSE_ON_SUCCESS_ONLY</key>
+				<true/>
+				<key>AUTO_CLOSE_TIMEOUT</key>
+				<real>-1</real>
+				<key>BACKGROUND_COLOR</key>
+				<string>FFFFFF</string>
+				<key>TEXT_COLOR</key>
+				<string>000000</string>
+				<key>TEXT_FONT</key>
+				<string>Monaco</string>
+				<key>TEXT_SIZE</key>
+				<integer>10</integer>
+				<key>WINDOW_ALPHA</key>
+				<real>1</real>
+				<key>WINDOW_CLOSE_FADE_OUT</key>
+				<false/>
+				<key>WINDOW_HEIGHT</key>
+				<integer>200</integer>
+				<key>WINDOW_OPEN_FADE_IN</key>
+				<false/>
+				<key>WINDOW_POSITION</key>
+				<string>alert</string>
+				<key>WINDOW_TITLE</key>
+				<string>Untitled</string>
+				<key>WINDOW_TYPE</key>
+				<string>floating</string>
+				<key>WINDOW_WIDTH</key>
+				<integer>400</integer>
+			</dict>
+			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
+			<string>10.4</string>
+			<key>REQUIRED_OMC_VERSION</key>
+			<string>2.0</string>
+			<key>SUBMENU_NAME</key>
+			<string>/Submenu Test 1</string>
+			<key>VERSION</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>ACTIVATION_MODE</key>
+			<string>act_always</string>
+			<key>COMMAND</key>
+			<array>
+				<string>echo "Executing dialog init subcommand";
+"$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$OMC_NIB_DLG_GUID" 101 "OFF";
+"$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$OMC_NIB_DLG_GUID" 102 0;
+"$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$OMC_NIB_DLG_GUID" 111 "Subcommand-initialized text view";
+#"$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$OMC_NIB_DLG_GUID" 122 "/Users/tom/test-image.png";
+"$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$OMC_NIB_DLG_GUID" 900 omc_disable;
+
+</string>
+			</array>
+			<key>COMMAND_ID</key>
+			<string>omc.dialog.initialize</string>
+			<key>ESCAPE_SPECIAL_CHARS</key>
+			<string>esc_with_backslash</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_silent_popen</string>
+			<key>NAME</key>
+			<array>
+				<string>Cocoa Dialog</string>
+			</array>
+			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
+			<string>10.5</string>
+			<key>REQUIRED_OMC_VERSION</key>
+			<string>2.0</string>
+			<key>VERSION</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>ACTIVATION_MODE</key>
+			<string>act_always</string>
+			<key>COMMAND</key>
+			<array>
+				<string></string>
+			</array>
+			<key>ESCAPE_SPECIAL_CHARS</key>
+			<string>esc_with_backslash</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_silent_popen</string>
+			<key>NAME</key>
+			<array>
+				<string>QCDialog</string>
+			</array>
+			<key>NIB_DIALOG</key>
+			<dict>
+				<key>IS_BLOCKING</key>
+				<false/>
+				<key>IS_COCOA</key>
+				<true/>
+				<key>NIB_NAME</key>
+				<string>QCDialog</string>
+			</dict>
+			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
+			<string>10.5</string>
+			<key>REQUIRED_OMC_VERSION</key>
+			<string>2.0</string>
+			<key>SUBMENU_NAME</key>
+			<string>Submenu Test 1</string>
+			<key>VERSION</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>ACTIVATION_MODE</key>
+			<string>act_always</string>
+			<key>COMMAND</key>
+			<array>
+				<string>echo "Executing dialog init subcommand";
+"$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$OMC_NIB_DLG_GUID" 1 "$OMC_MY_HOST_BUNDLE_PATH/Contents/Resources/QCDialog.qtz";
+</string>
+			</array>
+			<key>COMMAND_ID</key>
+			<string>omc.dialog.initialize</string>
+			<key>ESCAPE_SPECIAL_CHARS</key>
+			<string>esc_with_backslash</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_silent_popen</string>
+			<key>NAME</key>
+			<array>
+				<string>QCDialog</string>
+			</array>
+			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
+			<string>10.5</string>
+			<key>REQUIRED_OMC_VERSION</key>
+			<string>2.0</string>
+			<key>VERSION</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>ACTIVATION_MODE</key>
+			<string>act_always</string>
+			<key>COMMAND</key>
+			<array>
+				<string>echo "OK button pressed!";</string>
+			</array>
+			<key>COMMAND_ID</key>
+			<string>omc.dialog.terminate.ok</string>
+			<key>END_NOTIFICATION</key>
+			<dict>
+				<key>DISPLAY_NOTIFICATION</key>
+				<true/>
+			</dict>
+			<key>ESCAPE_SPECIAL_CHARS</key>
+			<string>esc_with_backslash</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_silent_popen</string>
+			<key>NAME</key>
+			<array>
+				<string>QCDialog</string>
+			</array>
+			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
+			<string>10.5</string>
+			<key>REQUIRED_OMC_VERSION</key>
+			<string>2.0</string>
+			<key>VERSION</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>ACTIVATION_MODE</key>
+			<string>act_always</string>
+			<key>COMMAND</key>
+			<array>
+				<string></string>
+			</array>
+			<key>ESCAPE_SPECIAL_CHARS</key>
+			<string>esc_with_backslash</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_silent_popen</string>
+			<key>NAME</key>
+			<array>
+				<string>ImageKit Test</string>
+			</array>
+			<key>NIB_DIALOG</key>
+			<dict>
+				<key>IS_BLOCKING</key>
+				<false/>
+				<key>IS_COCOA</key>
+				<true/>
+				<key>NIB_NAME</key>
+				<string>ImageKit</string>
+			</dict>
+			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
+			<string>10.5</string>
+			<key>REQUIRED_OMC_VERSION</key>
+			<string>2.0</string>
+			<key>SUBMENU_NAME</key>
+			<string>Submenu Test 2</string>
+			<key>VERSION</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>ACTIVATION_MODE</key>
+			<string>act_always</string>
+			<key>COMMAND</key>
+			<array>
+				<string>echo "Executing dialog init subcommand";
+"$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$OMC_NIB_DLG_GUID" 3  "$OMC_MY_HOST_BUNDLE_PATH/Contents/Resources/sunflower.jpg";
+</string>
+			</array>
+			<key>COMMAND_ID</key>
+			<string>omc.dialog.initialize</string>
+			<key>ESCAPE_SPECIAL_CHARS</key>
+			<string>esc_with_backslash</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_silent_popen</string>
+			<key>NAME</key>
+			<array>
+				<string>ImageKit Test</string>
+			</array>
+			<key>VERSION</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>ACTIVATION_MODE</key>
+			<string>act_always</string>
+			<key>COMMAND</key>
+			<array>
+				<string></string>
+			</array>
+			<key>ESCAPE_SPECIAL_CHARS</key>
+			<string>esc_with_backslash</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_silent_popen</string>
+			<key>NAME</key>
+			<array>
+				<string>WebKit Test</string>
+			</array>
+			<key>NIB_DIALOG</key>
+			<dict>
+				<key>IS_BLOCKING</key>
+				<false/>
+				<key>IS_COCOA</key>
+				<true/>
+				<key>NIB_NAME</key>
+				<string>WebKit</string>
+			</dict>
+			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
+			<string>10.4</string>
+			<key>REQUIRED_OMC_VERSION</key>
+			<string>2.0</string>
+			<key>SUBMENU_NAME</key>
+			<string>/Submenu Test 1/WebKit Submenu</string>
+			<key>VERSION</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>ACTIVATION_MODE</key>
+			<string>act_always</string>
+			<key>COMMAND</key>
+			<array>
+				<string>
+#"$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$OMC_NIB_DLG_GUID" 1 'http://www.abracode.com/';
+"$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$OMC_NIB_DLG_GUID" 2 'http://www.abracode.com/';
+</string>
+			</array>
+			<key>COMMAND_ID</key>
+			<string>omc.dialog.initialize</string>
+			<key>ESCAPE_SPECIAL_CHARS</key>
+			<string>esc_with_backslash</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_silent_popen</string>
+			<key>NAME</key>
+			<array>
+				<string>WebKit Test</string>
+			</array>
+			<key>VERSION</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>ACTIVATION_MODE</key>
+			<string>act_always</string>
+			<key>COMMAND</key>
+			<array>
+				<string></string>
+			</array>
+			<key>ESCAPE_SPECIAL_CHARS</key>
+			<string>esc_with_backslash</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_silent_popen</string>
+			<key>NAME</key>
+			<array>
+				<string>QuickTime View Test</string>
+			</array>
+			<key>NIB_DIALOG</key>
+			<dict>
+				<key>IS_BLOCKING</key>
+				<false/>
+				<key>IS_COCOA</key>
+				<true/>
+				<key>NIB_NAME</key>
+				<string>QuickTime</string>
+			</dict>
+			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
+			<string>10.4</string>
+			<key>REQUIRED_OMC_VERSION</key>
+			<string>2.0</string>
+			<key>SUBMENU_NAME</key>
+			<string>..</string>
+			<key>VERSION</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>ACTIVATION_MODE</key>
+			<string>act_always</string>
+			<key>COMMAND</key>
+			<array>
+				<string>
+"$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$OMC_NIB_DLG_GUID" 1 "$OMC_MY_HOST_BUNDLE_PATH/Contents/Resources/Introduction.qtz";
+</string>
+			</array>
+			<key>COMMAND_ID</key>
+			<string>omc.dialog.initialize</string>
+			<key>ESCAPE_SPECIAL_CHARS</key>
+			<string>esc_with_backslash</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_silent_popen</string>
+			<key>NAME</key>
+			<array>
+				<string>QuickTime View Test</string>
+			</array>
+			<key>VERSION</key>
+			<integer>1</integer>
+		</dict>
+	</array>
+	<key>VERSION</key>
+	<integer>2</integer>
+</dict>
+</plist>

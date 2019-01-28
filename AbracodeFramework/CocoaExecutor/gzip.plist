@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>COMMAND_LIST</key>
+	<array>
+		<dict>
+			<key>ACTIVATION_MODE</key>
+			<string>act_file</string>
+			<key>COMMAND</key>
+			<array>
+				<string>cd "$OMC_OBJ_PARENT_PATH"; gzip -9 -c "$OMC_OBJ_NAME" >"$OMC_OBJ_NAME.gz"</string>
+			</array>
+			<key>EXECUTION_MODE</key>
+			<string>exe_silent_popen</string>
+			<key>NAME</key>
+			<string>Compress with gzip</string>
+			<key>NOTES</key>
+			<string>Gzip reserving original</string>
+			<key>REFRESH_PATH</key>
+			<array>
+				<string>__OBJ_PATH__</string>
+				<string>.gz</string>
+			</array>
+			<key>REQUIRED_OMC_VERSION</key>
+			<string>1.9</string>
+			<key>VERSION</key>
+			<integer>3</integer>
+		</dict>
+	</array>
+	<key>VERSION</key>
+	<integer>2</integer>
+</dict>
+</plist>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>COMMAND_LIST</key>
+	<array>
+		<dict>
+			<key>ACTIVATION_MODE</key>
+			<string>act_selected_text</string>
+			<key>COMMAND</key>
+			<array>
+				<string>echo "$OMC_OBJ_TEXT"; echo "Sleep now..."; sleep 2; echo "Now awake!"</string>
+			</array>
+			<key>EXECUTION_MODE</key>
+			<string>exe_silent_popen</string>
+			<key>NAME</key>
+			<string>Echo text</string>
+			<key>NOTES</key>
+			<string>Echo text context</string>
+			<key>REQUIRED_OMC_VERSION</key>
+			<string>1.9</string>
+			<key>VERSION</key>
+			<integer>3</integer>
+		</dict>
+	</array>
+	<key>VERSION</key>
+	<integer>2</integer>
+</dict>
+</plist>

@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>COMMAND_LIST</key>
+	<array>
+		<dict>
+			<key>ACTIVATION_MODE</key>
+			<string>act_selected_text</string>
+			<key>COMMAND</key>
+			<array>
+				<string>tell application "System Events"
+	set my_text to "</string>
+				<string>__OBJ_TEXT__</string>
+				<string>"
+	set paragaph_count to count paragraphs of my_text
+	set word_count to count words of my_text
+	set character_count to count characters of my_text
+	set output_info to "Number of paragraphs: " &amp; paragaph_count &amp; return &amp; "Number of words: " &amp; word_count &amp; return &amp; "Number of characters: " &amp; character_count &amp; return
+end tell
+</string>
+			</array>
+			<key>ESCAPE_SPECIAL_CHARS</key>
+			<string>esc_for_applescript</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_applescript_with_output_window</string>
+			<key>NAME</key>
+			<array>
+				<string>Show Text Statistics</string>
+			</array>
+			<key>NOTES</key>
+			<string>Requires OMC 1.6. Shows paragraph count, word count and character count for selected text.</string>
+			<key>OUTPUT_WINDOW_SETTINGS</key>
+			<dict>
+				<key>AUTO_CLOSE_ON_SUCCESS_ONLY</key>
+				<true/>
+				<key>AUTO_CLOSE_TIMEOUT</key>
+				<real>-1</real>
+				<key>BACKGROUND_COLOR</key>
+				<string>FFFFFF</string>
+				<key>TEXT_COLOR</key>
+				<string>000000</string>
+				<key>TEXT_FONT</key>
+				<string>Monaco</string>
+				<key>TEXT_SIZE</key>
+				<integer>10</integer>
+				<key>WINDOW_ALPHA</key>
+				<real>1</real>
+				<key>WINDOW_CLOSE_FADE_OUT</key>
+				<true/>
+				<key>WINDOW_HEIGHT</key>
+				<integer>200</integer>
+				<key>WINDOW_OPEN_FADE_IN</key>
+				<true/>
+				<key>WINDOW_POSITION</key>
+				<string>alert</string>
+				<key>WINDOW_TITLE</key>
+				<string>Untitled</string>
+				<key>WINDOW_TYPE</key>
+				<string>global_floating</string>
+				<key>WINDOW_WIDTH</key>
+				<integer>400</integer>
+			</dict>
+			<key>SEND_TASK_TO_BACKGROUND_APP</key>
+			<true/>
+			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
+			<string>10.1</string>
+			<key>REQUIRED_OMC_VERSION</key>
+			<string>1.3.1</string>
+			<key>VERSION</key>
+			<integer>1</integer>
+		</dict>
+	</array>
+	<key>VERSION</key>
+	<integer>2</integer>
+</dict>
+</plist>
