@@ -24,7 +24,7 @@
 //#include <sys/stat.h>
 #include <unistd.h>
 
-#define USE_ICU_REGEX yes
+//#define USE_ICU_REGEX yes
 #ifdef USE_ICU_REGEX
 	#define U_HIDE_DRAFT_API 1
 	#define U_DISABLE_RENAMING 1
@@ -37,7 +37,9 @@
 	#include "FileURLDesc.h"
 #endif
 
-#include "OMCCocoaHelperExterns.h"
+// OMCCocoaHelper was only useful for CM plugins executed in-proc
+// these days are long gone
+//#include "OMCCocoaHelperExterns.h"
 #include "MoreAppleEvents.h"
 //#include "AAEDesc.h"
 #include "NibDialogControl.h"
@@ -559,7 +561,8 @@ OnMyCommandCM::CommonContextCheck( const AEDesc *inContext, CFTypeRef inCFContex
 		}
 	}
 	
-	if(mIsNullContext && mCMPluginMode)//for null context in CM mode try to get text from Cocoa host
+#if OLD_CODE_USED_IN_INPROC_CM_PLUGINS
+    if(mIsNullContext && mCMPluginMode)//for null context in CM mode try to get text from Cocoa host
 	{
 		TRACE_CSTR( "OnMyCommandCM->CMPluginExamineContext: inContext->descriptorType == typeNull\n" );
 		mIsTextContext = (Boolean)cocoaAppHasStringSelection();
@@ -567,7 +570,8 @@ OnMyCommandCM::CommonContextCheck( const AEDesc *inContext, CFTypeRef inCFContex
 //		if(mIsTextContext == false)
 //			return errAENotAEDesc;//do not show CM when descriptor type is null and there is no selection in Cocoa app
 	}	
-
+#endif //OLD_CODE_USED_IN_INPROC_CM_PLUGINS
+    
 	if(mCommandList == NULL)
 	{//not loaded yet?
 		if( mPlistURL != NULL )
@@ -669,8 +673,10 @@ OnMyCommandCM::CommonContextCheck( const AEDesc *inContext, CFTypeRef inCFContex
 		}
 		else if( !mIsTextContext )
 		{//maybe a selected text?
+#if OLD_CODE_USED_IN_INPROC_CM_PLUGINS
 			if( mCMPluginMode )
 				mIsTextContext = (Boolean)cocoaAppHasStringSelection();
+#endif
 
 			if( (inContext != NULL) && !mIsTextContext && !mIsNullContext )
 				mIsTextContext = CMUtils::AEDescHasTextData(*inContext);

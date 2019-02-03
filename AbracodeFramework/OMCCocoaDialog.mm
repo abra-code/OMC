@@ -8,7 +8,7 @@
 
 #import "OMCCocoaDialog.h"
 #import "OMCDialogController.h"
-#include "OnMyCommandCM.h"
+#include "OnMyCommand.h"
 #include "CMUtils.h"
 #include "ACFType.h"
 #include "OmcTaskNotification.h"

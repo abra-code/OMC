@@ -22,26 +22,24 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		1D71F3332206FA67009FAF91 /* DropletPreferences.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1D71F3312206FA67009FAF91 /* DropletPreferences.xib */; };
+		1D71F3342206FA67009FAF91 /* DropletPreferences.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1D71F3312206FA67009FAF91 /* DropletPreferences.xib */; };
+		1D71F337220702EA009FAF91 /* notify in Copy Support Executables */ = {isa = PBXBuildFile; fileRef = 1D71F336220702D7009FAF91 /* notify */; };
+		1D71F3382207030C009FAF91 /* notify in Copy Support Executables */ = {isa = PBXBuildFile; fileRef = 1D71F336220702D7009FAF91 /* notify */; };
 		1D742DC5193882BB005DFF97 /* pasteboard in Copy Support Executables */ = {isa = PBXBuildFile; fileRef = 1D742DC219388292005DFF97 /* pasteboard */; };
 		1D742DC6193882CF005DFF97 /* pasteboard in Copy Support Executables */ = {isa = PBXBuildFile; fileRef = 1D742DC219388292005DFF97 /* pasteboard */; };
 		1D9B1F5D21FF1572004704A7 /* OnMyCommand.cp in Sources */ = {isa = PBXBuildFile; fileRef = 1D9B1F5C21FF1572004704A7 /* OnMyCommand.cp */; };
 		1D9B1F5E21FF1572004704A7 /* OnMyCommand.cp in Sources */ = {isa = PBXBuildFile; fileRef = 1D9B1F5C21FF1572004704A7 /* OnMyCommand.cp */; };
-		1D9B1F6021FF183B004704A7 /* NavDialogs.cp in Sources */ = {isa = PBXBuildFile; fileRef = E2ED3BA10D0B287000481D8F /* NavDialogs.cp */; };
-		1D9B1F6121FF183B004704A7 /* NavDialogs.cp in Sources */ = {isa = PBXBuildFile; fileRef = E2ED3BA10D0B287000481D8F /* NavDialogs.cp */; };
 		1D9B1F6521FF191D004704A7 /* SubmenuTree.cp in Sources */ = {isa = PBXBuildFile; fileRef = 1D9B1F6321FF191D004704A7 /* SubmenuTree.cp */; };
 		1D9B1F6621FF191D004704A7 /* SubmenuTree.cp in Sources */ = {isa = PBXBuildFile; fileRef = 1D9B1F6321FF191D004704A7 /* SubmenuTree.cp */; };
 		1D9B1F7121FF1F9F004704A7 /* progress.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1D9B1F6F21FF1F9F004704A7 /* progress.xib */; };
 		1D9B1F7221FF1F9F004704A7 /* progress.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1D9B1F6F21FF1F9F004704A7 /* progress.xib */; };
 		8DC2EF530486A6940098B216 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C1666FE841158C02AAC07 /* InfoPlist.strings */; };
 		8DC2EF570486A6940098B216 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7B1FEA5585E11CA2CBB /* Cocoa.framework */; };
-		C149D18114FB818000F40EAF /* DropletPreferences.xib in Resources */ = {isa = PBXBuildFile; fileRef = E20E11BC0E1C93A200B10802 /* DropletPreferences.xib */; };
-		C149D18214FB818100F40EAF /* DropletPreferences.xib in Resources */ = {isa = PBXBuildFile; fileRef = E20E11BC0E1C93A200B10802 /* DropletPreferences.xib */; };
 		E20026D610B68F3200D5388F /* OMCCustomWindow.mm in Sources */ = {isa = PBXBuildFile; fileRef = E20026D510B68F3200D5388F /* OMCCustomWindow.mm */; };
 		E20026D710B68F3200D5388F /* OMCCustomWindow.mm in Sources */ = {isa = PBXBuildFile; fileRef = E20026D510B68F3200D5388F /* OMCCustomWindow.mm */; };
 		E204EB7F0D7FD8A900595D15 /* OMCConstants.h in Headers */ = {isa = PBXBuildFile; fileRef = E204EB7E0D7FD8A900595D15 /* OMCConstants.h */; };
 		E204EB800D7FD8A900595D15 /* OMCConstants.h in Headers */ = {isa = PBXBuildFile; fileRef = E204EB7E0D7FD8A900595D15 /* OMCConstants.h */; };
-		E208BD9D108B121C00AAA55A /* loco in Copy Support Executables */ = {isa = PBXBuildFile; fileRef = E208BD95108B0EFC00AAA55A /* loco */; };
-		E208BD9E108B122C00AAA55A /* loco in Copy Support Executables */ = {isa = PBXBuildFile; fileRef = E208BD95108B0EFC00AAA55A /* loco */; };
 		E20F1F69130BBE6300882872 /* alert in Copy Support Executables */ = {isa = PBXBuildFile; fileRef = E20F1F68130BBE5100882872 /* alert */; };
 		E20F1F6A130BBE7500882872 /* alert in Copy Support Executables */ = {isa = PBXBuildFile; fileRef = E20F1F68130BBE5100882872 /* alert */; };
 		E211D3C50D3F51010065C23A /* OMCCocoaNib.h in Headers */ = {isa = PBXBuildFile; fileRef = E211D3C30D3F51010065C23A /* OMCCocoaNib.h */; };
@@ -185,7 +183,6 @@
 		E257603E0D20EE1000D755FF /* OmcTaskManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E2ED3BA80D0B288400481D8F /* OmcTaskManager.cpp */; };
 		E257603F0D20EE1000D755FF /* OmcExecutor.cp in Sources */ = {isa = PBXBuildFile; fileRef = E2ED3BAA0D0B288400481D8F /* OmcExecutor.cp */; };
 		E25760400D20EE1000D755FF /* omc_popen.c in Sources */ = {isa = PBXBuildFile; fileRef = E2ED3BAC0D0B288400481D8F /* omc_popen.c */; };
-		E25760410D20EE1000D755FF /* OMCCocoaHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = E2ED3BBB0D0B290200481D8F /* OMCCocoaHelper.m */; };
 		E25760420D20EE1000D755FF /* ACMPlugin.cp in Sources */ = {isa = PBXBuildFile; fileRef = E2ED3BC00D0B293E00481D8F /* ACMPlugin.cp */; };
 		E25760440D20EE1000D755FF /* OMC.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E2FB111E0D185A2C005EB1E8 /* OMC.cpp */; };
 		E25760450D20EE1000D755FF /* OMCButton.m in Sources */ = {isa = PBXBuildFile; fileRef = E2517C3E0D1BCC2700180C68 /* OMCButton.m */; };
@@ -347,10 +344,7 @@
 		E2ED3BB10D0B288400481D8F /* OmcExecutor.h in Headers */ = {isa = PBXBuildFile; fileRef = E2ED3BAB0D0B288400481D8F /* OmcExecutor.h */; };
 		E2ED3BB20D0B288400481D8F /* omc_popen.c in Sources */ = {isa = PBXBuildFile; fileRef = E2ED3BAC0D0B288400481D8F /* omc_popen.c */; };
 		E2ED3BB30D0B288400481D8F /* omc_popen.h in Headers */ = {isa = PBXBuildFile; fileRef = E2ED3BAD0D0B288400481D8F /* omc_popen.h */; };
-		E2ED3BBC0D0B290200481D8F /* OMCCocoaHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = E2ED3BBB0D0B290200481D8F /* OMCCocoaHelper.m */; };
 		E2ED3BC10D0B293E00481D8F /* ACMPlugin.cp in Sources */ = {isa = PBXBuildFile; fileRef = E2ED3BC00D0B293E00481D8F /* ACMPlugin.cp */; };
-		E2FA54490ED0D34000CC3210 /* libicucore.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E2FA54480ED0D34000CC3210 /* libicucore.dylib */; };
-		E2FA544A0ED0D34000CC3210 /* libicucore.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E2FA54480ED0D34000CC3210 /* libicucore.dylib */; };
 		E2FB111F0D185A2C005EB1E8 /* OMC.h in Headers */ = {isa = PBXBuildFile; fileRef = E2FB111D0D185A2C005EB1E8 /* OMC.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E2FB11200D185A2C005EB1E8 /* OMC.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E2FB111E0D185A2C005EB1E8 /* OMC.cpp */; };
 		E2FB14000D19EE9A005EB1E8 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E2FB13FF0D19EE9A005EB1E8 /* CoreServices.framework */; };
@@ -382,11 +376,11 @@
 			dstPath = Support;
 			dstSubfolderSpec = 6;
 			files = (
+				1D71F337220702EA009FAF91 /* notify in Copy Support Executables */,
 				E234FAA40D0FD114001A7780 /* omc_next_command in Copy Support Executables */,
 				E234FAA10D0FD0CE001A7780 /* omc_dialog_control in Copy Support Executables */,
 				E2A832570D147B4A00117643 /* b64 in Copy Support Executables */,
 				E2A832580D147B4A00117643 /* plister in Copy Support Executables */,
-				E208BD9D108B121C00AAA55A /* loco in Copy Support Executables */,
 				E2C7781212FFDC6300A7E6D2 /* filt in Copy Support Executables */,
 				E20F1F69130BBE6300882872 /* alert in Copy Support Executables */,
 				1D742DC5193882BB005DFF97 /* pasteboard in Copy Support Executables */,
@@ -400,11 +394,11 @@
 			dstPath = Support;
 			dstSubfolderSpec = 6;
 			files = (
+				1D71F3382207030C009FAF91 /* notify in Copy Support Executables */,
 				E25760530D20EE1000D755FF /* omc_next_command in Copy Support Executables */,
 				E25760540D20EE1000D755FF /* omc_dialog_control in Copy Support Executables */,
 				E25760550D20EE1000D755FF /* b64 in Copy Support Executables */,
 				E25760560D20EE1000D755FF /* plister in Copy Support Executables */,
-				E208BD9E108B122C00AAA55A /* loco in Copy Support Executables */,
 				E27BD400130201410021460F /* filt in Copy Support Executables */,
 				E20F1F6A130BBE7500882872 /* alert in Copy Support Executables */,
 				1D742DC6193882CF005DFF97 /* pasteboard in Copy Support Executables */,
@@ -419,11 +413,20 @@
 		0867D6A5FE840307C02AAC07 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		089C1667FE841158C02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		1058C7B1FEA5585E11CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
-		1D742DC219388292005DFF97 /* pasteboard */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = pasteboard; path = ../OnMyCommand/build/Release/pasteboard; sourceTree = "<group>"; };
+		1D71F3292206F116009FAF91 /* DebugSettings.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DebugSettings.h; sourceTree = "<group>"; };
+		1D71F32A2206F1A1009FAF91 /* ACMPlugin.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ACMPlugin.h; sourceTree = "<group>"; };
+		1D71F32B2206F1D8009FAF91 /* CMUtils.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CMUtils.h; sourceTree = "<group>"; };
+		1D71F32C2206F214009FAF91 /* ACFDict.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ACFDict.h; sourceTree = "<group>"; };
+		1D71F32E2206F353009FAF91 /* StAEDesc.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StAEDesc.h; sourceTree = "<group>"; };
+		1D71F32F2206F5FB009FAF91 /* StSwitchToFront.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StSwitchToFront.h; sourceTree = "<group>"; };
+		1D71F3302206F778009FAF91 /* MessagePortListener.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MessagePortListener.h; sourceTree = "<group>"; };
+		1D71F3322206FA67009FAF91 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/DropletPreferences.xib; sourceTree = "<group>"; };
+		1D71F3352206FA78009FAF91 /* de */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = de; path = de.lproj/DropletPreferences.xib; sourceTree = "<group>"; };
+		1D71F336220702D7009FAF91 /* notify */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = notify; sourceTree = "<group>"; };
+		1D742DC219388292005DFF97 /* pasteboard */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = pasteboard; sourceTree = "<group>"; };
 		1D9B1F5721FF12F4004704A7 /* AMemoryCommon.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AMemoryCommon.h; sourceTree = "<group>"; };
 		1D9B1F5821FF14AF004704A7 /* OMCUtils.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OMCUtils.h; sourceTree = "<group>"; };
 		1D9B1F5C21FF1572004704A7 /* OnMyCommand.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OnMyCommand.cp; sourceTree = "<group>"; };
-		1D9B1F6221FF1846004704A7 /* NavDialogs.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = NavDialogs.h; path = "../../Abracode Workshop/Common/NavDialogs.h"; sourceTree = "<group>"; };
 		1D9B1F6321FF191D004704A7 /* SubmenuTree.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SubmenuTree.cp; sourceTree = "<group>"; };
 		1D9B1F6421FF191D004704A7 /* SubmenuTree.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SubmenuTree.h; sourceTree = "<group>"; };
 		1D9B1F7021FF1F9F004704A7 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/progress.xib; sourceTree = "<group>"; };
@@ -433,12 +436,11 @@
 		D2F7E79907B2D74100F64583 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = /System/Library/Frameworks/CoreData.framework; sourceTree = "<absolute>"; };
 		E20026D510B68F3200D5388F /* OMCCustomWindow.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCCustomWindow.mm; sourceTree = "<group>"; };
 		E204EB7E0D7FD8A900595D15 /* OMCConstants.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCConstants.h; sourceTree = "<group>"; };
-		E208BD95108B0EFC00AAA55A /* loco */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = loco; path = ../OnMyCommand/build/Release/loco; sourceTree = SOURCE_ROOT; };
 		E208BFF510943A8D00AAA55A /* German */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = German; path = German.lproj/input_clear.xib; sourceTree = "<group>"; };
 		E208BFF610943A9A00AAA55A /* German */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = German; path = German.lproj/input_combo.xib; sourceTree = "<group>"; };
 		E208BFF710943AB900AAA55A /* German */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = German; path = German.lproj/input_password.xib; sourceTree = "<group>"; };
 		E208BFF810943AC200AAA55A /* German */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = German; path = German.lproj/input_popup.xib; sourceTree = "<group>"; };
-		E20F1F68130BBE5100882872 /* alert */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = alert; path = ../OnMyCommand/build/Release/alert; sourceTree = SOURCE_ROOT; };
+		E20F1F68130BBE5100882872 /* alert */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = alert; path = ../build/Release/alert; sourceTree = SOURCE_ROOT; };
 		E211D3C30D3F51010065C23A /* OMCCocoaNib.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCCocoaNib.h; sourceTree = SOURCE_ROOT; };
 		E211D3C40D3F51010065C23A /* OMCCocoaNib.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMCCocoaNib.m; sourceTree = SOURCE_ROOT; };
 		E211D4F30D4346BA0065C23A /* OMCDialogController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCDialogController.h; sourceTree = SOURCE_ROOT; };
@@ -462,8 +464,8 @@
 		E234FA1E0D0FCB28001A7780 /* round-rect-363x90-black.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "round-rect-363x90-black.png"; path = "CustomWindows/round-rect-363x90-black.png"; sourceTree = SOURCE_ROOT; };
 		E234FA1F0D0FCB28001A7780 /* stop.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = stop.icns; sourceTree = "<group>"; };
 		E234FA200D0FCB28001A7780 /* app.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = app.icns; sourceTree = "<group>"; };
-		E234FA9E0D0FD084001A7780 /* omc_dialog_control */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = omc_dialog_control; path = ../OnMyCommand/build/Release/omc_dialog_control; sourceTree = SOURCE_ROOT; };
-		E234FAA30D0FD114001A7780 /* omc_next_command */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = omc_next_command; path = ../OnMyCommand/build/Release/omc_next_command; sourceTree = SOURCE_ROOT; };
+		E234FA9E0D0FD084001A7780 /* omc_dialog_control */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = omc_dialog_control; sourceTree = "<group>"; };
+		E234FAA30D0FD114001A7780 /* omc_next_command */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = omc_next_command; sourceTree = "<group>"; };
 		E23AAC8B12F55FE0004C867B /* OMCService.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCService.h; sourceTree = "<group>"; };
 		E23AAC8C12F55FE0004C867B /* OMCService.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMCService.m; sourceTree = "<group>"; };
 		E23DC95C0D9A2616009D2AD8 /* OMCPDFView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMCPDFView.m; sourceTree = "<group>"; };
@@ -551,8 +553,8 @@
 		E29ED2190D09FD8800C9D5E8 /* ARefCounted.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ARefCounted.cp; sourceTree = "<group>"; };
 		E29ED21B0D09FD8D00C9D5E8 /* ARefCounted.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ARefCounted.h; sourceTree = "<group>"; };
 		E2A29476105E02B500C732A3 /* OMCTableViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCTableViewController.h; sourceTree = "<group>"; };
-		E2A832550D147B4A00117643 /* b64 */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = b64; path = ../OnMyCommand/build/Release/b64; sourceTree = SOURCE_ROOT; };
-		E2A832560D147B4A00117643 /* plister */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = plister; path = ../OnMyCommand/build/Release/plister; sourceTree = SOURCE_ROOT; };
+		E2A832550D147B4A00117643 /* b64 */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = b64; path = ../build/Release/b64; sourceTree = SOURCE_ROOT; };
+		E2A832560D147B4A00117643 /* plister */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = plister; path = ../build/Release/plister; sourceTree = SOURCE_ROOT; };
 		E2ACB25712EADCB000A8ACF6 /* AbracodeFrameworkVersion.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = AbracodeFrameworkVersion.c; sourceTree = "<group>"; };
 		E2BB1E440E6F886200D2DDE5 /* OMCView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMCView.m; sourceTree = "<group>"; };
 		E2BB1E450E6F886200D2DDE5 /* OMCView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCView.h; sourceTree = "<group>"; };
@@ -564,8 +566,7 @@
 		E2C433430DEE72F600E976D2 /* PlistPreferences.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PlistPreferences.h; sourceTree = "<group>"; };
 		E2C433440DEE72F700E976D2 /* PlistPreferences.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PlistPreferences.cp; sourceTree = "<group>"; };
 		E2C433600DEE751300E976D2 /* OMCDropletController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCDropletController.mm; sourceTree = "<group>"; };
-		E2C434620DF27E4D00E976D2 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = ../OnMyCommand/English.lproj/DropletPreferences.xib; sourceTree = SOURCE_ROOT; };
-		E2C7780F12FFDC4D00A7E6D2 /* filt */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = filt; path = ../OnMyCommand/build/Release/filt; sourceTree = SOURCE_ROOT; };
+		E2C7780F12FFDC4D00A7E6D2 /* filt */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = filt; path = ../build/Release/filt; sourceTree = SOURCE_ROOT; };
 		E2C8485D10D61C33002DFDB5 /* OMCBox.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCBox.h; sourceTree = "<group>"; };
 		E2C8485E10D61C33002DFDB5 /* OMCBox.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMCBox.m; sourceTree = "<group>"; };
 		E2C84D710DA9AC090056DBC2 /* OMCCommandMenu.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCCommandMenu.h; sourceTree = "<group>"; };
@@ -596,7 +597,6 @@
 		E2ED3AEE0D0B27F700481D8F /* NibDialogControl.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = NibDialogControl.cp; sourceTree = "<group>"; };
 		E2ED3AEF0D0B27F700481D8F /* OMCDataBrowser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCDataBrowser.cpp; sourceTree = "<group>"; };
 		E2ED3AF90D0B283F00481D8F /* QuickTime.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuickTime.framework; path = /System/Library/Frameworks/QuickTime.framework; sourceTree = "<absolute>"; };
-		E2ED3BA10D0B287000481D8F /* NavDialogs.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = NavDialogs.cp; sourceTree = "<group>"; };
 		E2ED3BA20D0B287000481D8F /* OutputWindowHandler.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OutputWindowHandler.cp; sourceTree = "<group>"; };
 		E2ED3BA80D0B288400481D8F /* OmcTaskManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OmcTaskManager.cpp; sourceTree = "<group>"; };
 		E2ED3BA90D0B288400481D8F /* OmcTaskManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OmcTaskManager.h; sourceTree = "<group>"; };
@@ -605,7 +605,6 @@
 		E2ED3BAC0D0B288400481D8F /* omc_popen.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = omc_popen.c; sourceTree = "<group>"; };
 		E2ED3BAD0D0B288400481D8F /* omc_popen.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = omc_popen.h; sourceTree = "<group>"; };
 		E2ED3BB50D0B289B00481D8F /* OnMyCommand.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OnMyCommand.h; sourceTree = "<group>"; };
-		E2ED3BBB0D0B290200481D8F /* OMCCocoaHelper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = OMCCocoaHelper.m; path = ../OnMyCommand/OMCCocoaHelper/OMCCocoaHelper.m; sourceTree = "<group>"; };
 		E2ED3BC00D0B293E00481D8F /* ACMPlugin.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ACMPlugin.cp; sourceTree = "<group>"; };
 		E2EE07050D3C9704007DBAF4 /* ANotifier.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ANotifier.h; sourceTree = "<group>"; };
 		E2F5C9020DD10F5300B4D4EC /* AbracodeFramework.exp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.exports; path = AbracodeFramework.exp; sourceTree = "<group>"; };
@@ -615,7 +614,6 @@
 		E2FB111D0D185A2C005EB1E8 /* OMC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMC.h; sourceTree = "<group>"; };
 		E2FB111E0D185A2C005EB1E8 /* OMC.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMC.cpp; sourceTree = "<group>"; };
 		E2FB13FF0D19EE9A005EB1E8 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = /System/Library/Frameworks/CoreServices.framework; sourceTree = "<absolute>"; };
-		E2FD854F0E2C3AC00049D4D0 /* German */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = German; path = ../OnMyCommand/German.lproj/DropletPreferences.xib; sourceTree = SOURCE_ROOT; };
 		E2FD8D150E2EA3180049D4D0 /* DropletPreferences.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DropletPreferences.cp; sourceTree = "<group>"; };
 		E2FD8D160E2EA3180049D4D0 /* DropletPreferences.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DropletPreferences.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -631,7 +629,6 @@
 				E27103CE0D8142DF0097D83E /* Quartz.framework in Frameworks */,
 				E23DC9CC0D9A2870009D2AD8 /* QTKit.framework in Frameworks */,
 				E23DC9F60D9A289E009D2AD8 /* WebKit.framework in Frameworks */,
-				E2FA544A0ED0D34000CC3210 /* libicucore.dylib in Frameworks */,
 				E24A566710452FE3005D4A16 /* QuickTime.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -646,7 +643,6 @@
 				E27103CF0D8142DF0097D83E /* Quartz.framework in Frameworks */,
 				E23DC9CD0D9A2870009D2AD8 /* QTKit.framework in Frameworks */,
 				E23DC9F70D9A289E009D2AD8 /* WebKit.framework in Frameworks */,
-				E2FA54490ED0D34000CC3210 /* libicucore.dylib in Frameworks */,
 				E24A566810452FE3005D4A16 /* QuickTime.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -670,13 +666,12 @@
 				E29ED1710D09525700C9D5E8 /* CMUtils */,
 				E29ED1B10D09531300C9D5E8 /* Common */,
 				E29ED19E0D09528600C9D5E8 /* More AppleEvents */,
-				E2ED3BBB0D0B290200481D8F /* OMCCocoaHelper.m */,
 				E29ED2390D09FEF800C9D5E8 /* OMC */,
 				E2517C3C0D1BCC2700180C68 /* CocoaControls */,
 				32C88DFF0371C24200C91783 /* Other Sources */,
 				089C1665FE841158C02AAC07 /* Resources */,
 				E2269C1B0EB6DCF30029CCF5 /* AbracodeCommon.xcconfig */,
-				E234FA9D0D0FD06B001A7780 /* Executables */,
+				E234FA9D0D0FD06B001A7780 /* Support Tools */,
 				0867D69AFE84028FC02AAC07 /* External Frameworks and Libraries */,
 				034768DFFF38A50411DB9C8B /* Products */,
 				E2F5C9020DD10F5300B4D4EC /* AbracodeFramework.exp */,
@@ -711,8 +706,8 @@
 				E234FA1F0D0FCB28001A7780 /* stop.icns */,
 				E234FA200D0FCB28001A7780 /* app.icns */,
 				E234FA2B0D0FCB3E001A7780 /* CustomWindows */,
-				E20E11BC0E1C93A200B10802 /* DropletPreferences.xib */,
 				E2C255EE0DF7CEE2003D0E74 /* DropletPreferences.plist */,
+				1D71F3312206FA67009FAF91 /* DropletPreferences.xib */,
 			);
 			name = Resources;
 			sourceTree = "<group>";
@@ -765,19 +760,20 @@
 			path = CustomWindows;
 			sourceTree = "<group>";
 		};
-		E234FA9D0D0FD06B001A7780 /* Executables */ = {
+		E234FA9D0D0FD06B001A7780 /* Support Tools */ = {
 			isa = PBXGroup;
 			children = (
-				E208BD95108B0EFC00AAA55A /* loco */,
-				E234FAA30D0FD114001A7780 /* omc_next_command */,
-				E234FA9E0D0FD084001A7780 /* omc_dialog_control */,
-				E2A832550D147B4A00117643 /* b64 */,
-				E2A832560D147B4A00117643 /* plister */,
-				E2C7780F12FFDC4D00A7E6D2 /* filt */,
 				E20F1F68130BBE5100882872 /* alert */,
+				E2A832550D147B4A00117643 /* b64 */,
+				E2C7780F12FFDC4D00A7E6D2 /* filt */,
+				1D71F336220702D7009FAF91 /* notify */,
+				E234FA9E0D0FD084001A7780 /* omc_dialog_control */,
+				E234FAA30D0FD114001A7780 /* omc_next_command */,
 				1D742DC219388292005DFF97 /* pasteboard */,
+				E2A832560D147B4A00117643 /* plister */,
 			);
-			name = Executables;
+			name = "Support Tools";
+			path = ../build/Release;
 			sourceTree = "<group>";
 		};
 		E2517C3C0D1BCC2700180C68 /* CocoaControls */ = {
@@ -830,6 +826,7 @@
 		E29ED1710D09525700C9D5E8 /* CMUtils */ = {
 			isa = PBXGroup;
 			children = (
+				1D71F32B2206F1D8009FAF91 /* CMUtils.h */,
 				E29ED1720D09525700C9D5E8 /* CMUtilsBundle.cp */,
 				E29ED1730D09525700C9D5E8 /* CMUtilsMenu.cp */,
 				E29ED1740D09525700C9D5E8 /* CMUtilsAlias.cp */,
@@ -869,20 +866,24 @@
 				E287F1FA0D3C34B500BB1595 /* AObserverBase.h */,
 				E2EE07050D3C9704007DBAF4 /* ANotifier.h */,
 				E2ED3BC00D0B293E00481D8F /* ACMPlugin.cp */,
+				1D71F32A2206F1A1009FAF91 /* ACMPlugin.h */,
 				E27F2D030D56F7410060D231 /* CFObj.h */,
 				E29ED1B50D09532500C9D5E8 /* ACFType.h */,
 				E29ED1B60D09532500C9D5E8 /* ACFType.cp */,
+				1D71F32C2206F214009FAF91 /* ACFDict.h */,
 				1D9B1F5721FF12F4004704A7 /* AMemoryCommon.h */,
 				E29ED2190D09FD8800C9D5E8 /* ARefCounted.cp */,
 				E29ED21B0D09FD8D00C9D5E8 /* ARefCounted.h */,
 				E29ED1950D09527900C9D5E8 /* AStdArrayNew.h */,
 				E29ED1940D09527900C9D5E8 /* AStdMalloc.h */,
 				E29ED1960D09527900C9D5E8 /* AStdNew.h */,
-				E2ED3BA10D0B287000481D8F /* NavDialogs.cp */,
-				1D9B1F6221FF1846004704A7 /* NavDialogs.h */,
+				1D71F3292206F116009FAF91 /* DebugSettings.h */,
+				1D71F3302206F778009FAF91 /* MessagePortListener.h */,
 				E2C433440DEE72F700E976D2 /* PlistPreferences.cp */,
 				E2C433430DEE72F600E976D2 /* PlistPreferences.h */,
 				E2ED3AEC0D0B27E400481D8F /* StSwitchToFront.cp */,
+				1D71F32F2206F5FB009FAF91 /* StSwitchToFront.h */,
+				1D71F32E2206F353009FAF91 /* StAEDesc.h */,
 			);
 			name = Common;
 			path = ../Common;
@@ -1159,6 +1160,7 @@
 				Japanese,
 				French,
 				German,
+				de,
 			);
 			mainGroup = 0867D691FE84028FC02AAC07 /* Abracode */;
 			productRefGroup = 034768DFFF38A50411DB9C8B /* Products */;
@@ -1181,6 +1183,7 @@
 				E234F9FA0D0FC431001A7780 /* Private.strings in Resources */,
 				E234FA210D0FCB28001A7780 /* round-rect-363x90-blue.png in Resources */,
 				E234FA220D0FCB28001A7780 /* braced-rect-318x123-gray.png in Resources */,
+				1D71F3332206FA67009FAF91 /* DropletPreferences.xib in Resources */,
 				E234FA230D0FCB28001A7780 /* round-rect-363x90-green.png in Resources */,
 				E234FA240D0FCB28001A7780 /* notched-rect-378x198-yellow.png in Resources */,
 				E234FA250D0FCB28001A7780 /* round-rect-363x90-yellow.png in Resources */,
@@ -1197,7 +1200,6 @@
 				E2D92E6B1043D9F8003DC96B /* input_combo.xib in Resources */,
 				E2D92E6C1043D9F8003DC96B /* input_password.xib in Resources */,
 				E2D92E6D1043D9F8003DC96B /* input_popup.xib in Resources */,
-				C149D18114FB818000F40EAF /* DropletPreferences.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1209,6 +1211,7 @@
 				E25760100D20EE1000D755FF /* Private.strings in Resources */,
 				E25760130D20EE1000D755FF /* round-rect-363x90-blue.png in Resources */,
 				E25760140D20EE1000D755FF /* braced-rect-318x123-gray.png in Resources */,
+				1D71F3342206FA67009FAF91 /* DropletPreferences.xib in Resources */,
 				E25760150D20EE1000D755FF /* round-rect-363x90-green.png in Resources */,
 				E25760160D20EE1000D755FF /* notched-rect-378x198-yellow.png in Resources */,
 				E25760170D20EE1000D755FF /* round-rect-363x90-yellow.png in Resources */,
@@ -1225,7 +1228,6 @@
 				E2D92E6F1043D9F8003DC96B /* input_combo.xib in Resources */,
 				E2D92E701043D9F8003DC96B /* input_password.xib in Resources */,
 				E2D92E711043D9F8003DC96B /* input_popup.xib in Resources */,
-				C149D18214FB818100F40EAF /* DropletPreferences.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1296,7 +1298,6 @@
 				E2ED3BAE0D0B288400481D8F /* OmcTaskManager.cpp in Sources */,
 				E2ED3BB00D0B288400481D8F /* OmcExecutor.cp in Sources */,
 				E2ED3BB20D0B288400481D8F /* omc_popen.c in Sources */,
-				E2ED3BBC0D0B290200481D8F /* OMCCocoaHelper.m in Sources */,
 				E2ED3BC10D0B293E00481D8F /* ACMPlugin.cp in Sources */,
 				E2FB11200D185A2C005EB1E8 /* OMC.cpp in Sources */,
 				E2517C4E0D1BCC2700180C68 /* OMCButton.m in Sources */,
@@ -1312,7 +1313,6 @@
 				E211D4F80D4346BB0065C23A /* OMCDialogController.mm in Sources */,
 				E22FBAEF0D7A0D7700DC5BB4 /* OMCCocoaDialog.mm in Sources */,
 				E2735F830D7BC89F004D81CE /* OMCDialog.cpp in Sources */,
-				1D9B1F6021FF183B004704A7 /* NavDialogs.cp in Sources */,
 				E27103AE0D8141BC0097D83E /* OMCQCView.mm in Sources */,
 				E2E407000D8A5B00009AD8CA /* OMCSecureTextField.m in Sources */,
 				E2E4072A0D8AD1E3009AD8CA /* OMCSearchField.m in Sources */,
@@ -1378,7 +1378,6 @@
 				E257603E0D20EE1000D755FF /* OmcTaskManager.cpp in Sources */,
 				E257603F0D20EE1000D755FF /* OmcExecutor.cp in Sources */,
 				E25760400D20EE1000D755FF /* omc_popen.c in Sources */,
-				E25760410D20EE1000D755FF /* OMCCocoaHelper.m in Sources */,
 				E25760420D20EE1000D755FF /* ACMPlugin.cp in Sources */,
 				E25760440D20EE1000D755FF /* OMC.cpp in Sources */,
 				E25760450D20EE1000D755FF /* OMCButton.m in Sources */,
@@ -1403,7 +1402,6 @@
 				E23DC9730D9A2616009D2AD8 /* OMCWebView.m in Sources */,
 				E29A6AB40D9F7A01006A97B0 /* OMCMainMenuController.m in Sources */,
 				E2C84D890DA9D2600056DBC2 /* OMCSingleCommand.m in Sources */,
-				1D9B1F6121FF183B004704A7 /* NavDialogs.cp in Sources */,
 				E2C84DAB0DA9D4CD0056DBC2 /* OMCCommandExecutor.m in Sources */,
 				E2C84DEA0DA9F30F0056DBC2 /* OMCCommandMenu.mm in Sources */,
 				E242435A0DDC140F0002BF9E /* OMCOutputWindowController.mm in Sources */,
@@ -1454,21 +1452,21 @@
 			name = InfoPlist.strings;
 			sourceTree = "<group>";
 		};
+		1D71F3312206FA67009FAF91 /* DropletPreferences.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				1D71F3322206FA67009FAF91 /* English */,
+				1D71F3352206FA78009FAF91 /* de */,
+			);
+			name = DropletPreferences.xib;
+			sourceTree = "<group>";
+		};
 		1D9B1F6F21FF1F9F004704A7 /* progress.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
 				1D9B1F7021FF1F9F004704A7 /* English */,
 			);
 			name = progress.xib;
-			sourceTree = "<group>";
-		};
-		E20E11BC0E1C93A200B10802 /* DropletPreferences.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				E2C434620DF27E4D00E976D2 /* English */,
-				E2FD854F0E2C3AC00049D4D0 /* German */,
-			);
-			name = DropletPreferences.xib;
 			sourceTree = "<group>";
 		};
 		E234F9F80D0FC431001A7780 /* Private.strings */ = {

@@ -1,0 +1,247 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 45;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		8DD76F650486A84900D96B5E /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; settings = {ATTRIBUTES = (); }; };
+		8DD76F6A0486A84900D96B5E /* plister.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = C6859E8B029090EE04C91782 /* plister.1 */; };
+		E20397CA0948328E0068714F /* ABase64.c in Sources */ = {isa = PBXBuildFile; fileRef = E20397C90948328E0068714F /* ABase64.c */; };
+		E2DD23B7090659FA00411933 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E2AA0BFA09033F9A00EA94FD /* CoreFoundation.framework */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		8DD76F690486A84900D96B5E /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 8;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+				8DD76F6A0486A84900D96B5E /* plister.1 in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		08FB7796FE84155DC02AAC07 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		8DD76F6C0486A84900D96B5E /* plister */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = plister; sourceTree = BUILT_PRODUCTS_DIR; };
+		C6859E8B029090EE04C91782 /* plister.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = plister.1; sourceTree = "<group>"; };
+		E20397C90948328E0068714F /* ABase64.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = ABase64.c; path = ../b64/ABase64.c; sourceTree = SOURCE_ROOT; };
+		E2269B7A0EB6DB820029CCF5 /* AbracodeCommon.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = AbracodeCommon.xcconfig; path = ../AbracodeCommon.xcconfig; sourceTree = SOURCE_ROOT; };
+		E27A1ACB10526A2E000DFAC8 /* plister_Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = plister_Info.plist; sourceTree = SOURCE_ROOT; };
+		E29675AA0913034B00ED7CB3 /* AStdMalloc.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = AStdMalloc.h; path = ../Common/AStdMalloc.h; sourceTree = SOURCE_ROOT; };
+		E29A17FB090482F100402E0B /* AStdArrayNew.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = AStdArrayNew.h; path = ../Common/AStdArrayNew.h; sourceTree = SOURCE_ROOT; };
+		E2AA0BFA09033F9A00EA94FD /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = /System/Library/Frameworks/CoreFoundation.framework; sourceTree = "<absolute>"; };
+		E2AA0C380903482400EA94FD /* CFObj.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = CFObj.h; path = ../Common/CFObj.h; sourceTree = SOURCE_ROOT; };
+		E2EE798F0946DCCD00CD3EFF /* ABase64.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ABase64.h; path = ../b64/ABase64.h; sourceTree = SOURCE_ROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		8DD76F660486A84900D96B5E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E2DD23B7090659FA00411933 /* CoreFoundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		08FB7794FE84155DC02AAC07 /* plister */ = {
+			isa = PBXGroup;
+			children = (
+				08FB7795FE84155DC02AAC07 /* Source */,
+				C6859E8C029090F304C91782 /* Documentation */,
+				E2269B7A0EB6DB820029CCF5 /* AbracodeCommon.xcconfig */,
+				E27A1ACB10526A2E000DFAC8 /* plister_Info.plist */,
+				1AB674ADFE9D54B511CA2CBB /* Products */,
+				E2AA0BFA09033F9A00EA94FD /* CoreFoundation.framework */,
+			);
+			name = plister;
+			sourceTree = "<group>";
+		};
+		08FB7795FE84155DC02AAC07 /* Source */ = {
+			isa = PBXGroup;
+			children = (
+				08FB7796FE84155DC02AAC07 /* main.cpp */,
+				E20397C90948328E0068714F /* ABase64.c */,
+				E2EE798F0946DCCD00CD3EFF /* ABase64.h */,
+				E2AA0C380903482400EA94FD /* CFObj.h */,
+				E29A17FB090482F100402E0B /* AStdArrayNew.h */,
+				E29675AA0913034B00ED7CB3 /* AStdMalloc.h */,
+			);
+			name = Source;
+			sourceTree = "<group>";
+		};
+		1AB674ADFE9D54B511CA2CBB /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				8DD76F6C0486A84900D96B5E /* plister */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		C6859E8C029090F304C91782 /* Documentation */ = {
+			isa = PBXGroup;
+			children = (
+				C6859E8B029090EE04C91782 /* plister.1 */,
+			);
+			name = Documentation;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		8DD76F620486A84900D96B5E /* plister */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E2AA0BED09033F3500EA94FD /* Build configuration list for PBXNativeTarget "plister" */;
+			buildPhases = (
+				8DD76F640486A84900D96B5E /* Sources */,
+				8DD76F660486A84900D96B5E /* Frameworks */,
+				8DD76F690486A84900D96B5E /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = plister;
+			productInstallPath = "$(HOME)/bin";
+			productName = plister;
+			productReference = 8DD76F6C0486A84900D96B5E /* plister */;
+			productType = "com.apple.product-type.tool";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		08FB7793FE84155DC02AAC07 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+			};
+			buildConfigurationList = E2AA0BF109033F3500EA94FD /* Build configuration list for PBXProject "plister" */;
+			compatibilityVersion = "Xcode 3.1";
+			developmentRegion = English;
+			hasScannedForEncodings = 1;
+			knownRegions = (
+				en,
+			);
+			mainGroup = 08FB7794FE84155DC02AAC07 /* plister */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				8DD76F620486A84900D96B5E /* plister */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		8DD76F640486A84900D96B5E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8DD76F650486A84900D96B5E /* main.cpp in Sources */,
+				E20397CA0948328E0068714F /* ABase64.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		E2AA0BEE09033F3500EA94FD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				PRODUCT_NAME = plister;
+			};
+			name = Debug;
+		};
+		E2AA0BEF09033F3500EA94FD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				PRODUCT_NAME = plister;
+				STRIP_INSTALLED_PRODUCT = YES;
+				STRIP_STYLE = all;
+			};
+			name = Release;
+		};
+		E2AA0BF209033F3500EA94FD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = E2269B7A0EB6DB820029CCF5 /* AbracodeCommon.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = NO;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"_DEBUG_=1",
+					"_TRACE_=0",
+				);
+				INFOPLIST_FILE = plister_Info.plist;
+				OTHER_LDFLAGS = (
+					"-sectcreate",
+					__TEXT,
+					__info_plist,
+					plister_Info.plist,
+				);
+				STRIP_INSTALLED_PRODUCT = NO;
+				SYMROOT = ../build;
+			};
+			name = Debug;
+		};
+		E2AA0BF309033F3500EA94FD /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = E2269B7A0EB6DB820029CCF5 /* AbracodeCommon.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				DEAD_CODE_STRIPPING = YES;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"_DEBUG_=0",
+					"_TRACE_=0",
+				);
+				INFOPLIST_FILE = plister_Info.plist;
+				OTHER_LDFLAGS = (
+					"-sectcreate",
+					__TEXT,
+					__info_plist,
+					plister_Info.plist,
+				);
+				STRIP_STYLE = debugging;
+				SYMROOT = ../build;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		E2AA0BED09033F3500EA94FD /* Build configuration list for PBXNativeTarget "plister" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E2AA0BEE09033F3500EA94FD /* Debug */,
+				E2AA0BEF09033F3500EA94FD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		E2AA0BF109033F3500EA94FD /* Build configuration list for PBXProject "plister" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E2AA0BF209033F3500EA94FD /* Debug */,
+				E2AA0BF309033F3500EA94FD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 08FB7793FE84155DC02AAC07 /* Project object */;
+}

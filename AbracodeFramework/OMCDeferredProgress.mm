@@ -12,10 +12,6 @@
 #include "AStdMalloc.h"
 #include "CMUtils.h"
 
-#define U_HIDE_DRAFT_API 1
-#define U_DISABLE_RENAMING 1
-#include "unicode/uregex.h"
-
 /*
 pseudo plist with proposed enhancements:
 
@@ -497,7 +493,9 @@ CounterParams::CalculateProgress(CFArrayRef inOutputLines, OMCTaskProgress &outT
 		{
 			lastMatchedLine = oneLine;
 			
+#ifdef USE_ICU_REGEX
 			RangeAndString::Reset(regGroups, regGroupCount);
+#endif
 
 			double currValue = 0.0;
 			int32_t startOffset = -1;

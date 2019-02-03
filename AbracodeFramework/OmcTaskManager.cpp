@@ -16,7 +16,7 @@
 #include "AStdNew.h"
 #include "OmcTaskNotification.h"
 #include "ACFDict.h"
-#include "NibDialog.h"
+//#include "NibDialog.h"
 //#include "NibDialogControl.h"
 #include "ARefCounted.h"
 #include "DefaultExternBundle.h"
@@ -24,7 +24,7 @@
 #ifdef BUILD_DEPUTY
 	#include "MessagePortSend.h"
 #else
-	#include "OnMyCommandCM.h"
+	#include "OnMyCommand.h"
 	#include "OMCDialog.h"
 #endif
 

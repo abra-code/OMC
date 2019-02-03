@@ -19,7 +19,7 @@
 #include "OmcTaskManager.h"
 #include "OmcTaskNotification.h"
 #include <sys/socket.h>
-#include "OnMyCommandCM.h"
+#include "OnMyCommand.h"
 
 static char oneLine[512];
 static char fileName[256];

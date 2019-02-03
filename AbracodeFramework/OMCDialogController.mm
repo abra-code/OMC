@@ -8,7 +8,7 @@
 
 #import "OMCDialogController.h"
 #import "OMCPopUpButton.h"
-#include "OnMyCommandCM.h"
+#include "OnMyCommand.h"
 #include "ACFDict.h"
 #include "OMCCocoaDialog.h"
 #include "AStdMalloc.h"

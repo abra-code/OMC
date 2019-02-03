@@ -13,7 +13,7 @@
 
 #pragma once
 
-#include <Carbon/Carbon.h>
+#include <CoreFoundation/CoreFoundation.h>
 
 template <typename T> class ACFType
 {

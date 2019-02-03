@@ -10,7 +10,7 @@
 #include "OMCConstants.h"
 #include "CFObj.h"
 
-#define USE_ICU_REGEX yes
+//#define USE_ICU_REGEX yes
 
 
 #ifdef USE_ICU_REGEX
@@ -18,7 +18,7 @@
 	#define U_DISABLE_RENAMING 1
 	#include "unicode/uregex.h"
 #else
-	#include "regex.h"
+	#include <regex.h>
 #endif
 
 //single task progress state
