@@ -13,36 +13,6 @@
 #include "CMUtils.h"
 #include "StAEDesc.h"
 
-#if COMPILE_FSSPEC_CODE
-
-OSErr
-CMUtils::GetFSSpec(const AEDesc &inDesc, FSSpec &outSpec)
-{
-	OSErr err = fnfErr;
-
-	if( (inDesc.descriptorType == typeFSS) && (inDesc.dataHandle != NULL) )
-	{//no need to coerce
-		err = ::AEGetDescData( &inDesc, &outSpec, sizeof(FSSpec) );
-	}
-	else if( (inDesc.descriptorType != typeNull) && (inDesc.dataHandle != NULL) )
-	{
-		StAEDesc coercedSpec;
-		err = ::AECoerceDesc( &inDesc, typeFSS, coercedSpec );
-		if(err == noErr)
-		{
-			err = ::AEGetDescData( coercedSpec, &outSpec, sizeof(FSSpec) );
-		}
-		else
-		{
-			DEBUG_PSTR( "\p\tUnable to coerce to FSSpec..." );
-		}
-	}
-
-	return err;
-}
-
-#endif //COMPILE_FSSPEC_CODE
-
 
 OSErr
 CMUtils::GetFSRef(const AEDesc &inDesc, FSRef &outRef)
@@ -63,22 +33,6 @@ CMUtils::GetFSRef(const AEDesc &inDesc, FSRef &outRef)
 			TRACE_CSTR1("\tCMUtils::FSRefGetRef with coercing..." );
 			err = ::AEGetDescData( coercedRef, &outRef, sizeof(FSRef) );
 		}
-
-#if COMPILE_FSSPEC_CODE
-		else
-		{// Cannot get an FSRef. Try getting an FSSpec and make an FSRef out of it.
-			FSSpec theSpec;
-			err = CMUtils::GetFSSpec(inDesc, theSpec);
-			if(err == noErr)
-			{
-				err = ::FSpMakeFSRef( &theSpec, &outRef );
-			}
-			else
-			{
-				DEBUG_PSTR( "\p\tUnable to coerce to FSRef..." );
-			}
-		}
-#endif //COMPILE_FSSPEC_CODE
 	}
 
 	return err;

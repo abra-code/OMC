@@ -34,6 +34,7 @@
 		1D9B1F6621FF191D004704A7 /* SubmenuTree.cp in Sources */ = {isa = PBXBuildFile; fileRef = 1D9B1F6321FF191D004704A7 /* SubmenuTree.cp */; };
 		1D9B1F7121FF1F9F004704A7 /* progress.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1D9B1F6F21FF1F9F004704A7 /* progress.xib */; };
 		1D9B1F7221FF1F9F004704A7 /* progress.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1D9B1F6F21FF1F9F004704A7 /* progress.xib */; };
+		1DED8E572222BD8E00A2CAF7 /* MoreAppleEvents.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED19F0D09528600C9D5E8 /* MoreAppleEvents.cp */; };
 		8DC2EF530486A6940098B216 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C1666FE841158C02AAC07 /* InfoPlist.strings */; };
 		8DC2EF570486A6940098B216 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7B1FEA5585E11CA2CBB /* Cocoa.framework */; };
 		E20026D610B68F3200D5388F /* OMCCustomWindow.mm in Sources */ = {isa = PBXBuildFile; fileRef = E20026D510B68F3200D5388F /* OMCCustomWindow.mm */; };
@@ -95,8 +96,6 @@
 		E24243F00DDD68C20002BF9E /* OMCOutputWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = E24243EE0DDD68C20002BF9E /* OMCOutputWindow.xib */; };
 		E24244FF0DDF38080002BF9E /* OMCOutputPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = E24244FE0DDF38080002BF9E /* OMCOutputPanel.xib */; };
 		E24245000DDF38080002BF9E /* OMCOutputPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = E24244FE0DDF38080002BF9E /* OMCOutputPanel.xib */; };
-		E24A566710452FE3005D4A16 /* QuickTime.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E2ED3AF90D0B283F00481D8F /* QuickTime.framework */; };
-		E24A566810452FE3005D4A16 /* QuickTime.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E2ED3AF90D0B283F00481D8F /* QuickTime.framework */; };
 		E24B16890DE934CC00E44A45 /* OMCWindow.h in Headers */ = {isa = PBXBuildFile; fileRef = E24B16870DE934CC00E44A45 /* OMCWindow.h */; };
 		E24B168A0DE934CC00E44A45 /* OMCWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = E24B16880DE934CC00E44A45 /* OMCWindow.m */; };
 		E24B168B0DE934CC00E44A45 /* OMCWindow.h in Headers */ = {isa = PBXBuildFile; fileRef = E24B16870DE934CC00E44A45 /* OMCWindow.h */; };
@@ -128,7 +127,6 @@
 		E2575FF60D20EE1000D755FF /* AStdMalloc.h in Headers */ = {isa = PBXBuildFile; fileRef = E29ED1940D09527900C9D5E8 /* AStdMalloc.h */; };
 		E2575FF70D20EE1000D755FF /* AStdArrayNew.h in Headers */ = {isa = PBXBuildFile; fileRef = E29ED1950D09527900C9D5E8 /* AStdArrayNew.h */; };
 		E2575FF80D20EE1000D755FF /* AStdNew.h in Headers */ = {isa = PBXBuildFile; fileRef = E29ED1960D09527900C9D5E8 /* AStdNew.h */; };
-		E2575FFB0D20EE1000D755FF /* MoreSetup.h in Headers */ = {isa = PBXBuildFile; fileRef = E29ED1A30D09528600C9D5E8 /* MoreSetup.h */; };
 		E2575FFC0D20EE1000D755FF /* ACFType.h in Headers */ = {isa = PBXBuildFile; fileRef = E29ED1B50D09532500C9D5E8 /* ACFType.h */; };
 		E2575FFD0D20EE1000D755FF /* ARefCounted.h in Headers */ = {isa = PBXBuildFile; fileRef = E29ED21B0D09FD8D00C9D5E8 /* ARefCounted.h */; };
 		E25760000D20EE1000D755FF /* DefaultExternBundle.h in Headers */ = {isa = PBXBuildFile; fileRef = E2ED3AE90D0B27D300481D8F /* DefaultExternBundle.h */; };
@@ -170,9 +168,6 @@
 		E257602A0D20EE1000D755FF /* CMUtilsIsFolder.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED17D0D09525700C9D5E8 /* CMUtilsIsFolder.cp */; };
 		E257602B0D20EE1000D755FF /* CMUtilsAEFile.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED17E0D09525700C9D5E8 /* CMUtilsAEFile.cp */; };
 		E257602C0D20EE1000D755FF /* MoreAppleEvents.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED19F0D09528600C9D5E8 /* MoreAppleEvents.cp */; };
-		E257602D0D20EE1000D755FF /* MoreAEObjects.c in Sources */ = {isa = PBXBuildFile; fileRef = E29ED1A00D09528600C9D5E8 /* MoreAEObjects.c */; };
-		E257602E0D20EE1000D755FF /* MoreProcesses.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED1A10D09528600C9D5E8 /* MoreProcesses.cp */; };
-		E257602F0D20EE1000D755FF /* MoreMemory.c in Sources */ = {isa = PBXBuildFile; fileRef = E29ED1A20D09528600C9D5E8 /* MoreMemory.c */; };
 		E25760300D20EE1000D755FF /* ACFType.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED1B60D09532500C9D5E8 /* ACFType.cp */; };
 		E25760310D20EE1000D755FF /* ARefCounted.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED2190D09FD8800C9D5E8 /* ARefCounted.cp */; };
 		E25760340D20EE1000D755FF /* DefaultExternBundle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E2ED3AE80D0B27D300481D8F /* DefaultExternBundle.cpp */; };
@@ -253,11 +248,6 @@
 		E29ED1990D09527900C9D5E8 /* AStdMalloc.h in Headers */ = {isa = PBXBuildFile; fileRef = E29ED1940D09527900C9D5E8 /* AStdMalloc.h */; };
 		E29ED19A0D09527900C9D5E8 /* AStdArrayNew.h in Headers */ = {isa = PBXBuildFile; fileRef = E29ED1950D09527900C9D5E8 /* AStdArrayNew.h */; };
 		E29ED19B0D09527900C9D5E8 /* AStdNew.h in Headers */ = {isa = PBXBuildFile; fileRef = E29ED1960D09527900C9D5E8 /* AStdNew.h */; };
-		E29ED1A40D09528600C9D5E8 /* MoreAppleEvents.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED19F0D09528600C9D5E8 /* MoreAppleEvents.cp */; };
-		E29ED1A50D09528600C9D5E8 /* MoreAEObjects.c in Sources */ = {isa = PBXBuildFile; fileRef = E29ED1A00D09528600C9D5E8 /* MoreAEObjects.c */; };
-		E29ED1A60D09528600C9D5E8 /* MoreProcesses.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED1A10D09528600C9D5E8 /* MoreProcesses.cp */; };
-		E29ED1A70D09528600C9D5E8 /* MoreMemory.c in Sources */ = {isa = PBXBuildFile; fileRef = E29ED1A20D09528600C9D5E8 /* MoreMemory.c */; };
-		E29ED1A80D09528600C9D5E8 /* MoreSetup.h in Headers */ = {isa = PBXBuildFile; fileRef = E29ED1A30D09528600C9D5E8 /* MoreSetup.h */; };
 		E29ED1B70D09532500C9D5E8 /* ACFType.h in Headers */ = {isa = PBXBuildFile; fileRef = E29ED1B50D09532500C9D5E8 /* ACFType.h */; };
 		E29ED1B80D09532500C9D5E8 /* ACFType.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED1B60D09532500C9D5E8 /* ACFType.cp */; };
 		E29ED21A0D09FD8800C9D5E8 /* ARefCounted.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED2190D09FD8800C9D5E8 /* ARefCounted.cp */; };
@@ -430,6 +420,8 @@
 		1D9B1F6321FF191D004704A7 /* SubmenuTree.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SubmenuTree.cp; sourceTree = "<group>"; };
 		1D9B1F6421FF191D004704A7 /* SubmenuTree.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SubmenuTree.h; sourceTree = "<group>"; };
 		1D9B1F7021FF1F9F004704A7 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/progress.xib; sourceTree = "<group>"; };
+		1DED8E4C22229D1800A2CAF7 /* ACFArr.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ACFArr.h; sourceTree = "<group>"; };
+		1DED8E562222B65500A2CAF7 /* MoreAppleEvents.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoreAppleEvents.h; sourceTree = "<group>"; };
 		32DBCF5E0370ADEE00C91783 /* Abracode_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Abracode_Prefix.pch; sourceTree = "<group>"; };
 		8DC2EF5A0486A6940098B216 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8DC2EF5B0486A6940098B216 /* Abracode.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Abracode.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -543,11 +535,7 @@
 		E29ED1940D09527900C9D5E8 /* AStdMalloc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AStdMalloc.h; sourceTree = "<group>"; };
 		E29ED1950D09527900C9D5E8 /* AStdArrayNew.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AStdArrayNew.h; sourceTree = "<group>"; };
 		E29ED1960D09527900C9D5E8 /* AStdNew.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AStdNew.h; sourceTree = "<group>"; };
-		E29ED19F0D09528600C9D5E8 /* MoreAppleEvents.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MoreAppleEvents.cp; path = ../Common/MoreAppleEvents/MoreAppleEvents.cp; sourceTree = SOURCE_ROOT; };
-		E29ED1A00D09528600C9D5E8 /* MoreAEObjects.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = MoreAEObjects.c; path = ../Common/MoreAppleEvents/MoreAEObjects.c; sourceTree = SOURCE_ROOT; };
-		E29ED1A10D09528600C9D5E8 /* MoreProcesses.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MoreProcesses.cp; path = "../Common/MoreAppleEvents/MoreIsBetter parts/MoreProcesses.cp"; sourceTree = SOURCE_ROOT; };
-		E29ED1A20D09528600C9D5E8 /* MoreMemory.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = MoreMemory.c; path = "../Common/MoreAppleEvents/MoreIsBetter parts/MoreMemory.c"; sourceTree = SOURCE_ROOT; };
-		E29ED1A30D09528600C9D5E8 /* MoreSetup.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MoreSetup.h; path = "../Common/MoreAppleEvents/MoreIsBetter parts/MoreSetup.h"; sourceTree = SOURCE_ROOT; };
+		E29ED19F0D09528600C9D5E8 /* MoreAppleEvents.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MoreAppleEvents.cp; sourceTree = "<group>"; };
 		E29ED1B50D09532500C9D5E8 /* ACFType.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ACFType.h; sourceTree = "<group>"; };
 		E29ED1B60D09532500C9D5E8 /* ACFType.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ACFType.cp; sourceTree = "<group>"; };
 		E29ED2190D09FD8800C9D5E8 /* ARefCounted.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ARefCounted.cp; sourceTree = "<group>"; };
@@ -596,7 +584,6 @@
 		E2ED3AEC0D0B27E400481D8F /* StSwitchToFront.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = StSwitchToFront.cp; path = ../Common/StSwitchToFront.cp; sourceTree = SOURCE_ROOT; };
 		E2ED3AEE0D0B27F700481D8F /* NibDialogControl.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = NibDialogControl.cp; sourceTree = "<group>"; };
 		E2ED3AEF0D0B27F700481D8F /* OMCDataBrowser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCDataBrowser.cpp; sourceTree = "<group>"; };
-		E2ED3AF90D0B283F00481D8F /* QuickTime.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuickTime.framework; path = /System/Library/Frameworks/QuickTime.framework; sourceTree = "<absolute>"; };
 		E2ED3BA20D0B287000481D8F /* OutputWindowHandler.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OutputWindowHandler.cp; sourceTree = "<group>"; };
 		E2ED3BA80D0B288400481D8F /* OmcTaskManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OmcTaskManager.cpp; sourceTree = "<group>"; };
 		E2ED3BA90D0B288400481D8F /* OmcTaskManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OmcTaskManager.h; sourceTree = "<group>"; };
@@ -609,7 +596,6 @@
 		E2EE07050D3C9704007DBAF4 /* ANotifier.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ANotifier.h; sourceTree = "<group>"; };
 		E2F5C9020DD10F5300B4D4EC /* AbracodeFramework.exp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.exports; path = AbracodeFramework.exp; sourceTree = "<group>"; };
 		E2FA54450ED0D2D900CC3210 /* uregex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = uregex.h; path = ../icu/include/unicode/uregex.h; sourceTree = SOURCE_ROOT; };
-		E2FA54480ED0D34000CC3210 /* libicucore.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libicucore.dylib; path = /usr/lib/libicucore.dylib; sourceTree = "<absolute>"; };
 		E2FA54540ED0D3B800CC3210 /* utypes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = utypes.h; path = ../icu/include/unicode/utypes.h; sourceTree = SOURCE_ROOT; };
 		E2FB111D0D185A2C005EB1E8 /* OMC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMC.h; sourceTree = "<group>"; };
 		E2FB111E0D185A2C005EB1E8 /* OMC.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMC.cpp; sourceTree = "<group>"; };
@@ -629,7 +615,6 @@
 				E27103CE0D8142DF0097D83E /* Quartz.framework in Frameworks */,
 				E23DC9CC0D9A2870009D2AD8 /* QTKit.framework in Frameworks */,
 				E23DC9F60D9A289E009D2AD8 /* WebKit.framework in Frameworks */,
-				E24A566710452FE3005D4A16 /* QuickTime.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -643,7 +628,6 @@
 				E27103CF0D8142DF0097D83E /* Quartz.framework in Frameworks */,
 				E23DC9CD0D9A2870009D2AD8 /* QTKit.framework in Frameworks */,
 				E23DC9F70D9A289E009D2AD8 /* WebKit.framework in Frameworks */,
-				E24A566810452FE3005D4A16 /* QuickTime.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -665,7 +649,7 @@
 				E2FA54420ED0D2A700CC3210 /* ICU-includes */,
 				E29ED1710D09525700C9D5E8 /* CMUtils */,
 				E29ED1B10D09531300C9D5E8 /* Common */,
-				E29ED19E0D09528600C9D5E8 /* More AppleEvents */,
+				E29ED19E0D09528600C9D5E8 /* MoreAppleEvents */,
 				E29ED2390D09FEF800C9D5E8 /* OMC */,
 				E2517C3C0D1BCC2700180C68 /* CocoaControls */,
 				32C88DFF0371C24200C91783 /* Other Sources */,
@@ -682,7 +666,6 @@
 		0867D69AFE84028FC02AAC07 /* External Frameworks and Libraries */ = {
 			isa = PBXGroup;
 			children = (
-				E2FA54480ED0D34000CC3210 /* libicucore.dylib */,
 				1058C7B0FEA5585E11CA2CBB /* Linked Frameworks */,
 				1058C7B2FEA5585E11CA2CBB /* Other Frameworks */,
 			);
@@ -718,7 +701,6 @@
 				E29ED0710D094EB000C9D5E8 /* Carbon.framework */,
 				1058C7B1FEA5585E11CA2CBB /* Cocoa.framework */,
 				E2FB13FF0D19EE9A005EB1E8 /* CoreServices.framework */,
-				E2ED3AF90D0B283F00481D8F /* QuickTime.framework */,
 				E27103CD0D8142DF0097D83E /* Quartz.framework */,
 				E23DC9CB0D9A2870009D2AD8 /* QTKit.framework */,
 				E23DC9F50D9A289E009D2AD8 /* WebKit.framework */,
@@ -847,16 +829,14 @@
 			path = ../CMUtils;
 			sourceTree = "<group>";
 		};
-		E29ED19E0D09528600C9D5E8 /* More AppleEvents */ = {
+		E29ED19E0D09528600C9D5E8 /* MoreAppleEvents */ = {
 			isa = PBXGroup;
 			children = (
 				E29ED19F0D09528600C9D5E8 /* MoreAppleEvents.cp */,
-				E29ED1A00D09528600C9D5E8 /* MoreAEObjects.c */,
-				E29ED1A10D09528600C9D5E8 /* MoreProcesses.cp */,
-				E29ED1A20D09528600C9D5E8 /* MoreMemory.c */,
-				E29ED1A30D09528600C9D5E8 /* MoreSetup.h */,
+				1DED8E562222B65500A2CAF7 /* MoreAppleEvents.h */,
 			);
-			name = "More AppleEvents";
+			name = MoreAppleEvents;
+			path = ../MoreAppleEvents;
 			sourceTree = SOURCE_ROOT;
 		};
 		E29ED1B10D09531300C9D5E8 /* Common */ = {
@@ -870,6 +850,7 @@
 				E27F2D030D56F7410060D231 /* CFObj.h */,
 				E29ED1B50D09532500C9D5E8 /* ACFType.h */,
 				E29ED1B60D09532500C9D5E8 /* ACFType.cp */,
+				1DED8E4C22229D1800A2CAF7 /* ACFArr.h */,
 				1D71F32C2206F214009FAF91 /* ACFDict.h */,
 				1D9B1F5721FF12F4004704A7 /* AMemoryCommon.h */,
 				E29ED2190D09FD8800C9D5E8 /* ARefCounted.cp */,
@@ -983,7 +964,6 @@
 				E29ED1990D09527900C9D5E8 /* AStdMalloc.h in Headers */,
 				E29ED19A0D09527900C9D5E8 /* AStdArrayNew.h in Headers */,
 				E29ED19B0D09527900C9D5E8 /* AStdNew.h in Headers */,
-				E29ED1A80D09528600C9D5E8 /* MoreSetup.h in Headers */,
 				E29ED1B70D09532500C9D5E8 /* ACFType.h in Headers */,
 				E29ED21C0D09FD8D00C9D5E8 /* ARefCounted.h in Headers */,
 				E2ED3AEB0D0B27D300481D8F /* DefaultExternBundle.h in Headers */,
@@ -1044,7 +1024,6 @@
 				E2575FF60D20EE1000D755FF /* AStdMalloc.h in Headers */,
 				E2575FF70D20EE1000D755FF /* AStdArrayNew.h in Headers */,
 				E2575FF80D20EE1000D755FF /* AStdNew.h in Headers */,
-				E2575FFB0D20EE1000D755FF /* MoreSetup.h in Headers */,
 				E2575FFC0D20EE1000D755FF /* ACFType.h in Headers */,
 				E2575FFD0D20EE1000D755FF /* ARefCounted.h in Headers */,
 				E25760000D20EE1000D755FF /* DefaultExternBundle.h in Headers */,
@@ -1284,10 +1263,6 @@
 				E29ED1890D09525700C9D5E8 /* CMUtilsDebug.cp in Sources */,
 				E29ED18A0D09525700C9D5E8 /* CMUtilsIsFolder.cp in Sources */,
 				E29ED18B0D09525700C9D5E8 /* CMUtilsAEFile.cp in Sources */,
-				E29ED1A40D09528600C9D5E8 /* MoreAppleEvents.cp in Sources */,
-				E29ED1A50D09528600C9D5E8 /* MoreAEObjects.c in Sources */,
-				E29ED1A60D09528600C9D5E8 /* MoreProcesses.cp in Sources */,
-				E29ED1A70D09528600C9D5E8 /* MoreMemory.c in Sources */,
 				E29ED1B80D09532500C9D5E8 /* ACFType.cp in Sources */,
 				E29ED21A0D09FD8800C9D5E8 /* ARefCounted.cp in Sources */,
 				E2ED3AEA0D0B27D300481D8F /* DefaultExternBundle.cpp in Sources */,
@@ -1298,6 +1273,7 @@
 				E2ED3BAE0D0B288400481D8F /* OmcTaskManager.cpp in Sources */,
 				E2ED3BB00D0B288400481D8F /* OmcExecutor.cp in Sources */,
 				E2ED3BB20D0B288400481D8F /* omc_popen.c in Sources */,
+				1DED8E572222BD8E00A2CAF7 /* MoreAppleEvents.cp in Sources */,
 				E2ED3BC10D0B293E00481D8F /* ACMPlugin.cp in Sources */,
 				E2FB11200D185A2C005EB1E8 /* OMC.cpp in Sources */,
 				E2517C4E0D1BCC2700180C68 /* OMCButton.m in Sources */,
@@ -1365,9 +1341,6 @@
 				E257602A0D20EE1000D755FF /* CMUtilsIsFolder.cp in Sources */,
 				E257602B0D20EE1000D755FF /* CMUtilsAEFile.cp in Sources */,
 				E257602C0D20EE1000D755FF /* MoreAppleEvents.cp in Sources */,
-				E257602D0D20EE1000D755FF /* MoreAEObjects.c in Sources */,
-				E257602E0D20EE1000D755FF /* MoreProcesses.cp in Sources */,
-				E257602F0D20EE1000D755FF /* MoreMemory.c in Sources */,
 				E25760300D20EE1000D755FF /* ACFType.cp in Sources */,
 				E25760310D20EE1000D755FF /* ARefCounted.cp in Sources */,
 				E25760340D20EE1000D755FF /* DefaultExternBundle.cpp in Sources */,
@@ -1565,6 +1538,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = E2269C1B0EB6DCF30029CCF5 /* AbracodeCommon.xcconfig */;
 			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
 				DEAD_CODE_STRIPPING = NO;
 				DEPLOYMENT_LOCATION = YES;
 				DSTROOT = /;
@@ -1585,6 +1559,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = E2269C1B0EB6DCF30029CCF5 /* AbracodeCommon.xcconfig */;
 			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
 				DEAD_CODE_STRIPPING = YES;
 				DSTROOT = /;
 				EXPORTED_SYMBOLS_FILE = AbracodeFramework.exp;

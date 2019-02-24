@@ -15,19 +15,9 @@
 #pragma once
 
 #include "DebugSettings.h"
-
-#ifndef COMPILE_FSSPEC_CODE
-	//disable obsolete code
-	#define COMPILE_FSSPEC_CODE		0
-#endif
-
 #include <Carbon/Carbon.h>
 
 #pragma export off
-
-#if COMPILE_FSSPEC_CODE
-typedef OSStatus (*FSSpecHandlerProc)( const FSSpec *inSpec, void *ioData );
-#endif
 
 typedef OSStatus (*FSRefHandlerProc)( const FSRef *inRef, void *ioData );
 typedef OSStatus (*CFURLHandlerProc)( CFURLRef inURLRef, void *ioData );
@@ -88,10 +78,6 @@ public:
 	static SInt32		FindSubmenu(AEDescList* ioCommands, CFStringRef inName);
 //	Boolean				IsSubmenuWithName(const AERecord *inMenuItemRec, CFStringRef inSubmenuName);
 
-#if COMPILE_FSSPEC_CODE
-	static Boolean 		ProcessObjectList( const AEDescList *fileList, UInt32 &ioFlags, FSSpecHandlerProc inProcPtr, void *inProcData = NULL );
-#endif
-
 	static Boolean		ProcessObjectList( const AEDescList *fileList, UInt32 &ioFlags, FSRefHandlerProc inProcPtr, void *inProcData = NULL );
 
 	static Boolean		ProcessObjectList( CFArrayRef fileList, UInt32 &ioFlags, CFURLHandlerProc inProcPtr, void *inProcData = NULL );
@@ -99,31 +85,15 @@ public:
 	static CFMutableArrayRef	CollectObjectNames( const AEDescList *fileList);
 	static OSStatus				AESortFileList(const AEDescList *inFileList, AEDescList *outSortedList, CFOptionFlags compareOptions);
 
-#if COMPILE_FSSPEC_CODE
-	static OSErr		GetFSSpec(const AEDesc &inDesc, FSSpec &outSpec);
-#endif
-
 	static OSErr		GetFSRef(const AEDesc &inDesc, FSRef &outRef);
 
 	static OSErr		CreateFSRefDesc( const CFURLRef inURL, AEDesc &outAEDesc );
 
-#if COMPILE_FSSPEC_CODE
-	static OSStatus		GetPStringName(const FSSpec *inSpec, Str255 outName);
-#endif
-
 	static OSStatus		GetPStringName(const FSRef *inRef, Str255 outName);
 	static CFStringRef	CreateCFStringNameFromFSRef(const FSRef *inRef);
 	static OSErr		CreateAliasDesc( const AliasHandle inAliasH, AEDesc *outAliasAEDesc );
-#if COMPILE_FSSPEC_CODE
-	static OSErr		CreateAliasDesc( const FSSpec *inFSSpec, AEDesc *outAliasAEDesc );
-#endif
-
-	static OSErr		CreateAliasDesc( const FSRef *inFSRef, AEDesc *outAliasAEDesc );
+    static OSErr		CreateAliasDesc( const FSRef *inFSRef, AEDesc *outAliasAEDesc );
 	static OSErr		CreateAliasDesc( const CFURLRef inURL, AEDesc *outAliasAEDesc );
-
-#if COMPILE_FSSPEC_CODE
-	static OSErr		IsFolder(const FSSpec *inSpec, Boolean &outIsFolder);
-#endif
 
 	static OSErr		IsFolder(const FSRef *inRef, Boolean &outIsFolder);
 
@@ -131,18 +101,18 @@ public:
 
 	static OSErr		SendAppleEventToFinder( AEEventClass theAEEventClass, AEEventID theAEEventID,
 												const AEDesc &directObjectDesc,
-												Boolean waitForReply, Boolean toSelf);
+												Boolean waitForReply);
 												
 	static OSErr		SendAEWithTwoObjToFinder( AEEventClass theAEEventClass, AEEventID theAEEventID,
 													AEKeyword keyOne, const AEDesc &objOne,
 													AEKeyword keyTwo, const AEDesc &objTwo,
-													Boolean waitForReply, Boolean toSelf);
+													Boolean waitForReply);
 
 	static OSErr		SendAEWithThreeObjToFinder( AEEventClass theAEEventClass, AEEventID theAEEventID,
 													AEKeyword keyOne, const AEDesc &objOne,
 													AEKeyword keyTwo, const AEDesc &objTwo,
 													AEKeyword keyThree, const AEDesc &objThree,
-													Boolean waitForReply, Boolean toSelf);
+													Boolean waitForReply);
 
 	static OSErr		SendAppleEventToRunningApplication( FourCharCode appSig, AEEventClass theAEEventClass,
 															AEEventID theAEEventID, const AEDesc &directObjectDesc, Boolean waitForReply = false);
@@ -174,63 +144,25 @@ public:
 														AEKeyword keyTwo, const AEDesc &objTwo,
 														AEKeyword keyThree, const AEDesc &objThree, Boolean waitForReply = false);
 
-	static OSErr		SendAppleEventToSelf(AEEventClass theAEEventClass, AEEventID theAEEventID, const AEDesc &directObjectDesc);
-	static OSErr		SendAppleEventWithObjToSelf(AEEventClass theAEEventClass, AEEventID theAEEventID,
-													AEKeyword keyOne, const AEDesc &objOne);
-
-	static OSErr		SendAEWithTwoObjToSelf(AEEventClass theAEEventClass, AEEventID theAEEventID,
-													AEKeyword keyOne, const AEDesc &objOne,
-													AEKeyword keyTwo, const AEDesc &objTwo);
-
-	static OSErr		SendAEWithThreeObjToSelf(AEEventClass theAEEventClass, AEEventID theAEEventID,
-													AEKeyword keyOne, const AEDesc &objOne,
-													AEKeyword keyTwo, const AEDesc &objTwo,
-													AEKeyword keyThree, const AEDesc &objThree);
-
-	static OSErr		SendAppleEventWithObjToSelfWithReply(AEEventClass theAEEventClass, AEEventID theAEEventID,
-														AEDesc &outReply,
-														AEKeyword keyOne, const AEDesc &objOne);
-
 //	static OSErr		SendServicesQueryToSelf();
-	static OSErr		GetHostName(Str255 outName);
 	static CFStringRef	CopyHostName();
 
 
-	static void			PutFinderObjectToTrash(const AEDesc &directObjectDesc, Boolean waitForReply, Boolean toSelf);
-	static void			PutFinderObjectToTrash(const FSRef *inRef, Boolean waitForReply, Boolean toSelf);
+	static void			PutFinderObjectToTrash(const AEDesc &directObjectDesc, Boolean waitForReply);
+	static void			PutFinderObjectToTrash(const FSRef *inRef, Boolean waitForReply);
 
-#if COMPILE_FSSPEC_CODE
-	static void			PutFinderObjectToTrash(const FSSpec *inSpec, Boolean waitForReply, Boolean toSelf);
-#endif
+	static void			UpdateFinderObject(const AEDesc &directObjectDesc, Boolean waitForReply);
+	static void			UpdateFinderObject(const FSRef *inRef, Boolean waitForReply);
 
-	static void			UpdateFinderObject(const AEDesc &directObjectDesc, Boolean waitForReply, Boolean toSelf);
-	static void			UpdateFinderObject(const FSRef *inRef, Boolean waitForReply, Boolean toSelf);
+	static void			MoveFinderObjectToFolder(const AEDesc &directObjectDesc, const FSRef *inFolderRef, Boolean waitForReply);
 
-#if COMPILE_FSSPEC_CODE
-	static void			UpdateFinderObject(const FSSpec *inSpec, Boolean waitForReply, Boolean toSelf);
-#endif
+	static void			MoveFinderObjectToFolder(const FSRef *inFileRef, const FSRef *inFolderRef, Boolean waitForReply);
 
-	static void			MoveFinderObjectToFolder(const AEDesc &directObjectDesc, const FSRef *inFolderRef, Boolean waitForReply, Boolean toSelf);
-
-#if COMPILE_FSSPEC_CODE
-	static void			MoveFinderObjectToFolder(const AEDesc &directObjectDesc, const FSSpec *inFolderSpec, Boolean waitForReply, Boolean toSelf);
-#endif
-
-	static void			MoveFinderObjectToFolder(const FSRef *inFileRef, const FSRef *inFolderRef, Boolean waitForReply, Boolean toSelf);
-
-#if COMPILE_FSSPEC_CODE
-	static void			MoveFinderObjectToFolder(const FSSpec *inFileSpec, const FSSpec *inFolderSpec, Boolean waitForReply, Boolean toSelf);
-#endif
-
-	static OSStatus		GetInsertionLocationAsAliasDesc(AEDesc &outAliasDesc, AEDesc &outFinderObj, Boolean toSelf);
-	static Boolean		IsClickInOpenFinderWindow(const AEDesc *inContext, Boolean doCheckIfFolder, Boolean toSelf);
-	static OSErr		GetFinderWindowViewType(AEDesc &finderObjDesc, FourCharCode &outViewType, Boolean toSelf);
+	static OSStatus		GetInsertionLocationAsAliasDesc(AEDesc &outAliasDesc, AEDesc &outFinderObj);
+	static Boolean		IsClickInOpenFinderWindow(const AEDesc *inContext, Boolean doCheckIfFolder);
+	static OSErr		GetFinderWindowViewType(AEDesc &finderObjDesc, FourCharCode &outViewType);
 
 	static OSErr		DeleteObject(const FSRef *inRef);
-
-#if COMPILE_FSSPEC_CODE
-	static OSErr		DeleteObject(const FSSpec *inSpec);
-#endif
 
 	static Boolean		AEDescHasTextData(const AEDesc &inDesc);
 	static CFStringRef	CreateCFStringFromAEDesc(const AEDesc &inDesc, long inReplaceOption);

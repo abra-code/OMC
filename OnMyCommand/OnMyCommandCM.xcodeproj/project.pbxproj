@@ -1,0 +1,392 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 45;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		E234F8D60D0E85A0001A7780 /* Abracode.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E234F8D50D0E85A0001A7780 /* Abracode.framework */; };
+		E28156CF0B46740C007F4C1E /* app.icns in Resources */ = {isa = PBXBuildFile; fileRef = E28156CE0B46740C007F4C1E /* app.icns */; };
+		E28F6E2A0841AD30004800C0 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C167DFE841241C02AAC07 /* InfoPlist.strings */; };
+		E28F6E4F0841AD30004800C0 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0AA1909FFE8422F4C02AAC07 /* CoreFoundation.framework */; };
+		E28F6E510841AD30004800C0 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E29D23E4045BBC5700A87BAE /* Cocoa.framework */; };
+		E2AF964C0D0B344F00875BB1 /* OnMyCommandCM.cp in Sources */ = {isa = PBXBuildFile; fileRef = E2AF964B0D0B344F00875BB1 /* OnMyCommandCM.cp */; };
+		E2ED3BD80D0B329100481D8F /* ACMPluginProxy.cp in Sources */ = {isa = PBXBuildFile; fileRef = E2ED3BD70D0B329100481D8F /* ACMPluginProxy.cp */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		089C167EFE841241C02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		0AA1909FFE8422F4C02AAC07 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = /System/Library/Frameworks/CoreFoundation.framework; sourceTree = "<absolute>"; };
+		1DED8E4F2222AF8D00A2CAF7 /* AObserver.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AObserver.h; sourceTree = "<group>"; };
+		1DED8E502222AFA800A2CAF7 /* ACMPlugin.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ACMPlugin.h; sourceTree = "<group>"; };
+		1DED8E512222AFEA00A2CAF7 /* DebugSettings.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DebugSettings.h; sourceTree = "<group>"; };
+		1DED8E522222B02700A2CAF7 /* AStdArrayNew.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AStdArrayNew.h; sourceTree = "<group>"; };
+		1DED8E532222B06B00A2CAF7 /* AStdNew.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AStdNew.h; sourceTree = "<group>"; };
+		E2269B9D0EB6DBF90029CCF5 /* AbracodeCommon.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = AbracodeCommon.xcconfig; path = ../AbracodeCommon.xcconfig; sourceTree = SOURCE_ROOT; };
+		E234F8D50D0E85A0001A7780 /* Abracode.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Abracode.framework; path = /Library/Frameworks/Abracode.framework; sourceTree = "<absolute>"; };
+		E242355D0B2E8F1A00D1E25A /* OnMyCommand.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = OnMyCommand.h; path = ../AbracodeFramework/OnMyCommand.h; sourceTree = SOURCE_ROOT; };
+		E24976C40B18435500D1A1DA /* MessagePortListener.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MessagePortListener.h; sourceTree = "<group>"; };
+		E24977430B18C1DC00D1A1DA /* ACFType.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ACFType.h; sourceTree = "<group>"; };
+		E24977440B18C1DC00D1A1DA /* ACFArr.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ACFArr.h; sourceTree = "<group>"; };
+		E24977460B18C1DC00D1A1DA /* ACFDict.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ACFDict.h; sourceTree = "<group>"; };
+		E25898140B3525A5001DCCBE /* ARefCounted.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ARefCounted.h; sourceTree = "<group>"; };
+		E258987C0B352B94001DCCBE /* CFObj.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = CFObj.h; sourceTree = "<group>"; };
+		E28156CE0B46740C007F4C1E /* app.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = app.icns; sourceTree = "<group>"; };
+		E28F6E570841AD30004800C0 /* OnMyCommandCM.plugin */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = OnMyCommandCM.plugin; sourceTree = BUILT_PRODUCTS_DIR; };
+		E28F6E600841ADA1004800C0 /* Info-OnMyCommandCM.plist */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.plist.xml; path = "Info-OnMyCommandCM.plist"; sourceTree = "<group>"; };
+		E290669F0B4086F20033D5A7 /* ARefCounted.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ARefCounted.h; sourceTree = "<group>"; };
+		E29D23E4045BBC5700A87BAE /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
+		E2AF964B0D0B344F00875BB1 /* OnMyCommandCM.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OnMyCommandCM.cp; sourceTree = SOURCE_ROOT; };
+		E2ED3BD70D0B329100481D8F /* ACMPluginProxy.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ACMPluginProxy.cp; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		E28F6E4E0841AD30004800C0 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E28F6E4F0841AD30004800C0 /* CoreFoundation.framework in Frameworks */,
+				E28F6E510841AD30004800C0 /* Cocoa.framework in Frameworks */,
+				E234F8D60D0E85A0001A7780 /* Abracode.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		089C166AFE841209C02AAC07 /* OnMyCommandCM */ = {
+			isa = PBXGroup;
+			children = (
+				08FB77AFFE84173DC02AAC07 /* Source */,
+				089C167CFE841241C02AAC07 /* Resources */,
+				E2269B9D0EB6DBF90029CCF5 /* AbracodeCommon.xcconfig */,
+				089C1671FE841209C02AAC07 /* External Frameworks and Libraries */,
+				19C28FB6FE9D52B211CA2CBB /* Products */,
+			);
+			name = OnMyCommandCM;
+			sourceTree = "<group>";
+		};
+		089C1671FE841209C02AAC07 /* External Frameworks and Libraries */ = {
+			isa = PBXGroup;
+			children = (
+				0AA1909FFE8422F4C02AAC07 /* CoreFoundation.framework */,
+				E29D23E4045BBC5700A87BAE /* Cocoa.framework */,
+				E234F8D50D0E85A0001A7780 /* Abracode.framework */,
+			);
+			name = "External Frameworks and Libraries";
+			sourceTree = "<group>";
+		};
+		089C167CFE841241C02AAC07 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				E28F6E600841ADA1004800C0 /* Info-OnMyCommandCM.plist */,
+				089C167DFE841241C02AAC07 /* InfoPlist.strings */,
+				E28156CE0B46740C007F4C1E /* app.icns */,
+			);
+			name = Resources;
+			sourceTree = "<group>";
+		};
+		08FB77AFFE84173DC02AAC07 /* Source */ = {
+			isa = PBXGroup;
+			children = (
+				1DED8E4E2222AE4400A2CAF7 /* Common */,
+				E2ED3BD70D0B329100481D8F /* ACMPluginProxy.cp */,
+				E2AF964B0D0B344F00875BB1 /* OnMyCommandCM.cp */,
+				E242355D0B2E8F1A00D1E25A /* OnMyCommand.h */,
+			);
+			name = Source;
+			sourceTree = "<group>";
+		};
+		19C28FB6FE9D52B211CA2CBB /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				E28F6E570841AD30004800C0 /* OnMyCommandCM.plugin */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		1DED8E4E2222AE4400A2CAF7 /* Common */ = {
+			isa = PBXGroup;
+			children = (
+				E25898140B3525A5001DCCBE /* ARefCounted.h */,
+				1DED8E502222AFA800A2CAF7 /* ACMPlugin.h */,
+				E24976C40B18435500D1A1DA /* MessagePortListener.h */,
+				E24977430B18C1DC00D1A1DA /* ACFType.h */,
+				E24977440B18C1DC00D1A1DA /* ACFArr.h */,
+				E24977460B18C1DC00D1A1DA /* ACFDict.h */,
+				E290669F0B4086F20033D5A7 /* ARefCounted.h */,
+				E258987C0B352B94001DCCBE /* CFObj.h */,
+				1DED8E512222AFEA00A2CAF7 /* DebugSettings.h */,
+				1DED8E4F2222AF8D00A2CAF7 /* AObserver.h */,
+				1DED8E532222B06B00A2CAF7 /* AStdNew.h */,
+				1DED8E522222B02700A2CAF7 /* AStdArrayNew.h */,
+			);
+			name = Common;
+			path = ../Common;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		E28F6E1B0841AD30004800C0 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		E28F6E1A0841AD30004800C0 /* OnMyCommandCM */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E28101870864959E006192E8 /* Build configuration list for PBXNativeTarget "OnMyCommandCM" */;
+			buildPhases = (
+				E28F6E1B0841AD30004800C0 /* Headers */,
+				E28F6E290841AD30004800C0 /* Resources */,
+				E28F6E2B0841AD30004800C0 /* Sources */,
+				E28F6E4E0841AD30004800C0 /* Frameworks */,
+				E2749C130E27344800BB4454 /* Copy Icon */,
+				E21DA4A20E3AFCC100ACD55F /* Copy to Library */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = OnMyCommandCM;
+			productName = OnMyCommandCM;
+			productReference = E28F6E570841AD30004800C0 /* OnMyCommandCM.plugin */;
+			productType = "com.apple.product-type.bundle";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		089C1669FE841209C02AAC07 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 1010;
+				ORGANIZATIONNAME = Abracode;
+			};
+			buildConfigurationList = E281018B0864959E006192E8 /* Build configuration list for PBXProject "OnMyCommandCM" */;
+			compatibilityVersion = "Xcode 3.1";
+			developmentRegion = English;
+			hasScannedForEncodings = 1;
+			knownRegions = (
+				English,
+				Japanese,
+				French,
+				German,
+			);
+			mainGroup = 089C166AFE841209C02AAC07 /* OnMyCommandCM */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				E28F6E1A0841AD30004800C0 /* OnMyCommandCM */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		E28F6E290841AD30004800C0 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E28F6E2A0841AD30004800C0 /* InfoPlist.strings in Resources */,
+				E28156CF0B46740C007F4C1E /* app.icns in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		E21DA4A20E3AFCC100ACD55F /* Copy to Library */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Copy to Library";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "ditto -rsrc \"$BUILT_PRODUCTS_DIR\"/OnMyCommandCM.plugin '/Library/Contextual Menu Items/OnMyCommandCM.plugin'\n";
+			showEnvVarsInLog = 0;
+		};
+		E2749C130E27344800BB4454 /* Copy Icon */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Copy Icon";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "#copy Icon to folder renaming it to contain return character\nditto -rsrc \"$SRCROOT/Icon.rsrc\" \"$BUILT_PRODUCTS_DIR\"/OnMyCommandCM.plugin/Icon$'\\x0d';\n#make it invisible\n/usr/bin/SetFile -a V \"$BUILT_PRODUCTS_DIR\"/OnMyCommandCM.plugin/Icon$'\\x0d'\n\n#set custom icon flag for the folder\n/usr/bin/SetFile -a C \"$BUILT_PRODUCTS_DIR/OnMyCommandCM.plugin\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		E28F6E2B0841AD30004800C0 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E2ED3BD80D0B329100481D8F /* ACMPluginProxy.cp in Sources */,
+				E2AF964C0D0B344F00875BB1 /* OnMyCommandCM.cp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		089C167DFE841241C02AAC07 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				089C167EFE841241C02AAC07 /* English */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		E28101880864959E006192E8 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				COPY_PHASE_STRIP = NO;
+				DEPLOYMENT_POSTPROCESSING = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				INFOPLIST_FILE = "Info-OnMyCommandCM.plist";
+				PRODUCT_BUNDLE_IDENTIFIER = com.abracode.OnMyCommandCM;
+				PRODUCT_NAME = OnMyCommandCM;
+				WRAPPER_EXTENSION = plugin;
+			};
+			name = Debug;
+		};
+		E28101890864959E006192E8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				COPY_PHASE_STRIP = YES;
+				DEBUGGING_SYMBOLS = NO;
+				DEPLOYMENT_POSTPROCESSING = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				INFOPLIST_FILE = "Info-OnMyCommandCM.plist";
+				PRODUCT_BUNDLE_IDENTIFIER = com.abracode.OnMyCommandCM;
+				PRODUCT_NAME = OnMyCommandCM;
+				WRAPPER_EXTENSION = plugin;
+			};
+			name = Release;
+		};
+		E281018C0864959E006192E8 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = E2269B9D0EB6DBF90029CCF5 /* AbracodeCommon.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"_DEBUG_=1",
+					"_TRACE_=0",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				ONLY_ACTIVE_ARCH = YES;
+			};
+			name = Debug;
+		};
+		E281018D0864959E006192E8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = E2269B9D0EB6DBF90029CCF5 /* AbracodeCommon.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				DEAD_CODE_STRIPPING = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"_DEBUG_=0",
+					"_TRACE_=0",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		E28101870864959E006192E8 /* Build configuration list for PBXNativeTarget "OnMyCommandCM" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E28101880864959E006192E8 /* Debug */,
+				E28101890864959E006192E8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		E281018B0864959E006192E8 /* Build configuration list for PBXProject "OnMyCommandCM" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E281018C0864959E006192E8 /* Debug */,
+				E281018D0864959E006192E8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 089C1669FE841209C02AAC07 /* Project object */;
+}

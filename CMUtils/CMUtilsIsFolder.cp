@@ -12,31 +12,6 @@
 
 #include "CMUtils.h"
 
-#if COMPILE_FSSPEC_CODE
-#include "MoreFilesExtras.h"
-
-OSErr
-CMUtils::IsFolder(const FSSpec *inSpec, Boolean &outIsFolder)
-{
-	outIsFolder = false;
-
-	if(inSpec == NULL)
-		return paramErr;
-
-	CInfoPBRec pb;
-	OSErr err = GetCatInfoNoName(inSpec->vRefNum, inSpec->parID, inSpec->name, &pb);
-	if ( err == noErr )
-	{
-		if ( (pb.dirInfo.ioFlAttrib & kioFlAttribDirMask) != 0 )
-		{
-			outIsFolder = true;
-		}
-	}
-	return err;
-}
-
-#endif //COMPILE_FSSPEC_CODE
-
 OSErr
 CMUtils::IsFolder(const FSRef *inRef, Boolean &outIsFolder)
 {

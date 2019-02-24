@@ -90,7 +90,8 @@ CMUtils::CreateCFStringFromAEDesc(const AEDesc &inDesc, long inReplaceOption)
 	if( (inDesc.descriptorType == typeUnicodeText) && (inDesc.dataHandle != NULL) )
 	{
 		Size byteCount = ::AEGetDescDataSize( &inDesc );
-		UniChar *newBuffer = (UniChar *)::NewPtrClear(byteCount);
+        AStdMalloc<UniChar> wholeBuffer(byteCount/sizeof(UniChar));
+        UniChar *newBuffer = wholeBuffer;
 		if(newBuffer != NULL)
 		{
 			if( ::AEGetDescData( &inDesc, newBuffer, byteCount ) == noErr)
@@ -108,13 +109,12 @@ CMUtils::CreateCFStringFromAEDesc(const AEDesc &inDesc, long inReplaceOption)
 			
 				outString = ::CFStringCreateWithCharacters(kCFAllocatorDefault, newBuffer, byteCount/sizeof(UniChar) );
 			}	
-			::DisposePtr( (Ptr)newBuffer );
 		}
 	}
 	else if( (inDesc.descriptorType == typeChar) && (inDesc.dataHandle != NULL) )
 	{
 		Size byteCount = ::AEGetDescDataSize( &inDesc );
-		char *newBuffer = ::NewPtrClear(byteCount);
+        AStdMalloc<char> newBuffer(byteCount);
 		if(newBuffer != NULL)
 		{
 			if( ::AEGetDescData( &inDesc, newBuffer, byteCount ) == noErr)
@@ -124,9 +124,8 @@ CMUtils::CreateCFStringFromAEDesc(const AEDesc &inDesc, long inReplaceOption)
 				else if(inReplaceOption == kTextReplaceCRsWithLFs)
 					ReplaceCharacters(newBuffer, byteCount, 0x0D, 0x0A);
 
-				outString = ::CFStringCreateWithBytes(kCFAllocatorDefault, (const UInt8*)newBuffer, byteCount, CFStringGetSystemEncoding(), true);
+				outString = ::CFStringCreateWithBytes(kCFAllocatorDefault, (const UInt8*)newBuffer.Get(), byteCount, CFStringGetSystemEncoding(), true);
 			}	
-			::DisposePtr( (Ptr)newBuffer );
 		}
 	}
 	else if( (inDesc.descriptorType != typeNull) && (inDesc.dataHandle != NULL) ) 
@@ -139,7 +138,8 @@ CMUtils::CreateCFStringFromAEDesc(const AEDesc &inDesc, long inReplaceOption)
 				if(textDesc.GetDataStorage() != NULL)
 				{
 					Size byteCount = ::AEGetDescDataSize( textDesc );
-					UniChar *newBuffer = (UniChar *)::NewPtrClear(byteCount);
+                    AStdMalloc<UniChar> wholeBuffer(byteCount/sizeof(UniChar));
+                    UniChar *newBuffer = wholeBuffer;
 					if(newBuffer != NULL)
 					{
 						if( ::AEGetDescData( textDesc, newBuffer, byteCount ) == noErr)
@@ -157,7 +157,6 @@ CMUtils::CreateCFStringFromAEDesc(const AEDesc &inDesc, long inReplaceOption)
 
 							outString = ::CFStringCreateWithCharacters(kCFAllocatorDefault, newBuffer, byteCount/sizeof(UniChar) );
 						}	
-						::DisposePtr( (Ptr)newBuffer );
 					}
 				}
 		}
@@ -167,7 +166,7 @@ CMUtils::CreateCFStringFromAEDesc(const AEDesc &inDesc, long inReplaceOption)
 				if(textDesc.GetDataStorage() != NULL)
 				{
 					Size byteCount = ::AEGetDescDataSize( textDesc );
-					char *newBuffer = ::NewPtrClear(byteCount);
+                    AStdMalloc<char> newBuffer(byteCount);
 					if(newBuffer != NULL)
 					{
 						if( ::AEGetDescData( textDesc, newBuffer, byteCount ) == noErr)
@@ -177,9 +176,8 @@ CMUtils::CreateCFStringFromAEDesc(const AEDesc &inDesc, long inReplaceOption)
 							else if(inReplaceOption == kTextReplaceCRsWithLFs)
 								ReplaceCharacters(newBuffer, byteCount, 0x0D, 0x0A);
 
-							outString = ::CFStringCreateWithBytes(kCFAllocatorDefault, (const UInt8*)newBuffer, byteCount, CFStringGetSystemEncoding(), true);
+							outString = ::CFStringCreateWithBytes(kCFAllocatorDefault, (const UInt8*)newBuffer.Get(), byteCount, CFStringGetSystemEncoding(), true);
 						}	
-						::DisposePtr( (Ptr)newBuffer );
 					}
 				}
 		}

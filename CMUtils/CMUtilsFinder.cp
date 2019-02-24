@@ -23,22 +23,16 @@
 //it just means that the event was sent successfully
 
 OSErr
-CMUtils::SendAppleEventToFinder( AEEventClass theAEEventClass, AEEventID theAEEventID, const AEDesc &directObjectDesc, Boolean waitForReply /*=false*/, Boolean toSelf /*=false*/)
+CMUtils::SendAppleEventToFinder( AEEventClass theAEEventClass, AEEventID theAEEventID, const AEDesc &directObjectDesc, Boolean waitForReply /*=false*/)
 {
-	if(toSelf)
-		return CMUtils::SendAppleEventToSelf(theAEEventClass, theAEEventID, directObjectDesc);
-
 	return CMUtils::SendAppleEventToRunningApplication( 'MACS', theAEEventClass, theAEEventID, directObjectDesc, waitForReply );
 }
 
 OSErr
 CMUtils::SendAEWithTwoObjToFinder( AEEventClass theAEEventClass, AEEventID theAEEventID,
 									AEKeyword keyOne, const AEDesc &objOne,
-									AEKeyword keyTwo, const AEDesc &objTwo, Boolean waitForReply /*=false*/, Boolean toSelf /*=false*/ )
+									AEKeyword keyTwo, const AEDesc &objTwo, Boolean waitForReply /*=false*/)
 {
-	if(toSelf)
-		return CMUtils::SendAEWithTwoObjToSelf(theAEEventClass, theAEEventID, keyOne, objOne, keyTwo, objTwo);
-
 	return CMUtils::SendAEWithTwoObjToRunningApp( 'MACS', theAEEventClass, theAEEventID, keyOne, objOne, keyTwo, objTwo, waitForReply );
 }
 
@@ -46,42 +40,21 @@ OSErr
 CMUtils::SendAEWithThreeObjToFinder( AEEventClass theAEEventClass, AEEventID theAEEventID,
 									AEKeyword keyOne, const AEDesc &objOne,
 									AEKeyword keyTwo, const AEDesc &objTwo,
-									AEKeyword keyThree, const AEDesc &objThree, Boolean waitForReply /*=false*/, Boolean toSelf /*=false*/ )
+									AEKeyword keyThree, const AEDesc &objThree, Boolean waitForReply /*=false*/)
 {
-	if(toSelf)
-		return CMUtils::SendAEWithThreeObjToSelf(theAEEventClass, theAEEventID, keyOne, objOne, keyTwo, objTwo, keyThree, objThree);
-
 	return CMUtils::SendAEWithThreeObjToRunningApp( 'MACS', theAEEventClass, theAEEventID, keyOne, objOne, keyTwo, objTwo, keyThree, objThree, waitForReply );
 }
 
 #pragma mark -
 
 void
-CMUtils::PutFinderObjectToTrash(const AEDesc &directObjectDesc, Boolean waitForReply, Boolean toSelf )
+CMUtils::PutFinderObjectToTrash(const AEDesc &directObjectDesc, Boolean waitForReply)
 {
-	CMUtils::SendAppleEventToFinder( kAEFinderSuite, kAESync, directObjectDesc, waitForReply, toSelf );
+	CMUtils::SendAppleEventToFinder( kAEFinderSuite, kAESync, directObjectDesc, waitForReply );
 }
 
-#if COMPILE_FSSPEC_CODE
-
 void
-CMUtils::PutFinderObjectToTrash(const FSSpec *inSpec, Boolean waitForReply, Boolean toSelf)
-{
-	if(inSpec != NULL)
-	{
-		StAEDesc fileDesc;
-		OSErr err = CMUtils::CreateAliasDesc( inSpec, fileDesc );
-		if(err == noErr)
-		{
-			CMUtils::PutFinderObjectToTrash(fileDesc, waitForReply, toSelf );
-		}
-	}
-}
-
-#endif //COMPILE_FSSPEC_CODE
-
-void
-CMUtils::PutFinderObjectToTrash(const FSRef *inRef, Boolean waitForReply, Boolean toSelf)
+CMUtils::PutFinderObjectToTrash(const FSRef *inRef, Boolean waitForReply)
 {
 	if(inRef != NULL)
 	{
@@ -89,7 +62,7 @@ CMUtils::PutFinderObjectToTrash(const FSRef *inRef, Boolean waitForReply, Boolea
 		OSErr err = CMUtils::CreateAliasDesc( inRef, fileDesc );
 		if(err == noErr)
 		{
-			CMUtils::PutFinderObjectToTrash(fileDesc, waitForReply, toSelf );
+			CMUtils::PutFinderObjectToTrash(fileDesc, waitForReply);
 		}
 	}
 }
@@ -99,13 +72,13 @@ CMUtils::PutFinderObjectToTrash(const FSRef *inRef, Boolean waitForReply, Boolea
 #pragma mark -
 
 void
-CMUtils::UpdateFinderObject(const AEDesc &directObjectDesc, Boolean waitForReply, Boolean toSelf )
+CMUtils::UpdateFinderObject(const AEDesc &directObjectDesc, Boolean waitForReply)
 {
-	CMUtils::SendAppleEventToFinder( kAEFinderSuite, kAESync, directObjectDesc, waitForReply, toSelf );
+	CMUtils::SendAppleEventToFinder( kAEFinderSuite, kAESync, directObjectDesc, waitForReply);
 }
 
 void
-CMUtils::UpdateFinderObject(const FSRef *inRef, Boolean waitForReply, Boolean toSelf )
+CMUtils::UpdateFinderObject(const FSRef *inRef, Boolean waitForReply)
 {
 	if(inRef != NULL)
 	{
@@ -113,33 +86,16 @@ CMUtils::UpdateFinderObject(const FSRef *inRef, Boolean waitForReply, Boolean to
 		OSErr err = CMUtils::CreateAliasDesc( inRef, fileDesc );
 		if(err == noErr)
 		{
-			CMUtils::UpdateFinderObject( fileDesc, waitForReply, toSelf );
+			CMUtils::UpdateFinderObject( fileDesc, waitForReply);
 		}
 	}
 }
 
-#if COMPILE_FSSPEC_CODE
-
-void
-CMUtils::UpdateFinderObject(const FSSpec *inSpec, Boolean waitForReply, Boolean toSelf )
-{
-	if(inSpec != NULL)
-	{
-		StAEDesc fileDesc;
-		OSErr err = CMUtils::CreateAliasDesc( inSpec, fileDesc );
-		if(err == noErr)
-		{
-			CMUtils::UpdateFinderObject( fileDesc, waitForReply, toSelf );
-		}
-	}
-}
-
-#endif //COMPILE_FSSPEC_CODE
 
 #pragma mark -
 
 void
-CMUtils::MoveFinderObjectToFolder(const AEDesc &directObjectDesc, const FSRef *inFolderRef, Boolean waitForReply, Boolean toSelf )
+CMUtils::MoveFinderObjectToFolder(const AEDesc &directObjectDesc, const FSRef *inFolderRef, Boolean waitForReply)
 {
 	if( inFolderRef != NULL )
 	{
@@ -149,34 +105,14 @@ CMUtils::MoveFinderObjectToFolder(const AEDesc &directObjectDesc, const FSRef *i
 		{
 			CMUtils::SendAEWithTwoObjToFinder( kAECoreSuite, kAEMove,
 													keyDirectObject, directObjectDesc,
-													keyAEDestination, folderDesc, waitForReply, toSelf );
+													keyAEDestination, folderDesc, waitForReply);
 		}
 	}
 }
 
 
-#if COMPILE_FSSPEC_CODE
-
 void
-CMUtils::MoveFinderObjectToFolder(const AEDesc &directObjectDesc, const FSSpec *inFolderSpec, Boolean waitForReply, Boolean toSelf )
-{
-	if( inFolderSpec != NULL )
-	{
-		StAEDesc folderDesc;
-		OSErr err = CMUtils::CreateAliasDesc( inFolderSpec, folderDesc );
-		if(err == noErr)
-		{
-			CMUtils::SendAEWithTwoObjToFinder( kAECoreSuite, kAEMove,
-													keyDirectObject, directObjectDesc,
-													keyAEDestination, folderDesc, waitForReply, toSelf );
-		}
-	}
-}
-
-#endif //COMPILE_FSSPEC_CODE
-
-void
-CMUtils::MoveFinderObjectToFolder(const FSRef *inFileRef, const FSRef *inFolderRef, Boolean waitForReply, Boolean toSelf )
+CMUtils::MoveFinderObjectToFolder(const FSRef *inFileRef, const FSRef *inFolderRef, Boolean waitForReply)
 {
 	if( (inFileRef != NULL) && (inFolderRef != NULL) )
 	{
@@ -184,43 +120,19 @@ CMUtils::MoveFinderObjectToFolder(const FSRef *inFileRef, const FSRef *inFolderR
 		OSErr err = CMUtils::CreateAliasDesc( inFileRef, fileDesc );
 		if(err == noErr)
 		{
-			CMUtils::MoveFinderObjectToFolder(fileDesc, inFolderRef, waitForReply, toSelf );
+			CMUtils::MoveFinderObjectToFolder(fileDesc, inFolderRef, waitForReply);
 		}
 	}
 }
 
-
-#if COMPILE_FSSPEC_CODE
-
-void
-CMUtils::MoveFinderObjectToFolder(const FSSpec *inFileSpec, const FSSpec *inFolderSpec, Boolean waitForReply, Boolean toSelf )
-{
-	if( inFileSpec != NULL )
-	{
-		StAEDesc fileDesc;
-		OSErr err = CMUtils::CreateAliasDesc( inFileSpec, fileDesc );
-		if(err == noErr)
-		{
-			CMUtils::MoveFinderObjectToFolder(fileDesc, inFolderSpec, waitForReply, toSelf );
-		}
-	}
-}
-
-#endif //COMPILE_FSSPEC_CODE
 
 OSStatus
-CMUtils::GetInsertionLocationAsAliasDesc(AEDesc &outAliasDesc, AEDesc &outFinderObj, Boolean toSelf)
+CMUtils::GetInsertionLocationAsAliasDesc(AEDesc &outAliasDesc, AEDesc &outFinderObj)
 {
-	OSErr err = noErr;
-
-	if(toSelf)
-		err = MoreAETellSelfToGetAEDesc(pInsertionLoc, typeWildCard, &outFinderObj);
-	else
-		err = MoreAETellAppToGetAEDesc('MACS', pInsertionLoc, typeWildCard, &outFinderObj);
-
+	OSErr err = MoreAETellAppToGetAEDesc('MACS', pInsertionLoc, typeWildCard, &outFinderObj);
 	if(err != noErr)
 	{
-		LOG_CSTR( "OMC->CMUtils::GetInsertionLocation. MoreAETellSelfToGetAEDesc failed\n" );
+		LOG_CSTR( "OMC->CMUtils::GetInsertionLocation. MoreAETellAppToGetAEDesc failed\n" );
 
 #if 0 //_DEBUG_
 		{
@@ -250,10 +162,7 @@ CMUtils::GetInsertionLocationAsAliasDesc(AEDesc &outAliasDesc, AEDesc &outFinder
 	}
 #endif
 	
-	if(toSelf)
-		err = MoreAETellSelfToCoerceAEDescRequestingType(&outFinderObj, typeAlias, &outAliasDesc);
-	else
-		err = MoreAETellAppToCoerceAEDescRequestingType('MACS', &outFinderObj, typeAlias, &outAliasDesc);
+    err = MoreAETellAppToCoerceAEDescRequestingType('MACS', &outFinderObj, typeAlias, &outAliasDesc);
 
 #if _DEBUG_
 	{
@@ -278,7 +187,7 @@ CMUtils::GetInsertionLocationAsAliasDesc(AEDesc &outAliasDesc, AEDesc &outFinder
 //if you know that selected item is a folder, pass false for doCheckIfFolder to prevent redundant checking
 
 Boolean
-CMUtils::IsClickInOpenFinderWindow(const AEDesc *inContext, Boolean doCheckIfFolder, Boolean toSelf)
+CMUtils::IsClickInOpenFinderWindow(const AEDesc *inContext, Boolean doCheckIfFolder)
 {
 	TRACE_CSTR( "Enter CMUtils::IsClickInOpenFinderWindow\n" );
 	if(inContext == NULL)
@@ -357,7 +266,7 @@ CMUtils::IsClickInOpenFinderWindow(const AEDesc *inContext, Boolean doCheckIfFol
 	//there is a bug in Finder 10.3 that it returns non-container items (like plain file)
 	//when requested for insertion location in column view
 	
-	err = CMUtils::GetInsertionLocationAsAliasDesc(insertionLocAlias, finderObjDesc, toSelf);
+	err = CMUtils::GetInsertionLocationAsAliasDesc(insertionLocAlias, finderObjDesc);
 	
 	if(err != noErr)
 	{
@@ -379,7 +288,7 @@ CMUtils::IsClickInOpenFinderWindow(const AEDesc *inContext, Boolean doCheckIfFol
 	if(refsEqual)
 	{
 		FourCharCode viewType = 0;
-		err = GetFinderWindowViewType(finderObjDesc, viewType, toSelf);
+		err = GetFinderWindowViewType(finderObjDesc, viewType);
 		//there is a bug in Finder 10.3 (sic! another one!) that it returns error when asked for view type of window containing application or alias object
 		//in this case we interpret that returned error means that our click is indeed on some item
 		if(err != noErr)
@@ -410,33 +319,26 @@ CMUtils::IsClickInOpenFinderWindow(const AEDesc *inContext, Boolean doCheckIfFol
 //'lsvw' - list view
 
 OSErr
-CMUtils::GetFinderWindowViewType(AEDesc &finderObjDesc, FourCharCode &outViewType, Boolean toSelf)
+CMUtils::GetFinderWindowViewType(AEDesc &finderObjDesc, FourCharCode &outViewType)
 {
 	OSErr err = noErr;
 	outViewType = 0;
 
 	StAEDesc windowObjDesc;
-
-	if(toSelf)
-		err = MoreAETellMyObjectToGetAEDesc( &finderObjDesc, cContainerWindow, typeWildCard, windowObjDesc);
-	else
-		err = MoreAETellAppObjectToGetAEDesc('MACS', &finderObjDesc, cContainerWindow, typeWildCard, windowObjDesc);
+    err = MoreAETellAppObjectToGetAEDesc('MACS', &finderObjDesc, cContainerWindow, typeWildCard, windowObjDesc);
 
 	if(err != noErr)										
 	{
-		DEBUG_PSTR( "\pGetFinderWindowViewType->MoreAETellMyObjectToGetAEDesc failed to get container window" );
+		DEBUG_PSTR( "\pGetFinderWindowViewType->MoreAETellAppObjectToGetAEDesc failed to get container window" );
 		return err;
 	}
 
 	StAEDesc viewTypeDesc;
-	if(toSelf)
-		err = MoreAETellMyObjectToGetAEDesc( windowObjDesc, pView, typeWildCard, viewTypeDesc);
-	else
-		err = MoreAETellAppObjectToGetAEDesc('MACS', windowObjDesc, pView, typeWildCard, viewTypeDesc);
+    err = MoreAETellAppObjectToGetAEDesc('MACS', windowObjDesc, pView, typeWildCard, viewTypeDesc);
 
 	if(err != noErr)										
 	{
-		DEBUG_PSTR( "\pGetFinderWindowViewType->MoreAETellMyObjectToGetAEDesc failed to get view type" );
+		DEBUG_PSTR( "\pGetFinderWindowViewType->MoreAETellAppObjectToGetAEDesc failed to get view type" );
 		return err;
 	}
 

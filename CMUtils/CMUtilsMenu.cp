@@ -18,7 +18,7 @@
 #include <Carbon/Carbon.h>
 
 
-#if UNIVERSAL_INTERFACES_VERSION < 0x0342
+#if 0// UNIVERSAL_INTERFACES_VERSION < 0x0342
 
 //these enums used to be present in ContextualMenuPlugins.h, now they are defined in Menus.h
 enum

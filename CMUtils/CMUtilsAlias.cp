@@ -32,31 +32,6 @@ CMUtils::CreateAliasDesc( const AliasHandle inAliasH, AEDesc *outAliasAEDesc )
 	return err;
 }
 
-#if COMPILE_FSSPEC_CODE
-
-OSErr
-CMUtils::CreateAliasDesc( const FSSpec *inFSSpec, AEDesc *outAliasAEDesc )
-{
-	OSErr			err = noErr;
-	AliasHandle		aliasHandle;
-
-	err = ::NewAlias( NULL, inFSSpec, &aliasHandle);
-	if( (err == noErr) && (aliasHandle == NULL) )
-	{
-		err = paramErr;
-	}
-
-	if( err == noErr )
-	{
-		err = CMUtils::CreateAliasDesc( aliasHandle, outAliasAEDesc );
-		::DisposeHandle( (Handle)aliasHandle );
-	}
-
-	return err;
-}
-
-#endif //COMPILE_FSSPEC_CODE
-
 OSErr
 CMUtils::CreateAliasDesc( const FSRef *inFSRef, AEDesc *outAliasAEDesc )
 {

@@ -14,22 +14,6 @@
 #include "DebugSettings.h"
 
 //this function returns the name of the application currently executing the contextual menu plug-in
-OSErr
-CMUtils::GetHostName(Str255 outName)
-{
-	outName[0] = 0;
-	ProcessSerialNumber psn = { 0, kCurrentProcess };
-	
-	ProcessInfoRec	info;
-	info.processInfoLength	= sizeof(ProcessInfoRec);
-	info.processName		= outName;
-#ifdef __LP64__
-	info.processAppRef = NULL;
-#else
-	info.processAppSpec = NULL;
-#endif
-	return ::GetProcessInformation( &psn, &info );	
-}
 
 CFStringRef
 CMUtils::CopyHostName()

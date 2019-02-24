@@ -12,51 +12,6 @@
 #import "OMCPanel.h"
 #import "OMCCustomWindow.h"
 
-#ifndef __LP64__
-
-EventHandlerUPP gOMCWindowCarbonEventHandlerUPP = NULL;
-
-pascal OSStatus
-OMCWindowCarbonEventHandlerProc( EventHandlerCallRef inCallRef,
-									EventRef inEvent,
-									void* inUserData )
-{
-	OSStatus err = eventNotHandledErr;
-	UInt32     eventKind  = GetEventKind( inEvent );
-	UInt32     eventClass  = GetEventClass( inEvent );
-
-	if(eventClass == kEventClassCommand)
-	{
-		switch( eventKind )
-		{
-			case  kEventCommandUpdateStatus:
-			{
-				HICommand myCommand;
-				GetEventParameter( inEvent, kEventParamDirectObject, typeHICommand, NULL, sizeof(HICommand), NULL, &myCommand );
-				if(myCommand.commandID == kHICommandClose)
-				{
-					//NSLog(@"OMCWindowCarbonEventHandlerProc: capturing request for status of kHICommandClose");
-					if( (myCommand.attributes == kHICommandFromMenu) && (myCommand.menu.menuRef != NULL) )
-					{
-						//NSLog(@"OMCWindowCarbonEventHandlerProc: kHICommandClose coming from menu - trying to disable");
-						//NSLog(@"OMCWindowCarbonEventHandlerProc: kHICommandClose menu item index = %d", (int)myCommand.menu.menuItemIndex);
-						err = noErr;
-
-						DisableMenuItem(
-							myCommand.menu.menuRef,
-							myCommand.menu.menuItemIndex);
-					}
-				}
-			}
-			break;
-		}
-	}
-	
-	return err;
-}
-
-#endif //__LP64__
-
 
 static NSPoint sCascadeOffset = NSZeroPoint;
 
@@ -87,26 +42,6 @@ CreateOutputWindowController(const OutputWindowSettings &inSettings, OutputWindo
 			if(controller != NULL)
 			{
 				[controller setup: &inSettings withHandler:inHandler];
-
-		#ifndef __LP64__
-				NSWindow *nsWindow = [controller window];
-				if(nsWindow != NULL)
-				{
-					WindowRef carbonWindowRef = (WindowRef)[nsWindow windowRef];
-					if(carbonWindowRef != NULL)
-					{
-						EventTypeSpec windowEvents[1];
-						windowEvents[0].eventClass = kEventClassCommand;
-						windowEvents[0].eventKind = kEventCommandUpdateStatus;
-						if ( gOMCWindowCarbonEventHandlerUPP == NULL )
-							gOMCWindowCarbonEventHandlerUPP = NewEventHandlerUPP( OMCWindowCarbonEventHandlerProc );
-						/*OSStatus err =*/ InstallWindowEventHandler( carbonWindowRef,
-												gOMCWindowCarbonEventHandlerUPP,
-												GetEventTypeCount(windowEvents),
-												windowEvents, NULL, NULL );
-					}
-				}
-		#endif //__LP64__
 			}
 		}
 		@catch (NSException *localException)

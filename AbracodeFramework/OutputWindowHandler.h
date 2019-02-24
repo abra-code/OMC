@@ -12,9 +12,7 @@
 #pragma once
 
 #include <Carbon/Carbon.h>
-#include "AStdNew.h"
 #include "AObserver.h"
-#include "AStdNew.h"
 #include "CFObj.h"
 #include "OMCOutputWindowController.h"
 

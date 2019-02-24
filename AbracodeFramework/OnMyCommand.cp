@@ -43,7 +43,7 @@
 #include "MoreAppleEvents.h"
 //#include "AAEDesc.h"
 #include "NibDialogControl.h"
-#include "OMCCarbonDialog.h"
+//#include "OMCCarbonDialog.h"
 #include "SubmenuTree.h"
 #include "StSwitchToFront.h"
 #include "DefaultExternBundle.h"
@@ -306,7 +306,7 @@ OnMyCommandCM::OnMyCommandCM(CFPropertyListRef inPlistRef)
 	: ACMPlugin( kBundleIDString ), mPlistURL(NULL),
 	mSysVersion(100300), mCommandList(NULL), mCommandCount(0), mCurrCommandIndex(0), mObjectCount(0),
 	mCurrObjectIndex(0), mError(noErr),
-	mIsTextInClipboard(false), mIsOpenFolder(false), mIsNullContext(false), mIsTextContext(false), mRunningInFinder(false),
+	mIsTextInClipboard(false), mIsOpenFolder(false), mIsNullContext(false), mIsTextContext(false),
 	mCMPluginMode(true), mRunningInShortcutsObserver(false)
 {
 	TRACE_CSTR( "OnMyCommandCM::OnMyCommandCM\n" );
@@ -533,12 +533,14 @@ OnMyCommandCM::CommonContextCheck( const AEDesc *inContext, CFTypeRef inCFContex
 
 	if(mMyHostName != NULL)
 	{
+#if IN_PROC_CM //64-bit apps no longer load CM plug-ins in-proc
 		if( kCFCompareEqualTo == ::CFStringCompare( mMyHostName, CFSTR("Finder"), 0 ) )
 		{
-			mRunningInFinder = true;
 			TRACE_CSTR( "OnMyCommandCM->CMPluginExamineContext. running in Finder\n" );
 		}
-		else if( (kCFCompareEqualTo == ::CFStringCompare( mMyHostName, CFSTR("Shortcuts"), 0)) ||
+		else
+#endif
+        if( (kCFCompareEqualTo == ::CFStringCompare( mMyHostName, CFSTR("Shortcuts"), 0)) ||
 				 (kCFCompareEqualTo == ::CFStringCompare( mMyHostName, CFSTR("Shortcuts32"), 0)) ||
 				 (kCFCompareEqualTo == ::CFStringCompare( mMyHostName, CFSTR("OMCEdit"), 0)) )
 		{
@@ -635,9 +637,9 @@ OnMyCommandCM::CommonContextCheck( const AEDesc *inContext, CFTypeRef inCFContex
 	}
 
 	if(	anythingSelected && (mSysVersion >= 100300) && ((theFlags & kListOutMultipleObjects) == 0) && isFolder &&
-		(mRunningInFinder || (mRunningInShortcutsObserver && frontProcessIsFinder)) )
+		(mRunningInShortcutsObserver && frontProcessIsFinder) )
 	{//single folder selected in Finder in 10.3 - check what it is
-		mIsOpenFolder = CMUtils::IsClickInOpenFinderWindow(inContext, false, mRunningInFinder);
+		mIsOpenFolder = CMUtils::IsClickInOpenFinderWindow(inContext, false);
 		anythingSelected = ! mIsOpenFolder;
 	}
 	else if( !anythingSelected )
@@ -884,14 +886,9 @@ OnMyCommandCM::HandleSelection( AEDesc *inContext, SInt32 inCommandID )
 				}
 				else
 				{
-#ifndef __LP64__
-					if( RunNibDialog( currCommand ) == false )
-						throw OSStatus(userCanceledErr);
-#else
 					CFObj<CFStringRef> dynamicCommandName( CreateDynamicCommandName(currCommand, currCommand.localizationTableName, localizationBundle) );
 					DisplayAlert(mBundleRef, dynamicCommandName, CFSTR("CARBON_NIB_64_BIT"), kCFUserNotificationStopAlertLevel );
 					throw OSStatus(userCanceledErr);
-#endif //__LP64__
 				}
 			}
 
@@ -1620,11 +1617,11 @@ OnMyCommandCM::ProcessObjects()
 		switch(currCommand.executionMode)
 		{
 			case kExecTerminal:
-				ExecuteInTerminal( theCommand, currCommand.openNewTerminalSession, currCommand.bringTerminalToFront, mMyHostName );
+				ExecuteInTerminal( theCommand, currCommand.openNewTerminalSession, currCommand.bringTerminalToFront);
 			break;
 			
 			case kExecITerm:
-				ExecuteInITerm( theCommand, currCommand.iTermShellPath, currCommand.openNewTerminalSession, currCommand.bringTerminalToFront, mMyHostName );
+				ExecuteInITerm( theCommand, currCommand.iTermShellPath, currCommand.openNewTerminalSession, currCommand.bringTerminalToFront);
 			break;
 
 			case kExecSilentPOpen:
@@ -1709,11 +1706,11 @@ OnMyCommandCM::ProcessCommandWithText(const CommandDescription &currCommand, CFS
 	switch(currCommand.executionMode)
 	{
 		case kExecTerminal:
-			ExecuteInTerminal( theCommand, currCommand.openNewTerminalSession, currCommand.bringTerminalToFront, mMyHostName );
+			ExecuteInTerminal( theCommand, currCommand.openNewTerminalSession, currCommand.bringTerminalToFront );
 		break;
 		
 		case kExecITerm:
-			ExecuteInITerm( theCommand, currCommand.iTermShellPath, currCommand.openNewTerminalSession, currCommand.bringTerminalToFront, mMyHostName );
+			ExecuteInITerm( theCommand, currCommand.iTermShellPath, currCommand.openNewTerminalSession, currCommand.bringTerminalToFront );
 		break;
 
 		case kExecSilentPOpen:
@@ -1766,7 +1763,7 @@ OnMyCommandCM::ProcessCommandWithText(const CommandDescription &currCommand, CFS
 }
 
 void
-ExecuteInTerminal(CFStringRef inCommand, bool openInNewWindow, bool bringToFront, CFStringRef inHostAppName)
+ExecuteInTerminal(CFStringRef inCommand, bool openInNewWindow, bool bringToFront)
 {
 	if(inCommand == NULL)
 		return;
@@ -1775,37 +1772,9 @@ ExecuteInTerminal(CFStringRef inCommand, bool openInNewWindow, bool bringToFront
 	
 	OSStatus err = noErr;
 	StAEDesc theCommandDesc;
-	
-	bool sendToSelf = false;
-	if( inHostAppName != NULL )
-		sendToSelf = (kCFCompareEqualTo == ::CFStringCompare( inHostAppName, CFSTR("Terminal"), 0 ) );
-
-#if 1
 
 	//Send UTF-16 text
 	err = CMUtils::CreateUniTextDescFromCFString(inCommand, theCommandDesc);
-
-#else
-
-	//Send UTF-8 text
-	CFIndex uniCount = ::CFStringGetLength(inCommand);
-	CFIndex maxCount = ::CFStringGetMaximumSizeForEncoding( uniCount, kCFStringEncodingUTF8 );
-  	Ptr theString = ::NewPtrClear(maxCount +1);//one more for 0-termination
-  	if(theString != NULL)
-	{
-		if( ::CFStringGetCString( inCommand, theString, maxCount +1, kCFStringEncodingUTF8) )
-		{
-			SInt32 actualLen = ::strlen(theString);
-			err = ::AECreateDesc(typeChar, theString, actualLen, theCommandDesc);
-		}
-		::DisposePtr(theString);
-	}
-	else
-	{
-		err = memFullErr;
-	}
-
-#endif
 
 	if(err != noErr)
 		return;
@@ -1814,7 +1783,7 @@ ExecuteInTerminal(CFStringRef inCommand, bool openInNewWindow, bool bringToFront
 	::Gestalt(gestaltSystemVersion, &sysVersion);
 	
 
-	err = SendEventToTerminal(theCommandDesc, sysVersion, openInNewWindow, bringToFront, sendToSelf);
+	err = SendEventToTerminal(theCommandDesc, sysVersion, openInNewWindow, bringToFront);
 
 	if(err == noErr)
 		return;//sucess situation - we may exit now
@@ -1850,7 +1819,7 @@ ExecuteInTerminal(CFStringRef inCommand, bool openInNewWindow, bool bringToFront
 		{//we only try 10 times and then give up
 			::Delay(60, NULL); //wait 1 second before trying to send the event
 
-			err = SendEventToTerminal(theCommandDesc, sysVersion, false, bringToFront, sendToSelf);//after terminal launch a new window is open so never open another one
+			err = SendEventToTerminal(theCommandDesc, sysVersion, false, bringToFront);//after terminal launch a new window is open so never open another one
 			
 			if( (err == connectionInvalid) || (err == procNotFound) )
 			{
@@ -1874,7 +1843,7 @@ ExecuteInTerminal(CFStringRef inCommand, bool openInNewWindow, bool bringToFront
 }
 
 OSErr
-SendEventToTerminal(const AEDesc &inCommandDesc, SInt32 sysVersion, bool openInNewWindow, bool bringToFront, bool toSelf)
+SendEventToTerminal(const AEDesc &inCommandDesc, SInt32 sysVersion, bool openInNewWindow, bool bringToFront)
 {
 	OSErr err = noErr;
 	AEKeyword theKeyword = (sysVersion >= 0x1020) ? keyDirectObject : 'cmnd';//Terminal in Mac OS 10.1.x needs different event
@@ -1884,23 +1853,13 @@ SendEventToTerminal(const AEDesc &inCommandDesc, SInt32 sysVersion, bool openInN
 
 	if( openInNewWindow )
 	{
-		if(toSelf)
-			err = CMUtils::SendAppleEventWithObjToSelf( kAECoreSuite, kAEDoScript, theKeyword, inCommandDesc );
-		else
-			err = CMUtils::SendAEWithObjToRunningApp( kTerminalAppBundleID, kAECoreSuite, kAEDoScript, theKeyword, inCommandDesc );
+        err = CMUtils::SendAEWithObjToRunningApp( kTerminalAppBundleID, kAECoreSuite, kAEDoScript, theKeyword, inCommandDesc );
 	}
 	else
 	{
 		//find front window
 		StAEDesc theFrontWindow;
-		if(toSelf)
-			err = MoreAETellSelfToGetElementAt(
-										cWindow,
-										kAEFirst,
-										typeWildCard,
-										theFrontWindow);
-		else
-			err = MoreAETellBundledAppToGetElementAt(
+        err = MoreAETellBundledAppToGetElementAt(
 										kTerminalAppBundleID,
 										cWindow,
 										kAEFirst,
@@ -1922,28 +1881,19 @@ SendEventToTerminal(const AEDesc &inCommandDesc, SInt32 sysVersion, bool openInN
 											formAbsolutePosition, positionDesc, false,  theFrontWindowDesc );
 			}
 			*/
-			if(toSelf)
-				err = CMUtils::SendAEWithTwoObjToSelf( kAECoreSuite, kAEDoScript, theKeyword, inCommandDesc, keyAEFile, theFrontWindow/*Desc*/ );
-			else
-				err = CMUtils::SendAEWithTwoObjToRunningApp( kTerminalAppBundleID, kAECoreSuite, kAEDoScript, theKeyword, inCommandDesc, keyAEFile, theFrontWindow/*Desc*/ );
+            err = CMUtils::SendAEWithTwoObjToRunningApp( kTerminalAppBundleID, kAECoreSuite, kAEDoScript, theKeyword, inCommandDesc, keyAEFile, theFrontWindow/*Desc*/ );
 		}
 			
 		if( (err != noErr) && (err != connectionInvalid) && (err != procNotFound) )
 		{//if for any reason the event cannot be sent to topmost window, try opening new window
-			if(toSelf)
-				err = CMUtils::SendAppleEventWithObjToSelf( kAECoreSuite, kAEDoScript, theKeyword, inCommandDesc );			
-			else
-				err = CMUtils::SendAEWithObjToRunningApp( kTerminalAppBundleID, kAECoreSuite, kAEDoScript, theKeyword, inCommandDesc );
+            err = CMUtils::SendAEWithObjToRunningApp( kTerminalAppBundleID, kAECoreSuite, kAEDoScript, theKeyword, inCommandDesc );
 		}
 	}
 
 	if( (err == noErr) && bringToFront)
 	{
 		StAEDesc fakeDesc;
-		if(toSelf)
-			err = CMUtils::SendAppleEventWithObjToSelf( kAEMiscStandards, kAEActivate, 0, fakeDesc);
-		else
-			err = CMUtils::SendAEWithObjToRunningApp( kTerminalAppBundleID, kAEMiscStandards, kAEActivate, 0, fakeDesc);
+        err = CMUtils::SendAEWithObjToRunningApp( kTerminalAppBundleID, kAEMiscStandards, kAEActivate, 0, fakeDesc);
 	}
 
 	return err;
@@ -1951,17 +1901,13 @@ SendEventToTerminal(const AEDesc &inCommandDesc, SInt32 sysVersion, bool openInN
 
 
 void
-ExecuteInITerm(CFStringRef inCommand, CFStringRef inShellPath, bool openInNewWindow, bool bringToFront, CFStringRef inHostAppName)
+ExecuteInITerm(CFStringRef inCommand, CFStringRef inShellPath, bool openInNewWindow, bool bringToFront)
 {
 	if(inCommand == NULL)
 		return;
 	
 	OSStatus err = noErr;
 	StAEDesc theCommandDesc;
-
-	bool sendToSelf = false;
-	if( inHostAppName != NULL )
-		sendToSelf = (kCFCompareEqualTo == ::CFStringCompare( inHostAppName, CFSTR("iTerm"), 0 ) );
 
 	err = CMUtils::CreateUniTextDescFromCFString(inCommand, theCommandDesc);
 
@@ -1972,7 +1918,7 @@ ExecuteInITerm(CFStringRef inCommand, CFStringRef inShellPath, bool openInNewWin
 	::Gestalt(gestaltSystemVersion, &sysVersion);
 	
 
-	err = SendEventToITerm(theCommandDesc, inShellPath, sysVersion, openInNewWindow, bringToFront, false, sendToSelf);
+	err = SendEventToITerm(theCommandDesc, inShellPath, sysVersion, openInNewWindow, bringToFront, false);
 
 	if(err == noErr)
 		return;//sucess situation - we may exit now
@@ -2018,7 +1964,7 @@ ExecuteInITerm(CFStringRef inCommand, CFStringRef inShellPath, bool openInNewWin
 			}
 			else if(err == noErr)
 			{
-				err = SendEventToITerm(theCommandDesc, inShellPath, sysVersion, false, bringToFront, true, sendToSelf);//after terminal launch a new window is open so never open another one
+				err = SendEventToITerm(theCommandDesc, inShellPath, sysVersion, false, bringToFront, true);//after terminal launch a new window is open so never open another one
 				break;//either err == noErr (success), or some other error so we exit anyway
 			}
 		}
@@ -2036,7 +1982,7 @@ ExecuteInITerm(CFStringRef inCommand, CFStringRef inShellPath, bool openInNewWin
 }
 
 OSErr
-SendEventToITerm(const AEDesc &inCommandDesc, CFStringRef inShellPath, SInt32 sysVersion, bool openInNewWindow, bool bringToFront, bool justLaunching, bool toSelf)
+SendEventToITerm(const AEDesc &inCommandDesc, CFStringRef inShellPath, SInt32 sysVersion, bool openInNewWindow, bool bringToFront, bool justLaunching)
 {
 #pragma unused (sysVersion)
 
@@ -2048,13 +1994,7 @@ SendEventToITerm(const AEDesc &inCommandDesc, CFStringRef inShellPath, SInt32 sy
 	bool hasTerm = false;
 	bool tryNewSession = true;
 
-	if(toSelf)
-		err = MoreAETellSelfToGetAEDesc(
-									'Ctrm',
-									typeWildCard,
-									termDesc);
-	else
-		err = MoreAETellAppToGetAEDesc(	kITermAppSig,
+    err = MoreAETellAppToGetAEDesc(	kITermAppSig,
 									'Ctrm',
 									typeWildCard,
 									termDesc);
@@ -2062,24 +2002,14 @@ SendEventToITerm(const AEDesc &inCommandDesc, CFStringRef inShellPath, SInt32 sy
 
 	if(hasTerm && (openInNewWindow == false))
 	{
-		if(toSelf)
-			err = MoreAETellMyObjectToGetAEDesc(
-								termDesc,
-								'Cssn',
-								typeWildCard,
-								sessionDesc);
-		else
-			err = MoreAETellAppObjectToGetAEDesc( kITermAppSig,
+        err = MoreAETellAppObjectToGetAEDesc( kITermAppSig,
 								termDesc,
 								'Cssn',
 								typeWildCard,
 								sessionDesc);
 		if(err == noErr)
 		{//current session exists
-			if(toSelf)
-				err = CMUtils::SendAEWithTwoObjToSelf( kITermSuite, 'Wrte', keyDirectObject, sessionDesc, 'iTxt', inCommandDesc );
-			else
-				err = CMUtils::SendAEWithTwoObjToRunningApp( kITermAppSig, kITermSuite, 'Wrte', keyDirectObject, sessionDesc, 'iTxt', inCommandDesc );
+            err = CMUtils::SendAEWithTwoObjToRunningApp( kITermAppSig, kITermSuite, 'Wrte', keyDirectObject, sessionDesc, 'iTxt', inCommandDesc );
 			tryNewSession = (err != noErr);//don't try opening new session if this calls succeeds
 		}
 	}
@@ -2088,15 +2018,7 @@ SendEventToITerm(const AEDesc &inCommandDesc, CFStringRef inShellPath, SInt32 sy
 	{
 		if(hasTerm == false)
 		{
-			if(toSelf)
-				err = MoreAETellSelfToCreateNewElementIn(
-										'Ptrm',
-										NULL,
-										NULL,
-										typeWildCard,
-										termDesc);				
-			else
-				err = MoreAETellAppToCreateNewElementIn(
+            err = MoreAETellAppToCreateNewElementIn(
 										kITermAppSig,
 										'Ptrm',
 										NULL,
@@ -2109,17 +2031,7 @@ SendEventToITerm(const AEDesc &inCommandDesc, CFStringRef inShellPath, SInt32 sy
 		
 		if(hasTerm)
 		{
-			if(toSelf)
-				err = MoreAETellMyObjToInsertNewElement(
-											termDesc,
-											'Pssn',
-											'Pssn',
-											NULL,
-											kAEAfter,
-											typeWildCard,
-											sessionDesc);
-			else
-				err = MoreAETellAppObjToInsertNewElement(
+            err = MoreAETellAppObjToInsertNewElement(
 											kITermAppSig,
 											termDesc,
 											'Pssn',
@@ -2135,16 +2047,8 @@ SendEventToITerm(const AEDesc &inCommandDesc, CFStringRef inShellPath, SInt32 sy
 			err = CMUtils::CreateUniTextDescFromCFString( inShellPath, shellDesc );
 			if(err == noErr)
 			{
-				if(toSelf)
-				{
-					err = CMUtils::SendAEWithTwoObjToSelf( kITermSuite, 'Exec', keyDirectObject, sessionDesc, 'Cmnd', shellDesc );
-					err = CMUtils::SendAEWithTwoObjToSelf( kITermSuite, 'Wrte', keyDirectObject, sessionDesc, 'iTxt', inCommandDesc );
-				}
-				else
-				{
-					err = CMUtils::SendAEWithTwoObjToRunningApp( kITermAppSig, kITermSuite, 'Exec', keyDirectObject, sessionDesc, 'Cmnd', shellDesc );
-					err = CMUtils::SendAEWithTwoObjToRunningApp( kITermAppSig, kITermSuite, 'Wrte', keyDirectObject, sessionDesc, 'iTxt', inCommandDesc );
-				}
+                err = CMUtils::SendAEWithTwoObjToRunningApp( kITermAppSig, kITermSuite, 'Exec', keyDirectObject, sessionDesc, 'Cmnd', shellDesc );
+                err = CMUtils::SendAEWithTwoObjToRunningApp( kITermAppSig, kITermSuite, 'Wrte', keyDirectObject, sessionDesc, 'iTxt', inCommandDesc );
 			}
 		}
 	}
@@ -2728,7 +2632,7 @@ OnMyCommandCM::RefreshObjectsInFinder()
 	{
 		if(listItemsCount > 0)
 		{
-			err = CMUtils::SendAppleEventToFinder( kAEFinderSuite, kAESync, refreshList, false, mRunningInFinder );
+			err = CMUtils::SendAppleEventToFinder( kAEFinderSuite, kAESync, refreshList, false );
 			if(err != noErr)
 			{
 				DEBUG_CSTR( "OnMyCommandCM. RefreshObjectsInFinder. SendAppleEventToFinder failed\n" );
@@ -2736,7 +2640,7 @@ OnMyCommandCM::RefreshObjectsInFinder()
 			
 			//some people recommend sending refresh event to Finder twice
 			//but it does not seem to help because Finder sometimes just refuses to refresh
-			//err = CMUtils::SendAppleEventToFinder( kAEFinderSuite, kAESync, refreshList, false, mRunningInFinder );
+			//err = CMUtils::SendAppleEventToFinder( kAEFinderSuite, kAESync, refreshList, false );
 		}
 		else
 		{
@@ -5477,7 +5381,8 @@ OnMyCommandCM::CreateTextContext(const CommandDescription &currCommand, const AE
 
 	if( mIsTextContext && (currCommand.activationMode != kActiveClipboardText) )
 	{
-		mContextText.Adopt( currentCocoaStringSelection(), kCFObjDontRetain);
+#if IN_PROC_CM //long deprecated by Apple
+        mContextText.Adopt( currentCocoaStringSelection(), kCFObjDontRetain);
 		if((mContextText != NULL) && (currCommand.textReplaceOptions != kTextReplaceNothing))
 		{
 			CFMutableStringRef mutableCopy = ::CFStringCreateMutableCopy(kCFAllocatorDefault, 0, mContextText);
@@ -5489,7 +5394,7 @@ OnMyCommandCM::CreateTextContext(const CommandDescription &currCommand, const AE
 				::CFStringFindAndReplace(mutableCopy, CFSTR("\r"), CFSTR("\n"), wholeRange, 0);
 			mContextText.Adopt( mutableCopy, kCFObjDontRetain);
 		}
-		
+#endif //IN_PROC_CM
 		
 		if( (inContext != NULL) && (mContextText == NULL) && (mIsNullContext == false) )
 			mContextText.Adopt( CMUtils::CreateCFStringFromAEDesc( *inContext, currCommand.textReplaceOptions ), kCFObjDontRetain);
@@ -6057,28 +5962,6 @@ CreateCombinedString( CFArrayRef inStringsArray, CFStringRef inSeparator, CFStri
 }; //extern "C"
 
 #pragma mark -
-
-#ifndef __LP64__
-
-Boolean
-OnMyCommandCM::RunNibDialog( CommandDescription &currCommand )
-{
-	ARefCountedObj<OMCCarbonDialog> nibDialog( new OMCCarbonDialog(this) );
-
-	nibDialog->Run();
-	
-	if( nibDialog->IsModal() == false )
-		return true; //nothing to do here really. The dialog is modeless so main command executes right away
-	
-	if( nibDialog->WasDialogOkeyed() == false)
-		return false;
-
-	GetDialogControlValues(currCommand, *nibDialog);
-
-	return true;
-}
-
-#endif // __LP64__
 
 
 void
@@ -6823,147 +6706,3 @@ OnMyCommandCM::GetCurrentCommandExternBundle()
 
 	return NULL;
 }
-
-#pragma mark-
-#pragma mark ==== UNUSED ===
-
-
-//this function creates UTF-8 representation of a string and stores it back into CFString
-//this somewhat artifical approach enables manipulation of the string in its UTF-8 form
-//string procuced with this function should not be converted to 8-bit representation using any encoding,
-//high bytes should be cut off instead
-
-CFMutableStringRef
-CreateUFT8MutableStringCopy(CFStringRef inStrRef)
-{
-	if(inStrRef == NULL)
-		return NULL;
-
-	CFMutableStringRef outString = NULL;
-	
-	CFIndex uniCount = ::CFStringGetLength(inStrRef);
-	CFIndex maxCount = ::CFStringGetMaximumSizeForEncoding( uniCount, kCFStringEncodingUTF8 );
-  	Ptr theString = ::NewPtrClear(maxCount +1);//one more for 0-termination
-  	if(theString != NULL)
-	{
-		if( ::CFStringGetCString( inStrRef, theString, maxCount +1, kCFStringEncodingUTF8) )
-		{
-			SInt32 actualLen = ::strlen(theString);
-			//make 16 bit representation of our UTF-8 string to fool CFString and store it back unchanged
-			UniChar *uniPtr = ::AddHiBytes((unsigned char *)theString, actualLen);
-			::DisposePtr( theString );
-			if(uniPtr != NULL)
-			{
-				outString = ::CFStringCreateMutable(kCFAllocatorDefault, 0);
-				if(outString != NULL)
-				{
-					::CFStringAppendCharacters(outString, uniPtr, actualLen);
-				}
-			}
-			::DisposePtr( (Ptr)uniPtr );
-		}
-		else
-		{
-			::DisposePtr( theString );
-		}
-	}
-	return outString;
-}
-
-
-
-
-//this does not work. I did not find a way to enter non-ASCII characters in Terminal
-
-void
-ReplaceNonASCIICharsWithOctalEscapes(CFMutableStringRef inStrRef)
-{
-	static UniChar octalChars[12];
-
-	if(inStrRef == NULL)
-		return;
-
-	CFIndex	idx = ::CFStringGetLength(inStrRef) - 1;
-  	UniChar currChar;
-  	UniCharCount octalLen;
-  	
-  	while(idx >= 0)
-  	{
-  		currChar = ::CFStringGetCharacterAtIndex( inStrRef, idx);
-  		if(currChar > 127)
-  		{
-  			CFObj<CFMutableStringRef> octalEscapes( ::CFStringCreateMutable( kCFAllocatorDefault, 16) );//less storage would be fine too
-  			if(octalEscapes != NULL)
-  			{
-   				//make octal escapes
-  				::CFStringAppend( octalEscapes, CFSTR("\\") );
-  				octalLen = sizeof(octalChars)/sizeof(UniChar);
-  				DecToOctal(currChar, octalChars, octalLen );
-  				::CFStringAppendCharacters(octalEscapes, octalChars, octalLen);
-  				
-  				//replace char with octal escapes
-	  			CFRange theRange;
-  				theRange.location = idx;
-  				theRange.length = 1;
-  				::CFStringReplace(inStrRef, theRange, octalEscapes);
-  			}
-  		}
-  		idx--;
-  	}
-}
-
-//ioLen takes max buffer size on input and returns actual string len on output
-//outBuffer is NOT terminated with 0
-
-void
-DecToOctal(long inNum, UniChar *outBuffer, UniCharCount &ioLen )
-{
-	char octalChars[12] = {0,0,0,0,0,0,0,0,0,0,0,0};
-	long count = 0;
-	do
-	{
-		octalChars[count] = (inNum % 8);
-		inNum = (inNum / 8);
-		++count;
-	}               
-	while (inNum != 0);
-
-	UniCharCount i = 0;	
-	
-	while( (count > 0) && (i < ioLen) )
-	{
-		--count;
-		outBuffer[i] = (UniChar)(octalChars[count] + '0');
-		++i;
-	}
-	ioLen = i;
-}
-
-//on output, a new pointer is assigned via NewPtr
-//caller is responsible for releasing the memory via DisposePtr
-//this is not an encoding converter - it just upgrades 8-bit chars to 16-bit chars
-UniChar *
-AddHiBytes(unsigned char *inBuffer, ByteCount inCount)
-{
-	UniChar *newChars  = (UniChar *)::NewPtrClear( inCount * sizeof(UniChar) );
-	if(newChars == NULL)
-		return NULL;
-	
-	for(ByteCount i = 0; i < inCount; i++)
-	{
-		newChars[i] = (UniChar)inBuffer[i];
-	}
-	return newChars;
-}
-
-//on output, the buffer should be treated as an array of 8-bit chars
-void
-StripHiBytes(UniChar *ioBuffer, UniCharCount inCount)
-{
-	unsigned char *charPtr = (unsigned char *)ioBuffer;
-	for(UniCharCount i = 0; i < inCount; i++)
-	{
-		charPtr[i] = (unsigned char)(ioBuffer[i] & 0x00FF);
-	}
-}
-

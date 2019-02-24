@@ -13,20 +13,6 @@
 #include "CMUtils.h"
 #include "CFObj.h"
 
-#if COMPILE_FSSPEC_CODE
-
-//copy name to output buffer. just for parity with FSRef version
-OSStatus
-CMUtils::GetPStringName(const FSSpec *inSpec, Str255 outName)
-{
-	if(inSpec == NULL)
-		return paramErr;
-	::BlockMoveData( inSpec->name, outName, inSpec->name[0] + 1);
-	return noErr;
-}
-
-#endif //COMPILE_FSSPEC_CODE
-
 OSStatus
 CMUtils::GetPStringName(const FSRef *inRef, Str255 outName)
 {

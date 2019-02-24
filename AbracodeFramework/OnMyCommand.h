@@ -7,6 +7,7 @@
 #include "OMCConstants.h"
 #include "OMCUtils.h"
 #include "OMC.h"
+#include "AStdNew.h"
 #include "AStdArrayNew.h"
 
 class SelectionIterator;
@@ -237,9 +238,6 @@ public:
 	void				LoadCommandsFromPlistRef(CFPropertyListRef inPlistRef);
 	void				GetOneCommandParams(CommandDescription &outDesc, CFDictionaryRef inOneCommand);
 
-#ifndef __LP64__
-	Boolean				RunNibDialog( CommandDescription &currCommand );
-#endif
 	void				GetDialogControlValues( CommandDescription &currCommand, OMCDialog &inDialog );
 
 	OSStatus			ExecuteSubcommand( CFArrayRef inCommandName, CFStringRef inCommandID, OMCDialog *inDialog, CFTypeRef inContext );
@@ -344,16 +342,15 @@ protected:
 	Boolean						mIsOpenFolder;
 	Boolean						mIsNullContext;
 	Boolean						mIsTextContext;
-	Boolean						mRunningInFinder;
 	Boolean						mCMPluginMode;
 	Boolean						mRunningInShortcutsObserver;
 	ProcessSerialNumber			mFrontProcess;//if running in observer we don't want to return observer as front process if it happens to come up
 };
 
-void		ExecuteInTerminal(CFStringRef inCommand, bool openInNewWindow, bool bringToFront, CFStringRef inHostAppName);
-OSErr		SendEventToTerminal(const AEDesc &inCommandDesc, SInt32 sysVersion, bool openInNewWindow, bool bringToFront, bool toSelf);
-void		ExecuteInITerm(CFStringRef inCommand, CFStringRef inShellPath, bool openInNewWindow, bool bringToFront, CFStringRef inHostAppName);
-OSErr		SendEventToITerm(const AEDesc &inCommandDesc, CFStringRef inShellPath, SInt32 sysVersion, bool openInNewWindow, bool bringToFront, bool justLaunching, bool toSelf);
+void		ExecuteInTerminal(CFStringRef inCommand, bool openInNewWindow, bool bringToFront);
+OSErr		SendEventToTerminal(const AEDesc &inCommandDesc, SInt32 sysVersion, bool openInNewWindow, bool bringToFront);
+void		ExecuteInITerm(CFStringRef inCommand, CFStringRef inShellPath, bool openInNewWindow, bool bringToFront);
+OSErr		SendEventToITerm(const AEDesc &inCommandDesc, CFStringRef inShellPath, SInt32 sysVersion, bool openInNewWindow, bool bringToFront, bool justLaunching);
 
 
 void		GetMultiCommandParams(CommandDescription &outDesc, CFDictionaryRef inOneCommand);
@@ -420,12 +417,6 @@ CFStringRef			CreateExtensionOnlyFromCFURL(CFURLRef inPath, UInt16 escSpecialCha
 CFStringRef			CreateEscapedStringCopy(CFStringRef inStrRef, UInt16 escSpecialCharsMode);
 CFStringRef			CreateCombinedString( CFArrayRef inStringsArray, CFStringRef inSeparator, CFStringRef inPrefix, CFStringRef inSuffix, UInt16 escSpecialCharsMode );
 };
-
-CFMutableStringRef	CreateUFT8MutableStringCopy(CFStringRef inStrRef);
-void				ReplaceNonASCIICharsWithOctalEscapes(CFMutableStringRef inStrRef);
-void				DecToOctal(long inNum, UniChar *outBuffer, UniCharCount &ioLen );
-UniChar *			AddHiBytes(unsigned char *inBuffer, ByteCount inCount);
-void				StripHiBytes(UniChar *ioBuffer, UniCharCount inCount);
 
 CFDictionaryRef		ReadControlValuesFromPlist(CFStringRef inDialogUniqueID);
 CFStringRef			GetCommandUniqueID(CommandDescription &currCommand);
