@@ -14,24 +14,15 @@
 #include "CFObj.h"
 #include "StAEDesc.h"
 #include <string>
-#include "AStdArrayNew.h"
+#include <vector>
 
 #include "DebugSettings.h"
 //#include "NavDialogs.h"
 #include "OMCFilePanels.h"
 #include "OmcExecutor.h"
-#include "AStdNew.h"
 //#include <sys/stat.h>
 #include <unistd.h>
-
-//#define USE_ICU_REGEX yes
-#ifdef USE_ICU_REGEX
-	#define U_HIDE_DRAFT_API 1
-	#define U_DISABLE_RENAMING 1
-	#include "unicode/uregex.h"
-#else
-	#include <regex.h>
-#endif
+#include <regex.h>
 
 #if 0
 	#include "FileURLDesc.h"
@@ -304,7 +295,7 @@ const CFIndex kMaxSpecialWordLen = sizeof("__DLG_CHOOSE_FOLDER_NAME_NO_EXTENSION
 
 OnMyCommandCM::OnMyCommandCM(CFPropertyListRef inPlistRef)
 	: ACMPlugin( kBundleIDString ), mPlistURL(NULL),
-	mSysVersion(100300), mCommandList(NULL), mCommandCount(0), mCurrCommandIndex(0), mObjectCount(0),
+	mSysVersion(100300), mCommandList(NULL), mCommandCount(0), mCurrCommandIndex(0),
 	mCurrObjectIndex(0), mError(noErr),
 	mIsTextInClipboard(false), mIsOpenFolder(false), mIsNullContext(false), mIsTextContext(false),
 	mCMPluginMode(true), mRunningInShortcutsObserver(false)
@@ -478,7 +469,7 @@ OnMyCommandCM::CommonContextCheck( const AEDesc *inContext, CFTypeRef inCFContex
 		else if( contextType == ACFType<CFArrayRef>::GetTypeID() ) //list of files
 		{
 			mContextFiles.Adopt(
-					::CFArrayCreateMutable(kCFAllocatorDefault, mObjectCount, &kCFTypeArrayCallBacks),
+					::CFArrayCreateMutable(kCFAllocatorDefault, mObjectList.size(), &kCFTypeArrayCallBacks),
 					kCFObjDontRetain );
 
 			CFArrayRef fileArray = (CFArrayRef)inCFContext;
@@ -607,9 +598,8 @@ OnMyCommandCM::CommonContextCheck( const AEDesc *inContext, CFTypeRef inCFContex
 
 			if(listItemsCount > 0)
 			{
-				mObjectList.Reset(new OneObjProperties[listItemsCount]);
-				memset(mObjectList.Get(), 0, listItemsCount*sizeof(OneObjProperties));
-				mObjectCount = listItemsCount;
+                mObjectList.resize(listItemsCount);
+				memset(mObjectList.data(), 0, listItemsCount*sizeof(OneObjProperties));
 			}
 		}
 
@@ -621,20 +611,21 @@ OnMyCommandCM::CommonContextCheck( const AEDesc *inContext, CFTypeRef inCFContex
 	}
 
 //update total count
-	mObjectCount = mCurrObjectIndex;//currObjectIndex is incremented in FSRefCheckFileOrFolder for each valid object
+    //currObjectIndex is incremented in FSRefCheckFileOrFolder for each valid object
+    mObjectList.resize(mCurrObjectIndex);
 	mCurrObjectIndex = 0;
 
 	Boolean isFolder = false;
-	if(mObjectList != NULL)
-	{
-		isFolder = CheckAllObjects(mObjectList, 1, CheckIfFolder, NULL);
-		if(isFolder)
-		{
-			Boolean isPackage = CheckAllObjects(mObjectList, 1, CheckIfPackage, NULL);
-			if(isPackage)
-				isFolder = false;
-		}
-	}
+    if(mObjectList.size() == 1)
+    {
+        isFolder = CheckAllObjects(mObjectList, CheckIfFolder, NULL);
+        if(isFolder)
+        {
+            Boolean isPackage = CheckAllObjects(mObjectList, CheckIfPackage, NULL);
+            if(isPackage)
+                isFolder = false;
+        }
+    }
 
 	if(	anythingSelected && (mSysVersion >= 100300) && ((theFlags & kListOutMultipleObjects) == 0) && isFolder &&
 		(mRunningInShortcutsObserver && frontProcessIsFinder) )
@@ -653,10 +644,8 @@ OnMyCommandCM::CommonContextCheck( const AEDesc *inContext, CFTypeRef inCFContex
 		if(err == noErr)
 		{
 			DeleteObjectList();
-			
-			mObjectList.Reset(new OneObjProperties[1]);
-			memset(mObjectList.Get(), 0, sizeof(OneObjProperties));
-			mObjectCount = 1;
+            mObjectList.resize(1);
+			memset(mObjectList.data(), 0, sizeof(OneObjProperties));
 			
 			if(mCMPluginMode)
 			{
@@ -727,9 +716,8 @@ OnMyCommandCM::ExamineDropletFileContext(AEDescList *fileList)
 		{
 			if(listItemsCount > 0)
 			{
-				mObjectList.Reset(new OneObjProperties[listItemsCount]);
-				memset(mObjectList.Get(), 0, listItemsCount*sizeof(OneObjProperties));
-				mObjectCount = listItemsCount;
+                mObjectList.resize(listItemsCount);
+				memset(mObjectList.data(), 0, listItemsCount*sizeof(OneObjProperties));
 			}
 		}
 
@@ -737,7 +725,7 @@ OnMyCommandCM::ExamineDropletFileContext(AEDescList *fileList)
 	}
 
 //update total count
-	mObjectCount = mCurrObjectIndex;
+	mObjectList.resize(mCurrObjectIndex);
 	mCurrObjectIndex = 0;
 
 	return anythingToDo;
@@ -801,7 +789,7 @@ OnMyCommandCM::HandleSelection( AEDesc *inContext, SInt32 inCommandID )
 			}
 
 			//obtain text from selection before any dialogs are shown
-			Boolean objListEmpty = ((mObjectList == NULL) || (mObjectCount == 0));
+			bool objListEmpty = (mObjectList.size() == 0);
 			
 			if( ((currCommand.prescannedCommandInfo & kOmcCommandContainsTextObject) != 0) && (mContextText == NULL) )
 			{
@@ -1147,14 +1135,10 @@ OnMyCommandCM::SwapContext(OMCContextData &ioContextData)
 {
 	this->mContextFiles.Swap(ioContextData.mContextFiles);
 	this->mContextText.Swap(ioContextData.mContextText);
-	this->mObjectList.Swap(ioContextData.mObjectList);
+	this->mObjectList.swap(ioContextData.mObjectList);
 	this->mCommonParentPath.Swap(ioContextData.mCommonParentPath);
-
-	CFIndex temp = this->mObjectCount;
-	this->mObjectCount = ioContextData.mObjectCount;
-	ioContextData.mObjectCount = temp;
 	
-	temp = this->mCurrObjectIndex;
+	CFIndex temp = this->mCurrObjectIndex;
 	this->mCurrObjectIndex = ioContextData.mCurrObjectIndex;
 	ioContextData.mCurrObjectIndex = temp;
 
@@ -1191,17 +1175,17 @@ OnMyCommandCM::ResetContextData()
 CFTypeRef
 OnMyCommandCM::GetCFContext()
 {
-	if( (mObjectList != NULL) && (mObjectCount > 0) )
+	if( mObjectList.size() > 0 )
 	{
 		if(mContextFiles == NULL)
 		{
 			mContextFiles.Adopt(
-				::CFArrayCreateMutable(kCFAllocatorDefault, mObjectCount, &kCFTypeArrayCallBacks),
+				::CFArrayCreateMutable(kCFAllocatorDefault, mObjectList.size(), &kCFTypeArrayCallBacks),
 				kCFObjDontRetain );
 			
 			if(mContextFiles != NULL)
 			{	
-				for(CFIndex i = 0; i < mObjectCount; i++)
+				for(size_t i = 0; i < mObjectList.size(); i++)
 				{
 					CFObj<CFURLRef> urlRef( ::CFURLCreateFromFSRef(kCFAllocatorDefault, &(mObjectList[i].mRef)) );
 					::CFArrayAppendValue( mContextFiles, (CFURLRef)urlRef );
@@ -1365,31 +1349,26 @@ OnMyCommandCM::DeleteCommandList()
 void
 OnMyCommandCM::DeleteObjectList()
 {
-	if(mObjectList != NULL)
-	{
-		OneObjProperties *oneObj;
-		for(CFIndex i = 0; i < mObjectCount; i++)
-		{
-			oneObj = mObjectList + i;
-			
-			if( oneObj->mURLRef != NULL )
-			{
-				::CFRelease( oneObj->mURLRef );
-			}
-			
-			if( oneObj->mExtension != NULL )
-			{
-				::CFRelease( oneObj->mExtension );
-			}
-			
-			if( oneObj->mRefreshPath != NULL )
-			{
-				::CFRelease( oneObj->mRefreshPath );
-			}
-		}
-		mObjectList.Reset(NULL);
-	}
-	mObjectCount = 0;
+    for(CFIndex i = 0; i < mObjectList.size(); i++)
+    {
+        OneObjProperties& oneObj = mObjectList[i];
+        
+        if( oneObj.mURLRef != NULL )
+        {
+            ::CFRelease( oneObj.mURLRef );
+        }
+        
+        if( oneObj.mExtension != NULL )
+        {
+            ::CFRelease( oneObj.mExtension );
+        }
+        
+        if( oneObj.mRefreshPath != NULL )
+        {
+            ::CFRelease( oneObj.mRefreshPath );
+        }
+    }
+    mObjectList.clear();
 	mCurrObjectIndex = 0;
 }
 
@@ -1477,7 +1456,7 @@ OnMyCommandCM::FSRefCheckFileOrFolder(const FSRef *inRef, void *ioData)
 
 	OnMyCommandCM *myData = (OnMyCommandCM *)ioData;
 
-	if(myData->mObjectList == NULL)
+	if(myData->mObjectList.size() == 0)
 		return paramErr;
 
 //we are interested in real files or folders
@@ -1493,15 +1472,15 @@ OnMyCommandCM::FSRefCheckFileOrFolder(const FSRef *inRef, void *ioData)
 		err = ::LSCopyItemInfoForRef( inRef, whichInfo, &itemInfo);
 		if( err == noErr )
 		{
-			if( myData->mCurrObjectIndex < myData->mObjectCount )
+			if( myData->mCurrObjectIndex < myData->mObjectList.size() )
 			{
-				OneObjProperties *objProperties = myData->mObjectList + myData->mCurrObjectIndex;
+				OneObjProperties& objProperties = myData->mObjectList[myData->mCurrObjectIndex];
 				
-				objProperties->mRef = *inRef;
-				objProperties->mExtension  = itemInfo.extension;
-				objProperties->mType = itemInfo.filetype;
-				objProperties->mFlags = itemInfo.flags;
-				objProperties->mRefreshPath = NULL;
+				objProperties.mRef = *inRef;
+				objProperties.mExtension  = itemInfo.extension;
+				objProperties.mType = itemInfo.filetype;
+				objProperties.mFlags = itemInfo.flags;
+				objProperties.mRefreshPath = NULL;
 				
 				myData->mCurrObjectIndex++; //client will use thins information know the exact number of valid items
 			}
@@ -1524,18 +1503,18 @@ OnMyCommandCM::CFURLCheckFileOrFolder(CFURLRef inURLRef, void *ioData)
 
 	OnMyCommandCM *myData = (OnMyCommandCM *)ioData;
 
-	if(myData->mObjectList == NULL)
+	if(myData->mObjectList.size() == 0)
 		return paramErr;
 
 	FSRef oneRef;
 	Boolean isOK = ::CFURLGetFSRef(inURLRef, &oneRef);
-	if(isOK && (myData->mCurrObjectIndex < myData->mObjectCount) )
+	if(isOK && (myData->mCurrObjectIndex < myData->mObjectList.size()) )
 	{
-		OneObjProperties *objProperties = myData->mObjectList + myData->mCurrObjectIndex;
-		if(objProperties->mURLRef != NULL)
-			CFRelease(objProperties->mURLRef);
-		objProperties->mURLRef = inURLRef;
-		::CFRetain(objProperties->mURLRef);
+		OneObjProperties& objProperties = myData->mObjectList[myData->mCurrObjectIndex];
+		if(objProperties.mURLRef != nullptr)
+			CFRelease(objProperties.mURLRef);
+		objProperties.mURLRef = inURLRef;
+		::CFRetain(objProperties.mURLRef);
 		
 		return FSRefCheckFileOrFolder(&oneRef, ioData);
 	}
@@ -1545,8 +1524,7 @@ OnMyCommandCM::CFURLCheckFileOrFolder(CFURLRef inURLRef, void *ioData)
 OSStatus
 OnMyCommandCM::ProcessObjects()
 {
-	if( (mCommandList == NULL) || (mCommandCount == 0) ||
-		(mObjectList == NULL) || (mObjectCount == 0) )
+	if( (mCommandList == NULL) || (mCommandCount == 0) || (mObjectList.size() == 0) )
 		return noErr;
 
 	if( mCurrCommandIndex >= mCommandCount)
@@ -1566,7 +1544,7 @@ OnMyCommandCM::ProcessObjects()
 	
 	CFObj<CFStringRef> dynamicCommandName( CreateDynamicCommandName(currCommand, currCommand.localizationTableName, localizationBundle) );
 
-	CFIndex objectCount = mObjectCount;
+	CFIndex objectCount = mObjectList.size();
 	if( currCommand.multipleObjectProcessing == kMulObjProcessTogether )
 		objectCount = 1;
 
@@ -1587,7 +1565,7 @@ OnMyCommandCM::ProcessObjects()
 	
 	if( currCommand.refresh != NULL )
 	{//refreshing needed - compose array of paths before performing any action
-		for(CFIndex i = 0; i < mObjectCount; i++)
+		for(CFIndex i = 0; i < mObjectList.size(); i++)
 		{	
 			TRACE_CSTR("OnMyCommandCM. create refresh path\n" );
 			mCurrObjectIndex = i;
@@ -2566,7 +2544,7 @@ OnMyCommandCM::InitNibControlValueEntry(CFStringRef inControlID, CFIndex columnI
 void
 OnMyCommandCM::RefreshObjectsInFinder()
 {
-	if( (mObjectList == NULL) || (mObjectCount == 0) )
+	if( mObjectList.size() == 0 )
 		return;
 
 	OSStatus err;
@@ -2580,7 +2558,7 @@ OnMyCommandCM::RefreshObjectsInFinder()
 
 	StAEDesc listDel(refreshList);
 
-	for(CFIndex i = 0; i < mObjectCount; i++)
+	for(CFIndex i = 0; i < mObjectList.size(); i++)
 	{
 		if( mObjectList[i].mRefreshPath != NULL)
 		{
@@ -2820,7 +2798,7 @@ OnMyCommandCM::IsCommandEnabled(CommandDescription &currCommand, const AEDesc *i
 		
 		case kActiveFile:
 		{
-			doActivate = CheckAllObjects(mObjectList, mObjectCount, CheckIfFile, NULL);
+			doActivate = CheckAllObjects(mObjectList, CheckIfFile, NULL);
 			
 			if(doActivate)
 			{
@@ -2834,15 +2812,15 @@ OnMyCommandCM::IsCommandEnabled(CommandDescription &currCommand, const AEDesc *i
 
 				if(needsFileTypeCheck && needsExtensionCheck)
 				{
-					doActivate = CheckAllObjects(mObjectList, mObjectCount, CheckFileTypeOrExtension, &(currCommand));
+					doActivate = CheckAllObjects(mObjectList, CheckFileTypeOrExtension, &(currCommand));
 				}
 				else if(needsFileTypeCheck)
 				{
-					doActivate = CheckAllObjects(mObjectList, mObjectCount, CheckFileType, &(currCommand));
+					doActivate = CheckAllObjects(mObjectList, CheckFileType, &(currCommand));
 				}
 				else if(needsExtensionCheck)
 				{
-					doActivate = CheckAllObjects(mObjectList, mObjectCount, CheckExtension, &(currCommand));
+					doActivate = CheckAllObjects(mObjectList, CheckExtension, &(currCommand));
 				}
 			}
 		}
@@ -2850,7 +2828,7 @@ OnMyCommandCM::IsCommandEnabled(CommandDescription &currCommand, const AEDesc *i
 		
 		case kActiveFolder:
 		{
-			doActivate = CheckAllObjects(mObjectList, mObjectCount, CheckIfFolder, NULL);
+			doActivate = CheckAllObjects(mObjectList, CheckIfFolder, NULL);
 		
 			if(doActivate)
 			{
@@ -2861,7 +2839,7 @@ OnMyCommandCM::IsCommandEnabled(CommandDescription &currCommand, const AEDesc *i
 				}
 				if(needsExtensionCheck)
 				{
-					doActivate = CheckAllObjects(mObjectList, mObjectCount, CheckExtension, &(currCommand));
+					doActivate = CheckAllObjects(mObjectList, CheckExtension, &(currCommand));
 				}
 			}
 		}
@@ -2875,7 +2853,7 @@ OnMyCommandCM::IsCommandEnabled(CommandDescription &currCommand, const AEDesc *i
 				doActivate = !mIsOpenFolder;
 			
 			if(doActivate)
-				doActivate = CheckAllObjects(mObjectList, mObjectCount, CheckIfFolder, NULL);
+				doActivate = CheckAllObjects(mObjectList, CheckIfFolder, NULL);
 		
 			if(doActivate)
 			{
@@ -2886,7 +2864,7 @@ OnMyCommandCM::IsCommandEnabled(CommandDescription &currCommand, const AEDesc *i
 				}
 				if(needsExtensionCheck)
 				{
-					doActivate = CheckAllObjects(mObjectList, mObjectCount, CheckExtension, &(currCommand));
+					doActivate = CheckAllObjects(mObjectList, CheckExtension, &(currCommand));
 				}
 			}
 		}
@@ -2894,7 +2872,7 @@ OnMyCommandCM::IsCommandEnabled(CommandDescription &currCommand, const AEDesc *i
 		
 		case kActiveFileOrFolder:
 		{
-			doActivate = CheckAllObjects(mObjectList, mObjectCount, CheckIfFileOrFolder, NULL);
+			doActivate = CheckAllObjects(mObjectList, CheckIfFileOrFolder, NULL);
 			if(doActivate)
 			{
 				Boolean needsFileTypeCheck = (( currCommand.activationTypes != NULL ) &&
@@ -2907,15 +2885,15 @@ OnMyCommandCM::IsCommandEnabled(CommandDescription &currCommand, const AEDesc *i
 
 				if(needsFileTypeCheck && needsExtensionCheck)
 				{
-					doActivate = CheckAllObjects(mObjectList, mObjectCount, CheckFileTypeOrExtension, &(currCommand));
+					doActivate = CheckAllObjects(mObjectList, CheckFileTypeOrExtension, &(currCommand));
 				}
 				else if(needsFileTypeCheck)
 				{
-					doActivate = CheckAllObjects(mObjectList, mObjectCount, CheckFileType, &(currCommand));
+					doActivate = CheckAllObjects(mObjectList, CheckFileType, &(currCommand));
 				}
 				else if(needsExtensionCheck)
 				{
-					doActivate = CheckAllObjects(mObjectList, mObjectCount, CheckExtension, &(currCommand));
+					doActivate = CheckAllObjects(mObjectList, CheckExtension, &(currCommand));
 				}
 			}
 		}
@@ -2930,7 +2908,7 @@ OnMyCommandCM::IsCommandEnabled(CommandDescription &currCommand, const AEDesc *i
 				doActivate = !mIsOpenFolder;
 			
 			if(doActivate)
-				doActivate = CheckAllObjects(mObjectList, mObjectCount, CheckIfFileOrFolder, NULL);
+				doActivate = CheckAllObjects(mObjectList, CheckIfFileOrFolder, NULL);
 
 			if(doActivate)
 			{
@@ -2944,15 +2922,15 @@ OnMyCommandCM::IsCommandEnabled(CommandDescription &currCommand, const AEDesc *i
 
 				if(needsFileTypeCheck && needsExtensionCheck)
 				{
-					doActivate = CheckAllObjects(mObjectList, mObjectCount, CheckFileTypeOrExtension, &(currCommand));
+					doActivate = CheckAllObjects(mObjectList, CheckFileTypeOrExtension, &(currCommand));
 				}
 				else if(needsFileTypeCheck)
 				{
-					doActivate = CheckAllObjects(mObjectList, mObjectCount, CheckFileType, &(currCommand));
+					doActivate = CheckAllObjects(mObjectList, CheckFileType, &(currCommand));
 				}
 				else if(needsExtensionCheck)
 				{
-					doActivate = CheckAllObjects(mObjectList, mObjectCount, CheckExtension, &(currCommand));
+					doActivate = CheckAllObjects(mObjectList, CheckExtension, &(currCommand));
 				}
 			}
 		}
@@ -2974,7 +2952,7 @@ OnMyCommandCM::IsCommandEnabled(CommandDescription &currCommand, const AEDesc *i
 				}
 				if(needsExtensionCheck)
 				{
-					doActivate = CheckAllObjects(mObjectList, mObjectCount, CheckExtension, &(currCommand));
+					doActivate = CheckAllObjects(mObjectList, CheckExtension, &(currCommand));
 				}
 			}
 		}
@@ -2995,16 +2973,16 @@ OnMyCommandCM::IsCommandEnabled(CommandDescription &currCommand, const AEDesc *i
 		
 	if(doActivate && (currCommand.contextMatchString != NULL) )
 	{
-		if((mObjectList != NULL) && (mObjectCount > 0))
+		if(mObjectList.size() > 0)
 		{//path or name matching requested
 			switch(currCommand.matchFileOptions)
 			{
 				case kMatchFileName:
-					doActivate = CheckAllObjects(mObjectList, mObjectCount, CheckFileNameMatch, &(currCommand));
+					doActivate = CheckAllObjects(mObjectList, CheckFileNameMatch, &(currCommand));
 				break;
 				
 				case kMatchFilePath:
-					doActivate = CheckAllObjects(mObjectList, mObjectCount, CheckFilePathMatch, &(currCommand));
+					doActivate = CheckAllObjects(mObjectList, CheckFilePathMatch, &(currCommand));
 				break;
 			}
 		}
@@ -3039,25 +3017,17 @@ OnMyCommandCM::IsCommandEnabled(SInt32 inCmdIndex, const AEDesc *inContext, bool
 //all objects must meet the condition checked by procedure: logical AND
 
 Boolean
-CheckAllObjects(OneObjProperties *objList, UInt32 inCount, ObjCheckingProc inProcPtr, void *inProcData)
+CheckAllObjects(std::vector<OneObjProperties> &objList, ObjCheckingProc inProcPtr, void *inProcData)
 {
-	if( (objList == NULL) || (inProcPtr == NULL) )
+	if( inProcPtr == nullptr )
 		return false;
 
-	OneObjProperties *oneObj;
-	
-	for(UInt32 i = 0; i < inCount; i++)
+	for(size_t i = 0; i < objList.size(); i++)
 	{
-		oneObj = objList + i;
-		if(oneObj != NULL)
-		{
-			if(false == (*inProcPtr)( oneObj, inProcData ) )
-				return false;
-		}
-		else
-			return false;
+        if(false == (*inProcPtr)( &objList[i], inProcData ) )
+            return false;
 	}
-	
+
 	return true;
 }
 
@@ -3193,61 +3163,21 @@ DoStringsMatch(CFStringRef inMatchString, CFStringRef inSearchedString, UInt8 ma
 		
 		case kMatchRegularExpression:
 		{
-#ifdef USE_ICU_REGEX
-
-			UniCharCount charCount = 0;
-			AStdMalloc<UniChar> matchString( CMUtils::CreateUTF16DataFromCFString(inMatchString, &charCount) );
-			UParseError parseError = { 0 };
-			UErrorCode errorCode = U_ZERO_ERROR;
-			URegularExpression *regularExpression = uregex_open(
-								(const  UChar *)(const UniChar *)matchString,
-								(int32_t)charCount,
-								((compareOptions & kCFCompareCaseInsensitive) != 0) ? UREGEX_CASE_INSENSITIVE : 0,
-								&parseError,
-								&errorCode );
-			if( regularExpression != NULL )
-			{
-				charCount = 0;
-				AStdMalloc<UniChar> searchedString( CMUtils::CreateUTF16DataFromCFString(inSearchedString, &charCount) );
-
-				uregex_setText(
-						regularExpression,
-						(const  UChar *)(const UniChar *)searchedString,
-						(int32_t)charCount,
-						&errorCode);
-				
-				//this is a full match from beginning to end
-				UBool isMatched = uregex_matches(
-									regularExpression,
-									0,
-									&errorCode);
-				
-				uregex_close( regularExpression );
-				
-				return isMatched;
-			}
-			else
-			{
-				LOG_CSTR( "OMC->DoStringsMatch: regular expression compilation failed. Syntax error?\n" );
-			}
-
-#else //USE_ICU_REGEX
-
 			regex_t regular_expression;
-			AMalloc matchString( CMUtils::CreateUTF8CStringFromCFString(inMatchString, NULL) );
-			if(matchString == NULL)
+            std::string matchString = CMUtils::CreateUTF8StringFromCFString(inMatchString);
+			if(matchString.size() == 0)
 				return false;
 
 			int regFlags = REG_EXTENDED | REG_NOSUB;
 			if( (compareOptions & kCFCompareCaseInsensitive) != 0)
 				regFlags |= REG_ICASE;
 
-			if( ::regcomp(&regular_expression, (char *)matchString, regFlags) == 0)
+			if( ::regcomp(&regular_expression, matchString.c_str(), regFlags) == 0)
 			{
 				int result = -1;
-				AMalloc searchedString( CMUtils::CreateUTF8CStringFromCFString(inSearchedString, NULL) );
-				if(searchedString != NULL)
-					result = ::regexec( &regular_expression, (char *)searchedString, 0, NULL, 0);
+				std::string searchedString = CMUtils::CreateUTF8StringFromCFString(inSearchedString);
+				if(searchedString.size() > 0)
+					result = ::regexec( &regular_expression, searchedString.c_str(), 0, NULL, 0);
 
 				::regfree(&regular_expression);
 				return (result == 0);
@@ -3256,8 +3186,6 @@ DoStringsMatch(CFStringRef inMatchString, CFStringRef inSearchedString, UInt8 ma
 			{
 				LOG_CSTR( "OMC->DoStringsMatch: regular expression compilation failed. Syntax error?\n" );
 			}
-
-#endif //USE_ICU_REGEX
 		}
 		break;
 	}
@@ -3452,12 +3380,10 @@ OnMyCommandCM::LoadCommandsFromPlistFile(CFURLRef inPlistFileURL)
 	if(!success || (theDataRef == NULL))
 		return;
 
-	CFObj<CFStringRef> errorString;
-	CFObj<CFPropertyListRef> thePlist( ::CFPropertyListCreateFromXMLData (
-									kCFAllocatorDefault,
-									theDataRef,
-									kCFPropertyListImmutable,
-									&errorString) );
+    CFObj<CFPropertyListRef> thePlist( CFPropertyListCreateWithData(kCFAllocatorDefault,
+                                                                    theDataRef,
+                                                                    kCFPropertyListImmutable,
+                                                                    nullptr, nullptr) );
 
 	LoadCommandsFromPlistRef(thePlist);
 }
@@ -3616,7 +3542,7 @@ OnMyCommandCM::GetOneCommandParams(CommandDescription &outDesc, CFDictionaryRef 
 	{
 		//we may end up here because the key does not exist or because it is not an array
 		CFTypeRef resultRef = NULL;
-		Boolean keyExists = ::CFDictionaryGetValueIfPresent( oneCmd, CFSTR("COMMAND"), &resultRef );
+		Boolean keyExists = ::CFDictionaryGetValueIfPresent( inOneCommand, CFSTR("COMMAND"), &resultRef );
 		if(keyExists)
 		{
 			LOG_CSTR( "OMC->GetOneCommandParams. COMMAND param not of type CFArray\n" );
@@ -4386,7 +4312,7 @@ ReplaceWhitespaceCharactersWithEscapes(CFMutableStringRef inStrRef)
 CFMutableStringRef
 OnMyCommandCM::CreateCommandStringWithObjects(CFArrayRef inFragments, UInt16 escSpecialCharsMode)
 {
-	if( (inFragments == NULL) || (mCommandList == NULL) || (mCommandCount == 0) || (mObjectList == NULL) || (mCurrCommandIndex >= mCommandCount) )
+	if( (inFragments == NULL) || (mCommandList == NULL) || (mCommandCount == 0) || (mObjectList.size() == 0) || (mCurrCommandIndex >= mCommandCount) )
 		return NULL;
 
 	CFMutableStringRef theCommand = ::CFStringCreateMutable( kCFAllocatorDefault, 0);
@@ -4423,7 +4349,7 @@ OnMyCommandCM::CreateCommandStringWithObjects(CFArrayRef inFragments, UInt16 esc
 		if( fragments.GetValueAtIndex(i, fragmentRef) )
 		{
 			AppendTextToCommand(theCommand, fragmentRef,
-								mObjectList, mObjectCount, mCurrObjectIndex,
+								mObjectList.data(), mObjectList.size(), mCurrObjectIndex,
 								mClipboardText, currCommand,
 								currCommand.mulObjSeparator, currCommand.mulObjPrefix, currCommand.mulObjSuffix,
 								escSpecialCharsMode, selIterator );
@@ -4497,7 +4423,7 @@ OnMyCommandCM::CreateEnvironmentVariablesDict(CFStringRef inObjTextRef)
 			selIterator = activeDialog->GetSelectionIterator();
 	}
 
-	if(mObjectList != NULL)
+	if(mObjectList.size() > 0)
 	{
 		if(currCommand.sortMethod == kSortMethodByName)
 		{
@@ -4510,7 +4436,7 @@ OnMyCommandCM::CreateEnvironmentVariablesDict(CFStringRef inObjTextRef)
 		}
 
 		PopulateEnvironList( outEnviron,
-							mObjectList, mObjectCount, mCurrObjectIndex,
+							mObjectList.data(), mObjectList.size(), mCurrObjectIndex,
 							mClipboardText, currCommand,
 							currCommand.mulObjSeparator, currCommand.mulObjPrefix, currCommand.mulObjSuffix,
 							selIterator );
@@ -4571,7 +4497,7 @@ OnMyCommandCM::CreateCombinedStringWithObjects(CFArrayRef inArray, CFStringRef i
 		if( objects.GetValueAtIndex(i, fragmentRef) )
 		{
 			AppendTextToCommand(thePath, fragmentRef,
-								mObjectList, mObjectCount, mCurrObjectIndex,
+								mObjectList.data(), mObjectList.size(), mCurrObjectIndex,
 								NULL, currCommand,
 								NULL, NULL, NULL,
 								kEscapeNone, selIterator,
@@ -4948,8 +4874,8 @@ OnMyCommandCM::PopulateEnvironList(CFMutableDictionaryRef ioEnvironList,
 	if(itemCount == 0)
 		return;
 
-	AStdMalloc<void *> keyList(itemCount);
-	::CFDictionaryGetKeysAndValues(ioEnvironList, (const void **)keyList.Get(), NULL);
+    std::vector<void *> keyList(itemCount);
+	::CFDictionaryGetKeysAndValues(ioEnvironList, (const void **)keyList.data(), NULL);
 	for(CFIndex i = 0; i < itemCount; i++)
 	{
 		CFStringRef newStrRef = NULL;
@@ -5296,7 +5222,7 @@ CFStringRef
 OnMyCommandCM::CreateDynamicCommandName(const CommandDescription &currCommand, CFStringRef inLocTableName, CFBundleRef inLocBundleRef)
 {
 	CFStringRef commandName = NULL;
-	if( (mObjectCount > 1) && (currCommand.namePlural != NULL) )
+	if( (mObjectList.size() > 1) && (currCommand.namePlural != NULL) )
 	{
 		commandName = currCommand.namePlural;
 		if(inLocTableName != NULL)
@@ -5641,8 +5567,8 @@ CreateCommonParentPath(OneObjProperties *inObjList, CFIndex inObjCount )
 		return NULL;
 
 	OneObjProperties *oneObj;
-	CFMutableArrayRef *arrayList = new CFMutableArrayRef[inObjCount];
-	memset(arrayList, 0, inObjCount*sizeof(CFMutableArrayRef));
+    std::vector<CFMutableArrayRef> arrayList(inObjCount);
+	memset(arrayList.data(), 0, inObjCount*sizeof(CFMutableArrayRef));
 
 //create parent paths starting from branches, going to the root,
 //putting in reverse order, so it will be easier to iterate from the root later
@@ -5766,7 +5692,6 @@ CreateCommonParentPath(OneObjProperties *inObjList, CFIndex inObjCount )
 			arrayList[i] = NULL;
 		}
 	}
-	delete arrayList;
 	
 	return commonParentPath;
 }
@@ -5980,9 +5905,9 @@ OnMyCommandCM::GetDialogControlValues( CommandDescription &currCommand, OMCDialo
 	if(controlCount <= 0)
 		return;
 
-	AStdArrayNew<CFStringRef> keyList(controlCount);
-	AStdArrayNew<CFTypeRef> valueList(controlCount);
-	::CFDictionaryGetKeysAndValues(mNibControlValues, (const void **)keyList.Get(), (const void **)valueList.Get() );
+    std::vector<CFStringRef> keyList(controlCount);
+    std::vector<CFTypeRef> valueList(controlCount);
+	::CFDictionaryGetKeysAndValues(mNibControlValues, (const void **)keyList.data(), (const void **)valueList.data() );
 
 	for(CFIndex i = 0; i < controlCount; i++)
 	{
@@ -5993,8 +5918,8 @@ OnMyCommandCM::GetDialogControlValues( CommandDescription &currCommand, OMCDialo
 			if(columnCount > 0)
 			{
 				//get the list column ids which was filled during command prescan phase
-				AStdArrayNew<intptr_t> columnIdList(columnCount);
-				::CFDictionaryGetKeysAndValues(columnIds, (const void **)columnIdList.Get(), NULL );
+                std::vector<intptr_t> columnIdList(columnCount);
+				::CFDictionaryGetKeysAndValues(columnIds, (const void **)columnIdList.data(), NULL );
 								
 				//cache each column value requested for this control
 				for(CFIndex j = 0; j < columnCount; j++)
@@ -6198,9 +6123,10 @@ ReadControlValuesFromPlist(CFStringRef inDialogUniqueID)
 
 	if(success && (theDataRef != NULL))
 	{//file exists - read content	
-		CFObj<CFStringRef> errorString;
-		CFObj<CFPropertyListRef> thePlist( ::CFPropertyListCreateFromXMLData( kCFAllocatorDefault, theDataRef,
-																	kCFPropertyListImmutable, &errorString) );
+        CFObj<CFPropertyListRef> thePlist( CFPropertyListCreateWithData(kCFAllocatorDefault,
+                                                                        theDataRef,
+                                                                        kCFPropertyListImmutable,
+                                                                        nullptr, nullptr) );
 
 		resultDict = ACFType<CFDictionaryRef>::DynamicCast(thePlist);
 		if(resultDict != NULL)
@@ -6636,42 +6562,41 @@ FileNameComparator( const void *val1, const void *val2, void *context)
 OSStatus
 OnMyCommandCM::SortObjectListByName(CFOptionFlags compareOptions, bool sortAscending)
 {
-	if( (mObjectList == NULL) || (mObjectCount <= 1) )
+	if( mObjectList.size() <= 1 )
 		return noErr;//no need to sort
 	
-	AStdNew<SortSettings> newSort( new SortSettings(kSortMethodByName, compareOptions, sortAscending) );
-	if( (mSortSettings != NULL) && (*newSort == *mSortSettings) )
+    AUniquePtr<SortSettings> newSort(new SortSettings(kSortMethodByName, compareOptions, sortAscending));
+	if( (mSortSettings != nullptr) && (*newSort == *mSortSettings) )
 		return noErr;//already sorted by the same criteria
 
-	CFObj<CFMutableArrayRef> sortArray( ::CFArrayCreateMutable(kCFAllocatorDefault, mObjectCount, NULL /*const CFArrayCallBacks *callBacks*/ ) );
+	CFObj<CFMutableArrayRef> sortArray( ::CFArrayCreateMutable(kCFAllocatorDefault, mObjectList.size(), NULL /*const CFArrayCallBacks *callBacks*/ ) );
 	if(sortArray == NULL)
 		return memFullErr;
 
-	for (CFIndex i = 0; i < mObjectCount; i++)
+	for (CFIndex i = 0; i < mObjectList.size(); i++)
 	{
 		CFStringRef objName = CreateObjName( &(mObjectList[i]), NULL);
 		FileNameAndIndex *oneFileItem = new FileNameAndIndex(objName, i);//take ownership of filename
 		::CFArrayAppendValue(sortArray, oneFileItem);
 	}
 
-	CFRange theRange = { 0, mObjectCount };
+	CFRange theRange = { 0, static_cast<CFIndex>(mObjectList.size()) };
 	::CFArraySortValues(sortArray, theRange, FileNameComparator, &compareOptions);
 
 	//now put the sorted values back into our list of OneObjProperties
+    std::vector<OneObjProperties> newList( mObjectList.size() );
 	
-	OneObjProperties *newList = new OneObjProperties[mObjectCount];
-	
-	for(CFIndex i = 0; i < mObjectCount; i++)
+	for(CFIndex i = 0; i < mObjectList.size(); i++)
 	{
 		FileNameAndIndex *oneFileItem = (FileNameAndIndex *)::CFArrayGetValueAtIndex(sortArray,i);
-		newList[sortAscending ? i : (mObjectCount-1 -i)] = mObjectList[oneFileItem->index]; //it used to be at oneFileItem->index, now it is at "i" index
+		newList[sortAscending ? i : (mObjectList.size() -1 -i)] = mObjectList[oneFileItem->index]; //it used to be at oneFileItem->index, now it is at "i" index
 		delete oneFileItem;
 	}
 
 	//delete the old list itself but not its content because it has been copied to new list and ownership of objects has been transfered
-	mObjectList.Reset(newList);
+	mObjectList.swap(newList);
 	
-	mSortSettings.Reset( newSort.Detach() );
+	mSortSettings.reset( newSort.detach() );
 
 	return noErr;
 }

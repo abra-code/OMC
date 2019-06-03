@@ -7,18 +7,14 @@
 template <typename T> class ACFArrayBase : public CFObj<T>
 {
 public:
-
-	ACFArrayBase()
-	{
-	}
-	
-	ACFArrayBase( T inObj, CFObjRetainType inRetainType = kCFObjRetain )
+    //note: reverse retain default than CFObj!
+	ACFArrayBase( T inObj, CFObjRetainType inRetainType = kCFObjRetain ) noexcept
 		: CFObj<T>(inObj, inRetainType)
 	{
 	
 	}
 
-	CFIndex GetCount()
+	CFIndex GetCount() const noexcept
 	{
 		if(this->mRef != NULL)
 			return ::CFArrayGetCount( this->mRef );
@@ -26,7 +22,7 @@ public:
 	}
 
 	template< typename CFT >
-	Boolean GetValueAtIndex( CFIndex idx, CFT &outValue )
+	Boolean GetValueAtIndex( CFIndex idx, CFT &outValue ) const noexcept
 	{
 		if(this->mRef != NULL)
 		{
@@ -37,7 +33,7 @@ public:
 	}
 
 	template< typename CFT >
-	Boolean CopyValueAtIndex( CFIndex idx, CFT &outValue )
+	Boolean CopyValueAtIndex( CFIndex idx, CFT &outValue ) const noexcept
 	{
 		if( GetValueAtIndex(idx, outValue) )
 		{
@@ -47,7 +43,7 @@ public:
 		return false;
 	}
 
-	CFTypeRef GetValueAtIndex( CFIndex idx )
+	CFTypeRef GetValueAtIndex( CFIndex idx ) const noexcept
 	{
 		if(this->mRef != NULL)
 			return ::CFArrayGetValueAtIndex( this->mRef, idx );
@@ -60,40 +56,41 @@ typedef ACFArrayBase<CFArrayRef> ACFArr;
 class ACFMutableArr : public ACFArrayBase<CFMutableArrayRef>
 {
 public:
-	ACFMutableArr(CFIndex maxCount = 0)
+	ACFMutableArr(CFIndex maxCount = 0) noexcept
 	: ACFArrayBase<CFMutableArrayRef>( ::CFArrayCreateMutable( kCFAllocatorDefault, maxCount, &kCFTypeArrayCallBacks ) )
 	{
 	}
 
-	ACFMutableArr( CFMutableArrayRef inObj, CFObjRetainType inRetainType = kCFObjRetain )
+    //note: reverse retain default than CFObj!
+	ACFMutableArr( CFMutableArrayRef inObj, CFObjRetainType inRetainType = kCFObjRetain ) noexcept
 		: ACFArrayBase<CFMutableArrayRef>( inObj, inRetainType )
 	{
 	}
 
 	template< typename CFT >
-	void InsertValueAtIndex( CFIndex idx, CFT inCFObj )
+	void InsertValueAtIndex( CFIndex idx, CFT inCFObj ) noexcept
 	{
 		::CFArrayInsertValueAtIndex( mRef, idx, (const void *)inCFObj );
 	}
 
 	template< typename CFT >
-	void SetValueAtIndex( CFIndex idx, CFT inCFObj )
+	void SetValueAtIndex( CFIndex idx, CFT inCFObj ) noexcept
 	{
 		::CFArraySetValueAtIndex( mRef, idx, (const void *)inCFObj );
 	}
 	
 	template< typename CFT >
-	void AppendValue( CFT inCFObj )
+	void AppendValue( CFT inCFObj ) noexcept
 	{
 		::CFArrayAppendValue( mRef, (const void *)inCFObj );
 	}
 
-	void RemoveValueAtIndex( CFIndex idx )
+	void RemoveValueAtIndex( CFIndex idx ) noexcept
 	{
 		::CFArrayRemoveValueAtIndex( mRef, idx );
 	}
 
-	void RemoveAllValues()
+	void RemoveAllValues() noexcept
 	{
 		::CFArrayRemoveAllValues( mRef );
 	}

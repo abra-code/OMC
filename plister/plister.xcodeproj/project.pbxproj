@@ -28,13 +28,12 @@
 
 /* Begin PBXFileReference section */
 		08FB7796FE84155DC02AAC07 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		1D3BB167229BECA800542933 /* AUniquePtr.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = AUniquePtr.h; path = ../Common/AUniquePtr.h; sourceTree = "<group>"; };
 		8DD76F6C0486A84900D96B5E /* plister */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = plister; sourceTree = BUILT_PRODUCTS_DIR; };
 		C6859E8B029090EE04C91782 /* plister.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = plister.1; sourceTree = "<group>"; };
 		E20397C90948328E0068714F /* ABase64.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = ABase64.c; path = ../b64/ABase64.c; sourceTree = SOURCE_ROOT; };
 		E2269B7A0EB6DB820029CCF5 /* AbracodeCommon.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = AbracodeCommon.xcconfig; path = ../AbracodeCommon.xcconfig; sourceTree = SOURCE_ROOT; };
 		E27A1ACB10526A2E000DFAC8 /* plister_Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = plister_Info.plist; sourceTree = SOURCE_ROOT; };
-		E29675AA0913034B00ED7CB3 /* AStdMalloc.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = AStdMalloc.h; path = ../Common/AStdMalloc.h; sourceTree = SOURCE_ROOT; };
-		E29A17FB090482F100402E0B /* AStdArrayNew.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = AStdArrayNew.h; path = ../Common/AStdArrayNew.h; sourceTree = SOURCE_ROOT; };
 		E2AA0BFA09033F9A00EA94FD /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = /System/Library/Frameworks/CoreFoundation.framework; sourceTree = "<absolute>"; };
 		E2AA0C380903482400EA94FD /* CFObj.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = CFObj.h; path = ../Common/CFObj.h; sourceTree = SOURCE_ROOT; };
 		E2EE798F0946DCCD00CD3EFF /* ABase64.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ABase64.h; path = ../b64/ABase64.h; sourceTree = SOURCE_ROOT; };
@@ -72,8 +71,7 @@
 				E20397C90948328E0068714F /* ABase64.c */,
 				E2EE798F0946DCCD00CD3EFF /* ABase64.h */,
 				E2AA0C380903482400EA94FD /* CFObj.h */,
-				E29A17FB090482F100402E0B /* AStdArrayNew.h */,
-				E29675AA0913034B00ED7CB3 /* AStdMalloc.h */,
+				1D3BB167229BECA800542933 /* AUniquePtr.h */,
 			);
 			name = Source;
 			sourceTree = "<group>";
@@ -127,6 +125,7 @@
 			developmentRegion = English;
 			hasScannedForEncodings = 1;
 			knownRegions = (
+				English,
 				en,
 			);
 			mainGroup = 08FB7794FE84155DC02AAC07 /* plister */;

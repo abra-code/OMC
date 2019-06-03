@@ -20,8 +20,6 @@ CreateOutputWindowController(const OutputWindowSettings &inSettings, OutputWindo
 {
 	OMCOutputWindowController *controller = NULL;
 
-	/*BOOL isOK =*/ NSApplicationLoad();
-
 	@autoreleasepool
 	{
 		@try
@@ -99,6 +97,26 @@ void OMCOutputWindowAppendText(OMCOutputWindowControllerRef inControllerRef, CFS
 	} //@autoreleasepool
 }
 
+void OMCOutputWindowScheduleClosing(OMCOutputWindowControllerRef inControllerRef, CFTimeInterval delay)
+{
+    @autoreleasepool
+    {
+        @try
+        {
+            OMCOutputWindowController *controller = (OMCOutputWindowController *)inControllerRef;
+            [NSTimer scheduledTimerWithTimeInterval:delay
+                                                target:controller
+                                                selector:@selector(close)
+                                                userInfo:nil repeats:NO];
+        }
+        @catch (NSException *localException)
+        {
+            NSLog(@"OMCOutputWindowScheduleClosing received exception: %@", localException);
+        }
+    } //@autoreleasepool
+}
+
+
 void
 ResetOutputWindowCascading()
 {
@@ -109,7 +127,7 @@ ResetOutputWindowCascading()
 
 - (void)dealloc
 {
-	mHandler = NULL; //we are being deleted by our dying owner so mHandler is already invalid
+	mHandler = nullptr; //we are being deleted by our dying owner so mHandler is already invalid
 /*  
 	do not call [self window] in dealloc. Our refcount is 0 now and this will try to:
 	- load the window
@@ -311,11 +329,15 @@ ResetOutputWindowCascading()
 
 - (void)windowWillClose:(NSNotification *)notification
 {
-	if(mHandler != NULL)
+	if(mHandler != nullptr)
 	{//the handler is actually our owner and it will release us when it dies.
 	//we just need to let it know that we are ready
-		mHandler->ScheduleSelfDestruction(0.0);
-		mHandler = NULL;
+        OutputWindowHandler *windowHandler = mHandler;
+        mHandler = nullptr;
+        CFRunLoopPerformBlock( CFRunLoopGetMain(), kCFRunLoopCommonModes, ^()
+                              {
+                                  delete windowHandler;
+                              });
 	}
 }
 

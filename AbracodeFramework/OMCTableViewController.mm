@@ -102,7 +102,7 @@
 				oneTableColumn = [[[NSTableColumn alloc] initWithIdentifier:[columnIdentifier stringValue]] autorelease];
 				if( prevTableColumn != NULL)
 				{//with settings from previous column
-					NSCell *headerCell = [[prevTableColumn headerCell] copy];
+					NSTableHeaderCell *headerCell = [[prevTableColumn headerCell] copy];
 					[headerCell autorelease];
 					[oneTableColumn setHeaderCell: headerCell];
 					NSCell *dataCell = [[prevTableColumn dataCell] copy];

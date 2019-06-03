@@ -26,23 +26,23 @@ public:
 	ARefCounted()
 		: mRefCount(1) //newly created objects starts with a ref count 1
 	{
-//		TRACE_CSTR1( "ARefCounted::ARefCounted" );
+//		TRACE_CSTR( "ARefCounted::ARefCounted\n" );
 	}
 
 	virtual ~ARefCounted()
 	{
-//		TRACE_CSTR1( "ARefCounted::~ARefCounted" );
+//		TRACE_CSTR( "ARefCounted::~ARefCounted\n" );
 	}
 
 	int Retain() const
 	{
-//		TRACE_CSTR1( "ARefCounted::Retain" );
+//		TRACE_CSTR( "ARefCounted::Retain\n" );
 		return ++mRefCount;
 	}
 
 	int Release() const
 	{
-//		TRACE_CSTR1( "ARefCounted::Release" );
+//		TRACE_CSTRs( "ARefCounted::Release" );
 		int outRefCount = --mRefCount;
 		if(mRefCount == 0)
 		{

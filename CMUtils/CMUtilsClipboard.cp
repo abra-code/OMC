@@ -12,10 +12,9 @@
 
 #include "CMUtils.h"
 #include "DebugSettings.h"
-#include "AStdMalloc.h"
-#include "AStdArrayNew.h"
 #include "CFObj.h"
 #include "ACFType.h"
+#include <vector>
 
 #define SwapHiLoBytes(x)	( (unsigned short)((unsigned char)(x)<<8) | ((unsigned short)(x) >> 8) )
 
@@ -74,7 +73,7 @@ CMUtils::IsTextInClipboard()
 CFStringRef
 CMUtils::CreateCFStringFromClipboardText(long inReplaceOption)
 {
-	TRACE_CSTR1( "CreateCFStringFromClipboardText" );
+	TRACE_CSTR( "CreateCFStringFromClipboardText\n" );
 	
 	CFStringRef outString = NULL;
 
@@ -235,14 +234,14 @@ CMUtils::PutCFStringToClipboardAsUnicodeText(PasteboardRef inPasteboardRef, Past
 	else
 	{
 		//CFStringGetCharactersPtr failed and we must copy the string
-		AStdArrayNew<UniChar> newString(uniCount);
+		std::vector<UniChar> newString(uniCount);
 
 		CFRange theRange;
 		theRange.location = 0;
 		theRange.length = uniCount;
-		::CFStringGetCharacters( inString, theRange, newString);
+		::CFStringGetCharacters( inString, theRange, newString.data() );
 		
-		CFObj<CFDataRef> theData( CFDataCreate(kCFAllocatorDefault, (const UInt8*)newString.Get(), uniCount*sizeof(UniChar)) );
+		CFObj<CFDataRef> theData( CFDataCreate(kCFAllocatorDefault, (const UInt8*)newString.data(), uniCount*sizeof(UniChar)) );
 		err = PasteboardPutItemFlavor(inPasteboardRef, inItem, CFSTR("com.apple.utf16-plain-text"), theData, kPasteboardFlavorNoFlags);
 	}
 
@@ -264,13 +263,13 @@ CMUtils::PutCFStringToClipboardAsMacEncodedText(PasteboardRef inPasteboardRef, P
 	CFIndex newSize = ::CFStringGetMaximumSizeForEncoding(uniCount, sysEnc);
 	if(newSize > 0)
 	{
-		AMalloc buff(newSize + 1);
-		Boolean isOK = ::CFStringGetCString(inString, buff.Get(), newSize + 1, sysEnc);
+        std::vector<char> buff(newSize + 1);
+		Boolean isOK = ::CFStringGetCString(inString, buff.data(), newSize + 1, sysEnc);
 		if(isOK)
 		{
-			long stringLen = strlen(buff.Get());
+			long stringLen = strlen(buff.data());
 			
-			CFObj<CFDataRef> theData( CFDataCreate(kCFAllocatorDefault, (const UInt8*)buff.Get(), stringLen) );
+			CFObj<CFDataRef> theData( CFDataCreate(kCFAllocatorDefault, (const UInt8*)buff.data(), stringLen) );
 			err = PasteboardPutItemFlavor(inPasteboardRef, inItem, CFSTR("com.apple.traditional-mac-plain-text"), theData, kPasteboardFlavorNoFlags);
 		}
 		else

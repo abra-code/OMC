@@ -21,7 +21,7 @@ CMUtils::GetFSRef(const AEDesc &inDesc, FSRef &outRef)
 
 	if( (inDesc.descriptorType == typeFSRef) && (inDesc.dataHandle != NULL) )
 	{//no need to coerce
-		TRACE_CSTR1("\tCMUtils::FSRefGetRef without coercing..." );
+		TRACE_CSTR("\tCMUtils::FSRefGetRef without coercing...\n" );
 		err = ::AEGetDescData( &inDesc, &outRef, sizeof(FSRef) );
 	}
 	else if( (inDesc.descriptorType != typeNull) && (inDesc.dataHandle != NULL) )
@@ -30,7 +30,7 @@ CMUtils::GetFSRef(const AEDesc &inDesc, FSRef &outRef)
 		err = ::AECoerceDesc( &inDesc, typeFSRef, coercedRef );
 		if(err == noErr)
 		{
-			TRACE_CSTR1("\tCMUtils::FSRefGetRef with coercing..." );
+			TRACE_CSTR("\tCMUtils::FSRefGetRef with coercing...\n" );
 			err = ::AEGetDescData( coercedRef, &outRef, sizeof(FSRef) );
 		}
 	}

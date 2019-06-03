@@ -11,7 +11,6 @@
 #include "CFObj.h"
 #include "MessagePortListener.h"
 #include "AObserver.h"
-#include "AStdNew.h"
 #include "OMCDeferredProgress.h"
 
 class OmcExecutor;

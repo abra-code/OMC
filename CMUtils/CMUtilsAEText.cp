@@ -13,9 +13,8 @@
 #include "CMUtils.h"
 #include "DebugSettings.h"
 #include "StAEDesc.h"
-#include "AStdArrayNew.h"
-#include "AStdMalloc.h"
 #include "CFObj.h"
+#include <vector>
 
 Boolean
 CMUtils::AEDescHasTextData(const AEDesc &inDesc)
@@ -62,18 +61,15 @@ CMUtils::CreateCFStringFromAEDesc(const AEDesc &inDesc, long inReplaceOption)
 
 #if _DEBUG_
 
-	char debugStr[32];
-	DEBUG_CSTR( "AEDescHasTextData: data type is: " );
+	char debugStr[8];
 	UInt8 *descPtr = (UInt8 *)&inDesc.descriptorType;
 	debugStr[0] = descPtr[0];
 	debugStr[1] = descPtr[1];
 	debugStr[2] = descPtr[2];
 	debugStr[3] = descPtr[3];
 	debugStr[4] = '\0';
-	
-	
-	DEBUG_CSTR( debugStr );
-	DEBUG_CSTR("\n");
+
+    DEBUG_CSTR( "AEDescHasTextData: data type is: %s\n", debugStr );
 	
 	if(inDesc.dataHandle != NULL)
 	{
@@ -90,43 +86,37 @@ CMUtils::CreateCFStringFromAEDesc(const AEDesc &inDesc, long inReplaceOption)
 	if( (inDesc.descriptorType == typeUnicodeText) && (inDesc.dataHandle != NULL) )
 	{
 		Size byteCount = ::AEGetDescDataSize( &inDesc );
-        AStdMalloc<UniChar> wholeBuffer(byteCount/sizeof(UniChar));
-        UniChar *newBuffer = wholeBuffer;
-		if(newBuffer != NULL)
-		{
-			if( ::AEGetDescData( &inDesc, newBuffer, byteCount ) == noErr)
-			{
-				if( ((byteCount/sizeof(UniChar)) > 0) && (newBuffer[0] == 0xFEFF) )
-				{
-					newBuffer++;
-					byteCount -= sizeof(UniChar);
-				}
-				
-				if(inReplaceOption == kTextReplaceLFsWithCRs)
-					ReplaceUnicodeCharacters(newBuffer, byteCount/sizeof(UniChar), 0x000A, 0x000D);
-				else if(inReplaceOption == kTextReplaceCRsWithLFs)
-					ReplaceUnicodeCharacters(newBuffer, byteCount/sizeof(UniChar), 0x000D, 0x000A);
-			
-				outString = ::CFStringCreateWithCharacters(kCFAllocatorDefault, newBuffer, byteCount/sizeof(UniChar) );
-			}	
-		}
+        std::vector<UniChar> wholeBuffer(byteCount/sizeof(UniChar));
+        UniChar *newBuffer = wholeBuffer.data();
+        if( ::AEGetDescData( &inDesc, newBuffer, byteCount ) == noErr)
+        {
+            if( ((byteCount/sizeof(UniChar)) > 0) && (newBuffer[0] == 0xFEFF) )
+            {
+                newBuffer++;
+                byteCount -= sizeof(UniChar);
+            }
+            
+            if(inReplaceOption == kTextReplaceLFsWithCRs)
+                ReplaceUnicodeCharacters(newBuffer, byteCount/sizeof(UniChar), 0x000A, 0x000D);
+            else if(inReplaceOption == kTextReplaceCRsWithLFs)
+                ReplaceUnicodeCharacters(newBuffer, byteCount/sizeof(UniChar), 0x000D, 0x000A);
+        
+            outString = ::CFStringCreateWithCharacters(kCFAllocatorDefault, newBuffer, byteCount/sizeof(UniChar) );
+        }
 	}
 	else if( (inDesc.descriptorType == typeChar) && (inDesc.dataHandle != NULL) )
 	{
 		Size byteCount = ::AEGetDescDataSize( &inDesc );
-        AStdMalloc<char> newBuffer(byteCount);
-		if(newBuffer != NULL)
-		{
-			if( ::AEGetDescData( &inDesc, newBuffer, byteCount ) == noErr)
-			{
-				if(inReplaceOption == kTextReplaceLFsWithCRs)
-					ReplaceCharacters(newBuffer, byteCount, 0x0A, 0x0D);
-				else if(inReplaceOption == kTextReplaceCRsWithLFs)
-					ReplaceCharacters(newBuffer, byteCount, 0x0D, 0x0A);
+        std::vector<char> newBuffer(byteCount);
+        if( ::AEGetDescData( &inDesc, newBuffer.data(), byteCount ) == noErr)
+        {
+            if(inReplaceOption == kTextReplaceLFsWithCRs)
+                ReplaceCharacters(newBuffer.data(), byteCount, 0x0A, 0x0D);
+            else if(inReplaceOption == kTextReplaceCRsWithLFs)
+                ReplaceCharacters(newBuffer.data(), byteCount, 0x0D, 0x0A);
 
-				outString = ::CFStringCreateWithBytes(kCFAllocatorDefault, (const UInt8*)newBuffer.Get(), byteCount, CFStringGetSystemEncoding(), true);
-			}	
-		}
+            outString = ::CFStringCreateWithBytes(kCFAllocatorDefault, (const UInt8*)newBuffer.data(), byteCount, CFStringGetSystemEncoding(), true);
+        }
 	}
 	else if( (inDesc.descriptorType != typeNull) && (inDesc.dataHandle != NULL) ) 
 	{
@@ -138,26 +128,23 @@ CMUtils::CreateCFStringFromAEDesc(const AEDesc &inDesc, long inReplaceOption)
 				if(textDesc.GetDataStorage() != NULL)
 				{
 					Size byteCount = ::AEGetDescDataSize( textDesc );
-                    AStdMalloc<UniChar> wholeBuffer(byteCount/sizeof(UniChar));
-                    UniChar *newBuffer = wholeBuffer;
-					if(newBuffer != NULL)
-					{
-						if( ::AEGetDescData( textDesc, newBuffer, byteCount ) == noErr)
-						{
-							if( ((byteCount/sizeof(UniChar)) > 0) && (newBuffer[0] == 0xFEFF) )
-							{
-								newBuffer++;
-								byteCount -= sizeof(UniChar);
-							}
+                    std::vector<UniChar> wholeBuffer(byteCount/sizeof(UniChar));
+                    UniChar *newBuffer = wholeBuffer.data();
+                    if( ::AEGetDescData( textDesc, newBuffer, byteCount ) == noErr)
+                    {
+                        if( ((byteCount/sizeof(UniChar)) > 0) && (newBuffer[0] == 0xFEFF) )
+                        {
+                            newBuffer++;
+                            byteCount -= sizeof(UniChar);
+                        }
 
-							if(inReplaceOption == kTextReplaceLFsWithCRs)
-								ReplaceUnicodeCharacters(newBuffer, byteCount/sizeof(UniChar), 0x000A, 0x000D);
-							else if(inReplaceOption == kTextReplaceCRsWithLFs)
-								ReplaceUnicodeCharacters(newBuffer, byteCount/sizeof(UniChar), 0x000D, 0x000A);
+                        if(inReplaceOption == kTextReplaceLFsWithCRs)
+                            ReplaceUnicodeCharacters(newBuffer, byteCount/sizeof(UniChar), 0x000A, 0x000D);
+                        else if(inReplaceOption == kTextReplaceCRsWithLFs)
+                            ReplaceUnicodeCharacters(newBuffer, byteCount/sizeof(UniChar), 0x000D, 0x000A);
 
-							outString = ::CFStringCreateWithCharacters(kCFAllocatorDefault, newBuffer, byteCount/sizeof(UniChar) );
-						}	
-					}
+                        outString = ::CFStringCreateWithCharacters(kCFAllocatorDefault, newBuffer, byteCount/sizeof(UniChar) );
+                    }
 				}
 		}
 		else if( ::AECoerceDesc(&inDesc, typeChar, textDesc) == noErr)
@@ -166,19 +153,16 @@ CMUtils::CreateCFStringFromAEDesc(const AEDesc &inDesc, long inReplaceOption)
 				if(textDesc.GetDataStorage() != NULL)
 				{
 					Size byteCount = ::AEGetDescDataSize( textDesc );
-                    AStdMalloc<char> newBuffer(byteCount);
-					if(newBuffer != NULL)
-					{
-						if( ::AEGetDescData( textDesc, newBuffer, byteCount ) == noErr)
-						{
-							if(inReplaceOption == kTextReplaceLFsWithCRs)
-								ReplaceCharacters(newBuffer, byteCount, 0x0A, 0x0D);
-							else if(inReplaceOption == kTextReplaceCRsWithLFs)
-								ReplaceCharacters(newBuffer, byteCount, 0x0D, 0x0A);
+                    std::vector<char> newBuffer(byteCount);
+                    if( ::AEGetDescData( textDesc, newBuffer.data(), byteCount ) == noErr)
+                    {
+                        if(inReplaceOption == kTextReplaceLFsWithCRs)
+                            ReplaceCharacters(newBuffer.data(), byteCount, 0x0A, 0x0D);
+                        else if(inReplaceOption == kTextReplaceCRsWithLFs)
+                            ReplaceCharacters(newBuffer.data(), byteCount, 0x0D, 0x0A);
 
-							outString = ::CFStringCreateWithBytes(kCFAllocatorDefault, (const UInt8*)newBuffer.Get(), byteCount, CFStringGetSystemEncoding(), true);
-						}	
-					}
+                        outString = ::CFStringCreateWithBytes(kCFAllocatorDefault, (const UInt8*)newBuffer.data(), byteCount, CFStringGetSystemEncoding(), true);
+                    }
 				}
 		}
 	}
@@ -204,13 +188,13 @@ CMUtils::CreateUniTextDescFromCFString(CFStringRef inStringRef, AEDesc &outDesc)
 		return ::AECreateDesc(typeUnicodeText, uniString, uniCount*sizeof(UniChar), &outDesc);
 	}
 	
-	AStdArrayNew<UniChar> newString(uniCount);
+    std::vector<UniChar> newString(uniCount);
 
 	CFRange theRange;
 	theRange.location = 0;
 	theRange.length = uniCount;
-	::CFStringGetCharacters( inStringRef, theRange, newString.Get());
-	return ::AECreateDesc(typeUnicodeText, newString.Get(), uniCount*sizeof(UniChar), &outDesc);
+	::CFStringGetCharacters( inStringRef, theRange, newString.data());
+	return ::AECreateDesc(typeUnicodeText, newString.data(), uniCount*sizeof(UniChar), &outDesc);
 
 }
 
@@ -236,40 +220,33 @@ CMUtils::ReplaceUnicodeCharacters(UniChar *ioText, UniCharCount inCount, UniChar
 
 //zero-terminated string is given on output
 //result allocated with malloc, caller responsible for freeing it
-char *
-CMUtils::CreateUTF8CStringFromCFString(CFStringRef inString, ByteCount *outCount)
+std::string
+CMUtils::CreateUTF8StringFromCFString(CFStringRef inString)
 {
-	if(outCount != NULL)
-		*outCount = 0;
-
 	TRACE_CSTR("Entering CreateUTF8CStringFromCFString\n");
 
 	if( inString == NULL )
 	{
 		TRACE_CSTR("Input CFString is NULL, return\n");
-		return NULL;
+		return std::string();
 	}
 
 	//OSStatus err = noErr;
 	CFIndex uniCount = ::CFStringGetLength(inString);
 	if(uniCount > 0)
 	{
-		CFIndex newSize = ::CFStringGetMaximumSizeForEncoding(uniCount, kCFStringEncodingUTF8);
-		if(newSize > 0)
-		{
-			AMalloc buff(newSize + 1);
-			Boolean isOK = ::CFStringGetCString(inString, buff.Get(), newSize + 1, kCFStringEncodingUTF8);
-			if(isOK)
-			{
-				if(outCount != NULL)
-					*outCount = strlen(buff.Get());
-				return buff.Detach();
-			}
-		}
+		CFIndex maxCount = ::CFStringGetMaximumSizeForEncoding(uniCount, kCFStringEncodingUTF8); //too big size
+        std::string string(maxCount+1, '\0');//+ 1 for null char
+        Boolean isOK = ::CFStringGetCString(inString, &string[0], maxCount+1, kCFStringEncodingUTF8);
+        if(isOK)
+        {
+            string.resize(strnlen(&string[0], maxCount));//shrink down to exact size
+            return string;
+        }
 	}
 	
 	TRACE_CSTR("CreateUTF8CStringFromCFString. Empty string\n");
-	return (char *)calloc(1, sizeof(char));//one byte with '\0'
+	return std::string();
 }
 
 //character, not byte, count is given on output
@@ -290,15 +267,15 @@ CMUtils::CreateUTF16DataFromCFString(CFStringRef inString, UniCharCount *outChar
 	if(uniCount == 0)//we still want to allocate data for empty string but better not malloc 0 size
 		allocCount = 1;
 
-	AStdMalloc<UniChar> newString(allocCount);
+	UniChar* newString = (UniChar*)malloc(sizeof(UniChar)*allocCount);
 
 	CFRange theRange;
 	theRange.location = 0;
 	theRange.length = uniCount;
-	::CFStringGetCharacters( inString, theRange, newString.Get());
+	::CFStringGetCharacters( inString, theRange, newString);
 	if(outCharCount != NULL)
 		*outCharCount = uniCount;
 
-	return newString.Detach();
+	return newString;
 }
 

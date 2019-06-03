@@ -12,7 +12,7 @@
 
 @implementation OMCPanel
 
-- (id)initWithContentRect:(NSRect)contentRect styleMask:(NSUInteger)aStyle backing:(NSBackingStoreType)bufferingType defer:(BOOL)flag
+- (id)initWithContentRect:(NSRect)contentRect styleMask:(NSWindowStyleMask)aStyle backing:(NSBackingStoreType)bufferingType defer:(BOOL)flag
 {
 	//NSLog(@"OMCPanel initWithContentRect 1");
 	
@@ -27,7 +27,7 @@
 	return self;
 }
 
-- (id)initWithContentRect:(NSRect)contentRect styleMask:(NSUInteger)aStyle backing:(NSBackingStoreType)bufferingType defer:(BOOL)flag screen:(NSScreen *)screen
+- (id)initWithContentRect:(NSRect)contentRect styleMask:(NSWindowStyleMask)aStyle backing:(NSBackingStoreType)bufferingType defer:(BOOL)flag screen:(NSScreen *)screen
 {
 	//NSLog(@"OMCPanel initWithContentRect 2");
 	
@@ -141,7 +141,7 @@
 - (BOOL)performKeyEquivalent:(NSEvent *)theEvent
 {
 	NSUInteger modifFlags = [theEvent modifierFlags];
-	if( (modifFlags & NSDeviceIndependentModifierFlagsMask) == NSCommandKeyMask)
+	if( (modifFlags & NSEventModifierFlagDeviceIndependentFlagsMask) == NSEventModifierFlagCommand)
 	{
 		NSString *eventChar = [theEvent charactersIgnoringModifiers];
 		if([eventChar isEqualToString: @"w"])

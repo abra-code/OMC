@@ -140,7 +140,7 @@
 	}
 
 	[self setAutostartsRendering:YES];
-	[self setEventForwardingMask:NSAnyEventMask];
+    [self setEventForwardingMask:NSEventMaskAny];
 	[self startRendering];
 }
 

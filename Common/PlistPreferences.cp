@@ -69,11 +69,10 @@ PlistPreferences::GetIntegerValueForKey(CFStringRef inKey, CFIndex &outIntValue)
 void
 PlistPreferences::SetIntegerValueForKey(CFStringRef inKey, CFIndex inIntValue)
 {
-	CFNumberRef theNum = ::CFNumberCreate(kCFAllocatorDefault, kCFNumberLongType, &inIntValue);
-	if(theNum != NULL)
+	CFObj<CFNumberRef> theNum = ::CFNumberCreate(kCFAllocatorDefault, kCFNumberLongType, &inIntValue);
+	if(theNum != nullptr)
 	{
 		::CFPreferencesSetAppValue( inKey, theNum, mPrefsIdentifier );
-		::CFRelease(theNum);
 	}
 }
 
@@ -86,9 +85,9 @@ PlistPreferences::CopyStringForKey(CFStringRef inKey)
 	CFObj<CFTypeRef> resultRef( ::CFPreferencesCopyAppValue(inKey, mPrefsIdentifier) );
 	if( ACFType<CFStringRef>::DynamicCast(resultRef) != NULL )
 		return (CFStringRef)resultRef.Detach();
-	return NULL;
+	return nullptr;
 }
-	
+
 void
 PlistPreferences::SetStringForKey(CFStringRef inKey, CFStringRef inString)
 {

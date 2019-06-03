@@ -13,7 +13,7 @@ static int sWindowCount = 0;
 
 @implementation OMCWindow
 
-- (id)initWithContentRect:(NSRect)contentRect styleMask:(NSUInteger)aStyle backing:(NSBackingStoreType)bufferingType defer:(BOOL)flag
+- (id)initWithContentRect:(NSRect)contentRect styleMask:(NSWindowStyleMask)aStyle backing:(NSBackingStoreType)bufferingType defer:(BOOL)flag
 {
 	//NSLog(@"OMCWindow initWithContentRect 1");
 	
@@ -28,7 +28,7 @@ static int sWindowCount = 0;
 	return self;
 }
 
-- (id)initWithContentRect:(NSRect)contentRect styleMask:(NSUInteger)aStyle backing:(NSBackingStoreType)bufferingType defer:(BOOL)flag screen:(NSScreen *)screen
+- (id)initWithContentRect:(NSRect)contentRect styleMask:(NSWindowStyleMask)aStyle backing:(NSBackingStoreType)bufferingType defer:(BOOL)flag screen:(NSScreen *)screen
 {
 	//NSLog(@"OMCWindow initWithContentRect 2");
 
@@ -120,7 +120,7 @@ static int sWindowCount = 0;
 - (BOOL)performKeyEquivalent:(NSEvent *)theEvent
 {
 	NSUInteger modifFlags = [theEvent modifierFlags];
-	if( (modifFlags & NSDeviceIndependentModifierFlagsMask) == NSCommandKeyMask)
+    if( (modifFlags & NSEventModifierFlagDeviceIndependentFlagsMask) == NSEventModifierFlagCommand)
 	{
 		NSString *eventChar = [theEvent charactersIgnoringModifiers];
 		if([eventChar isEqualToString: @"w"])

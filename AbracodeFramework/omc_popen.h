@@ -24,13 +24,13 @@ typedef enum OMCPopenExecutionMode
 	kOMCPopenWrite = 0x02,
 } OMCPopenExecutionMode;
 
-char ** CreateEnviron(char **inKeys, char **inValues, size_t inCount);
+char ** CreateEnviron(char* const* inKeys, char* const* inValues, size_t inCount);
 void ReleaseEnviron(char **inEnviron);
 
 //returns 0 if succeeded
 //inEnvironList is terminated with entry where key=NULL
 //inShell is a string list terminated with NULL
-int omc_popen(const char *command, char **inShell, char **inEnvironList, unsigned int inMode, ChildProcessInfo *outChildProcessInfo);
+int omc_popen(const char *command, char * const *inShell, char * const *inEnvironList, unsigned int inMode, ChildProcessInfo *outChildProcessInfo);
 int omc_pclose(pid_t inChildPid);
 void omc_pclose_write(pid_t inChildPid);
 

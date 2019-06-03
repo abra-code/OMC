@@ -252,8 +252,11 @@ int main (int argc, const char * argv[])
 		if(success && (theDataRef != NULL))
 		{//file exists - read content
 			CFStringRef errorString = NULL;
-			CFPropertyListRef thePlist = CFPropertyListCreateFromXMLData( kCFAllocatorDefault, theDataRef,
-																	kCFPropertyListMutableContainers, &errorString);
+			CFPropertyListRef thePlist = CFPropertyListCreateWithData(
+											kCFAllocatorDefault,
+											theDataRef,
+                                        	kCFPropertyListMutableContainers,
+                                        	NULL, NULL);
 			CFRelease(theDataRef);
 			if(errorString != NULL)
 				CFRelease(errorString);
@@ -703,13 +706,13 @@ int main (int argc, const char * argv[])
 	success = false;
 	errorCode = 0;
 
-	CFDataRef xmlData = CFPropertyListCreateXMLData(kCFAllocatorDefault, plistDict);
+	CFDataRef xmlData = CFPropertyListCreateData(kCFAllocatorDefault, plistDict, kCFPropertyListBinaryFormat_v1_0, 0, NULL);
 	if(xmlData != NULL)
 	{
 		//overwrites previous file content
 		if(urlRef != NULL)
 		{
-			success = CFURLWriteDataAndPropertiesToResource( urlRef, xmlData, NULL, &errorCode);
+			success = CFURLWriteDataAndPropertiesToResource(urlRef, xmlData, NULL, &errorCode);
 			if(!success)
 				fprintf(stderr, "An error ocurred when writing property list to %s\n", sFilePath);
 		}

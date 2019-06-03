@@ -13,7 +13,6 @@
 
 #include "OmcTaskManager.h"
 #include "OmcExecutor.h"
-#include "AStdNew.h"
 #include "OmcTaskNotification.h"
 #include "ACFDict.h"
 //#include "NibDialog.h"
@@ -61,7 +60,6 @@ public:
 	}
 
 	ARefCountedObj< OmcExecutor > mExec;
-//	AStdNew<OmcExecutor>	mExec;
 	CFObj<CFStringRef>		mCommand;
 	CFObj<CFStringRef>		mInputPipe;
 	CFObj<CFStringRef>		mObjName;
@@ -337,7 +335,7 @@ OmcHostTaskManager::CancelAllTasks()
 	
 	if(sDuringCancel)
 	{
-		DEBUG_CSTR("Re-entering OmcHostTaskManager::CancelAllTasks() - BAD things will happen");
+		DEBUG_CSTR("Re-entering OmcHostTaskManager::CancelAllTasks() - BAD things will happen\n");
 	}
 
 	sDuringCancel = true;
@@ -788,8 +786,8 @@ OmcDeputyTaskManager::ReceiveNotification(void *ioData)
 //pack structure data so it can travel with message to another process
 CFDataRef OMCTaskCreatePackedData( const OmcTaskData &inStruct )
 {
-	ACFMutableDict dataDict;
-	
+    ACFMutableDict dataDict;
+
 	dataDict.SetValue( CFSTR("messageID"), (CFIndex)inStruct.messageID );
 	dataDict.SetValue( CFSTR("taskID"), inStruct.taskID );
 	dataDict.SetValue( CFSTR("childProcessID"), (CFIndex)inStruct.childProcessID );
@@ -834,7 +832,7 @@ CFDataRef OMCTaskCreatePackedData( const OmcTaskData &inStruct )
 		break;
 	}
 	
-	return ::CFPropertyListCreateXMLData( kCFAllocatorDefault, (CFDictionaryRef)dataDict);
+    return CFPropertyListCreateData(kCFAllocatorDefault, (CFMutableDictionaryRef)dataDict, kCFPropertyListBinaryFormat_v1_0, 0, nullptr);
 }
 
 //caller responsible for releasing CF objects allocated for this struct
@@ -844,7 +842,8 @@ bool OMCTaskUnpackData( CFDataRef inData, OmcTaskData &outStruct )
 
 	if(inData == NULL)
 		return false;
-	CFPropertyListRef thePlist = ::CFPropertyListCreateFromXMLData( kCFAllocatorDefault, inData, kCFPropertyListImmutable, NULL);
+
+    CFObj<CFPropertyListRef> thePlist(CFPropertyListCreateWithData(kCFAllocatorDefault, inData, kCFPropertyListImmutable, nullptr, nullptr));
 	if(thePlist == NULL)
 		return false;
 
@@ -855,7 +854,7 @@ bool OMCTaskUnpackData( CFDataRef inData, OmcTaskData &outStruct )
 		return false;
 	}
 
-	ACFDictOwned dataDict( plistDict );
+	ACFDict dataDict(plistDict);
 
 	CFIndex val = 0;
 	dataDict.GetValue(CFSTR("messageID"), val);
@@ -933,26 +932,32 @@ KeyPressSimulationCallBack(CFRunLoopTimerRef timer, void* context)
 {
 #pragma unused (context)
 
-	OSStatus err = noErr;
-	PasteboardRef theClipboard = NULL;
-	err = PasteboardCreate( kPasteboardClipboard, &theClipboard );
-	if( (err == noErr) && (theClipboard != NULL) )
-	{
-		PasteboardSyncFlags syncFlags = PasteboardSynchronize( theClipboard );
-#if _DEBUG_
-		printf("OMC: PasteboardSyncFlags = 0x%.8X\n", (unsigned int)syncFlags);
-#endif
-		CFRelease(theClipboard);
-	}
+    //synchronize pasteboard before simulating cmd+v
+    {
+        CFObj<PasteboardRef> thePasteboard;
+        OSStatus err = PasteboardCreate( kPasteboardClipboard, &thePasteboard );
+        if( (err == noErr) && (thePasteboard != nullptr) )
+        {
+            PasteboardSyncFlags syncFlags = PasteboardSynchronize( thePasteboard );
+    #if _DEBUG_
+            printf("OMC: PasteboardSyncFlags = 0x%.8X\n", (unsigned int)syncFlags);
+    #endif
+        }
+    }
 
-	::CGEnableEventStateCombining(FALSE);//default is TRUE, disable it when posting our keyboard event
-	::CGPostKeyboardEvent( (CGCharCode)0, (CGKeyCode)55, true ); // command down
-	::CGPostKeyboardEvent( (CGCharCode)'v', (CGKeyCode)9, true ); // 'v' down
-	::CGPostKeyboardEvent( (CGCharCode)'v', (CGKeyCode)9, false ); // 'v' up
-	::CGPostKeyboardEvent( (CGCharCode)0, (CGKeyCode)55, false ); // 'command up
-	::CGEnableEventStateCombining(TRUE);//revert to default
+    CFObj<CGEventRef> cmdDown = CGEventCreateKeyboardEvent(nullptr, (CGKeyCode)55, true);
+    CGEventPost(kCGHIDEventTap, cmdDown);
+    
+    CFObj<CGEventRef> vDown = CGEventCreateKeyboardEvent(nullptr, (CGKeyCode)9, true); // 'v' down
+    CGEventPost(kCGHIDEventTap, vDown);
 
-	if(timer != NULL)
+    CFObj<CGEventRef> vUp = CGEventCreateKeyboardEvent(nullptr, (CGKeyCode)9, false); // 'v' up
+    CGEventPost(kCGHIDEventTap, vUp);
+
+    CFObj<CGEventRef> cmdUp = CGEventCreateKeyboardEvent(nullptr, (CGKeyCode)55, false);
+    CGEventPost(kCGHIDEventTap, cmdUp);
+
+	if(timer != nullptr)
 	{
 		CFRunLoopTimerInvalidate(timer);
 		CFRelease(timer);

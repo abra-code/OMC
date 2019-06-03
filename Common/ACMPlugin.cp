@@ -18,7 +18,7 @@
 
 ACMPlugin::ACMPlugin(CFStringRef inBundleID)
 {
-	TRACE_CSTR1( "ACMPlugin::ACMPlugin" );
+	TRACE_CSTR( "ACMPlugin::ACMPlugin\n" );
 
 	if(inBundleID != NULL)
 		mBundleRef.Adopt( ::CFBundleGetBundleWithIdentifier(inBundleID), kCFObjRetain );
@@ -31,14 +31,14 @@ ACMPlugin::ACMPlugin(CFStringRef inBundleID)
 	}
 	else
 	{
-		DEBUG_CSTR1("CFBundleGetBundleWithIdentifier returned NULL!");
+		DEBUG_CSTR("CFBundleGetBundleWithIdentifier returned NULL!\n");
 	}
 #endif
 }
 
 ACMPlugin::~ACMPlugin()
 {
-	TRACE_CSTR1( "ACMPlugin::~ACMPlugin" );
+	TRACE_CSTR( "ACMPlugin::~ACMPlugin\n" );
 
 #if _DEBUG_
 	if( (CFBundleRef)mBundleRef != NULL)
@@ -48,7 +48,7 @@ ACMPlugin::~ACMPlugin()
 	}
 	else
 	{
-		DEBUG_CSTR1("ACMPlugin::~ACMPlugin. NULL mBundleRef!");
+		DEBUG_CSTR("ACMPlugin::~ACMPlugin. NULL mBundleRef!\n");
 	}
 #endif
 }

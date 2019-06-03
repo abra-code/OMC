@@ -14,8 +14,6 @@
 #include "CMUtils.h"
 #include "OutputWindowHandler.h"
 #include "StAEDesc.h"
-#include "AStdNew.h"
-#include "AStdMalloc.h"
 #include "OmcTaskManager.h"
 #include "OmcTaskNotification.h"
 #include <sys/socket.h>
@@ -73,7 +71,7 @@ OmcExecutor::ExecuteCFString( CFStringRef inCommand, CFStringRef inInputPipe )
 		deputyInfo.SetValue( CFSTR("TASK_INDEX"), (CFIndex)mTaskIndex );
 		
 		CreateDeputyData( deputyInfo );
-		CFObj<CFDataRef> deputyData( ::CFPropertyListCreateXMLData(kCFAllocatorDefault, (CFMutableDictionaryRef)deputyInfo) );
+        CFObj<CFDataRef> deputyData(CFPropertyListCreateData(kCFAllocatorDefault, (CFMutableDictionaryRef)deputyInfo, kCFPropertyListBinaryFormat_v1_0, 0, nullptr));
 		err = DelegateTaskToDeputy(deputyData);
 		if(err == noErr)
 			return false;
@@ -83,12 +81,12 @@ OmcExecutor::ExecuteCFString( CFStringRef inCommand, CFStringRef inInputPipe )
 //	DEBUG_CFSTR( inCommand );
 	
 	bool finishedSynchronously = true;//in error condition finish right away
-	AMalloc theString( CMUtils::CreateUTF8CStringFromCFString(inCommand, NULL) );
+    std::string theString = CMUtils::CreateUTF8StringFromCFString(inCommand);
 
 	OSStatus resultErr = noErr;
 
 	SetInputString( inInputPipe );
-	finishedSynchronously = Execute( theString, resultErr );
+	finishedSynchronously = Execute( theString.c_str(), resultErr );
 
 	if(finishedSynchronously)
 		Finish(finishedSynchronously, true, resultErr);
@@ -193,10 +191,10 @@ OmcExecutor::DelegateTaskToDeputy(CFDataRef inData)
 //we have to send it to background so the system call returns immediately
 	::CFStringAppend( theCommand, CFSTR(" &"));
 
-	AMalloc commandStr( CMUtils::CreateUTF8CStringFromCFString(theCommand, NULL) );
-	if(commandStr != NULL)
+    std::string commandStr = CMUtils::CreateUTF8StringFromCFString(theCommand);
+	if(commandStr.length() > 0)
 	{
-		OSStatus err = system( (char *)commandStr );
+		OSStatus err = system( commandStr.c_str() );
 		if(err == noErr)
 		{
 		    CFObj<CFMessagePortRef> remotePort( ::CFMessagePortCreateRemote(kCFAllocatorDefault, uniquePortName) );
@@ -362,7 +360,7 @@ POpenExecutor::POpenExecutor(const CommandDescription &inCommandDesc, CFBundleRe
 	mEnvironmentVariables(inEnviron, kCFObjRetain),
 	mReadSocket(NULL), mWriteSocket(NULL),
 	mReadSource(NULL), mWriteSource(NULL),
-	mInputStringByteCount(0), mWrittenInputBytesCount(0)
+	mWrittenInputBytesCount(0)
 {
 	mChildProcessInfo.inputFD = -1;
 	mChildProcessInfo.outputFD = -1;
@@ -373,58 +371,50 @@ bool
 POpenExecutor::Execute( const char *inCommand, OSStatus &outError )
 {
 	outError = noErr;
-	if(inCommand == NULL)
+	if(inCommand == nullptr)
 		return true;
 
 	TRACE_CSTR( "POpenExecutor. Executing silently now\n" );
 
 
-	bool wantsToWriteToStdin = (mInputString != NULL) && (mInputStringByteCount > 0);
+	bool wantsToWriteToStdin = (mInputString.length() > 0);
 
 	char ** envList = CreateEnvironmentList( mEnvironmentVariables );
 
-	char ** shellList = NULL;
-	if(mCustomShell != NULL)
+    std::vector<char*> shellArgs;
+    std::vector<std::string> customShellStrings;
+	if(mCustomShell != nullptr)
 	{
 		CFIndex itemCount = ::CFArrayGetCount(mCustomShell);
 		if(itemCount > 0)
 		{
-			shellList = (char **)::malloc( sizeof(char *) * (itemCount + 1) );
+            customShellStrings.resize(itemCount);
+			shellArgs.resize(itemCount+1);
 
 			size_t currItemIndex = 0;
 			for(CFIndex i = 0; i < itemCount; i++)
 			{
 				CFStringRef theValue = ACFType<CFStringRef>::DynamicCast( ::CFArrayGetValueAtIndex(mCustomShell, i) );
-				if( theValue != NULL )
+				if(theValue != nullptr)
 				{
-					shellList[currItemIndex] = CMUtils::CreateUTF8CStringFromCFString(theValue, NULL); //malloc'ed C-string
-					if(shellList[currItemIndex] != NULL)
+                    customShellStrings[currItemIndex] = CMUtils::CreateUTF8StringFromCFString(theValue);
+                    shellArgs[currItemIndex] = (char*)customShellStrings[currItemIndex].c_str();
+					if(shellArgs[currItemIndex] != nullptr)
 						currItemIndex++;
 				}
 			}
-
-			shellList[currItemIndex] = NULL;
+            
+			shellArgs[currItemIndex] = nullptr;
 		}
 	}
 	
-	ProcessOutputString(NULL); //send one progress notification before we start the exeuction
+	ProcessOutputString(nullptr); //send one progress notification before we start the exeuction
 
-	outError = omc_popen(	inCommand, shellList, envList,
+	outError = omc_popen(	inCommand, shellArgs.data(), envList,
 							wantsToWriteToStdin ? (kOMCPopenRead | kOMCPopenWrite) : kOMCPopenRead,
 							&mChildProcessInfo );
 
 	ReleaseEnviron( envList );
-
-	if(shellList != NULL)
-	{
-		size_t i = 0;
-		while(shellList[i] != NULL)
-		{
-			free( shellList[i] );
-			i++;
-		}
-		free(shellList);
-	}
 	
 	if(outError == 0)
 	{
@@ -584,7 +574,7 @@ POpenExecutor::Finish(bool wasSynchronous, bool sendNotification, OSStatus inErr
 void
 POpenExecutor::SetInputString( CFStringRef inInputPipe )
 {
-	mInputString.Reset( CMUtils::CreateUTF8CStringFromCFString(inInputPipe, &mInputStringByteCount) );
+	mInputString = CMUtils::CreateUTF8StringFromCFString(inInputPipe);
 	mWrittenInputBytesCount = 0;
 }
 
@@ -613,23 +603,22 @@ POpenExecutor::CloseWriting()
 void
 POpenExecutor::WriteInputStringChunk()
 {
-	if( (mWrittenInputBytesCount < mInputStringByteCount) && (mWriteSocket != NULL) && (mInputString != NULL) )
+	if( (mInputString.length() > 0) && (mWrittenInputBytesCount < mInputString.length()) && (mWriteSocket != NULL) )
 	{
-		char *dataToWrite = (char *)mInputString + mWrittenInputBytesCount;
-		size_t byteCount = mInputStringByteCount - mWrittenInputBytesCount;
+		const char *dataToWrite = mInputString.c_str() + mWrittenInputBytesCount;
+		size_t byteCount = mInputString.length() - mWrittenInputBytesCount;
 
 		CFSocketNativeHandle fd = ::CFSocketGetNative( mWriteSocket );
 		ssize_t bytesWritten = write(fd, dataToWrite, byteCount);
 		mWrittenInputBytesCount += bytesWritten;
 	}
 	
-	if( (mWrittenInputBytesCount >= mInputStringByteCount) || (mWriteSocket == NULL) || (mInputString == NULL) )
+	if( (mWrittenInputBytesCount >= mInputString.length()) || (mWriteSocket == NULL) )
 	{
 		CloseWriting();
 
 		//release input string early - we cannot write it twice anyway because we close the pipe
-		mInputString.Reset(NULL);
-		mInputStringByteCount = 0;
+		mInputString.resize(0);
 		mWrittenInputBytesCount = 0;
 	}
 }
@@ -789,15 +778,13 @@ AppleScriptExecutor::ExecuteCFString( CFStringRef inCommand, CFStringRef inInput
 #ifndef BUILD_DEPUTY
 	if(mUseDeputy)
 	{
-
 		ACFMutableDict deputyInfo;
 		deputyInfo.SetValue( CFSTR("COMMAND"), inCommand);
 		deputyInfo.SetValue( CFSTR("TASK_MANAGER_ID"), (CFStringRef)mTaskManagerID );
 		deputyInfo.SetValue( CFSTR("TASK_INDEX"), (CFIndex)mTaskIndex );
 
 		CreateDeputyData( deputyInfo );
-		CFObj<CFDataRef> deputyData( ::CFPropertyListCreateXMLData(kCFAllocatorDefault, (CFMutableDictionaryRef)deputyInfo) );
-
+        CFObj<CFDataRef> deputyData(CFPropertyListCreateData(kCFAllocatorDefault, (CFMutableDictionaryRef)deputyInfo, kCFPropertyListBinaryFormat_v1_0, 0, nullptr));
 		DelegateTaskToDeputy(deputyData);
 		if(err == noErr)
 		{
@@ -943,9 +930,7 @@ ShellScriptExecutor::Execute( const char *inCommand, OSStatus &outError )
 	}
 
 	//store the temp file path so we can delete it when we finish
-	size_t tmpPathLen = strlen(fileName);
-	mTempScriptPath.Reset( (char*)malloc(tmpPathLen+1) );
-	(void)strcpy(mTempScriptPath, fileName);
+    mTempScriptPath.assign(fileName);
 
 	result = fchmod(fd, S_IRWXU);
 	if(result != 0)
@@ -992,8 +977,8 @@ void
 ShellScriptExecutor::Finish(bool wasSynchronous, bool sendNotification, OSStatus inError)
 {
 	TRACE_CSTR("ShellScriptExecutor::Finish\n");
-	if(mTempScriptPath != NULL)
-		unlink(mTempScriptPath);
+	if(mTempScriptPath.length() > 0)
+		unlink(mTempScriptPath.c_str());
 
 	POpenExecutor::Finish(wasSynchronous, sendNotification, inError);
 }
@@ -1039,9 +1024,7 @@ ShellScriptWithOutputExecutor::Execute( const char *inCommand, OSStatus &outErro
 	}
 
 	//store the temp file path so we can delete it when we finish
-	size_t tmpPathLen = strlen(fileName);
-	mTempScriptPath.Reset( (char*)malloc(tmpPathLen+1) );
-	(void)strcpy(mTempScriptPath, fileName);
+	mTempScriptPath.assign(fileName);
 	
 	result = fchmod(fd, S_IRWXU);
 	if(result != 0)
@@ -1122,13 +1105,14 @@ CreateEnvironmentList(CFDictionaryRef inEnviron)
 	if(itemCount == 0)
 		return NULL;
 
-	AStdMalloc<void *> keyList(itemCount);
-	AStdMalloc<void *> valueList(itemCount);
+    std::vector<void *> keyList(itemCount);
+    std::vector<void *> valueList(itemCount);
+    std::vector<std::string> keyStrings(itemCount);
+    std::vector<std::string> valueStrings(itemCount);
 
-	::CFDictionaryGetKeysAndValues(inEnviron, (const void **)keyList.Get(), (const void **)valueList.Get());
+	::CFDictionaryGetKeysAndValues(inEnviron, (const void **)keyList.data(), (const void **)valueList.data());
 	size_t currItemIndex = 0;
-	char *cStr = NULL;
-	for(CFIndex i = 0; i < itemCount; i++)
+	for(size_t i = 0; i < itemCount; i++)
 	{
 		CFStringRef theKey = ACFType<CFStringRef>::DynamicCast( keyList[i] );
 		CFStringRef theValue = ACFType<CFStringRef>::DynamicCast( valueList[i] );
@@ -1137,36 +1121,18 @@ CreateEnvironmentList(CFDictionaryRef inEnviron)
 
 		if( (theKey != NULL) && (theValue != NULL) )
 		{
-			cStr = CMUtils::CreateUTF8CStringFromCFString(theKey, NULL); //malloc'ed C-string
-			if(cStr != NULL)
-			{
-				keyList[currItemIndex] = cStr;
-				cStr =  CMUtils::CreateUTF8CStringFromCFString(theValue, NULL); //malloc'ed C-string
-				if(cStr != NULL)
-				{
-					valueList[currItemIndex] = cStr;
-					currItemIndex++;
-				}
-				else
-				{//value is NULL, release the key
-					free( keyList[currItemIndex] );
-					keyList[currItemIndex] = NULL;
-				}
-			}
+			keyStrings[currItemIndex] = CMUtils::CreateUTF8StringFromCFString(theKey);
+            if(keyStrings[currItemIndex].length() > 0)
+            {
+                keyList[currItemIndex] = (void *)keyStrings[currItemIndex].c_str();
+                valueStrings[currItemIndex] = CMUtils::CreateUTF8StringFromCFString(theValue);
+                valueList[currItemIndex] = (void *)valueStrings[currItemIndex].c_str();
+                currItemIndex++;
+            }
 		}
 	}
 	
-	char ** newEnviron = CreateEnviron( (char **)keyList.Get(), (char **)valueList.Get(), currItemIndex );
-
-	for(size_t j = 0; j < currItemIndex; j++)
-	{
-		if( keyList[j] != NULL)
-			free( keyList[j] );
-		
-		if(valueList[j] != NULL)
-			free( valueList[j] );
-	}
-
+	char ** newEnviron = CreateEnviron( (char **)keyList.data(), (char **)valueList.data(), currItemIndex );
 	return newEnviron;
 }
 

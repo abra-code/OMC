@@ -94,8 +94,8 @@ static OMCService *sOMCService = NULL;
 - (NSArray *)URLsFromRunningOpenPanel
 {
 	NSOpenPanel *openPanel = [NSOpenPanel openPanel];
-	NSInteger result = [openPanel runModalForTypes:NULL /*(NSArray *)fileTypes*/];
-	if(result == NSOKButton)
+	NSModalResponse response = [openPanel runModal];
+	if(response == NSModalResponseOK)
 	{
 		return [openPanel URLs];
 	}

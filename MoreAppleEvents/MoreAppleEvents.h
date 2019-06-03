@@ -43,8 +43,8 @@
 				ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 	Change History:
-        This is a heavily trimmed and modified version of MoreAppleEvents
-        The original licence above allows redistribution of modified copies
+				This is a heavily trimmed and modified version of MoreAppleEvents
+				The original licence above allows redistribution of modified copies
  */
 
 #pragma once
@@ -77,9 +77,9 @@
  errAENotAEDesc        -1704    Not a valid descriptor record
  errAEBadListItem    -1705    Operation involving a list item failed
  */
-OSErr    MoreAEOCreatePropertyObject( const DescType propType,
-                                     AEDesc *containerObjPtr,
-                                     AEDesc *propertyObjPtr );
+OSErr MoreAEOCreatePropertyObject( const DescType propType,
+									AEDesc *containerObjPtr,
+									AEDesc *propertyObjPtr );
 
 /********************************************************************************
  Given selection type, create an new object descriptor for a selection,
@@ -101,10 +101,10 @@ OSErr    MoreAEOCreatePropertyObject( const DescType propType,
  errAENotAEDesc        -1704    Not a valid descriptor record
  errAEBadListItem    -1705    Operation involving a list item failed
  */
-OSErr    MoreAEOCreateSelectionObject( const DescType selection,
-                                      AEDesc *containerObjPtr,
-                                      AEDesc *selectionObject,
-                                      const DescType inObjectType );
+OSErr MoreAEOCreateSelectionObject( const DescType selection,
+									AEDesc *containerObjPtr,
+									AEDesc *selectionObject,
+									const DescType inObjectType );
 
 /********************************************************************************
 	Create and return an AppleEvent of the given class and ID. The event will be
@@ -216,7 +216,7 @@ extern  OSErr MoreAETellAppObjectToGetAEDesc(
 						const DescType pPropType,
 						const DescType pDescType,
 						AEDesc *pAEDesc);
-        
+
 /********************************************************************************
 	Takes a reply event checks it for any errors that may have been returned
 	by the event handler. A simple function, in that it only returns the error
@@ -231,11 +231,11 @@ extern  OSErr MoreAETellAppObjectToGetAEDesc(
 
 	RESULT CODES
 	____________
-	noErr				    0	No error	
+	noErr					0	No error	
 	????					??	Pretty much any error, depending on what the
 								event handler returns for it's errors.
 */
-extern  OSErr	MoreAEGetHandlerError( const AppleEvent* pAEReply );
+extern OSErr MoreAEGetHandlerError( const AppleEvent* pAEReply );
 
 /********************************************************************************
 	A very simple idle function. It simply ignors any event it receives,
@@ -248,9 +248,9 @@ extern  OSErr	MoreAEGetHandlerError( const AppleEvent* pAEReply );
 		IM:IAC for details about idle functions.
 		Pending Update Perils technote for more about handling low-level events.
 */	
-extern  Boolean	MoreAESimpleIdleFunction( EventRecord* event,
-									   SInt32* sleepTime,
-									   RgnHandle* mouseRgn );
+extern Boolean MoreAESimpleIdleFunction( EventRecord* event,
+										SInt32* sleepTime,
+										RgnHandle* mouseRgn );
 
 #ifdef __cplusplus
 }

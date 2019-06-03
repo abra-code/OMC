@@ -19,10 +19,9 @@
  	if(self == NULL)
 		return NULL;
 
-	if( (inNib != NULL) && [inNib instantiateNibWithOwner:self topLevelObjects:&mTopLevelNibObjects] )
+	if( (inNib != NULL) && [inNib instantiateWithOwner:self topLevelObjects:&mTopLevelNibObjects] )
 	{
-		[mTopLevelNibObjects makeObjectsPerformSelector:@selector(release)];//objects are overretained, need to release them so the array is the owner
-		[mTopLevelNibObjects retain];//the array itself is autoreleased so we need to retain it if we want to keep it
+		[mTopLevelNibObjects retain];
 		//NSLog(@"mTopLevelNibObjects=%@", mTopLevelNibObjects);
 	}
 
@@ -40,10 +39,9 @@
 	NSNib *myNib = [[NSNib alloc] initWithNibNamed:inNibName bundle:inBundle];
 	if(myNib != NULL)
 	{
-		if ([myNib instantiateNibWithOwner:self topLevelObjects:&mTopLevelNibObjects])
+		if ([myNib instantiateWithOwner:self topLevelObjects:&mTopLevelNibObjects])
 		{
-			[mTopLevelNibObjects makeObjectsPerformSelector:@selector(release)];//objects are overretained, need to release them so the array is the owner
-			[mTopLevelNibObjects retain];//the array itself is autoreleased so we need to retain it if we want to keep it
+			[mTopLevelNibObjects retain];
 			//NSLog(@"mTopLevelNibObjects=%@", mTopLevelNibObjects);
 		}
 		[myNib release];

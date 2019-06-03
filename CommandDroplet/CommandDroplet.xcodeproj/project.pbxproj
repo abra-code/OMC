@@ -1,0 +1,512 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 51;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		1D2A683615DE2E7F00AAF296 /* CommandDroplet.app in Copy Self to Abracode.framework */ = {isa = PBXBuildFile; fileRef = 8D1107320486CEB800E47090 /* CommandDroplet.app */; };
+		1D3BB16E229D0B6600542933 /* MainMenu.nib in Resources */ = {isa = PBXBuildFile; fileRef = 1D3BB16C229D0B6600542933 /* MainMenu.nib */; };
+		1D3BB16F229D0B6600542933 /* MainMenu.nib in Resources */ = {isa = PBXBuildFile; fileRef = 1D3BB16C229D0B6600542933 /* MainMenu.nib */; };
+		1DEDA49B15DCF71A006D67DB /* app.icns in Resources */ = {isa = PBXBuildFile; fileRef = 1DEDA49815DCF6DE006D67DB /* app.icns */; };
+		1DEDA49C15DCF71B006D67DB /* app.icns in Resources */ = {isa = PBXBuildFile; fileRef = 1DEDA49815DCF6DE006D67DB /* app.icns */; };
+		1DF18DE7226C773300305370 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 1DF18DE5226C773300305370 /* InfoPlist.strings */; };
+		1DF18DE8226C773300305370 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 1DF18DE5226C773300305370 /* InfoPlist.strings */; };
+		8D11072D0486CEB800E47090 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
+		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
+		C14245B31502331500E6E946 /* Abracode.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E23EA1640DFB026E0070E63F /* Abracode.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
+		E23EA1C30DFB06570070E63F /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
+		E23EA1C50DFB06570070E63F /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
+		E23EA1E10DFB06DD0070E63F /* Abracode-Private.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E23EA1E00DFB06DD0070E63F /* Abracode-Private.framework */; };
+		E23EA2020DFB9B7C0070E63F /* Command.plist in Resources */ = {isa = PBXBuildFile; fileRef = E23EA2010DFB9B7C0070E63F /* Command.plist */; };
+		E23EA2030DFB9B7C0070E63F /* Command.plist in Resources */ = {isa = PBXBuildFile; fileRef = E23EA2010DFB9B7C0070E63F /* Command.plist */; };
+		E2ACB28D12EAE02800A8ACF6 /* AbracodeFrameworkVersion.c in Sources */ = {isa = PBXBuildFile; fileRef = E2ACB28C12EAE02700A8ACF6 /* AbracodeFrameworkVersion.c */; };
+		E2CF504712ED5F730019D985 /* AbracodeFrameworkVersion.c in Sources */ = {isa = PBXBuildFile; fileRef = E2ACB28C12EAE02700A8ACF6 /* AbracodeFrameworkVersion.c */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		E23EA1B80DFB06030070E63F /* Copy Self to Abracode.framework */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /Library/Frameworks/Abracode.framework/Support;
+			dstSubfolderSpec = 0;
+			files = (
+				1D2A683615DE2E7F00AAF296 /* CommandDroplet.app in Copy Self to Abracode.framework */,
+			);
+			name = "Copy Self to Abracode.framework";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
+		13E42FB307B3F0F600E4EEF1 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = /System/Library/Frameworks/CoreData.framework; sourceTree = "<absolute>"; };
+		1D3BB170229D0B8400542933 /* de */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = de; path = de.lproj/MainMenu.nib; sourceTree = "<group>"; };
+		1D94D4A4229D2D0C009938BB /* Base */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = Base; path = Base.lproj/MainMenu.nib; sourceTree = "<group>"; };
+		1DEDA49815DCF6DE006D67DB /* app.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = app.icns; sourceTree = "<group>"; };
+		1DF18DE6226C773300305370 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		29B97316FDCFA39411CA2CEA /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		29B97324FDCFA39411CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
+		29B97325FDCFA39411CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
+		32CA4F630368D1EE00C91783 /* CommandDroplet_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CommandDroplet_Prefix.pch; sourceTree = "<group>"; };
+		8D1107310486CEB800E47090 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		8D1107320486CEB800E47090 /* CommandDroplet.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CommandDroplet.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		E2269AC60EB6D8FB0029CCF5 /* AbracodeCommon.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = AbracodeCommon.xcconfig; path = ../AbracodeCommon.xcconfig; sourceTree = SOURCE_ROOT; };
+		E23EA1640DFB026E0070E63F /* Abracode.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Abracode.framework; path = /Library/Frameworks/Abracode.framework; sourceTree = "<absolute>"; };
+		E23EA1CE0DFB06570070E63F /* StandaloneDroplet.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = StandaloneDroplet.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		E23EA1E00DFB06DD0070E63F /* Abracode-Private.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Abracode-Private.framework"; path = "../build/Release/Abracode-Private.framework"; sourceTree = SOURCE_ROOT; };
+		E23EA2010DFB9B7C0070E63F /* Command.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Command.plist; sourceTree = SOURCE_ROOT; };
+		E2ACB28C12EAE02700A8ACF6 /* AbracodeFrameworkVersion.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = AbracodeFrameworkVersion.c; path = /Library/Frameworks/Abracode.framework/Versions/A/Headers/AbracodeFrameworkVersion.c; sourceTree = "<absolute>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		8D11072E0486CEB800E47090 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */,
+				C14245B31502331500E6E946 /* Abracode.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E23EA1C40DFB06570070E63F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E23EA1C50DFB06570070E63F /* Cocoa.framework in Frameworks */,
+				E23EA1E10DFB06DD0070E63F /* Abracode-Private.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		1058C7A0FEA54F0111CA2CBB /* Linked Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				E23EA1640DFB026E0070E63F /* Abracode.framework */,
+				1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */,
+				E23EA1E00DFB06DD0070E63F /* Abracode-Private.framework */,
+			);
+			name = "Linked Frameworks";
+			sourceTree = "<group>";
+		};
+		1058C7A2FEA54F0111CA2CBB /* Other Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				29B97324FDCFA39411CA2CEA /* AppKit.framework */,
+				13E42FB307B3F0F600E4EEF1 /* CoreData.framework */,
+				29B97325FDCFA39411CA2CEA /* Foundation.framework */,
+			);
+			name = "Other Frameworks";
+			sourceTree = "<group>";
+		};
+		19C28FACFE9D520D11CA2CBB /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				8D1107320486CEB800E47090 /* CommandDroplet.app */,
+				E23EA1CE0DFB06570070E63F /* StandaloneDroplet.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		29B97314FDCFA39411CA2CEA /* CommandDroplet */ = {
+			isa = PBXGroup;
+			children = (
+				29B97315FDCFA39411CA2CEA /* Other Sources */,
+				29B97317FDCFA39411CA2CEA /* Resources */,
+				E2269AC60EB6D8FB0029CCF5 /* AbracodeCommon.xcconfig */,
+				29B97323FDCFA39411CA2CEA /* Frameworks */,
+				19C28FACFE9D520D11CA2CBB /* Products */,
+			);
+			name = CommandDroplet;
+			sourceTree = "<group>";
+		};
+		29B97315FDCFA39411CA2CEA /* Other Sources */ = {
+			isa = PBXGroup;
+			children = (
+				32CA4F630368D1EE00C91783 /* CommandDroplet_Prefix.pch */,
+				29B97316FDCFA39411CA2CEA /* main.m */,
+				E2ACB28C12EAE02700A8ACF6 /* AbracodeFrameworkVersion.c */,
+			);
+			name = "Other Sources";
+			sourceTree = "<group>";
+		};
+		29B97317FDCFA39411CA2CEA /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				E23EA2010DFB9B7C0070E63F /* Command.plist */,
+				8D1107310486CEB800E47090 /* Info.plist */,
+				1DF18DE5226C773300305370 /* InfoPlist.strings */,
+				1DEDA49815DCF6DE006D67DB /* app.icns */,
+				1D3BB16C229D0B6600542933 /* MainMenu.nib */,
+			);
+			name = Resources;
+			sourceTree = "<group>";
+		};
+		29B97323FDCFA39411CA2CEA /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				1058C7A0FEA54F0111CA2CBB /* Linked Frameworks */,
+				1058C7A2FEA54F0111CA2CBB /* Other Frameworks */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		8D1107260486CEB800E47090 /* CommandDroplet */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C01FCF4A08A954540054247B /* Build configuration list for PBXNativeTarget "CommandDroplet" */;
+			buildPhases = (
+				8D1107290486CEB800E47090 /* Resources */,
+				8D11072C0486CEB800E47090 /* Sources */,
+				8D11072E0486CEB800E47090 /* Frameworks */,
+				E23EA1B30DFB05970070E63F /* Create Links */,
+				E23EA1B50DFB05B50070E63F /* Remove Debug Resources */,
+				E23EA1B80DFB06030070E63F /* Copy Self to Abracode.framework */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = CommandDroplet;
+			productInstallPath = "$(HOME)/Applications";
+			productName = CommandDroplet;
+			productReference = 8D1107320486CEB800E47090 /* CommandDroplet.app */;
+			productType = "com.apple.product-type.application";
+		};
+		E23EA1BD0DFB06570070E63F /* StandaloneDroplet */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E23EA1CB0DFB06570070E63F /* Build configuration list for PBXNativeTarget "StandaloneDroplet" */;
+			buildPhases = (
+				E23EA1BE0DFB06570070E63F /* Resources */,
+				1DE8248C229D33AA00ECFAD1 /* Copy Abracode-Private.framework */,
+				E23EA1C20DFB06570070E63F /* Sources */,
+				E23EA1C40DFB06570070E63F /* Frameworks */,
+				E23EA1C70DFB06570070E63F /* Create Links */,
+				E23EA1C80DFB06570070E63F /* Remove Debug Resources */,
+				1D950701229D3675003BB7E4 /* Copy Self to Abracode.framework */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = StandaloneDroplet;
+			productInstallPath = "$(HOME)/Applications";
+			productName = CommandDroplet;
+			productReference = E23EA1CE0DFB06570070E63F /* StandaloneDroplet.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		29B97313FDCFA39411CA2CEA /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+			};
+			buildConfigurationList = C01FCF4E08A954540054247B /* Build configuration list for PBXProject "CommandDroplet" */;
+			compatibilityVersion = "Xcode 10.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 1;
+			knownRegions = (
+				de,
+				en,
+				fr,
+				Base,
+				ja,
+			);
+			mainGroup = 29B97314FDCFA39411CA2CEA /* CommandDroplet */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				8D1107260486CEB800E47090 /* CommandDroplet */,
+				E23EA1BD0DFB06570070E63F /* StandaloneDroplet */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		8D1107290486CEB800E47090 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E23EA2030DFB9B7C0070E63F /* Command.plist in Resources */,
+				1D3BB16E229D0B6600542933 /* MainMenu.nib in Resources */,
+				1DF18DE7226C773300305370 /* InfoPlist.strings in Resources */,
+				1DEDA49B15DCF71A006D67DB /* app.icns in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E23EA1BE0DFB06570070E63F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E23EA2020DFB9B7C0070E63F /* Command.plist in Resources */,
+				1D3BB16F229D0B6600542933 /* MainMenu.nib in Resources */,
+				1DF18DE8226C773300305370 /* InfoPlist.strings in Resources */,
+				1DEDA49C15DCF71B006D67DB /* app.icns in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		1D950701229D3675003BB7E4 /* Copy Self to Abracode.framework */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(BUILT_PRODUCTS_DIR)/StandaloneDroplet.app",
+			);
+			name = "Copy Self to Abracode.framework";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				/Library/Frameworks/Abracode.framework/Support/StandaloneDroplet.app,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "#Xcode hangs if you change it to copy files phase\nrm -Rf \"/Library/Frameworks/Abracode.framework/Support/StandaloneDroplet.app\"\nditto \"$BUILT_PRODUCTS_DIR/StandaloneDroplet.app\" \"/Library/Frameworks/Abracode.framework/Support/StandaloneDroplet.app\"\n\n";
+			showEnvVarsInLog = 0;
+		};
+		1DE8248C229D33AA00ECFAD1 /* Copy Abracode-Private.framework */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(BUILT_PRODUCTS_DIR)/Abracode-Private.framework",
+			);
+			name = "Copy Abracode-Private.framework";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(BUILT_PRODUCTS_DIR)/StandaloneDroplet.app/Contents/Frameworks/Abracode-Private.framework",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "ditto \"$BUILT_PRODUCTS_DIR/Abracode-Private.framework\" \"$BUILT_PRODUCTS_DIR/StandaloneDroplet.app/Contents/Frameworks/Abracode-Private.framework\"\n";
+			showEnvVarsInLog = 0;
+		};
+		E23EA1B30DFB05970070E63F /* Create Links */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Create Links";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "echo \"Additional applications and tools links:\";\ncd \"$BUILT_PRODUCTS_DIR/CommandDroplet.app/Contents/MacOS/\";\nln -s -f -h \"/Library/Frameworks/Abracode.framework/Versions/Current/Support/omc_dialog_control\" ;\nln -s -f -h \"/Library/Frameworks/Abracode.framework/Versions/Current/Support/omc_next_command\";\nln -s -f -h \"/Library/Frameworks/Abracode.framework/Versions/Current/Support/OMCDeputy.app\";\nln -s -f -h \"/Library/Frameworks/Abracode.framework/Versions/Current/Support/plister\";\nln -s -f -h \"/Library/Frameworks/Abracode.framework/Versions/Current/Support/b64\";\necho \"Additional resources links:\";\ncd \"$BUILT_PRODUCTS_DIR/CommandDroplet.app/Contents/Resources/\";\nln -s -f -h \"/Library/Frameworks/Abracode.framework/Versions/Current/Resources/braced-rect-318x123-gray.png\";\nln -s -f -h \"/Library/Frameworks/Abracode.framework/Versions/Current/Resources/notched-rect-378x198-yellow.png\";\nln -s -f -h \"/Library/Frameworks/Abracode.framework/Versions/Current/Resources/price-tag-274x61-yellow.png\";\nln -s -f -h \"/Library/Frameworks/Abracode.framework/Versions/Current/Resources/round-rect-363x90-black.png\";\nln -s -f -h \"/Library/Frameworks/Abracode.framework/Versions/Current/Resources/round-rect-363x90-blue.png\";\nln -s -f -h \"/Library/Frameworks/Abracode.framework/Versions/Current/Resources/round-rect-363x90-green.png\";\nln -s -f -h \"/Library/Frameworks/Abracode.framework/Versions/Current/Resources/round-rect-363x90-red.png\";\nln -s -f -h \"/Library/Frameworks/Abracode.framework/Versions/Current/Resources/round-rect-363x90-yellow.png\";\n";
+			showEnvVarsInLog = 0;
+		};
+		E23EA1B50DFB05B50070E63F /* Remove Debug Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Remove Debug Resources";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "if test \"$BUILD_STYLE\" != \"Debug\"; then\n\n\techo \"Removing droplet debugging resources\";\n\tcd \"$BUILT_PRODUCTS_DIR/CommandDroplet.app/Contents/Resources/\";\n\trm -fR \"English.lproj/dialog.nib\";\n\trm -fR \"English.lproj/debug.nib\";\n\n\techo \"Copy standard Command.plist to droplet\";\n\trm -f \"Command.plist\";\n\n\tditto \"$SRCROOT/Command-release.plist\" Command.plist;\n\nfi\n";
+			showEnvVarsInLog = 0;
+		};
+		E23EA1C70DFB06570070E63F /* Create Links */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Create Links";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "echo \"Additional applications and tools links:\";\ncd \"$BUILT_PRODUCTS_DIR/StandaloneDroplet.app/Contents/MacOS/\";\nln -s -f -h \"../Frameworks/Abracode-Private.framework/Versions/Current/Support/omc_dialog_control\";\nln -s -f -h \"../Frameworks/Abracode-Private.framework/Versions/Current/Support/omc_next_command\";\nln -s -f -h \"../Frameworks/Abracode-Private.framework/Versions/Current/Support/OMCDeputy.app\";\nln -s -f -h \"../Frameworks/Abracode-Private.framework/Versions/Current/Support/plister\";\nln -s -f -h \"../Frameworks/Abracode-Private.framework/Versions/Current/Support/b64\";\necho \"Additional resources links:\";\ncd \"$BUILT_PRODUCTS_DIR/StandaloneDroplet.app/Contents/Resources/\";\nln -s -f -h \"../Frameworks/Abracode-Private.framework/Versions/Current/Resources/braced-rect-318x123-gray.png\";\nln -s -f -h \"../Frameworks/Abracode-Private.framework/Versions/Current/Resources/notched-rect-378x198-yellow.png\";\nln -s -f -h \"../Frameworks/Abracode-Private.framework/Versions/Current/Resources/price-tag-274x61-yellow.png\";\nln -s -f -h \"../Frameworks/Abracode-Private.framework/Versions/Current/Resources/round-rect-363x90-black.png\";\nln -s -f -h \"../Frameworks/Abracode-Private.framework/Versions/Current/Resources/round-rect-363x90-blue.png\";\nln -s -f -h \"../Frameworks/Abracode-Private.framework/Versions/Current/Resources/round-rect-363x90-green.png\";\nln -s -f -h \"../Frameworks/Abracode-Private.framework/Versions/Current/Resources/round-rect-363x90-red.png\";\nln -s -f -h \"../Frameworks/Abracode-Private.framework/Versions/Current/Resources/round-rect-363x90-yellow.png\";\n";
+			showEnvVarsInLog = 0;
+		};
+		E23EA1C80DFB06570070E63F /* Remove Debug Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Remove Debug Resources";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "if test \"$BUILD_STYLE\" != \"Debug\"; then\n\n\techo \"Removing droplet debugging resources\";\n\tcd \"$BUILT_PRODUCTS_DIR/CommandDroplet.app/Contents/Resources/\";\n\trm -fR \"English.lproj/dialog.nib\";\n\trm -fR \"English.lproj/debug.nib\";\n\n\techo \"Copy standard Command.plist to droplet\";\n\trm -f \"Command.plist\";\n\tditto \"$SRCROOT/Command-release.plist\" Command.plist;\n\nfi\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		8D11072C0486CEB800E47090 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8D11072D0486CEB800E47090 /* main.m in Sources */,
+				E2ACB28D12EAE02800A8ACF6 /* AbracodeFrameworkVersion.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E23EA1C20DFB06570070E63F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E23EA1C30DFB06570070E63F /* main.m in Sources */,
+				E2CF504712ED5F730019D985 /* AbracodeFrameworkVersion.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		1D3BB16C229D0B6600542933 /* MainMenu.nib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				1D3BB170229D0B8400542933 /* de */,
+				1D94D4A4229D2D0C009938BB /* Base */,
+			);
+			name = MainMenu.nib;
+			sourceTree = "<group>";
+		};
+		1DF18DE5226C773300305370 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				1DF18DE6226C773300305370 /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		C01FCF4B08A954540054247B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_PREFIX_HEADER = CommandDroplet_Prefix.pch;
+				INFOPLIST_FILE = Info.plist;
+				PRODUCT_NAME = CommandDroplet;
+			};
+			name = Debug;
+		};
+		C01FCF4C08A954540054247B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				GCC_PREFIX_HEADER = CommandDroplet_Prefix.pch;
+				INFOPLIST_FILE = Info.plist;
+				PRODUCT_NAME = CommandDroplet;
+			};
+			name = Release;
+		};
+		C01FCF4F08A954540054247B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = E2269AC60EB6D8FB0029CCF5 /* AbracodeCommon.xcconfig */;
+			buildSettings = {
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IBC_FLATTEN_NIBS = NO;
+				IBC_STRIP_NIBS = NO;
+				SYMROOT = ../build;
+			};
+			name = Debug;
+		};
+		C01FCF5008A954540054247B /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = E2269AC60EB6D8FB0029CCF5 /* AbracodeCommon.xcconfig */;
+			buildSettings = {
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IBC_FLATTEN_NIBS = NO;
+				IBC_STRIP_NIBS = NO;
+				SYMROOT = ../build;
+			};
+			name = Release;
+		};
+		E23EA1CC0DFB06570070E63F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(CONFIGURATION_BUILD_DIR)/CommandDroplet.app/Contents/Frameworks\"",
+				);
+				GCC_PREFIX_HEADER = CommandDroplet_Prefix.pch;
+				INFOPLIST_FILE = Info.plist;
+				PRODUCT_NAME = StandaloneDroplet;
+			};
+			name = Debug;
+		};
+		E23EA1CD0DFB06570070E63F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(CONFIGURATION_BUILD_DIR)/CommandDroplet.app/Contents/Frameworks\"",
+				);
+				GCC_PREFIX_HEADER = CommandDroplet_Prefix.pch;
+				INFOPLIST_FILE = Info.plist;
+				PRODUCT_NAME = StandaloneDroplet;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		C01FCF4A08A954540054247B /* Build configuration list for PBXNativeTarget "CommandDroplet" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C01FCF4B08A954540054247B /* Debug */,
+				C01FCF4C08A954540054247B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C01FCF4E08A954540054247B /* Build configuration list for PBXProject "CommandDroplet" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C01FCF4F08A954540054247B /* Debug */,
+				C01FCF5008A954540054247B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		E23EA1CB0DFB06570070E63F /* Build configuration list for PBXNativeTarget "StandaloneDroplet" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E23EA1CC0DFB06570070E63F /* Debug */,
+				E23EA1CD0DFB06570070E63F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 29B97313FDCFA39411CA2CEA /* Project object */;
+}

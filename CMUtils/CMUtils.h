@@ -16,6 +16,7 @@
 
 #include "DebugSettings.h"
 #include <Carbon/Carbon.h>
+#include <string>
 
 #pragma export off
 
@@ -176,12 +177,8 @@ public:
 	
 	static void			ReplaceCharacters(char *ioText, Size inSize, char inFromChar, char inToChar);
 	static void			ReplaceUnicodeCharacters(UniChar *ioText, UniCharCount inCount, UniChar inFromChar, UniChar inToChar);
-	static char *		CreateUTF8CStringFromCFString(CFStringRef inString, ByteCount *outCount);
+    static std::string	CreateUTF8StringFromCFString(CFStringRef inString);
 	static UniChar *	CreateUTF16DataFromCFString(CFStringRef inString, UniCharCount *outCharCount);
-
-
-
-	static void			BufToHex( const unsigned char* src, char *dest, ByteCount srcLen, ByteCount &destLen, UInt8 clumpSize = 0);
 };
 
 

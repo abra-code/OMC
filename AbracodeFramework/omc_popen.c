@@ -108,7 +108,7 @@ SetEnvironOneByOne(const EnvironmentPair *inEnvironList )
 
 //caller responsible for freeing the result environ list with ReleaseEnviron()
 char **
-CreateEnviron(char **inKeys, char **inValues, size_t inCount)
+CreateEnviron(char* const* inKeys, char * const* inValues, size_t inCount)
 {
 	char*** envPtr = _NSGetEnviron();	// pointer to the real 'environ'
 	char** oldEnviron = *envPtr;
@@ -145,7 +145,7 @@ CreateEnviron(char **inKeys, char **inValues, size_t inCount)
 		for(i = 0; i < inCount; i++)
 		{
 			size_t lenNew = 0;
-			char *oneNewKey = inKeys[i];
+			const char *oneNewKey = inKeys[i];
 			while( oneNewKey[lenNew] != 0 )
 			{
 				lenNew++;
@@ -186,8 +186,8 @@ CreateEnviron(char **inKeys, char **inValues, size_t inCount)
 	for(i = 0; i < inCount; i++)
 	{
 		size_t keyLen = 0, valueLen = 0;
-		char *oneNewKey = inKeys[i];
-		char *oneNewValue = inValues[i];
+		const char *oneNewKey = inKeys[i];
+		const char *oneNewValue = inValues[i];
 
 		while( (oneNewKey != NULL) && (oneNewKey[keyLen] != 0) )
 		{
@@ -233,7 +233,7 @@ ReleaseEnviron(char **inEnviron)
 
 
 int
-omc_popen(const char *command, char **inShell, char **inEnvironList, unsigned int inMode, ChildProcessInfo *outChildProcessInfo)
+omc_popen(const char *command, char * const *inShell, char * const *inEnvironList, unsigned int inMode, ChildProcessInfo *outChildProcessInfo)
 {
 	char *argv[4];
 	ChildProcessInfoLink *thisLink;

@@ -11,7 +11,7 @@
 #include "OnMyCommand.h"
 #include "ACFDict.h"
 #include "OMCCocoaDialog.h"
-#include "AStdMalloc.h"
+#include <vector>
 #import "OMCQCView.h"
 #import "OMCTableViewController.h"
 #import "OMCTableView.h"
@@ -124,7 +124,7 @@ FindArgumentType(const char *argTypeStr)
 	mIsRunning = false;
 	mDeleteSelfOnClose = false;
 
-	mOMCDialogProxy.Adopt( new OMCCocoaDialog(self) );
+	mOMCDialogProxy.reset( new OMCCocoaDialog(self) );
 
 	mPlugin.Adopt(inOmc, kARefCountRetain);
 	mExternBundleRef.Adopt(inOmc->GetCurrentCommandExternBundle(), kCFObjRetain);
@@ -311,14 +311,9 @@ FindArgumentType(const char *argTypeStr)
 		mWindow = NULL;
 	}
 
-	if(mOmcCocoaNib != NULL)
-		[mOmcCocoaNib release];
-
-	if(mLastCommandID != NULL)
-		[mLastCommandID release];
-
-	if(mDialogOwnedItems != NULL)
-		[mDialogOwnedItems release];
+    [mOmcCocoaNib release];
+    [mLastCommandID release];
+    [mDialogOwnedItems release];
 
 	[super dealloc];
 }
@@ -369,7 +364,7 @@ FindArgumentType(const char *argTypeStr)
 		[myTable setDataSource:tableController];
 		[myTable setDelegate:tableController];
 
-		//the table DOES NOT retain its data source nor delegate!
+		//the table DOES NOT retain its.data() source nor delegate!
 		[self keepItem: tableController];//we retain it and it will be released when this dialog controller is released
 		[tableController release];
 
@@ -812,10 +807,10 @@ FindArgumentType(const char *argTypeStr)
 		itemCount = ::CFDictionaryGetCount(removeListItemsDict);
 		if(itemCount > 0)
 		{
-			AStdMalloc<CFTypeRef> keyList(itemCount);
-			AStdMalloc<CFTypeRef> valueList(itemCount);
+			std::vector<CFTypeRef> keyList(itemCount);
+			std::vector<CFTypeRef> valueList(itemCount);
 
-			::CFDictionaryGetKeysAndValues(removeListItemsDict, (const void **)keyList.Get(), (const void **)valueList.Get());
+			::CFDictionaryGetKeysAndValues(removeListItemsDict, (const void **)keyList.data(), (const void **)valueList.data());
 			for(CFIndex i = 0; i < itemCount; i++)
 			{
 				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
@@ -847,10 +842,10 @@ FindArgumentType(const char *argTypeStr)
 		itemCount = ::CFDictionaryGetCount(appendListItemsDict);
 		if(itemCount > 0)
 		{
-			AStdMalloc<CFTypeRef> keyList(itemCount);
-			AStdMalloc<CFTypeRef> valueList(itemCount);
+			std::vector<CFTypeRef> keyList(itemCount);
+			std::vector<CFTypeRef> valueList(itemCount);
 
-			::CFDictionaryGetKeysAndValues(appendListItemsDict, (const void **)keyList.Get(), (const void **)valueList.Get());
+			::CFDictionaryGetKeysAndValues(appendListItemsDict, (const void **)keyList.data(), (const void **)valueList.data());
 			for(CFIndex i = 0; i < itemCount; i++)
 			{
 				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
@@ -898,10 +893,10 @@ FindArgumentType(const char *argTypeStr)
 		itemCount = ::CFDictionaryGetCount(removeTableRowsDict);
 		if(itemCount > 0)
 		{
-			AStdMalloc<CFTypeRef> keyList(itemCount);
-			AStdMalloc<CFTypeRef> valueList(itemCount);
+			std::vector<CFTypeRef> keyList(itemCount);
+			std::vector<CFTypeRef> valueList(itemCount);
 
-			::CFDictionaryGetKeysAndValues(removeTableRowsDict, (const void **)keyList.Get(), (const void **)valueList.Get());
+			::CFDictionaryGetKeysAndValues(removeTableRowsDict, (const void **)keyList.data(), (const void **)valueList.data());
 			for(CFIndex i = 0; i < itemCount; i++)
 			{
 				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
@@ -927,10 +922,10 @@ FindArgumentType(const char *argTypeStr)
 		itemCount = ::CFDictionaryGetCount(addTableRowsDict);
 		if(itemCount > 0)
 		{
-			AStdMalloc<CFTypeRef> keyList(itemCount);
-			AStdMalloc<CFTypeRef> valueList(itemCount);
+			std::vector<CFTypeRef> keyList(itemCount);
+			std::vector<CFTypeRef> valueList(itemCount);
 
-			::CFDictionaryGetKeysAndValues(addTableRowsDict, (const void **)keyList.Get(), (const void **)valueList.Get());
+			::CFDictionaryGetKeysAndValues(addTableRowsDict, (const void **)keyList.data(), (const void **)valueList.data());
 			for(CFIndex i = 0; i < itemCount; i++)
 			{
 				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
@@ -957,10 +952,10 @@ FindArgumentType(const char *argTypeStr)
 		itemCount = ::CFDictionaryGetCount(addTableColumnsDict);
 		if(itemCount > 0)
 		{
-			AStdMalloc<CFTypeRef> keyList(itemCount);
-			AStdMalloc<CFTypeRef> valueList(itemCount);
+			std::vector<CFTypeRef> keyList(itemCount);
+			std::vector<CFTypeRef> valueList(itemCount);
 
-			::CFDictionaryGetKeysAndValues(addTableColumnsDict, (const void **)keyList.Get(), (const void **)valueList.Get());
+			::CFDictionaryGetKeysAndValues(addTableColumnsDict, (const void **)keyList.data(), (const void **)valueList.data());
 			for(CFIndex i = 0; i < itemCount; i++)
 			{
 				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
@@ -992,10 +987,10 @@ FindArgumentType(const char *argTypeStr)
 		itemCount = ::CFDictionaryGetCount(setTableWidthsDict);
 		if(itemCount > 0)
 		{
-			AStdMalloc<CFTypeRef> keyList(itemCount);
-			AStdMalloc<CFTypeRef> valueList(itemCount);
+			std::vector<CFTypeRef> keyList(itemCount);
+			std::vector<CFTypeRef> valueList(itemCount);
 
-			::CFDictionaryGetKeysAndValues(setTableWidthsDict, (const void **)keyList.Get(), (const void **)valueList.Get());
+			::CFDictionaryGetKeysAndValues(setTableWidthsDict, (const void **)keyList.data(), (const void **)valueList.data());
 			for(CFIndex i = 0; i < itemCount; i++)
 			{
 				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
@@ -1023,10 +1018,10 @@ FindArgumentType(const char *argTypeStr)
 		itemCount = ::CFDictionaryGetCount(valuesDict);
 		if(itemCount > 0)
 		{
-			AStdMalloc<CFTypeRef> keyList(itemCount);
-			AStdMalloc<CFTypeRef> valueList(itemCount);
+			std::vector<CFTypeRef> keyList(itemCount);
+			std::vector<CFTypeRef> valueList(itemCount);
 
-			::CFDictionaryGetKeysAndValues(valuesDict, (const void **)keyList.Get(), (const void **)valueList.Get());
+			::CFDictionaryGetKeysAndValues(valuesDict, (const void **)keyList.data(), (const void **)valueList.data());
 			for(CFIndex i = 0; i < itemCount; i++)
 			{
 				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
@@ -1047,10 +1042,10 @@ FindArgumentType(const char *argTypeStr)
 		itemCount = ::CFDictionaryGetCount(enableDisableDict);
 		if(itemCount > 0)
 		{
-			AStdMalloc<CFTypeRef> keyList(itemCount);
-			AStdMalloc<CFTypeRef> valueList(itemCount);
+			std::vector<CFTypeRef> keyList(itemCount);
+			std::vector<CFTypeRef> valueList(itemCount);
 
-			::CFDictionaryGetKeysAndValues(enableDisableDict, (const void **)keyList.Get(), (const void **)valueList.Get());
+			::CFDictionaryGetKeysAndValues(enableDisableDict, (const void **)keyList.data(), (const void **)valueList.data());
 			for(CFIndex i = 0; i < itemCount; i++)
 			{
 				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
@@ -1082,10 +1077,10 @@ FindArgumentType(const char *argTypeStr)
 		itemCount = ::CFDictionaryGetCount(showHideDict);
 		if(itemCount > 0)
 		{
-			AStdMalloc<CFTypeRef> keyList(itemCount);
-			AStdMalloc<CFTypeRef> valueList(itemCount);
+			std::vector<CFTypeRef> keyList(itemCount);
+			std::vector<CFTypeRef> valueList(itemCount);
 
-			::CFDictionaryGetKeysAndValues(showHideDict, (const void **)keyList.Get(), (const void **)valueList.Get());
+			::CFDictionaryGetKeysAndValues(showHideDict, (const void **)keyList.data(), (const void **)valueList.data());
 			for(CFIndex i = 0; i < itemCount; i++)
 			{
 				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
@@ -1112,10 +1107,10 @@ FindArgumentType(const char *argTypeStr)
 		itemCount = ::CFDictionaryGetCount(commandIdsDict);
 		if(itemCount > 0)
 		{
-			AStdMalloc<CFTypeRef> keyList(itemCount);
-			AStdMalloc<CFTypeRef> valueList(itemCount);
+			std::vector<CFTypeRef> keyList(itemCount);
+			std::vector<CFTypeRef> valueList(itemCount);
 
-			::CFDictionaryGetKeysAndValues(commandIdsDict, (const void **)keyList.Get(), (const void **)valueList.Get());
+			::CFDictionaryGetKeysAndValues(commandIdsDict, (const void **)keyList.data(), (const void **)valueList.data());
 			for(CFIndex i = 0; i < itemCount; i++)
 			{
 				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
@@ -1141,10 +1136,10 @@ FindArgumentType(const char *argTypeStr)
 		itemCount = ::CFDictionaryGetCount(selectDict);
 		if(itemCount > 0)
 		{
-			AStdMalloc<CFTypeRef> keyList(itemCount);
-			AStdMalloc<CFTypeRef> valueList(itemCount);
+			std::vector<CFTypeRef> keyList(itemCount);
+			std::vector<CFTypeRef> valueList(itemCount);
 			
-			::CFDictionaryGetKeysAndValues(selectDict, (const void **)keyList.Get(), (const void **)valueList.Get());
+			::CFDictionaryGetKeysAndValues(selectDict, (const void **)keyList.data(), (const void **)valueList.data());
 			for(CFIndex i = 0; i < itemCount; i++)
 			{
 				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
@@ -1190,10 +1185,10 @@ FindArgumentType(const char *argTypeStr)
 		itemCount = ::CFDictionaryGetCount(terminateDict);
 		if(itemCount > 0)
 		{
-			AStdMalloc<CFTypeRef> keyList(itemCount);
-			AStdMalloc<CFTypeRef> valueList(itemCount);
+			std::vector<CFTypeRef> keyList(itemCount);
+			std::vector<CFTypeRef> valueList(itemCount);
 			
-			::CFDictionaryGetKeysAndValues(terminateDict, (const void **)keyList.Get(), (const void **)valueList.Get());
+			::CFDictionaryGetKeysAndValues(terminateDict, (const void **)keyList.data(), (const void **)valueList.data());
 			for(CFIndex i = 0; i < itemCount; i++)
 			{
 				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
@@ -1250,10 +1245,10 @@ FindArgumentType(const char *argTypeStr)
 			itemCount = ::CFDictionaryGetCount(moveDict);
 			if(itemCount > 0)
 			{
-				AStdMalloc<CFTypeRef> keyList(itemCount);
-				AStdMalloc<CFTypeRef> valueList(itemCount);
+				std::vector<CFTypeRef> keyList(itemCount);
+				std::vector<CFTypeRef> valueList(itemCount);
 				
-				::CFDictionaryGetKeysAndValues(moveDict, (const void **)keyList.Get(), (const void **)valueList.Get());
+				::CFDictionaryGetKeysAndValues(moveDict, (const void **)keyList.data(), (const void **)valueList.data());
 				for(CFIndex i = 0; i < itemCount; i++)
 				{
 					CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
@@ -1312,10 +1307,10 @@ FindArgumentType(const char *argTypeStr)
 			itemCount = ::CFDictionaryGetCount(moveDict);
 			if(itemCount > 0)
 			{
-				AStdMalloc<CFTypeRef> keyList(itemCount);
-				AStdMalloc<CFTypeRef> valueList(itemCount);
+				std::vector<CFTypeRef> keyList(itemCount);
+				std::vector<CFTypeRef> valueList(itemCount);
 				
-				::CFDictionaryGetKeysAndValues(moveDict, (const void **)keyList.Get(), (const void **)valueList.Get());
+				::CFDictionaryGetKeysAndValues(moveDict, (const void **)keyList.data(), (const void **)valueList.data());
 				for(CFIndex i = 0; i < itemCount; i++)
 				{
 					CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
@@ -1423,10 +1418,10 @@ FindArgumentType(const char *argTypeStr)
 			itemCount = ::CFDictionaryGetCount(resizeDict);
 			if(itemCount > 0)
 			{
-				AStdMalloc<CFTypeRef> keyList(itemCount);
-				AStdMalloc<CFTypeRef> valueList(itemCount);
+				std::vector<CFTypeRef> keyList(itemCount);
+				std::vector<CFTypeRef> valueList(itemCount);
 				
-				::CFDictionaryGetKeysAndValues(resizeDict, (const void **)keyList.Get(), (const void **)valueList.Get());
+				::CFDictionaryGetKeysAndValues(resizeDict, (const void **)keyList.data(), (const void **)valueList.data());
 				for(CFIndex i = 0; i < itemCount; i++)
 				{
 					CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
@@ -1480,10 +1475,10 @@ FindArgumentType(const char *argTypeStr)
 		itemCount = ::CFDictionaryGetCount(invokeDict);
 		if(itemCount > 0)
 		{
-			AStdMalloc<CFTypeRef> keyList(itemCount);
-			AStdMalloc<CFTypeRef> valueList(itemCount);
+			std::vector<CFTypeRef> keyList(itemCount);
+			std::vector<CFTypeRef> valueList(itemCount);
 			
-			::CFDictionaryGetKeysAndValues(invokeDict, (const void **)keyList.Get(), (const void **)valueList.Get());
+			::CFDictionaryGetKeysAndValues(invokeDict, (const void **)keyList.data(), (const void **)valueList.data());
 			for(CFIndex i = 0; i < itemCount; i++)
 			{
 				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );

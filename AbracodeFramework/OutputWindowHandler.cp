@@ -11,7 +11,6 @@
 
 #include "OutputWindowHandler.h"
 #include "OmcExecutor.h"
-#include "AStdArrayNew.h"
 #include "CFObj.h"
 #include "DebugSettings.h"
 #include "CMUtils.h"
@@ -123,7 +122,7 @@ OutputWindowHandler::SetText(CFStringRef inText, Boolean inLastPart, Boolean inS
 		Boolean allowAutoclose = ( !mAutoCloseOnSuccessOnly || inSuccess );
 		if( (mAutoCloseTimeout >= 0.0) && allowAutoclose )
 		{
-			ScheduleSelfDestruction(mAutoCloseTimeout);
+            OMCOutputWindowScheduleClosing(mOutputWindowController, mAutoCloseTimeout);
 		}
 	}
 }
@@ -196,7 +195,7 @@ OutputWindowHandler::AppendOutputData( const UInt8 *inData, size_t inSize, Boole
 		Boolean allowAutoclose = ( !mAutoCloseOnSuccessOnly || inSuccess );
 		if( (mAutoCloseTimeout >= 0.0) && allowAutoclose && (mAutoCloseTimer == NULL) )
 		{
-			ScheduleSelfDestruction(mAutoCloseTimeout);
+            OMCOutputWindowScheduleClosing(mOutputWindowController, mAutoCloseTimeout);
 		}
 	}
 	else
@@ -210,37 +209,6 @@ void OutputWindowHandlerDeleterCallBack(CFRunLoopTimerRef timer, void* info)
 #pragma unused (timer)
 	OutputWindowHandler *theHandler = (OutputWindowHandler *)info;
 	delete theHandler;//the destructor will remove the timer
-}
-
-void
-OutputWindowHandler::ScheduleSelfDestruction(CFTimeInterval inTimeInterval)
-{
-	if(mAutoCloseTimer != NULL)
-	{//already scheduled, new request is to reschedule it
-		CFRunLoopTimerInvalidate(mAutoCloseTimer);
-		CFRelease(mAutoCloseTimer);
-		mAutoCloseTimer = NULL;
-	}
-
-//#ifdef BUILD_DEPUTY
-//	inTimeInterval += 1.0;
-//#endif
-
-	CFRunLoopTimerContext timerContext = {0, this, NULL, NULL, NULL};
-	mAutoCloseTimer = CFRunLoopTimerCreate(
-											 kCFAllocatorDefault,
-											 CFAbsoluteTimeGetCurrent() + inTimeInterval,
-											 0,		// interval
-											 0,		// flags
-											 0,		// order
-											 OutputWindowHandlerDeleterCallBack,
-											 &timerContext);
-	
-	if(mAutoCloseTimer != NULL)
-	{
-		CFRunLoopAddTimer(CFRunLoopGetCurrent(), mAutoCloseTimer, kCFRunLoopCommonModes);
-	}
-	
 }
 
 void
@@ -264,7 +232,7 @@ OutputWindowHandler::GetOutputWindowSettings(CFArrayRef inCommandName, CFDiction
 								kWindowResizableAttribute + kWindowFullZoomAttribute +
 								kWindowHideOnFullScreenAttribute +
 								kWindowStandardHandlerAttribute + kWindowLiveResizeAttribute + kWindowNoConstrainAttribute;				
-#else
+#else //BUILD_DEPUTY
 	//we need to check if the process is background only - in this case we cannot use floating
 	//because it will never show
 	
@@ -272,11 +240,7 @@ OutputWindowHandler::GetOutputWindowSettings(CFArrayRef inCommandName, CFDiction
 	ProcessInfoRec info;
 	info.processInfoLength = sizeof(ProcessInfoRec);
 	info.processName = NULL;
-#ifdef __LP64__
 	info.processAppRef = NULL;
-#else
-	info.processAppSpec = NULL;
-#endif
 	::GetProcessInformation( &psn, &info );
 
 	if( (info.processMode & modeOnlyBackground) != 0 )
@@ -302,7 +266,7 @@ OutputWindowHandler::GetOutputWindowSettings(CFArrayRef inCommandName, CFDiction
 								kWindowStandardHandlerAttribute + kWindowLiveResizeAttribute + kWindowNoConstrainAttribute;
 	}
 
-#endif
+#endif //BUILD_DEPUTY
 
 	if(inSettingsDict == NULL)
 		return;

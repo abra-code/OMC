@@ -1,0 +1,7 @@
+//
+// Prefix header for all source files of the 'OMCService' target in the 'OMCService' project
+//
+
+#ifdef __OBJC__
+    #import <Cocoa/Cocoa.h>
+#endif

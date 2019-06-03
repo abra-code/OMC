@@ -18,8 +18,6 @@ Boolean RunCocoaInputDialog(OnMyCommandCM *inPlugin, CFStringRef &outStringRef)
 	if(inPlugin == NULL)
 		return false;
 
-	/*BOOL isOK =*/ NSApplicationLoad();
-
 	CommandDescription &currCommand = inPlugin->GetCurrentCommand();
 	UInt16 dialogType = currCommand.inputDialogType;
 

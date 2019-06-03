@@ -9,8 +9,8 @@
 #import "OMCDeferredProgress.h"
 #import "OMCProgressWindowController.h"
 #include "ACFDict.h"
-#include "AStdMalloc.h"
 #include "CMUtils.h"
+#include <vector>
 
 /*
 pseudo plist with proposed enhancements:
@@ -326,26 +326,11 @@ SplitStatusTemplateString(CFStringRef inString)
 
 CounterParams::~CounterParams()
 {
-#ifdef USE_ICU_REGEX
-
-	if( regularExpression != NULL)
-	{
-		uregex_close( regularExpression );
-		regularExpression = NULL;
-	}
-	
-	RangeAndString::Reset(regGroups, regGroupCount);
-	delete [] regGroups;
-
-#else //USE_ICU_REGEX
-
 	if(regExprValid)
 	{
 		::regfree(&regularExpression);
 		regExprValid = false;
 	}
-
-#endif
 
 	delete mStatusTemplate;//this chain is self-destructing, just delete the head
 }
@@ -361,32 +346,11 @@ CounterParams::Init(CFDictionaryRef counterDict, CFStringRef inLocTable, CFBundl
 	CFStringRef theStr = NULL;
 	if( counterParams.GetValue(CFSTR("REGULAR_EXPRESSION_MATCH"), theStr) )
 	{
-#ifdef USE_ICU_REGEX
-		
-		UniCharCount charCount = 0;
-		AStdMalloc<UniChar> matchString( CMUtils::CreateUTF16DataFromCFString(theStr, &charCount) );
-		UParseError parseError = { 0 };
-		UErrorCode errorCode = U_ZERO_ERROR;
-		regularExpression = uregex_open(
-								(const  UChar *)(const UniChar *)matchString,
-								(int32_t)charCount,
-								caseInsensitive ? UREGEX_CASE_INSENSITIVE : 0,
-								&parseError,
-								&errorCode );
-		
-		regGroupCount = uregex_groupCount( regularExpression, &errorCode);//subgroup count, not including the whole pattern range
-		regGroupCount++;//one more for group 0: the whole pattern range
-		regGroups = new RangeAndString[regGroupCount];
-		RangeAndString::Init(regGroups, regGroupCount);
-
-#else //USE_ICU_REGEX
-
-		AMalloc matchString( CMUtils::CreateUTF8CStringFromCFString(theStr, NULL) );
+        std::string matchString = CMUtils::CreateUTF8StringFromCFString(theStr);
 		int regFlags = REG_EXTENDED;
 		if( caseInsensitive )
 			regFlags |= REG_ICASE;
-		regExprValid = ::regcomp(&(regularExpression), (char *)matchString, regFlags) == 0;
-#endif
+		regExprValid = ::regcomp(&(regularExpression), matchString.c_str(), regFlags) == 0;
 	}
 	
 	
@@ -433,25 +397,16 @@ CounterParams::CalculateProgress(CFArrayRef inOutputLines, OMCTaskProgress &outT
 {
 	outTaskProgress.statusString = NULL;//will be set with the last valid statusString
 
-#ifdef USE_ICU_REGEX
-	if( regularExpression == NULL)
-		return NULL;
-#else //USE_ICU_REGEX
 	if( !regExprValid )
 		return NULL;
-#endif
 
 	CFIndex lineCount = 0;
 	if(inOutputLines != NULL)
 		lineCount = CFArrayGetCount(inOutputLines);
 
-#ifdef USE_ICU_REGEX
-	UErrorCode errorCode = U_ZERO_ERROR;
-#else
 	CFIndex maxSubExpressionIndex = std::max( std::max(counterIndex, rangeEndIndex), rangeStartIndex );
 	size_t maxMatchCount = maxSubExpressionIndex+1;
-	regmatch_t *matches = new regmatch_t[maxMatchCount];
-#endif
+    std::vector<regmatch_t> matches(maxMatchCount);
 
 	CFStringRef lastMatchedLine = NULL;
 
@@ -459,60 +414,18 @@ CounterParams::CalculateProgress(CFArrayRef inOutputLines, OMCTaskProgress &outT
 	{
 		CFStringRef oneLine = (CFStringRef)CFArrayGetValueAtIndex(inOutputLines, i);
 
-#ifdef USE_ICU_REGEX
-		UBool isMatched = false;
-		UniCharCount charCount = 0;
-		AStdMalloc<UniChar> searchedString( CMUtils::CreateUTF16DataFromCFString(oneLine, &charCount) );
-		
-		if(searchedString != NULL)
-		{
-			uregex_setText(
-				regularExpression,
-				(const  UChar *)(const UniChar *)searchedString,
-				(int32_t)charCount,
-				&errorCode);
-
-			//this is a "contains" match, pattern matched somewhere in the string
-			isMatched = uregex_find(
-								regularExpression,
-								0,
-								&errorCode);
-		}
-
-		if(isMatched)
-		
-#else //USE_ICU_REGEX
-
 		int result = -1;
-		AMalloc searchedString( CMUtils::CreateUTF8CStringFromCFString(oneLine, NULL) );
-		if(searchedString != NULL)
-			result = ::regexec( &regularExpression, (char *)searchedString, maxMatchCount, matches, 0);
+        std::string searchedString = CMUtils::CreateUTF8StringFromCFString(oneLine);
+		if(searchedString.length() > 0)
+			result = ::regexec( &regularExpression, searchedString.c_str(), maxMatchCount, matches.data(), 0);
 
 		if(result == 0)
-#endif //USE_ICU_REGEX
 		{
 			lastMatchedLine = oneLine;
 			
-#ifdef USE_ICU_REGEX
-			RangeAndString::Reset(regGroups, regGroupCount);
-#endif
-
 			double currValue = 0.0;
 			int32_t startOffset = -1;
 			int32_t endOffset = -1;
-
-#ifdef USE_ICU_REGEX
-			if( (counterIndex > 0) && (counterIndex < regGroupCount) )
-			{
-				startOffset = uregex_start( regularExpression, (int32_t)counterIndex, &errorCode);
-				endOffset = uregex_end( regularExpression, (int32_t)counterIndex, &errorCode);
-				regGroups[counterIndex].range = CFRangeMake(startOffset, endOffset-startOffset);//cache it for potential replace
-				CFStringRef numStr = regGroups[counterIndex].GetString(oneLine, charCount);
-				if(numStr != NULL)
-					currValue = ::CFStringGetDoubleValue(numStr);
-			}
-			
-#else //USE_ICU_REGEX
 
 			if(counterIndex > 0)
 			{
@@ -522,30 +435,16 @@ CounterParams::CalculateProgress(CFArrayRef inOutputLines, OMCTaskProgress &outT
 
 			if( (startOffset >= 0) && (endOffset > startOffset) )
 			{
-				const char *numChars = (const char *)searchedString + startOffset;
+				const char *numChars = searchedString.c_str() + startOffset;
 				CFIndex theLen = endOffset - startOffset;
 				CFObj<CFStringRef> numStr( ::CFStringCreateWithBytes(kCFAllocatorDefault, (const UInt8 *)numChars, theLen, kCFStringEncodingUTF8, true), kCFObjDontRetain );
 				if(numStr != NULL)
 					currValue = ::CFStringGetDoubleValue(numStr);
 			}
 
-#endif //USE_ICU_REGEX
-
 			startOffset = -1;
 			endOffset = -1;
 
-#ifdef USE_ICU_REGEX
-			if( (rangeEndIndex > 0) && (rangeEndIndex < regGroupCount) )
-			{
-				startOffset = uregex_start( regularExpression, (int32_t)rangeEndIndex, &errorCode);
-				endOffset = uregex_end( regularExpression, (int32_t)rangeEndIndex, &errorCode);
-				regGroups[rangeEndIndex].range = CFRangeMake(startOffset, endOffset-startOffset);//cache it for potential replace
-				CFStringRef numStr = regGroups[rangeEndIndex].GetString(oneLine, charCount);
-				if(numStr != NULL)
-					rangeEndValue = ::CFStringGetDoubleValue(numStr);
-			}
-
-#else //USE_ICU_REGEX
 			if(rangeEndIndex > 0)
 			{
 				startOffset = matches[rangeEndIndex].rm_so;
@@ -553,29 +452,15 @@ CounterParams::CalculateProgress(CFArrayRef inOutputLines, OMCTaskProgress &outT
 			}
 			if( (startOffset >= 0) && (endOffset > startOffset) )
 			{
-				const char *numChars = (const char *)searchedString + startOffset;
+				const char *numChars = searchedString.c_str() + startOffset;
 				CFIndex theLen = endOffset - startOffset;
 				CFObj<CFStringRef> numStr( ::CFStringCreateWithBytes(kCFAllocatorDefault, (const UInt8 *)numChars, theLen, kCFStringEncodingUTF8, true), kCFObjDontRetain );
 				if(numStr != NULL)
 					rangeEndValue = ::CFStringGetDoubleValue(numStr);
 			}
-
-#endif //USE_ICU_REGEX
 			
 			startOffset = -1;
 			endOffset = -1;
-
-#ifdef USE_ICU_REGEX
-			if( (rangeStartIndex > 0) && (rangeStartIndex < regGroupCount) )
-			{
-				startOffset = uregex_start( regularExpression, (int32_t)rangeStartIndex, &errorCode);
-				endOffset = uregex_end( regularExpression, (int32_t)rangeStartIndex, &errorCode);
-				regGroups[rangeStartIndex].range = CFRangeMake(startOffset, endOffset-startOffset);//cache it for potential replace
-				CFStringRef numStr = regGroups[rangeStartIndex].GetString(oneLine, charCount);
-				if(numStr != NULL)
-					rangeStartValue = ::CFStringGetDoubleValue(numStr);
-			}
-#else //USE_ICU_REGEX
 
 			if(rangeStartIndex > 0)
 			{
@@ -585,16 +470,13 @@ CounterParams::CalculateProgress(CFArrayRef inOutputLines, OMCTaskProgress &outT
 
 			if( (startOffset >= 0) && (endOffset > startOffset) )
 			{
-				const char *numChars = (const char *)searchedString + startOffset;
+				const char *numChars = searchedString.c_str() + startOffset;
 				CFIndex theLen = endOffset - startOffset;
 				CFObj<CFStringRef> numStr( ::CFStringCreateWithBytes(kCFAllocatorDefault, (const UInt8 *)numChars, theLen, kCFStringEncodingUTF8, true), kCFObjDontRetain );
 				if(numStr != NULL)
 					rangeStartValue = ::CFStringGetDoubleValue(numStr);
 			}
 
-#endif //USE_ICU_REGEX
-
-			
 			double newProgress = 0.0;
 			
 			if(isCountdown)
@@ -629,56 +511,7 @@ CounterParams::CalculateProgress(CFArrayRef inOutputLines, OMCTaskProgress &outT
 			if( (newProgress >= outTaskProgress.progress) || (outTaskProgress.progress == 0) )
 			{
 				outTaskProgress.progress = newProgress;
-#ifdef USE_ICU_REGEX
-				//make final status string out of status template and the progress values
-				CFMutableStringRef statusString = ::CFStringCreateMutable(kCFAllocatorDefault, 0);
-				StatusTemplateItem *oneTemplateItem = mStatusTemplate;
-				while (oneTemplateItem != NULL)
-				{
-					CFStringRef oneString = NULL;
-					CFIndex groupIndex = -1;
-
-					if( oneTemplateItem->type == kTemplateItemString )
-						oneString = oneTemplateItem->item.text;
-					else
-					{
-						 groupIndex = oneTemplateItem->item.groupIndex;
-						 if( (groupIndex >= 0) && (groupIndex < regGroupCount) )
-						 {
-							oneString = regGroups[groupIndex].GetString(oneLine, charCount);
-							if(oneString == NULL)//range not obtained yet?
-							{
-								startOffset = uregex_start( regularExpression, (int32_t)groupIndex, &errorCode);
-								endOffset = uregex_end( regularExpression, (int32_t)groupIndex, &errorCode);
-								regGroups[groupIndex].range = CFRangeMake(startOffset, endOffset-startOffset);//cache it for potential replace
-								oneString = regGroups[groupIndex].GetString(oneLine, charCount);
-							}
-						 }
-					}
-					
-					if(oneString != NULL)
-					{
-						::CFStringAppend(statusString, oneString);
-					}
-					
-					oneTemplateItem = oneTemplateItem->next;
-				}
-				
-				if( ::CFStringGetLength(statusString) > 0 )
-				{
-					if(outTaskProgress.statusString != NULL)//release previous status if any 
-						::CFRelease(outTaskProgress.statusString);
-					outTaskProgress.statusString = statusString;//will be released by caller
-				}
-				else
-				{
-					::CFRelease(statusString);
-				}
-#endif //USE_ICU_REGEX
 			}
-#ifdef USE_ICU_REGEX
-			RangeAndString::Reset(regGroups, regGroupCount);
-#endif
 		}
 		else
 		{
@@ -687,11 +520,6 @@ CounterParams::CalculateProgress(CFArrayRef inOutputLines, OMCTaskProgress &outT
 #endif
 		}
 	}
-	
-
-#ifndef USE_ICU_REGEX
-	delete [] matches;
-#endif
 
 	return lastMatchedLine;
 }
@@ -703,20 +531,13 @@ StepsParams::~StepsParams()
 	{
 		for(CFIndex stepIndex = 0; stepIndex < stepsCount; stepIndex++)
 		{
-#ifdef USE_ICU_REGEX
-			if(steps[stepIndex].regularExpression != NULL)
-			{
-				uregex_close( steps[stepIndex].regularExpression );
-				steps[stepIndex].regularExpression = NULL;
-			}
-#else //USE_ICU_REGEX
 			if(steps[stepIndex].regExprValid)
 			{
 				::regfree( &steps[stepIndex].regularExpression );
 				steps[stepIndex].regExprValid = false;
 			}
-#endif
-			if(steps[stepIndex].status != NULL)
+
+            if(steps[stepIndex].status != NULL)
 			{
 				CFRelease(steps[stepIndex].status);
 				steps[stepIndex].status = NULL;
@@ -766,12 +587,7 @@ StepsParams::Init(CFDictionaryRef stepsDict, CFStringRef inLocTable, CFBundleRef
 			steps[stepIndex].matchString = NULL;
 			steps[stepIndex].value = 0;
 			steps[stepIndex].status = NULL;
-			
-#ifdef USE_ICU_REGEX
-			steps[stepIndex].regularExpression = NULL;
-#else //USE_ICU_REGEX
 			steps[stepIndex].regExprValid = false;
-#endif			
 			CFDictionaryRef oneStepDict = ACFType<CFDictionaryRef>::DynamicCast( CFArrayGetValueAtIndex(stepsArray, stepIndex) );
 			if(oneStepDict != NULL)
 			{
@@ -785,25 +601,11 @@ StepsParams::Init(CFDictionaryRef stepsDict, CFStringRef inLocTable, CFBundleRef
 				}
 				else
 				{				
-#ifdef USE_ICU_REGEX
-					UniCharCount charCount = 0;
-					AStdMalloc<UniChar> matchString( CMUtils::CreateUTF16DataFromCFString(theStr, &charCount) );
-					UParseError parseError = { 0 };
-					UErrorCode errorCode = U_ZERO_ERROR;
-					steps[stepIndex].regularExpression = uregex_open(
-															(const  UChar *)(const UniChar *)matchString,
-															(int32_t)charCount,
-															((matchCompareOptions & kCFCompareCaseInsensitive) != 0) ? UREGEX_CASE_INSENSITIVE : 0,
-															&parseError,
-															&errorCode );
-
-#else //USE_ICU_REGEX
-					AMalloc matchString( CMUtils::CreateUTF8CStringFromCFString(theStr, NULL) );
+                    std::string matchString = CMUtils::CreateUTF8StringFromCFString(theStr);
 					int regFlags = REG_EXTENDED | REG_NOSUB;
 					if( (matchCompareOptions & kCFCompareCaseInsensitive) != 0 )
 						regFlags |= REG_ICASE;
-					steps[stepIndex].regExprValid = ::regcomp(&(steps[stepIndex].regularExpression), (char *)matchString, regFlags) == 0;
-#endif
+					steps[stepIndex].regExprValid = ::regcomp(&(steps[stepIndex].regularExpression), matchString.c_str(), regFlags) == 0;
 				}
 				
 				oneStepParams.GetValue( CFSTR("VALUE"), steps[stepIndex].value );
@@ -875,44 +677,12 @@ StepsParams::CalculateProgress(CFArrayRef inOutputLines, OMCTaskProgress &outTas
 				
 				case kMatchRegularExpression:
 				{
-#ifdef USE_ICU_REGEX
-					if( currStep.regularExpression != NULL )
-					{
-						UBool isMatched = false;
-						UniCharCount charCount = 0;
-						AStdMalloc<UniChar> searchedString( CMUtils::CreateUTF16DataFromCFString(oneLine, &charCount) );
-						
-						if(searchedString != NULL)
-						{
-							UErrorCode errorCode = U_ZERO_ERROR;
-							uregex_setText(
-									currStep.regularExpression,
-									(const  UChar *)(const UniChar *)searchedString,
-									(int32_t)charCount,
-									&errorCode);
-							
-							//this is a "contains" match, pattern matched somewhere in the string
-							isMatched = uregex_find(
-												currStep.regularExpression,
-												0,
-												&errorCode);
-						}
-						
-						if(isMatched)
-						{
-							outTaskProgress.nextStepIndex = currStepIndex+1;
-							outTaskProgress.progress = (double)currStep.value;
-							outTaskProgress.statusString = currStep.status;
-							foundAMatch = true;
-						}
-					}
-#else //USE_ICU_REGEX
 					if( currStep.regExprValid )
 					{
 						int result = -1;
-						AMalloc searchedString( CMUtils::CreateUTF8CStringFromCFString(oneLine, NULL) );
-						if(searchedString != NULL)
-							result = ::regexec( &currStep.regularExpression, (char *)searchedString, 0, NULL, 0);
+                        std::string searchedString = CMUtils::CreateUTF8StringFromCFString(oneLine);
+						if(searchedString.length() > 0)
+							result = ::regexec( &currStep.regularExpression, searchedString.c_str(), 0, NULL, 0);
 						if(result == 0)
 						{
 							outTaskProgress.nextStepIndex = currStepIndex+1;
@@ -921,7 +691,6 @@ StepsParams::CalculateProgress(CFArrayRef inOutputLines, OMCTaskProgress &outTas
 							foundAMatch = true;
 						}
 					}
-#endif
 				}
 				break;
 			}
@@ -1251,7 +1020,6 @@ void OMCDeferredProgressCallBack(CFRunLoopTimerRef timer, void* info)
 OMCDeferredProgressRef
 OMCDeferredProgressCreate(CFDictionaryRef inProgressParams, CFStringRef inCommandName, CFIndex inTaskCount, CFStringRef inLocTable, CFBundleRef inLocBundle)
 {
-	/*BOOL isOK = */ NSApplicationLoad();
 	OMCDeferredProgress *myProgress = NULL;
     @autoreleasepool
 	{

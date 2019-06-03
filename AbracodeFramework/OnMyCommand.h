@@ -7,8 +7,8 @@
 #include "OMCConstants.h"
 #include "OMCUtils.h"
 #include "OMC.h"
-#include "AStdNew.h"
-#include "AStdArrayNew.h"
+#include "AUniquePtr.h"
+#include <vector>
 
 class SelectionIterator;
 class AObserverBase;
@@ -163,14 +163,13 @@ class OMCContextData
 {
 public:
 	OMCContextData()
-		: mObjectCount(0), mCurrObjectIndex(0), mIsNullContext(false), mIsTextContext(false)
+		: mCurrObjectIndex(0), mIsNullContext(false), mIsTextContext(false)
 	{
 	}
 
 	CFObj<CFMutableArrayRef>	mContextFiles;
 	CFObj<CFStringRef>			mContextText;
-	AStdArrayNew<OneObjProperties> mObjectList;
-	CFIndex						mObjectCount;
+	std::vector<OneObjProperties> mObjectList;
 	CFIndex						mCurrObjectIndex;
 	CFObj<CFStringRef>			mCommonParentPath;
 	Boolean						mIsNullContext;
@@ -318,11 +317,10 @@ protected:
 	CommandDescription			*mCommandList;
 	UInt32						mCommandCount;
 	UInt32						mCurrCommandIndex;
-	AStdArrayNew<OneObjProperties> mObjectList;
-	CFIndex						mObjectCount;
+    std::vector<OneObjProperties> mObjectList;
 	CFIndex						mCurrObjectIndex;
 	CFObj<CFMutableArrayRef>	mContextFiles;
-	AStdNew<SortSettings>		mSortSettings;
+	AUniquePtr<SortSettings>	mSortSettings;
 	CFObj<CFStringRef>			mContextText;//selected or clipboard text
 	CFObj<CFStringRef>			mClipboardText;//may be the same as mContextText, just retained
 	CFObj<CFStringRef>			mCommonParentPath;//cached here for better performance
@@ -367,7 +365,7 @@ void		GetContextMatchingParams(CommandDescription &outDesc, CFDictionaryRef inPa
 //removed const from OneObjProperties becuase it allows lazy population of some fields
 typedef Boolean (*ObjCheckingProc)( OneObjProperties *inObj, void *inProcData );
 
-Boolean		CheckAllObjects(OneObjProperties *objList, UInt32 inCount, ObjCheckingProc inProcPtr, void *inProcData);
+Boolean		CheckAllObjects(std::vector<OneObjProperties>& objList, ObjCheckingProc inProcPtr, void *inProcData);
 Boolean		CheckIfFile(OneObjProperties *inObj, void *);
 Boolean		CheckIfFolder(OneObjProperties *inObj, void *);
 Boolean		CheckIfFileOrFolder(OneObjProperties *inObj, void *);

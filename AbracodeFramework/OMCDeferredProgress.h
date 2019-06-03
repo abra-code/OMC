@@ -9,17 +9,7 @@
 #include <CoreFoundation/CoreFoundation.h>
 #include "OMCConstants.h"
 #include "CFObj.h"
-
-//#define USE_ICU_REGEX yes
-
-
-#ifdef USE_ICU_REGEX
-	#define U_HIDE_DRAFT_API 1
-	#define U_DISABLE_RENAMING 1
-	#include "unicode/uregex.h"
-#else
-	#include <regex.h>
-#endif
+#include <regex.h>
 
 //single task progress state
 typedef struct OMCTaskProgress
@@ -133,15 +123,9 @@ struct CounterParams
 	CounterParams()
 		: mStatusTemplate(NULL), counterIndex(0), rangeEndIndex(0), rangeStartIndex(0), rangeStartValue(0.0), rangeEndValue(100.0),
 		  isCountdown(false), suppressNonMatchingText(false),
-#ifdef USE_ICU_REGEX
-		regularExpression(NULL), regGroupCount(0), regGroups(NULL)
-#else
 		regExprValid(false)
-#endif
 	{
-#ifndef USE_ICU_REGEX
 		memset( &regularExpression, 0, sizeof(regularExpression) );
-#endif
 	}
 
 	~CounterParams();
@@ -149,13 +133,7 @@ struct CounterParams
 	void Init(CFDictionaryRef counterDict, CFStringRef inLocTable, CFBundleRef inLocBundle);
 	CFStringRef CalculateProgress(CFArrayRef inOutputLines, OMCTaskProgress &outTaskProgress);
 
-#ifdef USE_ICU_REGEX
-	URegularExpression *regularExpression;
-	int32_t				regGroupCount;
-	RangeAndString *	regGroups;//preallocated buffer for subgroups results
-#else
 	regex_t regularExpression;
-#endif
 	StatusTemplateItem *mStatusTemplate;
 	CFIndex counterIndex;
 	CFIndex rangeEndIndex;
@@ -164,20 +142,14 @@ struct CounterParams
 	double rangeEndValue;
 	Boolean isCountdown;
 	Boolean suppressNonMatchingText;
-#ifndef USE_ICU_REGEX
 	Boolean regExprValid;
-#endif
 };
 
 typedef struct OneStep
 {
 	CFStringRef matchString;
-#ifdef USE_ICU_REGEX
-	URegularExpression *regularExpression;
-#else
 	regex_t regularExpression;
 	Boolean regExprValid;
-#endif
 	CFIndex value;
 	CFStringRef status;
 } OneStep;

@@ -10,7 +10,7 @@
 #import "OMCCocoaNib.h"
 #include "CFObj.h"
 #include "ARefCounted.h"
-#include "AStdNew.h"
+#include "AUniquePtr.h"
 #include "SelectionIterator.h"
 
 class OnMyCommandCM;
@@ -28,7 +28,7 @@ class OMCCocoaDialog;
 	//so we can use smart pointers as member variables
 
 	ARefCountedObj<OnMyCommandCM>	mPlugin;
-	AStdNew<OMCCocoaDialog>			mOMCDialogProxy;
+	AUniquePtr<OMCCocoaDialog>		mOMCDialogProxy;
 	CFObj<CFBundleRef>				mExternBundleRef;
 	CFObj<CFArrayRef>				mCommandName;
 	CFObj<CFStringRef>				mDialogUniqueID;

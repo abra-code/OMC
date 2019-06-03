@@ -4,30 +4,17 @@
 #include "ACFType.h"
 
 //T typename = CFDictionaryRef or CFMutableDictionaryRef
-//TWrap<> = CFObj<> or CFObjNotOwned<>
-template <typename T, template<typename> class TWrap > class ACFDictBase : public TWrap<T>
+template <typename T> class ACFDictBase : public CFObj<T>
 {
 public:
-
-	ACFDictBase()
+    //note: reverse retain default than CFObj!
+	ACFDictBase(T inObj, CFObjRetainType inRetainType = kCFObjRetain) noexcept
+        : CFObj<T>(inObj, inRetainType)
 	{
 	}
 
-	ACFDictBase( T inObj )
-		: TWrap<T>(inObj)
-	{
-	
-	}
-
-	//only for CFObj:
-	ACFDictBase( T inObj, CFObjRetainType inRetainType )
-		: CFObj<T>(inObj, inRetainType)
-	{
-	
-	}
-		
 	template< typename CFT >
-	Boolean GetValue( CFStringRef inKey, CFT &outValue )
+	Boolean GetValue( CFStringRef inKey, CFT &outValue ) const noexcept
 	{
 		if(this->mRef != NULL)
 		{
@@ -40,7 +27,7 @@ public:
 	}
 	
 	template< typename CFT >
-	Boolean CopyValue( CFStringRef inKey, CFT &outValue )
+	Boolean CopyValue( CFStringRef inKey, CFT &outValue ) const noexcept
 	{
 		if( GetValue(inKey, outValue) )
 		{
@@ -51,7 +38,7 @@ public:
 	}
 
 	template< typename CFT >
-	Boolean CopyValue( CFStringRef inKey, CFObj<CFT> &outValue )
+	Boolean CopyValue( CFStringRef inKey, CFObj<CFT> &outValue ) const noexcept
 	{
 		CFT valueRef = NULL;
 		if( GetValue(inKey, valueRef) )
@@ -62,7 +49,7 @@ public:
 		return false;
 	}
 
-	Boolean GetValue( CFStringRef inKey, CFIndex &outValue )
+	Boolean GetValue( CFStringRef inKey, CFIndex &outValue ) const noexcept
 	{
 		CFNumberRef theNum = NULL;
 		if( GetValue(inKey, theNum) )
@@ -70,7 +57,7 @@ public:
 		return false;
 	}
 
-	Boolean GetValue( CFStringRef inKey, short &outValue )
+	Boolean GetValue( CFStringRef inKey, short &outValue ) const noexcept
 	{
 		CFNumberRef theNum = NULL;
 		if( GetValue(inKey, theNum) )
@@ -78,7 +65,7 @@ public:
 		return false;
 	}
 	
-	Boolean GetValue( CFStringRef inKey, float &outValue )
+	Boolean GetValue( CFStringRef inKey, float &outValue ) const noexcept
 	{
 		CFNumberRef theNum = NULL;
 		if( GetValue(inKey, theNum) )
@@ -86,7 +73,7 @@ public:
 		return false;
 	}
 	
-	Boolean GetValue( CFStringRef inKey, double &outValue )
+	Boolean GetValue( CFStringRef inKey, double &outValue ) const noexcept
 	{
 		CFNumberRef theNum = NULL;
 		if( GetValue(inKey, theNum) )
@@ -95,7 +82,7 @@ public:
 	}
 	
 	
-	Boolean GetValue( CFStringRef inKey, Boolean &outValue )
+	Boolean GetValue( CFStringRef inKey, Boolean &outValue ) const noexcept
 	{
 		CFBooleanRef theBool = NULL;
 		if( GetValue(inKey, theBool) )
@@ -106,7 +93,7 @@ public:
 		return false;
 	}
 	
-	Boolean GetValue( CFStringRef inKey, CFTypeRef &outValue )
+	Boolean GetValue( CFStringRef inKey, CFTypeRef &outValue ) const noexcept
 	{
 		if(this->mRef != NULL)
 		{
@@ -122,25 +109,24 @@ public:
 	}
 };
 	
-typedef ACFDictBase<CFDictionaryRef, CFObjNotOwned> ACFDict;
-typedef ACFDictBase<CFDictionaryRef, CFObj> ACFDictOwned;
+typedef ACFDictBase<CFDictionaryRef> ACFDict;
 
-typedef ACFDictBase<CFMutableDictionaryRef, CFObj> ACFMutableDictBaseOwned;
-	
-class ACFMutableDict : public ACFMutableDictBaseOwned
+class ACFMutableDict : public ACFDictBase<CFMutableDictionaryRef>
 {
 public:
-	ACFMutableDict()
-	: ACFMutableDictBaseOwned ( ::CFDictionaryCreateMutable( kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks ) )
+    ACFMutableDict() noexcept
+        : ACFDictBase<CFMutableDictionaryRef>( CFDictionaryCreateMutable(kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks ), kCFObjDontRetain )
+    {
+    }
+    
+    
+    //note: reverse retain default than CFObj!
+	ACFMutableDict( CFMutableDictionaryRef inObj, CFObjRetainType inRetainType = kCFObjRetain ) noexcept
+		: ACFDictBase<CFMutableDictionaryRef>( inObj, kCFObjRetain )
 	{
 	}
 
-	ACFMutableDict( CFMutableDictionaryRef inObj, CFObjRetainType inRetainType = kCFObjRetain )
-		: ACFMutableDictBaseOwned ( inObj, inRetainType )
-	{
-	}
-
-	void SetValue( CFStringRef inKey, CFStringRef inValue)
+	void SetValue( CFStringRef inKey, CFStringRef inValue) noexcept
 	{
 		if(inValue != NULL)
 			::CFDictionarySetValue(mRef, inKey, inValue);
@@ -148,35 +134,35 @@ public:
 			::CFDictionaryRemoveValue(mRef, inKey);
 	}
 			
-	void SetValue( CFStringRef inKey, CFIndex inValue)
+	void SetValue( CFStringRef inKey, CFIndex inValue) noexcept
 	{
 		CFObj<CFNumberRef> cfNumber( ::CFNumberCreate( kCFAllocatorDefault, kCFNumberCFIndexType, &inValue) );
 		::CFDictionarySetValue( mRef, inKey, (CFNumberRef)cfNumber );
 	}
 	
-	void SetValue( CFStringRef inKey, float inValue)
+	void SetValue( CFStringRef inKey, float inValue) noexcept
 	{
 		CFObj<CFNumberRef> cfNumber( ::CFNumberCreate( kCFAllocatorDefault, kCFNumberFloatType, &inValue) );
 		::CFDictionarySetValue(mRef, inKey, (CFNumberRef)cfNumber );
 	}
 	
-	void SetValue( CFStringRef inKey, double inValue)
+	void SetValue( CFStringRef inKey, double inValue) noexcept
 	{
 		CFObj<CFNumberRef> cfNumber( ::CFNumberCreate( kCFAllocatorDefault, kCFNumberDoubleType, &inValue) );
 		::CFDictionarySetValue(mRef, inKey, (CFNumberRef)cfNumber );
 	}
 	
-	void SetValue( CFStringRef inKey, Boolean inValue)
+	void SetValue( CFStringRef inKey, Boolean inValue) noexcept
 	{
 		::CFDictionarySetValue(mRef, inKey, inValue ? kCFBooleanTrue : kCFBooleanFalse );
 	}
 	
-	void SetValue( CFStringRef inKey, bool inValue)
+	void SetValue( CFStringRef inKey, bool inValue) noexcept
 	{
 		::CFDictionarySetValue(mRef, inKey, inValue ? kCFBooleanTrue : kCFBooleanFalse );
 	}
 
-	void SetValue( CFStringRef inKey, CFTypeRef inValue)
+	void SetValue( CFStringRef inKey, CFTypeRef inValue) noexcept
 	{
 		if(inValue != NULL)
 			::CFDictionarySetValue(mRef, inKey, inValue);

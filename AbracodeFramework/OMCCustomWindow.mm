@@ -28,7 +28,7 @@
 
 	NSRect windowRect = NSMakeRect(0, 0, imgSize.width, imgSize.height);
 
-	self = [super initWithContentRect:windowRect styleMask:NSBorderlessWindowMask backing:NSBackingStoreBuffered defer:YES];
+	self = [super initWithContentRect:windowRect styleMask:NSWindowStyleMaskBorderless backing:NSBackingStoreBuffered defer:YES];
 	if(self == NULL)
 		return NULL;
 
@@ -136,7 +136,7 @@
 - (BOOL)performKeyEquivalent:(NSEvent *)theEvent
 {
 	NSUInteger modifFlags = [theEvent modifierFlags];
-	if( (modifFlags & NSDeviceIndependentModifierFlagsMask) == NSCommandKeyMask)
+	if( (modifFlags & NSEventModifierFlagDeviceIndependentFlagsMask) == NSEventModifierFlagCommand)
 	{
 		NSString *eventChar = [theEvent charactersIgnoringModifiers];
 		if([eventChar isEqualToString: @"w"])
@@ -166,7 +166,7 @@
 
    //grab the current global mouse location; we could just as easily get the mouse location 
    //in the same way as we do in -mouseDown:
-    currentLocation = [self convertBaseToScreen:[self mouseLocationOutsideOfEventStream]];
+    currentLocation = [self convertPointToScreen:[self mouseLocationOutsideOfEventStream]];
     newOrigin.x = currentLocation.x - initialLocation.x;
     newOrigin.y = currentLocation.y - initialLocation.y;
     
@@ -223,7 +223,7 @@
 	//drag moving:
 
 	//grab the mouse location in global coordinates
-	initialLocation = [self convertBaseToScreen:locationInWindow];
+	initialLocation = [self convertPointToScreen:locationInWindow];
    
 	if(!dragResizing)
 	{//remebers origin relative offset of our click in window

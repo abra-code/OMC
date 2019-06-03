@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>COMMAND_LIST</key>
+	<array>
+		<dict>
+			<key>ACTIVATION_MODE</key>
+			<string>act_selected_text</string>
+			<key>COMMAND</key>
+			<array>
+				<string>echo &quot;Example Command&quot;</string>
+			</array>
+			<key>ESCAPE_SPECIAL_CHARS</key>
+			<string>esc_with_backslash</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_silent_popen</string>
+			<key>NAME</key>
+			<array>
+				<string>Example Command</string>
+			</array>
+			<key>VERSION</key>
+			<integer>1</integer>
+		</dict>
+	</array>
+	<key>VERSION</key>
+	<integer>2</integer>
+</dict>
+</plist>

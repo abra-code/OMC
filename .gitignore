@@ -2,12 +2,4 @@
 *.xcuserstate
 xcuserdata
 *.xcuserstate
-build/Release/alert
-build/Release/b64
-build/Release/filt
-build/Release/loco
-build/Release/notify
-build/Release/omc_dialog_control
-build/Release/omc_next_command
-build/Release/pasteboard
-build/Release/plister
+build/

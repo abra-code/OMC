@@ -43,8 +43,8 @@
 				ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 	Change History:
-        This is a heavily trimmed and modified version of MoreAppleEvents
-        The original licence above allows redistribution of modified copies
+				This is a heavily trimmed and modified version of MoreAppleEvents
+				The original licence above allows redistribution of modified copies
 */
 
 //**********	Project Headers			****************************************
@@ -74,19 +74,19 @@ static AEIdleUPP gAEIdleUPP = nil;
  errAENotAEDesc        -1704    Not a valid descriptor record
  errAEBadListItem    -1705    Operation involving a list item failed
  */
-OSErr    MoreAEOCreatePropertyObject( const DescType pPropertyType,
-                                     AEDesc *pContainerAEDesc,
-                                     AEDesc *propertyObjPtr )
+OSErr MoreAEOCreatePropertyObject( const DescType pPropertyType,
+									AEDesc *pContainerAEDesc,
+									AEDesc *propertyObjPtr )
 {
-    StAEDesc propDesc;
-    OSErr anErr = AECreateDesc( typeType, &pPropertyType, sizeof( pPropertyType ), &propDesc );
-    if ( noErr == anErr )
-    {
-        anErr = CreateObjSpecifier( cProperty, pContainerAEDesc, formPropertyID,
-                                   &propDesc, false, propertyObjPtr );
-    }
-    
-    return anErr;
+	StAEDesc propDesc;
+	OSErr anErr = AECreateDesc( typeType, &pPropertyType, sizeof( pPropertyType ), &propDesc );
+	if ( noErr == anErr )
+	{
+		anErr = CreateObjSpecifier( cProperty, pContainerAEDesc, formPropertyID,
+									&propDesc, false, propertyObjPtr );
+	}
+
+	return anErr;
 }//end MoreAEOCreatePropertyObject
 
 
@@ -113,19 +113,19 @@ OSErr    MoreAEOCreatePropertyObject( const DescType pPropertyType,
 
 //inObjectType is usually cObject but can be specific
 
-OSErr    MoreAEOCreateSelectionObject( const DescType pSelectionAEDesc,
-                                      AEDesc *pContainerAEDesc,
-                                      AEDesc *pSelectionObject,
-                                      const DescType inObjectType)
+OSErr MoreAEOCreateSelectionObject( const DescType pSelectionAEDesc,
+									AEDesc *pContainerAEDesc,
+									AEDesc *pSelectionObject,
+									const DescType inObjectType)
 {
-    StAEDesc selectionDesc;
-    OSErr anErr = AECreateDesc( typeAbsoluteOrdinal, &pSelectionAEDesc, sizeof( pSelectionAEDesc ), &selectionDesc );
-    if ( noErr == anErr )
-    {
-        anErr = CreateObjSpecifier( inObjectType, pContainerAEDesc, formAbsolutePosition,
-                                   &selectionDesc, false, pSelectionObject );
-    }
-    return anErr;
+	StAEDesc selectionDesc;
+	OSErr anErr = AECreateDesc( typeAbsoluteOrdinal, &pSelectionAEDesc, sizeof( pSelectionAEDesc ), &selectionDesc );
+	if ( noErr == anErr )
+	{
+		anErr = CreateObjSpecifier( inObjectType, pContainerAEDesc, formAbsolutePosition,
+									&selectionDesc, false, pSelectionObject );
+	}
+	return anErr;
 }//end MoreAEOCreateSelectionObject
 
 
@@ -159,12 +159,12 @@ OSErr    MoreAEOCreateSelectionObject( const DescType pSelectionAEDesc,
 {
 	assert(pAppleEvent != nil);
 	
-    StAEDesc targetDesc;
+	StAEDesc targetDesc;
 	OSStatus anErr = AECreateDesc(typeApplSignature, &pCreator, sizeof(pCreator), &targetDesc);
 	if (noErr == anErr)
 		anErr = AECreateAppleEvent(pAEEventClass, pAEEventID, &targetDesc, 
 									kAutoGenerateReturnID, kAnyTransactionID, pAppleEvent);
-    
+
 	return anErr;
 }//end MoreAECreateAppleEventCreatorTarget
 
@@ -179,7 +179,7 @@ OSErr    MoreAEOCreateSelectionObject( const DescType pSelectionAEDesc,
 	assert(inBundleID != nil);
 	assert(pAppleEvent != nil);
 	
-    StAEDesc     targetDesc;
+	StAEDesc targetDesc;
 	OSStatus anErr = AECreateDesc(typeApplicationBundleID, inBundleID, strlen(inBundleID), &targetDesc);
 	if (noErr == anErr)
 		anErr = AECreateAppleEvent(pAEEventClass, pAEEventID, &targetDesc, 
@@ -219,21 +219,20 @@ OSErr    MoreAEOCreateSelectionObject( const DescType pSelectionAEDesc,
 	if (pIdleProcUPP == nil)
 		return paramErr;
 
-    
-    AESendMode sendMode = kAEWaitReply;
+	AESendMode sendMode = kAEWaitReply;
 
-    StAEDesc theReply;
-    OSErr anErr = AESend(pAppleEvent, &theReply, sendMode, kAENormalPriority, kAEDefaultTimeout, NULL, NULL);
-    //	[ Don't dispose of the event, it's not ours ]
-    if (noErr == anErr)
-    {
-        anErr = MoreAEGetHandlerError(&theReply);
+	StAEDesc theReply;
+	OSErr anErr = AESend(pAppleEvent, &theReply, sendMode, kAENormalPriority, kAEDefaultTimeout, NULL, NULL);
+	//	[ Don't dispose of the event, it's not ours ]
+	if (noErr == anErr)
+	{
+		anErr = MoreAEGetHandlerError(&theReply);
 
-        if (!anErr && theReply.descriptorType != typeNull)
-        {
-            anErr = AEGetParamDesc(&theReply, keyDirectObject, pDescType, pAEDesc);
-        }
-    }
+		if (!anErr && theReply.descriptorType != typeNull)
+		{
+			anErr = AEGetParamDesc(&theReply, keyDirectObject, pDescType, pAEDesc);
+		}
+	}
 
 	return anErr;
 }	// MoreAESendEventReturnAEDesc
@@ -268,7 +267,7 @@ OSErr    MoreAEOCreateSelectionObject( const DescType pSelectionAEDesc,
 	if (nil == gAEIdleUPP)
 		gAEIdleUPP = NewAEIdleUPP(MoreAESimpleIdleFunction);
 
-    StAEDesc tAppleEvent;
+	StAEDesc tAppleEvent;
 	OSErr anErr = MoreAECreateAppleEventCreatorTarget(kAECoreSuite, kAEGetData, appCreator, &tAppleEvent);
 	if(noErr != anErr) return anErr;
 
@@ -318,7 +317,7 @@ OSErr    MoreAEOCreateSelectionObject( const DescType pSelectionAEDesc,
 	if (nil == gAEIdleUPP)
 		gAEIdleUPP = NewAEIdleUPP(MoreAESimpleIdleFunction);
 
-    StAEDesc tAppleEvent;
+	StAEDesc tAppleEvent;
 	OSErr anErr = MoreAECreateAppleEventCreatorTarget(kAECoreSuite, kAECreateElement, appCreator, &tAppleEvent);
 	if(noErr != anErr) return anErr;
 
@@ -369,7 +368,7 @@ keyAEPosition			A constant that specifies where to put the Apple event object de
 //kAEReplace	Replace the container
 
 
- OSErr MoreAETellAppObjToInsertNewElement(
+OSErr MoreAETellAppObjToInsertNewElement(
 										const OSType appCreator,
 										AEDesc *containerObj,
 										const DescType inClass,
@@ -382,7 +381,7 @@ keyAEPosition			A constant that specifies where to put the Apple event object de
 	if (nil == gAEIdleUPP)
 		gAEIdleUPP = NewAEIdleUPP(MoreAESimpleIdleFunction);
 
-    StAEDesc tAppleEvent;
+	StAEDesc tAppleEvent;
 	OSErr anErr = MoreAECreateAppleEventCreatorTarget(kAECoreSuite, kAECreateElement, appCreator, &tAppleEvent);
 	if(noErr != anErr) return anErr;
 
@@ -441,7 +440,7 @@ keyAEPosition			A constant that specifies where to put the Apple event object de
 	if (nil == gAEIdleUPP)
 		gAEIdleUPP = NewAEIdleUPP(MoreAESimpleIdleFunction);
 
-    StAEDesc tAppleEvent;
+	StAEDesc tAppleEvent;
 	OSErr anErr = MoreAECreateAppleEventBundleIDTarget(kAECoreSuite, kAEGetData, appBundleID, &tAppleEvent);
 	if(noErr != anErr) return anErr;
 
@@ -478,7 +477,7 @@ keyAEPosition			A constant that specifies where to put the Apple event object de
 	if (nil == gAEIdleUPP)
 		gAEIdleUPP = NewAEIdleUPP(MoreAESimpleIdleFunction);
 
-    StAEDesc tAppleEvent;
+	StAEDesc tAppleEvent;
 	OSErr anErr = MoreAECreateAppleEventCreatorTarget(kAECoreSuite, kAEGetData, appCreator, &tAppleEvent);
 	if(noErr != anErr) return anErr;
 
@@ -515,7 +514,7 @@ keyAEPosition			A constant that specifies where to put the Apple event object de
 
 	RESULT CODES
 	____________
-	noErr				    0	No error	
+	noErr					0	No error	
 	????					??	Pretty much any error, depending on what the
 								event handler returns for it's errors.
 */
@@ -523,9 +522,9 @@ keyAEPosition			A constant that specifies where to put the Apple event object de
 {
 	if ( pAEReply->descriptorType != typeNull )	// there's a reply, so there may be an error
 	{
-        OSErr handlerErr = noErr;
-        DescType    actualType = 0;
-        Size        actualSize = 0;
+		OSErr handlerErr = noErr;
+		DescType actualType = 0;
+		Size actualSize = 0;
 		OSErr getErrErr = AEGetParamPtr( pAEReply, keyErrorNumber, typeSInt16, &actualType,
 									&handlerErr, sizeof( OSErr ), &actualSize );
 		

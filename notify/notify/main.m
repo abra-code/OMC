@@ -136,7 +136,7 @@ void print_help()
 	fprintf(stdout, "SYNOPSIS\n");
 	fprintf(stdout, "\tnotify [options] \"Notification Message\"\n\n");
 	fprintf(stdout, "DESCRIPTION\n");
-	fprintf(stdout, "\talert sends user notification\n");
+	fprintf(stdout, "\tnotify sends user notification\n");
 	
 	fprintf(stdout, "OPTIONS\n");
 

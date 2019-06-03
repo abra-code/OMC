@@ -13,7 +13,6 @@
 #include "CMUtils.h"
 #include "StAEDesc.h"
 #include "MoreAppleEvents.h"
-//#include "AAEDesc.h"
 
 //send simple event with direct param to Finder
 //if you need something more complicated, use the following code as a starting point and stick required descriptions
@@ -136,12 +135,7 @@ CMUtils::GetInsertionLocationAsAliasDesc(AEDesc &outAliasDesc, AEDesc &outFinder
 
 #if 0 //_DEBUG_
 		{
-			Str255 hexString;
-			ByteCount destLen = sizeof(Str255);
-			CMUtils::BufToHex( (const unsigned char *)&err, (char *)hexString, sizeof(err), destLen );
-			::CopyCStringToPascal( (char *)hexString, hexString);
-			DEBUG_PSTR( "\p\tError code is: " );
-			DEBUG_PSTR(hexString);
+			DEBUG_CSTR( "\tError code is: 0x%x\n", (int)err );
 		}
 #endif //_DEBUG_
 		return err;
@@ -149,16 +143,14 @@ CMUtils::GetInsertionLocationAsAliasDesc(AEDesc &outAliasDesc, AEDesc &outFinder
 
 #if _DEBUG_
 	{
-	Str31 debugStr;
-	DEBUG_PSTR( "\pGetInsertionLocation: finderObjDesc data type is:" );
+	char debugStr[8];
 	UInt8 *descPtr = (UInt8 *)&(outFinderObj.descriptorType);
-	debugStr[0] = 4;
-	debugStr[1] = descPtr[0];
-	debugStr[2] = descPtr[1];
-	debugStr[3] = descPtr[2];
-	debugStr[4] = descPtr[3];
-	
-	DEBUG_PSTR( debugStr );
+    debugStr[0] = descPtr[0];
+    debugStr[1] = descPtr[1];
+    debugStr[2] = descPtr[2];
+    debugStr[3] = descPtr[3];
+    debugStr[4] = 0;
+    DEBUG_CSTR( "GetInsertionLocation: finderObjDesc data type is: %s\n", debugStr );
 	}
 #endif
 	
@@ -166,16 +158,14 @@ CMUtils::GetInsertionLocationAsAliasDesc(AEDesc &outAliasDesc, AEDesc &outFinder
 
 #if _DEBUG_
 	{
-	Str31 debugStr;
-	DEBUG_PSTR( "\pGetInsertionLocation: outAliasDesc data type is:" );
+	char debugStr[8];
 	UInt8 *descPtr = (UInt8 *)&(outAliasDesc.descriptorType);
-	debugStr[0] = 4;
-	debugStr[1] = descPtr[0];
-	debugStr[2] = descPtr[1];
-	debugStr[3] = descPtr[2];
-	debugStr[4] = descPtr[3];
-	
-	DEBUG_PSTR( debugStr );
+	debugStr[0] = descPtr[0];
+	debugStr[1] = descPtr[1];
+	debugStr[2] = descPtr[2];
+	debugStr[3] = descPtr[3];
+    debugStr[4] = 0;
+    DEBUG_CSTR( "GetInsertionLocation: outAliasDesc data type is: %s\n", debugStr );
 	}
 #endif
 	
@@ -329,7 +319,7 @@ CMUtils::GetFinderWindowViewType(AEDesc &finderObjDesc, FourCharCode &outViewTyp
 
 	if(err != noErr)										
 	{
-		DEBUG_PSTR( "\pGetFinderWindowViewType->MoreAETellAppObjectToGetAEDesc failed to get container window" );
+		DEBUG_CSTR( "GetFinderWindowViewType->MoreAETellAppObjectToGetAEDesc failed to get container window\n" );
 		return err;
 	}
 
@@ -338,22 +328,20 @@ CMUtils::GetFinderWindowViewType(AEDesc &finderObjDesc, FourCharCode &outViewTyp
 
 	if(err != noErr)										
 	{
-		DEBUG_PSTR( "\pGetFinderWindowViewType->MoreAETellAppObjectToGetAEDesc failed to get view type" );
+		DEBUG_CSTR( "GetFinderWindowViewType->MoreAETellAppObjectToGetAEDesc failed to get view type\n" );
 		return err;
 	}
 
 #if _DEBUG_
 	{
-	Str31 debugStr;
-	DEBUG_PSTR( "\pGetFinderWindowViewType: viewTypeDesc data type is:" );
+	char debugStr[8];
 	UInt8 *descPtr = (UInt8 *)&(viewTypeDesc.descriptorType);
-	debugStr[0] = 4;
-	debugStr[1] = descPtr[0];
-	debugStr[2] = descPtr[1];
-	debugStr[3] = descPtr[2];
-	debugStr[4] = descPtr[3];
-	
-	DEBUG_PSTR( debugStr );	
+	debugStr[0] = descPtr[0];
+	debugStr[1] = descPtr[1];
+	debugStr[2] = descPtr[2];
+	debugStr[3] = descPtr[3];
+    debugStr[4] = 0;
+	DEBUG_CSTR( "GetFinderWindowViewType: viewTypeDesc data type is: %s\n", debugStr );
 	}
 #endif
 

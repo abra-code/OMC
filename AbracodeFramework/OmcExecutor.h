@@ -10,13 +10,13 @@
 #include <Carbon/Carbon.h>
 #include "DebugSettings.h"
 #include "CFObj.h"
-#include "AStdMalloc.h"
-#include "ACFDict.h"
 #include "ANotifier.h"
 #include "AObserver.h"
-#include "AStdNew.h"
 #include "ARefCounted.h"
+#include "ACFDict.h"
 #include "omc_popen.h"
+#include <vector>
+#include <string>
 
 char ** CreateEnvironmentList(CFDictionaryRef inEnviron);
 
@@ -41,7 +41,7 @@ public:
 							}
 							else
 							{
-								DEBUG_CSTR("OmcExecutor::OmcExecutor. Passed NULL CFBundleRef  !\n");
+								DEBUG_CSTR("OmcExecutor::OmcExecutor. Passed NULL CFBundleRef!\n");
 							}
 #endif
 						}
@@ -143,8 +143,7 @@ protected:
 	CFRunLoopSourceRef		mReadSource;
 	CFRunLoopSourceRef		mWriteSource;
 
-	AMalloc					mInputString;
-	ByteCount				mInputStringByteCount;
+	std::string		        mInputString;
 	ByteCount				mWrittenInputBytesCount;
 };
 
@@ -257,7 +256,7 @@ protected:
 	virtual bool		Execute( const char *inCommand, OSStatus &outError );
 
 protected:
-	AMalloc				mTempScriptPath;
+	std::string mTempScriptPath;
 };
 
 class ShellScriptWithOutputExecutor

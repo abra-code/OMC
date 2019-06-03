@@ -1,8 +1,8 @@
 #include <iostream>
+#include <vector>
+#include <string>
 #include "CFObj.h"
-#include "AStdArrayNew.h"
-#include "AStdMalloc.h"
-#include <memory>
+#include "AUniquePtr.h"
 #include "ABase64.h"
 
 typedef enum PlisterCommandID
@@ -76,13 +76,13 @@ typedef struct CFObjSpec
 		: index(-1), nextSpec(inNextSpec)
 	{ }
 
-	bool IsEmpty() { return ((key == NULL) && (index == -1 ) && (nextSpec.get() == NULL)); }
-	bool IsTopLevel() { return ((key == NULL) && (index == -1 )); }
+	bool IsEmpty() { return ((key == nullptr) && (index == -1 ) && (nextSpec == nullptr)); }
+	bool IsTopLevel() { return ((key == nullptr) && (index == -1 )); }
 
 	CFObj<CFStringRef> key;
 	CFIndex index;//if positive - it can be index
 
-	std::auto_ptr<CFObjSpec> nextSpec;
+	AUniquePtr<CFObjSpec> nextSpec;
 	
 } CFObjSpec;
 
@@ -125,7 +125,6 @@ CFObjSpec *CreatePropertySpecifier(const char *inPropertySpecifier);
 CFObjSpec *AddObjSpec(CFURLRef inPath, CFObjSpec *oldHead);
 PropertyType GetPropertyType(const char *inTypeStr);
 CFIndex GetPositiveInteger(CFStringRef inString);
-char *CreateCString(CFStringRef inStrRef);
 CFTypeRef CreateCFItemFromArgumentString(PropertyType inCFObjType, const char *valueStr);
 void DisplayHelp();
 
@@ -138,7 +137,7 @@ typedef struct OnePlisterCommand
 
 	bool IsPlistModified()
 	{
-		return ( modifyAndSave || ((nextCommand.get() != NULL) && nextCommand->IsPlistModified()) );
+		return ( modifyAndSave || ((nextCommand != nullptr) && nextCommand->IsPlistModified()) );
 	}
 
 	PlisterCommandID			commandID;
@@ -148,9 +147,9 @@ typedef struct OnePlisterCommand
 	CFIndex						insertIndex;
 	CFObj<CFURLRef>				destPlistURL;//only for top level command
 	CFObj<CFPropertyListRef>	propertyList;//only for top level command
-	std::auto_ptr<CFObjSpec>	specChain; //either absolute specifier for top level command or relative for child commands
-	std::auto_ptr<CFObjSpec>	subSpecChain; //some commands may take item-relative spec in addition to main spec. currently "find" only
-	std::auto_ptr<OnePlisterCommand> nextCommand;//nextCommand may be one subcommand (iterate command has one child) or it can be a chain like batch command
+	AUniquePtr<CFObjSpec>	specChain; //either absolute specifier for top level command or relative for child commands
+	AUniquePtr<CFObjSpec>	subSpecChain; //some commands may take item-relative spec in addition to main spec. currently "find" only
+	AUniquePtr<OnePlisterCommand> nextCommand;//nextCommand may be one subcommand (iterate command has one child) or it can be a chain like batch command
 	bool						modifyAndSave; //command sets this flag if the property list is modified and needs to be saved
 } OnePlisterCommand;
 
@@ -319,14 +318,14 @@ ReadCommandAndParameters(int argumentCount, char * const argv[], int &paramIndex
 				return -1;
 			}
 
-			std::auto_ptr<CFObjSpec> specChain( CreatePropertySpecifier(propSpecStr) );
+			AUniquePtr<CFObjSpec> specChain( CreatePropertySpecifier(propSpecStr) );
 
 			CFObj<CFPropertyListRef> properties;
 			result = ReadPlistFile(plistPath, properties, false, NULL);
 			if(result == 0)
 			{
 				CFTypeRef itemRef = NULL;
-				result = ProcessGetItem(specChain.get(), properties, &itemRef);
+				result = ProcessGetItem(specChain, properties, &itemRef);
 				ioOneCommand.newValue.Adopt(itemRef, kCFObjRetain);
 			}
 		}
@@ -376,14 +375,14 @@ ReadCommandAndParameters(int argumentCount, char * const argv[], int &paramIndex
 			const char *plistPath = argv[paramIndex++];
 			const char *propSpecStr = argv[paramIndex++];
 
-			std::auto_ptr<CFObjSpec> specChain( CreatePropertySpecifier(propSpecStr) );
+			AUniquePtr<CFObjSpec> specChain = CreatePropertySpecifier(propSpecStr);
 
 			CFObj<CFPropertyListRef> properties;
 			result = ReadPlistFile(plistPath, properties, false, NULL);
 			if(result == 0)
 			{	
 				CFTypeRef itemRef = NULL;
-				result = ProcessGetItem(specChain.get(), properties, &itemRef);
+				result = ProcessGetItem(specChain, properties, &itemRef);
 				ioOneCommand.newValue.Adopt(itemRef, kCFObjRetain);
 			}
 		}
@@ -431,14 +430,14 @@ ReadCommandAndParameters(int argumentCount, char * const argv[], int &paramIndex
 			plistPath = argv[paramIndex++];
 			propSpecStr = argv[paramIndex++];
 			
-			std::auto_ptr<CFObjSpec> specChain( CreatePropertySpecifier(propSpecStr) );
+			AUniquePtr<CFObjSpec> specChain = CreatePropertySpecifier(propSpecStr);
 
 			CFObj<CFPropertyListRef> properties;
 			result = ReadPlistFile(plistPath, properties, false, NULL);
 			if(result == 0)
 			{	
 				CFTypeRef itemRef = NULL;
-				result = ProcessGetItem(specChain.get(), properties, &itemRef);
+				result = ProcessGetItem(specChain, properties, &itemRef);
 				ioOneCommand.newValue.Adopt(itemRef, kCFObjRetain);
 			}
 		}
@@ -543,7 +542,7 @@ ReadCommandAndParameters(int argumentCount, char * const argv[], int &paramIndex
 	{
 		ioOneCommand.modifyAndSave = false;//iterator itself does not carry information about modification. subcomamnd will do so though
 		ioOneCommand.nextCommand.reset( new OnePlisterCommand() );
-		OnePlisterCommand *oneCommand = ioOneCommand.nextCommand.get();
+		OnePlisterCommand *oneCommand = ioOneCommand.nextCommand;
 		result = ReadCommandAndParameters(argumentCount, argv, paramIndex, *oneCommand, false);
 	}
 
@@ -601,6 +600,30 @@ RunCommand( PlisterCommandContext &inContext, OnePlisterCommand &inCommand )
 	return result;
 }
 
+std::string
+CreateUTF8StringFromCFString(CFStringRef inStrRef)
+{
+    if(inStrRef == nullptr)
+    return std::string();
+    
+    CFIndex uniCount = ::CFStringGetLength(inStrRef);
+    if(uniCount > 0)
+    {
+        CFIndex maxCount = ::CFStringGetMaximumSizeForEncoding(uniCount, kCFStringEncodingUTF8 );
+        std::string string(maxCount+1, '\0');//+ 1 for null char
+        Boolean isOK = ::CFStringGetCString (inStrRef, &string[0], maxCount+1, kCFStringEncodingUTF8);
+        if(isOK)
+        {
+            string.resize(strnlen(&string[0], maxCount));//shrink down to exact size
+            return string;
+        }
+    }
+    
+    std::cerr << "Plister error: problem converting UTF-16 string to UTF-8" << std::endl;
+    
+    return std::string();
+}
+
 OSStatus
 RunGetCommand( PlisterCommandContext &inContext, OnePlisterCommand &inCommand )
 {
@@ -650,18 +673,17 @@ RunGetCommand( PlisterCommandContext &inContext, OnePlisterCommand &inCommand )
 	CFObj<CFStringRef> resultStr;
 	if(getInfoProcPtr != NULL)
 	{
-		result = CreateChildProperty(inCommand.specChain.get(), inContext.currItemRef, getInfoProcPtr, &containerOptions, &resultStr);
+		result = CreateChildProperty(inCommand.specChain, inContext.currItemRef, getInfoProcPtr, &containerOptions, &resultStr);
 	}
 	else if(getDictItemInfoProcPtr != NULL)
 	{
-		result = CreateDictChildProperty(inCommand.specChain.get(), inContext.currItemRef, getDictItemInfoProcPtr, &resultStr);
+		result = CreateDictChildProperty(inCommand.specChain, inContext.currItemRef, getDictItemInfoProcPtr, &resultStr);
 	}
 
 	if(resultStr != NULL)
 	{
-		AMalloc buff( CreateCString(resultStr) );
-		if(buff != NULL)
-			std::cout << (char *)buff << std::endl;
+        std::string str = CreateUTF8StringFromCFString(resultStr);
+        std::cout << str << std::endl;
 	}
 	
 	return result;
@@ -671,7 +693,7 @@ RunGetCommand( PlisterCommandContext &inContext, OnePlisterCommand &inCommand )
 OSStatus
 RunRemoveCommand(PlisterCommandContext &inContext, OnePlisterCommand &inCommand )
 {
-	return ProcessDeleteItem( inContext.currItemRef, inCommand.specChain.get() );
+	return ProcessDeleteItem( inContext.currItemRef, inCommand.specChain );
 }
 
 OSStatus
@@ -679,7 +701,7 @@ RunInsertCommand(PlisterCommandContext &inContext, OnePlisterCommand &inCommand 
 {
 	CFIndex insertIndex = inCommand.insertIndex;
 	CFTypeRef itemRef = NULL;
-	OSStatus result = ProcessGetItem(inCommand.specChain.get(), inContext.currItemRef, &itemRef);
+	OSStatus result = ProcessGetItem(inCommand.specChain, inContext.currItemRef, &itemRef);
 	if(itemRef != NULL)
 	{
 		if( (::CFGetTypeID(itemRef) == kCFTypeIDs[kCFType_dict]) && (inCommand.newKey != NULL))
@@ -713,7 +735,7 @@ OSStatus
 RunAppendCommand(PlisterCommandContext &inContext, OnePlisterCommand &inCommand )
 {//for array only
 	CFTypeRef itemRef = NULL;
-	OSStatus result = ProcessGetItem(inCommand.specChain.get(), inContext.currItemRef, &itemRef);
+	OSStatus result = ProcessGetItem(inCommand.specChain, inContext.currItemRef, &itemRef);
 	if((result == noErr) && (itemRef != NULL) )
 	{
 		if(::CFGetTypeID(itemRef) ==  kCFTypeIDs[kCFType_array])
@@ -734,7 +756,7 @@ RunSetCommand(PlisterCommandContext &inContext, OnePlisterCommand &inCommand )
 {
 	CFTypeRef lastContainer = NULL;
 	CFObjSpec *lastItemSpec = NULL;
-	OSStatus result = ProcessGetLastItemContainerAndSpec(inCommand.specChain.get(), inContext.currItemRef, &lastContainer, &lastItemSpec);
+	OSStatus result = ProcessGetLastItemContainerAndSpec(inCommand.specChain, inContext.currItemRef, &lastContainer, &lastItemSpec);
 	if( (result == noErr) && (lastContainer != NULL) && (lastItemSpec != NULL) )
 	{	
 		if( ::CFGetTypeID(lastContainer) == kCFTypeIDs[kCFType_dict] )
@@ -775,7 +797,7 @@ OSStatus
 RunFindCommand(PlisterCommandContext &inContext, OnePlisterCommand &inCommand )
 {	
 	CFTypeRef containerRef = NULL;
-	OSStatus result = ProcessGetItem(inCommand.specChain.get(), inContext.currItemRef, &containerRef);
+	OSStatus result = ProcessGetItem(inCommand.specChain, inContext.currItemRef, &containerRef);
 	if(containerRef != NULL)
 	{
 		ContainerOptions containerOptions;
@@ -788,10 +810,10 @@ RunFindCommand(PlisterCommandContext &inContext, OnePlisterCommand &inCommand )
 			CFIndex itemCount = ::CFDictionaryGetCount( (CFDictionaryRef)containerRef );
 			if( itemCount > 0 )
 			{
-				AStdMalloc<void *> keys(itemCount);
-				AStdMalloc<void *> dictValues(itemCount);
+                std::vector<void *> keys(itemCount);
+                std::vector<void *> dictValues(itemCount);
 				
-				::CFDictionaryGetKeysAndValues( (CFDictionaryRef)containerRef, (const void **)keys.Get(), (const void **)dictValues.Get() );
+				::CFDictionaryGetKeysAndValues( (CFDictionaryRef)containerRef, (const void **)keys.data(), (const void **)dictValues.data() );
 					
 				for( CFIndex index = 0; index < itemCount; index++ )
 				{
@@ -800,7 +822,7 @@ RunFindCommand(PlisterCommandContext &inContext, OnePlisterCommand &inCommand )
 						continue;
 
 					CFTypeRef subItemRef = NULL;
-					result = ProcessGetItem(inCommand.subSpecChain.get(), currItemRef, &subItemRef);
+					result = ProcessGetItem(inCommand.subSpecChain, currItemRef, &subItemRef);
 					
 					CFObj<CFStringRef> foundStr;
 					if(inCommand.cfObjType == kCFType_string)
@@ -814,9 +836,8 @@ RunFindCommand(PlisterCommandContext &inContext, OnePlisterCommand &inCommand )
 						CFObj<CFStringRef> resultStr;
 						result = CreateCFItemString( keys[index], &resultStr, NULL );
 
-						AMalloc buff( CreateCString(resultStr) );
-						if(buff != NULL)
-							std::cout << (char *)buff << std::endl;
+						std::string str = CreateUTF8StringFromCFString(resultStr);
+                        std::cout << str << std::endl;
 					
 						if(inCommand.commandID == kPCmd_find)
 							break;//break on first found item
@@ -835,7 +856,7 @@ RunFindCommand(PlisterCommandContext &inContext, OnePlisterCommand &inCommand )
 					continue;
 
 				CFTypeRef subItemRef = NULL;
-				result = ProcessGetItem(inCommand.subSpecChain.get(), currItemRef, &subItemRef);
+				result = ProcessGetItem(inCommand.subSpecChain, currItemRef, &subItemRef);
 
 				CFObj<CFStringRef> foundStr;
 				if(inCommand.cfObjType == kCFType_string)
@@ -847,9 +868,8 @@ RunFindCommand(PlisterCommandContext &inContext, OnePlisterCommand &inCommand )
 				if( (subItemRef != NULL) && ::CFEqual( inCommand.newValue, subItemRef ) )
 				{//print
 					CFObj<CFStringRef> resultStr( ::CFStringCreateWithFormat( kCFAllocatorDefault, NULL, CFSTR("%ld"), index ) );
-					AMalloc buff( CreateCString(resultStr) );
-					if(buff != NULL)
-						std::cout << (char *)buff << std::endl;
+					std::string str = CreateUTF8StringFromCFString(resultStr);
+                    std::cout << str << std::endl;
 					
 					if(inCommand.commandID == kPCmd_find)
 						break;//break on first found item
@@ -869,28 +889,28 @@ RunFindCommand(PlisterCommandContext &inContext, OnePlisterCommand &inCommand )
 OSStatus
 RunIterateCommand(PlisterCommandContext &inContext, OnePlisterCommand &inCommand )
 {
-	OnePlisterCommand *subCommand = inCommand.nextCommand.get();
+	OnePlisterCommand *subCommand = inCommand.nextCommand;
 	if(subCommand == NULL)
 	{
 		std::cerr << "Plister error: iteration subcommand not specified" << std::endl;
 		return -1;
 	}
 
-	std::auto_ptr<CFObjSpec> originalSpecChain( subCommand->specChain.release() );//we need to modify it so detach it now - we will put it back at the end
-	CFObjSpec *specChain = originalSpecChain.get();
-	if( (specChain != NULL) && specChain->IsEmpty() )
-		specChain = NULL;
+	AUniquePtr<CFObjSpec> originalSpecChain( subCommand->specChain.release() );//we need to modify it so detach it now - we will put it back at the end
+	CFObjSpec *specChain = originalSpecChain;
+	if( (specChain != nullptr) && specChain->IsEmpty() )
+		specChain = nullptr;
 	
-	while( (specChain != NULL) && specChain->IsTopLevel() )
+	while( (specChain != nullptr) && specChain->IsTopLevel() )
 	{
-		specChain = specChain->nextSpec.get();
+		specChain = specChain->nextSpec;
 	}
 
 	//if subcommand spec does not point any deeper than just item in iteration we need to take care with delete and insert comamnds
 	bool subcommandSpecIsRoot = (specChain == NULL);
 
 	CFTypeRef containerRef = NULL;
-	OSStatus result = ProcessGetItem(inCommand.specChain.get(), inContext.currItemRef, &containerRef);
+	OSStatus result = ProcessGetItem(inCommand.specChain, inContext.currItemRef, &containerRef);
 	if(containerRef != NULL)
 	{
 		//TODO: fix subcommands requiring container and it is missing becase it is this one that we are iterating!
@@ -900,10 +920,10 @@ RunIterateCommand(PlisterCommandContext &inContext, OnePlisterCommand &inCommand
 			CFIndex itemCount = ::CFDictionaryGetCount( (CFDictionaryRef)containerRef );
 			if( itemCount > 0 )
 			{
-				AStdMalloc<void *> keys(itemCount);
-				AStdMalloc<void *> dictValues(itemCount);
+                std::vector<void *> keys(itemCount);
+				std::vector<void *> dictValues(itemCount);
 				
-				::CFDictionaryGetKeysAndValues( (CFDictionaryRef)containerRef, (const void **)keys.Get(), (const void **)dictValues.Get() );
+				::CFDictionaryGetKeysAndValues( (CFDictionaryRef)containerRef, (const void **)keys.data(), (const void **)dictValues.data() );
 					
 				for( CFIndex index = 0; index < itemCount; index++ )
 				{
@@ -911,13 +931,13 @@ RunIterateCommand(PlisterCommandContext &inContext, OnePlisterCommand &inCommand
 					if(currItemRef == NULL)
 						continue;
 					
-					std::auto_ptr<CFObjSpec> itemSubSpec( new CFObjSpec(specChain) );
+					AUniquePtr<CFObjSpec> itemSubSpec = new CFObjSpec(specChain);
 					itemSubSpec->key.Adopt((CFStringRef)keys[index], kCFObjRetain);
-					subCommand->specChain.reset( itemSubSpec.get() );//temporarily stick the new subChain
+					subCommand->specChain.reset( itemSubSpec );//temporarily stick the new subChain
 					PlisterCommandContext context(containerRef);
 					result = RunCommand(context, *subCommand);
-					subCommand->specChain.release();//detach temp chain from subCommand
-					itemSubSpec->nextSpec.release();//detach original subchain from temp chain
+					subCommand->specChain.detach();//detach temp chain from subCommand
+					itemSubSpec->nextSpec.detach();//detach original subchain from temp chain
 				}
 			}
 			result = 0;
@@ -934,13 +954,13 @@ RunIterateCommand(PlisterCommandContext &inContext, OnePlisterCommand &inCommand
 					if(currItemRef == NULL)
 						continue;
 
-					std::auto_ptr<CFObjSpec> itemSubSpec( new CFObjSpec(specChain) );//add new head
+					AUniquePtr<CFObjSpec> itemSubSpec = new CFObjSpec(specChain);//add new head
 					itemSubSpec->index = index;
-					subCommand->specChain.reset( itemSubSpec.get() );//temporarily stick the new subChain
+					subCommand->specChain.reset( itemSubSpec );//temporarily stick the new subChain
 					PlisterCommandContext context(containerRef);
 					result = RunCommand(context, *subCommand);
-					subCommand->specChain.release();//detach temp chain from subCommand
-					itemSubSpec->nextSpec.release();//detach original subchain from temp chain
+					subCommand->specChain.detach();//detach temp chain from subCommand
+					itemSubSpec->nextSpec.detach();//detach original subchain from temp chain
 
 				}
 			}
@@ -956,13 +976,13 @@ RunIterateCommand(PlisterCommandContext &inContext, OnePlisterCommand &inCommand
 					if(currItemRef == NULL)
 						continue;
 
-					std::auto_ptr<CFObjSpec> itemSubSpec( new CFObjSpec(specChain) );//add new head
+					AUniquePtr<CFObjSpec> itemSubSpec = new CFObjSpec(specChain);//add new head
 					itemSubSpec->index = index;
-					subCommand->specChain.reset( itemSubSpec.get() );//temporarily stick the new subChain
+					subCommand->specChain.reset( itemSubSpec );//temporarily stick the new subChain
 					PlisterCommandContext context(containerRef);
 					result = RunCommand(context, *subCommand);
-					subCommand->specChain.release();//detach temp chain from subCommand
-					itemSubSpec->nextSpec.release();//detach original subchain from temp chain					
+					subCommand->specChain.detach();//detach temp chain from subCommand
+					itemSubSpec->nextSpec.detach();//detach original subchain from temp chain					
 				}
 			}
 			result = 0;
@@ -1035,12 +1055,11 @@ LoadPropertiesFromPlistFile(CFURLRef inPlistFileURL, bool inMutable)
 	if( !success || (theData == NULL) )
 		return NULL;
 
-	CFObj<CFStringRef> errorString;
-	return ::CFPropertyListCreateFromXMLData (
+	return ::CFPropertyListCreateWithData (
 									kCFAllocatorDefault,
 									theData,
 									inMutable ? kCFPropertyListMutableContainers : kCFPropertyListImmutable,
-									&errorString);
+									nullptr, nullptr);
 }
 
 bool
@@ -1049,7 +1068,8 @@ SavePropertiesToPlistFile(CFURLRef inPlistFileURL, CFPropertyListRef inPropertie
 	if( (inPlistFileURL == NULL) || (inProperties == NULL) )
 		return false;
 
-	CFObj<CFDataRef> xmlData( ::CFPropertyListCreateXMLData(kCFAllocatorDefault, inProperties) );
+	CFObj<CFDataRef> xmlData(CFPropertyListCreateData(kCFAllocatorDefault, inProperties, kCFPropertyListXMLFormat_v1_0, 0, nullptr));
+
 	if(xmlData == NULL)
 		return false;
 
@@ -1164,12 +1184,12 @@ CFIndex GetPositiveInteger(CFStringRef inString)
 	if(uniCount == 0)
 		return -1;
 
-	AStdArrayNew<UniChar> newString( uniCount );
+    std::vector<UniChar> newString( uniCount );
 
 	CFRange theRange;
 	theRange.location = 0;
 	theRange.length = uniCount;
-	::CFStringGetCharacters( inString, theRange, newString);
+	::CFStringGetCharacters( inString, theRange, newString.data());
 	
 	//only integer digits allowed in string - nothing else
 	for(CFIndex i = 0; i < uniCount; i++)
@@ -1291,18 +1311,14 @@ OSStatus CreateCFItemString( CFTypeRef inItem, CFStringRef *outResult, Container
 		if( (rawData != NULL) && (dataSize > 0) )
 		{
 			unsigned long buffSize = CalculateEncodedBufferSize(dataSize);
-			AMalloc buff(buffSize+1);
-			if(buff != NULL)
-			{
-				unsigned long encodedSize = EncodeBase64(rawData, dataSize, (unsigned char *)buff.Get(), buffSize);
-				buff[encodedSize] = 0;
-				*outResult = ::CFStringCreateWithCStringNoCopy(kCFAllocatorDefault, buff, kCFStringEncodingASCII, kCFAllocatorMalloc);
-				if(*outResult != NULL)
-				{
-					result = noErr;
-					buff.Detach();
-				}
-			}
+            std::vector<char> buff(buffSize+1);
+            unsigned long encodedSize = EncodeBase64(rawData, dataSize, (unsigned char *)buff.data(), buffSize);
+            buff[encodedSize] = 0;
+            *outResult = ::CFStringCreateWithCStringNoCopy(kCFAllocatorDefault, buff.data(), kCFStringEncodingASCII, kCFAllocatorMalloc);
+            if(*outResult != NULL)
+            {
+                result = noErr;
+            }
 		}
 	}
 	else if( itemType == kCFTypeIDs[kCFType_dict] )
@@ -1319,10 +1335,10 @@ OSStatus CreateCFItemString( CFTypeRef inItem, CFStringRef *outResult, Container
 			CFIndex itemCount = ::CFDictionaryGetCount( (CFDictionaryRef)inItem );
 			if( itemCount > 0 )
 			{
-				AStdMalloc<void *> keys(itemCount);
-				AStdMalloc<void *> dictValues(itemCount);
+                std::vector<void *> keys(itemCount);
+				std::vector<void *> dictValues(itemCount);
 				
-				::CFDictionaryGetKeysAndValues( (CFDictionaryRef)inItem, (const void **)keys.Get(), (const void **)dictValues.Get() );
+				::CFDictionaryGetKeysAndValues( (CFDictionaryRef)inItem, (const void **)keys.data(), (const void **)dictValues.data() );
 					
 				for( CFIndex index = 0; index < itemCount; index++ )
 				{
@@ -1430,19 +1446,19 @@ CreateChildProperty(CFObjSpec *inSpec, CFTypeRef inCurrLevelRef, CreateCFItemInf
 	{
 		if(sPrintErrorMessages)
 		{
-			AMalloc itemStr( CreateCString(inSpec->key) );
+            std::string itemStr = CreateUTF8StringFromCFString(inSpec->key);
 			std::cerr << "Plister error: item \"" << itemStr << "\" not found in plist file." << std::endl;
 		}
 		return -1;
 	}
 
-	if( inSpec->nextSpec.get() == NULL )
+	if( inSpec->nextSpec == nullptr )
 	{//we reached the end of spec chain - this is the item requested
 		err = (*inProcPtr)( currItemRef, outResult, containerOptions );
 	}
 	else
 	{//recursively dig deeper down the chain
-		err = CreateChildProperty(inSpec->nextSpec.get(), currItemRef, inProcPtr, containerOptions, outResult);
+		err = CreateChildProperty(inSpec->nextSpec, currItemRef, inProcPtr, containerOptions, outResult);
 	}
 	
 	return err;
@@ -1502,9 +1518,9 @@ OSStatus CreateCFItemKeys( CFTypeRef inItem, CFStringRef *outResult, ContainerOp
 			CFIndex itemCount = ::CFDictionaryGetCount( (CFDictionaryRef)inItem );
 			if( itemCount > 0 )
 			{
-				AStdMalloc<void *> keys(itemCount);
+                std::vector<void *> keys(itemCount);
 				
-				::CFDictionaryGetKeysAndValues( (CFDictionaryRef)inItem, (const void **)keys.Get(), NULL );
+				::CFDictionaryGetKeysAndValues( (CFDictionaryRef)inItem, (const void **)keys.data(), NULL );
 					
 				for( CFIndex index = 0; index < itemCount; index++ )
 				{
@@ -1538,7 +1554,7 @@ CreateDictChildProperty(CFObjSpec *inSpec, CFTypeRef inCurrLevelRef, CreateCFDic
 	CFTypeRef currItemRef = NULL;
 	CFTypeID itemType = ::CFGetTypeID(inCurrLevelRef);
 
-	CFObjSpec *nextSpec = inSpec->nextSpec.get();
+	CFObjSpec *nextSpec = inSpec->nextSpec;
 
 	if( inSpec->IsTopLevel() )//top level, root item requested
 	{
@@ -1583,7 +1599,7 @@ CreateDictChildProperty(CFObjSpec *inSpec, CFTypeRef inCurrLevelRef, CreateCFDic
 	{
 		if(sPrintErrorMessages)
 		{
-			AMalloc itemStr( CreateCString(inSpec->key) );
+            std::string itemStr = CreateUTF8StringFromCFString(inSpec->key);
 			std::cerr << "Plister error: item \"" << itemStr << "\" not found in plist file." << std::endl;
 		}
 		return -1;
@@ -1604,7 +1620,7 @@ CreateDictChildProperty(CFObjSpec *inSpec, CFTypeRef inCurrLevelRef, CreateCFDic
 	}
 	else
 	{
-		if( (nextSpec->nextSpec.get() == NULL) && (itemType == kCFTypeIDs[kCFType_dict]) && (nextSpec->index >= 0) )//next item will be the end
+		if( (nextSpec->nextSpec == nullptr) && (itemType == kCFTypeIDs[kCFType_dict]) && (nextSpec->index >= 0) )//next item will be the end
 		{//dict before the last item and the last one is index
 			err = (*inProcPtr)( (CFDictionaryRef)currItemRef, nextSpec->index, outResult );
 		}
@@ -1653,19 +1669,19 @@ ProcessGetItem(CFObjSpec *inSpec, CFTypeRef inCurrLevelRef, CFTypeRef *outResult
 	{
 		if(sPrintErrorMessages)
 		{
-			AMalloc itemStr( CreateCString(inSpec->key) );
+			std::string itemStr = CreateUTF8StringFromCFString(inSpec->key);
 			std::cerr << "Plister error: item \"" << itemStr << "\" not found in plist file." << std::endl;
 		}
 		return -1;
 	}
 
-	if( inSpec->nextSpec.get() == NULL )
+	if( inSpec->nextSpec == nullptr )
 	{//we reached the end of spec chain - this is the item requested
 		*outResult = currItemRef;
 	}
 	else
 	{//recursively dig deeper down the chain
-		err = ProcessGetItem(inSpec->nextSpec.get(), currItemRef, outResult);
+		err = ProcessGetItem(inSpec->nextSpec, currItemRef, outResult);
 	}
 	
 	return err;
@@ -1679,7 +1695,7 @@ ProcessGetLastItemContainerAndSpec(CFObjSpec *inSpec, CFTypeRef inCurrLevelRef, 
 	if( (inSpec == NULL) || (inCurrLevelRef == NULL) || (outContainer == NULL) || (outLastSpec == NULL) )
 		return -1;
 
-	if( inSpec->nextSpec.get() == NULL )
+	if( inSpec->nextSpec == nullptr )
 	{//next spec reaches the end of spec chain - this is the container requested
 		*outContainer = inCurrLevelRef;
 		*outLastSpec = inSpec;
@@ -1712,13 +1728,13 @@ ProcessGetLastItemContainerAndSpec(CFObjSpec *inSpec, CFTypeRef inCurrLevelRef, 
 	{
 		if(sPrintErrorMessages)
 		{
-			AMalloc itemStr( CreateCString(inSpec->key) );
+			std::string itemStr = CreateUTF8StringFromCFString(inSpec->key);
 			std::cerr << "Plister error: item \"" << itemStr << "\" not found in plist file." << std::endl;
 		}
 		return -1;
 	}
 
-	return ProcessGetLastItemContainerAndSpec(inSpec->nextSpec.get(), currItemRef, outContainer, outLastSpec);
+	return ProcessGetLastItemContainerAndSpec(inSpec->nextSpec, currItemRef, outContainer, outLastSpec);
 }
 
 OSStatus
@@ -1731,8 +1747,8 @@ ProcessDeleteItem(CFTypeRef inCurrLevelRef, CFObjSpec *inSpec )
 	CFTypeID itemType = ::CFGetTypeID(inCurrLevelRef);
 	CFTypeRef currItemRef = NULL;
 
-	CFObjSpec *nextSpec = inSpec->nextSpec.get();
-	if( nextSpec == NULL )
+	CFObjSpec *nextSpec = inSpec->nextSpec;
+	if( nextSpec == nullptr )
 	{//this is the container we are looking for
 		if( inSpec->IsTopLevel() )//top level, root item requested. 
 		{
@@ -1794,7 +1810,7 @@ ProcessDeleteItem(CFTypeRef inCurrLevelRef, CFObjSpec *inSpec )
 	{
 		if(sPrintErrorMessages)
 		{
-			AMalloc itemStr( CreateCString(inSpec->key) );
+			std::string itemStr = CreateUTF8StringFromCFString(inSpec->key);
 			std::cerr << "Plister error: container \"" << itemStr << "\" not found in plist file." << std::endl;
 		}
 		return -1;
@@ -1806,30 +1822,6 @@ ProcessDeleteItem(CFTypeRef inCurrLevelRef, CFObjSpec *inSpec )
 
 #pragma mark -
 
-//allocated with malloc, caller responsible for releasing it with "free()"
-char *
-CreateCString(CFStringRef inStrRef)
-{
-	if(inStrRef == NULL)
-		return NULL;
-
-	CFIndex uniCount = ::CFStringGetLength(inStrRef);
-	CFIndex maxCount = ::CFStringGetMaximumSizeForEncoding( uniCount, kCFStringEncodingUTF8 );
-	AMalloc buff(maxCount + 1);
-	Boolean success = ::CFStringGetCString (inStrRef, buff, maxCount+1, kCFStringEncodingUTF8);
-
-	if(success)
-	{
-		return buff.Detach();
-	}
-	else
-	{
-		std::cerr << "Plister error: problem converting UTF-16 string to UTF-8" << std::endl;
-	}
-	
-	return NULL;
-}
-
 CFTypeRef
 CreateCFItemFromArgumentString(PropertyType inCFObjType, const char *valueStr)
 {
@@ -1839,12 +1831,12 @@ CreateCFItemFromArgumentString(PropertyType inCFObjType, const char *valueStr)
 		if(encodedLen != 0)
 		{
 			unsigned long buffSize = CalculateDecodedBufferMaxSize(encodedLen);
-			AMalloc buff(buffSize);
+			char* buff = (char* )malloc(buffSize);
 			if(buff != NULL)
 			{
-				unsigned long decodedSize = DecodeBase64( (const unsigned char *)valueStr, encodedLen, (unsigned char *)buff.Get(), buffSize );
+				unsigned long decodedSize = DecodeBase64( (const unsigned char *)valueStr, encodedLen, (unsigned char *)buff, buffSize );
 				if(decodedSize != 0)
-					return ::CFDataCreateWithBytesNoCopy( kCFAllocatorDefault, (const UInt8*)buff.Detach(), decodedSize, kCFAllocatorMalloc );
+					return ::CFDataCreateWithBytesNoCopy( kCFAllocatorDefault, (const UInt8*)buff, decodedSize, kCFAllocatorMalloc );
 			}
 		}
 		return NULL;

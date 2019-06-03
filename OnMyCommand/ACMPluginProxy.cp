@@ -64,7 +64,7 @@ extern "C" void *ACMPluginFactory( CFAllocatorRef allocator, CFUUIDRef typeID )
 {
 #pragma unused( allocator )
 
-	TRACE_CSTR1( "Entering ACMPluginFactory" );
+	TRACE_CSTR( "Entering ACMPluginFactory\n" );
 
 	if(typeID == NULL)
 		return NULL;
@@ -75,7 +75,7 @@ extern "C" void *ACMPluginFactory( CFAllocatorRef allocator, CFUUIDRef typeID )
 	if ( ::CFEqual( typeID, kContextualMenuTypeID ) )
 		pluginProxy = CreateACMPluginProxy();
 
-	TRACE_CSTR1( "Exiting ACMPluginFactory" );
+	TRACE_CSTR( "Exiting ACMPluginFactory\n" );
 	// If the requested type is incorrect, return NULL.
 	return pluginProxy;
 }
@@ -120,7 +120,7 @@ CreateACMPluginProxy()
 //
 SInt32 ACMPluginProxyQueryInterface( void *thisInstance, CFUUIDBytes iid, void **ppv )
 {
-	TRACE_CSTR1( "ACMPluginProxyQueryInterface" );
+	TRACE_CSTR( "ACMPluginProxyQueryInterface\n" );
 	
 	if(thisInstance == NULL)
 		return E_NOINTERFACE;
@@ -166,7 +166,7 @@ SInt32 ACMPluginProxyQueryInterface( void *thisInstance, CFUUIDBytes iid, void *
 //
 UInt32 ACMPluginProxyAddRef( void *thisInstance )
 {
-	TRACE_CSTR1( "ACMPluginProxyAddRef" );
+	TRACE_CSTR( "ACMPluginProxyAddRef\n" );
 	ACMPluginProxy *proxy = (ACMPluginProxy *)thisInstance;
 	if(proxy != NULL)
 		return proxy->refCount++;
@@ -182,7 +182,7 @@ UInt32 ACMPluginProxyAddRef( void *thisInstance )
 //
 UInt32 ACMPluginProxyRelease( void *thisInstance )
 {
-	TRACE_CSTR1( "ACMPluginProxyRelease" );
+	TRACE_CSTR( "ACMPluginProxyRelease\n" );
 	ACMPluginProxy *proxy = (ACMPluginProxy *)thisInstance;
 	if(proxy != NULL)
 	{
@@ -203,7 +203,7 @@ OSStatus ACMPluginProxyExamineContext(
 					  const AEDesc *  inContext,
 					  AEDescList *    outCommandPairs)
 {
-	TRACE_CSTR1( "ACMPluginExamineContext" );
+	TRACE_CSTR( "ACMPluginExamineContext\n" );
 	OSStatus err = noErr;
 	ACMPluginProxy *proxy = (ACMPluginProxy *)thisInstance;
 
@@ -232,7 +232,7 @@ OSStatus ACMPluginProxyHandleSelection(
 					  AEDesc *  inContext,
 					  SInt32    inCommandID)
 {
-	TRACE_CSTR1( "ACMPluginExamineContext" );
+	TRACE_CSTR( "ACMPluginExamineContext\n" );
 	try
 	{
 		ACMPluginProxy *proxy = (ACMPluginProxy *)thisInstance;
@@ -249,7 +249,7 @@ OSStatus ACMPluginProxyHandleSelection(
 void 
 ACMPluginProxyPostMenuCleanup(void *thisInstance)
 {
-	TRACE_CSTR1( "ACMPluginExamineContext" );
+	TRACE_CSTR( "ACMPluginExamineContext\n" );
 	try
 	{
 		ACMPluginProxy *proxy = (ACMPluginProxy *)thisInstance;

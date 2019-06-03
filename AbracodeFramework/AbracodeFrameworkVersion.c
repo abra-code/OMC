@@ -26,8 +26,8 @@ UInt32 GetAbracodeFrameworkVersion()
 										NULL, //soundURL
 										NULL, //localizationURL
 										CFSTR("Missing Abracode.framework"), //alertHeader
-										CFSTR("This application requires Abracode.framework installed by OnMyCommand. Please go online to abracode.com to download it."),
-										CFSTR("Go Online"),
+										CFSTR("This application requires Abracode.framework installed by OnMyCommand. Please go to abracode.com to download it."),
+										CFSTR("Go"),
 										CFSTR("Cancel"),
 										NULL, //otherButtonTitle,
 										&responseFlags );

@@ -191,15 +191,8 @@ static NSMutableDictionary *sCachedPlists = NULL;
 	if( !success || (theDataRef == NULL) )
 		return NULL;
 	
-	CFStringRef errorString = NULL;
-	CFPropertyListRef thePlist = CFPropertyListCreateFromXMLData ( kCFAllocatorDefault,
-																		  theDataRef,
-																		  kCFPropertyListImmutable,
-																		  &errorString );
+    CFPropertyListRef thePlist = CFPropertyListCreateWithData(kCFAllocatorDefault, theDataRef, kCFPropertyListImmutable, NULL, NULL);
 	CFRelease(theDataRef);
-
-	if(errorString != NULL)
-		CFRelease(errorString);
 
 	if(thePlist == NULL)
 		return NULL;

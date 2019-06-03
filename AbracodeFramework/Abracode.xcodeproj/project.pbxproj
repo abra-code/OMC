@@ -124,9 +124,6 @@
 		E2517C5A0D1BCC2700180C68 /* OMCTextField.m in Sources */ = {isa = PBXBuildFile; fileRef = E2517C4A0D1BCC2700180C68 /* OMCTextField.m */; };
 		E2517C5B0D1BCC2700180C68 /* OMCTextView.h in Headers */ = {isa = PBXBuildFile; fileRef = E2517C4B0D1BCC2700180C68 /* OMCTextView.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E2517C5C0D1BCC2700180C68 /* OMCTextView.m in Sources */ = {isa = PBXBuildFile; fileRef = E2517C4C0D1BCC2700180C68 /* OMCTextView.m */; };
-		E2575FF60D20EE1000D755FF /* AStdMalloc.h in Headers */ = {isa = PBXBuildFile; fileRef = E29ED1940D09527900C9D5E8 /* AStdMalloc.h */; };
-		E2575FF70D20EE1000D755FF /* AStdArrayNew.h in Headers */ = {isa = PBXBuildFile; fileRef = E29ED1950D09527900C9D5E8 /* AStdArrayNew.h */; };
-		E2575FF80D20EE1000D755FF /* AStdNew.h in Headers */ = {isa = PBXBuildFile; fileRef = E29ED1960D09527900C9D5E8 /* AStdNew.h */; };
 		E2575FFC0D20EE1000D755FF /* ACFType.h in Headers */ = {isa = PBXBuildFile; fileRef = E29ED1B50D09532500C9D5E8 /* ACFType.h */; };
 		E2575FFD0D20EE1000D755FF /* ARefCounted.h in Headers */ = {isa = PBXBuildFile; fileRef = E29ED21B0D09FD8D00C9D5E8 /* ARefCounted.h */; };
 		E25760000D20EE1000D755FF /* DefaultExternBundle.h in Headers */ = {isa = PBXBuildFile; fileRef = E2ED3AE90D0B27D300481D8F /* DefaultExternBundle.h */; };
@@ -164,7 +161,6 @@
 		E25760260D20EE1000D755FF /* CMUtilsSendAE.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED1790D09525700C9D5E8 /* CMUtilsSendAE.cp */; };
 		E25760270D20EE1000D755FF /* CMUtilsFinder.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED17A0D09525700C9D5E8 /* CMUtilsFinder.cp */; };
 		E25760280D20EE1000D755FF /* CMUtilsFileName.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED17B0D09525700C9D5E8 /* CMUtilsFileName.cp */; };
-		E25760290D20EE1000D755FF /* CMUtilsDebug.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED17C0D09525700C9D5E8 /* CMUtilsDebug.cp */; };
 		E257602A0D20EE1000D755FF /* CMUtilsIsFolder.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED17D0D09525700C9D5E8 /* CMUtilsIsFolder.cp */; };
 		E257602B0D20EE1000D755FF /* CMUtilsAEFile.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED17E0D09525700C9D5E8 /* CMUtilsAEFile.cp */; };
 		E257602C0D20EE1000D755FF /* MoreAppleEvents.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED19F0D09528600C9D5E8 /* MoreAppleEvents.cp */; };
@@ -173,7 +169,6 @@
 		E25760340D20EE1000D755FF /* DefaultExternBundle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E2ED3AE80D0B27D300481D8F /* DefaultExternBundle.cpp */; };
 		E25760350D20EE1000D755FF /* StSwitchToFront.cp in Sources */ = {isa = PBXBuildFile; fileRef = E2ED3AEC0D0B27E400481D8F /* StSwitchToFront.cp */; };
 		E25760360D20EE1000D755FF /* NibDialogControl.cp in Sources */ = {isa = PBXBuildFile; fileRef = E2ED3AEE0D0B27F700481D8F /* NibDialogControl.cp */; };
-		E25760370D20EE1000D755FF /* OMCDataBrowser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E2ED3AEF0D0B27F700481D8F /* OMCDataBrowser.cpp */; };
 		E257603C0D20EE1000D755FF /* OutputWindowHandler.cp in Sources */ = {isa = PBXBuildFile; fileRef = E2ED3BA20D0B287000481D8F /* OutputWindowHandler.cp */; };
 		E257603E0D20EE1000D755FF /* OmcTaskManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E2ED3BA80D0B288400481D8F /* OmcTaskManager.cpp */; };
 		E257603F0D20EE1000D755FF /* OmcExecutor.cp in Sources */ = {isa = PBXBuildFile; fileRef = E2ED3BAA0D0B288400481D8F /* OmcExecutor.cp */; };
@@ -242,12 +237,8 @@
 		E29ED1860D09525700C9D5E8 /* CMUtilsSendAE.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED1790D09525700C9D5E8 /* CMUtilsSendAE.cp */; };
 		E29ED1870D09525700C9D5E8 /* CMUtilsFinder.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED17A0D09525700C9D5E8 /* CMUtilsFinder.cp */; };
 		E29ED1880D09525700C9D5E8 /* CMUtilsFileName.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED17B0D09525700C9D5E8 /* CMUtilsFileName.cp */; };
-		E29ED1890D09525700C9D5E8 /* CMUtilsDebug.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED17C0D09525700C9D5E8 /* CMUtilsDebug.cp */; };
 		E29ED18A0D09525700C9D5E8 /* CMUtilsIsFolder.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED17D0D09525700C9D5E8 /* CMUtilsIsFolder.cp */; };
 		E29ED18B0D09525700C9D5E8 /* CMUtilsAEFile.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED17E0D09525700C9D5E8 /* CMUtilsAEFile.cp */; };
-		E29ED1990D09527900C9D5E8 /* AStdMalloc.h in Headers */ = {isa = PBXBuildFile; fileRef = E29ED1940D09527900C9D5E8 /* AStdMalloc.h */; };
-		E29ED19A0D09527900C9D5E8 /* AStdArrayNew.h in Headers */ = {isa = PBXBuildFile; fileRef = E29ED1950D09527900C9D5E8 /* AStdArrayNew.h */; };
-		E29ED19B0D09527900C9D5E8 /* AStdNew.h in Headers */ = {isa = PBXBuildFile; fileRef = E29ED1960D09527900C9D5E8 /* AStdNew.h */; };
 		E29ED1B70D09532500C9D5E8 /* ACFType.h in Headers */ = {isa = PBXBuildFile; fileRef = E29ED1B50D09532500C9D5E8 /* ACFType.h */; };
 		E29ED1B80D09532500C9D5E8 /* ACFType.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED1B60D09532500C9D5E8 /* ACFType.cp */; };
 		E29ED21A0D09FD8800C9D5E8 /* ARefCounted.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED2190D09FD8800C9D5E8 /* ARefCounted.cp */; };
@@ -326,7 +317,6 @@
 		E2ED3AEB0D0B27D300481D8F /* DefaultExternBundle.h in Headers */ = {isa = PBXBuildFile; fileRef = E2ED3AE90D0B27D300481D8F /* DefaultExternBundle.h */; };
 		E2ED3AED0D0B27E400481D8F /* StSwitchToFront.cp in Sources */ = {isa = PBXBuildFile; fileRef = E2ED3AEC0D0B27E400481D8F /* StSwitchToFront.cp */; };
 		E2ED3AF20D0B27F700481D8F /* NibDialogControl.cp in Sources */ = {isa = PBXBuildFile; fileRef = E2ED3AEE0D0B27F700481D8F /* NibDialogControl.cp */; };
-		E2ED3AF30D0B27F700481D8F /* OMCDataBrowser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E2ED3AEF0D0B27F700481D8F /* OMCDataBrowser.cpp */; };
 		E2ED3BA60D0B287000481D8F /* OutputWindowHandler.cp in Sources */ = {isa = PBXBuildFile; fileRef = E2ED3BA20D0B287000481D8F /* OutputWindowHandler.cp */; };
 		E2ED3BAE0D0B288400481D8F /* OmcTaskManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E2ED3BA80D0B288400481D8F /* OmcTaskManager.cpp */; };
 		E2ED3BAF0D0B288400481D8F /* OmcTaskManager.h in Headers */ = {isa = PBXBuildFile; fileRef = E2ED3BA90D0B288400481D8F /* OmcTaskManager.h */; };
@@ -403,6 +393,7 @@
 		0867D6A5FE840307C02AAC07 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		089C1667FE841158C02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		1058C7B1FEA5585E11CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
+		1D3BB165229BEB1D00542933 /* AUniquePtr.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AUniquePtr.h; sourceTree = "<group>"; };
 		1D71F3292206F116009FAF91 /* DebugSettings.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DebugSettings.h; sourceTree = "<group>"; };
 		1D71F32A2206F1A1009FAF91 /* ACMPlugin.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ACMPlugin.h; sourceTree = "<group>"; };
 		1D71F32B2206F1D8009FAF91 /* CMUtils.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CMUtils.h; sourceTree = "<group>"; };
@@ -414,7 +405,6 @@
 		1D71F3352206FA78009FAF91 /* de */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = de; path = de.lproj/DropletPreferences.xib; sourceTree = "<group>"; };
 		1D71F336220702D7009FAF91 /* notify */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = notify; sourceTree = "<group>"; };
 		1D742DC219388292005DFF97 /* pasteboard */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = pasteboard; sourceTree = "<group>"; };
-		1D9B1F5721FF12F4004704A7 /* AMemoryCommon.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AMemoryCommon.h; sourceTree = "<group>"; };
 		1D9B1F5821FF14AF004704A7 /* OMCUtils.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OMCUtils.h; sourceTree = "<group>"; };
 		1D9B1F5C21FF1572004704A7 /* OnMyCommand.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OnMyCommand.cp; sourceTree = "<group>"; };
 		1D9B1F6321FF191D004704A7 /* SubmenuTree.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SubmenuTree.cp; sourceTree = "<group>"; };
@@ -529,12 +519,8 @@
 		E29ED1790D09525700C9D5E8 /* CMUtilsSendAE.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CMUtilsSendAE.cp; sourceTree = "<group>"; };
 		E29ED17A0D09525700C9D5E8 /* CMUtilsFinder.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CMUtilsFinder.cp; sourceTree = "<group>"; };
 		E29ED17B0D09525700C9D5E8 /* CMUtilsFileName.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CMUtilsFileName.cp; sourceTree = "<group>"; };
-		E29ED17C0D09525700C9D5E8 /* CMUtilsDebug.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CMUtilsDebug.cp; sourceTree = "<group>"; };
 		E29ED17D0D09525700C9D5E8 /* CMUtilsIsFolder.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CMUtilsIsFolder.cp; sourceTree = "<group>"; };
 		E29ED17E0D09525700C9D5E8 /* CMUtilsAEFile.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CMUtilsAEFile.cp; sourceTree = "<group>"; };
-		E29ED1940D09527900C9D5E8 /* AStdMalloc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AStdMalloc.h; sourceTree = "<group>"; };
-		E29ED1950D09527900C9D5E8 /* AStdArrayNew.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AStdArrayNew.h; sourceTree = "<group>"; };
-		E29ED1960D09527900C9D5E8 /* AStdNew.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AStdNew.h; sourceTree = "<group>"; };
 		E29ED19F0D09528600C9D5E8 /* MoreAppleEvents.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MoreAppleEvents.cp; sourceTree = "<group>"; };
 		E29ED1B50D09532500C9D5E8 /* ACFType.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ACFType.h; sourceTree = "<group>"; };
 		E29ED1B60D09532500C9D5E8 /* ACFType.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ACFType.cp; sourceTree = "<group>"; };
@@ -571,7 +557,6 @@
 		E2D92E691043D9F8003DC96B /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/input_popup.xib; sourceTree = "<group>"; };
 		E2D92E871043E0C2003DC96B /* OMCInputDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCInputDialog.h; sourceTree = "<group>"; };
 		E2D92E8D1043E0E3003DC96B /* OMCInputDialog.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCInputDialog.mm; sourceTree = "<group>"; };
-		E2E189121075BBF5001B7591 /* OMCDataBrowser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCDataBrowser.h; sourceTree = "<group>"; };
 		E2E1892D1075BEBC001B7591 /* SelectionIterator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SelectionIterator.h; sourceTree = "<group>"; };
 		E2E406FE0D8A5B00009AD8CA /* OMCSecureTextField.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMCSecureTextField.m; sourceTree = "<group>"; };
 		E2E406FF0D8A5B00009AD8CA /* OMCSecureTextField.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCSecureTextField.h; sourceTree = "<group>"; };
@@ -583,7 +568,6 @@
 		E2ED3AE90D0B27D300481D8F /* DefaultExternBundle.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DefaultExternBundle.h; sourceTree = "<group>"; };
 		E2ED3AEC0D0B27E400481D8F /* StSwitchToFront.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = StSwitchToFront.cp; path = ../Common/StSwitchToFront.cp; sourceTree = SOURCE_ROOT; };
 		E2ED3AEE0D0B27F700481D8F /* NibDialogControl.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = NibDialogControl.cp; sourceTree = "<group>"; };
-		E2ED3AEF0D0B27F700481D8F /* OMCDataBrowser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCDataBrowser.cpp; sourceTree = "<group>"; };
 		E2ED3BA20D0B287000481D8F /* OutputWindowHandler.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OutputWindowHandler.cp; sourceTree = "<group>"; };
 		E2ED3BA80D0B288400481D8F /* OmcTaskManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OmcTaskManager.cpp; sourceTree = "<group>"; };
 		E2ED3BA90D0B288400481D8F /* OmcTaskManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OmcTaskManager.h; sourceTree = "<group>"; };
@@ -595,8 +579,6 @@
 		E2ED3BC00D0B293E00481D8F /* ACMPlugin.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ACMPlugin.cp; sourceTree = "<group>"; };
 		E2EE07050D3C9704007DBAF4 /* ANotifier.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ANotifier.h; sourceTree = "<group>"; };
 		E2F5C9020DD10F5300B4D4EC /* AbracodeFramework.exp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.exports; path = AbracodeFramework.exp; sourceTree = "<group>"; };
-		E2FA54450ED0D2D900CC3210 /* uregex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = uregex.h; path = ../icu/include/unicode/uregex.h; sourceTree = SOURCE_ROOT; };
-		E2FA54540ED0D3B800CC3210 /* utypes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = utypes.h; path = ../icu/include/unicode/utypes.h; sourceTree = SOURCE_ROOT; };
 		E2FB111D0D185A2C005EB1E8 /* OMC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMC.h; sourceTree = "<group>"; };
 		E2FB111E0D185A2C005EB1E8 /* OMC.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMC.cpp; sourceTree = "<group>"; };
 		E2FB13FF0D19EE9A005EB1E8 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = /System/Library/Frameworks/CoreServices.framework; sourceTree = "<absolute>"; };
@@ -646,7 +628,6 @@
 		0867D691FE84028FC02AAC07 /* Abracode */ = {
 			isa = PBXGroup;
 			children = (
-				E2FA54420ED0D2A700CC3210 /* ICU-includes */,
 				E29ED1710D09525700C9D5E8 /* CMUtils */,
 				E29ED1B10D09531300C9D5E8 /* Common */,
 				E29ED19E0D09528600C9D5E8 /* MoreAppleEvents */,
@@ -819,7 +800,6 @@
 				E29ED1790D09525700C9D5E8 /* CMUtilsSendAE.cp */,
 				E29ED17A0D09525700C9D5E8 /* CMUtilsFinder.cp */,
 				E29ED17B0D09525700C9D5E8 /* CMUtilsFileName.cp */,
-				E29ED17C0D09525700C9D5E8 /* CMUtilsDebug.cp */,
 				E29ED17D0D09525700C9D5E8 /* CMUtilsIsFolder.cp */,
 				E29ED17E0D09525700C9D5E8 /* CMUtilsAEFile.cp */,
 				1D9B1F6321FF191D004704A7 /* SubmenuTree.cp */,
@@ -852,12 +832,9 @@
 				E29ED1B60D09532500C9D5E8 /* ACFType.cp */,
 				1DED8E4C22229D1800A2CAF7 /* ACFArr.h */,
 				1D71F32C2206F214009FAF91 /* ACFDict.h */,
-				1D9B1F5721FF12F4004704A7 /* AMemoryCommon.h */,
 				E29ED2190D09FD8800C9D5E8 /* ARefCounted.cp */,
 				E29ED21B0D09FD8D00C9D5E8 /* ARefCounted.h */,
-				E29ED1950D09527900C9D5E8 /* AStdArrayNew.h */,
-				E29ED1940D09527900C9D5E8 /* AStdMalloc.h */,
-				E29ED1960D09527900C9D5E8 /* AStdNew.h */,
+				1D3BB165229BEB1D00542933 /* AUniquePtr.h */,
 				1D71F3292206F116009FAF91 /* DebugSettings.h */,
 				1D71F3302206F778009FAF91 /* MessagePortListener.h */,
 				E2C433440DEE72F700E976D2 /* PlistPreferences.cp */,
@@ -920,8 +897,6 @@
 				E2C32CB40D2DF99C0023DA03 /* OMCObserver.h */,
 				1D9B1F5821FF14AF004704A7 /* OMCUtils.h */,
 				E204EB7E0D7FD8A900595D15 /* OMCConstants.h */,
-				E2ED3AEF0D0B27F700481D8F /* OMCDataBrowser.cpp */,
-				E2E189121075BBF5001B7591 /* OMCDataBrowser.h */,
 				E2ED3BA80D0B288400481D8F /* OmcTaskManager.cpp */,
 				E2ED3BA90D0B288400481D8F /* OmcTaskManager.h */,
 				E2C32CF50D2E1F6C0023DA03 /* OmcTaskNotification.h */,
@@ -943,15 +918,6 @@
 			name = OMC;
 			sourceTree = "<group>";
 		};
-		E2FA54420ED0D2A700CC3210 /* ICU-includes */ = {
-			isa = PBXGroup;
-			children = (
-				E2FA54540ED0D3B800CC3210 /* utypes.h */,
-				E2FA54450ED0D2D900CC3210 /* uregex.h */,
-			);
-			name = "ICU-includes";
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -961,9 +927,6 @@
 			files = (
 				E2ACB25A12EADCF500A8ACF6 /* AbracodeFrameworkVersion.c in Headers */,
 				E2B795870ECE9A1A00C8939E /* OMCPDFView.h in Headers */,
-				E29ED1990D09527900C9D5E8 /* AStdMalloc.h in Headers */,
-				E29ED19A0D09527900C9D5E8 /* AStdArrayNew.h in Headers */,
-				E29ED19B0D09527900C9D5E8 /* AStdNew.h in Headers */,
 				E29ED1B70D09532500C9D5E8 /* ACFType.h in Headers */,
 				E29ED21C0D09FD8D00C9D5E8 /* ARefCounted.h in Headers */,
 				E2ED3AEB0D0B27D300481D8F /* DefaultExternBundle.h in Headers */,
@@ -1021,9 +984,6 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E2575FF60D20EE1000D755FF /* AStdMalloc.h in Headers */,
-				E2575FF70D20EE1000D755FF /* AStdArrayNew.h in Headers */,
-				E2575FF80D20EE1000D755FF /* AStdNew.h in Headers */,
 				E2575FFC0D20EE1000D755FF /* ACFType.h in Headers */,
 				E2575FFD0D20EE1000D755FF /* ARefCounted.h in Headers */,
 				E25760000D20EE1000D755FF /* DefaultExternBundle.h in Headers */,
@@ -1260,7 +1220,6 @@
 				E29ED1860D09525700C9D5E8 /* CMUtilsSendAE.cp in Sources */,
 				E29ED1870D09525700C9D5E8 /* CMUtilsFinder.cp in Sources */,
 				E29ED1880D09525700C9D5E8 /* CMUtilsFileName.cp in Sources */,
-				E29ED1890D09525700C9D5E8 /* CMUtilsDebug.cp in Sources */,
 				E29ED18A0D09525700C9D5E8 /* CMUtilsIsFolder.cp in Sources */,
 				E29ED18B0D09525700C9D5E8 /* CMUtilsAEFile.cp in Sources */,
 				E29ED1B80D09532500C9D5E8 /* ACFType.cp in Sources */,
@@ -1268,7 +1227,6 @@
 				E2ED3AEA0D0B27D300481D8F /* DefaultExternBundle.cpp in Sources */,
 				E2ED3AED0D0B27E400481D8F /* StSwitchToFront.cp in Sources */,
 				E2ED3AF20D0B27F700481D8F /* NibDialogControl.cp in Sources */,
-				E2ED3AF30D0B27F700481D8F /* OMCDataBrowser.cpp in Sources */,
 				E2ED3BA60D0B287000481D8F /* OutputWindowHandler.cp in Sources */,
 				E2ED3BAE0D0B288400481D8F /* OmcTaskManager.cpp in Sources */,
 				E2ED3BB00D0B288400481D8F /* OmcExecutor.cp in Sources */,
@@ -1337,7 +1295,6 @@
 				E25760260D20EE1000D755FF /* CMUtilsSendAE.cp in Sources */,
 				E25760270D20EE1000D755FF /* CMUtilsFinder.cp in Sources */,
 				E25760280D20EE1000D755FF /* CMUtilsFileName.cp in Sources */,
-				E25760290D20EE1000D755FF /* CMUtilsDebug.cp in Sources */,
 				E257602A0D20EE1000D755FF /* CMUtilsIsFolder.cp in Sources */,
 				E257602B0D20EE1000D755FF /* CMUtilsAEFile.cp in Sources */,
 				E257602C0D20EE1000D755FF /* MoreAppleEvents.cp in Sources */,
@@ -1346,7 +1303,6 @@
 				E25760340D20EE1000D755FF /* DefaultExternBundle.cpp in Sources */,
 				E25760350D20EE1000D755FF /* StSwitchToFront.cp in Sources */,
 				E25760360D20EE1000D755FF /* NibDialogControl.cp in Sources */,
-				E25760370D20EE1000D755FF /* OMCDataBrowser.cpp in Sources */,
 				E257603C0D20EE1000D755FF /* OutputWindowHandler.cp in Sources */,
 				E257603E0D20EE1000D755FF /* OmcTaskManager.cpp in Sources */,
 				E257603F0D20EE1000D755FF /* OmcExecutor.cp in Sources */,
@@ -1552,6 +1508,7 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/../icu/include\"/**";
+				SYMROOT = ../build;
 			};
 			name = Debug;
 		};
@@ -1572,6 +1529,7 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/../icu/include\"/**";
+				SYMROOT = ../build;
 			};
 			name = Release;
 		};

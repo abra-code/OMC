@@ -16,8 +16,6 @@ CreateCFURLFromSaveAsDialog( CFStringRef inClientName, CFStringRef inMessage, CF
 {
 	NSURL *outURL = NULL;
 
-	/*BOOL isOK =*/ NSApplicationLoad();
-
 	@try
 	{
 
@@ -25,10 +23,10 @@ CreateCFURLFromSaveAsDialog( CFStringRef inClientName, CFStringRef inMessage, CF
 		if(savePanel == NULL)
 			return NULL;
 
-		if(inClientName == NULL)
+		if(inClientName == nullptr)
 			inClientName = CFSTR("OMC");
 
-		if(inMessage == NULL)
+		if(inMessage == nullptr)
 			inMessage = CFSTR("");
 
 		[savePanel setTreatsFilePackagesAsDirectories:YES];
@@ -42,15 +40,14 @@ CreateCFURLFromSaveAsDialog( CFStringRef inClientName, CFStringRef inMessage, CF
 			[savePanel setShowsHiddenFiles:YES];
 		}
 		
-	//	NSString *defaultDirPath = NULL;
-	//	if(inDefaultLocation != NULL)
-	//	{
-	//		NSURL *defaultDirURL = (NSURL *)inDefaultLocation;
-	//		defaultDirPath = [defaultDirURL path];
-	//	}
-
-		int theResult = [savePanel runModalForDirectory:(NSString *)inDefaultDirPath file:(NSString *)inDefaultName];//deprecated in 10.6
-		if(theResult == NSOKButton)
+        if(inDefaultDirPath != nullptr)
+            savePanel.directoryURL = [NSURL fileURLWithPath:(NSString *)inDefaultDirPath];
+       
+        if(inDefaultName != nullptr)
+            savePanel.nameFieldStringValue = (NSString *)inDefaultName;
+        
+        NSModalResponse response = [savePanel runModal];
+        if(response == NSModalResponseOK)
 		{
 			outURL = [savePanel URL];
 			[outURL retain];
@@ -86,10 +83,9 @@ CreateCFURLFromOpenDialog( CFStringRef inClientName, CFStringRef inMessage, CFSt
 CFArrayRef
 CreateCFURLsFromOpenDialog( CFStringRef inClientName, CFStringRef inMessage, CFStringRef inDefaultName, CFStringRef inDefaultDirPath, UInt32 inAdditonalFlags)
 {
+#pragma unused(inDefaultName) //NSOpenPanel API no longer supports default name
 	NSArray *outURLs = NULL;
 	
-	/*BOOL isOK =*/ NSApplicationLoad();
-
 	@try
 	{
 		NSOpenPanel *openPanel	= [NSOpenPanel openPanel];
@@ -118,14 +114,12 @@ CreateCFURLsFromOpenDialog( CFStringRef inClientName, CFStringRef inMessage, CFS
 			[openPanel setShowsHiddenFiles:YES];
 		}
 
-	//	NSString *defaultDirPath = NULL;
-	//	if(inDefaultLocation != NULL)
-	//	{
-	//		NSURL *defaultDirURL = (NSURL *)inDefaultLocation;
-	//		defaultDirPath = [defaultDirURL path];
-	//	}
-		int theResult = [openPanel runModalForDirectory:(NSString *)inDefaultDirPath file:(NSString *)inDefaultName types:NULL];
-		if(theResult == NSOKButton)
+        if(inDefaultDirPath != nullptr)
+            openPanel.directoryURL = [NSURL fileURLWithPath:(NSString *)inDefaultDirPath];
+       
+
+        NSModalResponse response = [openPanel runModal];
+        if(response == NSModalResponseOK)
 		{
 			outURLs = [openPanel URLs];
 			[outURLs retain];

@@ -20,8 +20,6 @@ Boolean RunCocoaDialog(OnMyCommandCM *inPlugin)
 	if(inPlugin == NULL)
 		return false;
 
-	/*BOOL isOK =*/ NSApplicationLoad();
-
 	CommandDescription &currCommand = inPlugin->GetCurrentCommand();
 
 	Boolean outResult = false;
@@ -113,13 +111,8 @@ OMCCocoaDialog::ReceivePortMessage( SInt32 msgid, CFDataRef inData )
 	if( mController == NULL )
 		return NULL;
 
-	CFStringRef errorString = NULL;
-	CFObj<CFPropertyListRef> thePlist( ::CFPropertyListCreateFromXMLData( kCFAllocatorDefault, inData,
-																	kCFPropertyListImmutable, &errorString) );
-		
-	if(errorString != NULL)
-		CFRelease(errorString);
-
+	CFObj<CFPropertyListRef> thePlist( CFPropertyListCreateWithData( kCFAllocatorDefault, inData,
+                                                                       kCFPropertyListImmutable, nullptr, nullptr) );
 	CFDictionaryRef plistDict = ACFType<CFDictionaryRef>::DynamicCast( (CFPropertyListRef)thePlist );
 
     @autoreleasepool

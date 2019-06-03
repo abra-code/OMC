@@ -24,228 +24,94 @@ typedef enum CFObjRetainType
 template <typename T> class CFObj
 {
 public:
-						CFObj()
-							: mRef(NULL)
-						{
-						}
+    CFObj() noexcept
+        : mRef(nullptr)
+    {
+    }
 
-						CFObj(T inRef, CFObjRetainType inRetainType = kCFObjDontRetain)
-							: mRef(inRef)
-						{
-							if( (mRef != NULL) && (inRetainType == kCFObjRetain) )
-								::CFRetain(mRef);
-						}
+    CFObj(T inRef, CFObjRetainType inRetainType = kCFObjDontRetain) noexcept
+        : mRef(inRef)
+    {
+        if( (mRef != nullptr) && (inRetainType == kCFObjRetain) )
+            ::CFRetain(mRef);
+    }
 
-	virtual				~CFObj()
-						{
-							Release();
-						}
+    virtual ~CFObj() noexcept
+    {
+        Release();
+    }
 						
-	T					Detach()
-						{
-							T outRef = mRef;
-							mRef = NULL;
-							return outRef;
-						}
+	T Detach() noexcept
+    {
+        T outRef = mRef;
+        mRef = nullptr;
+        return outRef;
+    }
 							
-	void				Release()
-						{
-							if(mRef != NULL)
-							{
-								::CFRelease(mRef);
-								mRef = NULL;
-							}
-						}
+	void Release() noexcept
+    {
+        if(mRef != nullptr)
+        {
+            ::CFRelease(mRef);
+            mRef = nullptr;
+        }
+    }
                         
-    void                Swap(CFObj &inOther)
-                        {
-                            T tempRef = mRef;
-                            mRef = inOther.mRef;
-                            inOther.mRef = tempRef;
-                        }
+    void Swap(CFObj &inOther) noexcept
+    {
+        T tempRef = mRef;
+        mRef = inOther.mRef;
+        inOther.mRef = tempRef;
+    }
 							
-	void				Adopt(T inRef, CFObjRetainType inRetainType = kCFObjDontRetain)
-						{
-							if( (inRef != NULL) && (inRetainType == kCFObjRetain) )
-								::CFRetain(inRef);
-							Release();
-							mRef = inRef;
-						}
+	void Adopt(T inRef, CFObjRetainType inRetainType = kCFObjDontRetain) noexcept
+    {
+        if( (inRef != nullptr) && (inRetainType == kCFObjRetain) )
+            ::CFRetain(inRef);
+        Release();
+        mRef = inRef;
+    }
 
-//the following does not work with gcc because of gcc bug/unimplemented feature
-	CFObj&				operator=(T &inRef)
-						{
-							Adopt(inRef, kCFObjDontRetain);
-							return *this;
-						}
+	CFObj& operator=(T &inRef) noexcept
+    {
+        Adopt(inRef, kCFObjDontRetain);
+        return *this;
+    }
 
-						operator T() const
-						{
-							return mRef;
-						}
+    operator T() const noexcept
+    {
+        return mRef;
+    }
 						
-	T*					operator & ()
-						{
-							return &mRef;
-						}
+	T* operator &() noexcept
+    {
+        return &mRef;
+    }
 
-	T					Get() const
-						{
-							return mRef;
-						}
+	T Get() const noexcept
+    {
+        return mRef;
+    }
 
-	T&					GetReference()
-						{
-							return mRef;
-						}
+	T& GetReference() noexcept
+    {
+        return mRef;
+    }
 
 protected:
-	T					mRef;
+	T mRef;
 
 private:
-						CFObj(const CFObj&);
-	CFObj&				operator=(const CFObj&);
-						operator CFTypeRef() const;//no automatic conversion to void *
-};
-
-template <> class CFObj<CFTypeRef>
-{
-public:
-						CFObj()
-							: mRef(NULL)
-						{
-						}
-
-						CFObj(CFTypeRef inRef, CFObjRetainType inRetainType = kCFObjDontRetain)
-							: mRef(inRef)
-						{
-							if( (mRef != NULL) && (inRetainType == kCFObjRetain) )
-								::CFRetain(mRef);
-						}
-
-	virtual				~CFObj()
-						{
-							Release();
-						}
-						
-	CFTypeRef			Detach()
-						{
-							CFTypeRef outRef = mRef;
-							mRef = NULL;
-							return outRef;
-						}
-							
-	void				Release()
-						{
-							if(mRef != NULL)
-							{
-								::CFRelease(mRef);
-								mRef = NULL;
-							}
-						}
-							
-	void				Adopt(CFTypeRef inRef, CFObjRetainType inRetainType = kCFObjDontRetain)
-						{
-							if( (inRef != NULL) && (inRetainType == kCFObjRetain) )
-								::CFRetain(inRef);
-							Release();
-							mRef = inRef;
-						}
-
-    void                Swap(CFObj &inOther)
-                        {
-                            CFTypeRef tempRef = mRef;
-                            mRef = inOther.mRef;
-                            inOther.mRef = tempRef;
-                        }
-
-//the following does not work with gcc because of gcc bug/unimplemented feature
-	CFObj&				operator=(CFTypeRef &inRef)
-						{
-							Adopt(inRef, kCFObjDontRetain);
-							return *this;
-						}
-
-						operator CFTypeRef() const
-						{
-							return mRef;
-						}
-						
-	CFTypeRef*			operator & ()
-						{
-							return &mRef;
-						}
-
-	CFTypeRef			Get() const
-						{
-							return mRef;
-						}
-
-	CFTypeRef&			GetReference()
-						{
-							return mRef;
-						}
-
-protected:
-	CFTypeRef			mRef;
-
-private:
-						CFObj(const CFObj&);
-	CFObj&				operator=(const CFObj&);
+    CFObj(const CFObj&);
+	CFObj& operator=(const CFObj&);
 };
 
 
-template< class T > bool operator==( CFObj<T>& inObj, int *inNULL )
+template<class T> bool operator==(CFObj<T>& inObj, nullptr_t)
 {
-   return ( (T)inObj == (T)inNULL );
+   return ((T)inObj == (T)nullptr);
 }
-template< class T > bool operator!=( CFObj<T>& inObj, int *inNULL )
+template<class T> bool operator!=(CFObj<T>& inObj, nullptr_t)
 {
-   return ( (T)inObj != (T)inNULL );
+   return ((T)inObj != (T)nullptr);
 }
-
-//mimics CFObj methods but without owning the object. Used as alternative CFObjectRef wrap
-template <typename T> class CFObjNotOwned
-{
-public:
-						CFObjNotOwned()
-							: mRef(NULL)
-						{
-						}
-
-						CFObjNotOwned(T inRef)
-							: mRef(inRef)
-						{
-						}
-
-	void				Adopt(T inRef)
-						{
-							mRef = inRef;
-						}
-
-						operator T() const
-						{
-							return mRef;
-						}
-						
-	T*					operator & ()
-						{
-							return &mRef;
-						}
-
-	T					Get() const
-						{
-							return mRef;
-						}
-
-	T&					GetReference()
-						{
-							return mRef;
-						}
-
-private:
-						CFObjNotOwned(T /*inRef*/, CFObjRetainType /*inRetainType*/);//don't allow this constructor
-
-protected:
-	T					mRef;
-};

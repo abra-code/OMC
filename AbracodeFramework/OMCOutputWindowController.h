@@ -34,5 +34,6 @@ OMCOutputWindowControllerRef CreateOutputWindowController(const OutputWindowSett
 void ReleaseOutputWindowController(OMCOutputWindowControllerRef inControllerRef);
 void OMCOutputWindowSetText(OMCOutputWindowControllerRef inControllerRef, CFStringRef inText);
 void OMCOutputWindowAppendText(OMCOutputWindowControllerRef inControllerRef, CFStringRef inText);
+void OMCOutputWindowScheduleClosing(OMCOutputWindowControllerRef inControllerRef, CFTimeInterval delay);
 void ResetOutputWindowCascading();
 

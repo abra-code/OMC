@@ -1,0 +1,975 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>COMMAND_LIST</key>
+	<array>
+		<dict>
+			<key>ACTIVATION_MODE</key>
+			<string>act_always</string>
+			<key>COMMAND</key>
+			<array>
+				<string>echo "$OMC_MY_BUNDLE_PATH";
+echo "$OMC_OMC_RESOURCES_PATH";
+echo "$OMC_OMC_SUPPORT_PATH";
+echo "$OMC_MY_HOST_BUNDLE_PATH";
+</string>
+			</array>
+			<key>EXECUTION_MODE</key>
+			<string>exe_popen_with_output_window</string>
+			<key>NAME</key>
+			<array>
+				<string>Test Locations</string>
+			</array>
+			<key>VERSION</key>
+			<integer>1</integer>
+		</dict>
+
+		<dict>
+			<key>COMMAND</key>
+			<array>
+				<string>echo "Hello World."</string>
+			</array>
+			<key>EXECUTION_MODE</key>
+			<string>exe_terminal</string>
+			<key>NAME</key>
+			<string>Terminal Test</string>
+			<key>NOTES</key>
+			<string>The most simple popen command.</string>
+			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
+			<string>10.1</string>
+			<key>REQUIRED_OMC_VERSION</key>
+			<string>1.3.1</string>
+			<key>VERSION</key>
+			<integer>1</integer>
+		</dict>
+
+		<dict>
+			<key>COMMAND_ID</key>
+			<string>Tst0</string>
+			<key>COMMAND</key>
+			<array>
+				<string>echo "Hello World. We have some long text here to see what the default notification dialog will do about it. Will it resize window or truncate the string? We still need more text because that is not enough. Now we should see what is going on with the text really and how good or bad it is going to look."</string>
+			</array>
+			<key>NAME</key>
+			<string>Hello World</string>
+			<key>END_NOTIFICATION</key>
+			<dict/>
+			<key>NOTES</key>
+			<string>The most simple popen command.</string>
+			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
+			<string>10.1</string>
+			<key>REQUIRED_OMC_VERSION</key>
+			<string>1.3.1</string>
+			<key>VERSION</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>ACTIVATION_MODE</key>
+			<string>act_file_or_folder</string>
+			<key>COMMAND_ID</key>
+			<string>Tst1</string>
+			<key>COMMAND</key>
+			<array>
+				<string>echo </string>
+				<string>__OBJ_NAME__</string>
+				<string>; sleep 1;</string>
+			</array>
+			<key>NAME</key>
+			<string>Determinate Progress</string>
+			<key>NOTES</key>
+			<string>Select multiple files and execute comamnd. Sleep added to simulate a task taking some time (so you can observe) the progress.</string>
+			<key>PROGRESS</key>
+			<dict>
+				<key>DELAY</key>
+				<real>0.000000000000000e+00</real>
+			</dict>
+			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
+			<string>10.1</string>
+			<key>REQUIRED_OMC_VERSION</key>
+			<string>1.3.1</string>
+			<key>VERSION</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>ACTIVATION_MODE</key>
+			<string>act_file_or_folder</string>
+			<key>COMMAND_ID</key>
+			<string>Tst2</string>
+			<key>COMMAND</key>
+			<array>
+				<string>echo "</string>
+				<string>__OBJ_NAME__</string>
+				<string>"; sleep 1;</string>
+			</array>
+			<key>ESCAPE_SPECIAL_CHARS</key>
+			<string>esc_none</string>
+			<key>MAX_PARALLEL_TASK_COUNT</key>
+			<integer>2</integer>
+			<key>NAME</key>
+			<string>Max parallel task count 2</string>
+			<key>NOTES</key>
+			<string>Limits the maximum concurrent task count to 2. Two files will be processed at the same time. The whole command should take half as many seconds as the number of selected files.</string>
+			<key>PROGRESS</key>
+			<dict/>
+			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
+			<string>10.1</string>
+			<key>REQUIRED_OMC_VERSION</key>
+			<string>1.3.1</string>
+			<key>VERSION</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>COMMAND_ID</key>
+			<string>Tst3</string>
+			<key>COMMAND</key>
+			<array>
+				<string>#!/bin/sh
+echo "Shell script output window which should autoclose. not"
+exit 1</string>
+			</array>
+			<key>EXECUTION_MODE</key>
+			<string>exe_shell_script_with_output_window</string>
+			<key>NAME</key>
+			<string>Shell autoclose</string>
+			<key>OUTPUT_WINDOW_SETTINGS</key>
+			<dict>
+				<key>AUTO_CLOSE_ON_SUCCESS_ONLY</key>
+				<true/>
+				<key>AUTO_CLOSE_TIMEOUT</key>
+				<real>1.000000000000000e+00</real>
+				<key>WINDOW_ALPHA</key>
+				<real>1.000000000000000e+00</real>
+				<key>WINDOW_CLOSE_FADE_OUT</key>
+				<false/>
+				<key>WINDOW_OPEN_FADE_IN</key>
+				<false/>
+				<key>WINDOW_TITLE</key>
+				<string>Untitled</string>
+			</dict>
+			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
+			<string>10.1</string>
+			<key>REQUIRED_OMC_VERSION</key>
+			<string>1.3.1</string>
+			<key>VERSION</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>COMMAND_ID</key>
+			<string>Tst4</string>
+			<key>COMMAND</key>
+			<array>
+				<string>echo "Front app name: </string>
+				<string>__FRONT_APPLICATION_NAME__</string>
+				<string>"; echo "Front app pid: </string>
+				<string>__FRONT_PROCESS_ID__</string>
+				<string>";</string>
+			</array>
+			<key>ESCAPE_SPECIAL_CHARS</key>
+			<string>esc_none</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_popen_with_output_window</string>
+			<key>NAME</key>
+			<string>Front Process Info</string>
+			<key>OUTPUT_WINDOW_SETTINGS</key>
+			<dict>
+				<key>AUTO_CLOSE_ON_SUCCESS_ONLY</key>
+				<true/>
+				<key>WINDOW_ALPHA</key>
+				<real>1.000000000000000e+00</real>
+				<key>WINDOW_CLOSE_FADE_OUT</key>
+				<false/>
+				<key>WINDOW_OPEN_FADE_IN</key>
+				<false/>
+				<key>WINDOW_TITLE</key>
+				<string>Untitled</string>
+			</dict>
+			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
+			<string>10.1</string>
+			<key>REQUIRED_OMC_VERSION</key>
+			<string>1.3.1</string>
+			<key>VERSION</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>COMMAND_ID</key>
+			<string>Tst5</string>
+			<key>COMMAND</key>
+			<array>
+				<string>echo -e "auto close on success. returning 0"; exit 0</string>
+			</array>
+			<key>EXECUTION_MODE</key>
+			<string>exe_popen_with_output_window</string>
+			<key>NAME</key>
+			<string>Autoclose default</string>
+			<key>OUTPUT_WINDOW_SETTINGS</key>
+			<dict>
+				<key>AUTO_CLOSE_ON_SUCCESS_ONLY</key>
+				<true/>
+				<key>AUTO_CLOSE_TIMEOUT</key>
+				<real>2.000000000000000e+00</real>
+				<key>WINDOW_ALPHA</key>
+				<real>1.000000000000000e+00</real>
+				<key>WINDOW_CLOSE_FADE_OUT</key>
+				<false/>
+				<key>WINDOW_OPEN_FADE_IN</key>
+				<false/>
+				<key>WINDOW_TITLE</key>
+				<string>Untitled</string>
+			</dict>
+			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
+			<string>10.1</string>
+			<key>REQUIRED_OMC_VERSION</key>
+			<string>1.3.1</string>
+			<key>VERSION</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>COMMAND_ID</key>
+			<string>Tst6</string>
+			<key>COMMAND</key>
+			<array>
+				<string>echo hello</string>
+			</array>
+			<key>EXECUTION_MODE</key>
+			<string>exe_silent_popen</string>
+			<key>NAME</key>
+			<string>background exec</string>
+			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
+			<string>10.1</string>
+			<key>REQUIRED_OMC_VERSION</key>
+			<string>1.3.1</string>
+			<key>SEND_TASK_TO_BACKGROUND_APP</key>
+			<true/>
+			<key>VERSION</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>COMMAND_ID</key>
+			<string>Tst7</string>
+			<key>COMMAND</key>
+			<array>
+				<string>echo "Command 1";</string>
+			</array>
+			<key>NAME</key>
+			<string>Chained Commands</string>
+			<key>NEXT_COMMAND_ID</key>
+			<string>Cmd2</string>
+			<key>NOTES</key>
+			<string></string>
+			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
+			<string>10.3.9</string>
+			<key>REQUIRED_OMC_VERSION</key>
+			<string>1.8</string>
+			<key>VERSION</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>COMMAND</key>
+			<array>
+				<string>echo "Command 2";</string>
+			</array>
+			<key>COMMAND_ID</key>
+			<string>Cmd2</string>
+			<key>NAME</key>
+			<string>Chained Commands</string>
+			<key>NEXT_COMMAND_ID</key>
+			<string>Cmd3</string>
+			<key>NOTES</key>
+			<string></string>
+			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
+			<string>10.3.9</string>
+			<key>REQUIRED_OMC_VERSION</key>
+			<string>1.8</string>
+			<key>VERSION</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>COMMAND</key>
+			<array>
+				<string>echo "Command 3";</string>
+			</array>
+			<key>COMMAND_ID</key>
+			<string>Cmd3</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_silent_popen</string>
+			<key>NAME</key>
+			<string>Chained Commands</string>
+			<key>NOTES</key>
+			<string></string>
+			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
+			<string>10.3.9</string>
+			<key>REQUIRED_OMC_VERSION</key>
+			<string>1.8</string>
+			<key>VERSION</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>COMMAND</key>
+			<array>
+				<string>echo </string>
+				<string>__DLG_INPUT_TEXT__</string>
+			</array>
+			<key>COMMAND_ID</key>
+			<string>ClrT</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_popen_with_output_window</string>
+			<key>INPUT_DIALOG</key>
+			<dict>
+				<key>CANCEL_BUTTON_NAME</key>
+				<string>I changed me mind</string>
+				<key>DEFAULT</key>
+				<string>Type something here</string>
+				<key>INPUT_TYPE</key>
+				<string>input_clear_text</string>
+				<key>MESSAGE</key>
+				<string>What do you want to do?
+Second line.
+And more to boot</string>
+				<key>OK_BUTTON_NAME</key>
+				<string>Go ahead and run</string>
+			</dict>
+			<key>NAME</key>
+			<string>Input Dialog Clear</string>
+			<key>OUTPUT_WINDOW_SETTINGS</key>
+			<dict>
+				<key>AUTO_CLOSE_ON_SUCCESS_ONLY</key>
+				<true/>
+				<key>WINDOW_ALPHA</key>
+				<real>1</real>
+				<key>WINDOW_CLOSE_FADE_OUT</key>
+				<false/>
+				<key>WINDOW_OPEN_FADE_IN</key>
+				<false/>
+				<key>WINDOW_TITLE</key>
+				<string>Untitled</string>
+			</dict>
+			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
+			<string>10.1</string>
+			<key>REQUIRED_OMC_VERSION</key>
+			<string>1.3.1</string>
+			<key>VERSION</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>COMMAND</key>
+			<array>
+				<string>echo </string>
+				<string>__DLG_INPUT_TEXT__</string>
+			</array>
+			<key>COMMAND_ID</key>
+			<string>PopM</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_popen_with_output_window</string>
+			<key>INPUT_DIALOG</key>
+			<dict>
+				<key>CANCEL_BUTTON_NAME</key>
+				<string>I changed me mind</string>
+				<key>DEFAULT</key>
+				<string>Choice 1</string>
+				<key>INPUT_MENU</key>
+				<array>
+					<dict>
+						<key>NAME</key>
+						<string>Choice 1</string>
+						<key>VALUE</key>
+						<string>value 1</string>
+					</dict>
+					<dict>
+						<key>NAME</key>
+						<string>Choice 2</string>
+						<key>VALUE</key>
+						<string>value 2</string>
+					</dict>
+					<dict>
+						<key>NAME</key>
+						<string>Choice 3</string>
+						<key>VALUE</key>
+						<string>value 3</string>
+					</dict>
+				</array>
+				<key>INPUT_TYPE</key>
+				<string>input_popup_menu</string>
+				<key>MESSAGE</key>
+				<string>What do you want to do?
+Second line.
+And more to boot</string>
+				<key>OK_BUTTON_NAME</key>
+				<string>Go ahead and run</string>
+			</dict>
+			<key>NAME</key>
+			<string>Input Dialog Popup</string>
+			<key>OUTPUT_WINDOW_SETTINGS</key>
+			<dict>
+				<key>AUTO_CLOSE_ON_SUCCESS_ONLY</key>
+				<true/>
+				<key>WINDOW_ALPHA</key>
+				<real>1</real>
+				<key>WINDOW_CLOSE_FADE_OUT</key>
+				<false/>
+				<key>WINDOW_OPEN_FADE_IN</key>
+				<false/>
+				<key>WINDOW_TITLE</key>
+				<string>Untitled</string>
+			</dict>
+			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
+			<string>10.1</string>
+			<key>REQUIRED_OMC_VERSION</key>
+			<string>1.3.1</string>
+			<key>VERSION</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>COMMAND</key>
+			<array>
+				<string>echo </string>
+				<string>__DLG_INPUT_TEXT__</string>
+			</array>
+			<key>COMMAND_ID</key>
+			<string>CmbM</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_popen_with_output_window</string>
+			<key>INPUT_DIALOG</key>
+			<dict>
+				<key>CANCEL_BUTTON_NAME</key>
+				<string>I changed me mind</string>
+				<key>DEFAULT</key>
+				<string>Choice 2</string>
+				<key>INPUT_MENU</key>
+				<array>
+					<dict>
+						<key>NAME</key>
+						<string>Choice 1</string>
+						<key>VALUE</key>
+						<string>value 1</string>
+					</dict>
+					<dict>
+						<key>NAME</key>
+						<string>Choice 2</string>
+						<key>VALUE</key>
+						<string>value 2</string>
+					</dict>
+					<dict>
+						<key>NAME</key>
+						<string>Choice 3</string>
+						<key>VALUE</key>
+						<string>value 3</string>
+					</dict>
+				</array>
+				<key>INPUT_TYPE</key>
+				<string>input_combo_box</string>
+				<key>MESSAGE</key>
+				<string>What do you want to do?
+Second line.
+And more to boot</string>
+				<key>OK_BUTTON_NAME</key>
+				<string>Go ahead and run</string>
+			</dict>
+			<key>NAME</key>
+			<string>Input Dialog Combo</string>
+			<key>OUTPUT_WINDOW_SETTINGS</key>
+			<dict>
+				<key>AUTO_CLOSE_ON_SUCCESS_ONLY</key>
+				<true/>
+				<key>WINDOW_ALPHA</key>
+				<real>1</real>
+				<key>WINDOW_CLOSE_FADE_OUT</key>
+				<false/>
+				<key>WINDOW_OPEN_FADE_IN</key>
+				<false/>
+				<key>WINDOW_TITLE</key>
+				<string>Untitled</string>
+			</dict>
+			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
+			<string>10.1</string>
+			<key>REQUIRED_OMC_VERSION</key>
+			<string>1.3.1</string>
+			<key>VERSION</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>COMMAND</key>
+			<array>
+				<string>echo </string>
+				<string>__DLG_INPUT_TEXT__</string>
+			</array>
+			<key>COMMAND_ID</key>
+			<string>PasT</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_popen_with_output_window</string>
+			<key>INPUT_DIALOG</key>
+			<dict>
+				<key>CANCEL_BUTTON_NAME</key>
+				<string>I changed me mind</string>
+				<key>DEFAULT</key>
+				<string>Type password here</string>
+				<key>INPUT_TYPE</key>
+				<string>input_password_text</string>
+				<key>MESSAGE</key>
+				<string>What do you want to do?
+Second line.
+And more to boot</string>
+				<key>OK_BUTTON_NAME</key>
+				<string>Go ahead and run</string>
+			</dict>
+			<key>NAME</key>
+			<string>Input Dialog Password</string>
+			<key>OUTPUT_WINDOW_SETTINGS</key>
+			<dict>
+				<key>AUTO_CLOSE_ON_SUCCESS_ONLY</key>
+				<true/>
+				<key>WINDOW_ALPHA</key>
+				<real>1</real>
+				<key>WINDOW_CLOSE_FADE_OUT</key>
+				<false/>
+				<key>WINDOW_OPEN_FADE_IN</key>
+				<false/>
+				<key>WINDOW_TITLE</key>
+				<string>Untitled</string>
+			</dict>
+			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
+			<string>10.1</string>
+			<key>REQUIRED_OMC_VERSION</key>
+			<string>1.3.1</string>
+			<key>VERSION</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>COMMAND_ID</key>
+			<string>SEnv</string>
+			<key>COMMAND</key>
+			<array>
+				<string>echo "$OMC_FRONT_APPLICATION_NAME"; env</string>
+			</array>
+			<key>ENVIRONMENT_VARIABLES</key>
+			<dict>
+				<key>OMC_TEST</key>
+				<string>OMC seriously rocks, man</string>
+				<key>OMC_MY_HOST_BUNDLE_PATH</key>
+				<string></string>
+			</dict>
+			<key>EXECUTION_MODE</key>
+			<string>exe_popen_with_output_window</string>
+			<key>NAME</key>
+			<string>test setenv</string>
+			<key>NOTES</key>
+			<string>test setenv</string>
+			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
+			<string>10.1</string>
+			<key>REQUIRED_OMC_VERSION</key>
+			<string>1.3.1</string>
+			<key>VERSION</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>COMMAND_ID</key>
+			<string>NEnv</string>
+			<key>COMMAND</key>
+			<array>
+				<string>env</string>
+			</array>
+			<key>EXECUTION_MODE</key>
+			<string>exe_popen_with_output_window</string>
+			<key>NAME</key>
+			<string>test no env</string>
+			<key>NOTES</key>
+			<string>test no environment variables set</string>
+			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
+			<string>10.1</string>
+			<key>REQUIRED_OMC_VERSION</key>
+			<string>1.3.1</string>
+			<key>VERSION</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>COMMAND_ID</key>
+			<string>Movi</string>
+			<key>COMMAND</key>
+			<array>
+				<string>echo "test movie"</string>
+			</array>
+			<key>EXECUTION_MODE</key>
+			<string>exe_popen_with_output_window</string>
+			<key>NAME</key>
+			<string>Test Movie</string>
+			<key>NIB_DIALOG</key>
+			<dict>
+				<key>INIT_SUBCOMMAND_ID</key>
+				<string>MvIn</string>
+				<key>NIB_NAME</key>
+				<string>debug</string>
+				<key>WINDOW_NAME</key>
+				<string>Movie</string>
+				<key>IS_BLOCKING</key>
+				<true/>
+			</dict>
+			<key>SUBMENU_NAME</key>
+			<string>..</string>
+			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
+			<string>10.3.9</string>
+			<key>REQUIRED_OMC_VERSION</key>
+			<string>1.8</string>
+			<key>VERSION</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>COMMAND_ID</key>
+			<string>MvIn</string>
+			<key>COMMAND</key>
+			<array>
+				<string>echo "initializing movie"; dialog_guid="</string>
+				<string>__NIB_DLG_GUID__</string>
+				<string>"; cd '</string>
+				<string>__MY_HOST_BUNDLE_PATH__</string>
+				<string>/Contents/MacOS/';
+./omc_dialog_control $dialog_guid 3 "sample.mov";
+				</string>
+			</array>
+			<key>EXECUTION_MODE</key>
+			<string>exe_popen_with_output_window</string>
+			<key>NAME</key>
+			<string>Test Movie</string>
+			<key>SUBMENU_NAME</key>
+			<string>..</string>
+			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
+			<string>10.3.9</string>
+			<key>REQUIRED_OMC_VERSION</key>
+			<string>1.8</string>
+			<key>VERSION</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>COMMAND_ID</key>
+			<string>Pipe</string>
+			<key>COMMAND</key>
+			<array>
+				<string>grep pipes 2&gt;&amp;1</string>
+			</array>
+			<key>STANDARD_INPUT_PIPE</key>
+			<array>
+				<string>__OBJ_TEXT__</string>
+			</array>
+			<key>TEXT_REPLACE_OPTION</key>
+			<string>txt_replace_cr_with_lf</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_popen_with_output_window</string>
+			<key>NAME</key>
+			<string>test input pipes</string>
+			<key>NOTES</key>
+			<string>test input pipes</string>
+			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
+			<string>10.1</string>
+			<key>REQUIRED_OMC_VERSION</key>
+			<string>1.3.1</string>
+			<key>VERSION</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>COMMAND</key>
+			<array>
+				<string></string>
+			</array>
+			<key>COMMAND_ID</key>
+			<string>MalG</string>
+			<key>NAME</key>
+			<string>Launch with Guard Malloc</string>
+			<key>NOTES</key>
+			<string>Guard Malloc GUI configuration applet</string>
+			<key>NIB_DIALOG</key>
+			<dict>
+				<key>NIB_NAME</key>
+				<string>debug</string>
+				<key>WINDOW_NAME</key>
+				<string>Configuration</string>
+				<key>IS_BLOCKING</key>
+				<false/>
+			</dict>
+			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
+			<string>10.1</string>
+			<key>REQUIRED_OMC_VERSION</key>
+			<string>1.3.1</string>
+			<key>SUBMENU_NAME</key>
+			<string>..</string>
+			<key>VERSION</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>COMMAND</key>
+			<array>
+				<string>env DYLD_INSERT_LIBRARIES=/usr/lib/libgmalloc.dylib </string>
+				<string>__NIB_DIALOG_CONTROL_3_VALUE__</string>
+				<string> </string>
+				<string>__NIB_DIALOG_CONTROL_4_VALUE__</string>
+				<string> </string>
+				<string>__NIB_DIALOG_CONTROL_5_VALUE__</string>
+				<string> </string>
+				<string>__NIB_DIALOG_CONTROL_6_VALUE__</string>
+				<string> </string>
+				<string>__NIB_DIALOG_CONTROL_7_VALUE__</string>
+				<string> </string>
+				<string>__NIB_DIALOG_CONTROL_8_VALUE__</string>
+				<string> open </string>
+				<string>__DLG_CHOOSE_FOLDER_PATH__</string>
+				<string> 2&gt;&amp;1</string>
+			</array>
+			<key>COMMAND_ID</key>
+			<string>end!</string>
+			<key>CHOOSE_FILE_DIALOG</key>
+			<dict>
+				<key>MESSAGE</key>
+				<string>Choose application to launch</string>
+			</dict>
+			<key>EXECUTION_MODE</key>
+			<string>exe_popen_with_output_window</string>
+			<key>NAME</key>
+			<string>Launch with Guard Malloc</string>
+			<key>NOTES</key>
+			<string>Launch handler</string>
+			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
+			<string>10.4</string>
+			<key>REQUIRED_OMC_VERSION</key>
+			<string>1.7</string>
+			<key>VERSION</key>
+			<integer>1</integer>
+		</dict>
+
+		<dict>
+			<key>COMMAND_ID</key>
+			<string>MulO</string>
+			<key>COMMAND</key>
+			<array>
+				<string>echo "</string>
+				<string>__OBJ_PATH__</string>
+				<string>";</string>
+			</array>
+			<key>EXECUTION_MODE</key>
+			<string>exe_popen_with_output_window</string>
+			<key>ENVIRONMENT_VARIABLES</key>
+			<dict>
+				<key>OMC_OBJ_PATH</key>
+				<string></string>
+			</dict>
+			<key>MULTIPLE_OBJECT_SETTINGS</key>
+			<dict>
+				<key>PROCESSING_MODE</key>
+				<string>proc_together</string>
+				<key>SORT_METHOD</key>
+				<string>sort_by_name</string>
+				<key>SORT_OPTIONS</key>
+				<dict>
+					<key>SORT_ASCENDING</key>
+					<true/>
+					<key>COMPARE_CASE_INSENSITIVE</key>
+					<true/>
+				 </dict>
+			</dict>
+			<key>NAME</key>
+			<string>Multiple Objects</string>
+			<key>NOTES</key>
+			<string></string>
+			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
+			<string>10.1</string>
+			<key>REQUIRED_OMC_VERSION</key>
+			<string>1.3.1</string>
+			<key>SUBMENU_NAME</key>
+			<string>..</string>
+			<key>VERSION</key>
+			<integer>1</integer>
+		</dict>
+
+		<dict>
+			<key>COMMAND_ID</key>
+			<string>Mul1</string>
+			<key>COMMAND</key>
+			<array>
+				<string>echo "</string>
+				<string>__OBJ_PATH__</string>
+				<string>";</string>
+			</array>
+			<key>EXECUTION_MODE</key>
+			<string>exe_popen_with_output_window</string>
+			<key>MULTIPLE_OBJECT_SETTINGS</key>
+			<dict>
+				<key>PROCESSING_MODE</key>
+				<string>proc_together</string>
+			</dict>
+			<key>NAME</key>
+			<string>Multiple Objects - no sort</string>
+			<key>NOTES</key>
+			<string></string>
+			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
+			<string>10.1</string>
+			<key>REQUIRED_OMC_VERSION</key>
+			<string>1.3.1</string>
+			<key>SUBMENU_NAME</key>
+			<string>..</string>
+			<key>VERSION</key>
+			<integer>1</integer>
+		</dict>
+
+		<dict>
+			<key>COMMAND_ID</key>
+			<string>CNDI</string>
+			<key>COMMAND</key>
+			<array>
+				<string>hdiutil create -megabytes "$OMC_INPUT_TEXT" -fs HFS+ -volname "$OMC_SAVE_AS_FILE_NAME" "$OMC_SAVE_AS_PATH.dmg" ; hdiutil attach "$OMC_SAVE_AS_PATH.dmg" ; open "/Volumes/$OMC_SAVE_AS_FILE_NAME"</string>
+			</array>
+			<key>EXECUTION_MODE</key>
+			<string>exe_silent_popen</string>
+			<key>INPUT_DIALOG</key>
+			<dict>
+				<key>DEFAULT</key>
+				<string>5 MB</string>
+				<key>INPUT_MENU</key>
+				<array>
+					<dict>
+						<key>NAME</key>
+						<string>5 MB</string>
+						<key>VALUE</key>
+						<string>5</string>
+					</dict>
+					<dict>
+						<key>NAME</key>
+						<string>10 MB</string>
+						<key>VALUE</key>
+						<string>10</string>
+					</dict>
+					<dict>
+						<key>NAME</key>
+						<string>15 MB</string>
+						<key>VALUE</key>
+						<string>15</string>
+					</dict>
+					<dict>
+						<key>NAME</key>
+						<string>20 MB</string>
+						<key>VALUE</key>
+						<string>20</string>
+					</dict>
+				</array>
+				<key>INPUT_TYPE</key>
+				<string>input_combo_box</string>
+				<key>MESSAGE</key>
+				<string>Please select a size for new disk image:</string>
+				<key>OK_BUTTON_NAME</key>
+				<string>Create</string>
+			</dict>
+			<key>NAME</key>
+			<string>Create New Disk Image...</string>
+			<key>NOTES</key>
+			<string>Create new disk image and mount it. Name file without .dmg extension, it will be added automatically. Volume name will be the same as file name.</string>
+			<key>PROGRESS</key>
+			<dict>
+				<key>DELAY</key>
+				<real>0.000000000000000e+00</real>
+			</dict>
+			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
+			<string>10.1</string>
+			<key>REQUIRED_OMC_VERSION</key>
+			<string>1.8.1</string>
+			<key>VERSION</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>COMMAND_ID</key>
+			<string>PoSh</string>
+			<key>COMMAND</key>
+			<array>
+				<string>env; echo </string>
+				<string>__MY_BUNDLE_PATH__</string>
+				<string>; echo "__OMC_SUPPORT_PATH__=</string>
+				<string>__OMC_SUPPORT_PATH__</string>
+				<string>"; echo "__OMC_RESOURCES_PATH__=</string>
+				<string>__OMC_RESOURCES_PATH__</string>
+				<string>";</string>
+			</array>
+			<key>ENVIRONMENT_VARIABLES</key>
+			<dict>
+				<key>OMC_OMC_SUPPORT_PATH</key>
+				<string></string>
+				<key>OMC_OMC_RESOURCES_PATH</key>
+				<string></string>
+			</dict>
+			<key>EXECUTION_MODE</key>
+			<string>exe_popen_with_output_window</string>
+			<key>NAME</key>
+			<string>test tcsh shell</string>
+			<key>NOTES</key>
+			<string>test tcsh shell in popen</string>
+			<key>POPEN_SHELL</key>
+			<array>
+				<string>/bin/tcsh</string>
+				<string>-c</string>
+			</array>
+			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
+			<string>10.1</string>
+			<key>REQUIRED_OMC_VERSION</key>
+			<string>1.3.1</string>
+			<key>VERSION</key>
+			<integer>1</integer>
+		</dict>
+
+
+		<dict>
+			<key>COMMAND_ID</key>
+			<string>PoSh</string>
+			<key>COMMAND</key>
+			<array>
+				<string>env; echo </string>
+				<string>__MY_BUNDLE_PATH__</string>
+				<string>; echo "__OMC_SUPPORT_PATH__=</string>
+				<string>__OMC_SUPPORT_PATH__</string>
+				<string>"; echo "__OMC_RESOURCES_PATH__=</string>
+				<string>__OMC_RESOURCES_PATH__</string>
+				<string>";</string>
+			</array>
+			<key>ENVIRONMENT_VARIABLES</key>
+			<dict>
+				<key>OMC_OMC_SUPPORT_PATH</key>
+				<string></string>
+				<key>OMC_OMC_RESOURCES_PATH</key>
+				<string></string>
+			</dict>
+			<key>EXECUTION_MODE</key>
+			<string>exe_popen_with_output_window</string>
+			<key>NAME</key>
+			<string>test tcsh shell</string>
+			<key>NOTES</key>
+			<string>test tcsh shell in popen</string>
+			<key>POPEN_SHELL</key>
+			<array>
+				<string>/bin/tcsh</string>
+				<string>-c</string>
+			</array>
+			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
+			<string>10.1</string>
+			<key>REQUIRED_OMC_VERSION</key>
+			<string>1.3.1</string>
+			<key>VERSION</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>COMMAND_ID</key>
+			<string>CNxC</string>
+			<key>COMMAND</key>
+			<array>
+				<string>"$OMC_OMC_SUPPORT_PATH/omc_next_command" "$OMC_CURRENT_COMMAND_GUID" "PoSh"; echo "called omc_next_command";</string>
+			</array>
+			<key>EXECUTION_MODE</key>
+			<string>exe_popen_with_output_window</string>
+			<key>NAME</key>
+			<string>Call next command</string>
+			<key>NOTES</key>
+			<string>test next command</string>
+			<key>REQUIRED_OMC_VERSION</key>
+			<string>2.0</string>
+			<key>VERSION</key>
+			<integer>1</integer>
+		</dict>
+
+
+	</array>
+	<key>VERSION</key>
+	<integer>2</integer>
+</dict>
+</plist>

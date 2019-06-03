@@ -13,7 +13,6 @@
 #include "ARefCounted.h"
 #include "CFObj.h"
 #include "StAEDesc.h"
-#include <memory>
 
 typedef struct OneSubmenuName
 {
@@ -26,7 +25,7 @@ typedef struct OneSubmenuName
 	{}
 
 	CFObj<CFStringRef> name;
-	std::auto_ptr<OneSubmenuName> next;
+	AUniquePtr<OneSubmenuName> next;
 	
 } OneSubmenuName;
 
@@ -83,8 +82,8 @@ FindOrAddSubmenu(NSMenu * inMenu, OneSubmenuName *inSubmenu)
 		[inMenu setSubmenu:subMenu forItem:newMenuItem];
 	}
 	
-	if(inSubmenu->next.get() != NULL)//recursively dig deeper
-		subMenu = FindOrAddSubmenu(subMenu, inSubmenu->next.get());
+	if(inSubmenu->next != nullptr)//recursively dig deeper
+		subMenu = FindOrAddSubmenu(subMenu, inSubmenu->next);
 
 	return subMenu;
 }
@@ -161,8 +160,8 @@ PopulateCommandsMenu(OnMyCommandCM *inPlugin, NSMenu *topMenu)
 		}
 		
 		CFObj<CFURLRef> submenuPath(::CFURLCreateWithFileSystemPath(kCFAllocatorDefault, submenuPathStr, kCFURLPOSIXPathStyle, true));
-		std::auto_ptr<OneSubmenuName> menuChain( CreateSubmenuNameChain(submenuPath, NULL) );
-		NSMenu * subMenu = FindOrAddSubmenu(topMenu, menuChain.get());
+		AUniquePtr<OneSubmenuName> menuChain( CreateSubmenuNameChain(submenuPath, NULL) );
+		NSMenu * subMenu = FindOrAddSubmenu(topMenu, menuChain);
 		if( (subMenu != NULL) && (commandList[i].name != NULL) )
 		{
 			CFObj<CFStringRef> staticName( ::CFStringCreateByCombiningStrings( kCFAllocatorDefault, commandList[i].name, CFSTR("") ) );

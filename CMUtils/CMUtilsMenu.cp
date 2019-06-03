@@ -12,10 +12,10 @@
 //**************************************************************************************
 
 #include "CMUtils.h"
-#include "AStdArrayNew.h"
 #include "DebugSettings.h"
 #include "StAEDesc.h"
 #include <Carbon/Carbon.h>
+#include <vector>
 
 
 #if 0// UNIVERSAL_INTERFACES_VERSION < 0x0342
@@ -44,7 +44,7 @@ CMUtils::AddCommandToAEDescList(	ConstStr255Param inCommandString,
 	if( (inCommandString == NULL) || (ioCommandList == NULL) )
 		return paramErr;
 
-//	TRACE_CSTR1("CMUtils. AddCommandToAEDescList with Str255" );
+//	TRACE_CSTR("CMUtils. AddCommandToAEDescList with Str255\n" );
 
 	OSStatus err = noErr;
 	
@@ -95,7 +95,7 @@ CMUtils::AddCommandToAEDescList( const UniChar *inCommandString,
 	if( (inCommandString == NULL) || (ioCommandList == NULL) )
 		return paramErr;
 
-//	TRACE_CSTR1("CMUtils. AddCommandToAEDescList with Unicode characters" );
+//	TRACE_CSTR("CMUtils. AddCommandToAEDescList with Unicode characters\n" );
 
 	OSStatus err = noErr;
 	
@@ -150,7 +150,7 @@ CMUtils::AddCommandToAEDescList(	CFStringRef inCommandString,
 	if( (inCommandString == NULL) || (ioCommandList == NULL) )
 		return paramErr;
 
-//	TRACE_CSTR1( "CMUtils. AddCommandToAEDescList with CFString" );
+//	TRACE_CSTR( "CMUtils. AddCommandToAEDescList with CFString\n" );
 //	TRACE_CFSTR(inCommandString);
 
 	OSStatus err = noErr;
@@ -219,7 +219,7 @@ CMUtils::AddCommandToAEDescList_Compatible(	CFStringRef inCommandString,
 	if( inCommandString == NULL )
 		return paramErr;
 
-//	TRACE_CSTR1("CMUtils. AddCommandToAEDescList with CFString" );
+//	TRACE_CSTR("CMUtils. AddCommandToAEDescList with CFString\n" );
 
 	CFIndex uniCount = ::CFStringGetLength(inCommandString);
 	const UniChar *uniString = ::CFStringGetCharactersPtr(inCommandString);
@@ -227,17 +227,14 @@ CMUtils::AddCommandToAEDescList_Compatible(	CFStringRef inCommandString,
 		return CMUtils::AddCommandToAEDescList(	uniString, uniCount, inCommandID, ioCommandList, attributes, modifiers );
 
 //CFStringGetCharactersPtr failed and we must copy the string
-
-	UniChar *newString = new UniChar[uniCount];
-	AStdArrayNew<UniChar> theDel(newString);
+    std::vector<UniChar> newString(uniCount);
 
 	CFRange theRange;
 	theRange.location = 0;
 	theRange.length = uniCount;
-	::CFStringGetCharacters( inCommandString, theRange, newString);
+	::CFStringGetCharacters( inCommandString, theRange, newString.data());
 
-	OSStatus outErr = CMUtils::AddCommandToAEDescList(	newString, uniCount, inCommandID, ioCommandList, attributes, modifiers );
-//	delete [] newString;
+	OSStatus outErr = CMUtils::AddCommandToAEDescList(	newString.data(), uniCount, inCommandID, ioCommandList, attributes, modifiers );
 	
 	return outErr;
 }
@@ -249,7 +246,7 @@ CMUtils::AddSubmenu( AEDescList* ioCommands, CFStringRef inName, AEDescList &inS
 	if( inName == NULL )
 		return paramErr;
 
-//	TRACE_CSTR1("CMUtils. AddSubmenu with CFString" );
+//	TRACE_CSTR("CMUtils. AddSubmenu with CFString\n" );
 
 	CFIndex uniCount = ::CFStringGetLength(inName);
 	const UniChar *uniString = ::CFStringGetCharactersPtr(inName);
@@ -280,7 +277,7 @@ CMUtils::AddSubmenu( AEDescList* ioCommands,
 	if( (inName == NULL) || (ioCommands == NULL) )
 		return paramErr;
 
-//	TRACE_CSTR1("CMUtils. AddSubmenu with Unicode characters" );
+//	TRACE_CSTR("CMUtils. AddSubmenu with Unicode characters\n" );
 
 	StAEDesc	theSupercommand; //AERecord
 

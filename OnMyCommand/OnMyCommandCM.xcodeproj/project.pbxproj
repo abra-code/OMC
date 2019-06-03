@@ -19,11 +19,10 @@
 /* Begin PBXFileReference section */
 		089C167EFE841241C02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		0AA1909FFE8422F4C02AAC07 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = /System/Library/Frameworks/CoreFoundation.framework; sourceTree = "<absolute>"; };
+		1D3BB166229BEB5900542933 /* AUniquePtr.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AUniquePtr.h; sourceTree = "<group>"; };
 		1DED8E4F2222AF8D00A2CAF7 /* AObserver.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AObserver.h; sourceTree = "<group>"; };
 		1DED8E502222AFA800A2CAF7 /* ACMPlugin.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ACMPlugin.h; sourceTree = "<group>"; };
 		1DED8E512222AFEA00A2CAF7 /* DebugSettings.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DebugSettings.h; sourceTree = "<group>"; };
-		1DED8E522222B02700A2CAF7 /* AStdArrayNew.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AStdArrayNew.h; sourceTree = "<group>"; };
-		1DED8E532222B06B00A2CAF7 /* AStdNew.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AStdNew.h; sourceTree = "<group>"; };
 		E2269B9D0EB6DBF90029CCF5 /* AbracodeCommon.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = AbracodeCommon.xcconfig; path = ../AbracodeCommon.xcconfig; sourceTree = SOURCE_ROOT; };
 		E234F8D50D0E85A0001A7780 /* Abracode.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Abracode.framework; path = /Library/Frameworks/Abracode.framework; sourceTree = "<absolute>"; };
 		E242355D0B2E8F1A00D1E25A /* OnMyCommand.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = OnMyCommand.h; path = ../AbracodeFramework/OnMyCommand.h; sourceTree = SOURCE_ROOT; };
@@ -120,8 +119,7 @@
 				E258987C0B352B94001DCCBE /* CFObj.h */,
 				1DED8E512222AFEA00A2CAF7 /* DebugSettings.h */,
 				1DED8E4F2222AF8D00A2CAF7 /* AObserver.h */,
-				1DED8E532222B06B00A2CAF7 /* AStdNew.h */,
-				1DED8E522222B02700A2CAF7 /* AStdArrayNew.h */,
+				1D3BB166229BEB5900542933 /* AUniquePtr.h */,
 			);
 			name = Common;
 			path = ../Common;
@@ -323,6 +321,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				ONLY_ACTIVE_ARCH = YES;
+				SYMROOT = ../build;
 			};
 			name = Debug;
 		};
@@ -362,6 +361,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				SYMROOT = ../build;
 			};
 			name = Release;
 		};

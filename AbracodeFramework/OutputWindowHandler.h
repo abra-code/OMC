@@ -112,8 +112,6 @@ public:
 
 	static Boolean			HexStringToColor(CFStringRef inString, OMCColor &outColor);
 
-	void					ScheduleSelfDestruction(CFTimeInterval inTimeInterval);
-
 protected:
 	ARefCountedObj< AObserver<OutputWindowHandler> > mTaskObserver;
 	OMCOutputWindowControllerRef mOutputWindowController;
