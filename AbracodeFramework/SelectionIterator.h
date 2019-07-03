@@ -10,8 +10,6 @@
 #ifndef _SelectionIterator_h_
 	#define _SelectionIterator_h_
 
-#import <QTKit/QTKitDefines.h> //this header defines NSUInteger in a way that can be included in C and ObjC
-
 //new iterator starts at first valid item. Calling Next() will move to next selection
 typedef struct SelectionIterator
 {

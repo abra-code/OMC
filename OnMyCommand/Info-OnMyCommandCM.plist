@@ -18,6 +18,8 @@
 	<string>OnMyCommandCM</string>
 	<key>CFBundlePackageType</key>
 	<string>cmpi</string>
+	<key>CFBundleIconFile</key>
+	<string>app.icns</string>
 	<key>CFBundleShortVersionString</key>
 	<string>3.2</string>
 	<key>CFBundleSignature</key>

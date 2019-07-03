@@ -146,8 +146,7 @@
 				E28F6E290841AD30004800C0 /* Resources */,
 				E28F6E2B0841AD30004800C0 /* Sources */,
 				E28F6E4E0841AD30004800C0 /* Frameworks */,
-				E2749C130E27344800BB4454 /* Copy Icon */,
-				E21DA4A20E3AFCC100ACD55F /* Copy to Library */,
+				E21DA4A20E3AFCC100ACD55F /* Copy to /Library/Contextual Menu Items */,
 			);
 			buildRules = (
 			);
@@ -199,34 +198,19 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		E21DA4A20E3AFCC100ACD55F /* Copy to Library */ = {
+		E21DA4A20E3AFCC100ACD55F /* Copy to /Library/Contextual Menu Items */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
 			);
-			name = "Copy to Library";
+			name = "Copy to /Library/Contextual Menu Items";
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "ditto -rsrc \"$BUILT_PRODUCTS_DIR\"/OnMyCommandCM.plugin '/Library/Contextual Menu Items/OnMyCommandCM.plugin'\n";
-			showEnvVarsInLog = 0;
-		};
-		E2749C130E27344800BB4454 /* Copy Icon */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "Copy Icon";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "#copy Icon to folder renaming it to contain return character\nditto -rsrc \"$SRCROOT/Icon.rsrc\" \"$BUILT_PRODUCTS_DIR\"/OnMyCommandCM.plugin/Icon$'\\x0d';\n#make it invisible\n/usr/bin/SetFile -a V \"$BUILT_PRODUCTS_DIR\"/OnMyCommandCM.plugin/Icon$'\\x0d'\n\n#set custom icon flag for the folder\n/usr/bin/SetFile -a C \"$BUILT_PRODUCTS_DIR/OnMyCommandCM.plugin\"\n";
+			shellScript = "ditto \"$BUILT_PRODUCTS_DIR\"/OnMyCommandCM.plugin '/Library/Contextual Menu Items/OnMyCommandCM.plugin'\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */

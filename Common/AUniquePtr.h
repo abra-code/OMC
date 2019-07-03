@@ -1,7 +1,7 @@
 //**************************************************************************************
 // Filename:	AUniquePtr.h
 //
-// Description: equivalent of std::unique_ptr with a couple to tweaks
+// Description: equivalent of std::unique_ptr with a couple of tweaks
 //**************************************************************************************
 
 #pragma once

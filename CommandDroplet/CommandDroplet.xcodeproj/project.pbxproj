@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		1D2A683615DE2E7F00AAF296 /* CommandDroplet.app in Copy Self to Abracode.framework */ = {isa = PBXBuildFile; fileRef = 8D1107320486CEB800E47090 /* CommandDroplet.app */; };
 		1D3BB16E229D0B6600542933 /* MainMenu.nib in Resources */ = {isa = PBXBuildFile; fileRef = 1D3BB16C229D0B6600542933 /* MainMenu.nib */; };
 		1D3BB16F229D0B6600542933 /* MainMenu.nib in Resources */ = {isa = PBXBuildFile; fileRef = 1D3BB16C229D0B6600542933 /* MainMenu.nib */; };
 		1DEDA49B15DCF71A006D67DB /* app.icns in Resources */ = {isa = PBXBuildFile; fileRef = 1DEDA49815DCF6DE006D67DB /* app.icns */; };
@@ -25,20 +24,6 @@
 		E2ACB28D12EAE02800A8ACF6 /* AbracodeFrameworkVersion.c in Sources */ = {isa = PBXBuildFile; fileRef = E2ACB28C12EAE02700A8ACF6 /* AbracodeFrameworkVersion.c */; };
 		E2CF504712ED5F730019D985 /* AbracodeFrameworkVersion.c in Sources */ = {isa = PBXBuildFile; fileRef = E2ACB28C12EAE02700A8ACF6 /* AbracodeFrameworkVersion.c */; };
 /* End PBXBuildFile section */
-
-/* Begin PBXCopyFilesBuildPhase section */
-		E23EA1B80DFB06030070E63F /* Copy Self to Abracode.framework */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = /Library/Frameworks/Abracode.framework/Support;
-			dstSubfolderSpec = 0;
-			files = (
-				1D2A683615DE2E7F00AAF296 /* CommandDroplet.app in Copy Self to Abracode.framework */,
-			);
-			name = "Copy Self to Abracode.framework";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
@@ -167,7 +152,7 @@
 				8D11072E0486CEB800E47090 /* Frameworks */,
 				E23EA1B30DFB05970070E63F /* Create Links */,
 				E23EA1B50DFB05B50070E63F /* Remove Debug Resources */,
-				E23EA1B80DFB06030070E63F /* Copy Self to Abracode.framework */,
+				1D213ED322AFAE250019E6AD /* Copy Self to Abracode.framework */,
 			);
 			buildRules = (
 			);
@@ -255,6 +240,27 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		1D213ED322AFAE250019E6AD /* Copy Self to Abracode.framework */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(BUILT_PRODUCTS_DIR)/CommandDroplet.app",
+			);
+			name = "Copy Self to Abracode.framework";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				/Library/Frameworks/Abracode.framework/Support/CommandDroplet.app,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Xcode fails if you change it to copy files phase\nrm -Rf \"/Library/Frameworks/Abracode.framework/Support/CommandDroplet.app\"\nditto \"$BUILT_PRODUCTS_DIR/CommandDroplet.app\" \"/Library/Frameworks/Abracode.framework/Support/CommandDroplet.app\"\n\n";
+			showEnvVarsInLog = 0;
+		};
 		1D950701229D3675003BB7E4 /* Copy Self to Abracode.framework */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -273,7 +279,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "#Xcode hangs if you change it to copy files phase\nrm -Rf \"/Library/Frameworks/Abracode.framework/Support/StandaloneDroplet.app\"\nditto \"$BUILT_PRODUCTS_DIR/StandaloneDroplet.app\" \"/Library/Frameworks/Abracode.framework/Support/StandaloneDroplet.app\"\n\n";
+			shellScript = "# Xcode hangs if you change it to copy files phase\nrm -Rf \"/Library/Frameworks/Abracode.framework/Support/StandaloneDroplet.app\"\nditto \"$BUILT_PRODUCTS_DIR/StandaloneDroplet.app\" \"/Library/Frameworks/Abracode.framework/Support/StandaloneDroplet.app\"\n\n";
 			showEnvVarsInLog = 0;
 		};
 		1DE8248C229D33AA00ECFAD1 /* Copy Abracode-Private.framework */ = {

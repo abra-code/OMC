@@ -1185,7 +1185,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "echo \"Creating additional symbolic links - relative, so the framework is movable\";\n\ncd \"$BUILT_PRODUCTS_DIR/Abracode-Private.framework\";\nrm -f \"Support\";\nln -s \"Versions/Current/Support\" \"Support\";\nrm -fR \"Contents\";\nmkdir \"Contents\";\ncd \"Contents\";\nln -s \"../Versions/Current/Support\" \"MacOS\";\nln -s \"../Versions/Current/Resources\" \"Resources\";\n";
+			shellScript = "echo \"Creating additional symbolic links - relative, so the framework is movable\";\n\ncd \"$BUILT_PRODUCTS_DIR/Abracode-Private.framework\";\nrm -f \"Support\";\nln -s \"Versions/Current/Support\" \"Support\";\n";
 			showEnvVarsInLog = 0;
 		};
 		E2A8326F0D147C7300117643 /* Create Links */ = {
@@ -1200,7 +1200,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "echo \"Creating additional symbolic links - relative, so the framework is movable\";\n\ncd \"/Library/Frameworks/Abracode.framework/\";\nrm -f \"Support\";\nln -s \"Versions/Current/Support\" \"Support\";\nrm -fR \"Contents\";\nmkdir \"Contents\";\ncd \"Contents\";\nln -s \"../Versions/Current/Support\" \"MacOS\";\nln -s \"../Versions/Current/Resources\" \"Resources\";\n";
+			shellScript = "echo \"Creating additional symbolic links - relative, so the framework is movable\";\n\ncd \"/Library/Frameworks/Abracode.framework/\";\nrm -f \"Support\";\nln -s \"Versions/Current/Support\" \"Support\";\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -1508,6 +1508,7 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/../icu/include\"/**";
+				OTHER_CODE_SIGN_FLAGS = "--deep";
 				SYMROOT = ../build;
 			};
 			name = Debug;
@@ -1529,6 +1530,7 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/../icu/include\"/**";
+				OTHER_CODE_SIGN_FLAGS = "--deep";
 				SYMROOT = ../build;
 			};
 			name = Release;
