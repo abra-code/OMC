@@ -11,11 +11,7 @@
 
 #pragma once
 
-#if defined(__MACH__)
-    #import <Carbon/Carbon.h>
-#else
-    #include <Carbon.h>
-#endif //defined(__MACH__)
+#include <Carbon/Carbon.h>
 
 class StSwitchToFront
 {

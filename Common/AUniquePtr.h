@@ -33,6 +33,6 @@ public:
     
     T* detach() noexcept
     {
-        return this->release(); //release is a very bad misnomer becuase the term is reserved in many ref-counted APIs
+        return this->release(); //release is a very bad misnomer because the term is reserved in many ref-counted APIs
     }
 };
