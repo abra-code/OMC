@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1D9BCB8222CC98D100F4EAB6 /* ACFPropertyList.m in Sources */ = {isa = PBXBuildFile; fileRef = 1D9BCB8122CC98D000F4EAB6 /* ACFPropertyList.m */; };
 		8DD76F790486A8DE00D96B5E /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 09AB6884FE841BABC02AAC07 /* CoreFoundation.framework */; };
 		E25EBD57075DE53A005F994C /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = E25EBD56075DE53A005F994C /* main.c */; };
 /* End PBXBuildFile section */
@@ -25,6 +26,8 @@
 
 /* Begin PBXFileReference section */
 		09AB6884FE841BABC02AAC07 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = /System/Library/Frameworks/CoreFoundation.framework; sourceTree = "<absolute>"; };
+		1D9BCB8122CC98D000F4EAB6 /* ACFPropertyList.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = ACFPropertyList.m; path = ../Common/ACFPropertyList.m; sourceTree = "<group>"; };
+		1D9BCB8322CC98E400F4EAB6 /* ACFPropertyList.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ACFPropertyList.h; path = ../Common/ACFPropertyList.h; sourceTree = "<group>"; };
 		8DD76F7E0486A8DE00D96B5E /* omc_dialog_control */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = omc_dialog_control; sourceTree = BUILT_PRODUCTS_DIR; };
 		E2269AD10EB6D9430029CCF5 /* AbracodeCommon.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = AbracodeCommon.xcconfig; path = ../AbracodeCommon.xcconfig; sourceTree = SOURCE_ROOT; };
 		E25EBD56075DE53A005F994C /* main.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = SOURCE_ROOT; };
@@ -60,6 +63,8 @@
 			isa = PBXGroup;
 			children = (
 				E25EBD56075DE53A005F994C /* main.c */,
+				1D9BCB8122CC98D000F4EAB6 /* ACFPropertyList.m */,
+				1D9BCB8322CC98E400F4EAB6 /* ACFPropertyList.h */,
 			);
 			name = Source;
 			sourceTree = "<group>";
@@ -141,6 +146,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				E25EBD57075DE53A005F994C /* main.c in Sources */,
+				1D9BCB8222CC98D100F4EAB6 /* ACFPropertyList.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

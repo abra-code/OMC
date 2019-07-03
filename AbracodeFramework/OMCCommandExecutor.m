@@ -9,6 +9,8 @@
 #import "OMCCommandExecutor.h"
 #include "OMC.h"
 #include "OMCFilePanels.h"
+#include "ACFPropertyList.h"
+
 
 static NSMutableDictionary *sCachedPlists = NULL;
 
@@ -178,21 +180,7 @@ static NSMutableDictionary *sCachedPlists = NULL;
 
 //not found, load it and cache
 
-	SInt32 errorCode = 0;
-	CFDataRef theDataRef = NULL;
-	Boolean success = CFURLCreateDataAndPropertiesFromResource(
-																 kCFAllocatorDefault,
-																 (CFURLRef)absURL,
-																 &theDataRef,
-																 NULL,
-																 NULL,
-																 &errorCode);
-	
-	if( !success || (theDataRef == NULL) )
-		return NULL;
-	
-    CFPropertyListRef thePlist = CFPropertyListCreateWithData(kCFAllocatorDefault, theDataRef, kCFPropertyListImmutable, NULL, NULL);
-	CFRelease(theDataRef);
+    CFPropertyListRef thePlist = CreatePropertyList((CFURLRef)absURL, kCFPropertyListImmutable);
 
 	if(thePlist == NULL)
 		return NULL;

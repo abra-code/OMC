@@ -34,6 +34,8 @@
 		1D9B1F6621FF191D004704A7 /* SubmenuTree.cp in Sources */ = {isa = PBXBuildFile; fileRef = 1D9B1F6321FF191D004704A7 /* SubmenuTree.cp */; };
 		1D9B1F7121FF1F9F004704A7 /* progress.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1D9B1F6F21FF1F9F004704A7 /* progress.xib */; };
 		1D9B1F7221FF1F9F004704A7 /* progress.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1D9B1F6F21FF1F9F004704A7 /* progress.xib */; };
+		1D9BCB7F22CC95E500F4EAB6 /* ACFPropertyList.m in Sources */ = {isa = PBXBuildFile; fileRef = 1D9BCB7C22CC95E500F4EAB6 /* ACFPropertyList.m */; };
+		1D9BCB8022CC95E500F4EAB6 /* ACFPropertyList.m in Sources */ = {isa = PBXBuildFile; fileRef = 1D9BCB7C22CC95E500F4EAB6 /* ACFPropertyList.m */; };
 		1DED8E572222BD8E00A2CAF7 /* MoreAppleEvents.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED19F0D09528600C9D5E8 /* MoreAppleEvents.cp */; };
 		8DC2EF530486A6940098B216 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C1666FE841158C02AAC07 /* InfoPlist.strings */; };
 		8DC2EF570486A6940098B216 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7B1FEA5585E11CA2CBB /* Cocoa.framework */; };
@@ -410,6 +412,8 @@
 		1D9B1F6321FF191D004704A7 /* SubmenuTree.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SubmenuTree.cp; sourceTree = "<group>"; };
 		1D9B1F6421FF191D004704A7 /* SubmenuTree.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SubmenuTree.h; sourceTree = "<group>"; };
 		1D9B1F7021FF1F9F004704A7 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/progress.xib; sourceTree = "<group>"; };
+		1D9BCB7B22CC95E500F4EAB6 /* ACFPropertyList.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ACFPropertyList.h; sourceTree = "<group>"; };
+		1D9BCB7C22CC95E500F4EAB6 /* ACFPropertyList.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ACFPropertyList.m; sourceTree = "<group>"; };
 		1DED8E4C22229D1800A2CAF7 /* ACFArr.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ACFArr.h; sourceTree = "<group>"; };
 		1DED8E562222B65500A2CAF7 /* MoreAppleEvents.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoreAppleEvents.h; sourceTree = "<group>"; };
 		32DBCF5E0370ADEE00C91783 /* Abracode_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Abracode_Prefix.pch; sourceTree = "<group>"; };
@@ -828,6 +832,8 @@
 				E2ED3BC00D0B293E00481D8F /* ACMPlugin.cp */,
 				1D71F32A2206F1A1009FAF91 /* ACMPlugin.h */,
 				E27F2D030D56F7410060D231 /* CFObj.h */,
+				1D9BCB7B22CC95E500F4EAB6 /* ACFPropertyList.h */,
+				1D9BCB7C22CC95E500F4EAB6 /* ACFPropertyList.m */,
 				E29ED1B50D09532500C9D5E8 /* ACFType.h */,
 				E29ED1B60D09532500C9D5E8 /* ACFType.cp */,
 				1DED8E4C22229D1800A2CAF7 /* ACFArr.h */,
@@ -1252,6 +1258,7 @@
 				E2E4072A0D8AD1E3009AD8CA /* OMCSearchField.m in Sources */,
 				E2E407860D8C3770009AD8CA /* OMCImageView.m in Sources */,
 				E23DC9640D9A2616009D2AD8 /* OMCPDFView.m in Sources */,
+				1D9BCB7F22CC95E500F4EAB6 /* ACFPropertyList.m in Sources */,
 				E23DC9680D9A2616009D2AD8 /* OMCIKImageView.m in Sources */,
 				E23DC96B0D9A2616009D2AD8 /* OMCWebView.m in Sources */,
 				E29A6AB60D9F7A01006A97B0 /* OMCMainMenuController.m in Sources */,
@@ -1310,6 +1317,7 @@
 				E25760420D20EE1000D755FF /* ACMPlugin.cp in Sources */,
 				E25760440D20EE1000D755FF /* OMC.cpp in Sources */,
 				E25760450D20EE1000D755FF /* OMCButton.m in Sources */,
+				1D9BCB8022CC95E500F4EAB6 /* ACFPropertyList.m in Sources */,
 				E25760460D20EE1000D755FF /* OMCButtonCell.m in Sources */,
 				E25760470D20EE1000D755FF /* OMCMenuItem.m in Sources */,
 				E25760480D20EE1000D755FF /* OMCPopUpButton.m in Sources */,

@@ -45,6 +45,7 @@
 #include "OMCDialog.h"
 #include "OMCInputDialog.h"
 #include "SelectionIterator.h"
+#include "ACFPropertyList.h"
 
 extern Boolean RunCocoaDialog(OnMyCommandCM *inPlugin);
 
@@ -3367,24 +3368,7 @@ OnMyCommandCM::LoadCommandsFromPlistFile(CFURLRef inPlistFileURL)
 	if(inPlistFileURL == NULL)
 		return;
 
-	SInt32 errorCode = 0;
-	CFObj<CFDataRef> theDataRef;
-	Boolean success = ::CFURLCreateDataAndPropertiesFromResource(
-										kCFAllocatorDefault,
-										inPlistFileURL,
-										&theDataRef,
-										NULL,
-										NULL,
-										&errorCode);
-
-	if(!success || (theDataRef == NULL))
-		return;
-
-    CFObj<CFPropertyListRef> thePlist( CFPropertyListCreateWithData(kCFAllocatorDefault,
-                                                                    theDataRef,
-                                                                    kCFPropertyListImmutable,
-                                                                    nullptr, nullptr) );
-
+    CFObj<CFPropertyListRef> thePlist( CreatePropertyList(inPlistFileURL, kCFPropertyListImmutable) );
 	LoadCommandsFromPlistRef(thePlist);
 }
 
@@ -6105,35 +6089,23 @@ OnMyCommandCM::CreateNibControlValue(SInt32 inSpecialWordID, const CommandDescri
 CFDictionaryRef
 ReadControlValuesFromPlist(CFStringRef inDialogUniqueID)
 {
-	CFDictionaryRef resultDict = NULL;
 	CFObj<CFStringRef> filePathStr( ::CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("/tmp/OMC/%@.plist"), inDialogUniqueID ) );
 	if(filePathStr == NULL)
 		return NULL;
 	
 	DEBUG_CFSTR( (CFStringRef)filePathStr );
 	
-	CFObj<CFURLRef> pathRef( ::CFURLCreateWithFileSystemPath(kCFAllocatorDefault, filePathStr, kCFURLPOSIXPathStyle, false) );
-	if(pathRef == NULL)
+	CFObj<CFURLRef> fileURL( ::CFURLCreateWithFileSystemPath(kCFAllocatorDefault, filePathStr, kCFURLPOSIXPathStyle, false) );
+	if(fileURL == NULL)
 		return NULL;
 	
-	SInt32 errorCode = 0;
-	CFObj<CFDataRef> theDataRef;
-	Boolean success = ::CFURLCreateDataAndPropertiesFromResource( kCFAllocatorDefault, pathRef,
-																&theDataRef, NULL, NULL, &errorCode);
+    CFObj<CFPropertyListRef> thePlist( CreatePropertyList(fileURL, kCFPropertyListImmutable) );
+    CFDictionaryRef resultDict = ACFType<CFDictionaryRef>::DynamicCast(thePlist);
+    if(resultDict != NULL)
+        thePlist.Detach();
 
-	if(success && (theDataRef != NULL))
-	{//file exists - read content	
-        CFObj<CFPropertyListRef> thePlist( CFPropertyListCreateWithData(kCFAllocatorDefault,
-                                                                        theDataRef,
-                                                                        kCFPropertyListImmutable,
-                                                                        nullptr, nullptr) );
-
-		resultDict = ACFType<CFDictionaryRef>::DynamicCast(thePlist);
-		if(resultDict != NULL)
-			thePlist.Detach();
-	}
-
-	/*Boolean isDeleted =*/ ::CFURLDestroyResource(pathRef, &errorCode);
+    SInt32 errorCode = 0;
+	/*Boolean isDeleted =*/ ::CFURLDestroyResource(fileURL, &errorCode);
 
 	return resultDict;
 }

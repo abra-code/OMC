@@ -4,6 +4,8 @@
 #include "CFObj.h"
 #include "AUniquePtr.h"
 #include "ABase64.h"
+#include "ACFPropertyList.h"
+
 
 typedef enum PlisterCommandID
 {
@@ -118,7 +120,6 @@ OSStatus ProcessGetLastItemContainerAndSpec(CFObjSpec *inSpec, CFTypeRef inCurrL
 
 OSStatus ReadPlistFile(const char *srcPlistPath, CFObj<CFPropertyListRef> &outProperties,
 						bool mutableContainers, CFURLRef *outPlistURL );
-CFPropertyListRef LoadPropertiesFromPlistFile(CFURLRef inPlistFileURL, bool inMutable);
 bool SavePropertiesToPlistFile(CFURLRef inPlistFileURL, CFPropertyListRef inProperties);
 
 CFObjSpec *CreatePropertySpecifier(const char *inPropertySpecifier);
@@ -230,7 +231,7 @@ int main (int argc, char * const argv[])
 
 	if(topCommand.IsPlistModified() && (result == 0) )//save only on success
 	{
-		bool success = SavePropertiesToPlistFile(topCommand.destPlistURL, topCommand.propertyList);
+        bool success = WritePropertyList(topCommand.propertyList, topCommand.destPlistURL, kCFPropertyListXMLFormat_v1_0);
 		if(!success)
 		{
 			std::cerr << "Plister error: could not save the result plist file." << std::endl;
@@ -1022,7 +1023,7 @@ ReadPlistFile(const char *plistPath, CFObj<CFPropertyListRef> &outProperties, bo
 	CFObj<CFStringRef> pathStr( ::CFStringCreateWithCString(kCFAllocatorDefault, plistPath, kCFStringEncodingUTF8) );
 	CFObj<CFURLRef> plistURL( ::CFURLCreateWithFileSystemPath(kCFAllocatorDefault, pathStr, kCFURLPOSIXPathStyle, false) );
 
-	outProperties.Adopt( LoadPropertiesFromPlistFile(plistURL, mutableContainers) );
+    outProperties.Adopt( CreatePropertyList(plistURL, mutableContainers ? kCFPropertyListMutableContainers : kCFPropertyListImmutable) );
 
 //signal error ourside if you wish
 //	if(outProperties == NULL)
@@ -1034,48 +1035,6 @@ ReadPlistFile(const char *plistPath, CFObj<CFPropertyListRef> &outProperties, bo
 	if(outPlistURL != NULL)
 		*outPlistURL = plistURL.Detach();
 	return noErr;
-}
-
-CFPropertyListRef
-LoadPropertiesFromPlistFile(CFURLRef inPlistFileURL, bool inMutable)
-{
-	if(inPlistFileURL == NULL)
-		return NULL;
-
-	CFObj<CFDataRef> theData;
-	SInt32 errorCode = 0;
-	Boolean success = ::CFURLCreateDataAndPropertiesFromResource(
-										kCFAllocatorDefault,
-										inPlistFileURL,
-										&theData,
-										NULL,
-										NULL,
-										&errorCode);
-
-	if( !success || (theData == NULL) )
-		return NULL;
-
-	return ::CFPropertyListCreateWithData (
-									kCFAllocatorDefault,
-									theData,
-									inMutable ? kCFPropertyListMutableContainers : kCFPropertyListImmutable,
-									nullptr, nullptr);
-}
-
-bool
-SavePropertiesToPlistFile(CFURLRef inPlistFileURL, CFPropertyListRef inProperties)
-{
-	if( (inPlistFileURL == NULL) || (inProperties == NULL) )
-		return false;
-
-	CFObj<CFDataRef> xmlData(CFPropertyListCreateData(kCFAllocatorDefault, inProperties, kCFPropertyListXMLFormat_v1_0, 0, nullptr));
-
-	if(xmlData == NULL)
-		return false;
-
-	//overwrites previous file content
-	SInt32 errorCode = 0;
-	return ::CFURLWriteDataAndPropertiesToResource( inPlistFileURL, xmlData, NULL, &errorCode);
 }
 
 PropertyType

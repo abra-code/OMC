@@ -2,6 +2,7 @@
 #include <CoreFoundation/CoreFoundation.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include "ACFPropertyList.h"
 
 static char sFilePath[1024];
 
@@ -111,8 +112,6 @@ int main (int argc, const char * argv[])
 	CFMutableDictionaryRef plistDict = NULL;
 	CFMutableDictionaryRef appendListItemsDict = NULL;
 
-	Boolean success = false;
-	SInt32 errorCode = 0;
 	Boolean hasLegacyLiveUpdateParam = false;
 	Boolean doAddListItems = false;
 
@@ -245,35 +244,18 @@ int main (int argc, const char * argv[])
 	
 	if(urlRef != NULL)
 	{
-		CFDataRef theDataRef = NULL;
-		success = CFURLCreateDataAndPropertiesFromResource( kCFAllocatorDefault, urlRef,
-																	&theDataRef, NULL, NULL, &errorCode);
-
-		if(success && (theDataRef != NULL))
-		{//file exists - read content
-			CFStringRef errorString = NULL;
-			CFPropertyListRef thePlist = CFPropertyListCreateWithData(
-											kCFAllocatorDefault,
-											theDataRef,
-                                        	kCFPropertyListMutableContainers,
-                                        	NULL, NULL);
-			CFRelease(theDataRef);
-			if(errorString != NULL)
-				CFRelease(errorString);
-			
-			if(thePlist != NULL)
-			{
-				if(CFDictionaryGetTypeID() == CFGetTypeID(thePlist) )
-				{
-					plistDict = (CFMutableDictionaryRef)thePlist;
-				}
-				else
-				{
-					CFRelease(thePlist);
-					thePlist = NULL;
-				}
-			}
-		}
+        CFPropertyListRef thePlist = CreatePropertyList(urlRef, kCFPropertyListMutableContainers);
+        if(thePlist != NULL)
+        {
+            if(CFDictionaryGetTypeID() == CFGetTypeID(thePlist) )
+            {
+                plistDict = (CFMutableDictionaryRef)thePlist;
+            }
+            else
+            {
+                CFRelease(thePlist);
+            }
+        }
 	}
 	
 	if(plistDict == NULL)
@@ -702,34 +684,24 @@ int main (int argc, const char * argv[])
 		CFRelease(valueStr);
 	}
 
+    if(urlRef != NULL)
+    {   //overwrites previous file content
+        bool success = WritePropertyList(plistDict, urlRef, kCFPropertyListBinaryFormat_v1_0);
+        if(!success)
+            fprintf(stderr, "An error ocurred when writing property list to %s\n", sFilePath);
+    }
+    else if(remotePort != NULL)
+    {
+        CFDataRef plistData = CFPropertyListCreateData(kCFAllocatorDefault, plistDict, kCFPropertyListBinaryFormat_v1_0, 0, NULL);
+        if(plistData != NULL)
+        {
+            result = CFMessagePortSendRequest(remotePort, 0/*msgid*/, plistData, 5/*send timeout*/, 0/*rcv timout*/, NULL/*kCFRunLoopDefaultMode*/, NULL/*replyData*/);
+            if(result != 0)
+                fprintf(stderr, "An error ocurred when sending request to dialog port: %d\n", result);
+            CFRelease(plistData);
+        }
+    }
 
-	success = false;
-	errorCode = 0;
-
-	CFDataRef xmlData = CFPropertyListCreateData(kCFAllocatorDefault, plistDict, kCFPropertyListBinaryFormat_v1_0, 0, NULL);
-	if(xmlData != NULL)
-	{
-		//overwrites previous file content
-		if(urlRef != NULL)
-		{
-			success = CFURLWriteDataAndPropertiesToResource(urlRef, xmlData, NULL, &errorCode);
-			if(!success)
-				fprintf(stderr, "An error ocurred when writing property list to %s\n", sFilePath);
-		}
-		else if(remotePort != NULL)
-		{
-			//CFDataRef replyData = NULL;
-			result = CFMessagePortSendRequest(remotePort, 0/*msgid*/, xmlData, 5/*send timeout*/, 0/*rcv timout*/, NULL/*kCFRunLoopDefaultMode*/, NULL/*replyData*/);		
-			//if(replyData != NULL)
-			//	CFRelease(replyData);
-			if(result != 0)
-				fprintf(stderr, "An error ocurred when sending request to dialog port: %d\n", result);
-		}
-		
-		CFRelease(xmlData);
-	}
-	
-	
 error_exit:
 
 	if(controlIDStr != NULL)

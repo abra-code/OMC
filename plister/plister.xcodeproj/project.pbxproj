@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1D9BCB8622CC9A2A00F4EAB6 /* ACFPropertyList.m in Sources */ = {isa = PBXBuildFile; fileRef = 1D9BCB8422CC9A2900F4EAB6 /* ACFPropertyList.m */; };
 		8DD76F650486A84900D96B5E /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; settings = {ATTRIBUTES = (); }; };
 		8DD76F6A0486A84900D96B5E /* plister.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = C6859E8B029090EE04C91782 /* plister.1 */; };
 		E20397CA0948328E0068714F /* ABase64.c in Sources */ = {isa = PBXBuildFile; fileRef = E20397C90948328E0068714F /* ABase64.c */; };
@@ -29,6 +30,8 @@
 /* Begin PBXFileReference section */
 		08FB7796FE84155DC02AAC07 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		1D3BB167229BECA800542933 /* AUniquePtr.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = AUniquePtr.h; path = ../Common/AUniquePtr.h; sourceTree = "<group>"; };
+		1D9BCB8422CC9A2900F4EAB6 /* ACFPropertyList.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = ACFPropertyList.m; path = ../Common/ACFPropertyList.m; sourceTree = "<group>"; };
+		1D9BCB8522CC9A2A00F4EAB6 /* ACFPropertyList.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ACFPropertyList.h; path = ../Common/ACFPropertyList.h; sourceTree = "<group>"; };
 		8DD76F6C0486A84900D96B5E /* plister */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = plister; sourceTree = BUILT_PRODUCTS_DIR; };
 		C6859E8B029090EE04C91782 /* plister.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = plister.1; sourceTree = "<group>"; };
 		E20397C90948328E0068714F /* ABase64.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = ABase64.c; path = ../b64/ABase64.c; sourceTree = SOURCE_ROOT; };
@@ -71,6 +74,8 @@
 				E20397C90948328E0068714F /* ABase64.c */,
 				E2EE798F0946DCCD00CD3EFF /* ABase64.h */,
 				E2AA0C380903482400EA94FD /* CFObj.h */,
+				1D9BCB8522CC9A2A00F4EAB6 /* ACFPropertyList.h */,
+				1D9BCB8422CC9A2900F4EAB6 /* ACFPropertyList.m */,
 				1D3BB167229BECA800542933 /* AUniquePtr.h */,
 			);
 			name = Source;
@@ -142,6 +147,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1D9BCB8622CC9A2A00F4EAB6 /* ACFPropertyList.m in Sources */,
 				8DD76F650486A84900D96B5E /* main.cpp in Sources */,
 				E20397CA0948328E0068714F /* ABase64.c in Sources */,
 			);
