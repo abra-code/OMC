@@ -24,10 +24,6 @@
 #include <unistd.h>
 #include <regex.h>
 
-#if 0
-	#include "FileURLDesc.h"
-#endif
-
 // OMCCocoaHelper was only useful for CM plugins executed in-proc
 // these days are long gone
 //#include "OMCCocoaHelperExterns.h"
@@ -46,6 +42,7 @@
 #include "OMCInputDialog.h"
 #include "SelectionIterator.h"
 #include "ACFPropertyList.h"
+#include "ACFURL.h"
 
 extern Boolean RunCocoaDialog(OnMyCommandCM *inPlugin);
 
@@ -6104,10 +6101,9 @@ ReadControlValuesFromPlist(CFStringRef inDialogUniqueID)
     if(resultDict != NULL)
         thePlist.Detach();
 
-    SInt32 errorCode = 0;
-	/*Boolean isDeleted =*/ ::CFURLDestroyResource(fileURL, &errorCode);
+    (void)DeleteFile(fileURL);
 
-	return resultDict;
+    return resultDict;
 }
 
 
