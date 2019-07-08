@@ -9,3 +9,39 @@ bool DeleteFile(CFURLRef fileURL)
         return (bool)[fileManager removeItemAtURL:(NSURL*)fileURL error:NULL];
     }
 }
+
+CFURLRef CopyPreferencesDirURL()
+{
+    @autoreleasepool
+    {
+        NSFileManager *fileManager = [NSFileManager defaultManager];
+        NSURL *userLibraryDirURL = [fileManager
+                                    URLForDirectory:NSLibraryDirectory
+                                    inDomain:NSUserDomainMask
+                                    appropriateForURL:NULL
+                                    create:YES
+                                    error:NULL];
+        if(userLibraryDirURL == NULL)
+            return NULL;
+        
+        NSURL *prefsURL = [userLibraryDirURL URLByAppendingPathComponent:@"Preferences" isDirectory:YES];
+        [prefsURL retain];
+        return (CFURLRef)prefsURL;
+    }
+}
+
+CFURLRef CopyApplicationSupportDirURL()
+{
+    @autoreleasepool
+    {
+        NSFileManager *fileManager = [NSFileManager defaultManager];
+        NSURL *userAppSupportDirURL = [fileManager
+                                    URLForDirectory:NSApplicationSupportDirectory
+                                    inDomain:NSUserDomainMask
+                                    appropriateForURL:NULL
+                                    create:YES
+                                    error:NULL];
+        [userAppSupportDirURL retain];
+        return (CFURLRef)userAppSupportDirURL;
+    }
+}

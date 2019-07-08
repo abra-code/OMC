@@ -11,6 +11,8 @@
 #include "DefaultExternBundle.h"
 #include "CMUtils.h"
 #include "CFObj.h"
+#include "ACFURL.h"
+
 
 extern "C"
 {
@@ -28,13 +30,7 @@ CreateDefaultExternBundleURL(CFArrayRef inCommandName)
 		
 	::CFStringAppend( bundleName, CFSTR(".omc") );
 
-	FSRef appSupportFolder;
-	memset(&appSupportFolder, 0, sizeof(FSRef) );
-	OSStatus err = ::FSFindFolder(kUserDomain, kApplicationSupportFolderType, kCreateFolder, &appSupportFolder);
-	if(err != noErr)
-		return NULL;
-
-	CFObj<CFURLRef> appSupportURL( ::CFURLCreateFromFSRef(kCFAllocatorDefault, &appSupportFolder) );
+	CFObj<CFURLRef> appSupportURL( CopyApplicationSupportDirURL() );
 	if(appSupportURL == NULL)
 		return NULL;
 

@@ -13,6 +13,7 @@
 #include "CMUtils.h"
 #include "StAEDesc.h"
 #include "MoreAppleEvents.h"
+#include "CFObj.h"
 
 //send simple event with direct param to Finder
 //if you need something more complicated, use the following code as a starting point and stick required descriptions
@@ -44,86 +45,8 @@ CMUtils::SendAEWithThreeObjToFinder( AEEventClass theAEEventClass, AEEventID the
 	return CMUtils::SendAEWithThreeObjToRunningApp( 'MACS', theAEEventClass, theAEEventID, keyOne, objOne, keyTwo, objTwo, keyThree, objThree, waitForReply );
 }
 
-#pragma mark -
-
-void
-CMUtils::PutFinderObjectToTrash(const AEDesc &directObjectDesc, Boolean waitForReply)
-{
-	CMUtils::SendAppleEventToFinder( kAEFinderSuite, kAESync, directObjectDesc, waitForReply );
-}
-
-void
-CMUtils::PutFinderObjectToTrash(const FSRef *inRef, Boolean waitForReply)
-{
-	if(inRef != NULL)
-	{
-		StAEDesc fileDesc;
-		OSErr err = CMUtils::CreateAliasDesc( inRef, fileDesc );
-		if(err == noErr)
-		{
-			CMUtils::PutFinderObjectToTrash(fileDesc, waitForReply);
-		}
-	}
-}
-
-
 
 #pragma mark -
-
-void
-CMUtils::UpdateFinderObject(const AEDesc &directObjectDesc, Boolean waitForReply)
-{
-	CMUtils::SendAppleEventToFinder( kAEFinderSuite, kAESync, directObjectDesc, waitForReply);
-}
-
-void
-CMUtils::UpdateFinderObject(const FSRef *inRef, Boolean waitForReply)
-{
-	if(inRef != NULL)
-	{
-		StAEDesc fileDesc;
-		OSErr err = CMUtils::CreateAliasDesc( inRef, fileDesc );
-		if(err == noErr)
-		{
-			CMUtils::UpdateFinderObject( fileDesc, waitForReply);
-		}
-	}
-}
-
-
-#pragma mark -
-
-void
-CMUtils::MoveFinderObjectToFolder(const AEDesc &directObjectDesc, const FSRef *inFolderRef, Boolean waitForReply)
-{
-	if( inFolderRef != NULL )
-	{
-		StAEDesc folderDesc;
-		OSErr err = CMUtils::CreateAliasDesc( inFolderRef, folderDesc );
-		if(err == noErr)
-		{
-			CMUtils::SendAEWithTwoObjToFinder( kAECoreSuite, kAEMove,
-													keyDirectObject, directObjectDesc,
-													keyAEDestination, folderDesc, waitForReply);
-		}
-	}
-}
-
-
-void
-CMUtils::MoveFinderObjectToFolder(const FSRef *inFileRef, const FSRef *inFolderRef, Boolean waitForReply)
-{
-	if( (inFileRef != NULL) && (inFolderRef != NULL) )
-	{
-		StAEDesc fileDesc;
-		OSErr err = CMUtils::CreateAliasDesc( inFileRef, fileDesc );
-		if(err == noErr)
-		{
-			CMUtils::MoveFinderObjectToFolder(fileDesc, inFolderRef, waitForReply);
-		}
-	}
-}
-
 
 OSStatus
 CMUtils::GetInsertionLocationAsAliasDesc(AEDesc &outAliasDesc, AEDesc &outFinderObj)
@@ -176,14 +99,14 @@ CMUtils::GetInsertionLocationAsAliasDesc(AEDesc &outAliasDesc, AEDesc &outFinder
 //call it when one item is in the list and only when running in Finder
 //if you know that selected item is a folder, pass false for doCheckIfFolder to prevent redundant checking
 
-Boolean
-CMUtils::IsClickInOpenFinderWindow(const AEDesc *inContext, Boolean doCheckIfFolder)
+bool
+CMUtils::IsClickInOpenFinderWindow(const AEDesc *inContext, Boolean doCheckIfFolder) noexcept
 {
 	TRACE_CSTR( "Enter CMUtils::IsClickInOpenFinderWindow\n" );
-	if(inContext == NULL)
+	if(inContext == nullptr)
 		return false;
 	
-	if( (inContext->descriptorType == typeNull) || (inContext->dataHandle == NULL) )
+	if( (inContext->descriptorType == typeNull) || (inContext->dataHandle == nullptr) )
 		return false;
 
 	long itemCount = 0;
@@ -203,49 +126,19 @@ CMUtils::IsClickInOpenFinderWindow(const AEDesc *inContext, Boolean doCheckIfFol
 		return false;
 	}
 
-	FSRef contextRef;
-	err = CMUtils::GetFSRef(oneObject, contextRef);
-	if(err != noErr)
+    CFObj<CFURLRef> contextURL = CMUtils::CopyURL(oneObject);
+	if(contextURL == nullptr)
 	{
-		TRACE_CSTR( "CMUtils::IsClickInOpenFinderWindow. CMUtils::GetFSRef returned error\n" );
+		TRACE_CSTR( "CMUtils::IsClickInOpenFinderWindow. CMUtils::CopyURL returned error\n" );
 		return false;
 	}
 
 	if(doCheckIfFolder)
 	{
 		TRACE_CSTR( "CMUtils::IsClickInOpenFinderWindow. Checking if folder selected\n" );
-		/*
-		//now check if it is a folder. only folders can be containers
-		FSCatalogInfo theInfo;
-		::BlockZero(&theInfo, sizeof(theInfo));
-		err = ::FSGetCatalogInfo( &contextRef, kFSCatInfoNodeFlags, &theInfo, NULL, NULL, NULL);
-		if ( err != noErr )
-			return false;
-		
-		if( (theInfo.nodeFlags & kFSNodeIsDirectoryMask) == 0 )
-			return false;
-		*/
-
-		//now check if it is a folder. only folders can be containers
-		//also check for packages - we treat bundles as files
-		LSItemInfoRecord itemInfo;
-		memset(&itemInfo, 0, sizeof(itemInfo));
-		LSRequestedInfo whichInfo = kLSRequestBasicFlagsOnly;
-		err = ::LSCopyItemInfoForRef( &contextRef, whichInfo, &itemInfo);
-		if( err == noErr )
-		{
-			if( (itemInfo.flags & kLSItemInfoIsContainer) == 0 )//not a container, we can safely assume the click is not in open folder
-			{
-				TRACE_CSTR( "CMUtils::IsClickInOpenFinderWindow. Folder not selected\n" );
-				return false;
-			}
-			//isPackage = ((itemInfo.flags & kLSItemInfoIsPackage) != 0);
-		}
-		else
-		{
-			TRACE_CSTR( "CMUtils::IsClickInOpenFinderWindow. LSCopyItemInfoForRef returned error\n" );
-			return false;
-		}
+        Boolean isDir = CFURLHasDirectoryPath(contextURL);
+        if(!isDir)
+            return false;
 	}
 
 	//if we are here it means that the clicked object is a folder
@@ -264,18 +157,18 @@ CMUtils::IsClickInOpenFinderWindow(const AEDesc *inContext, Boolean doCheckIfFol
 		return false;
 	}
 
-	FSRef insertionRef;
-	err = CMUtils::GetFSRef(insertionLocAlias, insertionRef);
+    CFObj<CFURLRef> insertionURL = CMUtils::CopyURL(insertionLocAlias);
 
-	if(err != noErr)
+	if(insertionURL == nullptr)
 	{
-		TRACE_CSTR( "CMUtils::IsClickInOpenFinderWindow. GetFSRef returned error on insertion location\n" );
+		TRACE_CSTR( "CMUtils::IsClickInOpenFinderWindow. CopyURL returned error on insertion location\n" );
 		return false;
 	}
 
-	Boolean refsEqual = (::FSCompareFSRefs(&contextRef, &insertionRef) == noErr);
-	
-	if(refsEqual)
+    CFObj<CFURLRef> absoluteContextURL = CFURLCopyAbsoluteURL(contextURL);
+    CFObj<CFURLRef> absoluteInsertionURL( CFURLCopyAbsoluteURL(insertionURL) );
+ 
+    if(CFEqual(absoluteContextURL, absoluteInsertionURL)  )
 	{
 		FourCharCode viewType = 0;
 		err = GetFinderWindowViewType(finderObjDesc, viewType);
@@ -294,13 +187,14 @@ CMUtils::IsClickInOpenFinderWindow(const AEDesc *inContext, Boolean doCheckIfFol
 		}
 		
 		TRACE_CSTR( "CMUtils::IsClickInOpenFinderWindow returns true\n" );
+        return true;
 	}
 	else
 	{
 		TRACE_CSTR( "CMUtils::IsClickInOpenFinderWindow selection and isertion file refs different\n" );
 	}
 
-	return refsEqual;
+	return false;
 }
 
 //types:

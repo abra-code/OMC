@@ -21,102 +21,6 @@ extern "C" UInt32 OMCGetCurrentVersion(void)
 	return CURRENT_OMC_VERSION;
 }
 
-
-//helper function to create AEContext from CoreFoundation object
-extern "C" OSStatus		OMCCreateAEContextFromCFContext( CFTypeRef inContext, AEDesc *outContextDesc );
-
-extern "C" OSStatus OMCCreateAEContextFromCFContext(CFTypeRef inContext, AEDesc *outDesc)
-{
-	OSStatus err = noErr;
-
-	if(outDesc == NULL)
-		return paramErr;
-
-	StAEDesc contextDesc;
-	if(inContext != NULL)
-	{
-		CFTypeID contextType = ::CFGetTypeID( inContext );
-		if( contextType == ACFType<CFStringRef>::GetTypeID() )//text
-		{
-			err = CMUtils::CreateUniTextDescFromCFString((CFStringRef)inContext, contextDesc);
-		}
-		else if( contextType == ACFType<CFArrayRef>::GetTypeID() ) //list of files
-		{
-			CFArrayRef fileArray = (CFArrayRef)inContext;
-			CFIndex fileCount = ::CFArrayGetCount(fileArray);
-			if(fileCount > 0)
-			{
-				err = ::AECreateList( NULL, 0, false, contextDesc );
-				if(err == noErr)
-				{
-					for(CFIndex i = 0; i < fileCount; i++)
-					{
-						CFTypeRef oneItemRef = ::CFArrayGetValueAtIndex(fileArray, i);
-						if(oneItemRef != NULL)
-						{
-							CFObj<CFURLRef> oneUrl;
-							contextType = ::CFGetTypeID( oneItemRef );
-
-							if( contextType == ACFType<CFStringRef>::GetTypeID() )//text
-							{
-								//somebody was lazy and gave us a path - we accept only POSIX paths
-								CFURLRef newURL = ::CFURLCreateWithFileSystemPath (
-														kCFAllocatorDefault,
-														(CFStringRef)oneItemRef,
-														kCFURLPOSIXPathStyle,
-														false);
-								if(newURL == NULL)
-									continue;//most likely incorrectly formed path, we skip it
-
-								oneUrl.Adopt(newURL, kCFObjDontRetain);//auto release
-
-								//fall through to URL case with the following params:
-								oneItemRef = (CFTypeRef)newURL;
-								contextType = ACFType<CFURLRef>::GetTypeID();
-							}
-
-							if( contextType == ACFType<CFURLRef>::GetTypeID() )
-							{
-								StAEDesc fileDesc;
-								err = CMUtils::CreateFSRefDesc( (CFURLRef)oneItemRef, fileDesc );
-								if(err == noErr)
-								{
-									err = ::AEPutDesc(	contextDesc, // the list
-														0, // put at the end of our list
-														fileDesc );
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-		else if( contextType == ACFType<CFURLRef>::GetTypeID() )
-		{//make a list even if single file. preferrable because Finder in 10.3 or higher does that
-			err = ::AECreateList( NULL, 0, false, contextDesc );
-			if(err == noErr)
-			{
-				StAEDesc fileDesc;
-				err = CMUtils::CreateFSRefDesc( (CFURLRef)inContext, fileDesc );
-				if(err == noErr)
-				{
-					err = ::AEPutDesc(	contextDesc, // the list
-										0, // put at the end of our list
-										fileDesc );
-				}
-			}
-		}
-	}
-
-	if(err == noErr)
-	{
-		*outDesc = contextDesc;
-		contextDesc.Detach();
-	}
-	
-	return err;
-}
-
 //inPlistRef can either be:
 //	1. A CFURLRef pointing to command description plist or .omc external bundle. If NULL, the default
 //		plist file is used:	~/Library/Preferences/com.abracode.OnMyCommandCMPrefs.plist 
@@ -144,10 +48,6 @@ extern "C" OSStatus OMCRunCommand(CFTypeRef inPlistRef, CFStringRef inCommandNam
 			err = omcPlugin->HandleSelection(NULL, kCMCommandStart+commandIndex);
 			omcPlugin->PostMenuCleanup();//currently doing nothing, just for completeness
 		}
-
-//		StAEDesc contextDesc;
-//		err = OMCCreateAEContextFromCFContext(inContext, contextDesc);
-//		err = OMCRunCommandAE(inPlistRef, inCommandNameOrID, contextDesc);
 	}
 	catch(...)
 	{
@@ -193,7 +93,7 @@ extern "C" OSStatus OMCRunCommandAE(CFTypeRef inPlistRef, CFStringRef inCommandN
 			{//try to coerce to see if it might be a single file ref
 			//make a list even if single file. preferrable because Finder in 10.3 or higher does that
 				StAEDesc coercedRef;
-				err = ::AECoerceDesc( inContext, typeFSRef, coercedRef );
+				err = ::AECoerceDesc( inContext, typeFileURL, coercedRef );
 				if(err == noErr)
 				{
 					err = ::AECreateList( NULL, 0, false, replacementContext );

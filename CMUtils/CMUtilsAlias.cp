@@ -17,8 +17,7 @@
 
 //ripped off MoreAEObjects.c
 
-OSErr
-CMUtils::CreateAliasDesc( const AliasHandle inAliasH, AEDesc *outAliasAEDesc )
+static OSErr CreateAliasDesc( const AliasHandle inAliasH, AEDesc *outAliasAEDesc )
 {
 	OSErr	err = noErr;
 	
@@ -32,8 +31,7 @@ CMUtils::CreateAliasDesc( const AliasHandle inAliasH, AEDesc *outAliasAEDesc )
 	return err;
 }
 
-OSErr
-CMUtils::CreateAliasDesc( const FSRef *inFSRef, AEDesc *outAliasAEDesc )
+static OSErr CreateAliasDesc( const FSRef *inFSRef, AEDesc *outAliasAEDesc )
 {
 	OSErr			err = noErr;
 	AliasHandle		aliasHandle;
@@ -47,7 +45,7 @@ CMUtils::CreateAliasDesc( const FSRef *inFSRef, AEDesc *outAliasAEDesc )
 
 	if( err == noErr )
 	{
-		err = CMUtils::CreateAliasDesc( aliasHandle, outAliasAEDesc );
+		err = CreateAliasDesc( aliasHandle, outAliasAEDesc );
 		::DisposeHandle( (Handle)aliasHandle );
 	}
 
@@ -61,7 +59,8 @@ CMUtils::CreateAliasDesc( const CFURLRef inURL, AEDesc *outAliasAEDesc )
 
 	FSRef fileRef;
 	if( ::CFURLGetFSRef(inURL, &fileRef) )
-		return CreateAliasDesc( &fileRef, outAliasAEDesc );
+        return ::
+        CreateAliasDesc( &fileRef, outAliasAEDesc );
 
 	return fnfErr;
 }

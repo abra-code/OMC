@@ -17,14 +17,14 @@
 
 
 // ---------------------------------------------------------------------------
-// FSRefProcessObjectList
+// ProcessObjectList
 // ---------------------------------------------------------------------------
 /*
 	generic file list processing loop
 	returns true if at least one item was processed sucessfully
 
 	caller must supply non-nil processing procedure of the prototype:
-	OSStatus (*FSRefHandlerProc)( FSRef *inRef, void *inData );
+    OSStatus (*CFURLHandlerProc)( CFURLRef inURLRef, void *ioData );
 
 in flags pass:	
 	kProcBreakOnFirst is a directive to break on first item processed successfully
@@ -36,7 +36,7 @@ on output you may receive flags:
 */
 
 Boolean
-CMUtils::ProcessObjectList( const AEDescList *fileList, UInt32 &ioFlags, FSRefHandlerProc inProcPtr, void *inProcData /*=NULL*/)
+CMUtils::ProcessObjectList( const AEDescList *fileList, UInt32 &ioFlags, CFURLHandlerProc inProcPtr, void *inProcData /*=NULL*/)
 {
 	Boolean outOK = false;
 	ioFlags &= ~kListOutFlagsMask;
@@ -45,7 +45,6 @@ CMUtils::ProcessObjectList( const AEDescList *fileList, UInt32 &ioFlags, FSRefHa
 		return false;
 
 	OSStatus err = noErr;
-	FSRef fileRef;
 	long listItemsCount = 0;
 
 	if( ::AECountItems(fileList, &listItemsCount) == noErr )
@@ -61,9 +60,10 @@ CMUtils::ProcessObjectList( const AEDescList *fileList, UInt32 &ioFlags, FSRefHa
 			err = ::AEGetNthDesc(fileList, i, typeWildCard, &theKeyword, file);
 			if (err == noErr)
 			{
-				if( GetFSRef(file, fileRef) == noErr )
+                CFObj<CFURLRef> oneURL = CopyURL(file);
+				if( oneURL != nullptr )
 				{
-					err = (*inProcPtr)( &fileRef, inProcData );
+					err = (*inProcPtr)( oneURL, inProcData );
 				
 					if(err == noErr)
 					{
@@ -139,8 +139,8 @@ class FileNameAndAEDesc
 {
 public:
 	//takes ownership of name and AEDesc
-	FileNameAndAEDesc(CFStringRef inName, AEDesc &inFileDesc)
-		: name(inName, kCFObjDontRetain), fileDesc(inFileDesc)
+	FileNameAndAEDesc(CFObj<CFStringRef> &inName, StAEDesc &inFileDesc)
+		: name(inName.Detach(), kCFObjDontRetain), fileDesc(inFileDesc.Detach())
 	{
 	}
 
@@ -155,7 +155,6 @@ CMUtils::CollectObjectNames( const AEDescList *fileList)
 	if( fileList == NULL )
 		return NULL;
 
-	FSRef fileRef;
 	long listItemsCount = 0;
 	OSStatus err = ::AECountItems(fileList, &listItemsCount);
 	if( (listItemsCount == 0) || (err != noErr) )
@@ -165,8 +164,6 @@ CMUtils::CollectObjectNames( const AEDescList *fileList)
 	if(outArray == NULL)
 		return NULL;
 
-	FSCatalogInfo theInfo;
-
 	for (int i = 1; i <= listItemsCount; i++)
 	{
 		// Get ith item in the object list
@@ -175,20 +172,12 @@ CMUtils::CollectObjectNames( const AEDescList *fileList)
 		err = ::AEGetNthDesc(fileList, i, typeWildCard, &theKeyword, &fileDesc);
 		if (err == noErr)
 		{
-			if( GetFSRef(fileDesc, fileRef) == noErr )
+            CFObj<CFURLRef> fileURL = CopyURL(fileDesc);
+			if(fileURL != nullptr)
 			{
-				memset(&theInfo, 0, sizeof(theInfo));
-
-				FSCatalogInfo theFileInfo;
-				HFSUniStr255 uniFileName;
-				err = ::FSGetCatalogInfo( &fileRef, kFSCatInfoNodeFlags, &theFileInfo, &uniFileName, NULL, NULL);
-				if ( err == noErr )
-				{//it is a file or folder. we can safely proceed
-					CFStringRef fileName = ::CFStringCreateWithCharacters( kCFAllocatorDefault, uniFileName.unicode, uniFileName.length );
-					FileNameAndAEDesc *oneFileItem = new FileNameAndAEDesc(fileName, fileDesc);//take ownership of filename and fileDesc
-					fileDesc.Detach();//FileNameAndAEDesc takes ownership of the fileDesc so prevent deleting it by our owner
-					::CFArrayAppendValue(outArray, oneFileItem);
-				}
+                CFObj<CFStringRef> fileName = ::CFURLCopyLastPathComponent(fileURL);
+                FileNameAndAEDesc *oneFileItem = new FileNameAndAEDesc(fileName, fileDesc);//take ownership of filename and fileDesc
+                ::CFArrayAppendValue(outArray, oneFileItem);
 			}
 		}
 	}
@@ -229,7 +218,7 @@ CMUtils::AESortFileList(const AEDescList *inFileList, AEDescList *outSortedList,
 		return noErr;
 	}
 	
-	CFObj<CFMutableArrayRef> objectsArray( CollectObjectNames( inFileList ) );//smart ptr will delte the array but indivdual items must be released in a loop before that
+	CFObj<CFMutableArrayRef> objectsArray( CollectObjectNames( inFileList ) );//smart ptr will delete the array but indivdual items must be released in a loop before that
 	if(objectsArray == NULL)
 		return -1;
 	

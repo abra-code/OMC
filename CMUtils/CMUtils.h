@@ -20,7 +20,6 @@
 
 #pragma export off
 
-typedef OSStatus (*FSRefHandlerProc)( const FSRef *inRef, void *ioData );
 typedef OSStatus (*CFURLHandlerProc)( CFURLRef inURLRef, void *ioData );
 
 enum
@@ -79,24 +78,16 @@ public:
 	static SInt32		FindSubmenu(AEDescList* ioCommands, CFStringRef inName);
 //	Boolean				IsSubmenuWithName(const AERecord *inMenuItemRec, CFStringRef inSubmenuName);
 
-	static Boolean		ProcessObjectList( const AEDescList *fileList, UInt32 &ioFlags, FSRefHandlerProc inProcPtr, void *inProcData = NULL );
+	static Boolean		ProcessObjectList( const AEDescList *fileList, UInt32 &ioFlags, CFURLHandlerProc inProcPtr, void *inProcData = NULL );
 
 	static Boolean		ProcessObjectList( CFArrayRef fileList, UInt32 &ioFlags, CFURLHandlerProc inProcPtr, void *inProcData = NULL );
 
 	static CFMutableArrayRef	CollectObjectNames( const AEDescList *fileList);
 	static OSStatus				AESortFileList(const AEDescList *inFileList, AEDescList *outSortedList, CFOptionFlags compareOptions);
 
-	static OSErr		GetFSRef(const AEDesc &inDesc, FSRef &outRef);
+    static CFURLRef     CopyURL(const AEDesc &inDesc);
 
-	static OSErr		CreateFSRefDesc( const CFURLRef inURL, AEDesc &outAEDesc );
-
-	static OSStatus		GetPStringName(const FSRef *inRef, Str255 outName);
-	static CFStringRef	CreateCFStringNameFromFSRef(const FSRef *inRef);
-	static OSErr		CreateAliasDesc( const AliasHandle inAliasH, AEDesc *outAliasAEDesc );
-    static OSErr		CreateAliasDesc( const FSRef *inFSRef, AEDesc *outAliasAEDesc );
 	static OSErr		CreateAliasDesc( const CFURLRef inURL, AEDesc *outAliasAEDesc );
-
-	static OSErr		IsFolder(const FSRef *inRef, Boolean &outIsFolder);
 
 	static CFBundleRef	CFBundleCreate(CFURLRef inBundleURL);
 
@@ -148,22 +139,9 @@ public:
 //	static OSErr		SendServicesQueryToSelf();
 	static CFStringRef	CopyHostName();
 
-
-	static void			PutFinderObjectToTrash(const AEDesc &directObjectDesc, Boolean waitForReply);
-	static void			PutFinderObjectToTrash(const FSRef *inRef, Boolean waitForReply);
-
-	static void			UpdateFinderObject(const AEDesc &directObjectDesc, Boolean waitForReply);
-	static void			UpdateFinderObject(const FSRef *inRef, Boolean waitForReply);
-
-	static void			MoveFinderObjectToFolder(const AEDesc &directObjectDesc, const FSRef *inFolderRef, Boolean waitForReply);
-
-	static void			MoveFinderObjectToFolder(const FSRef *inFileRef, const FSRef *inFolderRef, Boolean waitForReply);
-
 	static OSStatus		GetInsertionLocationAsAliasDesc(AEDesc &outAliasDesc, AEDesc &outFinderObj);
-	static Boolean		IsClickInOpenFinderWindow(const AEDesc *inContext, Boolean doCheckIfFolder);
+	static bool         IsClickInOpenFinderWindow(const AEDesc *inContext, Boolean doCheckIfFolder) noexcept;
 	static OSErr		GetFinderWindowViewType(AEDesc &finderObjDesc, FourCharCode &outViewType);
-
-	static OSErr		DeleteObject(const FSRef *inRef);
 
 	static Boolean		AEDescHasTextData(const AEDesc &inDesc);
 	static CFStringRef	CreateCFStringFromAEDesc(const AEDesc &inDesc, long inReplaceOption);

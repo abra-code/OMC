@@ -43,6 +43,7 @@
 #include "SelectionIterator.h"
 #include "ACFPropertyList.h"
 #include "ACFURL.h"
+#include "OMCHelpers.h"
 
 extern Boolean RunCocoaDialog(OnMyCommandCM *inPlugin);
 
@@ -365,20 +366,15 @@ OnMyCommandCM::Init(CFBundleRef inBundle)
 //	printf("OMC: Current system version = 0x%.8X, integer = %d\n", (unsigned int)mSysVersion, (int)mSysVersion);
 //#endif
 
-	ProcessSerialNumber psn = { 0, kCurrentProcess };
-	FSRef myRef;
-	OSStatus err = ::GetProcessBundleLocation(&psn, &myRef);
-	if(err == noErr)
-		mMyHostBundlePath.Adopt( ::CFURLCreateFromFSRef(kCFAllocatorDefault, &myRef), kCFObjDontRetain );
-
-	mMyHostName.Adopt( CMUtils::CopyHostName(), kCFObjDontRetain );
+    mMyHostBundleURL.Adopt(CFBundleCopyBundleURL(CFBundleGetMainBundle()), kCFObjDontRetain);
+    mMyHostAppName.Adopt(CopyHostAppName(), kCFObjDontRetain);
 
 #if  0 //_DEBUG_
 	CFShow((CFURLRef)mMyHostBundlePath);
-	CFShow((CFStringRef)mMyHostName);
+	CFShow((CFStringRef)mHostAppBundleID);
 #endif
 
-	return err;
+	return noErr;
 }
 
 //classic API for CM
@@ -518,37 +514,32 @@ OnMyCommandCM::CommonContextCheck( const AEDesc *inContext, CFTypeRef inCFContex
 	Boolean runningInEditorApp = false;
 	
 	Boolean frontProcessIsFinder = false;
-	CFObj<CFStringRef> frontProcessName;
 
-	if(mMyHostName != NULL)
+    CFStringRef hostAppBundleID = CFBundleGetIdentifier(CFBundleGetMainBundle());
+	if(hostAppBundleID != NULL)
 	{
 #if IN_PROC_CM //64-bit apps no longer load CM plug-ins in-proc
-		if( kCFCompareEqualTo == ::CFStringCompare( mMyHostName, CFSTR("Finder"), 0 ) )
+		if( kCFCompareEqualTo == ::CFStringCompare( mHostAppBundleID, CFSTR("com.apple.finder"), 0 ) )
 		{
 			TRACE_CSTR( "OnMyCommandCM->CMPluginExamineContext. running in Finder\n" );
 		}
 		else
 #endif
-        if( (kCFCompareEqualTo == ::CFStringCompare( mMyHostName, CFSTR("Shortcuts"), 0)) ||
-				 (kCFCompareEqualTo == ::CFStringCompare( mMyHostName, CFSTR("Shortcuts32"), 0)) ||
-				 (kCFCompareEqualTo == ::CFStringCompare( mMyHostName, CFSTR("OMCEdit"), 0)) )
+        if( (kCFCompareEqualTo == ::CFStringCompare( hostAppBundleID, CFSTR("com.abracode.Shortcuts"), 0)) ||
+				 (kCFCompareEqualTo == ::CFStringCompare( hostAppBundleID, CFSTR("de.MacDisk.Knut.OMCEdit"), 0)) )
 		{
 			runningInEditorApp = true;
 		}
-		else if( (kCFCompareEqualTo == ::CFStringCompare( mMyHostName, CFSTR("ShortcutObserver"), 0 )) ||
-				 (kCFCompareEqualTo == ::CFStringCompare( mMyHostName, CFSTR("ShortcutObserver32"), 0 )) )
+		else if(kCFCompareEqualTo == ::CFStringCompare( hostAppBundleID, CFSTR("com.abracode.ShortcutObserver"), 0 ))
 		{
 			mRunningInShortcutsObserver = true;
-			err = ::GetFrontProcess(&mFrontProcess);
-			if(err == noErr)
-			{
-				err  = ::CopyProcessName (&mFrontProcess, &frontProcessName);
-				if(frontProcessName != NULL)
-				{
-					if( kCFCompareEqualTo == ::CFStringCompare( frontProcessName, CFSTR("Finder"), 0 ) )
-						frontProcessIsFinder = true;
-				}
-			}
+            
+            CFObj<CFStringRef> frontProcessBundleID = CopyFrontAppBundleIdentifier();
+            if(frontProcessBundleID != nullptr)
+            {
+                if( kCFCompareEqualTo == ::CFStringCompare( frontProcessBundleID, CFSTR("com.apple.finder"), 0 ) )
+                    frontProcessIsFinder = true;
+            }
 		}
 	}
 	
@@ -604,12 +595,12 @@ OnMyCommandCM::CommonContextCheck( const AEDesc *inContext, CFTypeRef inCFContex
 		if( mContextFiles != NULL )
 			anythingSelected = CMUtils::ProcessObjectList( mContextFiles, theFlags, CFURLCheckFileOrFolder, this);
 		else if(inContext != NULL)
-			anythingSelected = CMUtils::ProcessObjectList( inContext, theFlags, FSRefCheckFileOrFolder, this );
+			anythingSelected = CMUtils::ProcessObjectList( inContext, theFlags, CFURLCheckFileOrFolder, this );
 
 	}
 
 //update total count
-    //currObjectIndex is incremented in FSRefCheckFileOrFolder for each valid object
+    //currObjectIndex is incremented in CFURLCheckFileOrFolder for each valid object
     mObjectList.resize(mCurrObjectIndex);
 	mCurrObjectIndex = 0;
 
@@ -627,52 +618,24 @@ OnMyCommandCM::CommonContextCheck( const AEDesc *inContext, CFTypeRef inCFContex
 
 	if(	anythingSelected && (mSysVersion >= 100300) && ((theFlags & kListOutMultipleObjects) == 0) && isFolder &&
 		(mRunningInShortcutsObserver && frontProcessIsFinder) )
-	{//single folder selected in Finder in 10.3 - check what it is
+	{//single folder selected in Finder in maxcOS 10.3 or higher - check what it is
 		mIsOpenFolder = CMUtils::IsClickInOpenFinderWindow(inContext, false);
 		anythingSelected = ! mIsOpenFolder;
 	}
-	else if( !anythingSelected )
-	{//not a list of objects - maybe an open window or desktop (pre-10.3 behavior)
-		//check what was clicked
-		FSRef folderRef;
-		err = fnfErr;//anything to mark that there is no file
-		if( (inContext != NULL) && (mIsNullContext == false) )
-			err = CMUtils::GetFSRef( *inContext, folderRef );
-
-		if(err == noErr)
-		{
-			DeleteObjectList();
-            mObjectList.resize(1);
-			memset(mObjectList.data(), 0, sizeof(OneObjProperties));
-			
-			if(mCMPluginMode)
-			{
-				err = FSRefCheckFileOrFolder( &folderRef, this );
-				if(err == noErr)
-				{
-					isFolder = false;
-					err = CMUtils::IsFolder( &folderRef, isFolder);
-					if( (err == noErr) && isFolder )
-					{
-						mIsOpenFolder = true;
-						TRACE_CSTR( "Open folder clicked\n" );
-					}
-				}
-			}
-		}
-		else if( !mIsTextContext )
-		{//maybe a selected text?
+	else if( !anythingSelected && !mIsTextContext )
+	{//not a list of objects, maybe a selected text?
 #if OLD_CODE_USED_IN_INPROC_CM_PLUGINS
-			if( mCMPluginMode )
-				mIsTextContext = (Boolean)cocoaAppHasStringSelection();
+        if( mCMPluginMode )
+            mIsTextContext = (Boolean)cocoaAppHasStringSelection();
 #endif
 
-			if( (inContext != NULL) && !mIsTextContext && !mIsNullContext )
-				mIsTextContext = CMUtils::AEDescHasTextData(*inContext);
-		}
+        if( (inContext != nullptr) && !mIsNullContext )
+            mIsTextContext = CMUtils::AEDescHasTextData(*inContext);
 	}
 
 	err = noErr;
+
+    CFObj<CFStringRef> frontProcessName = CopyFrontAppName();
 
 	//menu population requested
 	if(outCommandPairs != NULL)
@@ -701,7 +664,7 @@ OnMyCommandCM::ExamineDropletFileContext(AEDescList *fileList)
 	Boolean anythingToDo = false;
 	UInt32 theFlags = kListClear;
 
-	mCurrObjectIndex = 0;//FSRefCheckFileOrFolder increments this for each valid object
+	mCurrObjectIndex = 0;//CFURLCheckFileOrFolder increments this for each valid object
 
 	if(fileList == NULL)
 		return false;
@@ -719,7 +682,7 @@ OnMyCommandCM::ExamineDropletFileContext(AEDescList *fileList)
 			}
 		}
 
-		anythingToDo = CMUtils::ProcessObjectList( fileList, theFlags, OnMyCommandCM::FSRefCheckFileOrFolder, this );
+		anythingToDo = CMUtils::ProcessObjectList( fileList, theFlags, OnMyCommandCM::CFURLCheckFileOrFolder, this );
 	}
 
 //update total count
@@ -1185,8 +1148,8 @@ OnMyCommandCM::GetCFContext()
 			{	
 				for(size_t i = 0; i < mObjectList.size(); i++)
 				{
-					CFObj<CFURLRef> urlRef( ::CFURLCreateFromFSRef(kCFAllocatorDefault, &(mObjectList[i].mRef)) );
-					::CFArrayAppendValue( mContextFiles, (CFURLRef)urlRef );
+					if(mObjectList[i].mURLRef != nullptr)
+                        ::CFArrayAppendValue( mContextFiles, mObjectList[i].mURLRef );
 				}
 			}
 		}
@@ -1436,67 +1399,10 @@ OnMyCommandCM::FindCommandIndex( CFStringRef inNameOrId )
 
 #pragma mark -
 
-//static
-OSStatus
-OnMyCommandCM::FSRefCheckFileOrFolder(const FSRef *inRef, void *ioData)
-{
-	if( (inRef == NULL) || (ioData == NULL) )
-		return paramErr;
-
-#if (_TRACE_ == 1)
-	{
-		TRACE_CSTR("OnMyCommandCM::FSRefCheckFileOrFolder: One file: \n");
-		CFObj<CFURLRef> dbgURL( ::CFURLCreateFromFSRef( kCFAllocatorDefault, inRef) );
-		CFObj<CFStringRef> dbgPath( ::CFURLCopyFileSystemPath( dbgURL, kCFURLPOSIXPathStyle) );
-		TRACE_CFSTR( (CFStringRef)dbgPath );
-	}
-#endif //_TRACE_
-
-	OnMyCommandCM *myData = (OnMyCommandCM *)ioData;
-
-	if(myData->mObjectList.size() == 0)
-		return paramErr;
-
-//we are interested in real files or folders
-//sometimes we get FSRef not valid (InternetExplorer)
-	FSCatalogInfo theInfo;
-	memset(&theInfo, 0, sizeof(theInfo));
-	OSErr err = ::FSGetCatalogInfo(inRef, kFSCatInfoNodeFlags, &theInfo, NULL, NULL, NULL);
-	if ( err == noErr )
-	{//it is a file or folder. we can safely proceed
-		LSItemInfoRecord itemInfo;
-		memset(&itemInfo, 0, sizeof(itemInfo));
-		LSRequestedInfo whichInfo = kLSRequestExtension | kLSRequestTypeCreator | kLSRequestBasicFlagsOnly | kLSRequestExtensionFlagsOnly;
-		err = ::LSCopyItemInfoForRef( inRef, whichInfo, &itemInfo);
-		if( err == noErr )
-		{
-			if( myData->mCurrObjectIndex < myData->mObjectList.size() )
-			{
-				OneObjProperties& objProperties = myData->mObjectList[myData->mCurrObjectIndex];
-				
-				objProperties.mRef = *inRef;
-				objProperties.mExtension  = itemInfo.extension;
-				objProperties.mType = itemInfo.filetype;
-				objProperties.mFlags = itemInfo.flags;
-				objProperties.mRefreshPath = NULL;
-				
-				myData->mCurrObjectIndex++; //client will use thins information know the exact number of valid items
-			}
-			else if(itemInfo.extension != NULL)
-			{
-				::CFRelease(itemInfo.extension);
-			}
-		}
-	}
-	
-	return err;
-}
-
-//static
 OSStatus
 OnMyCommandCM::CFURLCheckFileOrFolder(CFURLRef inURLRef, void *ioData)
 {
-	if( (inURLRef == NULL) || (ioData == NULL) )
+	if( (inURLRef == nullptr) || (ioData == nullptr) )
 		return paramErr;
 
 	OnMyCommandCM *myData = (OnMyCommandCM *)ioData;
@@ -1504,18 +1410,42 @@ OnMyCommandCM::CFURLCheckFileOrFolder(CFURLRef inURLRef, void *ioData)
 	if(myData->mObjectList.size() == 0)
 		return paramErr;
 
-	FSRef oneRef;
-	Boolean isOK = ::CFURLGetFSRef(inURLRef, &oneRef);
-	if(isOK && (myData->mCurrObjectIndex < myData->mObjectList.size()) )
+    if(myData->mCurrObjectIndex < myData->mObjectList.size())
 	{
 		OneObjProperties& objProperties = myData->mObjectList[myData->mCurrObjectIndex];
-		if(objProperties.mURLRef != nullptr)
+        
+        if(inURLRef != nullptr)
+           ::CFRetain(inURLRef);
+        if(objProperties.mURLRef != nullptr)
 			CFRelease(objProperties.mURLRef);
 		objProperties.mURLRef = inURLRef;
-		::CFRetain(objProperties.mURLRef);
-		
-		return FSRefCheckFileOrFolder(&oneRef, ioData);
-	}
+
+        //TODO: write replacement for this LS API using CFURLRef/NSURL
+        LSItemInfoRecord itemInfo;
+        memset(&itemInfo, 0, sizeof(itemInfo));
+        LSRequestedInfo whichInfo = kLSRequestExtension | kLSRequestTypeCreator | kLSRequestBasicFlagsOnly | kLSRequestExtensionFlagsOnly;
+        OSErr err = ::LSCopyItemInfoForURL( inURLRef, whichInfo, &itemInfo);
+        if( err == noErr )
+        {
+            if( myData->mCurrObjectIndex < myData->mObjectList.size() )
+            {
+                OneObjProperties& objProperties = myData->mObjectList[myData->mCurrObjectIndex];
+                
+                objProperties.mExtension  = itemInfo.extension;
+                objProperties.mType = itemInfo.filetype;
+                objProperties.mFlags = itemInfo.flags;
+                objProperties.mRefreshPath = NULL;
+                
+                myData->mCurrObjectIndex++; //client will use thins information know the exact number of valid items
+            }
+            else if(itemInfo.extension != nullptr)
+            {
+                ::CFRelease(itemInfo.extension);
+            }
+        }
+
+    
+    }
 	return fnfErr;
 }
 
@@ -2654,7 +2584,7 @@ OnMyCommandCM::PopulateItemsMenu( const AEDesc *inContext, AEDescList* ioRootMen
 																CFSTR("Private"), mBundleRef, "") );
 	CFStringRef rootMenuName = CFSTR("/");
 
-	CFStringRef currAppName = mMyHostName;
+    CFStringRef currAppName = mMyHostAppName;
 	bool skipFinderWindowCheck = false;
 	if( runningInSpecialApp )
 	{
@@ -2999,7 +2929,7 @@ OnMyCommandCM::IsCommandEnabled(SInt32 inCmdIndex, const AEDesc *inContext, bool
 	if( (mCommandList == NULL) || (inCmdIndex < 0) || (inCmdIndex >= mCommandCount) )
 		return false;
 
-	CFStringRef currAppName = mMyHostName;
+    CFStringRef currAppName = mMyHostAppName;
 	bool skipFinderWindowCheck = false;
 	if( runningInSpecialApp )
 	{
@@ -3294,13 +3224,7 @@ GetSpecialEnvironWordID(CFStringRef inStr)
 CFURLRef
 CopyOMCPrefsURL()
 {
-	FSRef prefsFolder;
-	memset(&prefsFolder, 0, sizeof(FSRef) );
-	OSStatus err = ::FSFindFolder(kUserDomain, kPreferencesFolderType, kCreateFolder, &prefsFolder);
-	if(err != noErr)
-		return NULL;
-	
-	CFObj<CFURLRef> prefsFolderURL( ::CFURLCreateFromFSRef(kCFAllocatorDefault, &prefsFolder) );
+	CFObj<CFURLRef> prefsFolderURL( CopyPreferencesDirURL() );
 	if(prefsFolderURL == NULL)
 		return NULL;
 	
@@ -4185,111 +4109,6 @@ WrapWithSingleQuotesForShell(CFMutableStringRef inStrRef)
 		::CFStringAppend( inStrRef, CFSTR("'") );//at the end
 }
 
-//replaces \r, \n, \t, \\ with real values
-void
-ReplaceWhitespaceEscapesWithCharacters(CFMutableStringRef inStrRef)
-{
-	if(inStrRef == NULL)
-		return;
-
-  	CFIndex idx = 0;
-	CFIndex	charCount = ::CFStringGetLength(inStrRef);
-	if(charCount < 2)//0 or 1 characters cannot be a pair of escapers
-		return;
-
-  	UniChar currChar = ::CFStringGetCharacterAtIndex( inStrRef, 0 );
-	UniChar nextChar = 0;
-	while(idx < charCount )
-	{
-		//going backwards we get 2 characters at a time to looks for \r \n \t \\ pairs
-		if( (idx+1) < charCount)
-			nextChar = ::CFStringGetCharacterAtIndex( inStrRef, idx+1 );
-			 
- 		if( (currChar == '\\') && 
-			((nextChar == 'r') || (nextChar == 'n') || (nextChar == 't') || (nextChar == '\\') ) )
- 		{
-			CFStringRef replacementString = NULL;
-			switch(nextChar)
-			{
-				case 'r':
-					replacementString = CFSTR("\r");
-				break;
-				
-				case 'n':
-					replacementString = CFSTR("\n");
-				break;
-				
-				case 't':
-					replacementString = CFSTR("\t");
-				break;
-				
-				case '\\':
-					replacementString = CFSTR("\\");
-				break;
-			}
-			
-			assert(replacementString != NULL);
-			CFStringReplace(inStrRef, CFRangeMake(idx, 2), replacementString);
-			charCount--;//the string is now shorter
-			nextChar = 0; //we swallowed the next char
-
-			if( (idx+1) < charCount )
-			{
-				//replacement disturbed the loop by changing 2 characters into 1,
-				//prepare the next loop iteration
-				//we fetch new nextChar after the replaced range
-				//and it will be assigned to currChar right below for new iteration
-				nextChar = ::CFStringGetCharacterAtIndex( inStrRef, idx+1 );
-			}
-		}
-
-		idx++;
-		currChar = nextChar;
-		nextChar = 0;
-	}
-}
-
-void
-ReplaceWhitespaceCharactersWithEscapes(CFMutableStringRef inStrRef)
-{
-	if(inStrRef == NULL)
-		return;
-
-  	CFIndex	idx = ::CFStringGetLength(inStrRef) - 1;
-  	UniChar currChar = 0;
-	while(idx >= 0)
-	{
- 		currChar = ::CFStringGetCharacterAtIndex( inStrRef, idx );
- 		if( (currChar == '\r') || (currChar == '\n') || (currChar == '\t') || (currChar == '\\') )
- 		{
-			CFStringRef replacementString = NULL;
-			switch(currChar)
-			{
-				case '\r':
-					replacementString = CFSTR("\\r");
-				break;
-				
-				case '\n':
-					replacementString = CFSTR("\\n");
-				break;
-				
-				case '\t':
-					replacementString = CFSTR("\\t");
-				break;
-				
-				case '\\':
-					replacementString = CFSTR("\\\\");
-				break;
-			}
-			
-			assert(replacementString != NULL);
-			CFStringReplace(inStrRef, CFRangeMake(idx, 1), replacementString);
-		}
-		idx--;
-	}
-
-}
-
 CFMutableStringRef
 OnMyCommandCM::CreateCommandStringWithObjects(CFArrayRef inFragments, UInt16 escSpecialCharsMode)
 {
@@ -4570,7 +4389,7 @@ OnMyCommandCM::AppendTextToCommand(CFMutableStringRef inCommandRef, CFStringRef 
 		
 		case OBJ_DISPLAY_NAME:
 			newStrRef = CreateStringFromListOrSingleObject( inObjList, inObjCount, inCurrIndex,
-											CreateObjDisplayName, NULL,
+											CreateObjDisplayName, nullptr,
 											inMultiSeparator, inMultiPrefix, inMultiSuffix,
 											escSpecialCharsMode );
 		break;
@@ -4740,7 +4559,7 @@ OnMyCommandCM::AppendTextToCommand(CFMutableStringRef inCommandRef, CFStringRef 
 		break;
 	
 		case MY_HOST_BUNDLE_PATH:
-			newStrRef = CreatePathFromCFURL(mMyHostBundlePath, escSpecialCharsMode);
+			newStrRef = CreatePathFromCFURL(mMyHostBundleURL, escSpecialCharsMode);
 		break;
 		
 		case MY_EXTERNAL_BUNDLE_PATH:
@@ -5096,7 +4915,7 @@ OnMyCommandCM::PopulateEnvironList(CFMutableDictionaryRef ioEnvironList,
 			break;
 
 			case MY_HOST_BUNDLE_PATH:
-				newStrRef = CreatePathFromCFURL(mMyHostBundlePath, kEscapeNone);
+				newStrRef = CreatePathFromCFURL(mMyHostBundleURL, kEscapeNone);
 			break;
 			
 			case MY_EXTERNAL_BUNDLE_PATH:
@@ -5317,142 +5136,99 @@ OnMyCommandCM::CreateTextContext(const CommandDescription &currCommand, const AE
 #pragma mark -
 
 CFStringRef
-CreateObjPath(OneObjProperties *inObj, void *)
+CreateObjPath(OneObjProperties *inObj, void *) noexcept
 {
-	if(inObj == NULL)
-		return NULL;
-
-	if(inObj->mURLRef == NULL)
-		inObj->mURLRef = ::CFURLCreateFromFSRef( kCFAllocatorDefault, &(inObj->mRef) );
-
-	if(inObj->mURLRef != NULL)
+	if((inObj != nullptr) && (inObj->mURLRef != nullptr))
  		return ::CFURLCopyFileSystemPath(inObj->mURLRef, kCFURLPOSIXPathStyle);
 
- 	return NULL;
+ 	return nullptr;
 }
 
 CFStringRef
-CreateObjPathNoExtension(OneObjProperties *inObj, void *)
+CreateObjPathNoExtension(OneObjProperties *inObj, void *) noexcept
 {
-	if(inObj == NULL)
-		return NULL;
-
-	if(inObj->mURLRef == NULL)
-		inObj->mURLRef = ::CFURLCreateFromFSRef( kCFAllocatorDefault, &(inObj->mRef) );
-
-	if(inObj->mURLRef != NULL)
+	if((inObj != nullptr) && (inObj->mURLRef != nullptr))
   	{
 		CFObj<CFURLRef> newURL( ::CFURLCreateCopyDeletingPathExtension( kCFAllocatorDefault, inObj->mURLRef ) );
-		if(newURL != NULL)
+		if(newURL != nullptr)
  			return ::CFURLCopyFileSystemPath(newURL, kCFURLPOSIXPathStyle);
 	}
-	return NULL;
+	return nullptr;
 }
 
 
 CFStringRef
-CreateParentPath(OneObjProperties *inObj, void *)
+CreateParentPath(OneObjProperties *inObj, void *) noexcept
 {
-	if(inObj == NULL)
-		return NULL;
-
-	if(inObj->mURLRef == NULL)
-		inObj->mURLRef = ::CFURLCreateFromFSRef( kCFAllocatorDefault, &(inObj->mRef) );
-
-	if(inObj->mURLRef != NULL)
+    if((inObj != nullptr) && (inObj->mURLRef != nullptr))
   	{
  		CFObj<CFURLRef> newURL( ::CFURLCreateCopyDeletingLastPathComponent( kCFAllocatorDefault, inObj->mURLRef ) );
-		if(newURL != NULL)
+		if(newURL != nullptr)
  			return ::CFURLCopyFileSystemPath(newURL, kCFURLPOSIXPathStyle);
 	}
-	return NULL;
+	return nullptr;
 }
 
 
 CFStringRef
-CreateObjName(OneObjProperties *inObj, void *)
+CreateObjName(OneObjProperties *inObj, void *) noexcept
 {
-	if(inObj == NULL)
-		return NULL;
-
-	if(inObj->mURLRef == NULL)
-		inObj->mURLRef = ::CFURLCreateFromFSRef( kCFAllocatorDefault, &(inObj->mRef) );
-
-	if(inObj->mURLRef != NULL)
+	if((inObj != nullptr) && (inObj->mURLRef != nullptr))
 		return ::CFURLCopyLastPathComponent(inObj->mURLRef);
 
-	return NULL;
+	return nullptr;
 }
 
 CFStringRef
-CreateObjNameNoExtension(OneObjProperties *inObj, void *)
+CreateObjNameNoExtension(OneObjProperties *inObj, void *) noexcept
 {
-	if(inObj == NULL)
-		return NULL;
-
-	if(inObj->mURLRef == NULL)
-		inObj->mURLRef = ::CFURLCreateFromFSRef( kCFAllocatorDefault, &(inObj->mRef) );
-
-	if(inObj->mURLRef != NULL)
+    if((inObj != nullptr) && (inObj->mURLRef != nullptr))
   	{
 		CFObj<CFURLRef> newURL( ::CFURLCreateCopyDeletingPathExtension( kCFAllocatorDefault, inObj->mURLRef ) );
-		if(newURL != NULL)
+		if(newURL != nullptr)
 			return ::CFURLCopyLastPathComponent(newURL);
 	}
-
-	return NULL;
+	return nullptr;
 }
 
 
 CFStringRef
-CreateObjExtensionOnly(OneObjProperties *inObj, void *)
+CreateObjExtensionOnly(OneObjProperties *inObj, void *) noexcept
 {//we already have the extension in our data
-	if(inObj == NULL)
-		return NULL;
-
-	if(inObj->mExtension != NULL)
+	if((inObj != nullptr) && (inObj->mExtension != nullptr))
 		return ::CFStringCreateCopy(kCFAllocatorDefault, inObj->mExtension);
 
-	return NULL;
+	return nullptr;
 }
 
 
 CFStringRef
-CreateObjDisplayName(OneObjProperties *inObj, void *)
+CreateObjDisplayName(OneObjProperties *inObj, void *) noexcept
 {
-	if(inObj == NULL)
-		return NULL;
-
-	CFStringRef theName = NULL;
-	OSStatus err = ::LSCopyDisplayNameForRef(  &(inObj->mRef), &theName );
-	if(err == noErr)
-	{
-		return theName;
-	}
-
-	return NULL;
+    if((inObj != nullptr) && (inObj->mURLRef != nullptr))
+    {
+        CFStringRef displayName = nullptr;
+        Boolean isOK = CFURLCopyResourcePropertyForKey(inObj->mURLRef, kCFURLLocalizedNameKey, &displayName, nullptr);
+        if(isOK)
+            return displayName;
+    }
+	return nullptr;
 }
 
 CFStringRef
-CreateObjPathRelativeToBase(OneObjProperties *inObj, void *ioParam)
+CreateObjPathRelativeToBase(OneObjProperties *inObj, void *ioParam) noexcept
 {
-	if(inObj == NULL)
-		return NULL;
-
-	if(ioParam == NULL)
+	if(ioParam == nullptr)
 	{//no base is provided, fall back to full path
-		return CreateObjPath(inObj, NULL);
+		return CreateObjPath(inObj, nullptr);
 	}
 
 	CFStringRef commonParentPath = (CFStringRef)ioParam;
 
-	if(inObj->mURLRef == NULL)
-		inObj->mURLRef = ::CFURLCreateFromFSRef( kCFAllocatorDefault, &(inObj->mRef) );
-
-	if(inObj->mURLRef != NULL)
+    if((inObj != nullptr) && (inObj->mURLRef != nullptr))
   	{
  		CFObj<CFStringRef> fullPath( ::CFURLCopyFileSystemPath(inObj->mURLRef, kCFURLPOSIXPathStyle) );
- 		if(fullPath != NULL)
+ 		if(fullPath != nullptr)
  		{
  			//at this point we assume that fullPath starts with commonParentPath
  			//we do not check it
@@ -5466,7 +5242,7 @@ CreateObjPathRelativeToBase(OneObjProperties *inObj, void *ioParam)
  			return relPath;
  		}
  	}
- 	return NULL;
+ 	return nullptr;
 }
 
 
@@ -5544,8 +5320,8 @@ CreateStringFromListOrSingleObject( OneObjProperties *inObjList, CFIndex inObjCo
 CFStringRef
 CreateCommonParentPath(OneObjProperties *inObjList, CFIndex inObjCount )
 {
-	if( (inObjList == NULL) || (inObjCount == 0) )
-		return NULL;
+	if( (inObjList == nullptr) || (inObjCount == 0) )
+		return nullptr;
 
 	OneObjProperties *oneObj;
     std::vector<CFMutableArrayRef> arrayList(inObjCount);
@@ -5559,16 +5335,16 @@ CreateCommonParentPath(OneObjProperties *inObjList, CFIndex inObjCount )
 
 		CFMutableArrayRef pathsArray = ::CFArrayCreateMutable( kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks );
 		arrayList[i] = pathsArray;
-		if(pathsArray != NULL)
+		if(pathsArray != nullptr)
 		{
-			CFURLRef newURL = ::CFURLCreateFromFSRef( kCFAllocatorDefault, &(oneObj->mRef) );
+            CFURLRef newURL = (oneObj->mURLRef != nullptr) ? CFURLCopyAbsoluteURL(oneObj->mURLRef) : nullptr;
 
 			//we dispose of all these URLs, we leave only strings derived from them
- 			while(newURL != NULL)
+ 			while(newURL != nullptr)
  			{
  				CFObj<CFURLRef> urlDel(newURL);//delete previous when we are done
 				newURL = ::CFURLCreateCopyDeletingLastPathComponent( kCFAllocatorDefault, newURL );
-				if(newURL != NULL)
+				if(newURL != nullptr)
 				{
 					CFObj<CFStringRef> aPath( ::CFURLCopyFileSystemPath(newURL, kCFURLPOSIXPathStyle) );
 					::CFArrayInsertValueAtIndex( pathsArray, 0, aPath.Get());//grand parent is inserted in front
@@ -5576,7 +5352,7 @@ CreateCommonParentPath(OneObjProperties *inObjList, CFIndex inObjCount )
 					if( kCFCompareEqualTo == ::CFStringCompare( CFSTR("/"), aPath.Get(), 0) ) //we reached the top
 					{	
 						::CFRelease(newURL);//delete current URL and end the loop
-						newURL = NULL;
+						newURL = nullptr;
 					}
 				}
 			}
@@ -5587,7 +5363,7 @@ CreateCommonParentPath(OneObjProperties *inObjList, CFIndex inObjCount )
 	CFIndex minCount = 0x7FFFFFFF;
 	for(CFIndex i = 0; i < inObjCount; i++)
 	{
-		if(arrayList[i] != NULL)
+		if(arrayList[i] != nullptr)
 		{
 			CFIndex theCount = ::CFArrayGetCount(arrayList[i]);
 			if(theCount < minCount)
@@ -5600,7 +5376,7 @@ CreateCommonParentPath(OneObjProperties *inObjList, CFIndex inObjCount )
 		}
 	}
 
-	CFStringRef commonParentPath = NULL;
+	CFStringRef commonParentPath = nullptr;
 
 //find common parent
 	if( (minCount > 0) && (minCount < 0x7FFFFFFF) )
@@ -5639,7 +5415,7 @@ CreateCommonParentPath(OneObjProperties *inObjList, CFIndex inObjCount )
 		commonParentPath = ACFType<CFStringRef>::DynamicCast(commonLevelItem);
 		//Assert(commonParentPath != NULL);
 		
-		if(commonParentPath != NULL)
+		if(commonParentPath != nullptr)
 		{
 			//add slash at the end of parent path unless it is a root folder which has it already
 			if( kCFCompareEqualTo == ::CFStringCompare( commonParentPath, CFSTR("/"), 0 ) )
@@ -5651,13 +5427,13 @@ CreateCommonParentPath(OneObjProperties *inObjList, CFIndex inObjCount )
 				CFMutableStringRef	modifStr = ::CFStringCreateMutableCopy( kCFAllocatorDefault,
 																		::CFStringGetLength(commonParentPath)+1,
 																		commonParentPath );
-				if(modifStr != NULL)
+				if(modifStr != nullptr)
 				{
 					::CFStringAppend( modifStr, CFSTR("/") );
 					commonParentPath = modifStr;
 				}
 				else
-					commonParentPath = NULL;//failed
+					commonParentPath = nullptr;//failed
 			}
 
 			DEBUG_CFSTR( commonParentPath );
@@ -5667,10 +5443,10 @@ CreateCommonParentPath(OneObjProperties *inObjList, CFIndex inObjCount )
 //dispose of path arrays
 	for(CFIndex i = 0; i < inObjCount; i++)
 	{
-		if(arrayList[i] != NULL)
+		if(arrayList[i] != nullptr)
 		{
 			::CFRelease( arrayList[i] );
-			arrayList[i] = NULL;
+			arrayList[i] = nullptr;
 		}
 	}
 	
@@ -6352,149 +6128,6 @@ CopyNextCommandID(const CommandDescription &currCommand, const CommandState *inC
 		}
 	}
 	return theNextID;
-}
-
-extern "C" UInt32
-StringToVersion(CFStringRef inString)
-{
-	if(inString == NULL)
-		return 0;
-	
-	CFObj<CFArrayRef> numbersArr( ::CFStringCreateArrayBySeparatingStrings( kCFAllocatorDefault, inString, CFSTR(".") ) );
-	if(numbersArr == NULL)
-		return 0;
-
-	CFIndex theCount = ::CFArrayGetCount(numbersArr);
-	if(theCount > 3)
-		theCount = 3;
-
-	UInt8 versionNumbers[3];
-	versionNumbers[0] = versionNumbers[1] = versionNumbers[2] = 0;
-	for(CFIndex i = 0; i < theCount; i++)
-	{
-		CFStringRef oneNumString = (CFStringRef)::CFArrayGetValueAtIndex(numbersArr, i);
-		if(oneNumString != NULL)
-			versionNumbers[i] = (UInt8)::CFStringGetIntValue(oneNumString);
-	}
-	
-	UInt32 outVersion = versionNumbers[0] * 10000 + versionNumbers[1] * 100 + versionNumbers[2];//new format
-/*
-	UInt8 highestByte = 0;
-	if(versionNumbers[0] > 9)
-	{
-		highestByte = versionNumbers[0]/10;
-		versionNumbers[0] = versionNumbers[0] % 10;
-	}
-
-	UInt32 outVersion = ((UInt32)(highestByte & 0x0F) << 12) | ((UInt32)(versionNumbers[0] & 0x0F) << 8) |
-					((UInt32)(versionNumbers[1] & 0x0F) << 4) | ((UInt32)versionNumbers[2] & 0x0F);
-*/
-	return outVersion;
-}
-
-extern "C" CFStringRef
-CreateVersionString(UInt32 inVersion)
-{
-//	inVersion = ::CFSwapInt32HostToBig(inVersion);
-
-/*
-	int higestByte = (inVersion & 0xF000) >> 12;
-	int majorVersion = (inVersion & 0x0F00) >> 8;
-	int minorVersion = (inVersion & 0x00F0) >> 4;
-	int veryMinorVersion = (inVersion & 0x000F);
-*/
-	//new format
-	int majorVersion = inVersion/10000;
-	inVersion -= (10000 * majorVersion);
-	int minorVersion = inVersion/100;
-	inVersion -= (100 * minorVersion);
-	int veryMinorVersion = inVersion;
-
-//	CFStringRef higestStr = NULL;
-	CFStringRef veryMinorStr = NULL;
-	
-//	if(higestByte != 0)
-//		higestStr = CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("%d"), higestByte);
-
-	CFStringRef mainStr = CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("%d.%d"), majorVersion, minorVersion);
-
-	if(veryMinorVersion != 0)
-		veryMinorStr = CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR(".%d"), veryMinorVersion);
-		
-	CFMutableStringRef wholeStr = ::CFStringCreateMutable( kCFAllocatorDefault, 0);
-//	if(higestStr != NULL)
-//	{
-//		::CFStringAppend( wholeStr, higestStr );
-//		::CFRelease(higestStr);
-//	}
-
-	if(mainStr != NULL)
-	{
-		::CFStringAppend( wholeStr, mainStr );
-		::CFRelease(mainStr);
-	}
-	
-	if(veryMinorStr != NULL)
-	{
-		::CFStringAppend( wholeStr, veryMinorStr );
-		::CFRelease(veryMinorStr);
-	}
-	
-	return wholeStr;
-}
-
-extern "C" CFStringRef
-CreatePathByExpandingTilde(CFStringRef inPath)
-{
-	if(inPath == NULL)
-		return NULL;
-
-	CFIndex theLen = ::CFStringGetLength( inPath );
-	if(	theLen < 1)
-	{
-		::CFRetain(inPath);
-		return inPath;
-	}
-
-	UniChar fistChar = ::CFStringGetCharacterAtIndex( inPath, 0 );
-	if(fistChar != '~')
-	{
-		::CFRetain(inPath);
-		return inPath;
-	}
-
-	FSRef homeFolderRef;
-	OSStatus err = ::FSFindFolder(kUserDomain, kCurrentUserFolderType, kDontCreateFolder, &homeFolderRef);
-	if(err == noErr)
-	{
-		CFObj<CFURLRef> urlRef( ::CFURLCreateFromFSRef(kCFAllocatorDefault, &homeFolderRef) );
-		if(urlRef != NULL)
-		{
-			CFObj<CFStringRef> homePath( ::CFURLCopyFileSystemPath(urlRef, kCFURLPOSIXPathStyle) );
-			if(homePath != NULL)
-			{
-				if(theLen > 1)
-				{
-					CFObj<CFStringRef> subPath( ::CFStringCreateWithSubstring(kCFAllocatorDefault, inPath, ::CFRangeMake(1, theLen-1)) );
-					if(subPath != NULL)
-					{
-						CFStringRef outString = ::CFStringCreateWithFormat( kCFAllocatorDefault, NULL, CFSTR("%@%@"), (CFStringRef)homePath, (CFStringRef)subPath);
-						DEBUG_CFSTR(outString);
-						return outString;
-					}
-				}
-				else
-				{//just the tilde alone:
-					return homePath.Detach();
-				}
-			}
-		}
-
-	}
-	
-	//error condition - return original path
-	::CFRetain(inPath);
-	return inPath;
 }
 
 class FileNameAndIndex

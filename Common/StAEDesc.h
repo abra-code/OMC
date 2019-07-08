@@ -21,70 +21,75 @@
 class StAEDesc : public AEDesc
 {
 public:
-							StAEDesc()
-							{
-								Init();
-							}
+    StAEDesc() noexcept
+    {
+        Init();
+    }
 
-							StAEDesc(const AEDesc &inDesc)
-							{//just take ownership, do not copy
-								//*this = inDesc;
-								descriptorType = inDesc.descriptorType;
-								dataHandle = inDesc.dataHandle;
-							}
-							
-							StAEDesc(DescType inType, const void *inDataPtr, Size inSize)
-							{
-								::AECreateDesc(inType, inDataPtr, inSize, this);
-							}
-							
-							~StAEDesc()
-							{
-								if(dataHandle != NULL )
-								{
-									::AEDisposeDesc( this );
-								}
-							}
+    StAEDesc(const AEDesc &inDesc) noexcept
+    {//just take ownership, do not copy
+        this->descriptorType = inDesc.descriptorType;
+        this->dataHandle = inDesc.dataHandle;
+    }
+    
+    StAEDesc(DescType inType, const void *inDataPtr, Size inSize) noexcept
+    {
+        ::AECreateDesc(inType, inDataPtr, inSize, this);
+    }
+    
+    ~StAEDesc() noexcept
+    {
+        if(dataHandle != nullptr )
+        {
+            ::AEDisposeDesc( this );
+        }
+    }
 
-		void				Init()
-							{
-								AEInitializeDescInline(this);
-							}
+    void Init() noexcept
+    {
+        AEInitializeDescInline(this);
+    }
 
-		DescType			GetDescriptorType() const { return descriptorType; }
-		AEDataStorage		GetDataStorage() const { return dataHandle; }
+    DescType GetDescriptorType() const noexcept { return this->descriptorType; }
+    AEDataStorage GetDataStorage() const noexcept { return this->dataHandle; }
 
-		OSErr				GetData(void *ioData, Size inDataSize) const
-							{
-								return ::AEGetDescData(this, ioData, inDataSize);
-							}
+    OSErr GetData(void *ioData, Size inDataSize) const noexcept
+    {
+        return ::AEGetDescData(this, ioData, inDataSize);
+    }
 
-		bool				IsNULL() { return (descriptorType == typeNull); }
-		void				Detach() { Init(); }
+    bool IsNULL() const noexcept { return (this->descriptorType == typeNull); }
+
+    AEDesc Detach() noexcept
+    {
+        AEDesc outDesc = *this;
+        Init();
+        return outDesc;
+    }
 
 /*
-		operator			AEDesc& ()
-							{
-								return *this;
-							}
+operator			AEDesc& ()
+    {
+        return *this;
+    }
 
-		operator			const AEDesc& () const
-							{
-								return *this;
-							}
+operator			const AEDesc& () const
+    {
+        return *this;
+    }
 */
-		
-		operator			AEDesc* ()
-							{
-								return this;
-							}
 
-		operator			const AEDesc* () const
-							{
-								return this;
-							}
-				
+    operator AEDesc* () noexcept
+    {
+        return this;
+    }
+
+    operator const AEDesc* () const noexcept
+    {
+        return this;
+    }
+
 private:
-							StAEDesc(const StAEDesc&);
-		StAEDesc&			operator=(const StAEDesc&);
+    StAEDesc(const StAEDesc&);
+    StAEDesc& operator=(const StAEDesc&);
 };

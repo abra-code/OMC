@@ -12,41 +12,35 @@
 
 #include "CMUtils.h"
 #include "StAEDesc.h"
+#include <vector>
 
-
-OSErr
-CMUtils::GetFSRef(const AEDesc &inDesc, FSRef &outRef)
+CFURLRef CopyURLFromFileURLAEDesc(const AEDesc &inDesc)
 {
-	OSErr err = fnfErr;
-
-	if( (inDesc.descriptorType == typeFSRef) && (inDesc.dataHandle != NULL) )
-	{//no need to coerce
-		TRACE_CSTR("\tCMUtils::FSRefGetRef without coercing...\n" );
-		err = ::AEGetDescData( &inDesc, &outRef, sizeof(FSRef) );
-	}
-	else if( (inDesc.descriptorType != typeNull) && (inDesc.dataHandle != NULL) )
-	{
-		StAEDesc coercedRef;
-		err = ::AECoerceDesc( &inDesc, typeFSRef, coercedRef );
-		if(err == noErr)
-		{
-			TRACE_CSTR("\tCMUtils::FSRefGetRef with coercing...\n" );
-			err = ::AEGetDescData( coercedRef, &outRef, sizeof(FSRef) );
-		}
-	}
-
-	return err;
+    Size byteCount = ::AEGetDescDataSize( &inDesc );
+    std::vector<char> newBuffer(byteCount);
+    if( ::AEGetDescData(&inDesc, newBuffer.data(), byteCount) != noErr)
+        return nullptr;
+    CFURLRef outURL = CFURLCreateWithBytes(kCFAllocatorDefault, (const UInt8 *)newBuffer.data(), newBuffer.size(), kCFStringEncodingUTF8, nullptr);
+    return outURL;
 }
 
-OSErr
-CMUtils::CreateFSRefDesc( const CFURLRef inURL, AEDesc &outAEDesc )
+CFURLRef
+CMUtils::CopyURL(const AEDesc &inDesc)
 {
-	if(inURL == NULL) return fnfErr;
-	FSRef fileRef;
-	if( ::CFURLGetFSRef(inURL, &fileRef) )
-	{
-		return ::AECreateDesc( typeFSRef, &fileRef, sizeof(fileRef), &outAEDesc );
-	}
-	return fnfErr;
+    if( (inDesc.descriptorType == typeFileURL) && (inDesc.dataHandle != nullptr) )
+    {//no need to coerce
+        TRACE_CSTR("\tCMUtils::CopyURL without coercing...\n" );
+        return CopyURLFromFileURLAEDesc(inDesc);
+    }
+    else if( (inDesc.descriptorType != typeNull) && (inDesc.dataHandle != nullptr) )
+    {
+        StAEDesc coercedRef;
+        OSErr err = ::AECoerceDesc( &inDesc, typeFileURL, coercedRef );
+        if(err == noErr)
+        {
+            TRACE_CSTR("\tCMUtils::CopyURL with coercing...\n" );
+            return CopyURLFromFileURLAEDesc(coercedRef);
+        }
+    }
+    return nullptr;
 }
-

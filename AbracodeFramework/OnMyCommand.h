@@ -5,7 +5,7 @@
 #include "OutputWindowHandler.h"
 #include "ACMPlugin.h"
 #include "OMCConstants.h"
-#include "OMCUtils.h"
+#include "OMCStrings.h"
 #include "OMC.h"
 #include "AUniquePtr.h"
 #include <vector>
@@ -123,7 +123,6 @@ typedef struct CommandDescription
 
 typedef struct OneObjProperties
 {
-	FSRef			mRef;
 	CFURLRef		mURLRef;
 	CFStringRef		mExtension;
 	FileType		mType;
@@ -242,7 +241,6 @@ public:
 	OSStatus			ExecuteSubcommand( CFArrayRef inCommandName, CFStringRef inCommandID, OMCDialog *inDialog, CFTypeRef inContext );
 	OSStatus			ExecuteSubcommand( SInt32 commandIndex, OMCDialog *inDialog, CFTypeRef inContext );
 
-	static OSStatus		FSRefCheckFileOrFolder(const FSRef *inRef, void *ioData);
 	static OSStatus		CFURLCheckFileOrFolder(CFURLRef inURLRef, void *ioData);
 
 	Boolean				IsSubcommand(CFArrayRef inName, SInt32 inCommandIndex);
@@ -330,8 +328,8 @@ protected:
 	CFObj<CFURLRef>				mCachedChooseFolderPath;
 	CFObj<CFURLRef>				mCachedChooseObjectPath;
 //	CFObj<CFURLRef>				mMyBundlePath;
-	CFObj<CFURLRef>				mMyHostBundlePath;
-	CFObj<CFStringRef>			mMyHostName;
+	CFObj<CFURLRef>				mMyHostBundleURL;
+	CFObj<CFStringRef>			mMyHostAppName;
 	CFObj<CFMutableDictionaryRef> mNibControlValues;
 	CFObj<CFMutableDictionaryRef> mNibControlCustomProperties;
 	ARefCountedObj<AObserverBase> mObserver;
@@ -382,16 +380,16 @@ void	ReplaceSpecialCharsWithEscapesForAppleScript(CFMutableStringRef inStrRef);
 void	WrapWithSingleQuotesForShell(CFMutableStringRef inStrRef);
 
 //removed const from OneObjProperties becuase it allows lazy population of some fields
-typedef CFStringRef (*CreateObjProc)(OneObjProperties *inObj, void *ioParam);
+typedef CFStringRef (*CreateObjProc)(OneObjProperties *inObj, void *ioParam) noexcept;
 
-CFStringRef			CreateObjPath(OneObjProperties *inObj, void *ioParam);
-CFStringRef			CreateObjPathNoExtension(OneObjProperties *inObj, void *ioParam);
-CFStringRef			CreateParentPath(OneObjProperties *inObj, void *ioParam);
-CFStringRef			CreateObjName(OneObjProperties *inObj, void *ioParam);
-CFStringRef			CreateObjNameNoExtension(OneObjProperties *inObj, void *ioParam);
-CFStringRef			CreateObjExtensionOnly(OneObjProperties *inObj, void *ioParam);
-CFStringRef			CreateObjDisplayName(OneObjProperties *inObj, void *ioParam);
-CFStringRef			CreateObjPathRelativeToBase(OneObjProperties *inObj, void *ioParam);
+CFStringRef			CreateObjPath(OneObjProperties *inObj, void *ioParam) noexcept;
+CFStringRef			CreateObjPathNoExtension(OneObjProperties *inObj, void *ioParam) noexcept;
+CFStringRef			CreateParentPath(OneObjProperties *inObj, void *ioParam) noexcept;
+CFStringRef			CreateObjName(OneObjProperties *inObj, void *ioParam) noexcept;
+CFStringRef			CreateObjNameNoExtension(OneObjProperties *inObj, void *ioParam) noexcept;
+CFStringRef			CreateObjExtensionOnly(OneObjProperties *inObj, void *ioParam) noexcept;
+CFStringRef			CreateObjDisplayName(OneObjProperties *inObj, void *ioParam) noexcept;
+CFStringRef			CreateObjPathRelativeToBase(OneObjProperties *inObj, void *ioParam)noexcept ;
 
 CFStringRef			CreateCommonParentPath(OneObjProperties *inObjList, CFIndex inObjCount );
 
@@ -414,6 +412,12 @@ CFStringRef			CreateExtensionOnlyFromCFURL(CFURLRef inPath, UInt16 escSpecialCha
 
 CFStringRef			CreateEscapedStringCopy(CFStringRef inStrRef, UInt16 escSpecialCharsMode);
 CFStringRef			CreateCombinedString( CFArrayRef inStringsArray, CFStringRef inSeparator, CFStringRef inPrefix, CFStringRef inSuffix, UInt16 escSpecialCharsMode );
+
+SInt32              GetSpecialWordID(CFStringRef inStr);
+SInt32              GetSpecialEnvironWordID(CFStringRef inStr);
+
+UInt8               GetEscapingMode(CFStringRef theStr);
+CFStringRef         GetEscapingModeString(UInt8 inEscapeMode);
 };
 
 CFDictionaryRef		ReadControlValuesFromPlist(CFStringRef inDialogUniqueID);

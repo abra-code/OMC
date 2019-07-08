@@ -38,6 +38,10 @@
 		1D9BCB8022CC95E500F4EAB6 /* ACFPropertyList.m in Sources */ = {isa = PBXBuildFile; fileRef = 1D9BCB7C22CC95E500F4EAB6 /* ACFPropertyList.m */; };
 		1D9BCB8822CCA65A00F4EAB6 /* ACFURL.m in Sources */ = {isa = PBXBuildFile; fileRef = 1D9BCB8722CCA65A00F4EAB6 /* ACFURL.m */; };
 		1D9BCB8922CCA65A00F4EAB6 /* ACFURL.m in Sources */ = {isa = PBXBuildFile; fileRef = 1D9BCB8722CCA65A00F4EAB6 /* ACFURL.m */; };
+		1D9BCB8C22CCAB4F00F4EAB6 /* OMCStrings.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1D9BCB8B22CCAB4F00F4EAB6 /* OMCStrings.mm */; };
+		1D9BCB8D22CCAB4F00F4EAB6 /* OMCStrings.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1D9BCB8B22CCAB4F00F4EAB6 /* OMCStrings.mm */; };
+		1DBCC43522CE209300A1DD8F /* OMCHelpers.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1DBCC43222CE209300A1DD8F /* OMCHelpers.mm */; };
+		1DBCC43622CE209300A1DD8F /* OMCHelpers.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1DBCC43222CE209300A1DD8F /* OMCHelpers.mm */; };
 		1DED8E572222BD8E00A2CAF7 /* MoreAppleEvents.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED19F0D09528600C9D5E8 /* MoreAppleEvents.cp */; };
 		8DC2EF530486A6940098B216 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C1666FE841158C02AAC07 /* InfoPlist.strings */; };
 		8DC2EF570486A6940098B216 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7B1FEA5585E11CA2CBB /* Cocoa.framework */; };
@@ -164,8 +168,6 @@
 		E25760250D20EE1000D755FF /* CMUtilsAEText.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED1780D09525700C9D5E8 /* CMUtilsAEText.cp */; };
 		E25760260D20EE1000D755FF /* CMUtilsSendAE.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED1790D09525700C9D5E8 /* CMUtilsSendAE.cp */; };
 		E25760270D20EE1000D755FF /* CMUtilsFinder.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED17A0D09525700C9D5E8 /* CMUtilsFinder.cp */; };
-		E25760280D20EE1000D755FF /* CMUtilsFileName.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED17B0D09525700C9D5E8 /* CMUtilsFileName.cp */; };
-		E257602A0D20EE1000D755FF /* CMUtilsIsFolder.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED17D0D09525700C9D5E8 /* CMUtilsIsFolder.cp */; };
 		E257602B0D20EE1000D755FF /* CMUtilsAEFile.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED17E0D09525700C9D5E8 /* CMUtilsAEFile.cp */; };
 		E257602C0D20EE1000D755FF /* MoreAppleEvents.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED19F0D09528600C9D5E8 /* MoreAppleEvents.cp */; };
 		E25760300D20EE1000D755FF /* ACFType.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED1B60D09532500C9D5E8 /* ACFType.cp */; };
@@ -240,8 +242,6 @@
 		E29ED1850D09525700C9D5E8 /* CMUtilsAEText.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED1780D09525700C9D5E8 /* CMUtilsAEText.cp */; };
 		E29ED1860D09525700C9D5E8 /* CMUtilsSendAE.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED1790D09525700C9D5E8 /* CMUtilsSendAE.cp */; };
 		E29ED1870D09525700C9D5E8 /* CMUtilsFinder.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED17A0D09525700C9D5E8 /* CMUtilsFinder.cp */; };
-		E29ED1880D09525700C9D5E8 /* CMUtilsFileName.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED17B0D09525700C9D5E8 /* CMUtilsFileName.cp */; };
-		E29ED18A0D09525700C9D5E8 /* CMUtilsIsFolder.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED17D0D09525700C9D5E8 /* CMUtilsIsFolder.cp */; };
 		E29ED18B0D09525700C9D5E8 /* CMUtilsAEFile.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED17E0D09525700C9D5E8 /* CMUtilsAEFile.cp */; };
 		E29ED1B70D09532500C9D5E8 /* ACFType.h in Headers */ = {isa = PBXBuildFile; fileRef = E29ED1B50D09532500C9D5E8 /* ACFType.h */; };
 		E29ED1B80D09532500C9D5E8 /* ACFType.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED1B60D09532500C9D5E8 /* ACFType.cp */; };
@@ -409,7 +409,7 @@
 		1D71F3352206FA78009FAF91 /* de */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = de; path = de.lproj/DropletPreferences.xib; sourceTree = "<group>"; };
 		1D71F336220702D7009FAF91 /* notify */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = notify; sourceTree = "<group>"; };
 		1D742DC219388292005DFF97 /* pasteboard */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = pasteboard; sourceTree = "<group>"; };
-		1D9B1F5821FF14AF004704A7 /* OMCUtils.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OMCUtils.h; sourceTree = "<group>"; };
+		1D9B1F5821FF14AF004704A7 /* OMCStrings.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OMCStrings.h; sourceTree = "<group>"; };
 		1D9B1F5C21FF1572004704A7 /* OnMyCommand.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OnMyCommand.cp; sourceTree = "<group>"; };
 		1D9B1F6321FF191D004704A7 /* SubmenuTree.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SubmenuTree.cp; sourceTree = "<group>"; };
 		1D9B1F6421FF191D004704A7 /* SubmenuTree.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SubmenuTree.h; sourceTree = "<group>"; };
@@ -418,6 +418,9 @@
 		1D9BCB7C22CC95E500F4EAB6 /* ACFPropertyList.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ACFPropertyList.m; sourceTree = "<group>"; };
 		1D9BCB8722CCA65A00F4EAB6 /* ACFURL.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ACFURL.m; sourceTree = "<group>"; };
 		1D9BCB8A22CCA66500F4EAB6 /* ACFURL.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ACFURL.h; sourceTree = "<group>"; };
+		1D9BCB8B22CCAB4F00F4EAB6 /* OMCStrings.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCStrings.mm; sourceTree = "<group>"; };
+		1DBCC43122CE209200A1DD8F /* OMCHelpers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCHelpers.h; sourceTree = "<group>"; };
+		1DBCC43222CE209300A1DD8F /* OMCHelpers.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCHelpers.mm; sourceTree = "<group>"; };
 		1DED8E4C22229D1800A2CAF7 /* ACFArr.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ACFArr.h; sourceTree = "<group>"; };
 		1DED8E562222B65500A2CAF7 /* MoreAppleEvents.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoreAppleEvents.h; sourceTree = "<group>"; };
 		32DBCF5E0370ADEE00C91783 /* Abracode_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Abracode_Prefix.pch; sourceTree = "<group>"; };
@@ -526,8 +529,6 @@
 		E29ED1780D09525700C9D5E8 /* CMUtilsAEText.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CMUtilsAEText.cp; sourceTree = "<group>"; };
 		E29ED1790D09525700C9D5E8 /* CMUtilsSendAE.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CMUtilsSendAE.cp; sourceTree = "<group>"; };
 		E29ED17A0D09525700C9D5E8 /* CMUtilsFinder.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CMUtilsFinder.cp; sourceTree = "<group>"; };
-		E29ED17B0D09525700C9D5E8 /* CMUtilsFileName.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CMUtilsFileName.cp; sourceTree = "<group>"; };
-		E29ED17D0D09525700C9D5E8 /* CMUtilsIsFolder.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CMUtilsIsFolder.cp; sourceTree = "<group>"; };
 		E29ED17E0D09525700C9D5E8 /* CMUtilsAEFile.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CMUtilsAEFile.cp; sourceTree = "<group>"; };
 		E29ED19F0D09528600C9D5E8 /* MoreAppleEvents.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MoreAppleEvents.cp; sourceTree = "<group>"; };
 		E29ED1B50D09532500C9D5E8 /* ACFType.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ACFType.h; sourceTree = "<group>"; };
@@ -807,8 +808,6 @@
 				E29ED1780D09525700C9D5E8 /* CMUtilsAEText.cp */,
 				E29ED1790D09525700C9D5E8 /* CMUtilsSendAE.cp */,
 				E29ED17A0D09525700C9D5E8 /* CMUtilsFinder.cp */,
-				E29ED17B0D09525700C9D5E8 /* CMUtilsFileName.cp */,
-				E29ED17D0D09525700C9D5E8 /* CMUtilsIsFolder.cp */,
 				E29ED17E0D09525700C9D5E8 /* CMUtilsAEFile.cp */,
 				1D9B1F6321FF191D004704A7 /* SubmenuTree.cp */,
 				1D9B1F6421FF191D004704A7 /* SubmenuTree.h */,
@@ -864,6 +863,8 @@
 			children = (
 				E28181AA0EBC228C00E9652F /* OMCProgressWindowController.h */,
 				E28181AB0EBC228C00E9652F /* OMCProgressWindowController.m */,
+				1DBCC43122CE209200A1DD8F /* OMCHelpers.h */,
+				1DBCC43222CE209300A1DD8F /* OMCHelpers.mm */,
 				E2D92E8D1043E0E3003DC96B /* OMCInputDialog.mm */,
 				E2D92E871043E0C2003DC96B /* OMCInputDialog.h */,
 				E2D92E541043D74E003DC96B /* OMCInputDialogController.m */,
@@ -907,7 +908,8 @@
 				E2ED3BB50D0B289B00481D8F /* OnMyCommand.h */,
 				E2C32CB50D2DF99C0023DA03 /* OMCObserver.cpp */,
 				E2C32CB40D2DF99C0023DA03 /* OMCObserver.h */,
-				1D9B1F5821FF14AF004704A7 /* OMCUtils.h */,
+				1D9BCB8B22CCAB4F00F4EAB6 /* OMCStrings.mm */,
+				1D9B1F5821FF14AF004704A7 /* OMCStrings.h */,
 				E204EB7E0D7FD8A900595D15 /* OMCConstants.h */,
 				E2ED3BA80D0B288400481D8F /* OmcTaskManager.cpp */,
 				E2ED3BA90D0B288400481D8F /* OmcTaskManager.h */,
@@ -1232,14 +1234,13 @@
 				E29ED1850D09525700C9D5E8 /* CMUtilsAEText.cp in Sources */,
 				E29ED1860D09525700C9D5E8 /* CMUtilsSendAE.cp in Sources */,
 				E29ED1870D09525700C9D5E8 /* CMUtilsFinder.cp in Sources */,
-				E29ED1880D09525700C9D5E8 /* CMUtilsFileName.cp in Sources */,
-				E29ED18A0D09525700C9D5E8 /* CMUtilsIsFolder.cp in Sources */,
 				E29ED18B0D09525700C9D5E8 /* CMUtilsAEFile.cp in Sources */,
 				E29ED1B80D09532500C9D5E8 /* ACFType.cp in Sources */,
 				E29ED21A0D09FD8800C9D5E8 /* ARefCounted.cp in Sources */,
 				E2ED3AEA0D0B27D300481D8F /* DefaultExternBundle.cpp in Sources */,
 				E2ED3AED0D0B27E400481D8F /* StSwitchToFront.cp in Sources */,
 				E2ED3AF20D0B27F700481D8F /* NibDialogControl.cp in Sources */,
+				1D9BCB8C22CCAB4F00F4EAB6 /* OMCStrings.mm in Sources */,
 				E2ED3BA60D0B287000481D8F /* OutputWindowHandler.cp in Sources */,
 				E2ED3BAE0D0B288400481D8F /* OmcTaskManager.cpp in Sources */,
 				E2ED3BB00D0B288400481D8F /* OmcExecutor.cp in Sources */,
@@ -1260,6 +1261,7 @@
 				E211D4F80D4346BB0065C23A /* OMCDialogController.mm in Sources */,
 				E22FBAEF0D7A0D7700DC5BB4 /* OMCCocoaDialog.mm in Sources */,
 				E2735F830D7BC89F004D81CE /* OMCDialog.cpp in Sources */,
+				1DBCC43522CE209300A1DD8F /* OMCHelpers.mm in Sources */,
 				E27103AE0D8141BC0097D83E /* OMCQCView.mm in Sources */,
 				E2E407000D8A5B00009AD8CA /* OMCSecureTextField.m in Sources */,
 				E2E4072A0D8AD1E3009AD8CA /* OMCSearchField.m in Sources */,
@@ -1300,6 +1302,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				E257601F0D20EE1000D755FF /* CMUtilsBundle.cp in Sources */,
+				1DBCC43622CE209300A1DD8F /* OMCHelpers.mm in Sources */,
 				E25760200D20EE1000D755FF /* CMUtilsMenu.cp in Sources */,
 				E25760210D20EE1000D755FF /* CMUtilsAlias.cp in Sources */,
 				E25760220D20EE1000D755FF /* CMUtilsClipboard.cp in Sources */,
@@ -1308,8 +1311,6 @@
 				E25760250D20EE1000D755FF /* CMUtilsAEText.cp in Sources */,
 				E25760260D20EE1000D755FF /* CMUtilsSendAE.cp in Sources */,
 				E25760270D20EE1000D755FF /* CMUtilsFinder.cp in Sources */,
-				E25760280D20EE1000D755FF /* CMUtilsFileName.cp in Sources */,
-				E257602A0D20EE1000D755FF /* CMUtilsIsFolder.cp in Sources */,
 				E257602B0D20EE1000D755FF /* CMUtilsAEFile.cp in Sources */,
 				E257602C0D20EE1000D755FF /* MoreAppleEvents.cp in Sources */,
 				E25760300D20EE1000D755FF /* ACFType.cp in Sources */,
@@ -1361,6 +1362,7 @@
 				E28181AD0EBC228C00E9652F /* OMCProgressWindowController.m in Sources */,
 				1D9B1F5E21FF1572004704A7 /* OnMyCommand.cp in Sources */,
 				1D9B1F6621FF191D004704A7 /* SubmenuTree.cp in Sources */,
+				1D9BCB8D22CCAB4F00F4EAB6 /* OMCStrings.mm in Sources */,
 				E2D92E581043D74E003DC96B /* OMCInputDialogController.m in Sources */,
 				E2D92E8F1043E0E3003DC96B /* OMCInputDialog.mm in Sources */,
 				E26B2795109C174D00DBA8CE /* OMCTableView.m in Sources */,
