@@ -161,9 +161,7 @@
 		E257601C0D20EE1000D755FF /* app.icns in Resources */ = {isa = PBXBuildFile; fileRef = E234FA200D0FCB28001A7780 /* app.icns */; };
 		E257601F0D20EE1000D755FF /* CMUtilsBundle.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED1720D09525700C9D5E8 /* CMUtilsBundle.cp */; };
 		E25760200D20EE1000D755FF /* CMUtilsMenu.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED1730D09525700C9D5E8 /* CMUtilsMenu.cp */; };
-		E25760210D20EE1000D755FF /* CMUtilsAlias.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED1740D09525700C9D5E8 /* CMUtilsAlias.cp */; };
 		E25760220D20EE1000D755FF /* CMUtilsClipboard.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED1750D09525700C9D5E8 /* CMUtilsClipboard.cp */; };
-		E25760230D20EE1000D755FF /* CMUtilsHostName.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED1760D09525700C9D5E8 /* CMUtilsHostName.cp */; };
 		E25760240D20EE1000D755FF /* CMUtilsObjectList.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED1770D09525700C9D5E8 /* CMUtilsObjectList.cp */; };
 		E25760250D20EE1000D755FF /* CMUtilsAEText.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED1780D09525700C9D5E8 /* CMUtilsAEText.cp */; };
 		E25760260D20EE1000D755FF /* CMUtilsSendAE.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED1790D09525700C9D5E8 /* CMUtilsSendAE.cp */; };
@@ -235,9 +233,7 @@
 		E29ED0720D094EB000C9D5E8 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E29ED0710D094EB000C9D5E8 /* Carbon.framework */; };
 		E29ED17F0D09525700C9D5E8 /* CMUtilsBundle.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED1720D09525700C9D5E8 /* CMUtilsBundle.cp */; };
 		E29ED1800D09525700C9D5E8 /* CMUtilsMenu.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED1730D09525700C9D5E8 /* CMUtilsMenu.cp */; };
-		E29ED1810D09525700C9D5E8 /* CMUtilsAlias.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED1740D09525700C9D5E8 /* CMUtilsAlias.cp */; };
 		E29ED1820D09525700C9D5E8 /* CMUtilsClipboard.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED1750D09525700C9D5E8 /* CMUtilsClipboard.cp */; };
-		E29ED1830D09525700C9D5E8 /* CMUtilsHostName.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED1760D09525700C9D5E8 /* CMUtilsHostName.cp */; };
 		E29ED1840D09525700C9D5E8 /* CMUtilsObjectList.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED1770D09525700C9D5E8 /* CMUtilsObjectList.cp */; };
 		E29ED1850D09525700C9D5E8 /* CMUtilsAEText.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED1780D09525700C9D5E8 /* CMUtilsAEText.cp */; };
 		E29ED1860D09525700C9D5E8 /* CMUtilsSendAE.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED1790D09525700C9D5E8 /* CMUtilsSendAE.cp */; };
@@ -522,9 +518,7 @@
 		E29ED0710D094EB000C9D5E8 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = /System/Library/Frameworks/Carbon.framework; sourceTree = "<absolute>"; };
 		E29ED1720D09525700C9D5E8 /* CMUtilsBundle.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CMUtilsBundle.cp; sourceTree = "<group>"; };
 		E29ED1730D09525700C9D5E8 /* CMUtilsMenu.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CMUtilsMenu.cp; sourceTree = "<group>"; };
-		E29ED1740D09525700C9D5E8 /* CMUtilsAlias.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CMUtilsAlias.cp; sourceTree = "<group>"; };
 		E29ED1750D09525700C9D5E8 /* CMUtilsClipboard.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CMUtilsClipboard.cp; sourceTree = "<group>"; };
-		E29ED1760D09525700C9D5E8 /* CMUtilsHostName.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CMUtilsHostName.cp; sourceTree = "<group>"; };
 		E29ED1770D09525700C9D5E8 /* CMUtilsObjectList.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CMUtilsObjectList.cp; sourceTree = "<group>"; };
 		E29ED1780D09525700C9D5E8 /* CMUtilsAEText.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CMUtilsAEText.cp; sourceTree = "<group>"; };
 		E29ED1790D09525700C9D5E8 /* CMUtilsSendAE.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CMUtilsSendAE.cp; sourceTree = "<group>"; };
@@ -801,9 +795,7 @@
 				1D71F32B2206F1D8009FAF91 /* CMUtils.h */,
 				E29ED1720D09525700C9D5E8 /* CMUtilsBundle.cp */,
 				E29ED1730D09525700C9D5E8 /* CMUtilsMenu.cp */,
-				E29ED1740D09525700C9D5E8 /* CMUtilsAlias.cp */,
 				E29ED1750D09525700C9D5E8 /* CMUtilsClipboard.cp */,
-				E29ED1760D09525700C9D5E8 /* CMUtilsHostName.cp */,
 				E29ED1770D09525700C9D5E8 /* CMUtilsObjectList.cp */,
 				E29ED1780D09525700C9D5E8 /* CMUtilsAEText.cp */,
 				E29ED1790D09525700C9D5E8 /* CMUtilsSendAE.cp */,
@@ -1226,9 +1218,7 @@
 			files = (
 				E29ED17F0D09525700C9D5E8 /* CMUtilsBundle.cp in Sources */,
 				E29ED1800D09525700C9D5E8 /* CMUtilsMenu.cp in Sources */,
-				E29ED1810D09525700C9D5E8 /* CMUtilsAlias.cp in Sources */,
 				E29ED1820D09525700C9D5E8 /* CMUtilsClipboard.cp in Sources */,
-				E29ED1830D09525700C9D5E8 /* CMUtilsHostName.cp in Sources */,
 				E29ED1840D09525700C9D5E8 /* CMUtilsObjectList.cp in Sources */,
 				1D9BCB8822CCA65A00F4EAB6 /* ACFURL.m in Sources */,
 				E29ED1850D09525700C9D5E8 /* CMUtilsAEText.cp in Sources */,
@@ -1304,9 +1294,7 @@
 				E257601F0D20EE1000D755FF /* CMUtilsBundle.cp in Sources */,
 				1DBCC43622CE209300A1DD8F /* OMCHelpers.mm in Sources */,
 				E25760200D20EE1000D755FF /* CMUtilsMenu.cp in Sources */,
-				E25760210D20EE1000D755FF /* CMUtilsAlias.cp in Sources */,
 				E25760220D20EE1000D755FF /* CMUtilsClipboard.cp in Sources */,
-				E25760230D20EE1000D755FF /* CMUtilsHostName.cp in Sources */,
 				E25760240D20EE1000D755FF /* CMUtilsObjectList.cp in Sources */,
 				E25760250D20EE1000D755FF /* CMUtilsAEText.cp in Sources */,
 				E25760260D20EE1000D755FF /* CMUtilsSendAE.cp in Sources */,

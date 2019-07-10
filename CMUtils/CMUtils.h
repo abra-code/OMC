@@ -87,24 +87,7 @@ public:
 
     static CFURLRef     CopyURL(const AEDesc &inDesc);
 
-	static OSErr		CreateAliasDesc( const CFURLRef inURL, AEDesc *outAliasAEDesc );
-
 	static CFBundleRef	CFBundleCreate(CFURLRef inBundleURL);
-
-	static OSErr		SendAppleEventToFinder( AEEventClass theAEEventClass, AEEventID theAEEventID,
-												const AEDesc &directObjectDesc,
-												Boolean waitForReply);
-												
-	static OSErr		SendAEWithTwoObjToFinder( AEEventClass theAEEventClass, AEEventID theAEEventID,
-													AEKeyword keyOne, const AEDesc &objOne,
-													AEKeyword keyTwo, const AEDesc &objTwo,
-													Boolean waitForReply);
-
-	static OSErr		SendAEWithThreeObjToFinder( AEEventClass theAEEventClass, AEEventID theAEEventID,
-													AEKeyword keyOne, const AEDesc &objOne,
-													AEKeyword keyTwo, const AEDesc &objTwo,
-													AEKeyword keyThree, const AEDesc &objThree,
-													Boolean waitForReply);
 
 	static OSErr		SendAppleEventToRunningApplication( FourCharCode appSig, AEEventClass theAEEventClass,
 															AEEventID theAEEventID, const AEDesc &directObjectDesc, Boolean waitForReply = false);
@@ -136,12 +119,7 @@ public:
 														AEKeyword keyTwo, const AEDesc &objTwo,
 														AEKeyword keyThree, const AEDesc &objThree, Boolean waitForReply = false);
 
-//	static OSErr		SendServicesQueryToSelf();
-	static CFStringRef	CopyHostName();
-
-	static OSStatus		GetInsertionLocationAsAliasDesc(AEDesc &outAliasDesc, AEDesc &outFinderObj);
-	static bool         IsClickInOpenFinderWindow(const AEDesc *inContext, Boolean doCheckIfFolder) noexcept;
-	static OSErr		GetFinderWindowViewType(AEDesc &finderObjDesc, FourCharCode &outViewType);
+    static bool         IsClickInOpenFinderWindow(const AEDesc *inContext, Boolean doCheckIfFolder) noexcept;
 
 	static Boolean		AEDescHasTextData(const AEDesc &inDesc);
 	static CFStringRef	CreateCFStringFromAEDesc(const AEDesc &inDesc, long inReplaceOption);

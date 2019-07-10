@@ -36,9 +36,6 @@ struct OutputWindowSettings
 {
 	OutputWindowSettings()
 		: oneLineDelay(0.1 * kEventDurationSecond), title(NULL), alpha(1.0f),
-		windowClass(kUtilityWindowClass), 
-		windowAttributes(kWindowCloseBoxAttribute + kWindowCollapseBoxAttribute + kWindowResizableAttribute + kWindowFullZoomAttribute +
-						kWindowHideOnFullScreenAttribute + kWindowStandardHandlerAttribute + kWindowLiveResizeAttribute + kWindowNoConstrainAttribute),
 		positionMethod(kWindowAlertPositionOnMainScreen), width(400), height(200), fontSize(10.0),
 		textBox(CGRectZero), closeBox(CGRectZero), resizeBox(CGRectZero),
 		useFadeIn(false), useFadeOut(false)
@@ -60,9 +57,7 @@ struct OutputWindowSettings
 	EventTimerInterval oneLineDelay;
 	CFObj<CFStringRef> title;
 	float		alpha;
-	WindowClass windowClass;//UInt32
 	OMCWindowType windowType;
-	WindowAttributes windowAttributes;//UInt32
 	WindowPositionMethod positionMethod; //UInt32
 	CGPoint		topLeftPosition;//for absolute position only
 	CGPoint		specialPosition;//in range 0.0 - 1.0 for min/max of screen rect, negative: no special position

@@ -311,12 +311,12 @@ protected:
 
 	CFObj<CFURLRef>				mPlistURL;
 	CFObj<CFURLRef>				mExternBundleOverrideURL;
-	SInt32						mSysVersion; //OS version we are running in (10.2 == 0x1020)
-	CommandDescription			*mCommandList;
-	UInt32						mCommandCount;
-	UInt32						mCurrCommandIndex;
+    SInt32						mSysVersion {101300};
+    CommandDescription			*mCommandList {nullptr};
+    UInt32						mCommandCount {0};
+    UInt32						mCurrCommandIndex {0};
     std::vector<OneObjProperties> mObjectList;
-	CFIndex						mCurrObjectIndex;
+    CFIndex						mCurrObjectIndex {0};
 	CFObj<CFMutableArrayRef>	mContextFiles;
 	AUniquePtr<SortSettings>	mSortSettings;
 	CFObj<CFStringRef>			mContextText;//selected or clipboard text
@@ -333,14 +333,14 @@ protected:
 	CFObj<CFMutableDictionaryRef> mNibControlValues;
 	CFObj<CFMutableDictionaryRef> mNibControlCustomProperties;
 	ARefCountedObj<AObserverBase> mObserver;
-	OSStatus					mError;
-	Boolean						mIsTextInClipboard;
-	Boolean						mIsOpenFolder;
-	Boolean						mIsNullContext;
-	Boolean						mIsTextContext;
-	Boolean						mCMPluginMode;
-	Boolean						mRunningInShortcutsObserver;
-	ProcessSerialNumber			mFrontProcess;//if running in observer we don't want to return observer as front process if it happens to come up
+    OSStatus					mError {noErr};
+    Boolean						mIsTextInClipboard {false};
+    Boolean						mIsOpenFolder {false};
+    Boolean						mIsNullContext {false};
+    Boolean						mIsTextContext {false};
+    Boolean						mCMPluginMode {true};
+    Boolean						mRunningInShortcutsObserver {false};
+    pid_t			            mFrontProcessPID {0};//if running in observer we don't want to return observer as front process if it happens to come up
 };
 
 void		ExecuteInTerminal(CFStringRef inCommand, bool openInNewWindow, bool bringToFront);

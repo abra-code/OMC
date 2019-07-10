@@ -291,17 +291,6 @@ static OMCService *sOMCService = NULL;
 	if(runCommandAtReopenEvent == NO) //prefs say: do not reopen
 		return NO;
 
-#ifndef __LP64__
-	//remove this code when all windows are Cocoa:
-	WindowRef oneCarbonWindow = ::GetWindowList();
-	while(oneCarbonWindow != NULL)
-	{
-		if( GetWRefCon(oneCarbonWindow) == (SRefCon)'OMC!' )//Carbon window with 'OMC!' signature is up, do not reopen
-			return NO;
-		oneCarbonWindow = ::GetNextWindow(oneCarbonWindow);
-	}
-#endif //__LP64__
-
 	if( !hasVisibleWindows ) //we don't trust hasVisibleWindows value, it probably only applies to document windows
 	{
 		if( [OMCWindow getWindowCount] > 0 )

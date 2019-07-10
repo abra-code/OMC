@@ -191,17 +191,7 @@ OmcHostTaskManager::Finalize()
 		if(mCurrCommandState->dialogGUID != NULL)
 			currDialog = OMCDialog::FindDialogByGUID(mCurrCommandState->dialogGUID);
 		OSStatus err = mPlugin->ExecuteSubcommand(mCurrCommand.name, nextCommandID, currDialog, NULL);
-
-#ifndef __LP64__
-		if(err == eventNotHandledErr)
-		{//command not found - just post the command to host app
-			HICommand appCommand = kNullHICommand;
-			appCommand.commandID =  CFStringToFourCharCode(nextCommandID);
-			ProcessHICommand(&appCommand);
-		}
-#else
 		#pragma unused(err)
-#endif //__LP64__
 	}
 }
 

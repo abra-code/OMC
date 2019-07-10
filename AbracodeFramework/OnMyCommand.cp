@@ -293,16 +293,9 @@ const CFIndex kMaxSpecialWordLen = sizeof("__DLG_CHOOSE_FOLDER_NAME_NO_EXTENSION
 */
 
 OnMyCommandCM::OnMyCommandCM(CFPropertyListRef inPlistRef)
-	: ACMPlugin( kBundleIDString ), mPlistURL(NULL),
-	mSysVersion(100300), mCommandList(NULL), mCommandCount(0), mCurrCommandIndex(0),
-	mCurrObjectIndex(0), mError(noErr),
-	mIsTextInClipboard(false), mIsOpenFolder(false), mIsNullContext(false), mIsTextContext(false),
-	mCMPluginMode(true), mRunningInShortcutsObserver(false)
+	: ACMPlugin( kBundleIDString )
 {
 	TRACE_CSTR( "OnMyCommandCM::OnMyCommandCM\n" );
-
-	mFrontProcess.highLongOfPSN = 0;
-	mFrontProcess.lowLongOfPSN = 0;
 
 	if(inPlistRef != NULL)
 	{
@@ -533,6 +526,10 @@ OnMyCommandCM::CommonContextCheck( const AEDesc *inContext, CFTypeRef inCFContex
 		else if(kCFCompareEqualTo == ::CFStringCompare( hostAppBundleID, CFSTR("com.abracode.ShortcutObserver"), 0 ))
 		{
 			mRunningInShortcutsObserver = true;
+            
+            //remember front process pid at the moment of context check
+            //in case it gets changed later, we need to keep it
+            mFrontProcessPID = GetFrontAppPID();
             
             CFObj<CFStringRef> frontProcessBundleID = CopyFrontAppBundleIdentifier();
             if(frontProcessBundleID != nullptr)
@@ -2475,82 +2472,14 @@ OnMyCommandCM::RefreshObjectsInFinder()
 	if( mObjectList.size() == 0 )
 		return;
 
-	OSStatus err;
-	
-	AEDescList refreshList = {typeNull, NULL};
-	err = ::AECreateList( NULL, 0, false, &refreshList );
-	if(err != noErr) return;
-
 	TRACE_CSTR("OnMyCommandCM. RefreshObjectsInFinder\n" );
-
-
-	StAEDesc listDel(refreshList);
 
 	for(CFIndex i = 0; i < mObjectList.size(); i++)
 	{
 		if( mObjectList[i].mRefreshPath != NULL)
 		{
-
 			DEBUG_CFSTR( mObjectList[i].mRefreshPath );
-
-			CFObj<CFURLRef> oneURL( ::CFURLCreateWithFileSystemPath(kCFAllocatorDefault, mObjectList[i].mRefreshPath, kCFURLPOSIXPathStyle, false) );
-			if(oneURL != NULL)
-			{
-				StAEDesc urlDesc;
-				err = CMUtils::CreateAliasDesc( oneURL, urlDesc );
-				
-				if(err == noErr)
-				{
-					err = ::AEPutDesc( &refreshList, 0, urlDesc );
-				}
-				else
-				{
-					DEBUG_CSTR( "OMC->RefreshObjectsInFinder. CreateAliasDesc failed, err = %d\n", (int)err );
-				}
-//also, to make it more powerful when new files are deleted and created, we will call FNNotify for parent folder
-				CFObj<CFURLRef> parentURL( ::CFURLCreateCopyDeletingLastPathComponent( kCFAllocatorDefault, oneURL ) );
-				if(parentURL != NULL)
-				{
- 					FSRef fileRef;
-					if( ::CFURLGetFSRef(parentURL, &fileRef) )
-					{
-						err = FNNotify( &fileRef, kFNDirectoryModifiedMessage, kNilOptions);
- 						if(err != noErr)
- 						{
- 							DEBUG_CSTR( "OMC->RefreshObjectsInFinder. FNNotify failed, err = %d\n", (int)err );
- 						}
- 					}
- 					else
- 					{
- 						DEBUG_CSTR( "OnMyCommandCM. RefreshObjectsInFinder. parent folder does not exist\n" );
- 					}
- 				}
-			}
-			else
-			{
-				DEBUG_CSTR( "OMC->RefreshObjectsInFinder. CFURLCreateWithFileSystemPath failed, err = %d\n", (int)err );
-			}
-		}
-	}
-
-	long listItemsCount = 0;
-	if( ::AECountItems( &refreshList, &listItemsCount) == noErr )
-	{
-		if(listItemsCount > 0)
-		{
-			err = CMUtils::SendAppleEventToFinder( kAEFinderSuite, kAESync, refreshList, false );
-			if(err != noErr)
-			{
-				DEBUG_CSTR( "OnMyCommandCM. RefreshObjectsInFinder. SendAppleEventToFinder failed\n" );
-			}
-			
-			//some people recommend sending refresh event to Finder twice
-			//but it does not seem to help because Finder sometimes just refuses to refresh
-			//err = CMUtils::SendAppleEventToFinder( kAEFinderSuite, kAESync, refreshList, false );
-		}
-		else
-		{
-			DEBUG_CSTR( "OnMyCommandCM. RefreshObjectsInFinder. refresh list empty\n" );
+            RefreshFileInFinder(mObjectList[i].mRefreshPath);
 		}
 	}
 }
@@ -4564,7 +4493,7 @@ OnMyCommandCM::AppendTextToCommand(CFMutableStringRef inCommandRef, CFStringRef 
 		
 		case MY_EXTERNAL_BUNDLE_PATH:
 		{
-			if(currCommand.externalBundlePath != NULL)
+			if(currCommand.externalBundlePath != nullptr)
 			{
 				newStrRef = CreateEscapedStringCopy(currCommand.externalBundlePath, escSpecialCharsMode);
 			}
@@ -4579,41 +4508,27 @@ OnMyCommandCM::AppendTextToCommand(CFMutableStringRef inCommandRef, CFStringRef 
 //no need to escape process id
 		case FRONT_PROCESS_ID:
 		{
-			OSStatus err = noErr;
-			ProcessSerialNumber frontPSN = { kNoProcess, kNoProcess };
-			if( mRunningInShortcutsObserver && (mFrontProcess.highLongOfPSN != kNoProcess || mFrontProcess.lowLongOfPSN != kNoProcess) )
-				frontPSN = mFrontProcess;
+			pid_t frontPID = 0;
+			if( mRunningInShortcutsObserver && (mFrontProcessPID != 0))
+				frontPID = mFrontProcessPID;
 			else
-				err = GetFrontProcess( &frontPSN );
+				frontPID = GetFrontAppPID();
 
-			if( err == noErr )
-			{
-				pid_t frontPID = 0;
-				err = GetProcessPID( &frontPSN, &frontPID );
-				if(err == noErr)
-				{
-					newStrRef = CFStringCreateWithFormat( kCFAllocatorDefault, NULL, CFSTR("%d"), frontPID );
-				}
-			}
-			
+            newStrRef = CFStringCreateWithFormat( kCFAllocatorDefault, nullptr, CFSTR("%d"), frontPID );
 		}
 		break;
 		
 		case FRONT_APPLICATION_NAME:
 		{
-			OSStatus err = noErr;
-			ProcessSerialNumber frontPSN = { kNoProcess, kNoProcess };
-			if( mRunningInShortcutsObserver && (mFrontProcess.highLongOfPSN != kNoProcess || mFrontProcess.lowLongOfPSN != kNoProcess) )
-				frontPSN = mFrontProcess;
-			else
-				err = GetFrontProcess( &frontPSN );
+            CFObj<CFStringRef> frontAppStr;
+			if(mRunningInShortcutsObserver && (mFrontProcessPID != 0))
+				frontAppStr.Adopt(CopyAppNameForPID(mFrontProcessPID) );
 
-			if( err == noErr )
-			{
-				CFObj<CFStringRef> frontAppStr;
-				CopyProcessName( &frontPSN, &frontAppStr );
+			if(frontAppStr == nullptr)
+                frontAppStr.Adopt(CopyFrontAppName());
+            
+            if(frontAppStr != nullptr)
 				newStrRef = CreateEscapedStringCopy(frontAppStr, escSpecialCharsMode);
-			}
 		}
 		break;
 
@@ -4920,7 +4835,7 @@ OnMyCommandCM::PopulateEnvironList(CFMutableDictionaryRef ioEnvironList,
 			
 			case MY_EXTERNAL_BUNDLE_PATH:
 			{
-				if(currCommand.externalBundlePath != NULL)
+				if(currCommand.externalBundlePath != nullptr)
 				{
 					newStrRef = currCommand.externalBundlePath;
 					deleteNewString = false;
@@ -4935,41 +4850,26 @@ OnMyCommandCM::PopulateEnvironList(CFMutableDictionaryRef ioEnvironList,
 	//no need to escape process id
 			case FRONT_PROCESS_ID:
 			{
-				OSStatus err = noErr;
-				ProcessSerialNumber frontPSN = { kNoProcess, kNoProcess };
-				if( mRunningInShortcutsObserver && (mFrontProcess.highLongOfPSN != kNoProcess || mFrontProcess.lowLongOfPSN != kNoProcess) )
-					frontPSN = mFrontProcess;
-				else
-					err = GetFrontProcess( &frontPSN );
-
-				if( err == noErr )
-				{
-					pid_t frontPID = 0;
-					err = GetProcessPID( &frontPSN, &frontPID );
-					if(err == noErr)
-					{
-						newStrRef = CFStringCreateWithFormat( kCFAllocatorDefault, NULL, CFSTR("%d"), frontPID );
-					}
-				}
-				
+                pid_t frontPID = 0;
+                if( mRunningInShortcutsObserver && (mFrontProcessPID != 0))
+                    frontPID = mFrontProcessPID;
+                else
+                    frontPID = GetFrontAppPID();
+                
+                newStrRef = CFStringCreateWithFormat( kCFAllocatorDefault, nullptr, CFSTR("%d"), frontPID );
 			}
 			break;
 			
 			case FRONT_APPLICATION_NAME:
 			{
-				OSStatus err = noErr;
-				ProcessSerialNumber frontPSN = { kNoProcess, kNoProcess };
-				if( mRunningInShortcutsObserver && (mFrontProcess.highLongOfPSN != kNoProcess || mFrontProcess.lowLongOfPSN != kNoProcess) )
-					frontPSN = mFrontProcess;
-				else
-					err = GetFrontProcess( &frontPSN );
-
-				if( err == noErr )
-				{
-					CFStringRef frontAppStr = NULL;
-					CopyProcessName( &frontPSN, &frontAppStr );
-					newStrRef = frontAppStr;
-				}
+                CFObj<CFStringRef> frontAppStr;
+                if(mRunningInShortcutsObserver && (mFrontProcessPID != 0))
+                    frontAppStr.Adopt(CopyAppNameForPID(mFrontProcessPID) );
+                
+                if(frontAppStr == nullptr)
+                    frontAppStr.Adopt(CopyFrontAppName());
+                
+                newStrRef = frontAppStr.Detach();
 			}
 			break;
 

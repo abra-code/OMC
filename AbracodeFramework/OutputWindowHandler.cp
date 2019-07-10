@@ -227,11 +227,6 @@ OutputWindowHandler::GetOutputWindowSettings(CFArrayRef inCommandName, CFDiction
 #ifdef BUILD_DEPUTY
 //regular floating window is never shown in background app - the default is global floating
 	outSettings.windowType = kOMCWindowGlobalFloating;
-	outSettings.windowClass = kUtilityWindowClass;
-	outSettings.windowAttributes = kWindowCloseBoxAttribute + kWindowCollapseBoxAttribute + 
-								kWindowResizableAttribute + kWindowFullZoomAttribute +
-								kWindowHideOnFullScreenAttribute +
-								kWindowStandardHandlerAttribute + kWindowLiveResizeAttribute + kWindowNoConstrainAttribute;				
 #else //BUILD_DEPUTY
 	//we need to check if the process is background only - in this case we cannot use floating
 	//because it will never show
@@ -248,22 +243,12 @@ OutputWindowHandler::GetOutputWindowSettings(CFArrayRef inCommandName, CFDiction
 		DEBUG_CSTR("Current process is background-only\n");
 		DEBUG_CSTR("processMode = %d\n", (int)info.processMode);
 		outSettings.windowType = kOMCWindowGlobalFloating;
-		outSettings.windowClass = kUtilityWindowClass;
-		outSettings.windowAttributes = kWindowCloseBoxAttribute + kWindowCollapseBoxAttribute + 
-									kWindowResizableAttribute + kWindowFullZoomAttribute +
-									kWindowHideOnFullScreenAttribute +
-									kWindowStandardHandlerAttribute + kWindowLiveResizeAttribute + kWindowNoConstrainAttribute;				
 	}
 	else
 	{
 		DEBUG_CSTR("Current process is NOT background-only\n");
 		DEBUG_CSTR("processMode = %d\n", (int)info.processMode);
 		outSettings.windowType = kOMCWindowFloating;
-		outSettings.windowClass = kFloatingWindowClass;
-		outSettings.windowAttributes = kWindowCloseBoxAttribute + kWindowCollapseBoxAttribute + 
-								kWindowResizableAttribute + kWindowFullZoomAttribute +
-								kWindowHideOnSuspendAttribute + kWindowHideOnFullScreenAttribute +
-								kWindowStandardHandlerAttribute + kWindowLiveResizeAttribute + kWindowNoConstrainAttribute;
 	}
 
 #endif //BUILD_DEPUTY
@@ -322,57 +307,30 @@ OutputWindowHandler::GetOutputWindowSettings(CFArrayRef inCommandName, CFDiction
 		if( kCFCompareEqualTo == ::CFStringCompare( theStr, CFSTR("regular"), 0 ) )
 		{
 			outSettings.windowType = kOMCWindowRegular;
-			outSettings.windowClass = kDocumentWindowClass;
-			outSettings.windowAttributes = kWindowCloseBoxAttribute + kWindowCollapseBoxAttribute + 
-										kWindowResizableAttribute + kWindowFullZoomAttribute +
-										kWindowStandardHandlerAttribute + kWindowLiveResizeAttribute + kWindowNoConstrainAttribute;
 		}
 		else if( kCFCompareEqualTo == ::CFStringCompare( theStr, CFSTR("floating"), 0 ) )
 		{
 #ifdef BUILD_DEPUTY
 //regular floating window is never shown for backround deputy app. replace with global floating
 			outSettings.windowType = kOMCWindowGlobalFloating;
-			outSettings.windowClass = kUtilityWindowClass;
-			outSettings.windowAttributes = kWindowCloseBoxAttribute + kWindowCollapseBoxAttribute + 
-										kWindowResizableAttribute + kWindowFullZoomAttribute +
-										kWindowHideOnFullScreenAttribute +
-										kWindowStandardHandlerAttribute + kWindowLiveResizeAttribute + kWindowNoConstrainAttribute;				
-
 #else
 			if( (info.processMode & modeOnlyBackground) != 0 )
 			{
 				outSettings.windowType = kOMCWindowGlobalFloating;
-				outSettings.windowClass = kUtilityWindowClass;
-				outSettings.windowAttributes = kWindowCloseBoxAttribute + kWindowCollapseBoxAttribute + 
-											kWindowResizableAttribute + kWindowFullZoomAttribute +
-											kWindowHideOnFullScreenAttribute +
-											kWindowStandardHandlerAttribute + kWindowLiveResizeAttribute + kWindowNoConstrainAttribute;				
 			}
 			else
 			{
 				outSettings.windowType = kOMCWindowFloating;
-				outSettings.windowClass = kFloatingWindowClass;
-				outSettings.windowAttributes = kWindowCloseBoxAttribute + kWindowCollapseBoxAttribute + 
-											kWindowResizableAttribute + kWindowFullZoomAttribute +
-											kWindowHideOnSuspendAttribute + kWindowHideOnFullScreenAttribute +
-											kWindowStandardHandlerAttribute + kWindowLiveResizeAttribute + kWindowNoConstrainAttribute;
 			}
 #endif
 		}
 		else if( kCFCompareEqualTo == ::CFStringCompare( theStr, CFSTR("global_floating"), 0 ) )
 		{
 			outSettings.windowType = kOMCWindowGlobalFloating;
-			outSettings.windowClass = kUtilityWindowClass;
-			outSettings.windowAttributes = kWindowCloseBoxAttribute + kWindowCollapseBoxAttribute + 
-										kWindowResizableAttribute + kWindowFullZoomAttribute +
-										kWindowHideOnFullScreenAttribute +
-										kWindowStandardHandlerAttribute + kWindowLiveResizeAttribute + kWindowNoConstrainAttribute;				
 		}
 		else if( kCFCompareEqualTo == ::CFStringCompare( theStr, CFSTR("custom"), 0 ) )
 		{
 			outSettings.windowType = kOMCWindowCustom;
-			outSettings.windowClass = kOverlayWindowClass;
-			outSettings.windowAttributes	= kWindowNoShadowAttribute + kWindowStandardHandlerAttribute + kWindowNoConstrainAttribute;
 			isCustom = true;
 		}
 	}

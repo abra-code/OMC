@@ -15,41 +15,11 @@
 #include "MoreAppleEvents.h"
 #include "CFObj.h"
 
-//send simple event with direct param to Finder
-//if you need something more complicated, use the following code as a starting point and stick required descriptions
-//into the appleEvent
-
-//if the function returns noErr it does not mean the Finder will process your event
-//it just means that the event was sent successfully
-
-OSErr
-CMUtils::SendAppleEventToFinder( AEEventClass theAEEventClass, AEEventID theAEEventID, const AEDesc &directObjectDesc, Boolean waitForReply /*=false*/)
-{
-	return CMUtils::SendAppleEventToRunningApplication( 'MACS', theAEEventClass, theAEEventID, directObjectDesc, waitForReply );
-}
-
-OSErr
-CMUtils::SendAEWithTwoObjToFinder( AEEventClass theAEEventClass, AEEventID theAEEventID,
-									AEKeyword keyOne, const AEDesc &objOne,
-									AEKeyword keyTwo, const AEDesc &objTwo, Boolean waitForReply /*=false*/)
-{
-	return CMUtils::SendAEWithTwoObjToRunningApp( 'MACS', theAEEventClass, theAEEventID, keyOne, objOne, keyTwo, objTwo, waitForReply );
-}
-
-OSErr
-CMUtils::SendAEWithThreeObjToFinder( AEEventClass theAEEventClass, AEEventID theAEEventID,
-									AEKeyword keyOne, const AEDesc &objOne,
-									AEKeyword keyTwo, const AEDesc &objTwo,
-									AEKeyword keyThree, const AEDesc &objThree, Boolean waitForReply /*=false*/)
-{
-	return CMUtils::SendAEWithThreeObjToRunningApp( 'MACS', theAEEventClass, theAEEventID, keyOne, objOne, keyTwo, objTwo, keyThree, objThree, waitForReply );
-}
-
-
 #pragma mark -
 
-OSStatus
-CMUtils::GetInsertionLocationAsAliasDesc(AEDesc &outAliasDesc, AEDesc &outFinderObj)
+//TODO: check if this code still works with Finder in the latest macOS versions
+
+static OSStatus GetInsertionLocationAsAliasDesc(AEDesc &outAliasDesc, AEDesc &outFinderObj)
 {
 	OSErr err = MoreAETellAppToGetAEDesc('MACS', pInsertionLoc, typeWildCard, &outFinderObj);
 	if(err != noErr)
@@ -93,6 +63,53 @@ CMUtils::GetInsertionLocationAsAliasDesc(AEDesc &outAliasDesc, AEDesc &outFinder
 #endif
 	
 	return err;
+}
+
+//types:
+//'clvw' - column view
+// 'icnv' - icon view
+//'lsvw' - list view
+
+static OSErr GetFinderWindowViewType(AEDesc &finderObjDesc, FourCharCode &outViewType)
+{
+    OSErr err = noErr;
+    outViewType = 0;
+    
+    StAEDesc windowObjDesc;
+    err = MoreAETellAppObjectToGetAEDesc('MACS', &finderObjDesc, cContainerWindow, typeWildCard, windowObjDesc);
+    
+    if(err != noErr)
+    {
+        DEBUG_CSTR( "GetFinderWindowViewType->MoreAETellAppObjectToGetAEDesc failed to get container window\n" );
+        return err;
+    }
+    
+    StAEDesc viewTypeDesc;
+    err = MoreAETellAppObjectToGetAEDesc('MACS', windowObjDesc, pView, typeWildCard, viewTypeDesc);
+    
+    if(err != noErr)
+    {
+        DEBUG_CSTR( "GetFinderWindowViewType->MoreAETellAppObjectToGetAEDesc failed to get view type\n" );
+        return err;
+    }
+    
+#if _DEBUG_
+    {
+        char debugStr[8];
+        UInt8 *descPtr = (UInt8 *)&(viewTypeDesc.descriptorType);
+        debugStr[0] = descPtr[0];
+        debugStr[1] = descPtr[1];
+        debugStr[2] = descPtr[2];
+        debugStr[3] = descPtr[3];
+        debugStr[4] = 0;
+        DEBUG_CSTR( "GetFinderWindowViewType: viewTypeDesc data type is: %s\n", debugStr );
+    }
+#endif
+    
+    if( ((AEDesc*)viewTypeDesc)->descriptorType == typeEnumerated)
+        ::AEGetDescData(viewTypeDesc, &outViewType, sizeof(outViewType));
+    
+    return err;
 }
 
 //the following is needed for Mac OS 10.3 Finder
@@ -149,7 +166,7 @@ CMUtils::IsClickInOpenFinderWindow(const AEDesc *inContext, Boolean doCheckIfFol
 	//there is a bug in Finder 10.3 that it returns non-container items (like plain file)
 	//when requested for insertion location in column view
 	
-	err = CMUtils::GetInsertionLocationAsAliasDesc(insertionLocAlias, finderObjDesc);
+	err = GetInsertionLocationAsAliasDesc(insertionLocAlias, finderObjDesc);
 	
 	if(err != noErr)
 	{
@@ -197,50 +214,3 @@ CMUtils::IsClickInOpenFinderWindow(const AEDesc *inContext, Boolean doCheckIfFol
 	return false;
 }
 
-//types:
-//'clvw' - column view
-// 'icnv' - icon view
-//'lsvw' - list view
-
-OSErr
-CMUtils::GetFinderWindowViewType(AEDesc &finderObjDesc, FourCharCode &outViewType)
-{
-	OSErr err = noErr;
-	outViewType = 0;
-
-	StAEDesc windowObjDesc;
-    err = MoreAETellAppObjectToGetAEDesc('MACS', &finderObjDesc, cContainerWindow, typeWildCard, windowObjDesc);
-
-	if(err != noErr)										
-	{
-		DEBUG_CSTR( "GetFinderWindowViewType->MoreAETellAppObjectToGetAEDesc failed to get container window\n" );
-		return err;
-	}
-
-	StAEDesc viewTypeDesc;
-    err = MoreAETellAppObjectToGetAEDesc('MACS', windowObjDesc, pView, typeWildCard, viewTypeDesc);
-
-	if(err != noErr)										
-	{
-		DEBUG_CSTR( "GetFinderWindowViewType->MoreAETellAppObjectToGetAEDesc failed to get view type\n" );
-		return err;
-	}
-
-#if _DEBUG_
-	{
-	char debugStr[8];
-	UInt8 *descPtr = (UInt8 *)&(viewTypeDesc.descriptorType);
-	debugStr[0] = descPtr[0];
-	debugStr[1] = descPtr[1];
-	debugStr[2] = descPtr[2];
-	debugStr[3] = descPtr[3];
-    debugStr[4] = 0;
-	DEBUG_CSTR( "GetFinderWindowViewType: viewTypeDesc data type is: %s\n", debugStr );
-	}
-#endif
-
-	if( ((AEDesc*)viewTypeDesc)->descriptorType == typeEnumerated)
-		::AEGetDescData(viewTypeDesc, &outViewType, sizeof(outViewType));
-
-	return err;
-}
