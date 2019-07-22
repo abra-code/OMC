@@ -10,8 +10,10 @@ CFStringRef CopyFrontAppName();
 CFStringRef CopyFrontAppBundleIdentifier();
 pid_t GetFrontAppPID();
 CFStringRef CopyAppNameForPID(pid_t pid);
+bool RunningInRegularGUIApp();
 
 void RefreshFileInFinder(CFStringRef filePath);
+void GetOperatingSystemVersion(long* outMajorVersion, long* outMinorVersion, long* outPatchVersion);
 
 #ifdef __cplusplus
 }

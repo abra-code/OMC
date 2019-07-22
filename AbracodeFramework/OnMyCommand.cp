@@ -44,6 +44,9 @@
 #include "ACFPropertyList.h"
 #include "ACFURL.h"
 #include "OMCHelpers.h"
+#include "OMCStrings.h"
+#include "OMCTerminalExecutor.h"
+#include "OMCiTermExecutor.h"
 
 extern Boolean RunCocoaDialog(OnMyCommandCM *inPlugin);
 
@@ -54,11 +57,6 @@ enum
 	kPopupMenuDialogIndx		= 130,
 	kComboBoxDialogIndx			= 131
 };
-
-
-//const FourCharCode kTerminalAppSig = 'trmx';
-const FourCharCode kITermAppSig = 'ITRM';
-#define kTerminalAppBundleID "com.apple.Terminal"
 
 CFStringRef kOMCTopCommandID = CFSTR("top!");
 
@@ -343,17 +341,14 @@ OnMyCommandCM::Init(CFBundleRef inBundle)
 	if(inBundle != NULL)//plugin has the bundle ref already, droplet sets it here
 		mBundleRef.Adopt(inBundle, kCFObjRetain);
 
-	SInt32 sysVerMajor = 10;
-	SInt32 sysVerMinor = 4;
-	SInt32 sysVerBugFix = 0;
-	::Gestalt(gestaltSystemVersionMajor, &sysVerMajor);
-	::Gestalt(gestaltSystemVersionMinor, &sysVerMinor);
-	::Gestalt(gestaltSystemVersionBugFix, &sysVerBugFix);
+	long sysVerMajor = 10;
+	long sysVerMinor = 13;
+	long sysVerBugFix = 0;
 
-	//eg. 100411 max 999999
-	mSysVersion = 10000 * sysVerMajor + 100 * sysVerMinor + sysVerBugFix;
-
-//	::Gestalt(gestaltSystemVersion, &mSysVersion);
+    GetOperatingSystemVersion(&sysVerMajor, &sysVerMinor, &sysVerBugFix);
+    
+	//eg. 101405 max 999999
+	mSysVersion = 10000 * (SInt32)sysVerMajor + 100 * (SInt32)sysVerMinor + (SInt32)sysVerBugFix;
 
 //#if _DEBUG_
 //	printf("OMC: Current system version = 0x%.8X, integer = %d\n", (unsigned int)mSysVersion, (int)mSysVersion);
@@ -585,7 +580,6 @@ OnMyCommandCM::CommonContextCheck( const AEDesc *inContext, CFTypeRef inCFContex
 			if(listItemsCount > 0)
 			{
                 mObjectList.resize(listItemsCount);
-				memset(mObjectList.data(), 0, listItemsCount*sizeof(OneObjProperties));
 			}
 		}
 
@@ -675,7 +669,6 @@ OnMyCommandCM::ExamineDropletFileContext(AEDescList *fileList)
 			if(listItemsCount > 0)
 			{
                 mObjectList.resize(listItemsCount);
-				memset(mObjectList.data(), 0, listItemsCount*sizeof(OneObjProperties));
 			}
 		}
 
@@ -1145,8 +1138,8 @@ OnMyCommandCM::GetCFContext()
 			{	
 				for(size_t i = 0; i < mObjectList.size(); i++)
 				{
-					if(mObjectList[i].mURLRef != nullptr)
-                        ::CFArrayAppendValue( mContextFiles, mObjectList[i].mURLRef );
+					if(mObjectList[i].url != nullptr)
+                        ::CFArrayAppendValue( mContextFiles, mObjectList[i].url );
 				}
 			}
 		}
@@ -1307,25 +1300,6 @@ OnMyCommandCM::DeleteCommandList()
 void
 OnMyCommandCM::DeleteObjectList()
 {
-    for(CFIndex i = 0; i < mObjectList.size(); i++)
-    {
-        OneObjProperties& oneObj = mObjectList[i];
-        
-        if( oneObj.mURLRef != NULL )
-        {
-            ::CFRelease( oneObj.mURLRef );
-        }
-        
-        if( oneObj.mExtension != NULL )
-        {
-            ::CFRelease( oneObj.mExtension );
-        }
-        
-        if( oneObj.mRefreshPath != NULL )
-        {
-            ::CFRelease( oneObj.mRefreshPath );
-        }
-    }
     mObjectList.clear();
 	mCurrObjectIndex = 0;
 }
@@ -1402,46 +1376,24 @@ OnMyCommandCM::CFURLCheckFileOrFolder(CFURLRef inURLRef, void *ioData)
 	if( (inURLRef == nullptr) || (ioData == nullptr) )
 		return paramErr;
 
-	OnMyCommandCM *myData = (OnMyCommandCM *)ioData;
+	OnMyCommandCM &myData = *(OnMyCommandCM *)ioData;
 
-	if(myData->mObjectList.size() == 0)
-		return paramErr;
-
-    if(myData->mCurrObjectIndex < myData->mObjectList.size())
+    if(myData.mCurrObjectIndex < myData.mObjectList.size())
 	{
-		OneObjProperties& objProperties = myData->mObjectList[myData->mCurrObjectIndex];
+		OneObjProperties& objProperties = myData.mObjectList[myData.mCurrObjectIndex];
+        objProperties.url.Adopt(inURLRef, kCFObjRetain);
+        objProperties.extension.Adopt(CFURLCopyPathExtension(inURLRef));
         
-        if(inURLRef != nullptr)
-           ::CFRetain(inURLRef);
-        if(objProperties.mURLRef != nullptr)
-			CFRelease(objProperties.mURLRef);
-		objProperties.mURLRef = inURLRef;
+        const void* keys[] = { kCFURLIsRegularFileKey, kCFURLIsDirectoryKey, kCFURLIsPackageKey };
+        CFObj<CFArrayRef> propertyKeys(CFArrayCreate(kCFAllocatorDefault, keys, sizeof(keys)/sizeof(const void*), &kCFTypeArrayCallBacks));
+        CFObj<CFDictionaryRef> fileProperties(CFURLCopyResourcePropertiesForKeys(inURLRef, propertyKeys, nullptr));
 
-        //TODO: write replacement for this LS API using CFURLRef/NSURL
-        LSItemInfoRecord itemInfo;
-        memset(&itemInfo, 0, sizeof(itemInfo));
-        LSRequestedInfo whichInfo = kLSRequestExtension | kLSRequestTypeCreator | kLSRequestBasicFlagsOnly | kLSRequestExtensionFlagsOnly;
-        OSErr err = ::LSCopyItemInfoForURL( inURLRef, whichInfo, &itemInfo);
-        if( err == noErr )
-        {
-            if( myData->mCurrObjectIndex < myData->mObjectList.size() )
-            {
-                OneObjProperties& objProperties = myData->mObjectList[myData->mCurrObjectIndex];
-                
-                objProperties.mExtension  = itemInfo.extension;
-                objProperties.mType = itemInfo.filetype;
-                objProperties.mFlags = itemInfo.flags;
-                objProperties.mRefreshPath = NULL;
-                
-                myData->mCurrObjectIndex++; //client will use thins information know the exact number of valid items
-            }
-            else if(itemInfo.extension != nullptr)
-            {
-                ::CFRelease(itemInfo.extension);
-            }
-        }
+        ACFDict propertyDict(fileProperties);
+        propertyDict.GetValue(kCFURLIsRegularFileKey, objProperties.isRegularFile);
+        propertyDict.GetValue(kCFURLIsDirectoryKey, objProperties.isDirectory);
+        propertyDict.GetValue(kCFURLIsPackageKey, objProperties.isPackage);
 
-    
+        myData.mCurrObjectIndex++; //client will use this information to know the exact number of valid items
     }
 	return fnfErr;
 }
@@ -1495,7 +1447,7 @@ OnMyCommandCM::ProcessObjects()
 			TRACE_CSTR("OnMyCommandCM. create refresh path\n" );
 			mCurrObjectIndex = i;
 			CFObj<CFMutableStringRef> onePath( CreateCombinedStringWithObjects(currCommand.refresh, NULL, NULL) );
-			mObjectList[i].mRefreshPath = CreatePathByExpandingTilde( onePath );//we own the string
+			mObjectList[i].refreshPath.Adopt(CreatePathByExpandingTilde(onePath));
 		}
 	}
 
@@ -1665,306 +1617,6 @@ OnMyCommandCM::ProcessCommandWithText(const CommandDescription &currCommand, CFS
 	return noErr;
 }
 
-void
-ExecuteInTerminal(CFStringRef inCommand, bool openInNewWindow, bool bringToFront)
-{
-	if(inCommand == NULL)
-		return;
-
-//	FourCharCode termAppSig = 'trmx';
-	
-	OSStatus err = noErr;
-	StAEDesc theCommandDesc;
-
-	//Send UTF-16 text
-	err = CMUtils::CreateUniTextDescFromCFString(inCommand, theCommandDesc);
-
-	if(err != noErr)
-		return;
-
-	SInt32 sysVersion;
-	::Gestalt(gestaltSystemVersion, &sysVersion);
-	
-
-	err = SendEventToTerminal(theCommandDesc, sysVersion, openInNewWindow, bringToFront);
-
-	if(err == noErr)
-		return;//sucess situation - we may exit now
-
-	//terminal not running probably
-	TRACE_CSTR("\tExecuteInTerminal. Trying to launch the application with LS\n" );
-	FSRef appRef;
-	err = ::LSFindApplicationForInfo(kLSUnknownCreator, CFSTR(kTerminalAppBundleID), CFSTR("Terminal.app"), &appRef, NULL);
-
-	if(err != noErr)
-	{
-		LOG_CSTR( "OMC->ExecuteInTerminal. Could not find Terminal application. We give up now.\n" );
-		return;
-	}
-
-	LSLaunchFSRefSpec launchParams;
-	launchParams.appRef = &appRef;
-	launchParams.numDocs = 0;
-	launchParams.itemRefs = NULL;
-	launchParams.passThruParams = NULL;//appleEvent;
-	launchParams.launchFlags = kLSLaunchDefaults;
-	launchParams.asyncRefCon = NULL;
-	err = ::LSOpenFromRefSpec( &launchParams, NULL);
-
-	if(err == noErr)
-	{//Terminal is launching right now.
-	//We cannot send an event to it right away because it is not ready yet
-	//We cannot install a launch notify handler because we do not know if our host will be happy about this
-	//Installing a deferred task is too much work :-) so we go the easy way:
-	//we will wait one second and send event. We will try 10 times every one second to give plenty of time for the app to launch
-
-		for(int i = 1; i <= 10; i++)
-		{//we only try 10 times and then give up
-			::Delay(60, NULL); //wait 1 second before trying to send the event
-
-			err = SendEventToTerminal(theCommandDesc, sysVersion, false, bringToFront);//after terminal launch a new window is open so never open another one
-			
-			if( (err == connectionInvalid) || (err == procNotFound) )
-			{
-				TRACE_CSTR("\tExecuteInTerminal. App still launching. Waiting...\n" );
-				continue;
-			}
-			else 
-				break;//either err == noErr (success), or some other error so we exit anyway
-		}
-		
-		if(err != noErr)
-		{
-			LOG_CSTR( "OMC->ExecuteInTerminal. Event could not be sent to launched application, err = %d\n", (int)err );
-		}
-	}
-	else
-	{
-		LOG_CSTR( "OMC->ExecuteInTerminal. LSOpenFromRefSpec failed, err = %d\n", (int)err );
-	}
-	
-}
-
-OSErr
-SendEventToTerminal(const AEDesc &inCommandDesc, SInt32 sysVersion, bool openInNewWindow, bool bringToFront)
-{
-	OSErr err = noErr;
-	AEKeyword theKeyword = (sysVersion >= 0x1020) ? keyDirectObject : 'cmnd';//Terminal in Mac OS 10.1.x needs different event
-
-	if(sysVersion < 0x1020)
-		openInNewWindow = true;//old Terminal does no support execution in specified window
-
-	if( openInNewWindow )
-	{
-        err = CMUtils::SendAEWithObjToRunningApp( kTerminalAppBundleID, kAECoreSuite, kAEDoScript, theKeyword, inCommandDesc );
-	}
-	else
-	{
-		//find front window
-		StAEDesc theFrontWindow;
-        err = MoreAETellBundledAppToGetElementAt(
-										kTerminalAppBundleID,
-										cWindow,
-										kAEFirst,
-										typeWildCard,
-										theFrontWindow);
-		if(err == noErr)
-		{
-			/*
-			StAEDesc theFrontWindowDesc;
-			StAEDesc nullDescRec;
-			StAEDesc positionDesc;
-			long thePosition = 1; //window number one is the topmost window
-			err = ::AECreateDesc( typeLongInteger, &thePosition,
-									sizeof(thePosition), positionDesc);
-				
-			if(err == noErr)
-			{
-				err = ::CreateObjSpecifier( cWindow, nullDescRec, 
-											formAbsolutePosition, positionDesc, false,  theFrontWindowDesc );
-			}
-			*/
-            err = CMUtils::SendAEWithTwoObjToRunningApp( kTerminalAppBundleID, kAECoreSuite, kAEDoScript, theKeyword, inCommandDesc, keyAEFile, theFrontWindow/*Desc*/ );
-		}
-			
-		if( (err != noErr) && (err != connectionInvalid) && (err != procNotFound) )
-		{//if for any reason the event cannot be sent to topmost window, try opening new window
-            err = CMUtils::SendAEWithObjToRunningApp( kTerminalAppBundleID, kAECoreSuite, kAEDoScript, theKeyword, inCommandDesc );
-		}
-	}
-
-	if( (err == noErr) && bringToFront)
-	{
-		StAEDesc fakeDesc;
-        err = CMUtils::SendAEWithObjToRunningApp( kTerminalAppBundleID, kAEMiscStandards, kAEActivate, 0, fakeDesc);
-	}
-
-	return err;
-}
-
-
-void
-ExecuteInITerm(CFStringRef inCommand, CFStringRef inShellPath, bool openInNewWindow, bool bringToFront)
-{
-	if(inCommand == NULL)
-		return;
-	
-	OSStatus err = noErr;
-	StAEDesc theCommandDesc;
-
-	err = CMUtils::CreateUniTextDescFromCFString(inCommand, theCommandDesc);
-
-	if(err != noErr)
-		return;
-
-	SInt32 sysVersion;
-	::Gestalt(gestaltSystemVersion, &sysVersion);
-	
-
-	err = SendEventToITerm(theCommandDesc, inShellPath, sysVersion, openInNewWindow, bringToFront, false);
-
-	if(err == noErr)
-		return;//sucess situation - we may exit now
-
-	//terminal not running probably
-	TRACE_CSTR("\tExecuteInITerm. Trying to launch the application with LS\n" );
-	FSRef appRef;
-	err = ::LSFindApplicationForInfo(kITermAppSig, NULL, CFSTR("iTerm.app"), &appRef, NULL);
-
-	if(err != noErr)
-	{
-		TRACE_CSTR("\tExecuteInITerm. Could not find iTerm application. We give up now.\n" );
-		return;
-	}
-
-	LSLaunchFSRefSpec launchParams;
-	launchParams.appRef = &appRef;
-	launchParams.numDocs = 0;
-	launchParams.itemRefs = NULL;
-	launchParams.passThruParams = NULL;//appleEvent;
-	launchParams.launchFlags = kLSLaunchDefaults;
-	launchParams.asyncRefCon = NULL;
-	err = ::LSOpenFromRefSpec( &launchParams, NULL);
-
-	if(err == noErr)
-	{//iTerm is launching right now.
-	//We cannot send an event to it right away because it is not ready yet
-	//We cannot install a launch notify handler because we do not know if our host will be happy about this
-	//Installing a deferred task is too much work :-) so we go the easy way:
-	//we will wait one second and send event. We will try 10 times every one second to give plenty of time for the app to launch
-
-		for(int i = 1; i <= 10; i++)
-		{//we only try 10 times and then give up
-			::Delay(60, NULL); //wait 1 second before trying to send the event
-
-			StAEDesc fakeDesc;
-			err = CMUtils::SendAEWithObjToRunningApp( kITermAppSig, kAEMiscStandards, kAEActivate, 0, fakeDesc);
-			
-			if( (err == connectionInvalid) || (err == procNotFound) )
-			{
-				TRACE_CSTR("\tExecuteInITerm. App still launching. Waiting...\n" );
-				continue;
-			}
-			else if(err == noErr)
-			{
-				err = SendEventToITerm(theCommandDesc, inShellPath, sysVersion, false, bringToFront, true);//after terminal launch a new window is open so never open another one
-				break;//either err == noErr (success), or some other error so we exit anyway
-			}
-		}
-		
-		if(err != noErr)
-		{
-			LOG_CSTR( "OMC->ExecuteInITerm. Event could not be sent to launched application, err = %d\n", (int)err );
-		}
-	}
-	else
-	{
-		LOG_CSTR( "OMC->ExecuteInITerm. LSOpenFromRefSpec failed, err = %d\n", (int)err );
-	}
-	
-}
-
-OSErr
-SendEventToITerm(const AEDesc &inCommandDesc, CFStringRef inShellPath, SInt32 sysVersion, bool openInNewWindow, bool bringToFront, bool justLaunching)
-{
-#pragma unused (sysVersion)
-
-	const AEEventClass kITermSuite = 'ITRM';
-	OSErr err = -1;
-	
-	StAEDesc termDesc;
-	StAEDesc sessionDesc;
-	bool hasTerm = false;
-	bool tryNewSession = true;
-
-    err = MoreAETellAppToGetAEDesc(	kITermAppSig,
-									'Ctrm',
-									typeWildCard,
-									termDesc);
-	hasTerm = (err == noErr);//current terminal exists
-
-	if(hasTerm && (openInNewWindow == false))
-	{
-        err = MoreAETellAppObjectToGetAEDesc( kITermAppSig,
-								termDesc,
-								'Cssn',
-								typeWildCard,
-								sessionDesc);
-		if(err == noErr)
-		{//current session exists
-            err = CMUtils::SendAEWithTwoObjToRunningApp( kITermAppSig, kITermSuite, 'Wrte', keyDirectObject, sessionDesc, 'iTxt', inCommandDesc );
-			tryNewSession = (err != noErr);//don't try opening new session if this calls succeeds
-		}
-	}
-	
-	if(tryNewSession)
-	{
-		if(hasTerm == false)
-		{
-            err = MoreAETellAppToCreateNewElementIn(
-										kITermAppSig,
-										'Ptrm',
-										NULL,
-										NULL,
-										typeWildCard,
-										termDesc);
-										
-			hasTerm = (err == noErr);
-		}
-		
-		if(hasTerm)
-		{
-            err = MoreAETellAppObjToInsertNewElement(
-											kITermAppSig,
-											termDesc,
-											'Pssn',
-											'Pssn',
-											NULL,
-											kAEAfter,
-											typeWildCard,
-											sessionDesc);
-										
-			StAEDesc shellDesc;
-			if(inShellPath == NULL)
-				inShellPath = CFSTR("/bin/tcsh");
-			err = CMUtils::CreateUniTextDescFromCFString( inShellPath, shellDesc );
-			if(err == noErr)
-			{
-                err = CMUtils::SendAEWithTwoObjToRunningApp( kITermAppSig, kITermSuite, 'Exec', keyDirectObject, sessionDesc, 'Cmnd', shellDesc );
-                err = CMUtils::SendAEWithTwoObjToRunningApp( kITermAppSig, kITermSuite, 'Wrte', keyDirectObject, sessionDesc, 'iTxt', inCommandDesc );
-			}
-		}
-	}
-
-	if( (justLaunching == false) && (err == noErr) && bringToFront)
-	{
-		StAEDesc fakeDesc;
-		err = CMUtils::SendAEWithObjToRunningApp( kITermAppSig, kAEMiscStandards, kAEActivate, 0, fakeDesc);
-	}
-
-
-	return err;
-}
 
 #pragma mark -
 
@@ -2476,10 +2128,10 @@ OnMyCommandCM::RefreshObjectsInFinder()
 
 	for(CFIndex i = 0; i < mObjectList.size(); i++)
 	{
-		if( mObjectList[i].mRefreshPath != NULL)
+		if( mObjectList[i].refreshPath != NULL)
 		{
-			DEBUG_CFSTR( mObjectList[i].mRefreshPath );
-            RefreshFileInFinder(mObjectList[i].mRefreshPath);
+			DEBUG_CFSTR( mObjectList[i].refreshPath );
+            RefreshFileInFinder(mObjectList[i].refreshPath);
 		}
 	}
 }
@@ -2891,25 +2543,25 @@ CheckAllObjects(std::vector<OneObjProperties> &objList, ObjCheckingProc inProcPt
 inline Boolean
 CheckIfFile(OneObjProperties *inObj, void *)
 {
-	return ((inObj->mFlags & kLSItemInfoIsPlainFile) != 0);
+	return inObj->isRegularFile;
 }
 
 inline Boolean
 CheckIfFolder(OneObjProperties *inObj, void *)
 {
-	return ((inObj->mFlags & kLSItemInfoIsContainer) != 0);
+    return inObj->isDirectory;
 }
 
 inline Boolean
 CheckIfFileOrFolder(OneObjProperties *inObj, void *)
 {
-	return ((inObj->mFlags & (kLSItemInfoIsPlainFile | kLSItemInfoIsContainer)) != 0);
+	return (inObj->isRegularFile || inObj->isDirectory);
 }
 
 inline Boolean
 CheckIfPackage(OneObjProperties *inObj, void *)
 {
-	return ((inObj->mFlags & kLSItemInfoIsPackage) != 0);
+    return inObj->isPackage;
 }
 
 inline Boolean
@@ -2924,6 +2576,7 @@ CheckFileType(OneObjProperties *inObj, void *inData)
 	if( commDesc->activationTypeCount == 0)
 		return true;
 	
+    /* we don't support file type match anymore
 	for(UInt32 i = 0; i < commDesc->activationTypeCount; i++)
 	{
 		if( commDesc->activationTypes[i] == inObj->mType )
@@ -2931,6 +2584,7 @@ CheckFileType(OneObjProperties *inObj, void *inData)
 			return true;//a match was found
 		}
 	}
+    */
 
 	return false;
 }
@@ -2952,10 +2606,10 @@ CheckExtension(OneObjProperties *inObj, void *inData)
 	if(theCount == 0)
 		return true;//no extensions required - treat it as a match
 
-	if(inObj->mExtension == NULL)
+	if(inObj->extension == NULL)
 		return false;//no extension - it cannot be matched
 	
-	CFIndex	theLen = ::CFStringGetLength(inObj->mExtension);
+	CFIndex	theLen = ::CFStringGetLength(inObj->extension);
 	if(theLen == 0)
 		return false;//no extension - it cannot be matched
 	
@@ -2964,7 +2618,7 @@ CheckExtension(OneObjProperties *inObj, void *inData)
 	for(CFIndex i = 0; i < theCount; i++)
 	{
 		if( extensions.GetValueAtIndex(i, theExt) &&
-			(kCFCompareEqualTo == ::CFStringCompare( inObj->mExtension, theExt, kCFCompareCaseInsensitive)) )
+			(kCFCompareEqualTo == ::CFStringCompare( inObj->extension, theExt, kCFCompareCaseInsensitive)) )
 		{
 			return true;//a match found
 		}
@@ -5038,8 +4692,8 @@ OnMyCommandCM::CreateTextContext(const CommandDescription &currCommand, const AE
 CFStringRef
 CreateObjPath(OneObjProperties *inObj, void *) noexcept
 {
-	if((inObj != nullptr) && (inObj->mURLRef != nullptr))
- 		return ::CFURLCopyFileSystemPath(inObj->mURLRef, kCFURLPOSIXPathStyle);
+	if((inObj != nullptr) && (inObj->url != nullptr))
+ 		return ::CFURLCopyFileSystemPath(inObj->url, kCFURLPOSIXPathStyle);
 
  	return nullptr;
 }
@@ -5047,9 +4701,9 @@ CreateObjPath(OneObjProperties *inObj, void *) noexcept
 CFStringRef
 CreateObjPathNoExtension(OneObjProperties *inObj, void *) noexcept
 {
-	if((inObj != nullptr) && (inObj->mURLRef != nullptr))
+	if((inObj != nullptr) && (inObj->url != nullptr))
   	{
-		CFObj<CFURLRef> newURL( ::CFURLCreateCopyDeletingPathExtension( kCFAllocatorDefault, inObj->mURLRef ) );
+		CFObj<CFURLRef> newURL( ::CFURLCreateCopyDeletingPathExtension( kCFAllocatorDefault, inObj->url ) );
 		if(newURL != nullptr)
  			return ::CFURLCopyFileSystemPath(newURL, kCFURLPOSIXPathStyle);
 	}
@@ -5060,9 +4714,9 @@ CreateObjPathNoExtension(OneObjProperties *inObj, void *) noexcept
 CFStringRef
 CreateParentPath(OneObjProperties *inObj, void *) noexcept
 {
-    if((inObj != nullptr) && (inObj->mURLRef != nullptr))
+    if((inObj != nullptr) && (inObj->url != nullptr))
   	{
- 		CFObj<CFURLRef> newURL( ::CFURLCreateCopyDeletingLastPathComponent( kCFAllocatorDefault, inObj->mURLRef ) );
+ 		CFObj<CFURLRef> newURL( ::CFURLCreateCopyDeletingLastPathComponent( kCFAllocatorDefault, inObj->url ) );
 		if(newURL != nullptr)
  			return ::CFURLCopyFileSystemPath(newURL, kCFURLPOSIXPathStyle);
 	}
@@ -5073,8 +4727,8 @@ CreateParentPath(OneObjProperties *inObj, void *) noexcept
 CFStringRef
 CreateObjName(OneObjProperties *inObj, void *) noexcept
 {
-	if((inObj != nullptr) && (inObj->mURLRef != nullptr))
-		return ::CFURLCopyLastPathComponent(inObj->mURLRef);
+	if((inObj != nullptr) && (inObj->url != nullptr))
+		return ::CFURLCopyLastPathComponent(inObj->url);
 
 	return nullptr;
 }
@@ -5082,9 +4736,9 @@ CreateObjName(OneObjProperties *inObj, void *) noexcept
 CFStringRef
 CreateObjNameNoExtension(OneObjProperties *inObj, void *) noexcept
 {
-    if((inObj != nullptr) && (inObj->mURLRef != nullptr))
+    if((inObj != nullptr) && (inObj->url != nullptr))
   	{
-		CFObj<CFURLRef> newURL( ::CFURLCreateCopyDeletingPathExtension( kCFAllocatorDefault, inObj->mURLRef ) );
+		CFObj<CFURLRef> newURL( ::CFURLCreateCopyDeletingPathExtension( kCFAllocatorDefault, inObj->url ) );
 		if(newURL != nullptr)
 			return ::CFURLCopyLastPathComponent(newURL);
 	}
@@ -5095,8 +4749,8 @@ CreateObjNameNoExtension(OneObjProperties *inObj, void *) noexcept
 CFStringRef
 CreateObjExtensionOnly(OneObjProperties *inObj, void *) noexcept
 {//we already have the extension in our data
-	if((inObj != nullptr) && (inObj->mExtension != nullptr))
-		return ::CFStringCreateCopy(kCFAllocatorDefault, inObj->mExtension);
+	if((inObj != nullptr) && (inObj->extension != nullptr))
+		return ::CFStringCreateCopy(kCFAllocatorDefault, inObj->extension);
 
 	return nullptr;
 }
@@ -5105,10 +4759,10 @@ CreateObjExtensionOnly(OneObjProperties *inObj, void *) noexcept
 CFStringRef
 CreateObjDisplayName(OneObjProperties *inObj, void *) noexcept
 {
-    if((inObj != nullptr) && (inObj->mURLRef != nullptr))
+    if((inObj != nullptr) && (inObj->url != nullptr))
     {
         CFStringRef displayName = nullptr;
-        Boolean isOK = CFURLCopyResourcePropertyForKey(inObj->mURLRef, kCFURLLocalizedNameKey, &displayName, nullptr);
+        Boolean isOK = CFURLCopyResourcePropertyForKey(inObj->url, kCFURLLocalizedNameKey, &displayName, nullptr);
         if(isOK)
             return displayName;
     }
@@ -5125,9 +4779,9 @@ CreateObjPathRelativeToBase(OneObjProperties *inObj, void *ioParam) noexcept
 
 	CFStringRef commonParentPath = (CFStringRef)ioParam;
 
-    if((inObj != nullptr) && (inObj->mURLRef != nullptr))
+    if((inObj != nullptr) && (inObj->url != nullptr))
   	{
- 		CFObj<CFStringRef> fullPath( ::CFURLCopyFileSystemPath(inObj->mURLRef, kCFURLPOSIXPathStyle) );
+ 		CFObj<CFStringRef> fullPath( ::CFURLCopyFileSystemPath(inObj->url, kCFURLPOSIXPathStyle) );
  		if(fullPath != nullptr)
  		{
  			//at this point we assume that fullPath starts with commonParentPath
@@ -5237,7 +4891,7 @@ CreateCommonParentPath(OneObjProperties *inObjList, CFIndex inObjCount )
 		arrayList[i] = pathsArray;
 		if(pathsArray != nullptr)
 		{
-            CFURLRef newURL = (oneObj->mURLRef != nullptr) ? CFURLCopyAbsoluteURL(oneObj->mURLRef) : nullptr;
+            CFURLRef newURL = (oneObj->url != nullptr) ? CFURLCopyAbsoluteURL(oneObj->url) : nullptr;
 
 			//we dispose of all these URLs, we leave only strings derived from them
  			while(newURL != nullptr)
@@ -5467,14 +5121,13 @@ CreateEscapedStringCopy(CFStringRef inStrRef, UInt16 escSpecialCharsMode)
 		}
 		else if( escSpecialCharsMode == kEscapeWithPercent )
 		{
-			return ::CFURLCreateStringByAddingPercentEscapes(NULL, inStrRef, NULL, NULL, kCFStringEncodingUTF8);
+            return CreateStringByAddingPercentEscapes(inStrRef, false /*escapeAll*/);
 		}
 		else if( escSpecialCharsMode == kEscapeWithPercentAll )
 		{
 			//escape all illegal URL chars and all non-alphanumeric legal chars
 			//legal chars need to be escaped in order ot prevent conflicts in shell execution
-			return ::CFURLCreateStringByAddingPercentEscapes(NULL, inStrRef, NULL,
-							CFSTR("!$&'()*+,-./:;=?@_~"), kCFStringEncodingUTF8);
+            return CreateStringByAddingPercentEscapes(inStrRef, true /*escapeAll*/);
 		}
 		else if( escSpecialCharsMode == kEscapeForAppleScript )
 		{

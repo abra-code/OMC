@@ -33,9 +33,16 @@ public:
         : mRef(inRef)
     {
         if( (mRef != nullptr) && (inRetainType == kCFObjRetain) )
-            ::CFRetain(mRef);
+            CFRetain(mRef);
     }
 
+    explicit CFObj(const CFObj& inRef) noexcept
+        : mRef(inRef)
+    {
+        if(mRef != nullptr)
+            CFRetain(mRef);
+    }
+    
     virtual ~CFObj() noexcept
     {
         Release();
@@ -52,7 +59,7 @@ public:
     {
         if(mRef != nullptr)
         {
-            ::CFRelease(mRef);
+            CFRelease(mRef);
             mRef = nullptr;
         }
     }
@@ -67,7 +74,7 @@ public:
 	void Adopt(T inRef, CFObjRetainType inRetainType = kCFObjDontRetain) noexcept
     {
         if( (inRef != nullptr) && (inRetainType == kCFObjRetain) )
-            ::CFRetain(inRef);
+            CFRetain(inRef);
         Release();
         mRef = inRef;
     }
@@ -78,6 +85,12 @@ public:
         return *this;
     }
 
+    CFObj& operator=(const CFObj& inRef) noexcept
+    {
+        Adopt(inRef, kCFObjRetain);
+        return *this;
+    }
+    
     operator T() const noexcept
     {
         return mRef;
@@ -100,10 +113,6 @@ public:
 
 protected:
 	T mRef;
-
-private:
-    CFObj(const CFObj&);
-	CFObj& operator=(const CFObj&);
 };
 
 

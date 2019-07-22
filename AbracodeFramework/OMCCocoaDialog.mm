@@ -146,7 +146,7 @@ OMCCocoaDialog::ReceiveNotification(void *ioData)//local message
 		{
 			if( taskData->dataType == kOmcDataTypeBoolean )
 			{
-				bool wasSynchronous = taskData->data.test;
+				//bool wasSynchronous = taskData->data.test;
 			}
 
 			CFObj<CFDictionaryRef> controlValues( ReadControlValuesFromPlist(GetDialogUniqueID()) );

@@ -123,11 +123,14 @@ typedef struct CommandDescription
 
 typedef struct OneObjProperties
 {
-	CFURLRef		mURLRef;
-	CFStringRef		mExtension;
-	FileType		mType;
-	LSItemInfoFlags	mFlags;//we will request all flags except for application type flags which are not thread-safe.
-	CFStringRef		mRefreshPath;//refresh path is associated with object. this is one-to-one relationship
+	CFObj<CFURLRef> url;
+	CFObj<CFStringRef> extension;
+    CFObj<CFStringRef> refreshPath;//refresh path is associated with object. this is one-to-one relationship
+//	FileType		mType;
+    Boolean isRegularFile { false };
+    Boolean isDirectory { false };
+    Boolean isPackage { false };
+    Boolean reserved { false };
 } OneObjProperties;
 
 typedef struct SpecialWordAndID
@@ -342,12 +345,6 @@ protected:
     Boolean						mRunningInShortcutsObserver {false};
     pid_t			            mFrontProcessPID {0};//if running in observer we don't want to return observer as front process if it happens to come up
 };
-
-void		ExecuteInTerminal(CFStringRef inCommand, bool openInNewWindow, bool bringToFront);
-OSErr		SendEventToTerminal(const AEDesc &inCommandDesc, SInt32 sysVersion, bool openInNewWindow, bool bringToFront);
-void		ExecuteInITerm(CFStringRef inCommand, CFStringRef inShellPath, bool openInNewWindow, bool bringToFront);
-OSErr		SendEventToITerm(const AEDesc &inCommandDesc, CFStringRef inShellPath, SInt32 sysVersion, bool openInNewWindow, bool bringToFront, bool justLaunching);
-
 
 void		GetMultiCommandParams(CommandDescription &outDesc, CFDictionaryRef inOneCommand);
 void		GetInputDialogParams(CommandDescription &outDesc, CFDictionaryRef inOneCommand);

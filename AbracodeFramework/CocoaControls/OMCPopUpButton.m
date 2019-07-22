@@ -32,7 +32,7 @@
 	{
 		if( [selItem respondsToSelector:@selector(escapingMode)] )
 		{
-			NSString *escMode = [selItem escapingMode];
+			NSString *escMode = [selItem performSelector:@selector(escapingMode)];
 			if( escMode != NULL )
 				return escMode;
 		}
@@ -50,7 +50,7 @@
 		if( [selItem respondsToSelector:@selector(mappedValue)] )
 		{
 			//OMCMenuItem responds to that and may have a mapping
-			NSString *mappedValue = [selItem mappedValue];
+			NSString *mappedValue = [selItem performSelector:@selector(mappedValue)];
 			if( mappedValue != NULL )
 				return mappedValue;
 		}
@@ -75,7 +75,7 @@
 		NSMenuItem *menuItem = [itemArray objectAtIndex:itemIndex];
 		if( (menuItem != NULL) && [menuItem respondsToSelector:@selector(mappedValue)] )
 		{
-			NSString *mappedValue = [menuItem mappedValue];
+			NSString *mappedValue = [menuItem performSelector:@selector(mappedValue)];
 			if( (mappedValue != NULL) && [mappedValue isEqualToString:title] )
 			{
 				[self selectItemAtIndex:itemIndex];

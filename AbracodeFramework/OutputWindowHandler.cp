@@ -18,6 +18,7 @@
 #include "DefaultExternBundle.h"
 #include "ACFDict.h"
 #include "OmcTaskNotification.h"
+#include "OMCHelpers.h"
 
 //inNewFinalizer must be allocated with operator new and we take ownership of it and delete it in our destructor
 OutputWindowHandler::OutputWindowHandler( CFDictionaryRef inSettingsDict,
@@ -163,10 +164,10 @@ OutputWindowHandler::ReceiveNotification(void *ioData)
 	{
 		case kOmcTaskFinished:
 		{
-			bool isSuccess = true; //TODO
+			//bool isSuccess = true; //TODO
 			if( taskData->dataType == kOmcDataTypeBoolean )
 			{
-				bool wasSynchronous = taskData->data.test;
+				//bool wasSynchronous = taskData->data.test;
 			}
 			AppendOutputData( NULL, 0, taskData->error == noErr );//this finalizes our data processing and optionally starts autoclose timer
 		}
@@ -230,26 +231,8 @@ OutputWindowHandler::GetOutputWindowSettings(CFArrayRef inCommandName, CFDiction
 #else //BUILD_DEPUTY
 	//we need to check if the process is background only - in this case we cannot use floating
 	//because it will never show
-	
-	ProcessSerialNumber psn = { 0, kCurrentProcess };
-	ProcessInfoRec info;
-	info.processInfoLength = sizeof(ProcessInfoRec);
-	info.processName = NULL;
-	info.processAppRef = NULL;
-	::GetProcessInformation( &psn, &info );
-
-	if( (info.processMode & modeOnlyBackground) != 0 )
-	{
-		DEBUG_CSTR("Current process is background-only\n");
-		DEBUG_CSTR("processMode = %d\n", (int)info.processMode);
-		outSettings.windowType = kOMCWindowGlobalFloating;
-	}
-	else
-	{
-		DEBUG_CSTR("Current process is NOT background-only\n");
-		DEBUG_CSTR("processMode = %d\n", (int)info.processMode);
-		outSettings.windowType = kOMCWindowFloating;
-	}
+    bool regularGUIApp = RunningInRegularGUIApp();
+    outSettings.windowType = regularGUIApp ? kOMCWindowFloating : kOMCWindowGlobalFloating;
 
 #endif //BUILD_DEPUTY
 
@@ -314,14 +297,7 @@ OutputWindowHandler::GetOutputWindowSettings(CFArrayRef inCommandName, CFDiction
 //regular floating window is never shown for backround deputy app. replace with global floating
 			outSettings.windowType = kOMCWindowGlobalFloating;
 #else
-			if( (info.processMode & modeOnlyBackground) != 0 )
-			{
-				outSettings.windowType = kOMCWindowGlobalFloating;
-			}
-			else
-			{
-				outSettings.windowType = kOMCWindowFloating;
-			}
+            outSettings.windowType = regularGUIApp ? kOMCWindowFloating : kOMCWindowGlobalFloating;
 #endif
 		}
 		else if( kCFCompareEqualTo == ::CFStringCompare( theStr, CFSTR("global_floating"), 0 ) )

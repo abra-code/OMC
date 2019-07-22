@@ -30,7 +30,7 @@ CMUtils::IsTextInClipboard()
 	if( (err != noErr) || (clipboardRef == NULL) )
 		return false;
 
-	PasteboardSyncFlags  syncFlags = PasteboardSynchronize( clipboardRef );
+	/*PasteboardSyncFlags  syncFlags =*/ PasteboardSynchronize( clipboardRef );
 	
 	ItemCount itemCount = 0;
 	err = PasteboardGetItemCount(clipboardRef, &itemCount);
@@ -82,7 +82,7 @@ CMUtils::CreateCFStringFromClipboardText(long inReplaceOption)
 	if( (err != noErr) || (clipboardRef == NULL) )
 		return NULL;
 
-	PasteboardSyncFlags  syncFlags = PasteboardSynchronize( clipboardRef );
+	/*PasteboardSyncFlags  syncFlags =*/ PasteboardSynchronize( clipboardRef );
 	
 	ItemCount itemCount = 0;
 	err = PasteboardGetItemCount(clipboardRef, &itemCount);

@@ -397,14 +397,14 @@ FindArgumentType(const char *argTypeStr)
 	{//for non-controls which may support target/action  - slower
 		bool setTarget = true;
 		if( [inView respondsToSelector:@selector(target)] )
-			if( [inView target] != NULL )//don't override targets preset in IB
+			if( [inView performSelector:@selector(target)] != NULL )//don't override targets preset in IB
 				setTarget = false;
 
 		if(setTarget)
 		{
 			if( [inView respondsToSelector:@selector(setTarget:)] )
 			{
-				[inView setTarget:self];
+				[inView performSelector:@selector(setTarget) withObject:self];
 				if( [inView respondsToSelector:@selector(setAction:)] ) //only if target is ourselves we can set action
 					[inView setAction:@selector(handleAction:)];
 			}
@@ -1121,7 +1121,7 @@ FindArgumentType(const char *argTypeStr)
 					NSView *myControlOrView = [self findControlOrViewWithID:(NSString *)controlID];
 					if( (myControlOrView != NULL) && [myControlOrView respondsToSelector:@selector(setCommandID:)] )
 					{
-						[myControlOrView setCommandID:(NSString *)theVal];
+						[myControlOrView performSelector:@selector(setCommandID) withObject:(NSString *)theVal];
 					}
 				}
 			}

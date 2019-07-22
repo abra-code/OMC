@@ -743,6 +743,7 @@ AppleScriptExecutor::AppleScriptExecutor(const CommandDescription &inCommandDesc
 	mLocalizationTableName(inCommandDesc.localizationTableName, kCFObjRetain),
 	mUseOutput(useOutputWindow)
 {
+    //TODO: try if it can be implemented easily with NSAppleScript instead
 	if(mUseDeputy == false)
 		mOSAComponent = OpenDefaultComponent( kOSAComponentType, kOSAGenericScriptingComponentSubtype );
 
@@ -816,6 +817,7 @@ AppleScriptExecutor::ExecuteCFString( CFStringRef inCommand, CFStringRef inInput
 	ProcessOutputString(NULL); //send one progress notification before we start non-stoppable AS execution
 	
 	StAEDesc resultDesc;
+    //TODO: (NSAppleEventDescriptor *)executeAndReturnError:(NSDictionary<NSString *, id> * _Nullable * _Nullable)errorInfo;
 	OSAError osaErr = ::OSADoScript(
 						mOSAComponent,
 						theCommandDesc,

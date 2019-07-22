@@ -51,7 +51,7 @@ CFStringRef CopyAppNameForPID(pid_t pid)
 {
     @autoreleasepool
     {
-        NSRunningApplication *pidApplication = [NSRunningApplication runningApplicationWithProcessIdentifier:(pid_t)pid];
+        NSRunningApplication *pidApplication = [NSRunningApplication runningApplicationWithProcessIdentifier:pid];
         if(pidApplication != nil)
         {
             NSString *appName = [pidApplication localizedName];
@@ -63,6 +63,16 @@ CFStringRef CopyAppNameForPID(pid_t pid)
 }
 
 
+bool RunningInRegularGUIApp()
+{
+    @autoreleasepool
+    {
+        NSRunningApplication *currentApp = [NSRunningApplication currentApplication];
+        NSApplicationActivationPolicy appPolicy = [currentApp activationPolicy];
+        return (appPolicy == NSApplicationActivationPolicyRegular);
+    }
+}
+
 void RefreshFileInFinder(CFStringRef filePath)
 {
     @autoreleasepool
@@ -72,6 +82,17 @@ void RefreshFileInFinder(CFStringRef filePath)
         if(filePath != nullptr)
             [[NSWorkspace sharedWorkspace] noteFileSystemChanged:(NSString*)filePath];
     }
-
-    
 }
+
+void
+GetOperatingSystemVersion(long* outMajorVersion, long* outMinorVersion, long* outPatchVersion)
+{
+    @autoreleasepool
+    {
+        NSOperatingSystemVersion osVersion = [[NSProcessInfo processInfo] operatingSystemVersion];
+        *outMajorVersion = osVersion.majorVersion;
+        *outMinorVersion = osVersion.minorVersion;
+        *outPatchVersion = osVersion.patchVersion;
+    }
+}
+

@@ -1,5 +1,6 @@
 #include "OMCStrings.h"
 #include "CFObj.h"
+#import <Foundation/Foundation.h>
 
 CFStringRef CreatePathByExpandingTilde(CFStringRef inPath)
 {
@@ -14,6 +15,15 @@ CFStringRef CreatePathByExpandingTilde(CFStringRef inPath)
     }
 }
 
+CFStringRef CreateStringByAddingPercentEscapes(CFStringRef inStr, bool escapeAll)
+{
+    @autoreleasepool
+    {
+        NSString *escapedString = [(NSString *)inStr stringByAddingPercentEncodingWithAllowedCharacters:
+                                            escapeAll ? [NSCharacterSet alphanumericCharacterSet] : [NSCharacterSet URLQueryAllowedCharacterSet]];
+        return (CFStringRef)[escapedString retain];
+    }
+}
 
 UInt32 StringToVersion(CFStringRef inString)
 {

@@ -1,28 +1,16 @@
 //**************************************************************************************
 // Filename:	StSwitchToFront.h
-// Copyright © 2005 Abracode, Inc.  All rights reserved.
-//
-// Description:	
-//
-//**************************************************************************************
-// Revision History:
-// Saturday, May 28, 2005 - Original
 //**************************************************************************************
 
 #pragma once
-
-#include <Carbon/Carbon.h>
+#include <unistd.h>
 
 class StSwitchToFront
 {
 public:
-							StSwitchToFront(bool inRestore = true);
-	virtual					~StSwitchToFront();
+    StSwitchToFront(bool inRestore = true) noexcept;
+	~StSwitchToFront() noexcept;
 
 private:
-	ProcessSerialNumber		mFrontProcess;
-	
-		// Defensive programming. No copy constructor nor operator=
-							StSwitchToFront(const StSwitchToFront&);
-		StSwitchToFront&			operator=(const StSwitchToFront&);
+    pid_t mPreviousFrontAppPID { 0 };
 };

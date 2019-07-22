@@ -102,16 +102,16 @@ static OMCService *sOMCService = NULL;
 	return NULL;
 }
 
-//I assume the caller can handle NULL result and it is true in 10.5
--(id)openDocumentWithContentsOfURL:(NSURL *)absoluteURL display:(BOOL)displayDocument error:(NSError **)outError
+- (void)openDocumentWithContentsOfURL:(NSURL *)absoluteURL display:(BOOL)displayDocument completionHandler:(void (^)(NSDocument * _Nullable document, BOOL documentWasAlreadyOpen, NSError * _Nullable error))completionHandler
 {
-	if(absoluteURL != NULL)
-		[self noteNewRecentDocumentURL:absoluteURL];
+    if(absoluteURL != NULL)
+        [self noteNewRecentDocumentURL:absoluteURL];
+    
+    _runningCommandCount++;
+    /*OSStatus err = */[OMCCommandExecutor runCommand:commandID forCommandFile:commandFilePath withContext:absoluteURL useNavDialog:YES delegate:self];
+    _runningCommandCount--;
 
-	_runningCommandCount++;
-	/*OSStatus err = */[OMCCommandExecutor runCommand:commandID forCommandFile:commandFilePath withContext:absoluteURL useNavDialog:YES delegate:self];
-	_runningCommandCount--;
-	return NULL;
+    completionHandler(NULL, NO, NULL);
 }
 
 
@@ -260,8 +260,7 @@ static OMCService *sOMCService = NULL;
 		return FALSE;
 
 	NSURL *fileURL = [NSURL fileURLWithPath:filename];
-	NSError *error = NULL;
-	[self openDocumentWithContentsOfURL:[fileURL absoluteURL] display:YES error:&error];
+    [self openDocumentWithContentsOfURL:[fileURL absoluteURL] display:YES completionHandler:^(NSDocument *, BOOL, NSError *) {}];
 
 	BOOL quitAfterDropExecution = NO;
 	if(gPreferences != NULL)

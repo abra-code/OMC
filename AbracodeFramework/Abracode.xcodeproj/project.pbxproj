@@ -28,6 +28,10 @@
 		1D71F3382207030C009FAF91 /* notify in Copy Support Executables */ = {isa = PBXBuildFile; fileRef = 1D71F336220702D7009FAF91 /* notify */; };
 		1D742DC5193882BB005DFF97 /* pasteboard in Copy Support Executables */ = {isa = PBXBuildFile; fileRef = 1D742DC219388292005DFF97 /* pasteboard */; };
 		1D742DC6193882CF005DFF97 /* pasteboard in Copy Support Executables */ = {isa = PBXBuildFile; fileRef = 1D742DC219388292005DFF97 /* pasteboard */; };
+		1D80B9BA22E447E800CF1AF5 /* OMCiTermExecutor.cp in Sources */ = {isa = PBXBuildFile; fileRef = 1D80B9B822E447E800CF1AF5 /* OMCiTermExecutor.cp */; };
+		1D80B9BB22E447E800CF1AF5 /* OMCiTermExecutor.cp in Sources */ = {isa = PBXBuildFile; fileRef = 1D80B9B822E447E800CF1AF5 /* OMCiTermExecutor.cp */; };
+		1D80B9C222E447F900CF1AF5 /* OMCTerminalExecutor.cp in Sources */ = {isa = PBXBuildFile; fileRef = 1D80B9BF22E447F900CF1AF5 /* OMCTerminalExecutor.cp */; };
+		1D80B9C322E447F900CF1AF5 /* OMCTerminalExecutor.cp in Sources */ = {isa = PBXBuildFile; fileRef = 1D80B9BF22E447F900CF1AF5 /* OMCTerminalExecutor.cp */; };
 		1D9B1F5D21FF1572004704A7 /* OnMyCommand.cp in Sources */ = {isa = PBXBuildFile; fileRef = 1D9B1F5C21FF1572004704A7 /* OnMyCommand.cp */; };
 		1D9B1F5E21FF1572004704A7 /* OnMyCommand.cp in Sources */ = {isa = PBXBuildFile; fileRef = 1D9B1F5C21FF1572004704A7 /* OnMyCommand.cp */; };
 		1D9B1F6521FF191D004704A7 /* SubmenuTree.cp in Sources */ = {isa = PBXBuildFile; fileRef = 1D9B1F6321FF191D004704A7 /* SubmenuTree.cp */; };
@@ -171,7 +175,7 @@
 		E25760300D20EE1000D755FF /* ACFType.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED1B60D09532500C9D5E8 /* ACFType.cp */; };
 		E25760310D20EE1000D755FF /* ARefCounted.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED2190D09FD8800C9D5E8 /* ARefCounted.cp */; };
 		E25760340D20EE1000D755FF /* DefaultExternBundle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E2ED3AE80D0B27D300481D8F /* DefaultExternBundle.cpp */; };
-		E25760350D20EE1000D755FF /* StSwitchToFront.cp in Sources */ = {isa = PBXBuildFile; fileRef = E2ED3AEC0D0B27E400481D8F /* StSwitchToFront.cp */; };
+		E25760350D20EE1000D755FF /* StSwitchToFront.mm in Sources */ = {isa = PBXBuildFile; fileRef = E2ED3AEC0D0B27E400481D8F /* StSwitchToFront.mm */; };
 		E25760360D20EE1000D755FF /* NibDialogControl.cp in Sources */ = {isa = PBXBuildFile; fileRef = E2ED3AEE0D0B27F700481D8F /* NibDialogControl.cp */; };
 		E257603C0D20EE1000D755FF /* OutputWindowHandler.cp in Sources */ = {isa = PBXBuildFile; fileRef = E2ED3BA20D0B287000481D8F /* OutputWindowHandler.cp */; };
 		E257603E0D20EE1000D755FF /* OmcTaskManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E2ED3BA80D0B288400481D8F /* OmcTaskManager.cpp */; };
@@ -315,7 +319,7 @@
 		E2E407890D8C3770009AD8CA /* OMCImageView.h in Headers */ = {isa = PBXBuildFile; fileRef = E2E407850D8C376F009AD8CA /* OMCImageView.h */; };
 		E2ED3AEA0D0B27D300481D8F /* DefaultExternBundle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E2ED3AE80D0B27D300481D8F /* DefaultExternBundle.cpp */; };
 		E2ED3AEB0D0B27D300481D8F /* DefaultExternBundle.h in Headers */ = {isa = PBXBuildFile; fileRef = E2ED3AE90D0B27D300481D8F /* DefaultExternBundle.h */; };
-		E2ED3AED0D0B27E400481D8F /* StSwitchToFront.cp in Sources */ = {isa = PBXBuildFile; fileRef = E2ED3AEC0D0B27E400481D8F /* StSwitchToFront.cp */; };
+		E2ED3AED0D0B27E400481D8F /* StSwitchToFront.mm in Sources */ = {isa = PBXBuildFile; fileRef = E2ED3AEC0D0B27E400481D8F /* StSwitchToFront.mm */; };
 		E2ED3AF20D0B27F700481D8F /* NibDialogControl.cp in Sources */ = {isa = PBXBuildFile; fileRef = E2ED3AEE0D0B27F700481D8F /* NibDialogControl.cp */; };
 		E2ED3BA60D0B287000481D8F /* OutputWindowHandler.cp in Sources */ = {isa = PBXBuildFile; fileRef = E2ED3BA20D0B287000481D8F /* OutputWindowHandler.cp */; };
 		E2ED3BAE0D0B288400481D8F /* OmcTaskManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E2ED3BA80D0B288400481D8F /* OmcTaskManager.cpp */; };
@@ -405,6 +409,10 @@
 		1D71F3352206FA78009FAF91 /* de */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = de; path = de.lproj/DropletPreferences.xib; sourceTree = "<group>"; };
 		1D71F336220702D7009FAF91 /* notify */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = notify; sourceTree = "<group>"; };
 		1D742DC219388292005DFF97 /* pasteboard */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = pasteboard; sourceTree = "<group>"; };
+		1D80B9B822E447E800CF1AF5 /* OMCiTermExecutor.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCiTermExecutor.cp; sourceTree = "<group>"; };
+		1D80B9B922E447E800CF1AF5 /* OMCiTermExecutor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCiTermExecutor.h; sourceTree = "<group>"; };
+		1D80B9BE22E447F900CF1AF5 /* OMCTerminalExecutor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCTerminalExecutor.h; sourceTree = "<group>"; };
+		1D80B9BF22E447F900CF1AF5 /* OMCTerminalExecutor.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCTerminalExecutor.cp; sourceTree = "<group>"; };
 		1D9B1F5821FF14AF004704A7 /* OMCStrings.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OMCStrings.h; sourceTree = "<group>"; };
 		1D9B1F5C21FF1572004704A7 /* OnMyCommand.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OnMyCommand.cp; sourceTree = "<group>"; };
 		1D9B1F6321FF191D004704A7 /* SubmenuTree.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SubmenuTree.cp; sourceTree = "<group>"; };
@@ -569,7 +577,7 @@
 		E2E407850D8C376F009AD8CA /* OMCImageView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCImageView.h; sourceTree = "<group>"; };
 		E2ED3AE80D0B27D300481D8F /* DefaultExternBundle.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DefaultExternBundle.cpp; sourceTree = "<group>"; };
 		E2ED3AE90D0B27D300481D8F /* DefaultExternBundle.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DefaultExternBundle.h; sourceTree = "<group>"; };
-		E2ED3AEC0D0B27E400481D8F /* StSwitchToFront.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = StSwitchToFront.cp; path = ../Common/StSwitchToFront.cp; sourceTree = SOURCE_ROOT; };
+		E2ED3AEC0D0B27E400481D8F /* StSwitchToFront.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = StSwitchToFront.mm; path = ../Common/StSwitchToFront.mm; sourceTree = SOURCE_ROOT; };
 		E2ED3AEE0D0B27F700481D8F /* NibDialogControl.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = NibDialogControl.cp; sourceTree = "<group>"; };
 		E2ED3BA20D0B287000481D8F /* OutputWindowHandler.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OutputWindowHandler.cp; sourceTree = "<group>"; };
 		E2ED3BA80D0B288400481D8F /* OmcTaskManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OmcTaskManager.cpp; sourceTree = "<group>"; };
@@ -842,7 +850,7 @@
 				1D71F3302206F778009FAF91 /* MessagePortListener.h */,
 				E2C433440DEE72F700E976D2 /* PlistPreferences.cp */,
 				E2C433430DEE72F600E976D2 /* PlistPreferences.h */,
-				E2ED3AEC0D0B27E400481D8F /* StSwitchToFront.cp */,
+				E2ED3AEC0D0B27E400481D8F /* StSwitchToFront.mm */,
 				1D71F32F2206F5FB009FAF91 /* StSwitchToFront.h */,
 				1D71F32E2206F353009FAF91 /* StAEDesc.h */,
 			);
@@ -908,6 +916,10 @@
 				E2C32CF50D2E1F6C0023DA03 /* OmcTaskNotification.h */,
 				E2ED3BAA0D0B288400481D8F /* OmcExecutor.cp */,
 				E2ED3BAB0D0B288400481D8F /* OmcExecutor.h */,
+				1D80B9B822E447E800CF1AF5 /* OMCiTermExecutor.cp */,
+				1D80B9B922E447E800CF1AF5 /* OMCiTermExecutor.h */,
+				1D80B9BF22E447F900CF1AF5 /* OMCTerminalExecutor.cp */,
+				1D80B9BE22E447F900CF1AF5 /* OMCTerminalExecutor.h */,
 				E2ED3BAC0D0B288400481D8F /* omc_popen.c */,
 				E2ED3BAD0D0B288400481D8F /* omc_popen.h */,
 				E2ED3BA20D0B287000481D8F /* OutputWindowHandler.cp */,
@@ -1228,7 +1240,7 @@
 				E29ED1B80D09532500C9D5E8 /* ACFType.cp in Sources */,
 				E29ED21A0D09FD8800C9D5E8 /* ARefCounted.cp in Sources */,
 				E2ED3AEA0D0B27D300481D8F /* DefaultExternBundle.cpp in Sources */,
-				E2ED3AED0D0B27E400481D8F /* StSwitchToFront.cp in Sources */,
+				E2ED3AED0D0B27E400481D8F /* StSwitchToFront.mm in Sources */,
 				E2ED3AF20D0B27F700481D8F /* NibDialogControl.cp in Sources */,
 				1D9BCB8C22CCAB4F00F4EAB6 /* OMCStrings.mm in Sources */,
 				E2ED3BA60D0B287000481D8F /* OutputWindowHandler.cp in Sources */,
@@ -1255,6 +1267,7 @@
 				E27103AE0D8141BC0097D83E /* OMCQCView.mm in Sources */,
 				E2E407000D8A5B00009AD8CA /* OMCSecureTextField.m in Sources */,
 				E2E4072A0D8AD1E3009AD8CA /* OMCSearchField.m in Sources */,
+				1D80B9C222E447F900CF1AF5 /* OMCTerminalExecutor.cp in Sources */,
 				E2E407860D8C3770009AD8CA /* OMCImageView.m in Sources */,
 				E23DC9640D9A2616009D2AD8 /* OMCPDFView.m in Sources */,
 				1D9BCB7F22CC95E500F4EAB6 /* ACFPropertyList.m in Sources */,
@@ -1264,6 +1277,7 @@
 				E2C84D8B0DA9D2600056DBC2 /* OMCSingleCommand.m in Sources */,
 				E2C84DAD0DA9D4CD0056DBC2 /* OMCCommandExecutor.m in Sources */,
 				E2C84DEB0DA9F30F0056DBC2 /* OMCCommandMenu.mm in Sources */,
+				1D80B9BA22E447E800CF1AF5 /* OMCiTermExecutor.cp in Sources */,
 				E24243580DDC140F0002BF9E /* OMCOutputWindowController.mm in Sources */,
 				E24B168C0DE934CC00E44A45 /* OMCWindow.m in Sources */,
 				E24B17280DE94DB800E44A45 /* OMCPanel.m in Sources */,
@@ -1298,13 +1312,14 @@
 				E25760240D20EE1000D755FF /* CMUtilsObjectList.cp in Sources */,
 				E25760250D20EE1000D755FF /* CMUtilsAEText.cp in Sources */,
 				E25760260D20EE1000D755FF /* CMUtilsSendAE.cp in Sources */,
+				1D80B9C322E447F900CF1AF5 /* OMCTerminalExecutor.cp in Sources */,
 				E25760270D20EE1000D755FF /* CMUtilsFinder.cp in Sources */,
 				E257602B0D20EE1000D755FF /* CMUtilsAEFile.cp in Sources */,
 				E257602C0D20EE1000D755FF /* MoreAppleEvents.cp in Sources */,
 				E25760300D20EE1000D755FF /* ACFType.cp in Sources */,
 				E25760310D20EE1000D755FF /* ARefCounted.cp in Sources */,
 				E25760340D20EE1000D755FF /* DefaultExternBundle.cpp in Sources */,
-				E25760350D20EE1000D755FF /* StSwitchToFront.cp in Sources */,
+				E25760350D20EE1000D755FF /* StSwitchToFront.mm in Sources */,
 				E25760360D20EE1000D755FF /* NibDialogControl.cp in Sources */,
 				E257603C0D20EE1000D755FF /* OutputWindowHandler.cp in Sources */,
 				E257603E0D20EE1000D755FF /* OmcTaskManager.cpp in Sources */,
@@ -1340,6 +1355,7 @@
 				E242435A0DDC140F0002BF9E /* OMCOutputWindowController.mm in Sources */,
 				E24B168A0DE934CC00E44A45 /* OMCWindow.m in Sources */,
 				E24B17260DE94DB800E44A45 /* OMCPanel.m in Sources */,
+				1D80B9BB22E447E800CF1AF5 /* OMCiTermExecutor.cp in Sources */,
 				1D9BCB8922CCA65A00F4EAB6 /* ACFURL.m in Sources */,
 				E24B18170DE96F6D00E44A45 /* OMCFilePanels.mm in Sources */,
 				E2C433460DEE72F700E976D2 /* PlistPreferences.cp in Sources */,
@@ -1471,6 +1487,7 @@
 				INSTALL_GROUP = admin;
 				INSTALL_OWNER = root;
 				INSTALL_PATH = /Library/Frameworks;
+				PRODUCT_BUNDLE_IDENTIFIER = com.abracode.AbracodeFramework;
 				PRODUCT_NAME = Abracode;
 				SKIP_INSTALL = NO;
 				WRAPPER_EXTENSION = framework;
@@ -1490,6 +1507,7 @@
 				INSTALL_GROUP = admin;
 				INSTALL_OWNER = root;
 				INSTALL_PATH = /Library/Frameworks;
+				PRODUCT_BUNDLE_IDENTIFIER = com.abracode.AbracodeFramework;
 				PRODUCT_NAME = Abracode;
 				SKIP_INSTALL = NO;
 				WRAPPER_EXTENSION = framework;
@@ -1505,7 +1523,6 @@
 				DEPLOYMENT_LOCATION = YES;
 				DSTROOT = /;
 				EXPORTED_SYMBOLS_FILE = AbracodeFramework.exp;
-				GCC_OBJC_CALL_CXX_CDTORS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"_DEBUG_=1",
@@ -1527,7 +1544,6 @@
 				DEAD_CODE_STRIPPING = YES;
 				DSTROOT = /;
 				EXPORTED_SYMBOLS_FILE = AbracodeFramework.exp;
-				GCC_OBJC_CALL_CXX_CDTORS = YES;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"_DEBUG_=0",
 					"_TRACE_=0",
@@ -1554,6 +1570,7 @@
 				GCC_PREFIX_HEADER = "Abracode-Private_Prefix.pch";
 				INFOPLIST_FILE = "Info-Private.plist";
 				INSTALL_PATH = "@executable_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.abracode.AbracodePrivateFramework;
 				PRODUCT_NAME = "Abracode-Private";
 				WRAPPER_EXTENSION = framework;
 			};
@@ -1571,6 +1588,7 @@
 				GCC_PREFIX_HEADER = "Abracode-Private_Prefix.pch";
 				INFOPLIST_FILE = "Info-Private.plist";
 				INSTALL_PATH = "@executable_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.abracode.AbracodePrivateFramework;
 				PRODUCT_NAME = "Abracode-Private";
 				WRAPPER_EXTENSION = framework;
 			};
