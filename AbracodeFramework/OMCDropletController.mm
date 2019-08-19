@@ -364,8 +364,73 @@ static OMCService *sOMCService = NULL;
 	 if(urlString == NULL)
 		return;
 
+	//if not "exe" query, the defaults are:
+	NSString* commandID = @"omc.app.handle-url";
+	id urlContext = urlString;
+
+/*
+The design for URL query by example:
+myapp://exe?commandID=my.text.command.id&text=some%20text%20context
+myapp://exe?commandID=my.file.command.id&file=file1.txt&file=file2.txt
+
+"myapp": unique protocol word which needs to be specified per applet in its Info.plist
+"exe": predefined query part which OMC recognizes as special case to execute a command
+"text" value becomes $OMC_OBJ_TEXT
+"file" value becomes $OMC_OBJ_PATH - one or more paths would be supported
+*/
+
+    NSURL* inUrl = [NSURL URLWithString:urlString];
+    NSString *hostKey = [inUrl host];
+	if([hostKey compare:@"exe" options:NSCaseInsensitiveSearch] == NSOrderedSame)
+	{
+		//until correct values obtained
+		commandID = @"";
+		urlContext = nil;
+
+		NSMutableArray<NSURL*>* fileList = nil;
+		NSString* urlQuery = [inUrl query];
+		NSArray* queryKeyValuePairs = [urlQuery componentsSeparatedByString:@"&"];
+		for(NSString *oneKeyValueString in queryKeyValuePairs)
+		{
+			NSArray *keyValueComponents = [oneKeyValueString componentsSeparatedByString:@"="];
+			if([keyValueComponents count] != 2)
+			{
+				// malformed query if we don't have key and value - skip it
+				continue;
+			}
+
+			NSString *key = [[keyValueComponents objectAtIndex:0] stringByRemovingPercentEncoding];
+			NSString *value = [[keyValueComponents objectAtIndex:1] stringByRemovingPercentEncoding];
+			
+			if([key compare:@"commandID" options:NSCaseInsensitiveSearch] == NSOrderedSame)
+			{
+				commandID = value;
+			}
+			else if([key compare:@"text" options:NSCaseInsensitiveSearch] == NSOrderedSame)
+			{
+				urlContext = value;
+			}
+			else if([key compare:@"file" options:NSCaseInsensitiveSearch] == NSOrderedSame)
+			{
+				NSURL*fileURL = [NSURL fileURLWithPath:value];
+				if(fileURL != nil) //must not be nil if adding to array
+				{
+					if(fileList == nil) //lazy creator
+						fileList = [NSMutableArray array];
+
+					[fileList addObject:fileURL];
+				}
+			}
+		}
+		
+		if((fileList != nil) && ([fileList count] > 0))
+		{//we don't support both file and text contexts. files take precedent if someone specifies text
+			urlContext = fileList;
+		}
+	}
+
 	_runningCommandCount++;
-	OSStatus err = [OMCCommandExecutor runCommand:@"omc.app.handle-url" forCommandFile:commandFilePath withContext:urlString useNavDialog:NO delegate:self];
+	OSStatus err = [OMCCommandExecutor runCommand:commandID forCommandFile:commandFilePath withContext:urlContext useNavDialog:NO delegate:self];
 	(void)err;
 	_runningCommandCount--;
 }
