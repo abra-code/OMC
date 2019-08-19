@@ -1,10 +1,7 @@
 //**************************************************************************************
 // Filename:	OnMyCommandCM.cp
-//				Part of Contextual Menu Workshop by Abracode Inc.
-//				http://free.abracode.com/cmworkshop/
-// Copyright � 2002-2005 Abracode, Inc.  All rights reserved.
 //
-// Description:	Executes Unix commands in Terminal.app or silently
+// Description:	Main OnMyCommand enigne methods
 //
 //**************************************************************************************
 
@@ -125,7 +122,7 @@ const CommandDescription kEmptyCommand =
 	NULL,	//popenShell
 	NULL,	//customEnvironVariables
 	false,	//actOnlyInListedApps
-    false,  //unused
+	false,  //unused
 	false,	//disabled
 	false,	//isSubcommand
 	MIN_OMC_VERSION, //requiredOMCVersion
@@ -205,7 +202,7 @@ enum SpecialWordIDs
 
 static const SpecialWordAndID sSpecialWordAndIDList[] =
 {
-	//wordLen												// specialWord         //environName           //id
+	//wordLen												// specialWord		 //environName		   //id
 	{ sizeof("__OBJ_TEXT__")-1,								CFSTR("__OBJ_TEXT__"), CFSTR("OMC_OBJ_TEXT"),  OBJ_TEXT },
 	{ sizeof("__OBJ_PATH__")-1,								CFSTR("__OBJ_PATH__"), CFSTR("OMC_OBJ_PATH"),  OBJ_PATH },
 	{ sizeof("__OBJ_PARENT_PATH__")-1,						CFSTR("__OBJ_PARENT_PATH__"), CFSTR("OMC_OBJ_PARENT_PATH"),  OBJ_PARENT_PATH },
@@ -345,8 +342,8 @@ OnMyCommandCM::Init(CFBundleRef inBundle)
 	long sysVerMinor = 13;
 	long sysVerBugFix = 0;
 
-    GetOperatingSystemVersion(&sysVerMajor, &sysVerMinor, &sysVerBugFix);
-    
+	GetOperatingSystemVersion(&sysVerMajor, &sysVerMinor, &sysVerBugFix);
+	
 	//eg. 101405 max 999999
 	mSysVersion = 10000 * (SInt32)sysVerMajor + 100 * (SInt32)sysVerMinor + (SInt32)sysVerBugFix;
 
@@ -354,8 +351,8 @@ OnMyCommandCM::Init(CFBundleRef inBundle)
 //	printf("OMC: Current system version = 0x%.8X, integer = %d\n", (unsigned int)mSysVersion, (int)mSysVersion);
 //#endif
 
-    mMyHostBundleURL.Adopt(CFBundleCopyBundleURL(CFBundleGetMainBundle()), kCFObjDontRetain);
-    mMyHostAppName.Adopt(CopyHostAppName(), kCFObjDontRetain);
+	mMyHostBundleURL.Adopt(CFBundleCopyBundleURL(CFBundleGetMainBundle()), kCFObjDontRetain);
+	mMyHostAppName.Adopt(CopyHostAppName(), kCFObjDontRetain);
 
 #if  0 //_DEBUG_
 	CFShow((CFURLRef)mMyHostBundlePath);
@@ -503,7 +500,7 @@ OnMyCommandCM::CommonContextCheck( const AEDesc *inContext, CFTypeRef inCFContex
 	
 	Boolean frontProcessIsFinder = false;
 
-    CFStringRef hostAppBundleID = CFBundleGetIdentifier(CFBundleGetMainBundle());
+	CFStringRef hostAppBundleID = CFBundleGetIdentifier(CFBundleGetMainBundle());
 	if(hostAppBundleID != NULL)
 	{
 #if IN_PROC_CM //64-bit apps no longer load CM plug-ins in-proc
@@ -513,7 +510,7 @@ OnMyCommandCM::CommonContextCheck( const AEDesc *inContext, CFTypeRef inCFContex
 		}
 		else
 #endif
-        if( (kCFCompareEqualTo == ::CFStringCompare( hostAppBundleID, CFSTR("com.abracode.Shortcuts"), 0)) ||
+		if( (kCFCompareEqualTo == ::CFStringCompare( hostAppBundleID, CFSTR("com.abracode.Shortcuts"), 0)) ||
 				 (kCFCompareEqualTo == ::CFStringCompare( hostAppBundleID, CFSTR("de.MacDisk.Knut.OMCEdit"), 0)) )
 		{
 			runningInEditorApp = true;
@@ -521,22 +518,22 @@ OnMyCommandCM::CommonContextCheck( const AEDesc *inContext, CFTypeRef inCFContex
 		else if(kCFCompareEqualTo == ::CFStringCompare( hostAppBundleID, CFSTR("com.abracode.ShortcutObserver"), 0 ))
 		{
 			mRunningInShortcutsObserver = true;
-            
-            //remember front process pid at the moment of context check
-            //in case it gets changed later, we need to keep it
-            mFrontProcessPID = GetFrontAppPID();
-            
-            CFObj<CFStringRef> frontProcessBundleID = CopyFrontAppBundleIdentifier();
-            if(frontProcessBundleID != nullptr)
-            {
-                if( kCFCompareEqualTo == ::CFStringCompare( frontProcessBundleID, CFSTR("com.apple.finder"), 0 ) )
-                    frontProcessIsFinder = true;
-            }
+			
+			//remember front process pid at the moment of context check
+			//in case it gets changed later, we need to keep it
+			mFrontProcessPID = GetFrontAppPID();
+			
+			CFObj<CFStringRef> frontProcessBundleID = CopyFrontAppBundleIdentifier();
+			if(frontProcessBundleID != nullptr)
+			{
+				if( kCFCompareEqualTo == ::CFStringCompare( frontProcessBundleID, CFSTR("com.apple.finder"), 0 ) )
+					frontProcessIsFinder = true;
+			}
 		}
 	}
 	
 #if OLD_CODE_USED_IN_INPROC_CM_PLUGINS
-    if(mIsNullContext && mCMPluginMode)//for null context in CM mode try to get text from Cocoa host
+	if(mIsNullContext && mCMPluginMode)//for null context in CM mode try to get text from Cocoa host
 	{
 		TRACE_CSTR( "OnMyCommandCM->CMPluginExamineContext: inContext->descriptorType == typeNull\n" );
 		mIsTextContext = (Boolean)cocoaAppHasStringSelection();
@@ -545,7 +542,7 @@ OnMyCommandCM::CommonContextCheck( const AEDesc *inContext, CFTypeRef inCFContex
 //			return errAENotAEDesc;//do not show CM when descriptor type is null and there is no selection in Cocoa app
 	}	
 #endif //OLD_CODE_USED_IN_INPROC_CM_PLUGINS
-    
+	
 	if(mCommandList == NULL)
 	{//not loaded yet?
 		if( mPlistURL != NULL )
@@ -579,7 +576,7 @@ OnMyCommandCM::CommonContextCheck( const AEDesc *inContext, CFTypeRef inCFContex
 
 			if(listItemsCount > 0)
 			{
-                mObjectList.resize(listItemsCount);
+				mObjectList.resize(listItemsCount);
 			}
 		}
 
@@ -591,21 +588,21 @@ OnMyCommandCM::CommonContextCheck( const AEDesc *inContext, CFTypeRef inCFContex
 	}
 
 //update total count
-    //currObjectIndex is incremented in CFURLCheckFileOrFolder for each valid object
-    mObjectList.resize(mCurrObjectIndex);
+	//currObjectIndex is incremented in CFURLCheckFileOrFolder for each valid object
+	mObjectList.resize(mCurrObjectIndex);
 	mCurrObjectIndex = 0;
 
 	Boolean isFolder = false;
-    if(mObjectList.size() == 1)
-    {
-        isFolder = CheckAllObjects(mObjectList, CheckIfFolder, NULL);
-        if(isFolder)
-        {
-            Boolean isPackage = CheckAllObjects(mObjectList, CheckIfPackage, NULL);
-            if(isPackage)
-                isFolder = false;
-        }
-    }
+	if(mObjectList.size() == 1)
+	{
+		isFolder = CheckAllObjects(mObjectList, CheckIfFolder, NULL);
+		if(isFolder)
+		{
+			Boolean isPackage = CheckAllObjects(mObjectList, CheckIfPackage, NULL);
+			if(isPackage)
+				isFolder = false;
+		}
+	}
 
 	if(	anythingSelected && (mSysVersion >= 100300) && ((theFlags & kListOutMultipleObjects) == 0) && isFolder &&
 		(mRunningInShortcutsObserver && frontProcessIsFinder) )
@@ -616,17 +613,17 @@ OnMyCommandCM::CommonContextCheck( const AEDesc *inContext, CFTypeRef inCFContex
 	else if( !anythingSelected && !mIsTextContext )
 	{//not a list of objects, maybe a selected text?
 #if OLD_CODE_USED_IN_INPROC_CM_PLUGINS
-        if( mCMPluginMode )
-            mIsTextContext = (Boolean)cocoaAppHasStringSelection();
+		if( mCMPluginMode )
+			mIsTextContext = (Boolean)cocoaAppHasStringSelection();
 #endif
 
-        if( (inContext != nullptr) && !mIsNullContext )
-            mIsTextContext = CMUtils::AEDescHasTextData(*inContext);
+		if( (inContext != nullptr) && !mIsNullContext )
+			mIsTextContext = CMUtils::AEDescHasTextData(*inContext);
 	}
 
 	err = noErr;
 
-    CFObj<CFStringRef> frontProcessName = CopyFrontAppName();
+	CFObj<CFStringRef> frontProcessName = CopyFrontAppName();
 
 	//menu population requested
 	if(outCommandPairs != NULL)
@@ -668,7 +665,7 @@ OnMyCommandCM::ExamineDropletFileContext(AEDescList *fileList)
 		{
 			if(listItemsCount > 0)
 			{
-                mObjectList.resize(listItemsCount);
+				mObjectList.resize(listItemsCount);
 			}
 		}
 
@@ -1139,7 +1136,7 @@ OnMyCommandCM::GetCFContext()
 				for(size_t i = 0; i < mObjectList.size(); i++)
 				{
 					if(mObjectList[i].url != nullptr)
-                        ::CFArrayAppendValue( mContextFiles, mObjectList[i].url );
+						::CFArrayAppendValue( mContextFiles, mObjectList[i].url );
 				}
 			}
 		}
@@ -1300,7 +1297,7 @@ OnMyCommandCM::DeleteCommandList()
 void
 OnMyCommandCM::DeleteObjectList()
 {
-    mObjectList.clear();
+	mObjectList.clear();
 	mCurrObjectIndex = 0;
 }
 
@@ -1378,23 +1375,23 @@ OnMyCommandCM::CFURLCheckFileOrFolder(CFURLRef inURLRef, void *ioData)
 
 	OnMyCommandCM &myData = *(OnMyCommandCM *)ioData;
 
-    if(myData.mCurrObjectIndex < myData.mObjectList.size())
+	if(myData.mCurrObjectIndex < myData.mObjectList.size())
 	{
 		OneObjProperties& objProperties = myData.mObjectList[myData.mCurrObjectIndex];
-        objProperties.url.Adopt(inURLRef, kCFObjRetain);
-        objProperties.extension.Adopt(CFURLCopyPathExtension(inURLRef));
-        
-        const void* keys[] = { kCFURLIsRegularFileKey, kCFURLIsDirectoryKey, kCFURLIsPackageKey };
-        CFObj<CFArrayRef> propertyKeys(CFArrayCreate(kCFAllocatorDefault, keys, sizeof(keys)/sizeof(const void*), &kCFTypeArrayCallBacks));
-        CFObj<CFDictionaryRef> fileProperties(CFURLCopyResourcePropertiesForKeys(inURLRef, propertyKeys, nullptr));
+		objProperties.url.Adopt(inURLRef, kCFObjRetain);
+		objProperties.extension.Adopt(CFURLCopyPathExtension(inURLRef));
+		
+		const void* keys[] = { kCFURLIsRegularFileKey, kCFURLIsDirectoryKey, kCFURLIsPackageKey };
+		CFObj<CFArrayRef> propertyKeys(CFArrayCreate(kCFAllocatorDefault, keys, sizeof(keys)/sizeof(const void*), &kCFTypeArrayCallBacks));
+		CFObj<CFDictionaryRef> fileProperties(CFURLCopyResourcePropertiesForKeys(inURLRef, propertyKeys, nullptr));
 
-        ACFDict propertyDict(fileProperties);
-        propertyDict.GetValue(kCFURLIsRegularFileKey, objProperties.isRegularFile);
-        propertyDict.GetValue(kCFURLIsDirectoryKey, objProperties.isDirectory);
-        propertyDict.GetValue(kCFURLIsPackageKey, objProperties.isPackage);
+		ACFDict propertyDict(fileProperties);
+		propertyDict.GetValue(kCFURLIsRegularFileKey, objProperties.isRegularFile);
+		propertyDict.GetValue(kCFURLIsDirectoryKey, objProperties.isDirectory);
+		propertyDict.GetValue(kCFURLIsPackageKey, objProperties.isPackage);
 
-        myData.mCurrObjectIndex++; //client will use this information to know the exact number of valid items
-    }
+		myData.mCurrObjectIndex++; //client will use this information to know the exact number of valid items
+	}
 	return fnfErr;
 }
 
@@ -1498,14 +1495,6 @@ OnMyCommandCM::ProcessObjects()
 			case kExecAppleScriptWithOutputWindow:
 				theExec.Adopt( new AppleScriptExecutor(currCommand, dynamicCommandName, mBundleRef, externBundle, true) );
 			break;
-			
-			case kExecShellScript:
-				theExec.Adopt( new ShellScriptExecutor(currCommand, mBundleRef, environList) );
-			break;
-			
-			case kExecShellScriptWithOutputWindow:
-				theExec.Adopt( new ShellScriptWithOutputExecutor(currCommand, dynamicCommandName, mBundleRef, externBundle, environList) );
-			break;
 		}
 		
 		if(theExec != NULL)
@@ -1586,14 +1575,6 @@ OnMyCommandCM::ProcessCommandWithText(const CommandDescription &currCommand, CFS
 		
 		case kExecAppleScriptWithOutputWindow:
 			theExec.Adopt( new AppleScriptExecutor(currCommand, dynamicCommandName, mBundleRef, externBundle, true) );
-		break;
-		
-		case kExecShellScript:
-			theExec.Adopt( new ShellScriptExecutor(currCommand, mBundleRef, environList) );
-		break;
-		
-		case kExecShellScriptWithOutputWindow:
-			theExec.Adopt( new ShellScriptWithOutputExecutor(currCommand, dynamicCommandName, mBundleRef, externBundle, environList) );
 		break;
 	}
 	
@@ -1952,9 +1933,9 @@ OnMyCommandCM::ProcessOnePrescannedWord(CommandDescription &currCommand, SInt32 
 			{
 				 //saved as unique value in the dictionary
 				CFObj<CFStringRef> newControlID( CreateControlIDByAddingModifiers(controlID, kControlModifier_AllRows) );
-                controlID.Swap(newControlID);
+				controlID.Swap(newControlID);
 			}
-            InitNibControlValueEntry(controlID, columnIndex);
+			InitNibControlValueEntry(controlID, columnIndex);
 		}
 		break;
 	}
@@ -2131,7 +2112,7 @@ OnMyCommandCM::RefreshObjectsInFinder()
 		if( mObjectList[i].refreshPath != NULL)
 		{
 			DEBUG_CFSTR( mObjectList[i].refreshPath );
-            RefreshFileInFinder(mObjectList[i].refreshPath);
+			RefreshFileInFinder(mObjectList[i].refreshPath);
 		}
 	}
 }
@@ -2165,7 +2146,7 @@ OnMyCommandCM::PopulateItemsMenu( const AEDesc *inContext, AEDescList* ioRootMen
 																CFSTR("Private"), mBundleRef, "") );
 	CFStringRef rootMenuName = CFSTR("/");
 
-    CFStringRef currAppName = mMyHostAppName;
+	CFStringRef currAppName = mMyHostAppName;
 	bool skipFinderWindowCheck = false;
 	if( runningInSpecialApp )
 	{
@@ -2510,7 +2491,7 @@ OnMyCommandCM::IsCommandEnabled(SInt32 inCmdIndex, const AEDesc *inContext, bool
 	if( (mCommandList == NULL) || (inCmdIndex < 0) || (inCmdIndex >= mCommandCount) )
 		return false;
 
-    CFStringRef currAppName = mMyHostAppName;
+	CFStringRef currAppName = mMyHostAppName;
 	bool skipFinderWindowCheck = false;
 	if( runningInSpecialApp )
 	{
@@ -2533,8 +2514,8 @@ CheckAllObjects(std::vector<OneObjProperties> &objList, ObjCheckingProc inProcPt
 
 	for(size_t i = 0; i < objList.size(); i++)
 	{
-        if(false == (*inProcPtr)( &objList[i], inProcData ) )
-            return false;
+		if(false == (*inProcPtr)( &objList[i], inProcData ) )
+			return false;
 	}
 
 	return true;
@@ -2549,7 +2530,7 @@ CheckIfFile(OneObjProperties *inObj, void *)
 inline Boolean
 CheckIfFolder(OneObjProperties *inObj, void *)
 {
-    return inObj->isDirectory;
+	return inObj->isDirectory;
 }
 
 inline Boolean
@@ -2561,7 +2542,7 @@ CheckIfFileOrFolder(OneObjProperties *inObj, void *)
 inline Boolean
 CheckIfPackage(OneObjProperties *inObj, void *)
 {
-    return inObj->isPackage;
+	return inObj->isPackage;
 }
 
 inline Boolean
@@ -2576,7 +2557,7 @@ CheckFileType(OneObjProperties *inObj, void *inData)
 	if( commDesc->activationTypeCount == 0)
 		return true;
 	
-    /* we don't support file type match anymore
+	/* we don't support file type match anymore
 	for(UInt32 i = 0; i < commDesc->activationTypeCount; i++)
 	{
 		if( commDesc->activationTypes[i] == inObj->mType )
@@ -2584,7 +2565,7 @@ CheckFileType(OneObjProperties *inObj, void *inData)
 			return true;//a match was found
 		}
 	}
-    */
+	*/
 
 	return false;
 }
@@ -2675,7 +2656,7 @@ DoStringsMatch(CFStringRef inMatchString, CFStringRef inSearchedString, UInt8 ma
 		case kMatchRegularExpression:
 		{
 			regex_t regular_expression;
-            std::string matchString = CMUtils::CreateUTF8StringFromCFString(inMatchString);
+			std::string matchString = CMUtils::CreateUTF8StringFromCFString(inMatchString);
 			if(matchString.size() == 0)
 				return false;
 
@@ -2872,7 +2853,7 @@ OnMyCommandCM::LoadCommandsFromPlistFile(CFURLRef inPlistFileURL)
 	if(inPlistFileURL == NULL)
 		return;
 
-    CFObj<CFPropertyListRef> thePlist( CreatePropertyList(inPlistFileURL, kCFPropertyListImmutable) );
+	CFObj<CFPropertyListRef> thePlist( CreatePropertyList(inPlistFileURL, kCFPropertyListImmutable) );
 	LoadCommandsFromPlistRef(thePlist);
 }
 
@@ -3043,12 +3024,15 @@ OnMyCommandCM::GetOneCommandParams(CommandDescription &outDesc, CFDictionaryRef 
 //		TRACE_CSTR("\tGetOneCommandParams. EXECUTION_MODE string:\n" );
 //		TRACE_CFSTR(theStr);
 
-		if( (kCFCompareEqualTo == ::CFStringCompare( theStr, CFSTR("exe_silent"), 0)) ||
-			(kCFCompareEqualTo == ::CFStringCompare( theStr, CFSTR("exe_silent_popen"), 0)) )
+		if( (kCFCompareEqualTo == ::CFStringCompare( theStr, CFSTR("exe_silent_popen"), 0)) ||
+			(kCFCompareEqualTo == ::CFStringCompare( theStr, CFSTR("exe_popen"), 0)) ||
+			(kCFCompareEqualTo == ::CFStringCompare( theStr, CFSTR("exe_silent"), 0)) ||
+			(kCFCompareEqualTo == ::CFStringCompare( theStr, CFSTR("exe_shell_script"), 0 ) ) )
 		{
 			outDesc.executionMode = kExecSilentPOpen;
 		}
-		else if( kCFCompareEqualTo == ::CFStringCompare( theStr, CFSTR("exe_silent_system"), 0 ) )
+		else if( (kCFCompareEqualTo == ::CFStringCompare( theStr, CFSTR("exe_silent_system"), 0 )) ||
+			 (kCFCompareEqualTo == ::CFStringCompare( theStr, CFSTR("exe_system"), 0)) )
 		{
 			outDesc.executionMode = kExecSilentSystem;
 		}
@@ -3060,7 +3044,8 @@ OnMyCommandCM::GetOneCommandParams(CommandDescription &outDesc, CFDictionaryRef 
 		{
 			outDesc.executionMode = kExecITerm;
 		}
-		else if( kCFCompareEqualTo == ::CFStringCompare( theStr, CFSTR("exe_popen_with_output_window"), 0 ) )
+		else if( ( kCFCompareEqualTo == ::CFStringCompare( theStr, CFSTR("exe_popen_with_output_window"), 0 ) ) ||
+				( kCFCompareEqualTo == ::CFStringCompare( theStr, CFSTR("exe_shell_script_with_output_window"), 0 ) ) )
 		{
 			outDesc.executionMode = kExecPOpenWithOutputWindow;
 		}
@@ -3071,14 +3056,6 @@ OnMyCommandCM::GetOneCommandParams(CommandDescription &outDesc, CFDictionaryRef 
 		else if( kCFCompareEqualTo == ::CFStringCompare( theStr, CFSTR("exe_applescript_with_output_window"), 0 ) )
 		{
 			outDesc.executionMode = kExecAppleScriptWithOutputWindow;
-		}
-		else if( kCFCompareEqualTo == ::CFStringCompare( theStr, CFSTR("exe_shell_script"), 0 ) )
-		{
-			outDesc.executionMode = kExecShellScript;
-		}
-		else if( kCFCompareEqualTo == ::CFStringCompare( theStr, CFSTR("exe_shell_script_with_output_window"), 0 ) )
-		{
-			outDesc.executionMode = kExecShellScriptWithOutputWindow;
 		}
 	}
 
@@ -4169,20 +4146,20 @@ OnMyCommandCM::AppendTextToCommand(CFMutableStringRef inCommandRef, CFStringRef 
 			else
 				frontPID = GetFrontAppPID();
 
-            newStrRef = CFStringCreateWithFormat( kCFAllocatorDefault, nullptr, CFSTR("%d"), frontPID );
+			newStrRef = CFStringCreateWithFormat( kCFAllocatorDefault, nullptr, CFSTR("%d"), frontPID );
 		}
 		break;
 		
 		case FRONT_APPLICATION_NAME:
 		{
-            CFObj<CFStringRef> frontAppStr;
+			CFObj<CFStringRef> frontAppStr;
 			if(mRunningInShortcutsObserver && (mFrontProcessPID != 0))
 				frontAppStr.Adopt(CopyAppNameForPID(mFrontProcessPID) );
 
 			if(frontAppStr == nullptr)
-                frontAppStr.Adopt(CopyFrontAppName());
-            
-            if(frontAppStr != nullptr)
+				frontAppStr.Adopt(CopyFrontAppName());
+			
+			if(frontAppStr != nullptr)
 				newStrRef = CreateEscapedStringCopy(frontAppStr, escSpecialCharsMode);
 		}
 		break;
@@ -4244,7 +4221,7 @@ OnMyCommandCM::PopulateEnvironList(CFMutableDictionaryRef ioEnvironList,
 	if(itemCount == 0)
 		return;
 
-    std::vector<void *> keyList(itemCount);
+	std::vector<void *> keyList(itemCount);
 	::CFDictionaryGetKeysAndValues(ioEnvironList, (const void **)keyList.data(), NULL);
 	for(CFIndex i = 0; i < itemCount; i++)
 	{
@@ -4505,26 +4482,26 @@ OnMyCommandCM::PopulateEnvironList(CFMutableDictionaryRef ioEnvironList,
 	//no need to escape process id
 			case FRONT_PROCESS_ID:
 			{
-                pid_t frontPID = 0;
-                if( mRunningInShortcutsObserver && (mFrontProcessPID != 0))
-                    frontPID = mFrontProcessPID;
-                else
-                    frontPID = GetFrontAppPID();
-                
-                newStrRef = CFStringCreateWithFormat( kCFAllocatorDefault, nullptr, CFSTR("%d"), frontPID );
+				pid_t frontPID = 0;
+				if( mRunningInShortcutsObserver && (mFrontProcessPID != 0))
+					frontPID = mFrontProcessPID;
+				else
+					frontPID = GetFrontAppPID();
+				
+				newStrRef = CFStringCreateWithFormat( kCFAllocatorDefault, nullptr, CFSTR("%d"), frontPID );
 			}
 			break;
 			
 			case FRONT_APPLICATION_NAME:
 			{
-                CFObj<CFStringRef> frontAppStr;
-                if(mRunningInShortcutsObserver && (mFrontProcessPID != 0))
-                    frontAppStr.Adopt(CopyAppNameForPID(mFrontProcessPID) );
-                
-                if(frontAppStr == nullptr)
-                    frontAppStr.Adopt(CopyFrontAppName());
-                
-                newStrRef = frontAppStr.Detach();
+				CFObj<CFStringRef> frontAppStr;
+				if(mRunningInShortcutsObserver && (mFrontProcessPID != 0))
+					frontAppStr.Adopt(CopyAppNameForPID(mFrontProcessPID) );
+				
+				if(frontAppStr == nullptr)
+					frontAppStr.Adopt(CopyFrontAppName());
+				
+				newStrRef = frontAppStr.Detach();
 			}
 			break;
 
@@ -4663,7 +4640,7 @@ OnMyCommandCM::CreateTextContext(const CommandDescription &currCommand, const AE
 	if( mIsTextContext && (currCommand.activationMode != kActiveClipboardText) )
 	{
 #if IN_PROC_CM //long deprecated by Apple
-        mContextText.Adopt( currentCocoaStringSelection(), kCFObjDontRetain);
+		mContextText.Adopt( currentCocoaStringSelection(), kCFObjDontRetain);
 		if((mContextText != NULL) && (currCommand.textReplaceOptions != kTextReplaceNothing))
 		{
 			CFMutableStringRef mutableCopy = ::CFStringCreateMutableCopy(kCFAllocatorDefault, 0, mContextText);
@@ -4715,7 +4692,7 @@ CreateObjPathNoExtension(OneObjProperties *inObj, void *) noexcept
 CFStringRef
 CreateParentPath(OneObjProperties *inObj, void *) noexcept
 {
-    if((inObj != nullptr) && (inObj->url != nullptr))
+	if((inObj != nullptr) && (inObj->url != nullptr))
   	{
  		CFObj<CFURLRef> newURL( ::CFURLCreateCopyDeletingLastPathComponent( kCFAllocatorDefault, inObj->url ) );
 		if(newURL != nullptr)
@@ -4737,7 +4714,7 @@ CreateObjName(OneObjProperties *inObj, void *) noexcept
 CFStringRef
 CreateObjNameNoExtension(OneObjProperties *inObj, void *) noexcept
 {
-    if((inObj != nullptr) && (inObj->url != nullptr))
+	if((inObj != nullptr) && (inObj->url != nullptr))
   	{
 		CFObj<CFURLRef> newURL( ::CFURLCreateCopyDeletingPathExtension( kCFAllocatorDefault, inObj->url ) );
 		if(newURL != nullptr)
@@ -4760,13 +4737,13 @@ CreateObjExtensionOnly(OneObjProperties *inObj, void *) noexcept
 CFStringRef
 CreateObjDisplayName(OneObjProperties *inObj, void *) noexcept
 {
-    if((inObj != nullptr) && (inObj->url != nullptr))
-    {
-        CFStringRef displayName = nullptr;
-        Boolean isOK = CFURLCopyResourcePropertyForKey(inObj->url, kCFURLLocalizedNameKey, &displayName, nullptr);
-        if(isOK)
-            return displayName;
-    }
+	if((inObj != nullptr) && (inObj->url != nullptr))
+	{
+		CFStringRef displayName = nullptr;
+		Boolean isOK = CFURLCopyResourcePropertyForKey(inObj->url, kCFURLLocalizedNameKey, &displayName, nullptr);
+		if(isOK)
+			return displayName;
+	}
 	return nullptr;
 }
 
@@ -4780,7 +4757,7 @@ CreateObjPathRelativeToBase(OneObjProperties *inObj, void *ioParam) noexcept
 
 	CFStringRef commonParentPath = (CFStringRef)ioParam;
 
-    if((inObj != nullptr) && (inObj->url != nullptr))
+	if((inObj != nullptr) && (inObj->url != nullptr))
   	{
  		CFObj<CFStringRef> fullPath( ::CFURLCopyFileSystemPath(inObj->url, kCFURLPOSIXPathStyle) );
  		if(fullPath != nullptr)
@@ -4789,7 +4766,7 @@ CreateObjPathRelativeToBase(OneObjProperties *inObj, void *ioParam) noexcept
  			//we do not check it
  			CFRange theRange;
  			theRange.location = 0;
-    		theRange.length = ::CFStringGetLength(commonParentPath);
+			theRange.length = ::CFStringGetLength(commonParentPath);
 
 			//relative path will not be longer than full path
 			CFMutableStringRef	relPath = ::CFStringCreateMutableCopy(kCFAllocatorDefault, ::CFStringGetLength(fullPath), fullPath);
@@ -4879,7 +4856,7 @@ CreateCommonParentPath(OneObjProperties *inObjList, CFIndex inObjCount )
 		return nullptr;
 
 	OneObjProperties *oneObj;
-    std::vector<CFMutableArrayRef> arrayList(inObjCount);
+	std::vector<CFMutableArrayRef> arrayList(inObjCount);
 	memset(arrayList.data(), 0, inObjCount*sizeof(CFMutableArrayRef));
 
 //create parent paths starting from branches, going to the root,
@@ -4892,7 +4869,7 @@ CreateCommonParentPath(OneObjProperties *inObjList, CFIndex inObjCount )
 		arrayList[i] = pathsArray;
 		if(pathsArray != nullptr)
 		{
-            CFURLRef newURL = (oneObj->url != nullptr) ? CFURLCopyAbsoluteURL(oneObj->url) : nullptr;
+			CFURLRef newURL = (oneObj->url != nullptr) ? CFURLCopyAbsoluteURL(oneObj->url) : nullptr;
 
 			//we dispose of all these URLs, we leave only strings derived from them
  			while(newURL != nullptr)
@@ -5122,13 +5099,13 @@ CreateEscapedStringCopy(CFStringRef inStrRef, UInt16 escSpecialCharsMode)
 		}
 		else if( escSpecialCharsMode == kEscapeWithPercent )
 		{
-            return CreateStringByAddingPercentEscapes(inStrRef, false /*escapeAll*/);
+			return CreateStringByAddingPercentEscapes(inStrRef, false /*escapeAll*/);
 		}
 		else if( escSpecialCharsMode == kEscapeWithPercentAll )
 		{
 			//escape all illegal URL chars and all non-alphanumeric legal chars
 			//legal chars need to be escaped in order ot prevent conflicts in shell execution
-            return CreateStringByAddingPercentEscapes(inStrRef, true /*escapeAll*/);
+			return CreateStringByAddingPercentEscapes(inStrRef, true /*escapeAll*/);
 		}
 		else if( escSpecialCharsMode == kEscapeForAppleScript )
 		{
@@ -5216,8 +5193,8 @@ OnMyCommandCM::GetDialogControlValues( CommandDescription &currCommand, OMCDialo
 	if(controlCount <= 0)
 		return;
 
-    std::vector<CFStringRef> keyList(controlCount);
-    std::vector<CFTypeRef> valueList(controlCount);
+	std::vector<CFStringRef> keyList(controlCount);
+	std::vector<CFTypeRef> valueList(controlCount);
 	::CFDictionaryGetKeysAndValues(mNibControlValues, (const void **)keyList.data(), (const void **)valueList.data() );
 
 	for(CFIndex i = 0; i < controlCount; i++)
@@ -5229,7 +5206,7 @@ OnMyCommandCM::GetDialogControlValues( CommandDescription &currCommand, OMCDialo
 			if(columnCount > 0)
 			{
 				//get the list column ids which was filled during command prescan phase
-                std::vector<intptr_t> columnIdList(columnCount);
+				std::vector<intptr_t> columnIdList(columnCount);
 				::CFDictionaryGetKeysAndValues(columnIds, (const void **)columnIdList.data(), NULL );
 								
 				//cache each column value requested for this control
@@ -5242,7 +5219,7 @@ OnMyCommandCM::GetDialogControlValues( CommandDescription &currCommand, OMCDialo
 					//SInt32 controlID = keyList[i];
 					CFStringRef controlIDWithModifiers = keyList[i];
 					UInt32 valueModifiers = 0;
-                    CFObj<CFStringRef> controlID( CreateControlIDByStrippingModifiers(controlIDWithModifiers, valueModifiers) );
+					CFObj<CFStringRef> controlID( CreateControlIDByStrippingModifiers(controlIDWithModifiers, valueModifiers) );
 
 					if( (valueModifiers & kControlModifier_AllRows) != 0 )
 					{
@@ -5330,10 +5307,10 @@ OnMyCommandCM::CreateNibControlValue(SInt32 inSpecialWordID, const CommandDescri
 			return NULL;
 			
 		if( inSpecialWordID == NIB_TABLE_ALL_ROWS )
-        { //saved as unique value in the dictionary
-            CFObj<CFStringRef> newControlID( CreateControlIDByAddingModifiers(controlID, kControlModifier_AllRows) );
-            controlID.Swap(newControlID);
-        }
+		{ //saved as unique value in the dictionary
+			CFObj<CFStringRef> newControlID( CreateControlIDByAddingModifiers(controlID, kControlModifier_AllRows) );
+			controlID.Swap(newControlID);
+		}
 
 		const void *theItem = ::CFDictionaryGetValue(mNibControlValues, (CFStringRef)controlID);
 
@@ -5426,14 +5403,14 @@ ReadControlValuesFromPlist(CFStringRef inDialogUniqueID)
 	if(fileURL == NULL)
 		return NULL;
 	
-    CFObj<CFPropertyListRef> thePlist( CreatePropertyList(fileURL, kCFPropertyListImmutable) );
-    CFDictionaryRef resultDict = ACFType<CFDictionaryRef>::DynamicCast(thePlist);
-    if(resultDict != NULL)
-        thePlist.Detach();
+	CFObj<CFPropertyListRef> thePlist( CreatePropertyList(fileURL, kCFPropertyListImmutable) );
+	CFDictionaryRef resultDict = ACFType<CFDictionaryRef>::DynamicCast(thePlist);
+	if(resultDict != NULL)
+		thePlist.Detach();
 
-    (void)DeleteFile(fileURL);
+	(void)DeleteFile(fileURL);
 
-    return resultDict;
+	return resultDict;
 }
 
 
@@ -5720,7 +5697,7 @@ OnMyCommandCM::SortObjectListByName(CFOptionFlags compareOptions, bool sortAscen
 	if( mObjectList.size() <= 1 )
 		return noErr;//no need to sort
 	
-    AUniquePtr<SortSettings> newSort(new SortSettings(kSortMethodByName, compareOptions, sortAscending));
+	AUniquePtr<SortSettings> newSort(new SortSettings(kSortMethodByName, compareOptions, sortAscending));
 	if( (mSortSettings != nullptr) && (*newSort == *mSortSettings) )
 		return noErr;//already sorted by the same criteria
 
@@ -5739,7 +5716,7 @@ OnMyCommandCM::SortObjectListByName(CFOptionFlags compareOptions, bool sortAscen
 	::CFArraySortValues(sortArray, theRange, FileNameComparator, &compareOptions);
 
 	//now put the sorted values back into our list of OneObjProperties
-    std::vector<OneObjProperties> newList( mObjectList.size() );
+	std::vector<OneObjProperties> newList( mObjectList.size() );
 	
 	for(CFIndex i = 0; i < mObjectList.size(); i++)
 	{

@@ -1,7 +1,4 @@
-# AbracodeFramework.exp
-# Abracode
-#
-# Created by Tomasz Kukielka on 5/6/08.
+# Public APIs visible in Abracode.framework
 
 _OMCGetCurrentVersion
 _OMCRunCommand
@@ -31,7 +28,6 @@ _OBJC_CLASS_$_OMCMenuItem
 _OBJC_CLASS_$_OMCButtonCell
 _OBJC_CLASS_$_OMCImageView
 _OBJC_CLASS_$_OMCTextView
-#_OBJC_CLASS_$_OMCQTMovieView
 _OBJC_CLASS_$_OMCDropletController
 _OBJC_CLASS_$_OMCService
 _OBJC_CLASS_$_OMCSingleCommand
@@ -81,21 +77,6 @@ __ZN11ARefCounted15sCFSetCallbacksE
 __ZN15StSwitchToFrontC1Eb
 __ZN15StSwitchToFrontD1Ev
 
-#_GetAEListFromChooseFolderDialog
-#_GetAEListFromChooseFileDialog
-#_GetAEListFromChooseObjectDialog
-
-#__ZTI9NibDialog
-#__ZN9NibDialogC2EP10__CFBundlePK10__CFStringS4_bb
-#__ZN9NibDialogD2Ev
-#__ZN9NibDialog3RunEv
-#__ZN9NibDialog10InitializeEv
-#__ZN9NibDialog19InstallEventHandlerEv
-#__ZN9NibDialog11HandleEventEP25OpaqueEventHandlerCallRefP14OpaqueEventRef
-#__ZN9NibDialog14ProcessCommandEv
-#__ZN9NibDialog9TerminateEv
-#__ZN9NibDialog23CommandShouldQuitDialogEv
-
 __ZTV14SystemExecutor
 __ZTV11OmcExecutor
 __ZN11OmcExecutor19ReceiveNotificationEPv
@@ -106,10 +87,3 @@ __Z29ReleaseOutputWindowControllerPv
 __Z22OMCOutputWindowSetTextPvPK10__CFString
 __Z25OMCOutputWindowAppendTextPvPK10__CFString
 __Z30OMCOutputWindowScheduleClosingPvd
-
-#__ZN13OnMyCommandCM25PrescanCommandDescriptionER18CommandDescription
-#__ZN13OnMyCommandCM25LoadCommandsFromPlistFileEPK7__CFURL
-#__ZN13OnMyCommandCM16ResetContextDataEv
-
-#_CreatePathFromCFURL
-#_CreateEscapedStringCopy
