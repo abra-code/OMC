@@ -35,8 +35,6 @@ protected:
 	virtual void	RunNext() = 0;    
 };
 
-#ifndef BUILD_DEPUTY
-
 class OnMyCommandCM;
 class CommandDescription;
 class CommandState;
@@ -101,42 +99,4 @@ protected:
 	CFObj<CFStringRef>			mLastOutputText;
 	CFObj<CFStringRef>			mLastStatusLine;
 	bool						mUserCanceled;
-	bool						mUseDeputy;
 };
-
-#else //BUILD_DEPUTY
-
-//OmcDeputyTaskManager can handle only one task
-class OmcDeputyTaskManager : public OmcTaskManager
-{
-public:
-					OmcDeputyTaskManager();
-	virtual			~OmcDeputyTaskManager();
-
-	virtual void	AddTask(OmcExecutor *inNewExecutor, CFStringRef inCommand, CFStringRef inInputPipe, CFStringRef inObjName);
-
-	virtual void	ShowEndNotification() { };
-	virtual CFStringRef GetUniqueID() { return mHostManagerID; }
-
-	void			SetHostMangerID(CFStringRef inManagerID) { mHostManagerID.Adopt(inManagerID, kCFObjRetain); }
-	void			SetTaskIndex( CFIndex inTaskIndex ) { mTaskIndex = inTaskIndex; }
-
-	virtual AObserverBase *
-					GetObserver()
-					{
-						return (AObserver<OmcDeputyTaskManager> *)mTaskObserver;
-					}
-	void			ReceiveNotification(void *ioData);//local message
-
-protected:
- 	virtual void	RunNext();
-	void			NoteTaskEnded(CFIndex inDyingExecutorIndex, bool wasSynchronous);
-
-protected:
-	ARefCountedObj< OmcTask >	mTask;
-	CFObj<CFStringRef>			mHostManagerID;
-	CFIndex						mTaskIndex; //only one in this manager
-	ARefCountedObj< AObserver<OmcDeputyTaskManager> > mTaskObserver;
-};
-
-#endif //BUILD_DEPUTY

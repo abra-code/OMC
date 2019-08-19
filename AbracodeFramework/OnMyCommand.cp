@@ -125,7 +125,7 @@ const CommandDescription kEmptyCommand =
 	NULL,	//popenShell
 	NULL,	//customEnvironVariables
 	false,	//actOnlyInListedApps
-	false,	//useDeputy
+    false,  //unused
 	false,	//disabled
 	false,	//isSubcommand
 	MIN_OMC_VERSION, //requiredOMCVersion
@@ -1484,7 +1484,7 @@ OnMyCommandCM::ProcessObjects()
 			break;
 			
 			case kExecSilentSystem:
-				theExec.Adopt( new SystemExecutor(mBundleRef, currCommand.useDeputy) );
+				theExec.Adopt( new SystemExecutor(mBundleRef) );
 			break;
 			
 			case kExecPOpenWithOutputWindow:
@@ -1573,7 +1573,7 @@ OnMyCommandCM::ProcessCommandWithText(const CommandDescription &currCommand, CFS
 		break;
 		
 		case kExecSilentSystem:
-			theExec.Adopt( new SystemExecutor(mBundleRef, currCommand.useDeputy) );
+			theExec.Adopt( new SystemExecutor(mBundleRef) );
 		break;
 		
 		case kExecPOpenWithOutputWindow:
@@ -3268,8 +3268,9 @@ OnMyCommandCM::GetOneCommandParams(CommandDescription &outDesc, CFDictionaryRef 
 	if(customEnvironVariables != NULL)
 		outDesc.customEnvironVariables = ::CFDictionaryCreateMutableCopy( kCFAllocatorDefault, 0, customEnvironVariables );
 
-//using deputy for background execution?
-	oneCmd.GetValue(CFSTR("SEND_TASK_TO_BACKGROUND_APP"), outDesc.useDeputy);
+// using deputy for background execution?
+// no longer supported
+//	oneCmd.GetValue(CFSTR("SEND_TASK_TO_BACKGROUND_APP"), outDesc.unused);
 
 	oneCmd.CopyValue(CFSTR("END_NOTIFICATION"), outDesc.endNotification);
 

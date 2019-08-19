@@ -100,7 +100,7 @@ typedef struct CommandDescription
 	CFArrayRef		popenShell;
 	CFMutableDictionaryRef	customEnvironVariables;
 	Boolean			actOnlyInListedApps;//if true - activate only in those listed, if false - exclude those listed
-	Boolean			useDeputy;
+	Boolean			unused;
 	Boolean			disabled;
 	Boolean			isSubcommand;
 	SInt32			requiredOMCVersion;

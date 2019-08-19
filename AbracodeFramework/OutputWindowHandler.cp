@@ -98,16 +98,6 @@ OutputWindowHandler::~OutputWindowHandler()
 		mOutputWindowController = NULL;
 	}
 
-// TaskManager Quits app for commands without output window
-// but when window is there, the app needs to run until the window dies
-
-#ifdef BUILD_DEPUTY
-	TRACE_CSTR("Quitting the deputy application loop\n");
-	extern void TerminateApplication(CFTimeInterval inDelay);
-	TerminateApplication(mUseFadeOut ? 1.0 : 0.0);
-	//::QuitApplicationEventLoop();
-#endif
-
 	TRACE_CSTR("Exiting OutputWindowHandler destructor\n");
 }
 
@@ -225,16 +215,10 @@ OutputWindowHandler::GetOutputWindowSettings(CFArrayRef inCommandName, CFDiction
 	outSettings.title = NULL;
 	outSettings.alpha = 1.0;
 */
-#ifdef BUILD_DEPUTY
-//regular floating window is never shown in background app - the default is global floating
-	outSettings.windowType = kOMCWindowGlobalFloating;
-#else //BUILD_DEPUTY
 	//we need to check if the process is background only - in this case we cannot use floating
 	//because it will never show
     bool regularGUIApp = RunningInRegularGUIApp();
     outSettings.windowType = regularGUIApp ? kOMCWindowFloating : kOMCWindowGlobalFloating;
-
-#endif //BUILD_DEPUTY
 
 	if(inSettingsDict == NULL)
 		return;
@@ -293,12 +277,7 @@ OutputWindowHandler::GetOutputWindowSettings(CFArrayRef inCommandName, CFDiction
 		}
 		else if( kCFCompareEqualTo == ::CFStringCompare( theStr, CFSTR("floating"), 0 ) )
 		{
-#ifdef BUILD_DEPUTY
-//regular floating window is never shown for backround deputy app. replace with global floating
-			outSettings.windowType = kOMCWindowGlobalFloating;
-#else
             outSettings.windowType = regularGUIApp ? kOMCWindowFloating : kOMCWindowGlobalFloating;
-#endif
 		}
 		else if( kCFCompareEqualTo == ::CFStringCompare( theStr, CFSTR("global_floating"), 0 ) )
 		{

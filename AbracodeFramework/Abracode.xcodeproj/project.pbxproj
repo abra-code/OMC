@@ -899,7 +899,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "echo \"Creating additional symbolic links - relative, so the framework is movable\";\n\ncd \"/Library/Frameworks/Abracode.framework/\";\nrm -f \"Support\";\nln -s \"Versions/Current/Support\" \"Support\";\n";
+			shellScript = "echo \"Creating additional symbolic links - relative, so the framework is movable\";\n\ncd \"$BUILT_PRODUCTS_DIR/Abracode.framework\";\nrm -f \"Support\";\nln -s \"Versions/Current/Support\" \"Support\";\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */

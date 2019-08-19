@@ -27,11 +27,11 @@ class CommandDescription;
 class OmcExecutor : public ARefCounted
 {
 public:
-						OmcExecutor(CFBundleRef inBundleRef, Boolean useDeputy)
+						OmcExecutor(CFBundleRef inBundleRef)
 							: mNotifier( new ANotifier() ),
 							mCancelObserver( new AObserver<OmcExecutor>(this) ),
 							mBundleRef(inBundleRef, kCFObjRetain),
-							mUseDeputy(useDeputy), /*mIsFinishing(false),*/ mTaskIndex(0)
+							/*mIsFinishing(false),*/ mTaskIndex(0)
 						{
 #if _DEBUG_
 							if( (CFBundleRef)mBundleRef != NULL)
@@ -72,13 +72,6 @@ public:
 	virtual void		Cancel() { Finish(false, false, noErr); }
 	virtual void		ProcessOutputData(const void *inData, size_t inSize);
 	virtual void		ProcessOutputString(CFStringRef inString);
-
-#ifndef BUILD_DEPUTY
-
-	virtual OSStatus	DelegateTaskToDeputy( CFDataRef inData );
-	virtual void		CreateDeputyData( ACFMutableDict &ioDict ) = 0;
-
-#endif //BUILD_DEPUTY
 	
 	virtual bool		UsesOutputWindow() const { return false; }
 	
@@ -103,7 +96,6 @@ protected:
 	ARefCountedObj< AObserver<OmcExecutor> > mCancelObserver;
 	CFObj<CFStringRef>	mTaskManagerID;
 	CFObj<CFBundleRef>	mBundleRef;
-	Boolean				mUseDeputy;
 //	Boolean				mIsFinishing;
 	CFIndex				mTaskIndex;//task manager assigns task index to us for its own purposes
 };
@@ -120,10 +112,6 @@ public:
 	virtual void		Finish(bool wasSynchronous, bool sendNotification, OSStatus inError);
 	virtual pid_t		GetChildProcessID() const { return mChildProcessInfo.pid; }
 	
-#ifndef BUILD_DEPUTY
-	virtual void		CreateDeputyData( ACFMutableDict &ioDict );
-#endif
-
 	void				CloseWriting();
 	void				WriteInputStringChunk();
 
@@ -156,10 +144,6 @@ public:
 												CFDictionaryRef inEnviron);
 	virtual				~POpenWithOutputExecutor();
 
-#ifndef BUILD_DEPUTY
-	virtual void		CreateDeputyData( ACFMutableDict &ioDict );
-#endif
-
 	virtual void		Finish(bool wasSynchronous, bool sendNotification, OSStatus inError);
 
 	virtual bool		UsesOutputWindow() const { return true; }
@@ -179,18 +163,14 @@ class SystemExecutor
 	: public OmcExecutor
 {
 public:
-						SystemExecutor(CFBundleRef inBundle, Boolean useDeputy)
-							: OmcExecutor(inBundle, useDeputy)
+						SystemExecutor(CFBundleRef inBundle)
+							: OmcExecutor(inBundle)
 						{
 						}
 
 	virtual				~SystemExecutor()
 						{
 						}
-
-#ifndef BUILD_DEPUTY
-	virtual void		CreateDeputyData( ACFMutableDict &ioDict );
-#endif
 
 protected:
 	virtual bool		Execute( const char *inCommand, OSStatus &outError );
@@ -208,9 +188,6 @@ public:
 
 	virtual bool		ExecuteCFString( CFStringRef inCommand, CFStringRef inInputPipe );
 
-#ifndef BUILD_DEPUTY
-	virtual void		CreateDeputyData( ACFMutableDict &ioDict );
-#endif
 //	virtual void		Finish(bool wasSynchronous, bool sendNotification, OSStatus inError);
 
 	virtual bool		UsesOutputWindow() const { return mUseOutput; }
@@ -246,10 +223,6 @@ public:
 						{
 						}
 
-#ifndef BUILD_DEPUTY
-	virtual void		CreateDeputyData( ACFMutableDict &ioDict );
-#endif
-
 	virtual void		Finish(bool wasSynchronous, bool sendNotification, OSStatus inError);
 
 protected:
@@ -267,10 +240,6 @@ public:
 														CFBundleRef inBundleRef, CFBundleRef inExternBundleRef,
 														CFDictionaryRef inEnviron);
 	virtual				~ShellScriptWithOutputExecutor();
-
-#ifndef BUILD_DEPUTY
-	virtual void		CreateDeputyData( ACFMutableDict &ioDict );
-#endif
 
 	virtual void		Finish(bool wasSynchronous, bool sendNotification, OSStatus inError);
 

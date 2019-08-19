@@ -20,12 +20,8 @@
 #include "ARefCounted.h"
 #include "DefaultExternBundle.h"
 
-#ifdef BUILD_DEPUTY
-	#include "MessagePortSend.h"
-#else
-	#include "OnMyCommand.h"
-	#include "OMCDialog.h"
-#endif
+#include "OnMyCommand.h"
+#include "OMCDialog.h"
 
 #include <mach/host_info.h>
 #include <mach/mach_host.h>
@@ -65,7 +61,6 @@ public:
 	CFObj<CFStringRef>		mObjName;
 };
 
-#ifndef BUILD_DEPUTY
 
 OmcHostTaskManager::OmcHostTaskManager(OnMyCommandCM *inPlugin, const CommandDescription &currCommand,
 										CFStringRef inCommandName, CFBundleRef inBundle, CFIndex inMaxTaskCount)
@@ -75,7 +70,7 @@ OmcHostTaskManager::OmcHostTaskManager(OnMyCommandCM *inPlugin, const CommandDes
 	mMaxTaskCount(inMaxTaskCount), mTaskCount(0), mFinishedTasks(0),
 	mTaskObserver( new AObserver<OmcHostTaskManager>(this) ), mNotifier( new ANotifier() ),
 	mProgress(NULL),
-	mUserCanceled(false), mUseDeputy(currCommand.useDeputy)
+	mUserCanceled(false)
 {
 #if _DEBUG_
 	if( (CFBundleRef)mBundle != NULL)
@@ -256,12 +251,6 @@ OmcHostTaskManager::RunNext()
 
 			mProgress = OMCDeferredProgressCreate(mProgressParams, mCommandName, mTaskCount, mCurrCommand.localizationTableName, localizationBundle);
 			mProgressParams.Release();
-		}
-
-		if( mUseDeputy && !mListener.IsListening() )
-		{
-			CFObj<CFStringRef> portName( ::CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("OMCTaskManagerPort-%@"), GetUniqueID()) );
-			mListener.StartListening(this, portName );
 		}
 		
 		CFIndex emptySlotCount = mMaxTaskCount - runningCount;
@@ -658,118 +647,6 @@ OmcHostTaskManager::GetUniqueID()
 	return mUniqueID;
 }
 
-
-#else //BUILD_DEPUTY
-
-#pragma mark -
-
-OmcDeputyTaskManager::OmcDeputyTaskManager()
-	:  mTaskIndex(0), mTaskObserver( new AObserver<OmcDeputyTaskManager>(this) )
-{
-}
-
-OmcDeputyTaskManager::~OmcDeputyTaskManager()
-{
-	TRACE_CSTR("OmcDeputyTaskManager::~OmcDeputyTaskManager\n");
-	
-	if(mTaskObserver != NULL)
-		mTaskObserver->SetOwner(NULL);//observer may outlive us so it is very important to tell that we died
-	
-	if( (mTask != NULL) && !mTask->UsesOutputWindow() )
-	{
-//		::QuitApplicationEventLoop();
-		extern void TerminateApplication(CFTimeInterval inDelay);
-		TerminateApplication(0.0);
-	}
-}
-
-//call only once in Deputy
-//retains OmcExecutor object, retain CFStringRefs
-void
-OmcDeputyTaskManager::AddTask(OmcExecutor *inNewExecutor, CFStringRef inCommand, CFStringRef inInputPipe, CFStringRef inObjName)
-{
-	if(inNewExecutor != NULL)
-	{
-		TRACE_CSTR("OmcDeputyTaskManager::AddTask\n");
-		mTask.Adopt( new OmcTask(inNewExecutor, inCommand, inInputPipe, inObjName) );//take ownership
-		inNewExecutor->ReportToManager(this, mTaskIndex);
-	}
-}
-
-void
-OmcDeputyTaskManager::RunNext()
-{
-	TRACE_CSTR("OmcDeputyTaskManager::Run started\n");
-
-	bool finishedSynchronously = false;
-	if(mTask != NULL)
-		finishedSynchronously = mTask->Run();
-
-	if(finishedSynchronously)
-	{
-		delete this;
-		TRACE_CSTR("OmcDeputyTaskManager::Run finished synchronously\n");
-	}
-	else
-	{
-		TRACE_CSTR("OmcDeputyTaskManager::Run finished asynchronously\n");
-	}
-}
-
-void
-OmcDeputyTaskManager::NoteTaskEnded(CFIndex /*inDyingExecutorIndex*/, bool wasSynchronous)
-{
-	TRACE_CSTR("OmcDeputyTaskManager::NoteTaskEnded\n");
-
-	if( !wasSynchronous )
-	{
-		TRACE_CSTR("OmcDeputyTaskManager::NoteTaskEnded finished asynchronously\n");
-		delete this;
-	}
-	else
-	{
-		TRACE_CSTR("OmcDeputyTaskManager::NoteTaskEnded finished synchronously\n");
-	}
-}
-
-//receive local deputy notification and forward to manager in host app
-void
-OmcDeputyTaskManager::ReceiveNotification(void *ioData)
-{
-	if(ioData == NULL)
-		return;
-
-	TRACE_CSTR("OmcDeputyTaskManager::ReceiveNotification\n");
-
-	OmcTaskData *taskData = (OmcTaskData *)ioData;
-
-	if( GetUniqueID() != NULL)
-	{
-		TRACE_CSTR("OmcDeputyTaskManager: Sending data to host manager\n");
-		CFObj<CFDataRef> dataToSend( OMCTaskCreatePackedData( *taskData ) );
-		CFObj<CFStringRef> portName( ::CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("OMCTaskManagerPort-%@"), GetUniqueID()) );
-		SInt32 err = SendMessageToRemotePortWithoutResponse(portName, 0, dataToSend);
-		if(err != noErr)
-		{
-			TRACE_CSTR("OmcDeputyTaskManager::SendMessageToRemotePortWithoutResponse returned error\n");
-		}
-	}
-
-	switch(taskData->messageID)
-	{
-		case kOmcTaskFinished:
-			if( taskData->dataType == kOmcDataTypeBoolean )
-				NoteTaskEnded(taskData->taskID, taskData->data.test);
-		break;
-
-		case kOmcTaskProgress:
-		default:
-		break;
-	}
-}
-
-
-#endif //BUILD_DEPUTY
 
 #pragma mark -
 

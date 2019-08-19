@@ -58,26 +58,6 @@ OmcExecutor::ExecuteCFString( CFStringRef inCommand, CFStringRef inInputPipe )
 		return true;
 	}
 
-	OSStatus err = noErr;
-
-#ifndef BUILD_DEPUTY
-	if(mUseDeputy)
-	{
-		ACFMutableDict deputyInfo;
-		deputyInfo.SetValue( CFSTR("COMMAND"), inCommand);
-		deputyInfo.SetValue( CFSTR("STANDARD_INPUT_PIPE"), inInputPipe);
-		deputyInfo.SetValue( CFSTR("TASK_MANAGER_ID"), (CFStringRef)mTaskManagerID );
-		
-		deputyInfo.SetValue( CFSTR("TASK_INDEX"), (CFIndex)mTaskIndex );
-		
-		CreateDeputyData( deputyInfo );
-        CFObj<CFDataRef> deputyData(CFPropertyListCreateData(kCFAllocatorDefault, (CFMutableDictionaryRef)deputyInfo, kCFPropertyListBinaryFormat_v1_0, 0, nullptr));
-		err = DelegateTaskToDeputy(deputyData);
-		if(err == noErr)
-			return false;
-	}
-#endif
-
 //	DEBUG_CFSTR( inCommand );
 	
 	bool finishedSynchronously = true;//in error condition finish right away
@@ -126,117 +106,6 @@ OmcExecutor::Finish(bool wasSynchronous, bool sendNotification, OSStatus inError
 
 	this->Release(); //balance the retain we did in ExecuteCFString
 }
-
-//the deputy itself cannot delegate the task to another deputy
-//so the following code is not compiled when building the deputy applet
-
-#ifndef BUILD_DEPUTY
-
-OSStatus
-OmcExecutor::DelegateTaskToDeputy(CFDataRef inData)
-{
-	if(mBundleRef == NULL)
-		mBundleRef.Adopt( ::CFBundleGetMainBundle(), kCFObjRetain );
-
-	CFObj<CFURLRef> myBundleURL( ::CFBundleCopyBundleURL(mBundleRef) );
-	if(myBundleURL == NULL)
-		return fnfErr;
-
-	CFObj<CFURLRef> omcDeputyURL( ::CFURLCreateCopyAppendingPathComponent (
-									kCFAllocatorDefault,
-									myBundleURL,
-									CFSTR("Versions/Current/Support/OMCDeputy.app"),
-									true) );
-	if(omcDeputyURL == NULL)
-		return fnfErr;
-
-	CFObj<CFURLRef> deputyAbsoluteURL( ::CFURLCopyAbsoluteURL(omcDeputyURL) );
-	if(deputyAbsoluteURL == NULL)
-		return fnfErr;
-	
-	CFObj<CFStringRef> deputyPath( ::CFURLCopyFileSystemPath(deputyAbsoluteURL, kCFURLPOSIXPathStyle) );
-	if(deputyPath == NULL)
-		return fnfErr;
-	
-	CFObj<CFStringRef> escapedDeputyPath( CreateEscapedStringCopy(deputyPath, kEscapeWithBackslash) );
-	if(escapedDeputyPath == NULL)
-		return fnfErr;
-
-	CFObj<CFMutableStringRef> uniquePortName( ::CFStringCreateMutable( kCFAllocatorDefault, 0) );
-	if(uniquePortName == NULL)
-		return memFullErr;
-
-	::CFStringAppend( uniquePortName, CFSTR("OMCDeputyPort-") );
-	
-	CFUUIDRef  myUUID = ::CFUUIDCreate(kCFAllocatorDefault);
-	if(myUUID != NULL)
-	{
-		CFStringRef uniqueID = ::CFUUIDCreateString(kCFAllocatorDefault, myUUID);
-		CFRelease(myUUID);
-		::CFStringAppend( uniquePortName, uniqueID );
-		::CFRelease(uniqueID);
-	}
-
-
-	CFObj<CFMutableStringRef> theCommand( ::CFStringCreateMutable( kCFAllocatorDefault, 0) );
-	if(theCommand == NULL)
-		return memFullErr;
-
-//the deputy is launched with system() call because we want a new instance of this helper each time
-	::CFStringAppend( theCommand, escapedDeputyPath );
-	::CFStringAppend( theCommand, CFSTR("/Contents/MacOS/OMCDeputy "));//we need to point to the executable inside
-//we want to register a unique port each time and this is the parameter passed to the app
-	::CFStringAppend( theCommand, uniquePortName);
-//the newly launched app will not return becuase it enters the CFRunLoop,
-//we have to send it to background so the system call returns immediately
-	::CFStringAppend( theCommand, CFSTR(" &"));
-
-    std::string commandStr = CMUtils::CreateUTF8StringFromCFString(theCommand);
-	if(commandStr.length() > 0)
-	{
-		OSStatus err = system( commandStr.c_str() );
-		if(err == noErr)
-		{
-		    CFObj<CFMessagePortRef> remotePort( ::CFMessagePortCreateRemote(kCFAllocatorDefault, uniquePortName) );
-		   
-		    int tryCount = 0;
-		    while( (remotePort == NULL) && (tryCount < 5) )
-		    {
-		    	TRACE_CSTR("Cannot obtain OMCDeputy port, sleeping one second and trying again\n.");
-		    	sleep(1);
-		    	remotePort.Adopt( ::CFMessagePortCreateRemote(kCFAllocatorDefault, uniquePortName), kCFObjDontRetain );
-		    	tryCount++;
-		    }
-		    
-		    if(remotePort != NULL)
-		    {
-				//CFDataRef replyData = NULL;
-				err = ::CFMessagePortSendRequest(remotePort, 0/*msgid*/, inData, 5/*send timeout*/, 0/*rcv timout*/, NULL/*kCFRunLoopDefaultMode*/, NULL/*replyData*/);
-				TRACE_CSTR("Message to OMCDeputy sent and CFMessagePortSendRequest() returned\n.");
-				//if(replyData != NULL)
-				//	::CFRelease(replyData);
-				if( err == kCFMessagePortSuccess)
-				{
-					return noErr;
-				}
-				else
-				{//could not send the message
-					LOG_CSTR( "OMC->OmcExecutor::DelegateTaskToDeputy. Cannot send message to deputy. Trying to kill deputy now.\n" );
-					system("killall -9 OMCDeputy");
-				}
-			}
-			else
-			{
-				LOG_CSTR( "OMC->OmcExecutor::DelegateTaskToDeputy. Could not open the deputy port. Trying to kill deputy now\n" );
-				system("killall -9 OMCDeputy");
-			}
-		}
-	}
-
-	return -1;
-}
-
-#endif //!BUILD_DEPUTY
 
 void
 OmcExecutor::ProcessOutputData(const void *inData, size_t inSize)
@@ -355,7 +224,7 @@ void PopenCFSocketCallback(
 #pragma mark -
 
 POpenExecutor::POpenExecutor(const CommandDescription &inCommandDesc, CFBundleRef inBundle, CFDictionaryRef inEnviron)
-	: OmcExecutor(inBundle, inCommandDesc.useDeputy),
+	: OmcExecutor(inBundle),
 	mCustomShell(inCommandDesc.popenShell, kCFObjRetain),
 	mEnvironmentVariables(inEnviron, kCFObjRetain),
 	mReadSocket(NULL), mWriteSocket(NULL),
@@ -474,26 +343,6 @@ POpenExecutor::Execute( const char *inCommand, OSStatus &outError )
 	
 	return true; //error condition. finished
 }
-
-#ifndef BUILD_DEPUTY
-
-void
-POpenExecutor::CreateDeputyData( ACFMutableDict &ioDict )
-{
-	ioDict.SetValue( CFSTR("EXECUTION_MODE"), CFSTR("exe_silent_popen") );	
-
-	if(mBundleRef != NULL)
-		AddBundlePathToDict( ioDict, CFSTR("BUNDLE_PATH"), mBundleRef );
-
-	if(mEnvironmentVariables != NULL)
-		ioDict.SetValue( CFSTR("POPEN_SHELL"), (CFTypeRef)(CFArrayRef)mCustomShell );
-
-	if(mEnvironmentVariables != NULL)
-		ioDict.SetValue( CFSTR("ENVIRONMENT_VARIABLES"), (CFTypeRef)(CFDictionaryRef)mEnvironmentVariables );
-}
-
-#endif //!BUILD_DEPUTY
-
 
 POpenExecutor::~POpenExecutor()
 {
@@ -657,39 +506,6 @@ POpenWithOutputExecutor::Execute( const char *inCommand, OSStatus &outError )
 	return POpenExecutor::Execute(inCommand, outError);
 }
 
-#ifndef BUILD_DEPUTY
-
-void
-POpenWithOutputExecutor::CreateDeputyData( ACFMutableDict &ioDict )
-{	
-	ioDict.SetValue( CFSTR("EXECUTION_MODE"), CFSTR("exe_popen_with_output_window") );
-	if(mCommandName != NULL)
-		ioDict.SetValue( CFSTR("NAME"), (CFArrayRef)mCommandName );
-
-	if(mDynamicCommandName != NULL)
-		ioDict.SetValue( CFSTR("DYNAMIC_NAME"), (CFStringRef)mDynamicCommandName );//retained
-	
-	if(mSettingsDict != NULL)
-		ioDict.SetValue( CFSTR("OUTPUT_WINDOW_SETTINGS"), (CFDictionaryRef)mSettingsDict );//retained
-	
-	if(mBundleRef != NULL)
-		AddBundlePathToDict( ioDict, CFSTR("BUNDLE_PATH"), mBundleRef );
-
-	if(mExternBundleRef != NULL)
-		AddBundlePathToDict( ioDict, CFSTR("EXTERNAL_BUNDLE_PATH"), mExternBundleRef );
-
-	if(mLocalizationTableName != NULL)
-		ioDict.SetValue( CFSTR("LOCALIZATION_TABLE_NAME"), (CFStringRef)mLocalizationTableName);//retained
-
-	if(mEnvironmentVariables != NULL)
-		ioDict.SetValue( CFSTR("POPEN_SHELL"), (CFTypeRef)(CFArrayRef)mCustomShell );
-
-	if(mEnvironmentVariables != NULL)
-		ioDict.SetValue( CFSTR("ENVIRONMENT_VARIABLES"), (CFTypeRef)(CFDictionaryRef)mEnvironmentVariables );
-}
-
-#endif
-
 void
 POpenWithOutputExecutor::Finish(bool wasSynchronous, bool sendNotification, OSStatus inError)
 {
@@ -717,25 +533,12 @@ SystemExecutor::Execute( const char *inCommand, OSStatus &outError )
 	return true; //finished. system() is blocking
 }
 
-#ifndef BUILD_DEPUTY
-
-void
-SystemExecutor::CreateDeputyData( ACFMutableDict &ioDict )
-{
-	ioDict.SetValue( CFSTR("EXECUTION_MODE"), CFSTR("exe_silent_system"));
-	
-	if(mBundleRef != NULL)
-		AddBundlePathToDict( ioDict, CFSTR("BUNDLE_PATH"), mBundleRef );
-}
-
-#endif
-
 #pragma mark -
 
 AppleScriptExecutor::AppleScriptExecutor(const CommandDescription &inCommandDesc, CFStringRef inDynamicName,
 										CFBundleRef inBundleRef, CFBundleRef inExternBundleRef,
 										Boolean useOutputWindow)
-	: OmcExecutor(inBundleRef, inCommandDesc.useDeputy), mOSAComponent(NULL), mActiveUPP(NULL),
+	: OmcExecutor(inBundleRef), mOSAComponent(NULL), mActiveUPP(NULL),
 	mSettingsDict(inCommandDesc.outputWindowOptions, kCFObjRetain),
 	mCommandName(inCommandDesc.name, kCFObjRetain),
 	mDynamicCommandName(inDynamicName, kCFObjRetain),
@@ -744,8 +547,7 @@ AppleScriptExecutor::AppleScriptExecutor(const CommandDescription &inCommandDesc
 	mUseOutput(useOutputWindow)
 {
     //TODO: try if it can be implemented easily with NSAppleScript instead
-	if(mUseDeputy == false)
-		mOSAComponent = OpenDefaultComponent( kOSAComponentType, kOSAGenericScriptingComponentSubtype );
+    mOSAComponent = OpenDefaultComponent( kOSAComponentType, kOSAGenericScriptingComponentSubtype );
 
 	mActiveUPP = ::NewOSAActiveUPP( AppleScriptExecutor::OSAActiveProc );
 	if( (mActiveUPP != NULL) && (mOSAComponent != NULL) )
@@ -773,27 +575,6 @@ AppleScriptExecutor::ExecuteCFString( CFStringRef inCommand, CFStringRef inInput
 		Finish(true, true, noErr);
 		return true;
 	}
-
-	OSStatus err = noErr;
-
-#ifndef BUILD_DEPUTY
-	if(mUseDeputy)
-	{
-		ACFMutableDict deputyInfo;
-		deputyInfo.SetValue( CFSTR("COMMAND"), inCommand);
-		deputyInfo.SetValue( CFSTR("TASK_MANAGER_ID"), (CFStringRef)mTaskManagerID );
-		deputyInfo.SetValue( CFSTR("TASK_INDEX"), (CFIndex)mTaskIndex );
-
-		CreateDeputyData( deputyInfo );
-        CFObj<CFDataRef> deputyData(CFPropertyListCreateData(kCFAllocatorDefault, (CFMutableDictionaryRef)deputyInfo, kCFPropertyListBinaryFormat_v1_0, 0, nullptr));
-		DelegateTaskToDeputy(deputyData);
-		if(err == noErr)
-		{
-			//Finish(); //temp until we teach deputy to talk to manager
-			return false;
-		}
-	}
-#endif
 	
 	if( mOSAComponent == NULL )
 		mOSAComponent = OpenDefaultComponent( kOSAComponentType, kOSAGenericScriptingComponentSubtype );
@@ -806,7 +587,7 @@ AppleScriptExecutor::ExecuteCFString( CFStringRef inCommand, CFStringRef inInput
 
 	StAEDesc theCommandDesc;
 
-	err = CMUtils::CreateUniTextDescFromCFString(inCommand, theCommandDesc);
+	OSStatus err = CMUtils::CreateUniTextDescFromCFString(inCommand, theCommandDesc);
 
 	if(err != noErr)
 	{
@@ -848,37 +629,6 @@ AppleScriptExecutor::ExecuteCFString( CFStringRef inCommand, CFStringRef inInput
 	Finish(true, true, osaErr);//AppleScript execution is synchronous so we finish when it is done
 	return true;
 }
-
-#ifndef BUILD_DEPUTY
-
-void
-AppleScriptExecutor::CreateDeputyData( ACFMutableDict &ioDict )
-{
-	if(mUseOutput)
-		ioDict.SetValue( CFSTR("EXECUTION_MODE"), CFSTR("exe_applescript_with_output_window") );
-	else
-		ioDict.SetValue( CFSTR("EXECUTION_MODE"), CFSTR("exe_applescript") );
-	
-	if(mCommandName != NULL)
-		ioDict.SetValue( CFSTR("NAME"), (CFArrayRef)mCommandName );//retained
-
-	if(mDynamicCommandName != NULL)
-		ioDict.SetValue( CFSTR("DYNAMIC_NAME"), (CFStringRef)mDynamicCommandName );//retained
-
-	if(mSettingsDict != NULL)
-		ioDict.SetValue( CFSTR("OUTPUT_WINDOW_SETTINGS"), (CFDictionaryRef)mSettingsDict );//retained
-
-	if(mBundleRef != NULL)
-		AddBundlePathToDict( ioDict, CFSTR("BUNDLE_PATH"), mBundleRef );
-
-	if(mExternBundleRef != NULL)
-		AddBundlePathToDict( ioDict, CFSTR("EXTERNAL_BUNDLE_PATH"), mExternBundleRef );
-
-	if(mLocalizationTableName != NULL)
-		ioDict.SetValue( CFSTR("LOCALIZATION_TABLE_NAME"), (CFStringRef)mLocalizationTableName);//retained
-}
-
-#endif
 
 OSErr
 AppleScriptExecutor::OSAActiveProc(SRefCon refCon)
@@ -957,24 +707,6 @@ ShellScriptExecutor::Execute( const char *inCommand, OSStatus &outError )
 	return POpenExecutor::Execute(oneLine, outError);
 }
 
-#ifndef BUILD_DEPUTY
-
-void
-ShellScriptExecutor::CreateDeputyData( ACFMutableDict &ioDict )
-{
-	ioDict.SetValue( CFSTR("EXECUTION_MODE"), CFSTR("exe_shell_script") );
-	if(mBundleRef != NULL)
-		AddBundlePathToDict( ioDict, CFSTR("BUNDLE_PATH"), mBundleRef );
-
-	if(mEnvironmentVariables != NULL)
-		ioDict.SetValue( CFSTR("POPEN_SHELL"), (CFTypeRef)(CFArrayRef)mCustomShell );
-
-	if(mEnvironmentVariables != NULL)
-		ioDict.SetValue( CFSTR("ENVIRONMENT_VARIABLES"), (CFTypeRef)(CFDictionaryRef)mEnvironmentVariables );
-}
-
-#endif
-
 void
 ShellScriptExecutor::Finish(bool wasSynchronous, bool sendNotification, OSStatus inError)
 {
@@ -1052,40 +784,6 @@ ShellScriptWithOutputExecutor::Execute( const char *inCommand, OSStatus &outErro
 
 	return POpenExecutor::Execute(oneLine, outError);
 }
-
-#ifndef BUILD_DEPUTY
-
-void
-ShellScriptWithOutputExecutor::CreateDeputyData( ACFMutableDict &ioDict )
-{
-	ioDict.SetValue( CFSTR("EXECUTION_MODE"), CFSTR("exe_shell_script_with_output_window") );
-
-	if(mCommandName != NULL)
-		ioDict.SetValue( CFSTR("NAME"), (CFArrayRef)mCommandName);//retained
-
-	if(mDynamicCommandName != NULL)
-		ioDict.SetValue( CFSTR("DYNAMIC_NAME"), (CFStringRef)mDynamicCommandName);//retained
-
-	if(mSettingsDict != NULL)
-		ioDict.SetValue( CFSTR("OUTPUT_WINDOW_SETTINGS"), (CFDictionaryRef)mSettingsDict);//retained
-
-	if(mBundleRef != NULL)
-		AddBundlePathToDict( ioDict, CFSTR("BUNDLE_PATH"), mBundleRef );
-
-	if(mExternBundleRef != NULL)
-		AddBundlePathToDict( ioDict, CFSTR("EXTERNAL_BUNDLE_PATH"), mExternBundleRef );
-
-	if(mLocalizationTableName != NULL)
-		ioDict.SetValue( CFSTR("LOCALIZATION_TABLE_NAME"), (CFStringRef)mLocalizationTableName);//retained
-
-	if(mEnvironmentVariables != NULL)
-		ioDict.SetValue( CFSTR("POPEN_SHELL"), (CFTypeRef)(CFArrayRef)mCustomShell );
-
-	if(mEnvironmentVariables != NULL)
-		ioDict.SetValue( CFSTR("ENVIRONMENT_VARIABLES"), (CFTypeRef)(CFDictionaryRef)mEnvironmentVariables );
-}
-
-#endif
 
 void
 ShellScriptWithOutputExecutor::Finish(bool wasSynchronous, bool sendNotification, OSStatus inError)
