@@ -25,7 +25,7 @@ static OMCService *sOMCService = NULL;
 {
 //	NSLog( @"OMCDropletController init" );
 
-	//not a problem in Xcode 4 anymore
+	//not a problem since Xcode 4 anymore
 	if( ![self respondsToSelector: @selector(ibPopulateKeyPaths:)] )//don't init NSDocumentController in IB
 	{
 		self = [super init];

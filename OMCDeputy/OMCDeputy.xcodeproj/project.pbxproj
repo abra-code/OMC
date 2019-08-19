@@ -14,7 +14,6 @@
 			);
 			dependencies = (
 				E257630A0D20FAD600D755FF /* PBXTargetDependency */,
-				E25763080D20FAD600D755FF /* PBXTargetDependency */,
 			);
 			name = All;
 			productName = All;
@@ -26,30 +25,14 @@
 		E234F95B0D0EFCF9001A7780 /* OmcTaskManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E234F95A0D0EFCF9001A7780 /* OmcTaskManager.cpp */; };
 		E234F95E0D0EFD0F001A7780 /* OmcExecutor.cp in Sources */ = {isa = PBXBuildFile; fileRef = E234F95C0D0EFD0F001A7780 /* OmcExecutor.cp */; };
 		E234F9970D0FB125001A7780 /* MessagePortSend.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E234F9960D0FB125001A7780 /* MessagePortSend.cpp */; };
-		E25762E80D20F9EC00D755FF /* OmcTaskManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E234F95A0D0EFCF9001A7780 /* OmcTaskManager.cpp */; };
-		E25762E90D20F9EC00D755FF /* OmcExecutor.cp in Sources */ = {isa = PBXBuildFile; fileRef = E234F95C0D0EFD0F001A7780 /* OmcExecutor.cp */; };
-		E25762EA0D20F9EC00D755FF /* MessagePortSend.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E234F9960D0FB125001A7780 /* MessagePortSend.cpp */; };
-		E25762EC0D20F9EC00D755FF /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 20286C33FDCF999611CA2CEA /* Carbon.framework */; };
 		E28027150D21050F00577289 /* Abracode.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E25762E00D20F9D900D755FF /* Abracode.framework */; };
-		E280273C0D21BF4D00577289 /* Abracode-Private.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E25762F50D20FA5400D755FF /* Abracode-Private.framework */; };
 		E2C5371D12E98524000E6114 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = E2C5371C12E98524000E6114 /* MainMenu.xib */; };
-		E2C5371E12E98524000E6114 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = E2C5371C12E98524000E6114 /* MainMenu.xib */; };
-		E2D3F5EA0E04E254003FA81F /* main.mm in Sources */ = {isa = PBXBuildFile; fileRef = E2D3F5E90E04E254003FA81F /* main.mm */; };
 		E2D3F5EB0E04E254003FA81F /* main.mm in Sources */ = {isa = PBXBuildFile; fileRef = E2D3F5E90E04E254003FA81F /* main.mm */; };
-		E2D3F6000E04E2EF003FA81F /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E2D3F5FF0E04E2EF003FA81F /* Cocoa.framework */; };
 		E2D3F6010E04E2EF003FA81F /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E2D3F5FF0E04E2EF003FA81F /* Cocoa.framework */; };
-		E2D4D9060D7541E500C2365C /* OutputWindowHandler.cp in Sources */ = {isa = PBXBuildFile; fileRef = E2D4D9050D7541E500C2365C /* OutputWindowHandler.cp */; };
 		E2D4D9070D7541E500C2365C /* OutputWindowHandler.cp in Sources */ = {isa = PBXBuildFile; fileRef = E2D4D9050D7541E500C2365C /* OutputWindowHandler.cp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		E25763070D20FAD600D755FF /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 20286C28FDCF999611CA2CEA /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = E25762E40D20F9EC00D755FF;
-			remoteInfo = "OMCDeputy Standalone";
-		};
 		E25763090D20FAD600D755FF /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 20286C28FDCF999611CA2CEA /* Project object */;
@@ -85,9 +68,7 @@
 		E234F95D0D0EFD0F001A7780 /* OmcExecutor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OmcExecutor.h; path = ../AbracodeFramework/OmcExecutor.h; sourceTree = SOURCE_ROOT; };
 		E234F9960D0FB125001A7780 /* MessagePortSend.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MessagePortSend.cpp; path = ../Common/MessagePortSend.cpp; sourceTree = SOURCE_ROOT; };
 		E249797D0B1A7F0600D1A1DA /* MessagePortSend.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = MessagePortSend.h; path = ../Common/MessagePortSend.h; sourceTree = SOURCE_ROOT; };
-		E25762E00D20F9D900D755FF /* Abracode.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Abracode.framework; path = /Library/Frameworks/Abracode.framework; sourceTree = "<absolute>"; };
-		E25762F20D20F9EC00D755FF /* OMCDeputy.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OMCDeputy.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		E25762F50D20FA5400D755FF /* Abracode-Private.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = "Abracode-Private.framework"; path = "../build/Release/Abracode-Private.framework"; sourceTree = SOURCE_ROOT; };
+		E25762E00D20F9D900D755FF /* Abracode.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Abracode.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		E2C5371C12E98524000E6114 /* MainMenu.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = MainMenu.xib; sourceTree = "<group>"; };
 		E2D3F5E90E04E254003FA81F /* main.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = main.mm; sourceTree = SOURCE_ROOT; };
 		E2D3F5FF0E04E2EF003FA81F /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
@@ -106,16 +87,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		E25762EB0D20F9EC00D755FF /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				E25762EC0D20F9EC00D755FF /* Carbon.framework in Frameworks */,
-				E280273C0D21BF4D00577289 /* Abracode-Private.framework in Frameworks */,
-				E2D3F6000E04E2EF003FA81F /* Cocoa.framework in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -123,7 +94,6 @@
 			isa = PBXGroup;
 			children = (
 				8D0C4E970486CD37000505A6 /* OMCDeputy.app */,
-				E25762F20D20F9EC00D755FF /* OMCDeputy.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -213,7 +183,6 @@
 				20286C33FDCF999611CA2CEA /* Carbon.framework */,
 				4A9504CAFFE6A41611CA0CBA /* CoreServices.framework */,
 				4A9504C8FFE6A3BC11CA0CBA /* ApplicationServices.framework */,
-				E25762F50D20FA5400D755FF /* Abracode-Private.framework */,
 			);
 			name = "External Frameworks and Libraries";
 			sourceTree = "<group>";
@@ -247,32 +216,13 @@
 			productReference = 8D0C4E970486CD37000505A6 /* OMCDeputy.app */;
 			productType = "com.apple.product-type.application";
 		};
-		E25762E40D20F9EC00D755FF /* OMCDeputy Standalone */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = E25762EF0D20F9EC00D755FF /* Build configuration list for PBXNativeTarget "OMCDeputy Standalone" */;
-			buildPhases = (
-				E25762E50D20F9EC00D755FF /* Resources */,
-				E25762E60D20F9EC00D755FF /* Sources */,
-				E25762EB0D20F9EC00D755FF /* Frameworks */,
-				E25762EE0D20F9EC00D755FF /* Copy Self to Framework */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = "OMCDeputy Standalone";
-			productInstallPath = "$(HOME)/Applications";
-			productName = OMCDeputy;
-			productReference = E25762F20D20F9EC00D755FF /* OMCDeputy.app */;
-			productType = "com.apple.product-type.application";
-		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
 		20286C28FDCF999611CA2CEA /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1020;
+				LastUpgradeCheck = 1100;
 			};
 			buildConfigurationList = E2E901460864AA0600B99907 /* Build configuration list for PBXProject "OMCDeputy" */;
 			compatibilityVersion = "Xcode 10.0";
@@ -289,7 +239,6 @@
 			projectRoot = "";
 			targets = (
 				8D0C4E890486CD37000505A6 /* OMCDeputy */,
-				E25762E40D20F9EC00D755FF /* OMCDeputy Standalone */,
 				E25763040D20FACF00D755FF /* All */,
 			);
 		};
@@ -301,14 +250,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				E2C5371D12E98524000E6114 /* MainMenu.xib in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		E25762E50D20F9EC00D755FF /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				E2C5371E12E98524000E6114 /* MainMenu.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -328,23 +269,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "echo \"Copying OMCDeputy to Abracode.framework\";\nrm -fR \"/Library/Frameworks/Abracode.framework/Versions/Current/Support/OMCDeputy.app\";\nditto -rsrcFork \"$BUILT_PRODUCTS_DIR/OMCDeputy.app\" \"/Library/Frameworks/Abracode.framework/Versions/Current/Support/OMCDeputy.app\";\n";
-			showEnvVarsInLog = 0;
-		};
-		E25762EE0D20F9EC00D755FF /* Copy Self to Framework */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"$(BUILT_PRODUCTS_DIR)/OMCDeputy.app",
-			);
-			name = "Copy Self to Framework";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "echo \"Copying OMCDeputy to Abracode.framework\";\ncd \"../build/Release/Abracode-Private.framework/Versions/Current/Support\";\nrm -fR \"OMCDeputy.app\";\nditto -rsrcFork \"$BUILT_PRODUCTS_DIR/OMCDeputy.app\" \"OMCDeputy.app\";\n\ncd \"OMCDeputy.app/Contents\";\nrm -fR \"Frameworks\";\nmkdir \"Frameworks\";\ncd \"Frameworks\";\nln -s \"../../../../../../../Abracode-Private.framework\";\n";
+			shellScript = "echo \"Copying OMCDeputy to Abracode.framework\";\nrm -fR \"$BUILT_PRODUCTS_DIR/Abracode.framework/Versions/Current/Support/OMCDeputy.app\";\nditto -rsrcFork \"$BUILT_PRODUCTS_DIR/OMCDeputy.app\" \"$BUILT_PRODUCTS_DIR/Abracode.framework/Versions/Current/Support/OMCDeputy.app\";\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -362,26 +287,9 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		E25762E60D20F9EC00D755FF /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				E25762E80D20F9EC00D755FF /* OmcTaskManager.cpp in Sources */,
-				E25762E90D20F9EC00D755FF /* OmcExecutor.cp in Sources */,
-				E25762EA0D20F9EC00D755FF /* MessagePortSend.cpp in Sources */,
-				E2D4D9060D7541E500C2365C /* OutputWindowHandler.cp in Sources */,
-				E2D3F5EA0E04E254003FA81F /* main.mm in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		E25763080D20FAD600D755FF /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = E25762E40D20F9EC00D755FF /* OMCDeputy Standalone */;
-			targetProxy = E25763070D20FAD600D755FF /* PBXContainerItemProxy */;
-		};
 		E257630A0D20FAD600D755FF /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 8D0C4E890486CD37000505A6 /* OMCDeputy */;
@@ -390,50 +298,6 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		E25762F00D20F9EC00D755FF /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CONFIGURATION_BUILD_DIR = "$(BUILD_DIR)/$(CONFIGURATION)";
-				CONFIGURATION_TEMP_DIR = "$(PROJECT_TEMP_DIR)/$(CONFIGURATION)";
-				COPY_PHASE_STRIP = NO;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
-				);
-				FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SRCROOT)/../build/Debug\"";
-				GCC_ENABLE_FIX_AND_CONTINUE = YES;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				INFOPLIST_FILE = Info.plist;
-				INSTALL_PATH = "$(HOME)/Applications";
-				OBJROOT = "$(SYMROOT)";
-				PRODUCT_NAME = OMCDeputy;
-				SYMROOT = build;
-				WRAPPER_EXTENSION = app;
-			};
-			name = Debug;
-		};
-		E25762F10D20F9EC00D755FF /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CONFIGURATION_BUILD_DIR = "$(BUILD_DIR)/$(CONFIGURATION)";
-				CONFIGURATION_TEMP_DIR = "$(PROJECT_TEMP_DIR)/$(CONFIGURATION)";
-				COPY_PHASE_STRIP = YES;
-				DEPLOYMENT_POSTPROCESSING = YES;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
-				);
-				FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SRCROOT)/../build/Release\"";
-				GCC_ENABLE_FIX_AND_CONTINUE = NO;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
-				INFOPLIST_FILE = Info.plist;
-				INSTALL_PATH = "$(HOME)/Applications";
-				PRODUCT_NAME = OMCDeputy;
-				SYMROOT = build;
-				WRAPPER_EXTENSION = app;
-			};
-			name = Release;
-		};
 		E25763050D20FACF00D755FF /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -462,7 +326,10 @@
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				INFOPLIST_FILE = Info.plist;
-				INSTALL_PATH = "$(HOME)/Applications";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"@executable_path/../../../../../../..",
+					/Library/Frameworks,
+				);
 				PRODUCT_NAME = OMCDeputy;
 				WRAPPER_EXTENSION = app;
 			};
@@ -476,7 +343,10 @@
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
 				INFOPLIST_FILE = Info.plist;
-				INSTALL_PATH = "$(HOME)/Applications";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"@executable_path/../../../../../../..",
+					/Library/Frameworks,
+				);
 				PRODUCT_NAME = OMCDeputy;
 				WRAPPER_EXTENSION = app;
 			};
@@ -486,15 +356,12 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = E2269B500EB6DA7A0029CCF5 /* AbracodeCommon.xcconfig */;
 			buildSettings = {
-				GCC_ENABLE_OBJC_GC = unsupported;
-				GCC_OBJC_CALL_CXX_CDTORS = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = OMCDeputy_Prefix.pch;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"_DEBUG_=1",
 					"_TRACE_=1",
 				);
-				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/../../icu/include\"/**";
 				SYMROOT = ../build;
 			};
 			name = Debug;
@@ -504,8 +371,6 @@
 			baseConfigurationReference = E2269B500EB6DA7A0029CCF5 /* AbracodeCommon.xcconfig */;
 			buildSettings = {
 				DEAD_CODE_STRIPPING = YES;
-				GCC_ENABLE_OBJC_GC = unsupported;
-				GCC_OBJC_CALL_CXX_CDTORS = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = OMCDeputy_Prefix.pch;
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -513,7 +378,6 @@
 					"_TRACE_=0",
 					"NDEBUG=1",
 				);
-				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/../../icu/include\"/**";
 				SYMROOT = ../build;
 			};
 			name = Release;
@@ -521,15 +385,6 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		E25762EF0D20F9EC00D755FF /* Build configuration list for PBXNativeTarget "OMCDeputy Standalone" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				E25762F00D20F9EC00D755FF /* Debug */,
-				E25762F10D20F9EC00D755FF /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Debug;
-		};
 		E257630C0D20FAE300D755FF /* Build configuration list for PBXAggregateTarget "All" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

@@ -3,7 +3,6 @@
 //  CocoaApp
 //
 //  Created by Tomasz Kukielka on 4/17/08.
-//  Copyright 2008 Abracode Inc. All rights reserved.
 //
 
 #import <Cocoa/Cocoa.h>

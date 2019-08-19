@@ -14,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "E2575FF40D20EE1000D755FF"
-               BuildableName = "Abracode-Private.framework"
-               BlueprintName = "Abracode Private"
+               BlueprintIdentifier = "8DC2EF4F0486A6940098B216"
+               BuildableName = "Abracode.framework"
+               BlueprintName = "Abracode Framework"
                ReferencedContainer = "container:Abracode.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -29,8 +29,6 @@
       shouldUseLaunchSchemeArgsEnv = "YES">
       <Testables>
       </Testables>
-      <AdditionalOptions>
-      </AdditionalOptions>
    </TestAction>
    <LaunchAction
       buildConfiguration = "Debug"
@@ -45,12 +43,17 @@
       debugDocumentVersioning = "YES"
       debugServiceExtension = "internal"
       allowLocationSimulation = "YES">
+      <PathRunnable
+         runnableDebuggingMode = "0"
+         BundleIdentifier = "de.MacDisk.Knut.OMCEdit"
+         FilePath = "/Applications/OMC/OMCEdit.app">
+      </PathRunnable>
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "E2575FF40D20EE1000D755FF"
-            BuildableName = "Abracode-Private.framework"
-            BlueprintName = "Abracode Private"
+            BlueprintIdentifier = "8DC2EF4F0486A6940098B216"
+            BuildableName = "Abracode.framework"
+            BlueprintName = "Abracode Framework"
             ReferencedContainer = "container:Abracode.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -71,9 +74,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "E2575FF40D20EE1000D755FF"
-            BuildableName = "Abracode-Private.framework"
-            BlueprintName = "Abracode Private"
+            BlueprintIdentifier = "8DC2EF4F0486A6940098B216"
+            BuildableName = "Abracode.framework"
+            BlueprintName = "Abracode Framework"
             ReferencedContainer = "container:Abracode.xcodeproj">
          </BuildableReference>
       </MacroExpansion>

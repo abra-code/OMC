@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1DC95F072309566F0095B2AF /* AbracodeFrameworkVersion.c in Sources */ = {isa = PBXBuildFile; fileRef = 1DC95F062309566F0095B2AF /* AbracodeFrameworkVersion.c */; };
 		8D11072A0486CEB800E47090 /* MainMenu.nib in Resources */ = {isa = PBXBuildFile; fileRef = 29B97318FDCFA39411CA2CEA /* MainMenu.nib */; };
 		8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
 		8D11072D0486CEB800E47090 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
@@ -19,7 +20,6 @@
 		E29A6A750D9CDA08006A97B0 /* Example1.nib in Resources */ = {isa = PBXBuildFile; fileRef = E29A6A730D9CDA08006A97B0 /* Example1.nib */; };
 		E29A6A9D0D9CDE80006A97B0 /* WebKit.nib in Resources */ = {isa = PBXBuildFile; fileRef = E29A6A9B0D9CDE80006A97B0 /* WebKit.nib */; };
 		E29B53360D56D0A600F00B4A /* ForOutputObserver.plist in Resources */ = {isa = PBXBuildFile; fileRef = E29B53350D56D0A600F00B4A /* ForOutputObserver.plist */; };
-		E2ACB2C612EAE33700A8ACF6 /* AbracodeFrameworkVersion.c in Sources */ = {isa = PBXBuildFile; fileRef = E2ACB2C512EAE33700A8ACF6 /* AbracodeFrameworkVersion.c */; };
 		E2C32C3F0D2CB64B0023DA03 /* CocoaExecutor.m in Sources */ = {isa = PBXBuildFile; fileRef = E2C32C3E0D2CB64B0023DA03 /* CocoaExecutor.m */; };
 		E2C32C6A0D2CBB860023DA03 /* Example.plist in Resources */ = {isa = PBXBuildFile; fileRef = E2C32C690D2CBB860023DA03 /* Example.plist */; };
 		E2C32C880D2CC6530023DA03 /* gzip.plist in Resources */ = {isa = PBXBuildFile; fileRef = E2C32C870D2CC6530023DA03 /* gzip.plist */; };
@@ -33,6 +33,7 @@
 		089C165DFE840E0CC02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		13E42FB307B3F0F600E4EEF1 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = /System/Library/Frameworks/CoreData.framework; sourceTree = "<absolute>"; };
+		1DC95F062309566F0095B2AF /* AbracodeFrameworkVersion.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = AbracodeFrameworkVersion.c; path = Abracode.framework/Versions/A/Headers/AbracodeFrameworkVersion.c; sourceTree = BUILT_PRODUCTS_DIR; };
 		29B97316FDCFA39411CA2CEA /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		29B97319FDCFA39411CA2CEA /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = English.lproj/MainMenu.nib; sourceTree = "<group>"; };
 		29B97324FDCFA39411CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
@@ -49,7 +50,6 @@
 		E29A6A740D9CDA08006A97B0 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = English.lproj/Example1.nib; sourceTree = "<group>"; };
 		E29A6A9C0D9CDE80006A97B0 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = English.lproj/WebKit.nib; sourceTree = "<group>"; };
 		E29B53350D56D0A600F00B4A /* ForOutputObserver.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = ForOutputObserver.plist; sourceTree = SOURCE_ROOT; };
-		E2ACB2C512EAE33700A8ACF6 /* AbracodeFrameworkVersion.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = AbracodeFrameworkVersion.c; path = /Library/Frameworks/Abracode.framework/Versions/A/Headers/AbracodeFrameworkVersion.c; sourceTree = "<absolute>"; };
 		E2C32C370D2CB56B0023DA03 /* Abracode.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Abracode.framework; path = /Library/Frameworks/Abracode.framework; sourceTree = "<absolute>"; };
 		E2C32C3D0D2CB64B0023DA03 /* CocoaExecutor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CocoaExecutor.h; sourceTree = "<group>"; };
 		E2C32C3E0D2CB64B0023DA03 /* CocoaExecutor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CocoaExecutor.m; sourceTree = "<group>"; };
@@ -124,7 +124,7 @@
 			isa = PBXGroup;
 			children = (
 				32CA4F630368D1EE00C91783 /* CocoaExecutor_Prefix.pch */,
-				E2ACB2C512EAE33700A8ACF6 /* AbracodeFrameworkVersion.c */,
+				1DC95F062309566F0095B2AF /* AbracodeFrameworkVersion.c */,
 				29B97316FDCFA39411CA2CEA /* main.m */,
 				E2C32C3D0D2CB64B0023DA03 /* CocoaExecutor.h */,
 				E2C32C3E0D2CB64B0023DA03 /* CocoaExecutor.m */,
@@ -243,9 +243,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1DC95F072309566F0095B2AF /* AbracodeFrameworkVersion.c in Sources */,
 				8D11072D0486CEB800E47090 /* main.m in Sources */,
 				E2C32C3F0D2CB64B0023DA03 /* CocoaExecutor.m in Sources */,
-				E2ACB2C612EAE33700A8ACF6 /* AbracodeFrameworkVersion.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -360,6 +360,7 @@
 		};
 		C01FCF5008A954540054247B /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = E23C1AD410DE047300B2E8A1 /* AbracodeCommon.xcconfig */;
 			buildSettings = {
 				DEAD_CODE_STRIPPING = YES;
 				FRAMEWORK_SEARCH_PATHS = /Library/Frameworks;

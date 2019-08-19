@@ -3,10 +3,10 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleGetInfoString</key>
-	<string>CommandDroplet version 3.2, Copyright 2002-2019 Abracode. All rights reserved.</string>
+	<string>CommandDroplet version 3.2, Copyright Abracode. All rights reserved.</string>
 	<key>CFBundleName</key>
 	<string>CommandDroplet</string>
 	<key>NSHumanReadableCopyright</key>
-	<string>Copyright 2002-2019 Abracode</string>
+	<string>Copyright Abracode</string>
 </dict>
 </plist>

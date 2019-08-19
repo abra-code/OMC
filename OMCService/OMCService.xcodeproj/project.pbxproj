@@ -130,7 +130,6 @@
 				8D1107290486CEB800E47090 /* Resources */,
 				8D11072C0486CEB800E47090 /* Sources */,
 				8D11072E0486CEB800E47090 /* Frameworks */,
-				E2CF4FBD12ED58180019D985 /* Copy Self to Abracode.framework */,
 			);
 			buildRules = (
 			);
@@ -182,25 +181,6 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
-/* Begin PBXShellScriptBuildPhase section */
-		E2CF4FBD12ED58180019D985 /* Copy Self to Abracode.framework */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"$(BUILT_PRODUCTS_DIR)/OMCService.service",
-			);
-			name = "Copy Self to Abracode.framework";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "echo \"Copying OMCService to Abracode.framework\";\nrm -fR \"/Library/Frameworks/Abracode.framework/Versions/Current/Support/OMCService.service\";\nditto \"$BUILT_PRODUCTS_DIR/OMCService.service\" \"/Library/Frameworks/Abracode.framework/Versions/Current/Support/OMCService.service\";\n";
-			showEnvVarsInLog = 0;
-		};
-/* End PBXShellScriptBuildPhase section */
-
 /* Begin PBXSourcesBuildPhase section */
 		8D11072C0486CEB800E47090 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -237,7 +217,6 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				COPY_PHASE_STRIP = NO;
-				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = OMCService_Prefix.pch;

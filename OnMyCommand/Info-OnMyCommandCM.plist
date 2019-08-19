@@ -13,7 +13,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleLongVersionString</key>
-	<string>3.2, Copyright 2002-2015 Abracode</string>
+	<string>3.2, Copyright Abracode</string>
 	<key>CFBundleName</key>
 	<string>OnMyCommandCM</string>
 	<key>CFBundlePackageType</key>
@@ -45,6 +45,6 @@
 	<key>CFPlugInUnloadFunction</key>
 	<string></string>
 	<key>NSHumanReadableCopyright</key>
-	<string>Copyright 2002-2015 Abracode</string>
+	<string>Copyright Abracode</string>
 </dict>
 </plist>

@@ -40,6 +40,17 @@
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 	<key>LSMinimumSystemVersion</key>
-	<string>10.6.0</string>
+	<string>${MACOSX_DEPLOYMENT_TARGET}</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>OMC Command</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>your_app_unique_url_scheme_here</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>
