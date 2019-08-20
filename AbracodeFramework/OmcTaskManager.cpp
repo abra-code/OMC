@@ -142,6 +142,14 @@ OmcHostTaskManager::Finalize()
 
 	mNotifier->NotifyObservers( &notificationData );
 
+	if(mProgress != NULL)
+	{
+		OMCDeferredProgressRelease(mProgress);
+		mProgress = NULL;
+	}
+	
+	// In case of error, we don't do any extra post-execution tasks
+	// and do not execute the next command
 	if( mPlugin->GetError() != noErr )
 		return;
 
@@ -169,12 +177,6 @@ OmcHostTaskManager::Finalize()
 			usleep(50000);//0.05s for compatibility with "Shortcuts"
 			KeyPressSimulationCallBack(NULL, NULL);
 		}
-	}
-
-	if(mProgress != NULL)
-	{
-		OMCDeferredProgressRelease(mProgress);
-		mProgress = NULL;
 	}
 	
 //any command following this one?

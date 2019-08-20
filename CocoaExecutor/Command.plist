@@ -9,7 +9,13 @@
 			<string>Diff</string>
 			<key>COMMAND</key>
 			<array>
-				<string>echo "just testing output window"</string>
+				<string>echo "just testing output window"
+sleep 2
+echo "slept for a while, progress should show up"
+sleep 2
+echo "exit with non-zero return value to see if progress gets dismissed"
+exit 1
+</string>
 			</array>
 			<key>ESCAPE_SPECIAL_CHARS</key>
 			<string>esc_none</string>
@@ -45,10 +51,6 @@
 				<key>DELAY</key>
 				<real>1.0</real>
 			</dict>
-			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
-			<string>10.4</string>
-			<key>REQUIRED_OMC_VERSION</key>
-			<string>1.7</string>
 			<key>VERSION</key>
 			<integer>1</integer>
 		</dict>
@@ -105,12 +107,6 @@
 				<key>WINDOW_WIDTH</key>
 				<integer>600</integer>
 			</dict>
-			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
-			<string>10.3.9</string>
-			<key>REQUIRED_OMC_VERSION</key>
-			<string>1.8</string>
-			<key>SEND_TASK_TO_BACKGROUND_APP</key>
-			<false/>
 			<key>VERSION</key>
 			<integer>1</integer>
 		</dict>
