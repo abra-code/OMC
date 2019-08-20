@@ -37,7 +37,7 @@ extern "C" OSStatus OMCRunCommand(CFTypeRef inPlistRef, CFStringRef inCommandNam
 	{
 		ARefCountedObj<OnMyCommandCM> omcPlugin( new OnMyCommandCM(inPlistRef), kARefCountDontRetain );
 		omcPlugin->SetCMPluginMode(false);
-		omcPlugin->Init(NULL);
+		omcPlugin->Init();
 		SInt32 commandIndex = omcPlugin->FindCommandIndex(inCommandNameOrID);
 		if( commandIndex < 0 )
 			return fnfErr;
@@ -75,7 +75,7 @@ extern "C" OSStatus OMCRunCommandAE(CFTypeRef inPlistRef, CFStringRef inCommandN
 	{
 		ARefCountedObj<OnMyCommandCM> omcPlugin( new OnMyCommandCM(inPlistRef), kARefCountDontRetain );
 		omcPlugin->SetCMPluginMode(false);
-		omcPlugin->Init(NULL);
+		omcPlugin->Init();
 		SInt32 commandIndex = omcPlugin->FindCommandIndex(inCommandNameOrID);
 		if( commandIndex < 0 )
 			return fnfErr;
@@ -131,7 +131,7 @@ extern "C" OMCExecutorRef OMCCreateExecutor(CFTypeRef inPlistRef)
 	{
 		omcPlugin = new OnMyCommandCM(inPlistRef);
 		omcPlugin->SetCMPluginMode(false);
-		omcPlugin->Init(NULL);
+		omcPlugin->Init();
 	}
 	catch(...)
 	{

@@ -139,6 +139,7 @@ typedef struct SpecialWordAndID
 	CFStringRef	specialWord;
 	CFStringRef environName;
 	SInt32		id;
+	bool		alwaysExport { false };
 } SpecialWordAndID;
 
 class SortSettings
@@ -191,7 +192,7 @@ public:
 						OnMyCommandCM(CFTypeRef inPlistRef = NULL);
 	virtual				~OnMyCommandCM();
 	
-	virtual OSStatus	Init(CFBundleRef inBundle);
+	virtual OSStatus	Init();
 
 	virtual OSStatus	ExamineContext( const AEDesc *inContext, AEDescList *outCommandPairs );
 	virtual OSStatus	ExamineContext( const AEDesc *inContext, SInt32 inCommandRef, AEDescList *outCommandPairs );
@@ -310,6 +311,10 @@ protected:
 	
 	void				InitNibControlValueEntry(CFStringRef controlID, CFIndex columnIndex);
 
+private:
+
+	void				InitOmcBundlePaths();
+
 protected:
 
 	CFObj<CFURLRef>				mPlistURL;
@@ -330,9 +335,10 @@ protected:
 	CFObj<CFURLRef>				mCachedChooseFilePath;
 	CFObj<CFURLRef>				mCachedChooseFolderPath;
 	CFObj<CFURLRef>				mCachedChooseObjectPath;
-//	CFObj<CFURLRef>				mMyBundlePath;
-	CFObj<CFURLRef>				mMyHostBundleURL;
+	CFObj<CFStringRef>			mMyHostBundlePath;
 	CFObj<CFStringRef>			mMyHostAppName;
+	CFObj<CFStringRef>			mOmcSupportPath;
+	CFObj<CFStringRef>			mOmcResourcesPath;
 	CFObj<CFMutableDictionaryRef> mNibControlValues;
 	CFObj<CFMutableDictionaryRef> mNibControlCustomProperties;
 	ARefCountedObj<AObserverBase> mObserver;

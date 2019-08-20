@@ -210,8 +210,8 @@ void
 OmcHostTaskManager::Start()
 {
     //now the command have been parsed so we can copy the state params before execution
-	assert(mCurrCommandState != NULL);
-	assert(mCurrCommand.currState != NULL);
+	assert(mCurrCommandState != nullptr);
+	assert(mCurrCommand.currState != nullptr);
 	mCurrCommandState->commandGUID.Adopt(mCurrCommand.currState->commandGUID, kCFObjRetain);
 	mCurrCommandState->commandGUIDUsedByCommand = mCurrCommand.currState->commandGUIDUsedByCommand;
 

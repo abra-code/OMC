@@ -202,61 +202,61 @@ enum SpecialWordIDs
 
 static const SpecialWordAndID sSpecialWordAndIDList[] =
 {
-	//wordLen												// specialWord		 //environName		   //id
-	{ sizeof("__OBJ_TEXT__")-1,								CFSTR("__OBJ_TEXT__"), CFSTR("OMC_OBJ_TEXT"),  OBJ_TEXT },
-	{ sizeof("__OBJ_PATH__")-1,								CFSTR("__OBJ_PATH__"), CFSTR("OMC_OBJ_PATH"),  OBJ_PATH },
-	{ sizeof("__OBJ_PARENT_PATH__")-1,						CFSTR("__OBJ_PARENT_PATH__"), CFSTR("OMC_OBJ_PARENT_PATH"),  OBJ_PARENT_PATH },
-	{ sizeof("__OBJ_NAME__")-1,								CFSTR("__OBJ_NAME__"), CFSTR("OMC_OBJ_NAME"),  OBJ_NAME },
-	{ sizeof("__OBJ_NAME_NO_EXTENSION__")-1,				CFSTR("__OBJ_NAME_NO_EXTENSION__"), CFSTR("OMC_OBJ_NAME_NO_EXTENSION"),  OBJ_NAME_NO_EXTENSION },
-	{ sizeof("__OBJ_EXTENSION_ONLY__")-1,					CFSTR("__OBJ_EXTENSION_ONLY__"), CFSTR("OMC_OBJ_EXTENSION_ONLY"),  OBJ_EXTENSION_ONLY },
-	{ sizeof("__OBJ_DISPLAY_NAME__")-1,						CFSTR("__OBJ_DISPLAY_NAME__"), CFSTR("OMC_OBJ_DISPLAY_NAME"),  OBJ_DISPLAY_NAME },
-	{ sizeof("__OBJ_COMMON_PARENT_PATH__")-1,				CFSTR("__OBJ_COMMON_PARENT_PATH__"), CFSTR("OMC_OBJ_COMMON_PARENT_PATH"),  OBJ_COMMON_PARENT_PATH },
-	{ sizeof("__OBJ_PATH_RELATIVE_TO_COMMON_PARENT__")-1,	CFSTR("__OBJ_PATH_RELATIVE_TO_COMMON_PARENT__"), CFSTR("OMC_OBJ_PATH_RELATIVE_TO_COMMON_PARENT"),  OBJ_PATH_RELATIVE_TO_COMMON_PARENT },
+	//wordLen												// specialWord		 //environName		   //id			//always_export
+	{ sizeof("__OBJ_TEXT__")-1,								CFSTR("__OBJ_TEXT__"), CFSTR("OMC_OBJ_TEXT"),  OBJ_TEXT, true },
+	{ sizeof("__OBJ_PATH__")-1,								CFSTR("__OBJ_PATH__"), CFSTR("OMC_OBJ_PATH"),  OBJ_PATH, true },
+	{ sizeof("__OBJ_PARENT_PATH__")-1,						CFSTR("__OBJ_PARENT_PATH__"), CFSTR("OMC_OBJ_PARENT_PATH"),  OBJ_PARENT_PATH, false },
+	{ sizeof("__OBJ_NAME__")-1,								CFSTR("__OBJ_NAME__"), CFSTR("OMC_OBJ_NAME"),  OBJ_NAME, false },
+	{ sizeof("__OBJ_NAME_NO_EXTENSION__")-1,				CFSTR("__OBJ_NAME_NO_EXTENSION__"), CFSTR("OMC_OBJ_NAME_NO_EXTENSION"),  OBJ_NAME_NO_EXTENSION, false },
+	{ sizeof("__OBJ_EXTENSION_ONLY__")-1,					CFSTR("__OBJ_EXTENSION_ONLY__"), CFSTR("OMC_OBJ_EXTENSION_ONLY"),  OBJ_EXTENSION_ONLY, false },
+	{ sizeof("__OBJ_DISPLAY_NAME__")-1,						CFSTR("__OBJ_DISPLAY_NAME__"), CFSTR("OMC_OBJ_DISPLAY_NAME"),  OBJ_DISPLAY_NAME, false },
+	{ sizeof("__OBJ_COMMON_PARENT_PATH__")-1,				CFSTR("__OBJ_COMMON_PARENT_PATH__"), CFSTR("OMC_OBJ_COMMON_PARENT_PATH"),  OBJ_COMMON_PARENT_PATH, false },
+	{ sizeof("__OBJ_PATH_RELATIVE_TO_COMMON_PARENT__")-1,	CFSTR("__OBJ_PATH_RELATIVE_TO_COMMON_PARENT__"), CFSTR("OMC_OBJ_PATH_RELATIVE_TO_COMMON_PARENT"),  OBJ_PATH_RELATIVE_TO_COMMON_PARENT, false },
 
-	{ sizeof("__DLG_INPUT_TEXT__")-1,						CFSTR("__DLG_INPUT_TEXT__"), CFSTR("OMC_DLG_INPUT_TEXT"),  DLG_INPUT_TEXT },
+	{ sizeof("__DLG_INPUT_TEXT__")-1,						CFSTR("__DLG_INPUT_TEXT__"), CFSTR("OMC_DLG_INPUT_TEXT"),  DLG_INPUT_TEXT, false },
 
-	{ sizeof("__DLG_SAVE_AS_PATH__")-1,						CFSTR("__DLG_SAVE_AS_PATH__"), CFSTR("OMC_DLG_SAVE_AS_PATH"),  DLG_SAVE_AS_PATH },
-	{ sizeof("__DLG_SAVE_AS_PARENT_PATH__")-1,				CFSTR("__DLG_SAVE_AS_PARENT_PATH__"), CFSTR("OMC_DLG_SAVE_AS_PARENT_PATH"),  DLG_SAVE_AS_PARENT_PATH },
-	{ sizeof("__DLG_SAVE_AS_NAME__")-1,						CFSTR("__DLG_SAVE_AS_NAME__"), CFSTR("OMC_DLG_SAVE_AS_NAME"),  DLG_SAVE_AS_NAME },
-	{ sizeof("__DLG_SAVE_AS_NAME_NO_EXTENSION__")-1,		CFSTR("__DLG_SAVE_AS_NAME_NO_EXTENSION__"), CFSTR("OMC_DLG_SAVE_AS_NAME_NO_EXTENSION"),  DLG_SAVE_AS_NAME_NO_EXTENSION },
-	{ sizeof("__DLG_SAVE_AS_EXTENSION_ONLY__")-1,			CFSTR("__DLG_SAVE_AS_EXTENSION_ONLY__"), CFSTR("OMC_DLG_SAVE_AS_EXTENSION_ONLY"),  DLG_SAVE_AS_EXTENSION_ONLY },
+	{ sizeof("__DLG_SAVE_AS_PATH__")-1,						CFSTR("__DLG_SAVE_AS_PATH__"), CFSTR("OMC_DLG_SAVE_AS_PATH"),  DLG_SAVE_AS_PATH, false },
+	{ sizeof("__DLG_SAVE_AS_PARENT_PATH__")-1,				CFSTR("__DLG_SAVE_AS_PARENT_PATH__"), CFSTR("OMC_DLG_SAVE_AS_PARENT_PATH"),  DLG_SAVE_AS_PARENT_PATH, false },
+	{ sizeof("__DLG_SAVE_AS_NAME__")-1,						CFSTR("__DLG_SAVE_AS_NAME__"), CFSTR("OMC_DLG_SAVE_AS_NAME"),  DLG_SAVE_AS_NAME, false },
+	{ sizeof("__DLG_SAVE_AS_NAME_NO_EXTENSION__")-1,		CFSTR("__DLG_SAVE_AS_NAME_NO_EXTENSION__"), CFSTR("OMC_DLG_SAVE_AS_NAME_NO_EXTENSION"),  DLG_SAVE_AS_NAME_NO_EXTENSION, false },
+	{ sizeof("__DLG_SAVE_AS_EXTENSION_ONLY__")-1,			CFSTR("__DLG_SAVE_AS_EXTENSION_ONLY__"), CFSTR("OMC_DLG_SAVE_AS_EXTENSION_ONLY"),  DLG_SAVE_AS_EXTENSION_ONLY, false },
 
-	{ sizeof("__DLG_CHOOSE_FILE_PATH__")-1,					CFSTR("__DLG_CHOOSE_FILE_PATH__"), CFSTR("OMC_DLG_CHOOSE_FILE_PATH"),  DLG_CHOOSE_FILE_PATH },
-	{ sizeof("__DLG_CHOOSE_FILE_PARENT_PATH__")-1,			CFSTR("__DLG_CHOOSE_FILE_PARENT_PATH__"), CFSTR("OMC_DLG_CHOOSE_FILE_PARENT_PATH"),  DLG_CHOOSE_FILE_PARENT_PATH },
-	{ sizeof("__DLG_CHOOSE_FILE_NAME__")-1,					CFSTR("__DLG_CHOOSE_FILE_NAME__"), CFSTR("OMC_DLG_CHOOSE_FILE_NAME"),  DLG_CHOOSE_FILE_NAME },
-	{ sizeof("__DLG_CHOOSE_FILE_NAME_NO_EXTENSION__")-1,	CFSTR("__DLG_CHOOSE_FILE_NAME_NO_EXTENSION__"), CFSTR("OMC_DLG_CHOOSE_FILE_NAME_NO_EXTENSION"),  DLG_CHOOSE_FILE_NAME_NO_EXTENSION },
-	{ sizeof("__DLG_CHOOSE_FILE_EXTENSION_ONLY__")-1,		CFSTR("__DLG_CHOOSE_FILE_EXTENSION_ONLY__"), CFSTR("OMC_DLG_CHOOSE_FILE_EXTENSION_ONLY"),  DLG_CHOOSE_FILE_EXTENSION_ONLY },
+	{ sizeof("__DLG_CHOOSE_FILE_PATH__")-1,					CFSTR("__DLG_CHOOSE_FILE_PATH__"), CFSTR("OMC_DLG_CHOOSE_FILE_PATH"),  DLG_CHOOSE_FILE_PATH, false },
+	{ sizeof("__DLG_CHOOSE_FILE_PARENT_PATH__")-1,			CFSTR("__DLG_CHOOSE_FILE_PARENT_PATH__"), CFSTR("OMC_DLG_CHOOSE_FILE_PARENT_PATH"),  DLG_CHOOSE_FILE_PARENT_PATH, false },
+	{ sizeof("__DLG_CHOOSE_FILE_NAME__")-1,					CFSTR("__DLG_CHOOSE_FILE_NAME__"), CFSTR("OMC_DLG_CHOOSE_FILE_NAME"),  DLG_CHOOSE_FILE_NAME, false },
+	{ sizeof("__DLG_CHOOSE_FILE_NAME_NO_EXTENSION__")-1,	CFSTR("__DLG_CHOOSE_FILE_NAME_NO_EXTENSION__"), CFSTR("OMC_DLG_CHOOSE_FILE_NAME_NO_EXTENSION"),  DLG_CHOOSE_FILE_NAME_NO_EXTENSION, false },
+	{ sizeof("__DLG_CHOOSE_FILE_EXTENSION_ONLY__")-1,		CFSTR("__DLG_CHOOSE_FILE_EXTENSION_ONLY__"), CFSTR("OMC_DLG_CHOOSE_FILE_EXTENSION_ONLY"),  DLG_CHOOSE_FILE_EXTENSION_ONLY, false },
 
-	{ sizeof("__DLG_CHOOSE_FOLDER_PATH__")-1,				CFSTR("__DLG_CHOOSE_FOLDER_PATH__"), CFSTR("OMC_DLG_CHOOSE_FOLDER_PATH"),  DLG_CHOOSE_FOLDER_PATH },
-	{ sizeof("__DLG_CHOOSE_FOLDER_PARENT_PATH__")-1,		CFSTR("__DLG_CHOOSE_FOLDER_PARENT_PATH__"), CFSTR("OMC_DLG_CHOOSE_FOLDER_PARENT_PATH"),  DLG_CHOOSE_FOLDER_PARENT_PATH },
-	{ sizeof("__DLG_CHOOSE_FOLDER_NAME__")-1,				CFSTR("__DLG_CHOOSE_FOLDER_NAME__"), CFSTR("OMC_DLG_CHOOSE_FOLDER_NAME"),  DLG_CHOOSE_FOLDER_NAME },
-	{ sizeof("__DLG_CHOOSE_FOLDER_NAME_NO_EXTENSION__")-1,	CFSTR("__DLG_CHOOSE_FOLDER_NAME_NO_EXTENSION__"), CFSTR("OMC_DLG_CHOOSE_FOLDER_NAME_NO_EXTENSION"),  DLG_CHOOSE_FOLDER_NAME_NO_EXTENSION },
-	{ sizeof("__DLG_CHOOSE_FOLDER_EXTENSION_ONLY__")-1,		CFSTR("__DLG_CHOOSE_FOLDER_EXTENSION_ONLY__"), CFSTR("OMC_DLG_CHOOSE_FOLDER_EXTENSION_ONLY"),  DLG_CHOOSE_FOLDER_EXTENSION_ONLY },
+	{ sizeof("__DLG_CHOOSE_FOLDER_PATH__")-1,				CFSTR("__DLG_CHOOSE_FOLDER_PATH__"), CFSTR("OMC_DLG_CHOOSE_FOLDER_PATH"),  DLG_CHOOSE_FOLDER_PATH, false },
+	{ sizeof("__DLG_CHOOSE_FOLDER_PARENT_PATH__")-1,		CFSTR("__DLG_CHOOSE_FOLDER_PARENT_PATH__"), CFSTR("OMC_DLG_CHOOSE_FOLDER_PARENT_PATH"),  DLG_CHOOSE_FOLDER_PARENT_PATH, false },
+	{ sizeof("__DLG_CHOOSE_FOLDER_NAME__")-1,				CFSTR("__DLG_CHOOSE_FOLDER_NAME__"), CFSTR("OMC_DLG_CHOOSE_FOLDER_NAME"),  DLG_CHOOSE_FOLDER_NAME, false },
+	{ sizeof("__DLG_CHOOSE_FOLDER_NAME_NO_EXTENSION__")-1,	CFSTR("__DLG_CHOOSE_FOLDER_NAME_NO_EXTENSION__"), CFSTR("OMC_DLG_CHOOSE_FOLDER_NAME_NO_EXTENSION"),  DLG_CHOOSE_FOLDER_NAME_NO_EXTENSION, false },
+	{ sizeof("__DLG_CHOOSE_FOLDER_EXTENSION_ONLY__")-1,		CFSTR("__DLG_CHOOSE_FOLDER_EXTENSION_ONLY__"), CFSTR("OMC_DLG_CHOOSE_FOLDER_EXTENSION_ONLY"),  DLG_CHOOSE_FOLDER_EXTENSION_ONLY, false },
 
-	{ sizeof("__DLG_CHOOSE_OBJECT_PATH__")-1,				CFSTR("__DLG_CHOOSE_OBJECT_PATH__"), CFSTR("OMC_DLG_CHOOSE_OBJECT_PATH"),  DLG_CHOOSE_OBJECT_PATH },
-	{ sizeof("__DLG_CHOOSE_OBJECT_PARENT_PATH__")-1,		CFSTR("__DLG_CHOOSE_OBJECT_PARENT_PATH__"), CFSTR("OMC_DLG_CHOOSE_OBJECT_PARENT_PATH"),  DLG_CHOOSE_OBJECT_PARENT_PATH },
-	{ sizeof("__DLG_CHOOSE_OBJECT_NAME__")-1,				CFSTR("__DLG_CHOOSE_OBJECT_NAME__"), CFSTR("OMC_DLG_CHOOSE_OBJECT_NAME"),  DLG_CHOOSE_OBJECT_NAME },
-	{ sizeof("__DLG_CHOOSE_OBJECT_NAME_NO_EXTENSION__")-1,	CFSTR("__DLG_CHOOSE_OBJECT_NAME_NO_EXTENSION__"), CFSTR("OMC_DLG_CHOOSE_OBJECT_NAME_NO_EXTENSION"),  DLG_CHOOSE_OBJECT_NAME_NO_EXTENSION },
-	{ sizeof("__DLG_CHOOSE_OBJECT_EXTENSION_ONLY__")-1,		CFSTR("__DLG_CHOOSE_OBJECT_EXTENSION_ONLY__"), CFSTR("OMC_DLG_CHOOSE_OBJECT_EXTENSION_ONLY"),  DLG_CHOOSE_OBJECT_EXTENSION_ONLY },
+	{ sizeof("__DLG_CHOOSE_OBJECT_PATH__")-1,				CFSTR("__DLG_CHOOSE_OBJECT_PATH__"), CFSTR("OMC_DLG_CHOOSE_OBJECT_PATH"),  DLG_CHOOSE_OBJECT_PATH, false },
+	{ sizeof("__DLG_CHOOSE_OBJECT_PARENT_PATH__")-1,		CFSTR("__DLG_CHOOSE_OBJECT_PARENT_PATH__"), CFSTR("OMC_DLG_CHOOSE_OBJECT_PARENT_PATH"),  DLG_CHOOSE_OBJECT_PARENT_PATH, false },
+	{ sizeof("__DLG_CHOOSE_OBJECT_NAME__")-1,				CFSTR("__DLG_CHOOSE_OBJECT_NAME__"), CFSTR("OMC_DLG_CHOOSE_OBJECT_NAME"),  DLG_CHOOSE_OBJECT_NAME, false },
+	{ sizeof("__DLG_CHOOSE_OBJECT_NAME_NO_EXTENSION__")-1,	CFSTR("__DLG_CHOOSE_OBJECT_NAME_NO_EXTENSION__"), CFSTR("OMC_DLG_CHOOSE_OBJECT_NAME_NO_EXTENSION"),  DLG_CHOOSE_OBJECT_NAME_NO_EXTENSION, false },
+	{ sizeof("__DLG_CHOOSE_OBJECT_EXTENSION_ONLY__")-1,		CFSTR("__DLG_CHOOSE_OBJECT_EXTENSION_ONLY__"), CFSTR("OMC_DLG_CHOOSE_OBJECT_EXTENSION_ONLY"),  DLG_CHOOSE_OBJECT_EXTENSION_ONLY, false },
 
-	{ sizeof("__OMC_RESOURCES_PATH__")-1,					CFSTR("__OMC_RESOURCES_PATH__"), CFSTR("OMC_OMC_RESOURCES_PATH"),  OMC_RESOURCES_PATH },//framework path
-	{ sizeof("__OMC_SUPPORT_PATH__")-1,						CFSTR("__OMC_SUPPORT_PATH__"), CFSTR("OMC_OMC_SUPPORT_PATH"),  OMC_SUPPORT_PATH },//framework path
-	{ sizeof("__MY_HOST_BUNDLE_PATH__")-1,					CFSTR("__MY_HOST_BUNDLE_PATH__"), CFSTR("OMC_MY_HOST_BUNDLE_PATH"),  MY_HOST_BUNDLE_PATH },//preferred for droplets actually
-	{ sizeof("__MY_EXTERNAL_BUNDLE_PATH__")-1,				CFSTR("__MY_EXTERNAL_BUNDLE_PATH__"), CFSTR("OMC_MY_EXTERNAL_BUNDLE_PATH"),  MY_EXTERNAL_BUNDLE_PATH },//external bundle location
-	{ sizeof("__NIB_DLG_GUID__")-1,							CFSTR("__NIB_DLG_GUID__"), CFSTR("OMC_NIB_DLG_GUID"),  NIB_DLG_GUID },
-	{ sizeof("__CURRENT_COMMAND_GUID__")-1,					CFSTR("__CURRENT_COMMAND_GUID__"), CFSTR("OMC_CURRENT_COMMAND_GUID"),  CURRENT_COMMAND_GUID },
+	{ sizeof("__OMC_RESOURCES_PATH__")-1,					CFSTR("__OMC_RESOURCES_PATH__"), CFSTR("OMC_OMC_RESOURCES_PATH"),  OMC_RESOURCES_PATH, true },//framework path
+	{ sizeof("__OMC_SUPPORT_PATH__")-1,						CFSTR("__OMC_SUPPORT_PATH__"), CFSTR("OMC_OMC_SUPPORT_PATH"),  OMC_SUPPORT_PATH, true },//framework path
+	{ sizeof("__MY_HOST_BUNDLE_PATH__")-1,					CFSTR("__MY_HOST_BUNDLE_PATH__"), CFSTR("OMC_MY_HOST_BUNDLE_PATH"),  MY_HOST_BUNDLE_PATH, true },//preferred for droplets actually
+	{ sizeof("__MY_EXTERNAL_BUNDLE_PATH__")-1,				CFSTR("__MY_EXTERNAL_BUNDLE_PATH__"), CFSTR("OMC_MY_EXTERNAL_BUNDLE_PATH"),  MY_EXTERNAL_BUNDLE_PATH, false },//external bundle location
+	{ sizeof("__NIB_DLG_GUID__")-1,							CFSTR("__NIB_DLG_GUID__"), CFSTR("OMC_NIB_DLG_GUID"),  NIB_DLG_GUID, true },
+	{ sizeof("__CURRENT_COMMAND_GUID__")-1,					CFSTR("__CURRENT_COMMAND_GUID__"), CFSTR("OMC_CURRENT_COMMAND_GUID"),  CURRENT_COMMAND_GUID, true },
 	
-	{ sizeof("__FRONT_PROCESS_ID__")-1,						CFSTR("__FRONT_PROCESS_ID__"), CFSTR("OMC_FRONT_PROCESS_ID"),  FRONT_PROCESS_ID },
-	{ sizeof("__FRONT_APPLICATION_NAME__")-1,				CFSTR("__FRONT_APPLICATION_NAME__"), CFSTR("OMC_FRONT_APPLICATION_NAME"),  FRONT_APPLICATION_NAME },
+	{ sizeof("__FRONT_PROCESS_ID__")-1,						CFSTR("__FRONT_PROCESS_ID__"), CFSTR("OMC_FRONT_PROCESS_ID"),  FRONT_PROCESS_ID, false },
+	{ sizeof("__FRONT_APPLICATION_NAME__")-1,				CFSTR("__FRONT_APPLICATION_NAME__"), CFSTR("OMC_FRONT_APPLICATION_NAME"),  FRONT_APPLICATION_NAME, false },
 	
 //deprecated synonyms, still supported but should not appear in OMCEdit choices
-	{ sizeof("__INPUT_TEXT__")-1,							CFSTR("__INPUT_TEXT__"), CFSTR("OMC_INPUT_TEXT"),  DLG_INPUT_TEXT },
-	{ sizeof("__OBJ_PATH_NO_EXTENSION__")-1,				CFSTR("__OBJ_PATH_NO_EXTENSION__"), CFSTR("OMC_OBJ_PATH_NO_EXTENSION"),  OBJ_PATH_NO_EXTENSION },//not needed since = OBJ_PARENT_PATH + OBJ_NAME_NO_EXTENSION
-	{ sizeof("__PASSWORD__")-1,								CFSTR("__PASSWORD__"), CFSTR("OMC_PASSWORD"),  DLG_PASSWORD },
-	{ sizeof("__SAVE_AS_PATH__")-1,							CFSTR("__SAVE_AS_PATH__"), CFSTR("OMC_SAVE_AS_PATH"),  DLG_SAVE_AS_PATH },
-	{ sizeof("__SAVE_AS_PARENT_PATH__")-1,					CFSTR("__SAVE_AS_PARENT_PATH__"), CFSTR("OMC_SAVE_AS_PARENT_PATH"),  DLG_SAVE_AS_PARENT_PATH },
-	{ sizeof("__SAVE_AS_FILE_NAME__")-1,					CFSTR("__SAVE_AS_FILE_NAME__"), CFSTR("OMC_SAVE_AS_FILE_NAME"),  DLG_SAVE_AS_NAME },
-	{ sizeof("__MY_BUNDLE_PATH__")-1,						CFSTR("__MY_BUNDLE_PATH__"), CFSTR("OMC_MY_BUNDLE_PATH"),  MY_BUNDLE_PATH }//added for droplets, not very useful for CM
+	{ sizeof("__INPUT_TEXT__")-1,							CFSTR("__INPUT_TEXT__"), CFSTR("OMC_INPUT_TEXT"),  DLG_INPUT_TEXT, false },
+	{ sizeof("__OBJ_PATH_NO_EXTENSION__")-1,				CFSTR("__OBJ_PATH_NO_EXTENSION__"), CFSTR("OMC_OBJ_PATH_NO_EXTENSION"),  OBJ_PATH_NO_EXTENSION, false },//not needed since = OBJ_PARENT_PATH + OBJ_NAME_NO_EXTENSION
+	{ sizeof("__PASSWORD__")-1,								CFSTR("__PASSWORD__"), CFSTR("OMC_PASSWORD"),  DLG_PASSWORD, false },
+	{ sizeof("__SAVE_AS_PATH__")-1,							CFSTR("__SAVE_AS_PATH__"), CFSTR("OMC_SAVE_AS_PATH"),  DLG_SAVE_AS_PATH, false },
+	{ sizeof("__SAVE_AS_PARENT_PATH__")-1,					CFSTR("__SAVE_AS_PARENT_PATH__"), CFSTR("OMC_SAVE_AS_PARENT_PATH"),  DLG_SAVE_AS_PARENT_PATH, false },
+	{ sizeof("__SAVE_AS_FILE_NAME__")-1,					CFSTR("__SAVE_AS_FILE_NAME__"), CFSTR("OMC_SAVE_AS_FILE_NAME"),  DLG_SAVE_AS_NAME, false },
+	{ sizeof("__MY_BUNDLE_PATH__")-1,						CFSTR("__MY_BUNDLE_PATH__"), CFSTR("OMC_MY_BUNDLE_PATH"),  MY_BUNDLE_PATH, false }//added for droplets, not very useful for CM
 };
 
 //min and max len defined for slight optimization in resolving special words
@@ -269,26 +269,45 @@ const CFIndex kMaxSpecialWordLen = sizeof("__DLG_CHOOSE_FOLDER_NAME_NO_EXTENSION
 //										  __NIB_DIALOG_CONTROL_NNN_VALUE__
 //										  __NIB_TABLE_NNN_COLUMN_MMM_VALUE__
 
+static CFMutableDictionaryRef
+CreateAllCoreEnvironmentVariablePlaceholders()
+{
+	CFMutableDictionaryRef outDict = ::CFDictionaryCreateMutable(kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+	size_t theCount = sizeof(sSpecialWordAndIDList)/sizeof(SpecialWordAndID);
+	for(size_t i = 0; i< theCount; i++)
+	{
+		if(sSpecialWordAndIDList[i].alwaysExport)
+		{
+			CFDictionaryAddValue(outDict, sSpecialWordAndIDList[i].environName, CFSTR("") /*placeholder*/);
+		}
+	}
+
+	return outDict;
+}
+
+//this applier replaces key-values in destination mutable dictionary
+static void SetKeyValueInMutableDict(const void *key, const void *value, void *context)
+{
+	assert(ACFType<CFMutableDictionaryRef>::DynamicCast(context) != nullptr); //only assert in debug, don't incur the cost in release
+	CFMutableDictionaryRef destDict = reinterpret_cast<CFMutableDictionaryRef>(context);
+	CFDictionarySetValue(destDict, key, value);
+}
+
+//this applier adds key-values if not present to destination mutable dictionary
+static void AddKeyValueIfNotPresentToMutableDict(const void *key, const void *value, void *context)
+{
+	assert(ACFType<CFMutableDictionaryRef>::DynamicCast(context) != nullptr); //only assert in debug, don't incur the cost in release
+	CFMutableDictionaryRef destDict = reinterpret_cast<CFMutableDictionaryRef>(context);
+	CFDictionaryAddValue(destDict, key, value);
+}
+
 #pragma mark -
 #pragma mark **** IMPLEMENTATION ****
 
-
-#ifdef _PRIVATE_FRAMEWORK_
-	CFStringRef kBundleIDString = CFSTR("com.abracode.AbracodePrivateFramework");
-#else
-	CFStringRef kBundleIDString = CFSTR("com.abracode.AbracodeFramework");
-#endif //_PRIVATE_FRAMEWORK_
-
-/*
-#ifdef _BUILD_DROPLET_
-	CFStringRef kBundleIDString = CFSTR("com.abracode.CommandDroplet");
-#else
-	CFStringRef kBundleIDString = CFSTR("com.abracode.OnMyCommandCM");
-#endif //_BUILD_DROPLET_
-*/
+CFStringRef kBundleIDString = CFSTR("com.abracode.AbracodeFramework");
 
 OnMyCommandCM::OnMyCommandCM(CFPropertyListRef inPlistRef)
-	: ACMPlugin( kBundleIDString )
+	: ACMPlugin( kBundleIDString ) //mBundleRef is pointing to Abracode.framework bundle
 {
 	TRACE_CSTR( "OnMyCommandCM::OnMyCommandCM\n" );
 
@@ -333,11 +352,8 @@ OnMyCommandCM::~OnMyCommandCM()
 }
 
 OSStatus
-OnMyCommandCM::Init(CFBundleRef inBundle)
+OnMyCommandCM::Init()
 {
-	if(inBundle != NULL)//plugin has the bundle ref already, droplet sets it here
-		mBundleRef.Adopt(inBundle, kCFObjRetain);
-
 	long sysVerMajor = 10;
 	long sysVerMinor = 13;
 	long sysVerBugFix = 0;
@@ -351,22 +367,47 @@ OnMyCommandCM::Init(CFBundleRef inBundle)
 //	printf("OMC: Current system version = 0x%.8X, integer = %d\n", (unsigned int)mSysVersion, (int)mSysVersion);
 //#endif
 
-	mMyHostBundleURL.Adopt(CFBundleCopyBundleURL(CFBundleGetMainBundle()), kCFObjDontRetain);
+	CFObj<CFURLRef> myHostBundleURL = CFBundleCopyBundleURL(CFBundleGetMainBundle());
+	mMyHostBundlePath.Adopt(CreatePathFromCFURL(myHostBundleURL, kEscapeNone), kCFObjDontRetain);
 	mMyHostAppName.Adopt(CopyHostAppName(), kCFObjDontRetain);
 
+	InitOmcBundlePaths();
+
 #if  0 //_DEBUG_
-	CFShow((CFURLRef)mMyHostBundlePath);
+	CFShow((CFStringRef)mMyHostBundlePath);
 	CFShow((CFStringRef)mHostAppBundleID);
 #endif
 
 	return noErr;
 }
 
+void
+OnMyCommandCM::InitOmcBundlePaths()
+{
+	CFObj<CFURLRef> abracodeFrameworkBundleURL = CFBundleCopyBundleURL(mBundleRef);
+	if(abracodeFrameworkBundleURL != nullptr)
+	{
+		CFObj<CFURLRef> resPathURL( CFURLCreateCopyAppendingPathComponent(
+									kCFAllocatorDefault,
+									abracodeFrameworkBundleURL,
+									CFSTR("Versions/Current/Resources"),
+									true) );
+		mOmcResourcesPath.Adopt(CreatePathFromCFURL(resPathURL, kEscapeNone), kCFObjDontRetain);
+
+		CFObj<CFURLRef> supportPathURL( CFURLCreateCopyAppendingPathComponent(
+									kCFAllocatorDefault,
+									abracodeFrameworkBundleURL,
+									CFSTR("Versions/Current/Support"),
+									true) );
+		mOmcSupportPath.Adopt(CreatePathFromCFURL(supportPathURL, kEscapeNone), kCFObjDontRetain);
+	}
+}
+
 //classic API for CM
 OSStatus
 OnMyCommandCM::ExamineContext( const AEDesc *inAEContext, AEDescList *outCommandPairs )
 {
-	OSStatus err = Init(NULL);
+	OSStatus err = Init();
 	if(err != noErr)
 		return err;
 	
@@ -2785,6 +2826,7 @@ GetSpecialEnvironWordID(CFStringRef inStr)
 	return NO_SPECIAL_WORD;
 }
 
+
 CFURLRef
 CopyOMCPrefsURL()
 {
@@ -3239,11 +3281,13 @@ OnMyCommandCM::GetOneCommandParams(CommandDescription &outDesc, CFDictionaryRef 
 	oneCmd.CopyValue(CFSTR("POPEN_SHELL"), outDesc.popenShell);
 
 //customEnvironVariables
-	outDesc.customEnvironVariables = NULL;
-	CFDictionaryRef customEnvironVariables = NULL;
-	oneCmd.GetValue(CFSTR("ENVIRONMENT_VARIABLES"), customEnvironVariables);
-	if(customEnvironVariables != NULL)
-		outDesc.customEnvironVariables = ::CFDictionaryCreateMutableCopy( kCFAllocatorDefault, 0, customEnvironVariables );
+	outDesc.customEnvironVariables = CreateAllCoreEnvironmentVariablePlaceholders();
+	CFDictionaryRef commandMustExportEnvironVariables = nullptr;
+	oneCmd.GetValue(CFSTR("ENVIRONMENT_VARIABLES"), commandMustExportEnvironVariables);
+	if(commandMustExportEnvironVariables != nullptr)
+	{
+		CFDictionaryApplyFunction(commandMustExportEnvironVariables, SetKeyValueInMutableDict, (void *)outDesc.customEnvironVariables);
+	}
 
 // using deputy for background execution?
 // no longer supported
@@ -3589,7 +3633,7 @@ and you can create a file with '/' char in name in Finder but not in Terminal.
 void
 ReplaceSpecialCharsWithBackslashEscapes(CFMutableStringRef inStrRef)
 {
-	if(inStrRef == NULL)
+	if(inStrRef == nullptr)
 		return;
 
   	//replace spaces in path with backslash + space
@@ -3614,7 +3658,7 @@ ReplaceSpecialCharsWithBackslashEscapes(CFMutableStringRef inStrRef)
 void
 ReplaceSpecialCharsWithEscapesForAppleScript(CFMutableStringRef inStrRef)
 {
-	if(inStrRef == NULL)
+	if(inStrRef == nullptr)
 		return;
 
   	//replace double quotes & backslashes only
@@ -3635,7 +3679,7 @@ ReplaceSpecialCharsWithEscapesForAppleScript(CFMutableStringRef inStrRef)
 void
 WrapWithSingleQuotesForShell(CFMutableStringRef inStrRef)
 {
-	if(inStrRef == NULL)
+	if(inStrRef == nullptr)
 		return;
   	CFIndex	idx = ::CFStringGetLength(inStrRef) - 1;
 	CFIndex lastCharIndex = idx;
@@ -3883,7 +3927,7 @@ OnMyCommandCM::AppendTextToCommand(CFMutableStringRef inCommandRef, CFStringRef 
 
 	CFStringRef newStrRef = NULL;
 	CFObj<CFStringRef> newDel;
-	bool deleteNewString = true;
+	bool releaseNewString = true;
 
 	SInt32 specialWordID = GetSpecialWordID(inStrRef);
 
@@ -3892,11 +3936,11 @@ OnMyCommandCM::AppendTextToCommand(CFMutableStringRef inCommandRef, CFStringRef 
 		case NO_SPECIAL_WORD:
 		{
 			newStrRef = inStrRef;//we do not own inStrRef so our deleter does not adopt it
-			deleteNewString = false; 
+			releaseNewString = false;
 			if( (inStrRef != NULL) && (inLocTableName != NULL) && (inLocBundleRef != NULL) )//client wants us to localize text
 			{
 				newStrRef = ::CFCopyLocalizedStringFromTableInBundle( inStrRef, inLocTableName, inLocBundleRef, "");
-				deleteNewString = true;
+				releaseNewString = true;
 			}
 		}
 		break;
@@ -4061,6 +4105,7 @@ OnMyCommandCM::AppendTextToCommand(CFMutableStringRef inCommandRef, CFStringRef 
 			newStrRef = CreateEscapedStringCopy(inInputStr, escSpecialCharsMode);
 		break;
 		
+		// this is deprecated. Abracode.framework paths as below are preferred since version 2.0
 		case MY_BUNDLE_PATH:
 		{
 			if(mBundleRef != NULL)
@@ -4076,51 +4121,15 @@ OnMyCommandCM::AppendTextToCommand(CFMutableStringRef inCommandRef, CFStringRef 
 		break;
 
 		case OMC_RESOURCES_PATH:
-		{
-			if(mBundleRef != NULL)
-			{
-				CFObj<CFURLRef> myBundleURL( ::CFBundleCopyBundleURL(mBundleRef) );
-				if(myBundleURL != NULL)
-				{
-					CFObj<CFURLRef> resPath( ::CFURLCreateCopyAppendingPathComponent (
-												kCFAllocatorDefault,
-												myBundleURL,
-												CFSTR("Versions/Current/Resources"),
-												true) );
-					newStrRef = CreatePathFromCFURL(resPath, escSpecialCharsMode);
-				}
-			}
-			else
-			{
-				LOG_CSTR( "OMC: OMC_RESOURCES_PATH. bundle ref is NULL\n" );
-			}
-		}
+			newStrRef = CreateEscapedStringCopy(mOmcResourcesPath, escSpecialCharsMode);
 		break;
 		
 		case OMC_SUPPORT_PATH:
-		{
-			if(mBundleRef != NULL)
-			{
-				CFObj<CFURLRef> myBundleURL( ::CFBundleCopyBundleURL(mBundleRef) );
-				if(myBundleURL != NULL)
-				{
-					CFObj<CFURLRef> supportPath( ::CFURLCreateCopyAppendingPathComponent (
-												kCFAllocatorDefault,
-												myBundleURL,
-												CFSTR("Versions/Current/Support"),
-												true) );
-					newStrRef = CreatePathFromCFURL(supportPath, escSpecialCharsMode);
-				}
-			}
-			else
-			{
-				LOG_CSTR( "OMC: OMC_SUPPORT_PATH. bundle ref is NULL\n" );
-			}
-		}
+			newStrRef = CreateEscapedStringCopy(mOmcSupportPath, escSpecialCharsMode);
 		break;
 	
 		case MY_HOST_BUNDLE_PATH:
-			newStrRef = CreatePathFromCFURL(mMyHostBundleURL, escSpecialCharsMode);
+			newStrRef = CreateEscapedStringCopy(mMyHostBundlePath, escSpecialCharsMode);
 		break;
 		
 		case MY_EXTERNAL_BUNDLE_PATH:
@@ -4181,7 +4190,7 @@ OnMyCommandCM::AppendTextToCommand(CFMutableStringRef inCommandRef, CFStringRef 
 				if( currCommand.currState != NULL )
 				{
 					newStrRef = currCommand.currState->dialogGUID;
-					deleteNewString = false;
+					releaseNewString = false;
 				}
 			}
 		}
@@ -4193,7 +4202,7 @@ OnMyCommandCM::AppendTextToCommand(CFMutableStringRef inCommandRef, CFStringRef 
 			{
 				CommandDescription &currCommand = mCommandList[mCurrCommandIndex];
 				newStrRef = GetCommandUniqueID(currCommand);
-				deleteNewString = false;
+				releaseNewString = false;
 			}
 		}
 		break;
@@ -4201,7 +4210,7 @@ OnMyCommandCM::AppendTextToCommand(CFMutableStringRef inCommandRef, CFStringRef 
 
 	if(newStrRef != NULL)
 	{
-		if(deleteNewString)
+		if(releaseNewString)
 			newDel.Adopt(newStrRef);
 		::CFStringAppend( inCommandRef, newStrRef );
 	}
@@ -4227,7 +4236,7 @@ OnMyCommandCM::PopulateEnvironList(CFMutableDictionaryRef ioEnvironList,
 	{
 		CFStringRef newStrRef = NULL;
 		CFObj<CFStringRef> newDel;
-		bool deleteNewString = true;
+		bool releaseNewString = true;
 
 		CFStringRef theKey = ACFType<CFStringRef>::DynamicCast( keyList[(size_t)i] );
 		SInt32 specialWordID = GetSpecialEnvironWordID(theKey);
@@ -4238,12 +4247,12 @@ OnMyCommandCM::PopulateEnvironList(CFMutableDictionaryRef ioEnvironList,
 				newStrRef = NULL;//we do not have special dynamic value, so don't set it in dict
 			break;
 					
-			case OBJ_TEXT:
+			case OBJ_TEXT: //always exported
 				newStrRef = inObjTextRef;
-				deleteNewString = false;//we do not own inObjTextRef so we should never delete it
+				releaseNewString = false;//we do not own inObjTextRef so we should never delete it
 			break;
 			
-			case OBJ_PATH:
+			case OBJ_PATH: //always exported
 				newStrRef = CreateStringFromListOrSingleObject( inObjList, inObjCount, inCurrIndex,
 												CreateObjPath, NULL,
 												inMultiSeparator, inMultiPrefix, inMultiSuffix,
@@ -4297,7 +4306,7 @@ OnMyCommandCM::PopulateEnvironList(CFMutableDictionaryRef ioEnvironList,
 					mCommonParentPath.Adopt( CreateCommonParentPath(inObjList, inObjCount), kCFObjDontRetain );
 		
 				newStrRef = mCommonParentPath;
-				deleteNewString = false;
+				releaseNewString = false;
 			break;
 			
 			case OBJ_PATH_RELATIVE_TO_COMMON_PARENT:
@@ -4313,7 +4322,7 @@ OnMyCommandCM::PopulateEnvironList(CFMutableDictionaryRef ioEnvironList,
 			
 			case DLG_INPUT_TEXT:
 				newStrRef = inInputStr;
-				deleteNewString = false;
+				releaseNewString = false;
 			break;
 
 			case DLG_SAVE_AS_PATH:
@@ -4398,17 +4407,17 @@ OnMyCommandCM::PopulateEnvironList(CFMutableDictionaryRef ioEnvironList,
 
 			case DLG_PASSWORD:
 				newStrRef = inInputStr;
-				deleteNewString = false;
+				releaseNewString = false;
 			break;
 			
-			//this is deprecated. framework paths are preferred in version 2.0
+			// this is deprecated. Abracode.framework paths as below are preferred since version 2.0
 			case MY_BUNDLE_PATH:
 			{
 				if(mBundleRef != NULL)
 				{
-					CFObj<CFURLRef> myBundlePath( ::CFBundleCopyBundleURL(mBundleRef) );
-					if(myBundlePath != NULL)
-						newStrRef = CreatePathFromCFURL(myBundlePath, kEscapeNone);
+					CFObj<CFURLRef> myBundlePathURL( ::CFBundleCopyBundleURL(mBundleRef) );
+					if(myBundlePathURL != NULL)
+						newStrRef = CreatePathFromCFURL(myBundlePathURL, kEscapeNone);
 				}
 				else
 				{
@@ -4417,52 +4426,23 @@ OnMyCommandCM::PopulateEnvironList(CFMutableDictionaryRef ioEnvironList,
 			}
 			break;
 			
-			case OMC_RESOURCES_PATH:
+			case OMC_RESOURCES_PATH: //always exported
 			{
-				if(mBundleRef != NULL)
-				{
-					CFObj<CFURLRef> myBundleURL( ::CFBundleCopyBundleURL(mBundleRef) );
-					if(myBundleURL != NULL)
-					{
-						CFObj<CFURLRef> resPath( ::CFURLCreateCopyAppendingPathComponent (
-													kCFAllocatorDefault,
-													myBundleURL,
-													CFSTR("Versions/Current/Resources"),
-													true) );
-						newStrRef = CreatePathFromCFURL(resPath, kEscapeNone);
-					}
-				}
-				else
-				{
-					LOG_CSTR( "OMC: OMC_RESOURCES_PATH. bundle ref is NULL\n" );
-				}
+				newStrRef = mOmcResourcesPath;
+				releaseNewString = false;
 			}
 			break;
 			
-			case OMC_SUPPORT_PATH:
+			case OMC_SUPPORT_PATH: //always exported
 			{
-				if(mBundleRef != NULL)
-				{
-					CFObj<CFURLRef> myBundleURL( ::CFBundleCopyBundleURL(mBundleRef) );
-					if(myBundleURL != NULL)
-					{
-						CFObj<CFURLRef> supportPath( ::CFURLCreateCopyAppendingPathComponent (
-													kCFAllocatorDefault,
-													myBundleURL,
-													CFSTR("Versions/Current/Support"),
-													true) );
-						newStrRef = CreatePathFromCFURL(supportPath, kEscapeNone);
-					}
-				}
-				else
-				{
-					LOG_CSTR( "OMC: OMC_SUPPORT_PATH. bundle ref is NULL\n" );
-				}
+				newStrRef = mOmcSupportPath;
+				releaseNewString = false;
 			}
 			break;
 
-			case MY_HOST_BUNDLE_PATH:
-				newStrRef = CreatePathFromCFURL(mMyHostBundleURL, kEscapeNone);
+			case MY_HOST_BUNDLE_PATH: //always exported
+				newStrRef = mMyHostBundlePath;
+				releaseNewString = false;
 			break;
 			
 			case MY_EXTERNAL_BUNDLE_PATH:
@@ -4470,7 +4450,7 @@ OnMyCommandCM::PopulateEnvironList(CFMutableDictionaryRef ioEnvironList,
 				if(currCommand.externalBundlePath != nullptr)
 				{
 					newStrRef = currCommand.externalBundlePath;
-					deleteNewString = false;
+					releaseNewString = false;
 				}
 				else
 				{
@@ -4479,7 +4459,6 @@ OnMyCommandCM::PopulateEnvironList(CFMutableDictionaryRef ioEnvironList,
 			}
 			break;
 
-	//no need to escape process id
 			case FRONT_PROCESS_ID:
 			{
 				pid_t frontPID = 0;
@@ -4505,7 +4484,7 @@ OnMyCommandCM::PopulateEnvironList(CFMutableDictionaryRef ioEnvironList,
 			}
 			break;
 
-			case NIB_DLG_CONTROL_VALUE:
+			case NIB_DLG_CONTROL_VALUE: //always exported
 			case NIB_TABLE_VALUE:
 			case NIB_TABLE_ALL_ROWS:
 			{
@@ -4513,8 +4492,7 @@ OnMyCommandCM::PopulateEnvironList(CFMutableDictionaryRef ioEnvironList,
 			}
 			break;
 			
-	//no need to escape guid
-			case NIB_DLG_GUID:
+			case NIB_DLG_GUID: //always exported
 			{
 				if(mCommandList != NULL)
 				{
@@ -4522,19 +4500,19 @@ OnMyCommandCM::PopulateEnvironList(CFMutableDictionaryRef ioEnvironList,
 					if( currCommand.currState != NULL )
 					{
 						newStrRef = currCommand.currState->dialogGUID;
-						deleteNewString = false;
+						releaseNewString = false;
 					}
 				}
 			}
 			break;
 			
-			case CURRENT_COMMAND_GUID:
+			case CURRENT_COMMAND_GUID: //always exported. the side effect is that we now always check for next command in /tmp/OMC/current-command.id file
 			{
 				if(mCommandList != NULL)
 				{
 					CommandDescription &currCommand = mCommandList[mCurrCommandIndex];
 					newStrRef = GetCommandUniqueID(currCommand);
-					deleteNewString = false;
+					releaseNewString = false;
 				}
 			}
 			break;
@@ -4542,8 +4520,8 @@ OnMyCommandCM::PopulateEnvironList(CFMutableDictionaryRef ioEnvironList,
 
 		if(newStrRef != NULL)
 		{
-			if(deleteNewString)
-				newDel.Adopt(newStrRef);
+			if(releaseNewString)
+				newDel.Adopt(newStrRef, kCFObjDontRetain);
 			::CFDictionarySetValue(ioEnvironList, theKey, newStrRef);
 		}
 	}
@@ -4991,93 +4969,63 @@ extern "C"
 {
 
 CFStringRef
-CreatePathFromCFURL(CFURLRef inPath, UInt16 escSpecialCharsMode)
+CreatePathFromCFURL(CFURLRef inPathURL, UInt16 escSpecialCharsMode)
 {
-	CFStringRef newStrRef = NULL;
-	if(inPath != NULL)
-	{
-		newStrRef = ::CFURLCopyFileSystemPath(inPath, kCFURLPOSIXPathStyle);
-		CFStringRef cpyStrRef = CreateEscapedStringCopy(newStrRef, escSpecialCharsMode);
-		if(cpyStrRef != NULL)
-		{
-			CFObj<CFStringRef> strDel(newStrRef);//we have a copy, we may dispose of the original
-			newStrRef = cpyStrRef;
-		}
-	}
-	return newStrRef;
+	if(inPathURL == nullptr)
+		return nullptr;
+
+	CFObj<CFStringRef> pathStr = CFURLCopyFileSystemPath(inPathURL, kCFURLPOSIXPathStyle);
+	CFObj<CFStringRef> escapedPathStr = CreateEscapedStringCopy(pathStr, escSpecialCharsMode);
+	return escapedPathStr.Detach();
 }
 
 CFStringRef
-CreateParentPathFromCFURL(CFURLRef inPath, UInt16 escSpecialCharsMode)
+CreateParentPathFromCFURL(CFURLRef inPathURL, UInt16 escSpecialCharsMode)
 {
-	CFStringRef newStrRef = NULL;
-	if(inPath != NULL)
-	{
-		CFObj<CFURLRef> newURL( ::CFURLCreateCopyDeletingLastPathComponent( kCFAllocatorDefault, inPath ) );
-		newStrRef = ::CFURLCopyFileSystemPath(newURL, kCFURLPOSIXPathStyle);
-		CFStringRef  cpyStrRef = CreateEscapedStringCopy(newStrRef, escSpecialCharsMode);
-		if(cpyStrRef != NULL)
-		{
-			CFObj<CFStringRef> strDel(newStrRef);//we have a copy, we may dispose of the original
-			newStrRef = cpyStrRef;
-		}
-	}
-	return newStrRef;
+	if(inPathURL == nullptr)
+		return nullptr;
+
+	CFObj<CFURLRef> newURL = CFURLCreateCopyDeletingLastPathComponent(kCFAllocatorDefault, inPathURL);
+	CFObj<CFStringRef> pathStr = CFURLCopyFileSystemPath(newURL, kCFURLPOSIXPathStyle);
+	CFObj<CFStringRef> escapedPathStr = CreateEscapedStringCopy(pathStr, escSpecialCharsMode);
+	return escapedPathStr.Detach();
 }
 
 CFStringRef
-CreateNameFromCFURL(CFURLRef inPath, UInt16 escSpecialCharsMode)
+CreateNameFromCFURL(CFURLRef inPathURL, UInt16 escSpecialCharsMode)
 {
-	CFStringRef newStrRef = NULL;
-	if(inPath != NULL)
-	{
-		newStrRef = ::CFURLCopyLastPathComponent(inPath);
-		CFStringRef  cpyStrRef = CreateEscapedStringCopy(newStrRef, escSpecialCharsMode);
-		if(cpyStrRef != NULL)
-		{
-			CFObj<CFStringRef> strDel(newStrRef);//we have a copy, we may dispose of the original
-			newStrRef = cpyStrRef;
-		}
-	}
-	return newStrRef;
+	if(inPathURL == nullptr)
+		return nullptr;
+
+	CFObj<CFStringRef> pathStr = CFURLCopyLastPathComponent(inPathURL);
+	CFObj<CFStringRef> escapedPathStr = CreateEscapedStringCopy(pathStr, escSpecialCharsMode);
+	return escapedPathStr.Detach();
 }
 
 CFStringRef
-CreateNameNoExtensionFromCFURL(CFURLRef inPath, UInt16 escSpecialCharsMode)
+CreateNameNoExtensionFromCFURL(CFURLRef inPathURL, UInt16 escSpecialCharsMode)
 {
-	CFStringRef newStrRef = NULL;
-	if(inPath != NULL)
-  	{
-		CFObj<CFURLRef> newURL( ::CFURLCreateCopyDeletingPathExtension( kCFAllocatorDefault, inPath ) );
-		if(newURL != NULL)
-		{
-			newStrRef = ::CFURLCopyLastPathComponent(newURL);
-			CFStringRef  cpyStrRef = CreateEscapedStringCopy(newStrRef, escSpecialCharsMode);
-			if(cpyStrRef != NULL)
-			{
-				CFObj<CFStringRef> strDel(newStrRef);//we have a copy, we may dispose of the original
-				newStrRef = cpyStrRef;
-			}		
-		}
-	}
-	return newStrRef;
+	if(inPathURL == nullptr)
+		return nullptr;
+
+	CFObj<CFURLRef> newURL = CFURLCreateCopyDeletingPathExtension(kCFAllocatorDefault, inPathURL);
+	if(newURL == nullptr)
+		return nullptr;
+
+	CFObj<CFStringRef> pathStr = CFURLCopyLastPathComponent(newURL);
+	CFObj<CFStringRef> escapedPathStr = CreateEscapedStringCopy(pathStr, escSpecialCharsMode);
+	return escapedPathStr.Detach();
 }
 
 CFStringRef
-CreateExtensionOnlyFromCFURL(CFURLRef inPath, UInt16 escSpecialCharsMode)
+CreateExtensionOnlyFromCFURL(CFURLRef inPathURL, UInt16 escSpecialCharsMode)
 {
-	CFStringRef newStrRef = NULL;
-	if(inPath != NULL)
-  	{
-		newStrRef = ::CFURLCopyPathExtension(inPath);
-		CFStringRef  cpyStrRef = CreateEscapedStringCopy(newStrRef, escSpecialCharsMode);
-		if(cpyStrRef != NULL)
-		{
-			CFObj<CFStringRef> strDel(newStrRef);//we have a copy, we may dispose of the original
-			newStrRef = cpyStrRef;
-		}
-	}
-	return newStrRef;
+	if(inPathURL == nullptr)
+		return nullptr;
+
+	CFObj<CFStringRef> pathStr = CFURLCopyPathExtension(inPathURL);
+	CFObj<CFStringRef> escapedPathStr = CreateEscapedStringCopy(pathStr, escSpecialCharsMode);
+	return escapedPathStr.Detach();
 }
 
 #pragma mark -
@@ -5086,52 +5034,51 @@ CreateExtensionOnlyFromCFURL(CFURLRef inPath, UInt16 escSpecialCharsMode)
 CFStringRef
 CreateEscapedStringCopy(CFStringRef inStrRef, UInt16 escSpecialCharsMode)
 {
-	if( inStrRef != NULL )
-  	{
-  		if(escSpecialCharsMode == kEscapeWithBackslash)
-  		{
-  			CFMutableStringRef	modifStr = ::CFStringCreateMutableCopy(kCFAllocatorDefault, 0, inStrRef);
-			if(modifStr != NULL)
-			{
-				ReplaceSpecialCharsWithBackslashEscapes(modifStr);
-				return modifStr;
-			}
+	if(inStrRef == nullptr)
+  		return nullptr;
+
+	switch(escSpecialCharsMode)
+	{
+		case kEscapeWithBackslash:
+		{
+			CFMutableStringRef escapedStr = ::CFStringCreateMutableCopy(kCFAllocatorDefault, 0, inStrRef);
+			ReplaceSpecialCharsWithBackslashEscapes(escapedStr);
+			return escapedStr;
 		}
-		else if( escSpecialCharsMode == kEscapeWithPercent )
+
+		case kEscapeWithPercent:
 		{
 			return CreateStringByAddingPercentEscapes(inStrRef, false /*escapeAll*/);
 		}
-		else if( escSpecialCharsMode == kEscapeWithPercentAll )
+	
+		case kEscapeWithPercentAll:
 		{
 			//escape all illegal URL chars and all non-alphanumeric legal chars
 			//legal chars need to be escaped in order ot prevent conflicts in shell execution
 			return CreateStringByAddingPercentEscapes(inStrRef, true /*escapeAll*/);
 		}
-		else if( escSpecialCharsMode == kEscapeForAppleScript )
+		
+		case kEscapeForAppleScript:
 		{
-			CFMutableStringRef	modifStr = ::CFStringCreateMutableCopy(kCFAllocatorDefault, 0, inStrRef);
-			if(modifStr != NULL)
-			{
-				ReplaceSpecialCharsWithEscapesForAppleScript(modifStr);
-				return modifStr;
-			}
+			CFMutableStringRef escapedStr = ::CFStringCreateMutableCopy(kCFAllocatorDefault, 0, inStrRef);
+			ReplaceSpecialCharsWithEscapesForAppleScript(escapedStr);
+			return escapedStr;
 		}
-		else if( escSpecialCharsMode == kEscapeWrapWithSingleQuotesForShell )
+
+		case kEscapeWrapWithSingleQuotesForShell:
 		{
-			CFMutableStringRef	modifStr = ::CFStringCreateMutableCopy(kCFAllocatorDefault, 0, inStrRef);
-			if(modifStr != NULL)
-			{
-				WrapWithSingleQuotesForShell(modifStr);
-				return modifStr;
-			}
+			CFMutableStringRef escapedStr = ::CFStringCreateMutableCopy(kCFAllocatorDefault, 0, inStrRef);
+			WrapWithSingleQuotesForShell(escapedStr);
+			return escapedStr;
 		}
-		else
-		{
-			::CFRetain(inStrRef);
-			return inStrRef;
-		}
+	
+		case kEscapeNone:
+		default:
+		break;
 	}
-	return NULL;
+
+	::CFRetain(inStrRef);
+	return inStrRef;
 }
 
 CFStringRef
@@ -5599,14 +5546,14 @@ OnMyCommandCM::ExecuteSubcommand( SInt32 commandIndex, OMCDialog *inDialog, CFTy
 CFStringRef
 GetCommandUniqueID(CommandDescription &currCommand)
 {
-	assert(currCommand.currState != NULL);
-	if( currCommand.currState->commandGUID != NULL )
+	assert(currCommand.currState != nullptr);
+	if(currCommand.currState->commandGUID != nullptr)
 		return currCommand.currState->commandGUID;
 
-	CFObj<CFUUIDRef>  myUUID( ::CFUUIDCreate(kCFAllocatorDefault) );
-	if( myUUID != NULL )
+	CFObj<CFUUIDRef> myUUID(CFUUIDCreate(kCFAllocatorDefault));
+	if(myUUID != nullptr)
 	{
-		currCommand.currState->commandGUID.Adopt(::CFUUIDCreateString(kCFAllocatorDefault, myUUID), kCFObjDontRetain);
+		currCommand.currState->commandGUID.Adopt(CFUUIDCreateString(kCFAllocatorDefault, myUUID), kCFObjDontRetain);
 		currCommand.currState->commandGUIDUsedByCommand = true;
 	}
 
@@ -5632,8 +5579,7 @@ CopyNextCommandID(const CommandDescription &currCommand, const CommandState *inC
 		!inCommandState->commandGUIDUsedByCommand ||
 		((CFStringRef)inCommandState->commandGUID == NULL) )
 		return theNextID;
-	
-	
+
 	sCommandGUID[0] = 0;
 	Boolean isOK = ::CFStringGetCString(inCommandState->commandGUID, sCommandGUID, sizeof(sCommandGUID), kCFStringEncodingUTF8);
 	if(isOK)
