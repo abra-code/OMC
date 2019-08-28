@@ -20,7 +20,6 @@
 #include "OnMyCommand.h"
 
 static char oneLine[512];
-static char fileName[256];
 
 void
 AddBundlePathToDict(ACFMutableDict &ioDict, CFStringRef inKey, CFBundleRef inBundle)

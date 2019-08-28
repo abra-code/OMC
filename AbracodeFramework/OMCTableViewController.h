@@ -37,8 +37,9 @@ typedef enum ColumnSeparatorFormat
 -(void)setColumnWidths:(CFArrayRef)inWidthsArray;
 -(NSArray *)splitRowString:(NSString *)inRowString;
 -(NSArray *)columnArrayForRow:(NSUInteger)inRowIndex;
--(CFTypeRef)selectionValueForColumn:(NSInteger)inColumnIndex withIterator:(SelectionIterator *)inSelIterator;
--(CFArrayRef)allRowsForColumn:(NSInteger)inColumnIndex;
+-(id)selectionValueForColumn:(NSInteger)inColumnIndex withIterator:(SelectionIterator *)inSelIterator;
+-(NSArray *)allRowsForColumn:(NSInteger)inColumnIndex;
 -(NSString *)stringForRow:(NSUInteger)inRow column:(NSUInteger)inColumn prefix:(NSString *)colPrefix suffix:(NSString *)colSuffix separator:(NSString *)colSeparator;
+-(NSUInteger)columnCount;
 
 @end

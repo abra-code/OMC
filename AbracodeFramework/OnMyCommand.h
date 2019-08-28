@@ -99,6 +99,7 @@ typedef struct CommandDescription
 	CFBundleRef		externBundle;//populated on first request and cached
 	CFArrayRef		popenShell;
 	CFMutableDictionaryRef	customEnvironVariables;
+	CFMutableSetRef specialRequestedNibControls; //set of special words to export
 	Boolean			actOnlyInListedApps;//if true - activate only in those listed, if false - exclude those listed
 	Boolean			unused;
 	Boolean			disabled;
@@ -226,7 +227,7 @@ public:
 	void				DeleteObjectList();
 
 	OSStatus			ProcessObjects();
-	OSStatus			ProcessCommandWithText(const CommandDescription &currCommand, CFStringRef inStrRef);
+	OSStatus			ProcessCommandWithText(CommandDescription &currCommand, CFStringRef inStrRef);
 	Boolean				DisplayWarning( CommandDescription &currCommand );
 	Boolean				PopulateItemsMenu( const AEDesc *inContext, AEDescList* ioRootMenu, Boolean runningInSpecialApp, CFStringRef inFrontAppName );
 	bool				IsCommandEnabled(CommandDescription &currCommand, const AEDesc *inContext, CFStringRef currAppName, bool skipFinderWindowCheck);
@@ -240,7 +241,7 @@ public:
 	void				LoadCommandsFromPlistRef(CFPropertyListRef inPlistRef);
 	void				GetOneCommandParams(CommandDescription &outDesc, CFDictionaryRef inOneCommand);
 
-	void				GetDialogControlValues( CommandDescription &currCommand, OMCDialog &inDialog );
+	void				GetDialogControlValues(CommandDescription &currCommand, OMCDialog &inDialog, SelectionIterator *selIterator);
 
 	OSStatus			ExecuteSubcommand( CFArrayRef inCommandName, CFStringRef inCommandID, OMCDialog *inDialog, CFTypeRef inContext );
 	OSStatus			ExecuteSubcommand( SInt32 commandIndex, OMCDialog *inDialog, CFTypeRef inContext );
@@ -266,14 +267,12 @@ public:
 											OneObjProperties *inObjList, CFIndex inObjCount, CFIndex inCurrIndex,
 											CFStringRef inObjTextRef, CommandDescription &currCommand,
 											CFStringRef inMultiSeparator, CFStringRef inMultiPrefix, CFStringRef inMultiSuffix,
-											UInt16 escSpecialCharsMode, SelectionIterator *inSelIterator,
-											CFStringRef inLocTableName = NULL, CFBundleRef inLocBundleRef = NULL);
+											UInt16 escSpecialCharsMode, CFStringRef inLocTableName = nullptr, CFBundleRef inLocBundleRef = nullptr);
 
 	void				PopulateEnvironList(CFMutableDictionaryRef ioEnvironList,
 											OneObjProperties *inObjList, CFIndex inObjCount, CFIndex inCurrIndex,
 											CFStringRef inObjTextRef, CommandDescription &currCommand,
-											CFStringRef inMultiSeparator, CFStringRef inMultiPrefix, CFStringRef inMultiSuffix,
-											SelectionIterator *inSelIterator);
+											CFStringRef inMultiSeparator, CFStringRef inMultiPrefix, CFStringRef inMultiSuffix);
 
 	CFStringRef			CreateDynamicCommandName(const CommandDescription &currCommand, CFStringRef inLocTableName, CFBundleRef inLocBundleRef);
 	void				CreateTextContext(const CommandDescription &currCommand, const AEDesc *inContext);
@@ -281,7 +280,7 @@ public:
 	SInt32				FindSubcommandIndex(CFArrayRef inName, CFStringRef inCommandID);
 	SInt32				FindCommandIndex(CFArrayRef inName, CFStringRef inCommandID);
 	OSStatus			SortObjectListByName(CFOptionFlags compareOptions, bool sortAscending);
-	CFStringRef			CreateNibControlValue(SInt32 inSpecialWordID, const CommandDescription &currCommand, CFStringRef inNibControlString, UInt16 escSpecialCharsMode, SelectionIterator *inSelIterator, bool isEnvStyle);
+	CFStringRef			CreateNibControlValue(SInt32 inSpecialWordID, const CommandDescription &currCommand, CFStringRef inNibControlString, UInt16 escSpecialCharsMode, bool isEnvStyle);
 //	CFStringRef			CreateNibTableValue(const CommandDescription &currCommand, CFStringRef inNibControlString, UInt16 escSpecialCharsMode);
 	CFMutableStringRef	CreateCombinedStringWithObjects(CFArrayRef inArray, CFStringRef inLocTableName, CFBundleRef inLocBundleRef);
 
@@ -306,10 +305,6 @@ public:
 
 	CFTypeRef			GetCFContext();
 	CFBundleRef			GetCurrentCommandExternBundle();
-
-protected:
-	
-	void				InitNibControlValueEntry(CFStringRef controlID, CFIndex columnIndex);
 
 private:
 
@@ -339,7 +334,7 @@ protected:
 	CFObj<CFStringRef>			mMyHostAppName;
 	CFObj<CFStringRef>			mOmcSupportPath;
 	CFObj<CFStringRef>			mOmcResourcesPath;
-	CFObj<CFMutableDictionaryRef> mNibControlValues;
+	CFObj<CFMutableDictionaryRef> mNibControlValues;//key: controlID string, value: dictionary for columnID (as long) & value (CFType)
 	CFObj<CFMutableDictionaryRef> mNibControlCustomProperties;
 	ARefCountedObj<AObserverBase> mObserver;
     OSStatus					mError {noErr};

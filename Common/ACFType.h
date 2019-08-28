@@ -56,3 +56,5 @@ template <> CFTypeID ACFType<CFMutableDataRef>::sTypeID;
 template <> CFTypeID ACFType<CFDateRef>::sTypeID;
 template <> CFTypeID ACFType<CFBundleRef>::sTypeID;
 template <> CFTypeID ACFType<CFURLRef>::sTypeID;
+template <> CFTypeID ACFType<CFSetRef>::sTypeID;
+template <> CFTypeID ACFType<CFMutableSetRef>::sTypeID;

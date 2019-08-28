@@ -215,12 +215,15 @@
 
 -(NSArray *)columnArrayForRow:(NSUInteger)inRowIndex
 {
-	NSArray *rowColumnsArray = NULL;
+	if([mRows count] == 0)
+		return nil;
+
+	NSArray *rowColumnsArray = nil;
 	id oneRow = [mRows objectAtIndex:inRowIndex];
 	if( [oneRow isKindOfClass:[NSString class]] )
 	{
 		rowColumnsArray = [self splitRowString:oneRow];
-		if(rowColumnsArray != NULL)
+		if(rowColumnsArray != nil)
 		{
 			[mRows replaceObjectAtIndex:inRowIndex withObject:oneRow];
 		}
@@ -279,7 +282,7 @@
 //inColumnIndex is 1-based
 //if inColumnIndex = 0, this means combine the text from all columns (with optional prefix, separator and suffix set in the OMCTableView)
 
--(CFTypeRef)selectionValueForColumn:(NSInteger)inColumnIndex withIterator:(SelectionIterator *)inSelIterator
+-(id)selectionValueForColumn:(NSInteger)inColumnIndex withIterator:(SelectionIterator *)inSelIterator
 {
 	NSString *colPrefix = NULL;
 	NSString *colSuffix = NULL;
@@ -334,12 +337,12 @@
 			}
 			free(selectedRows);
 			
-			return (CFTypeRef)resultArray;
+			return resultArray;
 		}
 	}
 
 	if( currRow < [mRows count] )//single row case
-		return (CFTypeRef)[self stringForRow:currRow column:inColumnIndex prefix:colPrefix suffix:colSuffix separator:colSeparator];
+		return [self stringForRow:currRow column:inColumnIndex prefix:colPrefix suffix:colSuffix separator:colSeparator];
 	
 	return NULL;
 }
@@ -351,11 +354,11 @@
 //inColumnIndex is 1-based
 //if inColumnIndex = 0, this means combine the text from all columns (with optional prefix, separator and suffix set in the OMCTableView)
 
--(CFArrayRef)allRowsForColumn:(NSInteger)inColumnIndex
+-(NSArray *)allRowsForColumn:(NSInteger)inColumnIndex
 {
-	NSString *colPrefix = NULL;
-	NSString *colSuffix = NULL;
-	NSString *colSeparator = NULL;
+	NSString *colPrefix = nil;
+	NSString *colSuffix = nil;
+	NSString *colSeparator = nil;
 
 	if( [mTableView isKindOfClass:[OMCTableView class]] )
 	{
@@ -367,23 +370,23 @@
 
 	NSUInteger columnCount = [mColumnNames count];
 	if(columnCount == 0)
-		return NULL;
+		return nil;
 
 	NSUInteger allRowsCount = [mTableView numberOfRows];
 	if(allRowsCount == 0)
-		return NULL;
+		return nil;
 	
 	//we return an array of strings: OMC will know how to combine them for final result
 	NSMutableArray *resultArray = [NSMutableArray array];
 	for(NSUInteger i = 0; i < allRowsCount; i++)
 	{
 		NSString *rowString = [self stringForRow:i column:inColumnIndex prefix:colPrefix suffix:colSuffix separator:colSeparator];
-		if(rowString == NULL)
+		if(rowString == nil)
 			rowString = @"";
 		[resultArray addObject:rowString];
 	}
 
-	return (CFArrayRef)resultArray;
+	return resultArray;
 }
 
 
@@ -442,6 +445,21 @@
 		return oneColumnValue;
 	}
 	return NULL;
+}
+
+-(NSUInteger)columnCount
+{
+	NSUInteger columnCount = [mColumnNames count];//visible columns
+	
+	// The data may have more columns than just the visible ones
+	// if the data is well formed each row of data has the same number of columns
+	// it would be too expensive to go over all rows and check the max num of columns
+	// it should be good enough to query just the first row
+	NSArray *firstRowColumnsArray = [self columnArrayForRow:0];
+	NSUInteger firstRowColumnCount = [firstRowColumnsArray count];
+	//there might be more data columns than are visible. we allow access to all of them
+	NSUInteger maxColumnCount = (columnCount > firstRowColumnCount) ? columnCount : firstRowColumnCount;
+	return maxColumnCount;
 }
 
 @end

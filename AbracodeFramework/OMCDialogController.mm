@@ -259,38 +259,6 @@ FindArgumentType(const char *argTypeStr)
 	}
 	return (mOmcCocoaNib != NULL);
 }
-/*
-- (id)initWithWindow:(NSWindow *)inWindow
-{
-    if (![super init])
-        return NULL;
-
-    mWindow = inWindow;
-	mOmcCocoaNib = NULL;
-	mLastCommandID = NULL;
-	mIsModal = false;
-	mIsRunning = false;
-	mDeleteSelfOnClose = false;
-
-	mOMCDialogProxy.Adopt( new OMCCocoaDialog(self) );
-
-	if(mWindow != NULL)
-	{
-		//[mWindow setReleasedWhenClosed:NO];
-		[mWindow retain];
-
-		id contentViewObject = [mWindow contentView];
-		if( (contentViewObject != NULL) && [contentViewObject isKindOfClass:[NSView class] ] )
-		{
-			[self initSubview: (NSView*)contentViewObject];
-		}
-
-		[mWindow setDelegate: self];
-	}
-
-    return self;
-}
-*/
 
 - (void)dealloc
 {
@@ -322,7 +290,7 @@ FindArgumentType(const char *argTypeStr)
 {
 	//init self - add self as target and action handler for all controls
 	
-	//matix cells first if we are a matrix
+	// NSMatrix is deprecated since Mac OS 10.8. Min backwards compat support
 	if( [inView isKindOfClass:[NSMatrix class]] )
 	{
 		NSArray *cellsArray = [(NSMatrix*)inView cells];
@@ -364,8 +332,8 @@ FindArgumentType(const char *argTypeStr)
 		[myTable setDataSource:tableController];
 		[myTable setDelegate:tableController];
 
-		//the table DOES NOT retain its.data() source nor delegate!
-		[self keepItem: tableController];//we retain it and it will be released when this dialog controller is released
+		//the table DOES NOT retain its data source nor delegate!
+		[self keepItem: tableController];//we retain all controllers and they will be released when this dialog controller is released
 		[tableController release];
 
 		if( [myTable target] == NULL )//don't override targets preset in IB
@@ -374,15 +342,6 @@ FindArgumentType(const char *argTypeStr)
 			//[myTable setAction:@selector(handleAction:)];
 			[myTable setDoubleAction:@selector(handleDoubleClickAction:)];
 		}
-
-		//id myDelegate = [myTable delegate];
-		//retainCount = [myDelegate retainCount];
-		//NSLog(@"Init subview: OMC tableview controller retain count=%d", retainCount);
-
-		//BOOL isKindOf = [myDelegate isKindOfClass:[OMCTableViewController class]];
-		//BOOL isMemberOf = [myDelegate isMemberOfClass:[OMCTableViewController class]];
-		//NSLog(@"Init subview: OMC tableview controller: isKindOf=%d, isMemberOf=%d", (int)isKindOf, (int)isMemberOf);
-
 	}
 	else if( [inView isKindOfClass:[NSControl class] ] )
 	{//for controls - faster
@@ -456,8 +415,8 @@ FindArgumentType(const char *argTypeStr)
 {
 	//reset self - remove self as target and action handler for all controls
 
-	//matrix cells first if we are a matrix
-	if([inView isKindOfClass:[NSMatrix class] ])
+	// NSMatrix is deprecated since Mac OS 10.8. Min backwards compat support
+	if([inView isKindOfClass:[NSMatrix class]])
 	{
 		NSArray *cellsArray = [(NSMatrix*)inView cells];
 		if(cellsArray != NULL)
@@ -562,26 +521,177 @@ FindArgumentType(const char *argTypeStr)
 }
 
 - (id)findViewInParent:(NSView *)inParentView forControlID:(NSString *)inControlID //may return NSView or NSCell
-//-(id)findViewInParent:(NSView *)inParentView forTag:(NSInteger)aTag
 {
-    if(inControlID == NULL)
-        return NULL;
+    if(inControlID == nil)
+        return nil;
 
     NSInteger tagNum = [inParentView tag];
     NSString *controlID = [NSString stringWithFormat:@"%ld", (long)tagNum];
-	if( controlID != NULL && [controlID isEqualToString:inControlID] )
+	if( controlID != nil && [controlID isEqualToString:inControlID] )
 		return inParentView;
 
-    if( [inParentView respondsToSelector:@selector(identifier)] ) //identifier available in Mac OS X v10.7
+    if([inParentView respondsToSelector:@selector(identifier)])
     {
         controlID = [inParentView identifier];
         if( controlID != NULL && [controlID isEqualToString:inControlID] )
             return inParentView;
     }
 
-	if([inParentView isKindOfClass:[NSTabView class] ])
+	if([inParentView isKindOfClass:[NSTabView class]])
 	{//search tabs view recursively
 		NSArray *tabViewsArray = [(NSTabView*)inParentView tabViewItems];
+		if(tabViewsArray != NULL)
+		{
+			NSUInteger tabCount = [tabViewsArray count];
+			NSUInteger tabIndex;
+			for(tabIndex=0; tabIndex < tabCount; tabIndex++)
+			{
+				id oneTab = [tabViewsArray objectAtIndex:tabIndex];
+				if( (oneTab != nil) && [oneTab isKindOfClass:[NSTabViewItem class]] )
+				{
+					id viewObject = [(NSTabViewItem*)oneTab view];
+					if( (viewObject != nil) && [viewObject isKindOfClass:[NSView class]] )
+					{
+						NSView *resultView = [self findViewInParent:(NSView *)viewObject forControlID:inControlID];
+						if(resultView != nil)
+							return resultView;
+					}
+				}
+			}
+		}
+	}
+	// NSMatrix is deprecated since Mac OS 10.8. Min backwards compat support
+	else if([inParentView isKindOfClass:[NSMatrix class]])
+	{
+		NSArray *cellsArray = [(NSMatrix*)inParentView cells];
+		if(cellsArray != nil)
+		{
+			int subIndex;
+			int subCount = [cellsArray count];
+			for(subIndex = 0; subIndex < subCount; subIndex++)
+			{
+				id cellObject = [cellsArray objectAtIndex:subIndex];
+				if( (cellObject != nil) && [cellObject respondsToSelector:@selector(tag)] )
+				{
+                    tagNum = [cellObject tag];
+                    controlID = [NSString stringWithFormat:@"%ld", (long)tagNum];
+					if( controlID != nil && [controlID isEqualToString:inControlID] )
+						return cellObject;
+				}
+                
+                if( (cellObject != nil) && [cellObject respondsToSelector:@selector(identifier)] )
+                {
+                    controlID = [cellObject identifier];
+                    if( controlID != nil && [controlID isEqualToString:inControlID] )
+                        return cellObject;
+                }
+			}
+		}
+	}
+	else
+	{
+		//search subviews recursively
+		NSArray *subViewsArray = [inParentView subviews];
+		if(subViewsArray != nil)
+		{
+			int subIndex;
+			int subCount = [subViewsArray count];
+			for(subIndex = 0; subIndex < subCount; subIndex++)
+			{
+				id viewObject = [subViewsArray objectAtIndex:subIndex];
+				if( (viewObject != nil) && [viewObject isKindOfClass:[NSView class]] )
+				{
+					NSView *resultView = [self findViewInParent:(NSView *)viewObject forControlID:inControlID];
+					if(resultView != nil)
+						return resultView;
+				}
+			}
+		}
+	}
+	return nil;
+}
+
+// private helper
+-(void)storeValue:(id)inValue forControlID:(NSString*)controlID forColumn:(NSUInteger)columnIndex inControlValues:(NSMutableDictionary *)ioControlValues
+{
+	CFObj<CFMutableDictionaryRef> columnIdAndValueDict;
+	id columnValues = ioControlValues[controlID];
+	if(columnValues == nil)
+	{
+		columnIdAndValueDict.Adopt( ::CFDictionaryCreateMutable(
+					kCFAllocatorDefault,
+					0,
+					NULL,//keyCallBacks,//NSInteger keys
+					&kCFTypeDictionaryValueCallBacks), kCFObjDontRetain );
+
+		[ioControlValues setValue:(id)(CFMutableDictionaryRef)columnIdAndValueDict forKey:controlID];
+	}
+	else
+	{
+		columnIdAndValueDict.Adopt((CFMutableDictionaryRef)columnValues, kCFObjRetain);
+	}
+
+	CFDictionarySetValue(columnIdAndValueDict, (const void *)columnIndex, (const void *)inValue);
+}
+
+// private helper
+-(void)readControlValueForID:(NSString *)controlID inValues:(NSMutableDictionary *)ioControlValues andProperties:(NSMutableDictionary *)ioCustomProperties forView:(NSView *)inView withIterator:(SelectionIterator *)inSelIterator
+{
+	NSUInteger columnCount = 0;
+	if( [inView isKindOfClass:[NSTableView class]] )
+	{
+		NSTableView *myTable = (NSTableView *)inView;
+		id myDelegate = [myTable delegate];
+		if( (myDelegate != nil) && [myDelegate isKindOfClass:[OMCTableViewController class]] )
+		{
+			columnCount = [myDelegate columnCount];
+			//regular controls only use column index 0
+			//tables use columns 1..N  with 0 meaning all columns combined
+			for(NSInteger columnIndex = 0; columnIndex <= columnCount; columnIndex++)
+			{
+				id controlValue = [myDelegate selectionValueForColumn:columnIndex withIterator:inSelIterator];
+				if(controlValue != nil)
+				{
+					[self storeValue:controlValue forControlID:controlID forColumn:columnIndex inControlValues:ioControlValues];
+				}
+			}
+		}
+	}
+	else
+	{
+		id controlValue = [self controlValue:inView forPart:0 withIterator:inSelIterator];
+		if(controlValue != nil)
+			[self storeValue:controlValue forControlID:controlID forColumn:0 inControlValues:ioControlValues];
+	}
+
+	CFObj<CFDictionaryRef> customProperties([self copyControlProperties:inView]);
+	if(customProperties != NULL)
+		[ioCustomProperties setValue:(id)(CFDictionaryRef)customProperties forKey:controlID];
+}
+
+//internal implementation
+-(void)allControlValues:(NSMutableDictionary *)ioControlValues andProperties:(NSMutableDictionary *)ioCustomProperties inView:(NSView *)inView withIterator:(SelectionIterator *)inSelIterator
+{
+    if(inView == nil)
+        return;
+
+	//in general a view with subviews should not have a value but we check all non-empty, non-zero IDs
+	NSString *controlID = nil;
+	NSInteger tagNum = [inView tag];
+	if(tagNum != 0)
+		controlID = [NSString stringWithFormat:@"%ld", (long)tagNum];
+
+	if((controlID == nil) && [inView respondsToSelector:@selector(identifier)])
+		controlID = [inView identifier];
+
+	if((controlID != nil) && ([controlID length] > 0) && ![controlID isEqualToString:@"0"])
+	{
+		[self readControlValueForID:controlID inValues:ioControlValues andProperties:ioCustomProperties forView:inView withIterator:inSelIterator];
+	}
+
+	if([inView isKindOfClass:[NSTabView class]])
+	{//search tabs view recursively
+		NSArray *tabViewsArray = [(NSTabView*)inView tabViewItems];
 		if(tabViewsArray != NULL)
 		{
 			NSUInteger tabCount = [tabViewsArray count];
@@ -592,48 +702,55 @@ FindArgumentType(const char *argTypeStr)
 				if( (oneTab != NULL) && [oneTab isKindOfClass:[NSTabViewItem class]] )
 				{
 					id viewObject = [(NSTabViewItem*)oneTab view];
-					if( (viewObject != NULL) && [viewObject isKindOfClass:[NSView class]] )
+					if( (viewObject != nil) && [viewObject isKindOfClass:[NSView class]] )
 					{
-						NSView *resultView = [self findViewInParent:(NSView *)viewObject forControlID:inControlID];
-						if(resultView != NULL)
-							return resultView;
+						[self allControlValues:ioControlValues andProperties:ioCustomProperties inView:(NSView *)viewObject withIterator:inSelIterator];
 					}
 				}
 			}
 		}
 	}
-	else if([inParentView isKindOfClass:[NSMatrix class] ])
+	// NSMatrix is deprecated since Mac OS 10.8. Min backwards compat support
+	else if([inView isKindOfClass:[NSMatrix class]])
 	{
-		NSArray *cellsArray = [(NSMatrix*)inParentView cells];
-		if(cellsArray != NULL)
+		NSArray *cellsArray = [(NSMatrix*)inView cells];
+		if(cellsArray != nil)
 		{
 			int subIndex;
 			int subCount = [cellsArray count];
 			for(subIndex = 0; subIndex < subCount; subIndex++)
 			{
+				controlID = nil;
 				id cellObject = [cellsArray objectAtIndex:subIndex];
-				if( (cellObject != NULL) && [cellObject respondsToSelector:@selector(tag)] )
+				if( (cellObject != nil) && [cellObject respondsToSelector:@selector(tag)] )
 				{
-                    tagNum = [cellObject tag];
-                    controlID = [NSString stringWithFormat:@"%ld", (long)tagNum];
-					if( controlID != NULL && [controlID isEqualToString:inControlID] )
-						return cellObject;
+                    NSInteger tagNum = [cellObject tag];
+                    if(tagNum != 0)
+	                    controlID = [NSString stringWithFormat:@"%ld", (long)tagNum];
 				}
-                
-                if( (cellObject != NULL) && [cellObject respondsToSelector:@selector(identifier)] ) //identifier available in Mac OS X v10.7
-                {
+				
+                if( (controlID == nil) && (cellObject != nil) && [cellObject respondsToSelector:@selector(identifier)] )
                     controlID = [cellObject identifier];
-                    if( controlID != NULL && [controlID isEqualToString:inControlID] )
-                        return cellObject;
-                }
+				
+				if( (controlID != nil) && ([controlID length] > 0) && ![controlID isEqualToString:@"0"] )
+				{
+					id controlValue = [self controlValue:cellObject forPart:0 withIterator:inSelIterator];
+					if(controlValue != nil)
+					{
+						[self storeValue:controlValue forControlID:controlID forColumn:0 inControlValues:ioControlValues];
+						CFObj<CFDictionaryRef> customProperties([self copyControlProperties:inView]);
+						if(customProperties != NULL)
+							[ioCustomProperties setValue:(id)(CFDictionaryRef)customProperties forKey:controlID];
+					}
+				}
 			}
 		}
 	}
 	else
 	{
 		//search subviews recursively
-		NSArray *subViewsArray = [inParentView subviews];
-		if(subViewsArray != NULL)
+		NSArray *subViewsArray = [inView subviews];
+		if(subViewsArray != nil)
 		{
 			int subIndex;
 			int subCount = [subViewsArray count];
@@ -642,128 +759,144 @@ FindArgumentType(const char *argTypeStr)
 				id viewObject = [subViewsArray objectAtIndex:subIndex];
 				if( (viewObject != NULL) && [viewObject isKindOfClass:[NSView class]] )
 				{
-					NSView *resultView = [self findViewInParent:(NSView *)viewObject forControlID:inControlID];
-					if(resultView != NULL)
-						return resultView;
+					[self allControlValues:ioControlValues andProperties:ioCustomProperties inView:(NSView *)viewObject withIterator:inSelIterator];
 				}
 			}
 		}
 	}
-	return NULL;
 }
 
-- (CFTypeRef)controlValue:(NSString *)inControlID forPart:(NSInteger)inControlPart withIterator:(SelectionIterator *)inSelIterator outProperties:(CFDictionaryRef *)outCustomProperties
+// public API
+-(void)allControlValues:(NSMutableDictionary *)ioControlValues andProperties:(NSMutableDictionary *)ioCustomProperties withIterator:(SelectionIterator *)inSelIterator
 {
-	id myControlOrView = [self findControlOrViewWithID:inControlID];
-	if( myControlOrView != NULL )
+	id contentViewObject = [mWindow contentView];
+	if( (contentViewObject != nil) && [contentViewObject isKindOfClass:[NSView class] ] )
 	{
-		if(outCustomProperties)
-		{
-			NSString *escapingMode = NULL;
-			if( [myControlOrView respondsToSelector:@selector(escapingMode)] )
-				escapingMode = [myControlOrView escapingMode];
-			
-			NSString *combinedSelectionPrefix = NULL;
-			if( [myControlOrView respondsToSelector:@selector(combinedSelectionPrefix)] )
-				combinedSelectionPrefix = [myControlOrView combinedSelectionPrefix];
-			
-			NSString *combinedSelectionSuffix = NULL;
-			if( [myControlOrView respondsToSelector:@selector(combinedSelectionSuffix)] )
-				combinedSelectionSuffix = [myControlOrView combinedSelectionSuffix];
-			
-			NSString *combinedSelectionSeparator = NULL;
-			if( [myControlOrView respondsToSelector:@selector(combinedSelectionSeparator)] )
-				combinedSelectionSeparator = [myControlOrView combinedSelectionSeparator];
-			
-			if( (escapingMode != NULL) ||
-				(combinedSelectionPrefix != NULL) ||
-				(combinedSelectionSuffix != NULL) ||
-				(combinedSelectionSeparator != NULL) )
-			{
-				CFMutableDictionaryRef outDict = ::CFDictionaryCreateMutable(
-												kCFAllocatorDefault,
-												0,
-												NULL,//keyCallBacks,
-												&kCFTypeDictionaryValueCallBacks );	
-				*outCustomProperties = outDict;
-				if(outDict != NULL)
-				{
-					if(escapingMode != NULL)
-						::CFDictionarySetValue( outDict,
-												(const void *)kCustomEscapeMethodKey,
-												(const void *)(CFStringRef)escapingMode);
-					
-					if(combinedSelectionPrefix != NULL)
-						::CFDictionarySetValue( outDict,
-												(const void *)kCustomPrefixKey,
-												(const void *)(CFStringRef)combinedSelectionPrefix);
-
-					if(combinedSelectionSuffix != NULL)
-						::CFDictionarySetValue( outDict,
-												(const void *)kCustomSuffixKey,
-												(const void *)(CFStringRef)combinedSelectionSuffix);
-
-					if(combinedSelectionSeparator != NULL)
-						::CFDictionarySetValue( outDict,
-												(const void *)kCustomSeparatorKey,
-												(const void *)(CFStringRef)combinedSelectionSeparator);
-				}
-			}
-		}
-
-		if( [myControlOrView isKindOfClass:[NSPopUpButton class]] && ![myControlOrView isKindOfClass:[OMCPopUpButton class]] )
-		{
-			NSPopUpButton *myPopup = (NSPopUpButton *)myControlOrView;
-			NSInteger itemIndex = [myPopup indexOfSelectedItem] + 1;//0-based to 1-based
-			return (CFTypeRef)[NSString stringWithFormat: @"%ld", (long)itemIndex];
-		}
-		else if([myControlOrView isKindOfClass:[NSPathControl class]] || [myControlOrView isKindOfClass:[NSPathCell class]])
-		{
-			NSURL *fileURL = [myControlOrView URL];
-			if(fileURL != NULL)
-			{
-				NSString *filePath = [fileURL path];
-				if(filePath != NULL)
-					return (CFTypeRef)filePath;
-			}
-			return (CFTypeRef)[myControlOrView stringValue];
-		}
-		else if( [myControlOrView isKindOfClass:[NSText class]] )
-		{
-			NSText *myText = (NSText *)myControlOrView;
-			return (CFTypeRef)[myText string];
-		}
-		else if( [myControlOrView isKindOfClass:[NSTableView class]] )
-		{
-			NSTableView *myTable = (NSTableView *)myControlOrView;
-			id myDelegate = [myTable delegate];
-			if( (myDelegate != NULL) && [myDelegate isKindOfClass:[OMCTableViewController class]] )
-			{
-				if( (inSelIterator != NULL) && SelectionIterator_IsAllRows(inSelIterator) )
-					return (CFTypeRef)[myDelegate allRowsForColumn:inControlPart];
-				else
-					return [myDelegate selectionValueForColumn:inControlPart withIterator:inSelIterator];
-			}
-		}
-		
-		//nothing else produced a value, try "stringValue"
-		if( [myControlOrView respondsToSelector:@selector(stringValue)] )
-		{
-			return [myControlOrView stringValue];//OMC controls do their mappings internally and return proper string
-		}
-		
+		[self allControlValues:ioControlValues andProperties:ioCustomProperties inView:(NSView*)contentViewObject withIterator:inSelIterator];
 	}
-	return NULL;
+}
+
+-(CFDictionaryRef)copyControlProperties:(id)controlOrView
+{
+	CFMutableDictionaryRef outDict = NULL;
+	NSString *escapingMode = nil;
+	if( [controlOrView respondsToSelector:@selector(escapingMode)] )
+		escapingMode = [controlOrView escapingMode];
+
+	NSString *combinedSelectionPrefix = nil;
+	if( [controlOrView respondsToSelector:@selector(combinedSelectionPrefix)] )
+		combinedSelectionPrefix = [controlOrView combinedSelectionPrefix];
+
+	NSString *combinedSelectionSuffix = nil;
+	if( [controlOrView respondsToSelector:@selector(combinedSelectionSuffix)] )
+		combinedSelectionSuffix = [controlOrView combinedSelectionSuffix];
+
+	NSString *combinedSelectionSeparator = nil;
+	if( [controlOrView respondsToSelector:@selector(combinedSelectionSeparator)] )
+		combinedSelectionSeparator = [controlOrView combinedSelectionSeparator];
+
+	if( (escapingMode != nil) ||
+		(combinedSelectionPrefix != nil) ||
+		(combinedSelectionSuffix != nil) ||
+		(combinedSelectionSeparator != nil) )
+	{
+		outDict = ::CFDictionaryCreateMutable(
+										kCFAllocatorDefault,
+										0,
+										NULL,//keyCallBacks,
+										&kCFTypeDictionaryValueCallBacks );
+		if(outDict != NULL)
+		{
+			if(escapingMode != nil)
+				::CFDictionarySetValue( outDict,
+										(const void *)kCustomEscapeMethodKey,
+										(const void *)(CFStringRef)escapingMode);
+			
+			if(combinedSelectionPrefix != nil)
+				::CFDictionarySetValue( outDict,
+										(const void *)kCustomPrefixKey,
+										(const void *)(CFStringRef)combinedSelectionPrefix);
+
+			if(combinedSelectionSuffix != nil)
+				::CFDictionarySetValue( outDict,
+										(const void *)kCustomSuffixKey,
+										(const void *)(CFStringRef)combinedSelectionSuffix);
+
+			if(combinedSelectionSeparator != nil)
+				::CFDictionarySetValue( outDict,
+										(const void *)kCustomSeparatorKey,
+										(const void *)(CFStringRef)combinedSelectionSeparator);
+		}
+	}
+	return outDict;
+}
+
+- (id)controlValue:(id)controlOrView forPart:(NSInteger)inControlPart withIterator:(SelectionIterator *)inSelIterator
+{
+	if( [controlOrView isKindOfClass:[NSPopUpButton class]] && ![controlOrView isKindOfClass:[OMCPopUpButton class]] )
+	{
+		NSPopUpButton *myPopup = (NSPopUpButton *)controlOrView;
+		NSInteger itemIndex = [myPopup indexOfSelectedItem] + 1;//0-based to 1-based
+		return [NSString stringWithFormat: @"%ld", (long)itemIndex];
+	}
+	else if([controlOrView isKindOfClass:[NSPathControl class]] || [controlOrView isKindOfClass:[NSPathCell class]])
+	{
+		NSURL *fileURL = [controlOrView URL];
+		if(fileURL != nil)
+		{
+			NSString *filePath = [fileURL path];
+			if(filePath != nil)
+				return filePath;
+		}
+		return [controlOrView stringValue];
+	}
+	else if( [controlOrView isKindOfClass:[NSText class]] )
+	{
+		NSText *myText = (NSText *)controlOrView;
+		return [myText string];
+	}
+	else if( [controlOrView isKindOfClass:[NSTableView class]] )
+	{
+		NSTableView *myTable = (NSTableView *)controlOrView;
+		id myDelegate = [myTable delegate];
+		if( (myDelegate != nil) && [myDelegate isKindOfClass:[OMCTableViewController class]] )
+		{
+			if( (inSelIterator != NULL) && SelectionIterator_IsAllRows(inSelIterator) )
+				return [myDelegate allRowsForColumn:inControlPart];
+			else
+				return [myDelegate selectionValueForColumn:inControlPart withIterator:inSelIterator];
+		}
+	}
+
+	//nothing else produced a value, try "stringValue"
+	if( [controlOrView respondsToSelector:@selector(stringValue)] )
+	{
+		return [controlOrView stringValue];//OMC controls do their mappings internally and return proper string
+	}
+	return nil;
+}
+
+
+- (id)controlValueForID:(NSString *)inControlID forPart:(NSInteger)inControlPart withIterator:(SelectionIterator *)inSelIterator outProperties:(CFDictionaryRef *)outCustomProperties
+{
+	id controlOrView = [self findControlOrViewWithID:inControlID];
+	if(controlOrView != nil)
+	{
+		if(outCustomProperties != NULL)
+			*outCustomProperties = [self copyControlProperties:controlOrView];
+		return [self controlValue:controlOrView forPart:inControlPart withIterator:inSelIterator];
+	}
+	return nil;
 }
 
 - (void)setControlStringValue:(NSString *)inValue forControlID:(NSString *)inControlID
 {
-	id myControlOrView = [self findControlOrViewWithID:inControlID];
-	if( myControlOrView != NULL )
+	id controlOrView = [self findControlOrViewWithID:inControlID];
+	if( controlOrView != nil )
 	{
-		if( [myControlOrView isKindOfClass:[NSPopUpButton class]] )
+		if( [controlOrView isKindOfClass:[NSPopUpButton class]] )
 		{
-			NSPopUpButton *myPopup = (NSPopUpButton *)myControlOrView;
+			NSPopUpButton *myPopup = (NSPopUpButton *)controlOrView;
 			NSScanner *strScanner = [NSScanner scannerWithString:inValue];
 			int intValue = -1;
 			//0-based index for popup menu items
@@ -772,19 +905,19 @@ FindArgumentType(const char *argTypeStr)
 			else
 				[myPopup selectItemWithTitle:inValue];
 		}
-		else if([myControlOrView isKindOfClass:[NSPathControl class]] || [myControlOrView isKindOfClass:[NSPathCell class]])
+		else if([controlOrView isKindOfClass:[NSPathControl class]] || [controlOrView isKindOfClass:[NSPathCell class]])
 		{
 			NSURL *fileURL = [NSURL fileURLWithPath:inValue];
-			if(fileURL != NULL)
-				[myControlOrView setURL:fileURL];
+			if(fileURL != nil)
+				[controlOrView setURL:fileURL];
 		}
-		else if( [myControlOrView respondsToSelector:@selector(setStringValue:)] )
+		else if( [controlOrView respondsToSelector:@selector(setStringValue:)] )
 		{
-			[myControlOrView setStringValue:inValue];//OMC controls do their mappings internally
+			[controlOrView setStringValue:inValue];//OMC controls do their mappings internally
 		}
-		else if( [myControlOrView isKindOfClass:[NSText class]] )
+		else if( [controlOrView isKindOfClass:[NSText class]] )
 		{
-			NSText *myText = (NSText *)myControlOrView;
+			NSText *myText = (NSText *)controlOrView;
 			[myText setString:inValue];
 		}
 	}
@@ -817,17 +950,17 @@ FindArgumentType(const char *argTypeStr)
 				if(controlID != NULL)
 				{
 					//NSInteger controlId = ::CFStringGetIntValue(theKey);
-					id myControlOrView = [self findControlOrViewWithID:(NSString*)controlID];
-					if( myControlOrView != NULL )
+					id controlOrView = [self findControlOrViewWithID:(NSString*)controlID];
+					if( controlOrView != NULL )
 					{
-						if( [myControlOrView isKindOfClass:[NSPopUpButton class]] )
+						if( [controlOrView isKindOfClass:[NSPopUpButton class]] )
 						{
-							NSPopUpButton *myPopupButton = (NSPopUpButton *)myControlOrView;
+							NSPopUpButton *myPopupButton = (NSPopUpButton *)controlOrView;
 							[myPopupButton removeAllItems];
 						}
-						else if( [myControlOrView isKindOfClass:[NSComboBox class]] )
+						else if( [controlOrView isKindOfClass:[NSComboBox class]] )
 						{
-							NSComboBox *myCombo = (NSComboBox *)myControlOrView;
+							NSComboBox *myCombo = (NSComboBox *)controlOrView;
 							[myCombo removeAllItems];
 						}
 					}
@@ -853,13 +986,13 @@ FindArgumentType(const char *argTypeStr)
 				if( (controlID != NULL) && (theArr != NULL) )
 				{
 					//NSInteger controlId = ::CFStringGetIntValue(theKey);
-					id myControlOrView = [self findControlOrViewWithID:(NSString*)controlID];
-					if( myControlOrView != NULL )
+					id controlOrView = [self findControlOrViewWithID:(NSString*)controlID];
+					if( controlOrView != NULL )
 					{
 						CFIndex itemCount = ::CFArrayGetCount(theArr);
-						if( [myControlOrView isKindOfClass:[NSPopUpButton class]] )
+						if( [controlOrView isKindOfClass:[NSPopUpButton class]] )
 						{
-							NSPopUpButton *myPopupButton = (NSPopUpButton *)myControlOrView;
+							NSPopUpButton *myPopupButton = (NSPopUpButton *)controlOrView;
 							for(CFIndex i = 0; i < itemCount; i++)
 							{
 								CFTypeRef oneItem = ::CFArrayGetValueAtIndex(theArr,i);
@@ -868,9 +1001,9 @@ FindArgumentType(const char *argTypeStr)
 									[myPopupButton addItemWithTitle:(NSString *)oneString];
 							}
 						}
-						else if( [myControlOrView isKindOfClass:[NSComboBox class]] )
+						else if( [controlOrView isKindOfClass:[NSComboBox class]] )
 						{
-							NSComboBox *myCombo = (NSComboBox *)myControlOrView;
+							NSComboBox *myCombo = (NSComboBox *)controlOrView;
 							
 							for(CFIndex i = 0; i < itemCount; i++)
 							{
@@ -903,10 +1036,10 @@ FindArgumentType(const char *argTypeStr)
 				if(controlID != NULL)
 				{
 					//NSInteger controlId = ::CFStringGetIntValue(theKey);
-					id myControlOrView = [self findControlOrViewWithID:(NSString*)controlID];
-					if( (myControlOrView != NULL) && [myControlOrView isKindOfClass:[NSTableView class]] )
+					id controlOrView = [self findControlOrViewWithID:(NSString*)controlID];
+					if( (controlOrView != NULL) && [controlOrView isKindOfClass:[NSTableView class]] )
 					{
-						NSTableView *myTable = (NSTableView *)myControlOrView;
+						NSTableView *myTable = (NSTableView *)controlOrView;
 						id myDelegate = [myTable delegate];
 						if( (myDelegate != NULL) && [myDelegate isKindOfClass:[OMCTableViewController class]] )
 							[myDelegate removeRows];
@@ -933,10 +1066,10 @@ FindArgumentType(const char *argTypeStr)
 				if( (controlID != NULL) && (theArr != NULL) )
 				{
 					//NSInteger controlId = ::CFStringGetIntValue(theKey);
-					id myControlOrView = [self findControlOrViewWithID:(NSString*)controlID];
-					if( (myControlOrView != NULL) && [myControlOrView isKindOfClass:[NSTableView class]] )
+					id controlOrView = [self findControlOrViewWithID:(NSString*)controlID];
+					if( (controlOrView != NULL) && [controlOrView isKindOfClass:[NSTableView class]] )
 					{
-						NSTableView *myTable = (NSTableView *)myControlOrView;
+						NSTableView *myTable = (NSTableView *)controlOrView;
 						id myDelegate = [myTable delegate];
 						if( (myDelegate != NULL) && [myDelegate isKindOfClass:[OMCTableViewController class]] ) 
 							[myDelegate addRows:theArr];
@@ -963,10 +1096,10 @@ FindArgumentType(const char *argTypeStr)
 				if( (controlID != NULL) && (theArr != NULL) )
 				{
 					//NSInteger controlId = ::CFStringGetIntValue(theKey);
-					id myControlOrView = [self findControlOrViewWithID:(NSString*)controlID];
-					if( (myControlOrView != NULL) && [myControlOrView isKindOfClass:[NSTableView class]] )
+					id controlOrView = [self findControlOrViewWithID:(NSString*)controlID];
+					if( (controlOrView != NULL) && [controlOrView isKindOfClass:[NSTableView class]] )
 					{
-						NSTableView *myTable = (NSTableView *)myControlOrView;
+						NSTableView *myTable = (NSTableView *)controlOrView;
 						id myDelegate = [myTable delegate];
 						
 						//BOOL isKindOf = [myDelegate isKindOfClass:[OMCTableViewController class]];
@@ -998,10 +1131,10 @@ FindArgumentType(const char *argTypeStr)
 				if( (controlID != NULL) && (theArr != NULL) )
 				{
 					//NSInteger controlId = ::CFStringGetIntValue(theKey);
-					id myControlOrView = [self findControlOrViewWithID:(NSString*)controlID];
-					if( (myControlOrView != NULL) && [myControlOrView isKindOfClass:[NSTableView class]] )
+					id controlOrView = [self findControlOrViewWithID:(NSString*)controlID];
+					if( (controlOrView != NULL) && [controlOrView isKindOfClass:[NSTableView class]] )
 					{
-						NSTableView *myTable = (NSTableView *)myControlOrView;
+						NSTableView *myTable = (NSTableView *)controlOrView;
 						id myDelegate = [myTable delegate];
 						if( (myDelegate != NULL) && [myDelegate isKindOfClass:[OMCTableViewController class]] ) 
 							[myDelegate setColumnWidths:theArr];
@@ -1053,12 +1186,12 @@ FindArgumentType(const char *argTypeStr)
 				if( (controlID != NULL) && (theVal != NULL) )
 				{
 					//NSInteger controlId = ::CFStringGetIntValue(theKey);
-					id myControlOrView = [self findControlOrViewWithID:(NSString *)controlID];
-					if(myControlOrView != NULL)
+					id controlOrView = [self findControlOrViewWithID:(NSString *)controlID];
+					if(controlOrView != NULL)
 					{
 						Boolean doEnable = ::CFBooleanGetValue(theVal);
-						if( [myControlOrView respondsToSelector:@selector(setEnabled:)] )
-								[(NSControl *)myControlOrView setEnabled:doEnable];
+						if( [controlOrView respondsToSelector:@selector(setEnabled:)] )
+								[(NSControl *)controlOrView setEnabled:doEnable];
 						else
 						{
 							//NSView does not have enable/disable
@@ -1088,11 +1221,11 @@ FindArgumentType(const char *argTypeStr)
 				if( (controlID != NULL) && (theVal != NULL) )
 				{
 					//NSInteger controlId = ::CFStringGetIntValue(theKey);
-					id myControlOrView = [self findControlOrViewWithID:(NSString *)controlID];
-					if( (myControlOrView != NULL) && [myControlOrView respondsToSelector:@selector(setHidden:)] )
+					id controlOrView = [self findControlOrViewWithID:(NSString *)controlID];
+					if( (controlOrView != NULL) && [controlOrView respondsToSelector:@selector(setHidden:)] )
 					{
 						BOOL makeVisible = (BOOL)::CFBooleanGetValue(theVal);
-						[myControlOrView setHidden:(!makeVisible)];
+						[controlOrView setHidden:(!makeVisible)];
 					}
 				}
 			}
@@ -1118,10 +1251,10 @@ FindArgumentType(const char *argTypeStr)
 				if( (controlID != NULL) && (theVal != NULL) )
 				{
 					//NSInteger controlId = ::CFStringGetIntValue(theKey);
-					NSView *myControlOrView = [self findControlOrViewWithID:(NSString *)controlID];
-					if( (myControlOrView != NULL) && [myControlOrView respondsToSelector:@selector(setCommandID:)] )
+					NSView *controlOrView = [self findControlOrViewWithID:(NSString *)controlID];
+					if( (controlOrView != NULL) && [controlOrView respondsToSelector:@selector(setCommandID:)] )
 					{
-						[myControlOrView performSelector:@selector(setCommandID) withObject:(NSString *)theVal];
+						[controlOrView performSelector:@selector(setCommandID) withObject:(NSString *)theVal];
 					}
 				}
 			}
@@ -1164,11 +1297,11 @@ FindArgumentType(const char *argTypeStr)
 						//tab control item maybe? but does it have a tag?
 
 						//NSInteger controlId = ::CFStringGetIntValue(theKey);
-						//NSView *myControlOrView = [self findControlOrViewWithID:controlID];
+						//NSView *controlOrView = [self findControlOrViewWithID:controlID];
 
-						//if( (myControlOrView != NULL) && [myControlOrView respondsToSelector:@selector(setCommandID:)] )
+						//if( (controlOrView != NULL) && [controlOrView respondsToSelector:@selector(setCommandID:)] )
 						//{
-						//	[myControlOrView setCommandID:theVal];
+						//	[controlOrView setCommandID:theVal];
 						//}
 					}
 				}
@@ -1228,9 +1361,9 @@ FindArgumentType(const char *argTypeStr)
 					{//can a control/view respond to some kind of terminate message? probably not
 						
 						//NSInteger controlId = ::CFStringGetIntValue(theKey);
-						//NSView *myControlOrView = [self findControlOrViewWithID:controlId];
-						//if(myControlOrView != NULL)
-						//	[myControlOrView setHidden:(BOOL)::CFBooleanGetValue(theVal)];
+						//NSView *controlOrView = [self findControlOrViewWithID:controlId];
+						//if(controlOrView != NULL)
+						//	[controlOrView setHidden:(BOOL)::CFBooleanGetValue(theVal)];
 					}
 				}
 			}
@@ -1281,17 +1414,17 @@ FindArgumentType(const char *argTypeStr)
 						else
 						{
 							//NSInteger controlId = ::CFStringGetIntValue(theKey);
-							id myControlOrView = [self findControlOrViewWithID:(NSString *)controlID];
+							id controlOrView = [self findControlOrViewWithID:(NSString *)controlID];
 							
-							if( (myControlOrView != NULL) && [myControlOrView isKindOfClass:[NSView class]] )
+							if( (controlOrView != NULL) && [controlOrView isKindOfClass:[NSView class]] )
 							{
-								float viewHeight = NSHeight([myControlOrView bounds]);
-								NSView *superView = [myControlOrView superview];
+								float viewHeight = NSHeight([controlOrView bounds]);
+								NSView *superView = [controlOrView superview];
 								float superHeight = NSHeight([superView bounds]);
 								float bottomOrigin = superHeight - viewHeight - newTopLeftOrigin.y;
-								[myControlOrView setFrameOrigin: NSMakePoint(newTopLeftOrigin.x, bottomOrigin) ];
-								[myControlOrView setNeedsDisplay:YES];
-								//[[myControlOrView superview] setNeedsDisplay: YES];//can it mess up the superview?
+								[controlOrView setFrameOrigin: NSMakePoint(newTopLeftOrigin.x, bottomOrigin) ];
+								[controlOrView setNeedsDisplay:YES];
+								//[[controlOrView superview] setNeedsDisplay: YES];//can it mess up the superview?
 							}
 						}
 					}
@@ -1454,12 +1587,12 @@ FindArgumentType(const char *argTypeStr)
 						else
 						{
 							//NSInteger controlId = ::CFStringGetIntValue(theKey);
-							id myControlOrView = [self findControlOrViewWithID:(NSString *)controlID];
+							id controlOrView = [self findControlOrViewWithID:(NSString *)controlID];
 							
-							if( (myControlOrView != NULL) && [myControlOrView isKindOfClass:[NSView class]] )
+							if( (controlOrView != NULL) && [controlOrView isKindOfClass:[NSView class]] )
 							{
-								[myControlOrView setFrameSize:newSize];
-								[myControlOrView setNeedsDisplay:YES];
+								[controlOrView setFrameSize:newSize];
+								[controlOrView setNeedsDisplay:YES];
 							}
 						}
 					}

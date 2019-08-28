@@ -28,12 +28,12 @@ template <> CFTypeID ACFType<CFMutableDataRef>::sTypeID	= ::CFDataGetTypeID();
 template <> CFTypeID ACFType<CFDateRef>::sTypeID		= ::CFDateGetTypeID();
 template <> CFTypeID ACFType<CFBundleRef>::sTypeID		= ::CFBundleGetTypeID();
 template <> CFTypeID ACFType<CFURLRef>::sTypeID			= ::CFURLGetTypeID();
+template <> CFTypeID ACFType<CFSetRef>::sTypeID         = ::CFSetGetTypeID();
+template <> CFTypeID ACFType<CFMutableSetRef>::sTypeID  = ::CFSetGetTypeID();
 
 //Some other, currently unused CF types.
 //Uncomment when needed
 #if 0
-
-template <> CFTypeID ACFType<CFSetRef>::sTypeID = ::CFSetGetTypeID();
 template <> CFTypeID ACFType<CFDateFormatterRef>::sTypeID = ::CFDateFormatterGetTypeID();
 template <> CFTypeID ACFType<CFLocaleRef>::sTypeID = ::CFLocaleGetTypeID();
 template <> CFTypeID ACFType<CFNumberFormatterRef>::sTypeID = ::CFNumberFormatterGetTypeID();

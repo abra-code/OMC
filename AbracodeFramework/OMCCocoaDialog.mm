@@ -44,7 +44,7 @@ Boolean RunCocoaDialog(OnMyCommandCM *inPlugin)
 					{
 						if(omcDialog != NULL)
 						{
-							inPlugin->GetDialogControlValues( currCommand, *omcDialog );
+							inPlugin->GetDialogControlValues( currCommand, *omcDialog, NULL /*sel iterator*/ );
 							outResult = true;
 						}
 					}
@@ -71,21 +71,20 @@ Boolean RunCocoaDialog(OnMyCommandCM *inPlugin)
 
 
 CFTypeRef
-OMCCocoaDialog::CopyControlValue(CFStringRef inControlID, SInt32 inControlPart, SelectionIterator *inSelIterator, CFDictionaryRef *outCustomProperties)
+OMCCocoaDialog::CopyControlValue(CFStringRef inControlID, SInt32 inControlPart, SelectionIterator *inSelIterator, CFDictionaryRef *outCustomProperties) noexcept
 {
 	if(outCustomProperties != NULL)
 		*outCustomProperties = NULL;
 
-	CFTypeRef outValue = NULL;
+	id outValue = NULL;
     @autoreleasepool
 	{
 		@try
 		{
 			if(mController != NULL)
 			{
-				outValue = [mController controlValue:(NSString *)inControlID forPart:(NSInteger)inControlPart withIterator:inSelIterator outProperties:outCustomProperties];
-				if(outValue != NULL)
-					CFRetain(outValue);
+				outValue = [mController controlValueForID:(NSString *)inControlID forPart:(NSInteger)inControlPart withIterator:inSelIterator outProperties:outCustomProperties];
+				[outValue retain];
 			}
 		}
 		@catch (NSException *localException)
@@ -94,7 +93,26 @@ OMCCocoaDialog::CopyControlValue(CFStringRef inControlID, SInt32 inControlPart, 
 		}
 	} //@autoreleasepool
 
-	return outValue;
+	return (CFTypeRef)outValue;
+}
+
+void
+OMCCocoaDialog::CopyAllControlValues(CFMutableDictionaryRef ioControlValues, CFMutableDictionaryRef ioCustomProperties, SelectionIterator *inSelIterator) noexcept
+{
+    @autoreleasepool
+	{
+		@try
+		{
+			if(mController != NULL)
+			{
+				[mController allControlValues:(NSMutableDictionary *)ioControlValues andProperties:(NSMutableDictionary *)ioCustomProperties withIterator:inSelIterator];
+			}
+		}
+		@catch (NSException *localException)
+		{
+			NSLog(@"OMCCocoaDialog::CopyAllControlValues received exception: %@", localException);
+		}
+	} //@autoreleasepool
 }
 
 //port communication support for dialog

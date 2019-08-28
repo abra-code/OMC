@@ -43,14 +43,16 @@ class OMCCocoaDialog;
 
 - (id)initWithOmc:(OnMyCommandCM *)inOmc;
 - (Boolean)findNib:(NSString *)inNibName forBundlePath:(NSString *)inPath;
-//- (id)initWithWindow:(NSWindow *)inWindow;
 - (void)initSubview:(NSView *)inView;
 - (void)resetSubview:(NSView *)inView;
 - (id)findViewInParent:(NSView *)inParentView forControlID:(NSString *)inControlID;//may return NSView or NSCell
 - (id)findControlOrViewWithID:(NSString *)inControlID;//may return NSView or NSCell
-- (CFTypeRef)controlValue:(NSString *)inControlID forPart:(NSInteger)inControlPart withIterator:(SelectionIterator *)inSelIterator outProperties:(CFDictionaryRef *)outCustomProperties; //returns string or array of strings
+- (void)allControlValues:(NSMutableDictionary *)ioControlValues andProperties:(NSMutableDictionary *)ioCustomProperties withIterator:(SelectionIterator *)inSelIterator;
+- (id)controlValueForID:(NSString *)inControlID forPart:(NSInteger)inControlPart withIterator:(SelectionIterator *)inSelIterator outProperties:(CFDictionaryRef *)outCustomProperties; //returns string or array of strings
+- (id)controlValue:(id)controlOrView forPart:(NSInteger)inControlPart withIterator:(SelectionIterator *)inSelIterator;
 - (void)setControlStringValue:(NSString *)inValue forControlID:(NSString *)inControlID;
 - (void)setControlValues:(CFDictionaryRef)inControlDict;
+- (CFDictionaryRef)copyControlProperties:(id)controlOrView;
 - (void)handleAction:(id)sender;
 - (void)handleDoubleClickAction:(id)sender;
 - (OMCCocoaDialog *)getOMCDialog;
@@ -69,4 +71,4 @@ class OMCCocoaDialog;
 - (SelectionIterator *)createSelectionIterator:(CFDictionaryRef)inIteratorParams;
 - (void)keepItem:(id)inItem;
 
-@end
+@end //OMCDialogController
