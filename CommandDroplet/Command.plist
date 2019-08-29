@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
 	<key>COMMAND_LIST</key>
@@ -7,16 +7,16 @@
 		<dict>
 			<key>COMMAND</key>
 			<array>
-				<string>echo "Welcome to OMC"</string>
+				<string>echo &quot;Welcome to OMC&quot;</string>
 			</array>
 			<key>END_NOTIFICATION</key>
 			<dict/>
 			<key>NAME</key>
 			<string>Welcome</string>
 			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
-			<string>10.3.9</string>
+			<string>10.13</string>
 			<key>REQUIRED_OMC_VERSION</key>
-			<string>2.0</string>
+			<string>3.0</string>
 			<key>VERSION</key>
 			<integer>1</integer>
 		</dict>

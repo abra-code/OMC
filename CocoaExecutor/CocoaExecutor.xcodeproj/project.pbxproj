@@ -319,6 +319,7 @@
 				GCC_PREFIX_HEADER = CocoaExecutor_Prefix.pch;
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "$(HOME)/Applications";
+				LD_RUNPATH_SEARCH_PATHS = "@loader_path/../Frameworks /Library/Frameworks";
 				OTHER_LDFLAGS = (
 					"-weak_framework",
 					Abracode,
@@ -334,6 +335,7 @@
 				GCC_PREFIX_HEADER = CocoaExecutor_Prefix.pch;
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "$(HOME)/Applications";
+				LD_RUNPATH_SEARCH_PATHS = "@loader_path/../Frameworks /Library/Frameworks";
 				OTHER_LDFLAGS = (
 					"-weak_framework",
 					Abracode,
