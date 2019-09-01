@@ -289,40 +289,7 @@ FindArgumentType(const char *argTypeStr)
 - (void) initSubview:(NSView *)inView
 {
 	//init self - add self as target and action handler for all controls
-	
-	// NSMatrix is deprecated since Mac OS 10.8. Min backwards compat support
-	if( [inView isKindOfClass:[NSMatrix class]] )
-	{
-		NSArray *cellsArray = [(NSMatrix*)inView cells];
-		if(cellsArray != NULL)
-		{
-			int subIndex;
-			int subCount = [cellsArray count];
-			for(subIndex = 0; subIndex < subCount; subIndex++)
-			{
-				id cellObject = [cellsArray objectAtIndex:subIndex];
-				if( cellObject != NULL )
-				{
-					bool setTarget = true;
-					if( [cellObject respondsToSelector:@selector(target)] )
-						if( [cellObject target] != NULL )//don't override targets preset in IB
-							setTarget = false;
-					
-					if(setTarget)
-					{
-						if( [cellObject respondsToSelector:@selector(setTarget:)] )
-						{
-							[cellObject setTarget:self];
-							if( [cellObject respondsToSelector:@selector(setAction:)] ) //only if target is ourselves we can set action
-								[cellObject setAction:@selector(handleAction:)];
-						}
-					}
-					
-				}
-			}
-		}
-	}	
-	
+
 	if( [inView isKindOfClass:[NSTableView class]] )
 	{
 		NSTableView *myTable = (NSTableView *)inView;
@@ -414,36 +381,6 @@ FindArgumentType(const char *argTypeStr)
 - (void) resetSubview:(NSView *)inView
 {
 	//reset self - remove self as target and action handler for all controls
-
-	// NSMatrix is deprecated since Mac OS 10.8. Min backwards compat support
-	if([inView isKindOfClass:[NSMatrix class]])
-	{
-		NSArray *cellsArray = [(NSMatrix*)inView cells];
-		if(cellsArray != NULL)
-		{
-			int subIndex;
-			int subCount = [cellsArray count];
-			for(subIndex = 0; subIndex < subCount; subIndex++)
-			{
-				id cellObject = [cellsArray objectAtIndex:subIndex];
-				if( cellObject != NULL )
-				{
-					bool resetTarget = false;
-					if( [cellObject respondsToSelector:@selector(target)] )
-						if( [cellObject target] == self )//don't reset other targets
-							resetTarget = true;
-
-					if( resetTarget && [cellObject respondsToSelector:@selector(setTarget:)] )
-					{
-						[cellObject setTarget:NULL];
-						if( [cellObject respondsToSelector:@selector(setAction:)] ) //only if target is ourselves we can set action
-							[cellObject setAction:NULL];
-					}
-				}
-			}
-		}
-	}
-	
 	if( [inView isKindOfClass:[NSTableView class]] )
 	{
 		NSTableView *myTable = (NSTableView *)inView;
@@ -557,34 +494,6 @@ FindArgumentType(const char *argTypeStr)
 							return resultView;
 					}
 				}
-			}
-		}
-	}
-	// NSMatrix is deprecated since Mac OS 10.8. Min backwards compat support
-	else if([inParentView isKindOfClass:[NSMatrix class]])
-	{
-		NSArray *cellsArray = [(NSMatrix*)inParentView cells];
-		if(cellsArray != nil)
-		{
-			int subIndex;
-			int subCount = [cellsArray count];
-			for(subIndex = 0; subIndex < subCount; subIndex++)
-			{
-				id cellObject = [cellsArray objectAtIndex:subIndex];
-				if( (cellObject != nil) && [cellObject respondsToSelector:@selector(tag)] )
-				{
-                    tagNum = [cellObject tag];
-                    controlID = [NSString stringWithFormat:@"%ld", (long)tagNum];
-					if( controlID != nil && [controlID isEqualToString:inControlID] )
-						return cellObject;
-				}
-                
-                if( (cellObject != nil) && [cellObject respondsToSelector:@selector(identifier)] )
-                {
-                    controlID = [cellObject identifier];
-                    if( controlID != nil && [controlID isEqualToString:inControlID] )
-                        return cellObject;
-                }
 			}
 		}
 	}
@@ -705,42 +614,6 @@ FindArgumentType(const char *argTypeStr)
 					if( (viewObject != nil) && [viewObject isKindOfClass:[NSView class]] )
 					{
 						[self allControlValues:ioControlValues andProperties:ioCustomProperties inView:(NSView *)viewObject withIterator:inSelIterator];
-					}
-				}
-			}
-		}
-	}
-	// NSMatrix is deprecated since Mac OS 10.8. Min backwards compat support
-	else if([inView isKindOfClass:[NSMatrix class]])
-	{
-		NSArray *cellsArray = [(NSMatrix*)inView cells];
-		if(cellsArray != nil)
-		{
-			int subIndex;
-			int subCount = [cellsArray count];
-			for(subIndex = 0; subIndex < subCount; subIndex++)
-			{
-				controlID = nil;
-				id cellObject = [cellsArray objectAtIndex:subIndex];
-				if( (cellObject != nil) && [cellObject respondsToSelector:@selector(tag)] )
-				{
-                    NSInteger tagNum = [cellObject tag];
-                    if(tagNum != 0)
-	                    controlID = [NSString stringWithFormat:@"%ld", (long)tagNum];
-				}
-				
-                if( (controlID == nil) && (cellObject != nil) && [cellObject respondsToSelector:@selector(identifier)] )
-                    controlID = [cellObject identifier];
-				
-				if( (controlID != nil) && ([controlID length] > 0) && ![controlID isEqualToString:@"0"] )
-				{
-					id controlValue = [self controlValue:cellObject forPart:0 withIterator:inSelIterator];
-					if(controlValue != nil)
-					{
-						[self storeValue:controlValue forControlID:controlID forColumn:0 inControlValues:ioControlValues];
-						CFObj<CFDictionaryRef> customProperties([self copyControlProperties:inView]);
-						if(customProperties != NULL)
-							[ioCustomProperties setValue:(id)(CFDictionaryRef)customProperties forKey:controlID];
 					}
 				}
 			}
