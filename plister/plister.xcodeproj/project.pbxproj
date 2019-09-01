@@ -185,7 +185,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = E2269B7A0EB6DB820029CCF5 /* AbracodeCommon.xcconfig */;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
 				COPY_PHASE_STRIP = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"_DEBUG_=1",
@@ -207,7 +206,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = E2269B7A0EB6DB820029CCF5 /* AbracodeCommon.xcconfig */;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
 				DEAD_CODE_STRIPPING = YES;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"_DEBUG_=0",

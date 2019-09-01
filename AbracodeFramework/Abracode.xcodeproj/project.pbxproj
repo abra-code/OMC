@@ -1115,7 +1115,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = E2269C1B0EB6DCF30029CCF5 /* AbracodeCommon.xcconfig */;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
 				DEAD_CODE_STRIPPING = NO;
 				EXPORTED_SYMBOLS_FILE = AbracodeFramework.exp;
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -1135,7 +1134,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = E2269C1B0EB6DCF30029CCF5 /* AbracodeCommon.xcconfig */;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
 				DEAD_CODE_STRIPPING = YES;
 				EXPORTED_SYMBOLS_FILE = AbracodeFramework.exp;
 				GCC_PREPROCESSOR_DEFINITIONS = (

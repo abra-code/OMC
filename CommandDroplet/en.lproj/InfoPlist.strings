@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleGetInfoString</key>
-	<string>CommandDroplet version 3.2, Copyright Abracode. All rights reserved.</string>
+	<string>CommandDroplet version 4.0</string>
 	<key>CFBundleName</key>
 	<string>CommandDroplet</string>
 	<key>NSHumanReadableCopyright</key>

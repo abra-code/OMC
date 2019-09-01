@@ -272,7 +272,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = E2269B9D0EB6DBF90029CCF5 /* AbracodeCommon.xcconfig */;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
@@ -313,7 +312,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = E2269B9D0EB6DBF90029CCF5 /* AbracodeCommon.xcconfig */;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
