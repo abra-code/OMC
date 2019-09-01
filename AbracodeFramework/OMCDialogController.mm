@@ -462,8 +462,11 @@ FindArgumentType(const char *argTypeStr)
     if(inControlID == nil)
         return nil;
 
+	NSString *controlID = nil;
     NSInteger tagNum = [inParentView tag];
-    NSString *controlID = [NSString stringWithFormat:@"%ld", (long)tagNum];
+    if(tagNum > 0)
+    	controlID = [NSString stringWithFormat:@"%ld", (long)tagNum];
+	
 	if( controlID != nil && [controlID isEqualToString:inControlID] )
 		return inParentView;
 
@@ -587,11 +590,28 @@ FindArgumentType(const char *argTypeStr)
 	//in general a view with subviews should not have a value but we check all non-empty, non-zero IDs
 	NSString *controlID = nil;
 	NSInteger tagNum = [inView tag];
-	if(tagNum != 0)
+	if(tagNum > 0)
 		controlID = [NSString stringWithFormat:@"%ld", (long)tagNum];
 
+	static NSCharacterSet *nonAlphanumericCharacterSet = [[[NSCharacterSet alphanumericCharacterSet] invertedSet] retain];
+
 	if((controlID == nil) && [inView respondsToSelector:@selector(identifier)])
+	{
 		controlID = [inView identifier];
+		
+		// AppKit adds unique identifiers to controls which have no id assigned in the nib
+		// We see IDs like _NS:36 here
+		// Apple header says slash '/', backslash '\', and colon ':' characters are reserved
+		// so when we encounter them, we can skip the control as not interesting
+		// but in general for OMC we declare that a presence of any non-alphanumeric character invalidates the ID
+		if(controlID != nil)
+		{
+			NSRange illegalCharRange = [controlID rangeOfCharacterFromSet:nonAlphanumericCharacterSet];
+			//Returns a range of {NSNotFound, 0} if none of the characters in aSet are found.
+			if(illegalCharRange.location != NSNotFound)
+				controlID = nil; //something found, ID not valid
+		}
+	}
 
 	if((controlID != nil) && ([controlID length] > 0) && ![controlID isEqualToString:@"0"])
 	{

@@ -4157,11 +4157,12 @@ OnMyCommandCM::PopulateEnvironList(CFMutableDictionaryRef ioEnvironList,
 	CFStringRef inInputStr = mInputText;
 
 	CFIndex itemCount = ::CFDictionaryGetCount(ioEnvironList);
-	if(itemCount == 0)
-		return;
+	std::vector<void *> keyList(itemCount);//OK to create empty container if itemCount == 0
+	if(itemCount > 0)
+	{
+		CFDictionaryGetKeysAndValues(ioEnvironList, (const void **)keyList.data(), NULL);
+	}
 
-	std::vector<void *> keyList(itemCount);
-	::CFDictionaryGetKeysAndValues(ioEnvironList, (const void **)keyList.data(), NULL);
 	for(CFIndex i = 0; i < itemCount; i++)
 	{
 		CFStringRef newStrRef = NULL;
@@ -4414,8 +4415,11 @@ OnMyCommandCM::PopulateEnvironList(CFMutableDictionaryRef ioEnvironList,
 			}
 			break;
 
-			case NIB_DLG_CONTROL_VALUE: //always exported
-			case NIB_TABLE_VALUE:
+			//regular control values are always exported with AddEnvironmentVariablesForAllControls below
+			//case NIB_DLG_CONTROL_VALUE:
+			//case NIB_TABLE_VALUE:
+			
+			//special on-demand value, which is costly to obtain
 			case NIB_TABLE_ALL_ROWS:
 			{
 				newStrRef = CreateNibControlValue(specialWordID, currCommand, theKey, kEscapeNone, true);
@@ -4455,6 +4459,8 @@ OnMyCommandCM::PopulateEnvironList(CFMutableDictionaryRef ioEnvironList,
 			::CFDictionarySetValue(ioEnvironList, theKey, newStrRef);
 		}
 	}
+	
+	AddEnvironmentVariablesForAllControls(ioEnvironList, currCommand);
 }
 
 
@@ -5087,14 +5093,14 @@ OnMyCommandCM::GetDialogControlValues(CommandDescription &currCommand, OMCDialog
 	//regular controls do not have columns and the use 0 for column number to store their values
 	//column index 0 is a meta value for table and means: get array of all column values
 	//this way a regular method of querying controls works with table too: produces a selected row strings
-	if(mNibControlValues == NULL)
+	if(mNibControlValues == nullptr)
 		mNibControlValues.Adopt(CFDictionaryCreateMutable(kCFAllocatorDefault,
 															0,
 															&kCFTypeDictionaryKeyCallBacks,
 															&kCFTypeDictionaryValueCallBacks),
 														kCFObjDontRetain);
 
-	if(mNibControlCustomProperties == NULL)
+	if(mNibControlCustomProperties == nullptr)
 		mNibControlCustomProperties.Adopt(CFDictionaryCreateMutable(kCFAllocatorDefault,
 																		0,
 																		&kCFTypeDictionaryKeyCallBacks,
@@ -5135,12 +5141,12 @@ OnMyCommandCM::GetDialogControlValues(CommandDescription &currCommand, OMCDialog
 			CFObj<CFTypeRef> oneValue( inDialog.CopyControlValue(controlID, columnIndex, selIterator, &customProperties) );
 			SelectionIterator_Release(selIterator);
 
-			if(oneValue != NULL)
+			if(oneValue != nullptr)
 			{
 				StoreControlValue(mNibControlValues, controlID, oneValue, columnIndex);
 			
 				//custom escaping, prefix, suffix or separator
-				if(customProperties != NULL)
+				if(customProperties != nullptr)
 				{
 					::CFDictionarySetValue( mNibControlCustomProperties,
 											(const void *)controlID,
@@ -5151,6 +5157,121 @@ OnMyCommandCM::GetDialogControlValues(CommandDescription &currCommand, OMCDialog
 	}
 }
 
+static CFStringRef
+CreateControlValueString(CFTypeRef controlValue, CFDictionaryRef customProperties, UInt16 escSpecialCharsMode, bool isEnvStyle)
+{
+	CFStringRef newStrRef = nullptr;
+	if(controlValue == nullptr)
+		return nullptr;
+	
+	CFStringRef oneProperty = nullptr;
+	if( !isEnvStyle && (customProperties != nullptr) ) //in environment variables we don't put escapings
+	{
+		oneProperty = ACFType<CFStringRef>::DynamicCast( CFDictionaryGetValue(customProperties, (const void *)kCustomEscapeMethodKey) );
+		if(oneProperty != nullptr)
+			escSpecialCharsMode = GetEscapingMode(oneProperty);
+	}
+
+	//it can be string or array of strings
+	CFTypeID valType = ::CFGetTypeID( (CFTypeRef)controlValue );
+	if( valType == ACFType<CFStringRef>::sTypeID )//regular string
+	{
+		newStrRef = CreateEscapedStringCopy( (CFStringRef)(CFTypeRef)controlValue, escSpecialCharsMode);
+	}
+	else if( valType == ACFType<CFArrayRef>::sTypeID )
+	{
+		CFStringRef prefix = nullptr;
+		CFStringRef suffix = nullptr;
+		CFStringRef separator =  CFSTR("\t"); //separate with tab byy default
+
+		if(customProperties != nullptr)
+		{
+			oneProperty = ACFType<CFStringRef>::DynamicCast( CFDictionaryGetValue(customProperties, (const void *)kCustomPrefixKey) );
+			if(oneProperty != nullptr)
+				prefix = oneProperty;
+
+			oneProperty = ACFType<CFStringRef>::DynamicCast( CFDictionaryGetValue(customProperties, (const void *)kCustomSuffixKey) );
+			if(oneProperty != nullptr)
+				suffix = oneProperty;
+
+			oneProperty = ACFType<CFStringRef>::DynamicCast( CFDictionaryGetValue(customProperties, (const void *)kCustomSeparatorKey) );
+			if(oneProperty != nullptr)
+				separator = oneProperty;
+
+		}
+		newStrRef = CreateCombinedString( (CFArrayRef)(CFTypeRef)controlValue, separator, prefix, suffix, escSpecialCharsMode );
+	}
+
+	return newStrRef;
+}
+
+void
+OnMyCommandCM::AddEnvironmentVariablesForAllControls(CFMutableDictionaryRef ioEnvironList, const CommandDescription &currCommand)
+{
+	if(mNibControlValues == nullptr)
+		return;
+
+	CFIndex controlCount = CFDictionaryGetCount(mNibControlValues);
+	if(controlCount == 0)
+		return;
+
+	std::vector<CFTypeRef> keyList(controlCount);
+	std::vector<CFTypeRef> valueList(controlCount);
+
+	CFDictionaryGetKeysAndValues(mNibControlValues, (const void **)keyList.data(), (const void **)valueList.data());
+	for(CFIndex i = 0; i < controlCount; i++)
+	{
+		CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
+		CFDictionaryRef columnsDict = ACFType<CFDictionaryRef>::DynamicCast( valueList[i] );
+		if((controlID != nullptr) && (columnsDict != nullptr))
+		{
+			CFDictionaryRef controlProperties = (CFDictionaryRef)CFDictionaryGetValue(mNibControlCustomProperties, controlID);
+			CFIndex columnCount = CFDictionaryGetCount(columnsDict);
+			if(columnCount == 1)
+			{
+				//column dictionary keys are just integers, not CFStringRefs!
+				CFIndex columnIndex = 0;
+				CFTypeRef controlValue = CFDictionaryGetValue(columnsDict, (void *)columnIndex);
+				if(controlValue != nullptr)
+				{
+					CFObj<CFStringRef> controlValueString = CreateControlValueString(controlValue, controlProperties, kEscapeNone, true);
+					if(controlValueString != nullptr)
+					{
+						CFObj<CFStringRef> controlEnvName(CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("OMC_NIB_DIALOG_CONTROL_%@_VALUE"), controlID));
+						CFDictionarySetValue(ioEnvironList, controlEnvName, controlValueString);
+					}
+				}
+			}
+			else if(columnCount > 1)
+			{
+				std::vector<CFIndex> columnIDs(columnCount);
+				std::vector<CFTypeRef> columnValues(columnCount);
+				CFDictionaryGetKeysAndValues(columnsDict, (const void **)columnIDs.data(), (const void **)columnValues.data());
+				for(CFIndex k = 0; k < columnCount; k++)
+				{
+					CFIndex columnID = columnIDs[k];
+					CFTypeRef columnValue = columnValues[k];
+					if(columnValue != nullptr)
+					{
+						CFObj<CFStringRef> columnValueString = CreateControlValueString(columnValue, controlProperties, kEscapeNone, true);
+						if(columnValueString != nullptr)
+						{
+							CFObj<CFStringRef> columnEnvName(CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("OMC_NIB_TABLE_%@_COLUMN_%ld_VALUE"), controlID, columnID));
+							CFDictionarySetValue(ioEnvironList, columnEnvName, columnValueString);
+						}
+					}
+				}
+			}
+			else
+			{
+				continue;
+			}
+		}
+	}
+}
+
+
+
 //string or array of strings
 CFStringRef
 OnMyCommandCM::CreateNibControlValue(SInt32 inSpecialWordID, const CommandDescription &currCommand, CFStringRef inNibControlString, UInt16 escSpecialCharsMode, bool isEnvStyle)
@@ -5159,7 +5280,7 @@ OnMyCommandCM::CreateNibControlValue(SInt32 inSpecialWordID, const CommandDescri
 	CFIndex columnIndex = 0;//init to all columns
 	CFObj<CFStringRef> controlID;	
 
-	DEBUG_CFSTR(CFSTR("OnMyCommandCM::CreateNibControlValue"));
+	TRACE_CFSTR(CFSTR("OnMyCommandCM::CreateNibControlValue"));
 
 	if((mNibControlValues == nullptr) || (CFDictionaryGetCount(mNibControlValues) == 0))
 		return nullptr;
@@ -5177,7 +5298,7 @@ OnMyCommandCM::CreateNibControlValue(SInt32 inSpecialWordID, const CommandDescri
 
 	DEBUG_CFSTR((CFStringRef)controlID);
 
-	CFObj<CFDictionaryRef> customProperties; 
+	CFDictionaryRef customProperties = nullptr;
 
 	//we should have all the values already read from the dialog controls
 
@@ -5185,63 +5306,18 @@ OnMyCommandCM::CreateNibControlValue(SInt32 inSpecialWordID, const CommandDescri
 	CFDictionaryRef columnIds = ACFType<CFDictionaryRef>::DynamicCast(theItem);
 	if(columnIds != NULL)
 	{
+		//columnIDs dictionary keys are just integers, not strings
 		theItem = ::CFDictionaryGetValue(columnIds, (const void *)columnIndex);
-		oneValue.Adopt( (CFTypeRef)theItem, kCFObjRetain );
-		if( (oneValue != nullptr) && (mNibControlCustomProperties != nullptr) )
-		{
-			customProperties.Adopt(
-				ACFType<CFDictionaryRef>::DynamicCast(
-					CFDictionaryGetValue(mNibControlCustomProperties, (CFStringRef)controlID)),
-				kCFObjRetain );
-		}
+		oneValue.Adopt((CFTypeRef)theItem, kCFObjRetain);
+		if((oneValue != nullptr) && (mNibControlCustomProperties != nullptr))
+			customProperties = ACFType<CFDictionaryRef>::DynamicCast(CFDictionaryGetValue(mNibControlCustomProperties, (CFStringRef)controlID));
 	}
 
-	CFStringRef newStrRef = nullptr;
-	//it can be string or array of strings
-	if(oneValue != nullptr)
-	{
-		CFStringRef prefix = nullptr;
-		CFStringRef suffix = nullptr;
-		CFStringRef separator =  CFSTR("\t"); //try to separate with tab always //was: for shell-execution we separate just with space
+	CFStringRef controlValue = CreateControlValueString(oneValue, customProperties, escSpecialCharsMode, isEnvStyle);
 
-		CFStringRef oneProperty = nullptr;
-		if( !isEnvStyle && (customProperties != nullptr) ) //in environment variables we don't put escapings
-		{
-			oneProperty = ACFType<CFStringRef>::DynamicCast( CFDictionaryGetValue(customProperties, (const void *)kCustomEscapeMethodKey) );
-			if(oneProperty != nullptr)
-				escSpecialCharsMode = GetEscapingMode(oneProperty);			
-		}
+	TRACE_CSTR("\texiting CreateNibControlValue\n");
 
-		CFTypeID valType = ::CFGetTypeID( (CFTypeRef)oneValue );
-		if( valType == ACFType<CFStringRef>::sTypeID )//regular string
-		{
-			newStrRef = CreateEscapedStringCopy( (CFStringRef)(CFTypeRef)oneValue, escSpecialCharsMode);
-		}
-		else if( valType == ACFType<CFArrayRef>::sTypeID )
-		{
-			if(customProperties != nullptr)
-			{
-				oneProperty = ACFType<CFStringRef>::DynamicCast( CFDictionaryGetValue(customProperties, (const void *)kCustomPrefixKey) );
-				if(oneProperty != nullptr)
-					prefix = oneProperty;
-
-				oneProperty = ACFType<CFStringRef>::DynamicCast( CFDictionaryGetValue(customProperties, (const void *)kCustomSuffixKey) );
-				if(oneProperty != nullptr)
-					suffix = oneProperty;
-
-				oneProperty = ACFType<CFStringRef>::DynamicCast( CFDictionaryGetValue(customProperties, (const void *)kCustomSeparatorKey) );
-				if(oneProperty != nullptr)
-					separator = oneProperty;
-
-			}
-			newStrRef = CreateCombinedString( (CFArrayRef)(CFTypeRef)oneValue, separator, prefix, suffix, escSpecialCharsMode );
-		}
-
-	}
-
-	DEBUG_CSTR("\texiting CreateNibControlValue\n");
-
-	return newStrRef;
+	return controlValue;
 }
 
 

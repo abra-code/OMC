@@ -281,7 +281,8 @@ public:
 	SInt32				FindCommandIndex(CFArrayRef inName, CFStringRef inCommandID);
 	OSStatus			SortObjectListByName(CFOptionFlags compareOptions, bool sortAscending);
 	CFStringRef			CreateNibControlValue(SInt32 inSpecialWordID, const CommandDescription &currCommand, CFStringRef inNibControlString, UInt16 escSpecialCharsMode, bool isEnvStyle);
-//	CFStringRef			CreateNibTableValue(const CommandDescription &currCommand, CFStringRef inNibControlString, UInt16 escSpecialCharsMode);
+	void				AddEnvironmentVariablesForAllControls(CFMutableDictionaryRef ioEnvironList, const CommandDescription &currCommand);
+
 	CFMutableStringRef	CreateCombinedStringWithObjects(CFArrayRef inArray, CFStringRef inLocTableName, CFBundleRef inLocBundleRef);
 
 	CommandDescription & GetCurrentCommand()
