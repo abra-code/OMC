@@ -1071,7 +1071,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COPY_PHASE_STRIP = NO;
-				DSTROOT = /Library/Frameworks;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				FRAMEWORK_VERSION = A;
@@ -1080,8 +1079,6 @@
 				GCC_PREFIX_HEADER = Abracode_Prefix.pch;
 				GCC_PREPROCESSOR_DEFINITIONS = "_DEBUG_=1";
 				INFOPLIST_FILE = Info.plist;
-				INSTALL_GROUP = admin;
-				INSTALL_OWNER = root;
 				INSTALL_PATH = "@rpath";
 				PRODUCT_BUNDLE_IDENTIFIER = com.abracode.AbracodeFramework;
 				PRODUCT_NAME = Abracode;
@@ -1093,15 +1090,12 @@
 		1DEB91AF08733DA50010E9CD /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				DSTROOT = /Library/Frameworks;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				FRAMEWORK_VERSION = A;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = Abracode_Prefix.pch;
 				INFOPLIST_FILE = Info.plist;
-				INSTALL_GROUP = admin;
-				INSTALL_OWNER = root;
 				INSTALL_PATH = "@rpath";
 				PRODUCT_BUNDLE_IDENTIFIER = com.abracode.AbracodeFramework;
 				PRODUCT_NAME = Abracode;
@@ -1125,7 +1119,6 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				OTHER_CODE_SIGN_FLAGS = "--deep";
 				SYMROOT = ../build;
-				VALID_ARCHS = x86_64;
 			};
 			name = Debug;
 		};
@@ -1144,7 +1137,6 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				OTHER_CODE_SIGN_FLAGS = "--deep";
 				SYMROOT = ../build;
-				VALID_ARCHS = x86_64;
 			};
 			name = Release;
 		};

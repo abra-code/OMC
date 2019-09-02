@@ -202,6 +202,9 @@ void CocoaExecutorObserverCallback( OmcObserverMessage inMessage, CFIndex inTask
 			mObserver = NULL;
 		}
 		break;
+		
+		default:
+		break;
 	}
 
 	if(inMessage == kOmcObserverTaskProgress)//only task progress may carry some text from the execution
