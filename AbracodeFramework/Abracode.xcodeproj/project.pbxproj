@@ -256,7 +256,7 @@
 		E208BFF610943A9A00AAA55A /* German */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = German; path = German.lproj/input_combo.xib; sourceTree = "<group>"; };
 		E208BFF710943AB900AAA55A /* German */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = German; path = German.lproj/input_password.xib; sourceTree = "<group>"; };
 		E208BFF810943AC200AAA55A /* German */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = German; path = German.lproj/input_popup.xib; sourceTree = "<group>"; };
-		E20F1F68130BBE5100882872 /* alert */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = alert; path = ../build/Release/alert; sourceTree = SOURCE_ROOT; };
+		E20F1F68130BBE5100882872 /* alert */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = alert; sourceTree = "<group>"; };
 		E211D3C30D3F51010065C23A /* OMCCocoaNib.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCCocoaNib.h; sourceTree = SOURCE_ROOT; };
 		E211D3C40D3F51010065C23A /* OMCCocoaNib.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMCCocoaNib.m; sourceTree = SOURCE_ROOT; };
 		E211D4F30D4346BA0065C23A /* OMCDialogController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCDialogController.h; sourceTree = SOURCE_ROOT; };
@@ -355,8 +355,8 @@
 		E29ED2190D09FD8800C9D5E8 /* ARefCounted.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ARefCounted.cp; sourceTree = "<group>"; };
 		E29ED21B0D09FD8D00C9D5E8 /* ARefCounted.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ARefCounted.h; sourceTree = "<group>"; };
 		E2A29476105E02B500C732A3 /* OMCTableViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCTableViewController.h; sourceTree = "<group>"; };
-		E2A832550D147B4A00117643 /* b64 */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = b64; path = ../build/Release/b64; sourceTree = SOURCE_ROOT; };
-		E2A832560D147B4A00117643 /* plister */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = plister; path = ../build/Release/plister; sourceTree = SOURCE_ROOT; };
+		E2A832550D147B4A00117643 /* b64 */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = b64; sourceTree = "<group>"; };
+		E2A832560D147B4A00117643 /* plister */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = plister; sourceTree = "<group>"; };
 		E2ACB25712EADCB000A8ACF6 /* AbracodeFrameworkVersion.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = AbracodeFrameworkVersion.c; sourceTree = "<group>"; };
 		E2BB1E440E6F886200D2DDE5 /* OMCView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMCView.m; sourceTree = "<group>"; };
 		E2BB1E450E6F886200D2DDE5 /* OMCView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCView.h; sourceTree = "<group>"; };
@@ -368,7 +368,7 @@
 		E2C433430DEE72F600E976D2 /* PlistPreferences.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PlistPreferences.h; sourceTree = "<group>"; };
 		E2C433440DEE72F700E976D2 /* PlistPreferences.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PlistPreferences.cp; sourceTree = "<group>"; };
 		E2C433600DEE751300E976D2 /* OMCDropletController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCDropletController.mm; sourceTree = "<group>"; };
-		E2C7780F12FFDC4D00A7E6D2 /* filt */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = filt; path = ../build/Release/filt; sourceTree = SOURCE_ROOT; };
+		E2C7780F12FFDC4D00A7E6D2 /* filt */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = filt; sourceTree = "<group>"; };
 		E2C8485D10D61C33002DFDB5 /* OMCBox.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCBox.h; sourceTree = "<group>"; };
 		E2C8485E10D61C33002DFDB5 /* OMCBox.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMCBox.m; sourceTree = "<group>"; };
 		E2C84D710DA9AC090056DBC2 /* OMCCommandMenu.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCCommandMenu.h; sourceTree = "<group>"; };
@@ -549,8 +549,7 @@
 				E2A832560D147B4A00117643 /* plister */,
 			);
 			name = "Support Tools";
-			path = ../build/Release;
-			sourceTree = "<group>";
+			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		E2517C3C0D1BCC2700180C68 /* CocoaControls */ = {
 			isa = PBXGroup;
