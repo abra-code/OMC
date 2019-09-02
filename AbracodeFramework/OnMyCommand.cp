@@ -188,7 +188,8 @@ enum SpecialWordIDs
 	MY_BUNDLE_PATH, //new paths for droplets mostly
 	OMC_RESOURCES_PATH,
 	OMC_SUPPORT_PATH,
-	MY_HOST_BUNDLE_PATH, //MY_HOST_BUNDLE_PATH is preferred for droplets actually
+	APP_BUNDLE_PATH, //as of OMC 4.0 the preferred way to access applet bundle path - exported byy default
+	MY_HOST_BUNDLE_PATH, //deprecated but supported as of OMC 4.0 - not exported by default though
 	MY_EXTERNAL_BUNDLE_PATH, //points to EXTERNAL_BUNDLE_PATH defined in description. redundant but needed for portability
 	NIB_DLG_GUID,
 	NIB_DLG_CONTROL_VALUE,
@@ -242,7 +243,7 @@ static const SpecialWordAndID sSpecialWordAndIDList[] =
 
 	{ sizeof("__OMC_RESOURCES_PATH__")-1,					CFSTR("__OMC_RESOURCES_PATH__"), CFSTR("OMC_OMC_RESOURCES_PATH"),  OMC_RESOURCES_PATH, true },//framework path
 	{ sizeof("__OMC_SUPPORT_PATH__")-1,						CFSTR("__OMC_SUPPORT_PATH__"), CFSTR("OMC_OMC_SUPPORT_PATH"),  OMC_SUPPORT_PATH, true },//framework path
-	{ sizeof("__MY_HOST_BUNDLE_PATH__")-1,					CFSTR("__MY_HOST_BUNDLE_PATH__"), CFSTR("OMC_MY_HOST_BUNDLE_PATH"),  MY_HOST_BUNDLE_PATH, true },//preferred for droplets actually
+	{ sizeof("__APP_BUNDLE_PATH__")-1,						CFSTR("__APP_BUNDLE_PATH__"), CFSTR("OMC_APP_BUNDLE_PATH"),  APP_BUNDLE_PATH, true },//preferred for applets
 	{ sizeof("__MY_EXTERNAL_BUNDLE_PATH__")-1,				CFSTR("__MY_EXTERNAL_BUNDLE_PATH__"), CFSTR("OMC_MY_EXTERNAL_BUNDLE_PATH"),  MY_EXTERNAL_BUNDLE_PATH, false },//external bundle location
 	{ sizeof("__NIB_DLG_GUID__")-1,							CFSTR("__NIB_DLG_GUID__"), CFSTR("OMC_NIB_DLG_GUID"),  NIB_DLG_GUID, true },
 	{ sizeof("__CURRENT_COMMAND_GUID__")-1,					CFSTR("__CURRENT_COMMAND_GUID__"), CFSTR("OMC_CURRENT_COMMAND_GUID"),  CURRENT_COMMAND_GUID, true },
@@ -251,6 +252,7 @@ static const SpecialWordAndID sSpecialWordAndIDList[] =
 	{ sizeof("__FRONT_APPLICATION_NAME__")-1,				CFSTR("__FRONT_APPLICATION_NAME__"), CFSTR("OMC_FRONT_APPLICATION_NAME"),  FRONT_APPLICATION_NAME, false },
 	
 //deprecated synonyms, still supported but should not appear in OMCEdit choices
+	{ sizeof("__MY_HOST_BUNDLE_PATH__")-1,					CFSTR("__MY_HOST_BUNDLE_PATH__"), CFSTR("OMC_MY_HOST_BUNDLE_PATH"),  MY_HOST_BUNDLE_PATH, false },//deprecated as of OMC 4.0
 	{ sizeof("__INPUT_TEXT__")-1,							CFSTR("__INPUT_TEXT__"), CFSTR("OMC_INPUT_TEXT"),  DLG_INPUT_TEXT, false },
 	{ sizeof("__OBJ_PATH_NO_EXTENSION__")-1,				CFSTR("__OBJ_PATH_NO_EXTENSION__"), CFSTR("OMC_OBJ_PATH_NO_EXTENSION"),  OBJ_PATH_NO_EXTENSION, false },//not needed since = OBJ_PARENT_PATH + OBJ_NAME_NO_EXTENSION
 	{ sizeof("__PASSWORD__")-1,								CFSTR("__PASSWORD__"), CFSTR("OMC_PASSWORD"),  DLG_PASSWORD, false },
@@ -4059,6 +4061,7 @@ OnMyCommandCM::AppendTextToCommand(CFMutableStringRef inCommandRef, CFStringRef 
 			newStrRef = CreateEscapedStringCopy(mOmcSupportPath, escSpecialCharsMode);
 		break;
 	
+		case APP_BUNDLE_PATH:
 		case MY_HOST_BUNDLE_PATH:
 			newStrRef = CreateEscapedStringCopy(mMyHostBundlePath, escSpecialCharsMode);
 		break;
@@ -4371,7 +4374,8 @@ OnMyCommandCM::PopulateEnvironList(CFMutableDictionaryRef ioEnvironList,
 			}
 			break;
 
-			case MY_HOST_BUNDLE_PATH: //always exported
+			case APP_BUNDLE_PATH: //always exported
+			case MY_HOST_BUNDLE_PATH: //deprecated as of OMC 4.0
 				newStrRef = mMyHostBundlePath;
 				releaseNewString = false;
 			break;

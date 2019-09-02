@@ -35,7 +35,7 @@
 			<key>COMMAND</key>
 			<array>
 				<string>#echo "Droplet Preferences Init";
-bundleIdentifier=$("$OMC_OMC_SUPPORT_PATH/plister" get value "$OMC_MY_HOST_BUNDLE_PATH/Contents/Info.plist" /CFBundleIdentifier);
+bundleIdentifier=$("$OMC_OMC_SUPPORT_PATH/plister" get value "$OMC_APP_BUNDLE_PATH/Contents/Info.plist" /CFBundleIdentifier);
 
 prefsFile="/Users/$USER/Library/Preferences/$bundleIdentifier.plist";
 showNav=$("$OMC_OMC_SUPPORT_PATH/plister" get value "$prefsFile" /SHOW_NAV_DIALOG_ON_STARTUP);
@@ -92,7 +92,7 @@ fi
 			<string>act_always</string>
 			<key>COMMAND</key>
 			<array>
-				<string>bundleIdentifier=$("$OMC_OMC_SUPPORT_PATH/plister" get value "$OMC_MY_HOST_BUNDLE_PATH/Contents/Info.plist" /CFBundleIdentifier);
+				<string>bundleIdentifier=$("$OMC_OMC_SUPPORT_PATH/plister" get value "$OMC_APP_BUNDLE_PATH/Contents/Info.plist" /CFBundleIdentifier);
 
 /usr/bin/defaults write "$bundleIdentifier" SHOW_NAV_DIALOG_ON_STARTUP -bool "$OMC_NIB_DIALOG_CONTROL_1_VALUE"
 
@@ -117,7 +117,7 @@ fi
 			<string>act_always</string>
 			<key>COMMAND</key>
 			<array>
-				<string>bundleIdentifier=$("$OMC_OMC_SUPPORT_PATH/plister" get value "$OMC_MY_HOST_BUNDLE_PATH/Contents/Info.plist" /CFBundleIdentifier);
+				<string>bundleIdentifier=$("$OMC_OMC_SUPPORT_PATH/plister" get value "$OMC_APP_BUNDLE_PATH/Contents/Info.plist" /CFBundleIdentifier);
 
 /usr/bin/defaults write "$bundleIdentifier" QUIT_AFTER_DROP_EXECUTION -bool "$OMC_NIB_DIALOG_CONTROL_2_VALUE"
 
@@ -143,7 +143,7 @@ fi
 			<string>act_always</string>
 			<key>COMMAND</key>
 			<array>
-				<string>bundleIdentifier=$("$OMC_OMC_SUPPORT_PATH/plister" get value "$OMC_MY_HOST_BUNDLE_PATH/Contents/Info.plist" /CFBundleIdentifier);
+				<string>bundleIdentifier=$("$OMC_OMC_SUPPORT_PATH/plister" get value "$OMC_APP_BUNDLE_PATH/Contents/Info.plist" /CFBundleIdentifier);
 
 /usr/bin/defaults write "$bundleIdentifier" RUN_COMMAND_ON_REOPEN_EVENT -bool "$OMC_NIB_DIALOG_CONTROL_3_VALUE"
 

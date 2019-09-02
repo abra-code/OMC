@@ -366,7 +366,7 @@ exit 1
 			<key>COMMAND</key>
 			<array>
 				<string>echo "Executing dialog init subcommand";
-"$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$OMC_NIB_DLG_GUID" 1 "$OMC_MY_HOST_BUNDLE_PATH/Contents/Resources/QCDialog.qtz";
+"$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$OMC_NIB_DLG_GUID" 1 "$OMC_APP_BUNDLE_PATH/Contents/Resources/QCDialog.qtz";
 </string>
 			</array>
 			<key>COMMAND_ID</key>
@@ -454,7 +454,7 @@ exit 1
 			<key>COMMAND</key>
 			<array>
 				<string>echo "Executing dialog init subcommand";
-"$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$OMC_NIB_DLG_GUID" 3  "$OMC_MY_HOST_BUNDLE_PATH/Contents/Resources/sunflower.jpg";
+"$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$OMC_NIB_DLG_GUID" 3  "$OMC_APP_BUNDLE_PATH/Contents/Resources/sunflower.jpg";
 </string>
 			</array>
 			<key>COMMAND_ID</key>
@@ -565,7 +565,7 @@ exit 1
 			<key>COMMAND</key>
 			<array>
 				<string>
-"$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$OMC_NIB_DLG_GUID" 1 "$OMC_MY_HOST_BUNDLE_PATH/Contents/Resources/Introduction.qtz";
+"$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$OMC_NIB_DLG_GUID" 1 "$OMC_APP_BUNDLE_PATH/Contents/Resources/Introduction.qtz";
 </string>
 			</array>
 			<key>COMMAND_ID</key>
