@@ -56,6 +56,57 @@
 	_omcTargetSelector = aSelector;
 }
 
+//legacy encoder/decoder support - custom control data no longer serialized into nibs
+//custom properties get set later on nib load by calling proprty setters
+
+- (id)initWithCoder:(NSCoder *)coder
+{
+    self = [super initWithCoder:coder];
+	if(self == NULL)
+		return NULL;
+
+    if( ![coder allowsKeyedCoding] )
+		[NSException raise:NSInvalidArgumentException format:@"Unexpected coder not supporting keyed decoding"];
+
+	_omcTag = [coder decodeIntForKey:@"omcTag"];
+	escapingMode = [[coder decodeObjectForKey:@"omcEscapingMode"] retain];
+	if(escapingMode == NULL)
+	{
+		escapingMode = @"esc_none";//use default if key not present
+		[escapingMode retain];
+	}
+
+	compositionPath = NULL;
+	_omcTarget = NULL;
+	_omcTargetSelector = NULL;
+
+/*
+	BOOL isOK = [self loadCompositionFromFile:@"/Users/tom/Desktop/Introduction.qtz"];
+	if(!isOK)
+		NSLog(@"OMCQCView failed to load composition at \"/Users/tom/Desktop/Introduction.qtz\"");
+*/
+
+    return self;
+}
+
+- (void)encodeWithCoder:(NSCoder *)coder
+{
+    [super encodeWithCoder:coder];
+
+    if ( ![coder allowsKeyedCoding] )
+		[NSException raise:NSInvalidArgumentException format:@"Unexpected coder not supporting keyed encoding"];
+
+	[coder encodeInt:_omcTag forKey:@"omcTag"];
+
+	if(escapingMode == NULL)
+	{
+		escapingMode = @"esc_none";
+		[escapingMode retain];
+	}
+	
+	[coder encodeObject:escapingMode forKey:@"omcEscapingMode"];
+}
+
 - (NSString *)stringValue
 {
 	return compositionPath;

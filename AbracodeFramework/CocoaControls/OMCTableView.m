@@ -64,4 +64,70 @@
 	[super setStringValue:aString];
 }
 
+//legacy encoder/decoder support - custom control data no longer serialized into nibs
+//custom properties get set later on nib load by calling proprty setters
+
+- (id)initWithCoder:(NSCoder *)coder
+{
+    self = [super initWithCoder:coder];
+	if(self == NULL)
+		return NULL;
+
+    if( ![coder allowsKeyedCoding] )
+		[NSException raise:NSInvalidArgumentException format:@"Unexpected coder not supporting keyed decoding"];
+
+	[self setSelectionCommandID: [coder decodeObjectForKey:@"omcSelectionCommandID"]];
+	[self setDoubleClickCommandID: [coder decodeObjectForKey:@"omcDoubleClickCommandID"]];
+	[self setCombinedSelectionPrefix: [coder decodeObjectForKey:@"omcCombinedSelectionPrefix"]]; 
+	[self setCombinedSelectionSuffix: [coder decodeObjectForKey:@"omcCombinedSelectionSuffix"]];
+	[self setCombinedSelectionSeparator: [coder decodeObjectForKey:@"omcCombinedSelectionSeparator"]];
+	[self setMultipleColumnPrefix: [coder decodeObjectForKey:@"omcMultipleColumnPrefix"]];
+	[self setMultipleColumnSuffix: [coder decodeObjectForKey:@"omcMultipleColumnSuffix"]];
+	[self setMultipleColumnSeparator: [coder decodeObjectForKey:@"omcMultipleColumnSeparator"]];
+
+	NSString *newEscapingMode = [coder decodeObjectForKey:@"omcEscapingMode"];
+	if(newEscapingMode == NULL)
+		newEscapingMode = @"esc_none";//use default if key not present
+	[self setEscapingMode:newEscapingMode];
+
+    return self;
+}
+
+- (void)encodeWithCoder:(NSCoder *)coder
+{
+    [super encodeWithCoder:coder];
+
+    if( ![coder allowsKeyedCoding] )
+		[NSException raise:NSInvalidArgumentException format:@"Unexpected coder not supporting keyed encoding"];
+
+	if(selectionCommandID != NULL)
+		[coder encodeObject:selectionCommandID forKey:@"omcSelectionCommandID"];
+
+	if(doubleClickCommandID != NULL)
+		[coder encodeObject:doubleClickCommandID forKey:@"omcDoubleClickCommandID"];
+
+	if(combinedSelectionPrefix != NULL)
+		[coder encodeObject:combinedSelectionPrefix forKey:@"omcCombinedSelectionPrefix"];
+
+	if(combinedSelectionSuffix != NULL)
+		[coder encodeObject:combinedSelectionSuffix forKey:@"omcCombinedSelectionSuffix"];
+
+	if(combinedSelectionSeparator != NULL)
+		[coder encodeObject:combinedSelectionSeparator forKey:@"omcCombinedSelectionSeparator"];
+
+	if(multipleColumnPrefix != NULL)
+		[coder encodeObject:multipleColumnPrefix forKey:@"omcMultipleColumnPrefix"];
+
+	if(multipleColumnSuffix != NULL)
+		[coder encodeObject:multipleColumnSuffix forKey:@"omcMultipleColumnSuffix"];
+
+	if(multipleColumnSeparator != NULL)
+		[coder encodeObject:multipleColumnSeparator forKey:@"omcMultipleColumnSeparator"];
+
+	if(escapingMode == NULL)
+		[self setEscapingMode:@"esc_none"];
+	
+	[coder encodeObject:escapingMode forKey:@"omcEscapingMode"];
+}
+
 @end
