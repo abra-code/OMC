@@ -811,7 +811,8 @@
 				8DC2EF540486A6940098B216 /* Sources */,
 				8DC2EF560486A6940098B216 /* Frameworks */,
 				E234FAA20D0FD0FE001A7780 /* Copy Support Executables */,
-				E2A8326F0D147C7300117643 /* Create Links */,
+				E2A8326F0D147C7300117643 /* Create Support symlink */,
+				1DA31836231D075B00AA5385 /* Create symlink in Frameworks */,
 			);
 			buildRules = (
 			);
@@ -886,14 +887,33 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		E2A8326F0D147C7300117643 /* Create Links */ = {
+		1DA31836231D075B00AA5385 /* Create symlink in Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 12;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Create symlink in Frameworks";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "/bin/mkdir -p \"$BUILT_PRODUCTS_DIR/Frameworks\"\ncd \"$BUILT_PRODUCTS_DIR/Frameworks\"\n/bin/ln -f -s ../Abracode.framework .\n";
+			showEnvVarsInLog = 0;
+		};
+		E2A8326F0D147C7300117643 /* Create Support symlink */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
 			);
-			name = "Create Links";
+			name = "Create Support symlink";
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;

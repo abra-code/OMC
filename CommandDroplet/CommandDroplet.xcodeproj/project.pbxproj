@@ -246,11 +246,8 @@
 				INFOPLIST_FILE = Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"@loader_path/../Frameworks",
+					"@loader_path/../../../Frameworks",
 					/Library/Frameworks,
-				);
-				OTHER_LDFLAGS = (
-					"-weak_framework",
-					Abracode,
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.abracode.CommandDroplet;
 				PRODUCT_NAME = CommandDroplet;
@@ -266,11 +263,8 @@
 				INFOPLIST_FILE = Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"@loader_path/../Frameworks",
+					"@loader_path/../../../Frameworks",
 					/Library/Frameworks,
-				);
-				OTHER_LDFLAGS = (
-					"-weak_framework",
-					Abracode,
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.abracode.CommandDroplet;
 				PRODUCT_NAME = CommandDroplet;
