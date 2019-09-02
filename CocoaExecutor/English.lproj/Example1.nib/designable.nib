@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="14490.70" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="14865.1" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
-        <deployment version="101300" identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="14490.70"/>
+        <deployment identifier="macosx"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="14865.1"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -13,12 +13,12 @@
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="196" y="171" width="419" height="441"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="1440" height="878"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="1680" height="1027"/>
             <view key="contentView" id="4">
                 <rect key="frame" x="0.0" y="0.0" width="419" height="441"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
-                    <button verticalHuggingPriority="750" id="42" customClass="OMCButton">
+                    <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="42" customClass="OMCButton">
                         <rect key="frame" x="307" y="13" width="98" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <buttonCell key="cell" type="push" title="OK" bezelStyle="rounded" alignment="center" borderStyle="border" inset="2" id="43">
@@ -33,7 +33,7 @@ DQ
                             <userDefinedRuntimeAttribute type="string" keyPath="commandID" value="omc.dialog.ok"/>
                         </userDefinedRuntimeAttributes>
                     </button>
-                    <button verticalHuggingPriority="750" id="44" customClass="OMCButton">
+                    <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="44" customClass="OMCButton">
                         <rect key="frame" x="209" y="13" width="98" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <buttonCell key="cell" type="push" title="Cancel" bezelStyle="rounded" alignment="center" borderStyle="border" inset="2" id="45">
@@ -48,16 +48,20 @@ Gw
                             <userDefinedRuntimeAttribute type="string" keyPath="commandID" value="omc.dialog.cancel"/>
                         </userDefinedRuntimeAttributes>
                     </button>
-                    <comboBox verticalHuggingPriority="750" tag="201" id="53">
+                    <comboBox verticalHuggingPriority="750" fixedFrame="YES" tag="201" translatesAutoresizingMaskIntoConstraints="NO" id="53">
                         <rect key="frame" x="20" y="202" width="137" height="26"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <comboBoxCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" borderStyle="bezel" drawsBackground="YES" completes="NO" numberOfVisibleItems="5" id="71">
                             <font key="font" metaFont="system"/>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                            <objectValues>
+                                <string>One</string>
+                                <string>Two</string>
+                            </objectValues>
                         </comboBoxCell>
                     </comboBox>
-                    <textField verticalHuggingPriority="750" tag="200" id="54">
+                    <textField verticalHuggingPriority="750" fixedFrame="YES" tag="200" translatesAutoresizingMaskIntoConstraints="NO" id="54">
                         <rect key="frame" x="20" y="240" width="134" height="22"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="70">
@@ -66,7 +70,7 @@ Gw
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <popUpButton verticalHuggingPriority="750" tag="222" id="55">
+                    <popUpButton verticalHuggingPriority="750" fixedFrame="YES" tag="222" translatesAutoresizingMaskIntoConstraints="NO" id="55">
                         <rect key="frame" x="17" y="278" width="140" height="26"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <popUpButtonCell key="cell" type="push" title="Item 3" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" inset="2" selectedItem="67" id="65">
@@ -81,7 +85,7 @@ Gw
                             </menu>
                         </popUpButtonCell>
                     </popUpButton>
-                    <popUpButton verticalHuggingPriority="750" tag="202" id="56" customClass="OMCPopUpButton">
+                    <popUpButton verticalHuggingPriority="750" fixedFrame="YES" tag="202" translatesAutoresizingMaskIntoConstraints="NO" id="56" customClass="OMCPopUpButton">
                         <rect key="frame" x="17" y="314" width="140" height="26"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <popUpButtonCell key="cell" type="push" title="Item 3" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" inset="2" selectedItem="62" id="60">
@@ -110,7 +114,7 @@ Gw
                             </menu>
                         </popUpButtonCell>
                     </popUpButton>
-                    <datePicker verticalHuggingPriority="750" tag="223" id="57">
+                    <datePicker verticalHuggingPriority="750" fixedFrame="YES" tag="223" translatesAutoresizingMaskIntoConstraints="NO" id="57">
                         <rect key="frame" x="19" y="167" width="190" height="27"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <datePickerCell key="cell" borderStyle="bezel" alignment="left" id="58">
@@ -124,14 +128,14 @@ Gw
                             <datePickerElements key="datePickerElements" year="YES" month="YES" day="YES" hour="YES" minute="YES" second="YES"/>
                         </datePickerCell>
                     </datePicker>
-                    <scrollView horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" id="72">
+                    <scrollView fixedFrame="YES" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="72">
                         <rect key="frame" x="215" y="318" width="180" height="103"/>
                         <autoresizingMask key="autoresizingMask"/>
-                        <clipView key="contentView" drawsBackground="NO" id="c1Z-9e-2yD">
+                        <clipView key="contentView" ambiguous="YES" drawsBackground="NO" id="c1Z-9e-2yD">
                             <rect key="frame" x="1" y="1" width="163" height="101"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <subviews>
-                                <textView importsGraphics="NO" verticallyResizable="YES" usesFontPanel="YES" findStyle="panel" continuousSpellChecking="YES" usesRuler="YES" spellingCorrection="YES" smartInsertDelete="YES" id="81" customClass="OMCTextView">
+                                <textView ambiguous="YES" importsGraphics="NO" verticallyResizable="YES" usesFontPanel="YES" findStyle="panel" continuousSpellChecking="YES" usesRuler="YES" spellingCorrection="YES" smartInsertDelete="YES" id="81" customClass="OMCTextView">
                                     <rect key="frame" x="0.0" y="0.0" width="163" height="101"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
@@ -265,57 +269,54 @@ Gw
                             <autoresizingMask key="autoresizingMask"/>
                         </scroller>
                     </scrollView>
-                    <imageView tag="122" id="73" customClass="OMCImageView">
+                    <imageView fixedFrame="YES" tag="122" translatesAutoresizingMaskIntoConstraints="NO" id="73" customClass="OMCImageView">
                         <rect key="frame" x="212" y="164" width="186" height="143"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" imageFrameStyle="grayBezel" image="sunflower" id="80"/>
                         <userDefinedRuntimeAttributes>
                             <userDefinedRuntimeAttribute type="string" keyPath="escapingMode" value="esc_none"/>
-                            <userDefinedRuntimeAttribute type="string" keyPath="commandID" value="omc.dialog.ok"/>
                         </userDefinedRuntimeAttributes>
                     </imageView>
-                    <button tag="121" id="74">
-                        <rect key="frame" x="18" y="360" width="63" height="18"/>
+                    <button fixedFrame="YES" tag="121" translatesAutoresizingMaskIntoConstraints="NO" id="74">
+                        <rect key="frame" x="18" y="360" width="116" height="18"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <buttonCell key="cell" type="check" title="Check" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="79">
+                        <buttonCell key="cell" type="check" title="Plain Checkbox" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="79">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="system"/>
                         </buttonCell>
                     </button>
-                    <button tag="101" id="75" customClass="OMCButton">
-                        <rect key="frame" x="18" y="400" width="158" height="18"/>
+                    <button fixedFrame="YES" tag="101" translatesAutoresizingMaskIntoConstraints="NO" id="75" customClass="OMCButton">
+                        <rect key="frame" x="18" y="400" width="176" height="18"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <buttonCell key="cell" type="check" title="OMC Check with map" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="78">
+                        <buttonCell key="cell" type="check" title="OMC Checkbox with map" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="78">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="system"/>
                         </buttonCell>
                         <userDefinedRuntimeAttributes>
                             <userDefinedRuntimeAttribute type="string" keyPath="mappedOnValue" value="ON"/>
-                            <userDefinedRuntimeAttribute type="string" keyPath="mappedOffValue" value=""/>
+                            <userDefinedRuntimeAttribute type="string" keyPath="mappedOffValue" value="OFF"/>
                             <userDefinedRuntimeAttribute type="string" keyPath="escapingMode" value="esc_none"/>
-                            <userDefinedRuntimeAttribute type="string" keyPath="commandID" value="CheckWithMap"/>
                         </userDefinedRuntimeAttributes>
                     </button>
-                    <button tag="102" id="76" customClass="OMCButton">
-                        <rect key="frame" x="18" y="380" width="158" height="18"/>
+                    <button fixedFrame="YES" tag="102" translatesAutoresizingMaskIntoConstraints="NO" id="76" customClass="OMCButton">
+                        <rect key="frame" x="18" y="380" width="165" height="18"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                        <buttonCell key="cell" type="check" title="OMC Check no map" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="77">
+                        <buttonCell key="cell" type="check" title="OMC Checkbox no map" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="77">
                             <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                             <font key="font" metaFont="system"/>
                         </buttonCell>
                         <userDefinedRuntimeAttributes>
                             <userDefinedRuntimeAttribute type="string" keyPath="escapingMode" value="esc_none"/>
-                            <userDefinedRuntimeAttribute type="string" keyPath="commandID" value="CheckNoMap"/>
                         </userDefinedRuntimeAttributes>
                     </button>
-                    <box borderType="line" title="Box disabled in init code" id="NET-oe-rNq" customClass="OMCBox">
+                    <box fixedFrame="YES" borderType="line" title="Box disabled in init code" translatesAutoresizingMaskIntoConstraints="NO" id="NET-oe-rNq" customClass="OMCBox">
                         <rect key="frame" x="16" y="50" width="193" height="109"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <view key="contentView" id="9GX-v6-MRj">
                             <rect key="frame" x="3" y="3" width="187" height="91"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <subviews>
-                                <button id="aF2-cV-h2O">
+                                <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="aF2-cV-h2O">
                                     <rect key="frame" x="11" y="55" width="131" height="18"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                     <buttonCell key="cell" type="check" title="Regular checkbox" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="kgz-On-3bX">

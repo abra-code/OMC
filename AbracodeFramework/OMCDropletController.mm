@@ -479,51 +479,6 @@ myapp://exe?commandID=my.file.command.id&file=file1.txt&file=file2.txt
 	}
 }
 
-//legacy encoder/decoder support - custom control data no longer serialized into nibs
-//custom properties get set later on nib load by calling proprty setters
-
-- (id)initWithCoder:(NSCoder *)coder
-{
-	commandID = NULL;
-	commandFilePath = @"Command.plist";
-	[commandFilePath retain];
-	_startingUp = YES;
-	_startupModifiers = 0;
-	_runningCommandCount = 0;
-	
-	//should never happen in Xcode 4 anymore
-	if( ![self respondsToSelector: @selector(ibPopulateKeyPaths:)] )//don't init NSDocumentController in IB
-	{
-		self = [super init];
-		if(self == NULL)
-			return NULL;
-	}
-
-    if( ![coder allowsKeyedCoding] )
-		[NSException raise:NSInvalidArgumentException format:@"Unexpected coder not supporting keyed decoding"];
-	
-	commandID = [[coder decodeObjectForKey:@"omcCommandID"] retain];
-
-	NSString *myFilePath = [coder decodeObjectForKey:@"omcCommandFilePath"];
-	[self setCommandFilePath:myFilePath];
-
-    return self;
-}
-
-- (void)encodeWithCoder:(NSCoder *)coder
-{
-    if ( ![coder allowsKeyedCoding] )
-		[NSException raise:NSInvalidArgumentException format:@"Unexpected coder not supporting keyed encoding"];
-
-	if(commandID != NULL)
-		[coder encodeObject:commandID forKey:@"omcCommandID"];
-	
-	if( (commandFilePath != NULL) && ![commandFilePath isEqualToString:@"Command.plist"] )
-	{
-		[coder encodeObject:commandFilePath forKey:@"omcCommandFilePath"];
-	}
-}
-
 #pragma mark --- STUBS ---
 
 - (void)addDocument:(NSDocument *)document
