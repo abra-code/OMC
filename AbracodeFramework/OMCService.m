@@ -26,36 +26,13 @@ void OMCServiceObserverCallback( OmcObserverMessage inMessage, CFIndex inTaskID,
 - (id)init
 {
     self = [super init];
-	if(self == NULL)
-		return NULL;
+	if(self == nil)
+		return nil;
 
     mObserver = NULL;
-	mResultString = NULL;
+	mResultString = nil;
 	mRunLoopStarted = NO;
     return self;
-}
-
-//legacy encoder/decoder support - custom control data no longer serialized into nibs
-//custom properties get set later on nib load by calling proprty setters
-
-- (id)initWithCoder:(NSCoder *)coder
-{
-   self = [super init];
-	if(self == NULL)
-		return NULL;
-
-    mObserver = NULL;
-	mResultString = NULL;
-	mRunLoopStarted = NO;
-
-	//we don't read anything extra
-
-    return self;
-}
-
-- (void)encodeWithCoder:(NSCoder *)coder
-{
-	//we don't persist anything extra
 }
 
 - (void)dealloc
@@ -68,7 +45,7 @@ void OMCServiceObserverCallback( OmcObserverMessage inMessage, CFIndex inTaskID,
 	}
 	
 	[mResultString release];
-	mResultString = NULL;
+	mResultString = nil;
 	
 	if(mRunLoopStarted)
 	{

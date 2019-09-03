@@ -7,14 +7,11 @@
 IB_DESIGNABLE
 @interface OMCView : NSView
 {
-	NSInteger _omcTag;
-	BOOL	enabled;
+	BOOL	_enabled;
 }
 
-@property(readwrite) IBInspectable NSInteger tag;
-
-- (BOOL)isEnabled;
-- (void)setEnabled:(BOOL)flag;
+@property (nonatomic, readwrite) IBInspectable NSInteger tag;
+@property (nonatomic, readwrite) BOOL enabled;
 
 //recursive enable/disable for all controls in a view
 + (void)setEnabled:(BOOL)flag inView:(id)inView;

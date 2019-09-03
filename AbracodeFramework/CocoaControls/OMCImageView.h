@@ -8,9 +8,7 @@
 IB_DESIGNABLE
 @interface OMCImageView : NSImageView
 {
-	NSString *	commandID;
-	NSString *  escapingMode;
-	NSString *	imagePath;
+	NSString *	_imagePath;
 }
 
 @property (nonatomic, retain) IBInspectable NSString * commandID;

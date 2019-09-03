@@ -6,23 +6,18 @@
 
 @implementation OMCTextField
 
-@synthesize commandID, escapingMode;
+@synthesize commandID;
+@synthesize escapingMode;
 
 - (id)init
 {
     self = [super init];
-	if(self == NULL)
-		return NULL;
-	commandID = NULL;
- 	self.escapingMode = @"esc_none";
-	return self;
-}
+	if(self == nil)
+		return nil;
 
-- (void)dealloc
-{
-    [commandID release];
-	[escapingMode release];
-    [super dealloc];
+ 	self.escapingMode = @"esc_none";
+
+	return self;
 }
 
 //legacy encoder/decoder support - custom control data no longer serialized into nibs
@@ -31,34 +26,19 @@
 - (id)initWithCoder:(NSCoder *)coder
 {
     self = [super initWithCoder:coder];
-	if(self == NULL)
-		return NULL;
+	if(self == nil)
+		return nil;
 
-    if( ![coder allowsKeyedCoding] )
-		[NSException raise:NSInvalidArgumentException format:@"Unexpected coder not supporting keyed decoding"];
-
-	self.commandID = [coder decodeObjectForKey:@"omcCommandID"];
-	self.escapingMode = [coder decodeObjectForKey:@"omcEscapingMode"];
-	if(escapingMode == NULL)
-		self.escapingMode = @"esc_none";//use default if key not present
+ 	self.escapingMode = @"esc_none";
 
     return self;
 }
 
-- (void)encodeWithCoder:(NSCoder *)coder
+- (void)dealloc
 {
-    [super encodeWithCoder:coder];
-
-    if( ![coder allowsKeyedCoding] )
-		[NSException raise:NSInvalidArgumentException format:@"Unexpected coder not supporting keyed encoding"];
-
-	if(commandID != NULL)
-		[coder encodeObject:commandID forKey:@"omcCommandID"];
-
-	if(escapingMode == NULL)
-		self.escapingMode = @"esc_none";
-	
-	[coder encodeObject:escapingMode forKey:@"omcEscapingMode"];
+    self.commandID = nil;
+	self.escapingMode = nil;
+    [super dealloc];
 }
 
 /*

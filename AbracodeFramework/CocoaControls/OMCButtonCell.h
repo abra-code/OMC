@@ -7,10 +7,6 @@
 IB_DESIGNABLE
 @interface OMCButtonCell : NSButtonCell <NSDraggingDestination>
 {
-	NSString *	commandID;
-	NSString *	mappedOnValue;
-	NSString *	mappedOffValue;
-	NSString *  escapingMode;
 }
 
 @property (nonatomic, retain) IBInspectable NSString * commandID;

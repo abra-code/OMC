@@ -7,8 +7,6 @@
 IB_DESIGNABLE
 @interface OMCTextField : NSTextField
 {
-	NSString *	commandID;
-	NSString *  escapingMode;
 }
 
 @property (nonatomic, retain) IBInspectable NSString * commandID;

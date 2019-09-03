@@ -7,28 +7,39 @@
 
 @implementation OMCButtonCell
 
-@synthesize commandID, mappedOnValue, mappedOffValue, escapingMode;
+@synthesize commandID;
+@synthesize mappedOnValue;
+@synthesize mappedOffValue;
+@synthesize escapingMode;
 
 - (id)init
 {
     self = [super init];
-	if(self == NULL)
-		return NULL;
-	commandID = NULL;
-	mappedOnValue = NULL;
-	mappedOffValue = NULL;
-	escapingMode = @"esc_none";
-	[escapingMode retain];
+	if(self == nil)
+		return nil;
+
+	self.escapingMode = @"esc_none";
 
 	return self;
 }
 
+- (id)initWithCoder:(NSCoder *)coder
+{
+    self = [super initWithCoder:coder];
+	if(self == nil)
+		return nil;
+
+	self.escapingMode = @"esc_none";
+
+    return self;
+}
+
 - (void)dealloc
 {
-    [commandID release];
-    [mappedOnValue release];
-    [mappedOffValue release];	
- 	[escapingMode release];
+    self.commandID = nil;
+    self.mappedOnValue = nil;
+    self.mappedOffValue = nil;
+ 	self.escapingMode = nil;
 	[super dealloc];
 }
 
@@ -38,10 +49,10 @@
 {
 	OMCButtonCell *objCopy = [super copyWithZone:zone];
 
-	[objCopy->commandID retain];
-	[objCopy->mappedOnValue retain];
-	[objCopy->mappedOffValue retain];
-	[objCopy->escapingMode retain];
+	[objCopy.commandID retain];
+	[objCopy.mappedOnValue retain];
+	[objCopy.mappedOffValue retain];
+	[objCopy.escapingMode retain];
 
 	return objCopy;
 }
@@ -51,24 +62,24 @@
 - (NSString *)stringValue
 {
 	int intValue = [self intValue];
-	if( (intValue > 0) && (mappedOnValue != NULL) )
-		return mappedOnValue;
-	else if( (intValue == 0) && (mappedOffValue != NULL) )
-		return mappedOffValue;
+	if( (intValue > 0) && (self.mappedOnValue != nil) )
+		return self.mappedOnValue;
+	else if( (intValue == 0) && (mappedOffValue != nil) )
+		return self.mappedOffValue;
 		
 	return [super stringValue];
 }
 
 - (void)setStringValue:(NSString *)aString
 {
-	if(aString == NULL)
+	if(aString == nil)
 		return;
 		
-	if( (mappedOnValue != NULL) && [mappedOnValue isEqualToString:aString] )
+	if([self.mappedOnValue isEqualToString:aString])
 	{
 		[self setIntValue:1];
 	}
-	else if( (mappedOffValue != NULL) && [mappedOffValue isEqualToString:aString] )
+	else if([self.mappedOffValue isEqualToString:aString])
 	{
 		[self setIntValue:0];
 	}
@@ -76,56 +87,6 @@
 	{
 		[super setStringValue:aString];
 	}
-}
-
-//legacy encoder/decoder support - custom control data no longer serialized into nibs
-//custom properties get set later on nib load by calling proprty setters
-
-- (id)initWithCoder:(NSCoder *)coder
-{
-    self = [super initWithCoder:coder];
-	if(self == NULL)
-		return NULL;
-
-    if( ![coder allowsKeyedCoding] )
-		[NSException raise:NSInvalidArgumentException format:@"Unexpected coder not supporting keyed decoding"];
-
-	commandID = [[coder decodeObjectForKey:@"omcCommandID"] retain];
-	mappedOnValue = [[coder decodeObjectForKey:@"omcMappedOnValue"] retain];
-	mappedOffValue = [[coder decodeObjectForKey:@"omcMappedOffValue"] retain];
-	escapingMode = [[coder decodeObjectForKey:@"omcEscapingMode"] retain];
-	if(escapingMode == NULL)
-	{
-		escapingMode = @"esc_none";//use default if key not present
-		[escapingMode retain];
-	}
-
-    return self;
-}
-
-- (void)encodeWithCoder:(NSCoder *)coder
-{
-    [super encodeWithCoder:coder];
-
-    if( ![coder allowsKeyedCoding] )
-		[NSException raise:NSInvalidArgumentException format:@"Unexpected coder not supporting keyed encoding"];
-
-	if(commandID != NULL)
-		[coder encodeObject:commandID forKey:@"omcCommandID"];
-
-	if(mappedOnValue != NULL)
-		[coder encodeObject:mappedOnValue forKey:@"omcMappedOnValue"];
-
-	if(mappedOffValue != NULL)
-		[coder encodeObject:mappedOffValue forKey:@"omcMappedOffValue"];
-
-	if(escapingMode == NULL)
-	{
-		escapingMode = @"esc_none";
-		[escapingMode retain];
-	}
-
-	[coder encodeObject:escapingMode forKey:@"omcEscapingMode"];
 }
 
 @end

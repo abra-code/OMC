@@ -7,8 +7,6 @@
 IB_DESIGNABLE
 @interface OMCComboBox : NSComboBox
 {
-	NSString *	commandID;
-	NSString *  escapingMode;
 	NSString *	_lastValue;
 }
 

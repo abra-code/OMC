@@ -10,15 +10,14 @@
 IB_DESIGNABLE
 @interface OMCDropletController : NSDocumentController<NSApplicationDelegate>
 {
-	NSString *	commandID;//main/startup command name/id
-	NSString *	commandFilePath; //main plist file
+	NSString *	_commandFilePath;
 	BOOL		_startingUp;
 	CGEventFlags _startupModifiers;
 	int			_runningCommandCount;
 }
 
-@property(retain) IBInspectable NSString * commandID;
-@property(retain) IBInspectable NSString * commandFilePath;
+@property (nonatomic, retain) IBInspectable NSString * commandID; // main/startup command name/id
+@property (nonatomic, retain) IBInspectable NSString * commandFilePath; //main plist file
 
 
 - (void)showPrefsDialog:(id)sender;

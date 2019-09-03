@@ -11,12 +11,11 @@
 IB_DESIGNABLE
 @interface OMCSingleCommand : NSObject
 {
-	NSString *	commandID;
-	NSString *	commandFilePath;
+	NSString *	_commandFilePath;
 }
 
-@property(retain) IBInspectable NSString * commandID;
-@property(retain) IBInspectable NSString * commandFilePath;
+@property (nonatomic, retain) IBInspectable NSString * commandID;
+@property (nonatomic, retain) IBInspectable NSString * commandFilePath;
 
 - (void)execute:(id)sender;
 

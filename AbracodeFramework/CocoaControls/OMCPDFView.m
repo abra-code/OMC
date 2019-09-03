@@ -6,16 +6,15 @@
 
 @implementation OMCPDFView
 
-@synthesize tag = _omcTag, escapingMode;
+@synthesize tag;
+@synthesize escapingMode;
 
 - (id)init
 {
     self = [super init];
 	if(self == NULL)
 		return NULL;
-    _omcTag = 0;
-	escapingMode = @"esc_none";
-	[escapingMode retain];
+	self.escapingMode = @"esc_none";
 	return self;
 }
 
@@ -31,65 +30,38 @@
 - (id)initWithCoder:(NSCoder *)coder
 {
     self = [super initWithCoder:coder];
-	if(self == NULL)
-		return NULL;
+	if(self == nil)
+		return nil;
 
-    if( ![coder allowsKeyedCoding] )
-		[NSException raise:NSInvalidArgumentException format:@"Unexpected coder not supporting keyed decoding"];
-	
-	_omcTag = [coder decodeIntForKey:@"omcTag"];
-	escapingMode = [[coder decodeObjectForKey:@"omcEscapingMode"] retain];
-	if(escapingMode == NULL)
-	{
-		escapingMode = @"esc_none";//use default if key not present
-		[escapingMode retain];
-	}
+	self.escapingMode = @"esc_none";
 
     return self;
-}
-
-- (void)encodeWithCoder:(NSCoder *)coder
-{
-    [super encodeWithCoder:coder];
-
-    if ( ![coder allowsKeyedCoding] )
-		[NSException raise:NSInvalidArgumentException format:@"Unexpected coder not supporting keyed encoding"];
-
-	[coder encodeInt:_omcTag forKey:@"omcTag"];
-
-	if(escapingMode == NULL)
-	{
-		escapingMode = @"esc_none";
-		[escapingMode retain];
-	}
-	
-	[coder encodeObject:escapingMode forKey:@"omcEscapingMode"];
 }
 
 - (NSString *)stringValue
 {
 	PDFDocument *pdfDoc = [self document];
-	if(pdfDoc == NULL)
-		return NULL;
+	if(pdfDoc == nil)
+		return nil;
 
 	NSURL *pdfURL = [pdfDoc documentURL];
-	if(pdfURL == NULL)
-		return NULL;
+	if(pdfURL == nil)
+		return nil;
 
 	return [pdfURL path];
 }
 
 - (void)setStringValue:(NSString *)aString
 {
-	if(aString == NULL)
+	if(aString == nil)
 		return;
 
 	NSURL *pdfURL = [NSURL fileURLWithPath:aString];
-	if(pdfURL == NULL)
+	if(pdfURL == nil)
 		return;
 
 	PDFDocument *pdfDoc = [[PDFDocument alloc] initWithURL:pdfURL];
-	if(pdfDoc == NULL)
+	if(pdfDoc == nil)
 		return;
 
 	[self setDocument:pdfDoc];

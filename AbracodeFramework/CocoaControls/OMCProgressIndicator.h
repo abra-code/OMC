@@ -7,10 +7,9 @@
 IB_DESIGNABLE
 @interface OMCProgressIndicator : NSProgressIndicator
 {
-	NSInteger _omcTag;
 }
 
-@property(readwrite) IBInspectable NSInteger tag;
+@property (nonatomic, readwrite) IBInspectable NSInteger tag;
 
 @end
 

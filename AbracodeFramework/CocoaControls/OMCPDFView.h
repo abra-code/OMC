@@ -8,11 +8,9 @@
 IB_DESIGNABLE
 @interface OMCPDFView : PDFView
 {
-	NSInteger	_omcTag;
-	NSString *  escapingMode;
 }
 
-@property(readwrite) IBInspectable NSInteger tag;
+@property (nonatomic, readwrite) IBInspectable NSInteger tag;
 @property (nonatomic, retain) IBInspectable NSString * escapingMode;
 
 - (NSString *)stringValue;

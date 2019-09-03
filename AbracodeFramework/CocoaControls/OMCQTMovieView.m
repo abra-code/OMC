@@ -6,75 +6,46 @@
 
 @implementation OMCQTMovieView
 
-@synthesize tag = _omcTag, escapingMode;
+@synthesize tag;
+@synthesize escapingMode;
 
 - (id)init
 {
     self = [super init];
-	if(self == NULL)
-		return NULL;
-    _omcTag = 0;
-	escapingMode = @"esc_none";
-	[escapingMode retain];
+	if(self == nil)
+		return nil;
+
+	self.escapingMode = @"esc_none";
+
 	return self;
 }
-
-- (void)dealloc
-{
-	[escapingMode release];
-    [super dealloc];
-}
-
-//legacy encoder/decoder support - custom control data no longer serialized into nibs
-//custom properties get set later on nib load by calling proprty setters
 
 - (id)initWithCoder:(NSCoder *)coder
 {
     self = [super initWithCoder:coder];
-	if(self == NULL)
-		return NULL;
+	if(self == nil)
+		return nil;
 
-    if( ![coder allowsKeyedCoding] )
-		[NSException raise:NSInvalidArgumentException format:@"Unexpected coder not supporting keyed decoding"];
-	
-	_omcTag = [coder decodeIntForKey:@"omcTag"];
-	escapingMode = [[coder decodeObjectForKey:@"omcEscapingMode"] retain];
-	if(escapingMode == NULL)
-	{
-		escapingMode = @"esc_none";//use default if key not present
-		[escapingMode retain];
-	}
+	self.escapingMode = @"esc_none";
 
     return self;
 }
 
-- (void)encodeWithCoder:(NSCoder *)coder
+- (void)dealloc
 {
-    [super encodeWithCoder:coder];
-
-    if ( ![coder allowsKeyedCoding] )
-		[NSException raise:NSInvalidArgumentException format:@"Unexpected coder not supporting keyed encoding"];
-
-	[coder encodeInt:_omcTag forKey:@"omcTag"];
-
-	if(escapingMode == NULL)
-	{
-		escapingMode = @"esc_none";
-		[escapingMode retain];
-	}
-	
-	[coder encodeObject:escapingMode forKey:@"omcEscapingMode"];
+	self.escapingMode = nil;
+    [super dealloc];
 }
 
 - (NSString *)stringValue
 {
 	QTMovie *qtMovie = [self movie];
-	if(qtMovie == NULL)
-		return NULL;
+	if(qtMovie == nil)
+		return nil;
 
 	NSURL *movieURL = [qtMovie attributeForKey:QTMovieURLAttribute];
-	if(movieURL == NULL)
-		return NULL;
+	if(movieURL == nil)
+		return nil;
 	
 	return [movieURL path];
 }
@@ -82,7 +53,7 @@
 - (void)setStringValue:(NSString *)aString
 {
 	QTMovie *qtMovie = [QTMovie movieWithFile:aString error:NULL];
-	if(qtMovie == NULL)
+	if(qtMovie == nil)
 		return;
 
 	[self setMovie:qtMovie];

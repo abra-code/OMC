@@ -6,22 +6,23 @@
 
 @implementation OMCWebView
 
-@synthesize tag = _omcTag, escapingMode;
+@synthesize tag;
+@synthesize escapingMode;
 
 - (id)init
 {
     self = [super init];
-	if(self == NULL)
-		return NULL;
-    _omcTag = 0;
-	escapingMode = @"esc_none";
-	[escapingMode retain];
+	if(self == nil)
+		return nil;
+
+	self.escapingMode = @"esc_none";
+
 	return self;
 }
 
 - (void)dealloc
 {
-	[escapingMode release];
+	self.escapingMode = nil;
     [super dealloc];
 }
 
@@ -31,39 +32,12 @@
 - (id)initWithCoder:(NSCoder *)coder
 {
     self = [super initWithCoder:coder];
-	if(self == NULL)
-		return NULL;
+	if(self == nil)
+		return nil;
 
-    if( ![coder allowsKeyedCoding] )
-		[NSException raise:NSInvalidArgumentException format:@"Unexpected coder not supporting keyed decoding"];
-	
-	_omcTag = [coder decodeIntForKey:@"omcTag"];
-	escapingMode = [[coder decodeObjectForKey:@"omcEscapingMode"] retain];
-	if(escapingMode == NULL)
-	{
-		escapingMode = @"esc_none";//use default if key not present
-		[escapingMode retain];
-	}
+	self.escapingMode = @"esc_none";
 
     return self;
-}
-
-- (void)encodeWithCoder:(NSCoder *)coder
-{
-    [super encodeWithCoder:coder];
-
-    if ( ![coder allowsKeyedCoding] )
-		[NSException raise:NSInvalidArgumentException format:@"Unexpected coder not supporting keyed encoding"];
-
-	[coder encodeInt:_omcTag forKey:@"omcTag"];
-
-	if(escapingMode == NULL)
-	{
-		escapingMode = @"esc_none";
-		[escapingMode retain];
-	}
-	
-	[coder encodeObject:escapingMode forKey:@"omcEscapingMode"];
 }
 
 - (NSString *)stringValue

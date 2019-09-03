@@ -6,34 +6,41 @@
 
 @implementation OMCButton
 
-@synthesize commandID, mappedOnValue, mappedOffValue, escapingMode, acceptFileDrop, acceptTextDrop, droppedItems;
+@synthesize commandID;
+@synthesize mappedOnValue;
+@synthesize mappedOffValue;
+@synthesize escapingMode;
+@synthesize acceptFileDrop;
+@synthesize acceptTextDrop;
+@synthesize droppedItems;
 
 - (id)init
 {
     self = [super init];
 	if(self == nil)
 		return nil;
+	self.escapingMode = @"esc_none";
 
-	commandID = nil;
-	mappedOnValue = nil;
-	mappedOffValue = nil;
-	escapingMode = @"esc_none";
-	[escapingMode retain];
-	
-	acceptFileDrop = NO;
-	acceptTextDrop = NO;
-	droppedItems = nil;
+    return self;
+}
+
+- (id)initWithCoder:(NSCoder *)coder
+{
+    self = [super initWithCoder:coder];
+	if(self == nil)
+		return nil;
+	self.escapingMode = @"esc_none";
 
     return self;
 }
 
 - (void)dealloc
 {
-    [commandID release];
-    [mappedOnValue release];
-    [mappedOffValue release];
-	[escapingMode release];
-	[droppedItems release];
+    self.commandID = nil;
+    self.mappedOnValue = nil;
+    self.mappedOffValue = nil;
+	self.escapingMode = nil;
+	self.droppedItems = nil;
     [super dealloc];
 }
 
@@ -41,10 +48,10 @@
 - (NSString *)stringValue
 {
 	int intValue = [self intValue];
-	if( (intValue > 0) && (mappedOnValue != NULL) )
-		return mappedOnValue;
-	else if( (intValue == 0) && (mappedOffValue != NULL) )
-		return mappedOffValue;
+	if( (intValue > 0) && (self.mappedOnValue != nil) )
+		return self.mappedOnValue;
+	else if( (intValue == 0) && (self.mappedOffValue != nil) )
+		return self.mappedOffValue;
 		
 	return [super stringValue];
 }
@@ -52,14 +59,14 @@
 
 - (void)setStringValue:(NSString *)aString
 {
-	if(aString == NULL)
+	if(aString == nil)
 		return;
 		
-	if( (mappedOnValue != NULL) && [mappedOnValue isEqualToString:aString] )
+	if([self.mappedOnValue isEqualToString:aString])
 	{
 		[self setIntValue:1];
 	}
-	else if( (mappedOffValue != NULL) && [mappedOffValue isEqualToString:aString] )
+	else if([self.mappedOffValue isEqualToString:aString] )
 	{
 		[self setIntValue:0];
 	}
@@ -69,68 +76,15 @@
 	}
 }
 
-//legacy encoder/decoder support - custom control data no longer serialized into nibs
-//custom properties get set later on nib load by calling proprty setters
-
-- (id)initWithCoder:(NSCoder *)coder
-{
-    self = [super initWithCoder:coder];
-	if(self == nil)
-		return nil;
-
-    if( ![coder allowsKeyedCoding] )
-		[NSException raise:NSInvalidArgumentException format:@"Unexpected coder not supporting keyed decoding"];
-
-	commandID = [[coder decodeObjectForKey:@"omcCommandID"] retain];
-	mappedOnValue = [[coder decodeObjectForKey:@"omcMappedOnValue"] retain];
-	mappedOffValue = [[coder decodeObjectForKey:@"omcMappedOffValue"] retain];
-	escapingMode = [[coder decodeObjectForKey:@"omcEscapingMode"] retain];
-	if(escapingMode == nil)
-	{
-		escapingMode = @"esc_none";//use default if key not present
-		[escapingMode retain];
-	}
-
-	acceptFileDrop = NO;
-	acceptTextDrop = NO;
-	droppedItems = nil;
-
-    return self;
-}
-
-- (void)encodeWithCoder:(NSCoder *)coder
-{
-    [super encodeWithCoder:coder];
-
-    if( ![coder allowsKeyedCoding] )
-		[NSException raise:NSInvalidArgumentException format:@"Unexpected coder not supporting keyed encoding"];
-
-	if(commandID != NULL)
-		[coder encodeObject:commandID forKey:@"omcCommandID"];
-
-	if(mappedOnValue != NULL)
-		[coder encodeObject:mappedOnValue forKey:@"omcMappedOnValue"];
-
-	if(mappedOffValue != NULL)
-		[coder encodeObject:mappedOffValue forKey:@"omcMappedOffValue"];
-
-	if(escapingMode == NULL)
-	{
-		escapingMode = @"esc_none";
-		[escapingMode retain];
-	}
-	
-	[coder encodeObject:escapingMode forKey:@"omcEscapingMode"];
-}
 
 - (void)awakeFromNib
 {
-	if(acceptFileDrop || acceptTextDrop)
+	if(self.acceptFileDrop || self.acceptTextDrop)
 	{
 		NSMutableArray *typesArray = [NSMutableArray array];
-		if(acceptFileDrop)
+		if(self.acceptFileDrop)
 			[typesArray addObject:NSURLPboardType];
-		if(acceptTextDrop)
+		if(self.acceptTextDrop)
 			[typesArray addObject:NSPasteboardTypeString];
 		[self registerForDraggedTypes:typesArray];
 	}
@@ -143,8 +97,8 @@
 
     NSPasteboard *pboard = [sender draggingPasteboard];
 	NSArray *pboardTypes = [pboard types];
-    if( (acceptFileDrop && [pboardTypes containsObject:NSURLPboardType]) ||
-		(acceptTextDrop && [pboardTypes containsObject:NSPasteboardTypeString]) )
+    if( (self.acceptFileDrop && [pboardTypes containsObject:NSURLPboardType]) ||
+		(self.acceptTextDrop && [pboardTypes containsObject:NSPasteboardTypeString]) )
 	{
 		[self highlight:YES];
     	return NSDragOperationGeneric;
@@ -161,8 +115,8 @@
 {
     NSPasteboard *pboard = [sender draggingPasteboard];
 	NSArray *pboardTypes = [pboard types];
-    if( (acceptFileDrop && [pboardTypes containsObject:NSURLPboardType]) ||
-		(acceptTextDrop && [pboardTypes containsObject:NSPasteboardTypeString]) )
+    if( (self.acceptFileDrop && [pboardTypes containsObject:NSURLPboardType]) ||
+		(self.acceptTextDrop && [pboardTypes containsObject:NSPasteboardTypeString]) )
 	{
 		return YES;
 	}
@@ -174,7 +128,7 @@
 {
     NSPasteboard *pboard = [sender draggingPasteboard];
 	NSArray *pboardTypes = [pboard types];
-    if (acceptFileDrop && [pboardTypes containsObject:NSURLPboardType])
+    if (self.acceptFileDrop && [pboardTypes containsObject:NSURLPboardType])
     {
         NSArray *urls = [pboard readObjectsForClasses:@[[NSURL class]] options:nil];
 		self.droppedItems = urls;

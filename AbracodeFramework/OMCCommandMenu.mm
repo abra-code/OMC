@@ -194,38 +194,49 @@ PopulateCommandsMenu(OnMyCommandCM *inPlugin, NSMenu *topMenu)
 
 @implementation OMCCommandMenu
 
+@synthesize commandFilePath = _commandFilePath;
+
 - (id)init
 {
     self = [super init];
-	if(self == NULL)
-		return NULL;
-	commandFilePath = @"Command.plist";
-	[commandFilePath retain];
+	if(self == nil)
+		return nil;
+
+	self.commandFilePath = @"Command.plist";
+
+    return self;
+}
+
+- (id)initWithCoder:(NSCoder *)coder
+{
+	self = [super initWithCoder:coder];
+	if(self == nil)
+		return nil;
+
+	self.commandFilePath = @"Command.plist";
+
     return self;
 }
 
 - (id)initWithTitle:(NSString *)aTitle
 {
 	self = [super initWithTitle:aTitle];
-	if(self == NULL)
-		return NULL;
+	if(self == nil)
+		return nil;
 
-	commandFilePath = @"Command.plist";
-	[commandFilePath retain];
-    return self;	
+	self.commandFilePath = @"Command.plist";
+
+    return self;
 }
 
 - (void)dealloc
 {
-    [commandFilePath release];
+    self.commandFilePath = nil;
 	[super dealloc];
 }
 
 - (void)awakeFromNib
 {
-	if( [self respondsToSelector: @selector(ibPopulateKeyPaths:)] )//running as plugin in IB?
-		return;
-
 	//remove all items first (should only be a one placeholder anyway)
 	NSInteger itemCount = [self numberOfItems];
 	NSInteger i;
@@ -238,12 +249,12 @@ PopulateCommandsMenu(OnMyCommandCM *inPlugin, NSMenu *topMenu)
 	
 	OSStatus error = noErr;
 	NSBundle *appBundle = [NSBundle mainBundle];
-	NSString *plistPath = [appBundle pathForResource:commandFilePath ofType:NULL];
-	if(plistPath == NULL)
+	NSString *plistPath = [appBundle pathForResource:self.commandFilePath ofType:nil];
+	if(plistPath == nil)
 		return;
 
 	NSURL *commandURL = [NSURL fileURLWithPath:plistPath];
-	if(commandURL == NULL)
+	if(commandURL == nil)
 		return;
 
 	ARefCountedObj<OnMyCommandCM> omcPlugin( new OnMyCommandCM( (CFURLRef)commandURL ), kARefCountDontRetain );
@@ -257,57 +268,43 @@ PopulateCommandsMenu(OnMyCommandCM *inPlugin, NSMenu *topMenu)
 	}
 }
 
-- (NSString *)commandFilePath
-{
-	return commandFilePath;
-}
-
 - (void)setCommandFilePath:(NSString *)inPath
 {
-	if(inPath != NULL)
-	{
-		if([inPath length] == 0)
-		{
-			inPath = NULL;
-		}
-	}
-
-	if(inPath != NULL)
+	if((inPath != nil) && ([inPath length] > 0))
 	{
 		[inPath retain];
-		[commandFilePath release];
-		commandFilePath = inPath;
+		[_commandFilePath release];
+		_commandFilePath = inPath;
 	}
 	else
 	{
-		[commandFilePath release];
-		commandFilePath = @"Command.plist";
-		[commandFilePath retain];
+		[_commandFilePath release];
+		_commandFilePath = [@"Command.plist" retain];
 	}
 }
 
 - (void)executeCommand:(id)sender
 {
-	if( sender == NULL )
+	if( sender == nil )
 		return;
 	
-	NSString *myCommandID = NULL;
-	NSString *myName = NULL;//names in this menu might not be command names if localized
+	NSString *myCommandID = nil;
+	NSString *myName = nil;//names in this menu might not be command names if localized
 	
 	if( [sender respondsToSelector:@selector(representedObject)] )
 	{
 		myName = [sender representedObject];//the original non-localized name is here
 		if(	![myName isKindOfClass:[NSString class]] )
-			myName = NULL;
+			myName = nil;
 	}
 
 	if( [sender respondsToSelector:@selector(commandID)] )
 		myCommandID = [sender commandID];
 	
-	if( (myCommandID == NULL) && (myName == NULL) )
+	if( (myCommandID == nil) && (myName == nil) )
 		return;
 
-	if(myCommandID == NULL)
+	if(myCommandID == nil)
 		myCommandID = myName;
 	else
 	{
@@ -323,42 +320,10 @@ PopulateCommandsMenu(OnMyCommandCM *inPlugin, NSMenu *topMenu)
 		//else: unique ID for top command, let's use it instead of the name
 	}
 
-	if( myCommandID == NULL )
+	if( myCommandID == nil )
 		return;
 
-	/*OSStatus err = */[OMCCommandExecutor runCommand:myCommandID forCommandFile:commandFilePath withContext:NULL useNavDialog:YES delegate:self];
+	/*OSStatus err = */[OMCCommandExecutor runCommand:myCommandID forCommandFile:self.commandFilePath withContext:NULL useNavDialog:YES delegate:self];
 }
-
-
-//legacy encoder/decoder support - custom control data no longer serialized into nibs
-//custom properties get set later on nib load by calling proprty setters
-
-- (id)initWithCoder:(NSCoder *)coder
-{
-	self = [super initWithCoder:coder];
-	if(self == NULL)
-		return NULL;
-
-    if( ![coder allowsKeyedCoding] )
-		[NSException raise:NSInvalidArgumentException format:@"Unexpected coder not supporting keyed decoding"];
-	
-	NSString *myFilePath = [coder decodeObjectForKey:@"omcCommandFilePath"];
-	[self setCommandFilePath:myFilePath];
-	
-    return self;
-}
-
-- (void)encodeWithCoder:(NSCoder *)coder
-{
-    [super encodeWithCoder:coder];
-
-    if ( ![coder allowsKeyedCoding] )
-		[NSException raise:NSInvalidArgumentException format:@"Unexpected coder not supporting keyed encoding"];
-
-	if( (commandFilePath != NULL) && ![commandFilePath isEqualToString:@"Command.plist"] )
-		[coder encodeObject:commandFilePath forKey:@"omcCommandFilePath"];
-}
-
-
 
 @end

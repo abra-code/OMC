@@ -10,10 +10,7 @@ IB_DESIGNABLE
 {
 	id			_omcTarget;
 	SEL			_omcTargetSelector;
-	NSString *	commandID; //only for OMC Subcommand QC plug-in
-	NSInteger	_omcTag;
-	NSString *  escapingMode;
-	NSString *	compositionPath;
+	NSString *	_compositionPath;
 }
 
 - (id)target;
@@ -22,7 +19,7 @@ IB_DESIGNABLE
 - (void)setAction:(SEL)aSelector;
 
 @property (nonatomic, retain) IBInspectable NSString * commandID;
-@property(readwrite) IBInspectable NSInteger tag;
+@property (nonatomic, readwrite) IBInspectable NSInteger tag;
 @property (nonatomic, retain) IBInspectable NSString * escapingMode;
 
 - (NSString *)stringValue;

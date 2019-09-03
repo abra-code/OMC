@@ -7,7 +7,6 @@
 IB_DESIGNABLE
 @interface OMCPopUpButton : NSPopUpButton
 {
-	NSString *	commandID;
 }
 
 @property (nonatomic, retain) IBInspectable NSString * commandID;

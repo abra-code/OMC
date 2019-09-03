@@ -7,70 +7,39 @@
 
 @implementation OMCTextView
 
-@synthesize tag = _omcTag, escapingMode;
+@synthesize tag;
+@synthesize escapingMode;
+@synthesize enabled = _enabled;
 
 - (id)init
 {
     self = [super init];
-	if(self == NULL)
-		return NULL;
-    _omcTag = 0;
-	escapingMode = @"esc_none";
-	[escapingMode retain];
-	enabled = YES;
-	savedTextColor = NULL;
+	if(self == nil)
+		return nil;
+
+	self.escapingMode = @"esc_none";
+	_enabled = YES;
+
 	return self;
 }
-
-- (void)dealloc
-{
-	[escapingMode release];
-	if(savedTextColor != NULL)
-		[savedTextColor release];
-    [super dealloc];
-}
-
-//legacy encoder/decoder support - custom control data no longer serialized into nibs
-//custom properties get set later on nib load by calling proprty setters
 
 - (id)initWithCoder:(NSCoder *)coder
 {
     self = [super initWithCoder:coder];
-	if(self == NULL)
-		return NULL;
+	if(self == nil)
+		return nil;
 
-    if( ![coder allowsKeyedCoding] )
-		[NSException raise:NSInvalidArgumentException format:@"Unexpected coder not supporting keyed decoding"];
-	
-	_omcTag = [coder decodeIntForKey:@"omcTag"];
-	escapingMode = [[coder decodeObjectForKey:@"omcEscapingMode"] retain];
-	if(escapingMode == NULL)
-	{
-		escapingMode = @"esc_none";//use default if key not present
-		[escapingMode retain];
-	}
-	enabled = YES;
-	savedTextColor = NULL;
+	self.escapingMode = @"esc_none";
+	_enabled = YES;
 
     return self;
 }
 
-- (void)encodeWithCoder:(NSCoder *)coder
+- (void)dealloc
 {
-    [super encodeWithCoder:coder];
-
-    if ( ![coder allowsKeyedCoding] )
-		[NSException raise:NSInvalidArgumentException format:@"Unexpected coder not supporting keyed encoding"];
-
-	[coder encodeInt:_omcTag forKey:@"omcTag"];
-
-	if(escapingMode == NULL)
-	{
-		escapingMode = @"esc_none";
-		[escapingMode retain];
-	}
-	
-	[coder encodeObject:escapingMode forKey:@"omcEscapingMode"];
+	self.escapingMode = nil;
+	[_savedTextColor release];
+    [super dealloc];
 }
 
 - (NSString *)stringValue
@@ -83,35 +52,28 @@
 	[self setString:aString];
 }
 
-- (BOOL)isEnabled
-{
-	return enabled;
-}
-
 - (void)setEnabled:(BOOL)flag
 {
-	if(enabled != flag)
+	if(_enabled != flag)
 	{
-		enabled = flag;
-		[self setSelectable: enabled];
-		[self setEditable: enabled];
-		if(enabled)
+		_enabled = flag;
+		[self setSelectable:_enabled];
+		[self setEditable:_enabled];
+		if(_enabled)
 		{
-			if(savedTextColor != NULL)
+			if(_savedTextColor != nil)
 			{
-				[self setTextColor:savedTextColor];
-				[savedTextColor release];
-				savedTextColor = NULL;
+				[self setTextColor:_savedTextColor];
+				[_savedTextColor release];
+				_savedTextColor = nil;
 			}
 			else
 				[self setTextColor: [NSColor controlTextColor]];
 		}
 		else
 		{
-			if(savedTextColor != NULL)
-				[savedTextColor release];
-			savedTextColor = [self textColor];
-			[savedTextColor retain];
+			[_savedTextColor release];
+			_savedTextColor = [[self textColor] retain];
 			[self setTextColor: [NSColor disabledControlTextColor]];
 		}
 	}

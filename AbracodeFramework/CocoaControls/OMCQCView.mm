@@ -7,35 +7,38 @@
 
 @implementation OMCQCView
 
-@synthesize commandID, tag = _omcTag, escapingMode;
+@synthesize commandID;
+@synthesize tag;
+@synthesize escapingMode;
 
 - (id)init
 {
     self = [super init];
-	if(self == NULL)
-		return NULL;
-    _omcTag = 0;
-	escapingMode = @"esc_none";
-	[escapingMode retain];
-	commandID = NULL;
+	if(self == nil)
+		return nil;
 
-	compositionPath = NULL;
-	_omcTarget = NULL;
-	_omcTargetSelector = NULL;
+	self.escapingMode = @"esc_none";
 
 	return self;
 }
 
+- (id)initWithCoder:(NSCoder *)coder
+{
+    self = [super initWithCoder:coder];
+	if(self == nil)
+		return nil;
+
+	self.escapingMode = @"esc_none";
+
+    return self;
+}
+
 - (void)dealloc
 {
-	[escapingMode release];
-	[commandID release];
-
-	if(compositionPath != NULL)
-		[compositionPath release];
-
+	self.escapingMode = nil;
+	self.commandID = nil;
+	[_compositionPath release];
 	[_omcTarget release];
-
     [super dealloc];
 }
 
@@ -56,81 +59,30 @@
 	_omcTargetSelector = aSelector;
 }
 
-//legacy encoder/decoder support - custom control data no longer serialized into nibs
-//custom properties get set later on nib load by calling proprty setters
-
-- (id)initWithCoder:(NSCoder *)coder
-{
-    self = [super initWithCoder:coder];
-	if(self == NULL)
-		return NULL;
-
-    if( ![coder allowsKeyedCoding] )
-		[NSException raise:NSInvalidArgumentException format:@"Unexpected coder not supporting keyed decoding"];
-
-	_omcTag = [coder decodeIntForKey:@"omcTag"];
-	escapingMode = [[coder decodeObjectForKey:@"omcEscapingMode"] retain];
-	if(escapingMode == NULL)
-	{
-		escapingMode = @"esc_none";//use default if key not present
-		[escapingMode retain];
-	}
-
-	compositionPath = NULL;
-	_omcTarget = NULL;
-	_omcTargetSelector = NULL;
-
-/*
-	BOOL isOK = [self loadCompositionFromFile:@"/Users/tom/Desktop/Introduction.qtz"];
-	if(!isOK)
-		NSLog(@"OMCQCView failed to load composition at \"/Users/tom/Desktop/Introduction.qtz\"");
-*/
-
-    return self;
-}
-
-- (void)encodeWithCoder:(NSCoder *)coder
-{
-    [super encodeWithCoder:coder];
-
-    if ( ![coder allowsKeyedCoding] )
-		[NSException raise:NSInvalidArgumentException format:@"Unexpected coder not supporting keyed encoding"];
-
-	[coder encodeInt:_omcTag forKey:@"omcTag"];
-
-	if(escapingMode == NULL)
-	{
-		escapingMode = @"esc_none";
-		[escapingMode retain];
-	}
-	
-	[coder encodeObject:escapingMode forKey:@"omcEscapingMode"];
-}
 
 - (NSString *)stringValue
 {
-	return compositionPath;
+	return _compositionPath;
 }
 
 - (void)setStringValue:(NSString *)aString
 {
-	if(compositionPath != NULL)
+	if(_compositionPath != nil)
 	{
 		[self stopRendering];
 		[self unloadComposition];
-		[compositionPath release];
-		compositionPath = NULL;
+		[_compositionPath release];
+		_compositionPath = nil;
 	}
 
 	if(aString == NULL)
 		return;
 
-	compositionPath = [aString retain];
+	_compositionPath = [aString retain];
 
-
-	BOOL isOK = [self loadCompositionFromFile:compositionPath];
+	BOOL isOK = [self loadCompositionFromFile:_compositionPath];
 	if(!isOK)
-		NSLog(@"OMCQCView failed to load composition at \"%@\"", compositionPath);
+		NSLog(@"OMCQCView failed to load composition at \"%@\"", _compositionPath);
 
 	NSMutableDictionary* userInfo = [self userInfo];
 	if( (userInfo != NULL) && (_omcTarget != NULL) && [_omcTarget respondsToSelector:@selector(getCFContext)])
@@ -167,39 +119,5 @@
 	}
 	return isOK;
 }
-
-/*
-- (BOOL) renderAtTime:(NSTimeInterval)time arguments:(NSDictionary*)arguments
-{
-	NSEvent *currentEvent = [NSApp currentEvent];
-
-	if( currentEvent != NULL )
-	{
-		NSPoint mousePoint = [self convertPoint: [currentEvent locationInWindow] fromView:nil];
-		NSRect myRect = [self bounds];
-
-		mousePoint.x /= myRect.size.width;
-		mousePoint.y /= myRect.size.height;
-
-		NSMutableDictionary* newArguments = [NSMutableDictionary dictionaryWithDictionary:arguments];
-		[newArguments setObject:[NSValue valueWithPoint:mousePoint] forKey:QCRendererMouseLocationKey];
-		[newArguments setObject:currentEvent forKey:QCRendererEventKey];
-		
-		//NSLog(@"renderAtTime (with event) with arguments=%@", newArguments);
-
-		return [super renderAtTime:time arguments:newArguments];
-	}
-
-	NSPoint mousePoint = [[self window] mouseLocationOutsideOfEventStream];
-	NSRect myRect = [self bounds];
-
-	mousePoint.x /= myRect.size.width;
-	mousePoint.y /= myRect.size.height;
-	NSMutableDictionary* newArguments = [NSMutableDictionary dictionaryWithDictionary:arguments];
-	[newArguments setObject:[NSValue valueWithPoint:mousePoint] forKey:QCRendererMouseLocationKey];
-	NSLog(@"renderAtTime (no event) with arguments=%@", newArguments);
-	return [super renderAtTime:time arguments:newArguments];
-}
-*/
 
 @end

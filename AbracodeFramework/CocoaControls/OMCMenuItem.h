@@ -7,9 +7,6 @@
 IB_DESIGNABLE
 @interface OMCMenuItem : NSMenuItem
 {
-	NSString *	commandID;
-	NSString *	mappedValue;
-	NSString *  escapingMode;
 }
 
 @property (nonatomic, retain) IBInspectable NSString * commandID;

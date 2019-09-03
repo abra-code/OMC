@@ -21,21 +21,17 @@ static OMCService *sOMCService = NULL;
 
 @implementation OMCDropletController
 
+@synthesize commandFilePath = _commandFilePath;
+@synthesize commandID;
+
 - (id)init
 {
-//	NSLog( @"OMCDropletController init" );
+	self = [super init];
+	if(self == nil)
+		return nil;
 
-	//not a problem since Xcode 4 anymore
-	if( ![self respondsToSelector: @selector(ibPopulateKeyPaths:)] )//don't init NSDocumentController in IB
-	{
-		self = [super init];
-		if(self == NULL)
-			return NULL;
-	}
-
-	commandID = NULL;
-	commandFilePath = @"Command.plist";
-	[commandFilePath retain];
+	commandID = nil;
+	self.commandFilePath = @"Command.plist";
 	_startingUp = YES;
 	_startupModifiers = 0;
 	_runningCommandCount = 0;
@@ -49,21 +45,37 @@ static OMCService *sOMCService = NULL;
 	return self;
 }
 
+- (id)initWithCoder:(NSCoder *)coder
+{
+    self = [super initWithCoder:coder];
+	if(self == nil)
+		return nil;
+
+	self.commandFilePath = @"Command.plist";
+	_startingUp = YES;
+	_startupModifiers = 0;
+	_runningCommandCount = 0;
+	
+	NSAppleEventManager *eventManager = [NSAppleEventManager sharedAppleEventManager];
+	[eventManager setEventHandler:self
+					andSelector:@selector(handleGetURLEvent:withReplyEvent:)
+					forEventClass:kInternetEventClass
+					andEventID:kAEGetURL];
+
+    return self;
+}
+
+
 - (void)dealloc
 {
-    [commandID release];
-    [commandFilePath release];
+    self.commandID = nil;
+    self.commandFilePath = nil;
 	[super dealloc];
 }
 
 - (void)awakeFromNib
 {
 //	NSLog( @"OMCDropletController awakeFromNib " );
-
-	_startupModifiers = 0;
-
-	if( [self respondsToSelector: @selector(ibPopulateKeyPaths:)] )//running as plugin in IB?
-		return;
 
 	NSApplication *myApp = [NSApplication sharedApplication];
 	if(myApp != NULL)
@@ -108,7 +120,7 @@ static OMCService *sOMCService = NULL;
         [self noteNewRecentDocumentURL:absoluteURL];
     
     _runningCommandCount++;
-    /*OSStatus err = */[OMCCommandExecutor runCommand:commandID forCommandFile:commandFilePath withContext:absoluteURL useNavDialog:YES delegate:self];
+    /*OSStatus err = */[OMCCommandExecutor runCommand:self.commandID forCommandFile:self.commandFilePath withContext:absoluteURL useNavDialog:YES delegate:self];
     _runningCommandCount--;
 
     completionHandler(NULL, NO, NULL);
@@ -129,7 +141,7 @@ static OMCService *sOMCService = NULL;
 	}
 	
 	_runningCommandCount++;
-	/*OSStatus err = */[OMCCommandExecutor runCommand:commandID forCommandFile:commandFilePath withContext:absoluteURLArray useNavDialog:YES delegate:self];
+	/*OSStatus err = */[OMCCommandExecutor runCommand:self.commandID forCommandFile:self.commandFilePath withContext:absoluteURLArray useNavDialog:YES delegate:self];
 	_runningCommandCount--;
 }
 
@@ -137,7 +149,7 @@ static OMCService *sOMCService = NULL;
 - (IBAction)newDocument:(id)sender
 {
 	_runningCommandCount++;
-	/*OSStatus err = */[OMCCommandExecutor runCommand:commandID forCommandFile:commandFilePath withContext:NULL useNavDialog:YES delegate:self];
+	/*OSStatus err = */[OMCCommandExecutor runCommand:self.commandID forCommandFile:self.commandFilePath withContext:NULL useNavDialog:YES delegate:self];
 	_runningCommandCount--;
 	
 }
@@ -145,7 +157,7 @@ static OMCService *sOMCService = NULL;
 - (IBAction)openDocument:(id)sender
 {
 	_runningCommandCount++;
-	/*OSStatus err = */[OMCCommandExecutor runCommand:commandID forCommandFile:commandFilePath withContext:NULL useNavDialog:YES delegate:self];
+	/*OSStatus err = */[OMCCommandExecutor runCommand:self.commandID forCommandFile:self.commandFilePath withContext:NULL useNavDialog:YES delegate:self];
 	_runningCommandCount--;
 }
 
@@ -320,7 +332,7 @@ static OMCService *sOMCService = NULL;
 	}
 		
 	_runningCommandCount++;
-	OSStatus err = [OMCCommandExecutor runCommand:commandID forCommandFile:commandFilePath withContext:NULL useNavDialog:showNavDialogOnStartup delegate:self];
+	OSStatus err = [OMCCommandExecutor runCommand:self.commandID forCommandFile:self.commandFilePath withContext:NULL useNavDialog:showNavDialogOnStartup delegate:self];
 	_runningCommandCount--;
 	
 	if( (err == noErr) && quitAfterDropExecution)
@@ -365,7 +377,7 @@ static OMCService *sOMCService = NULL;
 		return;
 
 	//if not "exe" query, the defaults are:
-	NSString* commandID = @"omc.app.handle-url";
+	NSString* urlCommandID = @"omc.app.handle-url";
 	id urlContext = urlString;
 
 /*
@@ -384,7 +396,7 @@ myapp://exe?commandID=my.file.command.id&file=file1.txt&file=file2.txt
 	if([hostKey compare:@"exe" options:NSCaseInsensitiveSearch] == NSOrderedSame)
 	{
 		//until correct values obtained
-		commandID = @"";
+		urlCommandID = @"";
 		urlContext = nil;
 
 		NSMutableArray<NSURL*>* fileList = nil;
@@ -404,7 +416,7 @@ myapp://exe?commandID=my.file.command.id&file=file1.txt&file=file2.txt
 			
 			if([key compare:@"commandID" options:NSCaseInsensitiveSearch] == NSOrderedSame)
 			{
-				commandID = value;
+				urlCommandID = value;
 			}
 			else if([key compare:@"text" options:NSCaseInsensitiveSearch] == NSOrderedSame)
 			{
@@ -430,97 +442,25 @@ myapp://exe?commandID=my.file.command.id&file=file1.txt&file=file2.txt
 	}
 
 	_runningCommandCount++;
-	OSStatus err = [OMCCommandExecutor runCommand:commandID forCommandFile:commandFilePath withContext:urlContext useNavDialog:NO delegate:self];
+	OSStatus err = [OMCCommandExecutor runCommand:urlCommandID forCommandFile:_commandFilePath withContext:urlContext useNavDialog:NO delegate:self];
 	(void)err;
 	_runningCommandCount--;
 }
 
 #pragma mark --- OMC support ---
 
-- (NSString *)commandID
-{
-	return commandID;
-}
-
-- (void)setCommandID:(NSString *)string
-{
-	[string retain];
-	[commandID release];
-	commandID = string;
-}
-
-
-- (NSString *)commandFilePath
-{
-	return commandFilePath;
-}
-
 - (void)setCommandFilePath:(NSString *)inPath
 {
-	if(inPath != NULL)
-	{
-		if([inPath length] == 0)
-		{
-			inPath = NULL;
-		}
-	}
-
-	if(inPath != NULL)
+	if((inPath != nil) && ([inPath length] > 0))
 	{
 		[inPath retain];
-		[commandFilePath release];
-		commandFilePath = inPath;
+		[_commandFilePath release];
+		_commandFilePath = inPath;
 	}
 	else
 	{
-		[commandFilePath release];
-		commandFilePath = @"Command.plist";
-		[commandFilePath retain];
-	}
-}
-
-//legacy encoder/decoder support - custom control data no longer serialized into nibs
-//custom properties get set later on nib load by calling proprty setters
-
-- (id)initWithCoder:(NSCoder *)coder
-{
-	commandID = NULL;
-	commandFilePath = @"Command.plist";
-	[commandFilePath retain];
-	_startingUp = YES;
-	_startupModifiers = 0;
-	_runningCommandCount = 0;
-	
-	//should never happen in Xcode 4 anymore
-	if( ![self respondsToSelector: @selector(ibPopulateKeyPaths:)] )//don't init NSDocumentController in IB
-	{
-		self = [super init];
-		if(self == NULL)
-			return NULL;
-	}
-
-    if( ![coder allowsKeyedCoding] )
-		[NSException raise:NSInvalidArgumentException format:@"Unexpected coder not supporting keyed decoding"];
-	
-	commandID = [[coder decodeObjectForKey:@"omcCommandID"] retain];
-
-	NSString *myFilePath = [coder decodeObjectForKey:@"omcCommandFilePath"];
-	[self setCommandFilePath:myFilePath];
-
-    return self;
-}
-
-- (void)encodeWithCoder:(NSCoder *)coder
-{
-    if ( ![coder allowsKeyedCoding] )
-		[NSException raise:NSInvalidArgumentException format:@"Unexpected coder not supporting keyed encoding"];
-
-	if(commandID != NULL)
-		[coder encodeObject:commandID forKey:@"omcCommandID"];
-	
-	if( (commandFilePath != NULL) && ![commandFilePath isEqualToString:@"Command.plist"] )
-	{
-		[coder encodeObject:commandFilePath forKey:@"omcCommandFilePath"];
+		[_commandFilePath release];
+		_commandFilePath = [@"Command.plist" retain];
 	}
 }
 

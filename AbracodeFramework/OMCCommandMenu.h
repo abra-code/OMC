@@ -11,10 +11,10 @@
 IB_DESIGNABLE
 @interface OMCCommandMenu : NSMenu
 {
-	NSString *	commandFilePath;
+	NSString *	_commandFilePath;
 }
 
-@property(retain) IBInspectable NSString * commandFilePath;
+@property (nonatomic, retain) IBInspectable NSString * commandFilePath;
 
 - (void)executeCommand:(id)sender;
 

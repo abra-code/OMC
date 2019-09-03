@@ -6,102 +6,64 @@
 
 @implementation OMCImageView
 
-@synthesize commandID, escapingMode;
+@synthesize commandID;
+@synthesize escapingMode;
 
 - (id)init
 {
     self = [super init];
-	if(self == NULL)
-		return NULL;
-	escapingMode = @"esc_none";
-	[escapingMode retain];
-	commandID = NULL;
-	imagePath = NULL;
+	if(self == nil)
+		return nil;
+
+	self.escapingMode = @"esc_none";
+
 	return self;
 }
-
-- (void)dealloc
-{
-	[escapingMode release];
-    [commandID release];
-
-	if(imagePath != NULL)
-		[imagePath release];
-
-    [super dealloc];
-}
-
-//legacy encoder/decoder support - custom control data no longer serialized into nibs
-//custom properties get set later on nib load by calling proprty setters
 
 - (id)initWithCoder:(NSCoder *)coder
 {
     self = [super initWithCoder:coder];
-	if(self == NULL)
-		return NULL;
+	if(self == nil)
+		return nil;
 
-    if( ![coder allowsKeyedCoding] )
-		[NSException raise:NSInvalidArgumentException format:@"Unexpected coder not supporting keyed decoding"];
-
-	imagePath = NULL;
-
-	commandID = [[coder decodeObjectForKey:@"omcCommandID"] retain];
-	
-	escapingMode = [[coder decodeObjectForKey:@"omcEscapingMode"] retain];
-	if(escapingMode == NULL)
-	{
-		escapingMode = @"esc_none";//use default if key not present
-		[escapingMode retain];
-	}
+	self.escapingMode = @"esc_none";
 
     return self;
 }
 
-- (void)encodeWithCoder:(NSCoder *)coder
+- (void)dealloc
 {
-    [super encodeWithCoder:coder];
-
-    if ( ![coder allowsKeyedCoding] )
-		[NSException raise:NSInvalidArgumentException format:@"Unexpected coder not supporting keyed encoding"];
-
-	if(commandID != NULL)
-		[coder encodeObject:commandID forKey:@"omcCommandID"];
-
-	if(escapingMode == NULL)
-	{
-		escapingMode = @"esc_none";
-		[escapingMode retain];
-	}
-	
-	[coder encodeObject:escapingMode forKey:@"omcEscapingMode"];
+	self.escapingMode = nil;
+	self.commandID = nil;
+	[_imagePath release];
+    [super dealloc];
 }
 
 //override NSControl methods
 - (NSString *)stringValue
 {
-	return imagePath;
+	return _imagePath;
 }
 
 - (void)setStringValue:(NSString *)aString
 {
-
 //	NSLog(@"image name = %@", [[self image] name]);
 
-	if(imagePath != NULL)
+	if(_imagePath != nil)
 	{
-		[imagePath release];
-		imagePath = NULL;
+		[_imagePath release];
+		_imagePath = nil;
 	}
-	imagePath = aString;
+	_imagePath = aString;
 	
-	if(imagePath != NULL)
+	if(_imagePath != nil)
 	{
-		[imagePath retain];
+		[_imagePath retain];
 
-		NSImage *myImage = [[NSImage alloc] initWithContentsOfFile:imagePath];
+		NSImage *myImage = [[NSImage alloc] initWithContentsOfFile:_imagePath];
 
 		if(myImage == NULL)
-			NSLog(@"OMCImageView failed to load image at \"%@\"", imagePath);
+			NSLog(@"OMCImageView failed to load image at \"%@\"", _imagePath);
 		[self setImage:myImage];
 		
 //		NSLog(@"image name = %@", [myImage name]);

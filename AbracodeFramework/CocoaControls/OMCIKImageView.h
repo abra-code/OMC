@@ -8,12 +8,10 @@
 IB_DESIGNABLE
 @interface OMCIKImageView : IKImageView
 {
-	NSInteger	_omcTag;
-	NSString *  escapingMode;
 }
 
 //no tag in IKImageView - OMC extension
-@property(readwrite) IBInspectable NSInteger tag;
+@property (nonatomic, readwrite) IBInspectable NSInteger tag;
 @property (nonatomic, retain) IBInspectable NSString * escapingMode;
 
 - (NSString *)stringValue;
