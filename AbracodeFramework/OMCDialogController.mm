@@ -113,8 +113,8 @@ FindArgumentType(const char *argTypeStr)
 - (id)initWithOmc:(OnMyCommandCM *)inOmc
 {
    self = [super init];
-	if(self == NULL)
-		return NULL;
+	if(self == nil)
+		return nil;
 
 	mWindow = NULL;
 	mOmcCocoaNib = NULL;
@@ -842,7 +842,6 @@ FindArgumentType(const char *argTypeStr)
 				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
 				if(controlID != NULL)
 				{
-					//NSInteger controlId = ::CFStringGetIntValue(theKey);
 					id controlOrView = [self findControlOrViewWithID:(NSString*)controlID];
 					if( controlOrView != NULL )
 					{
@@ -878,7 +877,6 @@ FindArgumentType(const char *argTypeStr)
 				CFArrayRef theArr = ACFType<CFArrayRef>::DynamicCast( valueList[i] );
 				if( (controlID != NULL) && (theArr != NULL) )
 				{
-					//NSInteger controlId = ::CFStringGetIntValue(theKey);
 					id controlOrView = [self findControlOrViewWithID:(NSString*)controlID];
 					if( controlOrView != NULL )
 					{
@@ -928,7 +926,6 @@ FindArgumentType(const char *argTypeStr)
 				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
 				if(controlID != NULL)
 				{
-					//NSInteger controlId = ::CFStringGetIntValue(theKey);
 					id controlOrView = [self findControlOrViewWithID:(NSString*)controlID];
 					if( (controlOrView != NULL) && [controlOrView isKindOfClass:[NSTableView class]] )
 					{
@@ -958,7 +955,6 @@ FindArgumentType(const char *argTypeStr)
 				CFArrayRef theArr = ACFType<CFArrayRef>::DynamicCast( valueList[i] );
 				if( (controlID != NULL) && (theArr != NULL) )
 				{
-					//NSInteger controlId = ::CFStringGetIntValue(theKey);
 					id controlOrView = [self findControlOrViewWithID:(NSString*)controlID];
 					if( (controlOrView != NULL) && [controlOrView isKindOfClass:[NSTableView class]] )
 					{
@@ -988,7 +984,6 @@ FindArgumentType(const char *argTypeStr)
 				CFArrayRef theArr = ACFType<CFArrayRef>::DynamicCast( valueList[i] );
 				if( (controlID != NULL) && (theArr != NULL) )
 				{
-					//NSInteger controlId = ::CFStringGetIntValue(theKey);
 					id controlOrView = [self findControlOrViewWithID:(NSString*)controlID];
 					if( (controlOrView != NULL) && [controlOrView isKindOfClass:[NSTableView class]] )
 					{
@@ -1023,7 +1018,6 @@ FindArgumentType(const char *argTypeStr)
 				CFArrayRef theArr = ACFType<CFArrayRef>::DynamicCast( valueList[i] );
 				if( (controlID != NULL) && (theArr != NULL) )
 				{
-					//NSInteger controlId = ::CFStringGetIntValue(theKey);
 					id controlOrView = [self findControlOrViewWithID:(NSString*)controlID];
 					if( (controlOrView != NULL) && [controlOrView isKindOfClass:[NSTableView class]] )
 					{
@@ -1053,7 +1047,6 @@ FindArgumentType(const char *argTypeStr)
 				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
 				if(controlID != NULL)
 				{
-					//NSInteger controlId = ::CFStringGetIntValue(theKey);
 					[self setControlStringValue:(NSString *)ACFType<CFStringRef>::DynamicCast( valueList[i] ) forControlID:(NSString*)controlID];
 				}
 			}
@@ -1078,7 +1071,6 @@ FindArgumentType(const char *argTypeStr)
 				CFBooleanRef theVal = ACFType<CFBooleanRef>::DynamicCast( valueList[i] );
 				if( (controlID != NULL) && (theVal != NULL) )
 				{
-					//NSInteger controlId = ::CFStringGetIntValue(theKey);
 					id controlOrView = [self findControlOrViewWithID:(NSString *)controlID];
 					if(controlOrView != NULL)
 					{
@@ -1113,7 +1105,6 @@ FindArgumentType(const char *argTypeStr)
 				CFBooleanRef theVal = ACFType<CFBooleanRef>::DynamicCast( valueList[i] );
 				if( (controlID != NULL) && (theVal != NULL) )
 				{
-					//NSInteger controlId = ::CFStringGetIntValue(theKey);
 					id controlOrView = [self findControlOrViewWithID:(NSString *)controlID];
 					if( (controlOrView != NULL) && [controlOrView respondsToSelector:@selector(setHidden:)] )
 					{
@@ -1143,7 +1134,6 @@ FindArgumentType(const char *argTypeStr)
 				CFStringRef theVal = ACFType<CFStringRef>::DynamicCast( valueList[i] );
 				if( (controlID != NULL) && (theVal != NULL) )
 				{
-					//NSInteger controlId = ::CFStringGetIntValue(theKey);
 					NSView *controlOrView = [self findControlOrViewWithID:(NSString *)controlID];
 					if( (controlOrView != NULL) && [controlOrView respondsToSelector:@selector(setCommandID:)] )
 					{
@@ -1186,16 +1176,10 @@ FindArgumentType(const char *argTypeStr)
 					}
 					else
 					{
-						//select command for some control?
-						//tab control item maybe? but does it have a tag?
-
-						//NSInteger controlId = ::CFStringGetIntValue(theKey);
-						//NSView *controlOrView = [self findControlOrViewWithID:controlID];
-
-						//if( (controlOrView != NULL) && [controlOrView respondsToSelector:@selector(setCommandID:)] )
-						//{
-						//	[controlOrView setCommandID:theVal];
-						//}
+						//"selecting" a control means putting a focus in it/making it the first responder
+						NSView *controlOrView = [self findControlOrViewWithID:(NSString *)controlID];
+						if(controlOrView != nil)
+							[mWindow makeFirstResponder:controlOrView];
 					}
 				}
 			}

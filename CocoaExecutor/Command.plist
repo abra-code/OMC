@@ -301,13 +301,13 @@ exit 1
 			<string>act_always</string>
 			<key>COMMAND</key>
 			<array>
-				<string>echo "Executing dialog init subcommand";
-"$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$OMC_NIB_DLG_GUID" 101 "OFF";
-"$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$OMC_NIB_DLG_GUID" 102 0;
-"$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$OMC_NIB_DLG_GUID" 111 "Subcommand-initialized text view";
-#"$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$OMC_NIB_DLG_GUID" 122 "/Users/tom/test-image.png";
-"$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$OMC_NIB_DLG_GUID" 900 omc_disable;
-
+				<string>echo "Executing dialog init subcommand"
+"$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$OMC_NIB_DLG_GUID" 101 "OFF"
+"$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$OMC_NIB_DLG_GUID" 102 0
+"$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$OMC_NIB_DLG_GUID" 111 "Subcommand-initialized text view"
+#"$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$OMC_NIB_DLG_GUID" 122 "/Users/tom/test-image.png"
+"$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$OMC_NIB_DLG_GUID" 900 omc_disable
+"$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$OMC_NIB_DLG_GUID" 200 omc_select
 </string>
 			</array>
 			<key>COMMAND_ID</key>
