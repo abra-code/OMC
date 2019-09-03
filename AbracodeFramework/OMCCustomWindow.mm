@@ -29,8 +29,8 @@
 	NSRect windowRect = NSMakeRect(0, 0, imgSize.width, imgSize.height);
 
 	self = [super initWithContentRect:windowRect styleMask:NSWindowStyleMaskBorderless backing:NSBackingStoreBuffered defer:YES];
-	if(self == NULL)
-		return NULL;
+	if(self == nil)
+		return nil;
 
 	textBox = inSettings->textBox;//top-left relative
 	closeBox = inSettings->closeBox; //top-left relative

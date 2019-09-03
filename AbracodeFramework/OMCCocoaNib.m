@@ -16,10 +16,10 @@
 	mTopLevelNibObjects = NULL;
 
     self = [super init];
- 	if(self == NULL)
-		return NULL;
+ 	if(self == nil)
+		return nil;
 
-	if( (inNib != NULL) && [inNib instantiateWithOwner:self topLevelObjects:&mTopLevelNibObjects] )
+	if( (inNib != nil) && [inNib instantiateWithOwner:self topLevelObjects:&mTopLevelNibObjects] )
 	{
 		[mTopLevelNibObjects retain];
 		//NSLog(@"mTopLevelNibObjects=%@", mTopLevelNibObjects);
@@ -33,11 +33,11 @@
 	mTopLevelNibObjects = NULL;
 
     self = [super init];
-	if(self == NULL)
-		return NULL;
+	if(self == nil)
+		return nil;
 
 	NSNib *myNib = [[NSNib alloc] initWithNibNamed:inNibName bundle:inBundle];
-	if(myNib != NULL)
+	if(myNib != nil)
 	{
 		if ([myNib instantiateWithOwner:self topLevelObjects:&mTopLevelNibObjects])
 		{

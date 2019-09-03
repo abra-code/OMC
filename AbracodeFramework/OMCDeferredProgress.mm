@@ -727,8 +727,8 @@ inline double CalculateTotalProgress(OMCTaskProgress *allTasks, CFIndex inCount)
 -(id)initWithParams:(CFDictionaryRef)inParams forCommand:(NSString *)inCommandName taskCount:(CFIndex)inTaskCount locTable:(CFStringRef)inLocTable locBundle:(CFBundleRef)inLocBundle
 {
 	self = [super init];
-    if(self == NULL)
-		return NULL;
+    if(self == nil)
+		return nil;
 
 	
 #if _DEBUG_

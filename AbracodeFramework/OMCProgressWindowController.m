@@ -14,8 +14,9 @@
 - (id)initWithWindowNibName:(NSString *)windowNibName
 {
 	self = [super initWithWindowNibName:windowNibName];
-	if(self == NULL)
-		return NULL;
+	if(self == nil)
+		return nil;
+
 	mCanceled = NO;
 	mIsDeterminate = NO;
 	mLastValue = -1;

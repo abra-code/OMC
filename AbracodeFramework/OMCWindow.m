@@ -18,12 +18,12 @@ static int sWindowCount = 0;
 	//NSLog(@"OMCWindow initWithContentRect 1");
 	
 	self = [super initWithContentRect:contentRect styleMask:aStyle backing:bufferingType defer:flag];
-	if(self == NULL)
-		return NULL;
+	if(self == nil)
+		return nil;
 
 	useFadeIn = NO;
 	useFadeOut = NO;
-	_fadeOutAnimation = NULL;
+	_fadeOutAnimation = nil;
 
 	return self;
 }
@@ -33,12 +33,12 @@ static int sWindowCount = 0;
 	//NSLog(@"OMCWindow initWithContentRect 2");
 
 	self = [super initWithContentRect:contentRect styleMask:aStyle backing:bufferingType defer:flag screen:screen];
-	if(self == NULL)
-		return NULL;
+	if(self == nil)
+		return nil;
 
 	useFadeIn = NO;
 	useFadeOut = NO;
-	_fadeOutAnimation = NULL;
+	_fadeOutAnimation = nil;
 	
 	return self;
 }
