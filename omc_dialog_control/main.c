@@ -19,16 +19,12 @@ typedef enum InstructionID
 	omc_list_append_items_from_file,
 	omc_list_append_items_from_stdin,
 	omc_table_remove_all_rows,
+	omc_table_prepare_empty, //like omc_table_remove_all_rows but without reload/refresh
 	omc_table_add_rows,
 	omc_table_add_rows_from_file,
 	omc_table_add_rows_from_stdin,
 	omc_table_set_columns,
 	omc_table_set_column_widths,
-/*	omc_table_remove_all_columns,
-	omc_table_add_column_items,
-	omc_table_add_column_items_from_file,
-	omc_table_add_column_items_from_stdin,
-*/
 	omc_set_command_id,
 	omc_resize, //for window or control
 	omc_move, //for window or control
@@ -42,12 +38,12 @@ typedef enum InstructionID
 
 typedef struct InstructionWord
 {
-	SInt32 len;
+	size_t len;
 	CFStringRef word;
 	CFStringRef key;
-	Boolean boolValue;//only used for boolean switches
-	Boolean appendable;
-	SInt32 argumentCount;
+	bool boolValue;//only used for boolean switches
+	bool appendable;
+	int32_t argumentCount;
 } InstructionWord;
 
 enum
@@ -70,19 +66,13 @@ static InstructionWord sInstructionWordList[] =
 	{ sizeof("omc_list_append_items_from_file")-1,			CFSTR("omc_list_append_items_from_file"),		CFSTR("APPEND_LIST_ITEMS"),		true, true,		kArgumentCount_FromFile },
 	{ sizeof("omc_list_append_items_from_stdin")-1,			CFSTR("omc_list_append_items_from_stdin"),		CFSTR("APPEND_LIST_ITEMS"),		true, true,		kArgumentCount_FromStdin },
 	{ sizeof("omc_table_remove_all_rows")-1,				CFSTR("omc_table_remove_all_rows"),				CFSTR("REMOVE_TABLE_ROWS"),		true, false,	0 },
+	{ sizeof("omc_table_prepare_empty")-1,					CFSTR("omc_table_prepare_empty"),				CFSTR("PREPARE_TABLE_EMPTY"),	true, false,	0 },
 	{ sizeof("omc_table_add_rows")-1,						CFSTR("omc_table_add_rows"),					CFSTR("ADD_TABLE_ROWS"),		true, true,		kArgumentCount_Variable },
 	{ sizeof("omc_table_add_rows_from_file")-1,				CFSTR("omc_table_add_rows_from_file"),			CFSTR("ADD_TABLE_ROWS"),		true, true,		kArgumentCount_FromFile },
 	{ sizeof("omc_table_add_rows_from_stdin")-1,			CFSTR("omc_table_add_rows_from_stdin"),			CFSTR("ADD_TABLE_ROWS"),		true, true,		kArgumentCount_FromStdin },
 	{ sizeof("omc_table_set_columns")-1,					CFSTR("omc_table_set_columns"),					CFSTR("SET_TABLE_COLUMNS"),		true, false,	kArgumentCount_Variable },
 	{ sizeof("omc_table_set_column_widths")-1,				CFSTR("omc_table_set_column_widths"),			CFSTR("SET_TABLE_WIDTHS"),		true, false,	kArgumentCount_Variable },
-
-/*	{ sizeof("omc_table_remove_all_columns")-1,				CFSTR("omc_table_remove_all_columns"),			CFSTR("REMOVE_TABLE_COLUMNS") },
-	{ sizeof("omc_table_add_column_items")-1,				CFSTR("omc_table_add_column_items"),			CFSTR("ADD_COLUMN_ITEMS") },
-	{ sizeof("omc_table_add_column_items_from_file")-1,		CFSTR("omc_table_add_column_items_from_file"),	CFSTR("ADD_COLUMN_ITEMS") },
-	{ sizeof("omc_table_add_column_items_from_stdin")-1,	CFSTR("omc_table_add_column_items_from_stdin"),	CFSTR("ADD_COLUMN_ITEMS") },
-*/
 	{ sizeof("omc_set_command_id")-1,						CFSTR("omc_set_command_id"),					CFSTR("COMMAND_IDS"),			true, false,	1 },
-
 	{ sizeof("omc_resize")-1,								CFSTR("omc_resize"),							CFSTR("RESIZE"),				true, false,	2 },
 	{ sizeof("omc_move")-1,									CFSTR("omc_move"),								CFSTR("MOVE"),					true, false,	2 },
 	{ sizeof("omc_scroll")-1,								CFSTR("omc_scroll"),							CFSTR("SCROLL"),				true, false,	2 },
@@ -95,12 +85,40 @@ static InstructionWord sInstructionWordList[] =
 
 //min and max len defined for slight optimization in resolving instructions
 //the shortest is omc_show
-const CFIndex kMinInstructionWordLen = sizeof("omc_show") - 1;
+const size_t kMinInstructionWordLen = sizeof("omc_show") - 1;
 //the longest is omc_list_append_items_from_stdin
-const CFIndex kMaxInstructionWordLen = sizeof("omc_list_append_items_from_stdin") - 1;
+const size_t kMaxInstructionWordLen = sizeof("omc_list_append_items_from_stdin") - 1;
 
 
-InstructionID GetInstructionID(CFStringRef inStr);
+static inline InstructionID
+GetInstructionID(CFStringRef inStr)
+{
+	if(inStr == NULL)
+		return omc_set_control_value;
+
+  	size_t	strLen = (size_t)CFStringGetLength(inStr);
+	if( (strLen < kMinInstructionWordLen) || (strLen > kMaxInstructionWordLen))
+		return omc_set_control_value;
+
+  	UniChar oneChar = CFStringGetCharacterAtIndex(inStr, 0);
+	if(oneChar != 'o')
+		return omc_set_control_value; //special word must start with omc
+
+	size_t instructionCount = sizeof(sInstructionWordList)/sizeof(InstructionWord);
+	for(size_t i = 0; i < instructionCount; i++)
+	{
+		if(sInstructionWordList[i].len == strLen)
+		{
+			if( kCFCompareEqualTo == CFStringCompare( inStr, sInstructionWordList[i].word, 0) )
+			{
+				return i;
+			}
+		}
+	}
+
+	return omc_set_control_value;
+}
+
 
 int main (int argc, const char * argv[])
 {
@@ -111,10 +129,6 @@ int main (int argc, const char * argv[])
 	CFTypeRef theResult = NULL;
 	CFMutableDictionaryRef plistDict = NULL;
 	CFMutableDictionaryRef appendListItemsDict = NULL;
-
-	Boolean hasLegacyLiveUpdateParam = false;
-	Boolean doAddListItems = false;
-
 	CFMessagePortRef remotePort = NULL;
 
 	if(argc < 4)
@@ -134,10 +148,11 @@ int main (int argc, const char * argv[])
 		fprintf(stdout, "\tomc_table_set_columns [followed by column names - variable num of args]\n");
 		fprintf(stdout, "\tomc_table_set_column_widths [followed by column widths - variable num of args]\n");
 		fprintf(stdout, "\tomc_table_remove_all_rows\n");
+		fprintf(stdout, "\tomc_table_prepare_empty (like omc_table_remove_all_rows but without refresh)\n");
 		fprintf(stdout, "\tomc_table_add_rows [followed by tab-separated row strings]\n");
 		fprintf(stdout, "\tomc_table_add_rows_from_file [followed by file name - tab separated data]\n");
 		fprintf(stdout, "\tomc_table_add_rows_from_stdin (read from stdin or pipe - tab separated data)\n");
-		fprintf(stdout, "\tomc_select (brings dialog window to front)\n");
+		fprintf(stdout, "\tomc_select (brings dialog window or app to front, sets control focus)\n");
 		fprintf(stdout, "\tomc_terminate_ok (close dialog with OK message)\n");
 		fprintf(stdout, "\tomc_terminate_cancel (close dialog with Cancel message)\n");
 		fprintf(stdout, "\tomc_resize [followed by 2 space separated numbers] (for dialog window or controls)\n");
@@ -187,7 +202,6 @@ int main (int argc, const char * argv[])
 				SInt32 controlID = CFStringGetIntValue(controlIDStr);
 				if( (controlID <= 0) || (controlID > 9999))
 				{
-					CFRelease(controlIDStr);
 					controlIDStr = NULL;
 				}
 			}
@@ -207,30 +221,16 @@ int main (int argc, const char * argv[])
 	InstructionID instruction = GetInstructionID(valueStr);//must return valid index
 	key = sInstructionWordList[instruction].key;
 
-	CFStringRef portName = NULL;
-	if(argc >= 5)
-	{
-		hasLegacyLiveUpdateParam = (strcmp("omc_live_update", argv[argc-1]) == 0);
-		if(hasLegacyLiveUpdateParam == false)
-			hasLegacyLiveUpdateParam = ((doAddListItems == false) && (strcmp("live", argv[4]) == 0));//backward compatibility
-	}
-
-	portName = CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("OMCDialogControlPort-%s"), argv[1]);
+	CFStringRef portName = CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("OMCDialogControlPort-%s"), argv[1]);
 	if(portName != NULL)
 	{
 		remotePort = CFMessagePortCreateRemote(kCFAllocatorDefault, portName);//should return non-null if listener port created
-		CFRelease(portName);
 	}
-	
-	if(remotePort == NULL)
-	{
-		//fprintf(stderr, "Could not create a communication port with dialog. Saving params to plist file\n");
-	}
-
-//	int result = system("test -d /tmp/OMC || mkdir /tmp/OMC && chmod ugo+rw /tmp/OMC");
 
 	if(remotePort == NULL)
 	{//not communicating through port - write to file
+		//fprintf(stderr, "Could not create a communication port with dialog. Saving params to plist file\n");
+
 		if( access("/tmp/OMC", F_OK|R_OK|W_OK|X_OK) != 0 )
 		{
 			mkdir("/tmp/OMC", S_IRWXU|S_IRWXG|S_IRWXO);
@@ -276,7 +276,6 @@ int main (int argc, const char * argv[])
 		if( (instruction == omc_set_control_value) || (instruction == omc_set_value_from_stdin) )//regular control values
 		{
 			CFMutableDictionaryRef valuesDict = NULL;
-			Boolean doRelease = false;
 			theResult = CFDictionaryGetValue(plistDict, (const void *)key);
 			if( (theResult != NULL) && (CFDictionaryGetTypeID() == CFGetTypeID(theResult)) )
 				valuesDict = (CFMutableDictionaryRef)theResult;
@@ -285,11 +284,9 @@ int main (int argc, const char * argv[])
 			{//create new one
 				valuesDict = CFDictionaryCreateMutable( kCFAllocatorDefault, 0,
 													   &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
-				
 				if(valuesDict != NULL)
 				{
 					CFDictionarySetValue(plistDict, key, valuesDict);
-					doRelease = true;
 				}
 				else
 				{
@@ -319,7 +316,6 @@ int main (int argc, const char * argv[])
 					{
 						//CFShow(wholeStr);
 						CFDictionarySetValue(valuesDict, controlIDStr, wholeStr);
-						CFRelease(wholeStr);
 					}
 				}
 			}
@@ -327,10 +323,6 @@ int main (int argc, const char * argv[])
 			{
 				CFDictionarySetValue(valuesDict, controlIDStr, valueStr);
 			}
-
-			if(doRelease)
-				CFRelease(valuesDict);
-			
 		}
 		//bool switches or 0 argument instructions for which we set bool but we don't care about the value
 		else if( (instruction == omc_enable) || (instruction == omc_disable) || 
@@ -340,8 +332,6 @@ int main (int argc, const char * argv[])
 		   )
 		{
 			CFMutableDictionaryRef disableDict = NULL;
-			Boolean doRelease = false;
-
 			theResult = CFDictionaryGetValue(plistDict, (const void *)key);
 			if( (theResult != NULL) && (CFDictionaryGetTypeID() == CFGetTypeID(theResult)) )
 				disableDict = (CFMutableDictionaryRef)theResult;
@@ -354,7 +344,6 @@ int main (int argc, const char * argv[])
 				if(disableDict != NULL)
 				{
 					CFDictionarySetValue(plistDict, key, disableDict);
-					doRelease = true;
 				}
 				else
 				{
@@ -364,22 +353,12 @@ int main (int argc, const char * argv[])
 				}
 			}
 			CFDictionarySetValue(disableDict, controlIDStr, sInstructionWordList[instruction].boolValue ? kCFBooleanTrue : kCFBooleanFalse );
-			if(doRelease)
-				CFRelease(disableDict);
 		}
 		else if( (instruction == omc_list_remove_all) || 
-				(instruction == omc_table_remove_all_rows) )
+				(instruction == omc_table_remove_all_rows) ||
+				(instruction == omc_table_prepare_empty) )
 		{//"remove" always gets processed before adding items in OMC so it works fine
 			CFMutableDictionaryRef removeListItemsDict = NULL;
-			CFStringRef arrayKey = NULL;
-			
-			if(instruction == omc_list_remove_all)
-				arrayKey =  sInstructionWordList[omc_list_append_items].key;
-			else if(instruction == omc_table_remove_all_rows)
-				arrayKey = sInstructionWordList[omc_table_add_rows].key;
-
-			Boolean doRelease = false;
-
 			theResult = CFDictionaryGetValue(plistDict, (const void *)key);
 			if( (theResult != NULL) && (CFDictionaryGetTypeID() == CFGetTypeID(theResult)) )
 				removeListItemsDict = (CFMutableDictionaryRef)theResult;
@@ -392,7 +371,6 @@ int main (int argc, const char * argv[])
 				if(removeListItemsDict != NULL)
 				{
 					CFDictionarySetValue(plistDict, key, removeListItemsDict);
-					doRelease = true;
 				}
 				else
 				{
@@ -402,10 +380,13 @@ int main (int argc, const char * argv[])
 				}
 			}
 			CFDictionarySetValue(removeListItemsDict, controlIDStr, kCFBooleanTrue);
-			if(doRelease)
-				CFRelease(removeListItemsDict);
 
 //now check if there were any pending "append" items for this control id and remove them as well
+			CFStringRef arrayKey = NULL;
+			if(instruction == omc_list_remove_all)
+				arrayKey =  sInstructionWordList[omc_list_append_items].key;
+			else // if((instruction == omc_table_remove_all_rows) || (instruction == omc_table_prepare_empty))
+				arrayKey = sInstructionWordList[omc_table_add_rows].key;
 
 			theResult = CFDictionaryGetValue(plistDict, (const void *)arrayKey);
 			if( (theResult != NULL) && (CFDictionaryGetTypeID() == CFGetTypeID(theResult)) )
@@ -417,7 +398,6 @@ int main (int argc, const char * argv[])
 		}
 		else if(instruction == omc_invoke)
 		{//omc_invoke is different because it contains an array of arrays (the lowest level array forming one ObjC message)
-			Boolean doRelease = false;
 			theResult = CFDictionaryGetValue(plistDict, (const void *)key);
 			if( (theResult != NULL) && (CFDictionaryGetTypeID() == CFGetTypeID(theResult)) )
 				appendListItemsDict = (CFMutableDictionaryRef)theResult;
@@ -430,7 +410,6 @@ int main (int argc, const char * argv[])
 				if(appendListItemsDict != NULL)
 				{
 					CFDictionarySetValue(plistDict, key, appendListItemsDict);
-					doRelease = true;
 				}
 				else
 				{
@@ -441,7 +420,6 @@ int main (int argc, const char * argv[])
 			}
 			
 			CFMutableArrayRef itemArray = NULL;
-			Boolean doReleaseArray = false;
 			theResult = CFDictionaryGetValue(appendListItemsDict, (const void *)controlIDStr);
 			if( (theResult != NULL) && (CFArrayGetTypeID() == CFGetTypeID(theResult)) )
 				itemArray = (CFMutableArrayRef)theResult;
@@ -452,35 +430,27 @@ int main (int argc, const char * argv[])
 				if(itemArray != NULL)
 				{
 					CFDictionarySetValue(appendListItemsDict, controlIDStr, itemArray);
-					doReleaseArray = true;
 				}
 				else
 				{
 					fprintf(stderr, "An error ocurred when creating new CFArray. Out of memory?!\n");
 					result = -1;
-					if(doRelease)
-						CFRelease(appendListItemsDict);
 					goto error_exit;
 				}
 			}
 			//variable item count
-			CFIndex i;
-			CFIndex itemCount = argc;
-			if(hasLegacyLiveUpdateParam)
-				itemCount--; //last argument is omc_live_update, not real list item
-
+			int itemCount = argc;
 			if(itemCount > 4)
 			{
 				CFMutableArrayRef objCMessageArray = CFArrayCreateMutable( kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks );
 				if(objCMessageArray != NULL)
 				{
-					for(i = 4; i < itemCount; i++)
+					for(int i = 4; i < itemCount; i++)
 					{
 						CFStringRef itemStr = CFStringCreateWithCString(kCFAllocatorDefault, argv[i], kCFStringEncodingUTF8);
 						if(itemStr != NULL)
 						{
 							CFArrayAppendValue( objCMessageArray, itemStr );
-							CFRelease(itemStr);
 						}
 						else
 						{
@@ -488,15 +458,13 @@ int main (int argc, const char * argv[])
 						}
 					}
 					CFArrayAppendValue( itemArray, objCMessageArray );
-					CFRelease(objCMessageArray);
 				}
 			}
 		}
-		//multiple argument instructions,  new values appended or replaced in subarray
+		//multiple argument instructions, new values appended or replaced in subarray
 		else if( (sInstructionWordList[instruction].argumentCount != 0) &&
 				(sInstructionWordList[instruction].argumentCount != 1) )
 		{//adding items after remove command was issued is ok. the recipient will remove first and add next
-			Boolean doRelease = false;
 			theResult = CFDictionaryGetValue(plistDict, (const void *)key);
 			if( (theResult != NULL) && (CFDictionaryGetTypeID() == CFGetTypeID(theResult)) )
 				appendListItemsDict = (CFMutableDictionaryRef)theResult;
@@ -509,7 +477,6 @@ int main (int argc, const char * argv[])
 				if(appendListItemsDict != NULL)
 				{
 					CFDictionarySetValue(plistDict, key, appendListItemsDict);
-					doRelease = true;
 				}
 				else
 				{
@@ -520,7 +487,6 @@ int main (int argc, const char * argv[])
 			}
 			
 			CFMutableArrayRef itemArray = NULL;
-			Boolean doReleaseArray = false;
 			theResult = CFDictionaryGetValue(appendListItemsDict, (const void *)controlIDStr);
 			if( (theResult != NULL) && (CFArrayGetTypeID() == CFGetTypeID(theResult)) )
 				itemArray = (CFMutableArrayRef)theResult;
@@ -531,23 +497,17 @@ int main (int argc, const char * argv[])
 				if(itemArray != NULL)
 				{
 					CFDictionarySetValue(appendListItemsDict, controlIDStr, itemArray);
-					doReleaseArray = true;
 				}
 				else
 				{
 					fprintf(stderr, "An error ocurred when creating new CFArray. Out of memory?!\n");
 					result = -1;
-					if(doRelease)
-						CFRelease(appendListItemsDict);
 					goto error_exit;
 				}
 			}
 			
 			//variable item count
-			CFIndex i;
-			CFIndex itemCount = argc;
-			if(hasLegacyLiveUpdateParam)
-				itemCount--; //last argument is omc_live_update, not real list item
+			int itemCount = argc;
 
 			if( (sInstructionWordList[instruction].argumentCount == kArgumentCount_Variable) ||
 			    (sInstructionWordList[instruction].argumentCount > 0) )
@@ -555,13 +515,12 @@ int main (int argc, const char * argv[])
 				if( !sInstructionWordList[instruction].appendable )
 					CFArrayRemoveAllValues(itemArray);//those commands are not "appendable" 
 					
-				for(i = 4; i < itemCount; i++)
+				for(int i = 4; i < itemCount; i++)
 				{
 					CFStringRef itemStr = CFStringCreateWithCString(kCFAllocatorDefault, argv[i], kCFStringEncodingUTF8);
 					if(itemStr != NULL)
 					{
 						CFArrayAppendValue( itemArray, itemStr );
-						CFRelease(itemStr);
 					}
 					else
 					{
@@ -606,7 +565,6 @@ int main (int argc, const char * argv[])
 							if(itemStr != NULL)
 							{
 								CFArrayAppendValue( itemArray, itemStr );
-								CFRelease(itemStr);
 							}
 							else
 							{
@@ -618,25 +576,12 @@ int main (int argc, const char * argv[])
 					if( sInstructionWordList[instruction].argumentCount == kArgumentCount_FromFile )
 						fclose(fp);
 				}
-
-				if(buff != NULL )
-				{
-					free(buff);
-					buff = NULL;
-				}
 			}
-			
-			if(doReleaseArray)
-				CFRelease(itemArray);
-
-			if(doRelease)
-				CFRelease(appendListItemsDict);
 		}
 		//one argument instructions
 		else if( sInstructionWordList[instruction].argumentCount == 1 )
 		{
 			CFMutableDictionaryRef oneArgIntructionDict = NULL;
-			Boolean doRelease = false;
 
 			theResult = CFDictionaryGetValue(plistDict, (const void *)key);
 			if( (theResult != NULL) && (CFDictionaryGetTypeID() == CFGetTypeID(theResult)) )
@@ -650,7 +595,6 @@ int main (int argc, const char * argv[])
 				if(oneArgIntructionDict != NULL)
 				{
 					CFDictionarySetValue(plistDict, key, oneArgIntructionDict);
-					doRelease = true;
 				}
 				else
 				{
@@ -660,28 +604,20 @@ int main (int argc, const char * argv[])
 				}
 			}
 
-			CFIndex itemCount = argc;
-			if(hasLegacyLiveUpdateParam)
-				itemCount--; //last argument is omc_live_update, not real item
+			int itemCount = argc;
 			if(itemCount == 5)
 			{
 				CFStringRef argString = CFStringCreateWithCString(kCFAllocatorDefault, argv[4], kCFStringEncodingUTF8);
 				if(argString != NULL)
 				{
 					CFDictionarySetValue(oneArgIntructionDict, controlIDStr, argString);
-					CFRelease(argString);
 				}
 			}
-			
-			if(doRelease)
-				CFRelease(oneArgIntructionDict);
 		}
 		else
 		{
 			fprintf(stderr, "This should not happen: unknown instruction id. Aliens?\n");
 		}
-
-		CFRelease(valueStr);
 	}
 
     if(urlRef != NULL)
@@ -698,54 +634,14 @@ int main (int argc, const char * argv[])
             result = CFMessagePortSendRequest(remotePort, 0/*msgid*/, plistData, 5/*send timeout*/, 0/*rcv timout*/, NULL/*kCFRunLoopDefaultMode*/, NULL/*replyData*/);
             if(result != 0)
                 fprintf(stderr, "An error ocurred when sending request to dialog port: %d\n", result);
-            CFRelease(plistData);
         }
     }
 
 error_exit:
 
-	if(controlIDStr != NULL)
-		CFRelease(controlIDStr);
-
-	if(plistDict != NULL)
-		CFRelease(plistDict);
-
-	if(urlRef != NULL)
-		CFRelease(urlRef);
-		
 	if(remotePort != NULL)
 		CFRelease(remotePort);
 
     return result;
-}
-
-InstructionID
-GetInstructionID(CFStringRef inStr)
-{
-	if(inStr == NULL)
-		return omc_set_control_value;
-
-  	CFIndex	strLen = CFStringGetLength(inStr);
-	if( (strLen < kMinInstructionWordLen) || (strLen > kMaxInstructionWordLen))
-		return omc_set_control_value;
-
-  	UniChar oneChar = CFStringGetCharacterAtIndex(inStr, 0);
-	if(oneChar != 'o')
-		return omc_set_control_value; //special word must start with omc
-
-	UInt32 theCount = sizeof(sInstructionWordList)/sizeof(InstructionWord);
-	UInt32 i;
-	for( i = 0; i< theCount; i++ )
-	{
-		if(sInstructionWordList[i].len == strLen)
-		{
-			if( kCFCompareEqualTo == CFStringCompare( inStr, sInstructionWordList[i].word, 0) )
-			{
-				return i;
-			}
-		}
-	}
-
-	return omc_set_control_value;
 }
 

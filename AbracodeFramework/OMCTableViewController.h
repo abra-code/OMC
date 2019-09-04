@@ -33,6 +33,7 @@ typedef enum ColumnSeparatorFormat
 
 -(void)removeRows;
 -(void)addRows:(CFArrayRef)inRowArray;
+-(void)reloadData;
 -(void)setColumns:(CFArrayRef)inColumnArray;
 -(void)setColumnWidths:(CFArrayRef)inWidthsArray;
 -(NSArray *)splitRowString:(NSString *)inRowString;

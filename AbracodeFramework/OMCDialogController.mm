@@ -910,7 +910,38 @@ FindArgumentType(const char *argTypeStr)
 		}
 	}
 
-	//TODO: solve the refresh story
+	//empty the table without refresh/reload
+	CFDictionaryRef emptyTableDict;
+	if( controlValues.GetValue(CFSTR("PREPARE_TABLE_EMPTY"), emptyTableDict) )
+	{
+		itemCount = ::CFDictionaryGetCount(emptyTableDict);
+		if(itemCount > 0)
+		{
+			std::vector<CFTypeRef> keyList(itemCount);
+			std::vector<CFTypeRef> valueList(itemCount);
+
+			::CFDictionaryGetKeysAndValues(emptyTableDict, (const void **)keyList.data(), (const void **)valueList.data());
+			for(CFIndex i = 0; i < itemCount; i++)
+			{
+				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
+				if(controlID != NULL)
+				{
+					id controlOrView = [self findControlOrViewWithID:(NSString*)controlID];
+					if( (controlOrView != nil) && [controlOrView isKindOfClass:[NSTableView class]] )
+					{
+						NSTableView *myTable = (NSTableView *)controlOrView;
+						id myDelegate = [myTable delegate];
+						if( (myDelegate != nil) && [myDelegate isKindOfClass:[OMCTableViewController class]] )
+						{
+							[myDelegate removeRows];
+							//intentional no reload here
+						}
+					}
+				}
+			}
+		}
+	}
+
 	CFDictionaryRef removeTableRowsDict;
 	if( controlValues.GetValue(CFSTR("REMOVE_TABLE_ROWS"), removeTableRowsDict) )
 	{
@@ -927,12 +958,15 @@ FindArgumentType(const char *argTypeStr)
 				if(controlID != NULL)
 				{
 					id controlOrView = [self findControlOrViewWithID:(NSString*)controlID];
-					if( (controlOrView != NULL) && [controlOrView isKindOfClass:[NSTableView class]] )
+					if( (controlOrView != nil) && [controlOrView isKindOfClass:[NSTableView class]] )
 					{
 						NSTableView *myTable = (NSTableView *)controlOrView;
 						id myDelegate = [myTable delegate];
-						if( (myDelegate != NULL) && [myDelegate isKindOfClass:[OMCTableViewController class]] )
+						if( (myDelegate != nil) && [myDelegate isKindOfClass:[OMCTableViewController class]] )
+						{
 							[myDelegate removeRows];
+							[myDelegate reloadData];
+						}
 					}
 				}
 			}
@@ -956,12 +990,15 @@ FindArgumentType(const char *argTypeStr)
 				if( (controlID != NULL) && (theArr != NULL) )
 				{
 					id controlOrView = [self findControlOrViewWithID:(NSString*)controlID];
-					if( (controlOrView != NULL) && [controlOrView isKindOfClass:[NSTableView class]] )
+					if( (controlOrView != nil) && [controlOrView isKindOfClass:[NSTableView class]] )
 					{
 						NSTableView *myTable = (NSTableView *)controlOrView;
 						id myDelegate = [myTable delegate];
-						if( (myDelegate != NULL) && [myDelegate isKindOfClass:[OMCTableViewController class]] ) 
+						if( (myDelegate != nil) && [myDelegate isKindOfClass:[OMCTableViewController class]] )
+						{
 							[myDelegate addRows:theArr];
+							[myDelegate reloadData];
+						}
 					}
 				}
 			}
@@ -985,7 +1022,7 @@ FindArgumentType(const char *argTypeStr)
 				if( (controlID != NULL) && (theArr != NULL) )
 				{
 					id controlOrView = [self findControlOrViewWithID:(NSString*)controlID];
-					if( (controlOrView != NULL) && [controlOrView isKindOfClass:[NSTableView class]] )
+					if( (controlOrView != nil) && [controlOrView isKindOfClass:[NSTableView class]] )
 					{
 						NSTableView *myTable = (NSTableView *)controlOrView;
 						id myDelegate = [myTable delegate];
@@ -994,7 +1031,7 @@ FindArgumentType(const char *argTypeStr)
 						//BOOL isMemberOf = [myDelegate isMemberOfClass:[OMCTableViewController class]];
 						//NSLog(@"OMC tableview controller: isKindOf=%d, isMemberOf=%d", (int)isKindOf, (int)isMemberOf);
 						
-						if( (myDelegate != NULL) && [myDelegate isKindOfClass:[OMCTableViewController class]] ) 
+						if( (myDelegate != nil) && [myDelegate isKindOfClass:[OMCTableViewController class]] )
 							[myDelegate setColumns:theArr];
 					}
 				}
@@ -1019,11 +1056,11 @@ FindArgumentType(const char *argTypeStr)
 				if( (controlID != NULL) && (theArr != NULL) )
 				{
 					id controlOrView = [self findControlOrViewWithID:(NSString*)controlID];
-					if( (controlOrView != NULL) && [controlOrView isKindOfClass:[NSTableView class]] )
+					if( (controlOrView != nil) && [controlOrView isKindOfClass:[NSTableView class]] )
 					{
 						NSTableView *myTable = (NSTableView *)controlOrView;
 						id myDelegate = [myTable delegate];
-						if( (myDelegate != NULL) && [myDelegate isKindOfClass:[OMCTableViewController class]] ) 
+						if( (myDelegate != nil) && [myDelegate isKindOfClass:[OMCTableViewController class]] )
 							[myDelegate setColumnWidths:theArr];
 					}
 				}
@@ -1072,7 +1109,7 @@ FindArgumentType(const char *argTypeStr)
 				if( (controlID != NULL) && (theVal != NULL) )
 				{
 					id controlOrView = [self findControlOrViewWithID:(NSString *)controlID];
-					if(controlOrView != NULL)
+					if(controlOrView != nil)
 					{
 						Boolean doEnable = ::CFBooleanGetValue(theVal);
 						if( [controlOrView respondsToSelector:@selector(setEnabled:)] )
@@ -1106,7 +1143,7 @@ FindArgumentType(const char *argTypeStr)
 				if( (controlID != NULL) && (theVal != NULL) )
 				{
 					id controlOrView = [self findControlOrViewWithID:(NSString *)controlID];
-					if( (controlOrView != NULL) && [controlOrView respondsToSelector:@selector(setHidden:)] )
+					if( (controlOrView != nil) && [controlOrView respondsToSelector:@selector(setHidden:)] )
 					{
 						BOOL makeVisible = (BOOL)::CFBooleanGetValue(theVal);
 						[controlOrView setHidden:(!makeVisible)];
@@ -1135,7 +1172,7 @@ FindArgumentType(const char *argTypeStr)
 				if( (controlID != NULL) && (theVal != NULL) )
 				{
 					NSView *controlOrView = [self findControlOrViewWithID:(NSString *)controlID];
-					if( (controlOrView != NULL) && [controlOrView respondsToSelector:@selector(setCommandID:)] )
+					if( (controlOrView != nil) && [controlOrView respondsToSelector:@selector(setCommandID:)] )
 					{
 						[controlOrView performSelector:@selector(setCommandID) withObject:(NSString *)theVal];
 					}
@@ -1165,13 +1202,13 @@ FindArgumentType(const char *argTypeStr)
 				{
 					if( kCFCompareEqualTo == CFStringCompare( controlID, CFSTR("omc_window"), 0) )
 					{
-						//the message targets our dialog window - wow
+						//the message targets our dialog window
 						[mWindow makeKeyAndOrderFront:self];//bring it to front and select
 					}
 					else if( kCFCompareEqualTo == CFStringCompare( controlID, CFSTR("omc_application"), 0) )
 					{
 						NSApplication *myApp = [NSApplication sharedApplication];
-						if(myApp != NULL)
+						if(myApp != nil)
 							[myApp activateIgnoringOtherApps:YES];
 					}
 					else
@@ -1207,7 +1244,7 @@ FindArgumentType(const char *argTypeStr)
 				{
 					if( kCFCompareEqualTo == CFStringCompare( controlID, CFSTR("omc_window"), 0) )
 					{
-						//the message targets our dialog window - wow
+						//the message targets our dialog window
 						Boolean terminateOK = ::CFBooleanGetValue(theVal);
 						NSString *commandID;
 						if(terminateOK)
@@ -1236,8 +1273,6 @@ FindArgumentType(const char *argTypeStr)
 					}
 					else
 					{//can a control/view respond to some kind of terminate message? probably not
-						
-						//NSInteger controlId = ::CFStringGetIntValue(theKey);
 						//NSView *controlOrView = [self findControlOrViewWithID:controlId];
 						//if(controlOrView != NULL)
 						//	[controlOrView setHidden:(BOOL)::CFBooleanGetValue(theVal)];
@@ -1290,10 +1325,8 @@ FindArgumentType(const char *argTypeStr)
 						}
 						else
 						{
-							//NSInteger controlId = ::CFStringGetIntValue(theKey);
 							id controlOrView = [self findControlOrViewWithID:(NSString *)controlID];
-							
-							if( (controlOrView != NULL) && [controlOrView isKindOfClass:[NSView class]] )
+							if( (controlOrView != nil) && [controlOrView isKindOfClass:[NSView class]] )
 							{
 								float viewHeight = NSHeight([controlOrView bounds]);
 								NSView *superView = [controlOrView superview];
@@ -1349,10 +1382,10 @@ FindArgumentType(const char *argTypeStr)
 						//NSInteger controlId = ::CFStringGetIntValue(theKey);
 						id myView = [self findControlOrViewWithID:(NSString *)controlID];
 						
-						if( myView != NULL )
+						if( myView != nil )
 						{
-							NSClipView *clipView = NULL;
-							NSView *docView = NULL;
+							NSClipView *clipView = nil;
+							NSView *docView = nil;
 							if( [myView isKindOfClass:[NSScrollView class] ] )
 							{//we target scroll view
 								docView = [(NSScrollView *)myView documentView];
@@ -1366,11 +1399,11 @@ FindArgumentType(const char *argTypeStr)
 								//the superview is matte view
 								NSView *matteView = [docView superview];
 								
-								NSView *superView = NULL;
-								if(matteView != NULL)
+								NSView *superView = nil;
+								if(matteView != nil)
 									superView = [matteView superview];//get superview of matte view - this should be clipping view
 								
-								if( (superView != NULL) && [superView isKindOfClass:[NSClipView class] ] )
+								if( (superView != nil) && [superView isKindOfClass:[NSClipView class] ] )
 								{
 									docView = matteView;
 									clipView = (NSClipView *)superView;
@@ -1393,7 +1426,7 @@ FindArgumentType(const char *argTypeStr)
 								}
 
 								[docView scrollPoint:newTopLeftOrigin];
-								clipView = NULL;//set to null to prevent scrolling attempts below 
+								clipView = nil;//set to null to prevent scrolling attempts below
 							}
 							else if( [myView isKindOfClass:[NSView	class]] ) 
 							{//we target document view which is inside clip view, which in turn is in NSScrollView
@@ -1403,7 +1436,7 @@ FindArgumentType(const char *argTypeStr)
 									clipView = (NSClipView *)superView;
 							}
 							
-							if(clipView != NULL)
+							if(clipView != nil)
 							{
 								if( ![docView isFlipped] )
 								{
@@ -1458,15 +1491,14 @@ FindArgumentType(const char *argTypeStr)
 
 						if( kCFCompareEqualTo == CFStringCompare( controlID, CFSTR("omc_window"), 0) )
 						{
-							//the message targets our dialog window - wow
+							//the message targets our dialog window
 							[mWindow setContentSize:newSize];
 						}
 						else
 						{
-							//NSInteger controlId = ::CFStringGetIntValue(theKey);
 							id controlOrView = [self findControlOrViewWithID:(NSString *)controlID];
 							
-							if( (controlOrView != NULL) && [controlOrView isKindOfClass:[NSView class]] )
+							if( (controlOrView != nil) && [controlOrView isKindOfClass:[NSView class]] )
 							{
 								[controlOrView setFrameSize:newSize];
 								[controlOrView setNeedsDisplay:YES];
@@ -1495,10 +1527,10 @@ FindArgumentType(const char *argTypeStr)
 				CFArrayRef theArr = ACFType<CFArrayRef>::DynamicCast( valueList[i] );
 				if( (controlID != NULL) && (theArr != NULL) )
 				{
-					id messageTarget = NULL;
+					id messageTarget = nil;
 					if( kCFCompareEqualTo == CFStringCompare( controlID, CFSTR("omc_window"), 0) )
 					{
-						//the message targets our dialog window - wow
+						//the message targets our dialog window
 						messageTarget = (id)mWindow;
 					}
 					else if( kCFCompareEqualTo == CFStringCompare( controlID, CFSTR("omc_application"), 0) )
@@ -1511,11 +1543,10 @@ FindArgumentType(const char *argTypeStr)
 					}
 					else
 					{
-						//NSInteger controlId = ::CFStringGetIntValue(theKey);
 						messageTarget = [self findControlOrViewWithID:(NSString *)controlID];
 					}
 
-					if(messageTarget != NULL)
+					if(messageTarget != nil)
 					{
 						CFIndex messageCount = ::CFArrayGetCount(theArr);
 						if(messageCount > 0)

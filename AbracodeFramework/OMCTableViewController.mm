@@ -49,12 +49,15 @@
 -(void)removeRows
 {
 	[mRows removeAllObjects];
-	[mTableView reloadData];//inefficient if removeRows is followed by addRows
 }
 
 -(void)addRows:(CFArrayRef)inRowArray
 {
 	[mRows addObjectsFromArray:(NSArray *)inRowArray];//inRowArray is array of strings (unsplit) or array of column arrays
+}
+
+-(void)reloadData
+{
 	[mTableView reloadData];
 }
 
