@@ -1,3 +1,5 @@
+#include "Distribution.xcconfig"
+
 MACOSX_DEPLOYMENT_TARGET = 10.13
 SDKROOT = macosx
 FRAMEWORK_SEARCH_PATHS = /Library/Frameworks

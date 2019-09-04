@@ -8,20 +8,19 @@
 
 /* Begin PBXBuildFile section */
 		1D6E99E915CD2C1F00F3F48F /* Abracode.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1D6E99E815CD2C1F00F3F48F /* Abracode.framework */; };
-		8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
+		1DCFB24C231FACC800D1C62E /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1DCFB248231FACC800D1C62E /* MainMenu.xib */; };
 		8D11072D0486CEB800E47090 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
 		E23AAD5412F5737D004C867B /* app.icns in Resources */ = {isa = PBXBuildFile; fileRef = E23AAD5312F5737D004C867B /* app.icns */; };
-		E2C5369C12E97F3B000E6114 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = E2C5369B12E97F3B000E6114 /* MainMenu.xib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		089C165DFE840E0CC02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		13E42FB307B3F0F600E4EEF1 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = /System/Library/Frameworks/CoreData.framework; sourceTree = "<absolute>"; };
 		1D6E99E815CD2C1F00F3F48F /* Abracode.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Abracode.framework; path = /Library/Frameworks/Abracode.framework; sourceTree = "<absolute>"; };
 		1D7618BF231CEF80005F4AEB /* OMCService.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = OMCService.entitlements; sourceTree = "<group>"; };
 		1D942E3515CD26D500A08D55 /* AbracodeCommon.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = AbracodeCommon.xcconfig; path = ../AbracodeCommon.xcconfig; sourceTree = "<group>"; };
+		1DCFB249231FACC800D1C62E /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
 		256AC3F00F4B6AF500CF3369 /* OMCService_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCService_Prefix.pch; sourceTree = "<group>"; };
 		29B97316FDCFA39411CA2CEA /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		29B97324FDCFA39411CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
@@ -29,7 +28,6 @@
 		8D1107310486CEB800E47090 /* OMCService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "OMCService-Info.plist"; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* OMCService.service */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OMCService.service; sourceTree = BUILT_PRODUCTS_DIR; };
 		E23AAD5312F5737D004C867B /* app.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = app.icns; path = ../AbracodeFramework/app.icns; sourceTree = SOURCE_ROOT; };
-		E2C5369412E97EA8000E6114 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/MainMenu.xib; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -107,8 +105,7 @@
 			children = (
 				E23AAD5312F5737D004C867B /* app.icns */,
 				8D1107310486CEB800E47090 /* OMCService-Info.plist */,
-				089C165CFE840E0CC02AAC07 /* InfoPlist.strings */,
-				E2C5369B12E97F3B000E6114 /* MainMenu.xib */,
+				1DCFB248231FACC800D1C62E /* MainMenu.xib */,
 			);
 			name = Resources;
 			sourceTree = "<group>";
@@ -157,9 +154,7 @@
 			hasScannedForEncodings = 1;
 			knownRegions = (
 				English,
-				Japanese,
-				French,
-				German,
+				Base,
 			);
 			mainGroup = 29B97314FDCFA39411CA2CEA /* OMCService */;
 			projectDirPath = "";
@@ -175,9 +170,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */,
-				E2C5369C12E97F3B000E6114 /* MainMenu.xib in Resources */,
 				E23AAD5412F5737D004C867B /* app.icns in Resources */,
+				1DCFB24C231FACC800D1C62E /* MainMenu.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -195,18 +189,10 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXVariantGroup section */
-		089C165CFE840E0CC02AAC07 /* InfoPlist.strings */ = {
+		1DCFB248231FACC800D1C62E /* MainMenu.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				089C165DFE840E0CC02AAC07 /* English */,
-			);
-			name = InfoPlist.strings;
-			sourceTree = "<group>";
-		};
-		E2C5369B12E97F3B000E6114 /* MainMenu.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				E2C5369412E97EA8000E6114 /* English */,
+				1DCFB249231FACC800D1C62E /* Base */,
 			);
 			name = MainMenu.xib;
 			sourceTree = "<group>";
@@ -249,6 +235,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 1D942E3515CD26D500A08D55 /* AbracodeCommon.xcconfig */;
 			buildSettings = {
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				SYMROOT = ../build;
@@ -259,6 +246,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 1D942E3515CD26D500A08D55 /* AbracodeCommon.xcconfig */;
 			buildSettings = {
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				SYMROOT = ../build;

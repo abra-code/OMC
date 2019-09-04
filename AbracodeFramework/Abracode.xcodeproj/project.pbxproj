@@ -21,7 +21,6 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
-		1D71F3332206FA67009FAF91 /* DropletPreferences.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1D71F3312206FA67009FAF91 /* DropletPreferences.xib */; };
 		1D71F337220702EA009FAF91 /* notify in Copy Support Executables */ = {isa = PBXBuildFile; fileRef = 1D71F336220702D7009FAF91 /* notify */; };
 		1D742DC5193882BB005DFF97 /* pasteboard in Copy Support Executables */ = {isa = PBXBuildFile; fileRef = 1D742DC219388292005DFF97 /* pasteboard */; };
 		1D80B9BA22E447E800CF1AF5 /* OMCiTermExecutor.cp in Sources */ = {isa = PBXBuildFile; fileRef = 1D80B9B822E447E800CF1AF5 /* OMCiTermExecutor.cp */; };
@@ -33,6 +32,8 @@
 		1D9BCB8822CCA65A00F4EAB6 /* ACFURL.m in Sources */ = {isa = PBXBuildFile; fileRef = 1D9BCB8722CCA65A00F4EAB6 /* ACFURL.m */; };
 		1D9BCB8C22CCAB4F00F4EAB6 /* OMCStrings.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1D9BCB8B22CCAB4F00F4EAB6 /* OMCStrings.mm */; };
 		1DBCC43522CE209300A1DD8F /* OMCHelpers.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1DBCC43222CE209300A1DD8F /* OMCHelpers.mm */; };
+		1DCFB242231FAC1100D1C62E /* OMCOutputWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1DCFB244231FAC1100D1C62E /* OMCOutputWindow.xib */; };
+		1DCFB245231FAC1600D1C62E /* OMCOutputPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1DCFB247231FAC1600D1C62E /* OMCOutputPanel.xib */; };
 		1DED8E572222BD8E00A2CAF7 /* MoreAppleEvents.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED19F0D09528600C9D5E8 /* MoreAppleEvents.cp */; };
 		8DC2EF530486A6940098B216 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C1666FE841158C02AAC07 /* InfoPlist.strings */; };
 		8DC2EF570486A6940098B216 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7B1FEA5585E11CA2CBB /* Cocoa.framework */; };
@@ -46,14 +47,6 @@
 		E22FBAEE0D7A0D7700DC5BB4 /* OMCCocoaDialog.h in Headers */ = {isa = PBXBuildFile; fileRef = E22FBAEC0D7A0D7700DC5BB4 /* OMCCocoaDialog.h */; };
 		E22FBAEF0D7A0D7700DC5BB4 /* OMCCocoaDialog.mm in Sources */ = {isa = PBXBuildFile; fileRef = E22FBAED0D7A0D7700DC5BB4 /* OMCCocoaDialog.mm */; };
 		E234F9FA0D0FC431001A7780 /* Private.strings in Resources */ = {isa = PBXBuildFile; fileRef = E234F9F80D0FC431001A7780 /* Private.strings */; };
-		E234FA210D0FCB28001A7780 /* round-rect-363x90-blue.png in Resources */ = {isa = PBXBuildFile; fileRef = E234FA170D0FCB28001A7780 /* round-rect-363x90-blue.png */; };
-		E234FA220D0FCB28001A7780 /* braced-rect-318x123-gray.png in Resources */ = {isa = PBXBuildFile; fileRef = E234FA180D0FCB28001A7780 /* braced-rect-318x123-gray.png */; };
-		E234FA230D0FCB28001A7780 /* round-rect-363x90-green.png in Resources */ = {isa = PBXBuildFile; fileRef = E234FA190D0FCB28001A7780 /* round-rect-363x90-green.png */; };
-		E234FA240D0FCB28001A7780 /* notched-rect-378x198-yellow.png in Resources */ = {isa = PBXBuildFile; fileRef = E234FA1A0D0FCB28001A7780 /* notched-rect-378x198-yellow.png */; };
-		E234FA250D0FCB28001A7780 /* round-rect-363x90-yellow.png in Resources */ = {isa = PBXBuildFile; fileRef = E234FA1B0D0FCB28001A7780 /* round-rect-363x90-yellow.png */; };
-		E234FA260D0FCB28001A7780 /* price-tag-274x61-yellow.png in Resources */ = {isa = PBXBuildFile; fileRef = E234FA1C0D0FCB28001A7780 /* price-tag-274x61-yellow.png */; };
-		E234FA270D0FCB28001A7780 /* round-rect-363x90-red.png in Resources */ = {isa = PBXBuildFile; fileRef = E234FA1D0D0FCB28001A7780 /* round-rect-363x90-red.png */; };
-		E234FA280D0FCB28001A7780 /* round-rect-363x90-black.png in Resources */ = {isa = PBXBuildFile; fileRef = E234FA1E0D0FCB28001A7780 /* round-rect-363x90-black.png */; };
 		E234FA290D0FCB28001A7780 /* stop.icns in Resources */ = {isa = PBXBuildFile; fileRef = E234FA1F0D0FCB28001A7780 /* stop.icns */; };
 		E234FA2A0D0FCB28001A7780 /* app.icns in Resources */ = {isa = PBXBuildFile; fileRef = E234FA200D0FCB28001A7780 /* app.icns */; };
 		E234FAA10D0FD0CE001A7780 /* omc_dialog_control in Copy Support Executables */ = {isa = PBXBuildFile; fileRef = E234FA9E0D0FD084001A7780 /* omc_dialog_control */; };
@@ -70,8 +63,6 @@
 		E23DC9F60D9A289E009D2AD8 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E23DC9F50D9A289E009D2AD8 /* WebKit.framework */; };
 		E24243570DDC140F0002BF9E /* OMCOutputWindowController.h in Headers */ = {isa = PBXBuildFile; fileRef = E24243550DDC140F0002BF9E /* OMCOutputWindowController.h */; };
 		E24243580DDC140F0002BF9E /* OMCOutputWindowController.mm in Sources */ = {isa = PBXBuildFile; fileRef = E24243560DDC140F0002BF9E /* OMCOutputWindowController.mm */; };
-		E24243EF0DDD68C20002BF9E /* OMCOutputWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = E24243EE0DDD68C20002BF9E /* OMCOutputWindow.xib */; };
-		E24245000DDF38080002BF9E /* OMCOutputPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = E24244FE0DDF38080002BF9E /* OMCOutputPanel.xib */; };
 		E24B168B0DE934CC00E44A45 /* OMCWindow.h in Headers */ = {isa = PBXBuildFile; fileRef = E24B16870DE934CC00E44A45 /* OMCWindow.h */; };
 		E24B168C0DE934CC00E44A45 /* OMCWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = E24B16880DE934CC00E44A45 /* OMCWindow.m */; };
 		E24B17270DE94DB800E44A45 /* OMCPanel.h in Headers */ = {isa = PBXBuildFile; fileRef = E24B17230DE94DB800E44A45 /* OMCPanel.h */; };
@@ -132,7 +123,6 @@
 		E2BB1E480E6F886200D2DDE5 /* OMCView.m in Sources */ = {isa = PBXBuildFile; fileRef = E2BB1E440E6F886200D2DDE5 /* OMCView.m */; };
 		E2BB1E490E6F886200D2DDE5 /* OMCView.h in Headers */ = {isa = PBXBuildFile; fileRef = E2BB1E450E6F886200D2DDE5 /* OMCView.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E2C10C5E0E45783200454DB1 /* OMCDeferredProgress.h in Headers */ = {isa = PBXBuildFile; fileRef = E2C10C5A0E45783200454DB1 /* OMCDeferredProgress.h */; };
-		E2C255F00DF7CEE2003D0E74 /* DropletPreferences.plist in Resources */ = {isa = PBXBuildFile; fileRef = E2C255EE0DF7CEE2003D0E74 /* DropletPreferences.plist */; };
 		E2C32CB80D2DF99D0023DA03 /* OMCObserver.h in Headers */ = {isa = PBXBuildFile; fileRef = E2C32CB40D2DF99C0023DA03 /* OMCObserver.h */; };
 		E2C32CB90D2DF99D0023DA03 /* OMCObserver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E2C32CB50D2DF99C0023DA03 /* OMCObserver.cpp */; };
 		E2C32CF70D2E1F6C0023DA03 /* OmcTaskNotification.h in Headers */ = {isa = PBXBuildFile; fileRef = E2C32CF50D2E1F6C0023DA03 /* OmcTaskNotification.h */; };
@@ -177,7 +167,6 @@
 		E2FB111F0D185A2C005EB1E8 /* OMC.h in Headers */ = {isa = PBXBuildFile; fileRef = E2FB111D0D185A2C005EB1E8 /* OMC.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E2FB11200D185A2C005EB1E8 /* OMC.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E2FB111E0D185A2C005EB1E8 /* OMC.cpp */; };
 		E2FB14000D19EE9A005EB1E8 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E2FB13FF0D19EE9A005EB1E8 /* CoreServices.framework */; };
-		E2FD8D190E2EA3180049D4D0 /* DropletPreferences.cp in Sources */ = {isa = PBXBuildFile; fileRef = E2FD8D150E2EA3180049D4D0 /* DropletPreferences.cp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -214,7 +203,6 @@
 /* Begin PBXFileReference section */
 		0867D69BFE84028FC02AAC07 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
 		0867D6A5FE840307C02AAC07 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
-		089C1667FE841158C02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		1058C7B1FEA5585E11CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		1D3BB165229BEB1D00542933 /* AUniquePtr.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AUniquePtr.h; sourceTree = "<group>"; };
 		1D71F3292206F116009FAF91 /* DebugSettings.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DebugSettings.h; sourceTree = "<group>"; };
@@ -224,8 +212,6 @@
 		1D71F32E2206F353009FAF91 /* StAEDesc.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StAEDesc.h; sourceTree = "<group>"; };
 		1D71F32F2206F5FB009FAF91 /* StSwitchToFront.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StSwitchToFront.h; sourceTree = "<group>"; };
 		1D71F3302206F778009FAF91 /* MessagePortListener.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MessagePortListener.h; sourceTree = "<group>"; };
-		1D71F3322206FA67009FAF91 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/DropletPreferences.xib; sourceTree = "<group>"; };
-		1D71F3352206FA78009FAF91 /* de */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = de; path = de.lproj/DropletPreferences.xib; sourceTree = "<group>"; };
 		1D71F336220702D7009FAF91 /* notify */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = notify; sourceTree = "<group>"; };
 		1D742DC219388292005DFF97 /* pasteboard */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = pasteboard; sourceTree = "<group>"; };
 		1D80B9B822E447E800CF1AF5 /* OMCiTermExecutor.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCiTermExecutor.cp; sourceTree = "<group>"; };
@@ -236,7 +222,6 @@
 		1D9B1F5C21FF1572004704A7 /* OnMyCommand.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OnMyCommand.cp; sourceTree = "<group>"; };
 		1D9B1F6321FF191D004704A7 /* SubmenuTree.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SubmenuTree.cp; sourceTree = "<group>"; };
 		1D9B1F6421FF191D004704A7 /* SubmenuTree.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SubmenuTree.h; sourceTree = "<group>"; };
-		1D9B1F7021FF1F9F004704A7 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/progress.xib; sourceTree = "<group>"; };
 		1D9BCB7B22CC95E500F4EAB6 /* ACFPropertyList.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ACFPropertyList.h; sourceTree = "<group>"; };
 		1D9BCB7C22CC95E500F4EAB6 /* ACFPropertyList.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ACFPropertyList.m; sourceTree = "<group>"; };
 		1D9BCB8722CCA65A00F4EAB6 /* ACFURL.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ACFURL.m; sourceTree = "<group>"; };
@@ -244,6 +229,22 @@
 		1D9BCB8B22CCAB4F00F4EAB6 /* OMCStrings.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCStrings.mm; sourceTree = "<group>"; };
 		1DBCC43122CE209200A1DD8F /* OMCHelpers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCHelpers.h; sourceTree = "<group>"; };
 		1DBCC43222CE209300A1DD8F /* OMCHelpers.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCHelpers.mm; sourceTree = "<group>"; };
+		1DCFB234231FAAB200D1C62E /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/Private.strings; sourceTree = "<group>"; };
+		1DCFB235231FAAB500D1C62E /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/Private.strings; sourceTree = "<group>"; };
+		1DCFB236231FAABB00D1C62E /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/input_clear.xib; sourceTree = "<group>"; };
+		1DCFB237231FAABB00D1C62E /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/input_combo.xib; sourceTree = "<group>"; };
+		1DCFB238231FAABB00D1C62E /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/input_password.xib; sourceTree = "<group>"; };
+		1DCFB239231FAABB00D1C62E /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/input_popup.xib; sourceTree = "<group>"; };
+		1DCFB23A231FAABC00D1C62E /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/progress.xib; sourceTree = "<group>"; };
+		1DCFB23B231FAABF00D1C62E /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		1DCFB23C231FAABF00D1C62E /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Private.strings; sourceTree = "<group>"; };
+		1DCFB23D231FAAC300D1C62E /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/Private.strings; sourceTree = "<group>"; };
+		1DCFB23E231FAAC300D1C62E /* de */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = de; path = de.lproj/input_clear.xib; sourceTree = "<group>"; };
+		1DCFB23F231FAAC300D1C62E /* de */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = de; path = de.lproj/input_combo.xib; sourceTree = "<group>"; };
+		1DCFB240231FAAC300D1C62E /* de */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = de; path = de.lproj/input_password.xib; sourceTree = "<group>"; };
+		1DCFB241231FAAC300D1C62E /* de */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = de; path = de.lproj/input_popup.xib; sourceTree = "<group>"; };
+		1DCFB243231FAC1100D1C62E /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/OMCOutputWindow.xib; sourceTree = "<group>"; };
+		1DCFB246231FAC1600D1C62E /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/OMCOutputPanel.xib; sourceTree = "<group>"; };
 		1DED8E4C22229D1800A2CAF7 /* ACFArr.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ACFArr.h; sourceTree = "<group>"; };
 		1DED8E562222B65500A2CAF7 /* MoreAppleEvents.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoreAppleEvents.h; sourceTree = "<group>"; };
 		32DBCF5E0370ADEE00C91783 /* Abracode_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Abracode_Prefix.pch; sourceTree = "<group>"; };
@@ -252,10 +253,6 @@
 		D2F7E79907B2D74100F64583 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = /System/Library/Frameworks/CoreData.framework; sourceTree = "<absolute>"; };
 		E20026D510B68F3200D5388F /* OMCCustomWindow.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCCustomWindow.mm; sourceTree = "<group>"; };
 		E204EB7E0D7FD8A900595D15 /* OMCConstants.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCConstants.h; sourceTree = "<group>"; };
-		E208BFF510943A8D00AAA55A /* German */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = German; path = German.lproj/input_clear.xib; sourceTree = "<group>"; };
-		E208BFF610943A9A00AAA55A /* German */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = German; path = German.lproj/input_combo.xib; sourceTree = "<group>"; };
-		E208BFF710943AB900AAA55A /* German */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = German; path = German.lproj/input_password.xib; sourceTree = "<group>"; };
-		E208BFF810943AC200AAA55A /* German */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = German; path = German.lproj/input_popup.xib; sourceTree = "<group>"; };
 		E20F1F68130BBE5100882872 /* alert */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = alert; sourceTree = "<group>"; };
 		E211D3C30D3F51010065C23A /* OMCCocoaNib.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCCocoaNib.h; sourceTree = SOURCE_ROOT; };
 		E211D3C40D3F51010065C23A /* OMCCocoaNib.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMCCocoaNib.m; sourceTree = SOURCE_ROOT; };
@@ -266,18 +263,6 @@
 		E22FBAEC0D7A0D7700DC5BB4 /* OMCCocoaDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCCocoaDialog.h; sourceTree = "<group>"; };
 		E22FBAED0D7A0D7700DC5BB4 /* OMCCocoaDialog.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCCocoaDialog.mm; sourceTree = "<group>"; };
 		E22FCB220F5514220062D589 /* NibDialogControl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NibDialogControl.h; sourceTree = "<group>"; };
-		E234F9F90D0FC431001A7780 /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/Private.strings; sourceTree = SOURCE_ROOT; };
-		E234F9FD0D0FC48B001A7780 /* Japanese */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = Japanese; path = Japanese.lproj/Private.strings; sourceTree = SOURCE_ROOT; };
-		E234F9FE0D0FC48F001A7780 /* French */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = French; path = French.lproj/Private.strings; sourceTree = SOURCE_ROOT; };
-		E234F9FF0D0FC494001A7780 /* German */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = German; path = German.lproj/Private.strings; sourceTree = SOURCE_ROOT; };
-		E234FA170D0FCB28001A7780 /* round-rect-363x90-blue.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "round-rect-363x90-blue.png"; path = "CustomWindows/round-rect-363x90-blue.png"; sourceTree = SOURCE_ROOT; };
-		E234FA180D0FCB28001A7780 /* braced-rect-318x123-gray.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "braced-rect-318x123-gray.png"; path = "CustomWindows/braced-rect-318x123-gray.png"; sourceTree = SOURCE_ROOT; };
-		E234FA190D0FCB28001A7780 /* round-rect-363x90-green.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "round-rect-363x90-green.png"; path = "CustomWindows/round-rect-363x90-green.png"; sourceTree = SOURCE_ROOT; };
-		E234FA1A0D0FCB28001A7780 /* notched-rect-378x198-yellow.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "notched-rect-378x198-yellow.png"; path = "CustomWindows/notched-rect-378x198-yellow.png"; sourceTree = SOURCE_ROOT; };
-		E234FA1B0D0FCB28001A7780 /* round-rect-363x90-yellow.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "round-rect-363x90-yellow.png"; path = "CustomWindows/round-rect-363x90-yellow.png"; sourceTree = SOURCE_ROOT; };
-		E234FA1C0D0FCB28001A7780 /* price-tag-274x61-yellow.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "price-tag-274x61-yellow.png"; path = "CustomWindows/price-tag-274x61-yellow.png"; sourceTree = SOURCE_ROOT; };
-		E234FA1D0D0FCB28001A7780 /* round-rect-363x90-red.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "round-rect-363x90-red.png"; path = "CustomWindows/round-rect-363x90-red.png"; sourceTree = SOURCE_ROOT; };
-		E234FA1E0D0FCB28001A7780 /* round-rect-363x90-black.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "round-rect-363x90-black.png"; path = "CustomWindows/round-rect-363x90-black.png"; sourceTree = SOURCE_ROOT; };
 		E234FA1F0D0FCB28001A7780 /* stop.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = stop.icns; sourceTree = "<group>"; };
 		E234FA200D0FCB28001A7780 /* app.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = app.icns; sourceTree = "<group>"; };
 		E234FA9E0D0FD084001A7780 /* omc_dialog_control */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = omc_dialog_control; sourceTree = "<group>"; };
@@ -296,9 +281,7 @@
 		E23DC9F50D9A289E009D2AD8 /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = /System/Library/Frameworks/WebKit.framework; sourceTree = "<absolute>"; };
 		E24243550DDC140F0002BF9E /* OMCOutputWindowController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCOutputWindowController.h; sourceTree = "<group>"; };
 		E24243560DDC140F0002BF9E /* OMCOutputWindowController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCOutputWindowController.mm; sourceTree = "<group>"; };
-		E24243EE0DDD68C20002BF9E /* OMCOutputWindow.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = OMCOutputWindow.xib; sourceTree = "<group>"; };
 		E24243FA0DDD6A350002BF9E /* OutputWindowHandler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OutputWindowHandler.h; sourceTree = "<group>"; };
-		E24244FE0DDF38080002BF9E /* OMCOutputPanel.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = OMCOutputPanel.xib; sourceTree = "<group>"; };
 		E24B16870DE934CC00E44A45 /* OMCWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCWindow.h; sourceTree = "<group>"; };
 		E24B16880DE934CC00E44A45 /* OMCWindow.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMCWindow.m; sourceTree = "<group>"; };
 		E24B17230DE94DB800E44A45 /* OMCPanel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCPanel.h; sourceTree = "<group>"; };
@@ -361,7 +344,6 @@
 		E2BB1E440E6F886200D2DDE5 /* OMCView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMCView.m; sourceTree = "<group>"; };
 		E2BB1E450E6F886200D2DDE5 /* OMCView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCView.h; sourceTree = "<group>"; };
 		E2C10C5A0E45783200454DB1 /* OMCDeferredProgress.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCDeferredProgress.h; sourceTree = "<group>"; };
-		E2C255EE0DF7CEE2003D0E74 /* DropletPreferences.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = DropletPreferences.plist; sourceTree = "<group>"; };
 		E2C32CB40D2DF99C0023DA03 /* OMCObserver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCObserver.h; sourceTree = "<group>"; };
 		E2C32CB50D2DF99C0023DA03 /* OMCObserver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCObserver.cpp; sourceTree = "<group>"; };
 		E2C32CF50D2E1F6C0023DA03 /* OmcTaskNotification.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OmcTaskNotification.h; sourceTree = "<group>"; };
@@ -379,10 +361,6 @@
 		E2C84DE90DA9F30F0056DBC2 /* OMCCommandMenu.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCCommandMenu.mm; sourceTree = "<group>"; };
 		E2D92E531043D74E003DC96B /* OMCInputDialogController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCInputDialogController.h; sourceTree = "<group>"; };
 		E2D92E541043D74E003DC96B /* OMCInputDialogController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMCInputDialogController.m; sourceTree = "<group>"; };
-		E2D92E631043D9F8003DC96B /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/input_clear.xib; sourceTree = "<group>"; };
-		E2D92E651043D9F8003DC96B /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/input_combo.xib; sourceTree = "<group>"; };
-		E2D92E671043D9F8003DC96B /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/input_password.xib; sourceTree = "<group>"; };
-		E2D92E691043D9F8003DC96B /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/input_popup.xib; sourceTree = "<group>"; };
 		E2D92E871043E0C2003DC96B /* OMCInputDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCInputDialog.h; sourceTree = "<group>"; };
 		E2D92E8D1043E0E3003DC96B /* OMCInputDialog.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCInputDialog.mm; sourceTree = "<group>"; };
 		E2E1892D1075BEBC001B7591 /* SelectionIterator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SelectionIterator.h; sourceTree = "<group>"; };
@@ -410,8 +388,6 @@
 		E2FB111D0D185A2C005EB1E8 /* OMC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMC.h; sourceTree = "<group>"; };
 		E2FB111E0D185A2C005EB1E8 /* OMC.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMC.cpp; sourceTree = "<group>"; };
 		E2FB13FF0D19EE9A005EB1E8 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = /System/Library/Frameworks/CoreServices.framework; sourceTree = "<absolute>"; };
-		E2FD8D150E2EA3180049D4D0 /* DropletPreferences.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DropletPreferences.cp; sourceTree = "<group>"; };
-		E2FD8D160E2EA3180049D4D0 /* DropletPreferences.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DropletPreferences.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -478,13 +454,10 @@
 				E2D92E661043D9F8003DC96B /* input_password.xib */,
 				E2D92E681043D9F8003DC96B /* input_popup.xib */,
 				1D9B1F6F21FF1F9F004704A7 /* progress.xib */,
-				E24243EE0DDD68C20002BF9E /* OMCOutputWindow.xib */,
-				E24244FE0DDF38080002BF9E /* OMCOutputPanel.xib */,
+				1DCFB244231FAC1100D1C62E /* OMCOutputWindow.xib */,
+				1DCFB247231FAC1600D1C62E /* OMCOutputPanel.xib */,
 				E234FA1F0D0FCB28001A7780 /* stop.icns */,
 				E234FA200D0FCB28001A7780 /* app.icns */,
-				E234FA2B0D0FCB3E001A7780 /* CustomWindows */,
-				E2C255EE0DF7CEE2003D0E74 /* DropletPreferences.plist */,
-				1D71F3312206FA67009FAF91 /* DropletPreferences.xib */,
 			);
 			name = Resources;
 			sourceTree = "<group>";
@@ -519,21 +492,6 @@
 				32DBCF5E0370ADEE00C91783 /* Abracode_Prefix.pch */,
 			);
 			name = "Other Sources";
-			sourceTree = "<group>";
-		};
-		E234FA2B0D0FCB3E001A7780 /* CustomWindows */ = {
-			isa = PBXGroup;
-			children = (
-				E234FA180D0FCB28001A7780 /* braced-rect-318x123-gray.png */,
-				E234FA1A0D0FCB28001A7780 /* notched-rect-378x198-yellow.png */,
-				E234FA1C0D0FCB28001A7780 /* price-tag-274x61-yellow.png */,
-				E234FA1E0D0FCB28001A7780 /* round-rect-363x90-black.png */,
-				E234FA170D0FCB28001A7780 /* round-rect-363x90-blue.png */,
-				E234FA190D0FCB28001A7780 /* round-rect-363x90-green.png */,
-				E234FA1D0D0FCB28001A7780 /* round-rect-363x90-red.png */,
-				E234FA1B0D0FCB28001A7780 /* round-rect-363x90-yellow.png */,
-			);
-			path = CustomWindows;
 			sourceTree = "<group>";
 		};
 		E234FA9D0D0FD06B001A7780 /* Support Tools */ = {
@@ -731,8 +689,6 @@
 				E2735F360D7B9576004D81CE /* OMCDialog.h */,
 				E2ED3AE80D0B27D300481D8F /* DefaultExternBundle.cpp */,
 				E2ED3AE90D0B27D300481D8F /* DefaultExternBundle.h */,
-				E2FD8D150E2EA3180049D4D0 /* DropletPreferences.cp */,
-				E2FD8D160E2EA3180049D4D0 /* DropletPreferences.h */,
 			);
 			name = OMC;
 			sourceTree = "<group>";
@@ -835,14 +791,14 @@
 			};
 			buildConfigurationList = 1DEB91B108733DA50010E9CD /* Build configuration list for PBXProject "Abracode" */;
 			compatibilityVersion = "Xcode 10.0";
-			developmentRegion = English;
+			developmentRegion = en;
 			hasScannedForEncodings = 1;
 			knownRegions = (
-				English,
-				Japanese,
-				French,
-				German,
 				de,
+				ja,
+				fr,
+				Base,
+				en,
 			);
 			mainGroup = 0867D691FE84028FC02AAC07 /* Abracode */;
 			productRefGroup = 034768DFFF38A50411DB9C8B /* Products */;
@@ -862,21 +818,11 @@
 			files = (
 				8DC2EF530486A6940098B216 /* InfoPlist.strings in Resources */,
 				E234F9FA0D0FC431001A7780 /* Private.strings in Resources */,
-				E234FA210D0FCB28001A7780 /* round-rect-363x90-blue.png in Resources */,
-				E234FA220D0FCB28001A7780 /* braced-rect-318x123-gray.png in Resources */,
-				1D71F3332206FA67009FAF91 /* DropletPreferences.xib in Resources */,
-				E234FA230D0FCB28001A7780 /* round-rect-363x90-green.png in Resources */,
-				E234FA240D0FCB28001A7780 /* notched-rect-378x198-yellow.png in Resources */,
-				E234FA250D0FCB28001A7780 /* round-rect-363x90-yellow.png in Resources */,
-				E234FA260D0FCB28001A7780 /* price-tag-274x61-yellow.png in Resources */,
-				E234FA270D0FCB28001A7780 /* round-rect-363x90-red.png in Resources */,
 				1D9B1F7121FF1F9F004704A7 /* progress.xib in Resources */,
-				E234FA280D0FCB28001A7780 /* round-rect-363x90-black.png in Resources */,
 				E234FA290D0FCB28001A7780 /* stop.icns in Resources */,
 				E234FA2A0D0FCB28001A7780 /* app.icns in Resources */,
-				E24243EF0DDD68C20002BF9E /* OMCOutputWindow.xib in Resources */,
-				E24245000DDF38080002BF9E /* OMCOutputPanel.xib in Resources */,
-				E2C255F00DF7CEE2003D0E74 /* DropletPreferences.plist in Resources */,
+				1DCFB242231FAC1100D1C62E /* OMCOutputWindow.xib in Resources */,
+				1DCFB245231FAC1600D1C62E /* OMCOutputPanel.xib in Resources */,
 				E2D92E6A1043D9F8003DC96B /* input_clear.xib in Resources */,
 				E2D92E6B1043D9F8003DC96B /* input_combo.xib in Resources */,
 				E2D92E6C1043D9F8003DC96B /* input_password.xib in Resources */,
@@ -984,7 +930,6 @@
 				E24B18190DE96F6D00E44A45 /* OMCFilePanels.mm in Sources */,
 				E2C433480DEE72F700E976D2 /* PlistPreferences.cp in Sources */,
 				E2C433620DEE751300E976D2 /* OMCDropletController.mm in Sources */,
-				E2FD8D190E2EA3180049D4D0 /* DropletPreferences.cp in Sources */,
 				1D9B1F6521FF191D004704A7 /* SubmenuTree.cp in Sources */,
 				E258B2110E46E37C00926F10 /* OMCDeferredProgress.mm in Sources */,
 				E2BB1E480E6F886200D2DDE5 /* OMCView.m in Sources */,
@@ -1015,35 +960,42 @@
 		089C1666FE841158C02AAC07 /* InfoPlist.strings */ = {
 			isa = PBXVariantGroup;
 			children = (
-				089C1667FE841158C02AAC07 /* English */,
+				1DCFB23B231FAABF00D1C62E /* en */,
 			);
 			name = InfoPlist.strings;
-			sourceTree = "<group>";
-		};
-		1D71F3312206FA67009FAF91 /* DropletPreferences.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				1D71F3322206FA67009FAF91 /* English */,
-				1D71F3352206FA78009FAF91 /* de */,
-			);
-			name = DropletPreferences.xib;
 			sourceTree = "<group>";
 		};
 		1D9B1F6F21FF1F9F004704A7 /* progress.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				1D9B1F7021FF1F9F004704A7 /* English */,
+				1DCFB23A231FAABC00D1C62E /* Base */,
 			);
 			name = progress.xib;
+			sourceTree = "<group>";
+		};
+		1DCFB244231FAC1100D1C62E /* OMCOutputWindow.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				1DCFB243231FAC1100D1C62E /* Base */,
+			);
+			name = OMCOutputWindow.xib;
+			sourceTree = "<group>";
+		};
+		1DCFB247231FAC1600D1C62E /* OMCOutputPanel.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				1DCFB246231FAC1600D1C62E /* Base */,
+			);
+			name = OMCOutputPanel.xib;
 			sourceTree = "<group>";
 		};
 		E234F9F80D0FC431001A7780 /* Private.strings */ = {
 			isa = PBXVariantGroup;
 			children = (
-				E234F9F90D0FC431001A7780 /* English */,
-				E234F9FD0D0FC48B001A7780 /* Japanese */,
-				E234F9FE0D0FC48F001A7780 /* French */,
-				E234F9FF0D0FC494001A7780 /* German */,
+				1DCFB234231FAAB200D1C62E /* ja */,
+				1DCFB235231FAAB500D1C62E /* fr */,
+				1DCFB23C231FAABF00D1C62E /* en */,
+				1DCFB23D231FAAC300D1C62E /* de */,
 			);
 			name = Private.strings;
 			sourceTree = "<group>";
@@ -1051,8 +1003,8 @@
 		E2D92E621043D9F8003DC96B /* input_clear.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				E2D92E631043D9F8003DC96B /* English */,
-				E208BFF510943A8D00AAA55A /* German */,
+				1DCFB236231FAABB00D1C62E /* Base */,
+				1DCFB23E231FAAC300D1C62E /* de */,
 			);
 			name = input_clear.xib;
 			sourceTree = "<group>";
@@ -1060,8 +1012,8 @@
 		E2D92E641043D9F8003DC96B /* input_combo.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				E2D92E651043D9F8003DC96B /* English */,
-				E208BFF610943A9A00AAA55A /* German */,
+				1DCFB237231FAABB00D1C62E /* Base */,
+				1DCFB23F231FAAC300D1C62E /* de */,
 			);
 			name = input_combo.xib;
 			sourceTree = "<group>";
@@ -1069,8 +1021,8 @@
 		E2D92E661043D9F8003DC96B /* input_password.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				E2D92E671043D9F8003DC96B /* English */,
-				E208BFF710943AB900AAA55A /* German */,
+				1DCFB238231FAABB00D1C62E /* Base */,
+				1DCFB240231FAAC300D1C62E /* de */,
 			);
 			name = input_password.xib;
 			sourceTree = "<group>";
@@ -1078,8 +1030,8 @@
 		E2D92E681043D9F8003DC96B /* input_popup.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				E2D92E691043D9F8003DC96B /* English */,
-				E208BFF810943AC200AAA55A /* German */,
+				1DCFB239231FAABB00D1C62E /* Base */,
+				1DCFB241231FAAC300D1C62E /* de */,
 			);
 			name = input_popup.xib;
 			sourceTree = "<group>";
@@ -1090,6 +1042,7 @@
 		1DEB91AE08733DA50010E9CD /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
@@ -1110,6 +1063,7 @@
 		1DEB91AF08733DA50010E9CD /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				FRAMEWORK_VERSION = A;

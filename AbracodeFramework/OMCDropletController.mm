@@ -9,7 +9,6 @@
 #import "OMCDropletController.h"
 #import "OMCCommandExecutor.h"
 #import "OMCWindow.h"
-#include "DropletPreferences.h"
 #include "CFObj.h"
 #include "OMCFilePanels.h"
 #include "OMC.h"
@@ -90,10 +89,6 @@ static OMCService *sOMCService = NULL;
 	NSString *bunldeRefID = [appBundle bundleIdentifier];
 	if(bunldeRefID == NULL)
 		bunldeRefID = @"com.abracode.CommandDroplet";
-
-	gPreferences = new DropletPreferences( (CFStringRef)bunldeRefID );
-	gPreferences->Read();	
-
 
 	CGEventRef eventRef = CGEventCreate(NULL /*default event source*/);
 	if(eventRef != NULL)
@@ -194,39 +189,6 @@ static OMCService *sOMCService = NULL;
 	return [super validateUserInterfaceItem:anItem];
 }
 
-- (void)showPrefsDialog:(id)sender
-{
-	NSString *commandName = @"DropletPreferences.plist";
-	NSBundle *appBundle = [NSBundle mainBundle];
-	NSString *commandPath = [appBundle pathForResource:commandName ofType:NULL];
-	if(commandPath == NULL)
-	{
-		NSBundle *frameworkBundle = [NSBundle bundleWithIdentifier:(NSString *)kBundleIDString];
-		commandPath = [frameworkBundle pathForResource:commandName ofType:NULL];
-	}
-
-	if(commandPath != NULL)
-	{
-		_runningCommandCount++;
-		[OMCCommandExecutor runCommand:NULL forCommandFile:commandPath withContext:NULL useNavDialog:NO delegate:self];
-		_runningCommandCount--;
-	}
-	else
-		NSLog(@"Cannot find DropletPreferences.plist");
-
-	if(gPreferences != NULL)
-		gPreferences->Read();
-
-#if _DEBUG_
-	if( gPreferences != NULL )
-	{
-		NSLog(@"showNavDialogOnStartup=%d", (int)gPreferences->mPrefs.showNavDialogOnStartup);
-		NSLog(@"quitAfterDropExecution=%d", (int)gPreferences->mPrefs.quitAfterDropExecution);
-		NSLog(@"runCommandOnReopenEvent=%d", (int)gPreferences->mPrefs.runCommandOnReopenEvent);
-	}
-#endif
-}
-
 #pragma mark --- NSApplication delegate methods ---
 
 - (void)application:(NSApplication *)sender openFiles:(NSArray *)filenames
@@ -251,19 +213,6 @@ static OMCService *sOMCService = NULL;
 
 	[self openFiles:urlArray];
 	[sender replyToOpenOrPrint:NSApplicationDelegateReplySuccess];
-
-	BOOL quitAfterDropExecution = NO;
-	if(gPreferences != NULL)
-		quitAfterDropExecution = (BOOL)gPreferences->mPrefs.quitAfterDropExecution;
-	
-	if(_startingUp && quitAfterDropExecution)
-	{
-		NSApplication *myApp = [NSApplication sharedApplication];
-		if(myApp != NULL)
-		{
-			[myApp terminate:self];
-		}
-	}
 }
 
 - (BOOL)application:(NSApplication *)theApplication openFile:(NSString *)filename
@@ -274,32 +223,12 @@ static OMCService *sOMCService = NULL;
 	NSURL *fileURL = [NSURL fileURLWithPath:filename];
     [self openDocumentWithContentsOfURL:[fileURL absoluteURL] display:YES completionHandler:^(NSDocument *, BOOL, NSError *) {}];
 
-	BOOL quitAfterDropExecution = NO;
-	if(gPreferences != NULL)
-		quitAfterDropExecution = (BOOL)gPreferences->mPrefs.quitAfterDropExecution;
-	
-	if(_startingUp && quitAfterDropExecution)
-	{
-		NSApplication *myApp = [NSApplication sharedApplication];
-		if(myApp != NULL)
-		{
-			[myApp terminate:self];
-		}
-	}
-
 	return YES;
 }
 
 - (BOOL)applicationShouldHandleReopen:(NSApplication *)theApplication hasVisibleWindows:(BOOL)hasVisibleWindows
 {
 	if(_runningCommandCount > 0) //some command is running, do not reopen
-		return NO;
-
-	BOOL runCommandAtReopenEvent = NO;
-	if(gPreferences != NULL)
-		runCommandAtReopenEvent = gPreferences->mPrefs.runCommandOnReopenEvent;
-
-	if(runCommandAtReopenEvent == NO) //prefs say: do not reopen
 		return NO;
 
 	if( !hasVisibleWindows ) //we don't trust hasVisibleWindows value, it probably only applies to document windows
@@ -322,27 +251,11 @@ static OMCService *sOMCService = NULL;
 {
 	if( _startingUp && ((_startupModifiers & kCGEventFlagMaskAlternate) != 0) )
 		return FALSE;
-
-	BOOL showNavDialogOnStartup = YES;
-	BOOL quitAfterDropExecution = NO;
-	if(_startingUp && (gPreferences != NULL) )
-	{
-		showNavDialogOnStartup = (BOOL)gPreferences->mPrefs.showNavDialogOnStartup;
-		quitAfterDropExecution = (BOOL)gPreferences->mPrefs.quitAfterDropExecution;
-	}
 		
 	_runningCommandCount++;
-	OSStatus err = [OMCCommandExecutor runCommand:self.commandID forCommandFile:self.commandFilePath withContext:NULL useNavDialog:showNavDialogOnStartup delegate:self];
+	OSStatus err = [OMCCommandExecutor runCommand:self.commandID forCommandFile:self.commandFilePath withContext:NULL useNavDialog:YES delegate:self];
 	_runningCommandCount--;
 	
-	if( (err == noErr) && quitAfterDropExecution)
-	{
-		NSApplication *myApp = [NSApplication sharedApplication];
-		if(myApp != NULL)
-		{
-			[myApp terminate:self];
-		}
-	}
 	return (err == noErr);
 }
 

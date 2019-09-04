@@ -17,9 +17,9 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		089C167EFE841241C02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		0AA1909FFE8422F4C02AAC07 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = /System/Library/Frameworks/CoreFoundation.framework; sourceTree = "<absolute>"; };
 		1D3BB166229BEB5900542933 /* AUniquePtr.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AUniquePtr.h; sourceTree = "<group>"; };
+		1DCFB252231FAE8100D1C62E /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		1DED8E4F2222AF8D00A2CAF7 /* AObserver.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AObserver.h; sourceTree = "<group>"; };
 		1DED8E502222AFA800A2CAF7 /* ACMPlugin.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ACMPlugin.h; sourceTree = "<group>"; };
 		1DED8E512222AFEA00A2CAF7 /* DebugSettings.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DebugSettings.h; sourceTree = "<group>"; };
@@ -172,9 +172,7 @@
 			hasScannedForEncodings = 1;
 			knownRegions = (
 				English,
-				Japanese,
-				French,
-				German,
+				en,
 			);
 			mainGroup = 089C166AFE841209C02AAC07 /* OnMyCommandCM */;
 			projectDirPath = "";
@@ -231,7 +229,7 @@
 		089C167DFE841241C02AAC07 /* InfoPlist.strings */ = {
 			isa = PBXVariantGroup;
 			children = (
-				089C167EFE841241C02AAC07 /* English */,
+				1DCFB252231FAE8100D1C62E /* en */,
 			);
 			name = InfoPlist.strings;
 			sourceTree = "<group>";

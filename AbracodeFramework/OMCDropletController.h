@@ -19,9 +19,6 @@ IB_DESIGNABLE
 @property (nonatomic, retain) IBInspectable NSString * commandID; // main/startup command name/id
 @property (nonatomic, retain) IBInspectable NSString * commandFilePath; //main plist file
 
-
-- (void)showPrefsDialog:(id)sender;
-
 - (void)openFiles:(NSArray *)absoluteURLArray;
 
 - (void)handleGetURLEvent:(NSAppleEventDescriptor *)event withReplyEvent:(NSAppleEventDescriptor *)replyEvent;

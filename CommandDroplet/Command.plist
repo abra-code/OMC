@@ -16,7 +16,7 @@
 			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
 			<string>10.13</string>
 			<key>REQUIRED_OMC_VERSION</key>
-			<string>3.0</string>
+			<string>4.0</string>
 			<key>VERSION</key>
 			<integer>1</integer>
 		</dict>
