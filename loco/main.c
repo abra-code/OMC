@@ -146,8 +146,7 @@ int main (int argc, const char * argv[])
 	Boolean success = CFStringGetCString (localizedString, buff, maxCount+1, kCFStringEncodingUTF8);
 	if(success)
 	{
-		fprintf(stdout, buff);
-		fprintf(stdout, "\n");
+		fprintf(stdout, "%s\n", buff);
 	}
 	else
 	{

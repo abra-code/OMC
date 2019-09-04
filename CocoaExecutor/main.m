@@ -7,7 +7,7 @@
 
 #import <Cocoa/Cocoa.h>
 
-UInt32 GetAbracodeFrameworkVersion();
+UInt32 GetAbracodeFrameworkVersion(void);
 
 #define MINIMUM_OMC_VERSION 20000
 

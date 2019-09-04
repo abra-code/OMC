@@ -111,7 +111,7 @@ GetInstructionID(CFStringRef inStr)
 		{
 			if( kCFCompareEqualTo == CFStringCompare( inStr, sInstructionWordList[i].word, 0) )
 			{
-				return i;
+				return (InstructionID)i;
 			}
 		}
 	}
@@ -532,7 +532,7 @@ int main (int argc, const char * argv[])
 					(sInstructionWordList[instruction].argumentCount == kArgumentCount_FromStdin) )
 			{
 				FILE *fp = NULL;
-				size_t sizofBuff = 128*1024;//max buffer per one line because fgets() is a primitive method of reading the line
+				int sizofBuff = 128*1024;//max buffer per one line because fgets() is a primitive method of reading the line
 				char *buff = malloc(sizofBuff);
 
 				if( (sInstructionWordList[instruction].argumentCount == kArgumentCount_FromFile) &&
@@ -551,7 +551,7 @@ int main (int argc, const char * argv[])
 					while( fgets(buff, sizofBuff, fp) != NULL )
 					{
 						buff[sizofBuff-1] = '\0';//force null terminator just in case
-						int len = strlen(buff);
+						size_t len = strlen(buff);
 						if (len > 0 && buff[len-1] == '\n')
 						{
 							buff[len-1] = '\0';

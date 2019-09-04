@@ -9,7 +9,7 @@
 #import <Cocoa/Cocoa.h>
 #import "NotifyDelegate.h"
 
-void print_help();
+void print_help(void);
 
 
 static inline void NotifyUser(const char *inTitle, const char *inSubtitle, const char *inInfo, const char *inButton, const char *inUserInfo, const char *inSoundStr)
@@ -128,7 +128,7 @@ int main(int argc, const char * argv[])
 }
 
 
-void print_help()
+void print_help(void)
 {
 	fprintf(stdout, "\nNAME\n");
 	fprintf(stdout, "\tnotify - send user notification\n\n");

@@ -9,11 +9,11 @@
 			<string>Diff</string>
 			<key>COMMAND</key>
 			<array>
-				<string>echo "just testing output window"
+				<string>echo &quot;just testing output window&quot;
 sleep 2
-echo "slept for a while, progress should show up"
+echo &quot;slept for a while, progress should show up&quot;
 sleep 2
-echo "exit with non-zero return value to see if progress gets dismissed"
+echo &quot;exit with non-zero return value to see if progress gets dismissed&quot;
 exit 1
 </string>
 			</array>
@@ -28,7 +28,7 @@ exit 1
 			<key>OUTPUT_WINDOW_SETTINGS</key>
 			<dict>
 				<key>LINE_OUTPUT_INTERVAL</key>
-				<real>0.0</real>
+				<real>0</real>
 				<key>WINDOW_ALPHA</key>
 				<real>1</real>
 				<key>WINDOW_CLOSE_FADE_OUT</key>
@@ -49,18 +49,17 @@ exit 1
 			<key>PROGRESS</key>
 			<dict>
 				<key>DELAY</key>
-				<real>1.0</real>
+				<real>1</real>
 			</dict>
 			<key>VERSION</key>
 			<integer>1</integer>
 		</dict>
-
 		<dict>
 			<key>ACTIVATION_MODE</key>
 			<string>act_always</string>
 			<key>COMMAND</key>
 			<array>
-				<string>echo "Hello New Cocoa Output Window"; sleep 1; echo "More text here"; sleep 1; echo "And the last line";</string>
+				<string>echo &quot;Hello New Cocoa Output Window&quot;; sleep 1; echo &quot;More text here&quot;; sleep 1; echo &quot;And the last line&quot;;</string>
 			</array>
 			<key>ESCAPE_SPECIAL_CHARS</key>
 			<string>esc_with_backslash</string>
@@ -83,9 +82,9 @@ exit 1
 				<key>BACKGROUND_COLOR</key>
 				<string>FF3333</string>
 				<key>FRACT_POSITION_LEFT</key>
-				<real>0.10000000149011612</real>
+				<real>0.1000000014901161</real>
 				<key>FRACT_POSITION_TOP</key>
-				<real>0.30000001192092896</real>
+				<real>0.300000011920929</real>
 				<key>TEXT_COLOR</key>
 				<string>000080</string>
 				<key>TEXT_FONT</key>
@@ -93,7 +92,7 @@ exit 1
 				<key>TEXT_SIZE</key>
 				<integer>10</integer>
 				<key>WINDOW_ALPHA</key>
-				<real>0.80000001192092896</real>
+				<real>0.800000011920929</real>
 				<key>WINDOW_CLOSE_FADE_OUT</key>
 				<true/>
 				<key>WINDOW_HEIGHT</key>
@@ -160,7 +159,7 @@ exit 1
 			</dict>
 			<key>COMMAND</key>
 			<array>
-				<string>echo "$OMC_DLG_CHOOSE_FILE_PATH"; echo "$OMC_DLG_CHOOSE_FOLDER_PATH"; echo "$OMC_DLG_CHOOSE_OBJECT_PATH"; echo "$OMC_DLG_SAVE_AS_PATH"</string>
+				<string>echo &quot;$OMC_DLG_CHOOSE_FILE_PATH&quot;; echo &quot;$OMC_DLG_CHOOSE_FOLDER_PATH&quot;; echo &quot;$OMC_DLG_CHOOSE_OBJECT_PATH&quot;; echo &quot;$OMC_DLG_SAVE_AS_PATH&quot;</string>
 			</array>
 			<key>ESCAPE_SPECIAL_CHARS</key>
 			<string>esc_with_backslash</string>
@@ -227,16 +226,16 @@ exit 1
 			<key>COMMAND</key>
 			<array>
 				<string>
-				echo "101 = $OMC_NIB_DIALOG_CONTROL_101_VALUE";
-				echo "102 = $OMC_NIB_DIALOG_CONTROL_102_VALUE";
-				echo "111 = $OMC_NIB_DIALOG_CONTROL_111_VALUE";
-				echo "121 = $OMC_NIB_DIALOG_CONTROL_121_VALUE";
-				echo "122 = $OMC_NIB_DIALOG_CONTROL_122_VALUE";
-				echo "200 = $OMC_NIB_DIALOG_CONTROL_200_VALUE";
-				echo "201 = $OMC_NIB_DIALOG_CONTROL_201_VALUE";
-				echo "202 = $OMC_NIB_DIALOG_CONTROL_202_VALUE";
-				echo "222 = $OMC_NIB_DIALOG_CONTROL_222_VALUE";
-				echo "223 = $OMC_NIB_DIALOG_CONTROL_223_VALUE";
+				echo &quot;101 = $OMC_NIB_DIALOG_CONTROL_101_VALUE&quot;;
+				echo &quot;102 = $OMC_NIB_DIALOG_CONTROL_102_VALUE&quot;;
+				echo &quot;111 = $OMC_NIB_DIALOG_CONTROL_111_VALUE&quot;;
+				echo &quot;121 = $OMC_NIB_DIALOG_CONTROL_121_VALUE&quot;;
+				echo &quot;122 = $OMC_NIB_DIALOG_CONTROL_122_VALUE&quot;;
+				echo &quot;200 = $OMC_NIB_DIALOG_CONTROL_200_VALUE&quot;;
+				echo &quot;201 = $OMC_NIB_DIALOG_CONTROL_201_VALUE&quot;;
+				echo &quot;202 = $OMC_NIB_DIALOG_CONTROL_202_VALUE&quot;;
+				echo &quot;222 = $OMC_NIB_DIALOG_CONTROL_222_VALUE&quot;;
+				echo &quot;223 = $OMC_NIB_DIALOG_CONTROL_223_VALUE&quot;;
 				</string>
 			</array>
 			<key>ESCAPE_SPECIAL_CHARS</key>
@@ -301,13 +300,13 @@ exit 1
 			<string>act_always</string>
 			<key>COMMAND</key>
 			<array>
-				<string>echo "Executing dialog init subcommand"
-"$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$OMC_NIB_DLG_GUID" 101 "OFF"
-"$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$OMC_NIB_DLG_GUID" 102 0
-"$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$OMC_NIB_DLG_GUID" 111 "Subcommand-initialized text view"
-#"$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$OMC_NIB_DLG_GUID" 122 "/Users/tom/test-image.png"
-"$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$OMC_NIB_DLG_GUID" 900 omc_disable
-"$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$OMC_NIB_DLG_GUID" 200 omc_select
+				<string>echo &quot;Executing dialog init subcommand&quot;
+&quot;$OMC_OMC_SUPPORT_PATH/omc_dialog_control&quot; &quot;$OMC_NIB_DLG_GUID&quot; 101 &quot;OFF&quot;
+&quot;$OMC_OMC_SUPPORT_PATH/omc_dialog_control&quot; &quot;$OMC_NIB_DLG_GUID&quot; 102 0
+&quot;$OMC_OMC_SUPPORT_PATH/omc_dialog_control&quot; &quot;$OMC_NIB_DLG_GUID&quot; 111 &quot;Subcommand-initialized text view&quot;
+#&quot;$OMC_OMC_SUPPORT_PATH/omc_dialog_control&quot; &quot;$OMC_NIB_DLG_GUID&quot; 122 &quot;/Users/tom/test-image.png&quot;
+&quot;$OMC_OMC_SUPPORT_PATH/omc_dialog_control&quot; &quot;$OMC_NIB_DLG_GUID&quot; 900 omc_disable
+&quot;$OMC_OMC_SUPPORT_PATH/omc_dialog_control&quot; &quot;$OMC_NIB_DLG_GUID&quot; 200 omc_select
 </string>
 			</array>
 			<key>COMMAND_ID</key>
@@ -319,94 +318,6 @@ exit 1
 			<key>NAME</key>
 			<array>
 				<string>Cocoa Dialog</string>
-			</array>
-			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
-			<string>10.5</string>
-			<key>REQUIRED_OMC_VERSION</key>
-			<string>2.0</string>
-			<key>VERSION</key>
-			<integer>1</integer>
-		</dict>
-		<dict>
-			<key>ACTIVATION_MODE</key>
-			<string>act_always</string>
-			<key>COMMAND</key>
-			<array>
-				<string></string>
-			</array>
-			<key>ESCAPE_SPECIAL_CHARS</key>
-			<string>esc_with_backslash</string>
-			<key>EXECUTION_MODE</key>
-			<string>exe_silent_popen</string>
-			<key>NAME</key>
-			<array>
-				<string>QCDialog</string>
-			</array>
-			<key>NIB_DIALOG</key>
-			<dict>
-				<key>IS_BLOCKING</key>
-				<false/>
-				<key>IS_COCOA</key>
-				<true/>
-				<key>NIB_NAME</key>
-				<string>QCDialog</string>
-			</dict>
-			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
-			<string>10.5</string>
-			<key>REQUIRED_OMC_VERSION</key>
-			<string>2.0</string>
-			<key>SUBMENU_NAME</key>
-			<string>Submenu Test 1</string>
-			<key>VERSION</key>
-			<integer>1</integer>
-		</dict>
-		<dict>
-			<key>ACTIVATION_MODE</key>
-			<string>act_always</string>
-			<key>COMMAND</key>
-			<array>
-				<string>echo "Executing dialog init subcommand";
-"$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$OMC_NIB_DLG_GUID" 1 "$OMC_APP_BUNDLE_PATH/Contents/Resources/QCDialog.qtz";
-</string>
-			</array>
-			<key>COMMAND_ID</key>
-			<string>omc.dialog.initialize</string>
-			<key>ESCAPE_SPECIAL_CHARS</key>
-			<string>esc_with_backslash</string>
-			<key>EXECUTION_MODE</key>
-			<string>exe_silent_popen</string>
-			<key>NAME</key>
-			<array>
-				<string>QCDialog</string>
-			</array>
-			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
-			<string>10.5</string>
-			<key>REQUIRED_OMC_VERSION</key>
-			<string>2.0</string>
-			<key>VERSION</key>
-			<integer>1</integer>
-		</dict>
-		<dict>
-			<key>ACTIVATION_MODE</key>
-			<string>act_always</string>
-			<key>COMMAND</key>
-			<array>
-				<string>echo "OK button pressed!";</string>
-			</array>
-			<key>COMMAND_ID</key>
-			<string>omc.dialog.terminate.ok</string>
-			<key>END_NOTIFICATION</key>
-			<dict>
-				<key>DISPLAY_NOTIFICATION</key>
-				<true/>
-			</dict>
-			<key>ESCAPE_SPECIAL_CHARS</key>
-			<string>esc_with_backslash</string>
-			<key>EXECUTION_MODE</key>
-			<string>exe_silent_popen</string>
-			<key>NAME</key>
-			<array>
-				<string>QCDialog</string>
 			</array>
 			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
 			<string>10.5</string>
@@ -453,8 +364,8 @@ exit 1
 			<string>act_always</string>
 			<key>COMMAND</key>
 			<array>
-				<string>echo "Executing dialog init subcommand";
-"$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$OMC_NIB_DLG_GUID" 3  "$OMC_APP_BUNDLE_PATH/Contents/Resources/sunflower.jpg";
+				<string>echo &quot;Executing dialog init subcommand&quot;;
+&quot;$OMC_OMC_SUPPORT_PATH/omc_dialog_control&quot; &quot;$OMC_NIB_DLG_GUID&quot; 3  &quot;$OMC_APP_BUNDLE_PATH/Contents/Resources/sunflower.jpg&quot;;
 </string>
 			</array>
 			<key>COMMAND_ID</key>
@@ -509,8 +420,8 @@ exit 1
 			<key>COMMAND</key>
 			<array>
 				<string>
-#"$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$OMC_NIB_DLG_GUID" 1 'http://www.abracode.com/';
-"$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$OMC_NIB_DLG_GUID" 2 'http://www.abracode.com/';
+#&quot;$OMC_OMC_SUPPORT_PATH/omc_dialog_control&quot; &quot;$OMC_NIB_DLG_GUID&quot; 1 &apos;http://www.abracode.com/&apos;;
+&quot;$OMC_OMC_SUPPORT_PATH/omc_dialog_control&quot; &quot;$OMC_NIB_DLG_GUID&quot; 2 &apos;http://www.abracode.com/&apos;;
 </string>
 			</array>
 			<key>COMMAND_ID</key>
@@ -565,7 +476,7 @@ exit 1
 			<key>COMMAND</key>
 			<array>
 				<string>
-"$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$OMC_NIB_DLG_GUID" 1 "$OMC_APP_BUNDLE_PATH/Contents/Resources/Introduction.qtz";
+&quot;$OMC_OMC_SUPPORT_PATH/omc_dialog_control&quot; &quot;$OMC_NIB_DLG_GUID&quot; 1 &quot;$OMC_APP_BUNDLE_PATH/Contents/Resources/Introduction.qtz&quot;;
 </string>
 			</array>
 			<key>COMMAND_ID</key>

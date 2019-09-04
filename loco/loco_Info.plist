@@ -3,11 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleIdentifier</key>
-	<string>com.abracode.loco</string>
-	<key>CFBundleName</key>
-	<string>loco</string>
-	<key>CFBundleVersion</key>
-	<string>4.0</string>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleLocalizations</key>
 	<array>
 		<string>en</string>
@@ -29,6 +25,10 @@
 		<string>zh</string>
 		<string>ko</string>
 	</array>
+	<key>CFBundleName</key>
+	<string>loco</string>
+	<key>CFBundleVersion</key>
+	<string>4.0</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>${MACOSX_DEPLOYMENT_TARGET}</string>
 </dict>

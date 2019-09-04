@@ -77,8 +77,8 @@ void CocoaExecutorObserverCallback( OmcObserverMessage inMessage, CFIndex inTask
 	
 	[openPanel setMessage:@"Choose a file to compress with gzip"];
 	
-	int result = [openPanel runModalForTypes:NULL];
-	if(result != NSOKButton)
+	NSInteger result = [openPanel runModalForTypes:NULL];
+	if(result != NSModalResponseOK)
 	{
 		return;
 	}

@@ -134,9 +134,9 @@ int main(int argc, const char * argv[])
 	{
 		NSString *pasteboardName = NULL;
 		if( strncmp("general", pbNameStr, 7) == 0)
-			pasteboardName = NSGeneralPboard;
+			pasteboardName = NSPasteboardNameGeneral;
 		else if( strncmp("find", pbNameStr, 4) == 0)
-			pasteboardName = NSFindPboard;
+			pasteboardName = NSPasteboardNameFind;
 		else
 			pasteboardName = [NSString stringWithUTF8String:pbNameStr];
 	    

@@ -21,8 +21,8 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
-		1D71F337220702EA009FAF91 /* notify in Copy Support Executables */ = {isa = PBXBuildFile; fileRef = 1D71F336220702D7009FAF91 /* notify */; };
-		1D742DC5193882BB005DFF97 /* pasteboard in Copy Support Executables */ = {isa = PBXBuildFile; fileRef = 1D742DC219388292005DFF97 /* pasteboard */; };
+		1D71F337220702EA009FAF91 /* notify in Copy Support Executables */ = {isa = PBXBuildFile; fileRef = 1D71F336220702D7009FAF91 /* notify */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		1D742DC5193882BB005DFF97 /* pasteboard in Copy Support Executables */ = {isa = PBXBuildFile; fileRef = 1D742DC219388292005DFF97 /* pasteboard */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		1D80B9BA22E447E800CF1AF5 /* OMCiTermExecutor.cp in Sources */ = {isa = PBXBuildFile; fileRef = 1D80B9B822E447E800CF1AF5 /* OMCiTermExecutor.cp */; };
 		1D80B9C222E447F900CF1AF5 /* OMCTerminalExecutor.cp in Sources */ = {isa = PBXBuildFile; fileRef = 1D80B9BF22E447F900CF1AF5 /* OMCTerminalExecutor.cp */; };
 		1D9B1F5D21FF1572004704A7 /* OnMyCommand.cp in Sources */ = {isa = PBXBuildFile; fileRef = 1D9B1F5C21FF1572004704A7 /* OnMyCommand.cp */; };
@@ -39,7 +39,7 @@
 		8DC2EF570486A6940098B216 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7B1FEA5585E11CA2CBB /* Cocoa.framework */; };
 		E20026D710B68F3200D5388F /* OMCCustomWindow.mm in Sources */ = {isa = PBXBuildFile; fileRef = E20026D510B68F3200D5388F /* OMCCustomWindow.mm */; };
 		E204EB7F0D7FD8A900595D15 /* OMCConstants.h in Headers */ = {isa = PBXBuildFile; fileRef = E204EB7E0D7FD8A900595D15 /* OMCConstants.h */; };
-		E20F1F69130BBE6300882872 /* alert in Copy Support Executables */ = {isa = PBXBuildFile; fileRef = E20F1F68130BBE5100882872 /* alert */; };
+		E20F1F69130BBE6300882872 /* alert in Copy Support Executables */ = {isa = PBXBuildFile; fileRef = E20F1F68130BBE5100882872 /* alert */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		E211D3C50D3F51010065C23A /* OMCCocoaNib.h in Headers */ = {isa = PBXBuildFile; fileRef = E211D3C30D3F51010065C23A /* OMCCocoaNib.h */; };
 		E211D3C60D3F51010065C23A /* OMCCocoaNib.m in Sources */ = {isa = PBXBuildFile; fileRef = E211D3C40D3F51010065C23A /* OMCCocoaNib.m */; };
 		E211D4F70D4346BB0065C23A /* OMCDialogController.h in Headers */ = {isa = PBXBuildFile; fileRef = E211D4F30D4346BA0065C23A /* OMCDialogController.h */; };
@@ -49,8 +49,8 @@
 		E234F9FA0D0FC431001A7780 /* Private.strings in Resources */ = {isa = PBXBuildFile; fileRef = E234F9F80D0FC431001A7780 /* Private.strings */; };
 		E234FA290D0FCB28001A7780 /* stop.icns in Resources */ = {isa = PBXBuildFile; fileRef = E234FA1F0D0FCB28001A7780 /* stop.icns */; };
 		E234FA2A0D0FCB28001A7780 /* app.icns in Resources */ = {isa = PBXBuildFile; fileRef = E234FA200D0FCB28001A7780 /* app.icns */; };
-		E234FAA10D0FD0CE001A7780 /* omc_dialog_control in Copy Support Executables */ = {isa = PBXBuildFile; fileRef = E234FA9E0D0FD084001A7780 /* omc_dialog_control */; };
-		E234FAA40D0FD114001A7780 /* omc_next_command in Copy Support Executables */ = {isa = PBXBuildFile; fileRef = E234FAA30D0FD114001A7780 /* omc_next_command */; };
+		E234FAA10D0FD0CE001A7780 /* omc_dialog_control in Copy Support Executables */ = {isa = PBXBuildFile; fileRef = E234FA9E0D0FD084001A7780 /* omc_dialog_control */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		E234FAA40D0FD114001A7780 /* omc_next_command in Copy Support Executables */ = {isa = PBXBuildFile; fileRef = E234FAA30D0FD114001A7780 /* omc_next_command */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		E23AAC9012F55FE0004C867B /* OMCService.m in Sources */ = {isa = PBXBuildFile; fileRef = E23AAC8C12F55FE0004C867B /* OMCService.m */; };
 		E23AACC812F5684E004C867B /* OMCService.h in Headers */ = {isa = PBXBuildFile; fileRef = E23AAC8B12F55FE0004C867B /* OMCService.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E23DC9640D9A2616009D2AD8 /* OMCPDFView.m in Sources */ = {isa = PBXBuildFile; fileRef = E23DC95C0D9A2616009D2AD8 /* OMCPDFView.m */; };
@@ -116,8 +116,8 @@
 		E29ED21A0D09FD8800C9D5E8 /* ARefCounted.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED2190D09FD8800C9D5E8 /* ARefCounted.cp */; };
 		E29ED21C0D09FD8D00C9D5E8 /* ARefCounted.h in Headers */ = {isa = PBXBuildFile; fileRef = E29ED21B0D09FD8D00C9D5E8 /* ARefCounted.h */; };
 		E2A2947A105E02B500C732A3 /* OMCTableViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = E2A29476105E02B500C732A3 /* OMCTableViewController.h */; };
-		E2A832570D147B4A00117643 /* b64 in Copy Support Executables */ = {isa = PBXBuildFile; fileRef = E2A832550D147B4A00117643 /* b64 */; };
-		E2A832580D147B4A00117643 /* plister in Copy Support Executables */ = {isa = PBXBuildFile; fileRef = E2A832560D147B4A00117643 /* plister */; };
+		E2A832570D147B4A00117643 /* b64 in Copy Support Executables */ = {isa = PBXBuildFile; fileRef = E2A832550D147B4A00117643 /* b64 */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		E2A832580D147B4A00117643 /* plister in Copy Support Executables */ = {isa = PBXBuildFile; fileRef = E2A832560D147B4A00117643 /* plister */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		E2ACB25A12EADCF500A8ACF6 /* AbracodeFrameworkVersion.c in Headers */ = {isa = PBXBuildFile; fileRef = E2ACB25712EADCB000A8ACF6 /* AbracodeFrameworkVersion.c */; settings = {ATTRIBUTES = (Public, ); }; };
 		E2B795870ECE9A1A00C8939E /* OMCPDFView.h in Headers */ = {isa = PBXBuildFile; fileRef = E23DC95E0D9A2616009D2AD8 /* OMCPDFView.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E2BB1E480E6F886200D2DDE5 /* OMCView.m in Sources */ = {isa = PBXBuildFile; fileRef = E2BB1E440E6F886200D2DDE5 /* OMCView.m */; };
@@ -129,7 +129,7 @@
 		E2C433470DEE72F700E976D2 /* PlistPreferences.h in Headers */ = {isa = PBXBuildFile; fileRef = E2C433430DEE72F600E976D2 /* PlistPreferences.h */; };
 		E2C433480DEE72F700E976D2 /* PlistPreferences.cp in Sources */ = {isa = PBXBuildFile; fileRef = E2C433440DEE72F700E976D2 /* PlistPreferences.cp */; };
 		E2C433620DEE751300E976D2 /* OMCDropletController.mm in Sources */ = {isa = PBXBuildFile; fileRef = E2C433600DEE751300E976D2 /* OMCDropletController.mm */; };
-		E2C7781212FFDC6300A7E6D2 /* filt in Copy Support Executables */ = {isa = PBXBuildFile; fileRef = E2C7780F12FFDC4D00A7E6D2 /* filt */; };
+		E2C7781212FFDC6300A7E6D2 /* filt in Copy Support Executables */ = {isa = PBXBuildFile; fileRef = E2C7780F12FFDC4D00A7E6D2 /* filt */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		E2C8486110D61C33002DFDB5 /* OMCBox.h in Headers */ = {isa = PBXBuildFile; fileRef = E2C8485D10D61C33002DFDB5 /* OMCBox.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E2C8486210D61C33002DFDB5 /* OMCBox.m in Sources */ = {isa = PBXBuildFile; fileRef = E2C8485E10D61C33002DFDB5 /* OMCBox.m */; };
 		E2C84D750DA9AC090056DBC2 /* OMCCommandMenu.h in Headers */ = {isa = PBXBuildFile; fileRef = E2C84D710DA9AC090056DBC2 /* OMCCommandMenu.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -786,7 +786,7 @@
 		0867D690FE84028FC02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0510;
+				LastUpgradeCheck = 1100;
 				ORGANIZATIONNAME = Abracode;
 			};
 			buildConfigurationList = 1DEB91B108733DA50010E9CD /* Build configuration list for PBXProject "Abracode" */;
@@ -1047,7 +1047,6 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				FRAMEWORK_VERSION = A;
-				GCC_ENABLE_FIX_AND_CONTINUE = NO;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = Abracode_Prefix.pch;
 				GCC_PREPROCESSOR_DEFINITIONS = "_DEBUG_=1";
@@ -1083,6 +1082,7 @@
 			baseConfigurationReference = E2269C1B0EB6DCF30029CCF5 /* AbracodeCommon.xcconfig */;
 			buildSettings = {
 				DEAD_CODE_STRIPPING = NO;
+				ENABLE_TESTABILITY = YES;
 				EXPORTED_SYMBOLS_FILE = AbracodeFramework.exp;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -1091,6 +1091,7 @@
 				);
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CODE_SIGN_FLAGS = "--deep";
 				SYMROOT = ../build;
 			};
@@ -1129,7 +1130,6 @@
 			buildSettings = {
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				GCC_ENABLE_FIX_AND_CONTINUE = NO;
 				PRODUCT_NAME = All;
 				ZERO_LINK = NO;
 			};

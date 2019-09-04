@@ -1,7 +1,7 @@
 #include <CoreFoundation/CoreFoundation.h>
 #include <stdlib.h>
 
-void print_help();
+void print_help(void);
 
 int main (int argc, const char * argv[])
 {
@@ -103,7 +103,7 @@ int main (int argc, const char * argv[])
 }
 
 
-void print_help()
+void print_help(void)
 {
 	fprintf(stdout, "\nNAME\n");
 	fprintf(stdout, "\talert - display GUI alert dialog\n\n");

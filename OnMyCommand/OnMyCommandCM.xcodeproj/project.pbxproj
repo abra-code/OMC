@@ -168,11 +168,11 @@
 			};
 			buildConfigurationList = E281018B0864959E006192E8 /* Build configuration list for PBXProject "OnMyCommandCM" */;
 			compatibilityVersion = "Xcode 3.1";
-			developmentRegion = English;
+			developmentRegion = en;
 			hasScannedForEncodings = 1;
 			knownRegions = (
-				English,
 				en,
+				Base,
 			);
 			mainGroup = 089C166AFE841209C02AAC07 /* OnMyCommandCM */;
 			projectDirPath = "";

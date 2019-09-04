@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <regex.h>
 
-void print_help();
+void print_help(void);
 
 typedef struct str_replace
 {
@@ -291,7 +291,7 @@ int main (int argc, const char * argv[])
 }
 
 
-void print_help()
+void print_help(void)
 {
 	fprintf(stdout, "\nNAME\n");
 	fprintf(stdout, "\tfilt - lean and fast pipe filter, born out of frustration with sed\n\n");

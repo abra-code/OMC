@@ -11,7 +11,7 @@
 
 #include <CoreFoundation/CoreFoundation.h>
 
-extern UInt32 OMCGetCurrentVersion() __attribute__((weak_import));
+extern UInt32 OMCGetCurrentVersion(void) __attribute__((weak_import));
 
 UInt32 GetAbracodeFrameworkVersion()
 {

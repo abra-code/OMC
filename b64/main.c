@@ -67,7 +67,7 @@ int main (int argc, const char * argv[])
 			while( fgets(buff, sizeof(buff), fp) != NULL )
 			{
 				buff[sizeof(buff)-1] = '\0';//force null terminator just in case
-				int len = strlen(buff);
+				size_t len = strlen(buff);
 				if(inputData == NULL)
 				{//first time allocation
 					inputData = (unsigned char *)calloc(1, len);
