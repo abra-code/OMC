@@ -11,6 +11,8 @@ enum
 	kExecPOpenWithOutputWindow,
 	kExecAppleScript,
 	kExecAppleScriptWithOutputWindow,
+	kExecPopenScriptFile,
+	kExecPopenScriptFileWithOutputWindow
 };
 
 

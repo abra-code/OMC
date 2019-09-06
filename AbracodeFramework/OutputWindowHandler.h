@@ -35,8 +35,8 @@ typedef struct OMCColor
 struct OutputWindowSettings
 {
 	OutputWindowSettings()
-		: oneLineDelay(0.1 * kEventDurationSecond), title(NULL), alpha(1.0f),
-		positionMethod(kWindowAlertPositionOnMainScreen), width(400), height(200), fontSize(10.0),
+		: alpha(1.0f), positionMethod(kWindowAlertPositionOnMainScreen),
+		width(400), height(200), fontSize(10.0),
 		textBox(CGRectZero), closeBox(CGRectZero), resizeBox(CGRectZero),
 		useFadeIn(false), useFadeOut(false)
 	{
@@ -54,7 +54,6 @@ struct OutputWindowSettings
 		textColor.alpha = 1.0;
 	}
 
-	EventTimerInterval oneLineDelay;
 	CFObj<CFStringRef> title;
 	float		alpha;
 	OMCWindowType windowType;
@@ -81,9 +80,9 @@ class OutputWindowHandler
 {
 public:
 							OutputWindowHandler( CFDictionaryRef inSettingsDict, CFArrayRef inCommandName, CFStringRef inDynamicName, 
-												CFBundleRef inBundleRef, CFBundleRef inExternBundleRef, CFStringRef inLocalizationTableName);
+												CFBundleRef inExternBundleRef, CFStringRef inLocalizationTableName);
 							OutputWindowHandler(CFArrayRef inCommandName, CFStringRef inDynamicName, CFStringRef inTextToDisplay, CFDictionaryRef inSettingsDict,
-												CFBundleRef inBundleRef, CFBundleRef inExternBundleRef, CFStringRef inLocalizationTableName);
+												CFBundleRef inExternBundleRef, CFStringRef inLocalizationTableName);
 	virtual					~OutputWindowHandler();
 
 	AObserverBase *			GetObserver()
@@ -99,11 +98,13 @@ public:
 	Boolean					ShouldCloseWindow() { return mShouldCloseWindow; }
 	
 	void					AppendOutputData( const UInt8 *inData, size_t inSize, Boolean inSuccess );
-	CGImageRef				CreateImage(CFBundleRef inBundle, CFStringRef inBackroundPictureName);
+	CGImageRef				CreateImage(CFBundleRef inBundle, CFStringRef inBackgroundPictureName);
 
-	void					GetOutputWindowSettings(CFArrayRef inCommandName, CFDictionaryRef inSettingsDict,
-													CFBundleRef inBundleRef, CFBundleRef inExternBundleRef,
-													CFStringRef inLocalizationTableName, OutputWindowSettings &outSettings);
+	void					GetOutputWindowSettings(CFArrayRef inCommandName,
+													CFDictionaryRef inSettingsDict,
+													CFBundleRef inExternBundleRef,
+													CFStringRef inLocalizationTableName,
+													OutputWindowSettings &outSettings);
 
 	static Boolean			HexStringToColor(CFStringRef inString, OMCColor &outColor);
 

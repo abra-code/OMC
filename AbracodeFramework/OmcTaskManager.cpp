@@ -72,17 +72,6 @@ OmcHostTaskManager::OmcHostTaskManager(OnMyCommandCM *inPlugin, const CommandDes
 	mProgress(NULL),
 	mUserCanceled(false)
 {
-#if _DEBUG_
-	if( (CFBundleRef)mBundle != NULL)
-	{
-		CFIndex bundleRetainCount = ::CFGetRetainCount( (CFBundleRef)mBundle );
-		DEBUG_CSTR("OmcHostTaskManager::~OmcHostTaskManager. CFBundleRef retain count after retaining it is %d\n", (int)bundleRetainCount );
-	}
-	
-//	char *letsSeeIfMallocDebugCatchesThis = new char [321];
-	
-#endif
-
     //do not init command state here. parsing of the command happens later
     //so defer the init of mCurrCommandState until Run
 
@@ -109,20 +98,11 @@ OmcHostTaskManager::~OmcHostTaskManager()
 		DEBUG_CSTR( "OmcHostTaskManager::~OmcHostTaskManager. Task list not empty. pendingCount = %d, runningCount = %d\n", (int)pendingCount, (int)runningCount );
 	}
 
-#endif
+#endif //_DEBUG_
 
 	Finalize();
 	if(mTaskObserver != NULL)
 		mTaskObserver->SetOwner(NULL);//observer may outlive us so it is very important to tell that we died
-
-
-#if _DEBUG_
-	if( (CFBundleRef)mBundle != NULL)
-	{
-		CFIndex bundleRetainCount = ::CFGetRetainCount( (CFBundleRef)mBundle );
-		DEBUG_CSTR("OmcHostTaskManager::~OmcHostTaskManager. CFBundleRef retain count before releasing it is %d\n", (int)bundleRetainCount );
-	}
-#endif
 
 	delete mCurrCommandState;
 }
@@ -419,10 +399,10 @@ OmcHostTaskManager::ShowEndNotification()
 	}
 */
 	
-	iconURL.Adopt( ::CFBundleCopyResourceURL(::CFBundleGetMainBundle(), iconName, NULL, NULL) );//main bundle first from host app
+	iconURL.Adopt( CFBundleCopyResourceURL(CFBundleGetMainBundle(), iconName, nullptr, nullptr) );//main bundle first from host app
 
-	if( (iconURL == NULL) && (mBundle != NULL) )//fall back to framework icon
-		iconURL.Adopt( ::CFBundleCopyResourceURL(mBundle, iconName, NULL, NULL) );//framework bundle
+	if( (iconURL == nullptr) && (mBundle != nullptr) )//fall back to Abracode framework icon
+		iconURL.Adopt( ::CFBundleCopyResourceURL(mBundle, iconName, nullptr, nullptr) );
 
 //it checks for timeout after 30 seconds so it is quite useless for shorter timeouts
 

@@ -22,8 +22,9 @@
 
 //inNewFinalizer must be allocated with operator new and we take ownership of it and delete it in our destructor
 OutputWindowHandler::OutputWindowHandler( CFDictionaryRef inSettingsDict,
-										CFArrayRef inCommandName, CFStringRef inDynamicName,
-										CFBundleRef inBundleRef, CFBundleRef inExternBundleRef,
+										CFArrayRef inCommandName,
+										CFStringRef inDynamicName,
+										CFBundleRef inExternBundleRef,
 										CFStringRef inLocalizationTableName)
 	: mTaskObserver( new AObserver<OutputWindowHandler>(this) ),
 	mOutputWindowController(NULL), mAutoCloseTimer(NULL),
@@ -33,7 +34,7 @@ OutputWindowHandler::OutputWindowHandler( CFDictionaryRef inSettingsDict,
 	TRACE_CSTR("Entering OutputWindowHandler constructor (with command)\n");
 
 	OutputWindowSettings windowSettings;
-	GetOutputWindowSettings(inCommandName, inSettingsDict, inBundleRef, inExternBundleRef, inLocalizationTableName, windowSettings);
+	GetOutputWindowSettings(inCommandName, inSettingsDict, inExternBundleRef, inLocalizationTableName, windowSettings);
 
 	if(windowSettings.title == NULL)
 	{
@@ -48,8 +49,11 @@ OutputWindowHandler::OutputWindowHandler( CFDictionaryRef inSettingsDict,
 	mOutputWindowController = CreateOutputWindowController(windowSettings, this);
 }
 
-OutputWindowHandler::OutputWindowHandler(CFArrayRef inCommandName, CFStringRef inDynamicName, CFStringRef inTextToDisplay, CFDictionaryRef inSettingsDict,
-										CFBundleRef inBundleRef, CFBundleRef inExternBundleRef,
+OutputWindowHandler::OutputWindowHandler(CFArrayRef inCommandName,
+										CFStringRef inDynamicName,
+										CFStringRef inTextToDisplay,
+										CFDictionaryRef inSettingsDict,
+										CFBundleRef inExternBundleRef,
 										CFStringRef inLocalizationTableName)
 	:  mTaskObserver( new AObserver<OutputWindowHandler>(this) ),
 	mOutputWindowController(NULL), mAutoCloseTimer(NULL), 
@@ -60,7 +64,7 @@ OutputWindowHandler::OutputWindowHandler(CFArrayRef inCommandName, CFStringRef i
 	TRACE_CSTR("Entering OutputWindowHandler constructor (with text to display)\n");
 	
 	OutputWindowSettings windowSettings;
-	GetOutputWindowSettings(inCommandName, inSettingsDict, inBundleRef, inExternBundleRef, inLocalizationTableName, windowSettings);
+	GetOutputWindowSettings(inCommandName, inSettingsDict, inExternBundleRef, inLocalizationTableName, windowSettings);
 
 	if(windowSettings.title == NULL)
 	{
@@ -203,41 +207,31 @@ void OutputWindowHandlerDeleterCallBack(CFRunLoopTimerRef timer, void* info)
 }
 
 void
-OutputWindowHandler::GetOutputWindowSettings(CFArrayRef inCommandName, CFDictionaryRef inSettingsDict,
-											CFBundleRef inBundleRef, CFBundleRef inExternBundleRef,
-											CFStringRef inLocalizationTableName, OutputWindowSettings &outSettings)
+OutputWindowHandler::GetOutputWindowSettings(CFArrayRef inCommandName,
+											CFDictionaryRef inSettingsDict,
+											CFBundleRef inExternBundleRef,
+											CFStringRef inLocalizationTableName,
+											OutputWindowSettings &outSettings)
 {
 	CFStringRef theStr;
-
-//set defaults
-/* defaults set in constructor
-	outSettings.oneLineDelay = 0.1 * kEventDurationSecond;
-	outSettings.title = NULL;
-	outSettings.alpha = 1.0;
-*/
 	//we need to check if the process is background only - in this case we cannot use floating
 	//because it will never show
     bool regularGUIApp = RunningInRegularGUIApp();
     outSettings.windowType = regularGUIApp ? kOMCWindowFloating : kOMCWindowGlobalFloating;
 
-	if(inSettingsDict == NULL)
+	if(inSettingsDict == nullptr)
 		return;
 
 	ACFDict settings(inSettingsDict);
 
-//deprecated
-	double secondsInterval = 0.1;
-	if( settings.GetValue(CFSTR("LINE_OUTPUT_INTERVAL"), secondsInterval) )
-		outSettings.oneLineDelay = secondsInterval * kEventDurationSecond;
-
-	CFStringRef windowTitle = NULL;
+	CFStringRef windowTitle = nullptr;
 	settings.GetValue(CFSTR("WINDOW_TITLE"), windowTitle);
 
-	if( (windowTitle != NULL) && (inLocalizationTableName != NULL) )
+	if( (windowTitle != nullptr) && (inLocalizationTableName != nullptr) )
 	{//client wants localization
 		CFBundleRef localizationBundle = inExternBundleRef;//.omc module with localization?
-		if(localizationBundle == NULL)
-			localizationBundle = CFBundleGetMainBundle();//this will not work if command delegated to deputy (should be rare for droplet)
+		if(localizationBundle == nullptr)
+			localizationBundle = CFBundleGetMainBundle();
 
 		outSettings.title.Adopt( ::CFCopyLocalizedStringFromTableInBundle( windowTitle, inLocalizationTableName, localizationBundle, "") );
 	}
@@ -317,18 +311,21 @@ OutputWindowHandler::GetOutputWindowSettings(CFArrayRef inCommandName, CFDiction
 	settings.GetValue(CFSTR("FRACT_POSITION_TOP"), outSettings.specialPosition.y);
 	settings.GetValue(CFSTR("FRACT_POSITION_LEFT"), outSettings.specialPosition.x);
 	
-	CGImageRef customImage = NULL;
+	CGImageRef customImage = nullptr;
 	if( settings.GetValue(CFSTR("CUSTOM_WINDOW_PNG_IMAGE"), theStr) )
 	{
 		//try reading with from external bundle
-		if(inExternBundleRef != NULL)
+		if(inExternBundleRef != nullptr)
 			customImage = CreateImage(inExternBundleRef, theStr);
 		
-		if(customImage == NULL)//not found in external - try in main
-			customImage = CreateImage(inBundleRef, theStr);
+		if(customImage == nullptr)//not found in external - try in main app bundle
+		{
+			CFBundleRef appBundleRef = CFBundleGetMainBundle();
+			customImage = CreateImage(appBundleRef, theStr);
+		}
 	}
 	
-	if(customImage != NULL)
+	if(customImage != nullptr)
 	{
 		outSettings.backgroundImage.Adopt(customImage, kCFObjRetain);
 		outSettings.width = ::CGImageGetWidth(customImage);
@@ -352,9 +349,9 @@ OutputWindowHandler::GetOutputWindowSettings(CFArrayRef inCommandName, CFDiction
 	if( settings.GetValue(CFSTR("TEXT_COLOR"), theStr) )
 		HexStringToColor(theStr, outSettings.textColor);
 
-	CFStringRef fontName = NULL;	
+	CFStringRef fontName = nullptr;
 	settings.GetValue(CFSTR("TEXT_FONT"), fontName);
-	if(fontName == NULL)
+	if(fontName == nullptr)
 		fontName = CFSTR("Monaco");
 
 	outSettings.fontName.Adopt(fontName, kCFObjRetain);
@@ -463,24 +460,24 @@ OutputWindowHandler::HexStringToColor(CFStringRef inString, OMCColor &outColor)
 }
 
 CGImageRef
-OutputWindowHandler::CreateImage(CFBundleRef inBundle, CFStringRef inBackroundPictureName)
+OutputWindowHandler::CreateImage(CFBundleRef inBundle, CFStringRef inBackgroundPictureName)
 {
-	CFIndex strLen = ::CFStringGetLength(inBackroundPictureName);
+	CFIndex strLen = ::CFStringGetLength(inBackgroundPictureName);
 	if(strLen == 0)
 		return NULL;
 
-	UniChar firstChar = ::CFStringGetCharacterAtIndex(inBackroundPictureName, 0);
+	UniChar firstChar = ::CFStringGetCharacterAtIndex(inBackgroundPictureName, 0);
 	CFURLRef url = NULL;
 	
 	if(firstChar == (UniChar)'/')
 	{//absolute path
-		url = ::CFURLCreateWithFileSystemPath(kCFAllocatorDefault, inBackroundPictureName, kCFURLPOSIXPathStyle, false);
+		url = ::CFURLCreateWithFileSystemPath(kCFAllocatorDefault, inBackgroundPictureName, kCFURLPOSIXPathStyle, false);
 	}
 	else
 	{//image in resources
 		if(inBundle == NULL)
 			inBundle = ::CFBundleGetMainBundle();
-		url = ::CFBundleCopyResourceURL( inBundle, inBackroundPictureName, NULL, NULL );
+		url = ::CFBundleCopyResourceURL( inBundle, inBackgroundPictureName, NULL, NULL );
 	}
 
 	if( url == NULL )

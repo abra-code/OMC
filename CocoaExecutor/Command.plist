@@ -5,8 +5,63 @@
 	<key>COMMAND_LIST</key>
 	<array>
 		<dict>
+			<key>ACTIVATION_MODE</key>
+			<string>act_always</string>
+			<key>COMMAND</key>
+			<array>
+				<string></string>
+			</array>
+			<key>ESCAPE_SPECIAL_CHARS</key>
+			<string>esc_with_backslash</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_silent_popen</string>
+			<key>NAME</key>
+			<string>Test Executor</string>
+			<key>VERSION</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>ACTIVATION_MODE</key>
+			<string>act_always</string>
 			<key>COMMAND_ID</key>
-			<string>Diff</string>
+			<string>executor.test.manual.script.file</string>
+			<key>COMMAND</key>
+			<array>
+				<string>__APP_BUNDLE_PATH__</string>
+				<string>/Contents/Resources/Scripts/executor.test.exe.script.file.sh</string>
+			</array>
+			<key>ESCAPE_SPECIAL_CHARS</key>
+			<string>esc_none</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_popen_with_output_window</string>
+			<key>NAME</key>
+			<string>Test Manual Script Execution</string>
+			<key>NOTES</key>
+			<string>Manual setup of what exe_script_file and exe_script_file_with_output_window should do automatically</string>
+			<key>POPEN_SHELL</key>
+			<array>
+				<string>/bin/sh</string>
+			</array>
+			<key>VERSION</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>ACTIVATION_MODE</key>
+			<string>act_always</string>
+			<key>COMMAND_ID</key>
+			<string>executor.test.exe.script.file</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file_with_output_window</string>
+			<key>NAME</key>
+			<string>Test Script File Execution</string>
+			<key>NOTES</key>
+			<string>New execution style test to run executor.test.exe.script.file.sh in Contents/Resources/Scripts</string>
+			<key>VERSION</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>COMMAND_ID</key>
+			<string>executor.test.output.window.position</string>
 			<key>COMMAND</key>
 			<array>
 				<string>echo &quot;just testing output window&quot;
@@ -22,7 +77,7 @@ exit 1
 			<key>EXECUTION_MODE</key>
 			<string>exe_popen_with_output_window</string>
 			<key>NAME</key>
-			<string>Output Window position</string>
+			<string>Output Window Position Test</string>
 			<key>NOTES</key>
 			<string>Simple Diff command handler</string>
 			<key>OUTPUT_WINDOW_SETTINGS</key>
@@ -40,7 +95,7 @@ exit 1
 				<key>WINDOW_POSITION</key>
 				<string>cascade</string>
 				<key>WINDOW_TITLE</key>
-				<string>Diff</string>
+				<string>Test</string>
 				<key>WINDOW_TYPE</key>
 				<string>regular</string>
 				<key>WINDOW_WIDTH</key>
@@ -57,9 +112,11 @@ exit 1
 		<dict>
 			<key>ACTIVATION_MODE</key>
 			<string>act_always</string>
+			<key>COMMAND_ID</key>
+			<string>executor.test.output.window.options</string>
 			<key>COMMAND</key>
 			<array>
-				<string>echo &quot;Hello New Cocoa Output Window&quot;; sleep 1; echo &quot;More text here&quot;; sleep 1; echo &quot;And the last line&quot;;</string>
+				<string>echo &quot;New Output Window&quot;; sleep 1; echo &quot;More text here&quot;; sleep 1; echo &quot;And the last line&quot;;</string>
 			</array>
 			<key>ESCAPE_SPECIAL_CHARS</key>
 			<string>esc_with_backslash</string>
@@ -67,7 +124,7 @@ exit 1
 			<string>exe_popen_with_output_window</string>
 			<key>NAME</key>
 			<array>
-				<string>Cocoa Output Window</string>
+				<string>Output Window Test</string>
 			</array>
 			<key>OUTPUT_WINDOW_SETTINGS</key>
 			<dict>

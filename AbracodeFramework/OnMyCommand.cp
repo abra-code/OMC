@@ -1530,11 +1530,12 @@ OnMyCommandCM::ProcessObjects()
 		else
 			mCurrObjectIndex = i;
 
-		CFObj<CFMutableStringRef> theCommand( CreateCommandStringWithObjects(currCommand.command, currCommand.escapeSpecialCharsMode) );
+		UInt8 escapingMode = currCommand.escapeSpecialCharsMode;
+		if((currCommand.executionMode == kExecPopenScriptFile) ||
+			(currCommand.executionMode == kExecPopenScriptFileWithOutputWindow))
+			escapingMode = kEscapeNone; //the command is actually a path and will not be interpeted by any shell
 
-		if(theCommand == nullptr)
-			return memFullErr;
-
+		CFObj<CFMutableStringRef> theCommand( CreateCommandStringWithObjects(currCommand.command, escapingMode) );
 		CFObj<CFMutableStringRef> inputPipe( CreateCommandStringWithObjects(currCommand.inputPipe, kEscapeNone) );
 		CFObj<CFDictionaryRef> environList( CreateEnvironmentVariablesDict(NULL) );
 
@@ -1551,24 +1552,33 @@ OnMyCommandCM::ProcessObjects()
 				ExecuteInITerm( theCommand, currCommand.iTermShellPath, currCommand.openNewTerminalSession, currCommand.bringTerminalToFront);
 			break;
 
+			default:
 			case kExecSilentPOpen:
-				theExec.Adopt( new POpenExecutor(currCommand, mBundleRef, environList) );
+				theExec.Adopt( new POpenExecutor(currCommand, environList) );
 			break;
 			
 			case kExecSilentSystem:
-				theExec.Adopt( new SystemExecutor(mBundleRef) );
+				theExec.Adopt( new SystemExecutor() );
 			break;
 			
 			case kExecPOpenWithOutputWindow:
-				theExec.Adopt( new POpenWithOutputExecutor(currCommand, dynamicCommandName, mBundleRef, externBundle, environList) );
+				theExec.Adopt( new POpenWithOutputExecutor(currCommand, dynamicCommandName, externBundle, environList) );
 			break;
 			
 			case kExecAppleScript:
-				theExec.Adopt( new AppleScriptExecutor(currCommand, NULL, mBundleRef, externBundle, false) );
+				theExec.Adopt( new AppleScriptExecutor(currCommand, nullptr /*inDynamicName*/, externBundle, false /*useOutputWindow*/) );
 			break;
 			
 			case kExecAppleScriptWithOutputWindow:
-				theExec.Adopt( new AppleScriptExecutor(currCommand, dynamicCommandName, mBundleRef, externBundle, true) );
+				theExec.Adopt( new AppleScriptExecutor(currCommand, dynamicCommandName, externBundle, true /*useOutputWindow*/) );
+			break;
+
+			case kExecPopenScriptFile:
+				theExec.Adopt( new POpenScriptFileExecutor(currCommand, externBundle, environList) );
+			break;
+			
+			case kExecPopenScriptFileWithOutputWindow:
+				theExec.Adopt( new POpenScriptFileWithOutputExecutor(currCommand, dynamicCommandName, externBundle, environList) );
 			break;
 		}
 		
@@ -1591,10 +1601,12 @@ OnMyCommandCM::ProcessObjects()
 OSStatus
 OnMyCommandCM::ProcessCommandWithText(CommandDescription &currCommand, CFStringRef inStrRef)
 {
-	CFObj<CFMutableStringRef> theCommand( CreateCommandStringWithText(currCommand.command, inStrRef, currCommand.escapeSpecialCharsMode) );
-	
-	if(theCommand == nullptr)
-		return memFullErr;
+	UInt8 escapingMode = currCommand.escapeSpecialCharsMode;
+	if((currCommand.executionMode == kExecPopenScriptFile) ||
+		(currCommand.executionMode == kExecPopenScriptFileWithOutputWindow))
+		escapingMode = kEscapeNone; //the command is actually a path and will not be interpeted by any shell
+
+	CFObj<CFMutableStringRef> theCommand( CreateCommandStringWithText(currCommand.command, inStrRef, escapingMode) );
 
 	CFBundleRef externBundle = GetCurrentCommandExternBundle();
 	CFBundleRef localizationBundle = nullptr;
@@ -1638,24 +1650,33 @@ OnMyCommandCM::ProcessCommandWithText(CommandDescription &currCommand, CFStringR
 			ExecuteInITerm( theCommand, currCommand.iTermShellPath, currCommand.openNewTerminalSession, currCommand.bringTerminalToFront );
 		break;
 
+		default:
 		case kExecSilentPOpen:
-			theExec.Adopt( new POpenExecutor(currCommand, mBundleRef, environList) );
+			theExec.Adopt( new POpenExecutor(currCommand, environList) );
 		break;
 		
 		case kExecSilentSystem:
-			theExec.Adopt( new SystemExecutor(mBundleRef) );
+			theExec.Adopt( new SystemExecutor() );
 		break;
 		
 		case kExecPOpenWithOutputWindow:
-			theExec.Adopt( new POpenWithOutputExecutor(currCommand, dynamicCommandName, mBundleRef, externBundle, environList) );
+			theExec.Adopt( new POpenWithOutputExecutor(currCommand, dynamicCommandName, externBundle, environList) );
 		break;
 
 		case kExecAppleScript:
-			theExec.Adopt( new AppleScriptExecutor(currCommand, NULL, mBundleRef, externBundle, false) );
+			theExec.Adopt( new AppleScriptExecutor(currCommand, nullptr /*inDynamicName*/, externBundle, false /*useOutputWindow*/) );
 		break;
 		
 		case kExecAppleScriptWithOutputWindow:
-			theExec.Adopt( new AppleScriptExecutor(currCommand, dynamicCommandName, mBundleRef, externBundle, true) );
+			theExec.Adopt( new AppleScriptExecutor(currCommand, dynamicCommandName, externBundle, true /*useOutputWindow*/) );
+		break;
+
+		case kExecPopenScriptFile:
+			theExec.Adopt( new POpenScriptFileExecutor(currCommand, externBundle, environList) );
+		break;
+		
+		case kExecPopenScriptFileWithOutputWindow:
+			theExec.Adopt( new POpenScriptFileWithOutputExecutor(currCommand, dynamicCommandName, externBundle, environList) );
 		break;
 	}
 	
@@ -3036,6 +3057,10 @@ OnMyCommandCM::GetOneCommandParams(CommandDescription &outDesc, CFDictionaryRef 
 		{
 			outDesc.executionMode = kExecSilentPOpen;
 		}
+		else if( kCFCompareEqualTo == ::CFStringCompare(theStr, CFSTR("exe_script_file"), 0) )
+		{
+			outDesc.executionMode = kExecPopenScriptFile;
+		}
 		else if( (kCFCompareEqualTo == ::CFStringCompare( theStr, CFSTR("exe_silent_system"), 0 )) ||
 			 (kCFCompareEqualTo == ::CFStringCompare( theStr, CFSTR("exe_system"), 0)) )
 		{
@@ -3054,6 +3079,10 @@ OnMyCommandCM::GetOneCommandParams(CommandDescription &outDesc, CFDictionaryRef 
 		{
 			outDesc.executionMode = kExecPOpenWithOutputWindow;
 		}
+		else if( kCFCompareEqualTo == ::CFStringCompare(theStr, CFSTR("exe_script_file_with_output_window"), 0) )
+		{
+			outDesc.executionMode = kExecPopenScriptFileWithOutputWindow;
+		}
 		else if( kCFCompareEqualTo == ::CFStringCompare( theStr, CFSTR("exe_applescript"), 0 ) )
 		{
 			outDesc.executionMode = kExecAppleScript;
@@ -3061,6 +3090,10 @@ OnMyCommandCM::GetOneCommandParams(CommandDescription &outDesc, CFDictionaryRef 
 		else if( kCFCompareEqualTo == ::CFStringCompare( theStr, CFSTR("exe_applescript_with_output_window"), 0 ) )
 		{
 			outDesc.executionMode = kExecAppleScriptWithOutputWindow;
+		}
+		else
+		{
+			LOG_CSTR( "OMC->GetOneCommandParams. EXECUTION_MODE is not valid. Defaulting to exe_popen\n" );
 		}
 	}
 
@@ -3235,7 +3268,7 @@ OnMyCommandCM::GetOneCommandParams(CommandDescription &outDesc, CFDictionaryRef 
 	oneCmd.CopyValue(CFSTR("NEXT_COMMAND_ID"), outDesc.nextCommandID);
 
 //externalBundlePath
-	if( mExternBundleOverrideURL != NULL)//extern bundle path override is used when OMC is passed a .omc package for execution instead of plist file
+	if( mExternBundleOverrideURL != nullptr)//extern bundle path override is used when OMC is passed a .omc package for execution instead of plist file
 		outDesc.externalBundlePath = ::CFURLCopyFileSystemPath( mExternBundleOverrideURL, kCFURLPOSIXPathStyle );
 	else if( oneCmd.GetValue(CFSTR("EXTERNAL_BUNDLE_PATH"), theStr) )
 		outDesc.externalBundlePath = CreatePathByExpandingTilde( theStr );//keep the string, we are responsible for releasing it
@@ -4041,10 +4074,10 @@ OnMyCommandCM::AppendTextToCommand(CFMutableStringRef inCommandRef, CFStringRef 
 		// this is deprecated. Abracode.framework paths as below are preferred since version 2.0
 		case MY_BUNDLE_PATH:
 		{
-			if(mBundleRef != NULL)
+			if(mBundleRef != nullptr)
 			{
-				CFObj<CFURLRef> myBundlePath( ::CFBundleCopyBundleURL(mBundleRef) );
-				newStrRef = CreatePathFromCFURL(myBundlePath, escSpecialCharsMode);
+				CFObj<CFURLRef> abracodeFrameworkPath( ::CFBundleCopyBundleURL(mBundleRef) );
+				newStrRef = CreatePathFromCFURL(abracodeFrameworkPath, escSpecialCharsMode);
 			}
 			else
 			{
@@ -5672,7 +5705,7 @@ OnMyCommandCM::SortObjectListByName(CFOptionFlags compareOptions, bool sortAscen
 CFBundleRef
 OnMyCommandCM::GetCurrentCommandExternBundle()
 {
-	if( (mCommandList != NULL) && (mCurrCommandIndex < mCommandCount) )
+	if( (mCommandList != nullptr) && (mCurrCommandIndex < mCommandCount) )
 	{
 		CommandDescription &currCommand = mCommandList[mCurrCommandIndex];
 		if( currCommand.externBundleResolved )
@@ -5680,13 +5713,13 @@ OnMyCommandCM::GetCurrentCommandExternBundle()
 		
 		currCommand.externBundleResolved = true;
 
-		if( currCommand.externalBundlePath != NULL )
+		if( currCommand.externalBundlePath != nullptr )
 		{
 			CFObj<CFURLRef> bundleURL( ::CFURLCreateWithFileSystemPath(kCFAllocatorDefault, currCommand.externalBundlePath, kCFURLPOSIXPathStyle, true) );
 			if(bundleURL != NULL)
 			{
 				currCommand.externBundle = CMUtils::CFBundleCreate(bundleURL);
-				if(currCommand.externBundle != NULL)
+				if(currCommand.externBundle != nullptr)
 					return currCommand.externBundle;
 			}
 		}

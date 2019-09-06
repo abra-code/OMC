@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1D57B6822320F6AD00FAF9CB /* executor.test.exe.script.file.sh in CopyFiles */ = {isa = PBXBuildFile; fileRef = 1D57B6812320F6AD00FAF9CB /* executor.test.exe.script.file.sh */; };
 		1D7618BC231CEDD4005F4AEB /* Abracode.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E2C32C370D2CB56B0023DA03 /* Abracode.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		1DC95F072309566F0095B2AF /* AbracodeFrameworkVersion.c in Sources */ = {isa = PBXBuildFile; fileRef = 1DC95F062309566F0095B2AF /* AbracodeFrameworkVersion.c */; };
 		8D11072A0486CEB800E47090 /* MainMenu.nib in Resources */ = {isa = PBXBuildFile; fileRef = 29B97318FDCFA39411CA2CEA /* MainMenu.nib */; };
@@ -30,9 +31,23 @@
 		E2F5C7C80DCF017E00B4D4EC /* Introduction.qtz in Resources */ = {isa = PBXBuildFile; fileRef = E2F5C7C70DCF017E00B4D4EC /* Introduction.qtz */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		1D57B6832320F6D400FAF9CB /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = Scripts;
+			dstSubfolderSpec = 7;
+			files = (
+				1D57B6822320F6AD00FAF9CB /* executor.test.exe.script.file.sh in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		13E42FB307B3F0F600E4EEF1 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = /System/Library/Frameworks/CoreData.framework; sourceTree = "<absolute>"; };
+		1D57B6812320F6AD00FAF9CB /* executor.test.exe.script.file.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = executor.test.exe.script.file.sh; sourceTree = "<group>"; };
 		1D7618BD231CEE08005F4AEB /* CocoaExecutor.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = CocoaExecutor.entitlements; sourceTree = "<group>"; };
 		1DC95F062309566F0095B2AF /* AbracodeFrameworkVersion.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = AbracodeFrameworkVersion.c; path = Abracode.framework/Versions/A/Headers/AbracodeFrameworkVersion.c; sourceTree = BUILT_PRODUCTS_DIR; };
 		1DCFB253231FC2AB00D1C62E /* Base */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = Base; path = Base.lproj/MainMenu.nib; sourceTree = "<group>"; };
@@ -139,6 +154,7 @@
 		29B97317FDCFA39411CA2CEA /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				1D57B6812320F6AD00FAF9CB /* executor.test.exe.script.file.sh */,
 				8D1107310486CEB800E47090 /* Info.plist */,
 				E2F5C7BF0DCEFEAD00B4D4EC /* sunflower.jpg */,
 				E2F5C7C50DCF010900B4D4EC /* QCDialog.qtz */,
@@ -179,6 +195,7 @@
 				8D1107290486CEB800E47090 /* Resources */,
 				8D11072C0486CEB800E47090 /* Sources */,
 				8D11072E0486CEB800E47090 /* Frameworks */,
+				1D57B6832320F6D400FAF9CB /* CopyFiles */,
 			);
 			buildRules = (
 			);

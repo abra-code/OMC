@@ -7,7 +7,6 @@
  *
  */
 
-#include <Carbon/Carbon.h>
 #include "DebugSettings.h"
 #include "CFObj.h"
 #include "ANotifier.h"
@@ -27,23 +26,11 @@ class CommandDescription;
 class OmcExecutor : public ARefCounted
 {
 public:
-						OmcExecutor(CFBundleRef inBundleRef)
+						OmcExecutor()
 							: mNotifier( new ANotifier() ),
 							mCancelObserver( new AObserver<OmcExecutor>(this) ),
-							mBundleRef(inBundleRef, kCFObjRetain),
-							/*mIsFinishing(false),*/ mTaskIndex(0)
+							mTaskIndex(0)
 						{
-#if _DEBUG_
-							if( (CFBundleRef)mBundleRef != NULL)
-							{
-								CFIndex retainCount = ::CFGetRetainCount( (CFBundleRef)mBundleRef );
-								DEBUG_CSTR("OmcExecutor::OmcExecutor. CFBundleRef retain count after retaining it is %d\n", (int)retainCount );
-							}
-							else
-							{
-								DEBUG_CSTR("OmcExecutor::OmcExecutor. Passed NULL CFBundleRef!\n");
-							}
-#endif
 						}
 
 	virtual				~OmcExecutor(void)
@@ -52,18 +39,6 @@ public:
 							
 							if( mCancelObserver != NULL )
 								mCancelObserver->SetOwner(NULL);//observer may outlive us so it is very important to tell that we died
-
-#if _DEBUG_
-							if( (CFBundleRef)mBundleRef != NULL)
-							{
-								CFIndex retainCount = ::CFGetRetainCount( (CFBundleRef)mBundleRef );
-								DEBUG_CSTR("OmcExecutor::~OmcExecutor. CFBundleRef retain count before release is %d\n", (int)retainCount );
-							}
-							else
-							{
-								DEBUG_CSTR("OmcExecutor::~OmcExecutor. CFBundleRef is NULL!\n");
-							}
-#endif
 						}
 
 	
@@ -95,8 +70,6 @@ protected:
 	ARefCountedObj< ANotifier > mNotifier;
 	ARefCountedObj< AObserver<OmcExecutor> > mCancelObserver;
 	CFObj<CFStringRef>	mTaskManagerID;
-	CFObj<CFBundleRef>	mBundleRef;
-//	Boolean				mIsFinishing;
 	CFIndex				mTaskIndex;//task manager assigns task index to us for its own purposes
 };
 
@@ -106,7 +79,7 @@ class POpenExecutor
 {
 public:
 						
-						POpenExecutor(const CommandDescription &inCommandDesc, CFBundleRef inBundle, CFDictionaryRef inEnviron);
+						POpenExecutor(const CommandDescription &inCommandDesc, CFDictionaryRef inEnviron);
 	virtual				~POpenExecutor();
 
 	virtual void		Finish(bool wasSynchronous, bool sendNotification, OSStatus inError);
@@ -139,8 +112,9 @@ class POpenWithOutputExecutor
 	: public POpenExecutor
 {
 public:
-						POpenWithOutputExecutor(const CommandDescription &inCommandDesc, CFStringRef inDynamicName,
-												CFBundleRef inBundleRef, CFBundleRef inExternBundleRef,
+						POpenWithOutputExecutor(const CommandDescription &inCommandDesc,
+												CFStringRef inDynamicName,
+												CFBundleRef inExternBundleRef,
 												CFDictionaryRef inEnviron);
 	virtual				~POpenWithOutputExecutor();
 
@@ -159,12 +133,43 @@ protected:
 	CFObj<CFStringRef>			mLocalizationTableName;	
 };
 
+class POpenScriptFileExecutor
+	: public POpenExecutor
+{
+public:
+	POpenScriptFileExecutor(const CommandDescription &inCommandDesc,
+							CFBundleRef inExternBundleRef,
+							CFDictionaryRef inEnviron);
+
+protected:
+	virtual bool		Execute( const char *inCommand, OSStatus &outError );
+
+protected:
+	CFObj<CFStringRef>	mCommandID;
+	CFObj<CFBundleRef>	mExternBundleRef;
+};
+
+class POpenScriptFileWithOutputExecutor
+	: public POpenWithOutputExecutor
+{
+public:
+	POpenScriptFileWithOutputExecutor(const CommandDescription &inCommandDesc,
+							CFStringRef inDynamicName,
+							CFBundleRef inExternBundleRef,
+							CFDictionaryRef inEnviron);
+protected:
+	virtual bool		Execute( const char *inCommand, OSStatus &outError );
+
+protected:
+	CFObj<CFStringRef>	mCommandID;
+};
+
 class SystemExecutor
 	: public OmcExecutor
 {
 public:
-						SystemExecutor(CFBundleRef inBundle)
-							: OmcExecutor(inBundle)
+						SystemExecutor()
+							: OmcExecutor()
 						{
 						}
 
@@ -181,8 +186,9 @@ class AppleScriptExecutor
 	: public OmcExecutor
 {
 public:
-						AppleScriptExecutor(const CommandDescription &inCommandDesc, CFStringRef inDynamicName,
-											CFBundleRef inBundleRef, CFBundleRef inExternBundleRef,
+						AppleScriptExecutor(const CommandDescription &inCommandDesc,
+											CFStringRef inDynamicName,
+											CFBundleRef inExternBundleRef,
 											Boolean useOutputWindow);
 	virtual				~AppleScriptExecutor();
 
