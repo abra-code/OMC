@@ -15,14 +15,20 @@ CFStringRef CreatePathByExpandingTilde(CFStringRef inPath)
     }
 }
 
-CFStringRef CreateStringByAddingPercentEscapes(CFStringRef inStr, bool escapeAll)
+CFStringRef CopyFilenameExtension(CFStringRef inFilePath)
 {
-    @autoreleasepool
-    {
-        NSString *escapedString = [(NSString *)inStr stringByAddingPercentEncodingWithAllowedCharacters:
-                                            escapeAll ? [NSCharacterSet alphanumericCharacterSet] : [NSCharacterSet URLQueryAllowedCharacterSet]];
-        return (CFStringRef)[escapedString retain];
-    }
+	@autoreleasepool
+	{
+		return (CFStringRef)[[(NSString*)inFilePath pathExtension] retain];
+	}
+}
+
+CFStringRef CreateLowercaseString(CFStringRef inStr)
+{
+	@autoreleasepool
+	{
+		return (CFStringRef)[[(NSString*)inStr lowercaseString] retain];
+	}
 }
 
 UInt32 StringToVersion(CFStringRef inString)
@@ -112,6 +118,15 @@ CFStringRef CreateVersionString(UInt32 inVersion)
     return wholeStr;
 }
 
+CFStringRef CreateStringByAddingPercentEscapes(CFStringRef inStr, bool escapeAll)
+{
+    @autoreleasepool
+    {
+        NSString *escapedString = [(NSString *)inStr stringByAddingPercentEncodingWithAllowedCharacters:
+                                            escapeAll ? [NSCharacterSet alphanumericCharacterSet] : [NSCharacterSet URLQueryAllowedCharacterSet]];
+        return (CFStringRef)[escapedString retain];
+    }
+}
 
 //replaces \r, \n, \t, \\ with real values
 void

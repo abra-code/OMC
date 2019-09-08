@@ -34,6 +34,7 @@
 		1DBCC43522CE209300A1DD8F /* OMCHelpers.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1DBCC43222CE209300A1DD8F /* OMCHelpers.mm */; };
 		1DCFB242231FAC1100D1C62E /* OMCOutputWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1DCFB244231FAC1100D1C62E /* OMCOutputWindow.xib */; };
 		1DCFB245231FAC1600D1C62E /* OMCOutputPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1DCFB247231FAC1600D1C62E /* OMCOutputPanel.xib */; };
+		1DED3637232258A40086266F /* OMCScriptsManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1DED3635232258A40086266F /* OMCScriptsManager.cpp */; };
 		1DED8E572222BD8E00A2CAF7 /* MoreAppleEvents.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED19F0D09528600C9D5E8 /* MoreAppleEvents.cp */; };
 		8DC2EF530486A6940098B216 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C1666FE841158C02AAC07 /* InfoPlist.strings */; };
 		8DC2EF570486A6940098B216 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7B1FEA5585E11CA2CBB /* Cocoa.framework */; };
@@ -245,6 +246,8 @@
 		1DCFB241231FAAC300D1C62E /* de */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = de; path = de.lproj/input_popup.xib; sourceTree = "<group>"; };
 		1DCFB243231FAC1100D1C62E /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/OMCOutputWindow.xib; sourceTree = "<group>"; };
 		1DCFB246231FAC1600D1C62E /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/OMCOutputPanel.xib; sourceTree = "<group>"; };
+		1DED3634232258A40086266F /* OMCScriptsManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCScriptsManager.h; sourceTree = "<group>"; };
+		1DED3635232258A40086266F /* OMCScriptsManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCScriptsManager.cpp; sourceTree = "<group>"; };
 		1DED8E4C22229D1800A2CAF7 /* ACFArr.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ACFArr.h; sourceTree = "<group>"; };
 		1DED8E562222B65500A2CAF7 /* MoreAppleEvents.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoreAppleEvents.h; sourceTree = "<group>"; };
 		32DBCF5E0370ADEE00C91783 /* Abracode_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Abracode_Prefix.pch; sourceTree = "<group>"; };
@@ -675,6 +678,8 @@
 				E2C32CF50D2E1F6C0023DA03 /* OmcTaskNotification.h */,
 				E2ED3BAA0D0B288400481D8F /* OmcExecutor.cp */,
 				E2ED3BAB0D0B288400481D8F /* OmcExecutor.h */,
+				1DED3635232258A40086266F /* OMCScriptsManager.cpp */,
+				1DED3634232258A40086266F /* OMCScriptsManager.h */,
 				1D80B9B822E447E800CF1AF5 /* OMCiTermExecutor.cp */,
 				1D80B9B922E447E800CF1AF5 /* OMCiTermExecutor.h */,
 				1D80B9BF22E447F900CF1AF5 /* OMCTerminalExecutor.cp */,
@@ -906,6 +911,7 @@
 				E2517C5C0D1BCC2700180C68 /* OMCTextView.m in Sources */,
 				E2C32CB90D2DF99D0023DA03 /* OMCObserver.cpp in Sources */,
 				E211D3C60D3F51010065C23A /* OMCCocoaNib.m in Sources */,
+				1DED3637232258A40086266F /* OMCScriptsManager.cpp in Sources */,
 				E211D4F80D4346BB0065C23A /* OMCDialogController.mm in Sources */,
 				E22FBAEF0D7A0D7700DC5BB4 /* OMCCocoaDialog.mm in Sources */,
 				E2735F830D7BC89F004D81CE /* OMCDialog.cpp in Sources */,

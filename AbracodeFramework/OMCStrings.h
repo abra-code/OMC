@@ -5,13 +5,18 @@
 extern "C" {
 #endif
 
+CFStringRef			CreatePathByExpandingTilde(CFStringRef inPath);
+CFStringRef			CopyFilenameExtension(CFStringRef inFilePath);
+
+CFStringRef			CreateLowercaseString(CFStringRef inStr);
+
 UInt32				StringToVersion(CFStringRef inString);
 CFStringRef			CreateVersionString(UInt32 inVersion);
-CFStringRef			CreatePathByExpandingTilde(CFStringRef inPath);
-CFStringRef         CreateStringByAddingPercentEscapes(CFStringRef inStr, bool escapeAll);
 
+CFStringRef         CreateStringByAddingPercentEscapes(CFStringRef inStr, bool escapeAll);
 void				ReplaceWhitespaceEscapesWithCharacters(CFMutableStringRef ioStrRef);
 void				ReplaceWhitespaceCharactersWithEscapes(CFMutableStringRef ioStrRef);
+
 
 #ifdef __cplusplus
 }

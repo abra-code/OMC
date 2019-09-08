@@ -18,6 +18,7 @@
 #include "OmcTaskNotification.h"
 #include <sys/socket.h>
 #include "OnMyCommand.h"
+#include "OMCScriptsManager.h"
 
 static char oneLine[512];
 
@@ -562,62 +563,52 @@ static std::string CreateScriptPathAndShell(
 								CFObj<CFArrayRef> &ioCustomShell,
 								const char *inCommand)
 {
+	static OMCScriptsManager* sScriptsManager = new OMCScriptsManager(); //singleton created on demand here
+
+	CFObj<CFStringRef> scriptFilePath;
+
 	//inCommand, if non-empty, is an absolute file path (not expected to be a common setup)
-	CFObj<CFURLRef> scriptURL;
 	if((inCommand != nullptr) && (inCommand[0] != 0))
 	{
-		CFObj<CFStringRef> filePath = CFStringCreateWithCString(kCFAllocatorDefault, inCommand, kCFStringEncodingUTF8);
-		scriptURL.Adopt(CFURLCreateWithFileSystemPath(kCFAllocatorDefault, filePath, kCFURLPOSIXPathStyle, false /*isDirectory*/));
-		CFErrorRef error = nullptr;
-		Boolean fileExists = CFURLResourceIsReachable(scriptURL, &error);
-		if(!fileExists)
+		scriptFilePath.Adopt(CFStringCreateWithCString(kCFAllocatorDefault, inCommand, kCFStringEncodingUTF8));
+		CFObj<CFURLRef> scriptURL = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, scriptFilePath, kCFURLPOSIXPathStyle, false /*isDirectory*/);
+		if(scriptURL != nullptr)
 		{
-			CFRelease(error);
-			scriptURL.Release();
-		}
-	}
-	
-	if((scriptURL == nullptr) && (inCommandID != nullptr))
-	{ //the idea is to look for file of the same name as command ID within Applet.app/Contents/Resources/Scripts
-		CFBundleRef hostBundle = inExternBundle;
-		if(hostBundle == nullptr)
-			hostBundle = CFBundleGetMainBundle();
-		
-		// CFBundleCopyResourceURL does not seem to work without explicit file type. Thew following returns null
-		// CFBundleCopyResourceURL(hostBundle, inCommandID, nullptr /*any extension*/, CFSTR("Scripts"))
-		// TODO: create script manager with cache not to search the whole dir every time
-		CFObj<CFArrayRef> allScripts = CFBundleCopyResourceURLsOfType(hostBundle, nullptr, CFSTR("Scripts"));
-		CFIndex scriptCount = CFArrayGetCount(allScripts);
-		for(CFIndex i = 0; i < scriptCount; i++)
-		{
-			CFURLRef oneScriptURL = (CFURLRef)CFArrayGetValueAtIndex(allScripts, i);
-			CFObj<CFStringRef> oneScriptName = CreateNameNoExtensionFromCFURL(oneScriptURL, kEscapeNone);
-			if(kCFCompareEqualTo == ::CFStringCompare( oneScriptName, inCommandID, kCFCompareCaseInsensitive))
+			CFErrorRef error = nullptr;
+			Boolean fileExists = CFURLResourceIsReachable(scriptURL, &error);
+			if(!fileExists)
 			{
-				scriptURL.Adopt(oneScriptURL, kCFObjRetain);
-				break;
+				CFRelease(error);
+				scriptFilePath.Release();
 			}
 		}
 	}
+	
+	if((scriptFilePath == nullptr) && (inCommandID != nullptr))
+	{ //the idea is to look for file of the same name as command ID within Applet.app/Contents/Resources/Scripts
+		CFBundleRef hostBundle = inExternBundle;//formally supporting extern bundles
+		if(hostBundle == nullptr)
+			hostBundle = CFBundleGetMainBundle(); //in most cases it will be just applet bundle
+		
+		scriptFilePath.Adopt(sScriptsManager->GetScriptPath(hostBundle, inCommandID), kCFObjRetain);
+	}
 
-	if((scriptURL != nullptr) && (ioCustomShell == nullptr))
+	if(scriptFilePath == nullptr)
+	{
+		LOG_CSTR( "OMC->CreateScriptPathAndShell: unable to find script file\n" );
+		return std::string();
+	}
+
+	if(ioCustomShell == nullptr)
 	{ //the expected situation, we provide the shell mapping from script extension
-		CFObj<CFStringRef> extension = CFURLCopyPathExtension(scriptURL);
-		CFMutableArrayRef newShellArray = ::CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
+		CFObj<CFStringRef> extension = CopyFilenameExtension(scriptFilePath);
+		CFMutableArrayRef newShellArray = CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
 		ioCustomShell.Adopt(newShellArray, kCFObjDontRetain);
 		CFStringRef shellPath = GetShellFromScriptExtension(extension); //always returns non-null shell
 		CFArrayAppendValue(newShellArray, (const void *)shellPath);
 	}
 
-	if(scriptURL != nullptr)
-	{
-		CFObj<CFURLRef> absoluteURL( CFURLCopyAbsoluteURL(scriptURL) );
-		CFObj<CFStringRef> absoluteScriptPath = CFURLCopyFileSystemPath(absoluteURL, kCFURLPOSIXPathStyle);
-		return CMUtils::CreateUTF8StringFromCFString(absoluteScriptPath);
-	}
-
-	LOG_CSTR( "OMC->CreateScriptPathAndShell: unable to find script file\n" );
-	return std::string();
+	return CMUtils::CreateUTF8StringFromCFString(scriptFilePath); //null-safe
 }
 
 POpenScriptFileExecutor::POpenScriptFileExecutor(
