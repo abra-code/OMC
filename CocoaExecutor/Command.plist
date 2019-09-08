@@ -53,9 +53,37 @@
 			<key>EXECUTION_MODE</key>
 			<string>exe_script_file_with_output_window</string>
 			<key>NAME</key>
-			<string>Test Script File Execution</string>
+			<string>Test Sh File Execution</string>
 			<key>NOTES</key>
 			<string>New execution style test to run executor.test.exe.script.file.sh in Contents/Resources/Scripts</string>
+			<key>VERSION</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>ACTIVATION_MODE</key>
+			<string>act_always</string>
+			<key>COMMAND_ID</key>
+			<string>executor.test.javascript</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file_with_output_window</string>
+			<key>NAME</key>
+			<string>Test JavaScript File Execution</string>
+			<key>NOTES</key>
+			<string></string>
+			<key>VERSION</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>ACTIVATION_MODE</key>
+			<string>act_always</string>
+			<key>COMMAND_ID</key>
+			<string>executor.test.AppleScript</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file_with_output_window</string>
+			<key>NAME</key>
+			<string>Test AppleScript File Execution</string>
+			<key>NOTES</key>
+			<string></string>
 			<key>VERSION</key>
 			<integer>1</integer>
 		</dict>

@@ -522,18 +522,23 @@ typedef struct ExtensionAndShell
 	CFStringRef shell;
 } ExtensionAndShell;
 
+// until Apple removes half of it in future macOS releases
+// the locations of script interpreters are:
+
 static ExtensionAndShell sExtensionToShellMap[] =
 {
-	{ CFSTR(".sh"), CFSTR("/bin/sh") },
-	{ CFSTR(".py"), CFSTR("/usr/bin/python") },
-	{ CFSTR(".pl"), CFSTR("/usr/bin/perl") },
-	{ CFSTR(".applescript"), CFSTR("/usr/bin/osascript") },
-	{ CFSTR(".scpt"), CFSTR("/usr/bin/osascript") },
-	{ CFSTR(".zsh"), CFSTR("/bin/zsh") },
-	{ CFSTR(".bash"), CFSTR("/bin/bash") },
-	{ CFSTR(".csh"), CFSTR("/bin/csh") },
-	{ CFSTR(".tcsh"), CFSTR("/bin/tcsh") },
-	{ CFSTR(".js"), CFSTR("/System/Library/Frameworks/JavaScriptCore.framework/Versions/Current/Resources/jsc") }
+	{ CFSTR("sh"), CFSTR("/bin/sh") },
+	{ CFSTR("py"), CFSTR("/usr/bin/python") },
+	{ CFSTR("pl"), CFSTR("/usr/bin/perl") },
+	{ CFSTR("applescript"), CFSTR("/usr/bin/osascript") },
+	{ CFSTR("scpt"), CFSTR("/usr/bin/osascript") },
+	{ CFSTR("zsh"), CFSTR("/bin/zsh") }, //new default in 10.15
+	{ CFSTR("bash"), CFSTR("/bin/bash") },
+	{ CFSTR("csh"), CFSTR("/bin/csh") },
+	{ CFSTR("tcsh"), CFSTR("/bin/tcsh") },
+	{ CFSTR("dash"), CFSTR("/bin/dash") }, //10.15 only
+	{ CFSTR("rb"), CFSTR("/usr/bin/ruby") },
+	{ CFSTR("js"), CFSTR("/System/Library/Frameworks/JavaScriptCore.framework/Versions/Current/Resources/jsc") }
 };
 
 //sh is the default fallback for any script with no extension
