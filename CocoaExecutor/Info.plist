@@ -20,6 +20,8 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>4.0</string>
+	<key>NSAppleEventsUsageDescription</key>
+	<string>OMC Test App sends AppleEvents to other apps to test OMC AppleScript functionality</string>
 	<key>NSMainNibFile</key>
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>

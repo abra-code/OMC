@@ -48,9 +48,11 @@
 			<string>OMC Command</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>your_app_unique_url_scheme_here</string>
+				<string>applet_unique_url_scheme</string>
 			</array>
 		</dict>
 	</array>
+	<key>NSAppleEventsUsageDescription</key>
+	<string>OMC Applets send AppleEvents to other apps to provide some great functionality which is unique to each applet and should be explicitly explained here</string>
 </dict>
 </plist>

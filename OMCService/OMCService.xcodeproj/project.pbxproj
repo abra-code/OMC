@@ -206,7 +206,6 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = OMCService.entitlements;
 				COPY_PHASE_STRIP = NO;
-				ENABLE_HARDENED_RUNTIME = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = OMCService_Prefix.pch;
 				INFOPLIST_FILE = "OMCService-Info.plist";
@@ -222,7 +221,6 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = OMCService.entitlements;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				ENABLE_HARDENED_RUNTIME = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = OMCService_Prefix.pch;
 				INFOPLIST_FILE = "OMCService-Info.plist";

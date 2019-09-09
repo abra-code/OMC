@@ -346,7 +346,6 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = CocoaExecutor.entitlements;
 				COPY_PHASE_STRIP = NO;
-				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(LOCAL_LIBRARY_DIR)/Frameworks",
@@ -369,7 +368,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = CocoaExecutor.entitlements;
-				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(LOCAL_LIBRARY_DIR)/Frameworks",
