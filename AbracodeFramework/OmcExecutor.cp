@@ -295,7 +295,7 @@ POpenExecutor::Execute( const char *inCommand, OSStatus &outError )
 		context.release = nullptr;
 		context.copyDescription = nullptr;
 
-#if _DEBUG_
+#if 0 //_DEBUG_
 		//::CFShow( ::CFRunLoopGetCurrent() );
 		CFStringRef outStr = CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("PopenExecutor::Execute cfRunLoop=0x%p"), (void *) CFRunLoopGetCurrent() );
 		CFShow( outStr );

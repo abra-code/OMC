@@ -17,7 +17,7 @@ static OSErr SendEventToTerminal(const AEDesc &inCommandDesc, bool openInNewWind
 void
 ExecuteInTerminal(CFStringRef inCommand, bool openInNewWindow, bool bringToFront)
 {
-	if(inCommand == NULL)
+	if(inCommand == nullptr)
 		return;
 	
 	OSStatus err = noErr;

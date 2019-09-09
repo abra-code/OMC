@@ -23,7 +23,7 @@ ACMPlugin::ACMPlugin(CFStringRef inBundleID)
 	if(inBundleID != NULL)
 		mBundleRef.Adopt( ::CFBundleGetBundleWithIdentifier(inBundleID), kCFObjRetain );
 
-#if _DEBUG_
+#if 0 //_DEBUG_
 	if( (CFBundleRef)mBundleRef != NULL)
 	{
 		CFIndex bundleRetainCount = ::CFGetRetainCount( (CFBundleRef)mBundleRef );
@@ -40,7 +40,7 @@ ACMPlugin::~ACMPlugin()
 {
 	TRACE_CSTR( "ACMPlugin::~ACMPlugin\n" );
 
-#if _DEBUG_
+#if 0 //_DEBUG_
 	if( (CFBundleRef)mBundleRef != NULL)
 	{
 		CFIndex bundleRetainCount = ::CFGetRetainCount( (CFBundleRef)mBundleRef );
