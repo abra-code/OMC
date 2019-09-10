@@ -107,6 +107,25 @@
 			<integer>1</integer>
 		</dict>
 		<dict>
+			<key>ACTIVATION_MODE</key>
+			<string>act_always</string>
+			<key>COMMAND_ID</key>
+			<string>executor.test.iterm2</string>
+			<key>COMMAND</key>
+			<array>
+				<string>env
+</string>
+			</array>
+			<key>EXECUTION_MODE</key>
+			<string>exe_iterm</string>
+			<key>NAME</key>
+			<array>
+				<string>Test OMC Env Variables in iTerm 2</string>
+			</array>
+			<key>VERSION</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
 			<key>COMMAND_ID</key>
 			<string>executor.test.output.window.position</string>
 			<key>COMMAND</key>

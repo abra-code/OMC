@@ -374,10 +374,6 @@ Boolean		CheckFileNameMatch(OneObjProperties *inObj, void *inData);
 Boolean		CheckFilePathMatch(OneObjProperties *inObj, void *inData);
 Boolean		DoStringsMatch(CFStringRef inMatchString, CFStringRef inSearchedString, UInt8 matchMethod, CFStringCompareFlags compareOptions );
 
-void	ReplaceSpecialCharsWithBackslashEscapes(CFMutableStringRef inStrRef);
-void	ReplaceSpecialCharsWithEscapesForAppleScript(CFMutableStringRef inStrRef);
-void	WrapWithSingleQuotesForShell(CFMutableStringRef inStrRef);
-
 //removed const from OneObjProperties becuase it allows lazy population of some fields
 typedef CFStringRef (*CreateObjProc)(OneObjProperties *inObj, void *ioParam) noexcept;
 
@@ -408,8 +404,6 @@ CFStringRef			CreateNameFromCFURL(CFURLRef inPath, UInt16 escSpecialCharsMode);
 CFStringRef			CreateNameNoExtensionFromCFURL(CFURLRef inPath, UInt16 escSpecialCharsMode);
 CFStringRef			CreateExtensionOnlyFromCFURL(CFURLRef inPath, UInt16 escSpecialCharsMode);
 
-
-CFStringRef			CreateEscapedStringCopy(CFStringRef inStrRef, UInt16 escSpecialCharsMode);
 CFStringRef			CreateCombinedString( CFArrayRef inStringsArray, CFStringRef inSeparator, CFStringRef inPrefix, CFStringRef inSuffix, UInt16 escSpecialCharsMode );
 
 SInt32              GetSpecialWordID(CFStringRef inStr);

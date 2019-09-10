@@ -44,6 +44,7 @@
 #include "OMCStrings.h"
 #include "OMCTerminalExecutor.h"
 #include "OMCiTermExecutor.h"
+#include "OMCEnvironmentExportScript.h"
 
 extern Boolean RunCocoaDialog(OnMyCommandCM *inPlugin);
 
@@ -1459,6 +1460,18 @@ OnMyCommandCM::CFURLCheckFileOrFolder(CFURLRef inURLRef, void *ioData)
 	return fnfErr;
 }
 
+static CFStringRef
+CreateTerminalCommandWithEnvironmentSetup(CFStringRef inCommand, CommandDescription &currCommand, CFDictionaryRef environList, bool isSh)
+{
+	CFStringRef commandGUID = GetCommandUniqueID(currCommand);
+	WriteEnvironmentSetupScriptToTmp(environList, commandGUID, isSh);
+	CFObj<CFStringRef> envSetupCommand = CreateEnvironmentSetupCommandForShell(commandGUID, isSh);
+	CFObj<CFMutableStringRef> commandWithEnvSetup = CFStringCreateMutableCopy(kCFAllocatorDefault, 0, envSetupCommand);
+	CFStringAppend(commandWithEnvSetup, inCommand);
+	return commandWithEnvSetup.Detach();
+}
+
+
 OSStatus
 OnMyCommandCM::ProcessObjects()
 {
@@ -1545,11 +1558,19 @@ OnMyCommandCM::ProcessObjects()
 		switch(currCommand.executionMode)
 		{
 			case kExecTerminal:
-				ExecuteInTerminal( theCommand, currCommand.openNewTerminalSession, currCommand.bringTerminalToFront);
+			{
+				bool isSh = IsShDefaultInTerminal();
+				CFObj<CFStringRef> commandWithEnvSetup = CreateTerminalCommandWithEnvironmentSetup(theCommand, currCommand, environList, isSh);
+				ExecuteInTerminal( commandWithEnvSetup, currCommand.openNewTerminalSession, currCommand.bringTerminalToFront);
+			}
 			break;
 			
 			case kExecITerm:
-				ExecuteInITerm( theCommand, currCommand.iTermShellPath, currCommand.openNewTerminalSession, currCommand.bringTerminalToFront);
+			{
+				bool isSh = IsShDefaultInITem();
+				CFObj<CFStringRef> commandWithEnvSetup = CreateTerminalCommandWithEnvironmentSetup(theCommand, currCommand, environList, isSh);
+				ExecuteInITerm( commandWithEnvSetup, currCommand.iTermShellPath, currCommand.openNewTerminalSession, currCommand.bringTerminalToFront);
+			}
 			break;
 
 			default:
@@ -1638,16 +1659,23 @@ OnMyCommandCM::ProcessCommandWithText(CommandDescription &currCommand, CFStringR
 	OmcHostTaskManager *taskManager = new OmcHostTaskManager( this, currCommand, dynamicCommandName, mBundleRef, maxTaskCount );
 
 	ARefCountedObj<OmcExecutor> theExec;
-	
 
 	switch(currCommand.executionMode)
 	{
 		case kExecTerminal:
-			ExecuteInTerminal( theCommand, currCommand.openNewTerminalSession, currCommand.bringTerminalToFront );
+		{
+			bool isSh = IsShDefaultInTerminal();
+			CFObj<CFStringRef> commandWithEnvSetup = CreateTerminalCommandWithEnvironmentSetup(theCommand, currCommand, environList, isSh);
+			ExecuteInTerminal( commandWithEnvSetup, currCommand.openNewTerminalSession, currCommand.bringTerminalToFront );
+		}
 		break;
 		
 		case kExecITerm:
-			ExecuteInITerm( theCommand, currCommand.iTermShellPath, currCommand.openNewTerminalSession, currCommand.bringTerminalToFront );
+		{
+			bool isSh = IsShDefaultInITem();
+			CFObj<CFStringRef> commandWithEnvSetup = CreateTerminalCommandWithEnvironmentSetup(theCommand, currCommand, environList, isSh);
+			ExecuteInITerm( commandWithEnvSetup, currCommand.iTermShellPath, currCommand.openNewTerminalSession, currCommand.bringTerminalToFront );
+		}
 		break;
 
 		default:
@@ -2826,40 +2854,6 @@ OnMyCommandCM::ReadPreferences()
 {
 	TRACE_CSTR("OnMyCommandCM. ReadPreferences\n" );
 
-/*
-	if( mCommandList != NULL )
-	{
-		DeleteCommandList();
-	}
-	mCommandCount = 0;
-
-	CFStringRef prefsIdentifier = CFSTR(CM_IMPL_PLUGIN_PREFS_INDENTIFIER);
-	
-	::CFPreferencesAppSynchronize( prefsIdentifier );
-
-	Boolean isValid = false;
-//	CFIndex theState = 0;
-
-	CFIndex theVer = ::CFPreferencesGetAppIntegerValue( CFSTR("VERSION"), prefsIdentifier, &isValid );
-	if( isValid && (theVer == 2) )
-	{
-		isValid = false;
-		CFObj<CFPropertyListRef> resultRef( ::CFPreferencesCopyAppValue( CFSTR("COMMAND_LIST"), prefsIdentifier ) );
-		CFArrayRef theArr = ACFType<CFArrayRef>::DynamicCast(resultRef);
-		if( theArr != NULL )
-		{
-			ParseCommandList(theArr);
-		}
-		else
-		{
-			LOG_CSTR( "OMC->ReadPreferences: no COMMAND_LIST array\n" );
-		}
-	}
-	else
-	{
-		LOG_CSTR( "OMC->ReadPreferences: invalid command description format version number\n" );
-	}
-*/
 	//load prefs directly by reading from URL, bypassing the CFPreferences
 	//Looks like agressive caching of CFPreferences (or a bug there) prevents us from seeing new changes saved in OMCEdit
 	CFObj<CFURLRef> prefsURL( CopyOMCPrefsURL() );
@@ -3617,107 +3611,6 @@ CFStringToFourCharCode(CFStringRef inStrRef)
 	return ::CFSwapInt32BigToHost(outValue);
 }
 */
-
-/* ReplaceSpecialCharsWithBackslashEscapes modifies path so the special characters in filename
-will not be interpreted by shell.
-
-As a test, I created in Finder a folder named:
-
-	#`~!@$%^&*()_+={}[-]|\;'",.<>?/
-
-This function created an escaped version of it:
-	#\`~\!@\$%^\&\*\(\)_+=\{\}\[-\]\|\\\;\'\",.\<\>\?:
-
-and it works fine in Terminal.
-
-By the way: note that the '/' in Finder is represented as ':' in Terminal
-You may create a file with ':' char in name in Terminal, but not in Finder
-and you can create a file with '/' char in name in Finder but not in Terminal.
-	
-*/
-void
-ReplaceSpecialCharsWithBackslashEscapes(CFMutableStringRef inStrRef)
-{
-	if(inStrRef == nullptr)
-		return;
-
-  	//replace spaces in path with backslash + space
-  	CFIndex	idx = ::CFStringGetLength(inStrRef) - 1;
-  	UniChar currChar = 0;
-	while(idx >= 0)
-	{
- 		currChar = ::CFStringGetCharacterAtIndex( inStrRef, idx);
- 		if( (currChar == ' ') || (currChar == '\\') || (currChar == '*') || (currChar == '?') || (currChar == '\t') ||
- 			(currChar == '$') || (currChar == '\'') || (currChar == '\"') || (currChar == '!') || (currChar == '&') || 
- 			(currChar == '(') || (currChar == ')') || (currChar == '{') || (currChar == '}') || (currChar == '[') ||
- 			(currChar == ']') || (currChar == '|') || (currChar == ';') || (currChar == '<') || (currChar == '>') || 
- 			(currChar == '`') || (currChar == 0x0A) || (currChar == 0x0D) )
- 		{
-	 		::CFStringInsert( inStrRef, idx, CFSTR("\\") );
-		}
-		idx--;
-	}
-}
-
-
-void
-ReplaceSpecialCharsWithEscapesForAppleScript(CFMutableStringRef inStrRef)
-{
-	if(inStrRef == nullptr)
-		return;
-
-  	//replace double quotes & backslashes only
-  	CFIndex	idx = ::CFStringGetLength(inStrRef) - 1;
-  	UniChar currChar = 0;
-	while(idx >= 0)
-	{
- 		currChar = ::CFStringGetCharacterAtIndex( inStrRef, idx);
- 		if( (currChar == '\"') || (currChar == '\\') )
- 		{
-	 		::CFStringInsert( inStrRef, idx, CFSTR("\\") );
-		}
-		idx--;
-	}
-}
-
-//replaces all single quotes with '\'' sequence and adds ' at the beginning and end
-void
-WrapWithSingleQuotesForShell(CFMutableStringRef inStrRef)
-{
-	if(inStrRef == nullptr)
-		return;
-  	CFIndex	idx = ::CFStringGetLength(inStrRef) - 1;
-	CFIndex lastCharIndex = idx;
-  	UniChar currChar = 0;
-	Boolean addInFront = true;
-	Boolean addAtEnd = true;
-	while(idx >= 0)
-	{
- 		currChar = ::CFStringGetCharacterAtIndex( inStrRef, idx);
- 		if( currChar == '\'' )
- 		{
-			if(idx == lastCharIndex)
-			{
-				::CFStringAppend( inStrRef, CFSTR("\\'") );//append \' after existing '
-				addAtEnd = false;
-			}
-			else if(idx == 0)
-			{
-				::CFStringInsert( inStrRef, idx, CFSTR("\\'") );//insert \' before existing '
-				addInFront = false;
-			}
-			else
-				::CFStringInsert( inStrRef, idx, CFSTR("'\\'") );//insert '\' before existing '
-		}
-		idx--;
-	}
-
-	if(addInFront)
-		::CFStringInsert( inStrRef, 0, CFSTR("'") );//at the beginning
-
-	if(addAtEnd)
-		::CFStringAppend( inStrRef, CFSTR("'") );//at the end
-}
 
 CFMutableStringRef
 OnMyCommandCM::CreateCommandStringWithObjects(CFArrayRef inFragments, UInt16 escSpecialCharsMode)
@@ -5003,56 +4896,6 @@ CreateExtensionOnlyFromCFURL(CFURLRef inPathURL, UInt16 escSpecialCharsMode)
 
 #pragma mark -
 
-//this function always creates a copy of string so you may release original string when not needed
-CFStringRef
-CreateEscapedStringCopy(CFStringRef inStrRef, UInt16 escSpecialCharsMode)
-{
-	if(inStrRef == nullptr)
-  		return nullptr;
-
-	switch(escSpecialCharsMode)
-	{
-		case kEscapeWithBackslash:
-		{
-			CFMutableStringRef escapedStr = ::CFStringCreateMutableCopy(kCFAllocatorDefault, 0, inStrRef);
-			ReplaceSpecialCharsWithBackslashEscapes(escapedStr);
-			return escapedStr;
-		}
-
-		case kEscapeWithPercent:
-		{
-			return CreateStringByAddingPercentEscapes(inStrRef, false /*escapeAll*/);
-		}
-	
-		case kEscapeWithPercentAll:
-		{
-			//escape all illegal URL chars and all non-alphanumeric legal chars
-			//legal chars need to be escaped in order ot prevent conflicts in shell execution
-			return CreateStringByAddingPercentEscapes(inStrRef, true /*escapeAll*/);
-		}
-		
-		case kEscapeForAppleScript:
-		{
-			CFMutableStringRef escapedStr = ::CFStringCreateMutableCopy(kCFAllocatorDefault, 0, inStrRef);
-			ReplaceSpecialCharsWithEscapesForAppleScript(escapedStr);
-			return escapedStr;
-		}
-
-		case kEscapeWrapWithSingleQuotesForShell:
-		{
-			CFMutableStringRef escapedStr = ::CFStringCreateMutableCopy(kCFAllocatorDefault, 0, inStrRef);
-			WrapWithSingleQuotesForShell(escapedStr);
-			return escapedStr;
-		}
-	
-		case kEscapeNone:
-		default:
-		break;
-	}
-
-	::CFRetain(inStrRef);
-	return inStrRef;
-}
 
 CFStringRef
 CreateCombinedString( CFArrayRef inStringsArray, CFStringRef inSeparator, CFStringRef inPrefix, CFStringRef inSuffix, UInt16 escSpecialCharsMode )

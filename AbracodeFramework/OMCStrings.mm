@@ -1,6 +1,7 @@
-#include "OMCStrings.h"
-#include "CFObj.h"
 #import <Foundation/Foundation.h>
+#include "OMCStrings.h"
+#include "OMCConstants.h"
+#include "CFObj.h"
 
 CFStringRef CreatePathByExpandingTilde(CFStringRef inPath)
 {
@@ -231,4 +232,175 @@ ReplaceWhitespaceCharactersWithEscapes(CFMutableStringRef inStrRef)
         idx--;
     }
     
+}
+
+static inline void
+ReplaceSpecialCharsWithEscapesForAppleScript(CFMutableStringRef inStrRef)
+{
+	if(inStrRef == nullptr)
+		return;
+
+  	//replace double quotes & backslashes only
+  	CFIndex	idx = ::CFStringGetLength(inStrRef) - 1;
+  	UniChar currChar = 0;
+	while(idx >= 0)
+	{
+ 		currChar = ::CFStringGetCharacterAtIndex( inStrRef, idx);
+ 		if( (currChar == '\"') || (currChar == '\\') )
+ 		{
+	 		::CFStringInsert( inStrRef, idx, CFSTR("\\") );
+		}
+		idx--;
+	}
+}
+
+
+/* ReplaceSpecialCharsWithBackslashEscapes modifies path so the special characters in filename
+will not be interpreted by shell.
+
+As a test, I created in Finder a folder named:
+
+	#`~!@$%^&*()_+={}[-]|\;'",.<>?/
+
+This function created an escaped version of it:
+	#\`~\!@\$%^\&\*\(\)_+=\{\}\[-\]\|\\\;\'\",.\<\>\?:
+
+and it works fine in Terminal.
+
+By the way: note that the '/' in Finder is represented as ':' in Terminal
+You may create a file with ':' char in name in Terminal, but not in Finder
+and you can create a file with '/' char in name in Finder but not in Terminal.
+	
+*/
+static inline void
+ReplaceSpecialCharsWithBackslashEscapes(CFMutableStringRef inStrRef)
+{
+	if(inStrRef == nullptr)
+		return;
+
+  	//replace spaces in path with backslash + space
+  	CFIndex	idx = ::CFStringGetLength(inStrRef) - 1;
+  	UniChar currChar = 0;
+	while(idx >= 0)
+	{
+ 		currChar = ::CFStringGetCharacterAtIndex( inStrRef, idx);
+ 		if( (currChar == ' ') || (currChar == '\\') || (currChar == '*') || (currChar == '?') || (currChar == '\t') ||
+ 			(currChar == '$') || (currChar == '\'') || (currChar == '\"') || (currChar == '!') || (currChar == '&') ||
+ 			(currChar == '(') || (currChar == ')') || (currChar == '{') || (currChar == '}') || (currChar == '[') ||
+ 			(currChar == ']') || (currChar == '|') || (currChar == ';') || (currChar == '<') || (currChar == '>') ||
+ 			(currChar == '`') || (currChar == 0x0A) || (currChar == 0x0D) )
+ 		{
+	 		::CFStringInsert( inStrRef, idx, CFSTR("\\") );
+		}
+		idx--;
+	}
+}
+
+
+//replaces all single quotes with '\'' sequence and adds ' at the beginning and end
+static inline void
+WrapWithSingleQuotesForShell(CFMutableStringRef inStrRef)
+{
+	if(inStrRef == nullptr)
+		return;
+  	CFIndex	idx = ::CFStringGetLength(inStrRef) - 1;
+	CFIndex lastCharIndex = idx;
+  	UniChar currChar = 0;
+	Boolean addInFront = true;
+	Boolean addAtEnd = true;
+	while(idx >= 0)
+	{
+ 		currChar = ::CFStringGetCharacterAtIndex( inStrRef, idx);
+ 		if( currChar == '\'' )
+ 		{
+			if(idx == lastCharIndex)
+			{
+				::CFStringAppend( inStrRef, CFSTR("\\'") );//append \' after existing '
+				addAtEnd = false;
+			}
+			else if(idx == 0)
+			{
+				::CFStringInsert( inStrRef, idx, CFSTR("\\'") );//insert \' before existing '
+				addInFront = false;
+			}
+			else
+				::CFStringInsert( inStrRef, idx, CFSTR("'\\'") );//insert '\' before existing '
+		}
+		idx--;
+	}
+
+	if(addInFront)
+		::CFStringInsert( inStrRef, 0, CFSTR("'") );//at the beginning
+
+	if(addAtEnd)
+		::CFStringAppend( inStrRef, CFSTR("'") );//at the end
+}
+
+
+//this function always creates a copy of string so you may release original string when not needed
+CFStringRef
+CreateEscapedStringCopy(CFStringRef inStrRef, UInt16 escSpecialCharsMode)
+{
+	if(inStrRef == nullptr)
+  		return nullptr;
+
+	switch(escSpecialCharsMode)
+	{
+		case kEscapeWithBackslash:
+		{
+			CFMutableStringRef escapedStr = ::CFStringCreateMutableCopy(kCFAllocatorDefault, 0, inStrRef);
+			ReplaceSpecialCharsWithBackslashEscapes(escapedStr);
+			return escapedStr;
+		}
+
+		case kEscapeWithPercent:
+		{
+			return CreateStringByAddingPercentEscapes(inStrRef, false /*escapeAll*/);
+		}
+	
+		case kEscapeWithPercentAll:
+		{
+			//escape all illegal URL chars and all non-alphanumeric legal chars
+			//legal chars need to be escaped in order ot prevent conflicts in shell execution
+			return CreateStringByAddingPercentEscapes(inStrRef, true /*escapeAll*/);
+		}
+		
+		case kEscapeForAppleScript:
+		{
+			CFMutableStringRef escapedStr = ::CFStringCreateMutableCopy(kCFAllocatorDefault, 0, inStrRef);
+			ReplaceSpecialCharsWithEscapesForAppleScript(escapedStr);
+			return escapedStr;
+		}
+
+		case kEscapeWrapWithSingleQuotesForShell:
+		{
+			CFMutableStringRef escapedStr = ::CFStringCreateMutableCopy(kCFAllocatorDefault, 0, inStrRef);
+			WrapWithSingleQuotesForShell(escapedStr);
+			return escapedStr;
+		}
+	
+		case kEscapeNone:
+		default:
+		break;
+	}
+
+	::CFRetain(inStrRef);
+	return inStrRef;
+}
+
+bool
+WriteStringToFile(CFStringRef inContentStr, CFStringRef inFilePath)
+{
+	if((inContentStr == nullptr) || (inFilePath == nullptr))
+		return false;
+
+	@autoreleasepool
+	{
+		NSError *error = nil;
+		BOOL succeed = [(NSString*)inContentStr writeToFile:(NSString *)inFilePath
+												atomically:NO
+												encoding:NSUTF8StringEncoding
+												error:&error];
+		return (bool)succeed;
+	}
 }

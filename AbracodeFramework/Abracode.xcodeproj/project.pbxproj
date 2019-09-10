@@ -31,6 +31,7 @@
 		1D9BCB7F22CC95E500F4EAB6 /* ACFPropertyList.m in Sources */ = {isa = PBXBuildFile; fileRef = 1D9BCB7C22CC95E500F4EAB6 /* ACFPropertyList.m */; };
 		1D9BCB8822CCA65A00F4EAB6 /* ACFURL.m in Sources */ = {isa = PBXBuildFile; fileRef = 1D9BCB8722CCA65A00F4EAB6 /* ACFURL.m */; };
 		1D9BCB8C22CCAB4F00F4EAB6 /* OMCStrings.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1D9BCB8B22CCAB4F00F4EAB6 /* OMCStrings.mm */; };
+		1DB9D8C62324F01E003F6849 /* OMCEnvironmentExportScript.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1DB9D8C42324F01E003F6849 /* OMCEnvironmentExportScript.cpp */; };
 		1DBCC43522CE209300A1DD8F /* OMCHelpers.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1DBCC43222CE209300A1DD8F /* OMCHelpers.mm */; };
 		1DCFB242231FAC1100D1C62E /* OMCOutputWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1DCFB244231FAC1100D1C62E /* OMCOutputWindow.xib */; };
 		1DCFB245231FAC1600D1C62E /* OMCOutputPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1DCFB247231FAC1600D1C62E /* OMCOutputPanel.xib */; };
@@ -228,6 +229,8 @@
 		1D9BCB8722CCA65A00F4EAB6 /* ACFURL.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ACFURL.m; sourceTree = "<group>"; };
 		1D9BCB8A22CCA66500F4EAB6 /* ACFURL.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ACFURL.h; sourceTree = "<group>"; };
 		1D9BCB8B22CCAB4F00F4EAB6 /* OMCStrings.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCStrings.mm; sourceTree = "<group>"; };
+		1DB9D8C42324F01E003F6849 /* OMCEnvironmentExportScript.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCEnvironmentExportScript.cpp; sourceTree = "<group>"; };
+		1DB9D8C52324F01E003F6849 /* OMCEnvironmentExportScript.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCEnvironmentExportScript.h; sourceTree = "<group>"; };
 		1DBCC43122CE209200A1DD8F /* OMCHelpers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCHelpers.h; sourceTree = "<group>"; };
 		1DBCC43222CE209300A1DD8F /* OMCHelpers.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCHelpers.mm; sourceTree = "<group>"; };
 		1DCFB234231FAAB200D1C62E /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/Private.strings; sourceTree = "<group>"; };
@@ -676,6 +679,8 @@
 				E2ED3BA80D0B288400481D8F /* OmcTaskManager.cpp */,
 				E2ED3BA90D0B288400481D8F /* OmcTaskManager.h */,
 				E2C32CF50D2E1F6C0023DA03 /* OmcTaskNotification.h */,
+				1DB9D8C42324F01E003F6849 /* OMCEnvironmentExportScript.cpp */,
+				1DB9D8C52324F01E003F6849 /* OMCEnvironmentExportScript.h */,
 				E2ED3BAA0D0B288400481D8F /* OmcExecutor.cp */,
 				E2ED3BAB0D0B288400481D8F /* OmcExecutor.h */,
 				1DED3635232258A40086266F /* OMCScriptsManager.cpp */,
@@ -893,6 +898,7 @@
 				E2ED3AEA0D0B27D300481D8F /* DefaultExternBundle.cpp in Sources */,
 				E2ED3AED0D0B27E400481D8F /* StSwitchToFront.mm in Sources */,
 				E2ED3AF20D0B27F700481D8F /* NibDialogControl.cp in Sources */,
+				1DB9D8C62324F01E003F6849 /* OMCEnvironmentExportScript.cpp in Sources */,
 				1D9BCB8C22CCAB4F00F4EAB6 /* OMCStrings.mm in Sources */,
 				E2ED3BA60D0B287000481D8F /* OutputWindowHandler.cp in Sources */,
 				E2ED3BAE0D0B288400481D8F /* OmcTaskManager.cpp in Sources */,
@@ -1048,7 +1054,6 @@
 		1DEB91AE08733DA50010E9CD /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
@@ -1068,7 +1073,6 @@
 		1DEB91AF08733DA50010E9CD /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				FRAMEWORK_VERSION = A;

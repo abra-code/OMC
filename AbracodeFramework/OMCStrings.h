@@ -17,6 +17,9 @@ CFStringRef         CreateStringByAddingPercentEscapes(CFStringRef inStr, bool e
 void				ReplaceWhitespaceEscapesWithCharacters(CFMutableStringRef ioStrRef);
 void				ReplaceWhitespaceCharactersWithEscapes(CFMutableStringRef ioStrRef);
 
+CFStringRef			CreateEscapedStringCopy(CFStringRef inStrRef, UInt16 escSpecialCharsMode);
+
+bool				WriteStringToFile(CFStringRef inContentStr, CFStringRef inFilePath);
 
 #ifdef __cplusplus
 }
