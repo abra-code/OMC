@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 45;
+	objectVersion = 51;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -127,7 +127,7 @@
 				LastUpgradeCheck = 1100;
 			};
 			buildConfigurationList = E2AA0BF109033F3500EA94FD /* Build configuration list for PBXProject "plister" */;
-			compatibilityVersion = "Xcode 3.1";
+			compatibilityVersion = "Xcode 10.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 1;
 			knownRegions = (

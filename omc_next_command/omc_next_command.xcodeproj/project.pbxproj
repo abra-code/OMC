@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 45;
+	objectVersion = 51;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -113,7 +113,7 @@
 				LastUpgradeCheck = 1100;
 			};
 			buildConfigurationList = E2E901BA0864ADA200B99907 /* Build configuration list for PBXProject "omc_next_command" */;
-			compatibilityVersion = "Xcode 3.1";
+			compatibilityVersion = "Xcode 10.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 1;
 			knownRegions = (
@@ -146,7 +146,7 @@
 			buildSettings = {
 				COPY_PHASE_STRIP = NO;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				INSTALL_PATH = "$(HOME)/bin";
+				INSTALL_PATH = /usr/local/bin;
 				PRODUCT_BUNDLE_IDENTIFIER = com.abracode.omc_next_command;
 				PRODUCT_NAME = omc_next_command;
 			};
@@ -157,7 +157,7 @@
 			buildSettings = {
 				COPY_PHASE_STRIP = YES;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
-				INSTALL_PATH = "$(HOME)/bin";
+				INSTALL_PATH = /usr/local/bin;
 				PRODUCT_BUNDLE_IDENTIFIER = com.abracode.omc_next_command;
 				PRODUCT_NAME = omc_next_command;
 			};

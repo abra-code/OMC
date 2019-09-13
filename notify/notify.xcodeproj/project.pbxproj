@@ -124,7 +124,7 @@
 			isa = PBXProject;
 			attributes = {
 				LastUpgradeCheck = 1100;
-				ORGANIZATIONNAME = Abracode;
+				ORGANIZATIONNAME = "";
 			};
 			buildConfigurationList = 1D904E0819285FFA009FB0C7 /* Build configuration list for PBXProject "notify" */;
 			compatibilityVersion = "Xcode 10.0";

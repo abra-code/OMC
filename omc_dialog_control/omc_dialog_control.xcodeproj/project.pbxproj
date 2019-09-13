@@ -120,7 +120,7 @@
 			isa = PBXProject;
 			attributes = {
 				LastUpgradeCheck = 1100;
-				ORGANIZATIONNAME = Abracode;
+				ORGANIZATIONNAME = "";
 			};
 			buildConfigurationList = E2E9017C0864AACA00B99907 /* Build configuration list for PBXProject "omc_dialog_control" */;
 			compatibilityVersion = "Xcode 10.0";
