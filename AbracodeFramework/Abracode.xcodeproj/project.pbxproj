@@ -189,6 +189,7 @@
 			dstPath = Support;
 			dstSubfolderSpec = 6;
 			files = (
+				1DADB52F232B5857005AD883 /* loco in Copy Support Executables */,
 				1D71F337220702EA009FAF91 /* notify in Copy Support Executables */,
 				E234FAA40D0FD114001A7780 /* omc_next_command in Copy Support Executables */,
 				E234FAA10D0FD0CE001A7780 /* omc_dialog_control in Copy Support Executables */,
