@@ -581,8 +581,7 @@
 				1D9B1F6321FF191D004704A7 /* SubmenuTree.cp */,
 				1D9B1F6421FF191D004704A7 /* SubmenuTree.h */,
 			);
-			name = CMUtils;
-			path = ../CMUtils;
+			path = CMUtils;
 			sourceTree = "<group>";
 		};
 		E29ED19E0D09528600C9D5E8 /* MoreAppleEvents */ = {
@@ -591,8 +590,7 @@
 				E29ED19F0D09528600C9D5E8 /* MoreAppleEvents.cp */,
 				1DED8E562222B65500A2CAF7 /* MoreAppleEvents.h */,
 			);
-			name = MoreAppleEvents;
-			path = ../MoreAppleEvents;
+			path = MoreAppleEvents;
 			sourceTree = SOURCE_ROOT;
 		};
 		E29ED1B10D09531300C9D5E8 /* Common */ = {
