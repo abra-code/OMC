@@ -6,11 +6,35 @@
 	objectVersion = 51;
 	objects = {
 
+/* Begin PBXAggregateTarget section */
+		1DA93CCD2330C238006C808A /* Generated Files */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = 1DA93CD02330C238006C808A /* Build configuration list for PBXAggregateTarget "Generated Files" */;
+			buildPhases = (
+				1DA93CD32330C255006C808A /* Generate App Group Identifier */,
+			);
+			dependencies = (
+			);
+			name = "Generated Files";
+			productName = "Generated Files";
+		};
+/* End PBXAggregateTarget section */
+
 /* Begin PBXBuildFile section */
 		1D9BCB8222CC98D100F4EAB6 /* ACFPropertyList.m in Sources */ = {isa = PBXBuildFile; fileRef = 1D9BCB8122CC98D000F4EAB6 /* ACFPropertyList.m */; };
 		8DD76F790486A8DE00D96B5E /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 09AB6884FE841BABC02AAC07 /* CoreFoundation.framework */; };
 		E25EBD57075DE53A005F994C /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = E25EBD56075DE53A005F994C /* main.c */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		1DA93CD12330C24E006C808A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 1DA93CCD2330C238006C808A;
+			remoteInfo = "Generated Files";
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
 		8DD76F7B0486A8DE00D96B5E /* CopyFiles */ = {
@@ -106,6 +130,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				1DA93CD22330C24E006C808A /* PBXTargetDependency */,
 			);
 			name = omc_dialog_control;
 			productInstallPath = "$(HOME)/bin";
@@ -121,6 +146,11 @@
 			attributes = {
 				LastUpgradeCheck = 1100;
 				ORGANIZATIONNAME = "";
+				TargetAttributes = {
+					1DA93CCD2330C238006C808A = {
+						CreatedOnToolsVersion = 11.0;
+					};
+				};
 			};
 			buildConfigurationList = E2E9017C0864AACA00B99907 /* Build configuration list for PBXProject "omc_dialog_control" */;
 			compatibilityVersion = "Xcode 10.0";
@@ -134,10 +164,35 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
+				1DA93CCD2330C238006C808A /* Generated Files */,
 				8DD76F740486A8DE00D96B5E /* omc_dialog_control */,
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		1DA93CD32330C255006C808A /* Generate App Group Identifier */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/generate_app_group_identifier.sh",
+			);
+			name = "Generate App Group Identifier";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(BUILT_PRODUCTS_DIR)/generated/AppGroupIdentifier.h",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "source \"$SRCROOT/generate_app_group_identifier.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		8DD76F760486A8DE00D96B5E /* Sources */ = {
@@ -151,7 +206,29 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		1DA93CD22330C24E006C808A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 1DA93CCD2330C238006C808A /* Generated Files */;
+			targetProxy = 1DA93CD12330C24E006C808A /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		1DA93CCE2330C238006C808A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		1DA93CCF2330C238006C808A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 		E2E901790864AACA00B99907 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -159,6 +236,10 @@
 				INFOPLIST_FILE = ../Common/OmcTool_Info.plist;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.abracode.omc-dialog-control";
 				PRODUCT_NAME = omc_dialog_control;
+				USER_HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(BUILT_PRODUCTS_DIR)/generated",
+				);
 			};
 			name = Debug;
 		};
@@ -169,6 +250,10 @@
 				INFOPLIST_FILE = ../Common/OmcTool_Info.plist;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.abracode.omc-dialog-control";
 				PRODUCT_NAME = omc_dialog_control;
+				USER_HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(BUILT_PRODUCTS_DIR)/generated",
+				);
 			};
 			name = Release;
 		};
@@ -257,6 +342,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		1DA93CD02330C238006C808A /* Build configuration list for PBXAggregateTarget "Generated Files" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1DA93CCE2330C238006C808A /* Debug */,
+				1DA93CCF2330C238006C808A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		E2E901780864AACA00B99907 /* Build configuration list for PBXNativeTarget "omc_dialog_control" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

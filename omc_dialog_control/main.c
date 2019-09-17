@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include "ACFPropertyList.h"
+#include "AppGroupIdentifier.h"
 
 static char sFilePath[1024];
 
@@ -221,7 +222,7 @@ int main (int argc, const char * argv[])
 	InstructionID instruction = GetInstructionID(valueStr);//must return valid index
 	key = sInstructionWordList[instruction].key;
 
-	CFStringRef portName = CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("OMCDialogControlPort-%s"), argv[1]);
+	CFStringRef portName = CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("%s.OMCDialogControlPort-%s"), GetAppGroupIdentifier(), argv[1]);
 	if(portName != NULL)
 	{
 		remotePort = CFMessagePortCreateRemote(kCFAllocatorDefault, portName);//should return non-null if listener port created

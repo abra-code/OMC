@@ -429,6 +429,7 @@ exit 1
 &quot;$OMC_OMC_SUPPORT_PATH/omc_dialog_control&quot; &quot;$OMC_NIB_DLG_GUID&quot; 111 &quot;Subcommand-initialized text view&quot;
 #&quot;$OMC_OMC_SUPPORT_PATH/omc_dialog_control&quot; &quot;$OMC_NIB_DLG_GUID&quot; 122 &quot;/Users/tom/test-image.png&quot;
 &quot;$OMC_OMC_SUPPORT_PATH/omc_dialog_control&quot; &quot;$OMC_NIB_DLG_GUID&quot; 900 omc_disable
+&quot;$OMC_OMC_SUPPORT_PATH/omc_dialog_control&quot; &quot;$OMC_NIB_DLG_GUID&quot; 200 &quot;$OMC_NIB_DLG_GUID&quot;
 &quot;$OMC_OMC_SUPPORT_PATH/omc_dialog_control&quot; &quot;$OMC_NIB_DLG_GUID&quot; 200 omc_select
 </string>
 			</array>

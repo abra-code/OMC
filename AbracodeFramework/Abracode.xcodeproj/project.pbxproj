@@ -1069,6 +1069,10 @@
 				INSTALL_PATH = "@rpath";
 				PRODUCT_BUNDLE_IDENTIFIER = com.abracode.AbracodeFramework;
 				PRODUCT_NAME = Abracode;
+				USER_HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(BUILT_PRODUCTS_DIR)/generated",
+				);
 				WRAPPER_EXTENSION = framework;
 			};
 			name = Debug;
@@ -1085,6 +1089,10 @@
 				INSTALL_PATH = "@rpath";
 				PRODUCT_BUNDLE_IDENTIFIER = com.abracode.AbracodeFramework;
 				PRODUCT_NAME = Abracode;
+				USER_HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(BUILT_PRODUCTS_DIR)/generated",
+				);
 				WRAPPER_EXTENSION = framework;
 			};
 			name = Release;

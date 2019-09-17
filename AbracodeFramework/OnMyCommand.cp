@@ -408,13 +408,6 @@ OnMyCommandCM::InitOmcBundlePaths()
 	CFObj<CFURLRef> abracodeFrameworkBundleURL = CFBundleCopyBundleURL(mBundleRef);
 	if(abracodeFrameworkBundleURL != nullptr)
 	{
-		CFObj<CFURLRef> resPathURL( CFURLCreateCopyAppendingPathComponent(
-									kCFAllocatorDefault,
-									abracodeFrameworkBundleURL,
-									CFSTR("Versions/Current/Resources"),
-									true) );
-		mOmcResourcesPath.Adopt(CreatePathFromCFURL(resPathURL, kEscapeNone), kCFObjDontRetain);
-
 		CFObj<CFURLRef> supportPathURL( CFURLCreateCopyAppendingPathComponent(
 									kCFAllocatorDefault,
 									abracodeFrameworkBundleURL,
@@ -422,6 +415,10 @@ OnMyCommandCM::InitOmcBundlePaths()
 									true) );
 		mOmcSupportPath.Adopt(CreatePathFromCFURL(supportPathURL, kEscapeNone), kCFObjDontRetain);
 	}
+
+	CFObj<CFURLRef> resPathURL = CFBundleCopyResourcesDirectoryURL(mBundleRef);
+	mOmcResourcesPath.Adopt(CreatePathFromCFURL(resPathURL, kEscapeNone), kCFObjDontRetain);
+
 }
 
 //classic API for CM

@@ -8,6 +8,8 @@
  */
 
 #include "OMCDialog.h"
+#include "AppGroupIdentifier.h"
+
 
 OMCDialog * OMCDialog::sChainHead = NULL;
 
@@ -74,7 +76,7 @@ OMCDialog::GetDialogUniqueID()
 void
 OMCDialog::StartListening()
 {
-	CFObj<CFStringRef> portName( ::CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("OMCDialogControlPort-%@"), GetDialogUniqueID()) );
+	CFObj<CFStringRef> portName( ::CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("%s.OMCDialogControlPort-%@"), GetAppGroupIdentifier(), GetDialogUniqueID()) );
 	mListener.StartListening(this, portName);
 }
 
