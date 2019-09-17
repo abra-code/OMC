@@ -96,3 +96,16 @@ GetOperatingSystemVersion(long* outMajorVersion, long* outMinorVersion, long* ou
     }
 }
 
+CGEventFlags
+GetKeyboardModifiers()
+{
+	CGEventFlags outModifiers = 0;
+	CGEventRef eventRef = CGEventCreate(nullptr /*default event source*/);
+	if(eventRef != nullptr)
+	{
+		outModifiers = CGEventGetFlags(eventRef);
+		CFRelease(eventRef);
+	}
+	return outModifiers;
+}
+

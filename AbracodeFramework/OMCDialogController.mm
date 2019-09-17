@@ -1736,25 +1736,6 @@ FindArgumentType(const char *argTypeStr)
 
 	mOMCDialogProxy->StartListening();
 
-	//static initialization not needed here, the only thing here might be to find out
-	//if there is a table control using the iterator. Then we would check it and create SelectionIterator in processCommand
-	//Thinking again: don't do it. Delay until execution.
-	//The command using iteration may never be executed so why bother right now?
-
-/*
-//static initialization first
-//whatever is set in properties of controls in nib
-//currently only for clock, HIImageView and ImageWell
-
-	//edit field with lowest id gets the keyboard focus
-	NibDialogControl::KeyFocusCandidate focusCandidate = { 0x7FFFFFFF, NULL };
-	mUsesSelectionIterator = false;
-	NibDialogControl::InitializeAllSubControls(mWindow, NULL, mCommandName, mExternBundleRef, mPlugin->GetBundleRef(), focusCandidate, mUsesSelectionIterator);
-
-	if(focusCandidate.control != NULL)
-		::SetKeyboardFocus( mWindow, focusCandidate.control, kControlFocusNextPart);
-*/
-
 	[self processCommandWithContext:NULL];
 
 	[mLastCommandID release];

@@ -101,7 +101,7 @@ typedef struct CommandDescription
 	CFMutableDictionaryRef	customEnvironVariables;
 	CFMutableSetRef specialRequestedNibControls; //set of special words to export
 	Boolean			actOnlyInListedApps;//if true - activate only in those listed, if false - exclude those listed
-	Boolean			unused;
+	Boolean			debugging; //set to true when control keyboard modifier is held
 	Boolean			disabled;
 	Boolean			isSubcommand;
 	SInt32			requiredOMCVersion;

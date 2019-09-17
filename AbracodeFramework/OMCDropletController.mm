@@ -13,6 +13,7 @@
 #include "OMCFilePanels.h"
 #include "OMC.h"
 #import "OMCService.h"
+#include "OMCHelpers.h"
 
 
 extern CFStringRef kBundleIDString;
@@ -90,12 +91,7 @@ static OMCService *sOMCService = NULL;
 	if(bunldeRefID == NULL)
 		bunldeRefID = @"com.abracode.CommandDroplet";
 
-	CGEventRef eventRef = CGEventCreate(NULL /*default event source*/);
-	if(eventRef != NULL)
-	{
-		_startupModifiers = CGEventGetFlags(eventRef);
-		CFRelease(eventRef);
-	}
+	_startupModifiers = GetKeyboardModifiers();
 }
 
 - (NSArray *)URLsFromRunningOpenPanel

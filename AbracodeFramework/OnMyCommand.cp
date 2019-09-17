@@ -124,7 +124,7 @@ const CommandDescription kEmptyCommand =
 	NULL,	//customEnvironVariables
 	nullptr, //specialRequestedNibControls
 	false,	//actOnlyInListedApps
-	false,  //unused
+	false,  //debugging
 	false,	//disabled
 	false,	//isSubcommand
 	MIN_OMC_VERSION, //requiredOMCVersion
@@ -774,6 +774,12 @@ OnMyCommandCM::HandleSelection( AEDesc *inContext, SInt32 inCommandID )
 			
 			CommandDescription &currCommand = mCommandList[mCurrCommandIndex];
 
+			CGEventFlags keyboardModifiers = GetKeyboardModifiers();
+			//only if lone control key is pressed we consider it a debug request
+			currCommand.debugging = ((keyboardModifiers &
+									(kCGEventFlagMaskAlphaShift | kCGEventFlagMaskShift | kCGEventFlagMaskAlternate | kCGEventFlagMaskCommand)) == 0)
+									&& ((keyboardModifiers & kCGEventFlagMaskControl) != 0);
+			
 			//take original command as parameter, not copy
 			PrescanCommandDescription( currCommand );
 			
@@ -1533,6 +1539,17 @@ OnMyCommandCM::ProcessObjects()
 		}
 	}
 
+	UInt8 executionMode = currCommand.executionMode;
+	if(currCommand.debugging)
+	{ //when in debuggging mode, change silent executions to executions with output windows
+		if(executionMode == kExecSilentPOpen)
+			executionMode = kExecPOpenWithOutputWindow;
+		else if(executionMode == kExecPopenScriptFile)
+			executionMode = kExecPopenScriptFileWithOutputWindow;
+		else if(executionMode == kExecAppleScript)
+			executionMode = kExecAppleScriptWithOutputWindow;
+	}
+
 	for(CFIndex i = 0; i < objectCount; i++)
 	{
 		if( currCommand.multipleObjectProcessing == kMulObjProcessTogether )
@@ -1541,8 +1558,8 @@ OnMyCommandCM::ProcessObjects()
 			mCurrObjectIndex = i;
 
 		UInt8 escapingMode = currCommand.escapeSpecialCharsMode;
-		if((currCommand.executionMode == kExecPopenScriptFile) ||
-			(currCommand.executionMode == kExecPopenScriptFileWithOutputWindow))
+		if((executionMode == kExecPopenScriptFile) ||
+			(executionMode == kExecPopenScriptFileWithOutputWindow))
 			escapingMode = kEscapeNone; //the command is actually a path and will not be interpeted by any shell
 
 		CFObj<CFMutableStringRef> theCommand( CreateCommandStringWithObjects(currCommand.command, escapingMode) );
@@ -1551,8 +1568,8 @@ OnMyCommandCM::ProcessObjects()
 
 		ARefCountedObj<OmcExecutor> theExec;
 		CFObj<CFStringRef> objName( CreateObjName( &(mObjectList[i]), NULL) );
-	
-		switch(currCommand.executionMode)
+			
+		switch(executionMode)
 		{
 			case kExecTerminal:
 			{
@@ -1620,8 +1637,20 @@ OSStatus
 OnMyCommandCM::ProcessCommandWithText(CommandDescription &currCommand, CFStringRef inStrRef)
 {
 	UInt8 escapingMode = currCommand.escapeSpecialCharsMode;
-	if((currCommand.executionMode == kExecPopenScriptFile) ||
-		(currCommand.executionMode == kExecPopenScriptFileWithOutputWindow))
+	UInt8 executionMode = currCommand.executionMode;
+
+	if(currCommand.debugging)
+	{ //when in debuggging mode, change silent executions to executions with output windows
+		if(executionMode == kExecSilentPOpen)
+			executionMode = kExecPOpenWithOutputWindow;
+		else if(executionMode == kExecPopenScriptFile)
+			executionMode = kExecPopenScriptFileWithOutputWindow;
+		else if(executionMode == kExecAppleScript)
+			executionMode = kExecAppleScriptWithOutputWindow;
+	}
+
+	if((executionMode == kExecPopenScriptFile) ||
+		(executionMode == kExecPopenScriptFileWithOutputWindow))
 		escapingMode = kEscapeNone; //the command is actually a path and will not be interpeted by any shell
 
 	CFObj<CFMutableStringRef> theCommand( CreateCommandStringWithText(currCommand.command, inStrRef, escapingMode) );
@@ -1657,7 +1686,7 @@ OnMyCommandCM::ProcessCommandWithText(CommandDescription &currCommand, CFStringR
 
 	ARefCountedObj<OmcExecutor> theExec;
 
-	switch(currCommand.executionMode)
+	switch(executionMode)
 	{
 		case kExecTerminal:
 		{

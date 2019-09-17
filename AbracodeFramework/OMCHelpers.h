@@ -15,6 +15,8 @@ bool RunningInRegularGUIApp();
 void RefreshFileInFinder(CFStringRef filePath);
 void GetOperatingSystemVersion(long* outMajorVersion, long* outMinorVersion, long* outPatchVersion);
 
+CGEventFlags GetKeyboardModifiers();
+
 #ifdef __cplusplus
 }
 #endif
