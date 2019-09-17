@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleIdentifier</key>
-	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<string>${PRODUCT_BUNDLE_IDENTIFIER}</string>
 	<key>CFBundleLocalizations</key>
 	<array>
 		<string>en</string>
@@ -26,7 +26,7 @@
 		<string>ko</string>
 	</array>
 	<key>CFBundleName</key>
-	<string>loco</string>
+	<string>${PRODUCT_NAME}</string>
 	<key>CFBundleVersion</key>
 	<string>4.0</string>
 	<key>LSMinimumSystemVersion</key>

@@ -5,8 +5,6 @@
  *	Compile this file in your project and then call GetAbracodeFrameworkVersion to find out if the framework is installed
  *  
  *
- *  Copyright 2011-2014 Abracode. All rights reserved.
- *
  */
 
 #include <CoreFoundation/CoreFoundation.h>
@@ -26,7 +24,7 @@ UInt32 GetAbracodeFrameworkVersion()
 										NULL, //soundURL
 										NULL, //localizationURL
 										CFSTR("Missing Abracode.framework"), //alertHeader
-										CFSTR("This application requires Abracode.framework installed by OnMyCommand. Please go to abracode.com to download it."),
+										CFSTR("This app requires Abracode.framework installed by OnMyCommand. Please go to abracode.com to download it."),
 										CFSTR("Go"),
 										CFSTR("Cancel"),
 										NULL, //otherButtonTitle,
@@ -34,7 +32,7 @@ UInt32 GetAbracodeFrameworkVersion()
 
 	if( (responseFlags & 0x03) == kCFUserNotificationDefaultResponse )//Go online button
 	{
-		system("open 'http://www.abracode.com/free/cmworkshop/on_my_command.html'");
+		system("/usr/bin/open 'http://www.abracode.com/free/cmworkshop/on_my_command.html'");
 	}
 
 	return 0;

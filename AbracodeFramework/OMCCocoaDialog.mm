@@ -118,9 +118,6 @@ OMCCocoaDialog::CopyAllControlValues(CFMutableDictionaryRef ioControlValues, CFM
 //port communication support for dialog
 //when this port is set-up the command line tool "omc_dialog_control" sends messages to this port
 //instead of saving to file and wait for command to finish
-//TODO
-//messages to this port cannot be sent from the same thread (PROBABLY)
-//so port registration should be done only for commands sent to OMCDeputy
 
 //inData is a plist XML data in exactly the same format as read from temp plist file for disk-based communication
 CFDataRef

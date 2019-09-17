@@ -26,12 +26,12 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		1D0449AC2330B80300C01431 /* OmcTool_Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = OmcTool_Info.plist; path = ../Common/OmcTool_Info.plist; sourceTree = "<group>"; };
 		1D900388192763DA001CAAEF /* pasteboard */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = pasteboard; sourceTree = BUILT_PRODUCTS_DIR; };
 		1D90038B192763DA001CAAEF /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		1D90038E192763DA001CAAEF /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
-		1D900391192763DA001CAAEF /* pasteboard-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "pasteboard-Prefix.pch"; sourceTree = "<group>"; };
 		1D900392192763DA001CAAEF /* pasteboard.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = pasteboard.1; sourceTree = "<group>"; };
-		1D904E2019286FED009FB0C7 /* AbracodeCommon.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = AbracodeCommon.xcconfig; path = ../AbracodeCommon.xcconfig; sourceTree = "<group>"; };
+		1D904E2019286FED009FB0C7 /* OmcProjectCommon.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectCommon.xcconfig; path = ../Common/OmcProjectCommon.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -49,7 +49,8 @@
 		1D90037F192763DA001CAAEF = {
 			isa = PBXGroup;
 			children = (
-				1D904E2019286FED009FB0C7 /* AbracodeCommon.xcconfig */,
+				1D904E2019286FED009FB0C7 /* OmcProjectCommon.xcconfig */,
+				1D0449AC2330B80300C01431 /* OmcTool_Info.plist */,
 				1D90038D192763DA001CAAEF /* pasteboard */,
 				1D90038A192763DA001CAAEF /* Frameworks */,
 				1D900389192763DA001CAAEF /* Products */,
@@ -77,17 +78,8 @@
 			children = (
 				1D90038E192763DA001CAAEF /* main.m */,
 				1D900392192763DA001CAAEF /* pasteboard.1 */,
-				1D900390192763DA001CAAEF /* Supporting Files */,
 			);
 			path = pasteboard;
-			sourceTree = "<group>";
-		};
-		1D900390192763DA001CAAEF /* Supporting Files */ = {
-			isa = PBXGroup;
-			children = (
-				1D900391192763DA001CAAEF /* pasteboard-Prefix.pch */,
-			);
-			name = "Supporting Files";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -151,7 +143,7 @@
 /* Begin XCBuildConfiguration section */
 		1D900394192763DA001CAAEF /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 1D904E2019286FED009FB0C7 /* AbracodeCommon.xcconfig */;
+			baseConfigurationReference = 1D904E2019286FED009FB0C7 /* OmcProjectCommon.xcconfig */;
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
@@ -199,7 +191,7 @@
 		};
 		1D900395192763DA001CAAEF /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 1D904E2019286FED009FB0C7 /* AbracodeCommon.xcconfig */;
+			baseConfigurationReference = 1D904E2019286FED009FB0C7 /* OmcProjectCommon.xcconfig */;
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
@@ -241,8 +233,9 @@
 		1D900397192763DA001CAAEF /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "pasteboard/pasteboard-Prefix.pch";
+				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
+				INFOPLIST_FILE = ../Common/OmcTool_Info.plist;
+				PRODUCT_BUNDLE_IDENTIFIER = com.abracode.pasteboard;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -250,8 +243,9 @@
 		1D900398192763DA001CAAEF /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "pasteboard/pasteboard-Prefix.pch";
+				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
+				INFOPLIST_FILE = ../Common/OmcTool_Info.plist;
+				PRODUCT_BUNDLE_IDENTIFIER = com.abracode.pasteboard;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;

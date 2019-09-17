@@ -71,7 +71,7 @@
 		8D1107310486CEB800E47090 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* CocoaExecutor.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CocoaExecutor.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E211D27D0D3F1E950065C23A /* TextContext.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = TextContext.plist; sourceTree = SOURCE_ROOT; };
-		E23C1AD410DE047300B2E8A1 /* AbracodeCommon.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = AbracodeCommon.xcconfig; path = ../AbracodeCommon.xcconfig; sourceTree = SOURCE_ROOT; };
+		E23C1AD410DE047300B2E8A1 /* OmcProjectCommon.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = OmcProjectCommon.xcconfig; path = ../Common/OmcProjectCommon.xcconfig; sourceTree = SOURCE_ROOT; };
 		E24DB4740DA0B06000F53AB5 /* Command.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Command.plist; sourceTree = SOURCE_ROOT; };
 		E29B53350D56D0A600F00B4A /* ForOutputObserver.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = ForOutputObserver.plist; sourceTree = SOURCE_ROOT; };
 		E2C32C370D2CB56B0023DA03 /* Abracode.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Abracode.framework; path = /Library/Frameworks/Abracode.framework; sourceTree = "<absolute>"; };
@@ -136,7 +136,7 @@
 			isa = PBXGroup;
 			children = (
 				1D7618BD231CEE08005F4AEB /* CocoaExecutor.entitlements */,
-				E23C1AD410DE047300B2E8A1 /* AbracodeCommon.xcconfig */,
+				E23C1AD410DE047300B2E8A1 /* OmcProjectCommon.xcconfig */,
 				080E96DDFE201D6D7F000001 /* Classes */,
 				29B97315FDCFA39411CA2CEA /* Other Sources */,
 				29B97317FDCFA39411CA2CEA /* Resources */,
@@ -388,7 +388,7 @@
 		};
 		C01FCF4F08A954540054247B /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = E23C1AD410DE047300B2E8A1 /* AbracodeCommon.xcconfig */;
+			baseConfigurationReference = E23C1AD410DE047300B2E8A1 /* OmcProjectCommon.xcconfig */;
 			buildSettings = {
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
@@ -428,7 +428,7 @@
 		};
 		C01FCF5008A954540054247B /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = E23C1AD410DE047300B2E8A1 /* AbracodeCommon.xcconfig */;
+			baseConfigurationReference = E23C1AD410DE047300B2E8A1 /* OmcProjectCommon.xcconfig */;
 			buildSettings = {
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;

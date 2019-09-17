@@ -268,7 +268,7 @@
 		E211D4F30D4346BA0065C23A /* OMCDialogController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCDialogController.h; sourceTree = SOURCE_ROOT; };
 		E211D4F40D4346BB0065C23A /* OMCDialogController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCDialogController.mm; sourceTree = SOURCE_ROOT; };
 		E21A29B910B67B0500C39261 /* OMCCustomWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCCustomWindow.h; sourceTree = "<group>"; };
-		E2269C1B0EB6DCF30029CCF5 /* AbracodeCommon.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = AbracodeCommon.xcconfig; path = ../AbracodeCommon.xcconfig; sourceTree = SOURCE_ROOT; };
+		E2269C1B0EB6DCF30029CCF5 /* OmcProjectCommon.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = OmcProjectCommon.xcconfig; path = ../Common/OmcProjectCommon.xcconfig; sourceTree = SOURCE_ROOT; };
 		E22FBAEC0D7A0D7700DC5BB4 /* OMCCocoaDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCCocoaDialog.h; sourceTree = "<group>"; };
 		E22FBAED0D7A0D7700DC5BB4 /* OMCCocoaDialog.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCCocoaDialog.mm; sourceTree = "<group>"; };
 		E22FCB220F5514220062D589 /* NibDialogControl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NibDialogControl.h; sourceTree = "<group>"; };
@@ -434,7 +434,7 @@
 				E2517C3C0D1BCC2700180C68 /* CocoaControls */,
 				32C88DFF0371C24200C91783 /* Other Sources */,
 				089C1665FE841158C02AAC07 /* Resources */,
-				E2269C1B0EB6DCF30029CCF5 /* AbracodeCommon.xcconfig */,
+				E2269C1B0EB6DCF30029CCF5 /* OmcProjectCommon.xcconfig */,
 				E234FA9D0D0FD06B001A7780 /* Support Tools */,
 				0867D69AFE84028FC02AAC07 /* External Frameworks and Libraries */,
 				034768DFFF38A50411DB9C8B /* Products */,
@@ -1091,7 +1091,7 @@
 		};
 		1DEB91B208733DA50010E9CD /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = E2269C1B0EB6DCF30029CCF5 /* AbracodeCommon.xcconfig */;
+			baseConfigurationReference = E2269C1B0EB6DCF30029CCF5 /* OmcProjectCommon.xcconfig */;
 			buildSettings = {
 				DEAD_CODE_STRIPPING = NO;
 				ENABLE_TESTABILITY = YES;
@@ -1111,7 +1111,7 @@
 		};
 		1DEB91B308733DA50010E9CD /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = E2269C1B0EB6DCF30029CCF5 /* AbracodeCommon.xcconfig */;
+			baseConfigurationReference = E2269C1B0EB6DCF30029CCF5 /* OmcProjectCommon.xcconfig */;
 			buildSettings = {
 				DEAD_CODE_STRIPPING = YES;
 				EXPORTED_SYMBOLS_FILE = AbracodeFramework.exp;

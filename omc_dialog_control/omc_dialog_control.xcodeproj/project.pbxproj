@@ -29,9 +29,9 @@
 		1D9BCB8122CC98D000F4EAB6 /* ACFPropertyList.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = ACFPropertyList.m; path = ../Common/ACFPropertyList.m; sourceTree = "<group>"; };
 		1D9BCB8322CC98E400F4EAB6 /* ACFPropertyList.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ACFPropertyList.h; path = ../Common/ACFPropertyList.h; sourceTree = "<group>"; };
 		8DD76F7E0486A8DE00D96B5E /* omc_dialog_control */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = omc_dialog_control; sourceTree = BUILT_PRODUCTS_DIR; };
-		E2269AD10EB6D9430029CCF5 /* AbracodeCommon.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = AbracodeCommon.xcconfig; path = ../AbracodeCommon.xcconfig; sourceTree = SOURCE_ROOT; };
+		E2269AD10EB6D9430029CCF5 /* OmcProjectCommon.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = OmcProjectCommon.xcconfig; path = ../Common/OmcProjectCommon.xcconfig; sourceTree = SOURCE_ROOT; };
 		E25EBD56075DE53A005F994C /* main.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = SOURCE_ROOT; };
-		E27A1AD110526A8F000DFAC8 /* omc_dialog_control_Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = omc_dialog_control_Info.plist; sourceTree = SOURCE_ROOT; };
+		E27A1AD110526A8F000DFAC8 /* OmcTool_Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = OmcTool_Info.plist; path = ../Common/OmcTool_Info.plist; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -50,8 +50,8 @@
 			isa = PBXGroup;
 			children = (
 				08FB7795FE84155DC02AAC07 /* Source */,
-				E2269AD10EB6D9430029CCF5 /* AbracodeCommon.xcconfig */,
-				E27A1AD110526A8F000DFAC8 /* omc_dialog_control_Info.plist */,
+				E2269AD10EB6D9430029CCF5 /* OmcProjectCommon.xcconfig */,
+				E27A1AD110526A8F000DFAC8 /* OmcTool_Info.plist */,
 				C6859E96029091FE04C91782 /* Documentation */,
 				08FB779DFE84155DC02AAC07 /* External Frameworks and Libraries */,
 				19C28FBDFE9D53C911CA2CBB /* Products */,
@@ -155,7 +155,9 @@
 		E2E901790864AACA00B99907 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				PRODUCT_BUNDLE_IDENTIFIER = com.abracode.omc_dialog_control;
+				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
+				INFOPLIST_FILE = ../Common/OmcTool_Info.plist;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.abracode.omc-dialog-control";
 				PRODUCT_NAME = omc_dialog_control;
 			};
 			name = Debug;
@@ -163,14 +165,16 @@
 		E2E9017A0864AACA00B99907 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				PRODUCT_BUNDLE_IDENTIFIER = com.abracode.omc_dialog_control;
+				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
+				INFOPLIST_FILE = ../Common/OmcTool_Info.plist;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.abracode.omc-dialog-control";
 				PRODUCT_NAME = omc_dialog_control;
 			};
 			name = Release;
 		};
 		E2E9017D0864AACA00B99907 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = E2269AD10EB6D9430029CCF5 /* AbracodeCommon.xcconfig */;
+			baseConfigurationReference = E2269AD10EB6D9430029CCF5 /* OmcProjectCommon.xcconfig */;
 			buildSettings = {
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
@@ -204,21 +208,14 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				INFOPLIST_FILE = omc_dialog_control_Info.plist;
 				ONLY_ACTIVE_ARCH = YES;
-				OTHER_LDFLAGS = (
-					"-sectcreate",
-					__TEXT,
-					__info_plist,
-					omc_dialog_control_Info.plist,
-				);
 				SYMROOT = ../build;
 			};
 			name = Debug;
 		};
 		E2E9017E0864AACA00B99907 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = E2269AD10EB6D9430029CCF5 /* AbracodeCommon.xcconfig */;
+			baseConfigurationReference = E2269AD10EB6D9430029CCF5 /* OmcProjectCommon.xcconfig */;
 			buildSettings = {
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
@@ -253,13 +250,6 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				INFOPLIST_FILE = omc_dialog_control_Info.plist;
-				OTHER_LDFLAGS = (
-					"-sectcreate",
-					__TEXT,
-					__info_plist,
-					omc_dialog_control_Info.plist,
-				);
 				SYMROOT = ../build;
 			};
 			name = Release;

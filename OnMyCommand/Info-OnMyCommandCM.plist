@@ -9,13 +9,13 @@
 	<key>CFBundleGetInfoString</key>
 	<string>4.0</string>
 	<key>CFBundleIdentifier</key>
-	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<string>${PRODUCT_BUNDLE_IDENTIFIER}</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleLongVersionString</key>
 	<string>4.0, Copyright Abracode</string>
 	<key>CFBundleName</key>
-	<string>OnMyCommandCM</string>
+	<string>${PRODUCT_NAME}</string>
 	<key>CFBundlePackageType</key>
 	<string>cmpi</string>
 	<key>CFBundleIconFile</key>

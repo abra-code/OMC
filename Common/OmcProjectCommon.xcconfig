@@ -1,4 +1,4 @@
-#include "Distribution.xcconfig"
+#include "OmcDistribution.xcconfig"
 
 MACOSX_DEPLOYMENT_TARGET = 10.13
 SDKROOT = macosx
@@ -8,3 +8,4 @@ CLANG_CXX_LANGUAGE_STANDARD = c++17
 CLANG_ENABLE_OBJC_WEAK = YES
 
 ALWAYS_SEARCH_USER_PATHS = NO
+INFOPLIST_PREPROCESS = YES

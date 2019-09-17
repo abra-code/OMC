@@ -30,10 +30,9 @@
 		1D904E0D19285FFA009FB0C7 /* notify */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = notify; sourceTree = BUILT_PRODUCTS_DIR; };
 		1D904E1019285FFA009FB0C7 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		1D904E1319285FFA009FB0C7 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
-		1D904E1619285FFA009FB0C7 /* notify-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "notify-Prefix.pch"; sourceTree = "<group>"; };
 		1D904E1719285FFA009FB0C7 /* notify.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = notify.1; sourceTree = "<group>"; };
 		1D904E1E192866A0009FB0C7 /* notify_Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = notify_Info.plist; sourceTree = SOURCE_ROOT; };
-		1D904E1F19286E4C009FB0C7 /* AbracodeCommon.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = AbracodeCommon.xcconfig; path = ../AbracodeCommon.xcconfig; sourceTree = "<group>"; };
+		1D904E1F19286E4C009FB0C7 /* OmcProjectCommon.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectCommon.xcconfig; path = ../Common/OmcProjectCommon.xcconfig; sourceTree = "<group>"; };
 		1D904E2119288E4D009FB0C7 /* NotifyDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NotifyDelegate.h; sourceTree = "<group>"; };
 		1D904E2219288E4D009FB0C7 /* NotifyDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NotifyDelegate.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -53,7 +52,7 @@
 		1D904E0419285FFA009FB0C7 = {
 			isa = PBXGroup;
 			children = (
-				1D904E1F19286E4C009FB0C7 /* AbracodeCommon.xcconfig */,
+				1D904E1F19286E4C009FB0C7 /* OmcProjectCommon.xcconfig */,
 				1D904E1219285FFA009FB0C7 /* notify */,
 				1D904E0F19285FFA009FB0C7 /* Frameworks */,
 				1D904E0E19285FFA009FB0C7 /* Products */,
@@ -84,17 +83,8 @@
 				1D904E2219288E4D009FB0C7 /* NotifyDelegate.m */,
 				1D904E1719285FFA009FB0C7 /* notify.1 */,
 				1D904E1E192866A0009FB0C7 /* notify_Info.plist */,
-				1D904E1519285FFA009FB0C7 /* Supporting Files */,
 			);
 			path = notify;
-			sourceTree = "<group>";
-		};
-		1D904E1519285FFA009FB0C7 /* Supporting Files */ = {
-			isa = PBXGroup;
-			children = (
-				1D904E1619285FFA009FB0C7 /* notify-Prefix.pch */,
-			);
-			name = "Supporting Files";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -159,7 +149,7 @@
 /* Begin XCBuildConfiguration section */
 		1D904E1919285FFA009FB0C7 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 1D904E1F19286E4C009FB0C7 /* AbracodeCommon.xcconfig */;
+			baseConfigurationReference = 1D904E1F19286E4C009FB0C7 /* OmcProjectCommon.xcconfig */;
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
@@ -202,12 +192,13 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
+				SYMROOT = ../build;
 			};
 			name = Debug;
 		};
 		1D904E1A19285FFA009FB0C7 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 1D904E1F19286E4C009FB0C7 /* AbracodeCommon.xcconfig */;
+			baseConfigurationReference = 1D904E1F19286E4C009FB0C7 /* OmcProjectCommon.xcconfig */;
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
@@ -243,6 +234,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				SDKROOT = macosx;
+				SYMROOT = ../build;
 			};
 			name = Release;
 		};
@@ -250,12 +242,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "notify/notify-Prefix.pch";
 				INFOPLIST_FILE = notify_Info.plist;
 				PRODUCT_BUNDLE_IDENTIFIER = com.abracode.notify;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SYMROOT = ../build;
 			};
 			name = Debug;
 		};
@@ -263,12 +252,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "notify/notify-Prefix.pch";
 				INFOPLIST_FILE = notify_Info.plist;
 				PRODUCT_BUNDLE_IDENTIFIER = com.abracode.notify;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SYMROOT = ../build;
 			};
 			name = Release;
 		};

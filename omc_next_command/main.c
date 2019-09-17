@@ -23,11 +23,6 @@ int main (int argc, const char * argv[])
 		return -1;
 	}
 
-//	if(theIDLen != 4)
-//	{
-//		fprintf(stderr, "WARNING: command IDs are usually 4 characters long, the ID you provided is %d characters long.\n", theIDLen);
-//	}
-
 	if( access("/tmp/OMC", F_OK|R_OK|W_OK|X_OK) != 0 )
 	{
 		mkdir("/tmp/OMC", S_IRWXU|S_IRWXG|S_IRWXO);

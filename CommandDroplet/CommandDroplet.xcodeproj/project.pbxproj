@@ -31,7 +31,7 @@
 		32CA4F630368D1EE00C91783 /* CommandDroplet_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CommandDroplet_Prefix.pch; sourceTree = "<group>"; };
 		8D1107310486CEB800E47090 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* CommandDroplet.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CommandDroplet.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		E2269AC60EB6D8FB0029CCF5 /* AbracodeCommon.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = AbracodeCommon.xcconfig; path = ../AbracodeCommon.xcconfig; sourceTree = SOURCE_ROOT; };
+		E2269AC60EB6D8FB0029CCF5 /* OmcProjectCommon.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = OmcProjectCommon.xcconfig; path = ../Common/OmcProjectCommon.xcconfig; sourceTree = SOURCE_ROOT; };
 		E23EA1640DFB026E0070E63F /* Abracode.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Abracode.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		E23EA2010DFB9B7C0070E63F /* Command.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Command.plist; sourceTree = SOURCE_ROOT; };
 		E2ACB28C12EAE02700A8ACF6 /* AbracodeFrameworkVersion.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = AbracodeFrameworkVersion.c; path = Abracode.framework/Versions/A/Headers/AbracodeFrameworkVersion.c; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -83,7 +83,7 @@
 				1D7618BE231CEE28005F4AEB /* CommandDroplet.entitlements */,
 				29B97315FDCFA39411CA2CEA /* Other Sources */,
 				29B97317FDCFA39411CA2CEA /* Resources */,
-				E2269AC60EB6D8FB0029CCF5 /* AbracodeCommon.xcconfig */,
+				E2269AC60EB6D8FB0029CCF5 /* OmcProjectCommon.xcconfig */,
 				29B97323FDCFA39411CA2CEA /* Frameworks */,
 				19C28FACFE9D520D11CA2CBB /* Products */,
 			);
@@ -271,7 +271,7 @@
 		};
 		C01FCF4F08A954540054247B /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = E2269AC60EB6D8FB0029CCF5 /* AbracodeCommon.xcconfig */;
+			baseConfigurationReference = E2269AC60EB6D8FB0029CCF5 /* OmcProjectCommon.xcconfig */;
 			buildSettings = {
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
@@ -308,7 +308,7 @@
 		};
 		C01FCF5008A954540054247B /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = E2269AC60EB6D8FB0029CCF5 /* AbracodeCommon.xcconfig */;
+			baseConfigurationReference = E2269AC60EB6D8FB0029CCF5 /* OmcProjectCommon.xcconfig */;
 			buildSettings = {
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;

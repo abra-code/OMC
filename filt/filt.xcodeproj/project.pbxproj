@@ -24,7 +24,8 @@
 
 /* Begin PBXFileReference section */
 		08FB7796FE84155DC02AAC07 /* main.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
-		1DDCF98115CD1E6E00C79D36 /* AbracodeCommon.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = AbracodeCommon.xcconfig; path = ../AbracodeCommon.xcconfig; sourceTree = "<group>"; };
+		1D0449AB2330B4D500C01431 /* OmcTool_Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = OmcTool_Info.plist; path = ../Common/OmcTool_Info.plist; sourceTree = SOURCE_ROOT; };
+		1DDCF98115CD1E6E00C79D36 /* OmcProjectCommon.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectCommon.xcconfig; path = ../Common/OmcProjectCommon.xcconfig; sourceTree = SOURCE_ROOT; };
 		8DD76FB20486AB0100D96B5E /* filt */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = filt; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -42,7 +43,8 @@
 		08FB7794FE84155DC02AAC07 /* filt */ = {
 			isa = PBXGroup;
 			children = (
-				1DDCF98115CD1E6E00C79D36 /* AbracodeCommon.xcconfig */,
+				1DDCF98115CD1E6E00C79D36 /* OmcProjectCommon.xcconfig */,
+				1D0449AB2330B4D500C01431 /* OmcTool_Info.plist */,
 				08FB7795FE84155DC02AAC07 /* Source */,
 				1AB674ADFE9D54B511CA2CBB /* Products */,
 			);
@@ -128,10 +130,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COPY_PHASE_STRIP = NO;
-				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_MODEL_TUNING = G5;
+				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
+				INFOPLIST_FILE = ../Common/OmcTool_Info.plist;
 				INSTALL_PATH = /usr/local/bin;
+				PRODUCT_BUNDLE_IDENTIFIER = com.abracode.filt;
 				PRODUCT_NAME = filt;
 			};
 			name = Debug;
@@ -139,16 +142,18 @@
 		1DEB928708733DD80010E9CD /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				GCC_MODEL_TUNING = G5;
+				INFOPLIST_FILE = ../Common/OmcTool_Info.plist;
 				INSTALL_PATH = /usr/local/bin;
+				PRODUCT_BUNDLE_IDENTIFIER = com.abracode.filt;
 				PRODUCT_NAME = filt;
 			};
 			name = Release;
 		};
 		1DEB928A08733DD80010E9CD /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 1DDCF98115CD1E6E00C79D36 /* AbracodeCommon.xcconfig */;
+			baseConfigurationReference = 1DDCF98115CD1E6E00C79D36 /* OmcProjectCommon.xcconfig */;
 			buildSettings = {
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
@@ -183,7 +188,7 @@
 		};
 		1DEB928B08733DD80010E9CD /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 1DDCF98115CD1E6E00C79D36 /* AbracodeCommon.xcconfig */;
+			baseConfigurationReference = 1DDCF98115CD1E6E00C79D36 /* OmcProjectCommon.xcconfig */;
 			buildSettings = {
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
