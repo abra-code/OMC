@@ -73,8 +73,8 @@ echo "Abracode.framework";
 xcodebuild -project AbracodeFramework/Abracode.xcodeproj -alltargets -configuration $BUILD_CONFIG $IN_ACTION 2>&1 | grep -e "BUILD" | awk '{if ($0 ~ /.*FAIL.*/) printf "\033[1;31m"$0"\033[0m\n"; else printf $0"\n";}';
 echo ""
 
-echo "CommandDroplet";
-xcodebuild -project CommandDroplet/CommandDroplet.xcodeproj -alltargets -configuration $BUILD_CONFIG $IN_ACTION 2>&1 | grep -e "BUILD" | awk '{if ($0 ~ /.*FAIL.*/) printf "\033[1;31m"$0"\033[0m\n"; else printf $0"\n";}';
+echo "OMCApplet";
+xcodebuild -project OMCApplet/OMCApplet.xcodeproj -alltargets -configuration $BUILD_CONFIG $IN_ACTION 2>&1 | grep -e "BUILD" | awk '{if ($0 ~ /.*FAIL.*/) printf "\033[1;31m"$0"\033[0m\n"; else printf $0"\n";}';
 echo ""
 
 echo "OMCService";
@@ -82,7 +82,7 @@ xcodebuild -project OMCService/OMCService.xcodeproj -alltargets -configuration $
 echo ""
 
 echo "OnMyCommandCM";
-xcodebuild -project OnMyCommand/OnMyCommandCM.xcodeproj -alltargets -configuration $BUILD_CONFIG $IN_ACTION 2>&1 | grep -e "BUILD" | awk '{if ($0 ~ /.*FAIL.*/) printf "\033[1;31m"$0"\033[0m\n"; else printf $0"\n";}';
+xcodebuild -project OnMyCommandCM/OnMyCommandCM.xcodeproj -alltargets -configuration $BUILD_CONFIG $IN_ACTION 2>&1 | grep -e "BUILD" | awk '{if ($0 ~ /.*FAIL.*/) printf "\033[1;31m"$0"\033[0m\n"; else printf $0"\n";}';
 echo ""
 
 echo "CocoaExecutor";

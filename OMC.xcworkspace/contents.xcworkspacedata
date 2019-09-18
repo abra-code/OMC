@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Workspace
+   version = "1.0">
+   <FileRef
+      location = "group:alert/alert.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:b64/b64.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:filt/filt.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:loco/loco.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:notify/notify.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:omc_dialog_control/omc_dialog_control.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:omc_next_command/omc_next_command.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:pasteboard/pasteboard.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:plister/plister.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:AbracodeFramework/Abracode.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:OMCService/OMCService.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:OnMyCommand/OnMyCommandCM.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:OMCApplet/OMCApplet.xcodeproj">
+   </FileRef>
+</Workspace>

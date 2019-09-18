@@ -1,6 +1,6 @@
 /*
  *  DefaultExternBundle.cpp
- *  CommandDroplet
+ *  OMCApplet
  *
  *  Created by Tomasz Kukielka on 9/8/06.
  *  Copyright 2006 Abracode. All rights reserved.

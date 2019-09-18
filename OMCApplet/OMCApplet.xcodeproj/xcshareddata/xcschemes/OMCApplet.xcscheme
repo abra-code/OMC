@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "8D1107260486CEB800E47090"
-               BuildableName = "CommandDroplet.app"
-               BlueprintName = "CommandDroplet"
-               ReferencedContainer = "container:CommandDroplet.xcodeproj">
+               BuildableName = "OMCApplet.app"
+               BlueprintName = "OMCApplet"
+               ReferencedContainer = "container:OMCApplet.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -31,9 +31,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "8D1107260486CEB800E47090"
-            BuildableName = "CommandDroplet.app"
-            BlueprintName = "CommandDroplet"
-            ReferencedContainer = "container:CommandDroplet.xcodeproj">
+            BuildableName = "OMCApplet.app"
+            BlueprintName = "OMCApplet"
+            ReferencedContainer = "container:OMCApplet.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
       <Testables>
@@ -57,9 +57,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "8D1107260486CEB800E47090"
-            BuildableName = "CommandDroplet.app"
-            BlueprintName = "CommandDroplet"
-            ReferencedContainer = "container:CommandDroplet.xcodeproj">
+            BuildableName = "OMCApplet.app"
+            BlueprintName = "OMCApplet"
+            ReferencedContainer = "container:OMCApplet.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
       <AdditionalOptions>
@@ -81,9 +81,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "8D1107260486CEB800E47090"
-            BuildableName = "CommandDroplet.app"
-            BlueprintName = "CommandDroplet"
-            ReferencedContainer = "container:CommandDroplet.xcodeproj">
+            BuildableName = "OMCApplet.app"
+            BlueprintName = "OMCApplet"
+            ReferencedContainer = "container:OMCApplet.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

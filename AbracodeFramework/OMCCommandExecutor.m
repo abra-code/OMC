@@ -62,7 +62,7 @@ static NSMutableDictionary *sCachedPlists = NULL;
 					NSBundle *appBundle = [NSBundle mainBundle];
 					CFStringRef appName = (CFStringRef)[appBundle objectForInfoDictionaryKey:@"CFBundleName"];
 					if(appName == NULL)
-						appName = CFSTR("CommandDroplet");
+						appName = CFSTR("OMCApplet");
 					
 					switch(activationType)
 					{

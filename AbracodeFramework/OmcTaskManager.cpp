@@ -1,6 +1,6 @@
 /*
  *  OmcTaskManager.cpp
- *  CommandDroplet
+ *  OMCApplet
  *
  *  Created by Tomasz Kukielka on 11/18/06.
  *  Copyright 2006 Abracode. All rights reserved.

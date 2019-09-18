@@ -3,9 +3,9 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleGetInfoString</key>
-	<string>CommandDroplet version 4.0</string>
+	<string>OMCApplet version 4.0</string>
 	<key>CFBundleName</key>
-	<string>CommandDroplet</string>
+	<string>OMCApplet</string>
 	<key>NSHumanReadableCopyright</key>
 	<string>Copyright Abracode</string>
 </dict>

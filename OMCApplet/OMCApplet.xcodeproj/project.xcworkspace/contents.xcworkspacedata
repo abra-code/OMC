@@ -2,6 +2,6 @@
 <Workspace
    version = "1.0">
    <FileRef
-      location = "self:CommandDroplet.xcodeproj">
+      location = "self:OMCApplet.xcodeproj">
    </FileRef>
 </Workspace>

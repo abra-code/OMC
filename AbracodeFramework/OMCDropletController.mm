@@ -89,7 +89,7 @@ static OMCService *sOMCService = NULL;
 	NSBundle *appBundle = [NSBundle mainBundle];
 	NSString *bunldeRefID = [appBundle bundleIdentifier];
 	if(bunldeRefID == NULL)
-		bunldeRefID = @"com.abracode.CommandDroplet";
+		bunldeRefID = @"com.abracode.OMCApplet";
 
 	_startupModifiers = GetKeyboardModifiers();
 }

@@ -25,6 +25,7 @@
 		1D742DC5193882BB005DFF97 /* pasteboard in Copy Support Executables */ = {isa = PBXBuildFile; fileRef = 1D742DC219388292005DFF97 /* pasteboard */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		1D80B9BA22E447E800CF1AF5 /* OMCiTermExecutor.cp in Sources */ = {isa = PBXBuildFile; fileRef = 1D80B9B822E447E800CF1AF5 /* OMCiTermExecutor.cp */; };
 		1D80B9C222E447F900CF1AF5 /* OMCTerminalExecutor.cp in Sources */ = {isa = PBXBuildFile; fileRef = 1D80B9BF22E447F900CF1AF5 /* OMCTerminalExecutor.cp */; };
+		1D984C2923321D3400FF6967 /* AbracodeFrameworkVersion.c in Copy AbracodeFrameworkVersion.c to generated */ = {isa = PBXBuildFile; fileRef = E2ACB25712EADCB000A8ACF6 /* AbracodeFrameworkVersion.c */; };
 		1D9B1F5D21FF1572004704A7 /* OnMyCommand.cp in Sources */ = {isa = PBXBuildFile; fileRef = 1D9B1F5C21FF1572004704A7 /* OnMyCommand.cp */; };
 		1D9B1F6521FF191D004704A7 /* SubmenuTree.cp in Sources */ = {isa = PBXBuildFile; fileRef = 1D9B1F6321FF191D004704A7 /* SubmenuTree.cp */; };
 		1D9B1F7121FF1F9F004704A7 /* progress.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1D9B1F6F21FF1F9F004704A7 /* progress.xib */; };
@@ -183,6 +184,17 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		1D984C2823321D0B00FF6967 /* Copy AbracodeFrameworkVersion.c to generated */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = generated;
+			dstSubfolderSpec = 16;
+			files = (
+				1D984C2923321D3400FF6967 /* AbracodeFrameworkVersion.c in Copy AbracodeFrameworkVersion.c to generated */,
+			);
+			name = "Copy AbracodeFrameworkVersion.c to generated";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		E234FAA20D0FD0FE001A7780 /* Copy Support Executables */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -781,6 +793,7 @@
 				E234FAA20D0FD0FE001A7780 /* Copy Support Executables */,
 				E2A8326F0D147C7300117643 /* Create Support symlink */,
 				1DA31836231D075B00AA5385 /* Create symlink in Frameworks */,
+				1D984C2823321D0B00FF6967 /* Copy AbracodeFrameworkVersion.c to generated */,
 			);
 			buildRules = (
 			);

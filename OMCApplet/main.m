@@ -1,6 +1,6 @@
 //
 //  main.m
-//  CommandDroplet
+//  OMCApplet
 //
 //  Created by Tomasz Kukielka on 6/7/08.
 //  Copyright Abracode Inc 2008. All rights reserved.
