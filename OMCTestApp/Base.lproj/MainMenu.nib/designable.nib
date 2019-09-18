@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="14865.1" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="14868" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
         <deployment version="101300" identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="14865.1"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="14868"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="NSApplication">
@@ -14,10 +14,10 @@
         <customObject id="-3" userLabel="Application" customClass="NSObject"/>
         <menu title="AMainMenu" systemMenu="main" id="29" userLabel="MainMenu">
             <items>
-                <menuItem title="NewApplication" id="56">
-                    <menu key="submenu" title="NewApplication" systemMenu="apple" id="57">
+                <menuItem title="Test App" id="56">
+                    <menu key="submenu" title="Test App" systemMenu="apple" id="57">
                         <items>
-                            <menuItem title="About Cocoa Executor" id="58">
+                            <menuItem title="About Test App" id="58">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="orderFrontStandardAboutPanel:" target="-2" id="142"/>
@@ -36,7 +36,7 @@
                             <menuItem isSeparatorItem="YES" id="144">
                                 <modifierMask key="keyEquivalentModifierMask" command="YES"/>
                             </menuItem>
-                            <menuItem title="Hide Cocoa Executor" keyEquivalent="h" id="134">
+                            <menuItem title="Hide Test App" keyEquivalent="h" id="134">
                                 <connections>
                                     <action selector="hide:" target="-1" id="367"/>
                                 </connections>
@@ -55,7 +55,7 @@
                             <menuItem isSeparatorItem="YES" id="149">
                                 <modifierMask key="keyEquivalentModifierMask" command="YES"/>
                             </menuItem>
-                            <menuItem title="Quit Cocoa Executor" keyEquivalent="q" id="136">
+                            <menuItem title="Quit Test App" keyEquivalent="q" id="136">
                                 <connections>
                                     <action selector="terminate:" target="-1" id="369"/>
                                 </connections>
@@ -283,8 +283,8 @@
                         </items>
                     </menu>
                 </menuItem>
-                <menuItem title="Test" id="382">
-                    <menu key="submenu" title="Test" id="383">
+                <menuItem title="OMC Menu Items" id="382">
+                    <menu key="submenu" title="OMC Menu Items" id="383">
                         <items>
                             <menuItem title="Test Cocoa Dialog" id="406" customClass="OMCMenuItem">
                                 <userDefinedRuntimeAttributes>
@@ -347,14 +347,14 @@
                 <menuItem title="Help" id="103">
                     <menu key="submenu" title="Help" id="429">
                         <items>
-                            <menuItem title="NewApplication Help" keyEquivalent="?" id="430"/>
+                            <menuItem title="Test App Help" keyEquivalent="?" id="430"/>
                         </items>
                     </menu>
                 </menuItem>
             </items>
             <point key="canvasLocation" x="132" y="153"/>
         </menu>
-        <customObject id="375" customClass="CocoaExecutorController"/>
+        <customObject id="375" customClass="OMCTestAppController"/>
         <customObject id="401" customClass="OMCMainMenuController">
             <userDefinedRuntimeAttributes>
                 <userDefinedRuntimeAttribute type="string" keyPath="commandFilePath" value="Command.plist"/>

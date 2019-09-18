@@ -1,27 +1,27 @@
 //
-//  CocoaExecutor.m
-//  CocoaExecutor
+//  OMCTestApp.m
+//  OMCTestApp
 //
 //  Created by Tomasz Kukielka on 1/2/08.
 //  Copyright 2008 Abracode. All rights reserved.
 //
 
-#import "CocoaExecutor.h"
+#import "OMCTestApp.h"
 
-void CocoaExecutorObserverCallback( OmcObserverMessage inMessage, CFIndex inTaskID, CFTypeRef inResult, void *userData )
+void OMCTestAppObserverCallback( OmcObserverMessage inMessage, CFIndex inTaskID, CFTypeRef inResult, void *userData )
 {
 	if(userData == NULL)
 		return;
 	
 	id objcObject = (id)userData;
-	if( [objcObject isKindOfClass:[CocoaExecutorController class] ] )
+	if( [objcObject isKindOfClass:[OMCTestAppController class] ] )
 	{
-		CocoaExecutorController *cocoaController = (CocoaExecutorController *)objcObject;
+		OMCTestAppController *cocoaController = (OMCTestAppController *)objcObject;
 		[cocoaController receiveObserverMessage:inMessage forTaskId:inTaskID withData:inResult];
 	}
 }
 
-@implementation CocoaExecutorController
+@implementation OMCTestAppController
 
 - (id)init
 {
@@ -160,7 +160,7 @@ void CocoaExecutorObserverCallback( OmcObserverMessage inMessage, CFIndex inTask
 				{
 					if(mObserver == NULL)
 					{
-						mObserver = OMCCreateObserver( kOmcObserverAllMessages, CocoaExecutorObserverCallback, (void *)self );
+						mObserver = OMCCreateObserver( kOmcObserverAllMessages, OMCTestAppObserverCallback, (void *)self );
 						OMCAddObserver( omcExec, mObserver );
 					}
 					OSStatus error = OMCExecuteCommand( omcExec, commandRef );

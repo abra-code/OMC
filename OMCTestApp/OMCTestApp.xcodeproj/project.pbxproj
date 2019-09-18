@@ -25,7 +25,7 @@
 		E29A6A750D9CDA08006A97B0 /* Example1.nib in Resources */ = {isa = PBXBuildFile; fileRef = E29A6A730D9CDA08006A97B0 /* Example1.nib */; };
 		E29A6A9D0D9CDE80006A97B0 /* WebKit.nib in Resources */ = {isa = PBXBuildFile; fileRef = E29A6A9B0D9CDE80006A97B0 /* WebKit.nib */; };
 		E29B53360D56D0A600F00B4A /* ForOutputObserver.plist in Resources */ = {isa = PBXBuildFile; fileRef = E29B53350D56D0A600F00B4A /* ForOutputObserver.plist */; };
-		E2C32C3F0D2CB64B0023DA03 /* CocoaExecutor.m in Sources */ = {isa = PBXBuildFile; fileRef = E2C32C3E0D2CB64B0023DA03 /* CocoaExecutor.m */; };
+		E2C32C3F0D2CB64B0023DA03 /* OMCTestApp.m in Sources */ = {isa = PBXBuildFile; fileRef = E2C32C3E0D2CB64B0023DA03 /* OMCTestApp.m */; };
 		E2C32C6A0D2CBB860023DA03 /* Example.plist in Resources */ = {isa = PBXBuildFile; fileRef = E2C32C690D2CBB860023DA03 /* Example.plist */; };
 		E2C32C880D2CC6530023DA03 /* gzip.plist in Resources */ = {isa = PBXBuildFile; fileRef = E2C32C870D2CC6530023DA03 /* gzip.plist */; };
 		E2D16BBA0D484DED007E81CD /* Ls Browser.omc in Resources */ = {isa = PBXBuildFile; fileRef = E2D16BB00D484DED007E81CD /* Ls Browser.omc */; };
@@ -53,7 +53,7 @@
 		1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		13E42FB307B3F0F600E4EEF1 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = /System/Library/Frameworks/CoreData.framework; sourceTree = "<absolute>"; };
 		1D57B6812320F6AD00FAF9CB /* executor.test.exe.script.file.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = executor.test.exe.script.file.sh; sourceTree = "<group>"; };
-		1D7618BD231CEE08005F4AEB /* CocoaExecutor.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = CocoaExecutor.entitlements; sourceTree = "<group>"; };
+		1D7618BD231CEE08005F4AEB /* OMCTestApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = OMCTestApp.entitlements; sourceTree = "<group>"; };
 		1DB9D8BE2324BDB5003F6849 /* executor.test.javascript.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; path = executor.test.javascript.js; sourceTree = "<group>"; };
 		1DB9D8C12324D656003F6849 /* executor.test.AppleScript.applescript */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.applescript; path = executor.test.AppleScript.applescript; sourceTree = "<group>"; };
 		1DC95F062309566F0095B2AF /* AbracodeFrameworkVersion.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = AbracodeFrameworkVersion.c; path = Abracode.framework/Versions/A/Headers/AbracodeFrameworkVersion.c; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -67,16 +67,16 @@
 		29B97316FDCFA39411CA2CEA /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		29B97324FDCFA39411CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		29B97325FDCFA39411CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
-		32CA4F630368D1EE00C91783 /* CocoaExecutor_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CocoaExecutor_Prefix.pch; sourceTree = "<group>"; };
+		32CA4F630368D1EE00C91783 /* OMCTestApp_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCTestApp_Prefix.pch; sourceTree = "<group>"; };
 		8D1107310486CEB800E47090 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		8D1107320486CEB800E47090 /* CocoaExecutor.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CocoaExecutor.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		8D1107320486CEB800E47090 /* OMCTestApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OMCTestApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E211D27D0D3F1E950065C23A /* TextContext.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = TextContext.plist; sourceTree = SOURCE_ROOT; };
 		E23C1AD410DE047300B2E8A1 /* OmcProjectCommon.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = OmcProjectCommon.xcconfig; path = ../Common/OmcProjectCommon.xcconfig; sourceTree = SOURCE_ROOT; };
 		E24DB4740DA0B06000F53AB5 /* Command.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Command.plist; sourceTree = SOURCE_ROOT; };
 		E29B53350D56D0A600F00B4A /* ForOutputObserver.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = ForOutputObserver.plist; sourceTree = SOURCE_ROOT; };
 		E2C32C370D2CB56B0023DA03 /* Abracode.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Abracode.framework; path = /Library/Frameworks/Abracode.framework; sourceTree = "<absolute>"; };
-		E2C32C3D0D2CB64B0023DA03 /* CocoaExecutor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CocoaExecutor.h; sourceTree = "<group>"; };
-		E2C32C3E0D2CB64B0023DA03 /* CocoaExecutor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CocoaExecutor.m; sourceTree = "<group>"; };
+		E2C32C3D0D2CB64B0023DA03 /* OMCTestApp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCTestApp.h; sourceTree = "<group>"; };
+		E2C32C3E0D2CB64B0023DA03 /* OMCTestApp.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMCTestApp.m; sourceTree = "<group>"; };
 		E2C32C690D2CBB860023DA03 /* Example.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Example.plist; sourceTree = SOURCE_ROOT; };
 		E2C32C870D2CC6530023DA03 /* gzip.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = gzip.plist; sourceTree = SOURCE_ROOT; };
 		E2D16BB00D484DED007E81CD /* Ls Browser.omc */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "Ls Browser.omc"; sourceTree = SOURCE_ROOT; };
@@ -120,32 +120,32 @@
 		19C28FACFE9D520D11CA2CBB /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				8D1107320486CEB800E47090 /* CocoaExecutor.app */,
+				8D1107320486CEB800E47090 /* OMCTestApp.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		29B97314FDCFA39411CA2CEA /* CocoaExecutor */ = {
+		29B97314FDCFA39411CA2CEA /* OMCTestApp */ = {
 			isa = PBXGroup;
 			children = (
-				1D7618BD231CEE08005F4AEB /* CocoaExecutor.entitlements */,
+				1D7618BD231CEE08005F4AEB /* OMCTestApp.entitlements */,
 				E23C1AD410DE047300B2E8A1 /* OmcProjectCommon.xcconfig */,
 				29B97315FDCFA39411CA2CEA /* Other Sources */,
 				29B97317FDCFA39411CA2CEA /* Resources */,
 				29B97323FDCFA39411CA2CEA /* Frameworks */,
 				19C28FACFE9D520D11CA2CBB /* Products */,
 			);
-			name = CocoaExecutor;
+			name = OMCTestApp;
 			sourceTree = "<group>";
 		};
 		29B97315FDCFA39411CA2CEA /* Other Sources */ = {
 			isa = PBXGroup;
 			children = (
-				32CA4F630368D1EE00C91783 /* CocoaExecutor_Prefix.pch */,
+				32CA4F630368D1EE00C91783 /* OMCTestApp_Prefix.pch */,
 				1DC95F062309566F0095B2AF /* AbracodeFrameworkVersion.c */,
 				29B97316FDCFA39411CA2CEA /* main.m */,
-				E2C32C3D0D2CB64B0023DA03 /* CocoaExecutor.h */,
-				E2C32C3E0D2CB64B0023DA03 /* CocoaExecutor.m */,
+				E2C32C3D0D2CB64B0023DA03 /* OMCTestApp.h */,
+				E2C32C3E0D2CB64B0023DA03 /* OMCTestApp.m */,
 			);
 			name = "Other Sources";
 			sourceTree = "<group>";
@@ -189,9 +189,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		8D1107260486CEB800E47090 /* CocoaExecutor */ = {
+		8D1107260486CEB800E47090 /* OMCTestApp */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = C01FCF4A08A954540054247B /* Build configuration list for PBXNativeTarget "CocoaExecutor" */;
+			buildConfigurationList = C01FCF4A08A954540054247B /* Build configuration list for PBXNativeTarget "OMCTestApp" */;
 			buildPhases = (
 				8D1107290486CEB800E47090 /* Resources */,
 				8D11072C0486CEB800E47090 /* Sources */,
@@ -202,10 +202,10 @@
 			);
 			dependencies = (
 			);
-			name = CocoaExecutor;
+			name = OMCTestApp;
 			productInstallPath = "$(HOME)/Applications";
-			productName = CocoaExecutor;
-			productReference = 8D1107320486CEB800E47090 /* CocoaExecutor.app */;
+			productName = OMCTestApp;
+			productReference = 8D1107320486CEB800E47090 /* OMCTestApp.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -216,7 +216,7 @@
 			attributes = {
 				LastUpgradeCheck = 1100;
 			};
-			buildConfigurationList = C01FCF4E08A954540054247B /* Build configuration list for PBXProject "CocoaExecutor" */;
+			buildConfigurationList = C01FCF4E08A954540054247B /* Build configuration list for PBXProject "OMCTestApp" */;
 			compatibilityVersion = "Xcode 10.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 1;
@@ -224,11 +224,11 @@
 				Base,
 				en,
 			);
-			mainGroup = 29B97314FDCFA39411CA2CEA /* CocoaExecutor */;
+			mainGroup = 29B97314FDCFA39411CA2CEA /* OMCTestApp */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				8D1107260486CEB800E47090 /* CocoaExecutor */,
+				8D1107260486CEB800E47090 /* OMCTestApp */,
 			);
 		};
 /* End PBXProject section */
@@ -267,7 +267,7 @@
 				1DB9D8C22324D656003F6849 /* executor.test.AppleScript.applescript in Sources */,
 				1DC95F072309566F0095B2AF /* AbracodeFrameworkVersion.c in Sources */,
 				8D11072D0486CEB800E47090 /* main.m in Sources */,
-				E2C32C3F0D2CB64B0023DA03 /* CocoaExecutor.m in Sources */,
+				E2C32C3F0D2CB64B0023DA03 /* OMCTestApp.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -336,13 +336,13 @@
 		C01FCF4B08A954540054247B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = CocoaExecutor.entitlements;
+				CODE_SIGN_ENTITLEMENTS = OMCTestApp.entitlements;
 				COPY_PHASE_STRIP = NO;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(LOCAL_LIBRARY_DIR)/Frameworks",
 				);
-				GCC_PREFIX_HEADER = CocoaExecutor_Prefix.pch;
+				GCC_PREFIX_HEADER = OMCTestApp_Prefix.pch;
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "$(HOME)/Applications";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -350,8 +350,8 @@
 					"@loader_path/../../../Frameworks",
 					/Library/Frameworks,
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.abracode.CocoaExecutor;
-				PRODUCT_NAME = CocoaExecutor;
+				PRODUCT_BUNDLE_IDENTIFIER = com.abracode.OMCTestApp;
+				PRODUCT_NAME = OMCTestApp;
 				WRAPPER_EXTENSION = app;
 			};
 			name = Debug;
@@ -359,12 +359,12 @@
 		C01FCF4C08A954540054247B /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = CocoaExecutor.entitlements;
+				CODE_SIGN_ENTITLEMENTS = OMCTestApp.entitlements;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(LOCAL_LIBRARY_DIR)/Frameworks",
 				);
-				GCC_PREFIX_HEADER = CocoaExecutor_Prefix.pch;
+				GCC_PREFIX_HEADER = OMCTestApp_Prefix.pch;
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "$(HOME)/Applications";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -372,8 +372,8 @@
 					"@loader_path/../../../Frameworks",
 					/Library/Frameworks,
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.abracode.CocoaExecutor;
-				PRODUCT_NAME = CocoaExecutor;
+				PRODUCT_BUNDLE_IDENTIFIER = com.abracode.OMCTestApp;
+				PRODUCT_NAME = OMCTestApp;
 				WRAPPER_EXTENSION = app;
 			};
 			name = Release;
@@ -460,7 +460,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		C01FCF4A08A954540054247B /* Build configuration list for PBXNativeTarget "CocoaExecutor" */ = {
+		C01FCF4A08A954540054247B /* Build configuration list for PBXNativeTarget "OMCTestApp" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				C01FCF4B08A954540054247B /* Debug */,
@@ -469,7 +469,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		C01FCF4E08A954540054247B /* Build configuration list for PBXProject "CocoaExecutor" */ = {
+		C01FCF4E08A954540054247B /* Build configuration list for PBXProject "OMCTestApp" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				C01FCF4F08A954540054247B /* Debug */,

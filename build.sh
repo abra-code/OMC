@@ -85,8 +85,8 @@ echo "OnMyCommandCM";
 xcodebuild -project OnMyCommandCM/OnMyCommandCM.xcodeproj -alltargets -configuration $BUILD_CONFIG $IN_ACTION 2>&1 | grep -e "BUILD" | awk '{if ($0 ~ /.*FAIL.*/) printf "\033[1;31m"$0"\033[0m\n"; else printf $0"\n";}';
 echo ""
 
-echo "CocoaExecutor";
-xcodebuild -project CocoaExecutor/CocoaExecutor.xcodeproj -alltargets -configuration $BUILD_CONFIG $IN_ACTION 2>&1 | grep -e "BUILD" | awk '{if ($0 ~ /.*FAIL.*/) printf "\033[1;31m"$0"\033[0m\n"; else printf $0"\n";}';
+echo "OMCTestApp";
+xcodebuild -project OMCTestApp/OMCTestApp.xcodeproj -alltargets -configuration $BUILD_CONFIG $IN_ACTION 2>&1 | grep -e "BUILD" | awk '{if ($0 ~ /.*FAIL.*/) printf "\033[1;31m"$0"\033[0m\n"; else printf $0"\n";}';
 echo ""
 
 #echo "OMCEdit";

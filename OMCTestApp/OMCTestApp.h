@@ -1,6 +1,6 @@
 //
-//  CocoaExecutor.h
-//  CocoaExecutor
+//  OMCTestApp.h
+//  OMCTestApp
 //
 //  Created by Tomasz Kukielka on 1/2/08.
 //  Copyright 2008 Abracode. All rights reserved.
@@ -9,7 +9,7 @@
 #import <Cocoa/Cocoa.h>
 #include <Abracode/OMC.h>
 
-@interface CocoaExecutorController : NSObject
+@interface OMCTestAppController : NSObject
 {
 	OMCObserverRef	mObserver;
 }

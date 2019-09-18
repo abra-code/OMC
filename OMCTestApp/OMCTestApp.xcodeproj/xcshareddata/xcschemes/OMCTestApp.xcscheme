@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "8D1107260486CEB800E47090"
-               BuildableName = "CocoaExecutor.app"
-               BlueprintName = "CocoaExecutor"
-               ReferencedContainer = "container:CocoaExecutor.xcodeproj">
+               BuildableName = "OMCTestApp.app"
+               BlueprintName = "OMCTestApp"
+               ReferencedContainer = "container:OMCTestApp.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -31,9 +31,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "8D1107260486CEB800E47090"
-            BuildableName = "CocoaExecutor.app"
-            BlueprintName = "CocoaExecutor"
-            ReferencedContainer = "container:CocoaExecutor.xcodeproj">
+            BuildableName = "OMCTestApp.app"
+            BlueprintName = "OMCTestApp"
+            ReferencedContainer = "container:OMCTestApp.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
       <Testables>
@@ -56,9 +56,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "8D1107260486CEB800E47090"
-            BuildableName = "CocoaExecutor.app"
-            BlueprintName = "CocoaExecutor"
-            ReferencedContainer = "container:CocoaExecutor.xcodeproj">
+            BuildableName = "OMCTestApp.app"
+            BlueprintName = "OMCTestApp"
+            ReferencedContainer = "container:OMCTestApp.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
       <AdditionalOptions>
@@ -90,9 +90,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "8D1107260486CEB800E47090"
-            BuildableName = "CocoaExecutor.app"
-            BlueprintName = "CocoaExecutor"
-            ReferencedContainer = "container:CocoaExecutor.xcodeproj">
+            BuildableName = "OMCTestApp.app"
+            BlueprintName = "OMCTestApp"
+            ReferencedContainer = "container:OMCTestApp.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

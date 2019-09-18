@@ -1,6 +1,6 @@
 //
 //  main.m
-//  CocoaExecutor
+//  OMCTestApp
 //
 //  Copyright Abracode 2008. All rights reserved.
 //

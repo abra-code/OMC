@@ -122,11 +122,6 @@ static NSMutableDictionary *sCachedPlists = NULL;
 
 			if( error == noErr )
 			{
-				//	if(mObserver == NULL)
-				//	{
-				//		mObserver = OMCCreateObserver( kOmcObserverAllMessages, CocoaExecutorObserverCallback, (void *)self );
-				//		OMCAddObserver( omcExec, mObserver );
-				//	}
 				error = OMCExecuteCommand( omcExec, commandRef );
 				if(error != noErr)
 				{
