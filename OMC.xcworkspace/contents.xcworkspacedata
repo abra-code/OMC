@@ -35,9 +35,9 @@
       location = "group:OMCService/OMCService.xcodeproj">
    </FileRef>
    <FileRef
-      location = "group:OnMyCommand/OnMyCommandCM.xcodeproj">
+      location = "group:OMCApplet/OMCApplet.xcodeproj">
    </FileRef>
    <FileRef
-      location = "group:OMCApplet/OMCApplet.xcodeproj">
+      location = "group:OnMyCommandCM/OnMyCommandCM.xcodeproj">
    </FileRef>
 </Workspace>

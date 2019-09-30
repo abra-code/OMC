@@ -209,6 +209,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = OMCService_Prefix.pch;
 				INFOPLIST_FILE = "OMCService-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = /Library/Frameworks;
 				PRODUCT_BUNDLE_IDENTIFIER = com.abracode.OMCService;
 				PRODUCT_NAME = OMCService;
 				SYMROOT = ../build;
@@ -220,10 +221,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = OMCService.entitlements;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = OMCService_Prefix.pch;
 				INFOPLIST_FILE = "OMCService-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = /Library/Frameworks;
 				PRODUCT_BUNDLE_IDENTIFIER = com.abracode.OMCService;
 				PRODUCT_NAME = OMCService;
 				SYMROOT = ../build;

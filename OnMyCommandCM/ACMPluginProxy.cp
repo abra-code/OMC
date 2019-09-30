@@ -23,11 +23,7 @@
 
 //main entry point to the plugin's bundle code
 //this is the only function being exported and it is the one specified in plugin's bundle Info.plist
-
-#pragma export on
 extern "C" void * ACMPluginFactory( CFAllocatorRef allocator, CFUUIDRef typeID );
-#pragma export reset
-
 
 void * CreateACMPluginProxy();
 

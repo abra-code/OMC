@@ -247,6 +247,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				INFOPLIST_FILE = ../Common/OmcTool_Info.plist;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.abracode.omc-dialog-control";
 				PRODUCT_NAME = omc_dialog_control;
@@ -323,7 +324,6 @@
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_ENABLE_CPP_EXCEPTIONS = NO;
 				GCC_ENABLE_CPP_RTTI = NO;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"_DEBUG_=0",

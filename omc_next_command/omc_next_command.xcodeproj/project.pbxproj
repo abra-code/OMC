@@ -146,7 +146,6 @@
 			buildSettings = {
 				COPY_PHASE_STRIP = NO;
 				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				INFOPLIST_FILE = ../Common/OmcTool_Info.plist;
 				INSTALL_PATH = /usr/local/bin;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.abracode.omc-next-command";
@@ -159,7 +158,7 @@
 			buildSettings = {
 				COPY_PHASE_STRIP = YES;
 				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				INFOPLIST_FILE = ../Common/OmcTool_Info.plist;
 				INSTALL_PATH = /usr/local/bin;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.abracode.omc-next-command";
@@ -233,7 +232,6 @@
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_ENABLE_CPP_EXCEPTIONS = NO;
 				GCC_ENABLE_CPP_RTTI = NO;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"_DEBUG_=0",
