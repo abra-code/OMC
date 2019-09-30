@@ -2212,28 +2212,24 @@ OnMyCommandCM::PopulateItemsMenu( const AEDesc *inContext, AEDescList* ioRootMen
 {
 	TRACE_CSTR("OnMyCommandCM. PopulateItemsMenu\n" );
 
-	if( mCommandList == NULL )
+	if( mCommandList == nullptr )
 		return false;
 
 //	OSStatus err = noErr;
 	bool doActivate = false;
-	CFStringRef submenuName = NULL;
+	CFStringRef submenuName = nullptr;
 	
 	SubmenuTree itemTree(ioRootMenu);
 	
-	CFObj<CFStringRef> defaultMenuName( ::CFCopyLocalizedStringFromTableInBundle( CFSTR("/On My Command"), 
-																CFSTR("Private"), mBundleRef, "") );
 	CFStringRef rootMenuName = CFSTR("/");
-
 	CFStringRef currAppName = mMyHostAppName;
 	bool skipFinderWindowCheck = false;
-	if( runningInSpecialApp )
+	if(runningInSpecialApp)
 	{
 		currAppName = inFrontAppName;//currAppName != NULL: ShortcutObserver case, use front app
-		if(currAppName == NULL)//Shortcuts case - always show
+		if(currAppName == nullptr)//Shortcuts case - always show
 			skipFinderWindowCheck = true;
 	}
-	
 	
 	for(UInt32 i = 0; i < mCommandCount; i++)
 	{
@@ -2247,9 +2243,9 @@ OnMyCommandCM::PopulateItemsMenu( const AEDesc *inContext, AEDescList* ioRootMen
 		if(doActivate)
 		{	
 			CFObj<CFMutableStringRef> subPath;
-			if(currCommand.submenuName == NULL)
+			if(currCommand.submenuName == nullptr)
 			{
-				submenuName = defaultMenuName;
+				submenuName = rootMenuName;
 			}
 			else
 			{
@@ -2269,11 +2265,10 @@ OnMyCommandCM::PopulateItemsMenu( const AEDesc *inContext, AEDescList* ioRootMen
 						firstChar = (UniChar)'/';
 					}
 				}
-				
-				if(firstChar != (UniChar)'/')
+				else if(firstChar != (UniChar)'/')
 				{
 					CFMutableStringRef newName = ::CFStringCreateMutable( kCFAllocatorDefault, 0);
-					if(newName != NULL)
+					if(newName != nullptr)
 					{
 						subPath.Adopt(newName);
 						
@@ -2296,11 +2291,11 @@ OnMyCommandCM::PopulateItemsMenu( const AEDesc *inContext, AEDescList* ioRootMen
 					CreateTextContext(currCommand, inContext);//load context text now
 			}
 			
-			CFBundleRef localizationBundle = NULL;
-			if(currCommand.localizationTableName != NULL)//client wants to be localized
+			CFBundleRef localizationBundle = nullptr;
+			if(currCommand.localizationTableName != nullptr)//client wants to be localized
 			{
 				localizationBundle = GetCurrentCommandExternBundle();
-				if(localizationBundle == NULL)
+				if(localizationBundle == nullptr)
 					localizationBundle = CFBundleGetMainBundle();
 			}
 
