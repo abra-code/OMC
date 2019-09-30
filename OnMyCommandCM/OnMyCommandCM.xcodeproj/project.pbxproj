@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 45;
+	objectVersion = 51;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -20,6 +20,7 @@
 		0AA1909FFE8422F4C02AAC07 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = /System/Library/Frameworks/CoreFoundation.framework; sourceTree = "<absolute>"; };
 		1D3BB166229BEB5900542933 /* AUniquePtr.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AUniquePtr.h; sourceTree = "<group>"; };
 		1DCFB252231FAE8100D1C62E /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		1DD1AB232341DB1700ECFC14 /* OnMyCommandCM.exp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.exports; path = OnMyCommandCM.exp; sourceTree = "<group>"; };
 		1DED8E4F2222AF8D00A2CAF7 /* AObserver.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AObserver.h; sourceTree = "<group>"; };
 		1DED8E502222AFA800A2CAF7 /* ACMPlugin.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ACMPlugin.h; sourceTree = "<group>"; };
 		1DED8E512222AFEA00A2CAF7 /* DebugSettings.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DebugSettings.h; sourceTree = "<group>"; };
@@ -60,6 +61,7 @@
 			children = (
 				08FB77AFFE84173DC02AAC07 /* Source */,
 				089C167CFE841241C02AAC07 /* Resources */,
+				1DD1AB232341DB1700ECFC14 /* OnMyCommandCM.exp */,
 				E2269B9D0EB6DBF90029CCF5 /* OmcProjectCommon.xcconfig */,
 				089C1671FE841209C02AAC07 /* External Frameworks and Libraries */,
 				19C28FB6FE9D52B211CA2CBB /* Products */,
@@ -167,7 +169,7 @@
 				ORGANIZATIONNAME = Abracode;
 			};
 			buildConfigurationList = E281018B0864959E006192E8 /* Build configuration list for PBXProject "OnMyCommandCM" */;
-			compatibilityVersion = "Xcode 3.1";
+			compatibilityVersion = "Xcode 10.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 1;
 			knownRegions = (
@@ -242,8 +244,11 @@
 			buildSettings = {
 				COPY_PHASE_STRIP = NO;
 				DEPLOYMENT_POSTPROCESSING = YES;
+				EXPORTED_SYMBOLS_FILE = OnMyCommandCM.exp;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				INFOPLIST_FILE = "Info-OnMyCommandCM.plist";
+				INSTALL_PATH = "/Library/Contextual Menu Items";
+				LD_RUNPATH_SEARCH_PATHS = /Library/Frameworks;
 				PRODUCT_BUNDLE_IDENTIFIER = com.abracode.OnMyCommandCM;
 				PRODUCT_NAME = OnMyCommandCM;
 				WRAPPER_EXTENSION = plugin;
@@ -256,8 +261,11 @@
 				COPY_PHASE_STRIP = YES;
 				DEBUGGING_SYMBOLS = NO;
 				DEPLOYMENT_POSTPROCESSING = YES;
+				EXPORTED_SYMBOLS_FILE = OnMyCommandCM.exp;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
 				INFOPLIST_FILE = "Info-OnMyCommandCM.plist";
+				INSTALL_PATH = "/Library/Contextual Menu Items";
+				LD_RUNPATH_SEARCH_PATHS = /Library/Frameworks;
 				PRODUCT_BUNDLE_IDENTIFIER = com.abracode.OnMyCommandCM;
 				PRODUCT_NAME = OnMyCommandCM;
 				WRAPPER_EXTENSION = plugin;
