@@ -816,6 +816,7 @@ FindArgumentType(const char *argTypeStr)
 	}
 }
 
+//TODO: this method could use some serious refactoring to eliminate duplicate code
 - (void) setControlValues:(CFDictionaryRef)inControlDict
 {
 	if( inControlDict == NULL )
@@ -861,6 +862,60 @@ FindArgumentType(const char *argTypeStr)
 		}
 	}
 
+	//"set" operation replaces existing list items
+	CFDictionaryRef setListItemsDict;
+	if( controlValues.GetValue(CFSTR("SET_LIST_ITEMS"), setListItemsDict) )
+	{
+		itemCount = ::CFDictionaryGetCount(setListItemsDict);
+		if(itemCount > 0)
+		{
+			std::vector<CFTypeRef> keyList(itemCount);
+			std::vector<CFTypeRef> valueList(itemCount);
+
+			::CFDictionaryGetKeysAndValues(setListItemsDict, (const void **)keyList.data(), (const void **)valueList.data());
+			for(CFIndex i = 0; i < itemCount; i++)
+			{
+				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
+				CFArrayRef theArr = ACFType<CFArrayRef>::DynamicCast( valueList[i] );
+				if( (controlID != NULL) && (theArr != NULL) )
+				{
+					id controlOrView = [self findControlOrViewWithID:(NSString*)controlID];
+					if( controlOrView != NULL )
+					{
+						CFIndex itemCount = ::CFArrayGetCount(theArr);
+						if( [controlOrView isKindOfClass:[NSPopUpButton class]] )
+						{
+							NSPopUpButton *myPopupButton = (NSPopUpButton *)controlOrView;
+							[myPopupButton removeAllItems];
+							
+							for(CFIndex i = 0; i < itemCount; i++)
+							{
+								CFTypeRef oneItem = ::CFArrayGetValueAtIndex(theArr,i);
+								CFStringRef oneString = ACFType<CFStringRef>::DynamicCast( oneItem );
+								if(oneString != NULL)
+									[myPopupButton addItemWithTitle:(NSString *)oneString];
+							}
+						}
+						else if( [controlOrView isKindOfClass:[NSComboBox class]] )
+						{
+							NSComboBox *myCombo = (NSComboBox *)controlOrView;
+							[myCombo removeAllItems];
+							
+							for(CFIndex i = 0; i < itemCount; i++)
+							{
+								CFTypeRef oneItem = ::CFArrayGetValueAtIndex(theArr,i);
+								CFStringRef oneString = ACFType<CFStringRef>::DynamicCast( oneItem );
+								if(oneString != NULL)
+									[myCombo addItemWithObjectValue:(NSString *)oneString];
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	//"append" operation preserving existing list items
 	CFDictionaryRef appendListItemsDict;
 	if( controlValues.GetValue(CFSTR("APPEND_LIST_ITEMS"), appendListItemsDict) )
 	{
@@ -942,6 +997,7 @@ FindArgumentType(const char *argTypeStr)
 		}
 	}
 
+	//empty the table and refresh
 	CFDictionaryRef removeTableRowsDict;
 	if( controlValues.GetValue(CFSTR("REMOVE_TABLE_ROWS"), removeTableRowsDict) )
 	{
@@ -973,6 +1029,41 @@ FindArgumentType(const char *argTypeStr)
 		}
 	}
 
+	//"set" operation replaces existing content and refreshes
+	CFDictionaryRef setTableRowsDict;
+	if( controlValues.GetValue(CFSTR("SET_TABLE_ROWS"), setTableRowsDict) )
+	{
+		itemCount = ::CFDictionaryGetCount(setTableRowsDict);
+		if(itemCount > 0)
+		{
+			std::vector<CFTypeRef> keyList(itemCount);
+			std::vector<CFTypeRef> valueList(itemCount);
+
+			::CFDictionaryGetKeysAndValues(setTableRowsDict, (const void **)keyList.data(), (const void **)valueList.data());
+			for(CFIndex i = 0; i < itemCount; i++)
+			{
+				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
+				CFArrayRef theArr = ACFType<CFArrayRef>::DynamicCast( valueList[i] );
+				if( (controlID != NULL) && (theArr != NULL) )
+				{
+					id controlOrView = [self findControlOrViewWithID:(NSString*)controlID];
+					if( (controlOrView != nil) && [controlOrView isKindOfClass:[NSTableView class]] )
+					{
+						NSTableView *myTable = (NSTableView *)controlOrView;
+						id myDelegate = [myTable delegate];
+						if( (myDelegate != nil) && [myDelegate isKindOfClass:[OMCTableViewController class]] )
+						{
+							[myDelegate removeRows];
+							[myDelegate addRows:theArr];
+							[myDelegate reloadData];
+						}
+					}
+				}
+			}
+		}
+	}
+
+	//this is "append" operation
 	CFDictionaryRef addTableRowsDict;
 	if( controlValues.GetValue(CFSTR("ADD_TABLE_ROWS"), addTableRowsDict) )
 	{
