@@ -9,7 +9,7 @@
 #import <Cocoa/Cocoa.h>
 
 IB_DESIGNABLE
-@interface OMCSingleCommand : NSObject
+@interface OMCSingleCommand : NSObject <NSCoding>
 {
 	NSString *	_commandFilePath;
 }

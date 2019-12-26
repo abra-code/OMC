@@ -163,15 +163,10 @@ FindArgumentType(const char *argTypeStr)
 		CFObj<CFURLRef> bundleURL( CFBundleCopyBundleURL( mExternBundleRef ) );
 		if(bundleURL != NULL)
 		{
-			CFObj<CFStringRef> absolutePath;
-			CFObj<CFURLRef> absoluteURL( CFURLCopyAbsoluteURL(bundleURL) );
-			if(absoluteURL != NULL)
+			CFObj<CFStringRef> absolutePath = CreatePathFromCFURL(bundleURL, kEscapeNone);
+			if(absolutePath != NULL)
 			{
-				absolutePath.Adopt( ::CFURLCopyFileSystemPath(absoluteURL, kCFURLPOSIXPathStyle) );
-				if(absolutePath != NULL)
-				{
-					[self findNib:(NSString *)dialogNibName forBundlePath:(NSString *)(CFStringRef)absolutePath];
-				}
+				[self findNib:(NSString *)dialogNibName forBundlePath:(NSString *)(CFStringRef)absolutePath];
 			}
 		}
 	}
@@ -193,15 +188,10 @@ FindArgumentType(const char *argTypeStr)
 			CFObj<CFURLRef> bundleURL( CFBundleCopyBundleURL( frameworkBundleRef ) );
 			if(bundleURL != NULL)
 			{
-				CFObj<CFStringRef> absolutePath;
-				CFObj<CFURLRef> absoluteURL( CFURLCopyAbsoluteURL(bundleURL) );
-				if(absoluteURL != NULL)
+				CFObj<CFStringRef> absolutePath = CreatePathFromCFURL(bundleURL, kEscapeNone);
+				if(absolutePath != NULL)
 				{
-					absolutePath.Adopt( ::CFURLCopyFileSystemPath(absoluteURL, kCFURLPOSIXPathStyle) );
-					if(absolutePath != NULL)
-					{
-						[self findNib:(NSString *)dialogNibName forBundlePath:(NSString *)(CFStringRef)absolutePath];
-					}
+					[self findNib:(NSString *)dialogNibName forBundlePath:(NSString *)(CFStringRef)absolutePath];
 				}
 			}
 		}

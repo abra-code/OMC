@@ -24,6 +24,21 @@
     return self;
 }
 
+- (id)initWithCoder:(NSCoder *)coder
+{
+    self = [super init];
+	if(self == nil)
+		return nil;
+	self.commandFilePath = @"Command.plist";
+
+    return self;
+}
+
+- (void)encodeWithCoder:(nonnull NSCoder *)coder {
+}
+
+
+
 - (void)dealloc
 {
     self.commandID = nil;

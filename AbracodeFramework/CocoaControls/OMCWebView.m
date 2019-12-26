@@ -27,7 +27,7 @@
 }
 
 //legacy encoder/decoder support - custom control data no longer serialized into nibs
-//custom properties get set later on nib load by calling proprty setters
+//custom properties get set later on nib load by calling property setters
 
 - (id)initWithCoder:(NSCoder *)coder
 {

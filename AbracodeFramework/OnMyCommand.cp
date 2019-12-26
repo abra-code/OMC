@@ -408,11 +408,11 @@ OnMyCommandCM::InitOmcBundlePaths()
 	CFObj<CFURLRef> abracodeFrameworkBundleURL = CFBundleCopyBundleURL(mBundleRef);
 	if(abracodeFrameworkBundleURL != nullptr)
 	{
-		CFObj<CFURLRef> supportPathURL( CFURLCreateCopyAppendingPathComponent(
+		CFObj<CFURLRef> supportPathURL(CFURLCreateCopyAppendingPathComponent(
 									kCFAllocatorDefault,
 									abracodeFrameworkBundleURL,
 									CFSTR("Versions/Current/Support"),
-									true) );
+									true));
 		mOmcSupportPath.Adopt(CreatePathFromCFURL(supportPathURL, kEscapeNone), kCFObjDontRetain);
 	}
 
@@ -4861,7 +4861,8 @@ CreatePathFromCFURL(CFURLRef inPathURL, UInt16 escSpecialCharsMode)
 	if(inPathURL == nullptr)
 		return nullptr;
 
-	CFObj<CFStringRef> pathStr = CFURLCopyFileSystemPath(inPathURL, kCFURLPOSIXPathStyle);
+	CFObj<CFURLRef> absURL = CFURLCopyAbsoluteURL(inPathURL);
+	CFObj<CFStringRef> pathStr = CFURLCopyFileSystemPath(absURL, kCFURLPOSIXPathStyle);
 	CFObj<CFStringRef> escapedPathStr = CreateEscapedStringCopy(pathStr, escSpecialCharsMode);
 	return escapedPathStr.Detach();
 }
@@ -4872,7 +4873,8 @@ CreateParentPathFromCFURL(CFURLRef inPathURL, UInt16 escSpecialCharsMode)
 	if(inPathURL == nullptr)
 		return nullptr;
 
-	CFObj<CFURLRef> newURL = CFURLCreateCopyDeletingLastPathComponent(kCFAllocatorDefault, inPathURL);
+	CFObj<CFURLRef> absURL = CFURLCopyAbsoluteURL(inPathURL);
+	CFObj<CFURLRef> newURL = CFURLCreateCopyDeletingLastPathComponent(kCFAllocatorDefault, absURL);
 	CFObj<CFStringRef> pathStr = CFURLCopyFileSystemPath(newURL, kCFURLPOSIXPathStyle);
 	CFObj<CFStringRef> escapedPathStr = CreateEscapedStringCopy(pathStr, escSpecialCharsMode);
 	return escapedPathStr.Detach();
