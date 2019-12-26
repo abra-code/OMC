@@ -25,6 +25,8 @@
 		1D742DC5193882BB005DFF97 /* pasteboard in Copy Support Executables */ = {isa = PBXBuildFile; fileRef = 1D742DC219388292005DFF97 /* pasteboard */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		1D80B9BA22E447E800CF1AF5 /* OMCiTermExecutor.cp in Sources */ = {isa = PBXBuildFile; fileRef = 1D80B9B822E447E800CF1AF5 /* OMCiTermExecutor.cp */; };
 		1D80B9C222E447F900CF1AF5 /* OMCTerminalExecutor.cp in Sources */ = {isa = PBXBuildFile; fileRef = 1D80B9BF22E447F900CF1AF5 /* OMCTerminalExecutor.cp */; };
+		1D8189E923B45FAF00A13449 /* OMCGridView.m in Sources */ = {isa = PBXBuildFile; fileRef = 1D8189E723B45FAF00A13449 /* OMCGridView.m */; };
+		1D8189EA23B45FAF00A13449 /* OMCGridView.h in Headers */ = {isa = PBXBuildFile; fileRef = 1D8189E823B45FAF00A13449 /* OMCGridView.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		1D984C2923321D3400FF6967 /* AbracodeFrameworkVersion.c in Copy AbracodeFrameworkVersion.c to generated */ = {isa = PBXBuildFile; fileRef = E2ACB25712EADCB000A8ACF6 /* AbracodeFrameworkVersion.c */; };
 		1D9B1F5D21FF1572004704A7 /* OnMyCommand.cp in Sources */ = {isa = PBXBuildFile; fileRef = 1D9B1F5C21FF1572004704A7 /* OnMyCommand.cp */; };
 		1D9B1F6521FF191D004704A7 /* SubmenuTree.cp in Sources */ = {isa = PBXBuildFile; fileRef = 1D9B1F6321FF191D004704A7 /* SubmenuTree.cp */; };
@@ -234,6 +236,8 @@
 		1D80B9B922E447E800CF1AF5 /* OMCiTermExecutor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCiTermExecutor.h; sourceTree = "<group>"; };
 		1D80B9BE22E447F900CF1AF5 /* OMCTerminalExecutor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCTerminalExecutor.h; sourceTree = "<group>"; };
 		1D80B9BF22E447F900CF1AF5 /* OMCTerminalExecutor.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCTerminalExecutor.cp; sourceTree = "<group>"; };
+		1D8189E723B45FAF00A13449 /* OMCGridView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMCGridView.m; sourceTree = "<group>"; };
+		1D8189E823B45FAF00A13449 /* OMCGridView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCGridView.h; sourceTree = "<group>"; };
 		1D9B1F5821FF14AF004704A7 /* OMCStrings.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OMCStrings.h; sourceTree = "<group>"; };
 		1D9B1F5C21FF1572004704A7 /* OnMyCommand.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OnMyCommand.cp; sourceTree = "<group>"; };
 		1D9B1F6321FF191D004704A7 /* SubmenuTree.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SubmenuTree.cp; sourceTree = "<group>"; };
@@ -566,6 +570,8 @@
 				E2BB1E450E6F886200D2DDE5 /* OMCView.h */,
 				E2C8485D10D61C33002DFDB5 /* OMCBox.h */,
 				E2C8485E10D61C33002DFDB5 /* OMCBox.m */,
+				1D8189E823B45FAF00A13449 /* OMCGridView.h */,
+				1D8189E723B45FAF00A13449 /* OMCGridView.m */,
 				E23DC9630D9A2616009D2AD8 /* OMCWebView.m */,
 				E23DC95D0D9A2616009D2AD8 /* OMCWebView.h */,
 				E23DC9610D9A2616009D2AD8 /* OMCQTMovieView.m */,
@@ -768,6 +774,7 @@
 				E2C433470DEE72F700E976D2 /* PlistPreferences.h in Headers */,
 				E2C10C5E0E45783200454DB1 /* OMCDeferredProgress.h in Headers */,
 				E2BB1E490E6F886200D2DDE5 /* OMCView.h in Headers */,
+				1D8189EA23B45FAF00A13449 /* OMCGridView.h in Headers */,
 				E28181AE0EBC228C00E9652F /* OMCProgressWindowController.h in Headers */,
 				E2D92E551043D74E003DC96B /* OMCInputDialogController.h in Headers */,
 				E2D92E891043E0C2003DC96B /* OMCInputDialog.h in Headers */,
@@ -931,6 +938,7 @@
 				E2517C5A0D1BCC2700180C68 /* OMCTextField.m in Sources */,
 				E2517C5C0D1BCC2700180C68 /* OMCTextView.m in Sources */,
 				E2C32CB90D2DF99D0023DA03 /* OMCObserver.cpp in Sources */,
+				1D8189E923B45FAF00A13449 /* OMCGridView.m in Sources */,
 				E211D3C60D3F51010065C23A /* OMCCocoaNib.m in Sources */,
 				1DED3637232258A40086266F /* OMCScriptsManager.cpp in Sources */,
 				E211D4F80D4346BB0065C23A /* OMCDialogController.mm in Sources */,
