@@ -7,7 +7,7 @@
 	<key>CFBundleName</key>
 	<string>${PRODUCT_NAME}</string>
 	<key>CFBundleVersion</key>
-	<string>4.0</string>
+	<string>4.0.1</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>${MACOSX_DEPLOYMENT_TARGET}</string>
 	<key>NSPrincipalClass</key>
