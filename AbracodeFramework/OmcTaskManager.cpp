@@ -163,6 +163,16 @@ OmcHostTaskManager::Finalize()
 	CFObj<CFStringRef> nextCommandID( CopyNextCommandID(mCurrCommand, mCurrCommandState) );
 	if(nextCommandID != NULL)
 	{
+		// Before kicking off the next command process whatever events might have been triggered in the meantime
+		// This is especially needed for dialog control messages which might change the state of the dialog values
+		// and affect the next command if it tries to read them back
+		CFRunLoopRunResult runloopResult;
+		do
+		{
+			runloopResult = CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0, true /*returnAfterSourceHandled*/);
+		}
+		while(runloopResult == kCFRunLoopRunHandledSource);
+
 		assert(mCurrCommandState != NULL);
 		OMCDialog *currDialog = NULL;
 		if(mCurrCommandState->dialogGUID != NULL)
