@@ -2,8 +2,14 @@
 	OMCWebView.h
 */
 
-#import <Cocoa/Cocoa.h>
+#import <AppKit/AppKit.h>
 #import <WebKit/WebKit.h>
+
+/* 
+   THIS CONTROL IS DEPRECATED
+   USE OMCWebKitView INSTEAD
+*/
+
 
 IB_DESIGNABLE
 @interface OMCWebView : WebView
