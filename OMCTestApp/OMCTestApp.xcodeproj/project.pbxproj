@@ -7,11 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		1D57B6822320F6AD00FAF9CB /* executor.test.exe.script.file.sh in CopyFiles */ = {isa = PBXBuildFile; fileRef = 1D57B6812320F6AD00FAF9CB /* executor.test.exe.script.file.sh */; };
+		1D386DAF23BF01F900A16967 /* WebKitView.nib in Resources */ = {isa = PBXBuildFile; fileRef = 1D386DAD23BF01F900A16967 /* WebKitView.nib */; };
+		1D386DB123BF06C400A16967 /* test.webkit.example.html in Resources */ = {isa = PBXBuildFile; fileRef = 1D386DB023BF06C400A16967 /* test.webkit.example.html */; };
+		1D386DB423BF0B4600A16967 /* test.webkitview.init.sh in CopyFiles */ = {isa = PBXBuildFile; fileRef = 1D386DB223BF0A7E00A16967 /* test.webkitview.init.sh */; };
+		1D57B6822320F6AD00FAF9CB /* test.exe.script.file.sh in CopyFiles */ = {isa = PBXBuildFile; fileRef = 1D57B6812320F6AD00FAF9CB /* test.exe.script.file.sh */; };
 		1D7618BC231CEDD4005F4AEB /* Abracode.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E2C32C370D2CB56B0023DA03 /* Abracode.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
-		1DB9D8C02324C041003F6849 /* executor.test.javascript.js in CopyFiles */ = {isa = PBXBuildFile; fileRef = 1DB9D8BE2324BDB5003F6849 /* executor.test.javascript.js */; };
-		1DB9D8C22324D656003F6849 /* executor.test.AppleScript.applescript in Sources */ = {isa = PBXBuildFile; fileRef = 1DB9D8C12324D656003F6849 /* executor.test.AppleScript.applescript */; };
-		1DB9D8C32324D66A003F6849 /* executor.test.AppleScript.applescript in CopyFiles */ = {isa = PBXBuildFile; fileRef = 1DB9D8C12324D656003F6849 /* executor.test.AppleScript.applescript */; };
+		1DB9D8C02324C041003F6849 /* test.javascript.js in CopyFiles */ = {isa = PBXBuildFile; fileRef = 1DB9D8BE2324BDB5003F6849 /* test.javascript.js */; };
+		1DB9D8C22324D656003F6849 /* test.AppleScript.applescript in Sources */ = {isa = PBXBuildFile; fileRef = 1DB9D8C12324D656003F6849 /* test.AppleScript.applescript */; };
+		1DB9D8C32324D66A003F6849 /* test.AppleScript.applescript in CopyFiles */ = {isa = PBXBuildFile; fileRef = 1DB9D8C12324D656003F6849 /* test.AppleScript.applescript */; };
 		1DC95F072309566F0095B2AF /* AbracodeFrameworkVersion.c in Sources */ = {isa = PBXBuildFile; fileRef = 1DC95F062309566F0095B2AF /* AbracodeFrameworkVersion.c */; };
 		8D11072A0486CEB800E47090 /* MainMenu.nib in Resources */ = {isa = PBXBuildFile; fileRef = 29B97318FDCFA39411CA2CEA /* MainMenu.nib */; };
 		8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
@@ -23,7 +26,7 @@
 		E29A6A660D9CCEAC006A97B0 /* ImageKit.nib in Resources */ = {isa = PBXBuildFile; fileRef = E29A6A640D9CCEAC006A97B0 /* ImageKit.nib */; };
 		E29A6A710D9CD9CC006A97B0 /* QCDialog.nib in Resources */ = {isa = PBXBuildFile; fileRef = E29A6A6F0D9CD9CC006A97B0 /* QCDialog.nib */; };
 		E29A6A750D9CDA08006A97B0 /* Example1.nib in Resources */ = {isa = PBXBuildFile; fileRef = E29A6A730D9CDA08006A97B0 /* Example1.nib */; };
-		E29A6A9D0D9CDE80006A97B0 /* WebKit.nib in Resources */ = {isa = PBXBuildFile; fileRef = E29A6A9B0D9CDE80006A97B0 /* WebKit.nib */; };
+		E29A6A9D0D9CDE80006A97B0 /* LegacyWebKit.nib in Resources */ = {isa = PBXBuildFile; fileRef = E29A6A9B0D9CDE80006A97B0 /* LegacyWebKit.nib */; };
 		E29B53360D56D0A600F00B4A /* ForOutputObserver.plist in Resources */ = {isa = PBXBuildFile; fileRef = E29B53350D56D0A600F00B4A /* ForOutputObserver.plist */; };
 		E2C32C3F0D2CB64B0023DA03 /* OMCTestApp.m in Sources */ = {isa = PBXBuildFile; fileRef = E2C32C3E0D2CB64B0023DA03 /* OMCTestApp.m */; };
 		E2C32C6A0D2CBB860023DA03 /* Example.plist in Resources */ = {isa = PBXBuildFile; fileRef = E2C32C690D2CBB860023DA03 /* Example.plist */; };
@@ -41,9 +44,10 @@
 			dstPath = Scripts;
 			dstSubfolderSpec = 7;
 			files = (
-				1DB9D8C32324D66A003F6849 /* executor.test.AppleScript.applescript in CopyFiles */,
-				1DB9D8C02324C041003F6849 /* executor.test.javascript.js in CopyFiles */,
-				1D57B6822320F6AD00FAF9CB /* executor.test.exe.script.file.sh in CopyFiles */,
+				1D386DB423BF0B4600A16967 /* test.webkitview.init.sh in CopyFiles */,
+				1DB9D8C32324D66A003F6849 /* test.AppleScript.applescript in CopyFiles */,
+				1DB9D8C02324C041003F6849 /* test.javascript.js in CopyFiles */,
+				1D57B6822320F6AD00FAF9CB /* test.exe.script.file.sh in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -52,15 +56,18 @@
 /* Begin PBXFileReference section */
 		1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		13E42FB307B3F0F600E4EEF1 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = /System/Library/Frameworks/CoreData.framework; sourceTree = "<absolute>"; };
-		1D57B6812320F6AD00FAF9CB /* executor.test.exe.script.file.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = executor.test.exe.script.file.sh; sourceTree = "<group>"; };
+		1D386DAE23BF01F900A16967 /* Base */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = Base; path = Base.lproj/WebKitView.nib; sourceTree = "<group>"; };
+		1D386DB023BF06C400A16967 /* test.webkit.example.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; path = test.webkit.example.html; sourceTree = "<group>"; };
+		1D386DB223BF0A7E00A16967 /* test.webkitview.init.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = test.webkitview.init.sh; sourceTree = "<group>"; };
+		1D57B6812320F6AD00FAF9CB /* test.exe.script.file.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = test.exe.script.file.sh; sourceTree = "<group>"; };
 		1D7618BD231CEE08005F4AEB /* OMCTestApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = OMCTestApp.entitlements; sourceTree = "<group>"; };
-		1DB9D8BE2324BDB5003F6849 /* executor.test.javascript.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; path = executor.test.javascript.js; sourceTree = "<group>"; };
-		1DB9D8C12324D656003F6849 /* executor.test.AppleScript.applescript */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.applescript; path = executor.test.AppleScript.applescript; sourceTree = "<group>"; };
+		1DB9D8BE2324BDB5003F6849 /* test.javascript.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; path = test.javascript.js; sourceTree = "<group>"; };
+		1DB9D8C12324D656003F6849 /* test.AppleScript.applescript */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.applescript; path = test.AppleScript.applescript; sourceTree = "<group>"; };
 		1DC95F062309566F0095B2AF /* AbracodeFrameworkVersion.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = AbracodeFrameworkVersion.c; path = Abracode.framework/Versions/A/Headers/AbracodeFrameworkVersion.c; sourceTree = BUILT_PRODUCTS_DIR; };
 		1DCFB253231FC2AB00D1C62E /* Base */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = Base; path = Base.lproj/MainMenu.nib; sourceTree = "<group>"; };
 		1DCFB254231FC2AB00D1C62E /* Base */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = Base; path = Base.lproj/QCDialog.nib; sourceTree = "<group>"; };
 		1DCFB255231FC2AB00D1C62E /* Base */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = Base; path = Base.lproj/ImageKit.nib; sourceTree = "<group>"; };
-		1DCFB256231FC2AB00D1C62E /* Base */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = Base; path = Base.lproj/WebKit.nib; sourceTree = "<group>"; };
+		1DCFB256231FC2AB00D1C62E /* Base */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = Base; path = Base.lproj/LegacyWebKit.nib; sourceTree = "<group>"; };
 		1DCFB257231FC2AC00D1C62E /* Base */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = Base; path = Base.lproj/QuickTime.nib; sourceTree = "<group>"; };
 		1DCFB258231FC2AC00D1C62E /* Base */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = Base; path = Base.lproj/Example1.nib; sourceTree = "<group>"; };
 		1DCFB259231FC2B200D1C62E /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
@@ -153,9 +160,9 @@
 		29B97317FDCFA39411CA2CEA /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				1D57B6812320F6AD00FAF9CB /* executor.test.exe.script.file.sh */,
-				1DB9D8BE2324BDB5003F6849 /* executor.test.javascript.js */,
-				1DB9D8C12324D656003F6849 /* executor.test.AppleScript.applescript */,
+				1D57B6812320F6AD00FAF9CB /* test.exe.script.file.sh */,
+				1DB9D8BE2324BDB5003F6849 /* test.javascript.js */,
+				1DB9D8C12324D656003F6849 /* test.AppleScript.applescript */,
 				8D1107310486CEB800E47090 /* Info.plist */,
 				E2F5C7BF0DCEFEAD00B4D4EC /* sunflower.jpg */,
 				E2F5C7C50DCF010900B4D4EC /* QCDialog.qtz */,
@@ -170,7 +177,10 @@
 				29B97318FDCFA39411CA2CEA /* MainMenu.nib */,
 				E29A6A6F0D9CD9CC006A97B0 /* QCDialog.nib */,
 				E29A6A640D9CCEAC006A97B0 /* ImageKit.nib */,
-				E29A6A9B0D9CDE80006A97B0 /* WebKit.nib */,
+				1D386DB223BF0A7E00A16967 /* test.webkitview.init.sh */,
+				1D386DB023BF06C400A16967 /* test.webkit.example.html */,
+				1D386DAD23BF01F900A16967 /* WebKitView.nib */,
+				E29A6A9B0D9CDE80006A97B0 /* LegacyWebKit.nib */,
 				E24DB4770DA0B1B000F53AB5 /* QuickTime.nib */,
 				E29A6A730D9CDA08006A97B0 /* Example1.nib */,
 			);
@@ -244,11 +254,13 @@
 				E2C32C880D2CC6530023DA03 /* gzip.plist in Resources */,
 				E211D27E0D3F1E950065C23A /* TextContext.plist in Resources */,
 				E2D16BBA0D484DED007E81CD /* Ls Browser.omc in Resources */,
+				1D386DAF23BF01F900A16967 /* WebKitView.nib in Resources */,
 				E29B53360D56D0A600F00B4A /* ForOutputObserver.plist in Resources */,
 				E29A6A660D9CCEAC006A97B0 /* ImageKit.nib in Resources */,
 				E29A6A710D9CD9CC006A97B0 /* QCDialog.nib in Resources */,
 				E29A6A750D9CDA08006A97B0 /* Example1.nib in Resources */,
-				E29A6A9D0D9CDE80006A97B0 /* WebKit.nib in Resources */,
+				1D386DB123BF06C400A16967 /* test.webkit.example.html in Resources */,
+				E29A6A9D0D9CDE80006A97B0 /* LegacyWebKit.nib in Resources */,
 				E24DB4750DA0B06000F53AB5 /* Command.plist in Resources */,
 				E24DB4790DA0B1B000F53AB5 /* QuickTime.nib in Resources */,
 				E2F5C7C00DCEFEAD00B4D4EC /* sunflower.jpg in Resources */,
@@ -264,7 +276,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1DB9D8C22324D656003F6849 /* executor.test.AppleScript.applescript in Sources */,
+				1DB9D8C22324D656003F6849 /* test.AppleScript.applescript in Sources */,
 				1DC95F072309566F0095B2AF /* AbracodeFrameworkVersion.c in Sources */,
 				8D11072D0486CEB800E47090 /* main.m in Sources */,
 				E2C32C3F0D2CB64B0023DA03 /* OMCTestApp.m in Sources */,
@@ -280,6 +292,14 @@
 				1DCFB259231FC2B200D1C62E /* en */,
 			);
 			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+		1D386DAD23BF01F900A16967 /* WebKitView.nib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				1D386DAE23BF01F900A16967 /* Base */,
+			);
+			name = WebKitView.nib;
 			sourceTree = "<group>";
 		};
 		29B97318FDCFA39411CA2CEA /* MainMenu.nib */ = {
@@ -322,12 +342,12 @@
 			name = Example1.nib;
 			sourceTree = "<group>";
 		};
-		E29A6A9B0D9CDE80006A97B0 /* WebKit.nib */ = {
+		E29A6A9B0D9CDE80006A97B0 /* LegacyWebKit.nib */ = {
 			isa = PBXVariantGroup;
 			children = (
 				1DCFB256231FC2AB00D1C62E /* Base */,
 			);
-			name = WebKit.nib;
+			name = LegacyWebKit.nib;
 			sourceTree = SOURCE_ROOT;
 		};
 /* End PBXVariantGroup section */

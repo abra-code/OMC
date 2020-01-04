@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+div {
+  border: 1px solid black;
+  margin: 5px;
+}
+</style>
+</head>
+<body>
+
+<p>email: <input type="email" id="_e-mail" class="OMC" /></p>
+<br/>
+<p>password: <input type="password" id="_pass" class="OMC" /></p>
+<br/>
+<p>checkbox: <input type="checkbox" id="_checkbox" class="OMC" /></p>
+<br/>
+
+<p>button: <button class="OMC" id="_butt" type="button">Button</button></p>
+
+<div class="OMC length" id="one">
+  <p>div with class="OMC length"</p>
+</div>
+
+<div class="OMC width" id="two">
+  <p>div with class="OMC width"</p>
+</div>
+
+<div class="OMC depth" id="three">
+  <p>div with class="OMC depth"</p>
+</div>
+
+
+<button onclick="myFunction()">Test it</button>
+
+<script>
+function myFunction()
+{
+	var elemsArray = document.getElementsByClassName("OMC");
+	for (var i = 0, len = elemsArray.length; i < len; i++)
+	{
+		var elem = elemsArray[i];
+		elem.style.backgroundColor = "red";
+		if(elem.hasAttribute('id'))
+		{
+			console.log("id = " + elem.id);
+		}
+		
+		if(elem.nodeName == "INPUT")
+		{
+			console.log("value = " + elem.value);
+		}
+		else
+		{
+			console.log("innerText = " + elem.innerText);
+		}
+		//console.log("innerHTML = " + elem.innerHTML);
+	}
+}
+</script>
+
+</body>
+</html>
+

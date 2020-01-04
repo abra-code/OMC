@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="14868" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="15702" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
         <deployment version="101300" identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="14868"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="15702"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="NSApplication">
@@ -298,10 +298,10 @@
                                     <userDefinedRuntimeAttribute type="string" keyPath="commandID" value="ImageKit Test"/>
                                 </userDefinedRuntimeAttributes>
                             </menuItem>
-                            <menuItem title="Test WebKit Dialog" id="403" customClass="OMCMenuItem">
+                            <menuItem title="Test WebKitView Dialog" id="403" customClass="OMCMenuItem">
                                 <userDefinedRuntimeAttributes>
                                     <userDefinedRuntimeAttribute type="string" keyPath="escapingMode" value="esc_none"/>
-                                    <userDefinedRuntimeAttribute type="string" keyPath="commandID" value="WebKit Test"/>
+                                    <userDefinedRuntimeAttribute type="string" keyPath="commandID" value="test.webkitview"/>
                                 </userDefinedRuntimeAttributes>
                             </menuItem>
                             <menuItem title="Test QuickTime Dialog" id="402" customClass="OMCMenuItem">

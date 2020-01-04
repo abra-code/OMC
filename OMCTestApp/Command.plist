@@ -24,11 +24,11 @@
 			<key>ACTIVATION_MODE</key>
 			<string>act_always</string>
 			<key>COMMAND_ID</key>
-			<string>executor.test.manual.script.file</string>
+			<string>test.manual.script.file</string>
 			<key>COMMAND</key>
 			<array>
 				<string>__APP_BUNDLE_PATH__</string>
-				<string>/Contents/Resources/Scripts/executor.test.exe.script.file.sh</string>
+				<string>/Contents/Resources/Scripts/test.exe.script.file.sh</string>
 			</array>
 			<key>ESCAPE_SPECIAL_CHARS</key>
 			<string>esc_none</string>
@@ -49,13 +49,13 @@
 			<key>ACTIVATION_MODE</key>
 			<string>act_always</string>
 			<key>COMMAND_ID</key>
-			<string>executor.test.exe.script.file</string>
+			<string>test.exe.script.file</string>
 			<key>EXECUTION_MODE</key>
 			<string>exe_script_file_with_output_window</string>
 			<key>NAME</key>
 			<string>Test Sh File Execution</string>
 			<key>NOTES</key>
-			<string>New execution style test to run executor.test.exe.script.file.sh in Contents/Resources/Scripts</string>
+			<string>New execution style test to run test.exe.script.file.sh in Contents/Resources/Scripts</string>
 			<key>VERSION</key>
 			<integer>1</integer>
 		</dict>
@@ -63,7 +63,7 @@
 			<key>ACTIVATION_MODE</key>
 			<string>act_always</string>
 			<key>COMMAND_ID</key>
-			<string>executor.test.javascript</string>
+			<string>test.javascript</string>
 			<key>EXECUTION_MODE</key>
 			<string>exe_script_file_with_output_window</string>
 			<key>NAME</key>
@@ -77,7 +77,7 @@
 			<key>ACTIVATION_MODE</key>
 			<string>act_always</string>
 			<key>COMMAND_ID</key>
-			<string>executor.test.AppleScript</string>
+			<string>test.AppleScript</string>
 			<key>EXECUTION_MODE</key>
 			<string>exe_script_file_with_output_window</string>
 			<key>NAME</key>
@@ -91,7 +91,7 @@
 			<key>ACTIVATION_MODE</key>
 			<string>act_always</string>
 			<key>COMMAND_ID</key>
-			<string>executor.test.terminal</string>
+			<string>test.terminal</string>
 			<key>COMMAND</key>
 			<array>
 				<string>env
@@ -110,7 +110,7 @@
 			<key>ACTIVATION_MODE</key>
 			<string>act_always</string>
 			<key>COMMAND_ID</key>
-			<string>executor.test.iterm2</string>
+			<string>test.iterm2</string>
 			<key>COMMAND</key>
 			<array>
 				<string>env
@@ -127,7 +127,7 @@
 		</dict>
 		<dict>
 			<key>COMMAND_ID</key>
-			<string>executor.test.output.window.position</string>
+			<string>test.output.window.position</string>
 			<key>COMMAND</key>
 			<array>
 				<string>echo &quot;just testing output window&quot;
@@ -179,7 +179,7 @@ exit 1
 			<key>ACTIVATION_MODE</key>
 			<string>act_always</string>
 			<key>COMMAND_ID</key>
-			<string>executor.test.output.window.options</string>
+			<string>test.output.window.options</string>
 			<key>COMMAND</key>
 			<array>
 				<string>echo &quot;New Output Window&quot;; sleep 1; echo &quot;More text here&quot;; sleep 1; echo &quot;And the last line&quot;;</string>
@@ -512,13 +512,67 @@ exit 1
 			<array>
 				<string></string>
 			</array>
+			<key>COMMAND_ID</key>
+			<string>test.webkitview</string>
 			<key>ESCAPE_SPECIAL_CHARS</key>
 			<string>esc_with_backslash</string>
 			<key>EXECUTION_MODE</key>
 			<string>exe_silent_popen</string>
 			<key>NAME</key>
 			<array>
-				<string>WebKit Test</string>
+				<string>WebKitView Test</string>
+			</array>
+			<key>NIB_DIALOG</key>
+			<dict>
+				<key>INIT_SUBCOMMAND_ID</key>
+				<string>test.webkitview.init</string>
+				<key>IS_BLOCKING</key>
+				<false/>
+				<key>IS_COCOA</key>
+				<true/>
+				<key>NIB_NAME</key>
+				<string>WebKitView</string>
+			</dict>
+			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
+			<string>10.4</string>
+			<key>REQUIRED_OMC_VERSION</key>
+			<string>2.0</string>
+			<key>VERSION</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>ACTIVATION_MODE</key>
+			<string>act_always</string>
+			<key>COMMAND</key>
+			<array>
+			</array>
+			<key>COMMAND_ID</key>
+			<string>test.webkitview.init</string>
+			<key>ESCAPE_SPECIAL_CHARS</key>
+			<string>esc_with_backslash</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+			<key>NAME</key>
+			<array>
+				<string>WebKitView Test</string>
+			</array>
+			<key>VERSION</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>ACTIVATION_MODE</key>
+			<string>act_always</string>
+			<key>COMMAND</key>
+			<array>
+				<string></string>
+			</array>
+			<key>ESCAPE_SPECIAL_CHARS</key>
+			<string>esc_with_backslash</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_silent_popen</string>
+			<key>NAME</key>
+			<array>
+				<string>Legacy WebKit Test</string>
 			</array>
 			<key>NIB_DIALOG</key>
 			<dict>
@@ -527,14 +581,14 @@ exit 1
 				<key>IS_COCOA</key>
 				<true/>
 				<key>NIB_NAME</key>
-				<string>WebKit</string>
+				<string>LegacyWebKit</string>
 			</dict>
 			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
 			<string>10.4</string>
 			<key>REQUIRED_OMC_VERSION</key>
 			<string>2.0</string>
 			<key>SUBMENU_NAME</key>
-			<string>/Submenu Test 1/WebKit Submenu</string>
+			<string>/Submenu Test 1/Legacy WebKit</string>
 			<key>VERSION</key>
 			<integer>1</integer>
 		</dict>
@@ -544,8 +598,8 @@ exit 1
 			<key>COMMAND</key>
 			<array>
 				<string>
-#&quot;$OMC_OMC_SUPPORT_PATH/omc_dialog_control&quot; &quot;$OMC_NIB_DLG_GUID&quot; 1 &apos;http://www.abracode.com/&apos;;
-&quot;$OMC_OMC_SUPPORT_PATH/omc_dialog_control&quot; &quot;$OMC_NIB_DLG_GUID&quot; 2 &apos;http://www.abracode.com/&apos;;
+&quot;$OMC_OMC_SUPPORT_PATH/omc_dialog_control&quot; &quot;$OMC_NIB_DLG_GUID&quot; 1 &apos;http://www.abracode.com/&apos;
+&quot;$OMC_OMC_SUPPORT_PATH/omc_dialog_control&quot; &quot;$OMC_NIB_DLG_GUID&quot; 2 &apos;http://www.abracode.com/&apos;
 </string>
 			</array>
 			<key>COMMAND_ID</key>
@@ -556,7 +610,7 @@ exit 1
 			<string>exe_silent_popen</string>
 			<key>NAME</key>
 			<array>
-				<string>WebKit Test</string>
+				<string>Legacy WebKit Test</string>
 			</array>
 			<key>VERSION</key>
 			<integer>1</integer>
