@@ -320,7 +320,7 @@ FindArgumentType(const char *argTypeStr)
 		{
 			if( [inView respondsToSelector:@selector(setTarget:)] )
 			{
-				[inView performSelector:@selector(setTarget) withObject:self];
+				[inView performSelector:@selector(setTarget:) withObject:self];
 				if( [inView respondsToSelector:@selector(setAction:)] ) //only if target is ourselves we can set action
 					[inView setAction:@selector(handleAction:)];
 			}
