@@ -11,6 +11,7 @@
 		1D386DB123BF06C400A16967 /* test.webkit.example.html in Resources */ = {isa = PBXBuildFile; fileRef = 1D386DB023BF06C400A16967 /* test.webkit.example.html */; };
 		1D386DB423BF0B4600A16967 /* test.webkitview.init.sh in CopyFiles */ = {isa = PBXBuildFile; fileRef = 1D386DB223BF0A7E00A16967 /* test.webkitview.init.sh */; };
 		1D57B6822320F6AD00FAF9CB /* test.exe.script.file.sh in CopyFiles */ = {isa = PBXBuildFile; fileRef = 1D57B6812320F6AD00FAF9CB /* test.exe.script.file.sh */; };
+		1D6D26B223C0A85700C6320D /* test.webkitview.execute.sh in CopyFiles */ = {isa = PBXBuildFile; fileRef = 1D6D26B023C0A84800C6320D /* test.webkitview.execute.sh */; };
 		1D7618BC231CEDD4005F4AEB /* Abracode.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E2C32C370D2CB56B0023DA03 /* Abracode.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		1DB9D8C02324C041003F6849 /* test.javascript.js in CopyFiles */ = {isa = PBXBuildFile; fileRef = 1DB9D8BE2324BDB5003F6849 /* test.javascript.js */; };
 		1DB9D8C22324D656003F6849 /* test.AppleScript.applescript in Sources */ = {isa = PBXBuildFile; fileRef = 1DB9D8C12324D656003F6849 /* test.AppleScript.applescript */; };
@@ -44,6 +45,7 @@
 			dstPath = Scripts;
 			dstSubfolderSpec = 7;
 			files = (
+				1D6D26B223C0A85700C6320D /* test.webkitview.execute.sh in CopyFiles */,
 				1D386DB423BF0B4600A16967 /* test.webkitview.init.sh in CopyFiles */,
 				1DB9D8C32324D66A003F6849 /* test.AppleScript.applescript in CopyFiles */,
 				1DB9D8C02324C041003F6849 /* test.javascript.js in CopyFiles */,
@@ -60,6 +62,7 @@
 		1D386DB023BF06C400A16967 /* test.webkit.example.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; path = test.webkit.example.html; sourceTree = "<group>"; };
 		1D386DB223BF0A7E00A16967 /* test.webkitview.init.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = test.webkitview.init.sh; sourceTree = "<group>"; };
 		1D57B6812320F6AD00FAF9CB /* test.exe.script.file.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = test.exe.script.file.sh; sourceTree = "<group>"; };
+		1D6D26B023C0A84800C6320D /* test.webkitview.execute.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = test.webkitview.execute.sh; sourceTree = "<group>"; };
 		1D7618BD231CEE08005F4AEB /* OMCTestApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = OMCTestApp.entitlements; sourceTree = "<group>"; };
 		1DB9D8BE2324BDB5003F6849 /* test.javascript.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; path = test.javascript.js; sourceTree = "<group>"; };
 		1DB9D8C12324D656003F6849 /* test.AppleScript.applescript */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.applescript; path = test.AppleScript.applescript; sourceTree = "<group>"; };
@@ -178,6 +181,7 @@
 				E29A6A6F0D9CD9CC006A97B0 /* QCDialog.nib */,
 				E29A6A640D9CCEAC006A97B0 /* ImageKit.nib */,
 				1D386DB223BF0A7E00A16967 /* test.webkitview.init.sh */,
+				1D6D26B023C0A84800C6320D /* test.webkitview.execute.sh */,
 				1D386DB023BF06C400A16967 /* test.webkit.example.html */,
 				1D386DAD23BF01F900A16967 /* WebKitView.nib */,
 				E29A6A9B0D9CDE80006A97B0 /* LegacyWebKit.nib */,

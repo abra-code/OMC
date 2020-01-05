@@ -564,6 +564,25 @@ exit 1
 			<string>act_always</string>
 			<key>COMMAND</key>
 			<array>
+			</array>
+			<key>COMMAND_ID</key>
+			<string>test.webkitview.execute</string>
+			<key>ESCAPE_SPECIAL_CHARS</key>
+			<string>esc_with_backslash</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+			<key>NAME</key>
+			<array>
+				<string>WebKitView Test</string>
+			</array>
+			<key>VERSION</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>ACTIVATION_MODE</key>
+			<string>act_always</string>
+			<key>COMMAND</key>
+			<array>
 				<string></string>
 			</array>
 			<key>ESCAPE_SPECIAL_CHARS</key>

@@ -8,6 +8,9 @@
 
 @synthesize tag;
 @synthesize escapingMode;
+@synthesize target;
+@synthesize action;
+@synthesize commandID;
 
 - (instancetype)initWithFrame:(NSRect)frameRect
 {
@@ -23,6 +26,8 @@
 - (void)dealloc
 {
 	self.escapingMode = nil;
+	self.target = nil;
+	self.action = nil;
 	[_wkWebView release];
     [super dealloc];
 }
@@ -72,6 +77,22 @@
 // WKScriptMessageHandler protocol method:
 - (void)userContentController:(WKUserContentController *)userContentController didReceiveScriptMessage:(WKScriptMessage *)message
 {
+	id msgBody = message.body;
+	if([msgBody isKindOfClass:[NSDictionary class]])
+	{
+		NSDictionary<NSString*,id> *messageDict = (NSDictionary *)msgBody;
+		id cmdID = [messageDict valueForKey:@"commandID"];
+		if((cmdID != nil) && [cmdID isKindOfClass:[NSString class]])
+		{
+			// This should always be satisfied. OMCDialogController sets itself as target for all controls and views which support it
+			if((self.target != nil) && (self.action != nil))
+			{
+				self.commandID = (NSString *)cmdID; //[OMCDialogController handleAction:] will ask for commandID to execute
+				[self.target performSelector:self.action withObject:self]; // = [(OMCDialogController*)_target handleAction:self];
+				self.commandID = nil;
+			}
+		}
+	}
 }
 
 - (NSString *)stringValue

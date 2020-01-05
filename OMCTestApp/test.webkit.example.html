@@ -17,7 +17,7 @@ div {
 <p>checkbox: <input type="checkbox" id="_checkbox" class="OMC" /></p>
 <br/>
 
-<p>button: <button class="OMC" id="_butt" type="button">Button</button></p>
+<!-- <p>button: <button class="OMC" id="_butt" type="button">Button</button></p> -->
 
 <div class="OMC length" id="one">
   <p>div with class="OMC length"</p>
@@ -32,31 +32,41 @@ div {
 </div>
 
 
-<button onclick="myFunction()">Test it</button>
+<button data-commandID="test.webkitview.execute" onclick="runTestCommand(event)">Run Test Command</button>
 
 <script>
-function myFunction()
+
+function runTestCommand(event)
 {
+	var messageDict = {};
+	messageDict["commandID"] = event.currentTarget.dataset.commandid;
+	window.webkit.messageHandlers.OMC.postMessage(messageDict);
+}
+
+function getAllOMCControlValues()
+{
+	var valuesDict = {};
 	var elemsArray = document.getElementsByClassName("OMC");
 	for (var i = 0, len = elemsArray.length; i < len; i++)
 	{
 		var elem = elemsArray[i];
-		elem.style.backgroundColor = "red";
 		if(elem.hasAttribute('id'))
 		{
 			console.log("id = " + elem.id);
+			if(elem.nodeName == "INPUT")
+			{
+				console.log("value = " + elem.value);
+				valuesDict[elem.id] = elem.value;
+			}
+			else
+			{
+				console.log("innerHTML = " + elem.innerHTML);
+				valuesDict[elem.id] = elem.innerHTML;
+			}
 		}
 		
-		if(elem.nodeName == "INPUT")
-		{
-			console.log("value = " + elem.value);
-		}
-		else
-		{
-			console.log("innerText = " + elem.innerText);
-		}
-		//console.log("innerHTML = " + elem.innerHTML);
 	}
+	return valuesDict;
 }
 </script>
 

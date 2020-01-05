@@ -20,6 +20,9 @@ IB_DESIGNABLE
 
 @property (nonatomic, readwrite) IBInspectable NSInteger tag;
 @property (nonatomic, retain) IBInspectable NSString * escapingMode;
+@property (nonatomic, weak) id target;
+@property (nonatomic) SEL action;
+@property (nonatomic, retain) NSString * commandID;
 
 - (NSString *)stringValue;
 - (void)setStringValue:(NSString *)aString;
