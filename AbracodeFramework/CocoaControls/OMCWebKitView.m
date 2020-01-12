@@ -10,6 +10,7 @@
 @synthesize tag;
 @synthesize escapingMode;
 @synthesize javaScriptFile;
+@synthesize URL;
 @synthesize target;
 @synthesize action;
 @synthesize commandID;
@@ -59,18 +60,18 @@
 	wkWebViewConfig.userContentController = userContentController;
 
 	NSBundle *frameworkBundle = [NSBundle bundleForClass:self.class];
-	NSURL *omcWKitSupportScriptURL = [frameworkBundle URLForResource:@"OMCWebKitSupport" withExtension:@"js"];
-	NSString *omcWKitSupportScriptSource = [NSString stringWithContentsOfURL:omcWKitSupportScriptURL encoding:NSUTF8StringEncoding error:nil];
-	if(omcWKitSupportScriptSource != nil)
+	NSURL *omcWKSupportScriptURL = [frameworkBundle URLForResource:@"OMCWebKitSupport" withExtension:@"js"];
+	NSString *omcWKSupportScriptSource = [NSString stringWithContentsOfURL:omcWKSupportScriptURL encoding:NSUTF8StringEncoding error:nil];
+	if(omcWKSupportScriptSource != nil)
 	{
-		WKUserScript *omcWKSupportScript = [[WKUserScript alloc] initWithSource:omcWKitSupportScriptSource injectionTime:WKUserScriptInjectionTimeAtDocumentStart forMainFrameOnly:NO];
+		WKUserScript *omcWKSupportScript = [[WKUserScript alloc] initWithSource:omcWKSupportScriptSource injectionTime:WKUserScriptInjectionTimeAtDocumentStart forMainFrameOnly:NO];
 		[userContentController addUserScript:omcWKSupportScript];
 		[omcWKSupportScript release];
 	}
 
 	if(self.javaScriptFile != nil)
-	{ //client specified a script file name to inject.
-		// this should be a name of file in "Scripts" directory without an extension
+	{   // Client specified a script file name to inject
+		// This should be a name of file in "Scripts" directory without an extension
 		// but in case someone does add a .js extension, cut it
 		NSString *scriptName = self.javaScriptFile;
 		if([scriptName hasSuffix:@".js"])
@@ -101,6 +102,11 @@
 
 	[userContentController release];
 	[wkWebViewConfig release];
+	
+	if(self.URL != nil)
+	{
+		[self setStringValue:self.URL];
+	}
 }
 
 // keep the WKWebView subview resizing to the frame of hosting view

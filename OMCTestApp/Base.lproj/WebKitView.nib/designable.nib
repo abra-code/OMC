@@ -27,6 +27,7 @@
                                 <integer key="value" value="2"/>
                             </userDefinedRuntimeAttribute>
                             <userDefinedRuntimeAttribute type="string" keyPath="javaScriptFile" value="test.webkit.example.client"/>
+                            <userDefinedRuntimeAttribute type="string" keyPath="URL" value="http://abracode.com"/>
                         </userDefinedRuntimeAttributes>
                     </customView>
                     <textField verticalHuggingPriority="750" fixedFrame="YES" tag="1" translatesAutoresizingMaskIntoConstraints="NO" id="4" customClass="OMCTextField">
@@ -39,6 +40,7 @@
                         </textFieldCell>
                         <userDefinedRuntimeAttributes>
                             <userDefinedRuntimeAttribute type="string" keyPath="escapingMode" value="esc_none"/>
+                            <userDefinedRuntimeAttribute type="string" keyPath="commandID" value="test.webkitview.set.url"/>
                         </userDefinedRuntimeAttributes>
                     </textField>
                 </subviews>
