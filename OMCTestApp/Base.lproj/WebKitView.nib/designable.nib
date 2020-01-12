@@ -26,6 +26,7 @@
                             <userDefinedRuntimeAttribute type="number" keyPath="tag">
                                 <integer key="value" value="2"/>
                             </userDefinedRuntimeAttribute>
+                            <userDefinedRuntimeAttribute type="string" keyPath="javaScriptFile" value="test.webkit.example.client"/>
                         </userDefinedRuntimeAttributes>
                     </customView>
                     <textField verticalHuggingPriority="750" fixedFrame="YES" tag="1" translatesAutoresizingMaskIntoConstraints="NO" id="4" customClass="OMCTextField">

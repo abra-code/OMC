@@ -3,11 +3,16 @@
  */
 
 #pragma once
+
+#ifdef __cplusplus
+
 #include "CFObj.h"
 
 class OMCScriptsManager
 {
 public:
+
+	static OMCScriptsManager* GetScriptsManager();
 
 	OMCScriptsManager();
 	~OMCScriptsManager() { }
@@ -20,3 +25,16 @@ private:
 private:
 	CFObj<CFMutableDictionaryRef> mBundles; //key:bundle, value:dict of name/path pairs
 };
+
+#endif //__cplusplus
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+CFStringRef OMCGetScriptPath(CFBundleRef inBundle, CFStringRef inScriptName);
+
+#ifdef __cplusplus
+}
+#endif
+

@@ -5,6 +5,19 @@
 #include "OMCScriptsManager.h"
 #include "OMCStrings.h"
 
+OMCScriptsManager*
+OMCScriptsManager::GetScriptsManager()
+{
+	static OMCScriptsManager* sScriptsManager = new OMCScriptsManager();
+	return sScriptsManager;
+}
+
+CFStringRef OMCGetScriptPath(CFBundleRef inBundle, CFStringRef inScriptName)
+{
+	return OMCScriptsManager::GetScriptsManager()->GetScriptPath(inBundle, inScriptName);
+}
+
+
 OMCScriptsManager::OMCScriptsManager()
 	: mBundles(CFDictionaryCreateMutable(kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks))
 {

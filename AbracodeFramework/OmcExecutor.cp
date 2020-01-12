@@ -568,8 +568,6 @@ static std::string CreateScriptPathAndShell(
 								CFObj<CFArrayRef> &ioCustomShell,
 								const char *inCommand)
 {
-	static OMCScriptsManager* sScriptsManager = new OMCScriptsManager(); //singleton created on demand here
-
 	CFObj<CFStringRef> scriptFilePath;
 
 	//inCommand, if non-empty, is an absolute file path (not expected to be a common setup)
@@ -595,7 +593,7 @@ static std::string CreateScriptPathAndShell(
 		if(hostBundle == nullptr)
 			hostBundle = CFBundleGetMainBundle(); //in most cases it will be just applet bundle
 		
-		scriptFilePath.Adopt(sScriptsManager->GetScriptPath(hostBundle, inCommandID), kCFObjRetain);
+		scriptFilePath.Adopt(OMCGetScriptPath(hostBundle, inCommandID), kCFObjRetain);
 	}
 
 	if(scriptFilePath == nullptr)

@@ -3,14 +3,17 @@
 */
 
 #import "OMCWebKitView.h"
+#include "OMCScriptsManager.h"
 
 @implementation OMCWebKitView
 
 @synthesize tag;
 @synthesize escapingMode;
+@synthesize javaScriptFile;
 @synthesize target;
 @synthesize action;
 @synthesize commandID;
+@synthesize elementID;
 
 - (instancetype)initWithFrame:(NSRect)frameRect
 {
@@ -55,6 +58,39 @@
 	WKUserContentController *userContentController = [[WKUserContentController alloc] init];
 	wkWebViewConfig.userContentController = userContentController;
 
+	NSBundle *frameworkBundle = [NSBundle bundleForClass:self.class];
+	NSURL *omcWKitSupportScriptURL = [frameworkBundle URLForResource:@"OMCWebKitSupport" withExtension:@"js"];
+	NSString *omcWKitSupportScriptSource = [NSString stringWithContentsOfURL:omcWKitSupportScriptURL encoding:NSUTF8StringEncoding error:nil];
+	if(omcWKitSupportScriptSource != nil)
+	{
+		WKUserScript *omcWKSupportScript = [[WKUserScript alloc] initWithSource:omcWKitSupportScriptSource injectionTime:WKUserScriptInjectionTimeAtDocumentStart forMainFrameOnly:NO];
+		[userContentController addUserScript:omcWKSupportScript];
+		[omcWKSupportScript release];
+	}
+
+	if(self.javaScriptFile != nil)
+	{ //client specified a script file name to inject.
+		// this should be a name of file in "Scripts" directory without an extension
+		// but in case someone does add a .js extension, cut it
+		NSString *scriptName = self.javaScriptFile;
+		if([scriptName hasSuffix:@".js"])
+			scriptName = [scriptName stringByDeletingPathExtension];
+
+		CFBundleRef hostBundle = CFBundleGetMainBundle(); // TODO: support extern bundle for contextual menus?
+
+		CFStringRef clientScriptPath = OMCGetScriptPath(hostBundle, (CFStringRef)scriptName);
+		if(clientScriptPath != NULL)
+		{
+			NSString *clientScriptSource = [NSString stringWithContentsOfFile:(NSString *)clientScriptPath encoding:NSUTF8StringEncoding error:nil];
+			if(clientScriptSource != nil)
+			{
+				WKUserScript *clientScript = [[WKUserScript alloc] initWithSource:clientScriptSource injectionTime:WKUserScriptInjectionTimeAtDocumentEnd forMainFrameOnly:NO];
+				[userContentController addUserScript:clientScript];
+				[clientScript release];
+			}
+		}
+	}
+
 	// This adds a function window.webkit.messageHandlers.OMC.postMessage(<messageBody>) for all frames
 	[userContentController addScriptMessageHandler:self name:@"OMC"];
 
@@ -77,6 +113,10 @@
 // WKScriptMessageHandler protocol method:
 - (void)userContentController:(WKUserContentController *)userContentController didReceiveScriptMessage:(WKScriptMessage *)message
 {
+	// This should always be satisfied. OMCDialogController sets itself as target for all controls and views which support it
+	if((self.target == nil) || (self.action == nil))
+		return;
+
 	id msgBody = message.body;
 	if([msgBody isKindOfClass:[NSDictionary class]])
 	{
@@ -84,13 +124,17 @@
 		id cmdID = [messageDict valueForKey:@"commandID"];
 		if((cmdID != nil) && [cmdID isKindOfClass:[NSString class]])
 		{
-			// This should always be satisfied. OMCDialogController sets itself as target for all controls and views which support it
-			if((self.target != nil) && (self.action != nil))
+			id elemID = [messageDict valueForKey:@"elementID"];
+			if((elemID != nil) && [elemID isKindOfClass:[NSString class]])
 			{
-				self.commandID = (NSString *)cmdID; //[OMCDialogController handleAction:] will ask for commandID to execute
-				[self.target performSelector:self.action withObject:self]; // = [(OMCDialogController*)_target handleAction:self];
-				self.commandID = nil;
+				self.elementID = (NSString *)elemID;
 			}
+
+			self.commandID = (NSString *)cmdID; //[OMCDialogController handleAction:] will ask for commandID to execute
+			[self.target performSelector:self.action withObject:self]; // = [(OMCDialogController*)_target handleAction:self];
+			
+			self.commandID = nil;
+			self.elementID = nil;
 		}
 	}
 }

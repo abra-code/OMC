@@ -10,11 +10,11 @@ div {
 </head>
 <body>
 
-<p>email: <input type="email" id="_e-mail" class="OMC" /></p>
+<p>email: <input type="email" id="email" class="OMC" /></p>
 <br/>
-<p>password: <input type="password" id="_pass" class="OMC" /></p>
+<p>password: <input type="password" id="pass" class="OMC" /></p>
 <br/>
-<p>checkbox: <input type="checkbox" id="_checkbox" class="OMC" /></p>
+<p>checkbox: <input type="checkbox" id="checkbox" class="OMC" /></p>
 <br/>
 
 <!-- <p>button: <button class="OMC" id="_butt" type="button">Button</button></p> -->
@@ -32,41 +32,26 @@ div {
 </div>
 
 
-<button data-commandID="test.webkitview.execute" onclick="runTestCommand(event)">Run Test Command</button>
+<button id="button" data-commandID="test.webkitview.execute" onclick="runTestCommand(event)">Run Test Command</button>
 
 <script>
 
 function runTestCommand(event)
 {
-	var messageDict = {};
-	messageDict["commandID"] = event.currentTarget.dataset.commandid;
-	window.webkit.messageHandlers.OMC.postMessage(messageDict);
-}
+	let messageDict = {};
+	const currentControl = event.currentTarget;
 
-function getAllOMCControlValues()
-{
-	var valuesDict = {};
-	var elemsArray = document.getElementsByClassName("OMC");
-	for (var i = 0, len = elemsArray.length; i < len; i++)
+	if("commandid" in currentControl.dataset)
 	{
-		var elem = elemsArray[i];
-		if(elem.hasAttribute('id'))
-		{
-			console.log("id = " + elem.id);
-			if(elem.nodeName == "INPUT")
-			{
-				console.log("value = " + elem.value);
-				valuesDict[elem.id] = elem.value;
-			}
-			else
-			{
-				console.log("innerHTML = " + elem.innerHTML);
-				valuesDict[elem.id] = elem.innerHTML;
-			}
-		}
+		messageDict["commandID"] = currentControl.dataset.commandid;
 		
+		if(currentControl.hasAttribute('id'))
+		{
+			messageDict["elementID"] = currentControl.id;
+		}
+
+		window.webkit.messageHandlers.OMC.postMessage(messageDict);
 	}
-	return valuesDict;
 }
 </script>
 
