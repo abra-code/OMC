@@ -1,5 +1,5 @@
 
-function getAllOMCControlValues()
+function getAllOMCElementValues()
 {
 	let valuesDict = {};
 	let elemsArray = document.getElementsByClassName("OMC");

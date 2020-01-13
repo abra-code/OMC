@@ -116,6 +116,36 @@
 	_wkWebView.frame = subFrame;
 }
 
+- (void)runOMCCommandWithWebkitMessage:(NSDictionary<NSString*,id> *)messageDict
+{
+	id cmdID = [messageDict valueForKey:@"commandID"];
+	if((cmdID != nil) && [cmdID isKindOfClass:[NSString class]])
+	{
+		id elemID = [messageDict valueForKey:@"elementID"];
+		if((elemID != nil) && [elemID isKindOfClass:[NSString class]])
+		{
+			self.elementID = (NSString *)elemID;
+		}
+
+		// Obtain values from all elements of class OMC
+		// getAllOMCElementValues() is a function injected by our custom JavaScript on WKWebView creation
+		id theResult = [self executeJavaScript:@"getAllOMCElementValues();"];
+		if([theResult isKindOfClass:[NSDictionary class]]) //we expect dictionary result from that function
+		{
+			NSDictionary<NSString*, NSString*> *elementValuesDict = (NSDictionary<NSString*, NSString*> *)theResult;
+			// TODO: all element values will be exported as OMC_NIB_WEBVIEW_XXX_ELEMENT_YYY_VALUE
+			// HTML element id names will need to be normalized to a set [A-Z0-9_]
+			NSLog(@"result = %@", elementValuesDict);
+		}
+		
+		self.commandID = (NSString *)cmdID; //[OMCDialogController handleAction:] will ask for commandID to execute
+		[self.target performSelector:self.action withObject:self]; // = [(OMCDialogController*)_target handleAction:self];
+		
+		self.commandID = nil;
+		self.elementID = nil;
+	}
+}
+
 // WKScriptMessageHandler protocol method:
 - (void)userContentController:(WKUserContentController *)userContentController didReceiveScriptMessage:(WKScriptMessage *)message
 {
@@ -126,23 +156,55 @@
 	id msgBody = message.body;
 	if([msgBody isKindOfClass:[NSDictionary class]])
 	{
-		NSDictionary<NSString*,id> *messageDict = (NSDictionary *)msgBody;
-		id cmdID = [messageDict valueForKey:@"commandID"];
-		if((cmdID != nil) && [cmdID isKindOfClass:[NSString class]])
-		{
-			id elemID = [messageDict valueForKey:@"elementID"];
-			if((elemID != nil) && [elemID isKindOfClass:[NSString class]])
-			{
-				self.elementID = (NSString *)elemID;
-			}
+		NSDictionary<NSString*, id> *messageDict = (NSDictionary *)msgBody;
 
-			self.commandID = (NSString *)cmdID; //[OMCDialogController handleAction:] will ask for commandID to execute
-			[self.target performSelector:self.action withObject:self]; // = [(OMCDialogController*)_target handleAction:self];
-			
-			self.commandID = nil;
-			self.elementID = nil;
-		}
+		// We are being executed in callback from WebKit
+		// for safety, get out of the callback to execute the OMC command because
+		// we need to call into WebKit before executing the command to obtain element values
+		CFRunLoopPerformBlock(CFRunLoopGetMain(), kCFRunLoopCommonModes, ^()
+		{
+			[self runOMCCommandWithWebkitMessage:messageDict];
+		});
 	}
+}
+
+- (id)executeJavaScript:(NSString *)scriptString
+{
+	__block BOOL completionHandled = NO;
+	__block id outResult = nil;
+
+	@try
+	{
+		[_wkWebView evaluateJavaScript:scriptString completionHandler:^(id result, NSError *error)
+		{
+			completionHandled = YES;
+			if(error == nil)
+			{
+				outResult = [result retain];
+			}
+			else
+			{
+				NSLog(@"evaluateJavaScript error : %@", error.localizedDescription);
+			}
+		}];
+	}
+	@catch (NSException *localException)
+	{
+		NSLog(@"evaluateJavaScript: triggered exception: %@", localException);
+		completionHandled = YES; //if this happens, we need to make sure the loop below is not infinite
+	}
+
+	// Wait for the completion handler to be executed
+	// Apple documentation says it is always executed on main thread
+	// so it is posted to the CFRunLoop by WebKit
+	CFRunLoopRunResult runloopResult;
+	do
+	{
+		runloopResult = CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0, true /*returnAfterSourceHandled*/);
+	}
+	while(!completionHandled);
+
+	return [outResult autorelease];
 }
 
 - (NSString *)stringValue
