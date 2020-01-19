@@ -71,7 +71,7 @@ Boolean RunCocoaDialog(OnMyCommandCM *inPlugin)
 
 
 CFTypeRef
-OMCCocoaDialog::CopyControlValue(CFStringRef inControlID, SInt32 inControlPart, SelectionIterator *inSelIterator, CFDictionaryRef *outCustomProperties) noexcept
+OMCCocoaDialog::CopyControlValue(CFStringRef inControlID, CFStringRef inControlPart, SelectionIterator *inSelIterator, CFDictionaryRef *outCustomProperties) noexcept
 {
 	if(outCustomProperties != NULL)
 		*outCustomProperties = NULL;
@@ -83,7 +83,7 @@ OMCCocoaDialog::CopyControlValue(CFStringRef inControlID, SInt32 inControlPart, 
 		{
 			if(mController != NULL)
 			{
-				outValue = [mController controlValueForID:(NSString *)inControlID forPart:(NSInteger)inControlPart withIterator:inSelIterator outProperties:outCustomProperties];
+				outValue = [mController controlValueForID:(NSString *)inControlID forPart:(NSString *)inControlPart withIterator:inSelIterator outProperties:outCustomProperties];
 				[outValue retain];
 			}
 		}

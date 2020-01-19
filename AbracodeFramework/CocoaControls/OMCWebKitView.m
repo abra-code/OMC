@@ -5,6 +5,37 @@
 #import "OMCWebKitView.h"
 #include "OMCScriptsManager.h"
 
+// OMC ID will be used to construct the environment variables like OMC_NIB_WEBVIEW_1_ELEMENT_MYID_VALUE
+// HTML 5 element ID can be any character except whitespace
+// Allowed set for OMC is uppercase characters: A-Z, digits: 0-9 and underscore: _
+NSString *NormalizeOMCVariableIDFromElementID(NSString *inElementID)
+{
+	NSUInteger length = [inElementID length];
+	if(length == 0)
+		return @"";
+
+	unichar *characters = malloc(length * sizeof(unichar));
+	if(characters == NULL)
+		return @"";
+
+	[inElementID getCharacters:characters range:NSMakeRange(0, length)];
+
+	for(NSUInteger i = 0; i < length; i++)
+	{
+		unichar oneChar = characters[i];
+		if(oneChar >= 'a' && oneChar <= 'z')
+			characters[i] = oneChar - 32; //from a -> A, z -> Z
+		else if( (oneChar < '0') || (oneChar > '9' && oneChar < 'A') || (oneChar > 'Z') ) //we already handled a-z range above so don't bother again
+			characters[i] = '_';
+		//else it is A-Z or 0-9 so we leave unchanged
+	}
+	
+	NSString *outString = [NSString stringWithCharacters:characters length:length];
+	free(characters);
+
+	return outString;
+}
+
 @implementation OMCWebKitView
 
 @synthesize tag;
@@ -126,17 +157,6 @@
 		{
 			self.elementID = (NSString *)elemID;
 		}
-
-		// Obtain values from all elements of class OMC
-		// getAllOMCElementValues() is a function injected by our custom JavaScript on WKWebView creation
-		id theResult = [self executeJavaScript:@"getAllOMCElementValues();"];
-		if([theResult isKindOfClass:[NSDictionary class]]) //we expect dictionary result from that function
-		{
-			NSDictionary<NSString*, NSString*> *elementValuesDict = (NSDictionary<NSString*, NSString*> *)theResult;
-			// TODO: all element values will be exported as OMC_NIB_WEBVIEW_XXX_ELEMENT_YYY_VALUE
-			// HTML element id names will need to be normalized to a set [A-Z0-9_]
-			NSLog(@"result = %@", elementValuesDict);
-		}
 		
 		self.commandID = (NSString *)cmdID; //[OMCDialogController handleAction:] will ask for commandID to execute
 		[self.target performSelector:self.action withObject:self]; // = [(OMCDialogController*)_target handleAction:self];
@@ -231,6 +251,26 @@
 	{
 		NSURLRequest *urlRequest = [NSURLRequest requestWithURL:wkWebViewURL];
 		/*WKNavigation *wkNavigation =*/ [_wkWebView loadRequest:urlRequest];
+	}
+}
+
+- (void)storeElementValuesIn:(NSMutableDictionary *)ioDict
+{
+	// Obtain values from all elements of class OMC
+	// OMC.getAllElementValues() is a function injected by our custom JavaScript on WKWebView creation
+	id theResult = [self executeJavaScript:@"OMC.getAllElementValues();"];
+	if([theResult isKindOfClass:[NSDictionary class]]) //we expect dictionary result from that function
+	{
+		NSDictionary<NSString*, NSString*> *elementValuesDict = (NSDictionary<NSString*, NSString*> *)theResult;
+		// all element values will be exported as OMC_NIB_WEBVIEW_XXX_ELEMENT_YYY_VALUE
+		// HTML element id names are normalized to a set [A-Z0-9_]
+		//NSLog(@"result = %@", elementValuesDict);
+		
+		[elementValuesDict enumerateKeysAndObjectsUsingBlock: ^(id inKey, id inObj, BOOL *stop)
+		{
+			NSString *omcID = NormalizeOMCVariableIDFromElementID((NSString *)inKey);
+			[ioDict setValue:inObj forKey:omcID];
+		}];
 	}
 }
 

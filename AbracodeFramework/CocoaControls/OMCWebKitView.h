@@ -30,5 +30,6 @@ IB_DESIGNABLE
 - (NSString *)stringValue;
 - (void)setStringValue:(NSString *)aString;
 
+- (void)storeElementValuesIn:(NSMutableDictionary *)ioDict;
 
 @end

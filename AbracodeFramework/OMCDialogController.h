@@ -48,8 +48,8 @@ class OMCCocoaDialog;
 - (id)findViewInParent:(NSView *)inParentView forControlID:(NSString *)inControlID;//may return NSView or NSCell
 - (id)findControlOrViewWithID:(NSString *)inControlID;//may return NSView or NSCell
 - (void)allControlValues:(NSMutableDictionary *)ioControlValues andProperties:(NSMutableDictionary *)ioCustomProperties withIterator:(SelectionIterator *)inSelIterator;
-- (id)controlValueForID:(NSString *)inControlID forPart:(NSInteger)inControlPart withIterator:(SelectionIterator *)inSelIterator outProperties:(CFDictionaryRef *)outCustomProperties; //returns string or array of strings
-- (id)controlValue:(id)controlOrView forPart:(NSInteger)inControlPart withIterator:(SelectionIterator *)inSelIterator;
+- (id)controlValueForID:(NSString *)inControlID forPart:(NSString *)inControlPart withIterator:(SelectionIterator *)inSelIterator outProperties:(CFDictionaryRef *)outCustomProperties; //returns string or array of strings
+- (id)controlValue:(id)controlOrView forPart:(NSString *)inControlPart withIterator:(SelectionIterator *)inSelIterator;
 - (void)setControlStringValue:(NSString *)inValue forControlID:(NSString *)inControlID;
 - (void)setControlValues:(CFDictionaryRef)inControlDict;
 - (CFDictionaryRef)copyControlProperties:(id)controlOrView;

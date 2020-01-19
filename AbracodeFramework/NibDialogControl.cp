@@ -59,10 +59,8 @@ CreateControlIDFromString(CFStringRef inControlIDString, bool isEnvStyle)
 //get the params from __NIB_TABLE_XXX_COLUMN_XXX_VALUE__ or environment variable style OMC_NIB_TABLE_XXX_COLUMN_XXX_VALUE
 //TODO: if we implement more control id modifiers they should be added here and masked before being used for searching real IDs
 CFStringRef
-CreateTableIDAndColumnFromString(CFStringRef inControlIDString, CFIndex &outColumnIndex, bool useAllRows, bool isEnvStyle)
+CreateTableIDAndColumnFromString(CFStringRef inControlIDString, CFObj<CFStringRef> &outColumnIndexStr, bool useAllRows, bool isEnvStyle)
 {
-	outColumnIndex = 0;
-
 	if(inControlIDString == NULL)
 		return NULL;
 	
@@ -104,8 +102,6 @@ CreateTableIDAndColumnFromString(CFStringRef inControlIDString, CFIndex &outColu
 	if( idStrRange.length > 0)
 	{
 		controlID = ::CFStringCreateWithSubstring(kCFAllocatorDefault, inControlIDString, idStrRange);
-		//if(numberStr != NULL)
-		//	controlID = ::CFStringGetIntValue (numberStr);
 	}
 
 	CFRange numberStrRange;
@@ -113,9 +109,7 @@ CreateTableIDAndColumnFromString(CFStringRef inControlIDString, CFIndex &outColu
 	numberStrRange.length = actualLen - (columnStrRange.location + columnStrRange.length) - suffixLen;
 	if( numberStrRange.length > 0 )
 	{
-		CFObj<CFStringRef> numberStr( ::CFStringCreateWithSubstring(kCFAllocatorDefault, inControlIDString, numberStrRange) );
-		if(numberStr != NULL)
-			outColumnIndex = (CFIndex)::CFStringGetIntValue (numberStr);
+		outColumnIndexStr = CFStringCreateWithSubstring(kCFAllocatorDefault, inControlIDString, numberStrRange);
 	}
 	return controlID;
 }
@@ -164,3 +158,55 @@ CreateControlIDByAddingModifiers(CFStringRef inControlID, UInt32 inModifiers)
 	return outControlID.Detach();
 }
 
+// Extract control ID XXX and HTML element ID YYYY from string: OMC_NIB_WEBVIEW_XXX_ELEMENT_YYY_VALUE or __NIB_WEBVIEW_XXX_ELEMENT_YYY_VALUE__
+
+CFStringRef
+CreateWebViewIDAndElementIDFromString(CFStringRef inControlIDAndElementIDString, CFObj<CFStringRef> &outElementIDString, bool isEnvStyle)
+{
+	if(inControlIDAndElementIDString == NULL)
+		return NULL;
+	
+//the first part of the string is constant:
+	CFStringRef prefixString = isEnvStyle ? CFSTR("OMC_NIB_WEBVIEW_") : CFSTR("__NIB_WEBVIEW_");
+	CFIndex prefixLen = ::CFStringGetLength(prefixString);
+
+	CFStringRef elementString = CFSTR("_ELEMENT_");
+	CFIndex elementLen  =  ::CFStringGetLength(elementString);
+	
+	CFStringRef suffixString = isEnvStyle ? CFSTR("_VALUE") : CFSTR("_VALUE__");
+	CFIndex suffixLen  =  ::CFStringGetLength(suffixString);
+	
+	CFIndex actualLen = ::CFStringGetLength(inControlIDAndElementIDString);
+
+//there needs to be at least one character between prefix and ELEMENT and one between ELEMENT and suffix
+	if(actualLen < (prefixLen + 1 + elementLen + 1 + suffixLen) )
+		return NULL;
+
+	if( ::CFStringHasPrefix(inControlIDAndElementIDString, prefixString) == false)
+		return NULL;
+
+	if( ::CFStringHasSuffix(inControlIDAndElementIDString, suffixString) == false)
+		return NULL;
+
+	CFRange elementStrRange = ::CFStringFind( inControlIDAndElementIDString, elementString, 0 );
+	if(elementStrRange.length != elementLen)
+		return NULL;
+
+	CFStringRef controlID = NULL;
+	CFRange idStrRange;
+	idStrRange.location = prefixLen;
+	idStrRange.length = elementStrRange.location - prefixLen;
+	if( idStrRange.length > 0)
+	{
+		controlID = ::CFStringCreateWithSubstring(kCFAllocatorDefault, inControlIDAndElementIDString, idStrRange);
+	}
+
+	CFRange elementIDStrRange;
+	elementIDStrRange.location = elementStrRange.location + elementStrRange.length;
+	elementIDStrRange.length = actualLen - (elementStrRange.location + elementStrRange.length) - suffixLen;
+	if( elementIDStrRange.length > 0 )
+	{
+		outElementIDString = CFStringCreateWithSubstring(kCFAllocatorDefault, inControlIDAndElementIDString, elementIDStrRange);
+	}
+	return controlID;
+}

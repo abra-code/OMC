@@ -196,6 +196,7 @@ enum SpecialWordIDs
 	NIB_DLG_CONTROL_VALUE,
 	NIB_TABLE_VALUE,
 	NIB_TABLE_ALL_ROWS,
+	NIB_WEB_VIEW_VALUE,
 	CURRENT_COMMAND_GUID,
 	FRONT_PROCESS_ID,
 	FRONT_APPLICATION_NAME
@@ -314,7 +315,7 @@ static void AddRequestedSpecialNibDialogValuesToMutableSet(const void *key, cons
 	CFStringRef requestedKey = reinterpret_cast<CFStringRef>(key);
 	
 	SInt32 specialWordID = GetSpecialEnvironWordID(requestedKey);
-	// currently only NIB_TABLE_ALL_ROWS is special becuase it is expensive
+	// currently only NIB_TABLE_ALL_ROWS is special because it is expensive
 	// and not exported by default unless:
 	// A. explicitly used in the command body in the plist
 	// B. specifically requested in must export dictionary
@@ -2065,6 +2066,7 @@ OnMyCommandCM::ProcessOnePrescannedWord(CommandDescription &currCommand, SInt32 
 		
 		case NIB_DLG_CONTROL_VALUE:
 		case NIB_TABLE_VALUE:
+		case NIB_WEB_VIEW_VALUE:
 		break;
 
 		case NIB_TABLE_ALL_ROWS: //special expensive case not always exported, only on demand
@@ -2805,6 +2807,11 @@ GetSpecialWordID(CFStringRef inStr)
 	{
 		return NIB_TABLE_ALL_ROWS;
 	}
+	else if( ::CFStringHasPrefix(inStr, CFSTR("__NIB_WEBVIEW_")) &&
+			::CFStringHasSuffix(inStr, CFSTR("_VALUE__")) )
+	{
+		return NIB_WEB_VIEW_VALUE;
+	}
 	
 	return NO_SPECIAL_WORD;
 }
@@ -2855,7 +2862,12 @@ GetSpecialEnvironWordID(CFStringRef inStr)
 	{
 		return NIB_TABLE_ALL_ROWS;
 	}
-	
+	else if( ::CFStringHasPrefix(inStr, CFSTR("OMC_NIB_WEBVIEW_")) &&
+			::CFStringHasSuffix(inStr, CFSTR("_VALUE")) )
+	{
+		return NIB_WEB_VIEW_VALUE;
+	}
+
 	return NO_SPECIAL_WORD;
 }
 
@@ -4057,6 +4069,7 @@ OnMyCommandCM::AppendTextToCommand(CFMutableStringRef inCommandRef, CFStringRef 
 		case NIB_DLG_CONTROL_VALUE:
 		case NIB_TABLE_VALUE:
 		case NIB_TABLE_ALL_ROWS:
+		case NIB_WEB_VIEW_VALUE:
 		{
 			newStrRef = CreateNibControlValue(specialWordID, currCommand, inStrRef, escSpecialCharsMode, false);
 		}
@@ -4963,8 +4976,9 @@ CreateCombinedString( CFArrayRef inStringsArray, CFStringRef inSeparator, CFStri
 #pragma mark -
 
 // private helper
+//
 static void
-StoreControlValue(CFMutableDictionaryRef inValues, CFStringRef controlID, CFTypeRef inValue, CFIndex columnIndex)
+StoreControlValue(CFMutableDictionaryRef inValues, CFStringRef controlID, CFTypeRef inValue, CFStringRef controlPart)
 {
 	CFObj<CFMutableDictionaryRef> columnIdAndValueDict;
 	CFTypeRef columnValues = CFDictionaryGetValue(inValues, controlID);
@@ -4973,7 +4987,7 @@ StoreControlValue(CFMutableDictionaryRef inValues, CFStringRef controlID, CFType
 		columnIdAndValueDict.Adopt( ::CFDictionaryCreateMutable(
 					kCFAllocatorDefault,
 					0,
-					NULL,//keyCallBacks,//NSInteger keys
+					&kCFTypeDictionaryKeyCallBacks,
 					&kCFTypeDictionaryValueCallBacks), kCFObjDontRetain );
 
 		CFDictionarySetValue(inValues, controlID, (CFMutableDictionaryRef)columnIdAndValueDict);
@@ -4983,7 +4997,7 @@ StoreControlValue(CFMutableDictionaryRef inValues, CFStringRef controlID, CFType
 		columnIdAndValueDict.Adopt((CFMutableDictionaryRef)columnValues, kCFObjRetain);
 	}
 
-	CFDictionarySetValue(columnIdAndValueDict, (const void *)columnIndex, (const void *)inValue);
+	CFDictionarySetValue(columnIdAndValueDict, (const void *)controlPart, (const void *)inValue);
 }
 
 
@@ -5036,17 +5050,17 @@ OnMyCommandCM::GetDialogControlValues(CommandDescription &currCommand, OMCDialog
 
 		if(specialWordID == NIB_TABLE_ALL_ROWS) //the only special request currently supported
 		{
-			CFIndex columnIndex = 0;//init to all columns
-			CFObj<CFStringRef> controlID( CreateTableIDAndColumnFromString(specialWord, columnIndex, true, isEnvironVariable), kCFObjDontRetain );
+			CFObj<CFStringRef> columnIndexStr(CFSTR("0"), kCFObjRetain);
+			CFObj<CFStringRef> controlID( CreateTableIDAndColumnFromString(specialWord, columnIndexStr, true, isEnvironVariable), kCFObjDontRetain );
 			
 			SelectionIterator *selIterator = AllRowsIterator_Create();
 			CFObj<CFDictionaryRef> customProperties;
-			CFObj<CFTypeRef> oneValue( inDialog.CopyControlValue(controlID, columnIndex, selIterator, &customProperties) );
+			CFObj<CFTypeRef> oneValue( inDialog.CopyControlValue(controlID, columnIndexStr, selIterator, &customProperties) );
 			SelectionIterator_Release(selIterator);
 
 			if(oneValue != nullptr)
 			{
-				StoreControlValue(mNibControlValues, controlID, oneValue, columnIndex);
+				StoreControlValue(mNibControlValues, controlID, oneValue, columnIndexStr);
 			
 				//custom escaping, prefix, suffix or separator
 				if(customProperties != nullptr)
@@ -5125,16 +5139,15 @@ OnMyCommandCM::AddEnvironmentVariablesForAllControls(CFMutableDictionaryRef ioEn
 	for(CFIndex i = 0; i < controlCount; i++)
 	{
 		CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
-		CFDictionaryRef columnsDict = ACFType<CFDictionaryRef>::DynamicCast( valueList[i] );
-		if((controlID != nullptr) && (columnsDict != nullptr))
+		CFDictionaryRef partsDict = ACFType<CFDictionaryRef>::DynamicCast( valueList[i] );
+		if((controlID != nullptr) && (partsDict != nullptr))
 		{
 			CFDictionaryRef controlProperties = (CFDictionaryRef)CFDictionaryGetValue(mNibControlCustomProperties, controlID);
-			CFIndex columnCount = CFDictionaryGetCount(columnsDict);
-			if(columnCount == 1)
+			CFIndex partsCount = CFDictionaryGetCount(partsDict);
+			if(partsCount == 1)
 			{
-				//column dictionary keys are just integers, not CFStringRefs!
-				CFIndex columnIndex = 0;
-				CFTypeRef controlValue = CFDictionaryGetValue(columnsDict, (void *)columnIndex);
+				//parts dictionary keys are CFStringRefs
+				CFTypeRef controlValue = CFDictionaryGetValue(partsDict, (void *)CFSTR("0"));
 				if(controlValue != nullptr)
 				{
 					CFObj<CFStringRef> controlValueString = CreateControlValueString(controlValue, controlProperties, kEscapeNone, true);
@@ -5145,22 +5158,30 @@ OnMyCommandCM::AddEnvironmentVariablesForAllControls(CFMutableDictionaryRef ioEn
 					}
 				}
 			}
-			else if(columnCount > 1)
+			// previously only table views had multiple parts, now WebKit view has multiple elements
+			else if(partsCount > 1)
 			{
-				std::vector<CFIndex> columnIDs(columnCount);
-				std::vector<CFTypeRef> columnValues(columnCount);
-				CFDictionaryGetKeysAndValues(columnsDict, (const void **)columnIDs.data(), (const void **)columnValues.data());
-				for(CFIndex k = 0; k < columnCount; k++)
+				std::vector<CFTypeRef> partIDs(partsCount);
+				std::vector<CFTypeRef> partValues(partsCount);
+				CFDictionaryGetKeysAndValues(partsDict, (const void **)partIDs.data(), (const void **)partValues.data());
+				
+				Boolean isWebView = CFDictionaryContainsKey(partsDict, CFSTR("@")); //this otherwise invalid key indicates it is a WebView
+				
+				CFStringRef envVariableFormat = CFSTR("OMC_NIB_TABLE_%@_COLUMN_%@_VALUE");
+				if(isWebView)
+					envVariableFormat = CFSTR("OMC_NIB_WEBVIEW_%@_ELEMENT_%@_VALUE");
+				
+				for(CFIndex k = 0; k < partsCount; k++)
 				{
-					CFIndex columnID = columnIDs[k];
-					CFTypeRef columnValue = columnValues[k];
-					if(columnValue != nullptr)
+					CFTypeRef partID = partIDs[k];
+					CFTypeRef partValue = partValues[k];
+					if( (partValue != nullptr) && (CFStringCompare((CFStringRef)partID, CFSTR("@"), 0) != kCFCompareEqualTo) )
 					{
-						CFObj<CFStringRef> columnValueString = CreateControlValueString(columnValue, controlProperties, kEscapeNone, true);
-						if(columnValueString != nullptr)
+						CFObj<CFStringRef> partValueString = CreateControlValueString(partValue, controlProperties, kEscapeNone, true);
+						if(partValueString != nullptr)
 						{
-							CFObj<CFStringRef> columnEnvName(CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("OMC_NIB_TABLE_%@_COLUMN_%ld_VALUE"), controlID, columnID));
-							CFDictionarySetValue(ioEnvironList, columnEnvName, columnValueString);
+							CFObj<CFStringRef> controlAndPartEnvName(CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, envVariableFormat, controlID, partID));
+							CFDictionarySetValue(ioEnvironList, controlAndPartEnvName, partValueString);
 						}
 					}
 				}
@@ -5180,7 +5201,7 @@ CFStringRef
 OnMyCommandCM::CreateNibControlValue(SInt32 inSpecialWordID, const CommandDescription &currCommand, CFStringRef inNibControlString, UInt16 escSpecialCharsMode, bool isEnvStyle)
 {
 	CFObj<CFTypeRef> oneValue;
-	CFIndex columnIndex = 0;//init to all columns
+	CFObj<CFStringRef> partIDStr;
 	CFObj<CFStringRef> controlID;	
 
 	TRACE_CFSTR(CFSTR("OnMyCommandCM::CreateNibControlValue"));
@@ -5189,14 +5210,24 @@ OnMyCommandCM::CreateNibControlValue(SInt32 inSpecialWordID, const CommandDescri
 		return nullptr;
 
 	if( inSpecialWordID == NIB_DLG_CONTROL_VALUE ) //regular control query
+	{
 		controlID.Adopt( CreateControlIDFromString(inNibControlString, isEnvStyle), kCFObjDontRetain );
+	}
 	else if( (inSpecialWordID == NIB_TABLE_VALUE) || (inSpecialWordID == NIB_TABLE_ALL_ROWS) ) //table control query
-		controlID.Adopt( CreateTableIDAndColumnFromString(inNibControlString, columnIndex, inSpecialWordID == NIB_TABLE_ALL_ROWS, isEnvStyle), kCFObjDontRetain );
+	{
+		partIDStr.Adopt(CFSTR("0"), kCFObjRetain);
+		controlID.Adopt( CreateTableIDAndColumnFromString(inNibControlString, partIDStr, inSpecialWordID == NIB_TABLE_ALL_ROWS, isEnvStyle), kCFObjDontRetain );
 
-	if( inSpecialWordID == NIB_TABLE_ALL_ROWS )
-	{ //saved as unique value in the dictionary
-		CFObj<CFStringRef> newControlID( CreateControlIDByAddingModifiers(controlID, kControlModifier_AllRows) );
-		controlID.Swap(newControlID);
+		if( inSpecialWordID == NIB_TABLE_ALL_ROWS )
+		{ //saved as unique value in the dictionary
+			CFObj<CFStringRef> newControlID( CreateControlIDByAddingModifiers(controlID, kControlModifier_AllRows) );
+			controlID.Swap(newControlID);
+		}
+	}
+	else if( inSpecialWordID == NIB_WEB_VIEW_VALUE ) //OMCWebView control query
+	{
+		partIDStr.Adopt(CFSTR(""), kCFObjRetain);
+		controlID.Adopt( CreateWebViewIDAndElementIDFromString(inNibControlString, partIDStr, isEnvStyle), kCFObjDontRetain );
 	}
 
 	DEBUG_CFSTR((CFStringRef)controlID);
@@ -5209,8 +5240,7 @@ OnMyCommandCM::CreateNibControlValue(SInt32 inSpecialWordID, const CommandDescri
 	CFDictionaryRef columnIds = ACFType<CFDictionaryRef>::DynamicCast(theItem);
 	if(columnIds != NULL)
 	{
-		//columnIDs dictionary keys are just integers, not strings
-		theItem = ::CFDictionaryGetValue(columnIds, (const void *)columnIndex);
+		theItem = ::CFDictionaryGetValue(columnIds, (const void *)(CFStringRef)partIDStr);
 		oneValue.Adopt((CFTypeRef)theItem, kCFObjRetain);
 		if((oneValue != nullptr) && (mNibControlCustomProperties != nullptr))
 			customProperties = ACFType<CFDictionaryRef>::DynamicCast(CFDictionaryGetValue(mNibControlCustomProperties, (CFStringRef)controlID));

@@ -566,7 +566,7 @@ exit 1
 			<key>COMMAND_ID</key>
 			<string>test.webkitview.execute</string>
 			<key>EXECUTION_MODE</key>
-			<string>exe_script_file</string>
+			<string>exe_script_file_with_output_window</string>
 			<key>NAME</key>
 			<array>
 				<string>WebKitView Test</string>

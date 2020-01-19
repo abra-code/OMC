@@ -17,6 +17,7 @@
 #import "OMCTableView.h"
 #import "OMCComboBox.h" //for shouldExecutAction
 #import "OMCButton.h" //for droppedItems
+#import "OMCWebKitView.h"
 
 /*
  Method argument types. (Deprecated. These constants are used internally by NSInvocation—you should not use them directly.)
@@ -514,26 +515,27 @@ FindArgumentType(const char *argTypeStr)
 }
 
 // private helper
--(void)storeValue:(id)inValue forControlID:(NSString*)controlID forColumn:(NSUInteger)columnIndex inControlValues:(NSMutableDictionary *)ioControlValues
+-(CFMutableDictionaryRef)storeValue:(id)inValue forControlID:(NSString*)controlID forPart:(NSString *)controlPart inControlValues:(NSMutableDictionary *)ioControlValues
 {
-	CFObj<CFMutableDictionaryRef> columnIdAndValueDict;
-	id columnValues = ioControlValues[controlID];
-	if(columnValues == nil)
+	CFObj<CFMutableDictionaryRef> partIdAndValueDict;
+	id partValues = ioControlValues[controlID];
+	if(partValues == nil)
 	{
-		columnIdAndValueDict.Adopt( ::CFDictionaryCreateMutable(
+		partIdAndValueDict.Adopt( ::CFDictionaryCreateMutable(
 					kCFAllocatorDefault,
 					0,
-					NULL,//keyCallBacks,//NSInteger keys
+					&kCFTypeDictionaryKeyCallBacks,
 					&kCFTypeDictionaryValueCallBacks), kCFObjDontRetain );
 
-		[ioControlValues setValue:(id)(CFMutableDictionaryRef)columnIdAndValueDict forKey:controlID];
+		[ioControlValues setValue:(id)(CFMutableDictionaryRef)partIdAndValueDict forKey:controlID];
 	}
 	else
 	{
-		columnIdAndValueDict.Adopt((CFMutableDictionaryRef)columnValues, kCFObjRetain);
+		partIdAndValueDict.Adopt((CFMutableDictionaryRef)partValues, kCFObjRetain);
 	}
 
-	CFDictionarySetValue(columnIdAndValueDict, (const void *)columnIndex, (const void *)inValue);
+	CFDictionarySetValue(partIdAndValueDict, (const void *)controlPart, (const void *)inValue);
+	return partIdAndValueDict;
 }
 
 // private helper
@@ -554,16 +556,24 @@ FindArgumentType(const char *argTypeStr)
 				id controlValue = [myDelegate selectionValueForColumn:columnIndex withIterator:inSelIterator];
 				if(controlValue != nil)
 				{
-					[self storeValue:controlValue forControlID:controlID forColumn:columnIndex inControlValues:ioControlValues];
+					NSString *columnIndexStr = [NSString stringWithFormat:@"%ld", columnIndex];
+					[self storeValue:controlValue forControlID:controlID forPart:columnIndexStr inControlValues:ioControlValues];
 				}
 			}
 		}
 	}
+	else if( [inView isKindOfClass:[OMCWebKitView class]])
+	{
+		//special invalid part name "@" indicates it is a WebView to distinguish from table view
+		CFMutableDictionaryRef webViewPartValues = [self storeValue:@"" forControlID:controlID forPart:@"@" inControlValues:ioControlValues];
+		OMCWebKitView *omcWKView = (OMCWebKitView *)inView;
+		[omcWKView storeElementValuesIn:(NSMutableDictionary *)webViewPartValues];
+	}
 	else
 	{
-		id controlValue = [self controlValue:inView forPart:0 withIterator:inSelIterator];
+		id controlValue = [self controlValue:inView forPart:@"0" withIterator:inSelIterator];
 		if(controlValue != nil)
-			[self storeValue:controlValue forControlID:controlID forColumn:0 inControlValues:ioControlValues];
+			[self storeValue:controlValue forControlID:controlID forPart:@"0" inControlValues:ioControlValues];
 	}
 
 	CFObj<CFDictionaryRef> customProperties([self copyControlProperties:inView]);
@@ -714,7 +724,7 @@ FindArgumentType(const char *argTypeStr)
 	return outDict;
 }
 
-- (id)controlValue:(id)controlOrView forPart:(NSInteger)inControlPart withIterator:(SelectionIterator *)inSelIterator
+- (id)controlValue:(id)controlOrView forPart:(NSString *)inControlPart withIterator:(SelectionIterator *)inSelIterator
 {
 	if( [controlOrView isKindOfClass:[NSPopUpButton class]] && ![controlOrView isKindOfClass:[OMCPopUpButton class]] )
 	{
@@ -744,10 +754,11 @@ FindArgumentType(const char *argTypeStr)
 		id myDelegate = [myTable delegate];
 		if( (myDelegate != nil) && [myDelegate isKindOfClass:[OMCTableViewController class]] )
 		{
+			NSInteger columnIndex = [inControlPart integerValue];
 			if( (inSelIterator != NULL) && SelectionIterator_IsAllRows(inSelIterator) )
-				return [myDelegate allRowsForColumn:inControlPart];
+				return [myDelegate allRowsForColumn:columnIndex];
 			else
-				return [myDelegate selectionValueForColumn:inControlPart withIterator:inSelIterator];
+				return [myDelegate selectionValueForColumn:columnIndex withIterator:inSelIterator];
 		}
 	}
 
@@ -759,8 +770,8 @@ FindArgumentType(const char *argTypeStr)
 	return nil;
 }
 
-
-- (id)controlValueForID:(NSString *)inControlID forPart:(NSInteger)inControlPart withIterator:(SelectionIterator *)inSelIterator outProperties:(CFDictionaryRef *)outCustomProperties
+//inControlPart can be a column index for table or element ID for WebView
+- (id)controlValueForID:(NSString *)inControlID forPart:(NSString *)inControlPart withIterator:(SelectionIterator *)inSelIterator outProperties:(CFDictionaryRef *)outCustomProperties
 {
 	id controlOrView = [self findControlOrViewWithID:inControlID];
 	if(controlOrView != nil)

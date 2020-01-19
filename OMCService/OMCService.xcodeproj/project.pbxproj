@@ -27,7 +27,7 @@
 		29B97325FDCFA39411CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
 		8D1107310486CEB800E47090 /* OMCService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "OMCService-Info.plist"; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* OMCService.service */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OMCService.service; sourceTree = BUILT_PRODUCTS_DIR; };
-		E23AAD5312F5737D004C867B /* app.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = app.icns; path = ../AbracodeFramework/app.icns; sourceTree = SOURCE_ROOT; };
+		E23AAD5312F5737D004C867B /* app.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = app.icns; path = ../AbracodeFramework/Resources/app.icns; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */

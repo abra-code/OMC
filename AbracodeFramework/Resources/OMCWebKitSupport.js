@@ -1,26 +1,64 @@
-
-function getAllOMCElementValues()
+class OMC
 {
-	let valuesDict = {};
-	let elemsArray = document.getElementsByClassName("OMC");
-	for (let i = 0, len = elemsArray.length; i < len; i++)
+	static getAllElementValues()
 	{
-		let elem = elemsArray[i];
-		if(elem.hasAttribute('id'))
+		let valuesDict = {};
+		let elemsArray = document.getElementsByClassName("OMC");
+		for (let i = 0, len = elemsArray.length; i < len; i++)
 		{
-			console.log("id = " + elem.id);
-			if(elem.nodeName == "INPUT")
+			let elem = elemsArray[i];
+			if(elem.hasAttribute('id'))
 			{
-				console.log("value = " + elem.value);
-				valuesDict[elem.id] = elem.value;
-			}
-			else
-			{
-				console.log("innerHTML = " + elem.innerHTML);
-				valuesDict[elem.id] = elem.innerHTML;
+				//console.log("id = " + elem.id);
+				if(elem.nodeName == "INPUT")
+				{
+					//console.log("value = " + elem.value);
+					
+					if((elem.type == "checkbox") || (elem.type == "radio"))
+					{
+						if(elem.checked)
+							valuesDict[elem.id] = elem.value;
+						else
+							valuesDict[elem.id] = "";
+					}
+					else
+					{
+						valuesDict[elem.id] = elem.value;
+					}
+				}
+				else
+				{
+					//console.log("innerHTML = " + elem.innerHTML);
+					//valuesDict[elem.id] = elem.innerHTML;
+					valuesDict[elem.id] = elem.innerText;
+				}
 			}
 		}
-		
+		return valuesDict;
 	}
-	return valuesDict;
+
+	static getAllElementIDs()
+	{
+		var elementIDs = [];
+		let elemsArray = document.getElementsByClassName("OMC");
+		for (let i = 0, len = elemsArray.length; i < len; i++)
+		{
+			let elem = elemsArray[i];
+			if(elem.hasAttribute('id'))
+			{
+				elementIDs.push(elem.id);
+			}
+		}
+		return elementIDs;
+	}
+
+	static registerElementByID(elementID)
+	{
+		let foundElement = document.getElementById(elementID);
+		if(foundElement !== null)
+		{
+			foundElement.classList.add("OMC");
+		}
+	}
+
 }

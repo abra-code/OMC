@@ -64,7 +64,7 @@ public:
 
 	CFStringRef				GetDialogUniqueID();
 
-	virtual CFTypeRef		CopyControlValue(CFStringRef inControlID, SInt32 inControlPart, SelectionIterator *inSelIterator, CFDictionaryRef *outCustomProperties) noexcept = 0;
+	virtual CFTypeRef		CopyControlValue(CFStringRef inControlID, CFStringRef inControlPart, SelectionIterator *inSelIterator, CFDictionaryRef *outCustomProperties) noexcept = 0;
 	virtual void			CopyAllControlValues(CFMutableDictionaryRef ioControlValues, CFMutableDictionaryRef ioCustomProperties, SelectionIterator *inSelIterator) noexcept = 0;
 
 	virtual CFDataRef		ReceivePortMessage( SInt32 msgid, CFDataRef inData ) = 0;//remote message

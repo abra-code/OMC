@@ -21,7 +21,7 @@ public:
 
 	virtual				~OMCCocoaDialog() { }
 
-	virtual CFTypeRef	CopyControlValue(CFStringRef inControlID, SInt32 inControlPart, SelectionIterator *inSelIterator, CFDictionaryRef *outCustomProperties) noexcept;
+	virtual CFTypeRef	CopyControlValue(CFStringRef inControlID, CFStringRef inControlPart, SelectionIterator *inSelIterator, CFDictionaryRef *outCustomProperties) noexcept;
 	virtual void		CopyAllControlValues(CFMutableDictionaryRef ioControlValues, CFMutableDictionaryRef ioCustomProperties, SelectionIterator *inSelIterator) noexcept;
 
 	virtual CFDataRef	ReceivePortMessage( SInt32 msgid, CFDataRef inData );//remote message
