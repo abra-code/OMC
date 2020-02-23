@@ -5201,7 +5201,7 @@ CFStringRef
 OnMyCommandCM::CreateNibControlValue(SInt32 inSpecialWordID, const CommandDescription &currCommand, CFStringRef inNibControlString, UInt16 escSpecialCharsMode, bool isEnvStyle)
 {
 	CFObj<CFTypeRef> oneValue;
-	CFObj<CFStringRef> partIDStr;
+	CFObj<CFStringRef> partIDStr(CFSTR("0"), kCFObjRetain);
 	CFObj<CFStringRef> controlID;	
 
 	TRACE_CFSTR(CFSTR("OnMyCommandCM::CreateNibControlValue"));
@@ -5215,7 +5215,6 @@ OnMyCommandCM::CreateNibControlValue(SInt32 inSpecialWordID, const CommandDescri
 	}
 	else if( (inSpecialWordID == NIB_TABLE_VALUE) || (inSpecialWordID == NIB_TABLE_ALL_ROWS) ) //table control query
 	{
-		partIDStr.Adopt(CFSTR("0"), kCFObjRetain);
 		controlID.Adopt( CreateTableIDAndColumnFromString(inNibControlString, partIDStr, inSpecialWordID == NIB_TABLE_ALL_ROWS, isEnvStyle), kCFObjDontRetain );
 
 		if( inSpecialWordID == NIB_TABLE_ALL_ROWS )
@@ -5238,7 +5237,7 @@ OnMyCommandCM::CreateNibControlValue(SInt32 inSpecialWordID, const CommandDescri
 
 	const void *theItem = ::CFDictionaryGetValue(mNibControlValues, (CFStringRef)controlID);
 	CFDictionaryRef columnIds = ACFType<CFDictionaryRef>::DynamicCast(theItem);
-	if(columnIds != NULL)
+	if((columnIds != nullptr) && (partIDStr != nullptr))
 	{
 		theItem = ::CFDictionaryGetValue(columnIds, (const void *)(CFStringRef)partIDStr);
 		oneValue.Adopt((CFTypeRef)theItem, kCFObjRetain);
