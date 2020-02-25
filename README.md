@@ -15,8 +15,8 @@ Until the process of open-sourcing all of OnMyCommand is complete, installing th
 * This will create a partial file hierarchy headed by `Products`. Manually copy each file into the position indicated by its place in this hierarchy:
     * `Products/Library/Contextual Menu Items/OnMyCommandCM.plugin` to `/Library/Contextual Menu Items/`
     * `Products/Library/Frameworks/Abracode.framework` to `/Library/Frameworks/`
-    * `Products/Library/Services/OMCService.service` to [I think] `~/Library/Services/`
-    * [Guessing here—I didn’t use it] `Products/Applications/OMCApplet.app` to `/Applications/`
+    * `Products/Library/Services/OMCService.service` to `~/Library/Services/`
+    * `Products/Applications/OMCApplet.app` to `/Applications/`
     
     
 ## User-Visible Changes
