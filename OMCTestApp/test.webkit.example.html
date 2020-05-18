@@ -17,22 +17,22 @@ div {
 <p>
 	<input type="radio" name="element" value="earth" id="earth" class="OMC" /> Earth<br />
 	<input type="radio" name="element" value="air" id="air" class="OMC" /> Air<br />
-	<input type="radio" name="element" value="fire" id="fire" class="OMC" /> Fire<br />
+	<input type="radio" name="element" value="fire" id="fire" class="OMC" /> Fire [registers click event]<br />
 	<input type="radio" name="element" value="water" id="water" class="OMC" /> Water<br />
 </p>
 <br/>
 <!-- <p>button: <button class="OMC" id="_butt" type="button">Button</button></p> -->
 
-<div class="OMC length" id="one">
-  <p>div with class="OMC length"</p>
+<div class="length" id="one">
+  <p>Element with class="length" and id=one, initially not registered with OMC</p>
 </div>
 
-<div class="OMC width" id="two">
-  <p>div with class="OMC width"</p>
+<div class="width" id="two">
+  <p>Element with class="width" and id=two. Executes command on double click</p>
 </div>
 
-<div class="OMC depth" id="three">
-  <p>div with class="OMC depth"</p>
+<div class="depth">
+  <p>Element with class="depth" and no initial id. Client JS code assigns id=three and registers mouseup event</p>
 </div>
 
 

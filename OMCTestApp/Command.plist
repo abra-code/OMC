@@ -506,22 +506,12 @@ exit 1
 			<integer>1</integer>
 		</dict>
 		<dict>
-			<key>ACTIVATION_MODE</key>
-			<string>act_always</string>
-			<key>COMMAND</key>
-			<array>
-				<string></string>
-			</array>
 			<key>COMMAND_ID</key>
 			<string>test.webkitview</string>
-			<key>ESCAPE_SPECIAL_CHARS</key>
-			<string>esc_with_backslash</string>
 			<key>EXECUTION_MODE</key>
 			<string>exe_silent_popen</string>
 			<key>NAME</key>
-			<array>
-				<string>WebKitView Test</string>
-			</array>
+			<string>WebKitView Test</string>
 			<key>NIB_DIALOG</key>
 			<dict>
 				<key>INIT_SUBCOMMAND_ID</key>
@@ -534,70 +524,62 @@ exit 1
 				<string>WebKitView</string>
 			</dict>
 			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
-			<string>10.4</string>
+			<string>10.14</string>
 			<key>REQUIRED_OMC_VERSION</key>
-			<string>2.0</string>
-			<key>VERSION</key>
-			<integer>1</integer>
+			<string>4.0</string>
 		</dict>
 		<dict>
-			<key>ACTIVATION_MODE</key>
-			<string>act_always</string>
-			<key>COMMAND</key>
-			<array>
-			</array>
 			<key>COMMAND_ID</key>
 			<string>test.webkitview.init</string>
 			<key>EXECUTION_MODE</key>
 			<string>exe_script_file</string>
 			<key>NAME</key>
-			<array>
-				<string>WebKitView Test</string>
-			</array>
-			<key>VERSION</key>
-			<integer>1</integer>
+			<string>WebKitView Test</string>
 		</dict>
 		<dict>
-			<key>ACTIVATION_MODE</key>
-			<string>act_always</string>
-			<key>COMMAND</key>
-			<array>
-			</array>
 			<key>COMMAND_ID</key>
 			<string>test.webkitview.execute</string>
 			<key>EXECUTION_MODE</key>
 			<string>exe_script_file_with_output_window</string>
 			<key>NAME</key>
-			<array>
-				<string>WebKitView Test</string>
-			</array>
-			<key>VERSION</key>
-			<integer>1</integer>
+			<string>WebKitView Test</string>
+			<key>OUTPUT_WINDOW_SETTINGS</key>
+			<dict>
+				<key>TEXT_FONT</key>
+				<string>Andale Mono</string>
+				<key>TEXT_SIZE</key>
+				<integer>12</integer>
+				<key>WINDOW_HEIGHT</key>
+				<integer>500</integer>
+				<key>WINDOW_POSITION</key>
+				<string>cascade</string>
+				<key>WINDOW_TITLE</key>
+				<string>WebKit Control Values</string>
+				<key>WINDOW_TYPE</key>
+				<string>regular</string>
+				<key>WINDOW_WIDTH</key>
+				<integer>900</integer>
+			</dict>
 		</dict>
 		<dict>
-			<key>ACTIVATION_MODE</key>
-			<string>act_always</string>
-			<key>COMMAND</key>
-			<array>
-			</array>
+			<key>COMMAND_ID</key>
+			<string>test.webkitview.clicked</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+			<key>NAME</key>
+			<string>WebKitView Test</string>
+		</dict>
+		<dict>
 			<key>COMMAND_ID</key>
 			<string>test.webkitview.set.url</string>
 			<key>EXECUTION_MODE</key>
 			<string>exe_script_file</string>
 			<key>NAME</key>
-			<array>
-				<string>WebKitView Test</string>
-			</array>
-			<key>VERSION</key>
-			<integer>1</integer>
+			<string>WebKitView Test</string>
 		</dict>
 		<dict>
 			<key>ACTIVATION_MODE</key>
 			<string>act_always</string>
-			<key>COMMAND</key>
-			<array>
-				<string></string>
-			</array>
 			<key>ESCAPE_SPECIAL_CHARS</key>
 			<string>esc_with_backslash</string>
 			<key>EXECUTION_MODE</key>

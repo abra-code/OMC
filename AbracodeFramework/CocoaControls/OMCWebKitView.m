@@ -242,6 +242,10 @@ NSString *NormalizeOMCVariableIDFromElementID(NSString *inElementID)
 	}
 
 	NSURL *wkWebViewURL = [NSURL URLWithString:aString];
+	NSURL *previousURL = [_wkWebView URL];
+	if((previousURL != nil) && (wkWebViewURL != nil) && [previousURL isEqualTo:wkWebViewURL])
+		return;
+
 	if(wkWebViewURL.isFileURL)
 	{
 		NSURL *parentDirURL = [wkWebViewURL URLByDeletingLastPathComponent];

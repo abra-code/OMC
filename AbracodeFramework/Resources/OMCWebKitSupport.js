@@ -1,5 +1,6 @@
 class OMC
 {
+	//get values of all elements whose class id = "OMC"
 	static getAllElementValues()
 	{
 		let valuesDict = {};
@@ -37,6 +38,7 @@ class OMC
 		return valuesDict;
 	}
 
+	//get all IDs of elements whose class id = "OMC"
 	static getAllElementIDs()
 	{
 		var elementIDs = [];
@@ -52,6 +54,7 @@ class OMC
 		return elementIDs;
 	}
 
+	//find element by id and add "OMC" class
 	static registerElementByID(elementID)
 	{
 		let foundElement = document.getElementById(elementID);
@@ -61,4 +64,30 @@ class OMC
 		}
 	}
 
+	//for given element assign a new id and add "OMC" class
+	static registerElement(element, newID)
+	{
+		if(element !== undefined)
+		{
+			element.id = newID;
+			element.classList.add("OMC");
+		}
+	}
+
+	//execute command with given ID on native code side
+	static execute(commandID, senderElementID)
+	{
+		let messageDict = {};
+		if(commandID !== undefined)
+		{
+			messageDict["commandID"] = commandID;
+			
+			if (senderElementID !== undefined)
+			{
+				messageDict["elementID"] = senderElementID;
+			}
+
+			window.webkit.messageHandlers.OMC.postMessage(messageDict);
+		}
+	}
 }

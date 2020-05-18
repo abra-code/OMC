@@ -19,6 +19,8 @@
 		1DC95F072309566F0095B2AF /* AbracodeFrameworkVersion.c in Sources */ = {isa = PBXBuildFile; fileRef = 1DC95F062309566F0095B2AF /* AbracodeFrameworkVersion.c */; };
 		1DE10DFF23C9E043003FCCDA /* test.webkit.example.client.js in CopyFiles */ = {isa = PBXBuildFile; fileRef = 1DE10DFD23C9E035003FCCDA /* test.webkit.example.client.js */; };
 		1DE10E0223CB0CA0003FCCDA /* test.webkitview.set.url.sh in CopyFiles */ = {isa = PBXBuildFile; fileRef = 1DE10E0023CB0C94003FCCDA /* test.webkitview.set.url.sh */; };
+		1DF4225B24714C2E009538C2 /* test.webkitview.clicked.sh in Resources */ = {isa = PBXBuildFile; fileRef = 1DF4225A24714C2E009538C2 /* test.webkitview.clicked.sh */; };
+		1DF4225C24714C4E009538C2 /* test.webkitview.clicked.sh in CopyFiles */ = {isa = PBXBuildFile; fileRef = 1DF4225A24714C2E009538C2 /* test.webkitview.clicked.sh */; };
 		8D11072A0486CEB800E47090 /* MainMenu.nib in Resources */ = {isa = PBXBuildFile; fileRef = 29B97318FDCFA39411CA2CEA /* MainMenu.nib */; };
 		8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
 		8D11072D0486CEB800E47090 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
@@ -47,6 +49,7 @@
 			dstPath = Scripts;
 			dstSubfolderSpec = 7;
 			files = (
+				1DF4225C24714C4E009538C2 /* test.webkitview.clicked.sh in CopyFiles */,
 				1DE10E0223CB0CA0003FCCDA /* test.webkitview.set.url.sh in CopyFiles */,
 				1DE10DFF23C9E043003FCCDA /* test.webkit.example.client.js in CopyFiles */,
 				1D6D26B223C0A85700C6320D /* test.webkitview.execute.sh in CopyFiles */,
@@ -80,6 +83,7 @@
 		1DCFB259231FC2B200D1C62E /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		1DE10DFD23C9E035003FCCDA /* test.webkit.example.client.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; path = test.webkit.example.client.js; sourceTree = "<group>"; };
 		1DE10E0023CB0C94003FCCDA /* test.webkitview.set.url.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = test.webkitview.set.url.sh; sourceTree = "<group>"; };
+		1DF4225A24714C2E009538C2 /* test.webkitview.clicked.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = test.webkitview.clicked.sh; sourceTree = "<group>"; };
 		29B97316FDCFA39411CA2CEA /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		29B97324FDCFA39411CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		29B97325FDCFA39411CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
@@ -90,7 +94,7 @@
 		E23C1AD410DE047300B2E8A1 /* OmcProjectCommon.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = OmcProjectCommon.xcconfig; path = ../Common/OmcProjectCommon.xcconfig; sourceTree = SOURCE_ROOT; };
 		E24DB4740DA0B06000F53AB5 /* Command.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Command.plist; sourceTree = SOURCE_ROOT; };
 		E29B53350D56D0A600F00B4A /* ForOutputObserver.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = ForOutputObserver.plist; sourceTree = SOURCE_ROOT; };
-		E2C32C370D2CB56B0023DA03 /* Abracode.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Abracode.framework; path = /Library/Frameworks/Abracode.framework; sourceTree = "<absolute>"; };
+		E2C32C370D2CB56B0023DA03 /* Abracode.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Abracode.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		E2C32C3D0D2CB64B0023DA03 /* OMCTestApp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCTestApp.h; sourceTree = "<group>"; };
 		E2C32C3E0D2CB64B0023DA03 /* OMCTestApp.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMCTestApp.m; sourceTree = "<group>"; };
 		E2C32C690D2CBB860023DA03 /* Example.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Example.plist; sourceTree = SOURCE_ROOT; };
@@ -188,6 +192,7 @@
 				E29A6A640D9CCEAC006A97B0 /* ImageKit.nib */,
 				1D386DB223BF0A7E00A16967 /* test.webkitview.init.sh */,
 				1D6D26B023C0A84800C6320D /* test.webkitview.execute.sh */,
+				1DF4225A24714C2E009538C2 /* test.webkitview.clicked.sh */,
 				1DE10E0023CB0C94003FCCDA /* test.webkitview.set.url.sh */,
 				1DE10DFD23C9E035003FCCDA /* test.webkit.example.client.js */,
 				1D386DB023BF06C400A16967 /* test.webkit.example.html */,
@@ -274,6 +279,7 @@
 				1D386DB123BF06C400A16967 /* test.webkit.example.html in Resources */,
 				E29A6A9D0D9CDE80006A97B0 /* LegacyWebKit.nib in Resources */,
 				E24DB4750DA0B06000F53AB5 /* Command.plist in Resources */,
+				1DF4225B24714C2E009538C2 /* test.webkitview.clicked.sh in Resources */,
 				E24DB4790DA0B1B000F53AB5 /* QuickTime.nib in Resources */,
 				E2F5C7C00DCEFEAD00B4D4EC /* sunflower.jpg in Resources */,
 				E2F5C7C60DCF010900B4D4EC /* QCDialog.qtz in Resources */,
@@ -433,7 +439,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
-				FRAMEWORK_SEARCH_PATHS = /Library/Frameworks;
+				FRAMEWORK_SEARCH_PATHS = "$(BUILT_PRODUCTS_DIR)";
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"_DEBUG_=1",
@@ -473,7 +479,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				DEAD_CODE_STRIPPING = YES;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				FRAMEWORK_SEARCH_PATHS = /Library/Frameworks;
+				FRAMEWORK_SEARCH_PATHS = "$(BUILT_PRODUCTS_DIR)";
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"_DEBUG_=0",
