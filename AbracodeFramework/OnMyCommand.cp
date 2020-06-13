@@ -144,63 +144,6 @@ const CommandDescription kEmptyCommand =
 	NULL, //currState
 };
 
-enum SpecialWordIDs
-{
-	NO_SPECIAL_WORD = 0,
-
-	OBJ_TEXT,
-	OBJ_PATH,
-	OBJ_PATH_NO_EXTENSION,//deprecated
-	OBJ_PARENT_PATH,
-	OBJ_NAME,
-	OBJ_NAME_NO_EXTENSION,
-	OBJ_EXTENSION_ONLY,
-	OBJ_DISPLAY_NAME,
-	OBJ_COMMON_PARENT_PATH,
-	OBJ_PATH_RELATIVE_TO_COMMON_PARENT,
-
-	DLG_INPUT_TEXT,
-	DLG_PASSWORD,//deprecated
-
-	DLG_SAVE_AS_PATH,
-	DLG_SAVE_AS_PARENT_PATH,
-	DLG_SAVE_AS_NAME,
-	DLG_SAVE_AS_NAME_NO_EXTENSION,
-	DLG_SAVE_AS_EXTENSION_ONLY,
-
-	DLG_CHOOSE_FILE_PATH,
-	DLG_CHOOSE_FILE_PARENT_PATH,
-	DLG_CHOOSE_FILE_NAME,
-	DLG_CHOOSE_FILE_NAME_NO_EXTENSION,
-	DLG_CHOOSE_FILE_EXTENSION_ONLY,
-
-	DLG_CHOOSE_FOLDER_PATH,
-	DLG_CHOOSE_FOLDER_PARENT_PATH,
-	DLG_CHOOSE_FOLDER_NAME,
-	DLG_CHOOSE_FOLDER_NAME_NO_EXTENSION,
-	DLG_CHOOSE_FOLDER_EXTENSION_ONLY,
-
-	DLG_CHOOSE_OBJECT_PATH,
-	DLG_CHOOSE_OBJECT_PARENT_PATH,
-	DLG_CHOOSE_OBJECT_NAME,
-	DLG_CHOOSE_OBJECT_NAME_NO_EXTENSION,
-	DLG_CHOOSE_OBJECT_EXTENSION_ONLY,
-	
-	MY_BUNDLE_PATH, //new paths for droplets mostly
-	OMC_RESOURCES_PATH,
-	OMC_SUPPORT_PATH,
-	APP_BUNDLE_PATH, //as of OMC 4.0 the preferred way to access applet bundle path - exported byy default
-	MY_HOST_BUNDLE_PATH, //deprecated but supported as of OMC 4.0 - not exported by default though
-	MY_EXTERNAL_BUNDLE_PATH, //points to EXTERNAL_BUNDLE_PATH defined in description. redundant but needed for portability
-	NIB_DLG_GUID,
-	NIB_DLG_CONTROL_VALUE,
-	NIB_TABLE_VALUE,
-	NIB_TABLE_ALL_ROWS,
-	NIB_WEB_VIEW_VALUE,
-	CURRENT_COMMAND_GUID,
-	FRONT_PROCESS_ID,
-	FRONT_APPLICATION_NAME
-};
 
 //we take advantage of the fact that __XXX__ word has the same length as OMC_XXX
 
@@ -314,7 +257,7 @@ static void AddRequestedSpecialNibDialogValuesToMutableSet(const void *key, cons
 	assert(ACFType<CFStringRef>::DynamicCast(key) != nullptr);
 	CFStringRef requestedKey = reinterpret_cast<CFStringRef>(key);
 	
-	SInt32 specialWordID = GetSpecialEnvironWordID(requestedKey);
+	SpecialWordID specialWordID = GetSpecialEnvironWordID(requestedKey);
 	// currently only NIB_TABLE_ALL_ROWS is special because it is expensive
 	// and not exported by default unless:
 	// A. explicitly used in the command body in the plist
@@ -1165,27 +1108,6 @@ OnMyCommandCM::SwapContext(OMCContextData &ioContextData)
 	ioContextData.mIsTextContext = tempBool;
 }
 
-/*
-void
-OnMyCommandCM::ResetContextData()
-{
-	DeleteObjectList();
-	
-	mContextFiles.Release();
-	mContextText.Release();
-	mCommonParentPath.Release();
-	mInputText.Release();
-	mCachedSaveAsPath.Release();
-	mCachedChooseFilePath.Release();
-	mCachedChooseFolderPath.Release();
-	mCachedChooseObjectPath.Release();
-	mNibControlValues.Release();
-	mNibControlCustomProperties.Release();
-
-	mError = noErr;
-}
-*/
-
 CFTypeRef
 OnMyCommandCM::GetCFContext()
 {
@@ -1517,7 +1439,18 @@ OnMyCommandCM::ProcessObjects()
 	}
 
 	OmcHostTaskManager *taskManager = new OmcHostTaskManager( this, currCommand, dynamicCommandName, mBundleRef, maxTaskCount );
-	
+
+	OMCDialog *activeDialog = nullptr;
+	if( currCommand.currState != nullptr )
+	{
+		activeDialog = OMCDialog::FindDialogByGUID(currCommand.currState->dialogGUID);
+		if(activeDialog != nullptr)
+		{
+			SelectionIterator* selIterator = activeDialog->GetSelectionIterator();
+			activeDialog->CopyAllControlValues(currCommand.specialRequestedNibControls, selIterator);
+		}
+	}
+
 	if( currCommand.refresh != nullptr )
 	{//refreshing needed - compose array of paths before performing any action
 		for(CFIndex i = 0; i < mObjectList.size(); i++)
@@ -1526,17 +1459,6 @@ OnMyCommandCM::ProcessObjects()
 			mCurrObjectIndex = i;
 			CFObj<CFMutableStringRef> onePath( CreateCombinedStringWithObjects(currCommand.refresh, NULL, NULL) );
 			mObjectList[i].refreshPath.Adopt(CreatePathByExpandingTilde(onePath));
-		}
-	}
-
-	OMCDialog *activeDialog = nullptr;
-	if( (currCommand.currState != nullptr) && (currCommand.currState->dialogGUID != nullptr) )
-	{
-		activeDialog = OMCDialog::FindDialogByGUID(currCommand.currState->dialogGUID);
-		if(activeDialog != nullptr)
-		{
-			SelectionIterator* selIterator = activeDialog->GetSelectionIterator();
-			GetDialogControlValues(currCommand, *activeDialog, selIterator); //the control values stored in mNibControlValues
 		}
 	}
 
@@ -1654,8 +1576,6 @@ OnMyCommandCM::ProcessCommandWithText(CommandDescription &currCommand, CFStringR
 		(executionMode == kExecPopenScriptFileWithOutputWindow))
 		escapingMode = kEscapeNone; //the command is actually a path and will not be interpeted by any shell
 
-	CFObj<CFMutableStringRef> theCommand( CreateCommandStringWithText(currCommand.command, inStrRef, escapingMode) );
-
 	CFBundleRef externBundle = GetCurrentCommandExternBundle();
 	CFBundleRef localizationBundle = nullptr;
 	if(currCommand.localizationTableName != nullptr)//client wants to be localized
@@ -1666,16 +1586,17 @@ OnMyCommandCM::ProcessCommandWithText(CommandDescription &currCommand, CFStringR
 	}
 
 	OMCDialog *activeDialog = nullptr;
-	if( (currCommand.currState != nullptr) && (currCommand.currState->dialogGUID != nullptr) )
+	if( currCommand.currState != nullptr )
 	{
 		activeDialog = OMCDialog::FindDialogByGUID(currCommand.currState->dialogGUID);
 		if(activeDialog != nullptr)
 		{
 			SelectionIterator* selIterator = activeDialog->GetSelectionIterator();
-			GetDialogControlValues(currCommand, *activeDialog, selIterator); //the control values stored in mNibControlValues
+			activeDialog->CopyAllControlValues(currCommand.specialRequestedNibControls, selIterator);
 		}
 	}
 
+	CFObj<CFMutableStringRef> theCommand( CreateCommandStringWithText(currCommand.command, inStrRef, escapingMode) );
 	CFObj<CFMutableStringRef> inputPipe( CreateCommandStringWithText(currCommand.inputPipe, inStrRef, kEscapeNone) );
 	CFObj<CFDictionaryRef> environList( CreateEnvironmentVariablesDict(inStrRef) );
 
@@ -1979,7 +1900,7 @@ OnMyCommandCM::PrescanArrayOfObjects( CommandDescription &currCommand, CFArrayRe
 	{
 		if( objects.GetValueAtIndex(i, fragmentRef) )
 		{
-			SInt32 specialWordID = GetSpecialWordID(fragmentRef);
+			SpecialWordID specialWordID = GetSpecialWordID(fragmentRef);
 			if(specialWordID == NO_SPECIAL_WORD)
 				FindEnvironmentVariables(currCommand, fragmentRef);
 			else
@@ -2133,7 +2054,7 @@ OnMyCommandCM::FindEnvironmentVariables(CommandDescription &currCommand, CFStrin
 				if( (varLen >= kMinSpecialWordLen) && (varLen <= kMaxSpecialWordLen) )
 				{
 					CFObj<CFStringRef> varString( ::CFStringCreateWithSubstring(kCFAllocatorDefault, inString, CFRangeMake(varStartOffset,varLen)) );
-					SInt32 specialWordID = GetSpecialEnvironWordID(varString);
+					SpecialWordID specialWordID = GetSpecialEnvironWordID(varString);
 					if( specialWordID != NO_SPECIAL_WORD )
 					{
 						ProcessOnePrescannedWord(currCommand, specialWordID, varString, true);
@@ -2151,7 +2072,7 @@ OnMyCommandCM::FindEnvironmentVariables(CommandDescription &currCommand, CFStrin
 void
 OnMyCommandCM::ScanDynamicName( CommandDescription &currCommand )
 {
-	if( currCommand.name == NULL )
+	if( currCommand.name == nullptr )
 		return;
 
 //	TRACE_CSTR("OnMyCommandCM->ScanDynamicName\n" );
@@ -2164,7 +2085,7 @@ OnMyCommandCM::ScanDynamicName( CommandDescription &currCommand )
 	{
 		if( command.GetValueAtIndex(i, fragmentRef) )
 		{
-			SInt32 specialWordID = GetSpecialWordID(fragmentRef);
+			SpecialWordID specialWordID = GetSpecialWordID(fragmentRef);
 			switch(specialWordID)
 			{
 				case NO_SPECIAL_WORD:
@@ -2172,6 +2093,9 @@ OnMyCommandCM::ScanDynamicName( CommandDescription &currCommand )
 				
 				case OBJ_TEXT:
 					currCommand.nameContainsText = true;
+				break;
+				
+				default:
 				break;
 			}
 		}
@@ -2762,7 +2686,7 @@ DoStringsMatch(CFStringRef inMatchString, CFStringRef inSearchedString, UInt8 ma
 
 #pragma mark -
 
-extern "C" SInt32
+extern "C" SpecialWordID
 GetSpecialWordID(CFStringRef inStr)
 {
 #if 0
@@ -2816,7 +2740,7 @@ GetSpecialWordID(CFStringRef inStr)
 	return NO_SPECIAL_WORD;
 }
 
-extern "C" SInt32
+extern "C" SpecialWordID
 GetSpecialEnvironWordID(CFStringRef inStr)
 {
 #if 0
@@ -3655,7 +3579,11 @@ OnMyCommandCM::CreateCommandStringWithObjects(CFArrayRef inFragments, UInt16 esc
 	if(theCommand == nullptr)
 		return nullptr;
 
-	CommandDescription &currCommand = mCommandList[mCurrCommandIndex];
+	CommandDescription &currCommand = GetCurrentCommand();
+
+	OMCDialog *activeDialog = nullptr;
+	if( currCommand.currState != nullptr )
+		activeDialog = OMCDialog::FindDialogByGUID(currCommand.currState->dialogGUID);
 
 //	TRACE_CSTR("OnMyCommandCM. CreateCommandStringWithObjects\n" );
 
@@ -3678,7 +3606,7 @@ OnMyCommandCM::CreateCommandStringWithObjects(CFArrayRef inFragments, UInt16 esc
 		{
 			AppendTextToCommand(theCommand, fragmentRef,
 								mObjectList.data(), mObjectList.size(), mCurrObjectIndex,
-								mClipboardText, currCommand,
+								mClipboardText, currCommand, activeDialog,
 								currCommand.mulObjSeparator, currCommand.mulObjPrefix, currCommand.mulObjSuffix,
 								escSpecialCharsMode );
 		}
@@ -3699,7 +3627,10 @@ OnMyCommandCM::CreateCommandStringWithText(CFArrayRef inFragments, CFStringRef i
 	if(theCommand == nullptr)
 		return nullptr;
 
-	CommandDescription &currCommand = mCommandList[mCurrCommandIndex];
+	CommandDescription &currCommand = GetCurrentCommand();
+	OMCDialog *activeDialog = nullptr;
+	if( currCommand.currState != nullptr )
+		activeDialog = OMCDialog::FindDialogByGUID(currCommand.currState->dialogGUID);
 
 	ACFArr fragments(inFragments);
 	CFIndex theCount = fragments.GetCount();
@@ -3711,7 +3642,7 @@ OnMyCommandCM::CreateCommandStringWithText(CFArrayRef inFragments, CFStringRef i
 		{
 			AppendTextToCommand(theCommand, fragmentRef,
 								nullptr, 0, -1,
-								inObjTextRef, currCommand,
+								inObjTextRef, currCommand, activeDialog,
 								nullptr, nullptr, nullptr,
 								escSpecialCharsMode,
 								inLocTableName, inLocBundleRef );
@@ -3724,10 +3655,7 @@ OnMyCommandCM::CreateCommandStringWithText(CFArrayRef inFragments, CFStringRef i
 CFDictionaryRef
 OnMyCommandCM::CreateEnvironmentVariablesDict(CFStringRef inObjTextRef)
 {
-	if( (mCommandList == nullptr) || (mCommandCount == 0) || (mCurrCommandIndex >= mCommandCount) )
-		return nullptr;
-
-	CommandDescription &currCommand = mCommandList[mCurrCommandIndex];
+	CommandDescription &currCommand = GetCurrentCommand();
 
 	if( currCommand.customEnvironVariables == nullptr )
 		return nullptr;
@@ -3775,7 +3703,7 @@ OnMyCommandCM::CreateCombinedStringWithObjects(CFArrayRef inArray, CFStringRef i
 //	if( mObjectList == NULL )
 //		return NULL;
 
-	if((mCurrCommandIndex >= mCommandCount) || (inArray == nullptr))
+	if(inArray == nullptr)
 		return nullptr;
 
 	ACFArr objects(inArray);
@@ -3783,11 +3711,15 @@ OnMyCommandCM::CreateCombinedStringWithObjects(CFArrayRef inArray, CFStringRef i
 	if(theCount == 0)
 		return nullptr;
 
+	CommandDescription &currCommand = GetCurrentCommand();
+
+	OMCDialog *activeDialog = nullptr;
+	if( currCommand.currState != nullptr )
+		activeDialog = OMCDialog::FindDialogByGUID(currCommand.currState->dialogGUID);
+
 	CFMutableStringRef thePath = CFStringCreateMutable(kCFAllocatorDefault, 0);
 	if(thePath == nullptr)
 		return nullptr;
-
-	CommandDescription &currCommand = mCommandList[mCurrCommandIndex];
 
 	for(CFIndex i = 0; i < theCount; i++ )
 	{
@@ -3796,7 +3728,7 @@ OnMyCommandCM::CreateCombinedStringWithObjects(CFArrayRef inArray, CFStringRef i
 		{
 			AppendTextToCommand(thePath, fragmentRef,
 								mObjectList.data(), mObjectList.size(), mCurrObjectIndex,
-								nullptr, currCommand,
+								nullptr, currCommand, activeDialog,
 								nullptr, nullptr, nullptr,
 								kEscapeNone,
 								inLocTableName, inLocBundleRef );
@@ -3811,7 +3743,7 @@ OnMyCommandCM::CreateCombinedStringWithObjects(CFArrayRef inArray, CFStringRef i
 void
 OnMyCommandCM::AppendTextToCommand(CFMutableStringRef inCommandRef, CFStringRef inStrRef,
 					OneObjProperties *inObjList, CFIndex inObjCount, CFIndex inCurrIndex,
-					CFStringRef inObjTextRef, CommandDescription &currCommand,
+					CFStringRef inObjTextRef, CommandDescription &currCommand, OMCDialog *activeDialog,
 					CFStringRef inMultiSeparator, CFStringRef inMultiPrefix, CFStringRef inMultiSuffix,
 					UInt16 escSpecialCharsMode, CFStringRef inLocTableName /*=nullptr*/, CFBundleRef inLocBundleRef/*=nullptr*/)
 {
@@ -3821,7 +3753,7 @@ OnMyCommandCM::AppendTextToCommand(CFMutableStringRef inCommandRef, CFStringRef 
 	CFObj<CFStringRef> newDel;
 	bool releaseNewString = true;
 
-	SInt32 specialWordID = GetSpecialWordID(inStrRef);
+	SpecialWordID specialWordID = GetSpecialWordID(inStrRef);
 
 	switch(specialWordID)
 	{
@@ -4071,7 +4003,8 @@ OnMyCommandCM::AppendTextToCommand(CFMutableStringRef inCommandRef, CFStringRef 
 		case NIB_TABLE_ALL_ROWS:
 		case NIB_WEB_VIEW_VALUE:
 		{
-			newStrRef = CreateNibControlValue(specialWordID, currCommand, inStrRef, escSpecialCharsMode, false);
+			if(activeDialog != nullptr)
+				newStrRef = activeDialog->CreateNibControlValue(specialWordID, inStrRef, escSpecialCharsMode, false);
 		}
 		break;
 		
@@ -4080,7 +4013,6 @@ OnMyCommandCM::AppendTextToCommand(CFMutableStringRef inCommandRef, CFStringRef 
 		{
 			if(mCommandList != NULL)
 			{
-				CommandDescription &currCommand = mCommandList[mCurrCommandIndex];
 				if( currCommand.currState != NULL )
 				{
 					newStrRef = currCommand.currState->dialogGUID;
@@ -4094,7 +4026,6 @@ OnMyCommandCM::AppendTextToCommand(CFMutableStringRef inCommandRef, CFStringRef 
 		{
 			if(mCommandList != NULL)
 			{
-				CommandDescription &currCommand = mCommandList[mCurrCommandIndex];
 				newStrRef = GetCommandUniqueID(currCommand);
 				releaseNewString = false;
 			}
@@ -4125,6 +4056,10 @@ OnMyCommandCM::PopulateEnvironList(CFMutableDictionaryRef ioEnvironList,
 	{
 		CFDictionaryGetKeysAndValues(ioEnvironList, (const void **)keyList.data(), NULL);
 	}
+	
+	OMCDialog *activeDialog = nullptr;
+	if( currCommand.currState != nullptr )
+		activeDialog = OMCDialog::FindDialogByGUID(currCommand.currState->dialogGUID);
 
 	for(CFIndex i = 0; i < itemCount; i++)
 	{
@@ -4133,7 +4068,7 @@ OnMyCommandCM::PopulateEnvironList(CFMutableDictionaryRef ioEnvironList,
 		bool releaseNewString = true;
 
 		CFStringRef theKey = ACFType<CFStringRef>::DynamicCast( keyList[(size_t)i] );
-		SInt32 specialWordID = GetSpecialEnvironWordID(theKey);
+		SpecialWordID specialWordID = GetSpecialEnvironWordID(theKey);
 
 		switch(specialWordID)
 		{
@@ -4386,7 +4321,8 @@ OnMyCommandCM::PopulateEnvironList(CFMutableDictionaryRef ioEnvironList,
 			//special on-demand value, which is costly to obtain
 			case NIB_TABLE_ALL_ROWS:
 			{
-				newStrRef = CreateNibControlValue(specialWordID, currCommand, theKey, kEscapeNone, true);
+				if(activeDialog != nullptr)
+					newStrRef = activeDialog->CreateNibControlValue(specialWordID, theKey, kEscapeNone, true);
 			}
 			break;
 			
@@ -4394,7 +4330,6 @@ OnMyCommandCM::PopulateEnvironList(CFMutableDictionaryRef ioEnvironList,
 			{
 				if(mCommandList != NULL)
 				{
-					CommandDescription &currCommand = mCommandList[mCurrCommandIndex];
 					if( currCommand.currState != NULL )
 					{
 						newStrRef = currCommand.currState->dialogGUID;
@@ -4408,11 +4343,13 @@ OnMyCommandCM::PopulateEnvironList(CFMutableDictionaryRef ioEnvironList,
 			{
 				if(mCommandList != NULL)
 				{
-					CommandDescription &currCommand = mCommandList[mCurrCommandIndex];
 					newStrRef = GetCommandUniqueID(currCommand);
 					releaseNewString = false;
 				}
 			}
+			break;
+			
+			default:
 			break;
 		}
 
@@ -4424,7 +4361,8 @@ OnMyCommandCM::PopulateEnvironList(CFMutableDictionaryRef ioEnvironList,
 		}
 	}
 	
-	AddEnvironmentVariablesForAllControls(ioEnvironList, currCommand);
+	if(activeDialog != nullptr)
+		activeDialog->AddEnvironmentVariablesForAllControls(ioEnvironList);
 }
 
 
@@ -4975,284 +4913,6 @@ CreateCombinedString( CFArrayRef inStringsArray, CFStringRef inSeparator, CFStri
 
 #pragma mark -
 
-// private helper
-//
-static void
-StoreControlValue(CFMutableDictionaryRef inValues, CFStringRef controlID, CFTypeRef inValue, CFStringRef controlPart)
-{
-	CFObj<CFMutableDictionaryRef> columnIdAndValueDict;
-	CFTypeRef columnValues = CFDictionaryGetValue(inValues, controlID);
-	if(columnValues == NULL)
-	{
-		columnIdAndValueDict.Adopt( ::CFDictionaryCreateMutable(
-					kCFAllocatorDefault,
-					0,
-					&kCFTypeDictionaryKeyCallBacks,
-					&kCFTypeDictionaryValueCallBacks), kCFObjDontRetain );
-
-		CFDictionarySetValue(inValues, controlID, (CFMutableDictionaryRef)columnIdAndValueDict);
-	}
-	else
-	{
-		columnIdAndValueDict.Adopt((CFMutableDictionaryRef)columnValues, kCFObjRetain);
-	}
-
-	CFDictionarySetValue(columnIdAndValueDict, (const void *)controlPart, (const void *)inValue);
-}
-
-
-
-void
-OnMyCommandCM::GetDialogControlValues(CommandDescription &currCommand, OMCDialog &inDialog, SelectionIterator *selIterator)
-{
-	//get values for all controls in the dialog
-	//the code is generic to handle tables
-	//regular controls do not have columns and the use 0 for column number to store their values
-	//column index 0 is a meta value for table and means: get array of all column values
-	//this way a regular method of querying controls works with table too: produces a selected row strings
-	if(mNibControlValues == nullptr)
-		mNibControlValues.Adopt(CFDictionaryCreateMutable(kCFAllocatorDefault,
-															0,
-															&kCFTypeDictionaryKeyCallBacks,
-															&kCFTypeDictionaryValueCallBacks),
-														kCFObjDontRetain);
-
-	if(mNibControlCustomProperties == nullptr)
-		mNibControlCustomProperties.Adopt(CFDictionaryCreateMutable(kCFAllocatorDefault,
-																		0,
-																		&kCFTypeDictionaryKeyCallBacks,
-																		&kCFTypeDictionaryValueCallBacks),
-																	kCFObjDontRetain);//values will be CFStringRefs
-	
-	inDialog.CopyAllControlValues(mNibControlValues, mNibControlCustomProperties, selIterator);
-
-	// after getting all standard values from controls, also check if there is a request
-	// for special expensive values not covered by CopyAllControlValues
-	if(currCommand.specialRequestedNibControls == nullptr)
-		return;
-
-	CFIndex specialWordCount = ::CFSetGetCount(currCommand.specialRequestedNibControls);
-	if(specialWordCount <= 0)
-		return;
-
-	std::vector<CFStringRef> specialWordList(specialWordCount);
-	CFSetGetValues(currCommand.specialRequestedNibControls, (const void **)specialWordList.data());
-	for(CFIndex i = 0; i < specialWordCount; i++)
-	{
-		CFStringRef specialWord = (CFStringRef)specialWordList[i];
-		bool isEnvironVariable = false;
-		SInt32 specialWordID = GetSpecialWordID(specialWord);
-		if(specialWordID == NO_SPECIAL_WORD)
-		{
-			specialWordID = GetSpecialEnvironWordID(specialWord);
-			isEnvironVariable = true;
-		}
-
-		if(specialWordID == NIB_TABLE_ALL_ROWS) //the only special request currently supported
-		{
-			CFObj<CFStringRef> columnIndexStr(CFSTR("0"), kCFObjRetain);
-			CFObj<CFStringRef> controlID( CreateTableIDAndColumnFromString(specialWord, columnIndexStr, true, isEnvironVariable), kCFObjDontRetain );
-			
-			SelectionIterator *selIterator = AllRowsIterator_Create();
-			CFObj<CFDictionaryRef> customProperties;
-			CFObj<CFTypeRef> oneValue( inDialog.CopyControlValue(controlID, columnIndexStr, selIterator, &customProperties) );
-			SelectionIterator_Release(selIterator);
-
-			if(oneValue != nullptr)
-			{
-				StoreControlValue(mNibControlValues, controlID, oneValue, columnIndexStr);
-			
-				//custom escaping, prefix, suffix or separator
-				if(customProperties != nullptr)
-				{
-					::CFDictionarySetValue( mNibControlCustomProperties,
-											(const void *)controlID,
-											(const void *)(CFDictionaryRef)customProperties); //CFTypeRef is retained
-				}
-			}
-		}
-	}
-}
-
-static CFStringRef
-CreateControlValueString(CFTypeRef controlValue, CFDictionaryRef customProperties, UInt16 escSpecialCharsMode, bool isEnvStyle)
-{
-	CFStringRef newStrRef = nullptr;
-	if(controlValue == nullptr)
-		return nullptr;
-	
-	CFStringRef oneProperty = nullptr;
-	if( !isEnvStyle && (customProperties != nullptr) ) //in environment variables we don't put escapings
-	{
-		oneProperty = ACFType<CFStringRef>::DynamicCast( CFDictionaryGetValue(customProperties, (const void *)kCustomEscapeMethodKey) );
-		if(oneProperty != nullptr)
-			escSpecialCharsMode = GetEscapingMode(oneProperty);
-	}
-
-	//it can be string or array of strings
-	CFTypeID valType = ::CFGetTypeID( (CFTypeRef)controlValue );
-	if( valType == ACFType<CFStringRef>::sTypeID )//regular string
-	{
-		newStrRef = CreateEscapedStringCopy( (CFStringRef)(CFTypeRef)controlValue, escSpecialCharsMode);
-	}
-	else if( valType == ACFType<CFArrayRef>::sTypeID )
-	{
-		CFStringRef prefix = nullptr;
-		CFStringRef suffix = nullptr;
-		CFStringRef separator =  CFSTR("\t"); //separate with tab byy default
-
-		if(customProperties != nullptr)
-		{
-			oneProperty = ACFType<CFStringRef>::DynamicCast( CFDictionaryGetValue(customProperties, (const void *)kCustomPrefixKey) );
-			if(oneProperty != nullptr)
-				prefix = oneProperty;
-
-			oneProperty = ACFType<CFStringRef>::DynamicCast( CFDictionaryGetValue(customProperties, (const void *)kCustomSuffixKey) );
-			if(oneProperty != nullptr)
-				suffix = oneProperty;
-
-			oneProperty = ACFType<CFStringRef>::DynamicCast( CFDictionaryGetValue(customProperties, (const void *)kCustomSeparatorKey) );
-			if(oneProperty != nullptr)
-				separator = oneProperty;
-
-		}
-		newStrRef = CreateCombinedString( (CFArrayRef)(CFTypeRef)controlValue, separator, prefix, suffix, escSpecialCharsMode );
-	}
-
-	return newStrRef;
-}
-
-void
-OnMyCommandCM::AddEnvironmentVariablesForAllControls(CFMutableDictionaryRef ioEnvironList, const CommandDescription &currCommand)
-{
-	if(mNibControlValues == nullptr)
-		return;
-
-	CFIndex controlCount = CFDictionaryGetCount(mNibControlValues);
-	if(controlCount == 0)
-		return;
-
-	std::vector<CFTypeRef> keyList(controlCount);
-	std::vector<CFTypeRef> valueList(controlCount);
-
-	CFDictionaryGetKeysAndValues(mNibControlValues, (const void **)keyList.data(), (const void **)valueList.data());
-	for(CFIndex i = 0; i < controlCount; i++)
-	{
-		CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
-		CFDictionaryRef partsDict = ACFType<CFDictionaryRef>::DynamicCast( valueList[i] );
-		if((controlID != nullptr) && (partsDict != nullptr))
-		{
-			CFDictionaryRef controlProperties = (CFDictionaryRef)CFDictionaryGetValue(mNibControlCustomProperties, controlID);
-			CFIndex partsCount = CFDictionaryGetCount(partsDict);
-			if(partsCount == 1)
-			{
-				//parts dictionary keys are CFStringRefs
-				CFTypeRef controlValue = CFDictionaryGetValue(partsDict, (void *)CFSTR("0"));
-				if(controlValue != nullptr)
-				{
-					CFObj<CFStringRef> controlValueString = CreateControlValueString(controlValue, controlProperties, kEscapeNone, true);
-					if(controlValueString != nullptr)
-					{
-						CFObj<CFStringRef> controlEnvName(CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("OMC_NIB_DIALOG_CONTROL_%@_VALUE"), controlID));
-						CFDictionarySetValue(ioEnvironList, controlEnvName, controlValueString);
-					}
-				}
-			}
-			// previously only table views had multiple parts, now WebKit view has multiple elements
-			else if(partsCount > 1)
-			{
-				std::vector<CFTypeRef> partIDs(partsCount);
-				std::vector<CFTypeRef> partValues(partsCount);
-				CFDictionaryGetKeysAndValues(partsDict, (const void **)partIDs.data(), (const void **)partValues.data());
-				
-				Boolean isWebView = CFDictionaryContainsKey(partsDict, CFSTR("@")); //this otherwise invalid key indicates it is a WebView
-				
-				CFStringRef envVariableFormat = CFSTR("OMC_NIB_TABLE_%@_COLUMN_%@_VALUE");
-				if(isWebView)
-					envVariableFormat = CFSTR("OMC_NIB_WEBVIEW_%@_ELEMENT_%@_VALUE");
-				
-				for(CFIndex k = 0; k < partsCount; k++)
-				{
-					CFTypeRef partID = partIDs[k];
-					CFTypeRef partValue = partValues[k];
-					if( (partValue != nullptr) && (CFStringCompare((CFStringRef)partID, CFSTR("@"), 0) != kCFCompareEqualTo) )
-					{
-						CFObj<CFStringRef> partValueString = CreateControlValueString(partValue, controlProperties, kEscapeNone, true);
-						if(partValueString != nullptr)
-						{
-							CFObj<CFStringRef> controlAndPartEnvName(CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, envVariableFormat, controlID, partID));
-							CFDictionarySetValue(ioEnvironList, controlAndPartEnvName, partValueString);
-						}
-					}
-				}
-			}
-			else
-			{
-				continue;
-			}
-		}
-	}
-}
-
-
-
-//string or array of strings
-CFStringRef
-OnMyCommandCM::CreateNibControlValue(SInt32 inSpecialWordID, const CommandDescription &currCommand, CFStringRef inNibControlString, UInt16 escSpecialCharsMode, bool isEnvStyle)
-{
-	CFObj<CFTypeRef> oneValue;
-	CFObj<CFStringRef> partIDStr(CFSTR("0"), kCFObjRetain);
-	CFObj<CFStringRef> controlID;	
-
-	TRACE_CFSTR(CFSTR("OnMyCommandCM::CreateNibControlValue"));
-
-	if((mNibControlValues == nullptr) || (CFDictionaryGetCount(mNibControlValues) == 0))
-		return nullptr;
-
-	if( inSpecialWordID == NIB_DLG_CONTROL_VALUE ) //regular control query
-	{
-		controlID.Adopt( CreateControlIDFromString(inNibControlString, isEnvStyle), kCFObjDontRetain );
-	}
-	else if( (inSpecialWordID == NIB_TABLE_VALUE) || (inSpecialWordID == NIB_TABLE_ALL_ROWS) ) //table control query
-	{
-		controlID.Adopt( CreateTableIDAndColumnFromString(inNibControlString, partIDStr, inSpecialWordID == NIB_TABLE_ALL_ROWS, isEnvStyle), kCFObjDontRetain );
-
-		if( inSpecialWordID == NIB_TABLE_ALL_ROWS )
-		{ //saved as unique value in the dictionary
-			CFObj<CFStringRef> newControlID( CreateControlIDByAddingModifiers(controlID, kControlModifier_AllRows) );
-			controlID.Swap(newControlID);
-		}
-	}
-	else if( inSpecialWordID == NIB_WEB_VIEW_VALUE ) //OMCWebView control query
-	{
-		partIDStr.Adopt(CFSTR(""), kCFObjRetain);
-		controlID.Adopt( CreateWebViewIDAndElementIDFromString(inNibControlString, partIDStr, isEnvStyle), kCFObjDontRetain );
-	}
-
-	DEBUG_CFSTR((CFStringRef)controlID);
-
-	CFDictionaryRef customProperties = nullptr;
-
-	//we should have all the values already read from the dialog controls
-
-	const void *theItem = ::CFDictionaryGetValue(mNibControlValues, (CFStringRef)controlID);
-	CFDictionaryRef columnIds = ACFType<CFDictionaryRef>::DynamicCast(theItem);
-	if((columnIds != nullptr) && (partIDStr != nullptr))
-	{
-		theItem = ::CFDictionaryGetValue(columnIds, (const void *)(CFStringRef)partIDStr);
-		oneValue.Adopt((CFTypeRef)theItem, kCFObjRetain);
-		if((oneValue != nullptr) && (mNibControlCustomProperties != nullptr))
-			customProperties = ACFType<CFDictionaryRef>::DynamicCast(CFDictionaryGetValue(mNibControlCustomProperties, (CFStringRef)controlID));
-	}
-
-	CFStringRef controlValue = CreateControlValueString(oneValue, customProperties, escSpecialCharsMode, isEnvStyle);
-
-	TRACE_CSTR("\texiting CreateNibControlValue\n");
-
-	return controlValue;
-}
-
-
 //read values and delete the plist file immediately
 
 CFDictionaryRef
@@ -5403,7 +5063,7 @@ OnMyCommandCM::ExecuteSubcommand( SInt32 commandIndex, OMCDialog *inDialog, CFTy
 	if(commandIndex < 0)
 		return eventNotHandledErr;
 
-	if( (mCommandList == NULL) || (mCommandCount == 0) )
+	if( (mCommandList == nullptr) || (mCommandCount == 0) )
 		return eventNotHandledErr;
 
 	SInt32 mainCommandIndex = mCurrCommandIndex;
@@ -5414,12 +5074,12 @@ OnMyCommandCM::ExecuteSubcommand( SInt32 commandIndex, OMCDialog *inDialog, CFTy
 	//preserve existing runtime state for subcommand
 	CommandState *prevState = subCommand.currState;
 	CommandState *newState = new CommandState();
-	if(inDialog != NULL)
+	if(inDialog != nullptr)
 		newState->dialogGUID.Adopt(inDialog->GetDialogUniqueID(), kCFObjRetain);
 
 	subCommand.currState = newState;
 
-	OMCContextData *contextData = NULL;
+	OMCContextData *contextData = nullptr;
 
 	try
 	{
@@ -5427,7 +5087,7 @@ OnMyCommandCM::ExecuteSubcommand( SInt32 commandIndex, OMCDialog *inDialog, CFTy
 		//we start clean
 		mError = noErr;
 
-		if(inContext != NULL)
+		if(inContext != nullptr)
 		{//temporarily put new context for subcommand execution
 			contextData = new OMCContextData();
 			SwapContext( *contextData ); //this puts existing context in contextData and empties the containers in OnMyCommandCM
@@ -5435,14 +5095,14 @@ OnMyCommandCM::ExecuteSubcommand( SInt32 commandIndex, OMCDialog *inDialog, CFTy
 		}
 
 		if(err == noErr)
-			err = HandleSelection(NULL, kCMCommandStart+commandIndex);
+			err = HandleSelection(nullptr, kCMCommandStart+commandIndex);
 	}
 	catch(...)
 	{
 		err = -1;
 	}
 
-	if(inContext != NULL)
+	if(inContext != nullptr)
 	{
 		SwapContext( *contextData );
 		delete contextData;
@@ -5600,30 +5260,26 @@ OnMyCommandCM::SortObjectListByName(CFOptionFlags compareOptions, bool sortAscen
 CFBundleRef
 OnMyCommandCM::GetCurrentCommandExternBundle()
 {
-	if( (mCommandList != nullptr) && (mCurrCommandIndex < mCommandCount) )
+	CommandDescription &currCommand = GetCurrentCommand();
+
+	if( currCommand.externBundleResolved )
+		return currCommand.externBundle;//NULL or not NULL - we have been here before so don't repeat the costly steps
+	
+	currCommand.externBundleResolved = true;
+
+	if( currCommand.externalBundlePath != nullptr )
 	{
-		CommandDescription &currCommand = mCommandList[mCurrCommandIndex];
-		if( currCommand.externBundleResolved )
-			return currCommand.externBundle;//NULL or not NULL - we have been here before so don't repeat the costly steps
-		
-		currCommand.externBundleResolved = true;
-
-		if( currCommand.externalBundlePath != nullptr )
+		CFObj<CFURLRef> bundleURL( ::CFURLCreateWithFileSystemPath(kCFAllocatorDefault, currCommand.externalBundlePath, kCFURLPOSIXPathStyle, true) );
+		if(bundleURL != nullptr)
 		{
-			CFObj<CFURLRef> bundleURL( ::CFURLCreateWithFileSystemPath(kCFAllocatorDefault, currCommand.externalBundlePath, kCFURLPOSIXPathStyle, true) );
-			if(bundleURL != NULL)
-			{
-				currCommand.externBundle = CMUtils::CFBundleCreate(bundleURL);
-				if(currCommand.externBundle != nullptr)
-					return currCommand.externBundle;
-			}
+			currCommand.externBundle = CMUtils::CFBundleCreate(bundleURL);
+			if(currCommand.externBundle != nullptr)
+				return currCommand.externBundle;
 		}
-
-		//not explicitly set but might exist - so check it now
-		currCommand.externBundle = CreateDefaultExternBundleRef(currCommand.name);
-		
-		return currCommand.externBundle;
 	}
 
-	return NULL;
+	//not explicitly set but might exist - so check it now
+	currCommand.externBundle = CreateDefaultExternBundleRef(currCommand.name);
+	
+	return currCommand.externBundle;
 }

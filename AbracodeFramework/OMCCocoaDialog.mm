@@ -12,12 +12,13 @@
 #include "CMUtils.h"
 #include "ACFType.h"
 #include "OmcTaskNotification.h"
+#include "NibDialogControl.h"
 
 Boolean RunCocoaDialog(OnMyCommandCM *inPlugin);
 
 Boolean RunCocoaDialog(OnMyCommandCM *inPlugin)
 {
-	if(inPlugin == NULL)
+	if(inPlugin == nullptr)
 		return false;
 
 	CommandDescription &currCommand = inPlugin->GetCurrentCommand();
@@ -28,13 +29,13 @@ Boolean RunCocoaDialog(OnMyCommandCM *inPlugin)
 		@try
 		{
 			OMCDialogController *myController = [[OMCDialogController alloc] initWithOmc: inPlugin];
-			if(myController != NULL)
+			if(myController != nullptr)
 			{
 				[myController autorelease];
 				outResult = true;
 
-				assert(currCommand.currState != NULL);
-				OMCCocoaDialog * omcDialog = [myController getOMCDialog];
+				assert(currCommand.currState != nullptr);
+				OMCCocoaDialog* omcDialog = [myController getOMCDialog];
 				currCommand.currState->dialogGUID.Adopt(omcDialog->GetDialogUniqueID(), kCFObjRetain);
 
 				[myController run];
@@ -42,9 +43,9 @@ Boolean RunCocoaDialog(OnMyCommandCM *inPlugin)
 				{
 					if( [myController isOkeyed] )
 					{
-						if(omcDialog != NULL)
+						if(omcDialog != nullptr)
 						{
-							inPlugin->GetDialogControlValues( currCommand, *omcDialog, NULL /*sel iterator*/ );
+							omcDialog->CopyAllControlValues(currCommand.specialRequestedNibControls, nullptr);
 							outResult = true;
 						}
 					}
@@ -96,24 +97,117 @@ OMCCocoaDialog::CopyControlValue(CFStringRef inControlID, CFStringRef inControlP
 	return (CFTypeRef)outValue;
 }
 
+// private helper
 void
-OMCCocoaDialog::CopyAllControlValues(CFMutableDictionaryRef ioControlValues, CFMutableDictionaryRef ioCustomProperties, SelectionIterator *inSelIterator) noexcept
+OMCCocoaDialog::StoreControlValue(CFStringRef controlID, CFTypeRef inValue, CFStringRef controlPart) noexcept
+{
+	CFObj<CFMutableDictionaryRef> columnIdAndValueDict;
+	CFTypeRef columnValues = CFDictionaryGetValue(mNibControlValues, controlID);
+	if(columnValues == NULL)
+	{
+		columnIdAndValueDict.Adopt( ::CFDictionaryCreateMutable(
+					kCFAllocatorDefault,
+					0,
+					&kCFTypeDictionaryKeyCallBacks,
+					&kCFTypeDictionaryValueCallBacks), kCFObjDontRetain );
+
+		CFDictionarySetValue(mNibControlValues, controlID, (CFMutableDictionaryRef)columnIdAndValueDict);
+	}
+	else
+	{
+		columnIdAndValueDict.Adopt((CFMutableDictionaryRef)columnValues, kCFObjRetain);
+	}
+
+	CFDictionarySetValue(columnIdAndValueDict, (const void *)controlPart, (const void *)inValue);
+}
+
+void
+OMCCocoaDialog::CopyAllControlValues(CFSetRef requestedNibControls, SelectionIterator *inSelIterator) noexcept
 {
     @autoreleasepool
 	{
+		//get values for all controls in the dialog
+		//the code is generic to handle tables
+		//regular controls do not have columns and the use 0 for column number to store their values
+		//column index 0 is a meta value for table and means: get array of all column values
+		//this way a regular method of querying controls works with table too: produces a selected row strings
+		if(mNibControlValues == nullptr)
+			mNibControlValues.Adopt(CFDictionaryCreateMutable(kCFAllocatorDefault,
+																0,
+																&kCFTypeDictionaryKeyCallBacks,
+																&kCFTypeDictionaryValueCallBacks),
+																kCFObjDontRetain);
+
+		if(mNibControlCustomProperties == nullptr)
+			mNibControlCustomProperties.Adopt(CFDictionaryCreateMutable(kCFAllocatorDefault,
+																			0,
+																			&kCFTypeDictionaryKeyCallBacks,
+																			&kCFTypeDictionaryValueCallBacks),
+																		kCFObjDontRetain);//values will be CFStringRefs
+
 		@try
 		{
 			if(mController != NULL)
 			{
-				[mController allControlValues:(NSMutableDictionary *)ioControlValues andProperties:(NSMutableDictionary *)ioCustomProperties withIterator:inSelIterator];
+				[mController allControlValues:(NSMutableDictionary *)mNibControlValues.Get() andProperties:(NSMutableDictionary *)mNibControlCustomProperties.Get() withIterator:inSelIterator];
 			}
 		}
 		@catch (NSException *localException)
 		{
 			NSLog(@"OMCCocoaDialog::CopyAllControlValues received exception: %@", localException);
 		}
+
+		// after getting all standard values from controls, also check if there is a request
+		// for special expensive values not covered by CopyAllControlValues
+		if(requestedNibControls == nullptr)
+			return;
+
+		CFIndex specialWordCount = ::CFSetGetCount(requestedNibControls);
+		if(specialWordCount <= 0)
+			return;
+
+		std::vector<CFStringRef> specialWordList(specialWordCount);
+		CFSetGetValues(requestedNibControls, (const void **)specialWordList.data());
+		for(CFIndex i = 0; i < specialWordCount; i++)
+		{
+			CFStringRef specialWord = (CFStringRef)specialWordList[i];
+			bool isEnvironVariable = false;
+			SpecialWordID specialWordID = GetSpecialWordID(specialWord);
+			if(specialWordID == NO_SPECIAL_WORD)
+			{
+				specialWordID = GetSpecialEnvironWordID(specialWord);
+				isEnvironVariable = true;
+			}
+
+			if(specialWordID == NIB_TABLE_ALL_ROWS) //the only special request currently supported
+			{
+				CFObj<CFStringRef> columnIndexStr(CFSTR("0"), kCFObjRetain);
+				CFObj<CFStringRef> controlID( CreateTableIDAndColumnFromString(specialWord, columnIndexStr, true, isEnvironVariable), kCFObjDontRetain );
+				
+				SelectionIterator *selIterator = AllRowsIterator_Create();
+				CFObj<CFDictionaryRef> customProperties;
+				CFObj<CFTypeRef> oneValue( CopyControlValue(controlID, columnIndexStr, selIterator, &customProperties) );
+				SelectionIterator_Release(selIterator);
+
+				if(oneValue != nullptr)
+				{
+					StoreControlValue(controlID, oneValue, columnIndexStr);
+				
+					//custom escaping, prefix, suffix or separator
+					if(customProperties != nullptr)
+					{
+						::CFDictionarySetValue( mNibControlCustomProperties,
+												(const void *)controlID,
+												(const void *)(CFDictionaryRef)customProperties); //CFTypeRef is retained
+					}
+				}
+			}
+		}
+
+
 	} //@autoreleasepool
 }
+
 
 //port communication support for dialog
 //when this port is set-up the command line tool "omc_dialog_control" sends messages to this port

@@ -134,12 +134,70 @@ typedef struct OneObjProperties
     Boolean reserved { false };
 } OneObjProperties;
 
+typedef enum SpecialWordID
+{
+	NO_SPECIAL_WORD = 0,
+
+	OBJ_TEXT,
+	OBJ_PATH,
+	OBJ_PATH_NO_EXTENSION,//deprecated
+	OBJ_PARENT_PATH,
+	OBJ_NAME,
+	OBJ_NAME_NO_EXTENSION,
+	OBJ_EXTENSION_ONLY,
+	OBJ_DISPLAY_NAME,
+	OBJ_COMMON_PARENT_PATH,
+	OBJ_PATH_RELATIVE_TO_COMMON_PARENT,
+
+	DLG_INPUT_TEXT,
+	DLG_PASSWORD,//deprecated
+
+	DLG_SAVE_AS_PATH,
+	DLG_SAVE_AS_PARENT_PATH,
+	DLG_SAVE_AS_NAME,
+	DLG_SAVE_AS_NAME_NO_EXTENSION,
+	DLG_SAVE_AS_EXTENSION_ONLY,
+
+	DLG_CHOOSE_FILE_PATH,
+	DLG_CHOOSE_FILE_PARENT_PATH,
+	DLG_CHOOSE_FILE_NAME,
+	DLG_CHOOSE_FILE_NAME_NO_EXTENSION,
+	DLG_CHOOSE_FILE_EXTENSION_ONLY,
+
+	DLG_CHOOSE_FOLDER_PATH,
+	DLG_CHOOSE_FOLDER_PARENT_PATH,
+	DLG_CHOOSE_FOLDER_NAME,
+	DLG_CHOOSE_FOLDER_NAME_NO_EXTENSION,
+	DLG_CHOOSE_FOLDER_EXTENSION_ONLY,
+
+	DLG_CHOOSE_OBJECT_PATH,
+	DLG_CHOOSE_OBJECT_PARENT_PATH,
+	DLG_CHOOSE_OBJECT_NAME,
+	DLG_CHOOSE_OBJECT_NAME_NO_EXTENSION,
+	DLG_CHOOSE_OBJECT_EXTENSION_ONLY,
+	
+	MY_BUNDLE_PATH, //new paths for droplets mostly
+	OMC_RESOURCES_PATH,
+	OMC_SUPPORT_PATH,
+	APP_BUNDLE_PATH, //as of OMC 4.0 the preferred way to access applet bundle path - exported byy default
+	MY_HOST_BUNDLE_PATH, //deprecated but supported as of OMC 4.0 - not exported by default though
+	MY_EXTERNAL_BUNDLE_PATH, //points to EXTERNAL_BUNDLE_PATH defined in description. redundant but needed for portability
+	NIB_DLG_GUID,
+	NIB_DLG_CONTROL_VALUE,
+	NIB_TABLE_VALUE,
+	NIB_TABLE_ALL_ROWS,
+	NIB_WEB_VIEW_VALUE,
+	CURRENT_COMMAND_GUID,
+	FRONT_PROCESS_ID,
+	FRONT_APPLICATION_NAME
+} SpecialWordID;
+
 typedef struct SpecialWordAndID
 {
 	CFIndex		wordLen;
 	CFStringRef	specialWord;
 	CFStringRef environName;
-	SInt32		id;
+	SpecialWordID id;
 	bool		alwaysExport { false };
 } SpecialWordAndID;
 
@@ -241,8 +299,6 @@ public:
 	void				LoadCommandsFromPlistRef(CFPropertyListRef inPlistRef);
 	void				GetOneCommandParams(CommandDescription &outDesc, CFDictionaryRef inOneCommand);
 
-	void				GetDialogControlValues(CommandDescription &currCommand, OMCDialog &inDialog, SelectionIterator *selIterator);
-
 	OSStatus			ExecuteSubcommand( CFArrayRef inCommandName, CFStringRef inCommandID, OMCDialog *inDialog, CFTypeRef inContext );
 	OSStatus			ExecuteSubcommand( SInt32 commandIndex, OMCDialog *inDialog, CFTypeRef inContext );
 
@@ -265,7 +321,7 @@ public:
 
 	void				AppendTextToCommand(CFMutableStringRef inCommandRef, CFStringRef inStrRef,
 											OneObjProperties *inObjList, CFIndex inObjCount, CFIndex inCurrIndex,
-											CFStringRef inObjTextRef, CommandDescription &currCommand,
+											CFStringRef inObjTextRef, CommandDescription &currCommand, OMCDialog *activeDialog,
 											CFStringRef inMultiSeparator, CFStringRef inMultiPrefix, CFStringRef inMultiSuffix,
 											UInt16 escSpecialCharsMode, CFStringRef inLocTableName = nullptr, CFBundleRef inLocBundleRef = nullptr);
 
@@ -280,14 +336,12 @@ public:
 	SInt32				FindSubcommandIndex(CFArrayRef inName, CFStringRef inCommandID);
 	SInt32				FindCommandIndex(CFArrayRef inName, CFStringRef inCommandID);
 	OSStatus			SortObjectListByName(CFOptionFlags compareOptions, bool sortAscending);
-	CFStringRef			CreateNibControlValue(SInt32 inSpecialWordID, const CommandDescription &currCommand, CFStringRef inNibControlString, UInt16 escSpecialCharsMode, bool isEnvStyle);
-	void				AddEnvironmentVariablesForAllControls(CFMutableDictionaryRef ioEnvironList, const CommandDescription &currCommand);
 
 	CFMutableStringRef	CreateCombinedStringWithObjects(CFArrayRef inArray, CFStringRef inLocTableName, CFBundleRef inLocBundleRef);
 
 	CommandDescription & GetCurrentCommand()
 						{
-							if( (mCommandList == NULL) || (mCurrCommandIndex >= mCommandCount) )
+							if( (mCommandList == nullptr) || (mCurrCommandIndex >= mCommandCount) )
 								throw OSStatus(paramErr);
 							return mCommandList[mCurrCommandIndex];
 						}
@@ -335,8 +389,6 @@ protected:
 	CFObj<CFStringRef>			mMyHostAppName;
 	CFObj<CFStringRef>			mOmcSupportPath;
 	CFObj<CFStringRef>			mOmcResourcesPath;
-	CFObj<CFMutableDictionaryRef> mNibControlValues;//key: controlID string, value: dictionary for columnID (as long) & value (CFType)
-	CFObj<CFMutableDictionaryRef> mNibControlCustomProperties;
 	ARefCountedObj<AObserverBase> mObserver;
     OSStatus					mError {noErr};
     Boolean						mIsTextInClipboard {false};
@@ -406,8 +458,8 @@ CFStringRef			CreateExtensionOnlyFromCFURL(CFURLRef inPath, UInt16 escSpecialCha
 
 CFStringRef			CreateCombinedString( CFArrayRef inStringsArray, CFStringRef inSeparator, CFStringRef inPrefix, CFStringRef inSuffix, UInt16 escSpecialCharsMode );
 
-SInt32              GetSpecialWordID(CFStringRef inStr);
-SInt32              GetSpecialEnvironWordID(CFStringRef inStr);
+SpecialWordID       GetSpecialWordID(CFStringRef inStr);
+SpecialWordID       GetSpecialEnvironWordID(CFStringRef inStr);
 
 UInt8               GetEscapingMode(CFStringRef theStr);
 CFStringRef         GetEscapingModeString(UInt8 inEscapeMode);

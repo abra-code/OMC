@@ -13,6 +13,7 @@
 #include "MessagePortListener.h"
 
 class SelectionIterator;
+class OnMyCommandCM;
 
 enum
 {
@@ -41,6 +42,7 @@ class OMCDialog
 {
 
 public:
+	friend class OnMyCommandCM;
 
 							OMCDialog();
 	virtual					~OMCDialog();
@@ -65,18 +67,25 @@ public:
 	CFStringRef				GetDialogUniqueID();
 
 	virtual CFTypeRef		CopyControlValue(CFStringRef inControlID, CFStringRef inControlPart, SelectionIterator *inSelIterator, CFDictionaryRef *outCustomProperties) noexcept = 0;
-	virtual void			CopyAllControlValues(CFMutableDictionaryRef ioControlValues, CFMutableDictionaryRef ioCustomProperties, SelectionIterator *inSelIterator) noexcept = 0;
+	virtual void			CopyAllControlValues(CFSetRef requestedNibControls, SelectionIterator *inSelIterator) noexcept = 0;
 
 	virtual CFDataRef		ReceivePortMessage( SInt32 msgid, CFDataRef inData ) = 0;//remote message
 	virtual void			ReceiveNotification(void *ioData) = 0;//local message
 
 	static OMCDialog *		FindDialogByGUID(CFStringRef inGUID);
 
+	static CFStringRef		CreateControlValueString(CFTypeRef controlValue, CFDictionaryRef customProperties, UInt16 escSpecialCharsMode, bool isEnvStyle) noexcept;
+	CFStringRef				CreateNibControlValue(SInt32 inSpecialWordID, CFStringRef inNibControlString, UInt16 escSpecialCharsMode, bool isEnvStyle) noexcept;
+
+	void					AddEnvironmentVariablesForAllControls(CFMutableDictionaryRef ioEnvironList) noexcept;
+
 protected:
 	OMCDialog *				next;
 	ARefCountedObj< AObserver<OMCDialog> > mTaskObserver;
 	MessagePortListener<OMCDialog> mListener;
 	CFObj<CFStringRef>		mDialogUniqueID;
+	CFObj<CFMutableDictionaryRef> mNibControlValues;//key: controlID string, value: dictionary for columnID (as long) & value (CFType)
+	CFObj<CFMutableDictionaryRef> mNibControlCustomProperties;
 	SelectionIterator *		mSelectionIterator;//temporary reference for subcommand execution
 	static OMCDialog *		sChainHead;
 };

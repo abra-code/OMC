@@ -1863,7 +1863,7 @@ FindArgumentType(const char *argTypeStr)
 
 - (OSStatus)processCommandWithContext:(CFTypeRef)inContext
 {
-	if(mPlugin == NULL)
+	if(mPlugin == nullptr)
 		return paramErr;
 
 	SInt32 cmdIndex = -1;
@@ -1875,15 +1875,10 @@ FindArgumentType(const char *argTypeStr)
 	if(cmdIndex < 0 )
 		return eventNotHandledErr;//did not find the specified subcommand
 
-	CommandDescription *commandList = mPlugin->GetCommandList();
-	if(commandList == NULL)
-		return paramErr;
-
-	CommandDescription &currCommand = commandList[cmdIndex];
-	
+	CommandDescription &currCommand = mPlugin->GetCurrentCommand();
 	SelectionIterator *oldIterator = mOMCDialogProxy->GetSelectionIterator();
-	SelectionIterator *currentSelectionIterator = NULL;
-	if( currCommand.multipleSelectionIteratorParams != NULL )
+	SelectionIterator *currentSelectionIterator = nullptr;
+	if( currCommand.multipleSelectionIteratorParams != nullptr )
 		currentSelectionIterator = [self createSelectionIterator:currCommand.multipleSelectionIteratorParams];
 
 	mOMCDialogProxy->SetSelectionIterator(currentSelectionIterator);
@@ -1894,7 +1889,7 @@ FindArgumentType(const char *argTypeStr)
 	{
 		status = mPlugin->ExecuteSubcommand( cmdIndex, (OMCCocoaDialog*)mOMCDialogProxy, inContext );//does not throw
 	}
-	while( (currentSelectionIterator != NULL) && SelectionIterator_Next(currentSelectionIterator) );
+	while( (currentSelectionIterator != nullptr) && SelectionIterator_Next(currentSelectionIterator) );
 
 	mOMCDialogProxy->SetSelectionIterator(oldIterator);
 

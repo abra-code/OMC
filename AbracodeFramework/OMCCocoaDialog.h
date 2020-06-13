@@ -22,15 +22,18 @@ public:
 	virtual				~OMCCocoaDialog() { }
 
 	virtual CFTypeRef	CopyControlValue(CFStringRef inControlID, CFStringRef inControlPart, SelectionIterator *inSelIterator, CFDictionaryRef *outCustomProperties) noexcept;
-	virtual void		CopyAllControlValues(CFMutableDictionaryRef ioControlValues, CFMutableDictionaryRef ioCustomProperties, SelectionIterator *inSelIterator) noexcept;
+	virtual void		CopyAllControlValues(CFSetRef requestedNibControls, SelectionIterator *inSelIterator) noexcept;
 
 	virtual CFDataRef	ReceivePortMessage( SInt32 msgid, CFDataRef inData );//remote message
 	virtual void		ReceiveNotification(void *ioData);//local message
 
-	void				SetController(OMCDialogController *inController)
+	void				SetController(OMCDialogController *inController) noexcept
 						{
 							mController = inController;
 						}
+
+private:
+	void				StoreControlValue(CFStringRef controlID, CFTypeRef inValue, CFStringRef controlPart) noexcept;
 
 private:
 	OMCDialogController *mController; //not owned
