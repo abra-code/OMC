@@ -1,5 +1,5 @@
 // This is an injected client-side JavaScript
-// It is associated with OMCWebKitView instance by setting "User Define Runtime Atteribute" in nib control
+// It is associated with OMCWebKitView instance by setting "User Defined Runtime Attributes" in nib control:
 // javaScriptFile=test.webkit.example.client
 // This code is executed by WebKit after HTML document is loaded
 
