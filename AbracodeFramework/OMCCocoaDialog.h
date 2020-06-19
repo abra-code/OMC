@@ -9,12 +9,12 @@
 class OnMyCommandCM;
 #include "OMCDialog.h"
 
-@class OMCDialogController;
+using OMCDialogControllerRef = void *;
 
 class OMCCocoaDialog: public OMCDialog
 {
 public:
-						OMCCocoaDialog(OMCDialogController *inController)
+						OMCCocoaDialog(OMCDialogControllerRef inController)
 						{
 							mController = inController;
 						}
@@ -27,7 +27,7 @@ public:
 	virtual CFDataRef	ReceivePortMessage( SInt32 msgid, CFDataRef inData );//remote message
 	virtual void		ReceiveNotification(void *ioData);//local message
 
-	void				SetController(OMCDialogController *inController) noexcept
+	void				SetController(OMCDialogControllerRef inController) noexcept
 						{
 							mController = inController;
 						}
@@ -36,7 +36,8 @@ private:
 	void				StoreControlValue(CFStringRef controlID, CFTypeRef inValue, CFStringRef controlPart) noexcept;
 
 private:
-	OMCDialogController *mController; //not owned
+	OMCDialogControllerRef mController; //not owned
 };
 
 
+ARefCountedObj<OMCCocoaDialog> RunCocoaDialog(OnMyCommandCM *inPlugin);

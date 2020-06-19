@@ -1,14 +1,8 @@
 //**************************************************************************************
-// Filename:	ARefCounted.h
-//				Part of Abracode Workshop.
-//				http://free.abracode.com/cmworkshop/
-// Copyright � 2006 Abracode, Inc.  All rights reserved.
 //
+// Filename:	ARefCounted.h
 // Description:	ARefCounted and its smart pointer
 //
-//**************************************************************************************
-// Revision History:
-// Friday, Oct 16, 2005 - Original
 //**************************************************************************************
 
 #pragma once
@@ -23,24 +17,24 @@
 class ARefCounted
 {
 public:
-	ARefCounted()
+	ARefCounted() noexcept
 		: mRefCount(1) //newly created objects starts with a ref count 1
 	{
 //		TRACE_CSTR( "ARefCounted::ARefCounted\n" );
 	}
 
-	virtual ~ARefCounted()
+	virtual ~ARefCounted() noexcept
 	{
 //		TRACE_CSTR( "ARefCounted::~ARefCounted\n" );
 	}
 
-	int Retain() const
+	int Retain() noexcept
 	{
 //		TRACE_CSTR( "ARefCounted::Retain\n" );
 		return ++mRefCount;
 	}
 
-	int Release() const
+	int Release() noexcept
 	{
 //		TRACE_CSTRs( "ARefCounted::Release" );
 		int outRefCount = --mRefCount;
@@ -59,8 +53,8 @@ public:
 	{
 		try
 		{
-			const ARefCounted *myObj = reinterpret_cast< const ARefCounted * >( inValue );
-			if(myObj != NULL)
+			ARefCounted *myObj = reinterpret_cast<ARefCounted *>( const_cast<void *>(inValue) );
+			if(myObj != nullptr)
 				myObj->Retain();
 			return inValue;
 		}
@@ -68,15 +62,15 @@ public:
 		{
 			LOG_CSTR("Unexpected exception caught in TRefCount::CFArrayRetainCallBack\n");
 		}
-		return NULL;
+		return nullptr;
 	}
 
 	static void ReleaseCallback(CFAllocatorRef allocator, const void *inValue)
 	{
 		try
 		{
-			const ARefCounted *myObj = reinterpret_cast< const ARefCounted * >( inValue );
-			if(myObj != NULL)
+			ARefCounted *myObj = reinterpret_cast<ARefCounted *>( const_cast<void *>(inValue) );
+			if(myObj != nullptr)
 				myObj->Release();
 		}
 		catch(...)
@@ -94,7 +88,7 @@ public:
 	static const CFDictionaryValueCallBacks sCFDictionaryCallbacks;
 
 private:
-	mutable int mRefCount;
+	int mRefCount;
 };
 
 typedef enum ARefCountRetainType
@@ -106,50 +100,66 @@ typedef enum ARefCountRetainType
 template <typename T> class ARefCountedObj
 {
 public:
-						ARefCountedObj()
-							: mRef(NULL)
+						ARefCountedObj() noexcept
+							: mRef(nullptr)
 						{
 						}
 
-						ARefCountedObj(T* inRef, ARefCountRetainType inRetainType = kARefCountDontRetain)
+						ARefCountedObj(T* inRef, ARefCountRetainType inRetainType = kARefCountDontRetain) noexcept
 							: mRef(inRef)
 						{
-							if( (mRef != NULL) && (inRetainType == kARefCountRetain) )
+							if( (mRef != nullptr) && (inRetainType == kARefCountRetain) )
+								mRef->Retain();
+						}
+						
+						ARefCountedObj(const ARefCountedObj& inObj) noexcept
+							: mRef(inObj.mRef)
+						{
+							if(mRef != nullptr)
 								mRef->Retain();
 						}
 
-	virtual				~ARefCountedObj()
+	virtual				~ARefCountedObj() noexcept
 						{
-							ReleaseRef();
+							if(mRef != nullptr)
+							{
+								mRef->Release();
+								mRef = nullptr;
+							}
 						}
 						
-	T*					Detach()
+	T*					Detach() noexcept
 						{
 							T* outRef = mRef;
-							mRef = NULL;
+							mRef = nullptr;
 							return outRef;
 						}
 
-	void				Adopt(T* inRef, ARefCountRetainType inRetainType = kARefCountDontRetain)
+	void				Adopt(T* inRef, ARefCountRetainType inRetainType = kARefCountDontRetain) noexcept
 						{
-							if(mRef == inRef)
-								return;
-							ReleaseRef();
+							if((inRef != nullptr) && (inRetainType == kARefCountRetain))
+								inRef->Retain();
+							
+							if(mRef != nullptr)
+								mRef->Release();
+
 							mRef = inRef;
-							if( (mRef != NULL) && (inRetainType == kARefCountRetain) )
-								mRef->Retain();
 						}
 
-//the following does not work with gcc because of gcc bug/unimplemented feature
-	ARefCountedObj&		operator=(T* &inRef)
+	ARefCountedObj&		operator=(const ARefCountedObj& inObj) noexcept
 						{
-							Adopt(inRef, kARefCountDontRetain);
+							if(inObj.mRef != nullptr)
+								inObj.mRef->Retain();
+							if(mRef != nullptr)
+								mRef->Release();
+							mRef = inObj.mRef;
+							
 							return *this;
 						}
 
 	T*					operator -> () const
 						{
-							if(mRef == NULL)
+							if(mRef == nullptr)
 							{
 								LOG_CSTR("ARefCountedObj: operator -> trying to access NULL pointer\n");
 								throw OSStatus(-50);//paramErr
@@ -157,44 +167,30 @@ public:
 							return mRef;
 						}
 
-						operator T* () const
+						operator T* () const noexcept
 						{
 							return mRef;
 						}
 						
-	T**					operator & ()
+	T**					operator & () noexcept
 						{
 							return &mRef;
 						}
 
-	T*					Get() const
+	T*					Get() const  noexcept
 						{
 							return mRef;
 						}
 
-protected:
-
-	void				ReleaseRef()
-						{
-							if(mRef != NULL)
-							{
-								mRef->Release();
-								mRef = NULL;
-							}
-						}
-
-	T*					mRef;
-
 private:
-						ARefCountedObj(const ARefCountedObj&);
-	ARefCountedObj&				operator=(const ARefCountedObj&);
+	T*					mRef;
 };
 
-template< class T > bool operator==( ARefCountedObj<T>& inObj, int *inNULL )
+template< class T > bool operator==( ARefCountedObj<T>& inObj, nullptr_t ) noexcept
 {
-   return ( (T*)inObj == (T*)inNULL );
+   return ( (T*)inObj == nullptr );
 }
-template< class T > bool operator!=( ARefCountedObj<T>& inObj, int *inNULL )
+template< class T > bool operator!=( ARefCountedObj<T>& inObj, nullptr_t ) noexcept
 {
-   return ( (T*)inObj != (T*)inNULL );
+   return ( (T*)inObj != nullptr );
 }

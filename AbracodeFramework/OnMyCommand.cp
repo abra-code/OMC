@@ -34,8 +34,7 @@
 #include "OmcTaskManager.h"
 #include "ACFDict.h"
 #include "ACFArr.h"
-//#include "OMCCocoaDialog.h"
-#include "OMCDialog.h"
+#include "OMCCocoaDialog.h"
 #include "OMCInputDialog.h"
 #include "SelectionIterator.h"
 #include "ACFPropertyList.h"
@@ -45,8 +44,6 @@
 #include "OMCTerminalExecutor.h"
 #include "OMCiTermExecutor.h"
 #include "OMCEnvironmentExportScript.h"
-
-extern Boolean RunCocoaDialog(OnMyCommandCM *inPlugin);
 
 enum
 {
@@ -710,332 +707,334 @@ OnMyCommandCM::HandleSelection( AEDesc *inContext, SInt32 inCommandID )
 
 	try
 	{
-		if(inCommandID >= kCMCommandStart)
-		{
-			mCurrCommandIndex = inCommandID - kCMCommandStart;
-			if( mCurrCommandIndex >= mCommandCount )
-				throw OSStatus(paramErr);
-			
-			CommandDescription &currCommand = mCommandList[mCurrCommandIndex];
-
-			CGEventFlags keyboardModifiers = GetKeyboardModifiers();
-			//only if lone control key is pressed we consider it a debug request
-			currCommand.debugging = ((keyboardModifiers &
-									(kCGEventFlagMaskAlphaShift | kCGEventFlagMaskShift | kCGEventFlagMaskAlternate | kCGEventFlagMaskCommand)) == 0)
-									&& ((keyboardModifiers & kCGEventFlagMaskControl) != 0);
-			
-			//take original command as parameter, not copy
-			PrescanCommandDescription( currCommand );
-			
-			if(currCommand.currState == NULL)//top command may not have the command state object created yet
-				currCommand.currState = new CommandState();
-
-			//make a copy fo the description because when we show a dialog it may become invalid
-			//StAEDesc contextCopy;
-			//if(mIsNullContext == false)
-			//{
-			//	::AEDuplicateDesc(inContext, (AEDesc *)contextCopy);
-			//}
-
-			CFBundleRef localizationBundle = NULL;
-			if(currCommand.localizationTableName != NULL)//client wants to be localized
-			{
-				localizationBundle = GetCurrentCommandExternBundle();
-				if(localizationBundle == NULL)
-					localizationBundle = CFBundleGetMainBundle();
-			}
-
-			//obtain text from selection before any dialogs are shown
-			bool objListEmpty = (mObjectList.size() == 0);
-			
-			if( ((currCommand.prescannedCommandInfo & kOmcCommandContainsTextObject) != 0) && (mContextText == NULL) )
-			{
-				CreateTextContext(currCommand, inContext);
-			}
-
-			CFObj<CFStringRef> dynamicCommandName( CreateDynamicCommandName(currCommand, currCommand.localizationTableName, localizationBundle) );
-
-			if(CURRENT_OMC_VERSION < currCommand.requiredOMCVersion )
-			{
-				StSwitchToFront switcher;
-				CFObj<CFStringRef> warningText( ::CFCopyLocalizedStringFromTableInBundle( CFSTR("TOO_LOW_OMC"), 
-																CFSTR("Private"), mBundleRef, "") );
-
-				if( false == DisplayVersionWarning(mBundleRef, dynamicCommandName, warningText, currCommand.requiredOMCVersion, CURRENT_OMC_VERSION) )
-				{
-					throw OSStatus(userCanceledErr);
-				}
-			}
-			
-			if( mSysVersion < currCommand.requiredMacOSMinVersion)
-			{
-				StSwitchToFront switcher;
-				CFObj<CFStringRef> warningText( ::CFCopyLocalizedStringFromTableInBundle( CFSTR("TOO_LOW_MAC_OS"), 
-																CFSTR("Private"), mBundleRef, "") );
-
-				if( false == DisplayVersionWarning(mBundleRef, dynamicCommandName, warningText, currCommand.requiredMacOSMinVersion, mSysVersion) )
-				{
-					throw OSStatus(userCanceledErr);
-				}
-			}
-			
-			if(mSysVersion > currCommand.requiredMacOSMaxVersion)
-			{
-				StSwitchToFront switcher;
-				CFObj<CFStringRef> warningText( ::CFCopyLocalizedStringFromTableInBundle( CFSTR("TOO_HIGH_MAC_OS"), 
-																CFSTR("Private"), mBundleRef, "") );
-
-				if( false == DisplayVersionWarning(mBundleRef, dynamicCommandName, warningText, currCommand.requiredMacOSMaxVersion, mSysVersion) )
-				{
-					throw OSStatus(userCanceledErr);
-				}
-			}
-			
-			if( currCommand.warningStr != NULL )
-			{
-				TRACE_CSTR("OnMyCommandCM About to display warning\n" );
-				StSwitchToFront switcher;
-				if( DisplayWarning(currCommand) == false )
-				{
-					throw OSStatus(userCanceledErr);
-				}
-			}
-			
-			if( ((currCommand.prescannedCommandInfo & kOmcCommandContainsInputText) != 0) && (mInputText == NULL) )
-			{
-				TRACE_CSTR( "OnMyCommandCM About to ask for input text\n" );
-				StSwitchToFront switcher;
-
-				//if( ShowInputDialog( currCommand, mInputText.GetReference() ) == false )
-				if( RunCocoaInputDialog( this, mInputText.GetReference()) == false )
-				{
-					throw OSStatus(userCanceledErr);
-				}
-			}
-
-			//if( (currCommand.dialogNibName != NULL) && (currCommand.nibWindowName != NULL) )//if dialog required
-			if( currCommand.nibDialog != NULL )
-			{
-				ACFDict params( currCommand.nibDialog );
-				Boolean isCocoa = false;
-				params.GetValue( CFSTR("IS_COCOA"), isCocoa );
-
-				//bring executing application to front. important when running within ShortcutsObserver
-				//don't restore because for non-modal dialogs this would bring executing app behind along with the dialog
-				StSwitchToFront switcher(false);
-				
-				if(isCocoa)
-				{
-					if( RunCocoaDialog( this ) == false )
-						throw OSStatus(userCanceledErr);
-				}
-				else
-				{
-					CFObj<CFStringRef> dynamicCommandName( CreateDynamicCommandName(currCommand, currCommand.localizationTableName, localizationBundle) );
-					DisplayAlert(mBundleRef, dynamicCommandName, CFSTR("CARBON_NIB_64_BIT"), kCFUserNotificationStopAlertLevel );
-					throw OSStatus(userCanceledErr);
-				}
-			}
-
-#if 0
-			CFObj<CFURLRef> defaultLocationURL;
-			if(currCommand.defaultNavLocation != NULL)
-			{
-				CFObj<CFMutableStringRef> defaultLocationStr( CreateCombinedStringWithObjects(currCommand.defaultNavLocation) );
-				if(defaultLocationStr != NULL)
-				{
-					CFObj<CFStringRef> expandedLocationStr( CreatePathByExpandingTilde( defaultLocationStr ) );
-					if(expandedLocationStr != NULL)
-						defaultLocationURL.Adopt( ::CFURLCreateWithFileSystemPath(kCFAllocatorDefault, expandedLocationStr, kCFURLPOSIXPathStyle, true) );
-				}
-			}
-#endif
-
-			if( (currCommand.prescannedCommandInfo & kOmcCommandContainsSaveAsDialog) != 0 )
-			{
-				CFObj<CFStringRef> message;
-				CFObj<CFArrayRef> defaultFileName;
-				CFObj<CFArrayRef> defaultDirPath;
-				UInt32 additionalFlags = 0;
-				GetNavDialogParams( currCommand.saveAsParams, message.GetReference(), defaultFileName.GetReference(), defaultDirPath.GetReference(), additionalFlags );
-				
-				if(currCommand.saveAsPath != NULL)
-				{
-					CFRelease(currCommand.saveAsPath);
-					currCommand.saveAsPath = NULL;
-				}
-				
-				if( ((additionalFlags & kOMCFilePanelUseCachedPath) == 0) || (mCachedSaveAsPath == NULL) )
-				{
-					TRACE_CSTR("OnMyCommandCM About to display save as dialog\n" );
-					CFObj<CFMutableStringRef> defaultName( CreateCombinedStringWithObjects(defaultFileName, currCommand.localizationTableName, localizationBundle) );
-					
-					CFObj<CFStringRef> expandedDirStr;
-					CFObj<CFMutableStringRef> defaultLocationStr( CreateCombinedStringWithObjects(defaultDirPath, NULL, NULL) );
-					if(defaultLocationStr != NULL)
-						expandedDirStr.Adopt( CreatePathByExpandingTilde( defaultLocationStr ) );
-
-					if( (currCommand.localizationTableName != NULL) && (localizationBundle != NULL) && (message != NULL) )
-						message.Adopt( ::CFCopyLocalizedStringFromTableInBundle( message, currCommand.localizationTableName, localizationBundle, "") );
-
-					StSwitchToFront switcher;
-					currCommand.saveAsPath = CreateCFURLFromSaveAsDialog( dynamicCommandName, message, defaultName, expandedDirStr, additionalFlags);	
-					if(currCommand.saveAsPath == NULL)
-						throw OSStatus(userCanceledErr);
-
-					if( (additionalFlags & kOMCFilePanelUseCachedPath) != 0 )
-						mCachedSaveAsPath.Adopt( currCommand.saveAsPath, kCFObjRetain );
-				}
-				else
-				{
-					currCommand.saveAsPath = mCachedSaveAsPath;
-					CFRetain(currCommand.saveAsPath);//will be released
-				}
-			}
-			
-			if( (currCommand.prescannedCommandInfo & kOmcCommandContainsChooseFileDialog) != 0 )
-			{
-				CFObj<CFStringRef> message;
-				CFObj<CFArrayRef> defaultFileName;
-				CFObj<CFArrayRef> defaultDirPath;
-				UInt32 additionalFlags = 0;
-				GetNavDialogParams( currCommand.chooseFileParams, message.GetReference(), defaultFileName.GetReference(), defaultDirPath.GetReference(), additionalFlags );
-
-				if(currCommand.chooseFilePath != NULL)
-				{
-					CFRelease(currCommand.chooseFilePath);
-					currCommand.chooseFilePath = NULL;
-				}
-
-				if( ((additionalFlags & kOMCFilePanelUseCachedPath) == 0) || (mCachedChooseFilePath == NULL) )
-				{
-					TRACE_CSTR("OnMyCommandCM About to display choose file dialog\n" );
-					CFObj<CFMutableStringRef> defaultName( CreateCombinedStringWithObjects(defaultFileName, currCommand.localizationTableName, localizationBundle) );
-					
-					CFObj<CFStringRef> expandedDirStr;
-					CFObj<CFMutableStringRef> defaultLocationStr( CreateCombinedStringWithObjects(defaultDirPath, NULL, NULL) );
-					if(defaultLocationStr != NULL)
-						expandedDirStr.Adopt( CreatePathByExpandingTilde( defaultLocationStr ) );
-
-					if( (currCommand.localizationTableName != NULL) && (localizationBundle != NULL) && (message != NULL) )
-						message.Adopt( ::CFCopyLocalizedStringFromTableInBundle( message, currCommand.localizationTableName, localizationBundle, "") );
-
-					StSwitchToFront switcher;
-					currCommand.chooseFilePath = CreateCFURLFromOpenDialog( dynamicCommandName, message, defaultName, defaultLocationStr, additionalFlags | kOMCFilePanelCanChooseFiles);	
-					if(currCommand.chooseFilePath == NULL)
-						throw OSStatus(userCanceledErr);
-
-					if( (additionalFlags & kOMCFilePanelUseCachedPath) != 0 )
-						mCachedChooseFilePath.Adopt( currCommand.chooseFilePath, kCFObjRetain );
-				}
-				else
-				{
-					currCommand.chooseFilePath = mCachedChooseFilePath;
-					CFRetain(currCommand.chooseFilePath);//will be released
-				}
-			}
-
-			if( (currCommand.prescannedCommandInfo & kOmcCommandContainsChooseFolderDialog) != 0 )
-			{
-				CFObj<CFStringRef> message;
-				CFObj<CFArrayRef> defaultFileName;
-				CFObj<CFArrayRef> defaultDirPath;
-				UInt32 additionalFlags = 0;
-				GetNavDialogParams( currCommand.chooseFolderParams, message.GetReference(), defaultFileName.GetReference(), defaultDirPath.GetReference(), additionalFlags );
-
-				if(currCommand.chooseFolderPath != NULL)
-				{
-					CFRelease(currCommand.chooseFolderPath);
-					currCommand.chooseFolderPath = NULL;
-				}
-				
-				if( ((additionalFlags & kOMCFilePanelUseCachedPath) == 0) || (mCachedChooseFolderPath == NULL) )
-				{
-					TRACE_CSTR("OnMyCommandCM About to display choose folder dialog\n" );
-					CFObj<CFMutableStringRef> defaultName( CreateCombinedStringWithObjects(defaultFileName, currCommand.localizationTableName, localizationBundle) );
-					
-					CFObj<CFStringRef> expandedDirStr;
-					CFObj<CFMutableStringRef> defaultLocationStr( CreateCombinedStringWithObjects(defaultDirPath, NULL, NULL) );
-					if(defaultLocationStr != NULL)
-						expandedDirStr.Adopt( CreatePathByExpandingTilde( defaultLocationStr ) );
-					
-					if( (currCommand.localizationTableName != NULL) && (localizationBundle != NULL) && (message != NULL) )
-						message.Adopt( ::CFCopyLocalizedStringFromTableInBundle( message, currCommand.localizationTableName, localizationBundle, "") );
-
-					StSwitchToFront switcher;
-					currCommand.chooseFolderPath = CreateCFURLFromOpenDialog( dynamicCommandName, message, defaultName, defaultLocationStr, additionalFlags | kOMCFilePanelCanChooseDirectories);	
-					if(currCommand.chooseFolderPath == NULL)
-						throw OSStatus(userCanceledErr);
-
-					if( (additionalFlags & kOMCFilePanelUseCachedPath) != 0 )
-						mCachedChooseFolderPath.Adopt( currCommand.chooseFolderPath, kCFObjRetain );
-				}
-				else
-				{
-					currCommand.chooseFolderPath = mCachedChooseFolderPath;
-					CFRetain(currCommand.chooseFolderPath);//will be released
-				}
-			}
-
-			if( (currCommand.prescannedCommandInfo & kOmcCommandContainsChooseObjectDialog) != 0 )
-			{
-				CFObj<CFStringRef> message;
-				CFObj<CFArrayRef> defaultFileName;
-				CFObj<CFArrayRef> defaultDirPath;
-				UInt32 additionalFlags = 0;
-				GetNavDialogParams( currCommand.chooseObjectParams, message.GetReference(), defaultFileName.GetReference(), defaultDirPath.GetReference(), additionalFlags );
-
-				if(currCommand.chooseObjectPath != NULL)
-				{
-					CFRelease(currCommand.chooseObjectPath);
-					currCommand.chooseObjectPath = NULL;
-				}
-				
-				if( ((additionalFlags & kOMCFilePanelUseCachedPath) == 0) || (mCachedChooseObjectPath == NULL) )
-				{
-					TRACE_CSTR("OnMyCommandCM About to display choose object dialog\n" );
-					CFObj<CFMutableStringRef> defaultName( CreateCombinedStringWithObjects(defaultFileName, currCommand.localizationTableName, localizationBundle) );
-					
-					CFObj<CFStringRef> expandedDirStr;
-					CFObj<CFMutableStringRef> defaultLocationStr( CreateCombinedStringWithObjects(defaultDirPath, NULL, NULL) );
-					if(defaultLocationStr != NULL)
-						expandedDirStr.Adopt( CreatePathByExpandingTilde( defaultLocationStr ) );
-
-					if( (currCommand.localizationTableName != NULL) && (localizationBundle != NULL) && (message != NULL) )
-						message.Adopt( ::CFCopyLocalizedStringFromTableInBundle( message, currCommand.localizationTableName, localizationBundle, "") );
-
-					StSwitchToFront switcher;
-					currCommand.chooseObjectPath = CreateCFURLFromOpenDialog( dynamicCommandName, message, defaultName, defaultLocationStr, additionalFlags | kOMCFilePanelCanChooseFiles | kOMCFilePanelCanChooseDirectories);	
-					if(currCommand.chooseObjectPath == NULL)
-						throw OSStatus(userCanceledErr);
-					
-					if( (additionalFlags & kOMCFilePanelUseCachedPath) != 0 )
-						mCachedChooseObjectPath.Adopt( currCommand.chooseObjectPath, kCFObjRetain );
-				}
-				else
-				{
-					currCommand.chooseObjectPath = mCachedChooseObjectPath;
-					CFRetain(currCommand.chooseObjectPath);//will be released
-				}
-			}
-
-			if( objListEmpty || mIsTextContext )//text context
-			{
-				TRACE_CSTR("OnMyCommandCM->CMPluginHandleSelection: about to process command with text selection\n" );
-				ProcessCommandWithText( currCommand, mContextText );
-			}
-			else //file context
-			{
-				TRACE_CSTR("OnMyCommandCM About to proces file list\n" );
-				ProcessObjects();
-			}
-			
-			//we used to do some post-processing here but now most commands are async so we need to call Finalize when task ends
-		}
-		else
+		if(inCommandID < kCMCommandStart)
 		{
 			LOG_CSTR( "OMC->CMPluginHandleSelection: unknown menu item ID. Aliens?\n" );
+			throw OSStatus(paramErr);
 		}
+
+		mCurrCommandIndex = inCommandID - kCMCommandStart;
+		if( mCurrCommandIndex >= mCommandCount )
+			throw OSStatus(paramErr);
+		
+		CommandDescription &currCommand = mCommandList[mCurrCommandIndex];
+
+		CGEventFlags keyboardModifiers = GetKeyboardModifiers();
+		//only if lone control key is pressed we consider it a debug request
+		currCommand.debugging = ((keyboardModifiers &
+								(kCGEventFlagMaskAlphaShift | kCGEventFlagMaskShift | kCGEventFlagMaskAlternate | kCGEventFlagMaskCommand)) == 0)
+								&& ((keyboardModifiers & kCGEventFlagMaskControl) != 0);
+		
+		//take original command as parameter, not copy
+		PrescanCommandDescription( currCommand );
+		
+		if(currCommand.currState == NULL)//top command may not have the command state object created yet
+			currCommand.currState = new CommandState();
+
+		//make a copy fo the description because when we show a dialog it may become invalid
+		//StAEDesc contextCopy;
+		//if(mIsNullContext == false)
+		//{
+		//	::AEDuplicateDesc(inContext, (AEDesc *)contextCopy);
+		//}
+
+		CFBundleRef localizationBundle = NULL;
+		if(currCommand.localizationTableName != NULL)//client wants to be localized
+		{
+			localizationBundle = GetCurrentCommandExternBundle();
+			if(localizationBundle == NULL)
+				localizationBundle = CFBundleGetMainBundle();
+		}
+
+		//obtain text from selection before any dialogs are shown
+		bool objListEmpty = (mObjectList.size() == 0);
+		
+		if( ((currCommand.prescannedCommandInfo & kOmcCommandContainsTextObject) != 0) && (mContextText == NULL) )
+		{
+			CreateTextContext(currCommand, inContext);
+		}
+
+		CFObj<CFStringRef> dynamicCommandName( CreateDynamicCommandName(currCommand, currCommand.localizationTableName, localizationBundle) );
+
+		if(CURRENT_OMC_VERSION < currCommand.requiredOMCVersion )
+		{
+			StSwitchToFront switcher;
+			CFObj<CFStringRef> warningText( ::CFCopyLocalizedStringFromTableInBundle( CFSTR("TOO_LOW_OMC"),
+															CFSTR("Private"), mBundleRef, "") );
+
+			if( false == DisplayVersionWarning(mBundleRef, dynamicCommandName, warningText, currCommand.requiredOMCVersion, CURRENT_OMC_VERSION) )
+			{
+				throw OSStatus(userCanceledErr);
+			}
+		}
+		
+		if( mSysVersion < currCommand.requiredMacOSMinVersion)
+		{
+			StSwitchToFront switcher;
+			CFObj<CFStringRef> warningText( ::CFCopyLocalizedStringFromTableInBundle( CFSTR("TOO_LOW_MAC_OS"),
+															CFSTR("Private"), mBundleRef, "") );
+
+			if( false == DisplayVersionWarning(mBundleRef, dynamicCommandName, warningText, currCommand.requiredMacOSMinVersion, mSysVersion) )
+			{
+				throw OSStatus(userCanceledErr);
+			}
+		}
+		
+		if(mSysVersion > currCommand.requiredMacOSMaxVersion)
+		{
+			StSwitchToFront switcher;
+			CFObj<CFStringRef> warningText( ::CFCopyLocalizedStringFromTableInBundle( CFSTR("TOO_HIGH_MAC_OS"),
+															CFSTR("Private"), mBundleRef, "") );
+
+			if( false == DisplayVersionWarning(mBundleRef, dynamicCommandName, warningText, currCommand.requiredMacOSMaxVersion, mSysVersion) )
+			{
+				throw OSStatus(userCanceledErr);
+			}
+		}
+		
+		if( currCommand.warningStr != NULL )
+		{
+			TRACE_CSTR("OnMyCommandCM About to display warning\n" );
+			StSwitchToFront switcher;
+			if( DisplayWarning(currCommand) == false )
+			{
+				throw OSStatus(userCanceledErr);
+			}
+		}
+		
+		if( ((currCommand.prescannedCommandInfo & kOmcCommandContainsInputText) != 0) && (mInputText == NULL) )
+		{
+			TRACE_CSTR( "OnMyCommandCM About to ask for input text\n" );
+			StSwitchToFront switcher;
+
+			//if( ShowInputDialog( currCommand, mInputText.GetReference() ) == false )
+			if( RunCocoaInputDialog( this, mInputText.GetReference()) == false )
+			{
+				throw OSStatus(userCanceledErr);
+			}
+		}
+
+		ARefCountedObj<OMCCocoaDialog> activeDialog;
+
+		//if( (currCommand.dialogNibName != NULL) && (currCommand.nibWindowName != NULL) )//if dialog required
+		if( currCommand.nibDialog != NULL )
+		{
+			ACFDict params( currCommand.nibDialog );
+			Boolean isCocoa = false;
+			params.GetValue( CFSTR("IS_COCOA"), isCocoa );
+
+			//bring executing application to front. important when running within ShortcutsObserver
+			//don't restore because for non-modal dialogs this would bring executing app behind along with the dialog
+			StSwitchToFront switcher(false);
+			
+			if(isCocoa)
+			{
+				activeDialog = RunCocoaDialog( this );
+				if( activeDialog == nullptr )
+					throw OSStatus(userCanceledErr);
+			}
+			else
+			{
+				CFObj<CFStringRef> dynamicCommandName( CreateDynamicCommandName(currCommand, currCommand.localizationTableName, localizationBundle) );
+				DisplayAlert(mBundleRef, dynamicCommandName, CFSTR("CARBON_NIB_64_BIT"), kCFUserNotificationStopAlertLevel );
+				throw OSStatus(userCanceledErr);
+			}
+		}
+
+#if 0
+		CFObj<CFURLRef> defaultLocationURL;
+		if(currCommand.defaultNavLocation != NULL)
+		{
+			CFObj<CFMutableStringRef> defaultLocationStr( CreateCombinedStringWithObjects(currCommand.defaultNavLocation) );
+			if(defaultLocationStr != NULL)
+			{
+				CFObj<CFStringRef> expandedLocationStr( CreatePathByExpandingTilde( defaultLocationStr ) );
+				if(expandedLocationStr != NULL)
+					defaultLocationURL.Adopt( ::CFURLCreateWithFileSystemPath(kCFAllocatorDefault, expandedLocationStr, kCFURLPOSIXPathStyle, true) );
+			}
+		}
+#endif
+
+		if( (currCommand.prescannedCommandInfo & kOmcCommandContainsSaveAsDialog) != 0 )
+		{
+			CFObj<CFStringRef> message;
+			CFObj<CFArrayRef> defaultFileName;
+			CFObj<CFArrayRef> defaultDirPath;
+			UInt32 additionalFlags = 0;
+			GetNavDialogParams( currCommand.saveAsParams, message.GetReference(), defaultFileName.GetReference(), defaultDirPath.GetReference(), additionalFlags );
+			
+			if(currCommand.saveAsPath != NULL)
+			{
+				CFRelease(currCommand.saveAsPath);
+				currCommand.saveAsPath = NULL;
+			}
+			
+			if( ((additionalFlags & kOMCFilePanelUseCachedPath) == 0) || (mCachedSaveAsPath == NULL) )
+			{
+				TRACE_CSTR("OnMyCommandCM About to display save as dialog\n" );
+				CFObj<CFMutableStringRef> defaultName( CreateCombinedStringWithObjects(defaultFileName, currCommand.localizationTableName, localizationBundle) );
+				
+				CFObj<CFStringRef> expandedDirStr;
+				CFObj<CFMutableStringRef> defaultLocationStr( CreateCombinedStringWithObjects(defaultDirPath, NULL, NULL) );
+				if(defaultLocationStr != NULL)
+					expandedDirStr.Adopt( CreatePathByExpandingTilde( defaultLocationStr ) );
+
+				if( (currCommand.localizationTableName != NULL) && (localizationBundle != NULL) && (message != NULL) )
+					message.Adopt( ::CFCopyLocalizedStringFromTableInBundle( message, currCommand.localizationTableName, localizationBundle, "") );
+
+				StSwitchToFront switcher;
+				currCommand.saveAsPath = CreateCFURLFromSaveAsDialog( dynamicCommandName, message, defaultName, expandedDirStr, additionalFlags);
+				if(currCommand.saveAsPath == NULL)
+					throw OSStatus(userCanceledErr);
+
+				if( (additionalFlags & kOMCFilePanelUseCachedPath) != 0 )
+					mCachedSaveAsPath.Adopt( currCommand.saveAsPath, kCFObjRetain );
+			}
+			else
+			{
+				currCommand.saveAsPath = mCachedSaveAsPath;
+				CFRetain(currCommand.saveAsPath);//will be released
+			}
+		}
+		
+		if( (currCommand.prescannedCommandInfo & kOmcCommandContainsChooseFileDialog) != 0 )
+		{
+			CFObj<CFStringRef> message;
+			CFObj<CFArrayRef> defaultFileName;
+			CFObj<CFArrayRef> defaultDirPath;
+			UInt32 additionalFlags = 0;
+			GetNavDialogParams( currCommand.chooseFileParams, message.GetReference(), defaultFileName.GetReference(), defaultDirPath.GetReference(), additionalFlags );
+
+			if(currCommand.chooseFilePath != NULL)
+			{
+				CFRelease(currCommand.chooseFilePath);
+				currCommand.chooseFilePath = NULL;
+			}
+
+			if( ((additionalFlags & kOMCFilePanelUseCachedPath) == 0) || (mCachedChooseFilePath == NULL) )
+			{
+				TRACE_CSTR("OnMyCommandCM About to display choose file dialog\n" );
+				CFObj<CFMutableStringRef> defaultName( CreateCombinedStringWithObjects(defaultFileName, currCommand.localizationTableName, localizationBundle) );
+				
+				CFObj<CFStringRef> expandedDirStr;
+				CFObj<CFMutableStringRef> defaultLocationStr( CreateCombinedStringWithObjects(defaultDirPath, NULL, NULL) );
+				if(defaultLocationStr != NULL)
+					expandedDirStr.Adopt( CreatePathByExpandingTilde( defaultLocationStr ) );
+
+				if( (currCommand.localizationTableName != NULL) && (localizationBundle != NULL) && (message != NULL) )
+					message.Adopt( ::CFCopyLocalizedStringFromTableInBundle( message, currCommand.localizationTableName, localizationBundle, "") );
+
+				StSwitchToFront switcher;
+				currCommand.chooseFilePath = CreateCFURLFromOpenDialog( dynamicCommandName, message, defaultName, defaultLocationStr, additionalFlags | kOMCFilePanelCanChooseFiles);
+				if(currCommand.chooseFilePath == NULL)
+					throw OSStatus(userCanceledErr);
+
+				if( (additionalFlags & kOMCFilePanelUseCachedPath) != 0 )
+					mCachedChooseFilePath.Adopt( currCommand.chooseFilePath, kCFObjRetain );
+			}
+			else
+			{
+				currCommand.chooseFilePath = mCachedChooseFilePath;
+				CFRetain(currCommand.chooseFilePath);//will be released
+			}
+		}
+
+		if( (currCommand.prescannedCommandInfo & kOmcCommandContainsChooseFolderDialog) != 0 )
+		{
+			CFObj<CFStringRef> message;
+			CFObj<CFArrayRef> defaultFileName;
+			CFObj<CFArrayRef> defaultDirPath;
+			UInt32 additionalFlags = 0;
+			GetNavDialogParams( currCommand.chooseFolderParams, message.GetReference(), defaultFileName.GetReference(), defaultDirPath.GetReference(), additionalFlags );
+
+			if(currCommand.chooseFolderPath != NULL)
+			{
+				CFRelease(currCommand.chooseFolderPath);
+				currCommand.chooseFolderPath = NULL;
+			}
+			
+			if( ((additionalFlags & kOMCFilePanelUseCachedPath) == 0) || (mCachedChooseFolderPath == NULL) )
+			{
+				TRACE_CSTR("OnMyCommandCM About to display choose folder dialog\n" );
+				CFObj<CFMutableStringRef> defaultName( CreateCombinedStringWithObjects(defaultFileName, currCommand.localizationTableName, localizationBundle) );
+				
+				CFObj<CFStringRef> expandedDirStr;
+				CFObj<CFMutableStringRef> defaultLocationStr( CreateCombinedStringWithObjects(defaultDirPath, NULL, NULL) );
+				if(defaultLocationStr != NULL)
+					expandedDirStr.Adopt( CreatePathByExpandingTilde( defaultLocationStr ) );
+				
+				if( (currCommand.localizationTableName != NULL) && (localizationBundle != NULL) && (message != NULL) )
+					message.Adopt( ::CFCopyLocalizedStringFromTableInBundle( message, currCommand.localizationTableName, localizationBundle, "") );
+
+				StSwitchToFront switcher;
+				currCommand.chooseFolderPath = CreateCFURLFromOpenDialog( dynamicCommandName, message, defaultName, defaultLocationStr, additionalFlags | kOMCFilePanelCanChooseDirectories);
+				if(currCommand.chooseFolderPath == NULL)
+					throw OSStatus(userCanceledErr);
+
+				if( (additionalFlags & kOMCFilePanelUseCachedPath) != 0 )
+					mCachedChooseFolderPath.Adopt( currCommand.chooseFolderPath, kCFObjRetain );
+			}
+			else
+			{
+				currCommand.chooseFolderPath = mCachedChooseFolderPath;
+				CFRetain(currCommand.chooseFolderPath);//will be released
+			}
+		}
+
+		if( (currCommand.prescannedCommandInfo & kOmcCommandContainsChooseObjectDialog) != 0 )
+		{
+			CFObj<CFStringRef> message;
+			CFObj<CFArrayRef> defaultFileName;
+			CFObj<CFArrayRef> defaultDirPath;
+			UInt32 additionalFlags = 0;
+			GetNavDialogParams( currCommand.chooseObjectParams, message.GetReference(), defaultFileName.GetReference(), defaultDirPath.GetReference(), additionalFlags );
+
+			if(currCommand.chooseObjectPath != NULL)
+			{
+				CFRelease(currCommand.chooseObjectPath);
+				currCommand.chooseObjectPath = NULL;
+			}
+			
+			if( ((additionalFlags & kOMCFilePanelUseCachedPath) == 0) || (mCachedChooseObjectPath == NULL) )
+			{
+				TRACE_CSTR("OnMyCommandCM About to display choose object dialog\n" );
+				CFObj<CFMutableStringRef> defaultName( CreateCombinedStringWithObjects(defaultFileName, currCommand.localizationTableName, localizationBundle) );
+				
+				CFObj<CFStringRef> expandedDirStr;
+				CFObj<CFMutableStringRef> defaultLocationStr( CreateCombinedStringWithObjects(defaultDirPath, NULL, NULL) );
+				if(defaultLocationStr != NULL)
+					expandedDirStr.Adopt( CreatePathByExpandingTilde( defaultLocationStr ) );
+
+				if( (currCommand.localizationTableName != NULL) && (localizationBundle != NULL) && (message != NULL) )
+					message.Adopt( ::CFCopyLocalizedStringFromTableInBundle( message, currCommand.localizationTableName, localizationBundle, "") );
+
+				StSwitchToFront switcher;
+				currCommand.chooseObjectPath = CreateCFURLFromOpenDialog( dynamicCommandName, message, defaultName, defaultLocationStr, additionalFlags | kOMCFilePanelCanChooseFiles | kOMCFilePanelCanChooseDirectories);
+				if(currCommand.chooseObjectPath == NULL)
+					throw OSStatus(userCanceledErr);
+				
+				if( (additionalFlags & kOMCFilePanelUseCachedPath) != 0 )
+					mCachedChooseObjectPath.Adopt( currCommand.chooseObjectPath, kCFObjRetain );
+			}
+			else
+			{
+				currCommand.chooseObjectPath = mCachedChooseObjectPath;
+				CFRetain(currCommand.chooseObjectPath);//will be released
+			}
+		}
+
+		if( objListEmpty || mIsTextContext )//text context
+		{
+			TRACE_CSTR("OnMyCommandCM->CMPluginHandleSelection: about to process command with text selection\n" );
+			ProcessCommandWithText( currCommand, mContextText );
+		}
+		else //file context
+		{
+			TRACE_CSTR("OnMyCommandCM About to proces file list\n" );
+			ProcessObjects();
+		}
+		
+		//we used to do some post-processing here but now most commands are async so we need to call Finalize when task ends
 
 		TRACE_CSTR("OnMyCommandCM->CMPluginHandleSelection: finished successfully\n" );
 	}
@@ -1440,7 +1439,7 @@ OnMyCommandCM::ProcessObjects()
 
 	OmcHostTaskManager *taskManager = new OmcHostTaskManager( this, currCommand, dynamicCommandName, mBundleRef, maxTaskCount );
 
-	OMCDialog *activeDialog = nullptr;
+	ARefCountedObj<OMCDialog> activeDialog;
 	if( currCommand.currState != nullptr )
 	{
 		activeDialog = OMCDialog::FindDialogByGUID(currCommand.currState->dialogGUID);
@@ -1585,7 +1584,7 @@ OnMyCommandCM::ProcessCommandWithText(CommandDescription &currCommand, CFStringR
 			localizationBundle = CFBundleGetMainBundle();
 	}
 
-	OMCDialog *activeDialog = nullptr;
+	ARefCountedObj<OMCDialog> activeDialog;
 	if( currCommand.currState != nullptr )
 	{
 		activeDialog = OMCDialog::FindDialogByGUID(currCommand.currState->dialogGUID);
@@ -3581,7 +3580,7 @@ OnMyCommandCM::CreateCommandStringWithObjects(CFArrayRef inFragments, UInt16 esc
 
 	CommandDescription &currCommand = GetCurrentCommand();
 
-	OMCDialog *activeDialog = nullptr;
+	ARefCountedObj<OMCDialog> activeDialog;
 	if( currCommand.currState != nullptr )
 		activeDialog = OMCDialog::FindDialogByGUID(currCommand.currState->dialogGUID);
 
@@ -3628,7 +3627,7 @@ OnMyCommandCM::CreateCommandStringWithText(CFArrayRef inFragments, CFStringRef i
 		return nullptr;
 
 	CommandDescription &currCommand = GetCurrentCommand();
-	OMCDialog *activeDialog = nullptr;
+	ARefCountedObj<OMCDialog> activeDialog;
 	if( currCommand.currState != nullptr )
 		activeDialog = OMCDialog::FindDialogByGUID(currCommand.currState->dialogGUID);
 
@@ -3713,7 +3712,7 @@ OnMyCommandCM::CreateCombinedStringWithObjects(CFArrayRef inArray, CFStringRef i
 
 	CommandDescription &currCommand = GetCurrentCommand();
 
-	OMCDialog *activeDialog = nullptr;
+	ARefCountedObj<OMCDialog> activeDialog;
 	if( currCommand.currState != nullptr )
 		activeDialog = OMCDialog::FindDialogByGUID(currCommand.currState->dialogGUID);
 
@@ -4057,7 +4056,7 @@ OnMyCommandCM::PopulateEnvironList(CFMutableDictionaryRef ioEnvironList,
 		CFDictionaryGetKeysAndValues(ioEnvironList, (const void **)keyList.data(), NULL);
 	}
 	
-	OMCDialog *activeDialog = nullptr;
+	ARefCountedObj<OMCDialog> activeDialog;
 	if( currCommand.currState != nullptr )
 		activeDialog = OMCDialog::FindDialogByGUID(currCommand.currState->dialogGUID);
 

@@ -38,7 +38,7 @@ enum
 //	kControlModifier_Bool			= 0x00000008, //a checkbox returns integer 0 or 1, this may change the result to false/true
 };
 
-class OMCDialog
+class OMCDialog : public ARefCounted
 {
 
 public:
@@ -72,7 +72,7 @@ public:
 	virtual CFDataRef		ReceivePortMessage( SInt32 msgid, CFDataRef inData ) = 0;//remote message
 	virtual void			ReceiveNotification(void *ioData) = 0;//local message
 
-	static OMCDialog *		FindDialogByGUID(CFStringRef inGUID);
+	static ARefCountedObj<OMCDialog> FindDialogByGUID(CFStringRef inGUID);
 
 	static CFStringRef		CreateControlValueString(CFTypeRef controlValue, CFDictionaryRef customProperties, UInt16 escSpecialCharsMode, bool isEnvStyle) noexcept;
 	CFStringRef				CreateNibControlValue(SInt32 inSpecialWordID, CFStringRef inNibControlString, UInt16 escSpecialCharsMode, bool isEnvStyle) noexcept;

@@ -125,7 +125,7 @@ FindArgumentType(const char *argTypeStr)
 	mIsRunning = false;
 	mDeleteSelfOnClose = false;
 
-	mOMCDialogProxy.reset( new OMCCocoaDialog(self) );
+	mOMCDialogProxy.Adopt( new OMCCocoaDialog(self) );
 
 	mPlugin.Adopt(inOmc, kARefCountRetain);
 	mExternBundleRef.Adopt(inOmc->GetCurrentCommandExternBundle(), kCFObjRetain);

@@ -163,6 +163,11 @@ OmcHostTaskManager::Finalize()
 	CFObj<CFStringRef> nextCommandID( CopyNextCommandID(mCurrCommand, mCurrCommandState) );
 	if(nextCommandID != nullptr)
 	{
+		assert(mCurrCommandState != nullptr);
+		ARefCountedObj<OMCDialog> activeDialog;
+		if(mCurrCommandState->dialogGUID != nullptr)
+			activeDialog = OMCDialog::FindDialogByGUID(mCurrCommandState->dialogGUID);
+
 		// Before kicking off the next command process whatever events might have been triggered in the meantime
 		// This is especially needed for dialog control messages which might change the state of the dialog values
 		// and affect the next command if it tries to read them back
@@ -173,11 +178,7 @@ OmcHostTaskManager::Finalize()
 		}
 		while(runloopResult == kCFRunLoopRunHandledSource);
 
-		assert(mCurrCommandState != nullptr);
-		OMCDialog *currDialog = nullptr;
-		if(mCurrCommandState->dialogGUID != nullptr)
-			currDialog = OMCDialog::FindDialogByGUID(mCurrCommandState->dialogGUID);
-		OSStatus err = mPlugin->ExecuteSubcommand(mCurrCommand.name, nextCommandID, currDialog, NULL);
+		OSStatus err = mPlugin->ExecuteSubcommand(mCurrCommand.name, nextCommandID, activeDialog, NULL);
 		#pragma unused(err)
 	}
 }

@@ -14,44 +14,38 @@
 #include "OmcTaskNotification.h"
 #include "NibDialogControl.h"
 
-Boolean RunCocoaDialog(OnMyCommandCM *inPlugin);
-
-Boolean RunCocoaDialog(OnMyCommandCM *inPlugin)
+ARefCountedObj<OMCCocoaDialog> RunCocoaDialog(OnMyCommandCM *inPlugin)
 {
+	ARefCountedObj<OMCCocoaDialog > outDialog;
 	if(inPlugin == nullptr)
-		return false;
+		return outDialog;
 
 	CommandDescription &currCommand = inPlugin->GetCurrentCommand();
 
-	Boolean outResult = false;
 	@autoreleasepool
 	{
 		@try
 		{
-			OMCDialogController *myController = [[OMCDialogController alloc] initWithOmc: inPlugin];
+			OMCDialogController *myController = [[[OMCDialogController alloc] initWithOmc: inPlugin] autorelease];
 			if(myController != nullptr)
 			{
-				[myController autorelease];
-				outResult = true;
-
 				assert(currCommand.currState != nullptr);
-				OMCCocoaDialog* omcDialog = [myController getOMCDialog];
-				currCommand.currState->dialogGUID.Adopt(omcDialog->GetDialogUniqueID(), kCFObjRetain);
+				outDialog.Adopt( [myController getOMCDialog], kARefCountRetain );
+				currCommand.currState->dialogGUID.Adopt(outDialog->GetDialogUniqueID(), kCFObjRetain);
 
 				[myController run];
 				if( [myController isModal] )
 				{
 					if( [myController isOkeyed] )
 					{
-						if(omcDialog != nullptr)
+						if(outDialog != nullptr)
 						{
-							omcDialog->CopyAllControlValues(currCommand.specialRequestedNibControls, nullptr);
-							outResult = true;
+							outDialog->CopyAllControlValues(currCommand.specialRequestedNibControls, nullptr);
 						}
 					}
 					else
 					{
-						outResult = false;
+						outDialog.Adopt(nullptr);
 					}
 				}
 			}
@@ -59,11 +53,11 @@ Boolean RunCocoaDialog(OnMyCommandCM *inPlugin)
 		@catch (NSException *localException)
 		{
 			NSLog(@"RunCocoaDialog received exception: %@", localException);
-			outResult = false;
+			outDialog.Adopt(nullptr);
 		}
 	} //@autoreleasepool
 
-	return outResult;
+	return outDialog;
 }
 
 #pragma mark -

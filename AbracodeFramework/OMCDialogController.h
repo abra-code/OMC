@@ -28,7 +28,7 @@ class OMCCocoaDialog;
 	//so we can use smart pointers as member variables
 
 	ARefCountedObj<OnMyCommandCM>	mPlugin;
-	AUniquePtr<OMCCocoaDialog>		mOMCDialogProxy;
+	ARefCountedObj<OMCCocoaDialog>	mOMCDialogProxy;
 	CFObj<CFBundleRef>				mExternBundleRef;
 	CFObj<CFArrayRef>				mCommandName;
 	CFObj<CFStringRef>				mDialogUniqueID;

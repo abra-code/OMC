@@ -84,23 +84,27 @@ OMCDialog::StartListening()
 
 
 /*static*/
-OMCDialog *	
+ARefCountedObj<OMCDialog>
 OMCDialog::FindDialogByGUID(CFStringRef inGUID)
 {
+	ARefCountedObj<OMCDialog> outDialog;
 	if(inGUID == nullptr)
-		return nullptr;
+		return outDialog;
 
 	OMCDialog *oneLink = sChainHead;
 	while(oneLink != nullptr)
 	{
 		CFStringRef oneGUID = oneLink->mDialogUniqueID;//do not generate if never requested before, cannot be equal in such case
 		if( (oneGUID != nullptr) && (CFStringCompare(oneGUID, inGUID, 0) == kCFCompareEqualTo) )
-			return oneLink;
+		{
+			outDialog.Adopt(oneLink, kARefCountRetain);
+			break;
+		}
 
 		oneLink = oneLink->next;
 	}
 
-	return nullptr;
+	return outDialog;
 }
 
 //static
