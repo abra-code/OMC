@@ -1266,7 +1266,7 @@ FindArgumentType(const char *argTypeStr)
 					NSView *controlOrView = [self findControlOrViewWithID:(NSString *)controlID];
 					if( (controlOrView != nil) && [controlOrView respondsToSelector:@selector(setCommandID:)] )
 					{
-						[controlOrView performSelector:@selector(setCommandID) withObject:(NSString *)theVal];
+						[controlOrView performSelector:@selector(setCommandID:) withObject:(NSString *)theVal];
 					}
 				}
 			}
