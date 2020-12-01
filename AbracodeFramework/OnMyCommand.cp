@@ -2994,6 +2994,11 @@ OnMyCommandCM::GetOneCommandParams(CommandDescription &outDesc, CFDictionaryRef 
 		}
 	}
 
+	if(outDesc.command == nullptr)
+	{ //no inline command found - change the default execution mode to script file
+		outDesc.executionMode = kExecPopenScriptFile;
+	}
+
 //execution
 	if( oneCmd.GetValue(CFSTR("EXECUTION_MODE"), theStr) )
 	{
@@ -3043,7 +3048,8 @@ OnMyCommandCM::GetOneCommandParams(CommandDescription &outDesc, CFDictionaryRef 
 		}
 		else
 		{
-			LOG_CSTR( "OMC->GetOneCommandParams. EXECUTION_MODE is not valid. Defaulting to exe_popen\n" );
+			//not an error, using default execution mode
+			TRACE_CSTR( "OMC->GetOneCommandParams. EXECUTION_MODE is not specified. Defaulting to exe_popen or exe_script_file\n" );
 		}
 	}
 
