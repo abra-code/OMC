@@ -1,7 +1,0 @@
-// Stubs for open source
-// Contains code signing info when building OnMyCommand for distribution
-
-// This code sign identity allows running the built binaries on local machine:
-CODE_SIGN_IDENTITY = -
-
-DEVELOPMENT_TEAM = 

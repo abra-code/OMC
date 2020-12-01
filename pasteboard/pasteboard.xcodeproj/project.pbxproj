@@ -27,6 +27,8 @@
 
 /* Begin PBXFileReference section */
 		1D0449AC2330B80300C01431 /* OmcTool_Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = OmcTool_Info.plist; path = ../Common/OmcTool_Info.plist; sourceTree = "<group>"; };
+		1D4971B02575A6A400F7131C /* OmcProjectRelease.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectRelease.xcconfig; path = ../Common/OmcProjectRelease.xcconfig; sourceTree = "<group>"; };
+		1D4971B12575A6A400F7131C /* OmcProjectDebug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectDebug.xcconfig; path = ../Common/OmcProjectDebug.xcconfig; sourceTree = "<group>"; };
 		1D900388192763DA001CAAEF /* pasteboard */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = pasteboard; sourceTree = BUILT_PRODUCTS_DIR; };
 		1D90038B192763DA001CAAEF /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		1D90038E192763DA001CAAEF /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
@@ -49,6 +51,8 @@
 		1D90037F192763DA001CAAEF = {
 			isa = PBXGroup;
 			children = (
+				1D4971B12575A6A400F7131C /* OmcProjectDebug.xcconfig */,
+				1D4971B02575A6A400F7131C /* OmcProjectRelease.xcconfig */,
 				1D904E2019286FED009FB0C7 /* OmcProjectCommon.xcconfig */,
 				1D0449AC2330B80300C01431 /* OmcTool_Info.plist */,
 				1D90038D192763DA001CAAEF /* pasteboard */,
@@ -143,89 +147,15 @@
 /* Begin XCBuildConfiguration section */
 		1D900394192763DA001CAAEF /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 1D904E2019286FED009FB0C7 /* OmcProjectCommon.xcconfig */;
+			baseConfigurationReference = 1D4971B12575A6A400F7131C /* OmcProjectDebug.xcconfig */;
 			buildSettings = {
-				CLANG_ENABLE_MODULES = YES;
-				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
-				CLANG_WARN_BOOL_CONVERSION = YES;
-				CLANG_WARN_COMMA = YES;
-				CLANG_WARN_CONSTANT_CONVERSION = YES;
-				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
-				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
-				CLANG_WARN_EMPTY_BODY = YES;
-				CLANG_WARN_ENUM_CONVERSION = YES;
-				CLANG_WARN_INFINITE_RECURSION = YES;
-				CLANG_WARN_INT_CONVERSION = YES;
-				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
-				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
-				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
-				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
-				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
-				CLANG_WARN_STRICT_PROTOTYPES = YES;
-				CLANG_WARN_SUSPICIOUS_MOVE = YES;
-				CLANG_WARN_UNREACHABLE_CODE = YES;
-				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				COPY_PHASE_STRIP = NO;
-				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				ENABLE_TESTABILITY = YES;
-				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
-				GCC_NO_COMMON_BLOCKS = YES;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"DEBUG=1",
-					"$(inherited)",
-				);
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
-				GCC_WARN_UNDECLARED_SELECTOR = YES;
-				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
-				GCC_WARN_UNUSED_FUNCTION = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
-				ONLY_ACTIVE_ARCH = YES;
-				SDKROOT = macosx;
-				SYMROOT = ../build;
 			};
 			name = Debug;
 		};
 		1D900395192763DA001CAAEF /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 1D904E2019286FED009FB0C7 /* OmcProjectCommon.xcconfig */;
+			baseConfigurationReference = 1D4971B02575A6A400F7131C /* OmcProjectRelease.xcconfig */;
 			buildSettings = {
-				CLANG_ENABLE_MODULES = YES;
-				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
-				CLANG_WARN_BOOL_CONVERSION = YES;
-				CLANG_WARN_COMMA = YES;
-				CLANG_WARN_CONSTANT_CONVERSION = YES;
-				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
-				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
-				CLANG_WARN_EMPTY_BODY = YES;
-				CLANG_WARN_ENUM_CONVERSION = YES;
-				CLANG_WARN_INFINITE_RECURSION = YES;
-				CLANG_WARN_INT_CONVERSION = YES;
-				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
-				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
-				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
-				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
-				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
-				CLANG_WARN_STRICT_PROTOTYPES = YES;
-				CLANG_WARN_SUSPICIOUS_MOVE = YES;
-				CLANG_WARN_UNREACHABLE_CODE = YES;
-				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				COPY_PHASE_STRIP = YES;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				ENABLE_NS_ASSERTIONS = NO;
-				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
-				GCC_NO_COMMON_BLOCKS = YES;
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
-				GCC_WARN_UNDECLARED_SELECTOR = YES;
-				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
-				GCC_WARN_UNUSED_FUNCTION = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
-				SDKROOT = macosx;
-				SYMROOT = ../build;
 			};
 			name = Release;
 		};

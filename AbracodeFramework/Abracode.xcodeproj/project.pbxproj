@@ -44,7 +44,6 @@
 		1DE10DFC23C9D0EE003FCCDA /* OMCWebKitSupport.js in Resources */ = {isa = PBXBuildFile; fileRef = 1DE10DFB23C9D0EE003FCCDA /* OMCWebKitSupport.js */; };
 		1DED3637232258A40086266F /* OMCScriptsManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1DED3635232258A40086266F /* OMCScriptsManager.cpp */; };
 		1DED8E572222BD8E00A2CAF7 /* MoreAppleEvents.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED19F0D09528600C9D5E8 /* MoreAppleEvents.cp */; };
-		8DC2EF530486A6940098B216 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C1666FE841158C02AAC07 /* InfoPlist.strings */; };
 		8DC2EF570486A6940098B216 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7B1FEA5585E11CA2CBB /* Cocoa.framework */; };
 		E20026D710B68F3200D5388F /* OMCCustomWindow.mm in Sources */ = {isa = PBXBuildFile; fileRef = E20026D510B68F3200D5388F /* OMCCustomWindow.mm */; };
 		E204EB7F0D7FD8A900595D15 /* OMCConstants.h in Headers */ = {isa = PBXBuildFile; fileRef = E204EB7E0D7FD8A900595D15 /* OMCConstants.h */; };
@@ -228,6 +227,8 @@
 		1D386DA923BEED4A00A16967 /* OMCWebKitView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCWebKitView.h; sourceTree = "<group>"; };
 		1D386DAA23BEED4A00A16967 /* OMCWebKitView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMCWebKitView.m; sourceTree = "<group>"; };
 		1D3BB165229BEB1D00542933 /* AUniquePtr.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AUniquePtr.h; sourceTree = "<group>"; };
+		1D4971AC2575A69000F7131C /* OmcProjectDebug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectDebug.xcconfig; path = ../Common/OmcProjectDebug.xcconfig; sourceTree = "<group>"; };
+		1D4971AD2575A69000F7131C /* OmcProjectRelease.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectRelease.xcconfig; path = ../Common/OmcProjectRelease.xcconfig; sourceTree = "<group>"; };
 		1D71F3292206F116009FAF91 /* DebugSettings.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DebugSettings.h; sourceTree = "<group>"; };
 		1D71F32A2206F1A1009FAF91 /* ACMPlugin.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ACMPlugin.h; sourceTree = "<group>"; };
 		1D71F32B2206F1D8009FAF91 /* CMUtils.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CMUtils.h; sourceTree = "<group>"; };
@@ -264,7 +265,6 @@
 		1DCFB238231FAABB00D1C62E /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/input_password.xib; sourceTree = "<group>"; };
 		1DCFB239231FAABB00D1C62E /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/input_popup.xib; sourceTree = "<group>"; };
 		1DCFB23A231FAABC00D1C62E /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/progress.xib; sourceTree = "<group>"; };
-		1DCFB23B231FAABF00D1C62E /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		1DCFB23C231FAABF00D1C62E /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Private.strings; sourceTree = "<group>"; };
 		1DCFB23D231FAAC300D1C62E /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/Private.strings; sourceTree = "<group>"; };
 		1DCFB23E231FAAC300D1C62E /* de */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = de; path = de.lproj/input_clear.xib; sourceTree = "<group>"; };
@@ -456,6 +456,8 @@
 				E2517C3C0D1BCC2700180C68 /* CocoaControls */,
 				32C88DFF0371C24200C91783 /* Other Sources */,
 				089C1665FE841158C02AAC07 /* Resources */,
+				1D4971AC2575A69000F7131C /* OmcProjectDebug.xcconfig */,
+				1D4971AD2575A69000F7131C /* OmcProjectRelease.xcconfig */,
 				E2269C1B0EB6DCF30029CCF5 /* OmcProjectCommon.xcconfig */,
 				E234FA9D0D0FD06B001A7780 /* Support Tools */,
 				0867D69AFE84028FC02AAC07 /* External Frameworks and Libraries */,
@@ -478,7 +480,6 @@
 			isa = PBXGroup;
 			children = (
 				8DC2EF5A0486A6940098B216 /* Info.plist */,
-				089C1666FE841158C02AAC07 /* InfoPlist.strings */,
 				E234F9F80D0FC431001A7780 /* Private.strings */,
 				E2D92E621043D9F8003DC96B /* input_clear.xib */,
 				E2D92E641043D9F8003DC96B /* input_combo.xib */,
@@ -858,7 +859,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8DC2EF530486A6940098B216 /* InfoPlist.strings in Resources */,
 				E234F9FA0D0FC431001A7780 /* Private.strings in Resources */,
 				1D9B1F7121FF1F9F004704A7 /* progress.xib in Resources */,
 				E234FA290D0FCB28001A7780 /* stop.icns in Resources */,
@@ -1004,14 +1004,6 @@
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
-		089C1666FE841158C02AAC07 /* InfoPlist.strings */ = {
-			isa = PBXVariantGroup;
-			children = (
-				1DCFB23B231FAABF00D1C62E /* en */,
-			);
-			name = InfoPlist.strings;
-			sourceTree = "<group>";
-		};
 		1D9B1F6F21FF1F9F004704A7 /* progress.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
@@ -1092,6 +1084,7 @@
 				COPY_PHASE_STRIP = NO;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
+				EXPORTED_SYMBOLS_FILE = AbracodeFramework.exp;
 				FRAMEWORK_VERSION = A;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = Abracode_Prefix.pch;
@@ -1112,6 +1105,7 @@
 			buildSettings = {
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
+				EXPORTED_SYMBOLS_FILE = AbracodeFramework.exp;
 				FRAMEWORK_VERSION = A;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = Abracode_Prefix.pch;
@@ -1129,39 +1123,17 @@
 		};
 		1DEB91B208733DA50010E9CD /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = E2269C1B0EB6DCF30029CCF5 /* OmcProjectCommon.xcconfig */;
+			baseConfigurationReference = 1D4971AC2575A69000F7131C /* OmcProjectDebug.xcconfig */;
 			buildSettings = {
-				DEAD_CODE_STRIPPING = NO;
-				ENABLE_TESTABILITY = YES;
-				EXPORTED_SYMBOLS_FILE = AbracodeFramework.exp;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"_DEBUG_=1",
-					"_TRACE_=0",
-				);
-				GCC_WARN_ABOUT_RETURN_TYPE = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
-				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CODE_SIGN_FLAGS = "--deep";
-				SYMROOT = ../build;
 			};
 			name = Debug;
 		};
 		1DEB91B308733DA50010E9CD /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = E2269C1B0EB6DCF30029CCF5 /* OmcProjectCommon.xcconfig */;
+			baseConfigurationReference = 1D4971AD2575A69000F7131C /* OmcProjectRelease.xcconfig */;
 			buildSettings = {
-				DEAD_CODE_STRIPPING = YES;
-				EXPORTED_SYMBOLS_FILE = AbracodeFramework.exp;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"_DEBUG_=0",
-					"_TRACE_=0",
-					"NDEBUG=1",
-				);
-				GCC_WARN_ABOUT_RETURN_TYPE = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
 				OTHER_CODE_SIGN_FLAGS = "--deep";
-				SYMROOT = ../build;
 			};
 			name = Release;
 		};

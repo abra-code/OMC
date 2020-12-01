@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		E234F8D60D0E85A0001A7780 /* Abracode.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E234F8D50D0E85A0001A7780 /* Abracode.framework */; };
 		E28156CF0B46740C007F4C1E /* app.icns in Resources */ = {isa = PBXBuildFile; fileRef = E28156CE0B46740C007F4C1E /* app.icns */; };
-		E28F6E2A0841AD30004800C0 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C167DFE841241C02AAC07 /* InfoPlist.strings */; };
 		E28F6E4F0841AD30004800C0 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0AA1909FFE8422F4C02AAC07 /* CoreFoundation.framework */; };
 		E28F6E510841AD30004800C0 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E29D23E4045BBC5700A87BAE /* Cocoa.framework */; };
 		E2AF964C0D0B344F00875BB1 /* OnMyCommandCM.cp in Sources */ = {isa = PBXBuildFile; fileRef = E2AF964B0D0B344F00875BB1 /* OnMyCommandCM.cp */; };
@@ -19,7 +18,8 @@
 /* Begin PBXFileReference section */
 		0AA1909FFE8422F4C02AAC07 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = /System/Library/Frameworks/CoreFoundation.framework; sourceTree = "<absolute>"; };
 		1D3BB166229BEB5900542933 /* AUniquePtr.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AUniquePtr.h; sourceTree = "<group>"; };
-		1DCFB252231FAE8100D1C62E /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		1D4971A62575A66A00F7131C /* OmcProjectRelease.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectRelease.xcconfig; path = ../Common/OmcProjectRelease.xcconfig; sourceTree = "<group>"; };
+		1D4971A72575A66A00F7131C /* OmcProjectDebug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectDebug.xcconfig; path = ../Common/OmcProjectDebug.xcconfig; sourceTree = "<group>"; };
 		1DD1AB232341DB1700ECFC14 /* OnMyCommandCM.exp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.exports; path = OnMyCommandCM.exp; sourceTree = "<group>"; };
 		1DED8E4F2222AF8D00A2CAF7 /* AObserver.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AObserver.h; sourceTree = "<group>"; };
 		1DED8E502222AFA800A2CAF7 /* ACMPlugin.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ACMPlugin.h; sourceTree = "<group>"; };
@@ -62,6 +62,8 @@
 				08FB77AFFE84173DC02AAC07 /* Source */,
 				089C167CFE841241C02AAC07 /* Resources */,
 				1DD1AB232341DB1700ECFC14 /* OnMyCommandCM.exp */,
+				1D4971A72575A66A00F7131C /* OmcProjectDebug.xcconfig */,
+				1D4971A62575A66A00F7131C /* OmcProjectRelease.xcconfig */,
 				E2269B9D0EB6DBF90029CCF5 /* OmcProjectCommon.xcconfig */,
 				089C1671FE841209C02AAC07 /* External Frameworks and Libraries */,
 				19C28FB6FE9D52B211CA2CBB /* Products */,
@@ -83,7 +85,6 @@
 			isa = PBXGroup;
 			children = (
 				E28F6E600841ADA1004800C0 /* Info-OnMyCommandCM.plist */,
-				089C167DFE841241C02AAC07 /* InfoPlist.strings */,
 				E28156CE0B46740C007F4C1E /* app.icns */,
 			);
 			name = Resources;
@@ -190,7 +191,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E28F6E2A0841AD30004800C0 /* InfoPlist.strings in Resources */,
 				E28156CF0B46740C007F4C1E /* app.icns in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -227,25 +227,12 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
-/* Begin PBXVariantGroup section */
-		089C167DFE841241C02AAC07 /* InfoPlist.strings */ = {
-			isa = PBXVariantGroup;
-			children = (
-				1DCFB252231FAE8100D1C62E /* en */,
-			);
-			name = InfoPlist.strings;
-			sourceTree = "<group>";
-		};
-/* End PBXVariantGroup section */
-
 /* Begin XCBuildConfiguration section */
 		E28101880864959E006192E8 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COPY_PHASE_STRIP = NO;
 				DEPLOYMENT_POSTPROCESSING = YES;
 				EXPORTED_SYMBOLS_FILE = OnMyCommandCM.exp;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				INFOPLIST_FILE = "Info-OnMyCommandCM.plist";
 				INSTALL_PATH = "/Library/Contextual Menu Items";
 				LD_RUNPATH_SEARCH_PATHS = /Library/Frameworks;
@@ -258,11 +245,8 @@
 		E28101890864959E006192E8 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COPY_PHASE_STRIP = YES;
-				DEBUGGING_SYMBOLS = NO;
 				DEPLOYMENT_POSTPROCESSING = YES;
 				EXPORTED_SYMBOLS_FILE = OnMyCommandCM.exp;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
 				INFOPLIST_FILE = "Info-OnMyCommandCM.plist";
 				INSTALL_PATH = "/Library/Contextual Menu Items";
 				LD_RUNPATH_SEARCH_PATHS = /Library/Frameworks;
@@ -274,80 +258,15 @@
 		};
 		E281018C0864959E006192E8 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = E2269B9D0EB6DBF90029CCF5 /* OmcProjectCommon.xcconfig */;
+			baseConfigurationReference = 1D4971A72575A66A00F7131C /* OmcProjectDebug.xcconfig */;
 			buildSettings = {
-				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
-				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
-				CLANG_WARN_BOOL_CONVERSION = YES;
-				CLANG_WARN_COMMA = YES;
-				CLANG_WARN_CONSTANT_CONVERSION = YES;
-				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
-				CLANG_WARN_EMPTY_BODY = YES;
-				CLANG_WARN_ENUM_CONVERSION = YES;
-				CLANG_WARN_INFINITE_RECURSION = YES;
-				CLANG_WARN_INT_CONVERSION = YES;
-				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
-				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
-				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
-				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
-				CLANG_WARN_STRICT_PROTOTYPES = YES;
-				CLANG_WARN_SUSPICIOUS_MOVE = YES;
-				CLANG_WARN_UNREACHABLE_CODE = YES;
-				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				ENABLE_TESTABILITY = YES;
-				GCC_NO_COMMON_BLOCKS = YES;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"_DEBUG_=1",
-					"_TRACE_=0",
-				);
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES;
-				GCC_WARN_UNDECLARED_SELECTOR = YES;
-				GCC_WARN_UNINITIALIZED_AUTOS = YES;
-				GCC_WARN_UNUSED_FUNCTION = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
-				ONLY_ACTIVE_ARCH = YES;
-				SYMROOT = ../build;
 			};
 			name = Debug;
 		};
 		E281018D0864959E006192E8 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = E2269B9D0EB6DBF90029CCF5 /* OmcProjectCommon.xcconfig */;
+			baseConfigurationReference = 1D4971A62575A66A00F7131C /* OmcProjectRelease.xcconfig */;
 			buildSettings = {
-				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
-				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
-				CLANG_WARN_BOOL_CONVERSION = YES;
-				CLANG_WARN_COMMA = YES;
-				CLANG_WARN_CONSTANT_CONVERSION = YES;
-				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
-				CLANG_WARN_EMPTY_BODY = YES;
-				CLANG_WARN_ENUM_CONVERSION = YES;
-				CLANG_WARN_INFINITE_RECURSION = YES;
-				CLANG_WARN_INT_CONVERSION = YES;
-				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
-				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
-				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
-				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
-				CLANG_WARN_STRICT_PROTOTYPES = YES;
-				CLANG_WARN_SUSPICIOUS_MOVE = YES;
-				CLANG_WARN_UNREACHABLE_CODE = YES;
-				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				DEAD_CODE_STRIPPING = YES;
-				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				GCC_NO_COMMON_BLOCKS = YES;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"_DEBUG_=0",
-					"_TRACE_=0",
-				);
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES;
-				GCC_WARN_UNDECLARED_SELECTOR = YES;
-				GCC_WARN_UNINITIALIZED_AUTOS = YES;
-				GCC_WARN_UNUSED_FUNCTION = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
-				SYMROOT = ../build;
 			};
 			name = Release;
 		};

@@ -15,11 +15,6 @@ class AObserverBase;
 class OMCDialog;
 
 #define CM_IMPL_PLUGIN_PREFS_INDENTIFIER	"com.abracode.OnMyCommandCMPrefs"
-//2 digits per version point : 3.2.0 = 03 02 00
-#define CURRENT_OMC_VERSION 40101
-#define MIN_OMC_VERSION 30200
-#define MIN_MAC_OS_VERSION 101300
-#define MAX_MAC_OS_VERSION 999999
 
 extern CFStringRef kOMCTopCommandID;
 

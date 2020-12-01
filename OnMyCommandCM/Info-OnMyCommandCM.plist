@@ -7,13 +7,13 @@
 	<key>CFBundleExecutable</key>
 	<string>OnMyCommandCM</string>
 	<key>CFBundleGetInfoString</key>
-	<string>4.1.1</string>
+	<string>OnMyCommandCM version ${OMC_BUNDLE_VERSION}</string>
 	<key>CFBundleIdentifier</key>
 	<string>${PRODUCT_BUNDLE_IDENTIFIER}</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleLongVersionString</key>
-	<string>4.1.1, Copyright Abracode</string>
+	<string>OnMyCommandCM version ${OMC_BUNDLE_VERSION}, Copyright Abracode</string>
 	<key>CFBundleName</key>
 	<string>${PRODUCT_NAME}</string>
 	<key>CFBundlePackageType</key>
@@ -21,11 +21,11 @@
 	<key>CFBundleIconFile</key>
 	<string>app.icns</string>
 	<key>CFBundleShortVersionString</key>
-	<string>4.1.1</string>
+	<string>${OMC_BUNDLE_VERSION}</string>
 	<key>CFBundleSignature</key>
 	<string>cmnu</string>
 	<key>CFBundleVersion</key>
-	<string>4.1.1</string>
+	<string>${OMC_BUNDLE_VERSION}</string>
 	<key>CFPlugInDynamicRegisterFunction</key>
 	<string></string>
 	<key>CFPlugInDynamicRegistration</key>
