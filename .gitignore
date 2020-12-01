@@ -3,3 +3,4 @@
 xcuserdata
 *.xcuserstate
 build/
+Common/OmcDistribution.xcconfig
