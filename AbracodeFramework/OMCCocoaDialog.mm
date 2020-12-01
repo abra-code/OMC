@@ -78,7 +78,7 @@ OMCCocoaDialog::CopyControlValue(CFStringRef inControlID, CFStringRef inControlP
 		{
 			if(mController != NULL)
 			{
-				outValue = [mController controlValueForID:(NSString *)inControlID forPart:(NSString *)inControlPart withIterator:inSelIterator outProperties:outCustomProperties];
+				outValue = [(OMCDialogController*)mController controlValueForID:(NSString *)inControlID forPart:(NSString *)inControlPart withIterator:inSelIterator outProperties:outCustomProperties];
 				[outValue retain];
 			}
 		}
@@ -143,7 +143,7 @@ OMCCocoaDialog::CopyAllControlValues(CFSetRef requestedNibControls, SelectionIte
 		{
 			if(mController != NULL)
 			{
-				[mController allControlValues:(NSMutableDictionary *)mNibControlValues.Get() andProperties:(NSMutableDictionary *)mNibControlCustomProperties.Get() withIterator:inSelIterator];
+				[(OMCDialogController*)mController allControlValues:(NSMutableDictionary *)mNibControlValues.Get() andProperties:(NSMutableDictionary *)mNibControlCustomProperties.Get() withIterator:inSelIterator];
 			}
 		}
 		@catch (NSException *localException)
@@ -223,7 +223,7 @@ OMCCocoaDialog::ReceivePortMessage( SInt32 msgid, CFDataRef inData )
 		@try
 		{
 			if(plistDict != NULL)
-				[mController setControlValues:plistDict];
+				[(OMCDialogController*)mController setControlValues:plistDict];
 		}
 		@catch (NSException *localException)
 		{
@@ -259,7 +259,7 @@ OMCCocoaDialog::ReceiveNotification(void *ioData)//local message
 				@try
 				{
 					if(controlValues != NULL)
-						[mController setControlValues:(CFDictionaryRef)controlValues];
+						[(OMCDialogController*)mController setControlValues:(CFDictionaryRef)controlValues];
 				
 				}
 				@catch (NSException *localException)
