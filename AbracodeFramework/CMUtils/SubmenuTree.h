@@ -42,7 +42,6 @@ public:
 					CommandMenuItem(CFStringRef inSubmenuPathString,
 							CFStringRef inItemName,
 							SInt32 inCommandID,
-							Boolean putCFString,
 							MenuItemAttributes attributes,
 							UInt32 modifiers);
 	virtual			~CommandMenuItem();
@@ -51,7 +50,6 @@ public:
 	CFStringRef submenuPathString;
 	CFStringRef itemName;
 	SInt32 commandID;
-	Boolean putCFString;
 	MenuItemAttributes attributes;
 	UInt32 modifiers;
 };
@@ -69,7 +67,6 @@ public:
 							CFStringRef inSubmenuPathString,
 							CFStringRef inItemName,
 							SInt32 inCommandID,
-							Boolean putCFString,
 							MenuItemAttributes attributes,
 							UInt32 modifiers);
 

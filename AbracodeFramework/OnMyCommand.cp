@@ -268,6 +268,8 @@ static void AddRequestedSpecialNibDialogValuesToMutableSet(const void *key, cons
 
 CFStringRef kBundleIDString = CFSTR("com.abracode.AbracodeFramework");
 
+SInt32 OnMyCommandCM::sMacOSVersion = 101300;
+
 OnMyCommandCM::OnMyCommandCM(CFPropertyListRef inPlistRef)
 	: ACMPlugin( kBundleIDString ) //mBundleRef is pointing to Abracode.framework bundle
 {
@@ -316,14 +318,17 @@ OnMyCommandCM::~OnMyCommandCM()
 OSStatus
 OnMyCommandCM::Init()
 {
-	long sysVerMajor = 10;
-	long sysVerMinor = 13;
-	long sysVerBugFix = 0;
+	static dispatch_once_t onceToken;
+	dispatch_once(&onceToken, ^{
+		long sysVerMajor = 10;
+		long sysVerMinor = 13;
+		long sysVerBugFix = 0;
 
-	GetOperatingSystemVersion(&sysVerMajor, &sysVerMinor, &sysVerBugFix);
-	
-	//eg. 101405 max 999999
-	mSysVersion = 10000 * (SInt32)sysVerMajor + 100 * (SInt32)sysVerMinor + (SInt32)sysVerBugFix;
+		GetOperatingSystemVersion(&sysVerMajor, &sysVerMinor, &sysVerBugFix);
+		
+		//eg. 101405 max 999999
+		sMacOSVersion = 10000 * (SInt32)sysVerMajor + 100 * (SInt32)sysVerMinor + (SInt32)sysVerBugFix;
+	});
 
 //#if _DEBUG_
 //	printf("OMC: Current system version = 0x%.8X, integer = %d\n", (unsigned int)mSysVersion, (int)mSysVersion);
@@ -604,9 +609,9 @@ OnMyCommandCM::CommonContextCheck( const AEDesc *inContext, CFTypeRef inCFContex
 		}
 	}
 
-	if(	anythingSelected && (mSysVersion >= 100300) && ((theFlags & kListOutMultipleObjects) == 0) && isFolder &&
+	if(	anythingSelected && ((theFlags & kListOutMultipleObjects) == 0) && isFolder &&
 		(mRunningInShortcutsObserver && frontProcessIsFinder) )
-	{//single folder selected in Finder in maxcOS 10.3 or higher - check what it is
+	{//single folder selected in Finder - check what it is
 		mIsOpenFolder = CMUtils::IsClickInOpenFinderWindow(inContext, false);
 		anythingSelected = ! mIsOpenFolder;
 	}
@@ -768,25 +773,25 @@ OnMyCommandCM::HandleSelection( AEDesc *inContext, SInt32 inCommandID )
 			}
 		}
 		
-		if( mSysVersion < currCommand.requiredMacOSMinVersion)
+		if( sMacOSVersion < currCommand.requiredMacOSMinVersion)
 		{
 			StSwitchToFront switcher;
 			CFObj<CFStringRef> warningText( ::CFCopyLocalizedStringFromTableInBundle( CFSTR("TOO_LOW_MAC_OS"),
 															CFSTR("Private"), mBundleRef, "") );
 
-			if( false == DisplayVersionWarning(mBundleRef, dynamicCommandName, warningText, currCommand.requiredMacOSMinVersion, mSysVersion) )
+			if( false == DisplayVersionWarning(mBundleRef, dynamicCommandName, warningText, currCommand.requiredMacOSMinVersion, sMacOSVersion) )
 			{
 				throw OSStatus(userCanceledErr);
 			}
 		}
 		
-		if(mSysVersion > currCommand.requiredMacOSMaxVersion)
+		if(sMacOSVersion > currCommand.requiredMacOSMaxVersion)
 		{
 			StSwitchToFront switcher;
 			CFObj<CFStringRef> warningText( ::CFCopyLocalizedStringFromTableInBundle( CFSTR("TOO_HIGH_MAC_OS"),
 															CFSTR("Private"), mBundleRef, "") );
 
-			if( false == DisplayVersionWarning(mBundleRef, dynamicCommandName, warningText, currCommand.requiredMacOSMaxVersion, mSysVersion) )
+			if( false == DisplayVersionWarning(mBundleRef, dynamicCommandName, warningText, currCommand.requiredMacOSMaxVersion, sMacOSVersion) )
 			{
 				throw OSStatus(userCanceledErr);
 			}
@@ -2229,7 +2234,6 @@ OnMyCommandCM::PopulateItemsMenu( const AEDesc *inContext, AEDescList* ioRootMen
 								submenuName,
 								dynamicCommandName,
 								kCMCommandStart + i,
-								(mSysVersion >= 100200),
 								0,
 								kMenuNoModifiers);
 		}

@@ -10,7 +10,7 @@ bool DeleteFile(CFURLRef fileURL)
     }
 }
 
-CFURLRef CopyPreferencesDirURL()
+CFURLRef CopyPreferencesDirURL(void)
 {
     @autoreleasepool
     {
@@ -30,7 +30,7 @@ CFURLRef CopyPreferencesDirURL()
     }
 }
 
-CFURLRef CopyApplicationSupportDirURL()
+CFURLRef CopyApplicationSupportDirURL(void)
 {
     @autoreleasepool
     {

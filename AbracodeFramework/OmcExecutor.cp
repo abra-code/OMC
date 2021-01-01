@@ -538,8 +538,27 @@ static ExtensionAndShell sExtensionToShellMap[] =
 	{ CFSTR("tcsh"), CFSTR("/bin/tcsh") },
 	{ CFSTR("dash"), CFSTR("/bin/dash") }, //10.15 only
 	{ CFSTR("rb"), CFSTR("/usr/bin/ruby") },
-	{ CFSTR("js"), CFSTR("/System/Library/Frameworks/JavaScriptCore.framework/Versions/Current/Resources/jsc") }
+	{ CFSTR("js"), CFSTR("/System/Library/Frameworks/JavaScriptCore.framework/Versions/Current/Helpers/jsc") }, //in macOS 10.15, macOS 11
 };
+
+enum
+{
+	kScriptExtSh = 0,
+	kScriptExtPy,
+	kScriptExtPl,
+	kScriptExtAppleScript,
+	kScriptExtScpt,
+	kScriptExtZsh,
+	kScriptExtBash,
+	kScriptExtCsh,
+	kScriptExtTcsh,
+	kScriptExtDash,
+	kScriptExtRb,
+	kScriptExtJs,
+	kScriptExtCount
+};
+
+static_assert(kScriptExtCount == sizeof(sExtensionToShellMap)/sizeof(ExtensionAndShell), "Script extension map must match the enum");
 
 //sh is the default fallback for any script with no extension
 CFStringRef kDefaultShell = sExtensionToShellMap[0].shell;
@@ -555,6 +574,10 @@ CFStringRef GetShellFromScriptExtension(CFStringRef inExt)
 	{
 		if(kCFCompareEqualTo == ::CFStringCompare( inExt, sExtensionToShellMap[i].extension, kCFCompareCaseInsensitive))
 		{
+			if((i == kScriptExtJs) && (OnMyCommandCM::GetCurrentMacOSVersion() < 101500))
+			{
+				 return CFSTR("/System/Library/Frameworks/JavaScriptCore.framework/Versions/Current/Resources/jsc");
+			}
 			return sExtensionToShellMap[i].shell;
 		}
 	}

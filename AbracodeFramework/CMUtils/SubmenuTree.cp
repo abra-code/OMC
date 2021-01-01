@@ -15,11 +15,10 @@
 CommandMenuItem::CommandMenuItem(CFStringRef inSubmenuPathString,
 							CFStringRef inItemName,
 							SInt32 inCommandID,
-							Boolean inPutCFString,
 							MenuItemAttributes inAttributes,
 							UInt32 inModifiers)
 	: submenuPathString(inSubmenuPathString), itemName(inItemName), commandID(inCommandID),
-		putCFString(inPutCFString), attributes(inAttributes), modifiers(inModifiers)
+		attributes(inAttributes), modifiers(inModifiers)
 {
 	if(submenuPathString != NULL)
 		CFRetain(submenuPathString);
@@ -185,7 +184,6 @@ OSStatus
 SubmenuTree::AddMenuItem(	CFStringRef inSubmenuPathString,
 							CFStringRef inItemName,
 							SInt32 inCommandID,
-							Boolean putCFString, //available starting with OS 10.2
 							MenuItemAttributes attributes,
 							UInt32 modifiers)
 {
@@ -214,7 +212,6 @@ SubmenuTree::AddMenuItem(	CFStringRef inSubmenuPathString,
 										inSubmenuPathString,
 										inItemName,
 										inCommandID,
-										putCFString,
 										attributes,
 										modifiers);
 
@@ -321,7 +318,6 @@ SubmenuTree::AddSubmenusToAEList(SubmenuItem* currLevel)
 			err = CMUtils::AddCommandToAEDescList(
 							commandItem->itemName,
 							commandItem->commandID,
-							commandItem->putCFString,
 							&(currLevel->aeItemList),
 							commandItem->attributes,
 							commandItem->modifiers);

@@ -355,16 +355,17 @@ public:
 
 	CFTypeRef			GetCFContext();
 	CFBundleRef			GetCurrentCommandExternBundle();
+	static SInt32		GetCurrentMacOSVersion() { return sMacOSVersion; }
 
 private:
 
 	void				InitOmcBundlePaths();
 
 protected:
+    static SInt32				sMacOSVersion;
 
 	CFObj<CFURLRef>				mPlistURL;
 	CFObj<CFURLRef>				mExternBundleOverrideURL;
-    SInt32						mSysVersion {101300};
     CommandDescription			*mCommandList {nullptr};
     UInt32						mCommandCount {0};
     UInt32						mCurrCommandIndex {0};

@@ -19,7 +19,7 @@
 
 	mCanceled = NO;
 	mIsDeterminate = NO;
-	mLastValue = -1;
+	mLastValue = INT_MIN;
 	mLastString = NULL;
 
 #if 0 //_DEBUG_
@@ -63,11 +63,12 @@
 #endif
 
 	BOOL wantsDeterminate = (inProgress >= 0.0) ? YES : NO;
-	if( wantsDeterminate != mIsDeterminate )
+	if( (mLastValue == INT_MIN) || (wantsDeterminate != mIsDeterminate) )
 	{
 		[mProgressIndicator setIndeterminate: !wantsDeterminate];
 		if(!wantsDeterminate)
 			[mProgressIndicator startAnimation:self];
+
 		mIsDeterminate = wantsDeterminate;
 		[mProgressIndicator setNeedsDisplay:YES];
 	}
@@ -85,6 +86,10 @@
 #if 0 //_DEBUG_
 		NSLog(@"Setting progress to %d", newValue);
 #endif
+	}
+	else if(!wantsDeterminate)
+	{
+		mLastValue = newValue;
 	}
 
 	if(inText != NULL)

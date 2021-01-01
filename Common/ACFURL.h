@@ -7,8 +7,8 @@ extern "C" {
 
 bool DeleteFile(CFURLRef fileURL);
 
-CFURLRef CopyPreferencesDirURL();
-CFURLRef CopyApplicationSupportDirURL();
+CFURLRef CopyPreferencesDirURL(void);
+CFURLRef CopyApplicationSupportDirURL(void);
 
 #ifdef __cplusplus
 }

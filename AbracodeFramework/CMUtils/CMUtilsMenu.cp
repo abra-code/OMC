@@ -139,14 +139,10 @@ CMUtils::AddCommandToAEDescList( const UniChar *inCommandString,
 OSStatus 
 CMUtils::AddCommandToAEDescList(	CFStringRef inCommandString,
 									SInt32 inCommandID,
-									Boolean putCFString, //available starting with OS 10.2
 									AEDescList* ioCommandList,
 									MenuItemAttributes attributes /*= 0*/,
 									UInt32 modifiers /*= kMenuNoModifiers*/)
 {
-	if(putCFString == false)
-		return AddCommandToAEDescList_Compatible( inCommandString, inCommandID, ioCommandList, attributes, modifiers );
-
 	if( (inCommandString == NULL) || (ioCommandList == NULL) )
 		return paramErr;
 
@@ -205,38 +201,6 @@ CMUtils::AddCommandToAEDescList(	CFStringRef inCommandString,
 						theCommandRecord); // the command I'm putting into the list
 
     return err;
-}
-
-//This method is compatible with 10.1.x 
-
-OSStatus 
-CMUtils::AddCommandToAEDescList_Compatible(	CFStringRef inCommandString,
-									SInt32 inCommandID,
-									AEDescList* ioCommandList,
-									MenuItemAttributes attributes /*= 0*/,
-									UInt32 modifiers /*= kMenuNoModifiers*/ )
-{
-	if( inCommandString == NULL )
-		return paramErr;
-
-//	TRACE_CSTR("CMUtils. AddCommandToAEDescList with CFString\n" );
-
-	CFIndex uniCount = ::CFStringGetLength(inCommandString);
-	const UniChar *uniString = ::CFStringGetCharactersPtr(inCommandString);
-	if( uniString != NULL )
-		return CMUtils::AddCommandToAEDescList(	uniString, uniCount, inCommandID, ioCommandList, attributes, modifiers );
-
-//CFStringGetCharactersPtr failed and we must copy the string
-    std::vector<UniChar> newString(uniCount);
-
-	CFRange theRange;
-	theRange.location = 0;
-	theRange.length = uniCount;
-	::CFStringGetCharacters( inCommandString, theRange, newString.data());
-
-	OSStatus outErr = CMUtils::AddCommandToAEDescList(	newString.data(), uniCount, inCommandID, ioCommandList, attributes, modifiers );
-	
-	return outErr;
 }
 
 

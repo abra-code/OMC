@@ -60,14 +60,6 @@ public:
 
 	static OSStatus		AddCommandToAEDescList(	CFStringRef inCommandString,
 												SInt32 inCommandID,
-												Boolean putCFString, //available starting with OS 10.2
-												AEDescList* ioCommandList,
-												MenuItemAttributes attributes = 0,
-												UInt32 modifiers = kMenuNoModifiers);
-
-	static OSStatus		AddCommandToAEDescList_Compatible(
-												CFStringRef inCommandString,
-												SInt32 inCommandID,
 												AEDescList* ioCommandList,
 												MenuItemAttributes attributes = 0,
 												UInt32 modifiers = kMenuNoModifiers);
