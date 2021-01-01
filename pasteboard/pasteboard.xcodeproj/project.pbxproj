@@ -34,6 +34,7 @@
 		1D90038E192763DA001CAAEF /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		1D900392192763DA001CAAEF /* pasteboard.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = pasteboard.1; sourceTree = "<group>"; };
 		1D904E2019286FED009FB0C7 /* OmcProjectCommon.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectCommon.xcconfig; path = ../Common/OmcProjectCommon.xcconfig; sourceTree = "<group>"; };
+		1DD2112D259F43A50041BB8F /* OmcVersion.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcVersion.xcconfig; path = ../Common/OmcVersion.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -51,6 +52,7 @@
 		1D90037F192763DA001CAAEF = {
 			isa = PBXGroup;
 			children = (
+				1DD2112D259F43A50041BB8F /* OmcVersion.xcconfig */,
 				1D4971B12575A6A400F7131C /* OmcProjectDebug.xcconfig */,
 				1D4971B02575A6A400F7131C /* OmcProjectRelease.xcconfig */,
 				1D904E2019286FED009FB0C7 /* OmcProjectCommon.xcconfig */,

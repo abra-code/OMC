@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleGetInfoString</key>
-	<string>OMCApplet version 4.2.0</string>
+	<string>OMCApplet version 4.2.1</string>
 	<key>CFBundleName</key>
 	<string>OMCApplet</string>
 	<key>NSHumanReadableCopyright</key>

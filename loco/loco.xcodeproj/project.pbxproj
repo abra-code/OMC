@@ -30,6 +30,7 @@
 		09AB6884FE841BABC02AAC07 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = /System/Library/Frameworks/CoreFoundation.framework; sourceTree = "<absolute>"; };
 		1D4971B82575A6D500F7131C /* OmcProjectRelease.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectRelease.xcconfig; path = ../Common/OmcProjectRelease.xcconfig; sourceTree = "<group>"; };
 		1D4971B92575A6D500F7131C /* OmcProjectDebug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectDebug.xcconfig; path = ../Common/OmcProjectDebug.xcconfig; sourceTree = "<group>"; };
+		1DD21129259F43740041BB8F /* OmcVersion.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcVersion.xcconfig; path = ../Common/OmcVersion.xcconfig; sourceTree = "<group>"; };
 		8DD76F7E0486A8DE00D96B5E /* loco */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = loco; sourceTree = BUILT_PRODUCTS_DIR; };
 		C6859E970290921104C91782 /* loco.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = loco.1; sourceTree = "<group>"; };
 		E2482E5E106B54A2000B8C5C /* OmcProjectCommon.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = OmcProjectCommon.xcconfig; path = ../Common/OmcProjectCommon.xcconfig; sourceTree = SOURCE_ROOT; };
@@ -51,6 +52,7 @@
 		08FB7794FE84155DC02AAC07 /* loco */ = {
 			isa = PBXGroup;
 			children = (
+				1DD21129259F43740041BB8F /* OmcVersion.xcconfig */,
 				1D4971B92575A6D500F7131C /* OmcProjectDebug.xcconfig */,
 				1D4971B82575A6D500F7131C /* OmcProjectRelease.xcconfig */,
 				E2482E5E106B54A2000B8C5C /* OmcProjectCommon.xcconfig */,

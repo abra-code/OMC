@@ -54,6 +54,7 @@
 		1D4971B52575A6C200F7131C /* OmcProjectDebug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectDebug.xcconfig; path = ../Common/OmcProjectDebug.xcconfig; sourceTree = "<group>"; };
 		1D9BCB8122CC98D000F4EAB6 /* ACFPropertyList.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = ACFPropertyList.m; path = ../Common/ACFPropertyList.m; sourceTree = "<group>"; };
 		1D9BCB8322CC98E400F4EAB6 /* ACFPropertyList.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ACFPropertyList.h; path = ../Common/ACFPropertyList.h; sourceTree = "<group>"; };
+		1DD2112B259F438A0041BB8F /* OmcVersion.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcVersion.xcconfig; path = ../Common/OmcVersion.xcconfig; sourceTree = "<group>"; };
 		8DD76F7E0486A8DE00D96B5E /* omc_dialog_control */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = omc_dialog_control; sourceTree = BUILT_PRODUCTS_DIR; };
 		E2269AD10EB6D9430029CCF5 /* OmcProjectCommon.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = OmcProjectCommon.xcconfig; path = ../Common/OmcProjectCommon.xcconfig; sourceTree = SOURCE_ROOT; };
 		E25EBD56075DE53A005F994C /* main.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = SOURCE_ROOT; };
@@ -76,6 +77,7 @@
 			isa = PBXGroup;
 			children = (
 				08FB7795FE84155DC02AAC07 /* Source */,
+				1DD2112B259F438A0041BB8F /* OmcVersion.xcconfig */,
 				1D4971B52575A6C200F7131C /* OmcProjectDebug.xcconfig */,
 				1D4971B42575A6C200F7131C /* OmcProjectRelease.xcconfig */,
 				E2269AD10EB6D9430029CCF5 /* OmcProjectCommon.xcconfig */,

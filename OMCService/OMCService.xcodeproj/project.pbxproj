@@ -23,6 +23,7 @@
 		1D7618BF231CEF80005F4AEB /* OMCService.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = OMCService.entitlements; sourceTree = "<group>"; };
 		1D942E3515CD26D500A08D55 /* OmcProjectCommon.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectCommon.xcconfig; path = ../Common/OmcProjectCommon.xcconfig; sourceTree = "<group>"; };
 		1DCFB249231FACC800D1C62E /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
+		1DD2112F259F43C10041BB8F /* OmcVersion.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcVersion.xcconfig; path = ../Common/OmcVersion.xcconfig; sourceTree = "<group>"; };
 		256AC3F00F4B6AF500CF3369 /* OMCService_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCService_Prefix.pch; sourceTree = "<group>"; };
 		29B97316FDCFA39411CA2CEA /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		29B97324FDCFA39411CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
@@ -83,6 +84,7 @@
 			isa = PBXGroup;
 			children = (
 				1D7618BF231CEF80005F4AEB /* OMCService.entitlements */,
+				1DD2112F259F43C10041BB8F /* OmcVersion.xcconfig */,
 				1D4971AA2575A68000F7131C /* OmcProjectDebug.xcconfig */,
 				1D4971AB2575A68000F7131C /* OmcProjectRelease.xcconfig */,
 				1D942E3515CD26D500A08D55 /* OmcProjectCommon.xcconfig */,

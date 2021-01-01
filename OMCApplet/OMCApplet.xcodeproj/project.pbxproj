@@ -25,6 +25,7 @@
 		1D4971A92575A67700F7131C /* OmcProjectDebug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectDebug.xcconfig; path = ../Common/OmcProjectDebug.xcconfig; sourceTree = "<group>"; };
 		1D7618BE231CEE28005F4AEB /* OMCApplet.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = OMCApplet.entitlements; sourceTree = "<group>"; };
 		1D94D4A4229D2D0C009938BB /* Base */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = Base; path = Base.lproj/MainMenu.nib; sourceTree = "<group>"; };
+		1DD21130259F43C90041BB8F /* OmcVersion.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcVersion.xcconfig; path = ../Common/OmcVersion.xcconfig; sourceTree = "<group>"; };
 		1DEDA49815DCF6DE006D67DB /* app.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = app.icns; sourceTree = "<group>"; };
 		1DF18DE6226C773300305370 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		29B97316FDCFA39411CA2CEA /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
@@ -85,6 +86,7 @@
 				1D7618BE231CEE28005F4AEB /* OMCApplet.entitlements */,
 				29B97315FDCFA39411CA2CEA /* Other Sources */,
 				29B97317FDCFA39411CA2CEA /* Resources */,
+				1DD21130259F43C90041BB8F /* OmcVersion.xcconfig */,
 				1D4971A92575A67700F7131C /* OmcProjectDebug.xcconfig */,
 				1D4971A82575A67700F7131C /* OmcProjectRelease.xcconfig */,
 				E2269AC60EB6D8FB0029CCF5 /* OmcProjectCommon.xcconfig */,
