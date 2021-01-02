@@ -10,9 +10,9 @@ OMC started life as a contextual menu plug-in allowing users to add menu items t
 
 Most of the OMC development effort nowadays is directed towards building apps based on Abracode.framework and OMCApplet.app.  
 In contemporary terms you could describe OMC as low code or no code macOS app development environment.  
-An example OMC applet using the latest features is Find.app:  
+Example OMC applets using the latest features are:
 https://github.com/abra-code/FindApp
-
+https://github.com/abra-code/DeltaApp
 
 ## Key Design Ideas
 ### (Basic concepts under 5 minutes)
