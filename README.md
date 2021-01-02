@@ -15,7 +15,7 @@ Example OMC applets using the latest features are:
 https://github.com/abra-code/FindApp
 \
 https://github.com/abra-code/DeltaApp
-\
+
 
 ## Key Design Ideas
 ### (Basic concepts under 5 minutes)
