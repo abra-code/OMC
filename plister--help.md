@@ -1,13 +1,6 @@
 ./pasteboard --help
 
 ```
-USAGE
-	pasteboard MyPasteboardName put "String to put in MyPasteboardName pasteboard"
-	pasteboard general set "String to put in general pasteboard"
-	pasteboard find put "String to put in find pasteboard"
-	echo "String to put from stdin" | pasteboard MyPasteboardName put
-	pasteboard MyPasteboardName get
-tkukielk-mbp-2016:Release tkukielk$ ./plister --help | bbedit
 Usage: plister command command_params path/to/plist/file plist/property/pseudopath
 Available commands: get, set, remove|delete, add|append, insert, find, findall, iterate
 "insert" command is for dict or array and must be followed key or index respectively
