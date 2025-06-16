@@ -424,8 +424,8 @@ CounterParams::CalculateProgress(CFArrayRef inOutputLines, OMCTaskProgress &outT
 			lastMatchedLine = oneLine;
 			
 			double currValue = 0.0;
-			int32_t startOffset = -1;
-			int32_t endOffset = -1;
+			CFIndex startOffset = -1;
+            CFIndex endOffset = -1;
 
 			if(counterIndex > 0)
 			{

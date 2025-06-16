@@ -263,7 +263,7 @@ CMUtils::CreateUTF16DataFromCFString(CFStringRef inString, UniCharCount *outChar
 	}
 
 	CFIndex uniCount = ::CFStringGetLength(inString);
-	SInt32 allocCount = uniCount;
+	CFIndex allocCount = uniCount;
 	if(uniCount == 0)//we still want to allocate data for empty string but better not malloc 0 size
 		allocCount = 1;
 

@@ -355,8 +355,8 @@ FindArgumentType(const char *argTypeStr)
 		NSArray *subViewsArray = [inView subviews];
 		if(subViewsArray != NULL)
 		{
-			int subIndex;
-			int subCount = [subViewsArray count];
+            NSUInteger subIndex;
+            NSUInteger subCount = [subViewsArray count];
 			for(subIndex = 0; subIndex < subCount; subIndex++)
 			{
 				id viewObject = [subViewsArray objectAtIndex:subIndex];
@@ -422,8 +422,8 @@ FindArgumentType(const char *argTypeStr)
 		NSArray *subViewsArray = [inView subviews];
 		if(subViewsArray != NULL)
 		{
-			int subIndex;
-			int subCount = [subViewsArray count];
+            NSUInteger subIndex;
+            NSUInteger subCount = [subViewsArray count];
 			for(subIndex = 0; subIndex < subCount; subIndex++)
 			{
 				id viewObject = [subViewsArray objectAtIndex:subIndex];
@@ -497,8 +497,8 @@ FindArgumentType(const char *argTypeStr)
 		NSArray *subViewsArray = [inParentView subviews];
 		if(subViewsArray != nil)
 		{
-			int subIndex;
-			int subCount = [subViewsArray count];
+            NSUInteger subIndex;
+            NSUInteger subCount = [subViewsArray count];
 			for(subIndex = 0; subIndex < subCount; subIndex++)
 			{
 				id viewObject = [subViewsArray objectAtIndex:subIndex];
@@ -645,8 +645,8 @@ FindArgumentType(const char *argTypeStr)
 		NSArray *subViewsArray = [inView subviews];
 		if(subViewsArray != nil)
 		{
-			int subIndex;
-			int subCount = [subViewsArray count];
+            NSUInteger subIndex;
+            NSUInteger subCount = [subViewsArray count];
 			for(subIndex = 0; subIndex < subCount; subIndex++)
 			{
 				id viewObject = [subViewsArray objectAtIndex:subIndex];

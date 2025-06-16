@@ -725,7 +725,7 @@ bool OMCTaskUnpackData( CFDataRef inData, OmcTaskData &outStruct )
 
 	val = 0;
 	dataDict.GetValue( CFSTR("childProcessID"), val );
-	outStruct.childProcessID = val;
+	outStruct.childProcessID = (pid_t)val;
 	
 	val = 0;
 	dataDict.GetValue(CFSTR("error"), val);

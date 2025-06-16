@@ -238,14 +238,6 @@ static void SetKeyValueInMutableDict(const void *key, const void *value, void *c
 	CFDictionarySetValue(destDict, key, value);
 }
 
-//this applier adds key-values if not present to destination mutable dictionary
-static void AddKeyValueIfNotPresentToMutableDict(const void *key, const void *value, void *context)
-{
-	assert(ACFType<CFMutableDictionaryRef>::DynamicCast(context) != nullptr); //only assert in debug, don't incur the cost in release
-	CFMutableDictionaryRef destDict = reinterpret_cast<CFMutableDictionaryRef>(context);
-	CFDictionaryAddValue(destDict, key, value);
-}
-
 static void AddRequestedSpecialNibDialogValuesToMutableSet(const void *key, const void *value, void *context)
 {
 	assert(ACFType<CFMutableSetRef>::DynamicCast(context) != nullptr); //only assert in debug, don't incur the cost in release
@@ -2868,13 +2860,13 @@ OnMyCommandCM::LoadCommandsFromPlistRef(CFPropertyListRef inPlistRef)
 
 
 Boolean
-OnMyCommandCM::IsSubcommand(CFArrayRef inName, SInt32 inCommandIndex)
+OnMyCommandCM::IsSubcommand(CFArrayRef inName, CFIndex inCommandIndex)
 {
 	if((inName == NULL) || (mCommandList == NULL))
 		return false;
 
-	for(SInt32 i = inCommandIndex-1; i >= 0; i--)
-	{		
+	for(CFIndex i = inCommandIndex-1; i >= 0; i--)
+	{
 		if( (mCommandList[i].name != NULL) && ::CFEqual(inName, mCommandList[i].name) /*&&
 			((mCommandList[i].commandID == 'top!') || (mCommandList[i].isSubcommand))*/ )
 		{//if I find a command with the same name before me, I am the subcommand
@@ -2882,7 +2874,7 @@ OnMyCommandCM::IsSubcommand(CFArrayRef inName, SInt32 inCommandIndex)
 		}
 	}
 
-	for(SInt32 i = inCommandIndex+1; i < (SInt32)mCommandCount; i++)
+	for(CFIndex i = inCommandIndex+1; i < (CFIndex)mCommandCount; i++)
 	{
 		if( (mCommandList[i].name != NULL) && ::CFEqual(inName, mCommandList[i].name) &&
 			((mCommandList[i].commandID != NULL) && ::CFEqual(mCommandList[i].commandID, kOMCTopCommandID) ) )
@@ -2907,7 +2899,8 @@ OnMyCommandCM::ParseCommandList(CFArrayRef commandArrayRef)
 
 	mCommandList = new CommandDescription[theCount];
 	memset(mCommandList, 0, theCount*sizeof(CommandDescription));
-	mCommandCount = theCount;
+    assert(theCount <= UINT_MAX);
+	mCommandCount = (UInt32)theCount;
 	
 	CFDictionaryRef theDict;
 	
@@ -3129,11 +3122,12 @@ OnMyCommandCM::GetOneCommandParams(CommandDescription &outDesc, CFDictionaryRef 
 	{
 		ACFArr fileTypes(theArr);
 		CFIndex theCount = fileTypes.GetCount();
+        assert(theCount <= UINT_MAX);
 		if(theCount > 0)
 		{
 			outDesc.activationTypes = new FileType[theCount];
 			memset( outDesc.activationTypes, 0, theCount*sizeof(FileType) );
-			outDesc.activationTypeCount = theCount;
+			outDesc.activationTypeCount = (UInt32)theCount;
 			CFStringRef typeStrRef;
 			for(CFIndex i = 0; i < theCount; i++)
 			{
@@ -4739,7 +4733,7 @@ CreateCommonParentPath(OneObjProperties *inObjList, CFIndex inObjCount )
 	if( (minCount > 0) && (minCount < 0x7FFFFFFF) )
 	{//if minimum count is valid
 	//at this point, all items in arrayList are non-NULL
-		UInt32 commonPathLevel= 0;
+        CFIndex commonPathLevel = 0;
 		for( CFIndex pathLevel = 0; pathLevel < minCount; pathLevel++ )
 		{
 			//check given path level for each object

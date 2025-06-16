@@ -127,7 +127,7 @@ enum
 
 - (IBAction)closeWindow:(id)sender
 {
-	int buttonTag = [sender tag];
+    NSInteger buttonTag = [sender tag];
 	if(buttonTag == kOMCInputDialogOKButtonTag)
 		mIsCanceled = NO;
 	else 

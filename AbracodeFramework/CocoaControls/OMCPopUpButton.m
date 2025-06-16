@@ -57,8 +57,8 @@
 	if( (itemArray == NULL) || (title == NULL) )
 		return;
 
-	int itemCount = [itemArray count];
-	int itemIndex;
+	NSUInteger itemCount = [itemArray count];
+    NSUInteger itemIndex;
 	for(itemIndex = 0; itemIndex < itemCount; itemIndex++)
 	{
 		NSMenuItem *menuItem = [itemArray objectAtIndex:itemIndex];

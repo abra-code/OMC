@@ -299,7 +299,7 @@ public:
 
 	static OSStatus		CFURLCheckFileOrFolder(CFURLRef inURLRef, void *ioData);
 
-	Boolean				IsSubcommand(CFArrayRef inName, SInt32 inCommandIndex);
+	Boolean				IsSubcommand(CFArrayRef inName, CFIndex inCommandIndex);
 	SInt32				FindCommandIndex( CFStringRef inNameOrId );
 	void				PrescanCommandDescription(CommandDescription &currCommand );
 	OSStatus			GetCommandInfo(SInt32 inCommandRef, OMCInfoType infoType, void *outInfo);
