@@ -1874,7 +1874,7 @@ DisplayHelp()
 {
 	std::cerr << "Usage: plister command command_params path/to/plist/file plist/property/pseudopath" << std::endl;
 	std::cerr << "Available commands: get, set, remove|delete, add|append, insert, find, findall, iterate" << std::endl;
-	std::cerr << "\"insert\" command is for dict or array and must be followed key or index respectively" << std::endl;
+	std::cerr << "\"insert\" command is for dict or array and must be followed by a key or index respectively" << std::endl;
 	std::cerr << "\"set\" command is for replacing existing value with new value" << std::endl;
 	std::cerr << "\"add\"|\"append\" command is for array only"  << std::endl;
 	std::cerr << "\"find\", \"findall\" and \"iterate\" commands are for containers only (dict or array)"  << std::endl;

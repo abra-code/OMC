@@ -3,7 +3,7 @@
 ```
 Usage: plister command command_params path/to/plist/file plist/property/pseudopath
 Available commands: get, set, remove|delete, add|append, insert, find, findall, iterate
-"insert" command is for dict or array and must be followed key or index respectively
+"insert" command is for dict or array and must be followed by a key or index respectively
 "set" command is for replacing existing value with new value
 "add"|"append" command is for array only
 "find", "findall" and "iterate" commands are for containers only (dict or array)
