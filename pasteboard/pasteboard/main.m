@@ -16,7 +16,7 @@ typedef enum
 	kOperationGet
 } PasteboardOperation;
 
-void print_help()
+void print_help(void)
 {
 	fprintf(stdout, "\nNAME\n");
 	fprintf(stdout, "\tpasteboard - set or get Mac OS X pasteboard string\n\n");
@@ -40,7 +40,7 @@ void print_help()
 //pasteboard "PBName" get
 
 char *
-CreateCStringFromStdIn()
+CreateCStringFromStdIn(void)
 {
 	char *inputData = NULL;
 	unsigned long inputDataSize = 0;
