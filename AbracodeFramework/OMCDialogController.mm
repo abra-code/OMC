@@ -515,7 +515,7 @@ FindArgumentType(const char *argTypeStr)
 }
 
 // private helper
--(CFMutableDictionaryRef)storeValue:(id)inValue forControlID:(NSString*)controlID forPart:(NSString *)controlPart inControlValues:(NSMutableDictionary *)ioControlValues
+-(CFMutableDictionaryRef)storeValue:(nullable id)inValue forControlID:(NSString*)controlID forPart:(NSString *)controlPart inControlValues:(NSMutableDictionary *)ioControlValues
 {
 	CFObj<CFMutableDictionaryRef> partIdAndValueDict;
 	id partValues = ioControlValues[controlID];
@@ -534,7 +534,15 @@ FindArgumentType(const char *argTypeStr)
 		partIdAndValueDict.Adopt((CFMutableDictionaryRef)partValues, kCFObjRetain);
 	}
 
-	CFDictionarySetValue(partIdAndValueDict, (const void *)controlPart, (const void *)inValue);
+    if(inValue != nil)
+    {
+        CFDictionarySetValue(partIdAndValueDict, (const void *)controlPart, (const void *)inValue);
+    }
+    else
+    {
+        CFDictionaryRemoveValue(partIdAndValueDict, (const void *)controlPart);
+    }
+    
 	return partIdAndValueDict;
 }
 
@@ -554,11 +562,8 @@ FindArgumentType(const char *argTypeStr)
 			for(NSInteger columnIndex = 0; columnIndex <= columnCount; columnIndex++)
 			{
 				id controlValue = [myDelegate selectionValueForColumn:columnIndex withIterator:inSelIterator];
-				if(controlValue != nil)
-				{
-					NSString *columnIndexStr = [NSString stringWithFormat:@"%ld", columnIndex];
-					[self storeValue:controlValue forControlID:controlID forPart:columnIndexStr inControlValues:ioControlValues];
-				}
+                NSString *columnIndexStr = [NSString stringWithFormat:@"%ld", columnIndex];
+                [self storeValue:controlValue forControlID:controlID forPart:columnIndexStr inControlValues:ioControlValues];
 			}
 		}
 	}
@@ -572,8 +577,7 @@ FindArgumentType(const char *argTypeStr)
 	else
 	{
 		id controlValue = [self controlValue:inView forPart:@"0" withIterator:inSelIterator];
-		if(controlValue != nil)
-			[self storeValue:controlValue forControlID:controlID forPart:@"0" inControlValues:ioControlValues];
+        [self storeValue:controlValue forControlID:controlID forPart:@"0" inControlValues:ioControlValues];
 	}
 
 	CFObj<CFDictionaryRef> customProperties([self copyControlProperties:inView]);
@@ -1708,7 +1712,21 @@ FindArgumentType(const char *argTypeStr)
 	}
 	
 	if(commandID != NULL)
-		[self dispatchCommand:commandID withContext:NULL];
+    {
+        BOOL executeCommand = YES;
+        // for table view only execute double click command if there is a valid selection
+        if([sender isKindOfClass:[NSTableView class]])
+        {
+            NSTableView *tableView = (NSTableView *)sender;
+            NSIndexSet *indexSet = [tableView selectedRowIndexes];
+            executeCommand = (indexSet != NULL) && (indexSet.count > 0);
+        }
+        
+        if(executeCommand)
+        {
+            [self dispatchCommand:commandID withContext:NULL];
+        }
+    }
 }
 
 //NSWindow delegate methods
