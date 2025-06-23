@@ -593,7 +593,8 @@ static std::string CreateScriptPathAndShell(
 {
 	CFObj<CFStringRef> scriptFilePath;
 
-	//inCommand, if non-empty, is an absolute file path (not expected to be a common setup)
+    // This should be deprecated. Not a good idea
+	// inCommand, if non-empty, is an absolute file path (not expected to be a common setup)
 	if((inCommand != nullptr) && (inCommand[0] != 0))
 	{
 		scriptFilePath.Adopt(CFStringCreateWithCString(kCFAllocatorDefault, inCommand, kCFStringEncodingUTF8));
@@ -614,8 +615,16 @@ static std::string CreateScriptPathAndShell(
 	{ //the idea is to look for file of the same name as command ID within Applet.app/Contents/Resources/Scripts
 		CFBundleRef hostBundle = inExternBundle;//formally supporting extern bundles
 		if(hostBundle == nullptr)
-			hostBundle = CFBundleGetMainBundle(); //in most cases it will be just applet bundle
-		
+        {
+            hostBundle = CFBundleGetMainBundle(); //in most cases it will be just applet bundle
+        }
+        
+        // for historical reasons 'top!' commandID is assigned for the main command
+        // however, for newer shell script execution, it makes more sense to look for for something like a main.sh script
+        if(kCFCompareEqualTo == CFStringCompare(inCommandID, CFSTR("top!"), 0))
+        {
+            inCommandID = CFSTR("main");
+        }
 		scriptFilePath.Adopt(OMCGetScriptPath(hostBundle, inCommandID), kCFObjRetain);
 	}
 
