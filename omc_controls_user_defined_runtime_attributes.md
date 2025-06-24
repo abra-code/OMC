@@ -88,10 +88,6 @@ OMCTextView:
 	Number		tag
 	String		escapingMode
 
-OMCTextView:
-	Number		tag
-	String		escapingMode
-
 OMCView:
 	Number		tag
 
