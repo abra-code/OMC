@@ -817,8 +817,8 @@ OnMyCommandCM::HandleSelection( AEDesc *inContext, SInt32 inCommandID )
 		if( currCommand.nibDialog != NULL )
 		{
 			ACFDict params( currCommand.nibDialog );
-			Boolean isCocoa = false;
-			params.GetValue( CFSTR("IS_COCOA"), isCocoa );
+			Boolean isCocoa = true;
+//			params.GetValue( CFSTR("IS_COCOA"), isCocoa );
 
 			//bring executing application to front. important when running within ShortcutsObserver
 			//don't restore because for non-modal dialogs this would bring executing app behind along with the dialog
@@ -829,12 +829,6 @@ OnMyCommandCM::HandleSelection( AEDesc *inContext, SInt32 inCommandID )
 				activeDialog = RunCocoaDialog( this );
 				if( activeDialog == nullptr )
 					throw OSStatus(userCanceledErr);
-			}
-			else
-			{
-				CFObj<CFStringRef> dynamicCommandName( CreateDynamicCommandName(currCommand, currCommand.localizationTableName, localizationBundle) );
-				DisplayAlert(mBundleRef, dynamicCommandName, CFSTR("CARBON_NIB_64_BIT"), kCFUserNotificationStopAlertLevel );
-				throw OSStatus(userCanceledErr);
 			}
 		}
 

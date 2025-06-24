@@ -13,4 +13,3 @@
 
 /*Alert strings*/
 "OK" = "OK";
-"CARBON_NIB_64_BIT" = "This command uses a legacy Carbon nib dialog. Carbon nibs are no longer supported.";
