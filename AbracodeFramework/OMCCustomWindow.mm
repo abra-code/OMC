@@ -19,10 +19,8 @@
 	if( (CGImageRef)inSettings->backgroundImage != NULL)
 	{
 		NSBitmapImageRep *bitmapRep = [[NSBitmapImageRep alloc] initWithCGImage:(CGImageRef)inSettings->backgroundImage];
-		[bitmapRep autorelease];
 		windowImage = [[NSImage alloc] initWithSize:imgSize];
 		[windowImage addRepresentation:bitmapRep];
-		[windowImage autorelease];
 		imgSize = [windowImage size];
 	}
 
@@ -47,12 +45,10 @@
 		[imgView setRefusesFirstResponder:YES];
 		//[imgView setAlphaValue:inSettings->alpha];
 		[self setContentView:imgView];
-		[imgView release];
 	}
 
 	useFadeIn = NO;
 	useFadeOut = NO;
-	_fadeOutAnimation = NULL;
 
 	return self;
 }
@@ -84,7 +80,6 @@
 		//		[fadeInAnimation setDelegate:self];
 		//[self setAlphaValue: 0.0];
 		[fadeInAnimation startAnimation];
-		[fadeInAnimation release];
 	}
 	
 	[super makeKeyAndOrderFront:sender];
@@ -102,10 +97,9 @@
 -(void)animationDidEnd:(NSAnimation *)animation
 {
 	//NSLog(@"OMCCustomWindow animationDidEnd");
-	if(animation == _fadeOutAnimation)
+	if(animation == self.fadeOutAnimation)
 	{
-		[_fadeOutAnimation release];
-		_fadeOutAnimation = NULL;
+		self.fadeOutAnimation = nil;
 		[super orderOut:self];
 	}
 }
@@ -120,10 +114,10 @@
 							  NSViewAnimationFadeOutEffect, NSViewAnimationEffectKey,
 							  nil];
 		
-		_fadeOutAnimation = [[NSViewAnimation alloc] initWithViewAnimations:[NSArray arrayWithObject:dict]];
-		[_fadeOutAnimation setAnimationBlockingMode:NSAnimationNonblocking];
-		[_fadeOutAnimation setDelegate:self];
-		[_fadeOutAnimation startAnimation];
+		self.fadeOutAnimation = [[NSViewAnimation alloc] initWithViewAnimations:[NSArray arrayWithObject:dict]];
+		[self.fadeOutAnimation setAnimationBlockingMode:NSAnimationNonblocking];
+		[self.fadeOutAnimation setDelegate:self];
+		[self.fadeOutAnimation startAnimation];
 	}
 	else
 	{

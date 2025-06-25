@@ -10,12 +10,9 @@
 
 IB_DESIGNABLE
 @interface OMCSingleCommand : NSObject <NSCoding>
-{
-	NSString *	_commandFilePath;
-}
 
-@property (nonatomic, retain) IBInspectable NSString * commandID;
-@property (nonatomic, retain) IBInspectable NSString * commandFilePath;
+@property (nonatomic, strong) IBInspectable NSString * commandID;
+@property (nonatomic, strong) IBInspectable NSString * commandFilePath;
 
 - (void)execute:(id)sender;
 

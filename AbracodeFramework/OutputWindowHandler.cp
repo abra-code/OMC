@@ -289,19 +289,19 @@ OutputWindowHandler::GetOutputWindowSettings(CFArrayRef inCommandName,
 	{
 		if( kCFCompareEqualTo == ::CFStringCompare( theStr, CFSTR("absolute"), 0 ) )
 		{
-			outSettings.positionMethod = 0;//absolute position
+			outSettings.positionMethod = kOMCWindowAbsolutePosition;//absolute position
 		}
 		else if( kCFCompareEqualTo == ::CFStringCompare( theStr, CFSTR("alert"), 0 ) )
 		{
-			outSettings.positionMethod = kWindowAlertPositionOnMainScreen;
+			outSettings.positionMethod = kOMCWindowAlertPositionOnMainScreen;
 		}
 		else if( kCFCompareEqualTo == ::CFStringCompare( theStr, CFSTR("center"), 0 ) )
 		{
-			outSettings.positionMethod = kWindowCenterOnMainScreen;
+			outSettings.positionMethod = kOMCWindowCenterOnMainScreen;
 		}
 		else if( kCFCompareEqualTo == ::CFStringCompare( theStr, CFSTR("cascade"), 0 ) )
 		{
-			outSettings.positionMethod = kWindowCascadeOnMainScreen;
+			outSettings.positionMethod = kOMCWindowCascadeOnMainScreen;
 		}
 	}
 	

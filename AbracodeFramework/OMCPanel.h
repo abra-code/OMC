@@ -13,9 +13,9 @@
 {
 	BOOL useFadeIn;
 	BOOL useFadeOut;
-	
-	NSViewAnimation *_fadeOutAnimation;//temporary object present at closing, not owned
 }
+
+@property (strong) NSViewAnimation *fadeOutAnimation;
 
 -(void)setFadeIn:(BOOL)inFadeIn;
 -(void)setFadeOut:(BOOL)inFadeOut;

@@ -14,7 +14,6 @@
 #include "CMUtils.h"
 #include "DebugSettings.h"
 #include "StAEDesc.h"
-#include <Carbon/Carbon.h>
 #include <vector>
 
 

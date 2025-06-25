@@ -9,13 +9,13 @@ IB_DESIGNABLE
 {
 }
 
-@property (nonatomic, retain) IBInspectable NSString * commandID;
-@property (nonatomic, retain) IBInspectable NSString * mappedOnValue;
-@property (nonatomic, retain) IBInspectable NSString * mappedOffValue;
-@property (nonatomic, retain) IBInspectable NSString * escapingMode;
+@property (nonatomic, strong) IBInspectable NSString * commandID;
+@property (nonatomic, strong) IBInspectable NSString * mappedOnValue;
+@property (nonatomic, strong) IBInspectable NSString * mappedOffValue;
+@property (nonatomic, strong) IBInspectable NSString * escapingMode;
 @property (nonatomic) BOOL IBInspectable acceptFileDrop;
 @property (nonatomic) BOOL IBInspectable acceptTextDrop;
-@property (nonatomic, retain) id droppedItems; //could be NSArray * for list of files or NSString * for text
+@property (nonatomic, strong) id droppedItems; //could be NSArray * for list of files or NSString * for text
 
 @end
 

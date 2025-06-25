@@ -7,7 +7,6 @@
 @implementation OMCIKImageView
 
 @synthesize tag;
-@synthesize escapingMode;
 
 - (id)init
 {
@@ -30,13 +29,6 @@
 
     return self;
 }
-
-- (void)dealloc
-{
-	self.escapingMode = nil;
-    [super dealloc];
-}
-
 
 - (NSString *)stringValue
 {

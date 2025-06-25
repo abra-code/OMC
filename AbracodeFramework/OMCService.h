@@ -15,9 +15,10 @@
 @interface OMCService : NSObject <NSApplicationDelegate>
 {
 	OMCObserverRef	mObserver;
-	NSMutableString *mResultString;
 	BOOL mRunLoopStarted;
 }
+
+@property (nonatomic, strong) NSMutableString *resultString;
 
 - (void)runOMCService:(NSPasteboard *)pboard userData:(NSString *)userData error:(NSString **)error;
 - (void)receiveObserverMessage:(OmcObserverMessage)inMessage forTaskId:(CFIndex)inTaskID withData:(CFTypeRef)inResult;

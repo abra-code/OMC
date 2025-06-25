@@ -4,6 +4,7 @@
 
 #import <AppKit/AppKit.h>
 #import <WebKit/WebKit.h>
+#import "OMCActionProtocol.h"
 
 // Note that OMCWebKitView inherits from NSView and not WKWebView
 // When creating this control in nib file, insert "custom view", which is NSView
@@ -13,19 +14,18 @@
 // once the control is created. It effectively forces everyone to create WKWebView in code 
 
 IB_DESIGNABLE
-@interface OMCWebKitView : NSView <WKScriptMessageHandler>
-{
-	WKWebView *_wkWebView;
-}
+@interface OMCWebKitView : NSView <WKScriptMessageHandler, OMCActionProtocol>
 
 @property (nonatomic, readwrite) IBInspectable NSInteger tag;
-@property (nonatomic, retain) IBInspectable NSString *escapingMode;
-@property (nonatomic, retain) IBInspectable NSString *javaScriptFile;
-@property (nonatomic, retain) IBInspectable NSString *URL;
+@property (nonatomic, strong) WKWebView *wkWebView;
+
+@property (nonatomic, strong) IBInspectable NSString *escapingMode;
+@property (nonatomic, strong) IBInspectable NSString *javaScriptFile;
+@property (nonatomic, strong) IBInspectable NSString *URL;
 @property (nonatomic, weak) id target;
 @property (nonatomic) SEL action;
-@property (nonatomic, retain) NSString *commandID;
-@property (nonatomic, retain) NSString *elementID;
+@property (nonatomic, strong) NSString *commandID;
+@property (nonatomic, strong) NSString *elementID;
 
 - (NSString *)stringValue;
 - (void)setStringValue:(NSString *)aString;

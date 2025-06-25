@@ -20,22 +20,22 @@ typedef enum ColumnSeparatorFormat
 
 @interface OMCTableViewController : NSObject<NSTableViewDataSource, NSTableViewDelegate>
 {
-	NSTableView *mTableView;//the table we control
-	OMCDialogController *mDialogController;//the dialog controller that owns us
-	NSMutableArray *mRows;
-	NSArray *mColumnNames;
-	NSArray *mColumnWidths;
-	NSString *mSelectionChangeCommandID;
 	ColumnSeparatorFormat mSeparator;
 }
+
+@property (nonatomic, weak) OMCDialogController *dialogController; //the dialog controller that owns us
+@property (nonatomic, strong) NSTableView *tableView; //the table we control
+@property (nonatomic, strong) NSMutableArray *rows;
+@property (nonatomic, strong) NSArray *columnNames;
+@property (nonatomic, strong) NSArray *columnWidths;
+@property (nonatomic, strong) NSString *selectionChangeCommandID;
 
 - (id)initWithTableView:(NSTableView *)aTableView dialogController:(OMCDialogController *)inController;
 
 -(void)removeRows;
 -(void)addRows:(CFArrayRef)inRowArray;
 -(void)reloadData;
--(void)setColumns:(CFArrayRef)inColumnArray;
--(void)setColumnWidths:(CFArrayRef)inWidthsArray;
+-(void)setColumns:(NSArray *)columnArray;
 -(NSArray *)splitRowString:(NSString *)inRowString;
 -(NSArray *)columnArrayForRow:(NSUInteger)inRowIndex;
 -(id)selectionValueForColumn:(NSInteger)inColumnIndex withIterator:(SelectionIterator *)inSelIterator;

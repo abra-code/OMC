@@ -49,8 +49,9 @@
 
 #pragma once
 
+#include <CoreServices/CoreServices.h>
+#include <ApplicationServices/ApplicationServices.h>
 #include <Carbon/Carbon.h>
-
 
 #ifdef __cplusplus
 	extern "C" {
@@ -237,20 +238,6 @@ extern  OSErr MoreAETellAppObjectToGetAEDesc(
 */
 extern OSErr MoreAEGetHandlerError( const AppleEvent* pAEReply );
 
-/********************************************************************************
-	A very simple idle function. It simply ignors any event it receives,
-	returns 30 for the sleep time and nil for the mouse region.
-	
-	Your application should supply an idle function that handles any events it
-	might receive. This is especially important if your application has any windows.
-	
-	Also see:
-		IM:IAC for details about idle functions.
-		Pending Update Perils technote for more about handling low-level events.
-*/	
-extern Boolean MoreAESimpleIdleFunction( EventRecord* event,
-										SInt32* sleepTime,
-										RgnHandle* mouseRgn );
 
 #ifdef __cplusplus
 }

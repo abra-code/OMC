@@ -6,9 +6,6 @@
 
 @implementation OMCSearchField
 
-@synthesize commandID;
-@synthesize escapingMode;
-
 - (id)init
 {
     self = [super init];
@@ -29,13 +26,6 @@
 	self.escapingMode = @"esc_none";
 
     return self;
-}
-
-- (void)dealloc
-{
-    self.commandID = nil;
-	self.escapingMode = nil;
-    [super dealloc];
 }
 
 @end

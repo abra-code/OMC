@@ -18,12 +18,6 @@ class OMCCocoaDialog;
 
 @interface OMCDialogController : NSObject <NSWindowDelegate>
 {
-	NSWindow * mWindow;//we own it
-	OMCCocoaNib *mOmcCocoaNib;
-
-	NSString *mLastCommandID;//we own it
-	NSMutableSet *mDialogOwnedItems;
-
 	//we compile ObjC with the flag to invoke C++ constructors and destructor
 	//so we can use smart pointers as member variables
 
@@ -37,9 +31,12 @@ class OMCCocoaDialog;
 	CFObj<CFStringRef>				mEndCancelSubcommandID;
 	Boolean							mIsModal;
 	Boolean							mIsRunning;
-	Boolean							mDeleteSelfOnClose;
-
 }
+
+@property (nonatomic, strong) NSWindow *window;
+@property (nonatomic, strong) NSString *lastCommandID;
+@property (nonatomic, strong) OMCCocoaNib *omcCocoaNib;
+@property (nonatomic, strong) NSMutableSet *dialogOwnedItems;
 
 - (id)initWithOmc:(OnMyCommandCM *)inOmc;
 - (Boolean)findNib:(NSString *)inNibName forBundlePath:(NSString *)inPath;

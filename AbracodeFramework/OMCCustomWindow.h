@@ -17,8 +17,6 @@ struct OutputWindowSettings;
 	BOOL useFadeIn;
 	BOOL useFadeOut;
 	
-	NSViewAnimation *_fadeOutAnimation;//temporary object present at closing, not owned
-
 	CGRect		textBox;//top-left relative
 	CGRect		closeBox; //top-left relative
 	CGRect		resizeBox;//bottom-right relative
@@ -26,6 +24,8 @@ struct OutputWindowSettings;
 	NSPoint initialLocation;
 	BOOL	dragResizing;
 }
+
+@property (strong) NSViewAnimation *fadeOutAnimation;
 
 -(id)initWithSettings:(const OutputWindowSettings *)inSettings;
 -(void)setFadeIn:(BOOL)inFadeIn;

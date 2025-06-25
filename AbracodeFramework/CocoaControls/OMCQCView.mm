@@ -7,9 +7,7 @@
 
 @implementation OMCQCView
 
-@synthesize commandID;
 @synthesize tag;
-@synthesize escapingMode;
 
 - (id)init
 {
@@ -33,61 +31,33 @@
     return self;
 }
 
-- (void)dealloc
-{
-	self.escapingMode = nil;
-	self.commandID = nil;
-	[_compositionPath release];
-	[_omcTarget release];
-    [super dealloc];
-}
-
-- (id)target
-{
-	return _omcTarget;
-}
-
-- (void)setTarget:(id)anObject;
-{
-	[anObject retain];
-	[_omcTarget release];
-	_omcTarget = anObject;	
-}
-
-- (void)setAction:(SEL)aSelector
-{
-	_omcTargetSelector = aSelector;
-}
-
-
 - (NSString *)stringValue
 {
-	return _compositionPath;
+	return self.compositionPath;
 }
 
 - (void)setStringValue:(NSString *)aString
 {
-	if(_compositionPath != nil)
+	if(self.compositionPath != nil)
 	{
 		[self stopRendering];
 		[self unloadComposition];
-		[_compositionPath release];
-		_compositionPath = nil;
+		self.compositionPath = nil;
 	}
 
-	if(aString == NULL)
+	if(aString == nil)
 		return;
 
-	_compositionPath = [aString retain];
+	self.compositionPath = aString;
 
-	BOOL isOK = [self loadCompositionFromFile:_compositionPath];
+	BOOL isOK = [self loadCompositionFromFile:self.compositionPath];
 	if(!isOK)
-		NSLog(@"OMCQCView failed to load composition at \"%@\"", _compositionPath);
+		NSLog(@"OMCQCView failed to load composition at \"%@\"", self.compositionPath);
 
 	NSMutableDictionary* userInfo = [self userInfo];
-	if( (userInfo != NULL) && (_omcTarget != NULL) && [_omcTarget respondsToSelector:@selector(getCFContext)])
+	if( (userInfo != NULL) && (self.target != NULL) && [self.target respondsToSelector:@selector(getCFContext)])
 	{
-		id contextInfo = [_omcTarget getCFContext];
+		id contextInfo = [self.target getCFContext];
 		[userInfo setValue:contextInfo forKey:@"com.abracode.context"];
 	}
 
@@ -110,9 +80,9 @@
 				[self setCommandID: (NSString *)subcommand];
 				[userInfo removeObjectForKey:@"com.abracode.omc.subcommandId"];//we used it up, now remove from dictionary
 
-				if( (_omcTarget != NULL) && (_omcTargetSelector != NULL) )
+				if( (self.target != NULL) && (self.action != NULL) )
 				{
-					[_omcTarget performSelector:_omcTargetSelector withObject:self]; // = [(OMCDialogController*)_omcTarget handleAction:self];
+					[self.target performSelector:self.action withObject:self]; // = [(OMCDialogController*)_omcTarget handleAction:self];
 				}
 			}
 		}

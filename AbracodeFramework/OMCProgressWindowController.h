@@ -15,8 +15,9 @@
 	BOOL mCanceled;
 	BOOL mIsDeterminate;
 	int mLastValue;
-	NSString *mLastString;
 }
+
+@property (nonatomic, strong) NSString *lastString;
 
 - (void)setProgress:(double)inProgress text:(NSString *)inText;
 - (IBAction)closeWindow:(id)sender;

@@ -732,7 +732,7 @@ inline double CalculateTotalProgress(OMCTaskProgress *allTasks, CFIndex inCount)
 
 	
 #if _DEBUG_
-	NSLog(@"OMCDeferredProgress = %p", (void *)self);
+    NSLog(@"OMCDeferredProgress = %p", (__bridge void *)self);
 #endif
 
 	mProgressType = (inTaskCount > 1) ? kOMCProgressDeterminateTaskCount : kOMCProgressIndeterminate;
@@ -758,7 +758,7 @@ inline double CalculateTotalProgress(OMCTaskProgress *allTasks, CFIndex inCount)
 	
 	if(mTitleString == NULL)
 	{
-		mTitleString = (CFStringRef)inCommandName;
+        mTitleString = (__bridge CFStringRef)inCommandName;
 		if(mTitleString != NULL)
 			CFRetain(mTitleString);
 	}
@@ -771,7 +771,7 @@ inline double CalculateTotalProgress(OMCTaskProgress *allTasks, CFIndex inCount)
 	mDeferTimer = NULL;
 	if( delay > 0.0 )
 	{//use CFRunLoopTimer so we don't rely on existance of NSRunLoop (those are not toll-free bridged equivalents)
-		CFRunLoopTimerContext timerContext = {0, self, NULL, NULL, NULL};
+        CFRunLoopTimerContext timerContext = {0, (__bridge void *)self, NULL, NULL, NULL};
 		mDeferTimer = CFRunLoopTimerCreate(
 											   kCFAllocatorDefault,
 											   CFAbsoluteTimeGetCurrent() + delay,
@@ -836,14 +836,11 @@ inline double CalculateTotalProgress(OMCTaskProgress *allTasks, CFIndex inCount)
 	if( mController != NULL )
 	{
 		[mController close];
-		[mController release];
 		mController = NULL;
 	}
 
 	delete [] mTasks;
 	mTasks = NULL;
-	
-	[super dealloc];
 }
 
 //returns true if user cancelled
@@ -853,7 +850,7 @@ inline double CalculateTotalProgress(OMCTaskProgress *allTasks, CFIndex inCount)
 	NSLog(@"advanceProgressForTask: %@", inOutputStr);
 #endif
 
-	CFObj<CFArrayRef> lineArray( SplitStringIntoLines((CFStringRef)inOutputStr, mLastPartialLineStr.GetReference()) );
+    CFObj<CFArrayRef> lineArray( SplitStringIntoLines((__bridge CFStringRef)inOutputStr, mLastPartialLineStr.GetReference()) );
 	CFIndex lineCount = 0;
 	if(lineArray != NULL)
 		lineCount = ::CFArrayGetCount(lineArray);
@@ -878,7 +875,7 @@ inline double CalculateTotalProgress(OMCTaskProgress *allTasks, CFIndex inCount)
 		if( mProgressType != kOMCProgressIndeterminate)
 			totalProgress = CalculateTotalProgress(mTasks, mTaskCount);
 		
-		[mController setProgress:totalProgress text:(NSString *)(CFStringRef)mLastLineStr];
+        [mController setProgress:totalProgress text:(__bridge NSString *)(CFStringRef)mLastLineStr];
 	}
 	
 	return false;
@@ -950,7 +947,7 @@ inline double CalculateTotalProgress(OMCTaskProgress *allTasks, CFIndex inCount)
 	if(mController == NULL)
 	{
 		mController = [[OMCProgressWindowController alloc] initWithWindowNibName:@"progress"];
-		[[mController window] setTitle:(NSString *)mTitleString];
+        [[mController window] setTitle:(__bridge NSString *)mTitleString];
 
 		NSString *frameAutosaveName = [NSString stringWithFormat: @"omc_progress_window %@", mTitleString];
 		[mController setWindowFrameAutosaveName:frameAutosaveName];
@@ -961,7 +958,7 @@ inline double CalculateTotalProgress(OMCTaskProgress *allTasks, CFIndex inCount)
 
 		if(mLastLineStr != NULL)
 		{
-			[mController setProgress:totalProgress text:(NSString *)(CFStringRef)mLastLineStr];
+            [mController setProgress:totalProgress text:(__bridge NSString *)(CFStringRef)mLastLineStr];
 			mLastLineStr.Release();
 		}
 		else
@@ -1005,7 +1002,7 @@ void OMCDeferredProgressCallBack(CFRunLoopTimerRef timer, void* info)
 	{
 		@try
 		{
-			OMCDeferredProgress *myProgress = (OMCDeferredProgress *)info;
+            OMCDeferredProgress *myProgress = (__bridge OMCDeferredProgress *)info;
 			[myProgress showProgressWindow];
 		
 		}
@@ -1021,55 +1018,46 @@ OMCDeferredProgressRef
 OMCDeferredProgressCreate(CFDictionaryRef inProgressParams, CFStringRef inCommandName, CFIndex inTaskCount, CFStringRef inLocTable, CFBundleRef inLocBundle)
 {
 	OMCDeferredProgress *myProgress = NULL;
-    @autoreleasepool
-	{
-		@try
-		{
-			myProgress = [[OMCDeferredProgress alloc] initWithParams:inProgressParams forCommand:(NSString *)inCommandName taskCount:inTaskCount locTable:inLocTable locBundle:inLocBundle];
-		
-		}
-		@catch (NSException *localException)
-		{
-		
-			NSLog(@"OMCDeferredProgressCreate received exception: %@", localException);
-		}
-	} //@autoreleasepool
+    @try
+    {
+        myProgress = [[OMCDeferredProgress alloc] initWithParams:inProgressParams forCommand:(__bridge NSString *)inCommandName taskCount:inTaskCount locTable:inLocTable locBundle:inLocBundle];
+    
+    }
+    @catch (NSException *localException)
+    {
+    
+        NSLog(@"OMCDeferredProgressCreate received exception: %@", localException);
+    }
 
-	return (OMCDeferredProgressRef)myProgress;
+    return (OMCDeferredProgressRef)CFBridgingRetain(myProgress);
 }
 
 void
 OMCDeferredProgressRelease(OMCDeferredProgressRef inProgressRef)
 {
-	@autoreleasepool
-	{
-		@try
-		{
-			OMCDeferredProgress *myProgress = (OMCDeferredProgress *)inProgressRef;
-			[myProgress release];
-		}
-		@catch (NSException *localException)
-		{
-			NSLog(@"OMCDeferredProgressRelease received exception: %@", localException);
-		}
-	} //@autoreleasepool
+    @try
+    {
+        OMCDeferredProgress *myProgress = (OMCDeferredProgress *)CFBridgingRelease(inProgressRef);
+        myProgress = nil;
+    }
+    @catch (NSException *localException)
+    {
+        NSLog(@"OMCDeferredProgressRelease received exception: %@", localException);
+    }
 }
 
 Boolean
 OMCDeferredProgressAdvanceProgress(OMCDeferredProgressRef inProgressRef, CFIndex inTaskIndex, pid_t inChildPID, CFStringRef inOutputStr, Boolean isTaskEnded)
 {
 	Boolean userCancelled = false;
-	@autoreleasepool
-	{
-		@try
-		{
-			OMCDeferredProgress *myProgress = (OMCDeferredProgress *)inProgressRef;
-			userCancelled = [myProgress advanceProgressForTask:inTaskIndex childPid:inChildPID withOutputString:(NSString *)inOutputStr taskEnded:isTaskEnded];
-		}
-		@catch (NSException *localException)
-		{
-			NSLog(@"OMCDeferredProgressAdvanceProgress received exception: %@", localException);
-		}
-	} //@autoreleasepool
+    @try
+    {
+        OMCDeferredProgress *myProgress = (__bridge OMCDeferredProgress *)inProgressRef;
+        userCancelled = [myProgress advanceProgressForTask:inTaskIndex childPid:inChildPID withOutputString:(__bridge NSString *)inOutputStr taskEnded:isTaskEnded];
+    }
+    @catch (NSException *localException)
+    {
+        NSLog(@"OMCDeferredProgressAdvanceProgress received exception: %@", localException);
+    }
 	return userCancelled;
 }

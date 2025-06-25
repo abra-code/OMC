@@ -53,6 +53,20 @@
 
 static AEIdleUPP gAEIdleUPP = nil;
 
+/********************************************************************************
+    A very simple idle function. It simply ignors any event it receives,
+    returns 30 for the sleep time and nil for the mouse region.
+    
+    Your application should supply an idle function that handles any events it
+    might receive. This is especially important if your application has any windows.
+    
+    Also see:
+        IM:IAC for details about idle functions.
+        Pending Update Perils technote for more about handling low-level events.
+*/
+Boolean MoreAESimpleIdleFunction( EventRecord* event,
+                                        SInt32* sleepTime,
+                                        RgnHandle* mouseRgn );
 
 /********************************************************************************
  Given a property type, create an new object descriptor for that property,

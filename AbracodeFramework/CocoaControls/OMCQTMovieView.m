@@ -7,7 +7,6 @@
 @implementation OMCQTMovieView
 
 @synthesize tag;
-@synthesize escapingMode;
 
 - (id)init
 {

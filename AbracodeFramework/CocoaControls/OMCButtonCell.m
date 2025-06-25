@@ -7,11 +7,6 @@
 
 @implementation OMCButtonCell
 
-@synthesize commandID;
-@synthesize mappedOnValue;
-@synthesize mappedOffValue;
-@synthesize escapingMode;
-
 - (id)init
 {
     self = [super init];
@@ -34,25 +29,16 @@
     return self;
 }
 
-- (void)dealloc
-{
-    self.commandID = nil;
-    self.mappedOnValue = nil;
-    self.mappedOffValue = nil;
- 	self.escapingMode = nil;
-	[super dealloc];
-}
-
 //a subclass of NSCell must implement copying
 
 - (id)copyWithZone:(NSZone *)zone
 {
 	OMCButtonCell *objCopy = [super copyWithZone:zone];
 
-	[objCopy.commandID retain];
-	[objCopy.mappedOnValue retain];
-	[objCopy.mappedOffValue retain];
-	[objCopy.escapingMode retain];
+    objCopy->_commandID = [_commandID copyWithZone:zone];
+    objCopy->_mappedOnValue = [_mappedOnValue copyWithZone:zone];
+    objCopy->_mappedOffValue = [_mappedOffValue copyWithZone:zone];
+    objCopy->_escapingMode = [_escapingMode copyWithZone:zone];
 
 	return objCopy;
 }
@@ -64,7 +50,7 @@
 	int intValue = [self intValue];
 	if( (intValue > 0) && (self.mappedOnValue != nil) )
 		return self.mappedOnValue;
-	else if( (intValue == 0) && (mappedOffValue != nil) )
+	else if( (intValue == 0) && (self.mappedOffValue != nil) )
 		return self.mappedOffValue;
 		
 	return [super stringValue];

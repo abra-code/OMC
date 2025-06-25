@@ -4,13 +4,11 @@
 CFPropertyListRef CreatePropertyList(CFURLRef plistURL, CFPropertyListMutabilityOptions mutabilityOptions)
 {
 	CFPropertyListRef thePlist = NULL;
-
-	@autoreleasepool
-	{
-		NSData* plistData = [NSData dataWithContentsOfURL:(NSURL *)plistURL];
-		if(plistData != NULL)
-    		thePlist = CFPropertyListCreateWithData(kCFAllocatorDefault, (CFDataRef)plistData, mutabilityOptions, NULL, NULL);
-	}
+    NSData* plistData = [NSData dataWithContentsOfURL:(__bridge NSURL *)plistURL];
+    if(plistData != nil)
+    {
+        thePlist = CFPropertyListCreateWithData(kCFAllocatorDefault, (__bridge CFDataRef)plistData, mutabilityOptions, NULL, NULL);
+    }
 
 	return thePlist;
 }
@@ -22,17 +20,16 @@ WritePropertyList(CFPropertyListRef propertyList, CFURLRef plistURL, CFPropertyL
     CFDataRef plistData = NULL;
 
     if(propertyList != NULL)
-       plistData = CFPropertyListCreateData(kCFAllocatorDefault, propertyList, plistFormat, 0, NULL);
-
+    {
+        plistData = CFPropertyListCreateData(kCFAllocatorDefault, propertyList, plistFormat, 0, NULL);
+    }
+    
     if(plistData != NULL)
 	{
-		@autoreleasepool
-		{
-			isOK = (bool)[(NSData *)plistData
-							writeToURL:(NSURL *)plistURL
-							options:0
-							error:NULL];
-		}
+        isOK = (bool)[(__bridge NSData *)plistData
+                         writeToURL:(__bridge NSURL *)plistURL
+                            options:0
+                              error:NULL];
 		CFRelease(plistData);
 	}
 	return isOK;

@@ -7,11 +7,11 @@
  *
  */
 
-#include <Carbon/Carbon.h>
 #include "CFObj.h"
 #include "MessagePortListener.h"
 #include "AObserver.h"
 #include "OMCDeferredProgress.h"
+#include <mach/host_info.h>
 
 class OmcExecutor;
 class OmcTask;

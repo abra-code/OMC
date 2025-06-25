@@ -14,14 +14,13 @@
 CFURLRef
 CreateCFURLFromSaveAsDialog( CFStringRef inClientName, CFStringRef inMessage, CFStringRef inDefaultName, CFStringRef inDefaultDirPath, UInt32 inAdditonalFlags )
 {
-	NSURL *outURL = NULL;
+	NSURL *outURL = nil;
 
 	@try
 	{
-
 		NSSavePanel *savePanel	= [NSSavePanel savePanel];
-		if(savePanel == NULL)
-			return NULL;
+		if(savePanel == nil)
+			return nullptr;
 
 		if(inClientName == nullptr)
 			inClientName = CFSTR("OMC");
@@ -30,8 +29,8 @@ CreateCFURLFromSaveAsDialog( CFStringRef inClientName, CFStringRef inMessage, CF
 			inMessage = CFSTR("");
 
 		[savePanel setTreatsFilePackagesAsDirectories:YES];
-		[savePanel setTitle:(NSString *)inClientName];
-		[savePanel setMessage:(NSString *)inMessage];
+        [savePanel setTitle:(__bridge NSString *)inClientName];
+        [savePanel setMessage:(__bridge NSString *)inMessage];
 
 		//setShowsHiddenFiles: is undocumented so we need to check if it exists
 		if( ((inAdditonalFlags & kOMCFilePanelAllowInvisibleItems) != 0) &&
@@ -41,16 +40,15 @@ CreateCFURLFromSaveAsDialog( CFStringRef inClientName, CFStringRef inMessage, CF
 		}
 		
         if(inDefaultDirPath != nullptr)
-            savePanel.directoryURL = [NSURL fileURLWithPath:(NSString *)inDefaultDirPath];
+            savePanel.directoryURL = [NSURL fileURLWithPath:(__bridge NSString *)inDefaultDirPath];
        
         if(inDefaultName != nullptr)
-            savePanel.nameFieldStringValue = (NSString *)inDefaultName;
+            savePanel.nameFieldStringValue = (__bridge NSString *)inDefaultName;
         
         NSModalResponse response = [savePanel runModal];
         if(response == NSModalResponseOK)
 		{
 			outURL = [savePanel URL];
-			[outURL retain];
 		}
 	}
 	@catch (NSException *localException)
@@ -58,7 +56,7 @@ CreateCFURLFromSaveAsDialog( CFStringRef inClientName, CFStringRef inMessage, CF
 		NSLog(@"CreateCFURLFromSaveAsDialog received exception: %@", localException);
 	}
 	
-	return (CFURLRef)outURL;
+    return (CFURLRef)CFBridgingRetain(outURL);
 }
 
 CFURLRef
@@ -84,7 +82,7 @@ CFArrayRef
 CreateCFURLsFromOpenDialog( CFStringRef inClientName, CFStringRef inMessage, CFStringRef inDefaultName, CFStringRef inDefaultDirPath, UInt32 inAdditonalFlags)
 {
 #pragma unused(inDefaultName) //NSOpenPanel API no longer supports default name
-	NSArray *outURLs = NULL;
+	NSArray *outURLs = nil;
 	
 	@try
 	{
@@ -100,8 +98,8 @@ CreateCFURLsFromOpenDialog( CFStringRef inClientName, CFStringRef inMessage, CFS
 		if(inMessage == NULL)
 			inMessage = CFSTR("");
 
-		[openPanel setTitle:(NSString *)inClientName];	
-		[openPanel setMessage:(NSString *)inMessage];
+        [openPanel setTitle:(__bridge NSString *)inClientName];	
+        [openPanel setMessage:(__bridge NSString *)inMessage];
 		
 		[openPanel setCanChooseFiles:((inAdditonalFlags & kOMCFilePanelCanChooseFiles) != 0)];
 		[openPanel setCanChooseDirectories:((inAdditonalFlags & kOMCFilePanelCanChooseDirectories) != 0)];
@@ -115,14 +113,13 @@ CreateCFURLsFromOpenDialog( CFStringRef inClientName, CFStringRef inMessage, CFS
 		}
 
         if(inDefaultDirPath != nullptr)
-            openPanel.directoryURL = [NSURL fileURLWithPath:(NSString *)inDefaultDirPath];
+            openPanel.directoryURL = [NSURL fileURLWithPath:(__bridge NSString *)inDefaultDirPath];
        
 
         NSModalResponse response = [openPanel runModal];
         if(response == NSModalResponseOK)
 		{
 			outURLs = [openPanel URLs];
-			[outURLs retain];
 		}
 		
 	}
@@ -131,5 +128,5 @@ CreateCFURLsFromOpenDialog( CFStringRef inClientName, CFStringRef inMessage, CFS
 		NSLog(@"CreateCFURLsFromOpenDialog received exception: %@", localException);
 	}
 	
-	return (CFArrayRef)outURLs;
+    return (CFArrayRef)CFBridgingRetain(outURLs);
 }

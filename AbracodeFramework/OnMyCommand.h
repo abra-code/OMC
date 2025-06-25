@@ -42,7 +42,7 @@ typedef struct CommandDescription
 	CFStringRef		namePlural;
 	CFArrayRef		command;//array of CFStrings
 	CFArrayRef		inputPipe;//array of CFStrings
-	FileType *		activationTypes;
+    OSType *		activationTypes;
 	UInt32			activationTypeCount;
 	CFArrayRef		activationExtensions;//array of CFStrings
 	UInt8			executionMode;
@@ -122,7 +122,7 @@ typedef struct OneObjProperties
 	CFObj<CFURLRef> url;
 	CFObj<CFStringRef> extension;
     CFObj<CFStringRef> refreshPath;//refresh path is associated with object. this is one-to-one relationship
-//	FileType		mType;
+//	OSType		mType;
     Boolean isRegularFile { false };
     Boolean isDirectory { false };
     Boolean isPackage { false };

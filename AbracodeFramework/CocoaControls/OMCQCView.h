@@ -4,23 +4,18 @@
 
 #import <Cocoa/Cocoa.h>
 #import <Quartz/Quartz.h>
+#import "OMCActionProtocol.h"
 
 IB_DESIGNABLE
-@interface OMCQCView : QCView
-{
-	id			_omcTarget;
-	SEL			_omcTargetSelector;
-	NSString *	_compositionPath;
-}
+@interface OMCQCView : QCView<OMCActionProtocol>
 
-- (id)target;
-- (void)setTarget:(id)anObject;
+@property (nonatomic, assign) SEL action;
+@property (nonatomic, weak) id target;
+@property (nonatomic, strong) NSString *compositionPath;
 
-- (void)setAction:(SEL)aSelector;
-
-@property (nonatomic, retain) IBInspectable NSString * commandID;
 @property (nonatomic, readwrite) IBInspectable NSInteger tag;
-@property (nonatomic, retain) IBInspectable NSString * escapingMode;
+@property (nonatomic, strong) IBInspectable NSString * commandID;
+@property (nonatomic, strong) IBInspectable NSString * escapingMode;
 
 - (NSString *)stringValue;
 - (void)setStringValue:(NSString *)aString;

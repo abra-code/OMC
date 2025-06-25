@@ -6,12 +6,10 @@
 
 IB_DESIGNABLE
 @interface OMCMenuItem : NSMenuItem
-{
-}
 
-@property (nonatomic, retain) IBInspectable NSString * commandID;
-@property (nonatomic, retain) IBInspectable NSString * mappedValue;
-@property (nonatomic, retain) IBInspectable NSString * escapingMode;
+@property (nonatomic, strong) IBInspectable NSString * commandID;
+@property (nonatomic, strong) IBInspectable NSString * mappedValue;
+@property (nonatomic, strong) IBInspectable NSString * escapingMode;
 
 @end
 

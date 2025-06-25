@@ -10,14 +10,13 @@
 IB_DESIGNABLE
 @interface OMCDropletController : NSDocumentController<NSApplicationDelegate>
 {
-	NSString *	_commandFilePath;
 	BOOL		_startingUp;
 	CGEventFlags _startupModifiers;
 	int			_runningCommandCount;
 }
 
-@property (nonatomic, retain) IBInspectable NSString * commandID; // main/startup command name/id
-@property (nonatomic, retain) IBInspectable NSString * commandFilePath; //main plist file
+@property (nonatomic, strong) IBInspectable NSString * commandID; // main/startup command name/id
+@property (nonatomic, strong) IBInspectable NSString * commandFilePath; //main plist file
 
 - (void)openFiles:(NSArray *)absoluteURLArray;
 

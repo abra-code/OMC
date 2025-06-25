@@ -7,7 +7,6 @@
 @implementation OMCWebView
 
 @synthesize tag;
-@synthesize escapingMode;
 
 - (id)init
 {
@@ -18,12 +17,6 @@
 	self.escapingMode = @"esc_none";
 
 	return self;
-}
-
-- (void)dealloc
-{
-	self.escapingMode = nil;
-    [super dealloc];
 }
 
 //legacy encoder/decoder support - custom control data no longer serialized into nibs

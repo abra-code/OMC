@@ -3119,8 +3119,8 @@ OnMyCommandCM::GetOneCommandParams(CommandDescription &outDesc, CFDictionaryRef 
         assert(theCount <= UINT_MAX);
 		if(theCount > 0)
 		{
-			outDesc.activationTypes = new FileType[theCount];
-			memset( outDesc.activationTypes, 0, theCount*sizeof(FileType) );
+			outDesc.activationTypes = new OSType[theCount];
+			memset( outDesc.activationTypes, 0, theCount*sizeof(OSType) );
 			outDesc.activationTypeCount = (UInt32)theCount;
 			CFStringRef typeStrRef;
 			for(CFIndex i = 0; i < theCount; i++)

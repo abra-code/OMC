@@ -28,7 +28,7 @@ static NSMutableDictionary *sCachedPlists = NULL;
 	OMCExecutorRef omcExec = OMCCreateExecutor( loadedPlist );
 	if(omcExec != NULL)
 	{
-		OMCCommandRef commandRef = OMCFindCommand( omcExec, (CFStringRef)inCommandNameOrId );
+        OMCCommandRef commandRef = OMCFindCommand( omcExec, (__bridge CFStringRef)inCommandNameOrId );
 		if( OMCIsValidCommandRef(commandRef) )
 		{
 			error = noErr;
@@ -39,7 +39,7 @@ static NSMutableDictionary *sCachedPlists = NULL;
 			BOOL hasFiles = FALSE;
 			if( inContext != NULL )
 			{
-				CFTypeID contextType = CFGetTypeID( inContext );
+                CFTypeID contextType = CFGetTypeID((__bridge CFTypeRef)inContext);
 				hasFiles = ((contextType == CFArrayGetTypeID()) || (contextType == CFURLGetTypeID()));
 			}
 			
@@ -60,15 +60,15 @@ static NSMutableDictionary *sCachedPlists = NULL;
 					CFStringRef theMessage = CFCopyLocalizedStringFromTable(CFSTR("Choose Objects To Process"), CFSTR("Localizable"), "");
 					
 					NSBundle *appBundle = [NSBundle mainBundle];
-					CFStringRef appName = (CFStringRef)[appBundle objectForInfoDictionaryKey:@"CFBundleName"];
+					NSString *appName = [appBundle objectForInfoDictionaryKey:@"CFBundleName"];
 					if(appName == NULL)
-						appName = CFSTR("OMCApplet");
+						appName = @"OMCApplet";
 					
 					switch(activationType)
 					{
 						case kActiveFile:
 						{
-							docList = CreateCFURLsFromOpenDialog( appName, theMessage, NULL, NULL, kOMCFilePanelCanChooseFiles | kOMCFilePanelAllowMultipleItems );
+                            docList = CreateCFURLsFromOpenDialog( (__bridge CFStringRef)appName, theMessage, NULL, NULL, kOMCFilePanelCanChooseFiles | kOMCFilePanelAllowMultipleItems );
 						}
 						break;
 							
@@ -76,13 +76,13 @@ static NSMutableDictionary *sCachedPlists = NULL;
 						case kActiveFinderWindow:
 						case kActiveFolderExcludeFinderWindow:
 						{
-							docList = CreateCFURLsFromOpenDialog( appName, theMessage, NULL, NULL, kOMCFilePanelCanChooseDirectories | kOMCFilePanelAllowMultipleItems );
+                            docList = CreateCFURLsFromOpenDialog( (__bridge CFStringRef)appName, theMessage, NULL, NULL, kOMCFilePanelCanChooseDirectories | kOMCFilePanelAllowMultipleItems );
 						}
 						break;
 							
 						default:
 						{
-							docList = CreateCFURLsFromOpenDialog( appName, theMessage, NULL, NULL, kOMCFilePanelCanChooseFiles | kOMCFilePanelCanChooseDirectories | kOMCFilePanelAllowMultipleItems );
+                            docList = CreateCFURLsFromOpenDialog( (__bridge CFStringRef)appName, theMessage, NULL, NULL, kOMCFilePanelCanChooseFiles | kOMCFilePanelCanChooseDirectories | kOMCFilePanelAllowMultipleItems );
 						}
 						break;				
 					}
@@ -98,7 +98,7 @@ static NSMutableDictionary *sCachedPlists = NULL;
 					{
 						
 						//add to open recent
-						NSArray *absoluteURLArray = (NSArray *)docList;
+                        NSArray *absoluteURLArray = (__bridge NSArray *)docList;
 						NSUInteger fileCount = [absoluteURLArray count];
 						NSUInteger i;
 						for( i = 0; i < fileCount; i++ )
@@ -111,7 +111,7 @@ static NSMutableDictionary *sCachedPlists = NULL;
 			}
 			else
 			{
-				error = OMCExamineContext( omcExec, commandRef, (CFTypeRef)inContext );
+                error = OMCExamineContext( omcExec, commandRef, (__bridge CFTypeRef)inContext );
 			}
 			
 			if(docList != NULL)
@@ -167,7 +167,7 @@ static NSMutableDictionary *sCachedPlists = NULL;
 	
 	if(sCachedPlists != NULL)
 	{
-		CFPropertyListRef outPlist = [sCachedPlists objectForKey:absURL];
+        CFPropertyListRef outPlist = (__bridge CFPropertyListRef)([sCachedPlists objectForKey:absURL]);
 		if(outPlist != NULL)
 			return outPlist;
 	}
@@ -175,17 +175,17 @@ static NSMutableDictionary *sCachedPlists = NULL;
 
 //not found, load it and cache
 
-    CFPropertyListRef thePlist = CreatePropertyList((CFURLRef)absURL, kCFPropertyListImmutable);
+    CFPropertyListRef thePlist = CreatePropertyList((__bridge CFURLRef)absURL, kCFPropertyListImmutable);
 
 	if(thePlist == NULL)
 		return NULL;
 
-	if(sCachedPlists == NULL)
+	if(sCachedPlists == nil)
 	{
 		sCachedPlists = [[NSMutableDictionary alloc] init];
 	}
 
-	[sCachedPlists setObject:(id)thePlist forKey:(id)absURL];// plist retained
+    [sCachedPlists setObject:(__bridge id)thePlist forKey:absURL];// plist retained
 	CFRelease( thePlist );
 
 	return thePlist;

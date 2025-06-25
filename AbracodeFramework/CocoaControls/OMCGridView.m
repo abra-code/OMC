@@ -8,7 +8,6 @@
 @implementation OMCGridView
 
 @synthesize tag;
-@synthesize enabled = _enabled;
 
 - (id)init
 {

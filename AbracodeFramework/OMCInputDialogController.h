@@ -21,8 +21,10 @@
 	IBOutlet NSPopUpButton *mPopupButton;
 	IBOutlet NSComboBox *mComboBox;
 	BOOL	mIsCanceled;
-	NSArray *mMenuItems;//for popup or combo - may include mappings
 }
+
+//for popup or combo - may include mappings
+@property (nonatomic, strong) NSArray *menuItems;
 
 //setup
 - (void)setMenuItems:(NSArray*)inMenuItems;//array of NAME & VALUE mappings

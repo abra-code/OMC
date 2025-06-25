@@ -6,10 +6,8 @@
 
 IB_DESIGNABLE
 @interface OMCSecureTextField : NSSecureTextField
-{
-}
 
-@property (nonatomic, retain) IBInspectable NSString * commandID;
-@property (nonatomic, retain) IBInspectable NSString * escapingMode;
+@property (nonatomic, strong) IBInspectable NSString * commandID;
+@property (nonatomic, strong) IBInspectable NSString * escapingMode;
 
 @end

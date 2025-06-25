@@ -6,10 +6,8 @@
 
 IB_DESIGNABLE
 @interface OMCSlider : NSSlider
-{
-}
 
-@property (nonatomic, retain) IBInspectable NSString * commandID;
+@property (nonatomic, strong) IBInspectable NSString * commandID;
 
 @end
 

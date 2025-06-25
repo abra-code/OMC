@@ -6,10 +6,6 @@
 
 @implementation OMCMenuItem
 
-@synthesize commandID;
-@synthesize mappedValue;
-@synthesize escapingMode;
-
 - (id)init
 {
     self = [super init];
@@ -41,14 +37,6 @@
 	self.escapingMode = @"esc_none";
 
 	return self;
-}
-
-- (void)dealloc
-{
-    self.commandID = nil;
-    self.mappedValue = nil;
-	self.escapingMode = nil;
-    [super dealloc];
 }
 
 @end

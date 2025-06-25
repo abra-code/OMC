@@ -31,14 +31,6 @@
     return self;
 }
 
-- (void)dealloc
-{
-	self.escapingMode = nil;
-	self.commandID = nil;
-	[_imagePath release];
-    [super dealloc];
-}
-
 //override NSControl methods
 - (NSString *)stringValue
 {
@@ -49,30 +41,21 @@
 {
 //	NSLog(@"image name = %@", [[self image] name]);
 
-	if(_imagePath != nil)
-	{
-		[_imagePath release];
-		_imagePath = nil;
-	}
-	_imagePath = aString;
+	self.imagePath = aString;
 	
-	if(_imagePath != nil)
+	if(self.imagePath != nil)
 	{
-		[_imagePath retain];
+		NSImage *myImage = [[NSImage alloc] initWithContentsOfFile:self.imagePath];
 
-		NSImage *myImage = [[NSImage alloc] initWithContentsOfFile:_imagePath];
-
-		if(myImage == NULL)
-			NSLog(@"OMCImageView failed to load image at \"%@\"", _imagePath);
+		if(myImage == nil)
+			NSLog(@"OMCImageView failed to load image at \"%@\"", self.imagePath);
 		[self setImage:myImage];
 		
 //		NSLog(@"image name = %@", [myImage name]);
-		
-		[myImage release];
-	}
+    }
 	else
 	{
-		[self setImage:NULL];
+		[self setImage:nil];
 	}
 }
 

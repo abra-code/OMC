@@ -20,32 +20,13 @@
 	mCanceled = NO;
 	mIsDeterminate = NO;
 	mLastValue = INT_MIN;
-	mLastString = NULL;
 
 #if 0 //_DEBUG_
 	NSLog(@"OMCProgressWindowController = 0x%X", (void *)self);
 	NSLog(@"OMCProgressWindowController window = 0x%X", (void *)[self window]);
 #endif
+
 	return self;
-}
-
-- (void)dealloc
-{
-/*  do not call [self window] in dealloc. Our refcount is 0 now and this will try to:
-	- load the window
-	- revive the controller and retain
-
-	NSWindow *outputWindow = [self window];
-	
-	if(outputWindow != NULL)
-	{
-		[outputWindow close];
-	}
-*/
-	if(mLastString != NULL)
-		[mLastString release];
-	
-	[super dealloc];
 }
 
 //NULL inText means: "don't change the last one" and the code in OMCDeferredProgress relies on that
@@ -92,22 +73,15 @@
 		mLastValue = newValue;
 	}
 
-	if(inText != NULL)
+	if(inText != nil)
 	{
-		BOOL differentString = YES;
-		if(mLastString != NULL)
-			differentString = ![mLastString isEqualToString:inText];
-		
-		if(differentString)
+		if(![self.lastString isEqualToString:inText])
 		{
 			[mStatusText setStringValue:inText];
 			[mStatusText setNeedsDisplay:YES];
 		}
 
-		if(mLastString != NULL)
-			[mLastString release];
-		mLastString = inText;
-		[mLastString retain];
+        self.lastString = inText;
 	}
 }
 

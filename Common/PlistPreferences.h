@@ -1,5 +1,5 @@
 #pragma once
-#include <Carbon/Carbon.h>
+#include <CoreFoundation/CoreFoundation.h>
 
 
 class PlistPreferences

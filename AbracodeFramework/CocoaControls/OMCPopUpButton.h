@@ -6,10 +6,8 @@
 
 IB_DESIGNABLE
 @interface OMCPopUpButton : NSPopUpButton
-{
-}
 
-@property (nonatomic, retain) IBInspectable NSString * commandID;
+@property (nonatomic, strong) IBInspectable NSString * commandID;
 
 //no setter, gets value from currently selected menu item
 - (NSString *)escapingMode;

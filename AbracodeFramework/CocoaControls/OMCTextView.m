@@ -8,8 +8,6 @@
 @implementation OMCTextView
 
 @synthesize tag;
-@synthesize escapingMode;
-@synthesize enabled = _enabled;
 
 - (id)init
 {
@@ -35,13 +33,6 @@
     return self;
 }
 
-- (void)dealloc
-{
-	self.escapingMode = nil;
-	[_savedTextColor release];
-    [super dealloc];
-}
-
 - (NSString *)stringValue
 {
 	return [self string];
@@ -61,20 +52,18 @@
 		[self setEditable:_enabled];
 		if(_enabled)
 		{
-			if(_savedTextColor != nil)
+			if(self.savedTextColor != nil)
 			{
-				[self setTextColor:_savedTextColor];
-				[_savedTextColor release];
-				_savedTextColor = nil;
+				[self setTextColor:self.savedTextColor];
+                self.savedTextColor = nil;
 			}
 			else
-				[self setTextColor: [NSColor controlTextColor]];
+				[self setTextColor:[NSColor controlTextColor]];
 		}
 		else
 		{
-			[_savedTextColor release];
-			_savedTextColor = [[self textColor] retain];
-			[self setTextColor: [NSColor disabledControlTextColor]];
+			self.savedTextColor = [self textColor];
+			[self setTextColor:[NSColor disabledControlTextColor]];
 		}
 	}
 }

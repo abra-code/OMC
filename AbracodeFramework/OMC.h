@@ -9,7 +9,8 @@
 #ifndef _OMC_H_
 #define _OMC_H_ 
 
-#include <Carbon/Carbon.h>
+#include <CoreFoundation/CoreFoundation.h>
+#include <CoreServices/CoreServices.h>
 
 #ifdef __cplusplus
 extern "C" {

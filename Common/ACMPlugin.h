@@ -14,7 +14,8 @@
 #ifndef __ACMPlugin__
 #define __ACMPlugin__
 
-#include <Carbon/Carbon.h>
+#include <CoreFoundation/CoreFoundation.h>
+#include <CoreServices/CoreServices.h>
 #include "ARefCounted.h"
 #include "CFObj.h"
 

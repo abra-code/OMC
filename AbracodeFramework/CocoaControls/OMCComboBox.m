@@ -6,9 +6,6 @@
 
 @implementation OMCComboBox
 
-@synthesize commandID;
-@synthesize escapingMode;
-
 - (id)init
 {
     self = [super init];
@@ -31,15 +28,6 @@
     return self;
 }
 
-
-- (void)dealloc
-{
-	self.commandID = nil;
-	self.escapingMode = nil;
-	[_lastValue release];
-    [super dealloc];
-}
-
 /*
 - (BOOL)prepareForDragOperation:(id < NSDraggingInfo >)sender
 {
@@ -58,13 +46,12 @@
 {
 	BOOL shouldExecute = YES;
 	NSString *newValue = [self stringValue];
-	if( _lastValue != NULL )
+	if( self.lastValue != nil )
 	{
-		shouldExecute = ![_lastValue isEqualToString:newValue];
-		[_lastValue release];
+		shouldExecute = ![self.lastValue isEqualToString:newValue];
 	}
 	
-	_lastValue = [newValue retain];
+    self.lastValue = newValue;
 	
 	return shouldExecute;
 }

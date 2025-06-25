@@ -31,120 +31,107 @@ Boolean RunCocoaInputDialog(OnMyCommandCM *inPlugin, CFStringRef &outStringRef)
 
 	Boolean isOkeyed = false;
 
-	@autoreleasepool
-	{
-		@try
-		{
-			NSString * dialogNibName = NULL;
-			switch(dialogType)
-			{
-				case kInputClearText:
-				default:
-					dialogNibName = @"input_clear";
-				break;
+    @try
+    {
+        NSString * dialogNibName = NULL;
+        switch(dialogType)
+        {
+            case kInputClearText:
+            default:
+                dialogNibName = @"input_clear";
+            break;
 
-				case kInputPasswordText:
-					dialogNibName = @"input_password";
-				break;
-				
-				case kInputPopupMenu:
-					dialogNibName = @"input_popup";
-				break;
+            case kInputPasswordText:
+                dialogNibName = @"input_password";
+            break;
+            
+            case kInputPopupMenu:
+                dialogNibName = @"input_popup";
+            break;
 
-				case kInputComboBox:
-					dialogNibName = @"input_combo";
-				break;
-			}
-			
-			OMCInputDialogController *theController = [[OMCInputDialogController alloc] initWithWindowNibName:dialogNibName];
+            case kInputComboBox:
+                dialogNibName = @"input_combo";
+            break;
+        }
+        
+        OMCInputDialogController *theController = [[OMCInputDialogController alloc] initWithWindowNibName:dialogNibName];
 
-			if(currCommand.name != NULL)
-			{
-				CFObj<CFStringRef> dynamicCommandName( inPlugin->CreateDynamicCommandName(currCommand, currCommand.localizationTableName, localizationBundle) );
-				[theController setWindowTitle:(NSString *)(CFStringRef)dynamicCommandName];
-			}
+        if(currCommand.name != NULL)
+        {
+            CFObj<CFStringRef> dynamicCommandName( inPlugin->CreateDynamicCommandName(currCommand, currCommand.localizationTableName, localizationBundle) );
+            [theController setWindowTitle:(__bridge NSString *)(CFStringRef)dynamicCommandName];
+        }
 
-			NSString *inputDialogOK = (NSString *)currCommand.inputDialogOK;
-			if(inputDialogOK != NULL)
-			{
-				if(currCommand.localizationTableName != NULL)
-				{
-					inputDialogOK = (NSString *)::CFCopyLocalizedStringFromTableInBundle( currCommand.inputDialogOK, currCommand.localizationTableName, localizationBundle, "");
-					[inputDialogOK autorelease];
-				}
-				[theController setOKButtonTitle:inputDialogOK];
-			}
+        NSString *inputDialogOK = (__bridge NSString *)currCommand.inputDialogOK;
+        if(inputDialogOK != NULL)
+        {
+            if(currCommand.localizationTableName != NULL)
+            {
+                inputDialogOK = (NSString *)CFBridgingRelease(::CFCopyLocalizedStringFromTableInBundle( currCommand.inputDialogOK, currCommand.localizationTableName, localizationBundle, ""));
+            }
+            [theController setOKButtonTitle:inputDialogOK];
+        }
 
-			NSString *inputDialogCancel = (NSString *)currCommand.inputDialogCancel;
-			if(inputDialogCancel != NULL)
-			{
-				if(currCommand.localizationTableName != NULL)
-				{
-					inputDialogCancel = (NSString *)::CFCopyLocalizedStringFromTableInBundle( currCommand.inputDialogCancel, currCommand.localizationTableName, localizationBundle, "");
-					[inputDialogCancel autorelease];
-				}
-				[theController setCancelButtonTitle:inputDialogCancel];
-			}
+        NSString *inputDialogCancel = (__bridge NSString *)currCommand.inputDialogCancel;
+        if(inputDialogCancel != NULL)
+        {
+            if(currCommand.localizationTableName != NULL)
+            {
+                inputDialogCancel = (NSString *)CFBridgingRelease(::CFCopyLocalizedStringFromTableInBundle( currCommand.inputDialogCancel, currCommand.localizationTableName, localizationBundle, ""));
+            }
+            [theController setCancelButtonTitle:inputDialogCancel];
+        }
 
-			NSString* inputDialogMessage = (NSString*)currCommand.inputDialogMessage;
-			if(inputDialogMessage!= NULL)
-			{
-				if(currCommand.localizationTableName != NULL)
-				{
-					inputDialogMessage = (NSString*)::CFCopyLocalizedStringFromTableInBundle( currCommand.inputDialogMessage, currCommand.localizationTableName, localizationBundle, "");
-					[inputDialogMessage autorelease];
-				}
-				[theController setMessageText:inputDialogMessage];
-			}
+        NSString* inputDialogMessage = (__bridge NSString*)currCommand.inputDialogMessage;
+        if(inputDialogMessage!= NULL)
+        {
+            if(currCommand.localizationTableName != NULL)
+            {
+                inputDialogMessage = (NSString*)CFBridgingRelease(::CFCopyLocalizedStringFromTableInBundle( currCommand.inputDialogMessage, currCommand.localizationTableName, localizationBundle, ""));
+            }
+            [theController setMessageText:inputDialogMessage];
+        }
 
-			NSArray *inputDialogMenuItems = (NSArray*)currCommand.inputDialogMenuItems;
-			if( (dialogType == kInputPopupMenu) || (dialogType == kInputComboBox) )
-			{
-				if( (inputDialogMenuItems != NULL) && (currCommand.localizationTableName != NULL) )
-				{
-					NSUInteger itemCount = [inputDialogMenuItems count];
-					NSMutableArray *localizedArray = [NSMutableArray arrayWithCapacity:itemCount];
-					Class stringClass = [NSString class];
-					for(NSUInteger i = 0; i < itemCount; i++)
-					{
-						id oneItem = [inputDialogMenuItems objectAtIndex:i];
-						if( [oneItem isKindOfClass:stringClass] )
-						{
-							NSString *oneString = (NSString *)::CFCopyLocalizedStringFromTableInBundle( (CFStringRef)oneItem, currCommand.localizationTableName, localizationBundle, "");
-							[localizedArray addObject:oneString];
-							[oneString release];
-						}
-					}
-					inputDialogMenuItems = localizedArray;
-				}
-				[theController setMenuItems:inputDialogMenuItems];
-			}
+        NSArray *inputDialogMenuItems = (__bridge NSArray*)currCommand.inputDialogMenuItems;
+        if( (dialogType == kInputPopupMenu) || (dialogType == kInputComboBox) )
+        {
+            if( (inputDialogMenuItems != NULL) && (currCommand.localizationTableName != NULL) )
+            {
+                NSUInteger itemCount = [inputDialogMenuItems count];
+                NSMutableArray *localizedArray = [NSMutableArray arrayWithCapacity:itemCount];
+                Class stringClass = [NSString class];
+                for(NSUInteger i = 0; i < itemCount; i++)
+                {
+                    id oneItem = [inputDialogMenuItems objectAtIndex:i];
+                    if( [oneItem isKindOfClass:stringClass] )
+                    {
+                        NSString *oneString = (NSString *)CFBridgingRelease(::CFCopyLocalizedStringFromTableInBundle( (CFStringRef)oneItem, currCommand.localizationTableName, localizationBundle, ""));
+                        [localizedArray addObject:oneString];
+                    }
+                }
+                inputDialogMenuItems = localizedArray;
+            }
+            [theController setMenuItems:inputDialogMenuItems];
+        }
 
-			CFObj<CFStringRef> inputDialogDefault( inPlugin->CreateCombinedStringWithObjects(currCommand.inputDialogDefault, currCommand.localizationTableName, localizationBundle) );
-			if(inputDialogDefault != NULL)
-				[theController setDefaultChoiceString:(NSString *)(CFStringRef)inputDialogDefault];
+        CFObj<CFStringRef> inputDialogDefault( inPlugin->CreateCombinedStringWithObjects(currCommand.inputDialogDefault, currCommand.localizationTableName, localizationBundle) );
+        if(inputDialogDefault != NULL)
+            [theController setDefaultChoiceString:(__bridge NSString *)(CFStringRef)inputDialogDefault];
 
-			isOkeyed = (Boolean) [theController runModalDialog];
-			if(isOkeyed)
-			{
-				NSString *choiceString = [theController getChoiceString];
-				if(choiceString != NULL)
-				{
-					[choiceString retain];
-					outStringRef = (CFStringRef)choiceString;
-				}
-			}
+        isOkeyed = (Boolean) [theController runModalDialog];
+        if(isOkeyed)
+        {
+            NSString *choiceString = [theController getChoiceString];
+            outStringRef = (CFStringRef)CFBridgingRetain(choiceString);
+        }
 
-			[theController close];
-			[theController release];
-
-		}
-		@catch (NSException *localException)
-		{
-			NSLog(@"RunCocoaInputDialog received exception: %@", localException);
-			isOkeyed = false;
-		}
-	} //@autoreleasepool
+        [theController close];
+    }
+    @catch (NSException *localException)
+    {
+        NSLog(@"RunCocoaInputDialog received exception: %@", localException);
+        isOkeyed = false;
+    }
 
 	return isOkeyed;
 }

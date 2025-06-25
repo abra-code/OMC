@@ -13,7 +13,7 @@ void OMCServiceObserverCallback( OmcObserverMessage inMessage, CFIndex inTaskID,
 	if(userData == NULL)
 		return;
 	
-	id objcObject = (id)userData;
+    id objcObject = (__bridge id)userData;
 	if( [objcObject isKindOfClass:[OMCService class] ] )
 	{
 		OMCService *cocoaDelegate = (OMCService *)objcObject;
@@ -30,7 +30,6 @@ void OMCServiceObserverCallback( OmcObserverMessage inMessage, CFIndex inTaskID,
 		return nil;
 
     mObserver = NULL;
-	mResultString = nil;
 	mRunLoopStarted = NO;
     return self;
 }
@@ -43,17 +42,12 @@ void OMCServiceObserverCallback( OmcObserverMessage inMessage, CFIndex inTaskID,
 		OMCReleaseObserver( mObserver );//release the observer
 		mObserver = NULL;
 	}
-	
-	[mResultString release];
-	mResultString = nil;
-	
+    
 	if(mRunLoopStarted)
 	{
 		//CFRunLoopStop( CFRunLoopGetCurrent() );
 		mRunLoopStarted = NO;
 	}
-
-	[super dealloc];
 }
 
 
@@ -67,21 +61,7 @@ void OMCServiceObserverCallback( OmcObserverMessage inMessage, CFIndex inTaskID,
 - (void)runOMCService:(NSPasteboard *)pboard userData:(NSString *)userData error:(NSString **)error
 {
 	NSBundle *appBundle = [NSBundle mainBundle];
-
-#if 0 //the latest idea is to have one OMCService and use the main plist
-	NSString *plistPath = [appBundle pathForResource:@"Command" ofType:@"plist"];
-	if(plistPath == NULL)
-	{
-		if(error != NULL)
-			*error = @"Could not find Command.plist in service bundle";
-		return;
-	}
-	NSURL *commandURL = [NSURL fileURLWithPath:plistPath];
-#else
-    NSURL *commandURL = NULL;
-#endif //0
-
-	OMCExecutorRef omcExec = OMCCreateExecutor( (CFURLRef)commandURL );
+    OMCExecutorRef omcExec = OMCCreateExecutor(nil);
 	if(omcExec == NULL)
 	{
 		if(error != NULL)
@@ -138,24 +118,24 @@ void OMCServiceObserverCallback( OmcObserverMessage inMessage, CFIndex inTaskID,
 		}
 	}
 	
-	CFTypeRef contextRef = NULL;
-	if(pboard != NULL)
+	id contextObj = nil;
+	if(pboard != nil)
 	{
 		if(prefersTextContext)
 		{
 			NSArray *supportedTextTypes = [NSArray arrayWithObjects: NSStringPboardType, NULL];
 			NSString *bestType = [pboard availableTypeFromArray:supportedTextTypes];
 			if(bestType != NULL)
-				contextRef = (CFTypeRef)[pboard stringForType:NSStringPboardType];
+                contextObj = [pboard stringForType:NSStringPboardType];
 		}
 
-		if(contextRef == NULL)//also will enter here if prefersTextContext == false
+		if(contextObj == nil)//also will enter here if prefersTextContext == false
 		{//try file names
 			NSArray *supportedFileTypes = [NSArray arrayWithObjects: NSFilenamesPboardType, NULL];
 			NSString *bestType = [pboard availableTypeFromArray:supportedFileTypes];
 			if(bestType != NULL)
 			{
-				contextRef = (CFTypeRef)[pboard propertyListForType:NSFilenamesPboardType];
+                contextObj = [pboard propertyListForType:NSFilenamesPboardType];
 				//if([resultList isKindOfClass:[NSArray class]])
 			}
 			else if(!prefersTextContext)//we don't have file paths and did not try text yet: do it now
@@ -163,25 +143,25 @@ void OMCServiceObserverCallback( OmcObserverMessage inMessage, CFIndex inTaskID,
 				NSArray *supportedTextTypes = [NSArray arrayWithObjects: NSStringPboardType, NULL];
 				NSString *bestType = [pboard availableTypeFromArray:supportedTextTypes];
 				if(bestType != NULL)
-					contextRef = (CFTypeRef)[pboard stringForType:NSStringPboardType];
+                    contextObj = [pboard stringForType:NSStringPboardType];
 			}
 		}
 	}
 
-	OMCCommandRef commandRef = OMCFindCommand( omcExec, (CFStringRef)userData );
+    OMCCommandRef commandRef = OMCFindCommand( omcExec, (__bridge CFStringRef)userData );
 	if( OMCIsValidCommandRef(commandRef) )
 	{
-		if( noErr == OMCExamineContext(omcExec, commandRef, contextRef) )
+        if( noErr == OMCExamineContext(omcExec, commandRef, (__bridge CFTypeRef)(contextObj)) )
 		{
 			if(mObserver == NULL)
 			{
-				mObserver = OMCCreateObserver( kOmcObserverAllMessages, OMCServiceObserverCallback, (void *)self );
+                mObserver = OMCCreateObserver( kOmcObserverAllMessages, OMCServiceObserverCallback, (__bridge void *)self );
 				OMCAddObserver( omcExec, mObserver );
 			}
 			
 			if(wantsToReturnText)
 			{
-				mResultString = [[NSMutableString alloc] initWithCapacity:0];
+				self.resultString = [[NSMutableString alloc] init];
 			}
 			
 			OSStatus osError = OMCExecuteCommand( omcExec, commandRef );
@@ -203,12 +183,12 @@ void OMCServiceObserverCallback( OmcObserverMessage inMessage, CFIndex inTaskID,
 					;
 				}
 
-				if(mResultString != NULL)
+				if(self.resultString != NULL)
 				{
 					//NSLog(@"Setting pasteboard text to: %@", mResultString);
 					NSArray *supportedTextTypes = [NSArray arrayWithObjects: NSStringPboardType, NULL];
 					[pboard declareTypes:supportedTextTypes owner:NULL];
-					[pboard setString:mResultString forType:NSStringPboardType];
+					[pboard setString:self.resultString forType:NSStringPboardType];
 				}
 			}
 		}
@@ -235,9 +215,9 @@ void OMCServiceObserverCallback( OmcObserverMessage inMessage, CFIndex inTaskID,
 		{
 			//messageString = @"<<task progress>>";
 			if( (inResult != NULL) &&
-				[(id)inResult isKindOfClass:[NSString class]] )
+               [(__bridge id)inResult isKindOfClass:[NSString class]] )
 			{
-				[mResultString appendString:(NSString*)inResult];
+                [self.resultString appendString:(__bridge NSString*)inResult];
 			}
 		}
 		break;

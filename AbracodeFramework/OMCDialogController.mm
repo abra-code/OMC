@@ -6,6 +6,7 @@
 //  Copyright 2008 Abracode. All rights reserved.
 //
 
+#include <CoreServices/CoreServices.h>
 #import "OMCDialogController.h"
 #import "OMCPopUpButton.h"
 #include "OnMyCommand.h"
@@ -18,6 +19,7 @@
 #import "OMCComboBox.h" //for shouldExecutAction
 #import "OMCButton.h" //for droppedItems
 #import "OMCWebKitView.h"
+#import "OMCView.h"
 
 /*
  Method argument types. (Deprecated. These constants are used internally by NSInvocation—you should not use them directly.)
@@ -97,7 +99,7 @@ typedef enum ObjCSelectorArgumentType
 	kObjCArgBitfield = 'b'
 } ObjCSelectorArgumentType;
 
-ObjCSelectorArgumentType
+static ObjCSelectorArgumentType
 FindArgumentType(const char *argTypeStr)
 {
 	if(argTypeStr == NULL)
@@ -107,6 +109,17 @@ FindArgumentType(const char *argTypeStr)
 	return (ObjCSelectorArgumentType)argTypeStr[0];
 }
 
+static NSMutableSet<OMCDialogController *> *
+GetAllDialogControllers()
+{
+    static NSMutableSet<OMCDialogController *> *sAllDialogControllers = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        sAllDialogControllers = [[NSMutableSet alloc] init];
+    });
+
+    return sAllDialogControllers;
+}
 
 @implementation OMCDialogController
 
@@ -117,15 +130,13 @@ FindArgumentType(const char *argTypeStr)
 	if(self == nil)
 		return nil;
 
-	mWindow = NULL;
-	mOmcCocoaNib = NULL;
-	mLastCommandID = NULL;
-	mDialogOwnedItems = NULL;
-	mIsModal = false;
+    mIsModal = false;
 	mIsRunning = false;
-	mDeleteSelfOnClose = false;
 
-	mOMCDialogProxy.Adopt( new OMCCocoaDialog(self) );
+    NSMutableSet<OMCDialogController *> *allDialogControllers = GetAllDialogControllers();
+    [allDialogControllers addObject:self];
+    
+    mOMCDialogProxy.Adopt( new OMCCocoaDialog((__bridge OMCDialogControllerRef)self) );
 
 	mPlugin.Adopt(inOmc, kARefCountRetain);
 	mExternBundleRef.Adopt(inOmc->GetCurrentCommandExternBundle(), kCFObjRetain);
@@ -151,11 +162,6 @@ FindArgumentType(const char *argTypeStr)
 	Boolean isBlocking = true;//default is modal
 	params.GetValue( CFSTR("IS_BLOCKING"), isBlocking );
 	mIsModal = isBlocking;
-	if(mIsModal == false)
-	{//modelesss dialog disposes itself automatically but needs to be retained here because our caller will release one instance
-		mDeleteSelfOnClose = true;
-		[self retain];
-	}
 
 	//now we need to find out where our nib is
 
@@ -167,21 +173,21 @@ FindArgumentType(const char *argTypeStr)
 			CFObj<CFStringRef> absolutePath = CreatePathFromCFURL(bundleURL, kEscapeNone);
 			if(absolutePath != NULL)
 			{
-				[self findNib:(NSString *)dialogNibName forBundlePath:(NSString *)(CFStringRef)absolutePath];
+                [self findNib:(__bridge NSString *)dialogNibName forBundlePath:(__bridge NSString *)(CFStringRef)absolutePath];
 			}
 		}
 	}
 
-	if(mOmcCocoaNib == NULL)
+	if(_omcCocoaNib == nil)
 	{//still not found, check main default bundle
-		[self findNib:(NSString *)dialogNibName forBundlePath:NULL];
+        [self findNib:(__bridge NSString *)dialogNibName forBundlePath:NULL];
 	}
 
-	if(mOmcCocoaNib == NULL)
+	if(_omcCocoaNib == nil)
 	{
 		CFBundleRef frameworkBundleRef = mPlugin->GetBundleRef();
 #if DEBUG
-		NSLog(@"[OMCDialogController initWithOmc], frameworkBundleRef=%@", (id)frameworkBundleRef);
+        NSLog(@"[OMCDialogController initWithOmc], frameworkBundleRef=%@", (__bridge id)frameworkBundleRef);
 		CFShow(frameworkBundleRef);
 #endif
 		if(frameworkBundleRef != NULL)
@@ -192,27 +198,26 @@ FindArgumentType(const char *argTypeStr)
 				CFObj<CFStringRef> absolutePath = CreatePathFromCFURL(bundleURL, kEscapeNone);
 				if(absolutePath != NULL)
 				{
-					[self findNib:(NSString *)dialogNibName forBundlePath:(NSString *)(CFStringRef)absolutePath];
+                    [self findNib:(__bridge NSString *)dialogNibName forBundlePath:(__bridge NSString *)(CFStringRef)absolutePath];
 				}
 			}
 		}
 	}
 
-	if(mOmcCocoaNib != NULL)
+	if(_omcCocoaNib != nil)
 	{
-		mWindow = [mOmcCocoaNib getFirstWindow];
-		if(mWindow != NULL)
+        _window = [_omcCocoaNib getFirstWindow];
+		if(_window != NULL)
 		{
-			[mWindow setReleasedWhenClosed:NO];//we will release it when unloading the nib
-			[mWindow retain];
+			[_window setReleasedWhenClosed:NO];//we will release it when unloading the nib
 
-			id contentViewObject = [mWindow contentView];
+			id contentViewObject = [_window contentView];
 			if( (contentViewObject != NULL) && [contentViewObject isKindOfClass:[NSView class] ] )
 			{
 				[self initSubview: (NSView*)contentViewObject];
 			}
 			
-			[mWindow setDelegate: self];
+			[_window setDelegate: self];
 		}
 		else
 			NSLog(@"Cocoa nib file does not contain a window");
@@ -234,8 +239,7 @@ FindArgumentType(const char *argTypeStr)
 			NSNib *myNib = [[NSNib alloc] initWithNibNamed:inNibName bundle:myBundle];
 			if(myNib != NULL)
 			{
-				mOmcCocoaNib = [[OMCCocoaNib alloc] initWithNib:myNib];
-				[myNib release];
+                self.omcCocoaNib = [[OMCCocoaNib alloc] initWithNib:myNib];
 			}
 		}
 	}
@@ -244,37 +248,28 @@ FindArgumentType(const char *argTypeStr)
 		NSNib *myNib = [[NSNib alloc] initWithNibNamed:inNibName bundle:NULL];
 		if(myNib != NULL)
 		{
-			mOmcCocoaNib = [[OMCCocoaNib alloc] initWithNib:myNib];
-			[myNib release];
+			self.omcCocoaNib = [[OMCCocoaNib alloc] initWithNib:myNib];
 		}
 	}
-	return (mOmcCocoaNib != NULL);
+	return (self.omcCocoaNib != nil);
 }
 
 - (void)dealloc
 {
 	mOMCDialogProxy->SetController(NULL);
 	
-	if(mWindow != NULL)
+	if(_window != NULL)
 	{
 		//the window may outlive us
 		//we are dying we need to unregister all delegates, targets, observers, etc
-		id contentViewObject = [mWindow contentView];
+		id contentViewObject = [_window contentView];
 		if( (contentViewObject != NULL) && [contentViewObject isKindOfClass:[NSView class] ] )
 		{
 			[self resetSubview: (NSView*)contentViewObject];
 		}
 	
-		[mWindow setDelegate:NULL];//we are dying
-		[mWindow release];
-		mWindow = NULL;
+		[_window setDelegate:NULL];//we are dying
 	}
-
-    [mOmcCocoaNib release];
-    [mLastCommandID release];
-    [mDialogOwnedItems release];
-
-	[super dealloc];
 }
 
 - (void) initSubview:(NSView *)inView
@@ -292,7 +287,6 @@ FindArgumentType(const char *argTypeStr)
 
 		//the table DOES NOT retain its data source nor delegate!
 		[self keepItem: tableController];//we retain all controllers and they will be released when this dialog controller is released
-		[tableController release];
 
 		if( [myTable target] == NULL )//don't override targets preset in IB
 		{
@@ -322,8 +316,12 @@ FindArgumentType(const char *argTypeStr)
 			if( [inView respondsToSelector:@selector(setTarget:)] )
 			{
 				[inView performSelector:@selector(setTarget:) withObject:self];
-				if( [inView respondsToSelector:@selector(setAction:)] ) //only if target is ourselves we can set action
-					[inView setAction:@selector(handleAction:)];
+                
+                if ([inView conformsToProtocol:@protocol(OMCActionProtocol)]) {
+                    id<OMCActionProtocol> actionView = (id<OMCActionProtocol>)inView;
+                    //if( [inView respondsToSelector:@selector(setAction:)] )
+                    [actionView setAction:@selector(handleAction:)]; //only if target is ourselves we can set action
+                }
 			}
 		}
 	}
@@ -438,7 +436,7 @@ FindArgumentType(const char *argTypeStr)
 
 - (id)findControlOrViewWithID:(NSString *)inControlID
 {
-	id contentViewObject = [mWindow contentView];
+	id contentViewObject = [self.window contentView];
 	if( (contentViewObject != NULL) && [contentViewObject isKindOfClass:[NSView class] ] )
 	{
 		NSView *contentView = (NSView*)contentViewObject;
@@ -527,11 +525,11 @@ FindArgumentType(const char *argTypeStr)
 					&kCFTypeDictionaryKeyCallBacks,
 					&kCFTypeDictionaryValueCallBacks), kCFObjDontRetain );
 
-		[ioControlValues setValue:(id)(CFMutableDictionaryRef)partIdAndValueDict forKey:controlID];
+        [ioControlValues setValue:(__bridge id)(CFMutableDictionaryRef)partIdAndValueDict forKey:controlID];
 	}
 	else
 	{
-		partIdAndValueDict.Adopt((CFMutableDictionaryRef)partValues, kCFObjRetain);
+        partIdAndValueDict.Adopt((__bridge CFMutableDictionaryRef)partValues, kCFObjRetain);
 	}
 
     if(inValue != nil)
@@ -572,7 +570,7 @@ FindArgumentType(const char *argTypeStr)
 		//special invalid part name "@" indicates it is a WebView to distinguish from table view
 		CFMutableDictionaryRef webViewPartValues = [self storeValue:@"" forControlID:controlID forPart:@"@" inControlValues:ioControlValues];
 		OMCWebKitView *omcWKView = (OMCWebKitView *)inView;
-		[omcWKView storeElementValuesIn:(NSMutableDictionary *)webViewPartValues];
+        [omcWKView storeElementValuesIn:(__bridge NSMutableDictionary *)webViewPartValues];
 	}
 	else
 	{
@@ -582,7 +580,7 @@ FindArgumentType(const char *argTypeStr)
 
 	CFObj<CFDictionaryRef> customProperties([self copyControlProperties:inView]);
 	if(customProperties != NULL)
-		[ioCustomProperties setValue:(id)(CFDictionaryRef)customProperties forKey:controlID];
+        [ioCustomProperties setValue:(__bridge id)(CFDictionaryRef)customProperties forKey:controlID];
 }
 
 //internal implementation
@@ -597,7 +595,7 @@ FindArgumentType(const char *argTypeStr)
 	if(tagNum > 0)
 		controlID = [NSString stringWithFormat:@"%ld", (long)tagNum];
 
-	static NSCharacterSet *nonAlphanumericCharacterSet = [[[NSCharacterSet alphanumericCharacterSet] invertedSet] retain];
+	static NSCharacterSet *nonAlphanumericCharacterSet = [[NSCharacterSet alphanumericCharacterSet] invertedSet];
 
 	if((controlID == nil) && [inView respondsToSelector:@selector(identifier)])
 	{
@@ -666,7 +664,7 @@ FindArgumentType(const char *argTypeStr)
 // public API
 -(void)allControlValues:(NSMutableDictionary *)ioControlValues andProperties:(NSMutableDictionary *)ioCustomProperties withIterator:(SelectionIterator *)inSelIterator
 {
-	id contentViewObject = [mWindow contentView];
+	id contentViewObject = [self.window contentView];
 	if( (contentViewObject != nil) && [contentViewObject isKindOfClass:[NSView class] ] )
 	{
 		[self allControlValues:ioControlValues andProperties:ioCustomProperties inView:(NSView*)contentViewObject withIterator:inSelIterator];
@@ -707,22 +705,22 @@ FindArgumentType(const char *argTypeStr)
 			if(escapingMode != nil)
 				::CFDictionarySetValue( outDict,
 										(const void *)kCustomEscapeMethodKey,
-										(const void *)(CFStringRef)escapingMode);
+                                       (const void *)(__bridge CFStringRef)escapingMode);
 			
 			if(combinedSelectionPrefix != nil)
 				::CFDictionarySetValue( outDict,
 										(const void *)kCustomPrefixKey,
-										(const void *)(CFStringRef)combinedSelectionPrefix);
+                                       (const void *)(__bridge CFStringRef)combinedSelectionPrefix);
 
 			if(combinedSelectionSuffix != nil)
 				::CFDictionarySetValue( outDict,
 										(const void *)kCustomSuffixKey,
-										(const void *)(CFStringRef)combinedSelectionSuffix);
+                                       (const void *)(__bridge CFStringRef)combinedSelectionSuffix);
 
 			if(combinedSelectionSeparator != nil)
 				::CFDictionarySetValue( outDict,
 										(const void *)kCustomSeparatorKey,
-										(const void *)(CFStringRef)combinedSelectionSeparator);
+                                       (const void *)(__bridge CFStringRef)combinedSelectionSeparator);
 		}
 	}
 	return outDict;
@@ -848,7 +846,7 @@ FindArgumentType(const char *argTypeStr)
 				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
 				if(controlID != NULL)
 				{
-					id controlOrView = [self findControlOrViewWithID:(NSString*)controlID];
+                    id controlOrView = [self findControlOrViewWithID:(__bridge NSString*)controlID];
 					if( controlOrView != NULL )
 					{
 						if( [controlOrView isKindOfClass:[NSPopUpButton class]] )
@@ -884,7 +882,7 @@ FindArgumentType(const char *argTypeStr)
 				CFArrayRef theArr = ACFType<CFArrayRef>::DynamicCast( valueList[i] );
 				if( (controlID != NULL) && (theArr != NULL) )
 				{
-					id controlOrView = [self findControlOrViewWithID:(NSString*)controlID];
+                    id controlOrView = [self findControlOrViewWithID:(__bridge NSString*)controlID];
 					if( controlOrView != NULL )
 					{
 						CFIndex itemCount = ::CFArrayGetCount(theArr);
@@ -898,7 +896,7 @@ FindArgumentType(const char *argTypeStr)
 								CFTypeRef oneItem = ::CFArrayGetValueAtIndex(theArr,i);
 								CFStringRef oneString = ACFType<CFStringRef>::DynamicCast( oneItem );
 								if(oneString != NULL)
-									[myPopupButton addItemWithTitle:(NSString *)oneString];
+                                    [myPopupButton addItemWithTitle:(__bridge NSString *)oneString];
 							}
 						}
 						else if( [controlOrView isKindOfClass:[NSComboBox class]] )
@@ -911,7 +909,7 @@ FindArgumentType(const char *argTypeStr)
 								CFTypeRef oneItem = ::CFArrayGetValueAtIndex(theArr,i);
 								CFStringRef oneString = ACFType<CFStringRef>::DynamicCast( oneItem );
 								if(oneString != NULL)
-									[myCombo addItemWithObjectValue:(NSString *)oneString];
+                                    [myCombo addItemWithObjectValue:(__bridge NSString *)oneString];
 							}
 						}
 					}
@@ -937,7 +935,7 @@ FindArgumentType(const char *argTypeStr)
 				CFArrayRef theArr = ACFType<CFArrayRef>::DynamicCast( valueList[i] );
 				if( (controlID != NULL) && (theArr != NULL) )
 				{
-					id controlOrView = [self findControlOrViewWithID:(NSString*)controlID];
+                    id controlOrView = [self findControlOrViewWithID:(__bridge NSString*)controlID];
 					if( controlOrView != NULL )
 					{
 						CFIndex itemCount = ::CFArrayGetCount(theArr);
@@ -949,7 +947,7 @@ FindArgumentType(const char *argTypeStr)
 								CFTypeRef oneItem = ::CFArrayGetValueAtIndex(theArr,i);
 								CFStringRef oneString = ACFType<CFStringRef>::DynamicCast( oneItem );
 								if(oneString != NULL)
-									[myPopupButton addItemWithTitle:(NSString *)oneString];
+                                    [myPopupButton addItemWithTitle:(__bridge NSString *)oneString];
 							}
 						}
 						else if( [controlOrView isKindOfClass:[NSComboBox class]] )
@@ -961,7 +959,7 @@ FindArgumentType(const char *argTypeStr)
 								CFTypeRef oneItem = ::CFArrayGetValueAtIndex(theArr,i);
 								CFStringRef oneString = ACFType<CFStringRef>::DynamicCast( oneItem );
 								if(oneString != NULL)
-									[myCombo addItemWithObjectValue:(NSString *)oneString];
+                                    [myCombo addItemWithObjectValue:(__bridge NSString *)oneString];
 							}							
 						}
 					}
@@ -986,7 +984,7 @@ FindArgumentType(const char *argTypeStr)
 				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
 				if(controlID != NULL)
 				{
-					id controlOrView = [self findControlOrViewWithID:(NSString*)controlID];
+                    id controlOrView = [self findControlOrViewWithID:(__bridge NSString*)controlID];
 					if( (controlOrView != nil) && [controlOrView isKindOfClass:[NSTableView class]] )
 					{
 						NSTableView *myTable = (NSTableView *)controlOrView;
@@ -1018,7 +1016,7 @@ FindArgumentType(const char *argTypeStr)
 				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
 				if(controlID != NULL)
 				{
-					id controlOrView = [self findControlOrViewWithID:(NSString*)controlID];
+                    id controlOrView = [self findControlOrViewWithID:(__bridge NSString*)controlID];
 					if( (controlOrView != nil) && [controlOrView isKindOfClass:[NSTableView class]] )
 					{
 						NSTableView *myTable = (NSTableView *)controlOrView;
@@ -1051,7 +1049,7 @@ FindArgumentType(const char *argTypeStr)
 				CFArrayRef theArr = ACFType<CFArrayRef>::DynamicCast( valueList[i] );
 				if( (controlID != NULL) && (theArr != NULL) )
 				{
-					id controlOrView = [self findControlOrViewWithID:(NSString*)controlID];
+                    id controlOrView = [self findControlOrViewWithID:(__bridge NSString*)controlID];
 					if( (controlOrView != nil) && [controlOrView isKindOfClass:[NSTableView class]] )
 					{
 						NSTableView *myTable = (NSTableView *)controlOrView;
@@ -1085,7 +1083,7 @@ FindArgumentType(const char *argTypeStr)
 				CFArrayRef theArr = ACFType<CFArrayRef>::DynamicCast( valueList[i] );
 				if( (controlID != NULL) && (theArr != NULL) )
 				{
-					id controlOrView = [self findControlOrViewWithID:(NSString*)controlID];
+                    id controlOrView = [self findControlOrViewWithID:(__bridge NSString*)controlID];
 					if( (controlOrView != nil) && [controlOrView isKindOfClass:[NSTableView class]] )
 					{
 						NSTableView *myTable = (NSTableView *)controlOrView;
@@ -1117,7 +1115,7 @@ FindArgumentType(const char *argTypeStr)
 				CFArrayRef theArr = ACFType<CFArrayRef>::DynamicCast( valueList[i] );
 				if( (controlID != NULL) && (theArr != NULL) )
 				{
-					id controlOrView = [self findControlOrViewWithID:(NSString*)controlID];
+                    id controlOrView = [self findControlOrViewWithID:(__bridge NSString*)controlID];
 					if( (controlOrView != nil) && [controlOrView isKindOfClass:[NSTableView class]] )
 					{
 						NSTableView *myTable = (NSTableView *)controlOrView;
@@ -1128,7 +1126,7 @@ FindArgumentType(const char *argTypeStr)
 						//NSLog(@"OMC tableview controller: isKindOf=%d, isMemberOf=%d", (int)isKindOf, (int)isMemberOf);
 						
 						if( (myDelegate != nil) && [myDelegate isKindOfClass:[OMCTableViewController class]] )
-							[myDelegate setColumns:theArr];
+                            [myDelegate setColumns:(__bridge NSArray *)theArr];
 					}
 				}
 			}
@@ -1151,13 +1149,13 @@ FindArgumentType(const char *argTypeStr)
 				CFArrayRef theArr = ACFType<CFArrayRef>::DynamicCast( valueList[i] );
 				if( (controlID != NULL) && (theArr != NULL) )
 				{
-					id controlOrView = [self findControlOrViewWithID:(NSString*)controlID];
+                    id controlOrView = [self findControlOrViewWithID:(__bridge NSString*)controlID];
 					if( (controlOrView != nil) && [controlOrView isKindOfClass:[NSTableView class]] )
 					{
 						NSTableView *myTable = (NSTableView *)controlOrView;
 						id myDelegate = [myTable delegate];
 						if( (myDelegate != nil) && [myDelegate isKindOfClass:[OMCTableViewController class]] )
-							[myDelegate setColumnWidths:theArr];
+                            [myDelegate setColumnWidths:(__bridge NSArray *)theArr];
 					}
 				}
 			}
@@ -1180,7 +1178,8 @@ FindArgumentType(const char *argTypeStr)
 				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
 				if(controlID != NULL)
 				{
-					[self setControlStringValue:(NSString *)ACFType<CFStringRef>::DynamicCast( valueList[i] ) forControlID:(NSString*)controlID];
+                    [self setControlStringValue:(__bridge NSString *)ACFType<CFStringRef>::DynamicCast( valueList[i] )
+                                   forControlID:(__bridge NSString*)controlID];
 				}
 			}
 		}
@@ -1204,7 +1203,7 @@ FindArgumentType(const char *argTypeStr)
 				CFBooleanRef theVal = ACFType<CFBooleanRef>::DynamicCast( valueList[i] );
 				if( (controlID != NULL) && (theVal != NULL) )
 				{
-					id controlOrView = [self findControlOrViewWithID:(NSString *)controlID];
+                    id controlOrView = [self findControlOrViewWithID:(__bridge NSString *)controlID];
 					if(controlOrView != nil)
 					{
 						Boolean doEnable = ::CFBooleanGetValue(theVal);
@@ -1238,7 +1237,7 @@ FindArgumentType(const char *argTypeStr)
 				CFBooleanRef theVal = ACFType<CFBooleanRef>::DynamicCast( valueList[i] );
 				if( (controlID != NULL) && (theVal != NULL) )
 				{
-					id controlOrView = [self findControlOrViewWithID:(NSString *)controlID];
+                    id controlOrView = [self findControlOrViewWithID:(__bridge NSString *)controlID];
 					if( (controlOrView != nil) && [controlOrView respondsToSelector:@selector(setHidden:)] )
 					{
 						BOOL makeVisible = (BOOL)::CFBooleanGetValue(theVal);
@@ -1267,10 +1266,10 @@ FindArgumentType(const char *argTypeStr)
 				CFStringRef theVal = ACFType<CFStringRef>::DynamicCast( valueList[i] );
 				if( (controlID != NULL) && (theVal != NULL) )
 				{
-					NSView *controlOrView = [self findControlOrViewWithID:(NSString *)controlID];
+                    NSView *controlOrView = [self findControlOrViewWithID:(__bridge NSString *)controlID];
 					if( (controlOrView != nil) && [controlOrView respondsToSelector:@selector(setCommandID:)] )
 					{
-						[controlOrView performSelector:@selector(setCommandID:) withObject:(NSString *)theVal];
+                        [controlOrView performSelector:@selector(setCommandID:) withObject:(__bridge NSString *)theVal];
 					}
 				}
 			}
@@ -1299,7 +1298,7 @@ FindArgumentType(const char *argTypeStr)
 					if( kCFCompareEqualTo == CFStringCompare( controlID, CFSTR("omc_window"), 0) )
 					{
 						//the message targets our dialog window
-						[mWindow makeKeyAndOrderFront:self];//bring it to front and select
+						[self.window makeKeyAndOrderFront:self];//bring it to front and select
 					}
 					else if( kCFCompareEqualTo == CFStringCompare( controlID, CFSTR("omc_application"), 0) )
 					{
@@ -1310,9 +1309,9 @@ FindArgumentType(const char *argTypeStr)
 					else
 					{
 						//"selecting" a control means putting a focus in it/making it the first responder
-						NSView *controlOrView = [self findControlOrViewWithID:(NSString *)controlID];
+                        NSView *controlOrView = [self findControlOrViewWithID:(__bridge NSString *)controlID];
 						if(controlOrView != nil)
-							[mWindow makeFirstResponder:controlOrView];
+							[self.window makeFirstResponder:controlOrView];
 					}
 				}
 			}
@@ -1344,18 +1343,13 @@ FindArgumentType(const char *argTypeStr)
 						Boolean terminateOK = ::CFBooleanGetValue(theVal);
 						NSString *commandID;
 						if(terminateOK)
-							commandID = (mEndOKSubcommandID != NULL) ? (NSString *)(CFStringRef)mEndOKSubcommandID : @"omc.dialog.ok";
+                            commandID = (mEndOKSubcommandID != NULL) ? (__bridge NSString *)(CFStringRef)mEndOKSubcommandID : @"omc.dialog.ok";
 						else
-							commandID = (mEndCancelSubcommandID != NULL) ? (NSString *)(CFStringRef)mEndCancelSubcommandID : @"omc.dialog.cancel";
+                            commandID = (mEndCancelSubcommandID != NULL) ? (__bridge NSString *)(CFStringRef)mEndCancelSubcommandID : @"omc.dialog.cancel";
 						
-						if(mLastCommandID != NULL)
-							[mLastCommandID release];
-						mLastCommandID = [commandID retain];
+						self.lastCommandID = commandID;
 
-#if _DEBUG_
-						NSLog(@"closing dialog window=%@, retain count=%ld\n", mWindow, (long)[mWindow retainCount]);
-#endif
-						[mWindow close];//our windowWillClose will be called, which calls "terminate", which executes the proper termination command
+						[self.window close];//our windowWillClose will be called, which calls "terminate", which executes the proper termination command
 						return;
 					}
 					else if( kCFCompareEqualTo == CFStringCompare( controlID, CFSTR("omc_application"), 0) )
@@ -1421,7 +1415,7 @@ FindArgumentType(const char *argTypeStr)
 						}
 						else
 						{
-							id controlOrView = [self findControlOrViewWithID:(NSString *)controlID];
+                            id controlOrView = [self findControlOrViewWithID:(__bridge NSString *)controlID];
 							if( (controlOrView != nil) && [controlOrView isKindOfClass:[NSView class]] )
 							{
 								float viewHeight = NSHeight([controlOrView bounds]);
@@ -1476,7 +1470,7 @@ FindArgumentType(const char *argTypeStr)
 						}
 
 						//NSInteger controlId = ::CFStringGetIntValue(theKey);
-						id myView = [self findControlOrViewWithID:(NSString *)controlID];
+                        id myView = [self findControlOrViewWithID:(__bridge NSString *)controlID];
 						
 						if( myView != nil )
 						{
@@ -1588,11 +1582,11 @@ FindArgumentType(const char *argTypeStr)
 						if( kCFCompareEqualTo == CFStringCompare( controlID, CFSTR("omc_window"), 0) )
 						{
 							//the message targets our dialog window
-							[mWindow setContentSize:newSize];
+							[self.window setContentSize:newSize];
 						}
 						else
 						{
-							id controlOrView = [self findControlOrViewWithID:(NSString *)controlID];
+                            id controlOrView = [self findControlOrViewWithID:(__bridge NSString *)controlID];
 							
 							if( (controlOrView != nil) && [controlOrView isKindOfClass:[NSView class]] )
 							{
@@ -1627,7 +1621,7 @@ FindArgumentType(const char *argTypeStr)
 					if( kCFCompareEqualTo == CFStringCompare( controlID, CFSTR("omc_window"), 0) )
 					{
 						//the message targets our dialog window
-						messageTarget = (id)mWindow;
+						messageTarget = (id)self.window;
 					}
 					else if( kCFCompareEqualTo == CFStringCompare( controlID, CFSTR("omc_application"), 0) )
 					{
@@ -1639,7 +1633,7 @@ FindArgumentType(const char *argTypeStr)
 					}
 					else
 					{
-						messageTarget = [self findControlOrViewWithID:(NSString *)controlID];
+                        messageTarget = [self findControlOrViewWithID:(__bridge NSString *)controlID];
 					}
 
 					if(messageTarget != nil)
@@ -1665,14 +1659,11 @@ FindArgumentType(const char *argTypeStr)
 - (void)dispatchCommand:(NSString *)inCommandID withContext:(CFTypeRef)inContext
 {
 	//do some dispatching of the command here
-	[inCommandID retain];
-	if(mLastCommandID != NULL)
-		[mLastCommandID release];
-	mLastCommandID = inCommandID;
+	self.lastCommandID = inCommandID;
 	
 	if( [self commandShouldCloseDialog] )
 	{
-		[mWindow close];//our windowWillClose will be called, which calls "terminate", which executes the proper termination command
+		[self.window close];//our windowWillClose will be called, which calls "terminate", which executes the proper termination command
 	}
 	else
 	{
@@ -1695,7 +1686,7 @@ FindArgumentType(const char *argTypeStr)
 
 	CFTypeRef droppedItems = nil;
 	if( [sender respondsToSelector:@selector(droppedItems)] )
-		droppedItems = [sender droppedItems];
+        droppedItems = (__bridge CFTypeRef)[sender droppedItems];
 
 	[self dispatchCommand:commandID withContext:droppedItems];
 	
@@ -1741,10 +1732,8 @@ FindArgumentType(const char *argTypeStr)
 
 	[self terminate];
 
-	if(mDeleteSelfOnClose)
-	{
-		[self autorelease];//defer the release until the pool is destoryed. we don't want to kill ourself and the window yet. this caused crashes
-	}
+    NSMutableSet<OMCDialogController *> *allDialogControllers = GetAllDialogControllers();
+    [allDialogControllers removeObject:self];
 }
 
 - (OMCCocoaDialog *)getOMCDialog
@@ -1760,7 +1749,7 @@ FindArgumentType(const char *argTypeStr)
 - (void)run
 {
 #if DEBUG
-	NSLog(@"[OMCDialogController run] mWindow=%@", (id)mWindow);
+	NSLog(@"[OMCDialogController run] self.window=%@", (id)self.window);
 #endif
 	
 	if( mIsModal )
@@ -1781,7 +1770,7 @@ FindArgumentType(const char *argTypeStr)
 			//NSLog( @"OMCCialogController cfRunLoop=%@", cfRunLoop);
 */	
 #if 0
-			NSModalSession session = [NSApp beginModalSessionForWindow:mWindow];
+			NSModalSession session = [NSApp beginModalSessionForWindow:self.window];
 			for (;;)
 			{
 				if( [NSApp runModalSession:session] != NSRunContinuesResponse )
@@ -1792,7 +1781,7 @@ FindArgumentType(const char *argTypeStr)
 			[NSApp endModalSession:session];
 #else
 
-			[NSApp runModalForWindow:mWindow];
+			[NSApp runModalForWindow:self.window];
 #endif
 			
 		}
@@ -1800,31 +1789,31 @@ FindArgumentType(const char *argTypeStr)
 	else
 	{
 		if( [self initialize] )
-			[mWindow makeKeyAndOrderFront:self];
+			[self.window makeKeyAndOrderFront:self];
 	}
 }
 
 - (BOOL)isOkeyed
 {
 	
-	if(mLastCommandID != NULL)
+	if(self.lastCommandID != NULL)
 	{
 		if(mEndOKSubcommandID != NULL)
-			return [mLastCommandID isEqualToString:(NSString *)(CFStringRef)mEndOKSubcommandID];
+            return [self.lastCommandID isEqualToString:(__bridge NSString *)(CFStringRef)mEndOKSubcommandID];
 
-		return [mLastCommandID isEqualToString:@"omc.dialog.ok"];
+		return [self.lastCommandID isEqualToString:@"omc.dialog.ok"];
 	}
 	return false;
 }
 
 - (BOOL)isCanceled
 {
-	if(mLastCommandID != NULL)
+	if(self.lastCommandID != NULL)
 	{
 		if(mEndCancelSubcommandID != NULL)
-			return [mLastCommandID isEqualToString:(NSString *)(CFStringRef)mEndCancelSubcommandID];
+            return [self.lastCommandID isEqualToString:(__bridge NSString *)(CFStringRef)mEndCancelSubcommandID];
 
-		return [mLastCommandID isEqualToString:@"omc.dialog.cancel"];
+		return [self.lastCommandID isEqualToString:@"omc.dialog.cancel"];
 	}
 	return false;
 }
@@ -1837,19 +1826,17 @@ FindArgumentType(const char *argTypeStr)
 
 - (BOOL)initialize
 {
-	NSString *origCommand = mLastCommandID;//retained string we store temporarily
+	NSString *origCommand = self.lastCommandID;//retained string we store temporarily
 
-	mLastCommandID = @"omc.dialog.initialize";
+	self.lastCommandID = @"omc.dialog.initialize";
 	if(mInitSubcommandID != NULL)
-		mLastCommandID = (NSString *)(CFStringRef)mInitSubcommandID;
-	[mLastCommandID retain];
+        self.lastCommandID = (__bridge NSString *)(CFStringRef)mInitSubcommandID;
 
 	mOMCDialogProxy->StartListening();
 
 	[self processCommandWithContext:NULL];
 
-	[mLastCommandID release];
-	mLastCommandID = origCommand;
+	self.lastCommandID = origCommand;
 
 	if(mPlugin->GetError() != noErr)
 		return NO;//if there was an error during init command don't show the dialog
@@ -1860,21 +1847,18 @@ FindArgumentType(const char *argTypeStr)
 - (BOOL)terminate
 {
 	BOOL wasOkeyed = [self isOkeyed];
-	NSString *origCommand = mLastCommandID;//retained string we store temporarily
+	NSString *origCommand = self.lastCommandID;//retained string we store temporarily
 	
-	mLastCommandID = wasOkeyed ? @"omc.dialog.terminate.ok" : @"omc.dialog.terminate.cancel";
+	self.lastCommandID = wasOkeyed ? @"omc.dialog.terminate.ok" : @"omc.dialog.terminate.cancel";
 
 	if( wasOkeyed && (mEndOKSubcommandID != NULL) )
-		mLastCommandID = (NSString *)(CFStringRef)mEndOKSubcommandID;
+        self.lastCommandID = (__bridge NSString *)(CFStringRef)mEndOKSubcommandID;
 	else if( !wasOkeyed && (mEndCancelSubcommandID != NULL) )
-		mLastCommandID = (NSString *)(CFStringRef)mEndCancelSubcommandID;
-
-	[mLastCommandID retain];
+        self.lastCommandID = (__bridge NSString *)(CFStringRef)mEndCancelSubcommandID;
 
 	[self processCommandWithContext:NULL];
 
-	[mLastCommandID release];
-	mLastCommandID = origCommand;
+    self.lastCommandID = origCommand;
 
 	return YES;
 }
@@ -1885,13 +1869,13 @@ FindArgumentType(const char *argTypeStr)
 		return paramErr;
 
 	SInt32 cmdIndex = -1;
-	if( IsPredefinedDialogCommandID((CFStringRef)mLastCommandID) )
-		cmdIndex = mPlugin->FindSubcommandIndex(mCommandName, (CFStringRef)mLastCommandID); //only strict subcommand for predefined dialog commands
+    if( IsPredefinedDialogCommandID((__bridge CFStringRef)self.lastCommandID) )
+        cmdIndex = mPlugin->FindSubcommandIndex(mCommandName, (__bridge CFStringRef)self.lastCommandID); //only strict subcommand for predefined dialog commands
 	else																//(command name must match)
-		cmdIndex = mPlugin->FindCommandIndex(mCommandName, (CFStringRef)mLastCommandID);//relaxed rules for custom command id
+        cmdIndex = mPlugin->FindCommandIndex(mCommandName, (__bridge CFStringRef)self.lastCommandID);//relaxed rules for custom command id
 																	//(for example when used for next command)
 	if(cmdIndex < 0 )
-		return eventNotHandledErr;//did not find the specified subcommand
+		return errAEEventNotHandled;//did not find the specified subcommand
 
 	CommandDescription &currCommand = mPlugin->GetCurrentCommand();
 	SelectionIterator *oldIterator = mOMCDialogProxy->GetSelectionIterator();
@@ -1918,12 +1902,12 @@ FindArgumentType(const char *argTypeStr)
 
 - (id)getCFContext
 {
-	return (id)mPlugin->GetCFContext();
+    return (__bridge id)mPlugin->GetCFContext();
 }
 
 - (void)setWindowTopLeftPosition:(NSPoint)absolutePosition
 {	
-	NSRect windowFrame = [mWindow frame];
+	NSRect windowFrame = [self.window frame];
 	
 	NSScreen *mainScreen = [NSScreen mainScreen];
 	NSRect screenRect = [mainScreen visibleFrame];
@@ -1935,12 +1919,11 @@ FindArgumentType(const char *argTypeStr)
 			absolutePosition.y = screenRect.origin.y - windowFrame.size.height + 20;//winodw top visible at the bottom of the screen
 	}
 
-	[mWindow setFrameOrigin:absolutePosition];
+	[self.window setFrameOrigin:absolutePosition];
 }
 
 - (void) sendObjCMessage:(CFArrayRef)oneObjCMessage toTarget:(id)messageTarget
 {
-
 	CFLocaleRef currentLocale = NULL; 
 	CFNumberFormatterRef numberFormatter = NULL;
 
@@ -1960,12 +1943,14 @@ FindArgumentType(const char *argTypeStr)
 			CFTypeRef oneItemRef = ::CFArrayGetValueAtIndex(oneObjCMessage, i);
 			CFStringRef oneString = ACFType<CFStringRef>::DynamicCast( oneItemRef );
 			if(oneString != NULL)
-				[methodName appendString:(NSString *)oneString];
+            {
+                [methodName appendString:(__bridge NSString *)oneString];
+            }
 		}
 
 		SEL methodSelector = NSSelectorFromString(methodName);
 		NSMethodSignature *methodSig = [messageTarget methodSignatureForSelector:methodSelector];
-		if( methodSig != NULL )
+		if( methodSig != nil )
 		{//good news - object has this method implemented
 			
 			//const char *returnType = [methodSig methodReturnType];
@@ -2118,11 +2103,15 @@ FindArgumentType(const char *argTypeStr)
 								break;
 
 								case kObjCArgObjectType:
-								{//only NSString */CFStringRef supprted as id/NSObject *
+								{//only NSString */CFStringRef supported as id/NSObject *
 									if( kCFCompareEqualTo == ::CFStringCompare( CFSTR("omc_nil"), argString, kCFCompareCaseInsensitive) )
-										*(id *)stackBuff = nil;
-									else
-										*(CFStringRef *)stackBuff = argString;
+                                    {
+                                        *(CFTypeRef *)stackBuff = nil;
+                                    }
+                                    else
+                                    {
+                                        *(CFStringRef *)stackBuff = argString;
+                                    }
 								}
 								break;
 									
@@ -2245,8 +2234,10 @@ FindArgumentType(const char *argTypeStr)
 								case kObjCArgBitfield:
 								{
 									if( kCFCompareEqualTo == ::CFStringCompare( CFSTR("omc_nil"), argString, kCFCompareCaseInsensitive) )
-										*(id *)stackBuff = nil;
-									else
+                                    {
+                                        *(CFTypeRef *)stackBuff = nil;
+                                    }
+                                    else
 									{
 										okToAddArgument = NO;
 										NSLog(@"OMCDialogController sendObjCMessage: unsupported argument type for argument %d for \"%@\" selector", (int)argIndex+1, methodName);
@@ -2322,7 +2313,7 @@ FindArgumentType(const char *argTypeStr)
 		}
 		else if(CFStringGetTypeID() == CFGetTypeID(controlIDRef) )
 		{
-			controlID = (NSString *)controlIDRef;
+            controlID = (__bridge NSString *)controlIDRef;
 		}
 	}
 
@@ -2368,10 +2359,10 @@ FindArgumentType(const char *argTypeStr)
 	if(inItem == NULL)
 		return;
 	
-	if(mDialogOwnedItems == NULL)
-		mDialogOwnedItems = [[NSMutableSet alloc] initWithCapacity:0];
+	if(self.dialogOwnedItems == NULL)
+        self.dialogOwnedItems = [[NSMutableSet alloc] init];
 	
-	[mDialogOwnedItems addObject:inItem];
+	[self.dialogOwnedItems addObject:inItem];
 }
 
 

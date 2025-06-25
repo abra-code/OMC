@@ -6,14 +6,6 @@
 
 @implementation OMCButton
 
-@synthesize commandID;
-@synthesize mappedOnValue;
-@synthesize mappedOffValue;
-@synthesize escapingMode;
-@synthesize acceptFileDrop;
-@synthesize acceptTextDrop;
-@synthesize droppedItems;
-
 - (id)init
 {
     self = [super init];
@@ -32,16 +24,6 @@
 	self.escapingMode = @"esc_none";
 
     return self;
-}
-
-- (void)dealloc
-{
-    self.commandID = nil;
-    self.mappedOnValue = nil;
-    self.mappedOffValue = nil;
-	self.escapingMode = nil;
-	self.droppedItems = nil;
-    [super dealloc];
 }
 
 //overriding NSControl methods to include mapped values
@@ -135,7 +117,7 @@
         //NSLog(@"URLs are: %@", urls);
 		[self performClick:self];
     }
-    else if (acceptTextDrop && [pboardTypes containsObject:NSPasteboardTypeString])
+    else if (self.acceptTextDrop && [pboardTypes containsObject:NSPasteboardTypeString])
     {
        //NSArray* strings = [pboard readObjectsForClasses:@[[NSString class]] options:nil];
 	   NSString* string = [pboard stringForType:NSPasteboardTypeString];

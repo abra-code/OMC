@@ -18,102 +18,86 @@ static NSPoint sCascadeOffset = NSZeroPoint;
 OMCOutputWindowControllerRef
 CreateOutputWindowController(const OutputWindowSettings &inSettings, OutputWindowHandler *inHandler)
 {
-	OMCOutputWindowController *controller = NULL;
+	OMCOutputWindowController *controller = nil;
 
-	@autoreleasepool
-	{
-		@try
-		{
-			if(inSettings.windowType == kOMCWindowRegular)
-				controller = [[OMCOutputWindowController alloc] initWithWindowNibName:@"OMCOutputWindow"];
-			else if(inSettings.windowType == kOMCWindowFloating || inSettings.windowType == kOMCWindowGlobalFloating)
-				controller = [[OMCOutputWindowController alloc] initWithWindowNibName:@"OMCOutputPanel"];
-			else if(inSettings.windowType == kOMCWindowCustom)
-			{
-				OMCCustomWindow *customWindow = [[OMCCustomWindow alloc] initWithSettings:&inSettings];
-				[customWindow autorelease];
-				controller = [[OMCOutputWindowController alloc] initWithWindow:customWindow];
-			}
-			else
-				NSLog(@"Unsupported window type");
-			
-			if(controller != NULL)
-			{
-				[controller setup: &inSettings withHandler:inHandler];
-			}
-		}
-		@catch (NSException *localException)
-		{
-			NSLog(@"CreateOutputWindowController received exception: %@", localException);
-		}
-	} //@autoreleasepool
+    @try
+    {
+        if(inSettings.windowType == kOMCWindowRegular)
+            controller = [[OMCOutputWindowController alloc] initWithWindowNibName:@"OMCOutputWindow"];
+        else if(inSettings.windowType == kOMCWindowFloating || inSettings.windowType == kOMCWindowGlobalFloating)
+            controller = [[OMCOutputWindowController alloc] initWithWindowNibName:@"OMCOutputPanel"];
+        else if(inSettings.windowType == kOMCWindowCustom)
+        {
+            OMCCustomWindow *customWindow = [[OMCCustomWindow alloc] initWithSettings:&inSettings];
+            controller = [[OMCOutputWindowController alloc] initWithWindow:customWindow];
+        }
+        else
+            NSLog(@"Unsupported window type");
+        
+        if(controller != NULL)
+        {
+            [controller setup: &inSettings withHandler:inHandler];
+        }
+    }
+    @catch (NSException *localException)
+    {
+        NSLog(@"CreateOutputWindowController received exception: %@", localException);
+    }
 
-	return (OMCOutputWindowControllerRef)controller;
+    return (OMCOutputWindowControllerRef)CFBridgingRetain(controller);
 }
 
 void ReleaseOutputWindowController(OMCOutputWindowControllerRef inControllerRef)
 {
-	@autoreleasepool
-	{
-		@try
-		{
-			[(OMCOutputWindowController *)inControllerRef close];
-			[(OMCOutputWindowController *)inControllerRef release];
-		}
-		@catch (NSException *localException)
-		{
-			NSLog(@"ReleaseOutputWindowController received exception: %@", localException);
-		}
-	} //@autoreleasepool
+    @try
+    {
+        [(__bridge OMCOutputWindowController *)inControllerRef close];
+        CFBridgingRelease(inControllerRef);
+    }
+    @catch (NSException *localException)
+    {
+        NSLog(@"ReleaseOutputWindowController received exception: %@", localException);
+    }
 }
 
 void OMCOutputWindowSetText(OMCOutputWindowControllerRef inControllerRef, CFStringRef inText)
 {
-	@autoreleasepool
-	{
-		@try
-		{
-			[((OMCOutputWindowController *)inControllerRef) setText:(NSString *)inText];
-		}
-		@catch (NSException *localException)
-		{
-			NSLog(@"OMCOutputWindowSetText received exception: %@", localException);
-		}
-	} //@autoreleasepool
+    @try
+    {
+        [(__bridge OMCOutputWindowController *)inControllerRef setText:(__bridge NSString *)inText];
+    }
+    @catch (NSException *localException)
+    {
+        NSLog(@"OMCOutputWindowSetText received exception: %@", localException);
+    }
 }
 
 void OMCOutputWindowAppendText(OMCOutputWindowControllerRef inControllerRef, CFStringRef inText)
 {
-	@autoreleasepool
-	{
-		@try
-		{
-			[((OMCOutputWindowController *)inControllerRef) appendText:(NSString *)inText];
-		}
-		@catch (NSException *localException)
-		{
-			NSLog(@"OMCOutputWindowSetText received exception: %@", localException);
-		}
-	} //@autoreleasepool
+    @try
+    {
+        [((__bridge OMCOutputWindowController *)inControllerRef) appendText:(__bridge NSString *)inText];
+    }
+    @catch (NSException *localException)
+    {
+        NSLog(@"OMCOutputWindowSetText received exception: %@", localException);
+    }
 }
 
 void OMCOutputWindowScheduleClosing(OMCOutputWindowControllerRef inControllerRef, CFTimeInterval delay)
 {
-    @autoreleasepool
+    @try
     {
-        @try
-        {
-            OMCOutputWindowController *controller = (OMCOutputWindowController *)inControllerRef;
-            [NSTimer scheduledTimerWithTimeInterval:delay
-                                                target:controller
-                                                selector:@selector(close)
-                                                userInfo:nil repeats:NO];
-        }
-        @catch (NSException *localException)
-        {
-            NSLog(@"OMCOutputWindowScheduleClosing received exception: %@", localException);
-        }
-    } //@autoreleasepool
+        OMCOutputWindowController *controller = (__bridge OMCOutputWindowController *)inControllerRef;
+        [NSTimer scheduledTimerWithTimeInterval:delay
+                                            target:controller
+                                            selector:@selector(close)
+                                            userInfo:nil repeats:NO];
+    }
+    @catch (NSException *localException)
+    {
+        NSLog(@"OMCOutputWindowScheduleClosing received exception: %@", localException);
+    }
 }
 
 
@@ -140,7 +124,6 @@ ResetOutputWindowCascading()
 		[outputWindow close];//give it a chance to animate
 	}
 */
-	[super dealloc];
 }
 
 - (void)setup: (const OutputWindowSettings *)inSettings withHandler:(OutputWindowHandler *)inHandler
@@ -160,7 +143,6 @@ ResetOutputWindowCascading()
 		[textView setEditable:NO];
 		[textView setDrawsBackground:NO];
 		[textView setAlphaValue:1.0];
-		[textView autorelease];//window will hold a reference
 		NSView *contentView = [outputWindow contentView];
 		[contentView addSubview:textView];
 	}
@@ -181,7 +163,7 @@ ResetOutputWindowCascading()
 	
 	NSFont *theFont = NULL;
 	if( (CFStringRef)inSettings->fontName != NULL )
-		theFont = [NSFont fontWithName: (NSString*)(CFStringRef)inSettings->fontName size: inSettings->fontSize];
+        theFont = [NSFont fontWithName: (__bridge NSString*)(CFStringRef)inSettings->fontName size: inSettings->fontSize];
 	
 	if(theFont != NULL)
 		[textView setFont:theFont];
@@ -189,7 +171,7 @@ ResetOutputWindowCascading()
 	[self setWindowPosition:outputWindow withSettings:inSettings];
 	
 	if( (CFStringRef)inSettings->title != NULL )
-		[outputWindow setTitle:(NSString *)(CFStringRef)inSettings->title];
+        [outputWindow setTitle:(__bridge NSString *)(CFStringRef)inSettings->title];
 	
 	if(inSettings->windowType == kOMCWindowFloating)
 		[outputWindow setLevel:NSFloatingWindowLevel];
@@ -239,7 +221,7 @@ ResetOutputWindowCascading()
 	NSPoint specialPosition = { inSettings->specialPosition.x, inSettings->specialPosition.y };
 	NSPoint absolutePosition = { inSettings->topLeftPosition.x, inSettings->topLeftPosition.y };
 
-	if(inSettings->positionMethod == kWindowAlertPositionOnMainScreen)
+	if(inSettings->positionMethod == kOMCWindowAlertPositionOnMainScreen)
 	{
 		/* Apple Docs say:
 		 Center the window horizontally and position it vertically on the screen that contains the menu bar,
@@ -250,12 +232,12 @@ ResetOutputWindowCascading()
 		specialPosition.y = -1.0;
 		absolutePosition.y = screenRect.origin.y + screenRect.size.height * 4.0/5.0 - windowFrame.size.height;//bottom of the window
 	}
-	else if(inSettings->positionMethod == kWindowCenterOnMainScreen)
+	else if(inSettings->positionMethod == kOMCWindowCenterOnMainScreen)
 	{
 		specialPosition.x = 0.5;
 		specialPosition.y = 0.5;
 	}
-	else if(inSettings->positionMethod == kWindowCascadeOnMainScreen)
+	else if(inSettings->positionMethod == kOMCWindowCascadeOnMainScreen)
 	{
 		if( (sCascadeOffset.x == 0.0) && (sCascadeOffset.y == 0.0) )
 		{//not initialized yet

@@ -26,7 +26,7 @@ ARefCountedObj<OMCCocoaDialog> RunCocoaDialog(OnMyCommandCM *inPlugin)
 	{
 		@try
 		{
-			OMCDialogController *myController = [[[OMCDialogController alloc] initWithOmc: inPlugin] autorelease];
+			OMCDialogController *myController = [[OMCDialogController alloc] initWithOmc:inPlugin];
 			if(myController != nullptr)
 			{
 				assert(currCommand.currState != nullptr);
@@ -72,23 +72,24 @@ OMCCocoaDialog::CopyControlValue(CFStringRef inControlID, CFStringRef inControlP
 		*outCustomProperties = NULL;
 
 	id outValue = NULL;
-    @autoreleasepool
-	{
-		@try
-		{
-			if(mController != NULL)
-			{
-				outValue = [(OMCDialogController*)mController controlValueForID:(NSString *)inControlID forPart:(NSString *)inControlPart withIterator:inSelIterator outProperties:outCustomProperties];
-				[outValue retain];
-			}
-		}
-		@catch (NSException *localException)
-		{
-			NSLog(@"OMCCocoaDialog::CopyControlValue received exception: %@", localException);
-		}
-	} //@autoreleasepool
 
-	return (CFTypeRef)outValue;
+    @try
+    {
+        if(mController != NULL)
+        {
+            outValue = [(__bridge OMCDialogController*)mController
+                                controlValueForID:(__bridge NSString *)inControlID
+                                          forPart:(__bridge NSString *)inControlPart
+                                     withIterator:inSelIterator
+                                    outProperties:outCustomProperties];
+        }
+    }
+    @catch (NSException *localException)
+    {
+        NSLog(@"OMCCocoaDialog::CopyControlValue received exception: %@", localException);
+    }
+
+    return (CFTypeRef)CFBridgingRetain(outValue);
 }
 
 // private helper
@@ -118,88 +119,86 @@ OMCCocoaDialog::StoreControlValue(CFStringRef controlID, CFTypeRef inValue, CFSt
 void
 OMCCocoaDialog::CopyAllControlValues(CFSetRef requestedNibControls, SelectionIterator *inSelIterator) noexcept
 {
-    @autoreleasepool
-	{
-		//get values for all controls in the dialog
-		//the code is generic to handle tables
-		//regular controls do not have columns and the use 0 for column number to store their values
-		//column index 0 is a meta value for table and means: get array of all column values
-		//this way a regular method of querying controls works with table too: produces a selected row strings
-		if(mNibControlValues == nullptr)
-			mNibControlValues.Adopt(CFDictionaryCreateMutable(kCFAllocatorDefault,
-																0,
-																&kCFTypeDictionaryKeyCallBacks,
-																&kCFTypeDictionaryValueCallBacks),
-																kCFObjDontRetain);
+    //get values for all controls in the dialog
+    //the code is generic to handle tables
+    //regular controls do not have columns and the use 0 for column number to store their values
+    //column index 0 is a meta value for table and means: get array of all column values
+    //this way a regular method of querying controls works with table too: produces a selected row strings
+    if(mNibControlValues == nullptr)
+        mNibControlValues.Adopt(CFDictionaryCreateMutable(kCFAllocatorDefault,
+                                                            0,
+                                                            &kCFTypeDictionaryKeyCallBacks,
+                                                            &kCFTypeDictionaryValueCallBacks),
+                                                            kCFObjDontRetain);
 
-		if(mNibControlCustomProperties == nullptr)
-			mNibControlCustomProperties.Adopt(CFDictionaryCreateMutable(kCFAllocatorDefault,
-																			0,
-																			&kCFTypeDictionaryKeyCallBacks,
-																			&kCFTypeDictionaryValueCallBacks),
-																		kCFObjDontRetain);//values will be CFStringRefs
+    if(mNibControlCustomProperties == nullptr)
+        mNibControlCustomProperties.Adopt(CFDictionaryCreateMutable(kCFAllocatorDefault,
+                                                                        0,
+                                                                        &kCFTypeDictionaryKeyCallBacks,
+                                                                        &kCFTypeDictionaryValueCallBacks),
+                                                                    kCFObjDontRetain);//values will be CFStringRefs
 
-		@try
-		{
-			if(mController != NULL)
-			{
-				[(OMCDialogController*)mController allControlValues:(NSMutableDictionary *)mNibControlValues.Get() andProperties:(NSMutableDictionary *)mNibControlCustomProperties.Get() withIterator:inSelIterator];
-			}
-		}
-		@catch (NSException *localException)
-		{
-			NSLog(@"OMCCocoaDialog::CopyAllControlValues received exception: %@", localException);
-		}
+    @try
+    {
+        if(mController != NULL)
+        {
+            [(__bridge OMCDialogController*)mController
+                         allControlValues:(__bridge NSMutableDictionary *)mNibControlValues.Get()
+                            andProperties:(__bridge NSMutableDictionary *)mNibControlCustomProperties.Get()
+                             withIterator:inSelIterator];
+        }
+    }
+    @catch (NSException *localException)
+    {
+        NSLog(@"OMCCocoaDialog::CopyAllControlValues received exception: %@", localException);
+    }
 
-		// after getting all standard values from controls, also check if there is a request
-		// for special expensive values not covered by CopyAllControlValues
-		if(requestedNibControls == nullptr)
-			return;
+    // after getting all standard values from controls, also check if there is a request
+    // for special expensive values not covered by CopyAllControlValues
+    if(requestedNibControls == nullptr)
+        return;
 
-		CFIndex specialWordCount = ::CFSetGetCount(requestedNibControls);
-		if(specialWordCount <= 0)
-			return;
+    CFIndex specialWordCount = ::CFSetGetCount(requestedNibControls);
+    if(specialWordCount <= 0)
+        return;
 
-		std::vector<CFStringRef> specialWordList(specialWordCount);
-		CFSetGetValues(requestedNibControls, (const void **)specialWordList.data());
-		for(CFIndex i = 0; i < specialWordCount; i++)
-		{
-			CFStringRef specialWord = (CFStringRef)specialWordList[i];
-			bool isEnvironVariable = false;
-			SpecialWordID specialWordID = GetSpecialWordID(specialWord);
-			if(specialWordID == NO_SPECIAL_WORD)
-			{
-				specialWordID = GetSpecialEnvironWordID(specialWord);
-				isEnvironVariable = true;
-			}
+    std::vector<CFStringRef> specialWordList(specialWordCount);
+    CFSetGetValues(requestedNibControls, (const void **)specialWordList.data());
+    for(CFIndex i = 0; i < specialWordCount; i++)
+    {
+        CFStringRef specialWord = (CFStringRef)specialWordList[i];
+        bool isEnvironVariable = false;
+        SpecialWordID specialWordID = GetSpecialWordID(specialWord);
+        if(specialWordID == NO_SPECIAL_WORD)
+        {
+            specialWordID = GetSpecialEnvironWordID(specialWord);
+            isEnvironVariable = true;
+        }
 
-			if(specialWordID == NIB_TABLE_ALL_ROWS) //the only special request currently supported
-			{
-				CFObj<CFStringRef> columnIndexStr(CFSTR("0"), kCFObjRetain);
-				CFObj<CFStringRef> controlID( CreateTableIDAndColumnFromString(specialWord, columnIndexStr, true, isEnvironVariable), kCFObjDontRetain );
-				
-				SelectionIterator *selIterator = AllRowsIterator_Create();
-				CFObj<CFDictionaryRef> customProperties;
-				CFObj<CFTypeRef> oneValue( CopyControlValue(controlID, columnIndexStr, selIterator, &customProperties) );
-				SelectionIterator_Release(selIterator);
+        if(specialWordID == NIB_TABLE_ALL_ROWS) //the only special request currently supported
+        {
+            CFObj<CFStringRef> columnIndexStr(CFSTR("0"), kCFObjRetain);
+            CFObj<CFStringRef> controlID( CreateTableIDAndColumnFromString(specialWord, columnIndexStr, true, isEnvironVariable), kCFObjDontRetain );
+            
+            SelectionIterator *selIterator = AllRowsIterator_Create();
+            CFObj<CFDictionaryRef> customProperties;
+            CFObj<CFTypeRef> oneValue( CopyControlValue(controlID, columnIndexStr, selIterator, &customProperties) );
+            SelectionIterator_Release(selIterator);
 
-				if(oneValue != nullptr)
-				{
-					StoreControlValue(controlID, oneValue, columnIndexStr);
-				
-					//custom escaping, prefix, suffix or separator
-					if(customProperties != nullptr)
-					{
-						::CFDictionarySetValue( mNibControlCustomProperties,
-												(const void *)controlID,
-												(const void *)(CFDictionaryRef)customProperties); //CFTypeRef is retained
-					}
-				}
-			}
-		}
-
-
-	} //@autoreleasepool
+            if(oneValue != nullptr)
+            {
+                StoreControlValue(controlID, oneValue, columnIndexStr);
+            
+                //custom escaping, prefix, suffix or separator
+                if(customProperties != nullptr)
+                {
+                    ::CFDictionarySetValue( mNibControlCustomProperties,
+                                            (const void *)controlID,
+                                            (const void *)(CFDictionaryRef)customProperties); //CFTypeRef is retained
+                }
+            }
+        }
+    }
 }
 
 
@@ -218,18 +217,18 @@ OMCCocoaDialog::ReceivePortMessage( SInt32 msgid, CFDataRef inData )
                                                                        kCFPropertyListImmutable, nullptr, nullptr) );
 	CFDictionaryRef plistDict = ACFType<CFDictionaryRef>::DynamicCast( (CFPropertyListRef)thePlist );
 
-    @autoreleasepool
-	{
-		@try
-		{
-			if(plistDict != NULL)
-				[(OMCDialogController*)mController setControlValues:plistDict];
-		}
-		@catch (NSException *localException)
-		{
-			NSLog(@"OMCCocoaDialog::ReceivePortMessage received exception: %@", localException);
-		}
-	} //@autoreleasepool
+    @try
+    {
+        if(plistDict != NULL)
+        {
+            [(__bridge OMCDialogController*)mController setControlValues:plistDict];
+            
+        }
+    }
+    @catch (NSException *localException)
+    {
+        NSLog(@"OMCCocoaDialog::ReceivePortMessage received exception: %@", localException);
+    }
 
 	return NULL;
 }
@@ -254,19 +253,17 @@ OMCCocoaDialog::ReceiveNotification(void *ioData)//local message
 
 			CFObj<CFDictionaryRef> controlValues( ReadControlValuesFromPlist(GetDialogUniqueID()) );
 
-			@autoreleasepool
-			{
-				@try
-				{
-					if(controlValues != NULL)
-						[(OMCDialogController*)mController setControlValues:(CFDictionaryRef)controlValues];
-				
-				}
-				@catch (NSException *localException)
-				{
-					NSLog(@"OMCCocoaDialog::ReceiveNotification received exception: %@", localException);
-				}
-			} //@autoreleasepool
+            @try
+            {
+                if(controlValues != NULL)
+                {
+                    [(__bridge OMCDialogController*)mController setControlValues:(CFDictionaryRef)controlValues];
+                }
+            }
+            @catch (NSException *localException)
+            {
+                NSLog(@"OMCCocoaDialog::ReceiveNotification received exception: %@", localException);
+            }
 		}
 		break;
 

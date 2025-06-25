@@ -13,15 +13,14 @@
 
 - (id)initWithNib:(NSNib *)inNib
 {
-	mTopLevelNibObjects = NULL;
-
     self = [super init];
  	if(self == nil)
 		return nil;
 
-	if( (inNib != nil) && [inNib instantiateWithOwner:self topLevelObjects:&mTopLevelNibObjects] )
+    NSArray *topLevelObjects = nil;
+	if( (inNib != nil) && [inNib instantiateWithOwner:self topLevelObjects:&topLevelObjects] )
 	{
-		[mTopLevelNibObjects retain];
+        self.topLevelNibObjects = topLevelObjects;
 		//NSLog(@"mTopLevelNibObjects=%@", mTopLevelNibObjects);
 	}
 
@@ -30,8 +29,6 @@
 
 - (id)initWithNibNamed:(NSString *)inNibName bundle:(NSBundle *)inBundle
 {
-	mTopLevelNibObjects = NULL;
-
     self = [super init];
 	if(self == nil)
 		return nil;
@@ -39,12 +36,12 @@
 	NSNib *myNib = [[NSNib alloc] initWithNibNamed:inNibName bundle:inBundle];
 	if(myNib != nil)
 	{
-		if ([myNib instantiateWithOwner:self topLevelObjects:&mTopLevelNibObjects])
+        NSArray *topLevelObjects = nil;
+		if ([myNib instantiateWithOwner:self topLevelObjects:&topLevelObjects])
 		{
-			[mTopLevelNibObjects retain];
+            self.topLevelNibObjects = topLevelObjects;
 			//NSLog(@"mTopLevelNibObjects=%@", mTopLevelNibObjects);
 		}
-		[myNib release];
 	}
 
     return self;
@@ -52,43 +49,21 @@
 
 - (NSWindow *)getFirstWindow
 {
-	if(mTopLevelNibObjects == NULL)
-		return NULL;
+    NSArray *topLevelObjects = self.topLevelNibObjects;
+	if(topLevelObjects == nil)
+		return nil;
 	
-	NSWindow *firstWindow = NULL;
-	NSUInteger topObjectCount = [mTopLevelNibObjects count];
-	NSUInteger index = 0;
-	for(index = 0; index < topObjectCount; index++)
-	{
-		id topObject = [mTopLevelNibObjects objectAtIndex:index];
-		if( (topObject != NULL) && [topObject isKindOfClass:[NSWindow class]] )
-		{
-			firstWindow = (NSWindow *)topObject;
-			break;
-		}
-	}
-
-#if _DEBUG_
-	
-	for(index += 1; index < topObjectCount; index++)
-	{
-		id topObject = [mTopLevelNibObjects objectAtIndex:index];
-		if( (topObject != NULL) && [topObject isKindOfClass:[NSWindow class]] )
-		{
-			NSLog(@"More than one window in the nib, only the first one can be used");
-			break;
-		}
-	}
-#endif //_DEBUG_
+	NSWindow *firstWindow = nil;
+    for (id topObject in topLevelObjects)
+    {
+        if( [topObject isKindOfClass:[NSWindow class]] )
+        {
+            firstWindow = (NSWindow *)topObject;
+            break;
+        }
+    }
 
 	return firstWindow;
 }
-
-- (void)dealloc
-{
-	[mTopLevelNibObjects release];
-	[super dealloc];
-}
-
 
 @end

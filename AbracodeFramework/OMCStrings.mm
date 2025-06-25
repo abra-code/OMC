@@ -5,31 +5,20 @@
 
 CFStringRef CreatePathByExpandingTilde(CFStringRef inPath)
 {
-    if(inPath == NULL)
-        return NULL;
-    
-    @autoreleasepool
-    {
-        NSString *expandedString = [(NSString *)inPath stringByExpandingTildeInPath];
-        [expandedString retain];
-        return (CFStringRef)expandedString;
-    }
+    NSString *expandedString = [(__bridge NSString *)inPath stringByExpandingTildeInPath];
+    return (CFStringRef)CFBridgingRetain(expandedString);
 }
 
 CFStringRef CopyFilenameExtension(CFStringRef inFilePath)
 {
-	@autoreleasepool
-	{
-		return (CFStringRef)[[(NSString*)inFilePath pathExtension] retain];
-	}
+    NSString *pathExtension = [(__bridge NSString*)inFilePath pathExtension];
+    return (CFStringRef)CFBridgingRetain(pathExtension);
 }
 
 CFStringRef CreateLowercaseString(CFStringRef inStr)
 {
-	@autoreleasepool
-	{
-		return (CFStringRef)[[(NSString*)inStr lowercaseString] retain];
-	}
+    NSString *lowercaseString = [(__bridge NSString*)inStr lowercaseString];
+    return (CFStringRef)CFBridgingRetain(lowercaseString);
 }
 
 UInt32 StringToVersion(CFStringRef inString)
@@ -121,12 +110,9 @@ CFStringRef CreateVersionString(UInt32 inVersion)
 
 CFStringRef CreateStringByAddingPercentEscapes(CFStringRef inStr, bool escapeAll)
 {
-    @autoreleasepool
-    {
-        NSString *escapedString = [(NSString *)inStr stringByAddingPercentEncodingWithAllowedCharacters:
-                                            escapeAll ? [NSCharacterSet alphanumericCharacterSet] : [NSCharacterSet URLQueryAllowedCharacterSet]];
-        return (CFStringRef)[escapedString retain];
-    }
+    NSString *escapedString = [(__bridge NSString *)inStr stringByAddingPercentEncodingWithAllowedCharacters:
+                                        escapeAll ? [NSCharacterSet alphanumericCharacterSet] : [NSCharacterSet URLQueryAllowedCharacterSet]];
+    return (CFStringRef)CFBridgingRetain(escapedString);
 }
 
 //replaces \r, \n, \t, \\ with real values
@@ -391,16 +377,13 @@ CreateEscapedStringCopy(CFStringRef inStrRef, UInt16 escSpecialCharsMode)
 bool
 WriteStringToFile(CFStringRef inContentStr, CFStringRef inFilePath)
 {
-	if((inContentStr == nullptr) || (inFilePath == nullptr))
+	if((inContentStr == NULL) || (inFilePath == NULL))
 		return false;
 
-	@autoreleasepool
-	{
-		NSError *error = nil;
-		BOOL succeed = [(NSString*)inContentStr writeToFile:(NSString *)inFilePath
-												atomically:NO
-												encoding:NSUTF8StringEncoding
-												error:&error];
-		return (bool)succeed;
-	}
+    NSError *error = nil;
+    BOOL succeed = [(__bridge NSString*)inContentStr writeToFile:(__bridge NSString *)inFilePath
+                                            atomically:NO
+                                            encoding:NSUTF8StringEncoding
+                                            error:&error];
+    return (bool)succeed;
 }

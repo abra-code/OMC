@@ -15,6 +15,9 @@
 #pragma once
 
 #include "DebugSettings.h"
+#include <CoreFoundation/CoreFoundation.h>
+#include <CoreServices/CoreServices.h>
+#include <ApplicationServices/ApplicationServices.h>
 #include <Carbon/Carbon.h>
 #include <string>
 

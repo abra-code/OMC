@@ -11,7 +11,7 @@
 
 #pragma once
 
-#include <Carbon/Carbon.h>
+#include <CoreGraphics/CoreGraphics.h>
 #include "AObserver.h"
 #include "CFObj.h"
 #include "OMCOutputWindowController.h"
@@ -24,6 +24,14 @@ typedef enum
 	kOMCWindowCustom
 } OMCWindowType;
 
+typedef enum
+{
+    kOMCWindowAbsolutePosition = 0,
+    kOMCWindowAlertPositionOnMainScreen,
+    kOMCWindowCenterOnMainScreen,
+    kOMCWindowCascadeOnMainScreen
+} OMCWindowPosition;
+
 typedef struct OMCColor
 {
 	CGFloat red;
@@ -35,7 +43,7 @@ typedef struct OMCColor
 struct OutputWindowSettings
 {
 	OutputWindowSettings()
-		: alpha(1.0f), positionMethod(kWindowAlertPositionOnMainScreen),
+		: alpha(1.0f), positionMethod(kOMCWindowAlertPositionOnMainScreen),
 		width(400), height(200), fontSize(10.0),
 		textBox(CGRectZero), closeBox(CGRectZero), resizeBox(CGRectZero),
 		useFadeIn(false), useFadeOut(false)
@@ -57,7 +65,7 @@ struct OutputWindowSettings
 	CFObj<CFStringRef> title;
 	float		alpha;
 	OMCWindowType windowType;
-	WindowPositionMethod positionMethod; //UInt32
+    OMCWindowPosition positionMethod;
 	CGPoint		topLeftPosition;//for absolute position only
 	CGPoint		specialPosition;//in range 0.0 - 1.0 for min/max of screen rect, negative: no special position
 	short		width;

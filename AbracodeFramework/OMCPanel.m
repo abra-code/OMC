@@ -8,7 +8,6 @@
 
 #import "OMCPanel.h"
 #import "OMCWindow.h"
-#include <Carbon/Carbon.h>
 
 @implementation OMCPanel
 
@@ -22,7 +21,6 @@
 
 	useFadeIn = NO;
 	useFadeOut = NO;
-	_fadeOutAnimation = nil;
 
 	return self;
 }
@@ -36,7 +34,6 @@
 		return nil;
 	useFadeIn = NO;
 	useFadeOut = NO;
-	_fadeOutAnimation = nil;
 
 	return self;
 }
@@ -68,7 +65,6 @@
 		//		[fadeInAnimation setDelegate:self];
 		[self setAlphaValue: 0.0];
 		[fadeInAnimation startAnimation];
-		[fadeInAnimation release];
 	}
 	
 	[super makeKeyAndOrderFront:sender];
@@ -109,10 +105,9 @@
 -(void)animationDidEnd:(NSAnimation *)animation
 {
 	//NSLog(@"OMCPanel animationDidEnd");
-	if(animation == _fadeOutAnimation)
+	if(animation == self.fadeOutAnimation)
 	{
-		[_fadeOutAnimation release];
-		_fadeOutAnimation = NULL;
+		self.fadeOutAnimation = nil;
 		[super orderOut:self];
 	}
 }
@@ -126,10 +121,10 @@
 							  NSViewAnimationFadeOutEffect, NSViewAnimationEffectKey,
 							  nil];
 		
-		_fadeOutAnimation = [[NSViewAnimation alloc] initWithViewAnimations:[NSArray arrayWithObject:dict]];
-		[_fadeOutAnimation setAnimationBlockingMode:NSAnimationNonblocking];
-		[_fadeOutAnimation setDelegate:self];
-		[_fadeOutAnimation startAnimation];
+		self.fadeOutAnimation = [[NSViewAnimation alloc] initWithViewAnimations:[NSArray arrayWithObject:dict]];
+		[self.fadeOutAnimation setAnimationBlockingMode:NSAnimationNonblocking];
+		[self.fadeOutAnimation setDelegate:self];
+		[self.fadeOutAnimation startAnimation];
 	}
 	else
 	{

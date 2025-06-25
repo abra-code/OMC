@@ -21,17 +21,13 @@ static OMCService *sOMCService = NULL;
 
 @implementation OMCDropletController
 
-@synthesize commandFilePath = _commandFilePath;
-@synthesize commandID;
-
 - (id)init
 {
 	self = [super init];
 	if(self == nil)
 		return nil;
 
-	commandID = nil;
-	self.commandFilePath = @"Command.plist";
+	_commandFilePath = @"Command.plist";
 	_startingUp = YES;
 	_startupModifiers = 0;
 	_runningCommandCount = 0;
@@ -51,7 +47,7 @@ static OMCService *sOMCService = NULL;
 	if(self == nil)
 		return nil;
 
-	self.commandFilePath = @"Command.plist";
+	_commandFilePath = @"Command.plist";
 	_startingUp = YES;
 	_startupModifiers = 0;
 	_runningCommandCount = 0;
@@ -63,14 +59,6 @@ static OMCService *sOMCService = NULL;
 					andEventID:kAEGetURL];
 
     return self;
-}
-
-
-- (void)dealloc
-{
-    self.commandID = nil;
-    self.commandFilePath = nil;
-	[super dealloc];
 }
 
 - (void)awakeFromNib
@@ -362,14 +350,11 @@ myapp://exe?commandID=my.file.command.id&file=file1.txt&file=file2.txt
 {
 	if((inPath != nil) && ([inPath length] > 0))
 	{
-		[inPath retain];
-		[_commandFilePath release];
 		_commandFilePath = inPath;
 	}
 	else
 	{
-		[_commandFilePath release];
-		_commandFilePath = [@"Command.plist" retain];
+		_commandFilePath = @"Command.plist";
 	}
 }
 

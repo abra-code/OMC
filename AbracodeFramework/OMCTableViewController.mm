@@ -18,66 +18,44 @@
     self = [super init];
 	if(self != NULL)
 	{
-		mTableView = aTableView;
-		[mTableView retain];
-		mDialogController = inController;//do not retain, it owns us and retain would prevent its destruction
-		mSelectionChangeCommandID = NULL;
-		if( [mTableView isKindOfClass:[OMCTableView class]] )
+		_tableView = aTableView;
+		_dialogController = inController;//weak, it owns us and retain cause circular retain
+		if( [_tableView isKindOfClass:[OMCTableView class]] )
 		{
-			OMCTableView *omcTableView  = (OMCTableView *)mTableView;
-			mSelectionChangeCommandID = [omcTableView selectionCommandID];
-			if(mSelectionChangeCommandID != NULL)
-				[mSelectionChangeCommandID retain];
+			OMCTableView *omcTableView  = (OMCTableView *)_tableView;
+			_selectionChangeCommandID = [omcTableView selectionCommandID];
 		}
-		mRows = [[NSMutableArray alloc] init];
-		mColumnNames = NULL;
-		mColumnWidths = NULL;
+		_rows = [[NSMutableArray alloc] init];
 	}
     return self;
 }
 
-- (void)dealloc
-{
-	[mTableView release];
-	[mSelectionChangeCommandID release];
-    [mRows release];
-	[mColumnNames release];
-	[mColumnWidths release];
-	[super dealloc];
-}
-
 -(void)removeRows
 {
-	[mRows removeAllObjects];
+	[self.rows removeAllObjects];
 }
 
 -(void)addRows:(CFArrayRef)inRowArray
 {
-	[mRows addObjectsFromArray:(NSArray *)inRowArray];//inRowArray is array of strings (unsplit) or array of column arrays
+    [self.rows addObjectsFromArray:(__bridge NSArray *)inRowArray]; //inRowArray is array of strings (unsplit) or array of column arrays
 }
 
 -(void)reloadData
 {
-	[mTableView reloadData];
+	[self.tableView reloadData];
 }
 
--(void)setColumns:(CFArrayRef)inColumnArray
+-(void)setColumns:(NSArray *)columnArray
 {
-	NSArray *oldColumns = [mTableView tableColumns];
+	NSArray *oldColumns = [self.tableView tableColumns];
 	NSInteger oldCount = (NSInteger)[oldColumns count];
 
-	NSArray *columnArray = (NSArray *)inColumnArray;
-	if(columnArray != NULL)
-		[columnArray retain];
-
-	if(mColumnNames != NULL)
-		[mColumnNames release];
-	mColumnNames = columnArray;
+    self.columnNames = columnArray;
 	
-	if(mColumnNames == NULL)
+	if(self.columnNames == NULL)
 		return;
 
-	NSUInteger newCount = [mColumnNames count];
+	NSUInteger newCount = [self.columnNames count];
 
 	NSString *hiddenColumnName = @"omc_hidden_column";
 	CGFloat defaultColumnWidth = 100.0;
@@ -85,7 +63,7 @@
 	NSTableColumn *prevTableColumn = NULL;
 	for(NSUInteger newIndex = 0; newIndex < newCount; newIndex++)
 	{
-		id oneColumnTitle = [mColumnNames objectAtIndex:newIndex];
+		id oneColumnTitle = [self.columnNames objectAtIndex:newIndex];
 		if( ![oneColumnTitle isKindOfClass:[NSString class]] )
 			oneColumnTitle = @"";
 		
@@ -102,14 +80,12 @@
 			}
 			else
 			{//new column
-				oneTableColumn = [[[NSTableColumn alloc] initWithIdentifier:[columnIdentifier stringValue]] autorelease];
+				oneTableColumn = [[NSTableColumn alloc] initWithIdentifier:[columnIdentifier stringValue]];
 				if( prevTableColumn != NULL)
 				{//with settings from previous column
 					NSTableHeaderCell *headerCell = [[prevTableColumn headerCell] copy];
-					[headerCell autorelease];
 					[oneTableColumn setHeaderCell: headerCell];
 					NSCell *dataCell = [[prevTableColumn dataCell] copy];
-					[dataCell autorelease];
 					[oneTableColumn setDataCell:dataCell];
 					[oneTableColumn setEditable: [prevTableColumn isEditable]];
 					[oneTableColumn setResizingMask: [prevTableColumn resizingMask]];
@@ -122,7 +98,7 @@
 			[headerCell setStringValue:oneColumnTitle];
 			
 			if(currColumnIndex >= oldCount)
-				[mTableView addTableColumn:oneTableColumn];
+				[self.tableView addTableColumn:oneTableColumn];
 			prevTableColumn = oneTableColumn;
 			currColumnIndex++;
 		}
@@ -137,39 +113,32 @@
 	for(NSInteger i = (oldCount-1); i >= currColumnIndex; i--)
 	{
 		NSTableColumn * oneTableColumn = [oldColumns objectAtIndex:i];
-		[mTableView removeTableColumn:oneTableColumn];
+		[self.tableView removeTableColumn:oneTableColumn];
 	}
 
-	if( mColumnWidths != NULL )
+	if( self.columnWidths != nil )
 	{//if column widths set before column names, populate widths now
-		[self setColumnWidths:(CFArrayRef)mColumnWidths];
+		[self setColumnWidths:_columnWidths];
 	}
 
 }
 
--(void)setColumnWidths:(CFArrayRef)inWidthsArray
+-(void)setColumnWidths:(NSArray *)widthsArray
 {
-	NSArray *widthsArray = (NSArray *)inWidthsArray;
-	if(widthsArray != NULL)
-		[widthsArray retain];
-	
-	if(mColumnWidths != NULL)
-		[mColumnWidths release];
-
-	mColumnWidths = widthsArray;
-	if(mColumnWidths == NULL)
+    _columnWidths = widthsArray;
+	if(_columnWidths == nil)
 		return;
 	
-	if( [mColumnWidths count] == 0 )
+	if( [_columnWidths count] == 0 )
 		return;
 
-	if(mColumnNames == NULL) //column names not set yet, do not set widths
+	if(self.columnNames == nil) //column names not set yet, do not set widths
 		return;
 
-	NSUInteger columnNameCount = [mColumnNames count];
+	NSUInteger columnNameCount = [self.columnNames count];
 	NSString *hiddenColumnName = @"omc_hidden_column";
 
-	NSUInteger columnWidthCount = [mColumnWidths count];
+	NSUInteger columnWidthCount = [_columnWidths count];
 
 	//limit to max number of columns already added
 	if( columnWidthCount > columnNameCount )
@@ -177,7 +146,7 @@
 
 	for(NSUInteger i = 0; i < columnWidthCount; i++)
 	{
-		id oneColumnTitle = [mColumnNames objectAtIndex:i];
+		id oneColumnTitle = [self.columnNames objectAtIndex:i];
 		if( ![oneColumnTitle isKindOfClass:[NSString class]] )
 			oneColumnTitle = @"";
 		
@@ -185,7 +154,7 @@
 		if( ![hiddenColumnName isEqualToString:oneColumnTitle] )
 		{
 			CGFloat columnWidth = 100.0;
-			id oneColumnWidth = [mColumnWidths objectAtIndex:i];
+			id oneColumnWidth = [_columnWidths objectAtIndex:i];
 			if( [oneColumnWidth isKindOfClass:[NSString class]] )
 			{
 				columnWidth = [(NSString *)oneColumnWidth intValue];
@@ -195,7 +164,7 @@
 					columnWidth = 10000.0;
 			}
 			NSNumber *columnIdentifier = [NSNumber numberWithUnsignedInteger:i];
-			NSTableColumn * oneTableColumn = [mTableView tableColumnWithIdentifier:[columnIdentifier stringValue]];
+			NSTableColumn * oneTableColumn = [self.tableView tableColumnWithIdentifier:[columnIdentifier stringValue]];
 			if(oneTableColumn != NULL)
 				[oneTableColumn setWidth:columnWidth];
 		}
@@ -218,17 +187,17 @@
 
 -(NSArray *)columnArrayForRow:(NSUInteger)inRowIndex
 {
-	if([mRows count] == 0)
+	if([self.rows count] == 0)
 		return nil;
 
 	NSArray *rowColumnsArray = nil;
-	id oneRow = [mRows objectAtIndex:inRowIndex];
+	id oneRow = [self.rows objectAtIndex:inRowIndex];
 	if( [oneRow isKindOfClass:[NSString class]] )
 	{
 		rowColumnsArray = [self splitRowString:oneRow];
 		if(rowColumnsArray != nil)
 		{
-			[mRows replaceObjectAtIndex:inRowIndex withObject:oneRow];
+			[self.rows replaceObjectAtIndex:inRowIndex withObject:oneRow];
 		}
 	}
 	else if( [oneRow isKindOfClass:[NSArray class]] )
@@ -241,15 +210,15 @@
 //NSTableDataSource/NSTableViewDataSource protocol
 - (NSInteger)numberOfRowsInTableView:(NSTableView *)aTableView
 {
-	return [mRows count];
+	return [self.rows count];
 }
 
 - (id)tableView:(NSTableView *)aTableView objectValueForTableColumn:(NSTableColumn *)aTableColumn row:(NSInteger)rowIndex
 {
-	if( (mRows == NULL) || (aTableColumn == NULL) )
+	if( (self.rows == NULL) || (aTableColumn == NULL) )
 		return @"";
 
-	NSUInteger rowCount = [mRows count];
+	NSUInteger rowCount = [self.rows count];
 	if(rowIndex >= rowCount)
 		return @"";
 
@@ -271,9 +240,9 @@
 //delegate methods:
 - (void)tableViewSelectionDidChange:(NSNotification *)aNotification
 {
-	if( (mDialogController != NULL) && (mSelectionChangeCommandID != NULL) )
+	if( (self.dialogController != NULL) && (self.selectionChangeCommandID != NULL) )
 	{
-		[mDialogController dispatchCommand:mSelectionChangeCommandID withContext:NULL];
+		[self.dialogController dispatchCommand:self.selectionChangeCommandID withContext:NULL];
 	}
 }
 
@@ -291,15 +260,15 @@
 	NSString *colSuffix = NULL;
 	NSString *colSeparator = NULL;
 
-	if( [mTableView isKindOfClass:[OMCTableView class]] )
+	if( [self.tableView isKindOfClass:[OMCTableView class]] )
 	{
-		OMCTableView *omcTableView  = (OMCTableView *)mTableView;
+		OMCTableView *omcTableView  = (OMCTableView *)self.tableView;
 		colPrefix = [omcTableView multipleColumnPrefix];
 		colSuffix = [omcTableView multipleColumnSuffix];
 		colSeparator = [omcTableView multipleColumnSeparator];
 	}
 
-	NSUInteger columnCount = [mColumnNames count];
+	NSUInteger columnCount = [self.columnNames count];
 	if(columnCount == 0)
 		return NULL;
 
@@ -310,7 +279,7 @@
 	}
 	else
 	{
-		NSIndexSet *indexSet = [mTableView selectedRowIndexes];
+		NSIndexSet *indexSet = [self.tableView selectedRowIndexes];
 		if(indexSet == NULL)
 			return NULL;
 
@@ -326,7 +295,7 @@
 		{//more rows - we return an array of strings: OMC will know how to combine them for final result
 			NSUInteger *selectedRows = (NSUInteger *)calloc(selectedRowsCount, sizeof(NSUInteger));//sel iterator takes ownership
 			[indexSet getIndexes:selectedRows maxCount:selectedRowsCount inIndexRange:NULL];
-			NSUInteger rowCount = [mRows count];
+			NSUInteger rowCount = [self.rows count];
 			NSMutableArray *resultArray = [NSMutableArray array];
 			for(NSUInteger i = 0; i < selectedRowsCount; i++)
 			{
@@ -344,7 +313,7 @@
 		}
 	}
 
-	if( currRow < [mRows count] )//single row case
+	if( currRow < [self.rows count] )//single row case
 		return [self stringForRow:currRow column:inColumnIndex prefix:colPrefix suffix:colSuffix separator:colSeparator];
 	
 	return NULL;
@@ -363,19 +332,19 @@
 	NSString *colSuffix = nil;
 	NSString *colSeparator = nil;
 
-	if( [mTableView isKindOfClass:[OMCTableView class]] )
+	if( [self.tableView isKindOfClass:[OMCTableView class]] )
 	{
-		OMCTableView *omcTableView  = (OMCTableView *)mTableView;
+		OMCTableView *omcTableView  = (OMCTableView *)self.tableView;
 		colPrefix = [omcTableView multipleColumnPrefix];
 		colSuffix = [omcTableView multipleColumnSuffix];
 		colSeparator = [omcTableView multipleColumnSeparator];
 	}
 
-	NSUInteger columnCount = [mColumnNames count];
+	NSUInteger columnCount = [self.columnNames count];
 	if(columnCount == 0)
 		return nil;
 
-	NSUInteger allRowsCount = [mTableView numberOfRows];
+	NSUInteger allRowsCount = [self.tableView numberOfRows];
 	if(allRowsCount == 0)
 		return nil;
 	
@@ -397,7 +366,7 @@
 //column index is 1-based with special value 0 meaning all columns
 -(NSString *)stringForRow:(NSUInteger)inRow column:(NSUInteger)inColumnIndex prefix:(NSString *)colPrefix suffix:(NSString *)colSuffix separator:(NSString *)colSeparator
 {
-	NSUInteger columnCount = [mColumnNames count];//visible columns
+	NSUInteger columnCount = [self.columnNames count];//visible columns
 	NSArray *rowColumnsArray = [self columnArrayForRow:inRow];
 	NSUInteger currRowColumnCount = [rowColumnsArray count];
 	//there might be more data columns than are visible. we allow access to all of them
@@ -452,7 +421,7 @@
 
 -(NSUInteger)columnCount
 {
-	NSUInteger columnCount = [mColumnNames count];//visible columns
+	NSUInteger columnCount = [self.columnNames count];//visible columns
 	
 	// The data may have more columns than just the visible ones
 	// if the data is well formed each row of data has the same number of columns

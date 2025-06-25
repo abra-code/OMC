@@ -11,15 +11,13 @@
 
 @implementation OMCSingleCommand
 
-@synthesize commandFilePath = _commandFilePath;
-
 - (id)init
 {
     self = [super init];
 	if(self == nil)
 		return nil;
 
-	self.commandFilePath = @"Command.plist";
+	_commandFilePath = @"Command.plist";
 
     return self;
 }
@@ -29,7 +27,8 @@
     self = [super init];
 	if(self == nil)
 		return nil;
-	self.commandFilePath = @"Command.plist";
+
+    _commandFilePath = @"Command.plist";
 
     return self;
 }
@@ -37,27 +36,15 @@
 - (void)encodeWithCoder:(nonnull NSCoder *)coder {
 }
 
-
-
-- (void)dealloc
-{
-    self.commandID = nil;
-    self.commandFilePath = nil;
-	[super dealloc];
-}
-
 - (void)setCommandFilePath:(NSString *)inPath
 {
 	if((inPath != nil) && ([inPath length] > 0))
 	{
-		[inPath retain];
-		[_commandFilePath release];
 		_commandFilePath = inPath;
 	}
 	else
 	{
-		[_commandFilePath release];
-		_commandFilePath = [@"Command.plist" retain];
+		_commandFilePath = @"Command.plist";
 	}
 }
 

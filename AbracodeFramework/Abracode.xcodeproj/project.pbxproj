@@ -23,6 +23,7 @@
 /* Begin PBXBuildFile section */
 		1D386DAB23BEED4B00A16967 /* OMCWebKitView.h in Headers */ = {isa = PBXBuildFile; fileRef = 1D386DA923BEED4A00A16967 /* OMCWebKitView.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		1D386DAC23BEED4B00A16967 /* OMCWebKitView.m in Sources */ = {isa = PBXBuildFile; fileRef = 1D386DAA23BEED4A00A16967 /* OMCWebKitView.m */; };
+		1D3F8CBD2E0B7C8000B69493 /* OMCActionProtocol.h in Headers */ = {isa = PBXBuildFile; fileRef = 1D3F8CBC2E0B370A00B69493 /* OMCActionProtocol.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		1D71F337220702EA009FAF91 /* notify in Copy Support Executables */ = {isa = PBXBuildFile; fileRef = 1D71F336220702D7009FAF91 /* notify */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		1D742DC5193882BB005DFF97 /* pasteboard in Copy Support Executables */ = {isa = PBXBuildFile; fileRef = 1D742DC219388292005DFF97 /* pasteboard */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		1D80B9BA22E447E800CF1AF5 /* OMCiTermExecutor.cp in Sources */ = {isa = PBXBuildFile; fileRef = 1D80B9B822E447E800CF1AF5 /* OMCiTermExecutor.cp */; };
@@ -227,6 +228,7 @@
 		1D386DA923BEED4A00A16967 /* OMCWebKitView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCWebKitView.h; sourceTree = "<group>"; };
 		1D386DAA23BEED4A00A16967 /* OMCWebKitView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMCWebKitView.m; sourceTree = "<group>"; };
 		1D3BB165229BEB1D00542933 /* AUniquePtr.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AUniquePtr.h; sourceTree = "<group>"; };
+		1D3F8CBC2E0B370A00B69493 /* OMCActionProtocol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OMCActionProtocol.h; sourceTree = "<group>"; };
 		1D4971AC2575A69000F7131C /* OmcProjectDebug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectDebug.xcconfig; path = ../Common/OmcProjectDebug.xcconfig; sourceTree = "<group>"; };
 		1D4971AD2575A69000F7131C /* OmcProjectRelease.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectRelease.xcconfig; path = ../Common/OmcProjectRelease.xcconfig; sourceTree = "<group>"; };
 		1D71F3292206F116009FAF91 /* DebugSettings.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DebugSettings.h; sourceTree = "<group>"; };
@@ -548,6 +550,7 @@
 		E2517C3C0D1BCC2700180C68 /* CocoaControls */ = {
 			isa = PBXGroup;
 			children = (
+				1D3F8CBC2E0B370A00B69493 /* OMCActionProtocol.h */,
 				E2517C3D0D1BCC2700180C68 /* OMCButton.h */,
 				E2517C3E0D1BCC2700180C68 /* OMCButton.m */,
 				E2517C3F0D1BCC2700180C68 /* OMCButtonCell.h */,
@@ -753,6 +756,7 @@
 				E2FB111F0D185A2C005EB1E8 /* OMC.h in Headers */,
 				E2517C4D0D1BCC2700180C68 /* OMCButton.h in Headers */,
 				E2517C4F0D1BCC2700180C68 /* OMCButtonCell.h in Headers */,
+				1D3F8CBD2E0B7C8000B69493 /* OMCActionProtocol.h in Headers */,
 				E2517C510D1BCC2700180C68 /* OMCMenuItem.h in Headers */,
 				E2517C530D1BCC2700180C68 /* OMCPopUpButton.h in Headers */,
 				E2517C550D1BCC2700180C68 /* OMCProgressIndicator.h in Headers */,

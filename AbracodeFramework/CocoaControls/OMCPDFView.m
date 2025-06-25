@@ -7,21 +7,16 @@
 @implementation OMCPDFView
 
 @synthesize tag;
-@synthesize escapingMode;
 
 - (id)init
 {
     self = [super init];
 	if(self == NULL)
 		return NULL;
-	self.escapingMode = @"esc_none";
-	return self;
-}
 
-- (void)dealloc
-{
-	[escapingMode release];
-    [super dealloc];
+    self.escapingMode = @"esc_none";
+
+    return self;
 }
 
 //legacy encoder/decoder support - custom control data no longer serialized into nibs
@@ -65,8 +60,6 @@
 		return;
 
 	[self setDocument:pdfDoc];
-	
-	[pdfDoc release];
 }
 
 

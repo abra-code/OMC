@@ -7,14 +7,6 @@
 
 @implementation OMCPopUpButton
 
-@synthesize commandID;
-
-- (void)dealloc
-{
-    self.commandID  = nil;
-    [super dealloc];
-}
-
 - (NSString *)escapingMode
 {
 	NSMenuItem *selItem = [self selectedItem];

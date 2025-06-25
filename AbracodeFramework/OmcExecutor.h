@@ -7,6 +7,9 @@
  *
  */
 
+#include <CoreServices/CoreServices.h>
+#include <Carbon/Carbon.h>
+
 #include "DebugSettings.h"
 #include "CFObj.h"
 #include "ANotifier.h"

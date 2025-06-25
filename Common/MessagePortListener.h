@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include <Carbon/Carbon.h>
+#include <CoreFoundation/CoreFoundation.h>
 #include "CFObj.h"
 
 // "Receiver" class must implement ReceivePortMessage method as follows:

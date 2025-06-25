@@ -38,21 +38,6 @@
     return self;
 }
 
-- (void)dealloc
-{
-    self.selectionCommandID = nil;
-	self.doubleClickCommandID = nil;
-	self.combinedSelectionPrefix = nil;
-	self.combinedSelectionSuffix = nil;
-	self.combinedSelectionSeparator = nil;
-	self.multipleColumnPrefix = nil;
-	self.multipleColumnSuffix = nil;
-	self.multipleColumnSeparator = nil;
-	self.escapingMode = nil;
-
-    [super dealloc];
-}
-
 - (NSString *)stringValue
 {		
 	return [super stringValue];

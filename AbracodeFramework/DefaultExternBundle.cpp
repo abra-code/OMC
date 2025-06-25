@@ -7,7 +7,6 @@
  *
  */
 
-#include <Carbon/Carbon.h>
 #include "DefaultExternBundle.h"
 #include "CMUtils.h"
 #include "CFObj.h"

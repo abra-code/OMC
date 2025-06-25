@@ -39,13 +39,6 @@ NSString *NormalizeOMCVariableIDFromElementID(NSString *inElementID)
 @implementation OMCWebKitView
 
 @synthesize tag;
-@synthesize escapingMode;
-@synthesize javaScriptFile;
-@synthesize URL;
-@synthesize target;
-@synthesize action;
-@synthesize commandID;
-@synthesize elementID;
 
 - (instancetype)initWithFrame:(NSRect)frameRect
 {
@@ -56,15 +49,6 @@ NSString *NormalizeOMCVariableIDFromElementID(NSString *inElementID)
 	self.escapingMode = @"esc_none";
 
 	return self;
-}
-
-- (void)dealloc
-{
-	self.escapingMode = nil;
-	self.target = nil;
-	self.action = nil;
-	[_wkWebView release];
-    [super dealloc];
 }
 
 - (id)initWithCoder:(NSCoder *)coder
@@ -97,7 +81,6 @@ NSString *NormalizeOMCVariableIDFromElementID(NSString *inElementID)
 	{
 		WKUserScript *omcWKSupportScript = [[WKUserScript alloc] initWithSource:omcWKSupportScriptSource injectionTime:WKUserScriptInjectionTimeAtDocumentStart forMainFrameOnly:NO];
 		[userContentController addUserScript:omcWKSupportScript];
-		[omcWKSupportScript release];
 	}
 
 	if(self.javaScriptFile != nil)
@@ -110,15 +93,14 @@ NSString *NormalizeOMCVariableIDFromElementID(NSString *inElementID)
 
 		CFBundleRef hostBundle = CFBundleGetMainBundle(); // TODO: support extern bundle for contextual menus?
 
-		CFStringRef clientScriptPath = OMCGetScriptPath(hostBundle, (CFStringRef)scriptName);
+        CFStringRef clientScriptPath = OMCGetScriptPath(hostBundle, (__bridge CFStringRef)scriptName);
 		if(clientScriptPath != NULL)
 		{
-			NSString *clientScriptSource = [NSString stringWithContentsOfFile:(NSString *)clientScriptPath encoding:NSUTF8StringEncoding error:nil];
+            NSString *clientScriptSource = [NSString stringWithContentsOfFile:(__bridge NSString *)clientScriptPath encoding:NSUTF8StringEncoding error:nil];
 			if(clientScriptSource != nil)
 			{
 				WKUserScript *clientScript = [[WKUserScript alloc] initWithSource:clientScriptSource injectionTime:WKUserScriptInjectionTimeAtDocumentEnd forMainFrameOnly:NO];
 				[userContentController addUserScript:clientScript];
-				[clientScript release];
 			}
 		}
 	}
@@ -128,11 +110,8 @@ NSString *NormalizeOMCVariableIDFromElementID(NSString *inElementID)
 
 	NSRect subFrame = {{0.0, 0.0}, self.frame.size};
 	
-	_wkWebView = [[WKWebView alloc] initWithFrame:subFrame configuration:wkWebViewConfig];
-	[self addSubview:_wkWebView];
-
-	[userContentController release];
-	[wkWebViewConfig release];
+	self.wkWebView = [[WKWebView alloc] initWithFrame:subFrame configuration:wkWebViewConfig];
+	[self addSubview:self.wkWebView];
 	
 	if(self.URL != nil)
 	{
@@ -144,7 +123,7 @@ NSString *NormalizeOMCVariableIDFromElementID(NSString *inElementID)
 - (void)resizeSubviewsWithOldSize:(NSSize)__unused oldSize
 {
 	NSRect subFrame = {{0.0, 0.0}, self.frame.size};
-	_wkWebView.frame = subFrame;
+	self.wkWebView.frame = subFrame;
 }
 
 - (void)runOMCCommandWithWebkitMessage:(NSDictionary<NSString*,id> *)messageDict
@@ -195,14 +174,10 @@ NSString *NormalizeOMCVariableIDFromElementID(NSString *inElementID)
 
 	@try
 	{
-		[_wkWebView evaluateJavaScript:scriptString completionHandler:^(id result, NSError *error)
+		[self.wkWebView evaluateJavaScript:scriptString completionHandler:^(id result, NSError *error)
 		{
 			completionHandled = YES;
-			if(error == nil)
-			{
-				outResult = [result retain];
-			}
-			else
+			if(error != nil)
 			{
 				NSLog(@"evaluateJavaScript error : %@", error.localizedDescription);
 			}
@@ -224,12 +199,12 @@ NSString *NormalizeOMCVariableIDFromElementID(NSString *inElementID)
 	}
 	while(!completionHandled);
 
-	return [outResult autorelease];
+	return outResult;
 }
 
 - (NSString *)stringValue
 {
-	NSURL *webViewURL = [_wkWebView URL];
+	NSURL *webViewURL = [self.wkWebView URL];
 	return webViewURL.absoluteString;
 }
 
@@ -237,24 +212,24 @@ NSString *NormalizeOMCVariableIDFromElementID(NSString *inElementID)
 {
 	if((aString == nil) || ([aString length] == 0))
 	{
-		[_wkWebView loadHTMLString:@"" baseURL:nil];
+		[self.wkWebView loadHTMLString:@"" baseURL:nil];
 		return;
 	}
 
 	NSURL *wkWebViewURL = [NSURL URLWithString:aString];
-	NSURL *previousURL = [_wkWebView URL];
+	NSURL *previousURL = [self.wkWebView URL];
 	if((previousURL != nil) && (wkWebViewURL != nil) && [previousURL isEqualTo:wkWebViewURL])
 		return;
 
 	if(wkWebViewURL.isFileURL)
 	{
 		NSURL *parentDirURL = [wkWebViewURL URLByDeletingLastPathComponent];
-		/*WKNavigation *wkNavigation =*/ [_wkWebView loadFileURL:wkWebViewURL allowingReadAccessToURL:parentDirURL];
+		/*WKNavigation *wkNavigation =*/ [self.wkWebView loadFileURL:wkWebViewURL allowingReadAccessToURL:parentDirURL];
 	}
 	else
 	{
 		NSURLRequest *urlRequest = [NSURLRequest requestWithURL:wkWebViewURL];
-		/*WKNavigation *wkNavigation =*/ [_wkWebView loadRequest:urlRequest];
+		/*WKNavigation *wkNavigation =*/ [self.wkWebView loadRequest:urlRequest];
 	}
 }
 

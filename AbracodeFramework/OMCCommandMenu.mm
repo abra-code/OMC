@@ -73,12 +73,10 @@ FindOrAddSubmenu(NSMenu * inMenu, OneSubmenuName *inSubmenu)
 
 	if(subMenu == NULL)
 	{//create a new one
-		NSMenuItem *newMenuItem = [[NSMenuItem alloc] initWithTitle:(NSString *)(CFStringRef)inSubmenu->name action:NULL keyEquivalent:@""];
-		[newMenuItem autorelease];
+		NSMenuItem *newMenuItem = [[NSMenuItem alloc] initWithTitle:(__bridge NSString *)(CFStringRef)inSubmenu->name action:NULL keyEquivalent:@""];
 		[inMenu addItem:newMenuItem];
 
-		subMenu = [[NSMenu alloc] initWithTitle:(NSString *)(CFStringRef)inSubmenu->name];
-		[subMenu autorelease];
+		subMenu = [[NSMenu alloc] initWithTitle:(__bridge NSString *)(CFStringRef)inSubmenu->name];
 		[inMenu setSubmenu:subMenu forItem:newMenuItem];
 	}
 	
@@ -166,23 +164,21 @@ PopulateCommandsMenu(OnMyCommandCM *inPlugin, NSMenu *topMenu)
 		{
 			CFObj<CFStringRef> staticName( ::CFStringCreateByCombiningStrings( kCFAllocatorDefault, commandList[i].name, CFSTR("") ) );
 			
-			NSString *localizedName = (NSString *)(CFStringRef)staticName;
+            NSString *localizedName = (__bridge NSString *)(CFStringRef)staticName;
 			if(commandList[i].localizationTableName != NULL)
 			{
-				localizedName = (NSString*)::CFCopyLocalizedStringFromTableInBundle(staticName, commandList[i].localizationTableName, localizationBundle, "");
-				[localizedName autorelease];
+                localizedName = (NSString*)CFBridgingRelease(::CFCopyLocalizedStringFromTableInBundle(staticName, commandList[i].localizationTableName, localizationBundle, ""));
 			}
 
 			OMCMenuItem *newItem = [[OMCMenuItem alloc] initWithTitle:localizedName action:@selector(executeCommand:) keyEquivalent:@""];
 			if(newItem != NULL)
 			{
 				[newItem setTarget:topMenu];
-				[newItem setCommandID:(NSString *)(commandList[i].commandID)];
+                [newItem setCommandID:(__bridge NSString *)(commandList[i].commandID)];
 				//CFIndex retCount = CFGetRetainCount((CFStringRef)staticName);
-				[newItem setRepresentedObject: (id)(CFStringRef)staticName];//the original non-localized name stuffed here. retained object
+                [newItem setRepresentedObject: (__bridge id)(CFStringRef)staticName];//the original non-localized name stuffed here. retained object
 				//retCount = CFGetRetainCount((CFStringRef)staticName);
 				[subMenu addItem:newItem];
-				[newItem release];//retained by menu
 			}
 		}
 	}
@@ -194,15 +190,13 @@ PopulateCommandsMenu(OnMyCommandCM *inPlugin, NSMenu *topMenu)
 
 @implementation OMCCommandMenu
 
-@synthesize commandFilePath = _commandFilePath;
-
 - (id)init
 {
     self = [super init];
 	if(self == nil)
 		return nil;
 
-	self.commandFilePath = @"Command.plist";
+	_commandFilePath = @"Command.plist";
 
     return self;
 }
@@ -213,7 +207,7 @@ PopulateCommandsMenu(OnMyCommandCM *inPlugin, NSMenu *topMenu)
 	if(self == nil)
 		return nil;
 
-	self.commandFilePath = @"Command.plist";
+	_commandFilePath = @"Command.plist";
 
     return self;
 }
@@ -224,15 +218,9 @@ PopulateCommandsMenu(OnMyCommandCM *inPlugin, NSMenu *topMenu)
 	if(self == nil)
 		return nil;
 
-	self.commandFilePath = @"Command.plist";
+	_commandFilePath = @"Command.plist";
 
     return self;
-}
-
-- (void)dealloc
-{
-    self.commandFilePath = nil;
-	[super dealloc];
 }
 
 - (void)awakeFromNib
@@ -257,7 +245,7 @@ PopulateCommandsMenu(OnMyCommandCM *inPlugin, NSMenu *topMenu)
 	if(commandURL == nil)
 		return;
 
-	ARefCountedObj<OnMyCommandCM> omcPlugin( new OnMyCommandCM( (CFURLRef)commandURL ), kARefCountDontRetain );
+    ARefCountedObj<OnMyCommandCM> omcPlugin( new OnMyCommandCM( (__bridge CFURLRef)commandURL ), kARefCountDontRetain );
 	omcPlugin->SetCMPluginMode(false);
 	StAEDesc contextDesc;//empty context
 	error = omcPlugin->ExamineContext(contextDesc, NULL);
@@ -272,14 +260,11 @@ PopulateCommandsMenu(OnMyCommandCM *inPlugin, NSMenu *topMenu)
 {
 	if((inPath != nil) && ([inPath length] > 0))
 	{
-		[inPath retain];
-		[_commandFilePath release];
 		_commandFilePath = inPath;
 	}
 	else
 	{
-		[_commandFilePath release];
-		_commandFilePath = [@"Command.plist" retain];
+		_commandFilePath = @"Command.plist";
 	}
 }
 
@@ -313,7 +298,7 @@ PopulateCommandsMenu(OnMyCommandCM *inPlugin, NSMenu *topMenu)
 		{
 			myCommandID = myName;
 		}
-		else if( (commandIDLength == 4) && [myCommandID isEqualToString:(NSString *)kOMCTopCommandID] )//not interesting ID
+        else if( (commandIDLength == 4) && [myCommandID isEqualToString:(__bridge NSString *)kOMCTopCommandID] )//not interesting ID
 		{
 			myCommandID = myName;
 		}

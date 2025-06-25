@@ -10,9 +10,8 @@
 
 
 @interface OMCCocoaNib : NSObject
-{
-	NSArray *mTopLevelNibObjects;
-}
+
+@property (nonatomic, strong) NSArray *topLevelNibObjects;
 
 - (id)initWithNib:(NSNib *)inNib;
 - (id)initWithNibNamed:(NSString *)inNibName bundle:(NSBundle *)inBundle;

@@ -26,8 +26,6 @@
 {
 	NSUserNotificationCenter *defaultUserNotificationCenter = [NSUserNotificationCenter defaultUserNotificationCenter];
 	defaultUserNotificationCenter.delegate = nil;
-
-    [super dealloc];
 }
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification

@@ -11,7 +11,9 @@
 
 #pragma once
 
-#include <Carbon/Carbon.h>
+#include <CoreFoundation/CoreFoundation.h>
+#include <CoreServices/CoreServices.h>
+#include <Carbon/Carbon.h> // for MenuItemAttributes
 
 class AbstractMenuItem
 {

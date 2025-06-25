@@ -13,7 +13,7 @@
 
 #pragma once
 
-#include <Carbon/Carbon.h>
+#include <CoreFoundation/CoreFoundation.h>
 #include "AObserverBase.h"
 #include "ANotifier.h"
 

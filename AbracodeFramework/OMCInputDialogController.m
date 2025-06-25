@@ -19,65 +19,38 @@ enum
 - (id)initWithWindowNibName:(NSString *)windowNibName	// self is the owner
 {
 	self = [super initWithWindowNibName:windowNibName];
-	if( self != NULL )
+	if( self != nil )
 	{
 		mIsCanceled = YES;
-		mMenuItems = NULL;
 	}
 	return self;
-}
-
-- (void)dealloc
-{
-/*  
-	do not call [self window] in dealloc. Our refcount is 0 now and this will try to:
-	- load the window
-	- revive the controller and retain
-
-	NSWindow *myWindow = [self window];
-	
-	if(myWindow != NULL)
-		[myWindow close];
-*/
-	[mMenuItems release];
-
-	[super dealloc];
 }
 
 //setup
 - (void)setMenuItems:(NSArray*)inMenuItems//array of NAME & VALUE mappings
 {
-	if (mPopupButton != NULL)
+	if (mPopupButton != nil)
 		[mPopupButton removeAllItems];
-	else if(mComboBox != NULL)
+	else if(mComboBox != nil)
 		[mComboBox removeAllItems];
 
-	if(mMenuItems != NULL)
-		[mMenuItems release];
-
-	mMenuItems = inMenuItems;
+	self.menuItems = inMenuItems;
 	
-	if( mMenuItems == NULL )
+	if( self.menuItems == nil )
 		return;
 
-	[mMenuItems retain];
-
-	NSUInteger i;
-	NSUInteger itemCount = [mMenuItems count];
-	for(i = 0; i < itemCount; i++)
+	for(id oneItem in self.menuItems)
 	{
-		NSDictionary *dictItem = NULL;
-		id oneItem = [mMenuItems objectAtIndex:i];
 		if( [oneItem isKindOfClass:[NSDictionary class]] )
 		{
-			dictItem = (NSDictionary *)oneItem;
-			oneItem = [dictItem objectForKey:@"NAME"];
-			if( [oneItem isKindOfClass:[NSString class]] )
+            NSDictionary *dictItem = (NSDictionary *)oneItem;
+			id oneElem = [dictItem objectForKey:@"NAME"];
+			if( [oneElem isKindOfClass:[NSString class]] )
 			{
 				if (mPopupButton != NULL)
-					[mPopupButton addItemWithTitle:(NSString *)oneItem];
+					[mPopupButton addItemWithTitle:(NSString *)oneElem];
 				else if(mComboBox != NULL)
-					[mComboBox addItemWithObjectValue:(NSString *)oneItem];
+					[mComboBox addItemWithObjectValue:(NSString *)oneElem];
 			}
 		}
 	}
@@ -231,38 +204,34 @@ enum
 
 - (NSString *)getChoiceString
 {
-	NSString *choiceString = NULL;
-	if(mEditField != NULL)
+	NSString *choiceString = nil;
+	if(mEditField != nil)
 		choiceString = [mEditField stringValue];
-	else if(mPasswordField != NULL)
+	else if(mPasswordField != nil)
 		choiceString = [mPasswordField stringValue];
-	else if(mPopupButton != NULL)
+	else if(mPopupButton != nil)
 		choiceString = [mPopupButton titleOfSelectedItem];
-	else if(mComboBox != NULL)
+	else if(mComboBox != nil)
 		choiceString = [mComboBox stringValue];
 
-	if( (choiceString != NULL) && (mMenuItems != NULL) )
+	if( (choiceString != nil) && (self.menuItems != nil) )
 	{
 		//find mapping if mapped menu
-		NSUInteger i;		
-		NSUInteger itemCount = [mMenuItems count];
-		for(i = 0; i < itemCount; i++)
+		for(id oneItem in self.menuItems)
 		{
-			NSDictionary *dictItem = NULL;
-			id oneItem = [mMenuItems objectAtIndex:i];
 			if( [oneItem isKindOfClass:[NSDictionary class]] )
 			{
-				dictItem = (NSDictionary *)oneItem;
-				oneItem = [dictItem objectForKey:@"NAME"];
-				if( [oneItem isKindOfClass:[NSString class]] )
+                NSDictionary *dictItem = (NSDictionary *)oneItem;
+				id oneElem = [dictItem objectForKey:@"NAME"];
+				if( [oneElem isKindOfClass:[NSString class]] )
 				{
-					NSString *stringItem = (NSString*)oneItem;
+					NSString *stringItem = (NSString*)oneElem;
 					if( [stringItem isEqualToString:choiceString] )
 					{
-						oneItem = [dictItem objectForKey:@"VALUE"];
-						if( (oneItem != NULL) && [oneItem isKindOfClass:[NSString class]] )
+                        oneElem = [dictItem objectForKey:@"VALUE"];
+						if( (oneElem != nil) && [oneElem isKindOfClass:[NSString class]] )
 						{
-							choiceString = (NSString *)oneItem;
+							choiceString = (NSString *)oneElem;
 							break;
 						}
 					}

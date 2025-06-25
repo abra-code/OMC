@@ -13,9 +13,9 @@
 //						
 //**************************************************************************************
 
-
-#include <Carbon/Carbon.h>
+#include <CoreServices/CoreServices.h>
 #include <CoreFoundation/CFPlugInCOM.h>
+#include <Carbon/Carbon.h>
 #include "CFObj.h"
 #include "ARefCounted.h"
 #include "DebugSettings.h"

@@ -16,7 +16,7 @@ static inline void NotifyUser(const char *inTitle, const char *inSubtitle, const
 {
 	@autoreleasepool
 	{
-		NSUserNotification *newNotification = [[[NSUserNotification alloc] init] autorelease];
+		NSUserNotification *newNotification = [[NSUserNotification alloc] init];
 		if(inTitle != nil)
 			newNotification.title = [NSString stringWithUTF8String:inTitle];
 		
