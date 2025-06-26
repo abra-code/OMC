@@ -45,10 +45,6 @@ OMCQCView:
 	Number	tag;
 	String  escapingMode;
 
-OMCQTMovieView:
-	Number	tag;
-	String  escapingMode;
-
 OMCSearchField:
 	String	commandID;
 	String  escapingMode;
@@ -73,10 +69,6 @@ OMCTableView:
 
 OMCTextField:
 	String	commandID;
-	String  escapingMode;
-
-OMCTextView:
-	Number	tag;
 	String  escapingMode;
 
 OMCTextView:

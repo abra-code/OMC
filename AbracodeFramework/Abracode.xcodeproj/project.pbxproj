@@ -64,11 +64,9 @@
 		E23AACC812F5684E004C867B /* OMCService.h in Headers */ = {isa = PBXBuildFile; fileRef = E23AAC8B12F55FE0004C867B /* OMCService.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E23DC9640D9A2616009D2AD8 /* OMCPDFView.m in Sources */ = {isa = PBXBuildFile; fileRef = E23DC95C0D9A2616009D2AD8 /* OMCPDFView.m */; };
 		E23DC9650D9A2616009D2AD8 /* OMCWebView.h in Headers */ = {isa = PBXBuildFile; fileRef = E23DC95D0D9A2616009D2AD8 /* OMCWebView.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		E23DC9670D9A2616009D2AD8 /* OMCQTMovieView.h in Headers */ = {isa = PBXBuildFile; fileRef = E23DC95F0D9A2616009D2AD8 /* OMCQTMovieView.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E23DC9680D9A2616009D2AD8 /* OMCIKImageView.m in Sources */ = {isa = PBXBuildFile; fileRef = E23DC9600D9A2616009D2AD8 /* OMCIKImageView.m */; };
 		E23DC96A0D9A2616009D2AD8 /* OMCIKImageView.h in Headers */ = {isa = PBXBuildFile; fileRef = E23DC9620D9A2616009D2AD8 /* OMCIKImageView.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E23DC96B0D9A2616009D2AD8 /* OMCWebView.m in Sources */ = {isa = PBXBuildFile; fileRef = E23DC9630D9A2616009D2AD8 /* OMCWebView.m */; };
-		E23DC9CC0D9A2870009D2AD8 /* QTKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E23DC9CB0D9A2870009D2AD8 /* QTKit.framework */; };
 		E23DC9F60D9A289E009D2AD8 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E23DC9F50D9A289E009D2AD8 /* WebKit.framework */; };
 		E24243570DDC140F0002BF9E /* OMCOutputWindowController.h in Headers */ = {isa = PBXBuildFile; fileRef = E24243550DDC140F0002BF9E /* OMCOutputWindowController.h */; };
 		E24243580DDC140F0002BF9E /* OMCOutputWindowController.mm in Sources */ = {isa = PBXBuildFile; fileRef = E24243560DDC140F0002BF9E /* OMCOutputWindowController.mm */; };
@@ -306,9 +304,7 @@
 		E23DC95C0D9A2616009D2AD8 /* OMCPDFView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMCPDFView.m; sourceTree = "<group>"; };
 		E23DC95D0D9A2616009D2AD8 /* OMCWebView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCWebView.h; sourceTree = "<group>"; };
 		E23DC95E0D9A2616009D2AD8 /* OMCPDFView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCPDFView.h; sourceTree = "<group>"; };
-		E23DC95F0D9A2616009D2AD8 /* OMCQTMovieView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCQTMovieView.h; sourceTree = "<group>"; };
 		E23DC9600D9A2616009D2AD8 /* OMCIKImageView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMCIKImageView.m; sourceTree = "<group>"; };
-		E23DC9610D9A2616009D2AD8 /* OMCQTMovieView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMCQTMovieView.m; sourceTree = "<group>"; };
 		E23DC9620D9A2616009D2AD8 /* OMCIKImageView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCIKImageView.h; sourceTree = "<group>"; };
 		E23DC9630D9A2616009D2AD8 /* OMCWebView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMCWebView.m; sourceTree = "<group>"; };
 		E23DC9CB0D9A2870009D2AD8 /* QTKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QTKit.framework; path = /System/Library/Frameworks/QTKit.framework; sourceTree = "<absolute>"; };
@@ -433,7 +429,6 @@
 				E29ED0720D094EB000C9D5E8 /* Carbon.framework in Frameworks */,
 				E2FB14000D19EE9A005EB1E8 /* CoreServices.framework in Frameworks */,
 				E27103CE0D8142DF0097D83E /* Quartz.framework in Frameworks */,
-				E23DC9CC0D9A2870009D2AD8 /* QTKit.framework in Frameworks */,
 				E23DC9F60D9A289E009D2AD8 /* WebKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -589,8 +584,6 @@
 				1D386DAA23BEED4A00A16967 /* OMCWebKitView.m */,
 				E23DC95D0D9A2616009D2AD8 /* OMCWebView.h */,
 				E23DC9630D9A2616009D2AD8 /* OMCWebView.m */,
-				E23DC9610D9A2616009D2AD8 /* OMCQTMovieView.m */,
-				E23DC95F0D9A2616009D2AD8 /* OMCQTMovieView.h */,
 				E23DC9600D9A2616009D2AD8 /* OMCIKImageView.m */,
 				E23DC9620D9A2616009D2AD8 /* OMCIKImageView.h */,
 				E26B2792109C174D00DBA8CE /* OMCTableView.h */,
@@ -777,7 +770,6 @@
 				E2E407870D8C3770009AD8CA /* OMCImageView.h in Headers */,
 				1D386DAB23BEED4B00A16967 /* OMCWebKitView.h in Headers */,
 				E23DC9650D9A2616009D2AD8 /* OMCWebView.h in Headers */,
-				E23DC9670D9A2616009D2AD8 /* OMCQTMovieView.h in Headers */,
 				E23DC96A0D9A2616009D2AD8 /* OMCIKImageView.h in Headers */,
 				E29A6AB50D9F7A01006A97B0 /* OMCMainMenuController.h in Headers */,
 				E2C84D750DA9AC090056DBC2 /* OMCCommandMenu.h in Headers */,
