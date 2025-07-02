@@ -45,7 +45,7 @@ static NSMutableDictionary *sCachedPlists = NULL;
 			
 			Boolean useNavDialogForMissingFileContext = true;
 			UInt32 executionOptions = 0;
-			OMCGetCommandInfo(omcExec, commandRef, kOmcInfo_ExecutionOptions, &objectsInfo);
+			OMCGetCommandInfo(omcExec, commandRef, kOmcInfo_ExecutionOptions, &executionOptions);
 			if( (executionOptions & kExecutionOption_UseNavDialogForMissingFileContext) == 0 )
 				useNavDialogForMissingFileContext = false;
 	
