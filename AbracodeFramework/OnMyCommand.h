@@ -238,6 +238,15 @@ enum
 	kCMCommandStart				= 0x10000000			//command IDs start here
 };
 
+typedef enum
+{
+    kOMCHostApp_Unknown = 0,
+    kOMCHostApp_OMCService,
+    kOMCHostApp_Shortcuts,
+    kOMCHostApp_ShortcutsObserver,
+    kOMCHostApp_OMCEdit
+} OMCHostApp;
+
 class OnMyCommandCM : public ACMPlugin
 {
 public:
@@ -389,7 +398,7 @@ protected:
     Boolean						mIsNullContext {false};
     Boolean						mIsTextContext {false};
     Boolean						mCMPluginMode {true};
-    Boolean						mRunningInShortcutsObserver {false};
+    OMCHostApp					mHostApp {kOMCHostApp_Unknown};
     pid_t			            mFrontProcessPID {0};//if running in observer we don't want to return observer as front process if it happens to come up
 };
 

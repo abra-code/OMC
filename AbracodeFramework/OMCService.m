@@ -13,10 +13,10 @@ void OMCServiceObserverCallback( OmcObserverMessage inMessage, CFIndex inTaskID,
 	if(userData == NULL)
 		return;
 	
-    id objcObject = (__bridge id)userData;
+    id __weak objcObject = (__bridge id)userData;
 	if( [objcObject isKindOfClass:[OMCService class] ] )
 	{
-		OMCService *cocoaDelegate = (OMCService *)objcObject;
+		OMCService *__weak cocoaDelegate = (OMCService *)objcObject;
 		[cocoaDelegate receiveObserverMessage:inMessage forTaskId:inTaskID withData:inResult];
 	}
 }
@@ -61,7 +61,26 @@ void OMCServiceObserverCallback( OmcObserverMessage inMessage, CFIndex inTaskID,
 - (void)runOMCService:(NSPasteboard *)pboard userData:(NSString *)userData error:(NSString **)error
 {
 	NSBundle *appBundle = [NSBundle mainBundle];
-    OMCExecutorRef omcExec = OMCCreateExecutor(nil);
+    NSURL *commandURL = nil;
+
+    BOOL runningInOMCServiceApp = [appBundle.bundleIdentifier isEqualToString:@"com.abracode.OMCService"];
+    // if we are running in OMCService.service app we call OMCCreateExecutor() with commandURL = nil
+    // and that will read the command list from
+    // "com.abracode.OnMyCommandCMPrefs.plist" in ~/Library/Preferences/
+    // otherwise we find Command.plist in the applet bundle here:
+    if(!runningInOMCServiceApp)
+    {
+        NSString *plistPath = [appBundle pathForResource:@"Command" ofType:@"plist"];
+        if(plistPath == NULL)
+        {
+            if(error != NULL)
+                *error = @"Could not find Command.plist in app bundle";
+            return;
+        }
+        commandURL = [NSURL fileURLWithPath:plistPath];
+    }
+
+    OMCExecutorRef omcExec = OMCCreateExecutor( (__bridge CFURLRef)commandURL );
 	if(omcExec == NULL)
 	{
 		if(error != NULL)
@@ -121,6 +140,8 @@ void OMCServiceObserverCallback( OmcObserverMessage inMessage, CFIndex inTaskID,
 	id contextObj = nil;
 	if(pboard != nil)
 	{
+        NSArray<NSPasteboardType> *pasteboardTypes = pboard.types;
+        
 		if(prefersTextContext)
 		{
 			NSArray *supportedTextTypes = [NSArray arrayWithObjects: NSStringPboardType, NULL];
@@ -129,13 +150,18 @@ void OMCServiceObserverCallback( OmcObserverMessage inMessage, CFIndex inTaskID,
                 contextObj = [pboard stringForType:NSStringPboardType];
 		}
 
-		if(contextObj == nil)//also will enter here if prefersTextContext == false
+		if(pasteboardTypes != nil && contextObj == nil)//also will enter here if prefersTextContext == false
 		{//try file names
-			NSArray *supportedFileTypes = [NSArray arrayWithObjects: NSFilenamesPboardType, NULL];
+			NSArray *supportedFileTypes = [NSArray arrayWithObjects: NSFilenamesPboardType, NSPasteboardTypeFileURL, NULL];
 			NSString *bestType = [pboard availableTypeFromArray:supportedFileTypes];
 			if(bestType != NULL)
 			{
                 contextObj = [pboard propertyListForType:NSFilenamesPboardType];
+                if(contextObj == nil)
+                {
+                    NSString *urlString = [pboard stringForType:NSPasteboardTypeFileURL];
+                    contextObj = [NSURL URLWithString:urlString];
+                }
 				//if([resultList isKindOfClass:[NSArray class]])
 			}
 			else if(!prefersTextContext)//we don't have file paths and did not try text yet: do it now

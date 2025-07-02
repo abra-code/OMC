@@ -496,8 +496,8 @@ OnMyCommandCM::CommonContextCheck( const AEDesc *inContext, CFTypeRef inCFContex
 	}
 
 	Boolean runningInEditorApp = false;
-	
 	Boolean frontProcessIsFinder = false;
+    Boolean runningInShortcutsObserver = false;
 
 	CFStringRef hostAppBundleID = CFBundleGetIdentifier(CFBundleGetMainBundle());
 	if(hostAppBundleID != NULL)
@@ -509,28 +509,42 @@ OnMyCommandCM::CommonContextCheck( const AEDesc *inContext, CFTypeRef inCFContex
 		}
 		else
 #endif
-		if( (kCFCompareEqualTo == ::CFStringCompare( hostAppBundleID, CFSTR("com.abracode.Shortcuts"), 0)) ||
-				 (kCFCompareEqualTo == ::CFStringCompare( hostAppBundleID, CFSTR("de.MacDisk.Knut.OMCEdit"), 0)) )
+		
+        if(kCFCompareEqualTo == ::CFStringCompare(hostAppBundleID, CFSTR("com.abracode.OMCService"), 0))
+        {
+            mHostApp = kOMCHostApp_OMCService;
+        }
+		else if(kCFCompareEqualTo == ::CFStringCompare(hostAppBundleID, CFSTR("com.abracode.ShortcutObserver"), 0))
 		{
-			runningInEditorApp = true;
+            mHostApp = kOMCHostApp_ShortcutsObserver;
+            runningInShortcutsObserver = true;
 		}
-		else if(kCFCompareEqualTo == ::CFStringCompare( hostAppBundleID, CFSTR("com.abracode.ShortcutObserver"), 0 ))
-		{
-			mRunningInShortcutsObserver = true;
-			
-			//remember front process pid at the moment of context check
-			//in case it gets changed later, we need to keep it
-			mFrontProcessPID = GetFrontAppPID();
-			
-			CFObj<CFStringRef> frontProcessBundleID = CopyFrontAppBundleIdentifier();
-			if(frontProcessBundleID != nullptr)
-			{
-				if( kCFCompareEqualTo == ::CFStringCompare( frontProcessBundleID, CFSTR("com.apple.finder"), 0 ) )
-					frontProcessIsFinder = true;
-			}
-		}
+        else if(kCFCompareEqualTo == ::CFStringCompare(hostAppBundleID, CFSTR("com.abracode.Shortcuts"), 0))
+        {
+            mHostApp = kOMCHostApp_Shortcuts;
+            runningInEditorApp = true;
+        }
+        else if(kCFCompareEqualTo == ::CFStringCompare(hostAppBundleID, CFSTR("de.MacDisk.Knut.OMCEdit"), 0))
+        {
+            mHostApp = kOMCHostApp_OMCEdit;
+            runningInEditorApp = true;
+        }
 	}
 	
+    if((mHostApp == kOMCHostApp_OMCService) || (mHostApp == kOMCHostApp_ShortcutsObserver))
+    {
+        //remember front process pid at the moment of context check
+        //in case it gets changed later, we need to keep it
+        mFrontProcessPID = GetFrontAppPID();
+        
+        CFObj<CFStringRef> frontProcessBundleID = CopyFrontAppBundleIdentifier();
+        if(frontProcessBundleID != nullptr)
+        {
+            if( kCFCompareEqualTo == ::CFStringCompare( frontProcessBundleID, CFSTR("com.apple.finder"), 0 ) )
+                frontProcessIsFinder = true;
+        }
+    }
+    
 #if OLD_CODE_USED_IN_INPROC_CM_PLUGINS
 	if(mIsNullContext && mCMPluginMode)//for null context in CM mode try to get text from Cocoa host
 	{
@@ -604,7 +618,7 @@ OnMyCommandCM::CommonContextCheck( const AEDesc *inContext, CFTypeRef inCFContex
 	}
 
 	if(	anythingSelected && ((theFlags & kListOutMultipleObjects) == 0) && isFolder &&
-		(mRunningInShortcutsObserver && frontProcessIsFinder) )
+		(runningInShortcutsObserver && frontProcessIsFinder) )
 	{//single folder selected in Finder - check what it is
 		mIsOpenFolder = CMUtils::IsClickInOpenFinderWindow(inContext, false);
 		anythingSelected = ! mIsOpenFolder;
@@ -628,14 +642,14 @@ OnMyCommandCM::CommonContextCheck( const AEDesc *inContext, CFTypeRef inCFContex
 	if(outCommandPairs != NULL)
 	{
 		(void)PopulateItemsMenu( inContext, outCommandPairs,
-								runningInEditorApp || mRunningInShortcutsObserver,
+								runningInEditorApp || runningInShortcutsObserver,
 								frontProcessName );
 	}
 	
 	if(inCmdIndex >= 0)
 	{
 		bool isEnabled = IsCommandEnabled( inCmdIndex, inContext,
-							runningInEditorApp || mRunningInShortcutsObserver,
+							runningInEditorApp || runningInShortcutsObserver,
 							frontProcessName );
 		if( !isEnabled )
 			err = errAEWrongDataType;
@@ -3942,7 +3956,7 @@ OnMyCommandCM::AppendTextToCommand(CFMutableStringRef inCommandRef, CFStringRef 
 		case FRONT_PROCESS_ID:
 		{
 			pid_t frontPID = 0;
-			if( mRunningInShortcutsObserver && (mFrontProcessPID != 0))
+			if((mHostApp == kOMCHostApp_ShortcutsObserver) && (mFrontProcessPID != 0))
 				frontPID = mFrontProcessPID;
 			else
 				frontPID = GetFrontAppPID();
@@ -3954,7 +3968,7 @@ OnMyCommandCM::AppendTextToCommand(CFMutableStringRef inCommandRef, CFStringRef 
 		case FRONT_APPLICATION_NAME:
 		{
 			CFObj<CFStringRef> frontAppStr;
-			if(mRunningInShortcutsObserver && (mFrontProcessPID != 0))
+			if((mHostApp == kOMCHostApp_ShortcutsObserver) && (mFrontProcessPID != 0))
 				frontAppStr.Adopt(CopyAppNameForPID(mFrontProcessPID) );
 
 			if(frontAppStr == nullptr)
@@ -4259,7 +4273,7 @@ OnMyCommandCM::PopulateEnvironList(CFMutableDictionaryRef ioEnvironList,
 			case FRONT_PROCESS_ID:
 			{
 				pid_t frontPID = 0;
-				if( mRunningInShortcutsObserver && (mFrontProcessPID != 0))
+				if((mHostApp == kOMCHostApp_ShortcutsObserver) && (mFrontProcessPID != 0))
 					frontPID = mFrontProcessPID;
 				else
 					frontPID = GetFrontAppPID();
@@ -4271,7 +4285,7 @@ OnMyCommandCM::PopulateEnvironList(CFMutableDictionaryRef ioEnvironList,
 			case FRONT_APPLICATION_NAME:
 			{
 				CFObj<CFStringRef> frontAppStr;
-				if(mRunningInShortcutsObserver && (mFrontProcessPID != 0))
+				if((mHostApp == kOMCHostApp_ShortcutsObserver) && (mFrontProcessPID != 0))
 					frontAppStr.Adopt(CopyAppNameForPID(mFrontProcessPID) );
 				
 				if(frontAppStr == nullptr)
