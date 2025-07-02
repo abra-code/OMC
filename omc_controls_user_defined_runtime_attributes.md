@@ -49,11 +49,6 @@ OMCPopUpButton:
 OMCProgressIndicator:
 	Number		tag
 
-OMCQCView:
-	String		commandID
-	Number		tag
-	String		escapingMode
-
 OMCSearchField:
 	String		commandID
 	String		escapingMode

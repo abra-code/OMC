@@ -62,7 +62,6 @@ class OMCCocoaDialog;
 - (BOOL)terminate;
 - (void)dispatchCommand:(NSString *)inCommandID withContext:(CFTypeRef)inContext;
 - (OSStatus)processCommandWithContext:(CFTypeRef)inContext;
-- (id)getContext; // context as Obj-C object (translated from AEDesc)
 - (void)setWindowTopLeftPosition:(NSPoint)absolutePosition;
 - (void) sendObjCMessage:(CFArrayRef)oneObjCMessage toTarget:(id)messageTarget;
 - (SelectionIterator *)createSelectionIterator:(CFDictionaryRef)inIteratorParams;

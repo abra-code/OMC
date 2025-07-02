@@ -1099,35 +1099,6 @@ OnMyCommandCM::SwapContext(OMCContextData &ioContextData)
 	ioContextData.mIsTextContext = tempBool;
 }
 
-CFObj<CFTypeRef>
-OnMyCommandCM::GetContext()
-{
-    CFObj<CFTypeRef> outContext;
-
-	if( mObjectList.size() > 0 )
-	{
-        CFMutableArrayRef contextFiles = ::CFArrayCreateMutable(kCFAllocatorDefault, mObjectList.size(), &kCFTypeArrayCallBacks);
-        if(contextFiles == NULL)
-        {
-            return outContext;
-        }
-        
-        for(size_t i = 0; i < mObjectList.size(); i++)
-        {
-            if(mObjectList[i].url != nullptr)
-                ::CFArrayAppendValue(contextFiles, mObjectList[i].url);
-        }
-
-        outContext.Adopt( (CFTypeRef)contextFiles, kCFObjDontRetain );
-	}
-	else if(mContextText != NULL)
-	{
-        outContext.Adopt( (CFTypeRef)mContextText, kCFObjRetain );
-	}
-    
-	return outContext;
-}
-
 void
 OnMyCommandCM::DeleteCommandList()
 {

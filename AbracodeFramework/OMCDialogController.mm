@@ -7,13 +7,14 @@
 //
 
 #include <CoreServices/CoreServices.h>
+#import <Quartz/Quartz.h>
+#import <PDFKit/PDFKit.h>
 #import "OMCDialogController.h"
 #import "OMCPopUpButton.h"
 #include "OnMyCommand.h"
 #include "ACFDict.h"
 #include "OMCCocoaDialog.h"
 #include <vector>
-#import "OMCQCView.h"
 #import "OMCTableViewController.h"
 #import "OMCTableView.h"
 #import "OMCComboBox.h" //for shouldExecutAction
@@ -1856,13 +1857,6 @@ GetAllDialogControllers()
 	SelectionIterator_Release(currentSelectionIterator);
 	
 	return status;
-}
-
-- (id)getContext
-{
-    CFObj<CFTypeRef> cfContext = mPlugin->GetContext();
-    id __strong outContext = CFBridgingRelease(cfContext.Detach());
-    return outContext;
 }
 
 - (void)setWindowTopLeftPosition:(NSPoint)absolutePosition

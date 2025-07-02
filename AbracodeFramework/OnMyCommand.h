@@ -352,7 +352,6 @@ public:
 	CommandDescription * GetCommandList() { return mCommandList; }
 	UInt32				GetCommandCount() const { return mCommandCount; }
 
-    CFObj<CFTypeRef>	GetContext();
 	CFBundleRef			GetCurrentCommandExternBundle();
 	static SInt32		GetCurrentMacOSVersion() { return sMacOSVersion; }
 
