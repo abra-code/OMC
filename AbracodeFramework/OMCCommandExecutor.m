@@ -96,16 +96,12 @@ static NSMutableDictionary *sCachedPlists = NULL;
 					
 					if( (error == noErr) && (delegate != NULL) && [delegate respondsToSelector:@selector(noteNewRecentDocumentURL:)] )
 					{
-						
 						//add to open recent
-                        NSArray *absoluteURLArray = (__bridge NSArray *)docList;
-						NSUInteger fileCount = [absoluteURLArray count];
-						NSUInteger i;
-						for( i = 0; i < fileCount; i++ )
-						{
-							id oneFileURL = [absoluteURLArray objectAtIndex:i];
-							[delegate noteNewRecentDocumentURL:oneFileURL];
-						}
+                        NSArray<NSURL*> *__weak absoluteURLArray = (__bridge NSArray<NSURL*> *)docList;
+                        for(NSURL *oneFileURL in absoluteURLArray)
+                        {
+                            [delegate noteNewRecentDocumentURL:oneFileURL];
+                        }
 					}
 				}
 			}
@@ -185,7 +181,7 @@ static NSMutableDictionary *sCachedPlists = NULL;
 		sCachedPlists = [[NSMutableDictionary alloc] init];
 	}
 
-    [sCachedPlists setObject:(__bridge id)thePlist forKey:absURL];// plist retained
+    [sCachedPlists setObject:(__bridge id)thePlist forKey:absURL];
 	CFRelease( thePlist );
 
 	return thePlist;

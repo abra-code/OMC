@@ -45,21 +45,18 @@
 //do the mapping here or fall back to NSPopUpButton implementation
 - (void)selectItemWithTitle:(NSString *)title
 {
-	NSArray *itemArray = [self itemArray];
+	NSArray<NSMenuItem *> *itemArray = [self itemArray];
 	if( (itemArray == NULL) || (title == NULL) )
 		return;
 
-	NSUInteger itemCount = [itemArray count];
-    NSUInteger itemIndex;
-	for(itemIndex = 0; itemIndex < itemCount; itemIndex++)
+	for(NSMenuItem *menuItem in itemArray)
 	{
-		NSMenuItem *menuItem = [itemArray objectAtIndex:itemIndex];
-		if( (menuItem != NULL) && [menuItem respondsToSelector:@selector(mappedValue)] )
+		if( [menuItem respondsToSelector:@selector(mappedValue)] )
 		{
 			NSString *mappedValue = [menuItem performSelector:@selector(mappedValue)];
 			if( (mappedValue != NULL) && [mappedValue isEqualToString:title] )
 			{
-				[self selectItemAtIndex:itemIndex];
+				[self selectItem:menuItem];
 				return;
 			}
 		}

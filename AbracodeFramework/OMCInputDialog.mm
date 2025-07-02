@@ -11,6 +11,24 @@
 #include "OnMyCommand.h"
 #include "OMCInputDialogController.h"
 
+// For legacy reasons we start with CFBundleRef so we use all CoreFoundations input objects and return NSString *
+static inline
+NSString *
+LocalizedString(CFStringRef inStr, CFBundleRef localizationBundle, CFStringRef localizationTableName)
+{
+    NSString *__strong nsLocalizedStr = nil;
+    if(inStr != NULL)
+    {
+        CFRetain(inStr);
+        nsLocalizedStr = CFBridgingRelease(inStr);
+        if(localizationTableName != NULL)
+        {
+            nsLocalizedStr = (NSString *)CFBridgingRelease(::CFCopyLocalizedStringFromTableInBundle(inStr, localizationTableName, localizationBundle, ""));
+        }
+    }
+    return nsLocalizedStr;
+}
+
 //returns true if OKeyed and outStringRef is retained so caller responsible for releasing it
 Boolean RunCocoaInputDialog(OnMyCommandCM *inPlugin, CFStringRef &outStringRef)
 {
@@ -62,53 +80,34 @@ Boolean RunCocoaInputDialog(OnMyCommandCM *inPlugin, CFStringRef &outStringRef)
             [theController setWindowTitle:(__bridge NSString *)(CFStringRef)dynamicCommandName];
         }
 
-        NSString *inputDialogOK = (__bridge NSString *)currCommand.inputDialogOK;
-        if(inputDialogOK != NULL)
-        {
-            if(currCommand.localizationTableName != NULL)
-            {
-                inputDialogOK = (NSString *)CFBridgingRelease(::CFCopyLocalizedStringFromTableInBundle( currCommand.inputDialogOK, currCommand.localizationTableName, localizationBundle, ""));
-            }
-            [theController setOKButtonTitle:inputDialogOK];
-        }
+        NSString *inputDialogOK = LocalizedString(currCommand.inputDialogOK, localizationBundle, currCommand.localizationTableName);
+        [theController setOKButtonTitle:inputDialogOK];
+        
+        NSString *inputDialogCancel = LocalizedString(currCommand.inputDialogCancel, localizationBundle, currCommand.localizationTableName);
+        [theController setCancelButtonTitle:inputDialogCancel];
 
-        NSString *inputDialogCancel = (__bridge NSString *)currCommand.inputDialogCancel;
-        if(inputDialogCancel != NULL)
-        {
-            if(currCommand.localizationTableName != NULL)
-            {
-                inputDialogCancel = (NSString *)CFBridgingRelease(::CFCopyLocalizedStringFromTableInBundle( currCommand.inputDialogCancel, currCommand.localizationTableName, localizationBundle, ""));
-            }
-            [theController setCancelButtonTitle:inputDialogCancel];
-        }
-
-        NSString* inputDialogMessage = (__bridge NSString*)currCommand.inputDialogMessage;
-        if(inputDialogMessage!= NULL)
-        {
-            if(currCommand.localizationTableName != NULL)
-            {
-                inputDialogMessage = (NSString*)CFBridgingRelease(::CFCopyLocalizedStringFromTableInBundle( currCommand.inputDialogMessage, currCommand.localizationTableName, localizationBundle, ""));
-            }
-            [theController setMessageText:inputDialogMessage];
-        }
-
-        NSArray *inputDialogMenuItems = (__bridge NSArray*)currCommand.inputDialogMenuItems;
+        NSString* inputDialogMessage = LocalizedString(currCommand.inputDialogMessage, localizationBundle, currCommand.localizationTableName);
+        [theController setMessageText:inputDialogMessage];
+        
+        CFRetain(currCommand.inputDialogMenuItems);
+        NSArray *__strong inputDialogMenuItems = CFBridgingRelease(currCommand.inputDialogMenuItems);
+        
         if( (dialogType == kInputPopupMenu) || (dialogType == kInputComboBox) )
         {
             if( (inputDialogMenuItems != NULL) && (currCommand.localizationTableName != NULL) )
             {
-                NSUInteger itemCount = [inputDialogMenuItems count];
-                NSMutableArray *localizedArray = [NSMutableArray arrayWithCapacity:itemCount];
+                NSMutableArray *localizedArray = [NSMutableArray arrayWithCapacity:inputDialogMenuItems.count];
                 Class stringClass = [NSString class];
-                for(NSUInteger i = 0; i < itemCount; i++)
+                for(id oneItem in inputDialogMenuItems)
                 {
-                    id oneItem = [inputDialogMenuItems objectAtIndex:i];
                     if( [oneItem isKindOfClass:stringClass] )
                     {
-                        NSString *oneString = (NSString *)CFBridgingRelease(::CFCopyLocalizedStringFromTableInBundle( (CFStringRef)oneItem, currCommand.localizationTableName, localizationBundle, ""));
-                        [localizedArray addObject:oneString];
+                        NSString* localizedString = LocalizedString((__bridge CFStringRef)oneItem, localizationBundle, currCommand.localizationTableName);
+                        // non-null oneItem guarantees non-null result oneString
+                        [localizedArray addObject:localizedString];
                     }
                 }
+                
                 inputDialogMenuItems = localizedArray;
             }
             [theController setMenuItems:inputDialogMenuItems];

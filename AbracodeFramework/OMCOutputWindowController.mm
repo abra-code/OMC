@@ -51,8 +51,9 @@ void ReleaseOutputWindowController(OMCOutputWindowControllerRef inControllerRef)
 {
     @try
     {
-        [(__bridge OMCOutputWindowController *)inControllerRef close];
-        CFBridgingRelease(inControllerRef);
+        OMCOutputWindowController *controller = (OMCOutputWindowController *)CFBridgingRelease(inControllerRef);
+        [controller close];
+        controller = nil;
     }
     @catch (NSException *localException)
     {
@@ -64,7 +65,8 @@ void OMCOutputWindowSetText(OMCOutputWindowControllerRef inControllerRef, CFStri
 {
     @try
     {
-        [(__bridge OMCOutputWindowController *)inControllerRef setText:(__bridge NSString *)inText];
+        OMCOutputWindowController *__weak controller = (__bridge OMCOutputWindowController *)inControllerRef;
+        [controller setText:(__bridge NSString *)inText];
     }
     @catch (NSException *localException)
     {
@@ -76,7 +78,8 @@ void OMCOutputWindowAppendText(OMCOutputWindowControllerRef inControllerRef, CFS
 {
     @try
     {
-        [((__bridge OMCOutputWindowController *)inControllerRef) appendText:(__bridge NSString *)inText];
+        OMCOutputWindowController *__weak controller = (__bridge OMCOutputWindowController *)inControllerRef;
+        [controller appendText:(__bridge NSString *)inText];
     }
     @catch (NSException *localException)
     {
@@ -88,7 +91,7 @@ void OMCOutputWindowScheduleClosing(OMCOutputWindowControllerRef inControllerRef
 {
     @try
     {
-        OMCOutputWindowController *controller = (__bridge OMCOutputWindowController *)inControllerRef;
+        OMCOutputWindowController *__weak controller = (__bridge OMCOutputWindowController *)inControllerRef;
         [NSTimer scheduledTimerWithTimeInterval:delay
                                             target:controller
                                             selector:@selector(close)

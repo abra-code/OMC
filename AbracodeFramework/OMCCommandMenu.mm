@@ -162,12 +162,10 @@ PopulateCommandsMenu(OnMyCommandCM *inPlugin, NSMenu *topMenu)
 		NSMenu * subMenu = FindOrAddSubmenu(topMenu, menuChain);
 		if( (subMenu != NULL) && (commandList[i].name != NULL) )
 		{
-			CFObj<CFStringRef> staticName( ::CFStringCreateByCombiningStrings( kCFAllocatorDefault, commandList[i].name, CFSTR("") ) );
-			
-            NSString *localizedName = (__bridge NSString *)(CFStringRef)staticName;
+            NSString *localizedName = (NSString *)CFBridgingRelease( ::CFStringCreateByCombiningStrings(kCFAllocatorDefault, commandList[i].name, CFSTR("")) );
 			if(commandList[i].localizationTableName != NULL)
 			{
-                localizedName = (NSString*)CFBridgingRelease(::CFCopyLocalizedStringFromTableInBundle(staticName, commandList[i].localizationTableName, localizationBundle, ""));
+                localizedName = (NSString*)CFBridgingRelease(::CFCopyLocalizedStringFromTableInBundle((CFStringRef)localizedName, commandList[i].localizationTableName, localizationBundle, ""));
 			}
 
 			OMCMenuItem *newItem = [[OMCMenuItem alloc] initWithTitle:localizedName action:@selector(executeCommand:) keyEquivalent:@""];
@@ -176,7 +174,7 @@ PopulateCommandsMenu(OnMyCommandCM *inPlugin, NSMenu *topMenu)
 				[newItem setTarget:topMenu];
                 [newItem setCommandID:(__bridge NSString *)(commandList[i].commandID)];
 				//CFIndex retCount = CFGetRetainCount((CFStringRef)staticName);
-                [newItem setRepresentedObject: (__bridge id)(CFStringRef)staticName];//the original non-localized name stuffed here. retained object
+                [newItem setRepresentedObject: localizedName];//the original non-localized name stuffed here. retained object
 				//retCount = CFGetRetainCount((CFStringRef)staticName);
 				[subMenu addItem:newItem];
 			}

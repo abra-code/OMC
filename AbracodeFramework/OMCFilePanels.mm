@@ -40,10 +40,15 @@ CreateCFURLFromSaveAsDialog( CFStringRef inClientName, CFStringRef inMessage, CF
 		}
 		
         if(inDefaultDirPath != nullptr)
+        {
             savePanel.directoryURL = [NSURL fileURLWithPath:(__bridge NSString *)inDefaultDirPath];
-       
+        }
+        
         if(inDefaultName != nullptr)
-            savePanel.nameFieldStringValue = (__bridge NSString *)inDefaultName;
+        {
+            CFRetain(inDefaultName);
+            savePanel.nameFieldStringValue = (NSString *)CFBridgingRelease(inDefaultName);
+        }
         
         NSModalResponse response = [savePanel runModal];
         if(response == NSModalResponseOK)
@@ -113,8 +118,9 @@ CreateCFURLsFromOpenDialog( CFStringRef inClientName, CFStringRef inMessage, CFS
 		}
 
         if(inDefaultDirPath != nullptr)
+        {
             openPanel.directoryURL = [NSURL fileURLWithPath:(__bridge NSString *)inDefaultDirPath];
-       
+        }
 
         NSModalResponse response = [openPanel runModal];
         if(response == NSModalResponseOK)

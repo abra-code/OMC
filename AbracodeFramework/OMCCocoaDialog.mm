@@ -77,11 +77,11 @@ OMCCocoaDialog::CopyControlValue(CFStringRef inControlID, CFStringRef inControlP
     {
         if(mController != NULL)
         {
-            outValue = [(__bridge OMCDialogController*)mController
-                                controlValueForID:(__bridge NSString *)inControlID
-                                          forPart:(__bridge NSString *)inControlPart
-                                     withIterator:inSelIterator
-                                    outProperties:outCustomProperties];
+            OMCDialogController *__weak controller = (__bridge OMCDialogController*)mController;
+            outValue = [controller controlValueForID:(__bridge NSString *)inControlID
+                                             forPart:(__bridge NSString *)inControlPart
+                                        withIterator:inSelIterator
+                                       outProperties:outCustomProperties];
         }
     }
     @catch (NSException *localException)

@@ -13,6 +13,6 @@ IB_DESIGNABLE
 @property (nonatomic, readwrite) BOOL enabled;
 
 //recursive enable/disable for all controls in a view
-+ (void)setEnabled:(BOOL)flag inView:(id)inView;
++ (void)setEnabled:(BOOL)flag inView:(NSView *)inView;
 
 @end //OMCView

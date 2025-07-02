@@ -55,9 +55,9 @@
 		NSLog(@"OMCQCView failed to load composition at \"%@\"", self.compositionPath);
 
 	NSMutableDictionary* userInfo = [self userInfo];
-	if( (userInfo != NULL) && (self.target != NULL) && [self.target respondsToSelector:@selector(getCFContext)])
+	if( (userInfo != NULL) && (self.target != NULL) && [self.target respondsToSelector:@selector(getContext)])
 	{
-		id contextInfo = [self.target getCFContext];
+		id contextInfo = [self.target getContext];
 		[userInfo setValue:contextInfo forKey:@"com.abracode.context"];
 	}
 

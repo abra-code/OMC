@@ -434,6 +434,8 @@ OnMyCommandCM::CommonContextCheck( const AEDesc *inContext, CFTypeRef inCFContex
 	else
 		mIsNullContext = (inCFContext == NULL);
 
+    CFObj<CFMutableArrayRef> contextFiles;
+    
 	if(inCFContext != NULL)
 	{
 		CFTypeID contextType = ::CFGetTypeID( inCFContext );
@@ -444,13 +446,13 @@ OnMyCommandCM::CommonContextCheck( const AEDesc *inContext, CFTypeRef inCFContex
 		}
 		else if( contextType == ACFType<CFArrayRef>::GetTypeID() ) //list of files
 		{
-			mContextFiles.Adopt(
+			contextFiles.Adopt(
 					::CFArrayCreateMutable(kCFAllocatorDefault, mObjectList.size(), &kCFTypeArrayCallBacks),
 					kCFObjDontRetain );
 
 			CFArrayRef fileArray = (CFArrayRef)inCFContext;
 			CFIndex fileCount = ::CFArrayGetCount(fileArray);
-			if( (fileCount > 0) && (mContextFiles != NULL) )
+			if( (fileCount > 0) && (contextFiles != NULL) )
 			{
 				for(CFIndex i = 0; i < fileCount; i++)
 				{
@@ -475,17 +477,17 @@ OnMyCommandCM::CommonContextCheck( const AEDesc *inContext, CFTypeRef inCFContex
 						}
 						
 						if(oneUrl != NULL)
-							::CFArrayAppendValue( mContextFiles, (CFURLRef)oneUrl );
+							::CFArrayAppendValue( contextFiles, (CFURLRef)oneUrl );
 					}
 				}
 			}
 		}
 		else if( contextType == ACFType<CFURLRef>::GetTypeID() )
 		{//make a list even if single file. preferrable because Finder in 10.3 or higher does that
-			mContextFiles.Adopt(
+			contextFiles.Adopt(
 								::CFArrayCreateMutable(kCFAllocatorDefault, 1, &kCFTypeArrayCallBacks),
 								kCFObjDontRetain );
-			::CFArrayAppendValue( mContextFiles, (CFURLRef)inCFContext );
+			::CFArrayAppendValue( contextFiles, (CFURLRef)inCFContext );
 		}
 		else
 		{
@@ -561,9 +563,9 @@ OnMyCommandCM::CommonContextCheck( const AEDesc *inContext, CFTypeRef inCFContex
 		{
 			err = ::AECountItems(inContext, &listItemsCount);
 		}
-		else if(mContextFiles != NULL)
+		else if(contextFiles != NULL)
 		{
-			listItemsCount = ::CFArrayGetCount(mContextFiles);
+			listItemsCount = ::CFArrayGetCount(contextFiles);
 			err = noErr;
 		}
 		
@@ -577,8 +579,8 @@ OnMyCommandCM::CommonContextCheck( const AEDesc *inContext, CFTypeRef inCFContex
 			}
 		}
 
-		if( mContextFiles != NULL )
-			anythingSelected = CMUtils::ProcessObjectList( mContextFiles, theFlags, CFURLCheckFileOrFolder, this);
+		if( contextFiles != NULL )
+			anythingSelected = CMUtils::ProcessObjectList( contextFiles, theFlags, CFURLCheckFileOrFolder, this);
 		else if(inContext != NULL)
 			anythingSelected = CMUtils::ProcessObjectList( inContext, theFlags, CFURLCheckFileOrFolder, this );
 
@@ -1080,7 +1082,6 @@ OnMyCommandCM::Finalize()
 void
 OnMyCommandCM::SwapContext(OMCContextData &ioContextData)
 {
-	this->mContextFiles.Swap(ioContextData.mContextFiles);
 	this->mContextText.Swap(ioContextData.mContextText);
 	this->mObjectList.swap(ioContextData.mObjectList);
 	this->mCommonParentPath.Swap(ioContextData.mCommonParentPath);
@@ -1098,35 +1099,33 @@ OnMyCommandCM::SwapContext(OMCContextData &ioContextData)
 	ioContextData.mIsTextContext = tempBool;
 }
 
-CFTypeRef
-OnMyCommandCM::GetCFContext()
+CFObj<CFTypeRef>
+OnMyCommandCM::GetContext()
 {
+    CFObj<CFTypeRef> outContext;
+
 	if( mObjectList.size() > 0 )
 	{
-		if(mContextFiles == NULL)
-		{
-			mContextFiles.Adopt(
-				::CFArrayCreateMutable(kCFAllocatorDefault, mObjectList.size(), &kCFTypeArrayCallBacks),
-				kCFObjDontRetain );
-			
-			if(mContextFiles != NULL)
-			{	
-				for(size_t i = 0; i < mObjectList.size(); i++)
-				{
-					if(mObjectList[i].url != nullptr)
-						::CFArrayAppendValue( mContextFiles, mObjectList[i].url );
-				}
-			}
-		}
+        CFMutableArrayRef contextFiles = ::CFArrayCreateMutable(kCFAllocatorDefault, mObjectList.size(), &kCFTypeArrayCallBacks);
+        if(contextFiles == NULL)
+        {
+            return outContext;
+        }
+        
+        for(size_t i = 0; i < mObjectList.size(); i++)
+        {
+            if(mObjectList[i].url != nullptr)
+                ::CFArrayAppendValue(contextFiles, mObjectList[i].url);
+        }
 
-		return (CFMutableArrayRef)mContextFiles;
+        outContext.Adopt( (CFTypeRef)contextFiles, kCFObjDontRetain );
 	}
 	else if(mContextText != NULL)
 	{
-		return (CFStringRef)mContextText;
+        outContext.Adopt( (CFTypeRef)mContextText, kCFObjRetain );
 	}
-
-	return NULL;
+    
+	return outContext;
 }
 
 void

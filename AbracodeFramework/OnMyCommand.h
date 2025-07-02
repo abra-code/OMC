@@ -224,7 +224,6 @@ public:
 	{
 	}
 
-	CFObj<CFMutableArrayRef>	mContextFiles;
 	CFObj<CFStringRef>			mContextText;
 	std::vector<OneObjProperties> mObjectList;
 	CFIndex						mCurrObjectIndex;
@@ -353,7 +352,7 @@ public:
 	CommandDescription * GetCommandList() { return mCommandList; }
 	UInt32				GetCommandCount() const { return mCommandCount; }
 
-	CFTypeRef			GetCFContext();
+    CFObj<CFTypeRef>	GetContext();
 	CFBundleRef			GetCurrentCommandExternBundle();
 	static SInt32		GetCurrentMacOSVersion() { return sMacOSVersion; }
 
@@ -371,7 +370,6 @@ protected:
     UInt32						mCurrCommandIndex {0};
     std::vector<OneObjProperties> mObjectList;
     CFIndex						mCurrObjectIndex {0};
-	CFObj<CFMutableArrayRef>	mContextFiles;
 	AUniquePtr<SortSettings>	mSortSettings;
 	CFObj<CFStringRef>			mContextText;//selected or clipboard text
 	CFObj<CFStringRef>			mClipboardText;//may be the same as mContextText, just retained

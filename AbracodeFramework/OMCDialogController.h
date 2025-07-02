@@ -26,14 +26,14 @@ class OMCCocoaDialog;
 	CFObj<CFBundleRef>				mExternBundleRef;
 	CFObj<CFArrayRef>				mCommandName;
 	CFObj<CFStringRef>				mDialogUniqueID;
-	CFObj<CFStringRef>				mInitSubcommandID;
-	CFObj<CFStringRef>				mEndOKSubcommandID;
-	CFObj<CFStringRef>				mEndCancelSubcommandID;
 	Boolean							mIsModal;
 	Boolean							mIsRunning;
 }
 
 @property (nonatomic, strong) NSWindow *window;
+@property (nonatomic, strong) NSString *dialogInitSubcommandID;
+@property (nonatomic, strong) NSString *endOKSubcommandID;
+@property (nonatomic, strong) NSString *endCancelSubcommandID;
 @property (nonatomic, strong) NSString *lastCommandID;
 @property (nonatomic, strong) OMCCocoaNib *omcCocoaNib;
 @property (nonatomic, strong) NSMutableSet *dialogOwnedItems;
@@ -62,7 +62,7 @@ class OMCCocoaDialog;
 - (BOOL)terminate;
 - (void)dispatchCommand:(NSString *)inCommandID withContext:(CFTypeRef)inContext;
 - (OSStatus)processCommandWithContext:(CFTypeRef)inContext;
-- (id)getCFContext;//cm context as CF object (translated from AEDesc)
+- (id)getContext; // context as Obj-C object (translated from AEDesc)
 - (void)setWindowTopLeftPosition:(NSPoint)absolutePosition;
 - (void) sendObjCMessage:(CFArrayRef)oneObjCMessage toTarget:(id)messageTarget;
 - (SelectionIterator *)createSelectionIterator:(CFDictionaryRef)inIteratorParams;

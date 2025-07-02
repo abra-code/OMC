@@ -41,7 +41,7 @@
 }
 
 //recursive enable/disable for all controls in a view
-+ (void)setEnabled:(BOOL)flag inView:(id)inView
++ (void)setEnabled:(BOOL)flag inView:(NSView *)inView
 {
 	//checking if inView responds to setEnabled: selector and calling it would result in infinite loop for OMCView
 	//we check for classes that we know that respond to that selector instead
@@ -58,46 +58,22 @@
 	}
 	else if([inView isKindOfClass:[NSTabView class] ])
 	{//search tabs view recursively
-		NSArray *tabViewsArray = [(NSTabView*)inView tabViewItems];
-		if(tabViewsArray != NULL)
-		{
-			NSUInteger tabCount = [tabViewsArray count];
-			NSUInteger tabIndex;
-			for(tabIndex=0; tabIndex < tabCount; tabIndex++)
-			{
-				id oneTab = [tabViewsArray objectAtIndex:tabIndex];
-				if( (oneTab != NULL) && [oneTab isKindOfClass:[NSTabViewItem class]] )
-				{
-					id viewObject = [(NSTabViewItem*)oneTab view];
-					if( (viewObject != NULL) && [viewObject isKindOfClass:[NSView class]] )
-					{
-						[OMCView setEnabled:flag inView:viewObject];
-					}
-				}
-			}
-		}
+        for(NSTabViewItem *oneTab in ((NSTabView*)inView).tabViewItems)
+        {
+            NSView *tabView = [oneTab view];
+            if(tabView != nil)
+            {
+                [OMCView setEnabled:flag inView:tabView];
+            }
+        }
 	}
-	else if( [inView isKindOfClass:[NSView class] ] )
+	else if(inView != nil)
 	{
 		//search subviews recursively
-		NSArray *subViewsArray = [inView subviews];
-		if(subViewsArray != NULL)
-		{
-            NSUInteger subIndex;
-            NSUInteger subCount = [subViewsArray count];
-			for(subIndex = 0; subIndex < subCount; subIndex++)
-			{
-				id viewObject = [subViewsArray objectAtIndex:subIndex];
-				if( (viewObject != NULL) && [viewObject isKindOfClass:[NSView class]] )
-				{
-					[OMCView setEnabled:flag inView:viewObject];
-				}
-			}
-		}
-	}
-	else
-	{
-		DEBUG_CSTR("Unknown element type passed to OMCView setEnabled:inView:\n");
+        for(NSView *subView in inView.subviews)
+        {
+            [OMCView setEnabled:flag inView:subView];
+        }
 	}
 }
 

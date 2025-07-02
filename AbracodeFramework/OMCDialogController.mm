@@ -145,20 +145,30 @@ GetAllDialogControllers()
 	mCommandName.Adopt(currCommand.name, kCFObjRetain);
 
 	ACFDict params( currCommand.nibDialog );
-	CFStringRef dialogNibName = NULL;
-	params.GetValue( CFSTR("NIB_NAME"), dialogNibName );
+    CFObj<CFStringRef> nibName;
+	params.CopyValue( CFSTR("NIB_NAME"), nibName );
 
-	if(dialogNibName == NULL)
+	if(nibName == nullptr)
 		return self;//no nib name, no dialog
+    
+    NSString *dialogNibName = (NSString *)CFBridgingRelease(nibName.Detach());
 
 //	We can't get the window by name from nib in Cocoa
 //	CFStringRef nibWindowName = NULL;
 //	params.GetValue( CFSTR("WINDOW_NAME"), nibWindowName );
 
-	params.CopyValue( CFSTR("INIT_SUBCOMMAND_ID"), mInitSubcommandID );
-	params.CopyValue( CFSTR("END_OK_SUBCOMMAND_ID"), mEndOKSubcommandID );
-	params.CopyValue( CFSTR("END_CANCEL_SUBCOMMAND_ID"), mEndCancelSubcommandID );
-	
+    CFObj<CFStringRef> initSubcommandID;
+	params.CopyValue( CFSTR("INIT_SUBCOMMAND_ID"), initSubcommandID );
+    _dialogInitSubcommandID = (NSString *)CFBridgingRelease(initSubcommandID.Detach());
+    
+    CFObj<CFStringRef> endOKSubcommandID;
+	params.CopyValue( CFSTR("END_OK_SUBCOMMAND_ID"), endOKSubcommandID );
+    _endOKSubcommandID = (NSString *)CFBridgingRelease(endOKSubcommandID.Detach());
+
+    CFObj<CFStringRef> endCancelSubcommandID;
+	params.CopyValue( CFSTR("END_CANCEL_SUBCOMMAND_ID"), endCancelSubcommandID );
+    _endCancelSubcommandID = (NSString *)CFBridgingRelease(endCancelSubcommandID.Detach());
+
 	Boolean isBlocking = true;//default is modal
 	params.GetValue( CFSTR("IS_BLOCKING"), isBlocking );
 	mIsModal = isBlocking;
@@ -171,16 +181,16 @@ GetAllDialogControllers()
 		if(bundleURL != NULL)
 		{
 			CFObj<CFStringRef> absolutePath = CreatePathFromCFURL(bundleURL, kEscapeNone);
-			if(absolutePath != NULL)
+			if(absolutePath != nullptr)
 			{
-                [self findNib:(__bridge NSString *)dialogNibName forBundlePath:(__bridge NSString *)(CFStringRef)absolutePath];
+                [self findNib:dialogNibName forBundlePath:(__bridge NSString *)absolutePath.Get()];
 			}
 		}
 	}
 
 	if(_omcCocoaNib == nil)
 	{//still not found, check main default bundle
-        [self findNib:(__bridge NSString *)dialogNibName forBundlePath:NULL];
+        [self findNib:dialogNibName forBundlePath:NULL];
 	}
 
 	if(_omcCocoaNib == nil)
@@ -196,9 +206,9 @@ GetAllDialogControllers()
 			if(bundleURL != NULL)
 			{
 				CFObj<CFStringRef> absolutePath = CreatePathFromCFURL(bundleURL, kEscapeNone);
-				if(absolutePath != NULL)
+				if(absolutePath != nullptr)
 				{
-                    [self findNib:(__bridge NSString *)dialogNibName forBundlePath:(__bridge NSString *)(CFStringRef)absolutePath];
+                    [self findNib:dialogNibName forBundlePath:(__bridge NSString *)absolutePath.Get()];
 				}
 			}
 		}
@@ -207,14 +217,14 @@ GetAllDialogControllers()
 	if(_omcCocoaNib != nil)
 	{
         _window = [_omcCocoaNib getFirstWindow];
-		if(_window != NULL)
+		if(_window != nil)
 		{
 			[_window setReleasedWhenClosed:NO];//we will release it when unloading the nib
 
-			id contentViewObject = [_window contentView];
-			if( (contentViewObject != NULL) && [contentViewObject isKindOfClass:[NSView class] ] )
+            NSView *contentView = [_window contentView];
+			if(contentView != nil)
 			{
-				[self initSubview: (NSView*)contentViewObject];
+				[self initSubview:contentView];
 			}
 			
 			[_window setDelegate: self];
@@ -326,44 +336,24 @@ GetAllDialogControllers()
 		}
 	}
 
-	if([inView isKindOfClass:[NSTabView class] ])
+	if([inView isKindOfClass:[NSTabView class]])
 	{//init tabs view recursively
-		NSArray *tabViewsArray = [(NSTabView*)inView tabViewItems];
-		if(tabViewsArray != NULL)
-		{
-			NSUInteger tabCount = [tabViewsArray count];
-			NSUInteger tabIndex;
-			for(tabIndex=0; tabIndex < tabCount; tabIndex++)
-			{
-				id oneTab = [tabViewsArray objectAtIndex:tabIndex];
-				if( (oneTab != NULL) && [oneTab isKindOfClass:[NSTabViewItem class]] )
-				{
-					id viewObject = [(NSTabViewItem*)oneTab view];
-					if( (viewObject != NULL) && [viewObject isKindOfClass:[NSView class]] )
-					{
-						[self initSubview:(NSView *)viewObject];
-					}
-				}
-			}
-		}
+        for(NSTabViewItem *oneTab in ((NSTabView*)inView).tabViewItems)
+        {
+            NSView *tabView = [oneTab view];
+            if(tabView != NULL)
+            {
+                [self initSubview:tabView];
+            }
+        }
 	}
-	else
+	else if(inView != nil)
 	{
 		//init subviews recursively
-		NSArray *subViewsArray = [inView subviews];
-		if(subViewsArray != NULL)
-		{
-            NSUInteger subIndex;
-            NSUInteger subCount = [subViewsArray count];
-			for(subIndex = 0; subIndex < subCount; subIndex++)
-			{
-				id viewObject = [subViewsArray objectAtIndex:subIndex];
-				if( (viewObject != NULL) && [viewObject isKindOfClass:[NSView class]] )
-				{
-					[self initSubview:(NSView *)viewObject];
-				}
-			}
-		}
+        for(NSView *subView in inView.subviews)
+        {
+            [self initSubview:subView];
+        }
 	}
 }
 
@@ -395,120 +385,94 @@ GetAllDialogControllers()
 
 	if([inView isKindOfClass:[NSTabView class] ])
 	{//reset tabs view recursively
-		NSArray *tabViewsArray = [(NSTabView*)inView tabViewItems];
-		if(tabViewsArray != NULL)
-		{
-			NSUInteger tabCount = [tabViewsArray count];
-			NSUInteger tabIndex;
-			for(tabIndex=0; tabIndex < tabCount; tabIndex++)
-			{
-				id oneTab = [tabViewsArray objectAtIndex:tabIndex];
-				if( (oneTab != NULL) && [oneTab isKindOfClass:[NSTabViewItem class]] )
-				{
-					id viewObject = [(NSTabViewItem*)oneTab view];
-					if( (viewObject != NULL) && [viewObject isKindOfClass:[NSView class]] )
-					{
-						[self resetSubview:(NSView *)viewObject];
-					}
-				}
-			}
-		}
+        for(NSTabViewItem *oneTab in ((NSTabView*)inView).tabViewItems)
+        {
+            NSView *tabView = [oneTab view];
+            if(tabView != nil)
+            {
+                [self resetSubview:tabView];
+            }
+        }
 	}
-	else
+	else if(inView != nil)
 	{
 		//reset subviews recursively
-		NSArray *subViewsArray = [inView subviews];
-		if(subViewsArray != NULL)
-		{
-            NSUInteger subIndex;
-            NSUInteger subCount = [subViewsArray count];
-			for(subIndex = 0; subIndex < subCount; subIndex++)
-			{
-				id viewObject = [subViewsArray objectAtIndex:subIndex];
-				if( (viewObject != NULL) && [viewObject isKindOfClass:[NSView class]] )
-				{
-					[self resetSubview:(NSView *)viewObject];
-				}
-			}
-		}
+        for(NSView *subView in inView.subviews)
+        {
+            [self resetSubview:subView];
+        }
 	}
 }
 
+// may return NSView or NSCell
 - (id)findControlOrViewWithID:(NSString *)inControlID
 {
 	id contentViewObject = [self.window contentView];
-	if( (contentViewObject != NULL) && [contentViewObject isKindOfClass:[NSView class] ] )
+	if(contentViewObject != nil)
 	{
 		NSView *contentView = (NSView*)contentViewObject;
-		//return [contentView viewWithTag:aTag];
 		return [self findViewInParent:contentView forControlID:inControlID];
 	}
-	return NULL;
+	return nil;
 }
 
-- (id)findViewInParent:(NSView *)inParentView forControlID:(NSString *)inControlID //may return NSView or NSCell
+//may return NSView or NSCell
+- (id)findViewInParent:(NSView *)inParentView forControlID:(NSString *)inControlID
 {
     if(inControlID == nil)
+    {
         return nil;
+    }
 
 	NSString *controlID = nil;
     NSInteger tagNum = [inParentView tag];
     if(tagNum > 0)
-    	controlID = [NSString stringWithFormat:@"%ld", (long)tagNum];
-	
-	if( controlID != nil && [controlID isEqualToString:inControlID] )
-		return inParentView;
+    {
+        controlID = [NSString stringWithFormat:@"%ld", (long)tagNum];
+    }
+
+	if((controlID != nil) && [controlID isEqualToString:inControlID])
+    {
+        return inParentView;
+    }
 
     if([inParentView respondsToSelector:@selector(identifier)])
     {
         controlID = [inParentView identifier];
-        if( controlID != NULL && [controlID isEqualToString:inControlID] )
+        if((controlID != nil) && [controlID isEqualToString:inControlID])
+        {
             return inParentView;
+        }
     }
 
 	if([inParentView isKindOfClass:[NSTabView class]])
 	{//search tabs view recursively
-		NSArray *tabViewsArray = [(NSTabView*)inParentView tabViewItems];
-		if(tabViewsArray != NULL)
-		{
-			NSUInteger tabCount = [tabViewsArray count];
-			NSUInteger tabIndex;
-			for(tabIndex=0; tabIndex < tabCount; tabIndex++)
-			{
-				id oneTab = [tabViewsArray objectAtIndex:tabIndex];
-				if( (oneTab != nil) && [oneTab isKindOfClass:[NSTabViewItem class]] )
-				{
-					id viewObject = [(NSTabViewItem*)oneTab view];
-					if( (viewObject != nil) && [viewObject isKindOfClass:[NSView class]] )
-					{
-						NSView *resultView = [self findViewInParent:(NSView *)viewObject forControlID:inControlID];
-						if(resultView != nil)
-							return resultView;
-					}
-				}
-			}
-		}
+        for(NSTabViewItem *oneTab in ((NSTabView*)inParentView).tabViewItems)
+        {
+            NSView *tabView = [oneTab view];
+            if(tabView != nil)
+            {
+                NSView *resultView = [self findViewInParent:tabView forControlID:inControlID];
+                if(resultView != nil)
+                {
+                    return resultView;
+                }
+            }
+        }
 	}
-	else
+	else if(inParentView != nil)
 	{
 		//search subviews recursively
-		NSArray *subViewsArray = [inParentView subviews];
-		if(subViewsArray != nil)
-		{
-            NSUInteger subIndex;
-            NSUInteger subCount = [subViewsArray count];
-			for(subIndex = 0; subIndex < subCount; subIndex++)
-			{
-				id viewObject = [subViewsArray objectAtIndex:subIndex];
-				if( (viewObject != nil) && [viewObject isKindOfClass:[NSView class]] )
-				{
-					NSView *resultView = [self findViewInParent:(NSView *)viewObject forControlID:inControlID];
-					if(resultView != nil)
-						return resultView;
-				}
-			}
-		}
+        for(NSView *subView in inParentView.subviews)
+        {
+            NSView *resultView = [self findViewInParent:subView forControlID:inControlID];
+            if(resultView != nil)
+            {
+                return resultView;
+            }
+        }
 	}
+    
 	return nil;
 }
 
@@ -622,42 +586,22 @@ GetAllDialogControllers()
 
 	if([inView isKindOfClass:[NSTabView class]])
 	{//search tabs view recursively
-		NSArray *tabViewsArray = [(NSTabView*)inView tabViewItems];
-		if(tabViewsArray != NULL)
-		{
-			NSUInteger tabCount = [tabViewsArray count];
-			NSUInteger tabIndex;
-			for(tabIndex=0; tabIndex < tabCount; tabIndex++)
-			{
-				id oneTab = [tabViewsArray objectAtIndex:tabIndex];
-				if( (oneTab != NULL) && [oneTab isKindOfClass:[NSTabViewItem class]] )
-				{
-					id viewObject = [(NSTabViewItem*)oneTab view];
-					if( (viewObject != nil) && [viewObject isKindOfClass:[NSView class]] )
-					{
-						[self allControlValues:ioControlValues andProperties:ioCustomProperties inView:(NSView *)viewObject withIterator:inSelIterator];
-					}
-				}
-			}
-		}
+        for(NSTabViewItem *oneTab in ((NSTabView*)inView).tabViewItems)
+        {
+            NSView *tabView = [oneTab view];
+            if(tabView != nil)
+            {
+                [self allControlValues:ioControlValues andProperties:ioCustomProperties inView:tabView withIterator:inSelIterator];
+            }
+        }
 	}
-	else
+	else if(inView != nil)
 	{
 		//search subviews recursively
-		NSArray *subViewsArray = [inView subviews];
-		if(subViewsArray != nil)
-		{
-            NSUInteger subIndex;
-            NSUInteger subCount = [subViewsArray count];
-			for(subIndex = 0; subIndex < subCount; subIndex++)
-			{
-				id viewObject = [subViewsArray objectAtIndex:subIndex];
-				if( (viewObject != NULL) && [viewObject isKindOfClass:[NSView class]] )
-				{
-					[self allControlValues:ioControlValues andProperties:ioCustomProperties inView:(NSView *)viewObject withIterator:inSelIterator];
-				}
-			}
-		}
+        for(NSView *subView in inView.subviews)
+        {
+            [self allControlValues:ioControlValues andProperties:ioCustomProperties inView:subView withIterator:inSelIterator];
+        }
 	}
 }
 
@@ -1343,9 +1287,13 @@ GetAllDialogControllers()
 						Boolean terminateOK = ::CFBooleanGetValue(theVal);
 						NSString *commandID;
 						if(terminateOK)
-                            commandID = (mEndOKSubcommandID != NULL) ? (__bridge NSString *)(CFStringRef)mEndOKSubcommandID : @"omc.dialog.ok";
+                        {
+                            commandID = self.endOKSubcommandID ?: @"omc.dialog.ok";
+                        }
 						else
-                            commandID = (mEndCancelSubcommandID != NULL) ? (__bridge NSString *)(CFStringRef)mEndCancelSubcommandID : @"omc.dialog.cancel";
+                        {
+                            commandID = self.endCancelSubcommandID ?: @"omc.dialog.cancel";
+                        }
 						
 						self.lastCommandID = commandID;
 
@@ -1684,11 +1632,11 @@ GetAllDialogControllers()
 		![sender shouldExecuteAction] )
 		return;
 
-	CFTypeRef droppedItems = nil;
+	id droppedItems = nil;
 	if( [sender respondsToSelector:@selector(droppedItems)] )
-        droppedItems = (__bridge CFTypeRef)[sender droppedItems];
+        droppedItems = [sender droppedItems];
 
-	[self dispatchCommand:commandID withContext:droppedItems];
+	[self dispatchCommand:commandID withContext:(__bridge CFTypeRef)droppedItems];
 	
 	if(droppedItems != nil)
 		[sender setDroppedItems:nil]; //reset dropped itmes to nil so they will not persist for next action
@@ -1796,10 +1744,12 @@ GetAllDialogControllers()
 - (BOOL)isOkeyed
 {
 	
-	if(self.lastCommandID != NULL)
+	if(self.lastCommandID != nil)
 	{
-		if(mEndOKSubcommandID != NULL)
-            return [self.lastCommandID isEqualToString:(__bridge NSString *)(CFStringRef)mEndOKSubcommandID];
+		if(self.endOKSubcommandID != nil)
+        {
+            return [self.lastCommandID isEqualToString:self.endOKSubcommandID];
+        }
 
 		return [self.lastCommandID isEqualToString:@"omc.dialog.ok"];
 	}
@@ -1808,10 +1758,12 @@ GetAllDialogControllers()
 
 - (BOOL)isCanceled
 {
-	if(self.lastCommandID != NULL)
+	if(self.lastCommandID != nil)
 	{
-		if(mEndCancelSubcommandID != NULL)
-            return [self.lastCommandID isEqualToString:(__bridge NSString *)(CFStringRef)mEndCancelSubcommandID];
+		if(self.endCancelSubcommandID != nil)
+        {
+            return [self.lastCommandID isEqualToString:self.endCancelSubcommandID];
+        }
 
 		return [self.lastCommandID isEqualToString:@"omc.dialog.cancel"];
 	}
@@ -1826,12 +1778,14 @@ GetAllDialogControllers()
 
 - (BOOL)initialize
 {
-	NSString *origCommand = self.lastCommandID;//retained string we store temporarily
+	NSString *origCommand = self.lastCommandID;
 
 	self.lastCommandID = @"omc.dialog.initialize";
-	if(mInitSubcommandID != NULL)
-        self.lastCommandID = (__bridge NSString *)(CFStringRef)mInitSubcommandID;
-
+	if(self.dialogInitSubcommandID != nil)
+    {
+        self.lastCommandID = self.dialogInitSubcommandID;
+    }
+    
 	mOMCDialogProxy->StartListening();
 
 	[self processCommandWithContext:NULL];
@@ -1847,15 +1801,19 @@ GetAllDialogControllers()
 - (BOOL)terminate
 {
 	BOOL wasOkeyed = [self isOkeyed];
-	NSString *origCommand = self.lastCommandID;//retained string we store temporarily
+	NSString *origCommand = self.lastCommandID;
 	
 	self.lastCommandID = wasOkeyed ? @"omc.dialog.terminate.ok" : @"omc.dialog.terminate.cancel";
 
-	if( wasOkeyed && (mEndOKSubcommandID != NULL) )
-        self.lastCommandID = (__bridge NSString *)(CFStringRef)mEndOKSubcommandID;
-	else if( !wasOkeyed && (mEndCancelSubcommandID != NULL) )
-        self.lastCommandID = (__bridge NSString *)(CFStringRef)mEndCancelSubcommandID;
-
+	if( wasOkeyed && (self.endOKSubcommandID != nil) )
+    {
+        self.lastCommandID = self.endOKSubcommandID;
+    }
+	else if( !wasOkeyed && (self.endCancelSubcommandID != nil) )
+    {
+        self.lastCommandID = self.endCancelSubcommandID;
+    }
+    
 	[self processCommandWithContext:NULL];
 
     self.lastCommandID = origCommand;
@@ -1900,9 +1858,11 @@ GetAllDialogControllers()
 	return status;
 }
 
-- (id)getCFContext
+- (id)getContext
 {
-    return (__bridge id)mPlugin->GetCFContext();
+    CFObj<CFTypeRef> cfContext = mPlugin->GetContext();
+    id __strong outContext = CFBridgingRelease(cfContext.Detach());
+    return outContext;
 }
 
 - (void)setWindowTopLeftPosition:(NSPoint)absolutePosition
@@ -2313,7 +2273,8 @@ GetAllDialogControllers()
 		}
 		else if(CFStringGetTypeID() == CFGetTypeID(controlIDRef) )
 		{
-            controlID = (__bridge NSString *)controlIDRef;
+            CFRetain(controlIDRef);
+            controlID = (NSString *)CFBridgingRelease(controlIDRef);
 		}
 	}
 

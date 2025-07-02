@@ -26,11 +26,10 @@ WritePropertyList(CFPropertyListRef propertyList, CFURLRef plistURL, CFPropertyL
     
     if(plistData != NULL)
 	{
-        isOK = (bool)[(__bridge NSData *)plistData
-                         writeToURL:(__bridge NSURL *)plistURL
-                            options:0
-                              error:NULL];
-		CFRelease(plistData);
+        NSData *nsData = (NSData *)CFBridgingRelease(plistData);
+        isOK = (bool)[nsData writeToURL:(__bridge NSURL *)plistURL
+                                options:0
+                                  error:NULL];
 	}
 	return isOK;
 }

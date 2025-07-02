@@ -381,9 +381,10 @@ WriteStringToFile(CFStringRef inContentStr, CFStringRef inFilePath)
 		return false;
 
     NSError *error = nil;
-    BOOL succeed = [(__bridge NSString*)inContentStr writeToFile:(__bridge NSString *)inFilePath
-                                            atomically:NO
-                                            encoding:NSUTF8StringEncoding
-                                            error:&error];
+    NSString *__weak contentStr = (__bridge NSString *)inContentStr;
+    BOOL succeed = [contentStr writeToFile:(__bridge NSString *)inFilePath
+                                atomically:NO
+                                  encoding:NSUTF8StringEncoding
+                                     error:&error];
     return (bool)succeed;
 }

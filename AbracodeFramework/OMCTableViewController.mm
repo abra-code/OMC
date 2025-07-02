@@ -47,7 +47,7 @@
 
 -(void)setColumns:(NSArray *)columnArray
 {
-	NSArray *oldColumns = [self.tableView tableColumns];
+	NSArray<NSTableColumn *> *oldColumns = [self.tableView tableColumns];
 	NSInteger oldCount = (NSInteger)[oldColumns count];
 
     self.columnNames = columnArray;
