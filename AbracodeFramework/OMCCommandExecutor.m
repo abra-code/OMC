@@ -181,8 +181,8 @@ static NSMutableDictionary *sCachedPlists = NULL;
 		sCachedPlists = [[NSMutableDictionary alloc] init];
 	}
 
-    [sCachedPlists setObject:(__bridge id)thePlist forKey:absURL];
-	CFRelease( thePlist );
+    id __strong propertyList = CFBridgingRelease(thePlist);
+    [sCachedPlists setObject:propertyList forKey:absURL];
 
 	return thePlist;
 }

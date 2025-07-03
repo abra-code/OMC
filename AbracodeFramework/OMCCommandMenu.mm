@@ -162,7 +162,7 @@ PopulateCommandsMenu(OnMyCommandCM *inPlugin, NSMenu *topMenu)
 		NSMenu * subMenu = FindOrAddSubmenu(topMenu, menuChain);
 		if( (subMenu != NULL) && (commandList[i].name != NULL) )
 		{
-            NSString *localizedName = (NSString *)CFBridgingRelease( ::CFStringCreateByCombiningStrings(kCFAllocatorDefault, commandList[i].name, CFSTR("")) );
+            NSString *__strong localizedName = (NSString *)CFBridgingRelease( ::CFStringCreateByCombiningStrings(kCFAllocatorDefault, commandList[i].name, CFSTR("")) );
 			if(commandList[i].localizationTableName != NULL)
 			{
                 localizedName = (NSString*)CFBridgingRelease(::CFCopyLocalizedStringFromTableInBundle((CFStringRef)localizedName, commandList[i].localizationTableName, localizationBundle, ""));

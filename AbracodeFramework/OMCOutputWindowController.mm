@@ -51,7 +51,7 @@ void ReleaseOutputWindowController(OMCOutputWindowControllerRef inControllerRef)
 {
     @try
     {
-        OMCOutputWindowController *controller = (OMCOutputWindowController *)CFBridgingRelease(inControllerRef);
+        OMCOutputWindowController *__strong controller = (OMCOutputWindowController *)CFBridgingRelease(inControllerRef);
         [controller close];
         controller = nil;
     }

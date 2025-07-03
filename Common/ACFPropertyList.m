@@ -26,7 +26,7 @@ WritePropertyList(CFPropertyListRef propertyList, CFURLRef plistURL, CFPropertyL
     
     if(plistData != NULL)
 	{
-        NSData *nsData = (NSData *)CFBridgingRelease(plistData);
+        NSData *__strong nsData = (NSData *)CFBridgingRelease(plistData);
         isOK = (bool)[nsData writeToURL:(__bridge NSURL *)plistURL
                                 options:0
                                   error:NULL];

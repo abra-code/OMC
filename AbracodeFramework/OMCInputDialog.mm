@@ -90,7 +90,7 @@ Boolean RunCocoaInputDialog(OnMyCommandCM *inPlugin, CFStringRef &outStringRef)
         [theController setMessageText:inputDialogMessage];
         
         CFRetain(currCommand.inputDialogMenuItems);
-        NSArray *__strong inputDialogMenuItems = CFBridgingRelease(currCommand.inputDialogMenuItems);
+        NSArray *__strong inputDialogMenuItems = (NSArray *)CFBridgingRelease(currCommand.inputDialogMenuItems);
         
         if( (dialogType == kInputPopupMenu) || (dialogType == kInputComboBox) )
         {

@@ -1037,7 +1037,7 @@ OMCDeferredProgressRelease(OMCDeferredProgressRef inProgressRef)
 {
     @try
     {
-        OMCDeferredProgress *myProgress = (OMCDeferredProgress *)CFBridgingRelease(inProgressRef);
+        OMCDeferredProgress *__strong myProgress = (OMCDeferredProgress *)CFBridgingRelease(inProgressRef);
         myProgress = nil;
     }
     @catch (NSException *localException)

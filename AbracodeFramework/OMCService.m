@@ -14,9 +14,9 @@ void OMCServiceObserverCallback( OmcObserverMessage inMessage, CFIndex inTaskID,
 		return;
 	
     id __weak objcObject = (__bridge id)userData;
-	if( [objcObject isKindOfClass:[OMCService class] ] )
+	if([objcObject isKindOfClass:[OMCService class]])
 	{
-		OMCService *__weak cocoaDelegate = (OMCService *)objcObject;
+		OMCService *__strong cocoaDelegate = (OMCService *)objcObject;
 		[cocoaDelegate receiveObserverMessage:inMessage forTaskId:inTaskID withData:inResult];
 	}
 }
@@ -240,10 +240,10 @@ void OMCServiceObserverCallback( OmcObserverMessage inMessage, CFIndex inTaskID,
 		case kOmcObserverTaskProgress:
 		{
 			//messageString = @"<<task progress>>";
-			if( (inResult != NULL) &&
-               [(__bridge id)inResult isKindOfClass:[NSString class]] )
+            id __weak objcObject = (__bridge id)inResult;
+			if([objcObject isKindOfClass:[NSString class]])
 			{
-                [self.resultString appendString:(__bridge NSString*)inResult];
+                [self.resultString appendString:(NSString *)objcObject];
 			}
 		}
 		break;

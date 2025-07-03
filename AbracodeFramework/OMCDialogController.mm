@@ -152,7 +152,7 @@ GetAllDialogControllers()
 	if(nibName == nullptr)
 		return self;//no nib name, no dialog
     
-    NSString *dialogNibName = (NSString *)CFBridgingRelease(nibName.Detach());
+    NSString *__strong dialogNibName = (NSString *)CFBridgingRelease(nibName.Detach());
 
 //	We can't get the window by name from nib in Cocoa
 //	CFStringRef nibWindowName = NULL;
