@@ -50,6 +50,7 @@
 
 /* Begin PBXFileReference section */
 		09AB6884FE841BABC02AAC07 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = /System/Library/Frameworks/CoreFoundation.framework; sourceTree = "<absolute>"; };
+		1D039D7F2E16872C00D4924A /* omc_dialog_control-target.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "omc_dialog_control-target.xcconfig"; sourceTree = "<group>"; };
 		1D4971B42575A6C200F7131C /* OmcProjectRelease.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectRelease.xcconfig; path = ../Common/OmcProjectRelease.xcconfig; sourceTree = "<group>"; };
 		1D4971B52575A6C200F7131C /* OmcProjectDebug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectDebug.xcconfig; path = ../Common/OmcProjectDebug.xcconfig; sourceTree = "<group>"; };
 		1D9BCB8122CC98D000F4EAB6 /* ACFPropertyList.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = ACFPropertyList.m; path = ../Common/ACFPropertyList.m; sourceTree = "<group>"; };
@@ -77,6 +78,7 @@
 			isa = PBXGroup;
 			children = (
 				08FB7795FE84155DC02AAC07 /* Source */,
+				1D039D7F2E16872C00D4924A /* omc_dialog_control-target.xcconfig */,
 				1DD2112B259F438A0041BB8F /* OmcVersion.xcconfig */,
 				1D4971B52575A6C200F7131C /* OmcProjectDebug.xcconfig */,
 				1D4971B42575A6C200F7131C /* OmcProjectRelease.xcconfig */,
@@ -224,42 +226,26 @@
 		1DA93CCE2330C238006C808A /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
 		};
 		1DA93CCF2330C238006C808A /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
 		};
 		E2E901790864AACA00B99907 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 1D039D7F2E16872C00D4924A /* omc_dialog_control-target.xcconfig */;
 			buildSettings = {
-				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
-				INFOPLIST_FILE = ../Common/OmcTool_Info.plist;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.abracode.omc-dialog-control";
-				PRODUCT_NAME = omc_dialog_control;
-				USER_HEADER_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(BUILT_PRODUCTS_DIR)/generated",
-				);
 			};
 			name = Debug;
 		};
 		E2E9017A0864AACA00B99907 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 1D039D7F2E16872C00D4924A /* omc_dialog_control-target.xcconfig */;
 			buildSettings = {
-				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
-				INFOPLIST_FILE = ../Common/OmcTool_Info.plist;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.abracode.omc-dialog-control";
-				PRODUCT_NAME = omc_dialog_control;
-				USER_HEADER_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(BUILT_PRODUCTS_DIR)/generated",
-				);
 			};
 			name = Release;
 		};
@@ -267,8 +253,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 1D4971B52575A6C200F7131C /* OmcProjectDebug.xcconfig */;
 			buildSettings = {
-				GCC_ENABLE_CPP_EXCEPTIONS = NO;
-				GCC_ENABLE_CPP_RTTI = NO;
 			};
 			name = Debug;
 		};
@@ -276,8 +260,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 1D4971B42575A6C200F7131C /* OmcProjectRelease.xcconfig */;
 			buildSettings = {
-				GCC_ENABLE_CPP_EXCEPTIONS = NO;
-				GCC_ENABLE_CPP_RTTI = NO;
 			};
 			name = Release;
 		};

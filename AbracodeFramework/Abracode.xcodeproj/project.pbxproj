@@ -6,20 +6,6 @@
 	objectVersion = 51;
 	objects = {
 
-/* Begin PBXAggregateTarget section */
-		E257605F0D20EECA00D755FF /* All */ = {
-			isa = PBXAggregateTarget;
-			buildConfigurationList = E25760670D20EF0100D755FF /* Build configuration list for PBXAggregateTarget "All" */;
-			buildPhases = (
-			);
-			dependencies = (
-				E25760650D20EED200D755FF /* PBXTargetDependency */,
-			);
-			name = All;
-			productName = All;
-		};
-/* End PBXAggregateTarget section */
-
 /* Begin PBXBuildFile section */
 		1D386DAB23BEED4B00A16967 /* OMCWebKitView.h in Headers */ = {isa = PBXBuildFile; fileRef = 1D386DA923BEED4A00A16967 /* OMCWebKitView.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		1D386DAC23BEED4B00A16967 /* OMCWebKitView.m in Sources */ = {isa = PBXBuildFile; fileRef = 1D386DAA23BEED4A00A16967 /* OMCWebKitView.m */; };
@@ -96,8 +82,6 @@
 		E25D78990DBB24800065C7A3 /* OMCDropletController.h in Headers */ = {isa = PBXBuildFile; fileRef = E25D78950DBB24800065C7A3 /* OMCDropletController.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E26B2796109C174D00DBA8CE /* OMCTableView.h in Headers */ = {isa = PBXBuildFile; fileRef = E26B2792109C174D00DBA8CE /* OMCTableView.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E26B2797109C174D00DBA8CE /* OMCTableView.m in Sources */ = {isa = PBXBuildFile; fileRef = E26B2793109C174D00DBA8CE /* OMCTableView.m */; };
-		E27103AE0D8141BC0097D83E /* OMCQCView.mm in Sources */ = {isa = PBXBuildFile; fileRef = E27103AC0D8141BC0097D83E /* OMCQCView.mm */; };
-		E27103AF0D8141BC0097D83E /* OMCQCView.h in Headers */ = {isa = PBXBuildFile; fileRef = E27103AD0D8141BC0097D83E /* OMCQCView.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E27103CE0D8142DF0097D83E /* Quartz.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E27103CD0D8142DF0097D83E /* Quartz.framework */; };
 		E2735F370D7B9576004D81CE /* OMCDialog.h in Headers */ = {isa = PBXBuildFile; fileRef = E2735F360D7B9576004D81CE /* OMCDialog.h */; };
 		E2735F830D7BC89F004D81CE /* OMCDialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E2735F820D7BC89F004D81CE /* OMCDialog.cpp */; };
@@ -176,16 +160,6 @@
 		E2FB14000D19EE9A005EB1E8 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E2FB13FF0D19EE9A005EB1E8 /* CoreServices.framework */; };
 /* End PBXBuildFile section */
 
-/* Begin PBXContainerItemProxy section */
-		E25760640D20EED200D755FF /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 0867D690FE84028FC02AAC07 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 8DC2EF4F0486A6940098B216;
-			remoteInfo = "Abracode Shared";
-		};
-/* End PBXContainerItemProxy section */
-
 /* Begin PBXCopyFilesBuildPhase section */
 		1D984C2823321D0B00FF6967 /* Copy AbracodeFrameworkVersion.c to generated */ = {
 			isa = PBXCopyFilesBuildPhase;
@@ -223,6 +197,7 @@
 		0867D69BFE84028FC02AAC07 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
 		0867D6A5FE840307C02AAC07 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		1058C7B1FEA5585E11CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
+		1D039D782E16823200D4924A /* AbracodeFramework-target.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "AbracodeFramework-target.xcconfig"; sourceTree = "<group>"; };
 		1D386DA923BEED4A00A16967 /* OMCWebKitView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCWebKitView.h; sourceTree = "<group>"; };
 		1D386DAA23BEED4A00A16967 /* OMCWebKitView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMCWebKitView.m; sourceTree = "<group>"; };
 		1D3BB165229BEB1D00542933 /* AUniquePtr.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AUniquePtr.h; sourceTree = "<group>"; };
@@ -338,8 +313,6 @@
 		E25D78950DBB24800065C7A3 /* OMCDropletController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCDropletController.h; sourceTree = "<group>"; };
 		E26B2792109C174D00DBA8CE /* OMCTableView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCTableView.h; sourceTree = "<group>"; };
 		E26B2793109C174D00DBA8CE /* OMCTableView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMCTableView.m; sourceTree = "<group>"; };
-		E27103AC0D8141BC0097D83E /* OMCQCView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCQCView.mm; sourceTree = "<group>"; };
-		E27103AD0D8141BC0097D83E /* OMCQCView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCQCView.h; sourceTree = "<group>"; };
 		E27103CD0D8142DF0097D83E /* Quartz.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Quartz.framework; path = /System/Library/Frameworks/Quartz.framework; sourceTree = "<absolute>"; };
 		E2735F360D7B9576004D81CE /* OMCDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCDialog.h; sourceTree = "<group>"; };
 		E2735F820D7BC89F004D81CE /* OMCDialog.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCDialog.cpp; sourceTree = "<group>"; };
@@ -454,6 +427,7 @@
 				E2517C3C0D1BCC2700180C68 /* CocoaControls */,
 				32C88DFF0371C24200C91783 /* Other Sources */,
 				089C1665FE841158C02AAC07 /* Resources */,
+				1D039D782E16823200D4924A /* AbracodeFramework-target.xcconfig */,
 				1DD21114259F42CE0041BB8F /* OmcVersion.xcconfig */,
 				1D4971AC2575A69000F7131C /* OmcProjectDebug.xcconfig */,
 				1D4971AD2575A69000F7131C /* OmcProjectRelease.xcconfig */,
@@ -568,8 +542,6 @@
 				E2E407290D8AD1E3009AD8CA /* OMCSearchField.h */,
 				E2517C4B0D1BCC2700180C68 /* OMCTextView.h */,
 				E2517C4C0D1BCC2700180C68 /* OMCTextView.m */,
-				E27103AC0D8141BC0097D83E /* OMCQCView.mm */,
-				E27103AD0D8141BC0097D83E /* OMCQCView.h */,
 				E2E407840D8C376F009AD8CA /* OMCImageView.m */,
 				E2E407850D8C376F009AD8CA /* OMCImageView.h */,
 				E23DC95C0D9A2616009D2AD8 /* OMCPDFView.m */,
@@ -764,7 +736,6 @@
 				E22FBAEE0D7A0D7700DC5BB4 /* OMCCocoaDialog.h in Headers */,
 				E2735F370D7B9576004D81CE /* OMCDialog.h in Headers */,
 				E204EB7F0D7FD8A900595D15 /* OMCConstants.h in Headers */,
-				E27103AF0D8141BC0097D83E /* OMCQCView.h in Headers */,
 				E2E407010D8A5B00009AD8CA /* OMCSecureTextField.h in Headers */,
 				E2E4072B0D8AD1E3009AD8CA /* OMCSearchField.h in Headers */,
 				E2E407870D8C3770009AD8CA /* OMCImageView.h in Headers */,
@@ -798,9 +769,9 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
-		8DC2EF4F0486A6940098B216 /* Abracode Framework */ = {
+		8DC2EF4F0486A6940098B216 /* AbracodeFramework */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 1DEB91AD08733DA50010E9CD /* Build configuration list for PBXNativeTarget "Abracode Framework" */;
+			buildConfigurationList = 1DEB91AD08733DA50010E9CD /* Build configuration list for PBXNativeTarget "AbracodeFramework" */;
 			buildPhases = (
 				8DC2EF500486A6940098B216 /* Headers */,
 				8DC2EF520486A6940098B216 /* Resources */,
@@ -815,7 +786,7 @@
 			);
 			dependencies = (
 			);
-			name = "Abracode Framework";
+			name = AbracodeFramework;
 			productInstallPath = "$(HOME)/Library/Frameworks";
 			productName = Abracode;
 			productReference = 8DC2EF5B0486A6940098B216 /* Abracode.framework */;
@@ -846,8 +817,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				8DC2EF4F0486A6940098B216 /* Abracode Framework */,
-				E257605F0D20EECA00D755FF /* All */,
+				8DC2EF4F0486A6940098B216 /* AbracodeFramework */,
 			);
 		};
 /* End PBXProject section */
@@ -955,7 +925,6 @@
 				E22FBAEF0D7A0D7700DC5BB4 /* OMCCocoaDialog.mm in Sources */,
 				E2735F830D7BC89F004D81CE /* OMCDialog.cpp in Sources */,
 				1DBCC43522CE209300A1DD8F /* OMCHelpers.mm in Sources */,
-				E27103AE0D8141BC0097D83E /* OMCQCView.mm in Sources */,
 				E2E407000D8A5B00009AD8CA /* OMCSecureTextField.m in Sources */,
 				E2E4072A0D8AD1E3009AD8CA /* OMCSearchField.m in Sources */,
 				1D80B9C222E447F900CF1AF5 /* OMCTerminalExecutor.cp in Sources */,
@@ -992,14 +961,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
-
-/* Begin PBXTargetDependency section */
-		E25760650D20EED200D755FF /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 8DC2EF4F0486A6940098B216 /* Abracode Framework */;
-			targetProxy = E25760640D20EED200D755FF /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
 		1D9B1F6F21FF1F9F004704A7 /* progress.xib */ = {
@@ -1078,44 +1039,15 @@
 /* Begin XCBuildConfiguration section */
 		1DEB91AE08733DA50010E9CD /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 1D039D782E16823200D4924A /* AbracodeFramework-target.xcconfig */;
 			buildSettings = {
-				COPY_PHASE_STRIP = NO;
-				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 1;
-				EXPORTED_SYMBOLS_FILE = AbracodeFramework.exp;
-				FRAMEWORK_VERSION = A;
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = Abracode_Prefix.pch;
-				INFOPLIST_FILE = Info.plist;
-				INSTALL_PATH = "@rpath";
-				PRODUCT_BUNDLE_IDENTIFIER = com.abracode.AbracodeFramework;
-				PRODUCT_NAME = Abracode;
-				USER_HEADER_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(BUILT_PRODUCTS_DIR)/generated",
-				);
-				WRAPPER_EXTENSION = framework;
 			};
 			name = Debug;
 		};
 		1DEB91AF08733DA50010E9CD /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 1D039D782E16823200D4924A /* AbracodeFramework-target.xcconfig */;
 			buildSettings = {
-				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 1;
-				EXPORTED_SYMBOLS_FILE = AbracodeFramework.exp;
-				FRAMEWORK_VERSION = A;
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = Abracode_Prefix.pch;
-				INFOPLIST_FILE = Info.plist;
-				INSTALL_PATH = "@rpath";
-				PRODUCT_BUNDLE_IDENTIFIER = com.abracode.AbracodeFramework;
-				PRODUCT_NAME = Abracode;
-				USER_HEADER_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(BUILT_PRODUCTS_DIR)/generated",
-				);
-				WRAPPER_EXTENSION = framework;
 			};
 			name = Release;
 		};
@@ -1123,7 +1055,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 1D4971AC2575A69000F7131C /* OmcProjectDebug.xcconfig */;
 			buildSettings = {
-				OTHER_CODE_SIGN_FLAGS = "--deep";
 			};
 			name = Debug;
 		};
@@ -1131,34 +1062,13 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 1D4971AD2575A69000F7131C /* OmcProjectRelease.xcconfig */;
 			buildSettings = {
-				OTHER_CODE_SIGN_FLAGS = "--deep";
-			};
-			name = Release;
-		};
-		E25760600D20EECA00D755FF /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				COPY_PHASE_STRIP = NO;
-				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				PRODUCT_NAME = All;
-			};
-			name = Debug;
-		};
-		E25760610D20EECA00D755FF /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				COPY_PHASE_STRIP = YES;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				PRODUCT_NAME = All;
-				ZERO_LINK = NO;
 			};
 			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		1DEB91AD08733DA50010E9CD /* Build configuration list for PBXNativeTarget "Abracode Framework" */ = {
+		1DEB91AD08733DA50010E9CD /* Build configuration list for PBXNativeTarget "AbracodeFramework" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				1DEB91AE08733DA50010E9CD /* Debug */,
@@ -1172,15 +1082,6 @@
 			buildConfigurations = (
 				1DEB91B208733DA50010E9CD /* Debug */,
 				1DEB91B308733DA50010E9CD /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		E25760670D20EF0100D755FF /* Build configuration list for PBXAggregateTarget "All" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				E25760600D20EECA00D755FF /* Debug */,
-				E25760610D20EECA00D755FF /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

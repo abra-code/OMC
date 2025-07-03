@@ -24,6 +24,7 @@
 
 /* Begin PBXFileReference section */
 		08FB7796FE84155DC02AAC07 /* main.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
+		1D039D822E16896300D4924A /* filt-target.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "filt-target.xcconfig"; sourceTree = "<group>"; };
 		1D0449AB2330B4D500C01431 /* OmcTool_Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = OmcTool_Info.plist; path = ../Common/OmcTool_Info.plist; sourceTree = SOURCE_ROOT; };
 		1D4971BA2575A6DC00F7131C /* OmcProjectDebug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectDebug.xcconfig; path = ../Common/OmcProjectDebug.xcconfig; sourceTree = "<group>"; };
 		1D4971BB2575A6DC00F7131C /* OmcProjectRelease.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectRelease.xcconfig; path = ../Common/OmcProjectRelease.xcconfig; sourceTree = "<group>"; };
@@ -46,6 +47,7 @@
 		08FB7794FE84155DC02AAC07 /* filt */ = {
 			isa = PBXGroup;
 			children = (
+				1D039D822E16896300D4924A /* filt-target.xcconfig */,
 				1DD21128259F436A0041BB8F /* OmcVersion.xcconfig */,
 				1D4971BA2575A6DC00F7131C /* OmcProjectDebug.xcconfig */,
 				1D4971BB2575A6DC00F7131C /* OmcProjectRelease.xcconfig */,
@@ -134,23 +136,15 @@
 /* Begin XCBuildConfiguration section */
 		1DEB928608733DD80010E9CD /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 1D039D822E16896300D4924A /* filt-target.xcconfig */;
 			buildSettings = {
-				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
-				INFOPLIST_FILE = ../Common/OmcTool_Info.plist;
-				INSTALL_PATH = /usr/local/bin;
-				PRODUCT_BUNDLE_IDENTIFIER = com.abracode.filt;
-				PRODUCT_NAME = filt;
 			};
 			name = Debug;
 		};
 		1DEB928708733DD80010E9CD /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 1D039D822E16896300D4924A /* filt-target.xcconfig */;
 			buildSettings = {
-				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
-				INFOPLIST_FILE = ../Common/OmcTool_Info.plist;
-				INSTALL_PATH = /usr/local/bin;
-				PRODUCT_BUNDLE_IDENTIFIER = com.abracode.filt;
-				PRODUCT_NAME = filt;
 			};
 			name = Release;
 		};

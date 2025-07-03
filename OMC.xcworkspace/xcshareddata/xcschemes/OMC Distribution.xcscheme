@@ -16,7 +16,7 @@
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "8DC2EF4F0486A6940098B216"
                BuildableName = "Abracode.framework"
-               BlueprintName = "Abracode Framework"
+               BlueprintName = "AbracodeFramework"
                ReferencedContainer = "container:AbracodeFramework/Abracode.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -94,7 +94,7 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "8DC2EF4F0486A6940098B216"
             BuildableName = "Abracode.framework"
-            BlueprintName = "Abracode Framework"
+            BlueprintName = "AbracodeFramework"
             ReferencedContainer = "container:AbracodeFramework/Abracode.xcodeproj">
          </BuildableReference>
       </MacroExpansion>

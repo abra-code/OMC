@@ -27,6 +27,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		1D039D802E16889300D4924A /* notify-target.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "notify-target.xcconfig"; sourceTree = "<group>"; };
 		1D4971B62575A6CD00F7131C /* OmcProjectRelease.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectRelease.xcconfig; path = ../Common/OmcProjectRelease.xcconfig; sourceTree = "<group>"; };
 		1D4971B72575A6CD00F7131C /* OmcProjectDebug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectDebug.xcconfig; path = ../Common/OmcProjectDebug.xcconfig; sourceTree = "<group>"; };
 		1D904E0D19285FFA009FB0C7 /* notify */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = notify; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -55,6 +56,7 @@
 		1D904E0419285FFA009FB0C7 = {
 			isa = PBXGroup;
 			children = (
+				1D039D802E16889300D4924A /* notify-target.xcconfig */,
 				1DD2112A259F437C0041BB8F /* OmcVersion.xcconfig */,
 				1D4971B72575A6CD00F7131C /* OmcProjectDebug.xcconfig */,
 				1D4971B62575A6CD00F7131C /* OmcProjectRelease.xcconfig */,
@@ -169,21 +171,15 @@
 		};
 		1D904E1C19285FFA009FB0C7 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 1D039D802E16889300D4924A /* notify-target.xcconfig */;
 			buildSettings = {
-				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
-				INFOPLIST_FILE = notify_Info.plist;
-				PRODUCT_BUNDLE_IDENTIFIER = com.abracode.notify;
-				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
 		};
 		1D904E1D19285FFA009FB0C7 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 1D039D802E16889300D4924A /* notify-target.xcconfig */;
 			buildSettings = {
-				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
-				INFOPLIST_FILE = notify_Info.plist;
-				PRODUCT_BUNDLE_IDENTIFIER = com.abracode.notify;
-				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
 		};

@@ -26,6 +26,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		1D039D7D2E1685BB00D4924A /* pasteboard-target.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "pasteboard-target.xcconfig"; sourceTree = "<group>"; };
 		1D0449AC2330B80300C01431 /* OmcTool_Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = OmcTool_Info.plist; path = ../Common/OmcTool_Info.plist; sourceTree = "<group>"; };
 		1D4971B02575A6A400F7131C /* OmcProjectRelease.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectRelease.xcconfig; path = ../Common/OmcProjectRelease.xcconfig; sourceTree = "<group>"; };
 		1D4971B12575A6A400F7131C /* OmcProjectDebug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectDebug.xcconfig; path = ../Common/OmcProjectDebug.xcconfig; sourceTree = "<group>"; };
@@ -52,6 +53,7 @@
 		1D90037F192763DA001CAAEF = {
 			isa = PBXGroup;
 			children = (
+				1D039D7D2E1685BB00D4924A /* pasteboard-target.xcconfig */,
 				1DD2112D259F43A50041BB8F /* OmcVersion.xcconfig */,
 				1D4971B12575A6A400F7131C /* OmcProjectDebug.xcconfig */,
 				1D4971B02575A6A400F7131C /* OmcProjectRelease.xcconfig */,
@@ -163,21 +165,15 @@
 		};
 		1D900397192763DA001CAAEF /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 1D039D7D2E1685BB00D4924A /* pasteboard-target.xcconfig */;
 			buildSettings = {
-				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
-				INFOPLIST_FILE = ../Common/OmcTool_Info.plist;
-				PRODUCT_BUNDLE_IDENTIFIER = com.abracode.pasteboard;
-				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
 		};
 		1D900398192763DA001CAAEF /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 1D039D7D2E1685BB00D4924A /* pasteboard-target.xcconfig */;
 			buildSettings = {
-				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
-				INFOPLIST_FILE = ../Common/OmcTool_Info.plist;
-				PRODUCT_BUNDLE_IDENTIFIER = com.abracode.pasteboard;
-				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
 		};

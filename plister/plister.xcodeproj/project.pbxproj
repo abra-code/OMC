@@ -29,6 +29,7 @@
 
 /* Begin PBXFileReference section */
 		08FB7796FE84155DC02AAC07 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		1D039D7C2E1684F300D4924A /* plister-target.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "plister-target.xcconfig"; sourceTree = "<group>"; };
 		1D3BB167229BECA800542933 /* AUniquePtr.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = AUniquePtr.h; path = ../Common/AUniquePtr.h; sourceTree = "<group>"; };
 		1D4971AE2575A69B00F7131C /* OmcProjectRelease.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectRelease.xcconfig; path = ../Common/OmcProjectRelease.xcconfig; sourceTree = "<group>"; };
 		1D4971AF2575A69B00F7131C /* OmcProjectDebug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectDebug.xcconfig; path = ../Common/OmcProjectDebug.xcconfig; sourceTree = "<group>"; };
@@ -62,6 +63,7 @@
 			children = (
 				08FB7795FE84155DC02AAC07 /* Source */,
 				C6859E8C029090F304C91782 /* Documentation */,
+				1D039D7C2E1684F300D4924A /* plister-target.xcconfig */,
 				1DD2112E259F43AA0041BB8F /* OmcVersion.xcconfig */,
 				1D4971AF2575A69B00F7131C /* OmcProjectDebug.xcconfig */,
 				1D4971AE2575A69B00F7131C /* OmcProjectRelease.xcconfig */,
@@ -165,21 +167,15 @@
 /* Begin XCBuildConfiguration section */
 		E2AA0BEE09033F3500EA94FD /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 1D039D7C2E1684F300D4924A /* plister-target.xcconfig */;
 			buildSettings = {
-				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
-				INFOPLIST_FILE = ../Common/OmcTool_Info.plist;
-				PRODUCT_BUNDLE_IDENTIFIER = com.abracode.plister;
-				PRODUCT_NAME = plister;
 			};
 			name = Debug;
 		};
 		E2AA0BEF09033F3500EA94FD /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 1D039D7C2E1684F300D4924A /* plister-target.xcconfig */;
 			buildSettings = {
-				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
-				INFOPLIST_FILE = ../Common/OmcTool_Info.plist;
-				PRODUCT_BUNDLE_IDENTIFIER = com.abracode.plister;
-				PRODUCT_NAME = plister;
 			};
 			name = Release;
 		};

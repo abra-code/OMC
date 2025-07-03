@@ -23,6 +23,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		1D039D7E2E16866400D4924A /* omc_next_command-target.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "omc_next_command-target.xcconfig"; sourceTree = "<group>"; };
 		1D4971B22575A6B200F7131C /* OmcProjectRelease.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectRelease.xcconfig; path = ../Common/OmcProjectRelease.xcconfig; sourceTree = "<group>"; };
 		1D4971B32575A6B200F7131C /* OmcProjectDebug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectDebug.xcconfig; path = ../Common/OmcProjectDebug.xcconfig; sourceTree = "<group>"; };
 		1DD2112C259F439E0041BB8F /* OmcVersion.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcVersion.xcconfig; path = ../Common/OmcVersion.xcconfig; sourceTree = "<group>"; };
@@ -47,6 +48,7 @@
 			isa = PBXGroup;
 			children = (
 				08FB7795FE84155DC02AAC07 /* Source */,
+				1D039D7E2E16866400D4924A /* omc_next_command-target.xcconfig */,
 				1DD2112C259F439E0041BB8F /* OmcVersion.xcconfig */,
 				1D4971B32575A6B200F7131C /* OmcProjectDebug.xcconfig */,
 				1D4971B22575A6B200F7131C /* OmcProjectRelease.xcconfig */,
@@ -149,23 +151,15 @@
 /* Begin XCBuildConfiguration section */
 		E2E901B70864ADA200B99907 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 1D039D7E2E16866400D4924A /* omc_next_command-target.xcconfig */;
 			buildSettings = {
-				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
-				INFOPLIST_FILE = ../Common/OmcTool_Info.plist;
-				INSTALL_PATH = /usr/local/bin;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.abracode.omc-next-command";
-				PRODUCT_NAME = omc_next_command;
 			};
 			name = Debug;
 		};
 		E2E901B80864ADA200B99907 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 1D039D7E2E16866400D4924A /* omc_next_command-target.xcconfig */;
 			buildSettings = {
-				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
-				INFOPLIST_FILE = ../Common/OmcTool_Info.plist;
-				INSTALL_PATH = /usr/local/bin;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.abracode.omc-next-command";
-				PRODUCT_NAME = omc_next_command;
 			};
 			name = Release;
 		};
@@ -173,8 +167,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 1D4971B32575A6B200F7131C /* OmcProjectDebug.xcconfig */;
 			buildSettings = {
-				GCC_ENABLE_CPP_EXCEPTIONS = NO;
-				GCC_ENABLE_CPP_RTTI = NO;
 			};
 			name = Debug;
 		};
@@ -182,8 +174,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 1D4971B22575A6B200F7131C /* OmcProjectRelease.xcconfig */;
 			buildSettings = {
-				GCC_ENABLE_CPP_EXCEPTIONS = NO;
-				GCC_ENABLE_CPP_RTTI = NO;
 			};
 			name = Release;
 		};

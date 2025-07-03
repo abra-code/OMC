@@ -28,6 +28,7 @@
 /* Begin PBXFileReference section */
 		08FB7796FE84155DC02AAC07 /* main.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
 		09AB6884FE841BABC02AAC07 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = /System/Library/Frameworks/CoreFoundation.framework; sourceTree = "<absolute>"; };
+		1D039D812E16891300D4924A /* loco-target.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "loco-target.xcconfig"; sourceTree = "<group>"; };
 		1D4971B82575A6D500F7131C /* OmcProjectRelease.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectRelease.xcconfig; path = ../Common/OmcProjectRelease.xcconfig; sourceTree = "<group>"; };
 		1D4971B92575A6D500F7131C /* OmcProjectDebug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectDebug.xcconfig; path = ../Common/OmcProjectDebug.xcconfig; sourceTree = "<group>"; };
 		1DD21129259F43740041BB8F /* OmcVersion.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcVersion.xcconfig; path = ../Common/OmcVersion.xcconfig; sourceTree = "<group>"; };
@@ -52,6 +53,7 @@
 		08FB7794FE84155DC02AAC07 /* loco */ = {
 			isa = PBXGroup;
 			children = (
+				1D039D812E16891300D4924A /* loco-target.xcconfig */,
 				1DD21129259F43740041BB8F /* OmcVersion.xcconfig */,
 				1D4971B92575A6D500F7131C /* OmcProjectDebug.xcconfig */,
 				1D4971B82575A6D500F7131C /* OmcProjectRelease.xcconfig */,
@@ -157,23 +159,15 @@
 /* Begin XCBuildConfiguration section */
 		1DEB924808733DCA0010E9CD /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 1D039D812E16891300D4924A /* loco-target.xcconfig */;
 			buildSettings = {
-				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
-				INFOPLIST_FILE = loco_Info.plist;
-				INSTALL_PATH = /usr/local/bin;
-				PRODUCT_BUNDLE_IDENTIFIER = com.abracode.loco;
-				PRODUCT_NAME = loco;
 			};
 			name = Debug;
 		};
 		1DEB924908733DCA0010E9CD /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 1D039D812E16891300D4924A /* loco-target.xcconfig */;
 			buildSettings = {
-				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
-				INFOPLIST_FILE = loco_Info.plist;
-				INSTALL_PATH = /usr/local/bin;
-				PRODUCT_BUNDLE_IDENTIFIER = com.abracode.loco;
-				PRODUCT_NAME = loco;
 			};
 			name = Release;
 		};

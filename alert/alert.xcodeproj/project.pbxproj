@@ -26,6 +26,7 @@
 /* Begin PBXFileReference section */
 		08FB7796FE84155DC02AAC07 /* main.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
 		09AB6884FE841BABC02AAC07 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = /System/Library/Frameworks/CoreFoundation.framework; sourceTree = "<absolute>"; };
+		1D039D842E168A4700D4924A /* alert-target.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "alert-target.xcconfig"; sourceTree = "<group>"; };
 		1D0449AA2330B40900C01431 /* OmcTool_Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = OmcTool_Info.plist; path = ../Common/OmcTool_Info.plist; sourceTree = SOURCE_ROOT; };
 		1D4971BE2575A6EF00F7131C /* OmcProjectRelease.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectRelease.xcconfig; path = ../Common/OmcProjectRelease.xcconfig; sourceTree = "<group>"; };
 		1D4971BF2575A6EF00F7131C /* OmcProjectDebug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectDebug.xcconfig; path = ../Common/OmcProjectDebug.xcconfig; sourceTree = "<group>"; };
@@ -49,6 +50,7 @@
 		08FB7794FE84155DC02AAC07 /* alert */ = {
 			isa = PBXGroup;
 			children = (
+				1D039D842E168A4700D4924A /* alert-target.xcconfig */,
 				1DD21117259F432C0041BB8F /* OmcVersion.xcconfig */,
 				1D4971BF2575A6EF00F7131C /* OmcProjectDebug.xcconfig */,
 				1D4971BE2575A6EF00F7131C /* OmcProjectRelease.xcconfig */,
@@ -145,23 +147,15 @@
 /* Begin XCBuildConfiguration section */
 		1DEB924808733DCA0010E9CD /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 1D039D842E168A4700D4924A /* alert-target.xcconfig */;
 			buildSettings = {
-				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
-				INFOPLIST_FILE = ../Common/OmcTool_Info.plist;
-				INSTALL_PATH = /usr/local/bin;
-				PRODUCT_BUNDLE_IDENTIFIER = com.abracode.alert;
-				PRODUCT_NAME = alert;
 			};
 			name = Debug;
 		};
 		1DEB924908733DCA0010E9CD /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 1D039D842E168A4700D4924A /* alert-target.xcconfig */;
 			buildSettings = {
-				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
-				INFOPLIST_FILE = ../Common/OmcTool_Info.plist;
-				INSTALL_PATH = /usr/local/bin;
-				PRODUCT_BUNDLE_IDENTIFIER = com.abracode.alert;
-				PRODUCT_NAME = alert;
 			};
 			name = Release;
 		};
