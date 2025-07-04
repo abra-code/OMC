@@ -567,6 +567,7 @@ OnMyCommandCM::CommonContextCheck( const AEDesc *inContext, CFTypeRef inCFContex
 	Boolean anythingSelected = false;
 
 	UInt32 theFlags = kListClear;
+    size_t validObjectCount = 0;
 	if( !mIsNullContext && !mIsTextContext ) //we have some context that is not text
 	{
 		TRACE_CSTR( "OnMyCommandCM->CMPluginExamineContext: not null context descriptor\n" );
@@ -592,18 +593,17 @@ OnMyCommandCM::CommonContextCheck( const AEDesc *inContext, CFTypeRef inCFContex
 				mObjectList.resize(listItemsCount);
 			}
 		}
-
+        
 		if( contextFiles != NULL )
-			anythingSelected = CMUtils::ProcessObjectList( contextFiles, theFlags, CFURLCheckFileOrFolder, this);
+            validObjectCount = CMUtils::ProcessObjectList( contextFiles, theFlags, CFURLCheckFileOrFolder, &mObjectList);
 		else if(inContext != NULL)
-			anythingSelected = CMUtils::ProcessObjectList( inContext, theFlags, CFURLCheckFileOrFolder, this );
+            validObjectCount = CMUtils::ProcessObjectList( inContext, theFlags, CFURLCheckFileOrFolder, &mObjectList );
 
+        anythingSelected = (validObjectCount > 0);
 	}
 
-//update total count
-	//currObjectIndex is incremented in CFURLCheckFileOrFolder for each valid object
-	mObjectList.resize(mCurrObjectIndex);
-	mCurrObjectIndex = 0;
+    //update total count
+    mObjectList.resize(validObjectCount);
 
 	Boolean isFolder = false;
 	if(mObjectList.size() == 1)
@@ -657,39 +657,6 @@ OnMyCommandCM::CommonContextCheck( const AEDesc *inContext, CFTypeRef inCFContex
 	
 
 	return err;
-}
-
-Boolean
-OnMyCommandCM::ExamineDropletFileContext(AEDescList *fileList)
-{
-	Boolean anythingToDo = false;
-	UInt32 theFlags = kListClear;
-
-	mCurrObjectIndex = 0;//CFURLCheckFileOrFolder increments this for each valid object
-
-	if(fileList == NULL)
-		return false;
-
-	if( fileList->descriptorType != typeNull )
-	{
-		//pre-allocate space for all object properties
-		long listItemsCount = 0;
-		if( ::AECountItems(fileList, &listItemsCount) == noErr )
-		{
-			if(listItemsCount > 0)
-			{
-				mObjectList.resize(listItemsCount);
-			}
-		}
-
-		anythingToDo = CMUtils::ProcessObjectList( fileList, theFlags, OnMyCommandCM::CFURLCheckFileOrFolder, this );
-	}
-
-//update total count
-	mObjectList.resize(mCurrObjectIndex);
-	mCurrObjectIndex = 0;
-
-	return anythingToDo;
 }
 
 // ---------------------------------------------------------------------------
@@ -1333,16 +1300,16 @@ OnMyCommandCM::FindCommandIndex( CFStringRef inNameOrId )
 #pragma mark -
 
 OSStatus
-OnMyCommandCM::CFURLCheckFileOrFolder(CFURLRef inURLRef, void *ioData)
+OnMyCommandCM::CFURLCheckFileOrFolder(CFURLRef inURLRef, size_t index, void *ioData)
 {
 	if( (inURLRef == nullptr) || (ioData == nullptr) )
 		return paramErr;
 
-	OnMyCommandCM &myData = *(OnMyCommandCM *)ioData;
+    std::vector<OneObjProperties> &objectList = *(std::vector<OneObjProperties> *)ioData;
 
-	if(myData.mCurrObjectIndex < myData.mObjectList.size())
+	if(index < objectList.size())
 	{
-		OneObjProperties& objProperties = myData.mObjectList[myData.mCurrObjectIndex];
+		OneObjProperties& objProperties = objectList[index];
 		objProperties.url.Adopt(inURLRef, kCFObjRetain);
 		objProperties.extension.Adopt(CFURLCopyPathExtension(inURLRef));
 		
@@ -1355,7 +1322,7 @@ OnMyCommandCM::CFURLCheckFileOrFolder(CFURLRef inURLRef, void *ioData)
 		propertyDict.GetValue(kCFURLIsDirectoryKey, objProperties.isDirectory);
 		propertyDict.GetValue(kCFURLIsPackageKey, objProperties.isPackage);
 
-		myData.mCurrObjectIndex++; //client will use this information to know the exact number of valid items
+        return noErr;
 	}
 	return fnfErr;
 }
@@ -2482,10 +2449,18 @@ OnMyCommandCM::IsCommandEnabled(SInt32 inCmdIndex, const AEDesc *inContext, bool
 Boolean
 CheckAllObjects(std::vector<OneObjProperties> &objList, ObjCheckingProc inProcPtr, void *inProcData)
 {
-	if( inProcPtr == nullptr )
-		return false;
+	if(inProcPtr == nullptr)
+    {
+        return false;
+    }
+    
+    size_t elemCount = objList.size();
+    if(elemCount == 0)
+    {
+        return false;
+    }
 
-	for(size_t i = 0; i < objList.size(); i++)
+	for(size_t i = 0; i < elemCount; i++)
 	{
 		if(false == (*inProcPtr)( &objList[i], inProcData ) )
 			return false;

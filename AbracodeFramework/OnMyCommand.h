@@ -260,7 +260,6 @@ public:
 	virtual OSStatus	ExamineContext( const AEDesc *inContext, SInt32 inCommandRef, AEDescList *outCommandPairs );
 	virtual OSStatus	ExamineContext( CFTypeRef inContext, SInt32 inCommandRef );
 
-	virtual Boolean		ExamineDropletFileContext(AEDescList *fileList);
 	virtual OSStatus	HandleSelection( AEDesc *inContext, SInt32 inCommandID );//pass NULL for inContext when executing with CF Context
 	virtual void		PostMenuCleanup();
 
@@ -305,7 +304,7 @@ public:
 	OSStatus			ExecuteSubcommand( CFArrayRef inCommandName, CFStringRef inCommandID, OMCDialog *inDialog, CFTypeRef inContext );
 	OSStatus			ExecuteSubcommand( SInt32 commandIndex, OMCDialog *inDialog, CFTypeRef inContext );
 
-	static OSStatus		CFURLCheckFileOrFolder(CFURLRef inURLRef, void *ioData);
+	static OSStatus		CFURLCheckFileOrFolder(CFURLRef inURLRef, size_t index, void *ioData);
 
 	Boolean				IsSubcommand(CFArrayRef inName, CFIndex inCommandIndex);
 	SInt32				FindCommandIndex( CFStringRef inNameOrId );

@@ -23,7 +23,7 @@
 
 #pragma export off
 
-typedef OSStatus (*CFURLHandlerProc)( CFURLRef inURLRef, void *ioData );
+typedef OSStatus (*CFURLHandlerProc)( CFURLRef inURLRef, size_t index, void *ioData );
 
 enum
 {
@@ -73,9 +73,9 @@ public:
 	static SInt32		FindSubmenu(AEDescList* ioCommands, CFStringRef inName);
 //	Boolean				IsSubmenuWithName(const AERecord *inMenuItemRec, CFStringRef inSubmenuName);
 
-	static Boolean		ProcessObjectList( const AEDescList *fileList, UInt32 &ioFlags, CFURLHandlerProc inProcPtr, void *inProcData = NULL );
+	static size_t		ProcessObjectList( const AEDescList *fileList, UInt32 &ioFlags, CFURLHandlerProc inProcPtr, void *inProcData = NULL );
 
-	static Boolean		ProcessObjectList( CFArrayRef fileList, UInt32 &ioFlags, CFURLHandlerProc inProcPtr, void *inProcData = NULL );
+	static size_t		ProcessObjectList( CFArrayRef fileList, UInt32 &ioFlags, CFURLHandlerProc inProcPtr, void *inProcData = NULL );
 
 	static CFMutableArrayRef	CollectObjectNames( const AEDescList *fileList);
 	static OSStatus				AESortFileList(const AEDescList *inFileList, AEDescList *outSortedList, CFOptionFlags compareOptions);

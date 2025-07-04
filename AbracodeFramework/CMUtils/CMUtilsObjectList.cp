@@ -35,14 +35,14 @@ on output you may receive flags:
 
 */
 
-Boolean
+size_t
 CMUtils::ProcessObjectList( const AEDescList *fileList, UInt32 &ioFlags, CFURLHandlerProc inProcPtr, void *inProcData /*=NULL*/)
 {
-	Boolean outOK = false;
 	ioFlags &= ~kListOutFlagsMask;
-
+    size_t counter = 0; // the count of objects which passed the test
+    
 	if( (fileList == NULL) || (inProcPtr == NULL) )
-		return false;
+		return counter;
 
 	OSStatus err = noErr;
 	long listItemsCount = 0;
@@ -63,11 +63,11 @@ CMUtils::ProcessObjectList( const AEDescList *fileList, UInt32 &ioFlags, CFURLHa
                 CFObj<CFURLRef> oneURL = CopyURL(file);
 				if( oneURL != nullptr )
 				{
-					err = (*inProcPtr)( oneURL, inProcData );
+					err = (*inProcPtr)(oneURL, counter, inProcData);
 				
 					if(err == noErr)
 					{
-						outOK = true;
+                        counter++;
 						if( (ioFlags & kProcBreakOnFirst) != 0)
 							break;
 					}
@@ -84,17 +84,17 @@ CMUtils::ProcessObjectList( const AEDescList *fileList, UInt32 &ioFlags, CFURLHa
 		}
 	}
 	
-	return outOK;
+	return counter;
 }
 
-Boolean
+size_t
 CMUtils::ProcessObjectList( CFArrayRef fileList, UInt32 &ioFlags, CFURLHandlerProc inProcPtr, void *inProcData /*=NULL*/)
 {
-	Boolean outOK = false;
 	ioFlags &= ~kListOutFlagsMask;
-
-	if( (fileList == NULL) || (inProcPtr == NULL) )
-		return false;
+    size_t counter = 0; // the count of objects which passed the test
+    
+	if((fileList == NULL) || (inProcPtr == NULL))
+		return counter;
 
 	OSStatus err = noErr;
 
@@ -111,11 +111,11 @@ CMUtils::ProcessObjectList( CFArrayRef fileList, UInt32 &ioFlags, CFURLHandlerPr
 			CFTypeID itemType = ::CFGetTypeID( oneItem );
 			if( itemType == ACFType<CFURLRef>::GetTypeID() )
 			{
-				err = (*inProcPtr)( (CFURLRef)oneItem, inProcData );
+				err = (*inProcPtr)((CFURLRef)oneItem, counter, inProcData);
 			
 				if(err == noErr)
 				{
-					outOK = true;
+                    counter++;
 					if( (ioFlags & kProcBreakOnFirst) != 0)
 						break;
 				}
@@ -131,7 +131,7 @@ CMUtils::ProcessObjectList( CFArrayRef fileList, UInt32 &ioFlags, CFURLHandlerPr
 		}
 	}
 	
-	return outOK;
+	return counter;
 }
 
 
