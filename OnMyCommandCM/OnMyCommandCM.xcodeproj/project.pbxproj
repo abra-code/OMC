@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		1D039DAD2E168D4700D4924A /* Abracode.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1D039DAC2E168D4700D4924A /* Abracode.framework */; };
+		1D23064D2E17707600C3F67C /* Abracode.framework in Copy Abracode.framework */ = {isa = PBXBuildFile; fileRef = 1D039DB52E168D9C00D4924A /* Abracode.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		E28156CF0B46740C007F4C1E /* app.icns in Resources */ = {isa = PBXBuildFile; fileRef = E28156CE0B46740C007F4C1E /* app.icns */; };
 		E28F6E4F0841AD30004800C0 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0AA1909FFE8422F4C02AAC07 /* CoreFoundation.framework */; };
 		E28F6E510841AD30004800C0 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E29D23E4045BBC5700A87BAE /* Cocoa.framework */; };
@@ -31,6 +32,20 @@
 			remoteInfo = AbracodeFramework;
 		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		1D23064C2E17703C00C3F67C /* Copy Abracode.framework */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				1D23064D2E17707600C3F67C /* Abracode.framework in Copy Abracode.framework */,
+			);
+			name = "Copy Abracode.framework";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		0AA1909FFE8422F4C02AAC07 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = /System/Library/Frameworks/CoreFoundation.framework; sourceTree = "<absolute>"; };
@@ -180,6 +195,7 @@
 				E28F6E290841AD30004800C0 /* Resources */,
 				E28F6E2B0841AD30004800C0 /* Sources */,
 				E28F6E4E0841AD30004800C0 /* Frameworks */,
+				1D23064C2E17703C00C3F67C /* Copy Abracode.framework */,
 				E21DA4A20E3AFCC100ACD55F /* Copy to /Library/Contextual Menu Items */,
 			);
 			buildRules = (
