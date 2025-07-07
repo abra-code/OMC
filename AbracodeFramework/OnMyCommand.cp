@@ -334,7 +334,6 @@ OnMyCommandCM::Init()
 
 #if  0 //_DEBUG_
 	CFShow((CFStringRef)mMyHostBundlePath);
-	CFShow((CFStringRef)mHostAppBundleID);
 #endif
 
 	return noErr;
@@ -502,14 +501,6 @@ OnMyCommandCM::CommonContextCheck( const AEDesc *inContext, CFTypeRef inCFContex
 	CFStringRef hostAppBundleID = CFBundleGetIdentifier(CFBundleGetMainBundle());
 	if(hostAppBundleID != NULL)
 	{
-#if IN_PROC_CM //64-bit apps no longer load CM plug-ins in-proc
-		if( kCFCompareEqualTo == ::CFStringCompare( mHostAppBundleID, CFSTR("com.apple.finder"), 0 ) )
-		{
-			TRACE_CSTR( "OnMyCommandCM->CMPluginExamineContext. running in Finder\n" );
-		}
-		else
-#endif
-		
         if(kCFCompareEqualTo == ::CFStringCompare(hostAppBundleID, CFSTR("com.abracode.OMCService"), 0))
         {
             mHostApp = kOMCHostApp_OMCService;
@@ -544,18 +535,7 @@ OnMyCommandCM::CommonContextCheck( const AEDesc *inContext, CFTypeRef inCFContex
                 frontProcessIsFinder = true;
         }
     }
-    
-#if OLD_CODE_USED_IN_INPROC_CM_PLUGINS
-	if(mIsNullContext && mCMPluginMode)//for null context in CM mode try to get text from Cocoa host
-	{
-		TRACE_CSTR( "OnMyCommandCM->CMPluginExamineContext: inContext->descriptorType == typeNull\n" );
-		mIsTextContext = (Boolean)cocoaAppHasStringSelection();
-//	will need to show items marked as "always show"
-//		if(mIsTextContext == false)
-//			return errAENotAEDesc;//do not show CM when descriptor type is null and there is no selection in Cocoa app
-	}	
-#endif //OLD_CODE_USED_IN_INPROC_CM_PLUGINS
-	
+    	
 	if(mCommandList == NULL)
 	{//not loaded yet?
 		if( mPlistURL != NULL )
@@ -625,11 +605,6 @@ OnMyCommandCM::CommonContextCheck( const AEDesc *inContext, CFTypeRef inCFContex
 	}
 	else if( !anythingSelected && !mIsTextContext )
 	{//not a list of objects, maybe a selected text?
-#if OLD_CODE_USED_IN_INPROC_CM_PLUGINS
-		if( mCMPluginMode )
-			mIsTextContext = (Boolean)cocoaAppHasStringSelection();
-#endif
-
 		if( (inContext != nullptr) && !mIsNullContext )
 			mIsTextContext = CMUtils::AEDescHasTextData(*inContext);
 	}
@@ -4411,24 +4386,10 @@ OnMyCommandCM::CreateTextContext(const CommandDescription &currCommand, const AE
 
 	if( mIsTextContext && (currCommand.activationMode != kActiveClipboardText) )
 	{
-#if IN_PROC_CM //long deprecated by Apple
-		mContextText.Adopt( currentCocoaStringSelection(), kCFObjDontRetain);
-		if((mContextText != NULL) && (currCommand.textReplaceOptions != kTextReplaceNothing))
-		{
-			CFMutableStringRef mutableCopy = ::CFStringCreateMutableCopy(kCFAllocatorDefault, 0, mContextText);
-			CFRange wholeRange = CFRangeMake(0, CFStringGetLength(mutableCopy));
-
-			if(currCommand.textReplaceOptions == kTextReplaceLFsWithCRs)
-				::CFStringFindAndReplace(mutableCopy, CFSTR("\n"), CFSTR("\r"), wholeRange, 0);
-			else if(currCommand.textReplaceOptions == kTextReplaceCRsWithLFs)
-				::CFStringFindAndReplace(mutableCopy, CFSTR("\r"), CFSTR("\n"), wholeRange, 0);
-			mContextText.Adopt( mutableCopy, kCFObjDontRetain);
-		}
-#endif //IN_PROC_CM
-		
 		if( (inContext != NULL) && (mContextText == NULL) && (mIsNullContext == false) )
-			mContextText.Adopt( CMUtils::CreateCFStringFromAEDesc( *inContext, currCommand.textReplaceOptions ), kCFObjDontRetain);
-		
+        {
+            mContextText.Adopt( CMUtils::CreateCFStringFromAEDesc( *inContext, currCommand.textReplaceOptions ), kCFObjDontRetain);
+        }
 	}
 	else if(mIsTextInClipboard)
 	{

@@ -266,9 +266,6 @@ public:
 	OSStatus			CommonContextCheck( const AEDesc *inContext, CFTypeRef inCFContext, AEDescList *outCommandPairs, SInt32 inCmdIndex );
 
 //	void				Finalize();
-	//real CM plug-ins try hard to get current context
-	//when the context info is prepared by host app (non-CM situation), we don't want the agressive search and other behavior
-	void				SetCMPluginMode(Boolean inCMPluginMode) { mCMPluginMode = inCMPluginMode; }
 
 	void				AddObserver(AObserverBase *inObserver)
 						{
@@ -396,7 +393,6 @@ protected:
     Boolean						mIsOpenFolder {false};
     Boolean						mIsNullContext {false};
     Boolean						mIsTextContext {false};
-    Boolean						mCMPluginMode {true};
     OMCHostApp					mHostApp {kOMCHostApp_Unknown};
     pid_t			            mFrontProcessPID {0};//if running in observer we don't want to return observer as front process if it happens to come up
 };

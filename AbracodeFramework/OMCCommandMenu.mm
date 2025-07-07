@@ -244,7 +244,6 @@ PopulateCommandsMenu(OnMyCommandCM *inPlugin, NSMenu *topMenu)
 		return;
 
     ARefCountedObj<OnMyCommandCM> omcPlugin( new OnMyCommandCM( (__bridge CFURLRef)commandURL ), kARefCountDontRetain );
-	omcPlugin->SetCMPluginMode(false);
 	StAEDesc contextDesc;//empty context
 	error = omcPlugin->ExamineContext(contextDesc, NULL);
 	if( error == noErr )
