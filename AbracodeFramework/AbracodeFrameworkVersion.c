@@ -11,7 +11,7 @@
 
 extern UInt32 OMCGetCurrentVersion(void) __attribute__((weak_import));
 
-UInt32 GetAbracodeFrameworkVersion()
+UInt32 GetAbracodeFrameworkVersion(void)
 {
 	if(OMCGetCurrentVersion != NULL)
 		return OMCGetCurrentVersion();

@@ -46,5 +46,7 @@
 	<string></string>
 	<key>NSHumanReadableCopyright</key>
 	<string>Copyright Abracode</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>${MACOSX_DEPLOYMENT_TARGET}</string>
 </dict>
 </plist>

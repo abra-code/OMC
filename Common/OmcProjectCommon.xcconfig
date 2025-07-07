@@ -8,7 +8,7 @@ DEVELOPMENT_TEAM =
 #include? "OmcDistribution.xcconfig"
 
 
-MACOSX_DEPLOYMENT_TARGET = 10.13
+MACOSX_DEPLOYMENT_TARGET = 11.0
 SDKROOT = macosx
 FRAMEWORK_SEARCH_PATHS = /Library/Frameworks
 GCC_VERSION = com.apple.compilers.llvm.clang.1_0
@@ -56,3 +56,8 @@ GCC_WARN_UNUSED_FUNCTION = YES
 GCC_WARN_UNUSED_VARIABLE = YES
 
 
+// turn on some compiler security options
+OTHER_CFLAGS_ARCH[arch=x86_64] = -fcf-protection=full
+OTHER_CFLAGS_ARCH[arch=arm64] = -mbranch-protection=standard
+OTHER_CFLAGS = ${inherited} -fstack-protector-strong -fPIE ${OTHER_CFLAGS_ARCH}
+CLANG_CXX_STANDARD_LIBRARY_HARDENING = fast
