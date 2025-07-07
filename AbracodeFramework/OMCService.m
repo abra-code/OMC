@@ -94,45 +94,42 @@ void OMCServiceObserverCallback( OmcObserverMessage inMessage, CFIndex inTaskID,
 	NSDictionary *infoDictionary = [appBundle infoDictionary];
 	NSArray *servicesArray = (NSArray *)[infoDictionary objectForKey:@"NSServices"];
 	if( (servicesArray != NULL) &&
-		[servicesArray isKindOfClass:[NSArray class]] &&
+		[servicesArray isKindOfClass:NSArray.class] &&
 		([servicesArray count] > 0) )
 	{
 		NSDictionary *omcServiceDict = (NSDictionary *)[servicesArray objectAtIndex:0];
 		if( (omcServiceDict != NULL) &&
-			[omcServiceDict isKindOfClass:[NSDictionary class]] )
+			[omcServiceDict isKindOfClass:NSDictionary.class] )
 		{
-			NSArray *sendTypesArray = (NSArray *)[omcServiceDict objectForKey:@"NSSendTypes"];
-			if( (sendTypesArray != NULL) &&
-				[sendTypesArray isKindOfClass:[NSArray class]] )
-			{
-				NSUInteger typesCount = [sendTypesArray count];
-				if(typesCount > 0)
-				{
-					NSString *oneType = (NSString *)[sendTypesArray objectAtIndex:0];
-					if( (oneType != NULL) &&
-						[oneType isKindOfClass:[NSString class]] &&
-						([oneType isEqualToString:NSStringPboardType] || [oneType isEqualToString:NSPasteboardTypeString]) )
-					{
-						prefersTextContext = YES;
-					}
-				}
-			}
-
+            NSArray *sendFileTypesArray = (NSArray *)[omcServiceDict objectForKey:@"NSSendFileTypes"];
+            if( [sendFileTypesArray isKindOfClass:NSArray.class] && (sendFileTypesArray.count > 0))
+            {
+                prefersTextContext = NO;
+            }
+            else
+            {
+                NSArray *sendTypesArray = (NSArray *)[omcServiceDict objectForKey:@"NSSendTypes"];
+                if( [sendTypesArray isKindOfClass:NSArray.class] && (sendTypesArray.count > 0))
+                {
+                    NSString *oneType = (NSString *)[sendTypesArray objectAtIndex:0];
+                    if( [oneType isKindOfClass:NSString.class] &&
+                       ([oneType isEqualToString:NSStringPboardType] || [oneType isEqualToString:NSPasteboardTypeString]) )
+                    {
+                        prefersTextContext = YES;
+                    }
+                }
+            }
+            
 			NSArray *returnTypesArray = (NSArray *)[omcServiceDict objectForKey:@"NSReturnTypes"];
-			if( (returnTypesArray != NULL) &&
-				[returnTypesArray isKindOfClass:[NSArray class]] )
+			if([returnTypesArray isKindOfClass:NSArray.class] && (returnTypesArray.count > 0))
 			{
-				NSUInteger typesCount = [returnTypesArray count];
-				if(typesCount > 0)
-				{
-					NSString *oneType = (NSString *)[sendTypesArray objectAtIndex:0];
-					if( (oneType != NULL) &&
-						[oneType isKindOfClass:[NSString class]] &&
-						([oneType isEqualToString:NSStringPboardType] || [oneType isEqualToString:NSPasteboardTypeString]) )
-					{
-						wantsToReturnText = YES;
-					}
-				}
+                NSString *oneType = (NSString *)[returnTypesArray objectAtIndex:0];
+                if( (oneType != NULL) &&
+                    [oneType isKindOfClass:NSString.class] &&
+                    ([oneType isEqualToString:NSStringPboardType] || [oneType isEqualToString:NSPasteboardTypeString]) )
+                {
+                    wantsToReturnText = YES;
+                }
 			}
 		}
 	}
@@ -144,32 +141,42 @@ void OMCServiceObserverCallback( OmcObserverMessage inMessage, CFIndex inTaskID,
         
 		if(prefersTextContext)
 		{
-			NSArray *supportedTextTypes = [NSArray arrayWithObjects: NSStringPboardType, NULL];
+			NSArray *supportedTextTypes = @[NSPasteboardTypeString, NSStringPboardType];
 			NSString *bestType = [pboard availableTypeFromArray:supportedTextTypes];
 			if(bestType != NULL)
-                contextObj = [pboard stringForType:NSStringPboardType];
+            {
+                contextObj = [pboard stringForType:NSPasteboardTypeString];
+                if(contextObj == nil)
+                {
+                    contextObj = [pboard stringForType:NSStringPboardType];
+                }
+            }
 		}
 
-		if(pasteboardTypes != nil && contextObj == nil)//also will enter here if prefersTextContext == false
-		{//try file names
-			NSArray *supportedFileTypes = [NSArray arrayWithObjects: NSFilenamesPboardType, NSPasteboardTypeFileURL, NULL];
+		if((contextObj == nil) && (pasteboardTypes.count > 0)) //also will enter here if prefersTextContext == false
+		{ //try files
+			NSArray *supportedFileTypes = @[NSFilenamesPboardType, NSPasteboardTypeFileURL];
 			NSString *bestType = [pboard availableTypeFromArray:supportedFileTypes];
 			if(bestType != NULL)
 			{
-                contextObj = [pboard propertyListForType:NSFilenamesPboardType];
+                contextObj = [pboard readObjectsForClasses:@[NSURL.class] options:nil];
                 if(contextObj == nil)
                 {
-                    NSString *urlString = [pboard stringForType:NSPasteboardTypeFileURL];
-                    contextObj = [NSURL URLWithString:urlString];
+                    contextObj = [pboard propertyListForType:NSFilenamesPboardType];
                 }
-				//if([resultList isKindOfClass:[NSArray class]])
 			}
 			else if(!prefersTextContext)//we don't have file paths and did not try text yet: do it now
 			{
-				NSArray *supportedTextTypes = [NSArray arrayWithObjects: NSStringPboardType, NULL];
+				NSArray *supportedTextTypes = @[NSPasteboardTypeString, NSStringPboardType];
 				NSString *bestType = [pboard availableTypeFromArray:supportedTextTypes];
 				if(bestType != NULL)
-                    contextObj = [pboard stringForType:NSStringPboardType];
+                {
+                    contextObj = [pboard stringForType:NSPasteboardTypeString];
+                    if(contextObj == nil)
+                    {
+                        contextObj = [pboard stringForType:NSStringPboardType];
+                    }
+                }
 			}
 		}
 	}
@@ -212,7 +219,7 @@ void OMCServiceObserverCallback( OmcObserverMessage inMessage, CFIndex inTaskID,
 				if(self.resultString != NULL)
 				{
 					//NSLog(@"Setting pasteboard text to: %@", mResultString);
-					NSArray *supportedTextTypes = [NSArray arrayWithObjects: NSStringPboardType, NULL];
+					NSArray *supportedTextTypes = @[NSStringPboardType];
 					[pboard declareTypes:supportedTextTypes owner:NULL];
 					[pboard setString:self.resultString forType:NSStringPboardType];
 				}
