@@ -66,7 +66,7 @@ extern "C" OSStatus OMCRunCommand(CFTypeRef inPlistRef, CFStringRef inCommandNam
 
 //the same as OMCRunCommand() but takes AEDesc which may be text, file or a list of files
 
-extern "C" OSStatus OMCRunCommandAE(CFTypeRef inPlistRef, CFStringRef inCommandNameOrID, AEDesc *inContext)
+extern "C" OSStatus OMCRunCommandAE(CFTypeRef inPlistRef, CFStringRef inCommandNameOrID, AEDesc *inAEContext)
 {
 	OSStatus err = noErr;
 
@@ -79,19 +79,19 @@ extern "C" OSStatus OMCRunCommandAE(CFTypeRef inPlistRef, CFStringRef inCommandN
 			return fnfErr;
 
 		StAEDesc replacementContext;
-		if( (inContext != NULL) && (inContext->dataHandle != NULL) )
+		if( (inAEContext != NULL) && (inAEContext->dataHandle != NULL) )
 		{
-			if( (inContext->descriptorType != typeAEList) &&
-				(inContext->descriptorType != typeUnicodeText) &&
-				(inContext->descriptorType != typeChar) &&
-				(inContext->descriptorType != typeCString) &&
-				(inContext->descriptorType != typePString) &&
-				(inContext->descriptorType != typeUTF16ExternalRepresentation) &&
-				(inContext->descriptorType != typeUTF8Text) )
+			if( (inAEContext->descriptorType != typeAEList) &&
+				(inAEContext->descriptorType != typeUnicodeText) &&
+				(inAEContext->descriptorType != typeChar) &&
+				(inAEContext->descriptorType != typeCString) &&
+				(inAEContext->descriptorType != typePString) &&
+				(inAEContext->descriptorType != typeUTF16ExternalRepresentation) &&
+				(inAEContext->descriptorType != typeUTF8Text) )
 			{//try to coerce to see if it might be a single file ref
 			//make a list even if single file. preferrable because Finder in 10.3 or higher does that
 				StAEDesc coercedRef;
-				err = ::AECoerceDesc( inContext, typeFileURL, coercedRef );
+				err = ::AECoerceDesc( inAEContext, typeFileURL, coercedRef );
 				if(err == noErr)
 				{
 					err = ::AECreateList( NULL, 0, false, replacementContext );
@@ -100,16 +100,16 @@ extern "C" OSStatus OMCRunCommandAE(CFTypeRef inPlistRef, CFStringRef inCommandN
 						err = ::AEPutDesc(	replacementContext, // the list
 											0, // put at the end of our list
 											coercedRef );
-						inContext = replacementContext;
+						inAEContext = replacementContext;
 					}				
 				}
 			}
 		}
 
-		err = omcPlugin->ExamineContext(inContext, NULL);
+		err = omcPlugin->ExamineContext(inAEContext, NULL);
 		if( err == noErr )
 		{
-			err = omcPlugin->HandleSelection(inContext, kCMCommandStart+commandIndex);
+			err = omcPlugin->HandleSelection(inAEContext, kCMCommandStart+commandIndex);
 			omcPlugin->PostMenuCleanup();//currently doing nothing, just for completeness
 		}
 	}
@@ -138,12 +138,12 @@ extern "C" OMCExecutorRef OMCCreateExecutor(CFTypeRef inPlistRef)
 	return omcPlugin;
 }
 
-extern "C" OSStatus OMCExamineContextAE( OMCExecutorRef inOMCExecutor, OMCCommandRef inCmdRef, const AEDesc *inContext, AEDescList *outCommandPairs )
+extern "C" OSStatus OMCExamineContextAE( OMCExecutorRef inOMCExecutor, OMCCommandRef inCmdRef, const AEDesc *inAEContext, AEDescList *outCommandPairs )
 {
 	try
 	{
 		if(inOMCExecutor != NULL)
-			return inOMCExecutor->ExamineContext(inContext, inCmdRef, outCommandPairs);
+			return inOMCExecutor->ExamineContext(inAEContext, inCmdRef, outCommandPairs);
 	}
 	catch(...)
 	{
@@ -207,7 +207,7 @@ extern "C" OSStatus OMCGetCommandInfo(OMCExecutorRef inOMCExecutor, OMCCommandRe
 	return err;
 }
 
-extern "C" OSStatus OMCExecuteCommandAE( OMCExecutorRef inOMCExecutor, AEDesc *inContext, OMCCommandRef inCommandRef )
+extern "C" OSStatus OMCExecuteCommandAE( OMCExecutorRef inOMCExecutor, AEDesc *inAEContext, OMCCommandRef inCommandRef )
 {
 	OSStatus err = paramErr;
 
@@ -216,7 +216,7 @@ extern "C" OSStatus OMCExecuteCommandAE( OMCExecutorRef inOMCExecutor, AEDesc *i
 		if(inOMCExecutor != NULL)
 		{
 			if( OMCIsValidCommandRef(inCommandRef) )
-				err = inOMCExecutor->HandleSelection(inContext, inCommandRef);
+				err = inOMCExecutor->HandleSelection(inAEContext, inCommandRef);
 			inOMCExecutor->PostMenuCleanup();//currently does nothing
 		}
 	}

@@ -114,7 +114,7 @@ public:
 														AEKeyword keyTwo, const AEDesc &objTwo,
 														AEKeyword keyThree, const AEDesc &objThree, Boolean waitForReply = false);
 
-    static bool         IsClickInOpenFinderWindow(const AEDesc *inContext, Boolean doCheckIfFolder) noexcept;
+    static bool         IsClickInOpenFinderWindow(const AEDesc *inAEContext, Boolean doCheckIfFolder) noexcept;
 
 	static Boolean		AEDescHasTextData(const AEDesc &inDesc);
 	static CFStringRef	CreateCFStringFromAEDesc(const AEDesc &inDesc, long inReplaceOption);

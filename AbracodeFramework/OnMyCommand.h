@@ -256,14 +256,14 @@ public:
 	
 	virtual OSStatus	Init();
 
-	virtual OSStatus	ExamineContext( const AEDesc *inContext, AEDescList *outCommandPairs );
-	virtual OSStatus	ExamineContext( const AEDesc *inContext, SInt32 inCommandRef, AEDescList *outCommandPairs );
+	virtual OSStatus	ExamineContext( const AEDesc *inAEContext, AEDescList *outCommandPairs );
+	virtual OSStatus	ExamineContext( const AEDesc *inAEContext, SInt32 inCommandRef, AEDescList *outCommandPairs );
 	virtual OSStatus	ExamineContext( CFTypeRef inContext, SInt32 inCommandRef );
 
-	virtual OSStatus	HandleSelection( AEDesc *inContext, SInt32 inCommandID );//pass NULL for inContext when executing with CF Context
+	virtual OSStatus	HandleSelection( AEDesc *inAEContext, SInt32 inCommandID );//pass NULL for inAEContext when executing with CF Context
 	virtual void		PostMenuCleanup();
 
-	OSStatus			CommonContextCheck( const AEDesc *inContext, CFTypeRef inCFContext, AEDescList *outCommandPairs, SInt32 inCmdIndex );
+	OSStatus			CommonContextCheck( const AEDesc *inAEContext, CFTypeRef inContext, AEDescList *outCommandPairs, SInt32 inCmdIndex );
 
 //	void				Finalize();
 
@@ -286,9 +286,9 @@ public:
 	OSStatus			ProcessObjects();
 	OSStatus			ProcessCommandWithText(CommandDescription &currCommand, CFStringRef inStrRef);
 	Boolean				DisplayWarning( CommandDescription &currCommand );
-	Boolean				PopulateItemsMenu( const AEDesc *inContext, AEDescList* ioRootMenu, Boolean runningInSpecialApp, CFStringRef inFrontAppName );
-	bool				IsCommandEnabled(CommandDescription &currCommand, const AEDesc *inContext, CFStringRef currAppName, bool skipFinderWindowCheck);
-	bool				IsCommandEnabled(SInt32 inCmdIndex, const AEDesc *inContext, bool runningInSpecialApp, CFStringRef inFrontAppName);
+	Boolean				PopulateItemsMenu( const AEDesc *inAEContext, AEDescList* ioRootMenu, Boolean runningInSpecialApp, CFStringRef inFrontAppName );
+	bool				IsCommandEnabled(CommandDescription &currCommand, const AEDesc *inAEContext, CFStringRef currAppName, bool skipFinderWindowCheck);
+	bool				IsCommandEnabled(SInt32 inCmdIndex, const AEDesc *inAEContext, bool runningInSpecialApp, CFStringRef inFrontAppName);
 
 	Boolean				ShowInputDialog( CommandDescription &currCommand, CFStringRef &outStr );
 
@@ -330,7 +330,7 @@ public:
 											CFStringRef inMultiSeparator, CFStringRef inMultiPrefix, CFStringRef inMultiSuffix);
 
 	CFStringRef			CreateDynamicCommandName(const CommandDescription &currCommand, CFStringRef inLocTableName, CFBundleRef inLocBundleRef);
-	void				CreateTextContext(const CommandDescription &currCommand, const AEDesc *inContext);
+	void				CreateTextContext(const CommandDescription &currCommand, const AEDesc *inAEContext);
 
 	SInt32				FindSubcommandIndex(CFArrayRef inName, CFStringRef inCommandID);
 	SInt32				FindCommandIndex(CFArrayRef inName, CFStringRef inCommandID);

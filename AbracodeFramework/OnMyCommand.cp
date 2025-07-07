@@ -385,7 +385,7 @@ OnMyCommandCM::ExamineContext( const AEDesc *inAEContext, SInt32 inCommandRef, A
 
 //new API for OMC.h
 OSStatus
-OnMyCommandCM::ExamineContext( CFTypeRef inCFContext, SInt32 inCommandRef )
+OnMyCommandCM::ExamineContext( CFTypeRef inContext, SInt32 inCommandRef )
 {
 	SInt32 cmdIndex = -1;
 	if(inCommandRef >= kCMCommandStart)
@@ -393,28 +393,28 @@ OnMyCommandCM::ExamineContext( CFTypeRef inCFContext, SInt32 inCommandRef )
 	else
 		mCurrCommandIndex = 0;
 
-	return CommonContextCheck( NULL, inCFContext, NULL, cmdIndex );
+	return CommonContextCheck( NULL, inContext, NULL, cmdIndex );
 }
 
 
 OSStatus
-OnMyCommandCM::CommonContextCheck( const AEDesc *inContext, CFTypeRef inCFContext, AEDescList *outCommandPairs, SInt32 inCmdIndex )
+OnMyCommandCM::CommonContextCheck( const AEDesc *inAEContext, CFTypeRef inContext, AEDescList *outCommandPairs, SInt32 inCmdIndex )
 {
 	TRACE_CSTR( "OnMyCommandCM::CommonContextCheck\n" );
 	OSStatus err = noErr;
 
 //it is OK to have NULL context
-//	if( inContext == NULL )
+//	if( inAEContext == NULL )
 //	{
-//		DEBUG_CSTR( "OnMyCommandCM->CMPluginExamineContext error: inContext == NULL\n" );
+//		DEBUG_CSTR( "OnMyCommandCM->CMPluginExamineContext error: inAEContext == NULL\n" );
 //		return errAENotAEDesc;
 //	}
 
 #if _DEBUG_
-	if(inContext != NULL)
+	if(inAEContext != NULL)
 	{
 		DEBUG_CFSTR( CFSTR("OnMyCommandCM::ExamineContext. Data type is:") );
-		CFObj<CFStringRef> dbgType( ::UTCreateStringForOSType(inContext->descriptorType) );
+		CFObj<CFStringRef> dbgType( ::UTCreateStringForOSType(inAEContext->descriptorType) );
 		DEBUG_CFSTR( (CFStringRef)dbgType );
 	}
 #endif
@@ -428,19 +428,19 @@ OnMyCommandCM::CommonContextCheck( const AEDesc *inContext, CFTypeRef inCFContex
 
 	//remember if the context was null on CMPluginExamineContext
 	//we cannot trust it when handling the selection later
-	if(inContext != NULL)
-		mIsNullContext = ((inContext->descriptorType == typeNull) || (inContext->dataHandle == NULL));
+	if(inAEContext != NULL)
+		mIsNullContext = ((inAEContext->descriptorType == typeNull) || (inAEContext->dataHandle == NULL));
 	else
-		mIsNullContext = (inCFContext == NULL);
+		mIsNullContext = (inContext == NULL);
 
     CFObj<CFMutableArrayRef> contextFiles;
     
-	if(inCFContext != NULL)
+	if(inContext != NULL)
 	{
-		CFTypeID contextType = ::CFGetTypeID( inCFContext );
+		CFTypeID contextType = ::CFGetTypeID( inContext );
 		if( contextType == ACFType<CFStringRef>::GetTypeID() )//text
 		{
-			mContextText.Adopt( (CFStringRef)inCFContext, kCFObjRetain);
+			mContextText.Adopt( (CFStringRef)inContext, kCFObjRetain);
 			mIsTextContext = true;
 		}
 		else if( contextType == ACFType<CFArrayRef>::GetTypeID() ) //list of files
@@ -449,7 +449,7 @@ OnMyCommandCM::CommonContextCheck( const AEDesc *inContext, CFTypeRef inCFContex
 					::CFArrayCreateMutable(kCFAllocatorDefault, mObjectList.size(), &kCFTypeArrayCallBacks),
 					kCFObjDontRetain );
 
-			CFArrayRef fileArray = (CFArrayRef)inCFContext;
+			CFArrayRef fileArray = (CFArrayRef)inContext;
 			CFIndex fileCount = ::CFArrayGetCount(fileArray);
 			if( (fileCount > 0) && (contextFiles != NULL) )
 			{
@@ -486,7 +486,7 @@ OnMyCommandCM::CommonContextCheck( const AEDesc *inContext, CFTypeRef inCFContex
 			contextFiles.Adopt(
 								::CFArrayCreateMutable(kCFAllocatorDefault, 1, &kCFTypeArrayCallBacks),
 								kCFObjDontRetain );
-			::CFArrayAppendValue( contextFiles, (CFURLRef)inCFContext );
+			::CFArrayAppendValue( contextFiles, (CFURLRef)inContext );
 		}
 		else
 		{
@@ -554,9 +554,9 @@ OnMyCommandCM::CommonContextCheck( const AEDesc *inContext, CFTypeRef inCFContex
 		//pre-allocate space for all object properties
 		long listItemsCount = 0;
 		err = paramErr;
-		if(inContext != NULL)
+		if(inAEContext != NULL)
 		{
-			err = ::AECountItems(inContext, &listItemsCount);
+			err = ::AECountItems(inAEContext, &listItemsCount);
 		}
 		else if(contextFiles != NULL)
 		{
@@ -576,8 +576,8 @@ OnMyCommandCM::CommonContextCheck( const AEDesc *inContext, CFTypeRef inCFContex
         
 		if( contextFiles != NULL )
             validObjectCount = CMUtils::ProcessObjectList( contextFiles, theFlags, CFURLCheckFileOrFolder, &mObjectList);
-		else if(inContext != NULL)
-            validObjectCount = CMUtils::ProcessObjectList( inContext, theFlags, CFURLCheckFileOrFolder, &mObjectList );
+		else if(inAEContext != NULL)
+            validObjectCount = CMUtils::ProcessObjectList( inAEContext, theFlags, CFURLCheckFileOrFolder, &mObjectList );
 
         anythingSelected = (validObjectCount > 0);
 	}
@@ -600,13 +600,13 @@ OnMyCommandCM::CommonContextCheck( const AEDesc *inContext, CFTypeRef inCFContex
 	if(	anythingSelected && ((theFlags & kListOutMultipleObjects) == 0) && isFolder &&
 		(runningInShortcutsObserver && frontProcessIsFinder) )
 	{//single folder selected in Finder - check what it is
-		mIsOpenFolder = CMUtils::IsClickInOpenFinderWindow(inContext, false);
+		mIsOpenFolder = CMUtils::IsClickInOpenFinderWindow(inAEContext, false);
 		anythingSelected = ! mIsOpenFolder;
 	}
 	else if( !anythingSelected && !mIsTextContext )
 	{//not a list of objects, maybe a selected text?
-		if( (inContext != nullptr) && !mIsNullContext )
-			mIsTextContext = CMUtils::AEDescHasTextData(*inContext);
+		if( (inAEContext != nullptr) && !mIsNullContext )
+			mIsTextContext = CMUtils::AEDescHasTextData(*inAEContext);
 	}
 
 	err = noErr;
@@ -616,14 +616,14 @@ OnMyCommandCM::CommonContextCheck( const AEDesc *inContext, CFTypeRef inCFContex
 	//menu population requested
 	if(outCommandPairs != NULL)
 	{
-		(void)PopulateItemsMenu( inContext, outCommandPairs,
+		(void)PopulateItemsMenu( inAEContext, outCommandPairs,
 								runningInEditorApp || runningInShortcutsObserver,
 								frontProcessName );
 	}
 	
 	if(inCmdIndex >= 0)
 	{
-		bool isEnabled = IsCommandEnabled( inCmdIndex, inContext,
+		bool isEnabled = IsCommandEnabled( inCmdIndex, inAEContext,
 							runningInEditorApp || runningInShortcutsObserver,
 							frontProcessName );
 		if( !isEnabled )
@@ -646,10 +646,10 @@ OnMyCommandCM::CommonContextCheck( const AEDesc *inContext, CFTypeRef inCFContex
 //a null AEDesc is passed from Cocoa apps for CMPluginExamineContext
 //but is corrupted (sometimes?) when it arrives to CMPluginHandleSelection
 
-// pass NULL for inContext when executing with CF Context
+// pass NULL for inAEContext when executing with CF Context
 
 OSStatus
-OnMyCommandCM::HandleSelection( AEDesc *inContext, SInt32 inCommandID )
+OnMyCommandCM::HandleSelection( AEDesc *inAEContext, SInt32 inCommandID )
 {
 	TRACE_CSTR( "OnMyCommandCM::HandleSelection\n" );	
 
@@ -690,7 +690,7 @@ OnMyCommandCM::HandleSelection( AEDesc *inContext, SInt32 inCommandID )
 		//StAEDesc contextCopy;
 		//if(mIsNullContext == false)
 		//{
-		//	::AEDuplicateDesc(inContext, (AEDesc *)contextCopy);
+		//	::AEDuplicateDesc(inAEContext, (AEDesc *)contextCopy);
 		//}
 
 		CFBundleRef localizationBundle = NULL;
@@ -706,7 +706,7 @@ OnMyCommandCM::HandleSelection( AEDesc *inContext, SInt32 inCommandID )
 		
 		if( ((currCommand.prescannedCommandInfo & kOmcCommandContainsTextObject) != 0) && (mContextText == NULL) )
 		{
-			CreateTextContext(currCommand, inContext);
+			CreateTextContext(currCommand, inAEContext);
 		}
 
 		CFObj<CFStringRef> dynamicCommandName( CreateDynamicCommandName(currCommand, currCommand.localizationTableName, localizationBundle) );
@@ -2049,7 +2049,7 @@ OnMyCommandCM::RefreshObjectsInFinder()
 //if we run in ShortcutsObserver, runningInSpecialApp = true, inFrontAppName != NULL
 
 Boolean
-OnMyCommandCM::PopulateItemsMenu( const AEDesc *inContext, AEDescList* ioRootMenu,
+OnMyCommandCM::PopulateItemsMenu( const AEDesc *inAEContext, AEDescList* ioRootMenu,
 					Boolean runningInSpecialApp, CFStringRef inFrontAppName)
 {
 	TRACE_CSTR("OnMyCommandCM. PopulateItemsMenu\n" );
@@ -2080,7 +2080,7 @@ OnMyCommandCM::PopulateItemsMenu( const AEDesc *inContext, AEDescList* ioRootMen
 		if( currCommand.isSubcommand ) //it is a subcommand, do not add to menu, main command is always 'top!'
 			continue;
 
-		doActivate = IsCommandEnabled(currCommand, inContext, currAppName, skipFinderWindowCheck);
+		doActivate = IsCommandEnabled(currCommand, inAEContext, currAppName, skipFinderWindowCheck);
 
 		if(doActivate)
 		{	
@@ -2130,7 +2130,7 @@ OnMyCommandCM::PopulateItemsMenu( const AEDesc *inContext, AEDescList* ioRootMen
 			{
 				ScanDynamicName( currCommand );
 				if( currCommand.nameContainsText )
-					CreateTextContext(currCommand, inContext);//load context text now
+					CreateTextContext(currCommand, inAEContext);//load context text now
 			}
 			
 			CFBundleRef localizationBundle = nullptr;
@@ -2159,7 +2159,7 @@ OnMyCommandCM::PopulateItemsMenu( const AEDesc *inContext, AEDescList* ioRootMen
 }
 
 bool
-OnMyCommandCM::IsCommandEnabled(CommandDescription &currCommand, const AEDesc *inContext, CFStringRef currAppName, bool skipFinderWindowCheck)
+OnMyCommandCM::IsCommandEnabled(CommandDescription &currCommand, const AEDesc *inAEContext, CFStringRef currAppName, bool skipFinderWindowCheck)
 {
 	bool doActivate = false;
 	bool appActivate = true;
@@ -2393,7 +2393,7 @@ OnMyCommandCM::IsCommandEnabled(CommandDescription &currCommand, const AEDesc *i
 		}
 		else if( (mIsTextContext || mIsTextInClipboard) )
 		{//text matching requested
-			CreateTextContext(currCommand, inContext);//load context text now
+			CreateTextContext(currCommand, inAEContext);//load context text now
 			doActivate = DoStringsMatch(currCommand.contextMatchString, mContextText, currCommand.matchMethod, (CFStringCompareFlags)currCommand.matchCompareOptions );
 		}
 	}
@@ -2401,7 +2401,7 @@ OnMyCommandCM::IsCommandEnabled(CommandDescription &currCommand, const AEDesc *i
 }
 
 bool
-OnMyCommandCM::IsCommandEnabled(SInt32 inCmdIndex, const AEDesc *inContext, bool runningInSpecialApp, CFStringRef inFrontAppName)
+OnMyCommandCM::IsCommandEnabled(SInt32 inCmdIndex, const AEDesc *inAEContext, bool runningInSpecialApp, CFStringRef inFrontAppName)
 {
 	if( (mCommandList == NULL) || (inCmdIndex < 0) || (inCmdIndex >= mCommandCount) )
 		return false;
@@ -2416,7 +2416,7 @@ OnMyCommandCM::IsCommandEnabled(SInt32 inCmdIndex, const AEDesc *inContext, bool
 	}
 
 	CommandDescription &currCommand = mCommandList[inCmdIndex];
-	return IsCommandEnabled(currCommand, inContext, currAppName, skipFinderWindowCheck);
+	return IsCommandEnabled(currCommand, inAEContext, currAppName, skipFinderWindowCheck);
 }
 
 //all objects must meet the condition checked by procedure: logical AND
@@ -4379,16 +4379,16 @@ OnMyCommandCM::CreateDynamicCommandName(const CommandDescription &currCommand, C
 }
 
 void
-OnMyCommandCM::CreateTextContext(const CommandDescription &currCommand, const AEDesc *inContext)
+OnMyCommandCM::CreateTextContext(const CommandDescription &currCommand, const AEDesc *inAEContext)
 {
 	if(mContextText != NULL)
 		return;//already created
 
 	if( mIsTextContext && (currCommand.activationMode != kActiveClipboardText) )
 	{
-		if( (inContext != NULL) && (mContextText == NULL) && (mIsNullContext == false) )
+		if( (inAEContext != NULL) && (mContextText == NULL) && (mIsNullContext == false) )
         {
-            mContextText.Adopt( CMUtils::CreateCFStringFromAEDesc( *inContext, currCommand.textReplaceOptions ), kCFObjDontRetain);
+            mContextText.Adopt( CMUtils::CreateCFStringFromAEDesc( *inAEContext, currCommand.textReplaceOptions ), kCFObjDontRetain);
         }
 	}
 	else if(mIsTextInClipboard)

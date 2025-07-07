@@ -196,7 +196,7 @@ UInt32 ACMPluginProxyRelease( void *thisInstance )
 
 OSStatus ACMPluginProxyExamineContext(
 					  void *          thisInstance,
-					  const AEDesc *  inContext,
+					  const AEDesc *  inAEContext,
 					  AEDescList *    outCommandPairs)
 {
 	TRACE_CSTR( "ACMPluginExamineContext\n" );
@@ -208,7 +208,7 @@ OSStatus ACMPluginProxyExamineContext(
 		if( proxy != NULL )
 		{
 			proxy->plugin.Adopt( CreateNewCMPlugin(), kARefCountDontRetain );//the real plugin object creation, supplied by user
-			err = proxy->plugin->ExamineContext(inContext, outCommandPairs);
+			err = proxy->plugin->ExamineContext(inAEContext, outCommandPairs);
 		}
 	}
 	catch(...)
@@ -225,7 +225,7 @@ OSStatus ACMPluginProxyExamineContext(
 
 OSStatus ACMPluginProxyHandleSelection(
 					  void *    thisInstance,
-					  AEDesc *  inContext,
+					  AEDesc *  inAEContext,
 					  SInt32    inCommandID)
 {
 	TRACE_CSTR( "ACMPluginExamineContext\n" );
@@ -233,7 +233,7 @@ OSStatus ACMPluginProxyHandleSelection(
 	{
 		ACMPluginProxy *proxy = (ACMPluginProxy *)thisInstance;
 		if( (proxy != NULL) && (proxy->plugin != NULL) ) 
-			return proxy->plugin->HandleSelection(inContext, inCommandID);
+			return proxy->plugin->HandleSelection(inAEContext, inCommandID);
 	}
 	catch(...)
 	{

@@ -26,8 +26,8 @@ public:
 	ACMPlugin(CFStringRef inBundleID);
 	virtual ~ACMPlugin();
 
-	virtual OSStatus		ExamineContext( const AEDesc *inContext, AEDescList *outCommandPairs ) = 0;
-	virtual OSStatus		HandleSelection( AEDesc *inContext, SInt32 inCommandID ) = 0;
+	virtual OSStatus		ExamineContext( const AEDesc *inAEContext, AEDescList *outCommandPairs ) = 0;
+	virtual OSStatus		HandleSelection( AEDesc *inAEContext, SInt32 inCommandID ) = 0;
 	virtual void			PostMenuCleanup() = 0;
 	virtual CFBundleRef		GetBundleRef() const { return mBundleRef; }
 protected:

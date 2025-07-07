@@ -117,17 +117,17 @@ static OSErr GetFinderWindowViewType(AEDesc &finderObjDesc, FourCharCode &outVie
 //if you know that selected item is a folder, pass false for doCheckIfFolder to prevent redundant checking
 
 bool
-CMUtils::IsClickInOpenFinderWindow(const AEDesc *inContext, Boolean doCheckIfFolder) noexcept
+CMUtils::IsClickInOpenFinderWindow(const AEDesc *inAEContext, Boolean doCheckIfFolder) noexcept
 {
 	TRACE_CSTR( "Enter CMUtils::IsClickInOpenFinderWindow\n" );
-	if(inContext == nullptr)
+	if(inAEContext == nullptr)
 		return false;
 	
-	if( (inContext->descriptorType == typeNull) || (inContext->dataHandle == nullptr) )
+	if( (inAEContext->descriptorType == typeNull) || (inAEContext->dataHandle == nullptr) )
 		return false;
 
 	long itemCount = 0;
-	OSErr err = ::AECountItems(inContext, &itemCount);
+	OSErr err = ::AECountItems(inAEContext, &itemCount);
 	if( (err != noErr) || (itemCount == 0) || (itemCount > 1))
 	{
 		TRACE_CSTR( "CMUtils::IsClickInOpenFinderWindow. No object or more than one selected\n" );
@@ -136,7 +136,7 @@ CMUtils::IsClickInOpenFinderWindow(const AEDesc *inContext, Boolean doCheckIfFol
 
 	StAEDesc oneObject;
 	AEKeyword theKeyword;
-	err = ::AEGetNthDesc(inContext, 1, typeWildCard, &theKeyword, oneObject);//get first item in list
+	err = ::AEGetNthDesc(inAEContext, 1, typeWildCard, &theKeyword, oneObject);//get first item in list
 	if (err != noErr)
 	{
 		TRACE_CSTR( "CMUtils::IsClickInOpenFinderWindow. AEGetNthDesc returned error\n" );

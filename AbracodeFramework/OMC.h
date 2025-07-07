@@ -45,7 +45,7 @@ OSStatus OMCRunCommand(CFTypeRef inPlistRef, CFStringRef inCommandNameOrID, CFTy
 //for some reason Carbon Menu Manager headers for CM plugins defined HandleSelection() with non-const AEDesc
 //as if a return value was allowed (text selection replacement?). Not sure if there are apps using the return value though
 
-OSStatus OMCRunCommandAE(CFTypeRef inPlistRef, CFStringRef inCommandNameOrID, AEDesc *inContext);
+OSStatus OMCRunCommandAE(CFTypeRef inPlistRef, CFStringRef inCommandNameOrID, AEDesc *inAEContext);
 
 
 
@@ -78,7 +78,7 @@ OMCCommandRef	OMCFindCommand( OMCExecutorRef inOMCExecutor, CFStringRef inNameOr
 //pass kOmcUnspecifiedCommand in inCommandRef for all commands or valid command Ref for one command
 //outCommandPairs may be NULL
 //proceed only when this function returns noErr
-OSStatus		OMCExamineContextAE( OMCExecutorRef inOMCExecutor, OMCCommandRef inCommandRef, const AEDesc *inContext, AEDescList *outCommandPairs );
+OSStatus		OMCExamineContextAE( OMCExecutorRef inOMCExecutor, OMCCommandRef inCommandRef, const AEDesc *inAEContext, AEDescList *outCommandPairs );
 OSStatus		OMCExamineContext( OMCExecutorRef inOMCExecutor, OMCCommandRef inCommandRef, CFTypeRef inContext );
 
 	
@@ -134,7 +134,7 @@ enum
 OSStatus		OMCGetCommandInfo(OMCExecutorRef inOMCExecutor, OMCCommandRef inCommandRef, OMCInfoType infoType, void *outInfo);
 	
 //OMCExamineContext[AE]() must be called before calling OMCExecuteCommand[AE]()
-OSStatus		OMCExecuteCommandAE( OMCExecutorRef inOMCExecutor, AEDesc *inContext, OMCCommandRef inCommandRef );
+OSStatus		OMCExecuteCommandAE( OMCExecutorRef inOMCExecutor, AEDesc *inAEContext, OMCCommandRef inCommandRef );
 OSStatus		OMCExecuteCommand( OMCExecutorRef inOMCExecutor, OMCCommandRef inCommandRef );
 
 typedef enum OmcObserverMessage
