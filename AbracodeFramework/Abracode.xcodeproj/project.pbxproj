@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		1D386DAB23BEED4B00A16967 /* OMCWebKitView.h in Headers */ = {isa = PBXBuildFile; fileRef = 1D386DA923BEED4A00A16967 /* OMCWebKitView.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		1D386DAC23BEED4B00A16967 /* OMCWebKitView.m in Sources */ = {isa = PBXBuildFile; fileRef = 1D386DAA23BEED4A00A16967 /* OMCWebKitView.m */; };
+		1D3EA05C2E3584E60064354E /* OMCRuntimeUUIDs.h in Headers */ = {isa = PBXBuildFile; fileRef = 1D3EA05B2E3584E60064354E /* OMCRuntimeUUIDs.h */; };
 		1D3F8CBD2E0B7C8000B69493 /* OMCActionProtocol.h in Headers */ = {isa = PBXBuildFile; fileRef = 1D3F8CBC2E0B370A00B69493 /* OMCActionProtocol.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		1D71F337220702EA009FAF91 /* notify in Copy Support Executables */ = {isa = PBXBuildFile; fileRef = 1D71F336220702D7009FAF91 /* notify */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		1D742DC5193882BB005DFF97 /* pasteboard in Copy Support Executables */ = {isa = PBXBuildFile; fileRef = 1D742DC219388292005DFF97 /* pasteboard */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
@@ -201,6 +202,7 @@
 		1D386DA923BEED4A00A16967 /* OMCWebKitView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCWebKitView.h; sourceTree = "<group>"; };
 		1D386DAA23BEED4A00A16967 /* OMCWebKitView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMCWebKitView.m; sourceTree = "<group>"; };
 		1D3BB165229BEB1D00542933 /* AUniquePtr.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AUniquePtr.h; sourceTree = "<group>"; };
+		1D3EA05B2E3584E60064354E /* OMCRuntimeUUIDs.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OMCRuntimeUUIDs.h; sourceTree = "<group>"; };
 		1D3F8CBC2E0B370A00B69493 /* OMCActionProtocol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OMCActionProtocol.h; sourceTree = "<group>"; };
 		1D4971AC2575A69000F7131C /* OmcProjectDebug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectDebug.xcconfig; path = ../Common/OmcProjectDebug.xcconfig; sourceTree = "<group>"; };
 		1D4971AD2575A69000F7131C /* OmcProjectRelease.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectRelease.xcconfig; path = ../Common/OmcProjectRelease.xcconfig; sourceTree = "<group>"; };
@@ -699,6 +701,7 @@
 				E2735F360D7B9576004D81CE /* OMCDialog.h */,
 				E2ED3AE80D0B27D300481D8F /* DefaultExternBundle.cpp */,
 				E2ED3AE90D0B27D300481D8F /* DefaultExternBundle.h */,
+				1D3EA05B2E3584E60064354E /* OMCRuntimeUUIDs.h */,
 			);
 			name = OMC;
 			sourceTree = "<group>";
@@ -758,6 +761,7 @@
 				E28181AE0EBC228C00E9652F /* OMCProgressWindowController.h in Headers */,
 				E2D92E551043D74E003DC96B /* OMCInputDialogController.h in Headers */,
 				E2D92E891043E0C2003DC96B /* OMCInputDialog.h in Headers */,
+				1D3EA05C2E3584E60064354E /* OMCRuntimeUUIDs.h in Headers */,
 				E2A2947A105E02B500C732A3 /* OMCTableViewController.h in Headers */,
 				E26B2796109C174D00DBA8CE /* OMCTableView.h in Headers */,
 				E2C8486110D61C33002DFDB5 /* OMCBox.h in Headers */,

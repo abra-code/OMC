@@ -72,7 +72,7 @@ public:
 	virtual CFDataRef		ReceivePortMessage( SInt32 msgid, CFDataRef inData ) = 0;//remote message
 	virtual void			ReceiveNotification(void *ioData) = 0;//local message
 
-	static ARefCountedObj<OMCDialog> FindDialogByGUID(CFStringRef inGUID);
+	static ARefCountedObj<OMCDialog> FindDialogByUUID(CFStringRef inUUID);
 
 	static CFStringRef		CreateControlValueString(CFTypeRef controlValue, CFDictionaryRef customProperties, UInt16 escSpecialCharsMode, bool isEnvStyle) noexcept;
 	CFStringRef				CreateNibControlValue(SInt32 inSpecialWordID, CFStringRef inNibControlString, UInt16 escSpecialCharsMode, bool isEnvStyle) noexcept;

@@ -39,7 +39,7 @@ enum
 
 enum
 {
-	kTextReplaceNothing,
+	kTextReplaceNothing = 0,
 	kTextReplaceLFsWithCRs,
 	kTextReplaceCRsWithLFs
 };

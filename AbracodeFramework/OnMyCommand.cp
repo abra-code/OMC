@@ -55,93 +55,6 @@ enum
 
 CFStringRef kOMCTopCommandID = CFSTR("top!");
 
-const CommandDescription kEmptyCommand =
-{
-	NULL,	//name
-	NULL,	//namePlural
-	NULL,	//command
-	NULL,	//inputPipe
-	NULL,	//activationTypes
-	0,		//activationTypeCount
-	NULL,	//activationExtensions
-	kExecSilentPOpen,	//executionMode
-	kExecutionOption_None, //executionOptions
-	kActiveAlways,	//activationMode
-	kEscapeWithBackslash,	//escapeSpecialCharsMode
-	kMulObjProcessSeparately,	//multipleObjectProcessing
-	kSortMethodNone, //sortMethod
-	true,	//sortAscending
-	0,		//sortOptions
-	NULL,	//mulObjPrefix
-	NULL,	//mulObjSuffix
-	NULL,	//mulObjSeparator
-	NULL,	//warningStr
-	NULL,	//warningExecuteStr
-	NULL,	//warningCancelStr
-	NULL,	//submenuName
-	kOmcCommandNoSpecialObjects, //prescannedCommandInfo
-	false,	//isPrescanned
-	true,	//bringTerminalToFront
-	true,	//openNewTerminalSession
-	false,	//simulatePaste
-	false,  //nameIsDynamic
-	false,  //nameContainsText
-	kInputClearText, //inputDialogType
-	NULL,	//inputDialogOK
-	NULL,	//inputDialogCancel
-	NULL,	//inputDialogMessage
-	NULL,	//inputDialogDefault
-	NULL,	//inputDialogMenuItems
-	NULL,	//refresh
-
-	NULL, //saveAsParams
-	NULL, //chooseFileParams
-	NULL, //chooseFolderParams
-	NULL, //chooseObjectParams
-
-	NULL, //saveAsPath;
-	NULL, //chooseFilePath;
-	NULL, //chooseFolderPath;
-	NULL, //chooseObjectPath;
-
-	NULL,	//outputWindowOptions
-	NULL,	//nibDialog
-//	NULL,	//dialogNibName
-//	NULL,	//nibWindowName
-//	'ini!',	//initSubcommandID
-//	'end!', //endOKSubcommandID
-//	'cnc!', //endCancelSubcommandID
-	NULL,	//appNames
-	0,		//textReplaceOptions
-	NULL,	//commandID, "top!" = main command, NULL is not valid now
-	NULL,	//nextCommandID
-	NULL,	//externalBundlePath
-	NULL,	//externBundle //populated on first request and cached
-	NULL,	//popenShell
-	NULL,	//customEnvironVariables
-	nullptr, //specialRequestedNibControls
-	false,	//actOnlyInListedApps
-	false,  //debugging
-	false,	//disabled
-	false,	//isSubcommand
-	MIN_OMC_VERSION, //requiredOMCVersion
-	MIN_MAC_OS_VERSION, //requiredMacOSMinVersion
-	MAX_MAC_OS_VERSION, //requiredMacOSMaxVersion
-	NULL, //iTermShellPath
-	NULL, //endNotification
-	NULL, //progress
-	0, //maxTaskCount
-	NULL, //contextMatchString
-	0, //matchCompareOptions
-	kMatchExact, //matchMethod
-	kMatchFileName, //matchFileOptions
-	false, //externBundleResolved - costly call to find the extern bundle - do it once and flag it here
-	NULL, //multipleSelectionIteratorParams
-	NULL, //localizationTableName
-	NULL, //currState
-};
-
-
 //we take advantage of the fact that __XXX__ word has the same length as OMC_XXX
 
 static const SpecialWordAndID sSpecialWordAndIDList[] =
@@ -429,9 +342,9 @@ OnMyCommandCM::CommonContextCheck( const AEDesc *inAEContext, CFTypeRef inContex
 	//remember if the context was null on CMPluginExamineContext
 	//we cannot trust it when handling the selection later
 	if(inAEContext != NULL)
-		mIsNullContext = ((inAEContext->descriptorType == typeNull) || (inAEContext->dataHandle == NULL));
+		mContextData.isNullContext = ((inAEContext->descriptorType == typeNull) || (inAEContext->dataHandle == NULL));
 	else
-		mIsNullContext = (inContext == NULL);
+		mContextData.isNullContext = (inContext == NULL);
 
     CFObj<CFMutableArrayRef> contextFiles;
     
@@ -440,13 +353,13 @@ OnMyCommandCM::CommonContextCheck( const AEDesc *inAEContext, CFTypeRef inContex
 		CFTypeID contextType = ::CFGetTypeID( inContext );
 		if( contextType == ACFType<CFStringRef>::GetTypeID() )//text
 		{
-			mContextText.Adopt( (CFStringRef)inContext, kCFObjRetain);
-			mIsTextContext = true;
+            mContextData.contextText.Adopt( (CFStringRef)inContext, kCFObjRetain);
+			mContextData.isTextContext = true;
 		}
 		else if( contextType == ACFType<CFArrayRef>::GetTypeID() ) //list of files
 		{
 			contextFiles.Adopt(
-					::CFArrayCreateMutable(kCFAllocatorDefault, mObjectList.size(), &kCFTypeArrayCallBacks),
+					::CFArrayCreateMutable(kCFAllocatorDefault, mContextData.objectList.size(), &kCFTypeArrayCallBacks),
 					kCFObjDontRetain );
 
 			CFArrayRef fileArray = (CFArrayRef)inContext;
@@ -548,7 +461,7 @@ OnMyCommandCM::CommonContextCheck( const AEDesc *inAEContext, CFTypeRef inContex
 
 	UInt32 theFlags = kListClear;
     size_t validObjectCount = 0;
-	if( !mIsNullContext && !mIsTextContext ) //we have some context that is not text
+	if( !mContextData.isNullContext && !mContextData.isTextContext ) //we have some context that is not text
 	{
 		TRACE_CSTR( "OnMyCommandCM->CMPluginExamineContext: not null context descriptor\n" );
 		//pre-allocate space for all object properties
@@ -570,28 +483,28 @@ OnMyCommandCM::CommonContextCheck( const AEDesc *inAEContext, CFTypeRef inContex
 
 			if(listItemsCount > 0)
 			{
-				mObjectList.resize(listItemsCount);
+				mContextData.objectList.resize(listItemsCount);
 			}
 		}
         
 		if( contextFiles != NULL )
-            validObjectCount = CMUtils::ProcessObjectList( contextFiles, theFlags, CFURLCheckFileOrFolder, &mObjectList);
+            validObjectCount = CMUtils::ProcessObjectList( contextFiles, theFlags, CFURLCheckFileOrFolder, &mContextData.objectList);
 		else if(inAEContext != NULL)
-            validObjectCount = CMUtils::ProcessObjectList( inAEContext, theFlags, CFURLCheckFileOrFolder, &mObjectList );
+            validObjectCount = CMUtils::ProcessObjectList( inAEContext, theFlags, CFURLCheckFileOrFolder, &mContextData.objectList );
 
         anythingSelected = (validObjectCount > 0);
 	}
 
     //update total count
-    mObjectList.resize(validObjectCount);
+    mContextData.objectList.resize(validObjectCount);
 
 	Boolean isFolder = false;
-	if(mObjectList.size() == 1)
+	if(mContextData.objectList.size() == 1)
 	{
-		isFolder = CheckAllObjects(mObjectList, CheckIfFolder, NULL);
+		isFolder = CheckAllObjects(mContextData.objectList, CheckIfFolder, NULL);
 		if(isFolder)
 		{
-			Boolean isPackage = CheckAllObjects(mObjectList, CheckIfPackage, NULL);
+			Boolean isPackage = CheckAllObjects(mContextData.objectList, CheckIfPackage, NULL);
 			if(isPackage)
 				isFolder = false;
 		}
@@ -603,10 +516,10 @@ OnMyCommandCM::CommonContextCheck( const AEDesc *inAEContext, CFTypeRef inContex
 		mIsOpenFolder = CMUtils::IsClickInOpenFinderWindow(inAEContext, false);
 		anythingSelected = ! mIsOpenFolder;
 	}
-	else if( !anythingSelected && !mIsTextContext )
+	else if( !anythingSelected && !mContextData.isTextContext )
 	{//not a list of objects, maybe a selected text?
-		if( (inAEContext != nullptr) && !mIsNullContext )
-			mIsTextContext = CMUtils::AEDescHasTextData(*inAEContext);
+		if( (inAEContext != nullptr) && !mContextData.isNullContext )
+			mContextData.isTextContext = CMUtils::AEDescHasTextData(*inAEContext);
 	}
 
 	err = noErr;
@@ -680,15 +593,12 @@ OnMyCommandCM::HandleSelection( AEDesc *inAEContext, SInt32 inCommandID )
 								(kCGEventFlagMaskAlphaShift | kCGEventFlagMaskShift | kCGEventFlagMaskAlternate | kCGEventFlagMaskCommand)) == 0)
 								&& ((keyboardModifiers & kCGEventFlagMaskControl) != 0);
 		
-		//take original command as parameter, not copy
+		//take original command by reference, not copy
 		PrescanCommandDescription( currCommand );
 		
-		if(currCommand.currState == NULL)//top command may not have the command state object created yet
-			currCommand.currState = new CommandState();
-
 		//make a copy fo the description because when we show a dialog it may become invalid
 		//StAEDesc contextCopy;
-		//if(mIsNullContext == false)
+		//if(mContextData.isNullContext == false)
 		//{
 		//	::AEDuplicateDesc(inAEContext, (AEDesc *)contextCopy);
 		//}
@@ -702,9 +612,9 @@ OnMyCommandCM::HandleSelection( AEDesc *inAEContext, SInt32 inCommandID )
 		}
 
 		//obtain text from selection before any dialogs are shown
-		bool objListEmpty = (mObjectList.size() == 0);
+		bool objListEmpty = (mContextData.objectList.size() == 0);
 		
-		if( ((currCommand.prescannedCommandInfo & kOmcCommandContainsTextObject) != 0) && (mContextText == NULL) )
+		if( ((currCommand.prescannedCommandInfo & kOmcCommandContainsTextObject) != 0) && (mContextData.contextText == NULL) )
 		{
 			CreateTextContext(currCommand, inAEContext);
 		}
@@ -972,10 +882,10 @@ OnMyCommandCM::HandleSelection( AEDesc *inAEContext, SInt32 inCommandID )
 			}
 		}
 
-		if( objListEmpty || mIsTextContext )//text context
+		if( objListEmpty || mContextData.isTextContext )//text context
 		{
 			TRACE_CSTR("OnMyCommandCM->CMPluginHandleSelection: about to process command with text selection\n" );
-			ProcessCommandWithText( currCommand, mContextText );
+			ProcessCommandWithText( currCommand, mContextData.contextText );
 		}
 		else //file context
 		{
@@ -1034,26 +944,6 @@ OnMyCommandCM::Finalize()
 	
 }
 */
-
-void
-OnMyCommandCM::SwapContext(OMCContextData &ioContextData)
-{
-	this->mContextText.Swap(ioContextData.mContextText);
-	this->mObjectList.swap(ioContextData.mObjectList);
-	this->mCommonParentPath.Swap(ioContextData.mCommonParentPath);
-	
-	CFIndex temp = this->mCurrObjectIndex;
-	this->mCurrObjectIndex = ioContextData.mCurrObjectIndex;
-	ioContextData.mCurrObjectIndex = temp;
-
-	Boolean tempBool = this->mIsNullContext;
-	this->mIsNullContext = ioContextData.mIsNullContext;
-	ioContextData.mIsNullContext = tempBool;
-
-	tempBool = this->mIsTextContext;
-	this->mIsTextContext = ioContextData.mIsTextContext;
-	ioContextData.mIsTextContext = tempBool;
-}
 
 void
 OnMyCommandCM::DeleteCommandList()
@@ -1190,9 +1080,6 @@ OnMyCommandCM::DeleteCommandList()
 				
 			if(mCommandList[i].localizationTableName != NULL)
 				::CFRelease(mCommandList[i].localizationTableName);
-		
-			delete mCommandList[i].currState;
-			
 		}
 
 		delete [] mCommandList;
@@ -1204,8 +1091,8 @@ OnMyCommandCM::DeleteCommandList()
 void
 OnMyCommandCM::DeleteObjectList()
 {
-	mObjectList.clear();
-	mCurrObjectIndex = 0;
+	mContextData.objectList.clear();
+	mContextData.currObjectIndex = 0;
 }
 
 //external API, needs to load commands if needed
@@ -1305,9 +1192,9 @@ OnMyCommandCM::CFURLCheckFileOrFolder(CFURLRef inURLRef, size_t index, void *ioD
 static CFStringRef
 CreateTerminalCommandWithEnvironmentSetup(CFStringRef inCommand, CommandDescription &currCommand, CFDictionaryRef environList, bool isSh)
 {
-	CFStringRef commandGUID = GetCommandUniqueID(currCommand);
-	WriteEnvironmentSetupScriptToTmp(environList, commandGUID, isSh);
-	CFObj<CFStringRef> envSetupCommand = CreateEnvironmentSetupCommandForShell(commandGUID, isSh);
+	CFStringRef commandUUID = GetCommandUniqueID(currCommand);
+	WriteEnvironmentSetupScriptToTmp(environList, commandUUID, isSh);
+	CFObj<CFStringRef> envSetupCommand = CreateEnvironmentSetupCommandForShell(commandUUID, isSh);
 	CFObj<CFMutableStringRef> commandWithEnvSetup = CFStringCreateMutableCopy(kCFAllocatorDefault, 0, envSetupCommand);
 	CFStringAppend(commandWithEnvSetup, inCommand);
 	return commandWithEnvSetup.Detach();
@@ -1317,7 +1204,7 @@ CreateTerminalCommandWithEnvironmentSetup(CFStringRef inCommand, CommandDescript
 OSStatus
 OnMyCommandCM::ProcessObjects()
 {
-	if( (mCommandList == nullptr) || (mCommandCount == 0) || (mObjectList.size() == 0) )
+	if( (mCommandList == nullptr) || (mCommandCount == 0) || (mContextData.objectList.size() == 0) )
 		return noErr;
 
 	if( mCurrCommandIndex >= mCommandCount)
@@ -1337,7 +1224,7 @@ OnMyCommandCM::ProcessObjects()
 	
 	CFObj<CFStringRef> dynamicCommandName( CreateDynamicCommandName(currCommand, currCommand.localizationTableName, localizationBundle) );
 
-	CFIndex objectCount = mObjectList.size();
+	CFIndex objectCount = mContextData.objectList.size();
 	if( currCommand.multipleObjectProcessing == kMulObjProcessTogether )
 		objectCount = 1;
 
@@ -1357,24 +1244,21 @@ OnMyCommandCM::ProcessObjects()
 	OmcHostTaskManager *taskManager = new OmcHostTaskManager( this, currCommand, dynamicCommandName, mBundleRef, maxTaskCount );
 
 	ARefCountedObj<OMCDialog> activeDialog;
-	if( currCommand.currState != nullptr )
-	{
-		activeDialog = OMCDialog::FindDialogByGUID(currCommand.currState->dialogGUID);
-		if(activeDialog != nullptr)
-		{
-			SelectionIterator* selIterator = activeDialog->GetSelectionIterator();
-			activeDialog->CopyAllControlValues(currCommand.specialRequestedNibControls, selIterator);
-		}
-	}
+    activeDialog = OMCDialog::FindDialogByUUID(currCommand.runtimeUUIDs.dialogUUID);
+    if(activeDialog != nullptr)
+    {
+        SelectionIterator* selIterator = activeDialog->GetSelectionIterator();
+        activeDialog->CopyAllControlValues(currCommand.specialRequestedNibControls, selIterator);
+    }
 
 	if( currCommand.refresh != nullptr )
 	{//refreshing needed - compose array of paths before performing any action
-		for(CFIndex i = 0; i < mObjectList.size(); i++)
+		for(CFIndex i = 0; i < mContextData.objectList.size(); i++)
 		{	
 			TRACE_CSTR("OnMyCommandCM. create refresh path\n" );
-			mCurrObjectIndex = i;
+			mContextData.currObjectIndex = i;
 			CFObj<CFMutableStringRef> onePath( CreateCombinedStringWithObjects(currCommand.refresh, NULL, NULL) );
-			mObjectList[i].refreshPath.Adopt(CreatePathByExpandingTilde(onePath));
+			mContextData.objectList[i].refreshPath.Adopt(CreatePathByExpandingTilde(onePath));
 		}
 	}
 
@@ -1392,9 +1276,9 @@ OnMyCommandCM::ProcessObjects()
 	for(CFIndex i = 0; i < objectCount; i++)
 	{
 		if( currCommand.multipleObjectProcessing == kMulObjProcessTogether )
-			mCurrObjectIndex = -1;//invalid index means process them all together
+			mContextData.currObjectIndex = -1;//invalid index means process them all together
 		else
-			mCurrObjectIndex = i;
+			mContextData.currObjectIndex = i;
 
 		UInt8 escapingMode = currCommand.escapeSpecialCharsMode;
 		if((executionMode == kExecPopenScriptFile) ||
@@ -1406,7 +1290,7 @@ OnMyCommandCM::ProcessObjects()
 		CFObj<CFDictionaryRef> environList( CreateEnvironmentVariablesDict(NULL) );
 
 		ARefCountedObj<OmcExecutor> theExec;
-		CFObj<CFStringRef> objName( CreateObjName( &(mObjectList[i]), NULL) );
+		CFObj<CFStringRef> objName( CreateObjName( &(mContextData.objectList[i]), NULL) );
 			
 		switch(executionMode)
 		{
@@ -1502,15 +1386,12 @@ OnMyCommandCM::ProcessCommandWithText(CommandDescription &currCommand, CFStringR
 	}
 
 	ARefCountedObj<OMCDialog> activeDialog;
-	if( currCommand.currState != nullptr )
-	{
-		activeDialog = OMCDialog::FindDialogByGUID(currCommand.currState->dialogGUID);
-		if(activeDialog != nullptr)
-		{
-			SelectionIterator* selIterator = activeDialog->GetSelectionIterator();
-			activeDialog->CopyAllControlValues(currCommand.specialRequestedNibControls, selIterator);
-		}
-	}
+    activeDialog = OMCDialog::FindDialogByUUID(currCommand.runtimeUUIDs.dialogUUID);
+    if(activeDialog != nullptr)
+    {
+        SelectionIterator* selIterator = activeDialog->GetSelectionIterator();
+        activeDialog->CopyAllControlValues(currCommand.specialRequestedNibControls, selIterator);
+    }
 
 	CFObj<CFMutableStringRef> theCommand( CreateCommandStringWithText(currCommand.command, inStrRef, escapingMode) );
 	CFObj<CFMutableStringRef> inputPipe( CreateCommandStringWithText(currCommand.inputPipe, inStrRef, kEscapeNone) );
@@ -2008,7 +1889,7 @@ OnMyCommandCM::ScanDynamicName( CommandDescription &currCommand )
 				break;
 				
 				case OBJ_TEXT:
-					currCommand.nameContainsText = true;
+					currCommand.nameContainsDynamicText = true;
 				break;
 				
 				default:
@@ -2023,17 +1904,17 @@ OnMyCommandCM::ScanDynamicName( CommandDescription &currCommand )
 void
 OnMyCommandCM::RefreshObjectsInFinder()
 {
-	if( mObjectList.size() == 0 )
+	if( mContextData.objectList.size() == 0 )
 		return;
 
 	TRACE_CSTR("OnMyCommandCM. RefreshObjectsInFinder\n" );
 
-	for(CFIndex i = 0; i < mObjectList.size(); i++)
+	for(CFIndex i = 0; i < mContextData.objectList.size(); i++)
 	{
-		if( mObjectList[i].refreshPath != NULL)
+		if( mContextData.objectList[i].refreshPath != NULL)
 		{
-			DEBUG_CFSTR( mObjectList[i].refreshPath );
-			RefreshFileInFinder(mObjectList[i].refreshPath);
+			DEBUG_CFSTR( mContextData.objectList[i].refreshPath );
+			RefreshFileInFinder(mContextData.objectList[i].refreshPath);
 		}
 	}
 }
@@ -2129,7 +2010,7 @@ OnMyCommandCM::PopulateItemsMenu( const AEDesc *inAEContext, AEDescList* ioRootM
 			if( currCommand.nameIsDynamic )
 			{
 				ScanDynamicName( currCommand );
-				if( currCommand.nameContainsText )
+				if( currCommand.nameContainsDynamicText )
 					CreateTextContext(currCommand, inAEContext);//load context text now
 			}
 			
@@ -2203,7 +2084,7 @@ OnMyCommandCM::IsCommandEnabled(CommandDescription &currCommand, const AEDesc *i
 		
 		case kActiveFile:
 		{
-			doActivate = CheckAllObjects(mObjectList, CheckIfFile, NULL);
+			doActivate = CheckAllObjects(mContextData.objectList, CheckIfFile, NULL);
 			
 			if(doActivate)
 			{
@@ -2217,15 +2098,15 @@ OnMyCommandCM::IsCommandEnabled(CommandDescription &currCommand, const AEDesc *i
 
 				if(needsFileTypeCheck && needsExtensionCheck)
 				{
-					doActivate = CheckAllObjects(mObjectList, CheckFileTypeOrExtension, &(currCommand));
+					doActivate = CheckAllObjects(mContextData.objectList, CheckFileTypeOrExtension, &(currCommand));
 				}
 				else if(needsFileTypeCheck)
 				{
-					doActivate = CheckAllObjects(mObjectList, CheckFileType, &(currCommand));
+					doActivate = CheckAllObjects(mContextData.objectList, CheckFileType, &(currCommand));
 				}
 				else if(needsExtensionCheck)
 				{
-					doActivate = CheckAllObjects(mObjectList, CheckExtension, &(currCommand));
+					doActivate = CheckAllObjects(mContextData.objectList, CheckExtension, &(currCommand));
 				}
 			}
 		}
@@ -2233,7 +2114,7 @@ OnMyCommandCM::IsCommandEnabled(CommandDescription &currCommand, const AEDesc *i
 		
 		case kActiveFolder:
 		{
-			doActivate = CheckAllObjects(mObjectList, CheckIfFolder, NULL);
+			doActivate = CheckAllObjects(mContextData.objectList, CheckIfFolder, NULL);
 		
 			if(doActivate)
 			{
@@ -2244,7 +2125,7 @@ OnMyCommandCM::IsCommandEnabled(CommandDescription &currCommand, const AEDesc *i
 				}
 				if(needsExtensionCheck)
 				{
-					doActivate = CheckAllObjects(mObjectList, CheckExtension, &(currCommand));
+					doActivate = CheckAllObjects(mContextData.objectList, CheckExtension, &(currCommand));
 				}
 			}
 		}
@@ -2258,7 +2139,7 @@ OnMyCommandCM::IsCommandEnabled(CommandDescription &currCommand, const AEDesc *i
 				doActivate = !mIsOpenFolder;
 			
 			if(doActivate)
-				doActivate = CheckAllObjects(mObjectList, CheckIfFolder, NULL);
+				doActivate = CheckAllObjects(mContextData.objectList, CheckIfFolder, NULL);
 		
 			if(doActivate)
 			{
@@ -2269,7 +2150,7 @@ OnMyCommandCM::IsCommandEnabled(CommandDescription &currCommand, const AEDesc *i
 				}
 				if(needsExtensionCheck)
 				{
-					doActivate = CheckAllObjects(mObjectList, CheckExtension, &(currCommand));
+					doActivate = CheckAllObjects(mContextData.objectList, CheckExtension, &(currCommand));
 				}
 			}
 		}
@@ -2277,7 +2158,7 @@ OnMyCommandCM::IsCommandEnabled(CommandDescription &currCommand, const AEDesc *i
 		
 		case kActiveFileOrFolder:
 		{
-			doActivate = CheckAllObjects(mObjectList, CheckIfFileOrFolder, NULL);
+			doActivate = CheckAllObjects(mContextData.objectList, CheckIfFileOrFolder, NULL);
 			if(doActivate)
 			{
 				Boolean needsFileTypeCheck = (( currCommand.activationTypes != NULL ) &&
@@ -2290,15 +2171,15 @@ OnMyCommandCM::IsCommandEnabled(CommandDescription &currCommand, const AEDesc *i
 
 				if(needsFileTypeCheck && needsExtensionCheck)
 				{
-					doActivate = CheckAllObjects(mObjectList, CheckFileTypeOrExtension, &(currCommand));
+					doActivate = CheckAllObjects(mContextData.objectList, CheckFileTypeOrExtension, &(currCommand));
 				}
 				else if(needsFileTypeCheck)
 				{
-					doActivate = CheckAllObjects(mObjectList, CheckFileType, &(currCommand));
+					doActivate = CheckAllObjects(mContextData.objectList, CheckFileType, &(currCommand));
 				}
 				else if(needsExtensionCheck)
 				{
-					doActivate = CheckAllObjects(mObjectList, CheckExtension, &(currCommand));
+					doActivate = CheckAllObjects(mContextData.objectList, CheckExtension, &(currCommand));
 				}
 			}
 		}
@@ -2313,7 +2194,7 @@ OnMyCommandCM::IsCommandEnabled(CommandDescription &currCommand, const AEDesc *i
 				doActivate = !mIsOpenFolder;
 			
 			if(doActivate)
-				doActivate = CheckAllObjects(mObjectList, CheckIfFileOrFolder, NULL);
+				doActivate = CheckAllObjects(mContextData.objectList, CheckIfFileOrFolder, NULL);
 
 			if(doActivate)
 			{
@@ -2327,15 +2208,15 @@ OnMyCommandCM::IsCommandEnabled(CommandDescription &currCommand, const AEDesc *i
 
 				if(needsFileTypeCheck && needsExtensionCheck)
 				{
-					doActivate = CheckAllObjects(mObjectList, CheckFileTypeOrExtension, &(currCommand));
+					doActivate = CheckAllObjects(mContextData.objectList, CheckFileTypeOrExtension, &(currCommand));
 				}
 				else if(needsFileTypeCheck)
 				{
-					doActivate = CheckAllObjects(mObjectList, CheckFileType, &(currCommand));
+					doActivate = CheckAllObjects(mContextData.objectList, CheckFileType, &(currCommand));
 				}
 				else if(needsExtensionCheck)
 				{
-					doActivate = CheckAllObjects(mObjectList, CheckExtension, &(currCommand));
+					doActivate = CheckAllObjects(mContextData.objectList, CheckExtension, &(currCommand));
 				}
 			}
 		}
@@ -2357,14 +2238,14 @@ OnMyCommandCM::IsCommandEnabled(CommandDescription &currCommand, const AEDesc *i
 				}
 				if(needsExtensionCheck)
 				{
-					doActivate = CheckAllObjects(mObjectList, CheckExtension, &(currCommand));
+					doActivate = CheckAllObjects(mContextData.objectList, CheckExtension, &(currCommand));
 				}
 			}
 		}
 		break;
 		
 		case kActiveSelectedText:
-			doActivate = mIsTextContext;
+			doActivate = mContextData.isTextContext;
 		break;
 
 		case kActiveClipboardText:
@@ -2372,29 +2253,29 @@ OnMyCommandCM::IsCommandEnabled(CommandDescription &currCommand, const AEDesc *i
 		break;
 		
 		case kActiveSelectedOrClipboardText:
-			doActivate = (mIsTextContext || mIsTextInClipboard);
+			doActivate = (mContextData.isTextContext || mIsTextInClipboard);
 		break;
 	}
 		
 	if(doActivate && (currCommand.contextMatchString != NULL) )
 	{
-		if(mObjectList.size() > 0)
+		if(mContextData.objectList.size() > 0)
 		{//path or name matching requested
 			switch(currCommand.matchFileOptions)
 			{
 				case kMatchFileName:
-					doActivate = CheckAllObjects(mObjectList, CheckFileNameMatch, &(currCommand));
+					doActivate = CheckAllObjects(mContextData.objectList, CheckFileNameMatch, &(currCommand));
 				break;
 				
 				case kMatchFilePath:
-					doActivate = CheckAllObjects(mObjectList, CheckFilePathMatch, &(currCommand));
+					doActivate = CheckAllObjects(mContextData.objectList, CheckFilePathMatch, &(currCommand));
 				break;
 			}
 		}
-		else if( (mIsTextContext || mIsTextInClipboard) )
+		else if( (mContextData.isTextContext || mIsTextInClipboard) )
 		{//text matching requested
 			CreateTextContext(currCommand, inAEContext);//load context text now
-			doActivate = DoStringsMatch(currCommand.contextMatchString, mContextText, currCommand.matchMethod, (CFStringCompareFlags)currCommand.matchCompareOptions );
+			doActivate = DoStringsMatch(currCommand.contextMatchString, mContextData.contextText, currCommand.matchMethod, (CFStringCompareFlags)currCommand.matchCompareOptions );
 		}
 	}
 	return doActivate;
@@ -2826,7 +2707,6 @@ OnMyCommandCM::ParseCommandList(CFArrayRef commandArrayRef)
 		return;
 
 	mCommandList = new CommandDescription[theCount];
-	memset(mCommandList, 0, theCount*sizeof(CommandDescription));
     assert(theCount <= UINT_MAX);
 	mCommandCount = (UInt32)theCount;
 	
@@ -2834,7 +2714,6 @@ OnMyCommandCM::ParseCommandList(CFArrayRef commandArrayRef)
 	
 	for( CFIndex i = 0; i < theCount; i++ )
 	{
-		mCommandList[i] = kEmptyCommand;
 		if( commands.GetValueAtIndex( i, theDict ) )
 		{
 			GetOneCommandParams( mCommandList[i], theDict );
@@ -3503,7 +3382,7 @@ CFStringToFourCharCode(CFStringRef inStrRef)
 CFMutableStringRef
 OnMyCommandCM::CreateCommandStringWithObjects(CFArrayRef inFragments, UInt16 escSpecialCharsMode)
 {
-	if( (inFragments == nullptr) || (mCommandList == nullptr) || (mCommandCount == 0) || (mObjectList.size() == 0) || (mCurrCommandIndex >= mCommandCount) )
+	if( (inFragments == nullptr) || (mCommandList == nullptr) || (mCommandCount == 0) || (mContextData.objectList.size() == 0) || (mCurrCommandIndex >= mCommandCount) )
 		return nullptr;
 
 	CFMutableStringRef theCommand = CFStringCreateMutable(kCFAllocatorDefault, 0);
@@ -3513,8 +3392,7 @@ OnMyCommandCM::CreateCommandStringWithObjects(CFArrayRef inFragments, UInt16 esc
 	CommandDescription &currCommand = GetCurrentCommand();
 
 	ARefCountedObj<OMCDialog> activeDialog;
-	if( currCommand.currState != nullptr )
-		activeDialog = OMCDialog::FindDialogByGUID(currCommand.currState->dialogGUID);
+    activeDialog = OMCDialog::FindDialogByUUID(currCommand.runtimeUUIDs.dialogUUID);
 
 //	TRACE_CSTR("OnMyCommandCM. CreateCommandStringWithObjects\n" );
 
@@ -3523,9 +3401,9 @@ OnMyCommandCM::CreateCommandStringWithObjects(CFArrayRef inFragments, UInt16 esc
 		SortObjectListByName((CFOptionFlags)currCommand.sortOptions, (bool)currCommand.sortAscending);
 	}
 
-	if( ((currCommand.prescannedCommandInfo & kOmcCommandContainsTextObject) != 0) && (mClipboardText == nullptr) )
+	if( ((currCommand.prescannedCommandInfo & kOmcCommandContainsTextObject) != 0) && (mContextData.clipboardText == nullptr) )
 	{
-		mClipboardText.Adopt( CMUtils::CreateCFStringFromClipboardText(currCommand.textReplaceOptions), kCFObjDontRetain );
+        mContextData.clipboardText.Adopt( CMUtils::CreateCFStringFromClipboardText(currCommand.textReplaceOptions), kCFObjDontRetain );
 	}
 
 	ACFArr fragments(inFragments);
@@ -3536,8 +3414,8 @@ OnMyCommandCM::CreateCommandStringWithObjects(CFArrayRef inFragments, UInt16 esc
 		if(fragments.GetValueAtIndex(i, fragmentRef))
 		{
 			AppendTextToCommand(theCommand, fragmentRef,
-								mObjectList.data(), mObjectList.size(), mCurrObjectIndex,
-								mClipboardText, currCommand, activeDialog,
+								mContextData.objectList.data(), mContextData.objectList.size(), mContextData.currObjectIndex,
+                                mContextData.clipboardText, currCommand, activeDialog,
 								currCommand.mulObjSeparator, currCommand.mulObjPrefix, currCommand.mulObjSuffix,
 								escSpecialCharsMode );
 		}
@@ -3560,8 +3438,7 @@ OnMyCommandCM::CreateCommandStringWithText(CFArrayRef inFragments, CFStringRef i
 
 	CommandDescription &currCommand = GetCurrentCommand();
 	ARefCountedObj<OMCDialog> activeDialog;
-	if( currCommand.currState != nullptr )
-		activeDialog = OMCDialog::FindDialogByGUID(currCommand.currState->dialogGUID);
+    activeDialog = OMCDialog::FindDialogByUUID(currCommand.runtimeUUIDs.dialogUUID);
 
 	ACFArr fragments(inFragments);
 	CFIndex theCount = fragments.GetCount();
@@ -3596,21 +3473,21 @@ OnMyCommandCM::CreateEnvironmentVariablesDict(CFStringRef inObjTextRef)
 													::CFDictionaryGetCount(currCommand.customEnvironVariables),
 													currCommand.customEnvironVariables) );
 
-	if(mObjectList.size() > 0)
+	if(mContextData.objectList.size() > 0)
 	{
 		if(currCommand.sortMethod == kSortMethodByName)
 		{
 			SortObjectListByName((CFOptionFlags)currCommand.sortOptions, (bool)currCommand.sortAscending);
 		}
 
-		if( ((currCommand.prescannedCommandInfo & kOmcCommandContainsTextObject) != 0) && (mClipboardText == NULL) )
+		if( ((currCommand.prescannedCommandInfo & kOmcCommandContainsTextObject) != 0) && (mContextData.clipboardText == NULL) )
 		{
-			mClipboardText.Adopt( CMUtils::CreateCFStringFromClipboardText(currCommand.textReplaceOptions), kCFObjDontRetain );
+            mContextData.clipboardText.Adopt( CMUtils::CreateCFStringFromClipboardText(currCommand.textReplaceOptions), kCFObjDontRetain );
 		}
 
 		PopulateEnvironList( outEnviron,
-							mObjectList.data(), mObjectList.size(), mCurrObjectIndex,
-							mClipboardText, currCommand,
+							mContextData.objectList.data(), mContextData.objectList.size(), mContextData.currObjectIndex,
+                            mContextData.clipboardText, currCommand,
 							currCommand.mulObjSeparator, currCommand.mulObjPrefix, currCommand.mulObjSuffix);
 	
 	}
@@ -3631,7 +3508,7 @@ OnMyCommandCM::CreateCombinedStringWithObjects(CFArrayRef inArray, CFStringRef i
 //	TRACE_CSTR("OnMyCommandCM. beginning of CreateCombinedStringWithObject\n" );
 
 //this may be called without object too
-//	if( mObjectList == NULL )
+//	if( mContextData.objectList == NULL )
 //		return NULL;
 
 	if(inArray == nullptr)
@@ -3645,8 +3522,7 @@ OnMyCommandCM::CreateCombinedStringWithObjects(CFArrayRef inArray, CFStringRef i
 	CommandDescription &currCommand = GetCurrentCommand();
 
 	ARefCountedObj<OMCDialog> activeDialog;
-	if( currCommand.currState != nullptr )
-		activeDialog = OMCDialog::FindDialogByGUID(currCommand.currState->dialogGUID);
+    activeDialog = OMCDialog::FindDialogByUUID(currCommand.runtimeUUIDs.dialogUUID);
 
 	CFMutableStringRef thePath = CFStringCreateMutable(kCFAllocatorDefault, 0);
 	if(thePath == nullptr)
@@ -3658,7 +3534,7 @@ OnMyCommandCM::CreateCombinedStringWithObjects(CFArrayRef inArray, CFStringRef i
 		if( objects.GetValueAtIndex(i, fragmentRef) )
 		{
 			AppendTextToCommand(thePath, fragmentRef,
-								mObjectList.data(), mObjectList.size(), mCurrObjectIndex,
+								mContextData.objectList.data(), mContextData.objectList.size(), mContextData.currObjectIndex,
 								nullptr, currCommand, activeDialog,
 								nullptr, nullptr, nullptr,
 								kEscapeNone,
@@ -3755,19 +3631,19 @@ OnMyCommandCM::AppendTextToCommand(CFMutableStringRef inCommandRef, CFStringRef 
 		break;
 		
 		case OBJ_COMMON_PARENT_PATH:
-			if(mCommonParentPath == NULL)
-				mCommonParentPath.Adopt( CreateCommonParentPath(inObjList, inObjCount), kCFObjDontRetain );
+			if(mContextData.cachedCommonParentPath == NULL)
+				mContextData.cachedCommonParentPath.Adopt( CreateCommonParentPath(inObjList, inObjCount), kCFObjDontRetain );
 	
-			newStrRef = CreateEscapedStringCopy(mCommonParentPath, escSpecialCharsMode);
+			newStrRef = CreateEscapedStringCopy(mContextData.cachedCommonParentPath, escSpecialCharsMode);
 		break;
 		
 		case OBJ_PATH_RELATIVE_TO_COMMON_PARENT:
-			if(mCommonParentPath == NULL)
-				mCommonParentPath.Adopt( CreateCommonParentPath(inObjList, inObjCount), kCFObjDontRetain );
+			if(mContextData.cachedCommonParentPath == NULL)
+				mContextData.cachedCommonParentPath.Adopt( CreateCommonParentPath(inObjList, inObjCount), kCFObjDontRetain );
 		
 		
 			newStrRef = CreateStringFromListOrSingleObject( inObjList, inObjCount, inCurrIndex,
-											CreateObjPathRelativeToBase, (void *)(CFStringRef)mCommonParentPath,
+											CreateObjPathRelativeToBase, (void *)(CFStringRef)mContextData.cachedCommonParentPath,
 											inMultiSeparator, inMultiPrefix, inMultiSuffix,
 											escSpecialCharsMode );
 		break;
@@ -3944,11 +3820,8 @@ OnMyCommandCM::AppendTextToCommand(CFMutableStringRef inCommandRef, CFStringRef 
 		{
 			if(mCommandList != NULL)
 			{
-				if( currCommand.currState != NULL )
-				{
-					newStrRef = currCommand.currState->dialogGUID;
-					releaseNewString = false;
-				}
+                newStrRef = currCommand.runtimeUUIDs.dialogUUID;
+                releaseNewString = false;
 			}
 		}
 		break;
@@ -3989,8 +3862,7 @@ OnMyCommandCM::PopulateEnvironList(CFMutableDictionaryRef ioEnvironList,
 	}
 	
 	ARefCountedObj<OMCDialog> activeDialog;
-	if( currCommand.currState != nullptr )
-		activeDialog = OMCDialog::FindDialogByGUID(currCommand.currState->dialogGUID);
+    activeDialog = OMCDialog::FindDialogByUUID(currCommand.runtimeUUIDs.dialogUUID);
 
 	for(CFIndex i = 0; i < itemCount; i++)
 	{
@@ -4062,20 +3934,20 @@ OnMyCommandCM::PopulateEnvironList(CFMutableDictionaryRef ioEnvironList,
 			break;
 			
 			case OBJ_COMMON_PARENT_PATH:
-				if(mCommonParentPath == NULL)
-					mCommonParentPath.Adopt( CreateCommonParentPath(inObjList, inObjCount), kCFObjDontRetain );
+				if(mContextData.cachedCommonParentPath == NULL)
+					mContextData.cachedCommonParentPath.Adopt( CreateCommonParentPath(inObjList, inObjCount), kCFObjDontRetain );
 		
-				newStrRef = mCommonParentPath;
+				newStrRef = mContextData.cachedCommonParentPath;
 				releaseNewString = false;
 			break;
 			
 			case OBJ_PATH_RELATIVE_TO_COMMON_PARENT:
-				if(mCommonParentPath == NULL)
-					mCommonParentPath.Adopt( CreateCommonParentPath(inObjList, inObjCount), kCFObjDontRetain );
+				if(mContextData.cachedCommonParentPath == NULL)
+					mContextData.cachedCommonParentPath.Adopt( CreateCommonParentPath(inObjList, inObjCount), kCFObjDontRetain );
 			
 			
 				newStrRef = CreateStringFromListOrSingleObject( inObjList, inObjCount, inCurrIndex,
-												CreateObjPathRelativeToBase, (void *)(CFStringRef)mCommonParentPath,
+												CreateObjPathRelativeToBase, (void *)(CFStringRef)mContextData.cachedCommonParentPath,
 												inMultiSeparator, inMultiPrefix, inMultiSuffix,
 												kEscapeNone );
 			break;
@@ -4261,11 +4133,8 @@ OnMyCommandCM::PopulateEnvironList(CFMutableDictionaryRef ioEnvironList,
 			{
 				if(mCommandList != NULL)
 				{
-					if( currCommand.currState != NULL )
-					{
-						newStrRef = currCommand.currState->dialogGUID;
-						releaseNewString = false;
-					}
+                    newStrRef = currCommand.runtimeUUIDs.dialogUUID;
+                    releaseNewString = false;
 				}
 			}
 			break;
@@ -4301,7 +4170,7 @@ CFStringRef
 OnMyCommandCM::CreateDynamicCommandName(const CommandDescription &currCommand, CFStringRef inLocTableName, CFBundleRef inLocBundleRef)
 {
 	CFStringRef commandName = NULL;
-	if( (mObjectList.size() > 1) && (currCommand.namePlural != NULL) )
+	if( (mContextData.objectList.size() > 1) && (currCommand.namePlural != NULL) )
 	{
 		commandName = currCommand.namePlural;
 		if(inLocTableName != NULL)
@@ -4309,23 +4178,23 @@ OnMyCommandCM::CreateDynamicCommandName(const CommandDescription &currCommand, C
 		else
 			::CFRetain(commandName);
 	}
-	else if( currCommand.nameIsDynamic && currCommand.nameContainsText && (mContextText != NULL) )
+	else if( currCommand.nameIsDynamic && currCommand.nameContainsDynamicText && (mContextData.contextText != NULL) )
 	{
 		//clip the text here to reasonable size,
 		const CFIndex kMaxCharCount = 60;
-		CFIndex totalLen = ::CFStringGetLength( mContextText );
+		CFIndex totalLen = ::CFStringGetLength( mContextData.contextText );
 		CFIndex theLen = totalLen;
 		CFObj<CFMutableStringRef> newString;
 		bool textIsClipped = false;
 		if(theLen > kMaxCharCount)
 		{
-			CFObj<CFStringRef> shortString( ::CFStringCreateWithSubstring(kCFAllocatorDefault, mContextText, CFRangeMake(0, kMaxCharCount)) );
+			CFObj<CFStringRef> shortString( ::CFStringCreateWithSubstring(kCFAllocatorDefault, mContextData.contextText, CFRangeMake(0, kMaxCharCount)) );
 			newString.Adopt( ::CFStringCreateMutableCopy(kCFAllocatorDefault, kMaxCharCount + 4, shortString) );
 			textIsClipped = true;
 		}
 		else
 		{
-			newString.Adopt( ::CFStringCreateMutableCopy(kCFAllocatorDefault, kMaxCharCount + 4, mContextText) );
+			newString.Adopt( ::CFStringCreateMutableCopy(kCFAllocatorDefault, kMaxCharCount + 4, mContextData.contextText) );
 		}
 
 		::CFStringTrimWhitespace( newString );
@@ -4381,20 +4250,20 @@ OnMyCommandCM::CreateDynamicCommandName(const CommandDescription &currCommand, C
 void
 OnMyCommandCM::CreateTextContext(const CommandDescription &currCommand, const AEDesc *inAEContext)
 {
-	if(mContextText != NULL)
+	if(mContextData.contextText != NULL)
 		return;//already created
 
-	if( mIsTextContext && (currCommand.activationMode != kActiveClipboardText) )
+	if( mContextData.isTextContext && (currCommand.activationMode != kActiveClipboardText) )
 	{
-		if( (inAEContext != NULL) && (mContextText == NULL) && (mIsNullContext == false) )
+		if( (inAEContext != NULL) && (mContextData.contextText == NULL) && (mContextData.isNullContext == false) )
         {
-            mContextText.Adopt( CMUtils::CreateCFStringFromAEDesc( *inAEContext, currCommand.textReplaceOptions ), kCFObjDontRetain);
+            mContextData.contextText.Adopt( CMUtils::CreateCFStringFromAEDesc( *inAEContext, currCommand.textReplaceOptions ), kCFObjDontRetain);
         }
 	}
 	else if(mIsTextInClipboard)
 	{
-		mContextText.Adopt( CMUtils::CreateCFStringFromClipboardText(currCommand.textReplaceOptions), kCFObjDontRetain );
-		mClipboardText.Adopt( mContextText, kCFObjRetain );
+        mContextData.contextText.Adopt( CMUtils::CreateCFStringFromClipboardText(currCommand.textReplaceOptions), kCFObjDontRetain );
+        mContextData.clipboardText.Adopt( mContextData.contextText, kCFObjRetain );
 	}
 }
 
@@ -4988,16 +4857,19 @@ OnMyCommandCM::ExecuteSubcommand( SInt32 commandIndex, OMCDialog *inDialog, CFTy
 
 	CommandDescription &subCommand = mCommandList[commandIndex];
 
-	//preserve existing runtime state for subcommand
-	CommandState *prevState = subCommand.currState;
-	CommandState *newState = new CommandState();
+	// preserve existing UUIDs for subcommand
+	OMCRuntimeUUIDs prevUUIDs = subCommand.runtimeUUIDs;
+    
+	OMCRuntimeUUIDs newRuntimeUUIDs;
 	if(inDialog != nullptr)
-		newState->dialogGUID.Adopt(inDialog->GetDialogUniqueID(), kCFObjRetain);
+	{
+	    newRuntimeUUIDs.dialogUUID.Adopt(inDialog->GetDialogUniqueID(), kCFObjRetain);
+	}
+	
+	subCommand.runtimeUUIDs = newRuntimeUUIDs;
 
-	subCommand.currState = newState;
-
-	OMCContextData *contextData = nullptr;
-
+    OMCContextData contextData;
+    
 	try
 	{
 		//we don't want errors from previous subcommands to persist
@@ -5005,9 +4877,9 @@ OnMyCommandCM::ExecuteSubcommand( SInt32 commandIndex, OMCDialog *inDialog, CFTy
 		mError = noErr;
 
 		if(inContext != nullptr)
-		{//temporarily put new context for subcommand execution
-			contextData = new OMCContextData();
-			SwapContext( *contextData ); //this puts existing context in contextData and empties the containers in OnMyCommandCM
+		{
+            // temporarily put new context for subcommand execution
+            contextData.Swap( mContextData ); //this puts existing context in contextData and empties the containers in mContextData
 			err = ExamineContext(inContext, kCMCommandStart+commandIndex);
 		}
 
@@ -5019,18 +4891,17 @@ OnMyCommandCM::ExecuteSubcommand( SInt32 commandIndex, OMCDialog *inDialog, CFTy
 		err = -1;
 	}
 
-	if(inContext != nullptr)
-	{
-		SwapContext( *contextData );
-		delete contextData;
-	}
-
 	if(err != noErr)
 		mError = err;
 
-	//restore previous runtime state
-	subCommand.currState = prevState;
-	delete newState;
+    if(inContext != nullptr)
+    {
+        // swap back the original context data
+        mContextData.Swap( contextData );
+    }
+    
+	// restore previous runtime UUIDs
+	subCommand.runtimeUUIDs = prevUUIDs;
 
 	mCurrCommandIndex = mainCommandIndex;
 	
@@ -5041,59 +4912,59 @@ OnMyCommandCM::ExecuteSubcommand( SInt32 commandIndex, OMCDialog *inDialog, CFTy
 CFStringRef
 GetCommandUniqueID(CommandDescription &currCommand)
 {
-	assert(currCommand.currState != nullptr);
-	if(currCommand.currState->commandGUID != nullptr)
-		return currCommand.currState->commandGUID;
+	if(currCommand.runtimeUUIDs.commandUUID != nullptr)
+    {
+        return currCommand.runtimeUUIDs.commandUUID;
+    }
 
 	CFObj<CFUUIDRef> myUUID(CFUUIDCreate(kCFAllocatorDefault));
 	if(myUUID != nullptr)
 	{
-		currCommand.currState->commandGUID.Adopt(CFUUIDCreateString(kCFAllocatorDefault, myUUID), kCFObjDontRetain);
-		currCommand.currState->commandGUIDUsedByCommand = true;
+		currCommand.runtimeUUIDs.commandUUID.Adopt(CFUUIDCreateString(kCFAllocatorDefault, myUUID), kCFObjDontRetain);
 	}
 
-	return currCommand.currState->commandGUID;
+	return currCommand.runtimeUUIDs.commandUUID;
 }
 
 //next commmand scheduling may happen after currCommand has exited the main execution function
-//currCommand.currState may already be invalid
+//currCommand.runtimeUUIDs may already be invalid
 //however, the current command state is copied and preserved by the task manager
 //so it can pass inCommandState here
 CFStringRef
-CopyNextCommandID(const CommandDescription &currCommand, const CommandState *inCommandState)
+CopyNextCommandID(const CommandDescription &currCommand, const OMCRuntimeUUIDs &runtimeUUIDs)
 {
 	static char sFilePath[1024];
-	static char sCommandGUID[512];
+	static char sCommandUUID[512];
 	CFStringRef theNextID = currCommand.nextCommandID;//statically assigned id or NULL is default
 	if(theNextID != NULL)
 		::CFRetain(theNextID);
 
-	//next command id may be saved only if GetCommandUniqueID() was called at least once
-	//when it is called, the commandGUID is cached. otherwise don't bother checking for the file
-	if( (inCommandState == NULL) ||
-		!inCommandState->commandGUIDUsedByCommand ||
-		((CFStringRef)inCommandState->commandGUID == NULL) )
-		return theNextID;
+	// next command id may be saved only if GetCommandUniqueID() was called at least once
+	// when it is called, the commandUUID is cached. otherwise don't bother checking for the file
+	if( (CFStringRef)runtimeUUIDs.commandUUID == NULL )
+    {
+        return theNextID;
+    }
 
-	sCommandGUID[0] = 0;
-	Boolean isOK = ::CFStringGetCString(inCommandState->commandGUID, sCommandGUID, sizeof(sCommandGUID), kCFStringEncodingUTF8);
+    sCommandUUID[0] = 0;
+	Boolean isOK = ::CFStringGetCString(runtimeUUIDs.commandUUID, sCommandUUID, sizeof(sCommandUUID), kCFStringEncodingUTF8);
 	if(isOK)
 	{
-		snprintf(sFilePath, sizeof(sFilePath), "/tmp/OMC/%s.id", sCommandGUID);
-		if( access(sFilePath, F_OK) == 0 )//check if file with next command id exists 
+		snprintf(sFilePath, sizeof(sFilePath), "/tmp/OMC/%s.id", sCommandUUID);
+		if( access(sFilePath, F_OK) == 0 )//check if file with next command id exists
 		{
 			FILE *fp = fopen(sFilePath, "r");
 			if(fp != NULL)
 			{
-				fgets(sCommandGUID, sizeof(sCommandGUID), fp);//now store the next command ID in sCommandGUID
+				fgets(sCommandUUID, sizeof(sCommandUUID), fp);//now store the next command ID in sCommandGUID
 				fclose(fp);
 				
-				size_t idLen = strlen(sCommandGUID);
+				size_t idLen = strlen(sCommandUUID);
 				if(idLen > 0)
 				{
 					if(theNextID != NULL)
 						::CFRelease(theNextID);//release the static one
-					theNextID = ::CFStringCreateWithBytes(kCFAllocatorDefault, (const UInt8 *)sCommandGUID, idLen, kCFStringEncodingUTF8, false);
+					theNextID = ::CFStringCreateWithBytes(kCFAllocatorDefault, (const UInt8 *)sCommandUUID, idLen, kCFStringEncodingUTF8, false);
 				}
 			}
 			unlink(sFilePath);
@@ -5135,39 +5006,39 @@ FileNameComparator( const void *val1, const void *val2, void *context)
 OSStatus
 OnMyCommandCM::SortObjectListByName(CFOptionFlags compareOptions, bool sortAscending)
 {
-	if( mObjectList.size() <= 1 )
+	if( mContextData.objectList.size() <= 1 )
 		return noErr;//no need to sort
 	
 	AUniquePtr<SortSettings> newSort(new SortSettings(kSortMethodByName, compareOptions, sortAscending));
 	if( (mSortSettings != nullptr) && (*newSort == *mSortSettings) )
 		return noErr;//already sorted by the same criteria
 
-	CFObj<CFMutableArrayRef> sortArray( ::CFArrayCreateMutable(kCFAllocatorDefault, mObjectList.size(), NULL /*const CFArrayCallBacks *callBacks*/ ) );
+	CFObj<CFMutableArrayRef> sortArray( ::CFArrayCreateMutable(kCFAllocatorDefault, mContextData.objectList.size(), NULL /*const CFArrayCallBacks *callBacks*/ ) );
 	if(sortArray == NULL)
 		return memFullErr;
 
-	for (CFIndex i = 0; i < mObjectList.size(); i++)
+	for (CFIndex i = 0; i < mContextData.objectList.size(); i++)
 	{
-		CFStringRef objName = CreateObjName( &(mObjectList[i]), NULL);
+		CFStringRef objName = CreateObjName( &(mContextData.objectList[i]), NULL);
 		FileNameAndIndex *oneFileItem = new FileNameAndIndex(objName, i);//take ownership of filename
 		::CFArrayAppendValue(sortArray, oneFileItem);
 	}
 
-	CFRange theRange = { 0, static_cast<CFIndex>(mObjectList.size()) };
+	CFRange theRange = { 0, static_cast<CFIndex>(mContextData.objectList.size()) };
 	::CFArraySortValues(sortArray, theRange, FileNameComparator, &compareOptions);
 
 	//now put the sorted values back into our list of OneObjProperties
-	std::vector<OneObjProperties> newList( mObjectList.size() );
+	std::vector<OneObjProperties> newList( mContextData.objectList.size() );
 	
-	for(CFIndex i = 0; i < mObjectList.size(); i++)
+	for(CFIndex i = 0; i < mContextData.objectList.size(); i++)
 	{
 		FileNameAndIndex *oneFileItem = (FileNameAndIndex *)::CFArrayGetValueAtIndex(sortArray,i);
-		newList[sortAscending ? i : (mObjectList.size() -1 -i)] = mObjectList[oneFileItem->index]; //it used to be at oneFileItem->index, now it is at "i" index
+		newList[sortAscending ? i : (mContextData.objectList.size() -1 -i)] = mContextData.objectList[oneFileItem->index]; //it used to be at oneFileItem->index, now it is at "i" index
 		delete oneFileItem;
 	}
 
 	//delete the old list itself but not its content because it has been copied to new list and ownership of objects has been transfered
-	mObjectList.swap(newList);
+	mContextData.objectList.swap(newList);
 	
 	mSortSettings.reset( newSort.detach() );
 

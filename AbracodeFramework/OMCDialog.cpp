@@ -85,17 +85,17 @@ OMCDialog::StartListening()
 
 /*static*/
 ARefCountedObj<OMCDialog>
-OMCDialog::FindDialogByGUID(CFStringRef inGUID)
+OMCDialog::FindDialogByUUID(CFStringRef inUUID)
 {
 	ARefCountedObj<OMCDialog> outDialog;
-	if(inGUID == nullptr)
+	if(inUUID == nullptr)
 		return outDialog;
 
 	OMCDialog *oneLink = sChainHead;
 	while(oneLink != nullptr)
 	{
-		CFStringRef oneGUID = oneLink->mDialogUniqueID;//do not generate if never requested before, cannot be equal in such case
-		if( (oneGUID != nullptr) && (CFStringCompare(oneGUID, inGUID, 0) == kCFCompareEqualTo) )
+		CFStringRef oneUUID = oneLink->mDialogUniqueID;//do not generate if never requested before, cannot be equal in such case
+		if( (oneUUID != nullptr) && (CFStringCompare(oneUUID, inUUID, 0) == kCFCompareEqualTo) )
 		{
 			outDialog.Adopt(oneLink, kARefCountRetain);
 			break;

@@ -1,11 +1,10 @@
-//#include "OnMyCommand.h"
-
 #pragma once
 
 #include "OutputWindowHandler.h"
 #include "ACMPlugin.h"
 #include "OMCConstants.h"
 #include "OMCStrings.h"
+#include "OMCRuntimeUUIDs.h"
 #include "OMC.h"
 #include "AUniquePtr.h"
 #include <vector>
@@ -18,102 +17,84 @@ class OMCDialog;
 
 extern CFStringRef kOMCTopCommandID;
 
-class CommandState
-{
-public:
-	CommandState()
-	 : commandGUIDUsedByCommand(false)
-	{
-	}
-	
-	~CommandState()
-	{
-	}
-
-public:
-	CFObj<CFStringRef> commandGUID;
-	CFObj<CFStringRef>	dialogGUID;//dialog GUID used instead of dialog ptr to look up the instance
-	Boolean			commandGUIDUsedByCommand;//if requested, it's likely for next command
-};
-
 typedef struct CommandDescription
 {
-	CFArrayRef		name;
-	CFStringRef		namePlural;
-	CFArrayRef		command;//array of CFStrings
-	CFArrayRef		inputPipe;//array of CFStrings
-    OSType *		activationTypes;
-	UInt32			activationTypeCount;
-	CFArrayRef		activationExtensions;//array of CFStrings
-	UInt8			executionMode;
-	UInt8			executionOptions;
-	UInt8			activationMode;
-	UInt8			escapeSpecialCharsMode;
-	UInt8			multipleObjectProcessing;
-	UInt8			sortMethod;
-	UInt8			sortAscending;
-	UInt8			sortOptions;
-	CFStringRef		mulObjPrefix;
-	CFStringRef		mulObjSuffix;
-	CFStringRef		mulObjSeparator;
-	CFStringRef		warningStr;
-	CFStringRef		warningExecuteStr;
-	CFStringRef		warningCancelStr;
-	CFStringRef		submenuName;
-	UInt32			prescannedCommandInfo;
-	Boolean			isPrescanned;
-	Boolean			bringTerminalToFront;
-	Boolean			openNewTerminalSession;
-	Boolean			simulatePaste;
-	Boolean			nameIsDynamic;
-	Boolean			nameContainsText;
-	UInt16			inputDialogType;
-	CFStringRef		inputDialogOK;
-	CFStringRef		inputDialogCancel;
-	CFStringRef		inputDialogMessage;
-	CFArrayRef		inputDialogDefault;
-	CFArrayRef		inputDialogMenuItems;//array of name & value pairs
-	CFArrayRef		refresh;//a list of strings forming a path for Finder refresh
-	CFDictionaryRef	saveAsParams;
-	CFDictionaryRef	chooseFileParams;
-	CFDictionaryRef	chooseFolderParams;
-	CFDictionaryRef	chooseObjectParams;
+    CFArrayRef		name {NULL};
+    CFStringRef		namePlural {NULL};
+    CFArrayRef		command {NULL};//array of CFStrings
+    CFArrayRef		inputPipe {NULL};//array of CFStrings
+    OSType *		activationTypes {NULL};
+    UInt32			activationTypeCount {0};
+    CFArrayRef		activationExtensions {NULL};//array of CFStrings
+    UInt8			executionMode {kExecSilentPOpen};
+    UInt8			executionOptions {kExecutionOption_None};
+    UInt8			activationMode {kActiveAlways};
+    UInt8			escapeSpecialCharsMode {kEscapeWithBackslash};
+    UInt8			multipleObjectProcessing {kMulObjProcessSeparately};
+    UInt8			sortMethod {kSortMethodNone};
+    UInt8			sortAscending {true};
+    UInt8			sortOptions {0};
+    CFStringRef		mulObjPrefix {NULL};
+    CFStringRef		mulObjSuffix {NULL};
+    CFStringRef		mulObjSeparator {NULL};
+    CFStringRef		warningStr {NULL};
+    CFStringRef		warningExecuteStr {NULL};
+    CFStringRef		warningCancelStr {NULL};
+    CFStringRef		submenuName {NULL};
+    UInt32			prescannedCommandInfo {kOmcCommandNoSpecialObjects};
+    Boolean			isPrescanned {false};
+    Boolean			bringTerminalToFront {true};
+    Boolean			openNewTerminalSession {true};
+    Boolean			simulatePaste {false};
+    Boolean			nameIsDynamic {false};
+    Boolean			nameContainsDynamicText {false};
+    UInt16			inputDialogType {kInputClearText};
+    CFStringRef		inputDialogOK {NULL};
+    CFStringRef		inputDialogCancel {NULL};
+    CFStringRef		inputDialogMessage {NULL};
+    CFArrayRef		inputDialogDefault {NULL};
+    CFArrayRef		inputDialogMenuItems {NULL};//array of name & value pairs
+    CFArrayRef		refresh {NULL};//a list of strings forming a path for Finder refresh
+    CFDictionaryRef	saveAsParams {NULL};
+    CFDictionaryRef	chooseFileParams {NULL};
+    CFDictionaryRef	chooseFolderParams {NULL};
+    CFDictionaryRef	chooseObjectParams {NULL};
 
-	CFURLRef		saveAsPath;
-	CFURLRef		chooseFilePath;
-	CFURLRef		chooseFolderPath;
-	CFURLRef		chooseObjectPath;
+    CFURLRef		saveAsPath {NULL};
+    CFURLRef		chooseFilePath {NULL};
+    CFURLRef		chooseFolderPath {NULL};
+    CFURLRef		chooseObjectPath {NULL};
 
-	CFDictionaryRef	outputWindowOptions;
-	CFDictionaryRef nibDialog;
-	CFArrayRef		appNames;
-	long			textReplaceOptions;
-	CFStringRef		commandID;//"top!" = main command, other value = command handler/subcommand - should not appear in contextual menu
-	CFStringRef		nextCommandID; //if not NULL, next command
-	CFStringRef		externalBundlePath;
-	CFBundleRef		externBundle;//populated on first request and cached
-	CFArrayRef		popenShell;
-	CFMutableDictionaryRef	customEnvironVariables;
-	CFMutableSetRef specialRequestedNibControls; //set of special words to export
-	Boolean			actOnlyInListedApps;//if true - activate only in those listed, if false - exclude those listed
-	Boolean			debugging; //set to true when control keyboard modifier is held
-	Boolean			disabled;
-	Boolean			isSubcommand;
-	SInt32			requiredOMCVersion;
-	SInt32			requiredMacOSMinVersion;
-	SInt32			requiredMacOSMaxVersion;
-	CFStringRef		iTermShellPath;
-	CFDictionaryRef	endNotification;
-	CFDictionaryRef progress;
-	CFIndex			maxTaskCount;
-	CFStringRef		contextMatchString;
-	UInt8			matchCompareOptions;//currently only kCFCompareCaseInsensitive
-	UInt8			matchMethod; //kMatchExact, kMatchContains, kMatchRegularExpression
-	UInt8			matchFileOptions;//kMatchFileName, kMatchFilePath
-	Boolean			externBundleResolved;//costly call to find the extern bundle - do it once and flag it here
-	CFDictionaryRef multipleSelectionIteratorParams; //control id and forward/reverse flag
-	CFStringRef		localizationTableName;
-	CommandState	*currState; //dynamic state at runtime, must be managed before and after execution
+    CFDictionaryRef	outputWindowOptions {NULL};
+    CFDictionaryRef nibDialog {NULL};
+    CFArrayRef		appNames {NULL};
+    CFStringRef		commandID {NULL};//"top!" = main command, other value = command handler/subcommand - should not appear in contextual menu
+    CFStringRef		nextCommandID {NULL}; //if not NULL, next command
+    CFStringRef		externalBundlePath {NULL};
+    CFBundleRef		externBundle {NULL};//populated on first request and cached
+    CFArrayRef		popenShell {NULL};
+    CFMutableDictionaryRef	customEnvironVariables {NULL};
+    CFMutableSetRef specialRequestedNibControls {NULL}; //set of special words to export
+    Boolean			actOnlyInListedApps {false};//if true - activate only in those listed, if false - exclude those listed
+    Boolean			debugging {false}; //set to true when control keyboard modifier is held
+    Boolean			disabled {false};
+    Boolean			isSubcommand {false};
+    SInt32			requiredOMCVersion {MIN_OMC_VERSION};
+    SInt32			requiredMacOSMinVersion {MIN_MAC_OS_VERSION};
+    SInt32			requiredMacOSMaxVersion {MAX_MAC_OS_VERSION};
+    CFStringRef		iTermShellPath {NULL};
+    CFDictionaryRef	endNotification {NULL};
+    CFDictionaryRef progress {NULL};
+    CFIndex			maxTaskCount {0};
+    CFStringRef		contextMatchString {NULL};
+    UInt32          textReplaceOptions {0};
+    UInt8			matchCompareOptions {0};//currently only kCFCompareCaseInsensitive
+    UInt8			matchMethod {kMatchExact}; //kMatchExact, kMatchContains, kMatchRegularExpression
+    UInt8			matchFileOptions {kMatchFileName};//kMatchFileName, kMatchFilePath
+    Boolean			externBundleResolved {false};//costly call to find the extern bundle - do it once and flag it here
+    CFDictionaryRef multipleSelectionIteratorParams {NULL}; //control id and forward/reverse flag
+    CFStringRef		localizationTableName {NULL};
+    OMCRuntimeUUIDs	runtimeUUIDs; //command runtime UUIDs, must be managed before and after execution
 } CommandDescription;
 
 
@@ -219,17 +200,36 @@ inline bool operator==( const SortSettings &inS1, const SortSettings &inS2 )
 class OMCContextData
 {
 public:
-	OMCContextData()
-		: mCurrObjectIndex(0), mIsNullContext(false), mIsTextContext(false)
-	{
-	}
+	OMCContextData() {}
 
-	CFObj<CFStringRef>			mContextText;
-	std::vector<OneObjProperties> mObjectList;
-	CFIndex						mCurrObjectIndex;
-	CFObj<CFStringRef>			mCommonParentPath;
-	Boolean						mIsNullContext;
-	Boolean						mIsTextContext;
+    void
+    Swap(OMCContextData &otherData)
+    {
+        contextText.Swap(otherData.contextText);
+        clipboardText.Swap(otherData.clipboardText);
+        objectList.swap(otherData.objectList);
+        cachedCommonParentPath.Swap(otherData.cachedCommonParentPath);
+        
+        CFIndex temp = currObjectIndex;
+        currObjectIndex = otherData.currObjectIndex;
+        otherData.currObjectIndex = temp;
+
+        Boolean tempBool = isNullContext;
+        isNullContext = otherData.isNullContext;
+        otherData.isNullContext = tempBool;
+
+        tempBool = isTextContext;
+        isTextContext = otherData.isTextContext;
+        otherData.isTextContext = tempBool;
+    }
+    
+	CFObj<CFStringRef>			contextText;
+    CFObj<CFStringRef>          clipboardText; // may be the same as contextText, just retained
+	std::vector<OneObjProperties> objectList;
+    CFIndex						currObjectIndex {0};
+	CFObj<CFStringRef>			cachedCommonParentPath;
+    Boolean						isNullContext {false};
+    Boolean						isTextContext {false};
 };
 
 
@@ -277,8 +277,6 @@ public:
 							if(mObserver == inObserver)
 								mObserver.Adopt(NULL);
 						}
-	
-	void				SwapContext(OMCContextData &ioContextData);
 
 	void				DeleteCommandList();
 	void				DeleteObjectList();
@@ -372,12 +370,8 @@ protected:
     CommandDescription			*mCommandList {nullptr};
     UInt32						mCommandCount {0};
     UInt32						mCurrCommandIndex {0};
-    std::vector<OneObjProperties> mObjectList;
-    CFIndex						mCurrObjectIndex {0};
 	AUniquePtr<SortSettings>	mSortSettings;
-	CFObj<CFStringRef>			mContextText;//selected or clipboard text
-	CFObj<CFStringRef>			mClipboardText;//may be the same as mContextText, just retained
-	CFObj<CFStringRef>			mCommonParentPath;//cached here for better performance
+    OMCContextData              mContextData;
 	CFObj<CFStringRef>			mInputText;
 	CFObj<CFURLRef>				mCachedSaveAsPath;
 	CFObj<CFURLRef>				mCachedChooseFilePath;
@@ -391,8 +385,6 @@ protected:
     OSStatus					mError {noErr};
     Boolean						mIsTextInClipboard {false};
     Boolean						mIsOpenFolder {false};
-    Boolean						mIsNullContext {false};
-    Boolean						mIsTextContext {false};
     OMCHostApp					mHostApp {kOMCHostApp_Unknown};
     pid_t			            mFrontProcessPID {0};//if running in observer we don't want to return observer as front process if it happens to come up
 };
@@ -464,7 +456,7 @@ CFStringRef         GetEscapingModeString(UInt8 inEscapeMode);
 
 CFDictionaryRef		ReadControlValuesFromPlist(CFStringRef inDialogUniqueID);
 CFStringRef			GetCommandUniqueID(CommandDescription &currCommand);
-CFStringRef			CopyNextCommandID(const CommandDescription &currCommand, const CommandState *inCommandState);
+CFStringRef			CopyNextCommandID(const CommandDescription &currCommand, const OMCRuntimeUUIDs &runtimeUUIDs);
 Boolean				DisplayVersionWarning(CFBundleRef inBundleRef, CFStringRef dynamicCommandName, CFStringRef inString, SInt32 requiredVersion, SInt32 currVersion);
 Boolean				DisplayAlert(CFBundleRef inBundleRef, CFStringRef dynamicCommandName, CFStringRef inAlertString, CFOptionFlags inAlertLevel = kCFUserNotificationStopAlertLevel );
 

@@ -11,6 +11,7 @@
 #include "MessagePortListener.h"
 #include "AObserver.h"
 #include "OMCDeferredProgress.h"
+#include "OMCRuntimeUUIDs.h"
 #include <mach/host_info.h>
 
 class OmcExecutor;
@@ -37,7 +38,6 @@ protected:
 
 class OnMyCommandCM;
 class CommandDescription;
-class CommandState;
 
 class OmcHostTaskManager : public OmcTaskManager
 {
@@ -80,7 +80,7 @@ private:
 protected:
 	ARefCountedObj<OnMyCommandCM> mPlugin; //the plugin is retained and released when we finish
 	const CommandDescription &	mCurrCommand;
-	CommandState *				mCurrCommandState;
+	OMCRuntimeUUIDs	    		mCurrCommandUUIDs;
 	CFObj<CFStringRef>			mCommandName;
 	CFObj<CFDictionaryRef>		mEndNotificationParams;
 	CFObj<CFDictionaryRef>		mProgressParams;

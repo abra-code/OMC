@@ -4,7 +4,7 @@
 
 enum
 {
-	kExecSilentPOpen,
+	kExecSilentPOpen = 0,
 	kExecSilentSystem,
 	kExecTerminal,
 	kExecITerm,
@@ -30,19 +30,19 @@ enum
 
 enum
 {
-	kMulObjProcessSeparately,
+	kMulObjProcessSeparately = 0,
 	kMulObjProcessTogether
 };
 
 enum
 {
-	kSortMethodNone,
+	kSortMethodNone = 0,
 	kSortMethodByName
 };
 
 enum
 {
-	kInputClearText,
+	kInputClearText = 0,
 	kInputPasswordText,
 	kInputPopupMenu,
 	kInputComboBox
@@ -50,13 +50,13 @@ enum
 
 enum
 {
-	kMatchExact,
+	kMatchExact = 0,
 	kMatchContains,
 	kMatchRegularExpression
 };
 
 enum
 {
-	kMatchFileName,
+	kMatchFileName = 0,
 	kMatchFilePath
 };

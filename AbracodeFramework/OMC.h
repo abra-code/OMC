@@ -110,7 +110,7 @@ enum
 //information for kOmcInfo_ActivationType passed back as UInt32
 enum
 {
-	kActiveAlways = 1,
+	kActiveAlways = 0,
 	kActiveFile,
 	kActiveFolder,
 	kActiveFileOrFolder,

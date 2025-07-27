@@ -29,9 +29,8 @@ ARefCountedObj<OMCCocoaDialog> RunCocoaDialog(OnMyCommandCM *inPlugin)
 			OMCDialogController *myController = [[OMCDialogController alloc] initWithOmc:inPlugin];
 			if(myController != nullptr)
 			{
-				assert(currCommand.currState != nullptr);
 				outDialog.Adopt( [myController getOMCDialog], kARefCountRetain );
-				currCommand.currState->dialogGUID.Adopt(outDialog->GetDialogUniqueID(), kCFObjRetain);
+				currCommand.runtimeUUIDs.dialogUUID.Adopt(outDialog->GetDialogUniqueID(), kCFObjRetain);
 
 				[myController run];
 				if( [myController isModal] )
