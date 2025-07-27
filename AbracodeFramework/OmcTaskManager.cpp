@@ -64,7 +64,7 @@ public:
 
 OmcHostTaskManager::OmcHostTaskManager(OnMyCommandCM *inPlugin, const CommandDescription &currCommand,
 										CFStringRef inCommandName, CFBundleRef inBundle, CFIndex inMaxTaskCount)
-	: mPlugin(inPlugin, kARefCountRetain), mCurrCommand(currCommand), mCurrCommandState(new CommandState()),
+	: mPlugin(inPlugin, kARefCountRetain), mCurrCommand(currCommand),
 	mCommandName(inCommandName, kCFObjRetain), mEndNotificationParams(currCommand.endNotification, kCFObjRetain),
 	mProgressParams(currCommand.progress, kCFObjRetain), mBundle(inBundle, kCFObjRetain),
 	mMaxTaskCount(inMaxTaskCount), mTaskCount(0), mFinishedTasks(0),
@@ -72,8 +72,8 @@ OmcHostTaskManager::OmcHostTaskManager(OnMyCommandCM *inPlugin, const CommandDes
 	mProgress(NULL),
 	mUserCanceled(false)
 {
-    //do not init command state here. parsing of the command happens later
-    //so defer the init of mCurrCommandState until Run
+    //do not init command UUIDs here. parsing of the command happens later
+    //so defer the init of mCurrCommandUUIDs until Run
 
 	mExternBundle.Adopt(inPlugin->GetCurrentCommandExternBundle(), kCFObjRetain);
 
@@ -102,9 +102,9 @@ OmcHostTaskManager::~OmcHostTaskManager()
 
 	Finalize();
 	if(mTaskObserver != NULL)
-		mTaskObserver->SetOwner(NULL);//observer may outlive us so it is very important to tell that we died
-
-	delete mCurrCommandState;
+    {
+        mTaskObserver->SetOwner(NULL);//observer may outlive us so it is very important to tell that we died
+    }
 }
 
 void
@@ -160,14 +160,15 @@ OmcHostTaskManager::Finalize()
 	}
 	
 //any command following this one?
-	CFObj<CFStringRef> nextCommandID( CopyNextCommandID(mCurrCommand, mCurrCommandState) );
+	CFObj<CFStringRef> nextCommandID( CopyNextCommandID(mCurrCommand, mCurrCommandUUIDs) );
 	if(nextCommandID != nullptr)
 	{
-		assert(mCurrCommandState != nullptr);
 		ARefCountedObj<OMCDialog> activeDialog;
-		if(mCurrCommandState->dialogGUID != nullptr)
-			activeDialog = OMCDialog::FindDialogByGUID(mCurrCommandState->dialogGUID);
-
+		if(mCurrCommandUUIDs.dialogUUID != nullptr)
+        {
+            activeDialog = OMCDialog::FindDialogByUUID(mCurrCommandUUIDs.dialogUUID);
+        }
+        
 		// Before kicking off the next command process whatever events might have been triggered in the meantime
 		// This is especially needed for dialog control messages which might change the state of the dialog values
 		// and affect the next command if it tries to read them back
@@ -200,16 +201,11 @@ OmcHostTaskManager::AddTask(OmcExecutor *inNewExecutor, CFStringRef inCommand, C
 void
 OmcHostTaskManager::Start()
 {
-    //now the command have been parsed so we can copy the state params before execution
-	assert(mCurrCommandState != nullptr);
-	assert(mCurrCommand.currState != nullptr);
-	mCurrCommandState->commandGUID.Adopt(mCurrCommand.currState->commandGUID, kCFObjRetain);
-	mCurrCommandState->commandGUIDUsedByCommand = mCurrCommand.currState->commandGUIDUsedByCommand;
-
-	// if current command has a dialog associated with it
-	// remember its ID but do not save the pointer because when we need it later the dialog may be deleted already
-	//we will use the dialog ID to look it up on the list of existing dialogs
-	mCurrCommandState->dialogGUID.Adopt(mCurrCommand.currState->dialogGUID, kCFObjRetain);
+    // now the command have been parsed so we can copy the state params before execution
+    // if current command has a dialog associated with it
+    // remember its ID but do not save the pointer because when we need it later the dialog may be deleted already
+    // we will use the dialog ID to look it up on the list of existing dialogs
+    mCurrCommandUUIDs = mCurrCommand.runtimeUUIDs;
     
     RunNext();
 }
