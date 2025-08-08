@@ -14,6 +14,7 @@
 #include "OnMyCommand.h"
 #include "ACFDict.h"
 #include "OMCCocoaDialog.h"
+#include "CommandRuntimeData.h"
 #include <vector>
 #import "OMCTableViewController.h"
 #import "OMCTableView.h"
@@ -125,21 +126,25 @@ GetAllDialogControllers()
 @implementation OMCDialogController
 
 
-- (id)initWithOmc:(OnMyCommandCM *)inOmc
+- (id)initWithOmc:(OnMyCommandCM *)inOmc commandRuntimeData:(CommandRuntimeData *)inCommandRuntimeData
 {
    self = [super init];
 	if(self == nil)
 		return nil;
 
-    mIsModal = false;
+    mIsModal = true;
 	mIsRunning = false;
 
+    mPlugin.Adopt(inOmc, kARefCountRetain);
+    assert(inCommandRuntimeData != nullptr);
+    mCommandRuntimeData.Adopt(inCommandRuntimeData, kARefCountRetain);
+    
     NSMutableSet<OMCDialogController *> *allDialogControllers = GetAllDialogControllers();
     [allDialogControllers addObject:self];
     
     mOMCDialogProxy.Adopt( new OMCCocoaDialog((__bridge OMCDialogControllerRef)self) );
+    mCommandRuntimeData->SetAssociatedDialogUUID(mOMCDialogProxy->GetDialogUUID());
 
-	mPlugin.Adopt(inOmc, kARefCountRetain);
 	mExternBundleRef.Adopt(inOmc->GetCurrentCommandExternBundle(), kCFObjRetain);
 
 	CommandDescription &currCommand = mPlugin->GetCurrentCommand();
@@ -228,6 +233,18 @@ GetAllDialogControllers()
 				[self initSubview:contentView];
 			}
 			
+            OneObjProperties *associatedObj = mCommandRuntimeData->GetAssociatedObject();
+            if(associatedObj != nullptr)
+            {
+                CFURLRef fileURL = associatedObj->url.Get();
+                if(fileURL != NULL)
+                {
+                    NSURL *__weak associatedFileURL = (__bridge NSURL *)(fileURL);
+                    _window.representedURL = associatedFileURL;
+                    [_window setTitleWithRepresentedFilename:associatedFileURL.path];
+                }
+            }
+            
 			[_window setDelegate: self];
 		}
 		else
@@ -1705,7 +1722,7 @@ GetAllDialogControllers()
 	{
 		
 //		bool isInited = false;
-		if( [self initialize] )
+		if( [self initializeDialog] )
 		{
 /*
 			NSRunLoop *currRunLoop = [NSRunLoop currentRunLoop];
@@ -1737,7 +1754,7 @@ GetAllDialogControllers()
 	}
 	else
 	{
-		if( [self initialize] )
+		if( [self initializeDialog] )
 			[self.window makeKeyAndOrderFront:self];
 	}
 }
@@ -1777,7 +1794,7 @@ GetAllDialogControllers()
 }
 
 
-- (BOOL)initialize
+- (BOOL)initializeDialog
 {
 	NSString *origCommand = self.lastCommandID;
 
@@ -1789,7 +1806,7 @@ GetAllDialogControllers()
     
 	mOMCDialogProxy->StartListening();
 
-	[self processCommandWithContext:NULL];
+    [self processCommandWithContext:NULL];
 
 	self.lastCommandID = origCommand;
 
@@ -1828,7 +1845,7 @@ GetAllDialogControllers()
 		return paramErr;
 
 	SInt32 cmdIndex = -1;
-    if( IsPredefinedDialogCommandID((__bridge CFStringRef)self.lastCommandID) )
+    if( OMCDialog::IsPredefinedDialogCommandID((__bridge CFStringRef)self.lastCommandID) )
         cmdIndex = mPlugin->FindSubcommandIndex(mCommandName, (__bridge CFStringRef)self.lastCommandID); //only strict subcommand for predefined dialog commands
 	else																//(command name must match)
         cmdIndex = mPlugin->FindCommandIndex(mCommandName, (__bridge CFStringRef)self.lastCommandID);//relaxed rules for custom command id
@@ -1848,7 +1865,7 @@ GetAllDialogControllers()
 
 	do
 	{
-		status = mPlugin->ExecuteSubcommand( cmdIndex, (OMCCocoaDialog*)mOMCDialogProxy, inContext );//does not throw
+		status = mPlugin->ExecuteSubcommand( cmdIndex, mCommandRuntimeData, inContext );//does not throw
 	}
 	while( (currentSelectionIterator != nullptr) && SelectionIterator_Next(currentSelectionIterator) );
 
@@ -2299,7 +2316,7 @@ GetAllDialogControllers()
 					}
 				}
 
-				assert(sizeof(unsigned long) == sizeof(NSUInteger));
+				static_assert(sizeof(unsigned long) == sizeof(NSUInteger));
 				SelectionIterator *outSelIter = SelectionIterator_Create((unsigned long *)selectedRows, selectedRowsCount);
 				return outSelIter;
 			}

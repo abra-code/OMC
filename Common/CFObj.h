@@ -87,7 +87,7 @@ public:
 
     CFObj& operator=(const CFObj& inRef) noexcept
     {
-        Adopt(inRef, kCFObjRetain);
+        Adopt(inRef.mRef, kCFObjRetain);
         return *this;
     }
     

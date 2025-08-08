@@ -72,7 +72,6 @@ protected:
 
 	ARefCountedObj< ANotifier > mNotifier;
 	ARefCountedObj< AObserver<OmcExecutor> > mCancelObserver;
-	CFObj<CFStringRef>	mTaskManagerID;
 	CFIndex				mTaskIndex;//task manager assigns task index to us for its own purposes
 };
 

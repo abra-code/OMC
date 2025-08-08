@@ -10,6 +10,7 @@ class OnMyCommandCM;
 #include "OMCDialog.h"
 
 using OMCDialogControllerRef = void *;
+class CommandRuntimeData;
 
 class OMCCocoaDialog: public OMCDialog
 {
@@ -40,4 +41,4 @@ private:
 };
 
 
-ARefCountedObj<OMCCocoaDialog> RunCocoaDialog(OnMyCommandCM *inPlugin);
+ARefCountedObj<OMCDialog> RunCocoaDialog(OnMyCommandCM *inPlugin, CommandRuntimeData *commandRuntimeData);

@@ -48,8 +48,6 @@ _OBJC_CLASS_$_OMCComboBox
 __ZN13OnMyCommandCMC1EPKv
 
 _CreateDefaultExternBundleRef
-_GetEscapingModeString
-_GetEscapingMode
 _ReplaceWhitespaceEscapesWithCharacters
 _ReplaceWhitespaceCharactersWithEscapes
 

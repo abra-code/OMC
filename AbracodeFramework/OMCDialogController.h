@@ -15,17 +15,18 @@
 
 class OnMyCommandCM;
 class OMCCocoaDialog;
+class CommandRuntimeData;
 
 @interface OMCDialogController : NSObject <NSWindowDelegate>
 {
-	//we compile ObjC with the flag to invoke C++ constructors and destructor
-	//so we can use smart pointers as member variables
+	// we compile ObjC with the flag to invoke C++ constructors and destructor
+	// so we can use smart pointers as member variables
 
 	ARefCountedObj<OnMyCommandCM>	mPlugin;
 	ARefCountedObj<OMCCocoaDialog>	mOMCDialogProxy;
+    ARefCountedObj<CommandRuntimeData> mCommandRuntimeData;
 	CFObj<CFBundleRef>				mExternBundleRef;
 	CFObj<CFArrayRef>				mCommandName;
-	CFObj<CFStringRef>				mDialogUniqueID;
 	Boolean							mIsModal;
 	Boolean							mIsRunning;
 }
@@ -38,7 +39,7 @@ class OMCCocoaDialog;
 @property (nonatomic, strong) OMCCocoaNib *omcCocoaNib;
 @property (nonatomic, strong) NSMutableSet *dialogOwnedItems;
 
-- (id)initWithOmc:(OnMyCommandCM *)inOmc;
+- (id)initWithOmc:(OnMyCommandCM *)inOmc commandRuntimeData:(CommandRuntimeData *)inCommandRuntimeData;
 - (Boolean)findNib:(NSString *)inNibName forBundlePath:(NSString *)inPath;
 - (void)initSubview:(NSView *)inView;
 - (void)resetSubview:(NSView *)inView;
@@ -58,7 +59,7 @@ class OMCCocoaDialog;
 - (BOOL)isOkeyed;
 - (BOOL)isCanceled;
 - (BOOL)commandShouldCloseDialog;
-- (BOOL)initialize;
+- (BOOL)initializeDialog;
 - (BOOL)terminate;
 - (void)dispatchCommand:(NSString *)inCommandID withContext:(CFTypeRef)inContext;
 - (OSStatus)processCommandWithContext:(CFTypeRef)inContext;

@@ -1,7 +1,7 @@
 //**************************************************************************************
 //
 // Filename:	ARefCounted.h
-// Description:	ARefCounted and its smart pointer
+// Description:	ARefCounted and its smart pointer ARefCountedObj<>
 //
 //**************************************************************************************
 
@@ -55,7 +55,9 @@ public:
 		{
 			ARefCounted *myObj = reinterpret_cast<ARefCounted *>( const_cast<void *>(inValue) );
 			if(myObj != nullptr)
-				myObj->Retain();
+            {
+                myObj->Retain();
+            }
 			return inValue;
 		}
 		catch(...)
@@ -71,7 +73,9 @@ public:
 		{
 			ARefCounted *myObj = reinterpret_cast<ARefCounted *>( const_cast<void *>(inValue) );
 			if(myObj != nullptr)
-				myObj->Release();
+            {
+                myObj->Release();
+            }
 		}
 		catch(...)
 		{
@@ -108,15 +112,19 @@ public:
 						ARefCountedObj(T* inRef, ARefCountRetainType inRetainType = kARefCountDontRetain) noexcept
 							: mRef(inRef)
 						{
-							if( (mRef != nullptr) && (inRetainType == kARefCountRetain) )
-								mRef->Retain();
+							if((mRef != nullptr) && (inRetainType == kARefCountRetain))
+                            {
+                                mRef->Retain();
+                            }
 						}
 						
 						ARefCountedObj(const ARefCountedObj& inObj) noexcept
 							: mRef(inObj.mRef)
 						{
 							if(mRef != nullptr)
-								mRef->Retain();
+                            {
+                                mRef->Retain();
+                            }
 						}
 
 	virtual				~ARefCountedObj() noexcept
@@ -138,10 +146,14 @@ public:
 	void				Adopt(T* inRef, ARefCountRetainType inRetainType = kARefCountDontRetain) noexcept
 						{
 							if((inRef != nullptr) && (inRetainType == kARefCountRetain))
-								inRef->Retain();
-							
+                            {
+                                inRef->Retain();
+                            }
+                            
 							if(mRef != nullptr)
-								mRef->Release();
+                            {
+                                mRef->Release();
+                            }
 
 							mRef = inRef;
 						}
@@ -149,9 +161,13 @@ public:
 	ARefCountedObj&		operator=(const ARefCountedObj& inObj) noexcept
 						{
 							if(inObj.mRef != nullptr)
-								inObj.mRef->Retain();
+                            {
+                                inObj.mRef->Retain();
+                            }
 							if(mRef != nullptr)
-								mRef->Release();
+                            {
+                                mRef->Release();
+                            }
 							mRef = inObj.mRef;
 							
 							return *this;

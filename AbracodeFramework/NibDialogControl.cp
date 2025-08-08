@@ -11,8 +11,37 @@
 //**************************************************************************************
 
 #include "NibDialogControl.h"
+#include "ACFPropertyList.h"
 #include "OMCDialog.h"
+#include "ACFURL.h"
 #include "CFObj.h"
+#include "ACFType.h"
+
+//read values and delete the plist file immediately
+
+CFDictionaryRef
+ReadControlValuesFromPlist(CFStringRef inDialogUniqueID)
+{
+    CFObj<CFStringRef> filePathStr( ::CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("/tmp/OMC/%@.plist"), inDialogUniqueID ) );
+    if(filePathStr == NULL)
+        return NULL;
+    
+    DEBUG_CFSTR( (CFStringRef)filePathStr );
+    
+    CFObj<CFURLRef> fileURL( ::CFURLCreateWithFileSystemPath(kCFAllocatorDefault, filePathStr, kCFURLPOSIXPathStyle, false) );
+    if(fileURL == NULL)
+        return NULL;
+    
+    CFObj<CFPropertyListRef> thePlist( CreatePropertyList(fileURL, kCFPropertyListImmutable) );
+    CFDictionaryRef resultDict = ACFType<CFDictionaryRef>::DynamicCast(thePlist);
+    if(resultDict != NULL)
+        thePlist.Detach();
+
+    (void)DeleteFile(fileURL);
+
+    return resultDict;
+}
+
 
 //get the controlID from __NIB_DIALOG_CONTROL_XXX_VALUE__ or environment variable style OMC_NIB_DIALOG_CONTROL_XXX_VALUE
 //TODO: if we implement more control id modifiers they should be added here and masked before being used for searching real IDs

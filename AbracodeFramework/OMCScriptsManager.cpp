@@ -42,6 +42,10 @@ OMCScriptsManager::GetScriptPath(CFBundleRef inBundle, CFStringRef inScriptName)
 	return outScriptPath;
 }
 
+// Find all files in "Scripts" dir in the bundle and create a dictionary of {script_name: script_file_path}
+// where script_name is a file name without extension and normalized to lowercase
+// and script_file_path is an absolute POSIX path to the corresponding script file
+
 CFMutableDictionaryRef
 OMCScriptsManager::CreateScriptsCacheForBundle(CFBundleRef inBundle)
 {

@@ -15,8 +15,10 @@
 void
 OMCObserver::ReceiveNotification(void *ioData)
 {
-	if( (ioData == NULL) || (mCallback == NULL) )
-		return;
+    if((ioData == nullptr) || (mCallback == nullptr))
+    {
+        return;
+    }
 
 	OmcObserverMessage message = kOmcObserverMessageNone;
 	CFObj<CFTypeRef> resultText;
@@ -27,21 +29,25 @@ OMCObserver::ReceiveNotification(void *ioData)
 	{
 		case kOmcTaskFinished:
 		{
-			if( (mMessageTypes & kOmcObserverTaskFinished) != 0)
-				message = kOmcObserverTaskFinished;
+			if((mMessageTypes & kOmcObserverTaskFinished) != 0)
+            {
+                message = kOmcObserverTaskFinished;
+            }
 		}
 		break;
 		
 		case kOmcAllTasksFinished:
 		{
-			if( (mMessageTypes & kOmcObserverAllTasksFinished) != 0)
-				message = kOmcObserverAllTasksFinished;
+			if((mMessageTypes & kOmcObserverAllTasksFinished) != 0)
+            {
+                message = kOmcObserverAllTasksFinished;
+            }
 		}
 		break;
 
 		case kOmcTaskProgress:
 		{
-			if( (mMessageTypes & kOmcObserverTaskProgress) != 0)
+			if((mMessageTypes & kOmcObserverTaskProgress) != 0)
 			{
 				message = kOmcObserverTaskProgress;
 		
@@ -49,27 +55,29 @@ OMCObserver::ReceiveNotification(void *ioData)
 				{
 					case kOmcDataTypePointer:
 					{
-						if(taskData->data.ptr != NULL) //do not clear last status if we don't have anything explicilty new
-							resultText.Adopt( ::CFStringCreateWithBytes(kCFAllocatorDefault, (const UInt8 *)taskData->data.ptr, taskData->dataSize, kCFStringEncodingUTF8, true), kCFObjDontRetain );
+						if(taskData->data.ptr != nullptr) //do not clear last status if we don't have anything explicilty new
+                        {
+                            resultText.Adopt(::CFStringCreateWithBytes(kCFAllocatorDefault, (const UInt8 *)taskData->data.ptr, taskData->dataSize, kCFStringEncodingUTF8, true), kCFObjDontRetain);
+                        }
 					}
 					break;
 
 					case kOmcDataTypeCFData:
 					{
-						if(taskData->data.cfObj != NULL) //do not clear last status if we don't have anything explicilty new
+						if(taskData->data.cfObj != nullptr) //do not clear last status if we don't have anything explicilty new
 						{
-							const UInt8 *rawData = ::CFDataGetBytePtr( (CFDataRef)taskData->data.cfObj );
-							CFIndex theLen = ::CFDataGetLength( (CFDataRef)taskData->data.cfObj );
-							resultText.Adopt( ::CFStringCreateWithBytes(kCFAllocatorDefault, rawData, theLen, kCFStringEncodingUTF8, true), kCFObjDontRetain );
+							const UInt8 *rawData = ::CFDataGetBytePtr((CFDataRef)taskData->data.cfObj);
+							CFIndex theLen = ::CFDataGetLength((CFDataRef)taskData->data.cfObj);
+							resultText.Adopt(::CFStringCreateWithBytes(kCFAllocatorDefault, rawData, theLen, kCFStringEncodingUTF8, true), kCFObjDontRetain);
 						}
 					}
 					break;
 
 					case kOmcDataTypeCFString:
 					{
-						if(taskData->data.cfObj != NULL) //do not clear last status if we don't have anything explicilty new
+						if(taskData->data.cfObj != nullptr) //do not clear last status if we don't have anything explicilty new
 						{
-							resultText.Adopt( (CFStringRef)taskData->data.cfObj, kCFObjRetain );						
+							resultText.Adopt((CFStringRef)taskData->data.cfObj, kCFObjRetain);						
 						}
 					}
 					break;
@@ -83,8 +91,10 @@ OMCObserver::ReceiveNotification(void *ioData)
 
 		case kOmcTaskCancel:
 		{
-			if( (mMessageTypes & kOmcObserverAllTasksFinished) != 0)
-				message = kOmcObserverTaskCanceled;
+			if((mMessageTypes & kOmcObserverAllTasksFinished) != 0)
+            {
+                message = kOmcObserverTaskCanceled;
+            }
 		}
 		break;
 		
@@ -94,17 +104,17 @@ OMCObserver::ReceiveNotification(void *ioData)
 		}
 	}
 
-	if( message != kOmcObserverMessageNone )
+	if(message != kOmcObserverMessageNone)
 	{
-		(*mCallback)( message, taskData->taskID, resultText, mUserData );
+		(*mCallback)(message, taskData->taskID, resultText, mUserData);
 	}
 }
 
 
 
-extern "C" OMCObserverRef OMCCreateObserver( UInt32 messageTypes, OMCObserverCallback inCallback, void *userData )
+extern "C" OMCObserverRef OMCCreateObserver(UInt32 messageTypes, OMCObserverCallback inCallback, void *userData)
 {
-	OMCObserverRef observerRef = NULL;
+	OMCObserverRef observerRef = nullptr;
 	try
 	{
 		observerRef = new OMCObserver(messageTypes, inCallback, userData);
@@ -116,36 +126,40 @@ extern "C" OMCObserverRef OMCCreateObserver( UInt32 messageTypes, OMCObserverCal
 	return observerRef;
 }
 
-extern "C" void OMCReleaseObserver( OMCObserverRef inObserver )
+extern "C" void OMCReleaseObserver(OMCObserverRef inObserver)
 {
 	try
 	{
-		if(inObserver != NULL)
-			inObserver->Release();
+		if(inObserver != nullptr)
+        {
+            inObserver->Release();
+        }
 	}
 	catch(...)
 	{
 	}
 }
 
-extern "C" void OMCRetainObserver( OMCObserverRef inObserver )
+extern "C" void OMCRetainObserver(OMCObserverRef inObserver)
 {
 	try
 	{
-		if(inObserver != NULL)
-			inObserver->Retain();
+		if(inObserver != nullptr)
+        {
+            inObserver->Retain();
+        }
 	}
 	catch(...)
 	{
 	}
 }
 
-extern "C" void OMCAddObserver( OMCExecutorRef inOMCExecutor, OMCObserverRef inObserverOwner )
+extern "C" void OMCAddObserver(OMCExecutorRef inOMCExecutor, OMCObserverRef inObserverOwner)
 {
 	try
 	{
-		if( (inOMCExecutor != NULL) && (inObserverOwner != NULL) )
-			inOMCExecutor->AddObserver( inObserverOwner->GetObserver() );
+		if((inOMCExecutor != NULL) && (inObserverOwner != NULL))
+			inOMCExecutor->AddObserver(inObserverOwner->GetObserver());
 	}
 	catch(...)
 	{
@@ -153,11 +167,11 @@ extern "C" void OMCAddObserver( OMCExecutorRef inOMCExecutor, OMCObserverRef inO
 	}
 }
 
-extern "C" void OMCUnregisterObserver( OMCObserverRef inObserverOwner )
+extern "C" void OMCUnregisterObserver(OMCObserverRef inObserverOwner)
 {
 	try
 	{
-		if( inObserverOwner != NULL )
+		if(inObserverOwner != nullptr)
 		{
 			inObserverOwner->Unregister();
 		}

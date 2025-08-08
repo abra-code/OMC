@@ -7,6 +7,8 @@
 //
 
 class OnMyCommandCM;
+class CommandRuntimeData;
 
 //returns true if OKeyed and outStringRef is retained so caller responsible for releasing it
-Boolean RunCocoaInputDialog(OnMyCommandCM *inPlugin, CFStringRef &outStringRef);
+Boolean RunCocoaInputDialog(OnMyCommandCM *inPlugin,
+                            CommandRuntimeData &commandRuntimeData);

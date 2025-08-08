@@ -64,7 +64,7 @@ public:
 
 	void					StartListening();
 
-	CFStringRef				GetDialogUniqueID();
+	CFStringRef				GetDialogUUID();
 
 	virtual CFTypeRef		CopyControlValue(CFStringRef inControlID, CFStringRef inControlPart, SelectionIterator *inSelIterator, CFDictionaryRef *outCustomProperties) noexcept = 0;
 	virtual void			CopyAllControlValues(CFSetRef requestedNibControls, SelectionIterator *inSelIterator) noexcept = 0;
@@ -73,8 +73,9 @@ public:
 	virtual void			ReceiveNotification(void *ioData) = 0;//local message
 
 	static ARefCountedObj<OMCDialog> FindDialogByUUID(CFStringRef inUUID);
-
 	static CFStringRef		CreateControlValueString(CFTypeRef controlValue, CFDictionaryRef customProperties, UInt16 escSpecialCharsMode, bool isEnvStyle) noexcept;
+    static Boolean          IsPredefinedDialogCommandID(CFStringRef inCommandID) noexcept;
+
 	CFStringRef				CreateNibControlValue(SInt32 inSpecialWordID, CFStringRef inNibControlString, UInt16 escSpecialCharsMode, bool isEnvStyle) noexcept;
 
 	void					AddEnvironmentVariablesForAllControls(CFMutableDictionaryRef ioEnvironList) noexcept;
@@ -83,7 +84,7 @@ protected:
 	OMCDialog *				next;
 	ARefCountedObj< AObserver<OMCDialog> > mTaskObserver;
 	MessagePortListener<OMCDialog> mListener;
-	CFObj<CFStringRef>		mDialogUniqueID;
+	CFObj<CFStringRef>		mDialogUUID;
 	CFObj<CFMutableDictionaryRef> mNibControlValues;//key: controlID string, value: dictionary for columnID (as long) & value (CFType)
 	CFObj<CFMutableDictionaryRef> mNibControlCustomProperties;
 	SelectionIterator *		mSelectionIterator;//temporary reference for subcommand execution

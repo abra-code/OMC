@@ -9,6 +9,7 @@
 #import <Cocoa/Cocoa.h>
 #import "OMCInputDialog.h"
 #include "OnMyCommand.h"
+#include "CommandRuntimeData.h"
 #include "OMCInputDialogController.h"
 
 // For legacy reasons we start with CFBundleRef so we use all CoreFoundations input objects and return NSString *
@@ -29,13 +30,15 @@ LocalizedString(CFStringRef inStr, CFBundleRef localizationBundle, CFStringRef l
     return nsLocalizedStr;
 }
 
-//returns true if OKeyed and outStringRef is retained so caller responsible for releasing it
-Boolean RunCocoaInputDialog(OnMyCommandCM *inPlugin, CFStringRef &outStringRef)
+// returns true if OKeyed
+Boolean RunCocoaInputDialog(OnMyCommandCM *inPlugin,
+                            CommandRuntimeData &commandRuntimeData)
 {
-	outStringRef = NULL;
-	if(inPlugin == NULL)
-		return false;
-
+	if(inPlugin == nullptr)
+    {
+        return false;
+    }
+    
 	CommandDescription &currCommand = inPlugin->GetCurrentCommand();
 	UInt16 dialogType = currCommand.inputDialogType;
 
@@ -76,7 +79,10 @@ Boolean RunCocoaInputDialog(OnMyCommandCM *inPlugin, CFStringRef &outStringRef)
 
         if(currCommand.name != NULL)
         {
-            CFObj<CFStringRef> dynamicCommandName( inPlugin->CreateDynamicCommandName(currCommand, currCommand.localizationTableName, localizationBundle) );
+            CFObj<CFStringRef> dynamicCommandName( inPlugin->CreateDynamicCommandName(currCommand,
+                                                                                      commandRuntimeData,
+                                                                                      currCommand.localizationTableName,
+                                                                                      localizationBundle) );
             [theController setWindowTitle:(__bridge NSString *)(CFStringRef)dynamicCommandName];
         }
 
@@ -113,15 +119,21 @@ Boolean RunCocoaInputDialog(OnMyCommandCM *inPlugin, CFStringRef &outStringRef)
             [theController setMenuItems:inputDialogMenuItems];
         }
 
-        CFObj<CFStringRef> inputDialogDefault( inPlugin->CreateCombinedStringWithObjects(currCommand.inputDialogDefault, currCommand.localizationTableName, localizationBundle) );
+        CFObj<CFStringRef> inputDialogDefault( inPlugin->CreateCombinedStringWithObjects(currCommand.inputDialogDefault,
+                                                                                         commandRuntimeData,
+                                                                                         currCommand.localizationTableName,
+                                                                                         localizationBundle) );
         if(inputDialogDefault != NULL)
+        {
             [theController setDefaultChoiceString:(__bridge NSString *)(CFStringRef)inputDialogDefault];
-
+        }
+        
         isOkeyed = (Boolean) [theController runModalDialog];
         if(isOkeyed)
         {
             NSString *choiceString = [theController getChoiceString];
-            outStringRef = (CFStringRef)CFBridgingRetain(choiceString);
+            CFStringRef choiceStringRef = (CFStringRef)CFBridgingRetain(choiceString);
+            commandRuntimeData.inputText.Adopt(choiceStringRef);
         }
 
         [theController close];

@@ -9,28 +9,30 @@
 #import "OMCCocoaDialog.h"
 #import "OMCDialogController.h"
 #include "OnMyCommand.h"
+#include "CommandRuntimeData.h"
 #include "CMUtils.h"
 #include "ACFType.h"
 #include "OmcTaskNotification.h"
 #include "NibDialogControl.h"
 
-ARefCountedObj<OMCCocoaDialog> RunCocoaDialog(OnMyCommandCM *inPlugin)
+ARefCountedObj<OMCDialog> RunCocoaDialog(OnMyCommandCM *inPlugin, CommandRuntimeData *commandRuntimeData)
 {
-	ARefCountedObj<OMCCocoaDialog > outDialog;
+	ARefCountedObj<OMCDialog > outDialog;
 	if(inPlugin == nullptr)
 		return outDialog;
 
+    assert(commandRuntimeData != nullptr);
 	CommandDescription &currCommand = inPlugin->GetCurrentCommand();
 
 	@autoreleasepool
 	{
 		@try
 		{
-			OMCDialogController *myController = [[OMCDialogController alloc] initWithOmc:inPlugin];
+			OMCDialogController *myController = [[OMCDialogController alloc] initWithOmc:inPlugin
+                                                                      commandRuntimeData:commandRuntimeData];
 			if(myController != nullptr)
 			{
 				outDialog.Adopt( [myController getOMCDialog], kARefCountRetain );
-				currCommand.runtimeUUIDs.dialogUUID.Adopt(outDialog->GetDialogUniqueID(), kCFObjRetain);
 
 				[myController run];
 				if( [myController isModal] )
@@ -250,7 +252,7 @@ OMCCocoaDialog::ReceiveNotification(void *ioData)//local message
 				//bool wasSynchronous = taskData->data.test;
 			}
 
-			CFObj<CFDictionaryRef> controlValues( ReadControlValuesFromPlist(GetDialogUniqueID()) );
+			CFObj<CFDictionaryRef> controlValues( ReadControlValuesFromPlist(GetDialogUUID()) );
 
             @try
             {

@@ -35,16 +35,18 @@ extern "C" OSStatus OMCRunCommand(CFTypeRef inPlistRef, CFStringRef inCommandNam
 
 	try
 	{
-		ARefCountedObj<OnMyCommandCM> omcPlugin( new OnMyCommandCM(inPlistRef), kARefCountDontRetain );
+		ARefCountedObj<OnMyCommandCM> omcPlugin(new OnMyCommandCM(inPlistRef), kARefCountDontRetain);
 		omcPlugin->Init();
 		SInt32 commandIndex = omcPlugin->FindCommandIndex(inCommandNameOrID);
-		if( commandIndex < 0 )
-			return fnfErr;
-
+		if(commandIndex < 0)
+        {
+            return fnfErr;
+        }
+        
 		err = omcPlugin->ExamineContext(inContext, kCMCommandStart+commandIndex);
-		if( err == noErr )
+		if(err == noErr)
 		{
-			err = omcPlugin->HandleSelection(NULL, kCMCommandStart+commandIndex);
+			err = omcPlugin->HandleSelection(nullptr, kCMCommandStart+commandIndex);
 			omcPlugin->PostMenuCleanup();//currently doing nothing, just for completeness
 		}
 	}
@@ -54,10 +56,10 @@ extern "C" OSStatus OMCRunCommand(CFTypeRef inPlistRef, CFStringRef inCommandNam
 	}
 
 #if _DEBUG_
-	if( err != noErr )
+	if(err != noErr)
 	{
-		CFObj<CFStringRef> debugStr( ::CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("OMCRunCommand error = %d"), (int)err) );
-		::CFShow( (CFStringRef)debugStr );
+		CFObj<CFStringRef> debugStr(::CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("OMCRunCommand error = %d"), (int)err));
+		::CFShow((CFStringRef)debugStr);
 	}
 #endif
 
@@ -72,42 +74,44 @@ extern "C" OSStatus OMCRunCommandAE(CFTypeRef inPlistRef, CFStringRef inCommandN
 
 	try
 	{
-		ARefCountedObj<OnMyCommandCM> omcPlugin( new OnMyCommandCM(inPlistRef), kARefCountDontRetain );
+		ARefCountedObj<OnMyCommandCM> omcPlugin(new OnMyCommandCM(inPlistRef), kARefCountDontRetain);
 		omcPlugin->Init();
 		SInt32 commandIndex = omcPlugin->FindCommandIndex(inCommandNameOrID);
-		if( commandIndex < 0 )
-			return fnfErr;
+		if(commandIndex < 0)
+        {
+            return fnfErr;
+        }
 
 		StAEDesc replacementContext;
-		if( (inAEContext != NULL) && (inAEContext->dataHandle != NULL) )
+		if((inAEContext != nullptr) && (inAEContext->dataHandle != nullptr))
 		{
-			if( (inAEContext->descriptorType != typeAEList) &&
+			if((inAEContext->descriptorType != typeAEList) &&
 				(inAEContext->descriptorType != typeUnicodeText) &&
 				(inAEContext->descriptorType != typeChar) &&
 				(inAEContext->descriptorType != typeCString) &&
 				(inAEContext->descriptorType != typePString) &&
 				(inAEContext->descriptorType != typeUTF16ExternalRepresentation) &&
-				(inAEContext->descriptorType != typeUTF8Text) )
+				(inAEContext->descriptorType != typeUTF8Text))
 			{//try to coerce to see if it might be a single file ref
 			//make a list even if single file. preferrable because Finder in 10.3 or higher does that
 				StAEDesc coercedRef;
-				err = ::AECoerceDesc( inAEContext, typeFileURL, coercedRef );
+				err = ::AECoerceDesc(inAEContext, typeFileURL, coercedRef);
 				if(err == noErr)
 				{
-					err = ::AECreateList( NULL, 0, false, replacementContext );
+					err = ::AECreateList(nullptr, 0, false, replacementContext);
 					if(err == noErr)
 					{
-						err = ::AEPutDesc(	replacementContext, // the list
+						err = ::AEPutDesc(replacementContext, // the list
 											0, // put at the end of our list
-											coercedRef );
+											coercedRef);
 						inAEContext = replacementContext;
 					}				
 				}
 			}
 		}
 
-		err = omcPlugin->ExamineContext(inAEContext, NULL);
-		if( err == noErr )
+		err = omcPlugin->ExamineContext(inAEContext, nullptr);
+		if(err == noErr)
 		{
 			err = omcPlugin->HandleSelection(inAEContext, kCMCommandStart+commandIndex);
 			omcPlugin->PostMenuCleanup();//currently doing nothing, just for completeness
@@ -124,7 +128,7 @@ extern "C" OSStatus OMCRunCommandAE(CFTypeRef inPlistRef, CFStringRef inCommandN
 
 extern "C" OMCExecutorRef OMCCreateExecutor(CFTypeRef inPlistRef)
 {
-	OMCExecutorRef omcPlugin = NULL;
+	OMCExecutorRef omcPlugin = nullptr;
 	try
 	{
 		omcPlugin = new OnMyCommandCM(inPlistRef);
@@ -138,12 +142,14 @@ extern "C" OMCExecutorRef OMCCreateExecutor(CFTypeRef inPlistRef)
 	return omcPlugin;
 }
 
-extern "C" OSStatus OMCExamineContextAE( OMCExecutorRef inOMCExecutor, OMCCommandRef inCmdRef, const AEDesc *inAEContext, AEDescList *outCommandPairs )
+extern "C" OSStatus OMCExamineContextAE(OMCExecutorRef inOMCExecutor, OMCCommandRef inCmdRef, const AEDesc *inAEContext, AEDescList *outCommandPairs)
 {
 	try
 	{
-		if(inOMCExecutor != NULL)
-			return inOMCExecutor->ExamineContext(inAEContext, inCmdRef, outCommandPairs);
+		if(inOMCExecutor != nullptr)
+        {
+            return inOMCExecutor->ExamineContext(inAEContext, inCmdRef, outCommandPairs);
+        }
 	}
 	catch(...)
 	{
@@ -152,12 +158,14 @@ extern "C" OSStatus OMCExamineContextAE( OMCExecutorRef inOMCExecutor, OMCComman
 	return paramErr;
 }
 
-extern "C" OSStatus OMCExamineContext( OMCExecutorRef inOMCExecutor, OMCCommandRef inCmdRef, CFTypeRef inContext )
+extern "C" OSStatus OMCExamineContext(OMCExecutorRef inOMCExecutor, OMCCommandRef inCmdRef, CFTypeRef inContext)
 {
 	try
 	{
-		if(inOMCExecutor != NULL)
-			return inOMCExecutor->ExamineContext( inContext, inCmdRef );
+		if(inOMCExecutor != nullptr)
+        {
+            return inOMCExecutor->ExamineContext(inContext, inCmdRef);
+        }
 	}
 	catch(...)
 	{
@@ -167,17 +175,21 @@ extern "C" OSStatus OMCExamineContext( OMCExecutorRef inOMCExecutor, OMCCommandR
 }
 
 
-extern "C" OMCCommandRef OMCFindCommand( OMCExecutorRef inOMCExecutor, CFStringRef inNameOrId )
+extern "C" OMCCommandRef OMCFindCommand(OMCExecutorRef inOMCExecutor, CFStringRef inNameOrId)
 {
 	OMCCommandRef outCommandRef = -1;
 
 	try
 	{
-		if(inOMCExecutor != NULL)
-			outCommandRef = inOMCExecutor->FindCommandIndex(inNameOrId);
+		if(inOMCExecutor != nullptr)
+        {
+            outCommandRef = inOMCExecutor->FindCommandIndex(inNameOrId);
+        }
 
 		if(outCommandRef >= 0)
-			return (kCMCommandStart+outCommandRef);
+        {
+            return (kCMCommandStart+outCommandRef);
+        }
 	}
 	catch(...)
 	{
@@ -193,10 +205,12 @@ extern "C" OSStatus OMCGetCommandInfo(OMCExecutorRef inOMCExecutor, OMCCommandRe
 	
 	try
 	{
-		if(inOMCExecutor != NULL)
+		if(inOMCExecutor != nullptr)
 		{
-			if( OMCIsValidCommandRef(inCommandRef) )
-				err = inOMCExecutor->GetCommandInfo(inCommandRef, infoType, outInfo);
+			if(OMCIsValidCommandRef(inCommandRef))
+            {
+                err = inOMCExecutor->GetCommandInfo(inCommandRef, infoType, outInfo);
+            }
 		}
 	}
 	catch(...)
@@ -207,7 +221,7 @@ extern "C" OSStatus OMCGetCommandInfo(OMCExecutorRef inOMCExecutor, OMCCommandRe
 	return err;
 }
 
-extern "C" OSStatus OMCExecuteCommandAE( OMCExecutorRef inOMCExecutor, AEDesc *inAEContext, OMCCommandRef inCommandRef )
+extern "C" OSStatus OMCExecuteCommandAE(OMCExecutorRef inOMCExecutor, AEDesc *inAEContext, OMCCommandRef inCommandRef)
 {
 	OSStatus err = paramErr;
 
@@ -215,8 +229,10 @@ extern "C" OSStatus OMCExecuteCommandAE( OMCExecutorRef inOMCExecutor, AEDesc *i
 	{
 		if(inOMCExecutor != NULL)
 		{
-			if( OMCIsValidCommandRef(inCommandRef) )
-				err = inOMCExecutor->HandleSelection(inAEContext, inCommandRef);
+			if(OMCIsValidCommandRef(inCommandRef))
+            {
+                err = inOMCExecutor->HandleSelection(inAEContext, inCommandRef);
+            }
 			inOMCExecutor->PostMenuCleanup();//currently does nothing
 		}
 	}
@@ -228,16 +244,18 @@ extern "C" OSStatus OMCExecuteCommandAE( OMCExecutorRef inOMCExecutor, AEDesc *i
 	return err;
 }
 
-extern "C" OSStatus OMCExecuteCommand( OMCExecutorRef inOMCExecutor, OMCCommandRef inCommandRef )
+extern "C" OSStatus OMCExecuteCommand(OMCExecutorRef inOMCExecutor, OMCCommandRef inCommandRef)
 {
 	OSStatus err = paramErr;
 
 	try
 	{
-		if(inOMCExecutor != NULL)
+		if(inOMCExecutor != nullptr)
 		{
-			if( OMCIsValidCommandRef(inCommandRef) )
-				err = inOMCExecutor->HandleSelection(NULL, inCommandRef);
+			if(OMCIsValidCommandRef(inCommandRef))
+            {
+                err = inOMCExecutor->HandleSelection(nullptr, inCommandRef);
+            }
 			inOMCExecutor->PostMenuCleanup();//currently does nothing
 		}
 	}
@@ -250,24 +268,28 @@ extern "C" OSStatus OMCExecuteCommand( OMCExecutorRef inOMCExecutor, OMCCommandR
 }
 
 
-extern "C" void OMCReleaseExecutor( OMCExecutorRef inOMCExecutor )
+extern "C" void OMCReleaseExecutor(OMCExecutorRef inOMCExecutor)
 {
 	try
 	{
-		if(inOMCExecutor != NULL)
-			inOMCExecutor->Release();
+		if(inOMCExecutor != nullptr)
+        {
+            inOMCExecutor->Release();
+        }
 	}
 	catch(...)
 	{
 	}
 }
 
-extern "C" void OMCRetainExecutor( OMCExecutorRef inOMCExecutor )
+extern "C" void OMCRetainExecutor(OMCExecutorRef inOMCExecutor)
 {
 	try
 	{
-		if(inOMCExecutor != NULL)
-			inOMCExecutor->Retain();
+		if(inOMCExecutor != nullptr)
+        {
+            inOMCExecutor->Retain();
+        }
 	}
 	catch(...)
 	{

@@ -15,6 +15,8 @@
 #include <CoreFoundation/CoreFoundation.h>
 #include "CFObj.h"
 
+CFDictionaryRef ReadControlValuesFromPlist(CFStringRef inDialogUniqueID);
+
 CFStringRef CreateControlIDFromString(CFStringRef inControlIDString, bool isEnvStyle);
 CFStringRef CreateTableIDAndColumnFromString(CFStringRef inTableIDAndColumnString, CFObj<CFStringRef> &outColumnIndexStr, bool useAllRows, bool isEnvStyle);
 

@@ -21,19 +21,88 @@
 #include "DefaultExternBundle.h"
 
 #include "OnMyCommand.h"
+#include "CommandRuntimeData.h"
 #include "OMCDialog.h"
+#include "OMCHelpers.h"
 
 #include <mach/host_info.h>
 #include <mach/mach_host.h>
 
 void KeyPressSimulationCallBack(CFRunLoopTimerRef timer, void* context);
 
+static void
+RefreshObjectsInFinder(CommandRuntimeData &commandRuntimeData)
+{
+    std::vector<OneObjProperties> &objectList = commandRuntimeData.GetObjectList();
+    
+    if(objectList.size() == 0)
+        return;
+
+    TRACE_CSTR("RefreshObjectsInFinder\n");
+
+    for(CFIndex i = 0; i < objectList.size(); i++)
+    {
+        if(objectList[i].refreshPath != nullptr)
+        {
+            DEBUG_CFSTR( objectList[i].refreshPath );
+            RefreshFileInFinder(objectList[i].refreshPath);
+        }
+    }
+}
+
+//next commmand scheduling may happen after currCommand has exited the main execution function
+//currCommand.runtimeUUIDs may already be invalid
+//however, the current command state is copied and preserved by the task manager
+//so it can pass inCommandState here
+static CFStringRef
+CopyNextCommandID(const CommandDescription &currCommand, CFStringRef currCommandUUID)
+{
+    static char sFilePath[1024];
+    static char sCommandUUID[512];
+    CFStringRef theNextID = currCommand.nextCommandID;//statically assigned id or NULL is default
+    if(theNextID != NULL)
+        ::CFRetain(theNextID);
+
+    // currCommandUUID used to be optional. In normal situation it should not be nil
+    if( (CFStringRef)currCommandUUID == NULL )
+    {
+        return theNextID;
+    }
+
+    sCommandUUID[0] = 0;
+    Boolean isOK = ::CFStringGetCString(currCommandUUID, sCommandUUID, sizeof(sCommandUUID), kCFStringEncodingUTF8);
+    if(isOK)
+    {
+        snprintf(sFilePath, sizeof(sFilePath), "/tmp/OMC/%s.id", sCommandUUID);
+        if( access(sFilePath, F_OK) == 0 )//check if file with next command id exists
+        {
+            FILE *fp = fopen(sFilePath, "r");
+            if(fp != NULL)
+            {
+                fgets(sCommandUUID, sizeof(sCommandUUID), fp);//now store the next command ID in sCommandGUID
+                fclose(fp);
+                
+                size_t idLen = strlen(sCommandUUID);
+                if(idLen > 0)
+                {
+                    if(theNextID != NULL)
+                        ::CFRelease(theNextID);//release the static one
+                    theNextID = ::CFStringCreateWithBytes(kCFAllocatorDefault, (const UInt8 *)sCommandUUID, idLen, kCFStringEncodingUTF8, false);
+                }
+            }
+            unlink(sFilePath);
+        }
+    }
+    return theNextID;
+}
+
+
 class OmcTask : public ARefCounted
 {
 public:
 	//retains OmcExecutor
-	OmcTask(OmcExecutor *inNewExec, CFStringRef inCommand, CFStringRef inInputPipe, CFStringRef inObjName)
-		: mExec(inNewExec, kARefCountRetain), mCommand(inCommand, kCFObjRetain), mInputPipe(inInputPipe, kCFObjRetain),
+	OmcTask(OmcExecutor *inNewExec, CommandRuntimeData *commandRuntimeData, CFStringRef inCommand, CFStringRef inInputPipe, CFStringRef inObjName)
+		: mExec(inNewExec, kARefCountRetain), commandRuntimeData(commandRuntimeData, kARefCountRetain), mCommand(inCommand, kCFObjRetain), mInputPipe(inInputPipe, kCFObjRetain),
 		mObjName(inObjName, kCFObjRetain)
 	{
 	}
@@ -47,7 +116,7 @@ public:
 	bool Run()
 	{
 		return mExec->ExecuteCFString(mCommand, mInputPipe);
-//		mCommand.Release(); //we no longer need it. do not release the command now because the task might have finished and we may be deleted already
+//		mCommand.Release(); // do not release the command now because the task might have finished and we may be deleted already
 	}
 
 	bool UsesOutputWindow()
@@ -55,7 +124,8 @@ public:
 		return mExec->UsesOutputWindow();
 	}
 
-	ARefCountedObj< OmcExecutor > mExec;
+	ARefCountedObj<OmcExecutor> mExec;
+    ARefCountedObj<CommandRuntimeData> commandRuntimeData;
 	CFObj<CFStringRef>		mCommand;
 	CFObj<CFStringRef>		mInputPipe;
 	CFObj<CFStringRef>		mObjName;
@@ -67,10 +137,7 @@ OmcHostTaskManager::OmcHostTaskManager(OnMyCommandCM *inPlugin, const CommandDes
 	: mPlugin(inPlugin, kARefCountRetain), mCurrCommand(currCommand),
 	mCommandName(inCommandName, kCFObjRetain), mEndNotificationParams(currCommand.endNotification, kCFObjRetain),
 	mProgressParams(currCommand.progress, kCFObjRetain), mBundle(inBundle, kCFObjRetain),
-	mMaxTaskCount(inMaxTaskCount), mTaskCount(0), mFinishedTasks(0),
-	mTaskObserver( new AObserver<OmcHostTaskManager>(this) ), mNotifier( new ANotifier() ),
-	mProgress(NULL),
-	mUserCanceled(false)
+	mMaxTaskCount(inMaxTaskCount), mTaskObserver( new AObserver<OmcHostTaskManager>(this) ), mNotifier( new ANotifier() )
 {
     //do not init command UUIDs here. parsing of the command happens later
     //so defer the init of mCurrCommandUUIDs until Run
@@ -86,211 +153,219 @@ OmcHostTaskManager::OmcHostTaskManager(OnMyCommandCM *inPlugin, const CommandDes
 
 OmcHostTaskManager::~OmcHostTaskManager()
 {
-	TRACE_CSTR( "OmcHostTaskManager::~OmcHostTaskManager\n");
-
-#if _DEBUG_
-
-//make sure that when we are dying, the lists of tasks are empty
-	CFIndex pendingCount = ::CFArrayGetCount( mPendingTasks );
-	CFIndex runningCount = ::CFArrayGetCount( mRunningTasks );
-	if( (pendingCount != 0) || (runningCount != 0) )
-	{
-		DEBUG_CSTR( "OmcHostTaskManager::~OmcHostTaskManager. Task list not empty. pendingCount = %d, runningCount = %d\n", (int)pendingCount, (int)runningCount );
-	}
-
-#endif //_DEBUG_
-
-	Finalize();
-	if(mTaskObserver != NULL)
-    {
-        mTaskObserver->SetOwner(NULL);//observer may outlive us so it is very important to tell that we died
-    }
+	TRACE_CSTR( "OmcHostTaskManager::~OmcHostTaskManager this=%p\n", (void *)this);
 }
 
 void
 OmcHostTaskManager::Finalize()
 {
-	OmcTaskData notificationData;
-	memset( &notificationData, 0, sizeof(notificationData) );
-	notificationData.messageID = kOmcAllTasksFinished;
-	notificationData.taskID = 0;
-	notificationData.childProcessID = 0;
-	notificationData.error = noErr;
-	notificationData.dataType = kOMCDataTypeNone;
-	notificationData.dataSize = 0;
-	notificationData.data.ptr = NULL;
-
-	mNotifier->NotifyObservers( &notificationData );
-
-	if(mProgress != NULL)
-	{
-		OMCDeferredProgressRelease(mProgress);
-		mProgress = NULL;
-	}
-	
-	// In case of error, we don't do any extra post-execution tasks
-	// and do not execute the next command
-	if( mPlugin->GetError() != noErr )
-		return;
-
-	mPlugin->RefreshObjectsInFinder();
-
-	if(mCurrCommand.simulatePaste)
-	{			
-		TRACE_CSTR( "OnMyCommandCM::Finalize: simulate paste\n" );
-		CFRunLoopTimerRef myTimer = CFRunLoopTimerCreate(
-										kCFAllocatorDefault,
-										CFAbsoluteTimeGetCurrent() + 0.05,
-										0,		// interval
-										0,		// flags
-										0,		// order
-										KeyPressSimulationCallBack,
-										NULL);
-
-		if(myTimer != NULL)
-		{
-			TRACE_CSTR( "OnMyCommandCM:Finalize: adding timer for paste simulation\n" );
-			CFRunLoopAddTimer(CFRunLoopGetCurrent(), myTimer, kCFRunLoopCommonModes);
-		}
-		else
-		{
-			usleep(50000);//0.05s for compatibility with "Shortcuts"
-			KeyPressSimulationCallBack(NULL, NULL);
-		}
-	}
-	
-//any command following this one?
-	CFObj<CFStringRef> nextCommandID( CopyNextCommandID(mCurrCommand, mCurrCommandUUIDs) );
-	if(nextCommandID != nullptr)
-	{
-		ARefCountedObj<OMCDialog> activeDialog;
-		if(mCurrCommandUUIDs.dialogUUID != nullptr)
-        {
-            activeDialog = OMCDialog::FindDialogByUUID(mCurrCommandUUIDs.dialogUUID);
-        }
+    TRACE_CSTR( "OmcHostTaskManager::Finalize this=%p\n", (void *)this);
+    
+    if(mHasFinalized)
+    {
+        // finalizing multiple times would introduce retain/release imbalance
+        // assert(mHasFinalized == false); // this happens when delayed notification arrives
+        return;
+    }
+    
+    mHasFinalized = true;
+    ARefCountedObj<OmcHostTaskManager> scopeRelease(this, kARefCountDontRetain);
+    
+    OmcTaskData notificationData;
+    memset( &notificationData, 0, sizeof(notificationData) );
+    notificationData.messageID = kOmcAllTasksFinished;
+    notificationData.taskID = 0;
+    notificationData.childProcessID = 0;
+    notificationData.error = noErr;
+    notificationData.dataType = kOMCDataTypeNone;
+    notificationData.dataSize = 0;
+    notificationData.data.ptr = NULL;
+    
+    mNotifier->NotifyObservers( &notificationData );
+    
+    if(mProgress != NULL)
+    {
+        OMCDeferredProgressRelease(mProgress);
+        mProgress = NULL;
+    }
+    
+    // In case of error, we don't do any extra post-execution tasks
+    if(mCurrCommand.simulatePaste && (mPlugin->GetError() == noErr))
+    {
+        TRACE_CSTR( "OnMyCommandCM::Finalize: simulate paste\n" );
+        CFRunLoopTimerRef myTimer = CFRunLoopTimerCreate(
+                                                         kCFAllocatorDefault,
+                                                         CFAbsoluteTimeGetCurrent() + 0.05,
+                                                         0,		// interval
+                                                         0,		// flags
+                                                         0,		// order
+                                                         KeyPressSimulationCallBack,
+                                                         NULL);
         
-		// Before kicking off the next command process whatever events might have been triggered in the meantime
-		// This is especially needed for dialog control messages which might change the state of the dialog values
-		// and affect the next command if it tries to read them back
-		CFRunLoopRunResult runloopResult;
-		do
-		{
-			runloopResult = CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0, true /*returnAfterSourceHandled*/);
-		}
-		while(runloopResult == kCFRunLoopRunHandledSource);
-
-		OSStatus err = mPlugin->ExecuteSubcommand(mCurrCommand.name, nextCommandID, activeDialog, NULL);
-		#pragma unused(err)
-	}
+        if(myTimer != NULL)
+        {
+            TRACE_CSTR( "OnMyCommandCM:Finalize: adding timer for paste simulation\n" );
+            CFRunLoopAddTimer(CFRunLoopGetCurrent(), myTimer, kCFRunLoopCommonModes);
+        }
+        else
+        {
+            usleep(50000);//0.05s for compatibility with "Shortcuts"
+            KeyPressSimulationCallBack(NULL, NULL);
+        }
+    }
+    
+    if(mTaskObserver != NULL)
+    {
+        mTaskObserver->SetOwner(NULL);// observer may outlive us so it's important to tell it we died
+    }
+    
+#if _DEBUG_
+    
+    //make sure that when we are dying, the lists of tasks are empty
+    CFIndex pendingCount = ::CFArrayGetCount( mPendingTasks );
+    CFIndex runningCount = ::CFArrayGetCount( mRunningTasks );
+    if( (pendingCount != 0) || (runningCount != 0) )
+    {
+        DEBUG_CSTR( "OmcHostTaskManager::~OmcHostTaskManager. Task list not empty. pendingCount = %d, runningCount = %d\n", (int)pendingCount, (int)runningCount );
+    }
+    
+#endif //_DEBUG_
+    
 }
 
 //retains OmcExecutor object, retain CFStringRefs
 void
-OmcHostTaskManager::AddTask(OmcExecutor *inNewExecutor, CFStringRef inCommand, CFStringRef inInputPipe, CFStringRef inObjName)
+OmcHostTaskManager::AddTask(OmcExecutor *inNewExecutor,
+                            CommandRuntimeData *commandRuntimeData,
+                            CFStringRef inCommand,
+                            CFStringRef inInputPipe,
+                            CFStringRef inObjName)
 {
 	if(inNewExecutor != NULL)
 	{
-		ARefCountedObj< OmcTask > newTask( new OmcTask(inNewExecutor, inCommand, inInputPipe, inObjName) );
+		ARefCountedObj< OmcTask > newTask( new OmcTask(inNewExecutor, commandRuntimeData, inCommand, inInputPipe, inObjName) );
 		::CFArrayAppendValue(mPendingTasks, (OmcTask *)newTask );//retains newTask
 		inNewExecutor->ReportToManager(this, mTaskCount);
 		mTaskCount++;
 	}
 }
 
-//kick start all tasks
-void
-OmcHostTaskManager::Start()
-{
-    // now the command have been parsed so we can copy the state params before execution
-    // if current command has a dialog associated with it
-    // remember its ID but do not save the pointer because when we need it later the dialog may be deleted already
-    // we will use the dialog ID to look it up on the list of existing dialogs
-    mCurrCommandUUIDs = mCurrCommand.runtimeUUIDs;
-    
-    RunNext();
-}
-
 void
 OmcHostTaskManager::RunNext()
 {
-	CFIndex pendingCount = ::CFArrayGetCount( mPendingTasks );
-	CFIndex runningCount = ::CFArrayGetCount( mRunningTasks );
-	if( (pendingCount == 0) && (runningCount == 0) )
-	{
-		if(!mUserCanceled)
-			ShowEndNotification();
-		delete this;
-		return;
-	}
-
-	bool finishedSynchronously = false;
-
-	if( (pendingCount  > 0) && (runningCount < mMaxTaskCount) )
-	{
-		if( (mProgressParams != NULL) && (mProgress == NULL) )
-		{//lazy progress creation
-			
-			CFBundleRef localizationBundle = NULL;
-			if(mCurrCommand.localizationTableName != NULL)//client wants to be localized
-			{
-				localizationBundle = mExternBundle;
-				if(localizationBundle == NULL)
-					localizationBundle = CFBundleGetMainBundle();
-			}
-
-			mProgress = OMCDeferredProgressCreate(mProgressParams, mCommandName, mTaskCount, mCurrCommand.localizationTableName, localizationBundle);
-			mProgressParams.Release();
-		}
-		
-		CFIndex emptySlotCount = mMaxTaskCount - runningCount;
-		if(pendingCount > emptySlotCount)
-			pendingCount = emptySlotCount;
-
-		for(CFIndex i = 0; i < pendingCount; i++)
-		{//move first pending task from pending list to the end of running list
-			OmcTask *oneTask = (OmcTask *)::CFArrayGetValueAtIndex( mPendingTasks, 0 );
-			if(oneTask != NULL)
-				::CFArrayAppendValue(mRunningTasks, oneTask);//will retain oneTask
-			::CFArrayRemoveValueAtIndex( mPendingTasks, 0 );
-			//now run the task
-			finishedSynchronously |= oneTask->Run();
-			if(mUserCanceled)
-				break;
-		}
-	}
-	
-	if(finishedSynchronously) //at least one task finished synchronously: go and run more pending tasks
-		RunNext();
+    CFIndex pendingCount = ::CFArrayGetCount( mPendingTasks );
+    CFIndex runningCount = ::CFArrayGetCount( mRunningTasks );
+    if( (pendingCount == 0) && (runningCount == 0) )
+    {
+        if(!mUserCanceled)
+            ShowEndNotification();
+        Finalize();
+        return;
+    }
+    
+    bool finishedSynchronously = false;
+    
+    if( (pendingCount  > 0) && (runningCount < mMaxTaskCount) )
+    {
+        if( (mProgressParams != NULL) && (mProgress == NULL) )
+        {//lazy progress creation
+            
+            CFBundleRef localizationBundle = NULL;
+            if(mCurrCommand.localizationTableName != NULL)//client wants to be localized
+            {
+                localizationBundle = mExternBundle;
+                if(localizationBundle == NULL)
+                    localizationBundle = CFBundleGetMainBundle();
+            }
+            
+            mProgress = OMCDeferredProgressCreate(mProgressParams, mCommandName, mTaskCount, mCurrCommand.localizationTableName, localizationBundle);
+            mProgressParams.Release();
+        }
+        
+        CFIndex emptySlotCount = mMaxTaskCount - runningCount;
+        if(pendingCount > emptySlotCount)
+            pendingCount = emptySlotCount;
+        
+        for(CFIndex i = 0; i < pendingCount; i++)
+        {//move first pending task from pending list to the end of running list
+            OmcTask *oneTask = (OmcTask *)::CFArrayGetValueAtIndex( mPendingTasks, 0 );
+            if(oneTask != NULL)
+            {
+                ::CFArrayAppendValue(mRunningTasks, oneTask);//will retain oneTask
+            }
+            ::CFArrayRemoveValueAtIndex( mPendingTasks, 0 );
+            //now run the task
+            finishedSynchronously |= oneTask->Run();
+            if(mUserCanceled)
+                break;
+        }
+    }
+    
+    if(finishedSynchronously) // at least one task finished synchronously: go and run more pending tasks
+    {
+        RunNext();
+    }
 }
 
 void
-OmcHostTaskManager::NoteTaskEnded(CFIndex inDyingExecutorIndex, bool wasSynchronous)
+OmcHostTaskManager::NoteTaskEnded(CFIndex finishedExecutorIndex, bool wasSynchronous)
 {
 	CFIndex itemCount = ::CFArrayGetCount( mRunningTasks );
 	for(CFIndex i = 0; i < itemCount; i++)
 	{
 		OmcTask *oneTask = (OmcTask *)::CFArrayGetValueAtIndex( mRunningTasks, i );
-		if( (oneTask != NULL) && (oneTask->mExec != NULL) &&
-			(oneTask->mExec->GetTaskIndex() == inDyingExecutorIndex) )
+		if((oneTask != nullptr) && (oneTask->mExec != nullptr) &&
+           (oneTask->mExec->GetTaskIndex() == finishedExecutorIndex))
 		{
-			::CFArrayRemoveValueAtIndex( mRunningTasks, i );//releases task
+            ARefCountedObj<OmcTask> finishedTask(oneTask, kARefCountRetain); // retain locally until we are done here
+            
+			::CFArrayRemoveValueAtIndex(mRunningTasks, i);//releases task
 			mFinishedTasks++;
 			if(mProgress != NULL)
-				mUserCanceled = OMCDeferredProgressAdvanceProgress(mProgress, inDyingExecutorIndex, 0, NULL, true);
-			break;
+            {
+                mUserCanceled = OMCDeferredProgressAdvanceProgress(mProgress, finishedExecutorIndex, 0, NULL, true);
+            }
+            
+            
+            CFObj<CFStringRef> nextCommandID;
+            if(finishedTask->commandRuntimeData != nullptr)
+            {
+                RefreshObjectsInFinder(*(finishedTask->commandRuntimeData));
+                
+                //any command following this one?
+                CFStringRef commandUUID = finishedTask->commandRuntimeData->GetCommandUUID();
+                nextCommandID.Adopt(CopyNextCommandID(mCurrCommand, commandUUID));
+            }
+            
+            if(nextCommandID != nullptr)
+            {
+                // Before kicking off the next command process whatever events might have been triggered in the meantime
+                // This is especially needed for dialog control messages which might change the state of the dialog values
+                // and affect the next command if it tries to read them back
+
+                CFRunLoopRunResult runloopResult;
+                do
+                {
+                    runloopResult = CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0, true /*returnAfterSourceHandled*/);
+                }
+                while(runloopResult == kCFRunLoopRunHandledSource);
+
+                OSStatus __unused err = mPlugin->ExecuteSubcommand(mCurrCommand.name, nextCommandID, finishedTask->commandRuntimeData, NULL);
+            }
+            break;
 		}
 	}
 
 	if(mUserCanceled)
 	{
 		CancelAllTasks();
-		delete this;
+        Finalize();
 	}
-	else if( !wasSynchronous )
+	else if(!wasSynchronous)
 	{
-	//if the execution was synchronous, we are still in "Run" command above.
-	//we let the task finish and clean up before running again
-		RunNext();//run pending tasks in empty slots. may delete self
+        // if the execution was synchronous, we are still in "Run" command above.
+        // we let the task finish and clean up before running again
+		RunNext(); // Run pending tasks in empty slots. Calls Finalize() if no more tasks
 	}
 }
 
@@ -322,8 +397,10 @@ OmcHostTaskManager::CancelAllTasks()
 
 	mPlugin->SetError( userCanceledErr );
 
-	if(pendingCount > 0 )
-		::CFArrayRemoveAllValues( mPendingTasks );//individual tasks will be released
+	if(pendingCount > 0)
+    {
+        ::CFArrayRemoveAllValues( mPendingTasks );//individual tasks will be released
+    }
 
 	if(runningCount == 0)
 	{
@@ -348,7 +425,9 @@ OmcHostTaskManager::CancelAllTasks()
 		{
 			ARefCountedObj<OmcTask> canceledTask(oneTask, kARefCountRetain);//temp retain
 			if(oneTask->mExec != NULL)
-				oneTask->mExec->Cancel();
+            {
+                oneTask->mExec->Cancel();
+            }
 		}
 	}
 
@@ -361,14 +440,18 @@ void
 OmcHostTaskManager::ShowEndNotification()
 {
 	if(mEndNotificationParams == NULL)
-		return;
+    {
+        return;
+    }
 
 	CFBundleRef localizationBundle = NULL;
 	if(mCurrCommand.localizationTableName != NULL)//client wants to be localized
 	{
 		localizationBundle = mExternBundle;
 		if(localizationBundle == NULL)
-			localizationBundle = CFBundleGetMainBundle();
+        {
+            localizationBundle = CFBundleGetMainBundle();
+        }
 	}
 
 	ACFDict params(mEndNotificationParams);
@@ -409,7 +492,9 @@ OmcHostTaskManager::ShowEndNotification()
 	iconURL.Adopt( CFBundleCopyResourceURL(CFBundleGetMainBundle(), iconName, nullptr, nullptr) );//main bundle first from host app
 
 	if( (iconURL == nullptr) && (mBundle != nullptr) )//fall back to Abracode framework icon
-		iconURL.Adopt( ::CFBundleCopyResourceURL(mBundle, iconName, nullptr, nullptr) );
+    {
+        iconURL.Adopt(::CFBundleCopyResourceURL(mBundle, iconName, nullptr, nullptr));
+    }
 
 //it checks for timeout after 30 seconds so it is quite useless for shorter timeouts
 
@@ -534,106 +619,97 @@ OmcHostTaskManager::CreateLastLineString(CFStringRef inString)
 void
 OmcHostTaskManager::ReceiveNotification(void *ioData)
 {
-	if(ioData == NULL)
-		return;
-	
-	//forward notification to my observers too
-	mNotifier->NotifyObservers( ioData );
-	
-	OmcTaskData *taskData = (OmcTaskData *)ioData;
-
-	switch(taskData->messageID)
-	{
-		case kOmcTaskFinished:
-		{
-			mPlugin->SetError( taskData->error );
-			if( taskData->dataType == kOmcDataTypeBoolean )
-				NoteTaskEnded(taskData->taskID, taskData->data.test);//may delete self. do not access "this" after that call
-		}
-		break;
-
-		case kOmcTaskProgress:
-		{
-			switch(taskData->dataType)
-			{
-				case kOmcDataTypePointer:
-				{
-					if(taskData->data.ptr != NULL) //do not clear last status if we don't have anything explicilty new
-					{
-						mLastOutputText.Adopt( ::CFStringCreateWithBytes(kCFAllocatorDefault, (const UInt8 *)taskData->data.ptr, taskData->dataSize, kCFStringEncodingUTF8, true), kCFObjDontRetain );
-						mLastStatusLine.Adopt( CreateLastLineString((const UInt8 *)taskData->data.ptr, taskData->dataSize), kCFObjDontRetain );
-					}
-				}
-				break;
-
-				case kOmcDataTypeCFData:
-				{
-					if(taskData->data.cfObj != NULL) //do not clear last status if we don't have anything explicilty new
-					{
-						const UInt8 *rawData = ::CFDataGetBytePtr( (CFDataRef)taskData->data.cfObj );
-						CFIndex theLen = ::CFDataGetLength( (CFDataRef)taskData->data.cfObj );
-						mLastOutputText.Adopt( ::CFStringCreateWithBytes(kCFAllocatorDefault, rawData, theLen, kCFStringEncodingUTF8, true), kCFObjDontRetain );
-						mLastStatusLine.Adopt( CreateLastLineString(rawData, theLen), kCFObjDontRetain );
-					}
-				}
-				break;
-
-				case kOmcDataTypeCFString:
-				{
-					if(taskData->data.cfObj != NULL) //do not clear last status if we don't have anything explicilty new
-					{
-						mLastOutputText.Adopt( (CFStringRef)taskData->data.cfObj, kCFObjRetain );						
-						mLastStatusLine.Adopt( CreateLastLineString( (CFStringRef)taskData->data.cfObj ), kCFObjDontRetain );
-					}
-				}
-				break;
-					
-				default:
-					//should we expect other enums here?
-					//assert(false);
-				break;
-			}
-			
-			if(mProgress != NULL)
-			{
-				mUserCanceled = OMCDeferredProgressAdvanceProgress(mProgress, taskData->taskID, taskData->childProcessID, mLastOutputText, false);
-			}			
-
-			if(mUserCanceled)
-			{
-				CancelAllTasks();
-				delete this;
-			}
-		}
-		break;
-
-		case kOmcTaskCancel:
-		{
-			mUserCanceled = true;
-			CancelAllTasks();
-			delete this;
-		}
-		break;
-			
-		default:
-		break;
-	}
-	// do not put any code here because this may have been deleted
-}
-
-//caller should NOT release the result string
-
-CFStringRef
-OmcHostTaskManager::GetUniqueID()
-{
-	if(mUniqueID != NULL)
-		return mUniqueID;
-
-	CFObj<CFUUIDRef>  myUUID( ::CFUUIDCreate(kCFAllocatorDefault) );
-	if(myUUID != NULL)
-		mUniqueID.Adopt( ::CFUUIDCreateString(kCFAllocatorDefault, myUUID) );
-
-	return mUniqueID;
+    if(ioData == nullptr)
+    {
+        return;
+    }
+    
+    // retain self here to ensure the safety of all operations in scope
+    ARefCountedObj<OmcHostTaskManager> localRetain(this, kARefCountRetain);
+    
+    // forward notification to my observers too
+    mNotifier->NotifyObservers(ioData);
+    
+    OmcTaskData *taskData = (OmcTaskData *)ioData;
+    
+    switch(taskData->messageID)
+    {
+        case kOmcTaskFinished:
+        {
+            mPlugin->SetError( taskData->error );
+            if(taskData->dataType == kOmcDataTypeBoolean)
+            {
+                NoteTaskEnded(taskData->taskID, taskData->data.test);
+            }
+        }
+        break;
+            
+        case kOmcTaskProgress:
+        {
+            switch(taskData->dataType)
+            {
+                case kOmcDataTypePointer:
+                {
+                    if(taskData->data.ptr != NULL) //do not clear last status if we don't have anything explicilty new
+                    {
+                        mLastOutputText.Adopt( ::CFStringCreateWithBytes(kCFAllocatorDefault, (const UInt8 *)taskData->data.ptr, taskData->dataSize, kCFStringEncodingUTF8, true), kCFObjDontRetain );
+                        mLastStatusLine.Adopt( CreateLastLineString((const UInt8 *)taskData->data.ptr, taskData->dataSize), kCFObjDontRetain );
+                    }
+                }
+                break;
+                    
+                case kOmcDataTypeCFData:
+                {
+                    if(taskData->data.cfObj != NULL) //do not clear last status if we don't have anything explicilty new
+                    {
+                        const UInt8 *rawData = ::CFDataGetBytePtr( (CFDataRef)taskData->data.cfObj );
+                        CFIndex theLen = ::CFDataGetLength( (CFDataRef)taskData->data.cfObj );
+                        mLastOutputText.Adopt( ::CFStringCreateWithBytes(kCFAllocatorDefault, rawData, theLen, kCFStringEncodingUTF8, true), kCFObjDontRetain );
+                        mLastStatusLine.Adopt( CreateLastLineString(rawData, theLen), kCFObjDontRetain );
+                    }
+                }
+                break;
+                    
+                case kOmcDataTypeCFString:
+                {
+                    if(taskData->data.cfObj != NULL) //do not clear last status if we don't have anything explicilty new
+                    {
+                        mLastOutputText.Adopt( (CFStringRef)taskData->data.cfObj, kCFObjRetain );
+                        mLastStatusLine.Adopt( CreateLastLineString( (CFStringRef)taskData->data.cfObj ), kCFObjDontRetain );
+                    }
+                }
+                break;
+                    
+                default:
+                    //should we expect other enums here?
+                    //assert(false);
+                break;
+            }
+            
+            if(mProgress != NULL)
+            {
+                mUserCanceled = OMCDeferredProgressAdvanceProgress(mProgress, taskData->taskID, taskData->childProcessID, mLastOutputText, false);
+            }
+            
+            if(mUserCanceled)
+            {
+                CancelAllTasks();
+                Finalize();
+            }
+        }
+        break;
+            
+        case kOmcTaskCancel:
+        {
+            mUserCanceled = true;
+            CancelAllTasks();
+            Finalize();
+        }
+        break;
+            
+        default:
+        break;
+    }
 }
 
 

@@ -41,7 +41,6 @@ OmcExecutor::ReportToManager(OmcTaskManager *inTaskManager, CFIndex inTaskIndex)
 {
 	if(inTaskManager != nullptr )
 	{
-		mTaskManagerID.Adopt( inTaskManager->GetUniqueID(), kCFObjRetain );
 		mNotifier->AddObserver( inTaskManager->GetObserver() );
 	}
 	mTaskIndex = inTaskIndex;
@@ -70,8 +69,10 @@ OmcExecutor::ExecuteCFString( CFStringRef inCommand, CFStringRef inInputPipe )
 	}
 
 	if(finishedSynchronously)
-		Finish(finishedSynchronously, true, resultErr);
-	
+    {
+        Finish(finishedSynchronously, true, resultErr);
+    }
+    
 	return finishedSynchronously;
 }
 
@@ -522,23 +523,25 @@ typedef struct ExtensionAndShell
 	CFStringRef shell;
 } ExtensionAndShell;
 
-// until Apple removes half of it in future macOS releases
-// the locations of script interpreters are:
+// The locations of script interpreters in macOS are:
 
 static ExtensionAndShell sExtensionToShellMap[] =
 {
 	{ CFSTR("sh"), CFSTR("/bin/sh") },
-	{ CFSTR("py"), CFSTR("/usr/bin/python") },
+    // Python code is problematic if shipped in an app to customers without Xcode tools installed
+    // TODO: detect py and add a warning instead of failing silently
+    { CFSTR("py"), CFSTR("/usr/bin/python3") }, // requires Xcode Command Line Tools, starting with macOS 11
 	{ CFSTR("pl"), CFSTR("/usr/bin/perl") },
 	{ CFSTR("applescript"), CFSTR("/usr/bin/osascript") },
 	{ CFSTR("scpt"), CFSTR("/usr/bin/osascript") },
-	{ CFSTR("zsh"), CFSTR("/bin/zsh") }, //new default in 10.15
+	{ CFSTR("zsh"), CFSTR("/bin/zsh") }, // new default shell since 10.15
 	{ CFSTR("bash"), CFSTR("/bin/bash") },
 	{ CFSTR("csh"), CFSTR("/bin/csh") },
 	{ CFSTR("tcsh"), CFSTR("/bin/tcsh") },
-	{ CFSTR("dash"), CFSTR("/bin/dash") }, //10.15 only
+	{ CFSTR("dash"), CFSTR("/bin/dash") },
 	{ CFSTR("rb"), CFSTR("/usr/bin/ruby") },
-	{ CFSTR("js"), CFSTR("/System/Library/Frameworks/JavaScriptCore.framework/Versions/Current/Helpers/jsc") }, //in macOS 10.15, macOS 11
+	{ CFSTR("js"), CFSTR("/System/Library/Frameworks/JavaScriptCore.framework/Versions/Current/Helpers/jsc") }, // in macOS >= 10.15, OMC min is 11
+    { CFSTR("mjs"), CFSTR("/System/Library/Frameworks/JavaScriptCore.framework/Versions/Current/Helpers/jsc") }
 };
 
 enum
@@ -555,6 +558,7 @@ enum
 	kScriptExtDash,
 	kScriptExtRb,
 	kScriptExtJs,
+    kScriptExtMjs,
 	kScriptExtCount
 };
 
@@ -574,10 +578,11 @@ CFStringRef GetShellFromScriptExtension(CFStringRef inExt)
 	{
 		if(kCFCompareEqualTo == ::CFStringCompare( inExt, sExtensionToShellMap[i].extension, kCFCompareCaseInsensitive))
 		{
-			if((i == kScriptExtJs) && (OnMyCommandCM::GetCurrentMacOSVersion() < 101500))
-			{
-				 return CFSTR("/System/Library/Frameworks/JavaScriptCore.framework/Versions/Current/Resources/jsc");
-			}
+            if((i == kScriptExtPy) && (OnMyCommandCM::GetCurrentMacOSVersion() < 123000))
+            {
+                 return CFSTR("/usr/bin/python"); // removed from macOS starting with 12.3, (early 2022)
+            }
+
 			return sExtensionToShellMap[i].shell;
 		}
 	}

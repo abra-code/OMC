@@ -11,25 +11,28 @@
 #include "MessagePortListener.h"
 #include "AObserver.h"
 #include "OMCDeferredProgress.h"
-#include "OMCRuntimeUUIDs.h"
 #include <mach/host_info.h>
 
 class OmcExecutor;
 class OmcTask;
+class CommandRuntimeData;
 
 host_basic_info * GetHostBasicInfo();
 
-class OmcTaskManager
+class OmcTaskManager : public ARefCounted
 {
 public:
 	virtual			~OmcTaskManager() { } //just to satisfy GCC
 
-	//retains OmcExecutor, retains CFStringRefs
-	virtual void	AddTask(OmcExecutor *inNewExecutor, CFStringRef inCommand, CFStringRef inInputPipe, CFStringRef inObjName) = 0;
+	// retains OmcExecutor, retains CFStringRefs
+	virtual void	AddTask(OmcExecutor *inNewExecutor,
+                            CommandRuntimeData *runtimeData,
+                            CFStringRef inCommand,
+                            CFStringRef inInputPipe,
+                            CFStringRef inObjName) = 0;
 
-    virtual void    Start() { RunNext(); }//first run, call after adding some tasks
+    virtual void    Start() { RunNext(); } // first run, call after adding some tasks
 	virtual void	ShowEndNotification() = 0;	
-	virtual CFStringRef GetUniqueID() = 0;
 	virtual AObserverBase *	GetObserver() = 0;
 
 protected:
@@ -46,11 +49,13 @@ public:
 										CFStringRef inCommandName, CFBundleRef inBundle, CFIndex inMaxTaskCount);
 	virtual			~OmcHostTaskManager();
 
-	virtual void	AddTask(OmcExecutor *inNewExecutor, CFStringRef inCommand, CFStringRef inInputPipe, CFStringRef inObjName);
+	virtual void	AddTask(OmcExecutor *inNewExecutor,
+                            CommandRuntimeData *runtimeData,
+                            CFStringRef inCommand,
+                            CFStringRef inInputPipe,
+                            CFStringRef inObjName);
 
-    virtual void    Start();//first run, call after adding some tasks
 	virtual void	ShowEndNotification();
-	virtual CFStringRef GetUniqueID();
 
 	CFDataRef		ReceivePortMessage( SInt32 msgid, CFDataRef inData );//remote message
 
@@ -80,7 +85,6 @@ private:
 protected:
 	ARefCountedObj<OnMyCommandCM> mPlugin; //the plugin is retained and released when we finish
 	const CommandDescription &	mCurrCommand;
-	OMCRuntimeUUIDs	    		mCurrCommandUUIDs;
 	CFObj<CFStringRef>			mCommandName;
 	CFObj<CFDictionaryRef>		mEndNotificationParams;
 	CFObj<CFDictionaryRef>		mProgressParams;
@@ -88,15 +92,16 @@ protected:
 	CFObj<CFBundleRef>			mExternBundle;
 	CFObj<CFMutableArrayRef>	mPendingTasks;//array of OmcTask *
 	CFObj<CFMutableArrayRef>	mRunningTasks; //array of OmcTask *
-	CFIndex						mMaxTaskCount;
-	CFIndex						mTaskCount;
-	CFIndex						mFinishedTasks;
+    CFIndex						mMaxTaskCount {0};
+    CFIndex						mTaskCount {0};
+    CFIndex						mFinishedTasks {0};
 	CFObj<CFStringRef>			mUniqueID;
 	ARefCountedObj< AObserver<OmcHostTaskManager> > mTaskObserver;
 	ARefCountedObj< ANotifier > mNotifier;//the task manager is also a notifier and forwards all messages to its observers
 	MessagePortListener<OmcHostTaskManager> mListener;
-	OMCDeferredProgressRef		 mProgress;
+    OMCDeferredProgressRef		mProgress {nullptr};
 	CFObj<CFStringRef>			mLastOutputText;
 	CFObj<CFStringRef>			mLastStatusLine;
-	bool						mUserCanceled;
+    bool						mUserCanceled {false};
+    bool                        mHasFinalized {false};
 };

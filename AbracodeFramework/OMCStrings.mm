@@ -2,6 +2,7 @@
 #include "OMCStrings.h"
 #include "OMCConstants.h"
 #include "CFObj.h"
+#include "ACFType.h"
 
 CFStringRef CreatePathByExpandingTilde(CFStringRef inPath)
 {
@@ -388,3 +389,105 @@ WriteStringToFile(CFStringRef inContentStr, CFStringRef inFilePath)
                                      error:&error];
     return (bool)succeed;
 }
+
+
+CFStringRef
+CreateCombinedString( CFArrayRef inStringsArray, CFStringRef inSeparator, CFStringRef inPrefix, CFStringRef inSuffix, UInt16 escSpecialCharsMode )
+{
+    if(inStringsArray == NULL)
+        return NULL;
+
+    CFIndex itemCount = ::CFArrayGetCount(inStringsArray);
+
+    CFMutableStringRef mutableStr = ::CFStringCreateMutable(kCFAllocatorDefault, 0);
+    for(CFIndex i = 0; i < itemCount; i++)
+    {
+        CFTypeRef oneItem = ::CFArrayGetValueAtIndex(inStringsArray,i);
+        CFStringRef oneString = ACFType<CFStringRef>::DynamicCast( oneItem );
+        if(oneString != NULL)
+        {
+            CFObj<CFStringRef> escapedString( CreateEscapedStringCopy(oneString, escSpecialCharsMode) );
+
+            if(inPrefix != NULL)
+            {
+                ::CFStringAppend( mutableStr, inPrefix );
+            }
+            
+            ::CFStringAppend( mutableStr, escapedString );
+            
+            if(inSuffix != NULL)
+            {
+                ::CFStringAppend( mutableStr, inSuffix );
+            }
+
+            if( (inSeparator != NULL) && i < (itemCount-1) )
+            {//add separator, but not after the last item
+                ::CFStringAppend( mutableStr, inSeparator );
+            }
+        }
+    }
+    return mutableStr;
+}
+
+CFStringRef
+CreatePathFromCFURL(CFURLRef inPathURL, UInt16 escSpecialCharsMode)
+{
+    if(inPathURL == nullptr)
+        return nullptr;
+
+    CFObj<CFURLRef> absURL = CFURLCopyAbsoluteURL(inPathURL);
+    CFObj<CFStringRef> pathStr = CFURLCopyFileSystemPath(absURL, kCFURLPOSIXPathStyle);
+    CFObj<CFStringRef> escapedPathStr = CreateEscapedStringCopy(pathStr, escSpecialCharsMode);
+    return escapedPathStr.Detach();
+}
+
+CFStringRef
+CreateParentPathFromCFURL(CFURLRef inPathURL, UInt16 escSpecialCharsMode)
+{
+    if(inPathURL == nullptr)
+        return nullptr;
+
+    CFObj<CFURLRef> absURL = CFURLCopyAbsoluteURL(inPathURL);
+    CFObj<CFURLRef> newURL = CFURLCreateCopyDeletingLastPathComponent(kCFAllocatorDefault, absURL);
+    CFObj<CFStringRef> pathStr = CFURLCopyFileSystemPath(newURL, kCFURLPOSIXPathStyle);
+    CFObj<CFStringRef> escapedPathStr = CreateEscapedStringCopy(pathStr, escSpecialCharsMode);
+    return escapedPathStr.Detach();
+}
+
+CFStringRef
+CreateNameFromCFURL(CFURLRef inPathURL, UInt16 escSpecialCharsMode)
+{
+    if(inPathURL == nullptr)
+        return nullptr;
+
+    CFObj<CFStringRef> pathStr = CFURLCopyLastPathComponent(inPathURL);
+    CFObj<CFStringRef> escapedPathStr = CreateEscapedStringCopy(pathStr, escSpecialCharsMode);
+    return escapedPathStr.Detach();
+}
+
+CFStringRef
+CreateNameNoExtensionFromCFURL(CFURLRef inPathURL, UInt16 escSpecialCharsMode)
+{
+    if(inPathURL == nullptr)
+        return nullptr;
+
+    CFObj<CFURLRef> newURL = CFURLCreateCopyDeletingPathExtension(kCFAllocatorDefault, inPathURL);
+    if(newURL == nullptr)
+        return nullptr;
+
+    CFObj<CFStringRef> pathStr = CFURLCopyLastPathComponent(newURL);
+    CFObj<CFStringRef> escapedPathStr = CreateEscapedStringCopy(pathStr, escSpecialCharsMode);
+    return escapedPathStr.Detach();
+}
+
+CFStringRef
+CreateExtensionOnlyFromCFURL(CFURLRef inPathURL, UInt16 escSpecialCharsMode)
+{
+    if(inPathURL == nullptr)
+        return nullptr;
+
+    CFObj<CFStringRef> pathStr = CFURLCopyPathExtension(inPathURL);
+    CFObj<CFStringRef> escapedPathStr = CreateEscapedStringCopy(pathStr, escSpecialCharsMode);
+    return escapedPathStr.Detach();
+}
+

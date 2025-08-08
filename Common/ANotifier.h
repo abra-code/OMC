@@ -55,7 +55,7 @@ public:
 		//unlikely sitaution but we should log it
 		if(mIterationArray != NULL)
 		{
-			LOG_CSTR("OMC->ANotifier::AddObserver: Warning: adding itme to the set while iterating!\n");
+			LOG_CSTR("OMC->ANotifier::AddObserver: Warning: adding item to the set while iterating!\n");
 		}
 
 		::CFSetAddValue( mObservers, (const void *)inObserver );
@@ -95,9 +95,9 @@ public:
 	{
 		if(mObservers != NULL)
 		{
-			Retain();//prevent anyone from deleting us during this operation
+            // prevent anyone from deleting us during this operation
+            ARefCountedObj<ANotifier> localRetain(this, kARefCountRetain);
 			CallAllObservers(NotifyOneObserver, ioData);
-			Release();
 		}
 	}
 
@@ -107,7 +107,9 @@ public:
 		{
 			const AObserverBase *oneObserver = (const AObserverBase *)inOneValue;
 			if(oneObserver != NULL)
-				oneObserver->ReceiveNotification(ioData);
+            {
+                oneObserver->ReceiveNotification(ioData);
+            }
 		}
 		catch(...)
 		{

@@ -63,22 +63,22 @@ OMCDialog::~OMCDialog()
 //caller should NOT release the result string
 
 CFStringRef
-OMCDialog::GetDialogUniqueID()
+OMCDialog::GetDialogUUID()
 {
-	if(mDialogUniqueID != NULL)
-		return mDialogUniqueID;
+	if(mDialogUUID != NULL)
+		return mDialogUUID;
 
 	CFObj<CFUUIDRef>  myUUID( ::CFUUIDCreate(kCFAllocatorDefault) );
 	if(myUUID != NULL)
-		mDialogUniqueID.Adopt( ::CFUUIDCreateString(kCFAllocatorDefault, myUUID) );
+        mDialogUUID.Adopt( ::CFUUIDCreateString(kCFAllocatorDefault, myUUID) );
 
-	return mDialogUniqueID;
+	return mDialogUUID;
 }
 
 void
 OMCDialog::StartListening()
 {
-	CFObj<CFStringRef> portName( ::CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("%s.OMCDialogControlPort-%@"), GetAppGroupIdentifier(), GetDialogUniqueID()) );
+	CFObj<CFStringRef> portName( ::CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("%s.OMCDialogControlPort-%@"), GetAppGroupIdentifier(), GetDialogUUID()) );
 	mListener.StartListening(this, portName);
 }
 
@@ -94,7 +94,7 @@ OMCDialog::FindDialogByUUID(CFStringRef inUUID)
 	OMCDialog *oneLink = sChainHead;
 	while(oneLink != nullptr)
 	{
-		CFStringRef oneUUID = oneLink->mDialogUniqueID;//do not generate if never requested before, cannot be equal in such case
+		CFStringRef oneUUID = oneLink->mDialogUUID;//do not generate if never requested before, cannot be equal in such case
 		if( (oneUUID != nullptr) && (CFStringCompare(oneUUID, inUUID, 0) == kCFCompareEqualTo) )
 		{
 			outDialog.Adopt(oneLink, kARefCountRetain);
@@ -120,7 +120,9 @@ OMCDialog::CreateControlValueString(CFTypeRef controlValue, CFDictionaryRef cust
 	{
 		oneProperty = ACFType<CFStringRef>::DynamicCast( CFDictionaryGetValue(customProperties, (const void *)kCustomEscapeMethodKey) );
 		if(oneProperty != nullptr)
-			escSpecialCharsMode = GetEscapingMode(oneProperty);
+        {
+            escSpecialCharsMode = GetEscapingMode(oneProperty);
+        }
 	}
 
 	//it can be string or array of strings
@@ -282,4 +284,48 @@ OMCDialog::AddEnvironmentVariablesForAllControls(CFMutableDictionaryRef ioEnviro
 			}
 		}
 	}
+}
+
+
+Boolean
+OMCDialog::IsPredefinedDialogCommandID(CFStringRef inCommandID) noexcept
+{
+    if(inCommandID == NULL)
+        return false;
+
+    if(kCFCompareEqualTo == CFStringCompare(inCommandID, CFSTR("omc.dialog.terminate.ok"), 0))
+        return true;
+
+    if(kCFCompareEqualTo == CFStringCompare(inCommandID, CFSTR("omc.dialog.terminate.cancel"), 0))
+        return true;
+
+    if(kCFCompareEqualTo == CFStringCompare(inCommandID, CFSTR("omc.dialog.initialize"), 0))
+        return true;
+
+    if(kCFCompareEqualTo == CFStringCompare(inCommandID, CFSTR("omc.dialog.ok"), 0))
+        return true;
+    
+    if(kCFCompareEqualTo == CFStringCompare(inCommandID, CFSTR("omc.dialog.cancel"), 0))
+        return true;
+
+    if(CFStringGetLength(inCommandID) != 4)
+        return false;
+    
+    //Carbon legacy - only 4 chars
+    if(kCFCompareEqualTo == CFStringCompare(inCommandID, CFSTR("ok  "), 0))
+        return true;
+    
+    if(kCFCompareEqualTo == CFStringCompare(inCommandID, CFSTR("cncl"), 0))
+        return true;
+
+    if(kCFCompareEqualTo == CFStringCompare(inCommandID, CFSTR("ini!"), 0))
+        return true;
+
+    if(kCFCompareEqualTo == CFStringCompare(inCommandID, CFSTR("end!"), 0))
+        return true;
+
+    if(kCFCompareEqualTo == CFStringCompare(inCommandID, CFSTR("cnc!"), 0))
+        return true;
+    
+    return false;
 }
