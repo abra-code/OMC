@@ -14,7 +14,7 @@
 // once the control is created. It effectively forces everyone to create WKWebView in code 
 
 IB_DESIGNABLE
-@interface OMCWebKitView : NSView <WKScriptMessageHandler, OMCActionProtocol>
+@interface OMCWebKitView : NSView <WKScriptMessageHandler, WKUIDelegate, OMCActionProtocol>
 
 @property (nonatomic, readwrite) IBInspectable NSInteger tag;
 @property (nonatomic, strong) WKWebView *wkWebView;

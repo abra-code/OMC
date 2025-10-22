@@ -109,10 +109,11 @@ NSString *NormalizeOMCVariableIDFromElementID(NSString *inElementID)
 	[userContentController addScriptMessageHandler:self name:@"OMC"];
 
 	NSRect subFrame = {{0.0, 0.0}, self.frame.size};
-	
 	self.wkWebView = [[WKWebView alloc] initWithFrame:subFrame configuration:wkWebViewConfig];
 	[self addSubview:self.wkWebView];
-	
+
+    self.wkWebView.UIDelegate = self;
+
 	if(self.URL != nil)
 	{
 		[self setStringValue:self.URL];
@@ -251,6 +252,20 @@ NSString *NormalizeOMCVariableIDFromElementID(NSString *inElementID)
 			[ioDict setValue:inObj forKey:omcID];
 		}];
 	}
+}
+
+
+#pragma mark - WKUIDelegate
+
+- (void)webView:(WKWebView *)webView runOpenPanelWithParameters:(WKOpenPanelParameters *)parameters initiatedByFrame:(WKFrameInfo *)frame completionHandler:(void (^)(NSArray<NSURL *> * _Nullable))completionHandler {
+    NSOpenPanel *openPanel = [NSOpenPanel openPanel];
+    openPanel.allowsMultipleSelection = parameters.allowsMultipleSelection;
+    openPanel.canChooseDirectories = parameters.allowsDirectories;
+    openPanel.canChooseFiles = YES;
+    
+    [openPanel beginWithCompletionHandler:^(NSModalResponse result) {
+        completionHandler(result == NSModalResponseOK ? openPanel.URLs : nil);
+    }];
 }
 
 @end
