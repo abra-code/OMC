@@ -14,11 +14,41 @@
 			<key>NAME</key>
 			<string>Welcome</string>
 			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
-			<string>10.13</string>
+			<string>11.0</string>
 			<key>REQUIRED_OMC_VERSION</key>
-			<string>4.0</string>
+			<string>4.3</string>
 			<key>VERSION</key>
 			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>COMMAND_ID</key>
+			<string>app.will.launch</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+			<key>WAIT_FOR_TASK_COMPLETION</key>
+			<true/>
+			<key>NAME</key>
+			<string>OMCApplet</string>
+		</dict>
+		<dict>
+			<key>COMMAND_ID</key>
+			<string>app.did.launch</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+			<key>WAIT_FOR_TASK_COMPLETION</key>
+			<true/>
+			<key>NAME</key>
+			<string>OMCApplet</string>
+		</dict>
+		<dict>
+			<key>COMMAND_ID</key>
+			<string>app.will.terminate</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+			<key>WAIT_FOR_TASK_COMPLETION</key>
+			<true/>
+			<key>NAME</key>
+			<string>OMCApplet</string>
 		</dict>
 	</array>
 	<key>VERSION</key>

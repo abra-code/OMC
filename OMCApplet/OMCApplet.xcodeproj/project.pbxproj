@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 51;
+	objectVersion = 73;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -47,6 +47,16 @@
 			name = "Copy Abracode.framework";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		1DA51CC52EACE0C700BFF670 /* Copy Scripts */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = Scripts;
+			dstSubfolderSpec = 7;
+			files = (
+			);
+			name = "Copy Scripts";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
@@ -73,6 +83,34 @@
 		E23EA2010DFB9B7C0070E63F /* Command.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Command.plist; sourceTree = SOURCE_ROOT; };
 		E2ACB28C12EAE02700A8ACF6 /* AbracodeFrameworkVersion.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = AbracodeFrameworkVersion.c; path = generated/AbracodeFrameworkVersion.c; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		1DA51CC42EACE0BE00BFF670 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				app.did.launch.sh,
+				app.will.launch.sh,
+				app.will.terminate.sh,
+			);
+			target = 8D1107260486CEB800E47090 /* OMCApplet */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+		1DA51CC82EACE0ED00BFF670 /* PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
+			buildPhase = 1DA51CC52EACE0C700BFF670 /* Copy Scripts */;
+			membershipExceptions = (
+				app.did.launch.sh,
+				app.will.launch.sh,
+				app.will.terminate.sh,
+			);
+		};
+/* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		1DA51CBE2EACE01000BFF670 /* Scripts */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (1DA51CC42EACE0BE00BFF670 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, 1DA51CC82EACE0ED00BFF670 /* PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = Scripts; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		8D11072E0486CEB800E47090 /* Frameworks */ = {
@@ -153,6 +191,7 @@
 		29B97317FDCFA39411CA2CEA /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				1DA51CBE2EACE01000BFF670 /* Scripts */,
 				E23EA2010DFB9B7C0070E63F /* Command.plist */,
 				8D1107310486CEB800E47090 /* Info.plist */,
 				1DF18DE5226C773300305370 /* InfoPlist.strings */,
@@ -182,12 +221,16 @@
 				8D11072C0486CEB800E47090 /* Sources */,
 				8D11072E0486CEB800E47090 /* Frameworks */,
 				1D039D9F2E168BF500D4924A /* Copy Abracode.framework */,
+				1DA51CC52EACE0C700BFF670 /* Copy Scripts */,
 				E23EA1B50DFB05B50070E63F /* Remove Debug Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 				1D039DBA2E168DAF00D4924A /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				1DA51CBE2EACE01000BFF670 /* Scripts */,
 			);
 			name = OMCApplet;
 			productInstallPath = "$(HOME)/Applications";
@@ -204,7 +247,6 @@
 				LastUpgradeCheck = 1100;
 			};
 			buildConfigurationList = C01FCF4E08A954540054247B /* Build configuration list for PBXProject "OMCApplet" */;
-			compatibilityVersion = "Xcode 10.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 1;
 			knownRegions = (
@@ -215,6 +257,7 @@
 				ja,
 			);
 			mainGroup = 29B97314FDCFA39411CA2CEA /* OMCApplet */;
+			preferredProjectObjectVersion = 51;
 			projectDirPath = "";
 			projectReferences = (
 				{
@@ -266,8 +309,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if test \"$BUILD_STYLE\" != \"Debug\"; then\n\n\techo \"Removing droplet debugging resources\";\n\tcd \"$BUILT_PRODUCTS_DIR/OMCApplet.app/Contents/Resources/\";\n\trm -fR \"English.lproj/dialog.nib\";\n\trm -fR \"English.lproj/debug.nib\";\n\n\techo \"Copy standard Command.plist to droplet\";\n\trm -f \"Command.plist\";\n\n\tditto \"$SRCROOT/Command-release.plist\" Command.plist;\n\nfi\n";
-			showEnvVarsInLog = 0;
+			shellScript = "if test \"$CONFIGURATION\" != \"Debug\"; then\n\n\techo \"Removing droplet debugging resources\";\n\tcd \"$BUILT_PRODUCTS_DIR/OMCApplet.app/Contents/Resources/\";\n    rm -fR \"Scripts\";   \n\trm -fR \"English.lproj/dialog.nib\";\n\trm -fR \"English.lproj/debug.nib\";\n\n\techo \"Copy standard Command.plist to droplet\";\n\trm -f \"Command.plist\";\n\n\tditto \"$SRCROOT/Command-release.plist\" Command.plist;\n\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
