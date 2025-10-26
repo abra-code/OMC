@@ -80,17 +80,8 @@ void
 OmcExecutor::Finish(bool wasSynchronous, bool sendNotification, OSStatus inError)
 {
 	TRACE_CSTR("OmcExecutor::Finish\n");
-/*
-	if(mIsFinishing)
-	{
-		TRACE_CSTR("OmcExecutor::Finish - reentry prevented\n");
-		return;//prevent re-entry caused by circular notifications
-	}
 
-	mIsFinishing = true;
-*/
-
-	if(sendNotification)
+    if(sendNotification)
 	{
 		OmcTaskData notificationData;
 		memset( &notificationData, 0, sizeof(notificationData) );
@@ -228,14 +219,12 @@ void PopenCFSocketCallback(
 POpenExecutor::POpenExecutor(const CommandDescription &inCommandDesc, CFDictionaryRef inEnviron)
 	: OmcExecutor(),
 	mCustomShell(inCommandDesc.popenShell, kCFObjRetain),
-	mEnvironmentVariables(inEnviron, kCFObjRetain),
-	mReadSocket(nullptr), mWriteSocket(nullptr),
-	mReadSource(nullptr), mWriteSource(nullptr),
-	mWrittenInputBytesCount(0)
+	mEnvironmentVariables(inEnviron, kCFObjRetain)
 {
-	mChildProcessInfo.inputFD = -1;
-	mChildProcessInfo.outputFD = -1;
-	mChildProcessInfo.pid = 0;
+   if ((inCommandDesc.executionOptions & kExecutionOption_WaitForTaskCompletion) != 0)
+   {
+       mWaitForTaskCompletion = true;
+   }
 }
 
 bool
@@ -339,7 +328,24 @@ POpenExecutor::Execute( const char *inCommand, OSStatus &outError )
 				}
 			}
 		}
+        
+        if (mWaitForTaskCompletion)
+        {
+            TRACE_CSTR("POpenExecutor waiting for child process execution to finish\n");
+            do
+            {
+                CFRunLoopRunResult runLoopResult = CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0, true /*returnAfterSourceHandled*/);
+                if((runLoopResult == kCFRunLoopRunFinished) ||
+                   (runLoopResult == kCFRunLoopRunStopped))
+                {
+                    break;
+                }
+            }
+            while(mWaitForTaskCompletion);
 
+            return true;
+        }
+        
 		return false;
 	}
 	
@@ -385,6 +391,16 @@ POpenExecutor::~POpenExecutor()
 void
 POpenExecutor::Finish(bool wasSynchronous, bool sendNotification, OSStatus inError)
 {
+    // check if Finish() has already been called
+    // normally in async execution it is called just once when closing the output pipe
+    // in synchronous execution it is also called after the task ends so let's return early
+    
+    if(mHasFinished)
+    {
+        return;
+    }
+    mHasFinished = true;
+
 	TRACE_CSTR("POpenExecutor::Finish\n");
 
 	int pipeResult = 0;
@@ -419,6 +435,13 @@ POpenExecutor::Finish(bool wasSynchronous, bool sendNotification, OSStatus inErr
 		mWriteSource = nullptr;
 	}
 	
+    
+    if(mWaitForTaskCompletion)
+    {
+        mWaitForTaskCompletion = false;
+        wasSynchronous = true;
+    }
+
 	OmcExecutor::Finish(wasSynchronous, sendNotification, (OSStatus)pipeResult );
 }
 

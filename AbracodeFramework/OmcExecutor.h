@@ -100,14 +100,16 @@ protected:
 	CFObj<CFArrayRef>		mCustomShell;
 	CFObj<CFDictionaryRef>	mEnvironmentVariables;
 
-	ChildProcessInfo		mChildProcessInfo;
-	CFSocketRef				mReadSocket;
-	CFSocketRef				mWriteSocket;
-	CFRunLoopSourceRef		mReadSource;
-	CFRunLoopSourceRef		mWriteSource;
+    ChildProcessInfo		mChildProcessInfo {-1, -1, NULL};
+    CFSocketRef				mReadSocket {NULL};
+    CFSocketRef				mWriteSocket {NULL};
+    CFRunLoopSourceRef		mReadSource {NULL};
+    CFRunLoopSourceRef		mWriteSource {NULL};
 
 	std::string		        mInputString;
-	ByteCount				mWrittenInputBytesCount;
+    ByteCount				mWrittenInputBytesCount {0};
+    bool                    mWaitForTaskCompletion {false};
+    bool                    mHasFinished {false};
 };
 
 class POpenWithOutputExecutor

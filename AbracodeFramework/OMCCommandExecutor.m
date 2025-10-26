@@ -94,7 +94,7 @@ static NSMutableDictionary *sCachedPlists = NULL;
 				{
 					error = OMCExamineContext( omcExec, commandRef, docList );
 					
-					if( (error == noErr) && (delegate != NULL) && [delegate respondsToSelector:@selector(noteNewRecentDocumentURL:)] )
+					if( (error == noErr) && (delegate != nil) && [delegate respondsToSelector:@selector(noteNewRecentDocumentURL:)] )
 					{
 						//add to open recent
                         NSArray<NSURL*> *__weak absoluteURLArray = (__bridge NSArray<NSURL*> *)docList;

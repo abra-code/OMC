@@ -550,7 +550,7 @@ GetOneCommandParams(CommandDescription &outDesc, CFDictionaryRef inOneCommand, C
         else
         {
             //not an error, using default execution mode
-            TRACE_CSTR( "OMC->GetOneCommandParams. EXECUTION_MODE is not specified. Defaulting to exe_popen or exe_script_file\n" );
+            TRACE_CSTR( "OMC->GetOneCommandParams. EXECUTION_MODE is not specified. Defaulting to exe_shell_script or exe_script_file\n" );
         }
     }
 
@@ -775,8 +775,17 @@ GetOneCommandParams(CommandDescription &outDesc, CFDictionaryRef inOneCommand, C
     Boolean useNavDialogForMissingFileContext = true;
     oneCmd.GetValue(CFSTR("USE_NAV_DIALOG_FOR_MISSING_FILE_CONTEXT"), useNavDialogForMissingFileContext);
     if(useNavDialogForMissingFileContext)
+    {
         outDesc.executionOptions |= kExecutionOption_UseNavDialogForMissingFileContext;
-
+    }
+    
+    Boolean waitForTaskCompletion = false;
+    oneCmd.GetValue(CFSTR("WAIT_FOR_TASK_COMPLETION"), waitForTaskCompletion);
+    if(waitForTaskCompletion)
+    {
+        outDesc.executionOptions |= kExecutionOption_WaitForTaskCompletion;
+    }
+    
 //name/path/text matching settings
     if( oneCmd.GetValue(CFSTR("ACTIVATION_OBJECT_STRING_MATCH"), theDict) )
     {

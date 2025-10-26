@@ -126,7 +126,8 @@ enum
 enum
 {
 	kExecutionOption_None = 0x00,
-	kExecutionOption_UseNavDialogForMissingFileContext = 0x01
+	kExecutionOption_UseNavDialogForMissingFileContext = 0x01,
+    kExecutionOption_WaitForTaskCompletion = 0x02
 };
 
 	

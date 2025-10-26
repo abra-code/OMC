@@ -1842,17 +1842,26 @@ GetAllDialogControllers()
 - (OSStatus)processCommandWithContext:(CFTypeRef)inContext
 {
 	if(mPlugin == nullptr)
-		return paramErr;
-
+    {
+        return paramErr;
+    }
+    
 	SInt32 cmdIndex = -1;
-    if( OMCDialog::IsPredefinedDialogCommandID((__bridge CFStringRef)self.lastCommandID) )
+    if(OMCDialog::IsPredefinedDialogCommandID((__bridge CFStringRef)self.lastCommandID))
+    {
         cmdIndex = mPlugin->FindSubcommandIndex(mCommandName, (__bridge CFStringRef)self.lastCommandID); //only strict subcommand for predefined dialog commands
+    }
 	else																//(command name must match)
+    {
         cmdIndex = mPlugin->FindCommandIndex(mCommandName, (__bridge CFStringRef)self.lastCommandID);//relaxed rules for custom command id
-																	//(for example when used for next command)
-	if(cmdIndex < 0 )
-		return errAEEventNotHandled;//did not find the specified subcommand
-
+        //(for example when used for next command)
+    }
+    
+	if(cmdIndex < 0)
+    {
+        return errAEEventNotHandled;//did not find the specified subcommand
+    }
+    
 	CommandDescription &currCommand = mPlugin->GetCurrentCommand();
 	SelectionIterator *oldIterator = mOMCDialogProxy->GetSelectionIterator();
 	SelectionIterator *currentSelectionIterator = nullptr;
