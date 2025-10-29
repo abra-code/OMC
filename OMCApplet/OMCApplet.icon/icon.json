@@ -1,0 +1,35 @@
+{
+  "fill" : {
+    "automatic-gradient" : "display-p3:0.10199,0.26270,0.28638,1.00000"
+  },
+  "groups" : [
+    {
+      "layers" : [
+        {
+          "fill" : {
+            "linear-gradient" : [
+              "display-p3:0.91748,0.20398,0.14124,1.00000",
+              "display-p3:0.60791,0.12158,0.08234,1.00000"
+            ]
+          },
+          "hidden" : false,
+          "image-name" : "square-circle-thick.png",
+          "name" : "square-circle-thick"
+        }
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.5
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "squares" : [
+      "macOS"
+    ]
+  }
+}
