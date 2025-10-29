@@ -242,6 +242,10 @@ GetAllDialogControllers()
                     NSURL *__weak associatedFileURL = (__bridge NSURL *)(fileURL);
                     _window.representedURL = associatedFileURL;
                     [_window setTitleWithRepresentedFilename:associatedFileURL.path];
+                    // associating file with a window makes it appear as a document for user
+                    // we may arrive here via different ways which may not end up calling `noteNewRecentDocumentURL:`
+                    // but calling it twice on the same URL is not a problem
+                    [NSDocumentController.sharedDocumentController noteNewRecentDocumentURL:associatedFileURL];
                 }
             }
             
