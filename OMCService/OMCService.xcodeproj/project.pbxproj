@@ -10,9 +10,9 @@
 		1D039DC92E168E0D00D4924A /* Abracode.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1D039DC82E168DD600D4924A /* Abracode.framework */; };
 		1D039DCB2E168EFC00D4924A /* Abracode.framework in Copy Abracode.framework */ = {isa = PBXBuildFile; fileRef = 1D039DC82E168DD600D4924A /* Abracode.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		1DCFB24C231FACC800D1C62E /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1DCFB248231FACC800D1C62E /* MainMenu.xib */; };
+		1DEE0B1A2EB35B0200729DAE /* OMCService.icon in Resources */ = {isa = PBXBuildFile; fileRef = 1DEE0B192EB35B0200729DAE /* OMCService.icon */; };
 		8D11072D0486CEB800E47090 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
-		E23AAD5412F5737D004C867B /* app.icns in Resources */ = {isa = PBXBuildFile; fileRef = E23AAD5312F5737D004C867B /* app.icns */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -57,13 +57,13 @@
 		1D942E3515CD26D500A08D55 /* OmcProjectCommon.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectCommon.xcconfig; path = ../Common/OmcProjectCommon.xcconfig; sourceTree = "<group>"; };
 		1DCFB249231FACC800D1C62E /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
 		1DD2112F259F43C10041BB8F /* OmcVersion.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcVersion.xcconfig; path = ../Common/OmcVersion.xcconfig; sourceTree = "<group>"; };
+		1DEE0B192EB35B0200729DAE /* OMCService.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = OMCService.icon; sourceTree = "<group>"; };
 		256AC3F00F4B6AF500CF3369 /* OMCService_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCService_Prefix.pch; sourceTree = "<group>"; };
 		29B97316FDCFA39411CA2CEA /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		29B97324FDCFA39411CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		29B97325FDCFA39411CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
 		8D1107310486CEB800E47090 /* OMCService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "OMCService-Info.plist"; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* OMCService.service */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OMCService.service; sourceTree = BUILT_PRODUCTS_DIR; };
-		E23AAD5312F5737D004C867B /* app.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = app.icns; path = ../AbracodeFramework/Resources/app.icns; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -144,7 +144,7 @@
 		29B97317FDCFA39411CA2CEA /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				E23AAD5312F5737D004C867B /* app.icns */,
+				1DEE0B192EB35B0200729DAE /* OMCService.icon */,
 				8D1107310486CEB800E47090 /* OMCService-Info.plist */,
 				1DCFB248231FACC800D1C62E /* MainMenu.xib */,
 			);
@@ -229,7 +229,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E23AAD5412F5737D004C867B /* app.icns in Resources */,
+				1DEE0B1A2EB35B0200729DAE /* OMCService.icon in Resources */,
 				1DCFB24C231FACC800D1C62E /* MainMenu.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
