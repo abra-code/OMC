@@ -236,7 +236,8 @@ OSErr MoreAEOCreateSelectionObject( const DescType pSelectionAEDesc,
 	AESendMode sendMode = kAEWaitReply;
 
 	StAEDesc theReply;
-	OSErr anErr = AESend(pAppleEvent, &theReply, sendMode, kAENormalPriority, kAEDefaultTimeout, NULL, NULL);
+    SInt32 timeout = 60 * 5; //wait no longer than 5 secs. kAEDefaultTimeout is 60 secs
+	OSErr anErr = AESend(pAppleEvent, &theReply, sendMode, kAENormalPriority, timeout, NULL, NULL);
 	//	[ Don't dispose of the event, it's not ours ]
 	if (noErr == anErr)
 	{

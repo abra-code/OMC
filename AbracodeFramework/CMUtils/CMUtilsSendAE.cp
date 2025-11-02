@@ -108,8 +108,9 @@ CMUtils::SendAEWithThreeObjToRunningApp( FourCharCode appSig, AEEventClass theAE
 			}
 			
 			StAEDesc theAEReply;
+            SInt32 timeout = 60 * 5; //wait no longer than 5 secs. kAEDefaultTimeout is 60 secs
 			theErr = ::AESend( appleEvent, theAEReply, theMode,
-					kAENormalPriority, kAEDefaultTimeout, theUpp, NULL);
+					kAENormalPriority, timeout, theUpp, NULL);
 		
 			if(theUpp != NULL)
 			{
@@ -234,8 +235,9 @@ CMUtils::SendAEWithThreeObjToRunningApp( const char * inAppBundleIDCStr, AEEvent
 			}
 			
 			StAEDesc theAEReply;
+            SInt32 timeout = 60 * 5; //wait no longer than 5 secs. kAEDefaultTimeout is 60 secs
 			theErr = ::AESend( appleEvent, theAEReply, theMode,
-					kAENormalPriority, kAEDefaultTimeout, theUpp, NULL);
+					kAENormalPriority, timeout, theUpp, NULL);
 		
 			if(theUpp != NULL)
 			{
