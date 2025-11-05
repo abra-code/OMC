@@ -92,7 +92,8 @@ Declared with `<key>EXECUTION_MODE</key>`. Default `exe_shell_script` if key not
 > - `exe_popen`, `exe_silent_popen`, `exe_silent` → use `exe_shell_script` 
 > - `exe_popen_with_output_window` → use `exe_shell_script_with_output_window`
 > - `exe_silent_system` → use `exe_system`
-> **New**: `WAIT_FOR_TASK_COMPLETION` (boolean) forces sync for some async modes.
+>
+> **New in v4.3**: `WAIT_FOR_TASK_COMPLETION` (boolean) forces sync for some async modes.
 
 
 > **Best Practices**:
@@ -100,7 +101,7 @@ Declared with `<key>EXECUTION_MODE</key>`. Default `exe_shell_script` if key not
 > - **For Contextual Menus (OnMyCommandCM)**: Use `exe_shell_script` + inline `COMMAND` array (or single string with env vars).
 > - **Prefer `$OMC_FOO` env vars**; fall back to `__FOO__` only in `exe_system` or `exe_applescript`.
 > - **Always quote env vars**: `"${OMC_OBJ_PATH}"`.
-> - **Use long, descriptive `COMMAND_ID`s** (early OMC 4-character limit is deprecated).
+> - **Use unique descriptive `COMMAND_ID`s** (early OMC 4-character limit is deprecated).
 
 ---
 
@@ -146,8 +147,6 @@ Controls **when** an action handler is available and what primary runtime contex
   <string>act_file</string>
   <key>EXECUTION_MODE</key>
   <string>exe_script_file</string>
-  <key>WAIT_FOR_TASK_COMPLETION</key>
-  <true/>
 </dict>
 ```
 
@@ -194,7 +193,7 @@ xattr -dr com.apple.quarantine "${OMC_OBJ_PATH}"
 
 > **Best Practices**:
 > - Any special context keyword in form of `__FOO__` must be a separate string in the `COMMAND` array
-> - Use **single string** in `COMMAND` array when using environment variables.
+> - When using environment variables you don't need to chop the script into multiple strings in `COMMAND` array so one string is sufficient.
 > - **Always quote** environment variables: `"${OMC_OBJ_PATH}"`
 > - Use `{}` to avoid shell parsing issues.
 > - Multiple strings in `COMMAND` array are concatenated without spaces. So an array like: `["gzip", "-d", "${OMC_OBJ_PATH}"]` → `gzip-d/path` → **broken**.
@@ -436,7 +435,7 @@ This provides a lightweight alternative to full NIB dialogs for displaying comma
 | `TEXT_SIZE` | Integer | `10` | Font size in points. | `12` |
 | `TEXT_COLOR` | String | `"000000"` | Text color (6-hex RRGGBB). | `"#002B36"` |
 | `BACKGROUND_COLOR` | String | `"FFFFFF"` | Background color (6-hex RRGGBB). | `"#FDF6E3"` |
-| `CUSTOM_WINDOW_PNG_IMAGE` | String | None | PNG path for `WINDOW_TYPE="custom"` (defines shape/background). | `"${OMC_APP_BUNDLE_PATH}/Resources/custom.png"` |
+| `CUSTOM_WINDOW_PNG_IMAGE` | String | None | PNG path for `WINDOW_TYPE="custom"` (defines shape/background). | `"custom.png"` |
 | `CUSTOM_TEXTBOX_POSITION_TOP` | Integer | `0` | Text area top offset (custom only). | `20` |
 | `CUSTOM_TEXTBOX_POSITION_LEFT` | Integer | `0` | Text area left offset (custom only). | `20` |
 | `CUSTOM_TEXTBOX_WIDTH` | Integer | Window width | Text area width (custom only). | `300` |
@@ -504,7 +503,7 @@ This provides a lightweight alternative to full NIB dialogs for displaying comma
     <key>BACKGROUND_COLOR</key>
     <string>FDF6E3</string>
     <key>CUSTOM_WINDOW_PNG_IMAGE</key>
-    <string>${OMC_APP_BUNDLE_PATH}/Resources/bezel.png</string>
+    <string>bezel.png</string>
     <key>CUSTOM_TEXTBOX_POSITION_TOP</key>
     <integer>20</integer>
     <key>CUSTOM_TEXTBOX_POSITION_LEFT</key>
@@ -815,10 +814,10 @@ The OMC project includes additional help files in the same directory as this ref
 
 ## 13. Example Full Applets:
 
-[Find.app](https://github.com/abra-code/FindApp)
-[Delta.app](https://github.com/abra-code/DeltaApp)
-[Xattr.app](https://github.com/abra-code/XattrApp)
-[AIChat.app](https://github.com/abra-code/AIChatApp)
+[Find.app](https://github.com/abra-code/FindApp)<br>
+[Delta.app](https://github.com/abra-code/DeltaApp)<br>
+[Xattr.app](https://github.com/abra-code/XattrApp)<br>
+[AIChat.app](https://github.com/abra-code/AIChatApp)<br>
 
 ---
 
