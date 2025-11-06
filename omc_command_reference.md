@@ -144,8 +144,8 @@ Controls **when** an action handler is available and what primary runtime contex
   <key>COMMAND_ID</key>
   <string>clear_quarantine</string>
   <key>ACTIVATION_MODE</key>
-  <string>act_file</string>
-  <key>EXECUTION_MODE</key>
+  <string>act_file_or_folder</string>
+  <key>EXECUTION_MODE</key> <!-- optional, exe_script_file is default when COMMAND is absent -->
   <string>exe_script_file</string>
 </dict>
 ```
@@ -182,7 +182,7 @@ xattr -dr com.apple.quarantine "${OMC_OBJ_PATH}"
     <string>gz</string>
     <string>tgz</string>
   </array>
-  <key>EXECUTION_MODE</key>
+  <key>EXECUTION_MODE</key>  <!-- optional, exe_shell_script is default -->
   <string>exe_shell_script</string>
   <key>COMMAND</key>
   <array>
