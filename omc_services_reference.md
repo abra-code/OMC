@@ -75,7 +75,7 @@ The OMC engine listens on the `OMCService` port upon applet launch. When a servi
 ### Xattr.app at [XattrApp](https://github.com/abra-code/XattrApp)
 - `NSUserData`: `Xattr` (corresponding to `NAME` in command description)
 - `NSSendTypes`: `NSFilenamesPboardType`
-- `NSReturnTypes`: `NSStringPboardType`
+- Input: `$OMC_OBJ_PATH` for file or folder to view extended attributes. Multiple selections processed separately.
 
 ---
 
