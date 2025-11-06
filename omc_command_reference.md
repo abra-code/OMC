@@ -1,4 +1,4 @@
-# OnMyCommand (OMC) Command Reference
+# OMC Command Reference
 
 ## Introduction
 
