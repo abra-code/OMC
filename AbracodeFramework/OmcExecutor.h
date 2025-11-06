@@ -150,6 +150,7 @@ protected:
 
 protected:
 	CFObj<CFStringRef>	mCommandID;
+    CFObj<CFStringRef>  mCommandName;
 	CFObj<CFBundleRef>	mExternBundleRef;
 };
 
@@ -166,6 +167,7 @@ protected:
 
 protected:
 	CFObj<CFStringRef>	mCommandID;
+    CFObj<CFStringRef>  mCommandName;
 };
 
 class SystemExecutor

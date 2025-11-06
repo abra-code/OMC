@@ -615,18 +615,20 @@ CFStringRef GetShellFromScriptExtension(CFStringRef inExt)
 
 static std::string CreateScriptPathAndShell(
 								CFBundleRef inExternBundle,
+                                CFStringRef inCommandName,
 								CFStringRef inCommandID,
 								CFObj<CFArrayRef> &ioCustomShell,
 								const char *inCommand)
 {
 	CFObj<CFStringRef> scriptFilePath;
 
-    // This should be deprecated. Not a good idea
+    // Not a good idea, removed
 	// inCommand, if non-empty, is an absolute file path (not expected to be a common setup)
+    /*
 	if((inCommand != nullptr) && (inCommand[0] != 0))
 	{
 		scriptFilePath.Adopt(CFStringCreateWithCString(kCFAllocatorDefault, inCommand, kCFStringEncodingUTF8));
-		CFObj<CFURLRef> scriptURL = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, scriptFilePath, kCFURLPOSIXPathStyle, false /*isDirectory*/);
+		CFObj<CFURLRef> scriptURL = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, scriptFilePath, kCFURLPOSIXPathStyle, false);
 		if(scriptURL != nullptr)
 		{
 			CFErrorRef error = nullptr;
@@ -638,23 +640,48 @@ static std::string CreateScriptPathAndShell(
 			}
 		}
 	}
-	
-	if((scriptFilePath == nullptr) && (inCommandID != nullptr))
-	{ //the idea is to look for file of the same name as command ID within Applet.app/Contents/Resources/Scripts
-		CFBundleRef hostBundle = inExternBundle;//formally supporting extern bundles
-		if(hostBundle == nullptr)
+    */
+
+    CFBundleRef hostBundle = inExternBundle; // formally supporting extern bundles
+    if(hostBundle == nullptr)
+    {
+        hostBundle = CFBundleGetMainBundle(); // in most cases it will be just applet bundle
+    }
+
+    // this should not happen, but...
+    if(inCommandID == nullptr)
+    {
+        assert(inCommandID != nullptr);
+        inCommandID = kOMCTopCommandID;
+    }
+    
+    // for historical reasons commandID = 'top!' is assigned early for the main command
+    // in the command group without explicit COMMAND_ID
+    // it is problematic for multiple command groups in one plist - the comamnd ids are not unique anymore
+    // however, for newer shell script execution, it makes more sense to look for for something
+    // like a CommandName.main.sh or main.sh script
+    if(kCFCompareEqualTo == CFStringCompare(inCommandID, kOMCTopCommandID, 0))
+    {
+        if(inCommandName != nullptr)
         {
-            hostBundle = CFBundleGetMainBundle(); //in most cases it will be just applet bundle
+            CFObj<CFStringRef> scriptName = CFStringCreateWithFormat(kCFAllocatorDefault,
+                                                                   nullptr,
+                                                                   CFSTR("%@.main"),
+                                                                   inCommandName);
+            scriptFilePath.Adopt(OMCGetScriptPath(hostBundle, scriptName), kCFObjRetain);
         }
         
-        // for historical reasons 'top!' commandID is assigned for the main command
-        // however, for newer shell script execution, it makes more sense to look for for something like a main.sh script
-        if(kCFCompareEqualTo == CFStringCompare(inCommandID, CFSTR("top!"), 0))
-        {
+        if(scriptFilePath == nullptr)
+        { // fall back to "main" if we could not find a script for "CommandName.main"
             inCommandID = CFSTR("main");
         }
-		scriptFilePath.Adopt(OMCGetScriptPath(hostBundle, inCommandID), kCFObjRetain);
-	}
+    }
+    
+    if(scriptFilePath == nullptr)
+    {
+        // the idea is to look for file of the same name as command ID within Applet.app/Contents/Resources/Scripts
+        scriptFilePath.Adopt(OMCGetScriptPath(hostBundle, inCommandID), kCFObjRetain);
+    }
 
 	if(scriptFilePath == nullptr)
 	{
@@ -663,7 +690,7 @@ static std::string CreateScriptPathAndShell(
 	}
 
 	if(ioCustomShell == nullptr)
-	{ //the expected situation, we provide the shell mapping from script extension
+	{ // the expected situation, we provide the shell mapping from script extension
 		CFObj<CFStringRef> extension = CopyFilenameExtension(scriptFilePath);
 		CFMutableArrayRef newShellArray = CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
 		ioCustomShell.Adopt(newShellArray, kCFObjDontRetain);
@@ -682,12 +709,20 @@ POpenScriptFileExecutor::POpenScriptFileExecutor(
 	mCommandID(inCommandDesc.commandID, kCFObjRetain),
 	mExternBundleRef(inExternBundleRef, kCFObjRetain)
 {
+    if(!inCommandDesc.nameIsDynamic &&
+       (inCommandDesc.name != NULL) &&
+       ::CFArrayGetCount(inCommandDesc.name) > 0)
+    {
+        CFTypeRef firstItem = CFArrayGetValueAtIndex(inCommandDesc.name, 0);
+        CFStringRef nameStr = ACFType<CFStringRef>::DynamicCast(firstItem);
+        mCommandName.Adopt(nameStr, kCFObjRetain);
+    }
 }
 
 bool
 POpenScriptFileExecutor::Execute( const char *inCommand, OSStatus &outError )
 {
-	std::string pathStr = CreateScriptPathAndShell(mExternBundleRef, mCommandID, mCustomShell, inCommand);
+	std::string pathStr = CreateScriptPathAndShell(mExternBundleRef, mCommandName, mCommandID, mCustomShell, inCommand);
 	return POpenExecutor::Execute(pathStr.c_str(), outError);
 }
 
@@ -701,12 +736,20 @@ POpenScriptFileWithOutputExecutor::POpenScriptFileWithOutputExecutor(
 	: POpenWithOutputExecutor(inCommandDesc, inDynamicName, inExternBundleRef, inEnviron),
 	mCommandID(inCommandDesc.commandID, kCFObjRetain)
 {
+    if(!inCommandDesc.nameIsDynamic &&
+       (inCommandDesc.name != NULL) &&
+       ::CFArrayGetCount(inCommandDesc.name) > 0)
+    {
+        CFTypeRef firstItem = CFArrayGetValueAtIndex(inCommandDesc.name, 0);
+        CFStringRef nameStr = ACFType<CFStringRef>::DynamicCast(firstItem);
+        mCommandName.Adopt(nameStr, kCFObjRetain);
+    }
 }
 
 bool
 POpenScriptFileWithOutputExecutor::Execute( const char *inCommand, OSStatus &outError )
 {
-	std::string pathStr = CreateScriptPathAndShell(mExternBundleRef, mCommandID, mCustomShell, inCommand);
+	std::string pathStr = CreateScriptPathAndShell(mExternBundleRef, mCommandName, mCommandID, mCustomShell, inCommand);
 	return POpenWithOutputExecutor::Execute( pathStr.c_str(), outError );
 }
 
