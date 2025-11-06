@@ -15,7 +15,11 @@ Example OMC applets using the latest features are:
 https://github.com/abra-code/FindApp
 \
 https://github.com/abra-code/DeltaApp
-
+\
+https://github.com/abra-code/XattrApp
+\
+https://github.com/abra-code/AIChatApp
+\
 
 ## Key Design Ideas
 ### (Basic concepts under 5 minutes)
@@ -51,4 +55,13 @@ OMC engine runs your handler scripts in separate child processes. This has sever
 - the execution is mostly asynchronous (depends on execution mode if you are curious to look into details),
 - since it is an out of process execution, the communication back to the host app from your script must be handled in special way. OMC provides two command line tools to facilitate that: `omc_dialog_control` and `omc_next_command`,
 - communication with other commands within the same app is limited but information can be shared through files or via private pasteboard. OMC provides a `pasteboard` tool to help with this.
+
+
+## Documentation
+Ready to learn more? Start here:  
+
+[OnMyCommand (OMC) Command Reference](omc_command_reference.md)<br>
+[OMC Runtime Context Reference](omc_runtime_context_reference.md)<br>
+[OMC Services Reference](omc_services_reference.md)<br>
+
 
