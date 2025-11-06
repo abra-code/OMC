@@ -1972,7 +1972,7 @@ OnMyCommandCM::LoadCommandsFromPlistRef(CFPropertyListRef inPlistRef)
 
 	ACFDict properties(plistDict);
 
-	CFIndex verNum = 0;
+	CFIndex verNum = 2;
 	properties.GetValue(CFSTR("VERSION"), verNum);
 	if(verNum != 2)
 		return;
