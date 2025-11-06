@@ -789,8 +789,166 @@ Prompts **before** command runs. Value available via `$OMC_DLG_INPUT_TEXT`.
 
 ---
 
+## Miscellaneous Command Description Options
 
-## 12. Related Documentation
+These options handle advanced behaviors like multi-object processing, input piping, shell customization, command chaining, and escaping. They are placed directly in an command description dictionary.
+
+---
+
+### `MULTIPLE_OBJECT_SETTINGS` – Multi-Object Processing
+
+Controls how multiple selected objects (files/folders) are handled. Defaults to separate execution per object.
+
+| Key | Type | Default | Description & Best Practices |
+|-----|------|---------|------------------------------|
+| `PROCESSING_MODE` | String | `"proc_separately"` | `"proc_separately"` (run command per object) or `"proc_together"` (single run with composed paths). | `"proc_together"` for batch tools like `tar`. |
+| `PREFIX` | String | `""` | Text before each path (e.g., `"`). | `"` for quoted paths. |
+| `SUFFIX` | String | `""` | Text after each path (e.g., `"`). | `"` |
+| `SEPARATOR` | String | `""` | Text between paths (e.g., space or `\n`). | `" "` for space-separated. |
+| `SORT_METHOD` | String | `"sort_none"` | `"sort_none"` or `"sort_by_name"`. | `"sort_by_name"` for ordered input. |
+| `SORT_OPTIONS` | Dict | `{}` | Sub-keys for sorting (if `SORT_METHOD` != none): `SORT_ASCENDING` (bool, default `true`), `COMPARE_CASE_INSENSITIVE` (bool, default `false`), `COMPARE_NONLITERAL` (bool, default `false`), `COMPARE_LOCALIZED` (bool, default `false`), `COMPARE_NUMERICAL` (bool, default `false`). | `{ "SORT_ASCENDING": <true/>, "COMPARE_CASE_INSENSITIVE": <true/> }` for Finder-like sort. |
+
+**Example** (Batch quote and space-separate paths):
+```xml
+<key>MULTIPLE_OBJECT_SETTINGS</key>
+<dict>
+  <key>PROCESSING_MODE</key>
+  <string>proc_together</string>
+  <key>PREFIX</key>
+  <string>"</string>
+  <key>SUFFIX</key>
+  <string>"</string>
+  <key>SEPARATOR</key>
+  <string> </string>
+  <key>SORT_METHOD</key>
+  <string>sort_by_name</string>
+  <key>SORT_OPTIONS</key>
+  <dict>
+    <key>SORT_ASCENDING</key>
+    <true/>
+    <key>COMPARE_CASE_INSENSITIVE</key>
+    <true/>
+  </dict>
+</dict>
+<key>COMMAND</key>
+<array>
+  <string>ls -1</string>
+</array>
+```
+
+**Notes**: Paths compose as `<PREFIX>path1<SUFFIX><SEPARATOR><PREFIX>path2<SUFFIX>`. Use with `act_file` for selections.
+
+---
+
+### `STANDARD_INPUT_PIPE` – Stdin Piping
+
+Pipes context (e.g., text) to command stdin. Array of strings/special words (no env vars). Works only with popen modes (`exe_shell_script`, etc.).
+
+| Key | Type | Default | Description & Best Practices |
+|-----|------|---------|------------------------------|
+| `STANDARD_INPUT_PIPE` | Array<String> | None | Content to pipe (e.g., `__OBJ_TEXT__`). | `["__OBJ_TEXT__"]` for selected text. |
+
+**Related Keys**:
+- `TEXT_REPLACE_OPTION` (String): `"txt_replace_none"` (default), `"txt_replace_cr_with_lf"`, etc., for line endings.
+
+**Example** (Grep selected text):
+```xml
+<key>STANDARD_INPUT_PIPE</key>
+<array>
+  <string>__OBJ_TEXT__</string>
+</array>
+<key>TEXT_REPLACE_OPTION</key>
+<string>txt_replace_cr_with_lf</string>
+<key>COMMAND</key>
+<array>
+  <string>grep 'hello'</string>
+</array>
+<key>EXECUTION_MODE</key>
+<string>exe_shell_script_with_output_window</string>
+```
+
+**Notes**: Avoids shell escaping; ideal for large/sensitive data. Command tool must read stdin.
+
+---
+
+### `POPEN_SHELL` – Custom Popen Shell
+
+Overrides default shell (`/bin/sh -c <command>`) for popen modes like `exe_shell_script`
+
+| Key | Type | Default | Description & Best Practices |
+|-----|------|---------|------------------------------|
+| `POPEN_SHELL` | Array<String> | `["/bin/sh", "-c"]` | Shell path + flags (command appended by OMC). | `["/bin/zsh", "-c"]` for zsh. |
+
+**Example** (Use tcsh):
+```xml
+<key>POPEN_SHELL</key>
+<array>
+  <string>/bin/tcsh</string>
+  <string>-c</string>
+</array>
+<key>COMMAND</key>
+<array>
+  <string>env</string>
+</array>
+<key>EXECUTION_MODE</key>
+<string>exe_shell_script_with_output_window</string>
+```
+
+**Notes**: Useful for shells with better features (e.g., zsh arrays). Test for compatibility.
+
+---
+
+### `NEXT_COMMAND_ID` – Static Command Chaining
+
+Unconditionally chains to another command on success (no cancel).
+
+| Key | Type | Default | Description & Best Practices |
+|-----|------|---------|------------------------------|
+| `NEXT_COMMAND_ID` | String | None | ID of next command (overridden by dynamic `omc_next_command`). |
+
+**Example**:
+```xml
+<key>NEXT_COMMAND_ID</key>
+<string>post.process</string>
+```
+
+**Notes**: Use for fixed sequences; dynamic tool takes precedence. No env var export to next.
+
+---
+
+### `ESCAPE_SPECIAL_CHARS` – Special Char Escaping
+
+Escapes inserted objects (paths/text) for safe execution. Applies only to inline objects in form of `__FOO__`. Not applied when exporting `OMC_FOO` environment variables.
+
+| Key | Type | Default | Description & Best Practices |
+|-----|------|---------|------------------------------|
+| `ESCAPE_SPECIAL_CHARS` | String | `"esc_with_backslash"` | Options: `"esc_none"`, `"esc_with_backslash"` (backslash spaces/LF/CR), `"esc_with_percent"` (URL), `"esc_with_percent_all"` (full URL), `"esc_for_applescript"` (AS quotes), `"esc_wrap_with_single_quotes_for_shell"` (quoted shell). | `"esc_wrap_with_single_quotes_for_shell"` for complex paths. |
+
+**Example** (Shell-quoted):
+```xml
+<key>ESCAPE_SPECIAL_CHARS</key>
+<string>esc_wrap_with_single_quotes_for_shell</string>
+<key>COMMAND</key>
+<array>
+  <string>ls</string>
+  <string>__OBJ_PATH__</string>
+</array>
+```
+
+**Notes**: `"esc_with_backslash"` default for inline paths/text objects. Avoid with quoted inserts. Use `"esc_for_applescript"` for AppleScript modes.
+
+---
+
+> ### Best Practices:
+> - **Multi-Object**: Test composed paths in scripts; use sorting for consistency.
+> - **Piping**: Prefer for text-heavy context objects and passwords or other secrets.
+> - **Chaining**: Use static for simple flows.
+
+---
+
+
+
+## Related Documentation
 
 The OMC project includes additional help files in the same directory as this reference. These documents cover companion tools and utilities shipped with the engine:
 
@@ -812,7 +970,7 @@ The OMC project includes additional help files in the same directory as this ref
 ---
 
 
-## 13. Example Full Applets:
+## Example Full Applets:
 
 [Find.app](https://github.com/abra-code/FindApp)<br>
 [Delta.app](https://github.com/abra-code/DeltaApp)<br>
