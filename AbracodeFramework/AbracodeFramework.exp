@@ -33,7 +33,7 @@ _OBJC_CLASS_$_OMCService
 _OBJC_CLASS_$_OMCSingleCommand
 _OBJC_CLASS_$_OMCMainMenuController
 _OBJC_CLASS_$_OMCSlider
-_OBJC_CLASS_$_OMCWebView
+_OBJC_CLASS_$_OMCWebKitView
 _OBJC_CLASS_$_OMCIKImageView
 _OBJC_CLASS_$_OMCProgressIndicator
 _OBJC_CLASS_$_OMCTextField
