@@ -263,13 +263,13 @@ GetAllDialogControllers()
 
 - (Boolean)findNib:(NSString *)inNibName forBundlePath:(NSString *)inPath
 {
-	if(inPath != NULL)
+	if(inPath != nil)
 	{//bundle with explicit path
 		NSBundle *myBundle = [NSBundle bundleWithPath:inPath];
 		if(myBundle != NULL)
 		{
 			NSNib *myNib = [[NSNib alloc] initWithNibNamed:inNibName bundle:myBundle];
-			if(myNib != NULL)
+			if(myNib != nil)
 			{
                 self.omcCocoaNib = [[OMCCocoaNib alloc] initWithNib:myNib];
 			}
@@ -277,8 +277,8 @@ GetAllDialogControllers()
 	}
 	else
 	{//main bundle
-		NSNib *myNib = [[NSNib alloc] initWithNibNamed:inNibName bundle:NULL];
-		if(myNib != NULL)
+		NSNib *myNib = [[NSNib alloc] initWithNibNamed:inNibName bundle:nil];
+		if(myNib != nil)
 		{
 			self.omcCocoaNib = [[OMCCocoaNib alloc] initWithNib:myNib];
 		}
@@ -288,19 +288,19 @@ GetAllDialogControllers()
 
 - (void)dealloc
 {
-	mOMCDialogProxy->SetController(NULL);
+	mOMCDialogProxy->SetController(nil);
 	
-	if(_window != NULL)
+	if(_window != nil)
 	{
 		//the window may outlive us
 		//we are dying we need to unregister all delegates, targets, observers, etc
 		id contentViewObject = [_window contentView];
-		if( (contentViewObject != NULL) && [contentViewObject isKindOfClass:[NSView class] ] )
+		if( (contentViewObject != nil) && [contentViewObject isKindOfClass:[NSView class] ] )
 		{
 			[self resetSubview: (NSView*)contentViewObject];
 		}
 	
-		[_window setDelegate:NULL];//we are dying
+		[_window setDelegate:nil];//we are dying
 	}
 }
 
@@ -320,7 +320,7 @@ GetAllDialogControllers()
 		//the table DOES NOT retain its data source nor delegate!
 		[self keepItem: tableController];//we retain all controllers and they will be released when this dialog controller is released
 
-		if( [myTable target] == NULL )//don't override targets preset in IB
+		if( [myTable target] == nil )//don't override targets preset in IB
 		{
 			[myTable setTarget:self];
 			//[myTable setAction:@selector(handleAction:)];
@@ -330,7 +330,7 @@ GetAllDialogControllers()
 	else if( [inView isKindOfClass:[NSControl class] ] )
 	{//for controls - faster
 		NSControl *myControl = (NSControl *)inView;
-		if( [myControl target] == NULL )//don't override targets preset in IB
+		if( [myControl target] == nil )//don't override targets preset in IB
 		{
 			[myControl setTarget:self];
 			[myControl setAction:@selector(handleAction:)];
@@ -340,7 +340,7 @@ GetAllDialogControllers()
 	{//for non-controls which may support target/action  - slower
 		bool setTarget = true;
 		if( [inView respondsToSelector:@selector(target)] )
-			if( [inView performSelector:@selector(target)] != NULL )//don't override targets preset in IB
+			if( [inView performSelector:@selector(target)] != nil )//don't override targets preset in IB
 				setTarget = false;
 
 		if(setTarget)
@@ -349,13 +349,25 @@ GetAllDialogControllers()
 			{
 				[inView performSelector:@selector(setTarget:) withObject:self];
                 
-                if ([inView conformsToProtocol:@protocol(OMCActionProtocol)]) {
+                if ([inView conformsToProtocol:@protocol(OMCActionProtocol)])
+                {
                     id<OMCActionProtocol> actionView = (id<OMCActionProtocol>)inView;
                     //if( [inView respondsToSelector:@selector(setAction:)] )
                     [actionView setAction:@selector(handleAction:)]; //only if target is ourselves we can set action
                 }
 			}
 		}
+        
+        if([inView conformsToProtocol:@protocol(OMCViewSetupProtocol)])
+        {
+            id<OMCViewSetupProtocol> viewToSetup = (id<OMCViewSetupProtocol>)inView;
+            if(mCommandRuntimeData != nullptr)
+            {
+                CFDictionaryRef envVars = mPlugin->CreateEnvironmentVariablesDict(NULL, *mCommandRuntimeData);
+                NSDictionary *__strong envVarsDict = CFBridgingRelease(envVars); // transfer ownership to strong var
+                [viewToSetup setupWithEnvironmentVariables:envVarsDict];
+            }
+        }
 	}
 
 	if([inView isKindOfClass:[NSTabView class]])
@@ -363,7 +375,7 @@ GetAllDialogControllers()
         for(NSTabViewItem *oneTab in ((NSTabView*)inView).tabViewItems)
         {
             NSView *tabView = [oneTab view];
-            if(tabView != NULL)
+            if(tabView != nil)
             {
                 [self initSubview:tabView];
             }

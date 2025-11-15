@@ -185,7 +185,7 @@ OMCDialog::CreateNibControlValue(SInt32 inSpecialWordID, CFStringRef inNibContro
 			controlID.Swap(newControlID);
 		}
 	}
-	else if( inSpecialWordID == NIB_WEB_VIEW_VALUE ) //OMCWebView control query
+	else if( inSpecialWordID == NIB_WEB_VIEW_VALUE ) //OMCWebKitView control query
 	{
 		partIDStr.Adopt(CFSTR(""), kCFObjRetain);
 		controlID.Adopt( CreateWebViewIDAndElementIDFromString(inNibControlString, partIDStr, isEnvStyle), kCFObjDontRetain );

@@ -1,5 +1,5 @@
 /*
-	OMCWebView.m
+	OMCWebKitView.m
 */
 
 #import "OMCWebKitView.h"
@@ -62,17 +62,19 @@ NSString *NormalizeOMCVariableIDFromElementID(NSString *inElementID)
     return self;
 }
 
-- (void)awakeFromNib
+// called right after the nib instantiation by our dialog controller
+- (void)setupWithEnvironmentVariables:(NSDictionary *)envVars
 {
-	[super awakeFromNib];
-	[self createWKWebKitView];
+    [self createWKWebKitViewWithEnvVars:envVars];
 }
 
--(void)createWKWebKitView
+-(void)createWKWebKitViewWithEnvVars:(NSDictionary *)envVars
 {
 	WKWebViewConfiguration *wkWebViewConfig = [[WKWebViewConfiguration alloc] init];
 	WKUserContentController *userContentController = [[WKUserContentController alloc] init];
 	wkWebViewConfig.userContentController = userContentController;
+
+    [self exportOMCEnvironmentVariables:envVars userContentController:userContentController];
 
 	NSBundle *frameworkBundle = [NSBundle bundleForClass:self.class];
 	NSURL *omcWKSupportScriptURL = [frameworkBundle URLForResource:@"OMCWebKitSupport" withExtension:@"js"];
@@ -82,7 +84,7 @@ NSString *NormalizeOMCVariableIDFromElementID(NSString *inElementID)
 		WKUserScript *omcWKSupportScript = [[WKUserScript alloc] initWithSource:omcWKSupportScriptSource injectionTime:WKUserScriptInjectionTimeAtDocumentStart forMainFrameOnly:NO];
 		[userContentController addUserScript:omcWKSupportScript];
 	}
-
+    
 	if(self.javaScriptFile != nil)
 	{   // Client specified a script file name to inject
 		// This should be a name of file in "Scripts" directory without an extension
@@ -118,6 +120,32 @@ NSString *NormalizeOMCVariableIDFromElementID(NSString *inElementID)
 	{
 		[self setStringValue:self.URL];
 	}
+}
+
+// Set OMC env variables in window.omc_env
+// JavaScript code can access the variables at runtime with code like:
+// const myAppPath = window.omc_env.OMC_APP_BUNDLE_PATH
+- (void)exportOMCEnvironmentVariables:(NSDictionary *)envVars userContentController:(WKUserContentController *)userContentController
+{
+    // Convert the dictionary to JSON
+    NSError *error = nil;
+    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:envVars options:0 error:&error];
+    if (jsonData == nil)
+    {
+        NSLog(@"Error converting dictionary to JSON: %@", error);
+        return;
+    }
+    
+    NSString *jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+    
+    // JavaScript code to inject
+    NSString *jsCode = [NSString stringWithFormat:@"window.omc_env = %@;", jsonString];
+
+    WKUserScript *userScript = [[WKUserScript alloc] initWithSource:jsCode
+                                                       injectionTime:WKUserScriptInjectionTimeAtDocumentStart
+                                                    forMainFrameOnly:NO];
+    
+    [userContentController addUserScript:userScript];
 }
 
 // keep the WKWebView subview resizing to the frame of hosting view

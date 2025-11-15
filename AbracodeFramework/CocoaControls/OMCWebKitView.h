@@ -5,6 +5,7 @@
 #import <AppKit/AppKit.h>
 #import <WebKit/WebKit.h>
 #import "OMCActionProtocol.h"
+#import "OMCViewSetupProtocol.h"
 
 // Note that OMCWebKitView inherits from NSView and not WKWebView
 // When creating this control in nib file, insert "custom view", which is NSView
@@ -14,7 +15,7 @@
 // once the control is created. It effectively forces everyone to create WKWebView in code 
 
 IB_DESIGNABLE
-@interface OMCWebKitView : NSView <WKScriptMessageHandler, WKUIDelegate, OMCActionProtocol>
+@interface OMCWebKitView : NSView <WKScriptMessageHandler, WKUIDelegate, OMCActionProtocol, OMCViewSetupProtocol>
 
 @property (nonatomic, readwrite) IBInspectable NSInteger tag;
 @property (nonatomic, strong) WKWebView *wkWebView;
