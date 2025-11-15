@@ -477,7 +477,7 @@ OmcHostTaskManager::ShowEndNotification()
 	}
 
 	CFObj<CFURLRef> iconURL;
-	CFStringRef iconName = CFSTR("app.icns");
+	CFStringRef iconName = CFSTR("app");
 
 //extern bundle actually should be checked first
 /*we have the dynamic command name here but we need the original name for default bundle
@@ -488,12 +488,23 @@ OmcHostTaskManager::ShowEndNotification()
 			iconURL.Adopt( CFBundleCopyResourceURL(defaultExternBundleRef, iconName, NULL, NULL) );
 	}
 */
-	
-	iconURL.Adopt( CFBundleCopyResourceURL(CFBundleGetMainBundle(), iconName, nullptr, nullptr) );//main bundle first from host app
+    
+    CFBundleRef appBundleRef = CFBundleGetMainBundle();
+    if(appBundleRef != nullptr)
+    {
+        CFTypeRef iconFileRef = CFBundleGetValueForInfoDictionaryKey(appBundleRef, CFSTR("CFBundleIconFile"));
+        CFStringRef iconFileName = ACFType<CFStringRef>::DynamicCast(iconFileRef);
+        if(iconFileName == nullptr)
+        {
+            iconFileName = iconName;
+        }
+        
+        iconURL.Adopt( CFBundleCopyResourceURL(appBundleRef, iconFileName, CFSTR("icns"), nullptr) ); //main bundle first from host app
+    }
 
 	if( (iconURL == nullptr) && (mBundle != nullptr) )//fall back to Abracode framework icon
     {
-        iconURL.Adopt(::CFBundleCopyResourceURL(mBundle, iconName, nullptr, nullptr));
+        iconURL.Adopt(::CFBundleCopyResourceURL(mBundle, iconName, CFSTR("icns"), nullptr));
     }
 
 //it checks for timeout after 30 seconds so it is quite useless for shorter timeouts
