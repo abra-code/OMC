@@ -4,6 +4,7 @@
 #include "ACFDict.h"
 #include "ACFArr.h"
 #include "DebugSettings.h"
+#include <vector>
 
 CFStringRef kOMCTopCommandID = CFSTR("top!");
 
@@ -1015,7 +1016,31 @@ PrescanArrayOfObjects( CommandDescription &currCommand, CFArrayRef inObjects )
     currCommand.isPrescanned = true;
 }
 
-//optimization - called early to check if password or clipboard will be used
+
+void
+PrescanEnvironmentVariables(CommandDescription &currCommand, CFDictionaryRef inEnvironList)
+{
+    if(inEnvironList == nullptr)
+        return;
+
+    CFIndex itemCount = ::CFDictionaryGetCount(inEnvironList);
+    std::vector<void *> keyList(itemCount);//OK to create empty container if itemCount == 0
+    if(itemCount > 0)
+    {
+        CFDictionaryGetKeysAndValues(inEnvironList, (const void **)keyList.data(), nullptr);
+    }
+        
+    for(CFIndex i = 0; i < itemCount; i++)
+    {        
+        CFStringRef theKey = ACFType<CFStringRef>::DynamicCast( keyList[(size_t)i] );
+        SpecialWordID specialWordID = GetSpecialEnvironWordID(theKey);
+        if(specialWordID != NO_SPECIAL_WORD)
+        {
+            ProcessOnePrescannedWord(currCommand, specialWordID, theKey, true);
+        }
+    }
+}
+
 void
 PrescanCommandDescription( CommandDescription &currCommand )
 {
@@ -1023,11 +1048,20 @@ PrescanCommandDescription( CommandDescription &currCommand )
         return;
 
 //    TRACE_CSTR("OnMyCommandCM->PrescanCommandDescription\n" );
-    if( currCommand.command != NULL )
+    if(currCommand.command != nullptr)
+    {
         PrescanArrayOfObjects( currCommand, currCommand.command );
+    }
 
-    if( currCommand.inputPipe != NULL )
+    if(currCommand.inputPipe != nullptr)
+    {
         PrescanArrayOfObjects( currCommand, currCommand.inputPipe );
+    }
+    
+    if(currCommand.customEnvironVariables != nullptr)
+    {
+        PrescanEnvironmentVariables(currCommand, currCommand.customEnvironVariables);
+    }
 }
 
 void
