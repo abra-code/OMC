@@ -42,7 +42,8 @@ enum
 
 enum
 {
-	kInputClearText = 0,
+    kInputNone = 0,
+	kInputClearText,
 	kInputPasswordText,
 	kInputPopupMenu,
 	kInputComboBox

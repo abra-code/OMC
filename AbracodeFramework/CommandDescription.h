@@ -95,7 +95,7 @@ typedef struct CommandDescription
     Boolean			simulatePaste {false};
     Boolean			nameIsDynamic {false};
     Boolean			nameContainsDynamicText {false};
-    UInt16			inputDialogType {kInputClearText};
+    UInt16			inputDialogType {kInputNone};
     CFStringRef		inputDialogOK {NULL};
     CFStringRef		inputDialogCancel {NULL};
     CFStringRef		inputDialogMessage {NULL};

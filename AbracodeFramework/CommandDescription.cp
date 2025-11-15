@@ -300,6 +300,7 @@ GetInputDialogParams(CommandDescription &outDesc, CFDictionaryRef inParams)
     CFStringRef theStr;
 
     ACFDict params(inParams);
+    outDesc.inputDialogType = kInputClearText; // default if explicit setting is absent
     if( params.GetValue(CFSTR("INPUT_TYPE"), theStr) )
     {
         if( kCFCompareEqualTo == ::CFStringCompare( theStr, CFSTR("input_clear_text"), 0 ) )
@@ -761,6 +762,32 @@ GetOneCommandParams(CommandDescription &outDesc, CFDictionaryRef inOneCommand, C
             CFRelease(outDesc.specialRequestedNibControls);
             outDesc.specialRequestedNibControls = nullptr;
         }
+    }
+
+// The presence of dialog settings is a trigger for showing given dialog and exporting its path variable
+    if(outDesc.chooseObjectParams != nullptr) // CHOOSE_OBJECT_DIALOG settings present
+    {
+        CFDictionaryAddValue(outDesc.customEnvironVariables, CFSTR("OMC_DLG_CHOOSE_OBJECT_PATH"), CFSTR(""));
+    }
+
+    if(outDesc.chooseFileParams != nullptr) // CHOOSE_FILE_DIALOG settings present
+    {
+        CFDictionaryAddValue(outDesc.customEnvironVariables, CFSTR("OMC_DLG_CHOOSE_FILE_PATH"), CFSTR(""));
+    }
+    
+    if(outDesc.chooseFolderParams != nullptr) // CHOOSE_FOLDER_DIALOG settigns present
+    {
+        CFDictionaryAddValue(outDesc.customEnvironVariables, CFSTR("OMC_DLG_CHOOSE_FOLDER_PATH"), CFSTR(""));
+    }
+
+    if(outDesc.saveAsParams != nullptr) // SAVE_AS_DIALOG settings present
+    {
+        CFDictionaryAddValue(outDesc.customEnvironVariables, CFSTR("OMC_DLG_SAVE_AS_PATH"), CFSTR(""));
+    }
+
+    if(outDesc.inputDialogType != kInputNone) // INPUT_DIALOG settings present
+    {
+        CFDictionaryAddValue(outDesc.customEnvironVariables, CFSTR("OMC_DLG_INPUT_TEXT"), CFSTR(""));
     }
 
 // using deputy for background execution?
