@@ -162,7 +162,7 @@ OSStatus
 OnMyCommandCM::ExamineContext( const AEDesc *inAEContext, AEDescList *outCommandPairs )
 {
 	OSStatus __unused err = Init();
-	return CommonContextCheck( inAEContext, NULL, outCommandPairs, -1 /*inCmdIndex*/ );
+	return CommonContextCheck( inAEContext, nullptr, nullptr, outCommandPairs, -1 /*inCmdIndex*/ );
 }
 
 
@@ -176,7 +176,7 @@ OnMyCommandCM::ExamineContext( const AEDesc *inAEContext, SInt32 inCommandRef, A
 	else
 		mCurrCommandIndex = 0;
 
-	return CommonContextCheck( inAEContext, NULL, outCommandPairs, cmdIndex );
+	return CommonContextCheck( inAEContext, nullptr, nullptr, outCommandPairs, cmdIndex );
 }
 
 //new API for OMC.h
@@ -189,13 +189,13 @@ OnMyCommandCM::ExamineContext( CFTypeRef inContext, SInt32 inCommandRef )
 	else
 		mCurrCommandIndex = 0;
 
-	return CommonContextCheck( NULL, inContext, NULL, cmdIndex );
+	return CommonContextCheck( nullptr, inContext, nullptr, nullptr, cmdIndex );
 }
 
 // it is OK to have NULL AE or CF, or both contexts here
 
 OSStatus
-OnMyCommandCM::CommonContextCheck( const AEDesc *inAEContext, CFTypeRef inContext, AEDescList *outCommandPairs, SInt32 inCmdIndex )
+OnMyCommandCM::CommonContextCheck( const AEDesc *inAEContext, CFTypeRef inContext, const OMCContextData *inParentContextData, AEDescList *outCommandPairs, SInt32 inCmdIndex )
 {
 	TRACE_CSTR( "OnMyCommandCM::CommonContextCheck\n" );
 	OSStatus err = noErr;
@@ -227,14 +227,14 @@ OnMyCommandCM::CommonContextCheck( const AEDesc *inAEContext, CFTypeRef inContex
 
 	//remember if the context was null on CMPluginExamineContext
 	//we cannot trust it when handling the selection later
-	if(inAEContext != NULL)
+	if(inAEContext != nullptr)
         contextData.isNullContext = ((inAEContext->descriptorType == typeNull) || (inAEContext->dataHandle == NULL));
 	else
         contextData.isNullContext = (inContext == NULL);
 
     CFObj<CFMutableArrayRef> contextFiles;
     
-	if(inContext != NULL)
+	if(inContext != nullptr)
 	{
 		CFTypeID contextType = ::CFGetTypeID( inContext );
 		if( contextType == ACFType<CFStringRef>::GetTypeID() )//text
@@ -250,12 +250,12 @@ OnMyCommandCM::CommonContextCheck( const AEDesc *inAEContext, CFTypeRef inContex
 
 			CFArrayRef fileArray = (CFArrayRef)inContext;
 			CFIndex fileCount = ::CFArrayGetCount(fileArray);
-			if( (fileCount > 0) && (contextFiles != NULL) )
+			if( (fileCount > 0) && (contextFiles != nullptr) )
 			{
 				for(CFIndex i = 0; i < fileCount; i++)
 				{
 					CFTypeRef oneItemRef = ::CFArrayGetValueAtIndex(fileArray, i);
-					if(oneItemRef != NULL)
+					if(oneItemRef != nullptr)
 					{
 						CFObj<CFURLRef> oneUrl;
 						contextType = ::CFGetTypeID( oneItemRef );
@@ -274,7 +274,7 @@ OnMyCommandCM::CommonContextCheck( const AEDesc *inAEContext, CFTypeRef inContex
 							oneUrl.Adopt( (CFURLRef)oneItemRef, kCFObjRetain );
 						}
 						
-						if(oneUrl != NULL)
+						if(oneUrl != nullptr)
 							::CFArrayAppendValue( contextFiles, (CFURLRef)oneUrl );
 					}
 				}
@@ -298,7 +298,7 @@ OnMyCommandCM::CommonContextCheck( const AEDesc *inAEContext, CFTypeRef inContex
     Boolean runningInShortcutsObserver = false;
 
 	CFStringRef hostAppBundleID = CFBundleGetIdentifier(CFBundleGetMainBundle());
-	if(hostAppBundleID != NULL)
+	if(hostAppBundleID != nullptr)
 	{
         if(kCFCompareEqualTo == ::CFStringCompare(hostAppBundleID, CFSTR("com.abracode.OMCService"), 0))
         {
@@ -335,16 +335,14 @@ OnMyCommandCM::CommonContextCheck( const AEDesc *inAEContext, CFTypeRef inContex
         }
     }
     	
-	if(mCommandList == NULL)
+	if(mCommandList == nullptr)
 	{//not loaded yet?
-		if( mPlistURL != NULL )
+		if( mPlistURL != nullptr )
 			LoadCommandsFromPlistFile(mPlistURL);
 		else
 			ReadPreferences();
 	}
-
-	Boolean anythingSelected = false;
-
+    
 	UInt32 theFlags = kListClear;
     size_t validObjectCount = 0;
 	if( !contextData.isNullContext && !contextData.isTextContext ) //we have some context that is not text
@@ -353,11 +351,11 @@ OnMyCommandCM::CommonContextCheck( const AEDesc *inAEContext, CFTypeRef inContex
 		//pre-allocate space for all object properties
 		long listItemsCount = 0;
 		err = paramErr;
-		if(inAEContext != NULL)
+		if(inAEContext != nullptr)
 		{
 			err = ::AECountItems(inAEContext, &listItemsCount);
 		}
-		else if(contextFiles != NULL)
+		else if(contextFiles != nullptr)
 		{
 			listItemsCount = ::CFArrayGetCount(contextFiles);
 			err = noErr;
@@ -373,31 +371,38 @@ OnMyCommandCM::CommonContextCheck( const AEDesc *inAEContext, CFTypeRef inContex
 			}
 		}
         
-		if( contextFiles != NULL )
+		if( contextFiles != nullptr )
             validObjectCount = CMUtils::ProcessObjectList( contextFiles, theFlags, CFURLCheckFileOrFolder, &contextData.objectList);
-		else if(inAEContext != NULL)
+		else if(inAEContext != nullptr)
             validObjectCount = CMUtils::ProcessObjectList( inAEContext, theFlags, CFURLCheckFileOrFolder, &contextData.objectList );
-
-        anythingSelected = (validObjectCount > 0);
+        
+        contextData.objectList.resize(validObjectCount);
 	}
 
+    if(contextData.isNullContext && (inParentContextData != nullptr) && !inParentContextData->isNullContext)
+    {
+        contextData = *inParentContextData;
+        contextData.isCopyFromParent = true;
+        validObjectCount = contextData.objectList.size();
+    }
+    
     //update total count
-    contextData.objectList.resize(validObjectCount);
-
-	Boolean isFolder = false;
-	if(contextData.objectList.size() == 1)
+    bool anythingSelected = (validObjectCount > 0);
+    bool isOneObjectSelected = (validObjectCount == 1);
+	bool isFolder = false;
+    
+	if(isOneObjectSelected)
 	{
-		isFolder = CheckAllObjects(contextData.objectList, CheckIfFolder, NULL);
+		isFolder = CheckAllObjects(contextData.objectList, CheckIfFolder, nullptr);
 		if(isFolder)
 		{
-			Boolean isPackage = CheckAllObjects(contextData.objectList, CheckIfPackage, NULL);
+			Boolean isPackage = CheckAllObjects(contextData.objectList, CheckIfPackage, nullptr);
 			if(isPackage)
 				isFolder = false;
 		}
 	}
 
-	if(	anythingSelected && ((theFlags & kListOutMultipleObjects) == 0) && isFolder &&
-		(runningInShortcutsObserver && frontProcessIsFinder) )
+	if(	isOneObjectSelected && isFolder && (runningInShortcutsObserver && frontProcessIsFinder) )
 	{//single folder selected in Finder - check what it is
         contextData.isOpenFolder = CMUtils::IsClickInOpenFinderWindow(inAEContext, false);
 		anythingSelected = ! contextData.isOpenFolder;
@@ -413,7 +418,7 @@ OnMyCommandCM::CommonContextCheck( const AEDesc *inAEContext, CFTypeRef inContex
 	CFObj<CFStringRef> frontProcessName = CopyFrontAppName();
 
 	//menu population requested
-	if(outCommandPairs != NULL)
+	if(outCommandPairs != nullptr)
 	{
 		(void)PopulateItemsMenu(inAEContext,
                                 *mInitialRuntimeData,
@@ -497,12 +502,14 @@ OnMyCommandCM::ExecuteCommand(AEDesc *inAEContext, SInt32 inCommandIndex, const 
          if(parentCommandRuntimeData != nullptr)
         {
             // a data with null context from our prior context check can be replaced with data from parent
-            if(commandRuntimeData->GetContextData().isNullContext)
+            OMCContextData &contextData = commandRuntimeData->GetContextData();
+            if(contextData.isNullContext || contextData.isCopyFromParent)
             {
                 // preserve our own command UUID, not the one from parent command
                 // but other than that transfer all other data from parent
                 CFObj<CFStringRef> commandUUID(commandRuntimeData->GetCommandUUID(), kCFObjRetain);
                 commandRuntimeData.Adopt(new CommandRuntimeData(*parentCommandRuntimeData));
+                commandRuntimeData->GetContextData().isCopyFromParent = true;
                 commandRuntimeData->SetCommandUUID(commandUUID);
             }
             else
@@ -601,7 +608,7 @@ OnMyCommandCM::ExecuteCommand(AEDesc *inAEContext, SInt32 inCommandIndex, const 
 				throw OSStatus(userCanceledErr);
 			}
 		}
-
+        
 		if((currCommand.prescannedCommandInfo & kOmcCommandContainsSaveAsDialog) != 0)
 		{
             PresentSaveAsDialog(this,
@@ -3054,8 +3061,14 @@ OnMyCommandCM::ExecuteSubcommand(SInt32 commandIndex, CommandRuntimeData *parent
 		//we don't want errors from previous subcommands to persist
 		//we start clean
 		mError = noErr;
-
-        err = CommonContextCheck( NULL, inContext, NULL, commandIndex );
+        
+        OMCContextData *parentContextData = nullptr;
+        if(parentCommandRuntimeData != nullptr)
+        {
+            parentContextData = &(parentCommandRuntimeData->GetContextData());
+        }
+        
+        err = CommonContextCheck( nullptr, inContext, parentContextData, nullptr, commandIndex );
 		if(err == noErr)
         {
             err = ExecuteCommand(nullptr, commandIndex, parentCommandRuntimeData);

@@ -321,7 +321,7 @@ OmcHostTaskManager::NoteTaskEnded(CFIndex finishedExecutorIndex, bool wasSynchro
             
 			::CFArrayRemoveValueAtIndex(mRunningTasks, i);//releases task
 			mFinishedTasks++;
-			if(mProgress != NULL)
+			if(mProgress != nullptr)
             {
                 mUserCanceled = OMCDeferredProgressAdvanceProgress(mProgress, finishedExecutorIndex, 0, NULL, true);
             }
@@ -350,7 +350,7 @@ OmcHostTaskManager::NoteTaskEnded(CFIndex finishedExecutorIndex, bool wasSynchro
                 }
                 while(runloopResult == kCFRunLoopRunHandledSource);
 
-                OSStatus __unused err = mPlugin->ExecuteSubcommand(mCurrCommand.name, nextCommandID, finishedTask->commandRuntimeData, NULL);
+                OSStatus __unused err = mPlugin->ExecuteSubcommand(mCurrCommand.name, nextCommandID, finishedTask->commandRuntimeData, nullptr);
             }
             break;
 		}

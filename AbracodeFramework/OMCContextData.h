@@ -30,7 +30,24 @@ class OMCContextData
 {
 public:
 	OMCContextData() {}
-    
+    OMCContextData(const OMCContextData &otherContextData)
+      : contextText(otherContextData.contextText),
+        clipboardText(otherContextData.clipboardText),
+        objectList(otherContextData.objectList),
+        objectListSorting(otherContextData.objectListSorting),
+        currObjectIndex(0),
+        saveAsPath(otherContextData.saveAsPath),
+        chooseFilePath(otherContextData.chooseFilePath),
+        chooseFolderPath(otherContextData.chooseFolderPath),
+        chooseObjectPath(otherContextData.chooseObjectPath),
+        isNullContext(otherContextData.isNullContext),
+        isTextContext(otherContextData.isTextContext),
+        isTextInClipboard(otherContextData.isTextInClipboard),
+        isOpenFolder(otherContextData.isOpenFolder),
+        isCopyFromParent(otherContextData.isCopyFromParent)
+    {
+    }
+
 	CFObj<CFStringRef>			contextText;
     CFObj<CFStringRef>          clipboardText; // may be the same as contextText, just retained
 	std::vector<OneObjProperties> objectList;
@@ -44,6 +61,7 @@ public:
     Boolean						isTextContext {false};
     Boolean                     isTextInClipboard {false};
     Boolean                     isOpenFolder {false};
+    Boolean                     isCopyFromParent {false};
 };
 
 OSStatus SortObjectListByName(OMCContextData &contextData,

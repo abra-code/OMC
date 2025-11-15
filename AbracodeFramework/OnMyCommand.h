@@ -47,7 +47,7 @@ public:
 	virtual OSStatus	HandleSelection( AEDesc *inAEContext, SInt32 inCommandRef ); // pass NULL for inAEContext when executing with CF Context
     virtual void		PostMenuCleanup();
 
-	OSStatus			CommonContextCheck( const AEDesc *inAEContext, CFTypeRef inContext, AEDescList *outCommandPairs, SInt32 inCmdIndex );
+	OSStatus			CommonContextCheck( const AEDesc *inAEContext, CFTypeRef inContext, const OMCContextData *inParentContext, AEDescList *outCommandPairs, SInt32 inCmdIndex );
     // internal API to execute a command
     OSStatus            ExecuteCommand( AEDesc *inAEContext, SInt32 inCommandIndex, const CommandRuntimeData *parentCommandRuntimeData ); // pass NULL for inAEContext when executing with CF Context
 
