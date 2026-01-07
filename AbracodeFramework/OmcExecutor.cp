@@ -34,6 +34,49 @@ AddBundlePathToDict(ACFMutableDict &ioDict, CFStringRef inKey, CFBundleRef inBun
 	}
 }
 
+static inline
+Boolean IsFileExecutable(CFURLRef inFileURL)
+{
+    if(inFileURL == nullptr)
+    {
+        return false;
+    }
+    
+    CFErrorRef error = nullptr;
+    CFObj<CFBooleanRef> isExecutableRef;
+    if(::CFURLCopyResourcePropertyForKey(inFileURL, kCFURLIsExecutableKey, &isExecutableRef, &error))
+    {
+        return ((isExecutableRef != nullptr) && ::CFBooleanGetValue(isExecutableRef));
+    }
+    return false;
+}
+
+static inline
+const char* FindInstalledPython(void)
+{
+    // Relative to your app bundle
+    const char* candidates[] =
+    {
+        "/Library/Frameworks/Python.framework/Versions/Current/bin/python3", // official Python installer
+        "/opt/homebrew/bin/python3", // symlink for homebrew arm64 installation
+        "/usr/local/bin/python3", // symlink for homebrew x86_64 or official Python installation
+        "/opt/local/bin/python3", // MacPorts
+        // pyenv or conda installed python requires respective init/activation so not usable in GUI apps
+        NULL
+    };
+    
+    for (int i = 0; candidates[i] != NULL; i++)
+    {
+        if (::access(candidates[i], X_OK) == 0)
+        {
+            return candidates[i];
+        }
+    }
+    
+    return "/usr/bin/python3"; // older Python 3.9.x redirecting to Xcode bundle
+}
+
+
 #pragma mark -
 
 void
@@ -216,7 +259,7 @@ void PopenCFSocketCallback(
 
 #pragma mark -
 
-POpenExecutor::POpenExecutor(const CommandDescription &inCommandDesc, CFDictionaryRef inEnviron)
+POpenExecutor::POpenExecutor(const CommandDescription &inCommandDesc, CFMutableDictionaryRef inEnviron)
 	: OmcExecutor(),
 	mCustomShell(inCommandDesc.popenShell, kCFObjRetain),
 	mEnvironmentVariables(inEnviron, kCFObjRetain)
@@ -268,7 +311,7 @@ POpenExecutor::Execute( const char *inCommand, OSStatus &outError )
 		}
 	}
 	
-	ProcessOutputString(nullptr); //send one progress notification before we start the exeuction
+	ProcessOutputString(nullptr); //send one progress notification before we start the execution
 
 	outError = omc_popen(	inCommand, shellArgs.data(), envList,
 							wantsToWriteToStdin ? (kOMCPopenRead | kOMCPopenWrite) : kOMCPopenRead,
@@ -503,7 +546,7 @@ POpenExecutor::WriteInputStringChunk()
 POpenWithOutputExecutor::POpenWithOutputExecutor(const CommandDescription &inCommandDesc,
 												CFStringRef inDynamicName,
 												CFBundleRef inExternBundleRef,
-												CFDictionaryRef inEnviron)
+												CFMutableDictionaryRef inEnviron)
 	: POpenExecutor(inCommandDesc, inEnviron),
 	mSettingsDict(inCommandDesc.outputWindowOptions, kCFObjRetain),
 	mCommandName(inCommandDesc.name, kCFObjRetain),
@@ -553,7 +596,7 @@ static ExtensionAndShell sExtensionToShellMap[] =
 	{ CFSTR("sh"), CFSTR("/bin/sh") },
     // Python code is problematic if shipped in an app to customers without Xcode tools installed
     // TODO: detect py and add a warning instead of failing silently
-    { CFSTR("py"), CFSTR("/usr/bin/python3") }, // requires Xcode Command Line Tools, starting with macOS 11
+    { CFSTR("py"), CFSTR("/usr/bin/python3") }, // placholder - will be dynamically resolved with GetPythonToolPath
 	{ CFSTR("pl"), CFSTR("/usr/bin/perl") },
 	{ CFSTR("applescript"), CFSTR("/usr/bin/osascript") },
 	{ CFSTR("scpt"), CFSTR("/usr/bin/osascript") },
@@ -587,11 +630,48 @@ enum
 
 static_assert(kScriptExtCount == sizeof(sExtensionToShellMap)/sizeof(ExtensionAndShell), "Script extension map must match the enum");
 
-//sh is the default fallback for any script with no extension
+// sh is the default fallback for any script with no extension
 CFStringRef kDefaultShell = sExtensionToShellMap[0].shell;
 
+static CFStringRef GetPythonToolPath()
+{
+    static CFStringRef sPythonPath = nullptr;
+
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        // Check if the app has embeded Python 3 in its bundle
+        // the expected location for bundled Python is OMCApplet.app/Contents/Library/Python/
+        // A relocatable Python 3 distribution suitable for embeddeding in the applets can be produced with this infra:
+        // https://github.com/abra-code/Python-Embedding
+        CFObj<CFURLRef> hostAppBundleURL = ::CFBundleCopyBundleURL(::CFBundleGetMainBundle());
+        if(hostAppBundleURL != nullptr)
+        {
+            CFObj<CFURLRef> pythonPathURL(::CFURLCreateCopyAppendingPathComponent(
+                                              kCFAllocatorDefault,
+                                              hostAppBundleURL,
+                                              CFSTR("Contents/Library/Python/bin/python3"),
+                                              false));
+            if((pythonPathURL != nullptr) && IsFileExecutable(pythonPathURL))
+            {
+                sPythonPath = CreatePathFromCFURL(pythonPathURL, kEscapeNone);
+            }
+        }
+        
+        // Embedded Python 3 distribution not found
+        // The command assumes Python is installed on deployment machine
+        // Let's find the location, if any
+        if(sPythonPath == nullptr)
+        {
+            const char *python_path = FindInstalledPython();
+            sPythonPath = ::CFStringCreateWithCString(kCFAllocatorDefault, python_path, kCFStringEncodingUTF8);
+        }
+    });
+
+    return sPythonPath;
+}
+
 static inline
-CFStringRef GetShellFromScriptExtension(CFStringRef inExt)
+CFStringRef GetShellFromScriptExtension(CFStringRef inExt, CFMutableDictionaryRef envVariables)
 {
 	if(inExt == nullptr)
 		return kDefaultShell;
@@ -601,9 +681,13 @@ CFStringRef GetShellFromScriptExtension(CFStringRef inExt)
 	{
 		if(kCFCompareEqualTo == ::CFStringCompare( inExt, sExtensionToShellMap[i].extension, kCFCompareCaseInsensitive))
 		{
-            if((i == kScriptExtPy) && (OnMyCommandCM::GetCurrentMacOSVersion() < 123000))
+            if(i == kScriptExtPy)
             {
-                 return CFSTR("/usr/bin/python"); // removed from macOS starting with 12.3, (early 2022)
+                // add pyc cache location to env vars
+                // this is not a writable location for sandboxed apps but OMC applets are hard or impossible to sandbox
+                CFStringRef pycCachePath = CFSTR("/tmp/Pyc");
+                CFDictionaryAddValue(envVariables, CFSTR("PYTHONPYCACHEPREFIX"), pycCachePath);
+                return GetPythonToolPath();
             }
 
 			return sExtensionToShellMap[i].shell;
@@ -618,29 +702,10 @@ static std::string CreateScriptPathAndShell(
                                 CFStringRef inCommandName,
 								CFStringRef inCommandID,
 								CFObj<CFArrayRef> &ioCustomShell,
+                                CFMutableDictionaryRef envVariables,
 								const char *inCommand)
 {
 	CFObj<CFStringRef> scriptFilePath;
-
-    // Not a good idea, removed
-	// inCommand, if non-empty, is an absolute file path (not expected to be a common setup)
-    /*
-	if((inCommand != nullptr) && (inCommand[0] != 0))
-	{
-		scriptFilePath.Adopt(CFStringCreateWithCString(kCFAllocatorDefault, inCommand, kCFStringEncodingUTF8));
-		CFObj<CFURLRef> scriptURL = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, scriptFilePath, kCFURLPOSIXPathStyle, false);
-		if(scriptURL != nullptr)
-		{
-			CFErrorRef error = nullptr;
-			Boolean fileExists = CFURLResourceIsReachable(scriptURL, &error);
-			if(!fileExists)
-			{
-				CFRelease(error);
-				scriptFilePath.Release();
-			}
-		}
-	}
-    */
 
     CFBundleRef hostBundle = inExternBundle; // formally supporting extern bundles
     if(hostBundle == nullptr)
@@ -694,7 +759,7 @@ static std::string CreateScriptPathAndShell(
 		CFObj<CFStringRef> extension = CopyFilenameExtension(scriptFilePath);
 		CFMutableArrayRef newShellArray = CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
 		ioCustomShell.Adopt(newShellArray, kCFObjDontRetain);
-		CFStringRef shellPath = GetShellFromScriptExtension(extension); //always returns non-null shell
+		CFStringRef shellPath = GetShellFromScriptExtension(extension, envVariables); //always returns non-null shell
 		CFArrayAppendValue(newShellArray, (const void *)shellPath);
 	}
 
@@ -704,7 +769,7 @@ static std::string CreateScriptPathAndShell(
 POpenScriptFileExecutor::POpenScriptFileExecutor(
 							const CommandDescription &inCommandDesc,
 							CFBundleRef inExternBundleRef,
-							CFDictionaryRef inEnviron)
+							CFMutableDictionaryRef inEnviron)
 	: POpenExecutor(inCommandDesc, inEnviron),
 	mCommandID(inCommandDesc.commandID, kCFObjRetain),
 	mExternBundleRef(inExternBundleRef, kCFObjRetain)
@@ -722,7 +787,7 @@ POpenScriptFileExecutor::POpenScriptFileExecutor(
 bool
 POpenScriptFileExecutor::Execute( const char *inCommand, OSStatus &outError )
 {
-	std::string pathStr = CreateScriptPathAndShell(mExternBundleRef, mCommandName, mCommandID, mCustomShell, inCommand);
+	std::string pathStr = CreateScriptPathAndShell(mExternBundleRef, mCommandName, mCommandID, mCustomShell, mEnvironmentVariables, inCommand);
 	return POpenExecutor::Execute(pathStr.c_str(), outError);
 }
 
@@ -732,7 +797,7 @@ POpenScriptFileWithOutputExecutor::POpenScriptFileWithOutputExecutor(
 										const CommandDescription &inCommandDesc,
 										CFStringRef inDynamicName,
 										CFBundleRef inExternBundleRef,
-										CFDictionaryRef inEnviron)
+										CFMutableDictionaryRef inEnviron)
 	: POpenWithOutputExecutor(inCommandDesc, inDynamicName, inExternBundleRef, inEnviron),
 	mCommandID(inCommandDesc.commandID, kCFObjRetain)
 {
@@ -749,7 +814,7 @@ POpenScriptFileWithOutputExecutor::POpenScriptFileWithOutputExecutor(
 bool
 POpenScriptFileWithOutputExecutor::Execute( const char *inCommand, OSStatus &outError )
 {
-	std::string pathStr = CreateScriptPathAndShell(mExternBundleRef, mCommandName, mCommandID, mCustomShell, inCommand);
+	std::string pathStr = CreateScriptPathAndShell(mExternBundleRef, mCommandName, mCommandID, mCustomShell, mEnvironmentVariables, inCommand);
 	return POpenWithOutputExecutor::Execute( pathStr.c_str(), outError );
 }
 

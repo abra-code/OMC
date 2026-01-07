@@ -1033,7 +1033,7 @@ OnMyCommandCM::ExecuteCommandWithObjects(CommandRuntimeData *initialCommandRunti
         
 		CFObj<CFMutableStringRef> theCommand( CreateCommandStringWithObjects(currCommand.command, *commandRuntimeData, escapingMode) );
 		CFObj<CFMutableStringRef> inputPipe( CreateCommandStringWithObjects(currCommand.inputPipe, *commandRuntimeData, kEscapeNone) );
-		CFObj<CFDictionaryRef> environList( CreateEnvironmentVariablesDict(NULL, *commandRuntimeData) );
+		CFObj<CFMutableDictionaryRef> environList( CreateEnvironmentVariablesDict(NULL, *commandRuntimeData) );
 
 		ARefCountedObj<OmcExecutor> theExec;
         
@@ -1175,7 +1175,7 @@ OnMyCommandCM::ExecuteCommandWithText(CommandDescription &currCommand, CFStringR
 
 	CFObj<CFMutableStringRef> theCommand( CreateCommandStringWithText(currCommand.command, inStrRef, *commandRuntimeData, escapingMode) );
 	CFObj<CFMutableStringRef> inputPipe( CreateCommandStringWithText(currCommand.inputPipe, inStrRef, *commandRuntimeData, kEscapeNone) );
-	CFObj<CFDictionaryRef> environList( CreateEnvironmentVariablesDict(inStrRef, *commandRuntimeData) );
+	CFObj<CFMutableDictionaryRef> environList( CreateEnvironmentVariablesDict(inStrRef, *commandRuntimeData) );
 
 	CFObj<CFStringRef> dynamicCommandName( CreateDynamicCommandName(currCommand,
                                                                     *commandRuntimeData,
@@ -2146,7 +2146,7 @@ OnMyCommandCM::CreateCommandStringWithText(CFArrayRef inFragments,
 	return theCommand;
 }
 
-CFDictionaryRef
+CFMutableDictionaryRef
 OnMyCommandCM::CreateEnvironmentVariablesDict(CFStringRef inObjTextRef, CommandRuntimeData &commandRuntimeData)
 {
 	CommandDescription &currCommand = GetCurrentCommand();

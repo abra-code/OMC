@@ -81,7 +81,7 @@ class POpenExecutor
 {
 public:
 						
-						POpenExecutor(const CommandDescription &inCommandDesc, CFDictionaryRef inEnviron);
+						POpenExecutor(const CommandDescription &inCommandDesc, CFMutableDictionaryRef inEnviron);
 	virtual				~POpenExecutor();
 
 	virtual void		Finish(bool wasSynchronous, bool sendNotification, OSStatus inError);
@@ -98,7 +98,7 @@ protected:
 protected:
 
 	CFObj<CFArrayRef>		mCustomShell;
-	CFObj<CFDictionaryRef>	mEnvironmentVariables;
+	CFObj<CFMutableDictionaryRef> mEnvironmentVariables;
 
     ChildProcessInfo		mChildProcessInfo {-1, -1, NULL};
     CFSocketRef				mReadSocket {NULL};
@@ -119,7 +119,7 @@ public:
 						POpenWithOutputExecutor(const CommandDescription &inCommandDesc,
 												CFStringRef inDynamicName,
 												CFBundleRef inExternBundleRef,
-												CFDictionaryRef inEnviron);
+												CFMutableDictionaryRef inEnviron);
 	virtual				~POpenWithOutputExecutor();
 
 	virtual void		Finish(bool wasSynchronous, bool sendNotification, OSStatus inError);
@@ -143,7 +143,7 @@ class POpenScriptFileExecutor
 public:
 	POpenScriptFileExecutor(const CommandDescription &inCommandDesc,
 							CFBundleRef inExternBundleRef,
-							CFDictionaryRef inEnviron);
+							CFMutableDictionaryRef inEnviron);
 
 protected:
 	virtual bool		Execute( const char *inCommand, OSStatus &outError );
@@ -161,7 +161,7 @@ public:
 	POpenScriptFileWithOutputExecutor(const CommandDescription &inCommandDesc,
 							CFStringRef inDynamicName,
 							CFBundleRef inExternBundleRef,
-							CFDictionaryRef inEnviron);
+                            CFMutableDictionaryRef inEnviron);
 protected:
 	virtual bool		Execute( const char *inCommand, OSStatus &outError );
 

@@ -112,7 +112,7 @@ public:
                                                     CFStringRef inLocTableName = NULL,
                                                     CFBundleRef inLocBundleRef = NULL);
     
-	CFDictionaryRef		CreateEnvironmentVariablesDict(CFStringRef inObjTextRef, CommandRuntimeData &commandRuntimeData);
+    CFMutableDictionaryRef CreateEnvironmentVariablesDict(CFStringRef inObjTextRef, CommandRuntimeData &commandRuntimeData);
 
 	void				AppendTextToCommand(CFMutableStringRef inCommandRef, CFStringRef inStrRef,
 											OneObjProperties *inObjList, CFIndex inObjCount, CFIndex inCurrIndex,
