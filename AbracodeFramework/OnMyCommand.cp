@@ -2550,7 +2550,7 @@ OnMyCommandCM::PopulateEnvironList(CFMutableDictionaryRef ioEnvironList, Command
     OMCContextData &contextData = commandRuntimeData.GetContextData();
     
 	CFIndex itemCount = ::CFDictionaryGetCount(ioEnvironList);
-	std::vector<void *> keyList(itemCount);//OK to create empty container if itemCount == 0
+	std::vector<void *> keyList(itemCount); // OK to create empty container if itemCount == 0
 	if(itemCount > 0)
 	{
 		CFDictionaryGetKeysAndValues(ioEnvironList, (const void **)keyList.data(), NULL);
@@ -2851,6 +2851,10 @@ OnMyCommandCM::PopulateEnvironList(CFMutableDictionaryRef ioEnvironList, Command
 				newDel.Adopt(newStrRef, kCFObjDontRetain);
 			::CFDictionarySetValue(ioEnvironList, theKey, newStrRef);
 		}
+        else
+        {
+            CFDictionaryRemoveValue(ioEnvironList, theKey);
+        }
 	}
 	
 	if(activeDialog != nullptr)

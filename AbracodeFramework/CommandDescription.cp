@@ -352,7 +352,7 @@ CreateAllCoreEnvironmentVariablePlaceholders()
     {
         if(sSpecialWordAndIDList[i].alwaysExport)
         {
-            CFDictionaryAddValue(outDict, sSpecialWordAndIDList[i].environName, CFSTR("") /*placeholder*/);
+            CFDictionaryAddValue(outDict, sSpecialWordAndIDList[i].environName, kCFBooleanFalse /*placeholder*/);
         }
     }
 
@@ -1051,10 +1051,12 @@ PrescanEnvironmentVariables(CommandDescription &currCommand, CFDictionaryRef inE
         return;
 
     CFIndex itemCount = ::CFDictionaryGetCount(inEnvironList);
-    std::vector<void *> keyList(itemCount);//OK to create empty container if itemCount == 0
+    std::vector<void *> keyList(itemCount); // OK to create empty container if itemCount == 0
+    std::vector<void *> valueList(itemCount); // OK to create empty container if itemCount == 0
+ 
     if(itemCount > 0)
     {
-        CFDictionaryGetKeysAndValues(inEnvironList, (const void **)keyList.data(), nullptr);
+        CFDictionaryGetKeysAndValues(inEnvironList, (const void **)keyList.data(), (const void **)valueList.data());
     }
         
     for(CFIndex i = 0; i < itemCount; i++)
@@ -1063,7 +1065,16 @@ PrescanEnvironmentVariables(CommandDescription &currCommand, CFDictionaryRef inE
         SpecialWordID specialWordID = GetSpecialEnvironWordID(theKey);
         if(specialWordID != NO_SPECIAL_WORD)
         {
-            ProcessOnePrescannedWord(currCommand, specialWordID, theKey, true);
+            // only prescan environment variable list keys if the value is string
+            // custom env var keys defined in command plist have string values
+            // default "always export" keys have kCFBooleanFalse values and should be filtered out at this point
+            // because the goal of prescanning is to determine the intent of the command designer:
+            // which objects are requested to be explicitly exported
+            CFStringRef envVal = ACFType<CFStringRef>::DynamicCast( valueList[(size_t)i] );
+            if(envVal != nullptr)
+            {
+                ProcessOnePrescannedWord(currCommand, specialWordID, theKey, true);
+            }
         }
     }
 }
