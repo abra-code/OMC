@@ -304,10 +304,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 1D039D792E1683C700D4924A /* OnMyCommandCM-target.xcconfig */;
 			buildSettings = {
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(LOCAL_LIBRARY_DIR)/Frameworks",
-				);
 			};
 			name = Debug;
 		};
@@ -315,10 +311,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 1D039D792E1683C700D4924A /* OnMyCommandCM-target.xcconfig */;
 			buildSettings = {
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(LOCAL_LIBRARY_DIR)/Frameworks",
-				);
 			};
 			name = Release;
 		};
