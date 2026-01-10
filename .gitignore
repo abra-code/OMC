@@ -1,6 +1,5 @@
 .DS_Store
 *.xcuserstate
 xcuserdata
-*.xcuserstate
 build/
 Common/OmcDistribution.xcconfig
