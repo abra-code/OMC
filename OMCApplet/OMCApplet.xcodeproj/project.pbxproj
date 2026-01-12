@@ -9,6 +9,11 @@
 /* Begin PBXBuildFile section */
 		1D039DCC2E168F2500D4924A /* Abracode.framework in Copy Abracode.framework */ = {isa = PBXBuildFile; fileRef = 1D039DBD2E168DAF00D4924A /* Abracode.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		1D3BB16E229D0B6600542933 /* MainMenu.nib in Resources */ = {isa = PBXBuildFile; fileRef = 1D3BB16C229D0B6600542933 /* MainMenu.nib */; };
+		1D80D5302F12E81400E3B4FB /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
+		1D80D5312F12E81400E3B4FB /* AbracodeFrameworkVersion.c in Sources */ = {isa = PBXBuildFile; fileRef = E2ACB28C12EAE02700A8ACF6 /* AbracodeFrameworkVersion.c */; };
+		1D80D5332F12E81400E3B4FB /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
+		1D80D5342F12E81400E3B4FB /* Abracode.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E23EA1640DFB026E0070E63F /* Abracode.framework */; settings = {ATTRIBUTES = (Required, ); }; };
+		1D80D5362F12E81400E3B4FB /* Abracode.framework in Copy Abracode.framework */ = {isa = PBXBuildFile; fileRef = 1D039DBD2E168DAF00D4924A /* Abracode.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		1DEE0AF62EB2261900729DAE /* OMCApplet.icon in Resources */ = {isa = PBXBuildFile; fileRef = 1DEE0AF52EB2261900729DAE /* OMCApplet.icon */; };
 		1DF18DE7226C773300305370 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 1DF18DE5226C773300305370 /* InfoPlist.strings */; };
 		8D11072D0486CEB800E47090 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
@@ -33,6 +38,13 @@
 			remoteGlobalIDString = 8DC2EF5B0486A6940098B216;
 			remoteInfo = AbracodeFramework;
 		};
+		1D80D5292F12E81400E3B4FB /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1D039DB62E168DAF00D4924A /* Abracode.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 8DC2EF4F0486A6940098B216;
+			remoteInfo = AbracodeFramework;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -45,6 +57,27 @@
 				1D039DCC2E168F2500D4924A /* Abracode.framework in Copy Abracode.framework */,
 			);
 			name = "Copy Abracode.framework";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1D80D5352F12E81400E3B4FB /* Copy Abracode.framework */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				1D80D5362F12E81400E3B4FB /* Abracode.framework in Copy Abracode.framework */,
+			);
+			name = "Copy Abracode.framework";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1D80D5372F12E81400E3B4FB /* Copy Scripts */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = Scripts;
+			dstSubfolderSpec = 7;
+			files = (
+			);
+			name = "Copy Scripts";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		1DA51CC52EACE0C700BFF670 /* Copy Scripts */ = {
@@ -68,6 +101,7 @@
 		1D4971A82575A67700F7131C /* OmcProjectRelease.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectRelease.xcconfig; path = ../Common/OmcProjectRelease.xcconfig; sourceTree = "<group>"; };
 		1D4971A92575A67700F7131C /* OmcProjectDebug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectDebug.xcconfig; path = ../Common/OmcProjectDebug.xcconfig; sourceTree = "<group>"; };
 		1D7618BE231CEE28005F4AEB /* OMCApplet.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = OMCApplet.entitlements; sourceTree = "<group>"; };
+		1D80D53C2F12E81400E3B4FB /* OMCPythonApplet.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OMCPythonApplet.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1D94D4A4229D2D0C009938BB /* Base */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = Base; path = Base.lproj/MainMenu.nib; sourceTree = "<group>"; };
 		1DD21130259F43C90041BB8F /* OmcVersion.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcVersion.xcconfig; path = ../Common/OmcVersion.xcconfig; sourceTree = "<group>"; };
 		1DEE0AF52EB2261900729DAE /* OMCApplet.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = OMCApplet.icon; sourceTree = "<group>"; };
@@ -85,6 +119,26 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		1D80D53D2F12E81400E3B4FB /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				app.did.launch.sh,
+				app.will.launch.sh,
+				app.will.terminate.sh,
+				Welcome.main.py,
+			);
+			target = 1D80D5272F12E81400E3B4FB /* OMCPythonApplet */;
+		};
+		1D80D57C2F1308B900E3B4FB /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				"Build-Embedded-Python.sh",
+				"Command-Python-release.plist",
+				"OMCPythonApplet-Info.plist",
+				"OMCPythonApplet-target.xcconfig",
+			);
+			target = 1D80D5272F12E81400E3B4FB /* OMCPythonApplet */;
+		};
 		1DA51CC42EACE0BE00BFF670 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -97,6 +151,13 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+		1D80D54F2F12F06E00E3B4FB /* PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
+			buildPhase = 1D80D5372F12E81400E3B4FB /* Copy Scripts */;
+			membershipExceptions = (
+				Welcome.main.py,
+			);
+		};
 		1DA51CC82EACE0ED00BFF670 /* PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
 			buildPhase = 1DA51CC52EACE0C700BFF670 /* Copy Scripts */;
@@ -109,10 +170,20 @@
 /* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		1DA51CBE2EACE01000BFF670 /* Scripts */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (1DA51CC42EACE0BE00BFF670 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, 1DA51CC82EACE0ED00BFF670 /* PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = Scripts; sourceTree = "<group>"; };
+		1D80D5752F1308AC00E3B4FB /* PythonApplet */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (1D80D57C2F1308B900E3B4FB /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = PythonApplet; sourceTree = "<group>"; };
+		1DA51CBE2EACE01000BFF670 /* Scripts */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (1DA51CC42EACE0BE00BFF670 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, 1DA51CC82EACE0ED00BFF670 /* PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet */, 1D80D53D2F12E81400E3B4FB /* PBXFileSystemSynchronizedBuildFileExceptionSet */, 1D80D54F2F12F06E00E3B4FB /* PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = Scripts; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		1D80D5322F12E81400E3B4FB /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1D80D5332F12E81400E3B4FB /* Cocoa.framework in Frameworks */,
+				1D80D5342F12E81400E3B4FB /* Abracode.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		8D11072E0486CEB800E47090 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -148,6 +219,7 @@
 			isa = PBXGroup;
 			children = (
 				8D1107320486CEB800E47090 /* OMCApplet.app */,
+				1D80D53C2F12E81400E3B4FB /* OMCPythonApplet.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -166,6 +238,7 @@
 				1D7618BE231CEE28005F4AEB /* OMCApplet.entitlements */,
 				29B97315FDCFA39411CA2CEA /* Other Sources */,
 				29B97317FDCFA39411CA2CEA /* Resources */,
+				1D80D5752F1308AC00E3B4FB /* PythonApplet */,
 				1D039D762E167EC300D4924A /* OMCApplet-target.xcconfig */,
 				1DD21130259F43C90041BB8F /* OmcVersion.xcconfig */,
 				1D4971A92575A67700F7131C /* OmcProjectDebug.xcconfig */,
@@ -213,6 +286,33 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		1D80D5272F12E81400E3B4FB /* OMCPythonApplet */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1D80D5392F12E81400E3B4FB /* Build configuration list for PBXNativeTarget "OMCPythonApplet" */;
+			buildPhases = (
+				1D80D52A2F12E81400E3B4FB /* Resources */,
+				1D80D52F2F12E81400E3B4FB /* Sources */,
+				1D80D5322F12E81400E3B4FB /* Frameworks */,
+				1D80D5352F12E81400E3B4FB /* Copy Abracode.framework */,
+				1D80D5372F12E81400E3B4FB /* Copy Scripts */,
+				1D80D5382F12E81400E3B4FB /* Remove Debug Resources */,
+				1D80D5A82F130AB900E3B4FB /* Build Embedded Python */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				1D80D5282F12E81400E3B4FB /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				1D80D5752F1308AC00E3B4FB /* PythonApplet */,
+				1DA51CBE2EACE01000BFF670 /* Scripts */,
+			);
+			name = OMCPythonApplet;
+			productInstallPath = "$(HOME)/Applications";
+			productName = OMCApplet;
+			productReference = 1D80D53C2F12E81400E3B4FB /* OMCPythonApplet.app */;
+			productType = "com.apple.product-type.application";
+		};
 		8D1107260486CEB800E47090 /* OMCApplet */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = C01FCF4A08A954540054247B /* Build configuration list for PBXNativeTarget "OMCApplet" */;
@@ -268,6 +368,7 @@
 			projectRoot = "";
 			targets = (
 				8D1107260486CEB800E47090 /* OMCApplet */,
+				1D80D5272F12E81400E3B4FB /* OMCPythonApplet */,
 			);
 		};
 /* End PBXProject section */
@@ -283,6 +384,13 @@
 /* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
+		1D80D52A2F12E81400E3B4FB /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		8D1107290486CEB800E47090 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -297,6 +405,41 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		1D80D5382F12E81400E3B4FB /* Remove Debug Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Remove Debug Resources";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "if test \"$CONFIGURATION\" != \"Debug\"; then\n\n\techo \"Removing droplet debugging resources\";\n\tcd \"$BUILT_PRODUCTS_DIR/$FULL_PRODUCT_NAME/Contents/Resources/\";\n\trm -fR \"English.lproj/dialog.nib\";\n\trm -fR \"English.lproj/debug.nib\";\n\n\techo \"Copy standard Command.plist to droplet\";\n\trm -f \"Command.plist\";\n\n\tditto \"$PROJECT_DIR/PythonApplet/Command-Python-release.plist\" Command.plist;\n\nfi\n";
+		};
+		1D80D5A82F130AB900E3B4FB /* Build Embedded Python */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(PROJECT_DIR)/PythonApplet/Build-Embedded-Python.sh",
+				"$(PROJECT_DIR)/../../Python-Embedding/build-embedded-python.sh",
+			);
+			name = "Build Embedded Python";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(BUILT_PRODUCTS_DIR)/$(FULL_PRODUCT_NAME)/Contents/Library/Python",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "source \"${PROJECT_DIR}/PythonApplet/Build-Embedded-Python.sh\"\n";
+		};
 		E23EA1B50DFB05B50070E63F /* Remove Debug Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -309,11 +452,20 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if test \"$CONFIGURATION\" != \"Debug\"; then\n\n\techo \"Removing droplet debugging resources\";\n\tcd \"$BUILT_PRODUCTS_DIR/OMCApplet.app/Contents/Resources/\";\n    rm -fR \"Scripts\";   \n\trm -fR \"English.lproj/dialog.nib\";\n\trm -fR \"English.lproj/debug.nib\";\n\n\techo \"Copy standard Command.plist to droplet\";\n\trm -f \"Command.plist\";\n\n\tditto \"$SRCROOT/Command-release.plist\" Command.plist;\n\nfi\n";
+			shellScript = "if test \"$CONFIGURATION\" != \"Debug\"; then\n\n\techo \"Removing droplet debugging resources\";\n\tcd \"$BUILT_PRODUCTS_DIR/$FULL_PRODUCT_NAME/Contents/Resources/\";\n    rm -fR \"Scripts\";   \n\trm -fR \"English.lproj/dialog.nib\";\n\trm -fR \"English.lproj/debug.nib\";\n\n\techo \"Copy standard Command.plist to droplet\";\n\trm -f \"Command.plist\";\n\n\tditto \"$PROJECT_DIR/Command-release.plist\" Command.plist;\n\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		1D80D52F2F12E81400E3B4FB /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1D80D5302F12E81400E3B4FB /* main.m in Sources */,
+				1D80D5312F12E81400E3B4FB /* AbracodeFrameworkVersion.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		8D11072C0486CEB800E47090 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -330,6 +482,11 @@
 			isa = PBXTargetDependency;
 			name = AbracodeFramework;
 			targetProxy = 1D039DB92E168DAF00D4924A /* PBXContainerItemProxy */;
+		};
+		1D80D5282F12E81400E3B4FB /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = AbracodeFramework;
+			targetProxy = 1D80D5292F12E81400E3B4FB /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -354,6 +511,22 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		1D80D53A2F12E81400E3B4FB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReferenceAnchor = 1D80D5752F1308AC00E3B4FB /* PythonApplet */;
+			baseConfigurationReferenceRelativePath = "OMCPythonApplet-target.xcconfig";
+			buildSettings = {
+			};
+			name = Debug;
+		};
+		1D80D53B2F12E81400E3B4FB /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReferenceAnchor = 1D80D5752F1308AC00E3B4FB /* PythonApplet */;
+			baseConfigurationReferenceRelativePath = "OMCPythonApplet-target.xcconfig";
+			buildSettings = {
+			};
+			name = Release;
+		};
 		C01FCF4B08A954540054247B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 1D039D762E167EC300D4924A /* OMCApplet-target.xcconfig */;
@@ -385,6 +558,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		1D80D5392F12E81400E3B4FB /* Build configuration list for PBXNativeTarget "OMCPythonApplet" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1D80D53A2F12E81400E3B4FB /* Debug */,
+				1D80D53B2F12E81400E3B4FB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		C01FCF4A08A954540054247B /* Build configuration list for PBXNativeTarget "OMCApplet" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
