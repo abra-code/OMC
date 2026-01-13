@@ -3,3 +3,5 @@
 xcuserdata
 build/
 Common/OmcDistribution.xcconfig
+**/*.xcuserdatad/xcschemes/xcschememanagement.plist
+**/*.xcuserdatad/UserInterfaceState.xcuserstate
