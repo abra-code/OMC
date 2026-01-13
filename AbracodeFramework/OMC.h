@@ -58,7 +58,10 @@ OSStatus OMCRunCommandAE(CFTypeRef inPlistRef, CFStringRef inCommandNameOrID, AE
 typedef struct OnMyCommandCM * OMCExecutorRef;
 
 typedef SInt32 OMCCommandRef;
-extern const OMCCommandRef kOmcUnspecifiedCommand;
+enum
+{
+    kOmcUnspecifiedCommand = -1
+};
 
 typedef struct OMCObserver * OMCObserverRef;
 
@@ -70,9 +73,9 @@ OMCCommandRef	OMCFindCommand( OMCExecutorRef inOMCExecutor, CFStringRef inNameOr
 
 
 #ifdef __cplusplus
-	inline bool OMCIsValidCommandRef( OMCCommandRef inCommandRef ) { return (inCommandRef >= 0); }
+	inline bool OMCIsValidCommandRef( OMCCommandRef inCommandRef ) { return (inCommandRef > kOmcUnspecifiedCommand); }
 #else
-	#define OMCIsValidCommandRef(inCommandRef) ((inCommandRef) >= 0)
+	#define OMCIsValidCommandRef(inCommandRef) ((inCommandRef) > kOmcUnspecifiedCommand)
 #endif //!__cplusplus
 
 //pass kOmcUnspecifiedCommand in inCommandRef for all commands or valid command Ref for one command

@@ -14,8 +14,6 @@
 #include "CMUtils.h"
 #include "OnMyCommand.h"
 
-const OMCCommandRef kOmcUnspecifiedCommand = -1;
-
 extern "C" UInt32 OMCGetCurrentVersion(void)
 {
 	return CURRENT_OMC_VERSION;
