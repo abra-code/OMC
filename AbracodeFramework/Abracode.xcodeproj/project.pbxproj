@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 51;
+	objectVersion = 70;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -31,6 +31,7 @@
 		1DADB52F232B5857005AD883 /* loco in Copy Support Executables */ = {isa = PBXBuildFile; fileRef = 1DADB52E232B5847005AD883 /* loco */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		1DB9D8C62324F01E003F6849 /* OMCEnvironmentExportScript.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1DB9D8C42324F01E003F6849 /* OMCEnvironmentExportScript.cpp */; };
 		1DBCC43522CE209300A1DD8F /* OMCHelpers.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1DBCC43222CE209300A1DD8F /* OMCHelpers.mm */; };
+		1DCBC0D92F15FCE40002B8AB /* Abracode.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8DC2EF5B0486A6940098B216 /* Abracode.framework */; };
 		1DCFB242231FAC1100D1C62E /* OMCOutputWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1DCFB244231FAC1100D1C62E /* OMCOutputWindow.xib */; };
 		1DCFB245231FAC1600D1C62E /* OMCOutputPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1DCFB247231FAC1600D1C62E /* OMCOutputPanel.xib */; };
 		1DE10DFC23C9D0EE003FCCDA /* OMCWebKitSupport.js in Resources */ = {isa = PBXBuildFile; fileRef = 1DE10DFB23C9D0EE003FCCDA /* OMCWebKitSupport.js */; };
@@ -290,6 +291,13 @@
 			remoteGlobalIDString = 8DD76FB20486AB0100D96B5E;
 			remoteInfo = filt;
 		};
+		1DCBC0DA2F15FCE40002B8AB /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0867D690FE84028FC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 8DC2EF4F0486A6940098B216;
+			remoteInfo = AbracodeFramework;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -384,6 +392,8 @@
 		1DB9D8C52324F01E003F6849 /* OMCEnvironmentExportScript.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCEnvironmentExportScript.h; sourceTree = "<group>"; };
 		1DBCC43122CE209200A1DD8F /* OMCHelpers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCHelpers.h; sourceTree = "<group>"; };
 		1DBCC43222CE209300A1DD8F /* OMCHelpers.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCHelpers.mm; sourceTree = "<group>"; };
+		1DCBC0D52F15FCE40002B8AB /* AbracodeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AbracodeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		1DCBC0E02F15FD220002B8AB /* AbracodeTests-target.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "AbracodeTests-target.xcconfig"; sourceTree = "<group>"; };
 		1DCFB234231FAAB200D1C62E /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/Private.strings; sourceTree = "<group>"; };
 		1DCFB235231FAAB500D1C62E /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/Private.strings; sourceTree = "<group>"; };
 		1DCFB236231FAABB00D1C62E /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/input_clear.xib; sourceTree = "<group>"; };
@@ -542,7 +552,19 @@
 		E2FB13FF0D19EE9A005EB1E8 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = /System/Library/Frameworks/CoreServices.framework; sourceTree = "<absolute>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		1DCBC0D62F15FCE40002B8AB /* AbracodeTests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = AbracodeTests; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
+
 /* Begin PBXFrameworksBuildPhase section */
+		1DCBC0D22F15FCE30002B8AB /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1DCBC0D92F15FCE40002B8AB /* Abracode.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		8DC2EF560486A6940098B216 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -562,6 +584,7 @@
 			isa = PBXGroup;
 			children = (
 				8DC2EF5B0486A6940098B216 /* Abracode.framework */,
+				1DCBC0D52F15FCE40002B8AB /* AbracodeTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -577,12 +600,14 @@
 				32C88DFF0371C24200C91783 /* Other Sources */,
 				089C1665FE841158C02AAC07 /* Resources */,
 				1D039D782E16823200D4924A /* AbracodeFramework-target.xcconfig */,
+				1DCBC0E02F15FD220002B8AB /* AbracodeTests-target.xcconfig */,
 				1DD21114259F42CE0041BB8F /* OmcVersion.xcconfig */,
 				1D4971AC2575A69000F7131C /* OmcProjectDebug.xcconfig */,
 				1D4971AD2575A69000F7131C /* OmcProjectRelease.xcconfig */,
 				E2269C1B0EB6DCF30029CCF5 /* OmcProjectCommon.xcconfig */,
 				E234FA9D0D0FD06B001A7780 /* Support Tools */,
 				0867D69AFE84028FC02AAC07 /* External Frameworks and Libraries */,
+				1DCBC0D62F15FCE40002B8AB /* AbracodeTests */,
 				034768DFFF38A50411DB9C8B /* Products */,
 				E2F5C9020DD10F5300B4D4EC /* AbracodeFramework.exp */,
 				1D80D4582F12C69A00E3B4FB /* Tool Dependencies */,
@@ -1014,6 +1039,29 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
+		1DCBC0D42F15FCE30002B8AB /* AbracodeTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1DCBC0DF2F15FCE40002B8AB /* Build configuration list for PBXNativeTarget "AbracodeTests" */;
+			buildPhases = (
+				1DCBC0D12F15FCE30002B8AB /* Sources */,
+				1DCBC0D22F15FCE30002B8AB /* Frameworks */,
+				1DCBC0D32F15FCE30002B8AB /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				1DCBC0DB2F15FCE40002B8AB /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				1DCBC0D62F15FCE40002B8AB /* AbracodeTests */,
+			);
+			name = AbracodeTests;
+			packageProductDependencies = (
+			);
+			productName = AbracodeTests;
+			productReference = 1DCBC0D52F15FCE40002B8AB /* AbracodeTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		8DC2EF4F0486A6940098B216 /* AbracodeFramework */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 1DEB91AD08733DA50010E9CD /* Build configuration list for PBXNativeTarget "AbracodeFramework" */;
@@ -1054,6 +1102,11 @@
 			attributes = {
 				LastUpgradeCheck = 1100;
 				ORGANIZATIONNAME = "";
+				TargetAttributes = {
+					1DCBC0D42F15FCE30002B8AB = {
+						CreatedOnToolsVersion = 26.2;
+					};
+				};
 			};
 			buildConfigurationList = 1DEB91B108733DA50010E9CD /* Build configuration list for PBXProject "Abracode" */;
 			compatibilityVersion = "Xcode 10.0";
@@ -1110,6 +1163,7 @@
 			projectRoot = "";
 			targets = (
 				8DC2EF4F0486A6940098B216 /* AbracodeFramework */,
+				1DCBC0D42F15FCE30002B8AB /* AbracodeTests */,
 			);
 		};
 /* End PBXProject section */
@@ -1181,6 +1235,13 @@
 /* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
+		1DCBC0D32F15FCE30002B8AB /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		8DC2EF520486A6940098B216 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1239,6 +1300,13 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		1DCBC0D12F15FCE30002B8AB /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		8DC2EF540486A6940098B216 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1370,6 +1438,11 @@
 			name = filt;
 			targetProxy = 1D80D4D72F12D96200E3B4FB /* PBXContainerItemProxy */;
 		};
+		1DCBC0DB2F15FCE40002B8AB /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 8DC2EF4F0486A6940098B216 /* AbracodeFramework */;
+			targetProxy = 1DCBC0DA2F15FCE40002B8AB /* PBXContainerItemProxy */;
+		};
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
@@ -1447,6 +1520,20 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		1DCBC0DC2F15FCE40002B8AB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 1DCBC0E02F15FD220002B8AB /* AbracodeTests-target.xcconfig */;
+			buildSettings = {
+			};
+			name = Debug;
+		};
+		1DCBC0DD2F15FCE40002B8AB /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 1DCBC0E02F15FD220002B8AB /* AbracodeTests-target.xcconfig */;
+			buildSettings = {
+			};
+			name = Release;
+		};
 		1DEB91AE08733DA50010E9CD /* Debug */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 1D039D782E16823200D4924A /* AbracodeFramework-target.xcconfig */;
@@ -1478,6 +1565,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		1DCBC0DF2F15FCE40002B8AB /* Build configuration list for PBXNativeTarget "AbracodeTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1DCBC0DC2F15FCE40002B8AB /* Debug */,
+				1DCBC0DD2F15FCE40002B8AB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		1DEB91AD08733DA50010E9CD /* Build configuration list for PBXNativeTarget "AbracodeFramework" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
