@@ -594,8 +594,6 @@ typedef struct ExtensionAndShell
 static ExtensionAndShell sExtensionToShellMap[] =
 {
 	{ CFSTR("sh"), CFSTR("/bin/sh") },
-    // Python code is problematic if shipped in an app to customers without Xcode tools installed
-    // TODO: detect py and add a warning instead of failing silently
     { CFSTR("py"), CFSTR("/usr/bin/python3") }, // placholder - will be dynamically resolved with GetPythonToolPath
 	{ CFSTR("pl"), CFSTR("/usr/bin/perl") },
 	{ CFSTR("applescript"), CFSTR("/usr/bin/osascript") },

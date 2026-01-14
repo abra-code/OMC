@@ -26,7 +26,6 @@
                 @"NAME": @"Echo Test",
                 @"COMMAND_ID": @"echo_test",
                 @"EXECUTION_MODE": @"exe_shell_script",
-                @"ACTIVATION_MODE": @"act_always",
                 @"COMMAND": @[@"echo 'Hello from OMC'"]
             },
             // File context command

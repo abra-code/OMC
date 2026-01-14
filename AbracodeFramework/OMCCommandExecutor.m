@@ -23,9 +23,17 @@ static NSMutableDictionary *sCachedPlists = NULL;
 {
 	OSStatus error = userCanceledErr;//pessimistic scenario
 	
-	CFPropertyListRef loadedPlist = [OMCCommandExecutor cachedPlistForCommandFile:inFileName];
-	
-	OMCExecutorRef omcExec = OMCCreateExecutor( loadedPlist );
+    CFTypeRef commandRef = nil;
+    NSString *ext = [inFileName pathExtension];
+    if ([ext isEqualToString:@"omc"]) {
+        commandRef = (__bridge CFURLRef)[NSURL fileURLWithPath:inFileName isDirectory:YES];
+    }
+    else
+    {
+        commandRef = [OMCCommandExecutor cachedPlistForCommandFile:inFileName];
+    }
+    
+	OMCExecutorRef omcExec = OMCCreateExecutor( commandRef );
 	if(omcExec != NULL)
 	{
         OMCCommandRef commandRef = OMCFindCommand( omcExec, (__bridge CFStringRef)inCommandNameOrId );

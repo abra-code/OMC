@@ -26,7 +26,6 @@
                 @"NAME": @"Simple Echo",
                 @"COMMAND_ID": @"simple_echo",
                 @"EXECUTION_MODE": @"exe_shell_script",
-                @"ACTIVATION_MODE": @"act_always",
                 @"COMMAND": @[@"echo 'Simple command executed'"]
             },
             // File processing command

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>VERSION</key>
+    <integer>2</integer>
+    <key>COMMAND_LIST</key>
+    <array>
+         <dict>
+            <key>NAME</key>
+            <string>Shell Test</string>
+            <key>COMMAND_ID</key>
+            <string>shell_test</string>
+            <key>EXECUTION_MODE</key>
+            <string>exe_script_file</string>
+        </dict>
+        <dict>
+            <key>NAME</key>
+            <string>Python Test</string>
+            <key>COMMAND_ID</key>
+            <string>python_test</string>
+            <key>EXECUTION_MODE</key>
+            <string>exe_script_file</string>
+        </dict>
+        <dict>
+            <key>NAME</key>
+            <string>Perl Test</string>
+            <key>COMMAND_ID</key>
+            <string>perl_test</string>
+            <key>EXECUTION_MODE</key>
+            <string>exe_script_file</string>
+        </dict>
+        <dict>
+            <key>NAME</key>
+            <string>JavaScript Test</string>
+            <key>COMMAND_ID</key>
+            <string>js_test</string>
+            <key>EXECUTION_MODE</key>
+            <string>exe_script_file</string>
+        </dict>
+        <dict>
+            <key>NAME</key>
+            <string>AppleScript Test</string>
+            <key>COMMAND_ID</key>
+            <string>applescript_test</string>
+            <key>EXECUTION_MODE</key>
+            <string>exe_script_file</string>
+        </dict>
+        <dict>
+            <key>NAME</key>
+            <string>Ruby Test</string>
+            <key>COMMAND_ID</key>
+            <string>ruby_test</string>
+            <key>EXECUTION_MODE</key>
+            <string>exe_script_file</string>
+        </dict>
+        <dict>
+            <key>NAME</key>
+            <string>File Context Test</string>
+            <key>COMMAND_ID</key>
+            <string>file_context</string>
+            <key>EXECUTION_MODE</key>
+            <string>exe_script_file</string>
+            <key>ACTIVATION_MODE</key>
+            <string>act_file</string>
+        </dict>
+    </array>
+</dict>
+</plist>

@@ -32,6 +32,7 @@
 		1DB9D8C62324F01E003F6849 /* OMCEnvironmentExportScript.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1DB9D8C42324F01E003F6849 /* OMCEnvironmentExportScript.cpp */; };
 		1DBCC43522CE209300A1DD8F /* OMCHelpers.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1DBCC43222CE209300A1DD8F /* OMCHelpers.mm */; };
 		1DCBC0D92F15FCE40002B8AB /* Abracode.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8DC2EF5B0486A6940098B216 /* Abracode.framework */; };
+		1DCBC16E2F176A9D0002B8AB /* TestBundles in CopyFiles */ = {isa = PBXBuildFile; fileRef = 1DCBC16D2F176A9D0002B8AB /* TestBundles */; };
 		1DCFB242231FAC1100D1C62E /* OMCOutputWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1DCFB244231FAC1100D1C62E /* OMCOutputWindow.xib */; };
 		1DCFB245231FAC1600D1C62E /* OMCOutputPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1DCFB247231FAC1600D1C62E /* OMCOutputPanel.xib */; };
 		1DE10DFC23C9D0EE003FCCDA /* OMCWebKitSupport.js in Resources */ = {isa = PBXBuildFile; fileRef = 1DE10DFB23C9D0EE003FCCDA /* OMCWebKitSupport.js */; };
@@ -312,6 +313,16 @@
 			name = "Copy AbracodeFrameworkVersion.c to generated";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		1DCBC16C2F176A430002B8AB /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 7;
+			files = (
+				1DCBC16E2F176A9D0002B8AB /* TestBundles in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		E234FAA20D0FD0FE001A7780 /* Copy Support Executables */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -394,6 +405,7 @@
 		1DBCC43222CE209300A1DD8F /* OMCHelpers.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCHelpers.mm; sourceTree = "<group>"; };
 		1DCBC0D52F15FCE40002B8AB /* AbracodeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AbracodeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		1DCBC0E02F15FD220002B8AB /* AbracodeTests-target.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "AbracodeTests-target.xcconfig"; sourceTree = "<group>"; };
+		1DCBC16D2F176A9D0002B8AB /* TestBundles */ = {isa = PBXFileReference; lastKnownFileType = folder; path = TestBundles; sourceTree = "<group>"; };
 		1DCFB234231FAAB200D1C62E /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/Private.strings; sourceTree = "<group>"; };
 		1DCFB235231FAAB500D1C62E /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/Private.strings; sourceTree = "<group>"; };
 		1DCFB236231FAABB00D1C62E /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/input_clear.xib; sourceTree = "<group>"; };
@@ -608,6 +620,7 @@
 				E234FA9D0D0FD06B001A7780 /* Support Tools */,
 				0867D69AFE84028FC02AAC07 /* External Frameworks and Libraries */,
 				1DCBC0D62F15FCE40002B8AB /* AbracodeTests */,
+				1DCBC16D2F176A9D0002B8AB /* TestBundles */,
 				034768DFFF38A50411DB9C8B /* Products */,
 				E2F5C9020DD10F5300B4D4EC /* AbracodeFramework.exp */,
 				1D80D4582F12C69A00E3B4FB /* Tool Dependencies */,
@@ -1045,7 +1058,7 @@
 			buildPhases = (
 				1DCBC0D12F15FCE30002B8AB /* Sources */,
 				1DCBC0D22F15FCE30002B8AB /* Frameworks */,
-				1DCBC0D32F15FCE30002B8AB /* Resources */,
+				1DCBC16C2F176A430002B8AB /* CopyFiles */,
 			);
 			buildRules = (
 			);
@@ -1235,13 +1248,6 @@
 /* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
-		1DCBC0D32F15FCE30002B8AB /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		8DC2EF520486A6940098B216 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
