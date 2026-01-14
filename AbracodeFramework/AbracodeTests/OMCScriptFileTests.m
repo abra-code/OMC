@@ -476,11 +476,10 @@
         BOOL completed = [executionObserver waitForCompletionWithTimeout:5.0];
         XCTAssertTrue(completed, @"%@ should complete within timeout", testName);
         
-        // Verify some output was captured (except AppleScript which logs to stderr)
-        if (![testName isEqualToString:@"applescript_test"]) {
-            XCTAssertTrue(executionObserver.capturedOutput.length > 0,
-                         @"%@ should produce output. Got: %@", testName, executionObserver.capturedOutput);
-        }
+        NSString *capturedOutput = executionObserver.capturedOutput;
+        NSRange range = [capturedOutput rangeOfString:@"script test" options:NSCaseInsensitiveSearch];
+        BOOL containsScriptTestOutput = (range.location != NSNotFound);
+        XCTAssertTrue(containsScriptTestOutput, @"Output should contain 'script test'. Got: %@", capturedOutput);
     }
 }
 
