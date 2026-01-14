@@ -10,9 +10,30 @@
 #include "OMC.h"
 #include "OMCFilePanels.h"
 #include "ACFPropertyList.h"
-
+#import "OMCObserverDelegate.h"
 
 static NSMutableDictionary *sCachedPlists = NULL;
+
+void OMCDelegateObserverCallback(OmcObserverMessage inMessage, CFIndex inTaskID, CFTypeRef inResult, void *userData)
+{
+    if (userData == NULL)
+    {
+        return;
+    }
+    
+    id __weak objcObject = (__bridge id)userData;
+    if ([objcObject conformsToProtocol:@protocol(OMCObserverDelegate)])
+    {
+        id<OMCObserverDelegate> __strong observerDelegate = (id<OMCObserverDelegate>)objcObject;
+        [observerDelegate receiveObserverMessage:inMessage forTaskId:inTaskID withData:inResult];
+    }
+}
+
+@interface OMCCommandExecutor()
++ (CFPropertyListRef)cachedPlistForCommandFile:(NSString *)inFileName;
++ (CFPropertyListRef)cachedPlistForURL:(NSURL *)inURL;
+@end
+
 
 @implementation OMCCommandExecutor
 
@@ -126,6 +147,23 @@ static NSMutableDictionary *sCachedPlists = NULL;
 
 			if( error == noErr )
 			{
+                // Check if delegate wants to observe task execution
+                if ((delegate != nil) && [delegate conformsToProtocol:@protocol(OMCObserverDelegate)])
+                {
+                    id<OMCObserverDelegate> observerDelegate = (id<OMCObserverDelegate>)delegate;
+                    
+                    // Create observer with the delegate as userData (stored weakly there)
+                    OMCObserverRef observer = OMCCreateObserver(kOmcObserverAllMessages,
+                                                                 OMCDelegateObserverCallback,
+                                                                 (__bridge void *)observerDelegate);
+                    if (observer != NULL)
+                    {
+                        [observerDelegate setObserver:observer]; // Delegate takes the ownership of the observer and retains it
+                        OMCAddObserver(omcExec, observer);
+                        OMCReleaseObserver(observer); // Release our local reference - delegate now owns it
+                    }
+                }
+
 				error = OMCExecuteCommand( omcExec, commandRef );
 				if(error != noErr)
 				{

@@ -11,13 +11,15 @@
 void OMCServiceObserverCallback( OmcObserverMessage inMessage, CFIndex inTaskID, CFTypeRef inResult, void *userData )
 {
 	if(userData == NULL)
-		return;
-	
+    {
+        return;
+    }
+    
     id __weak objcObject = (__bridge id)userData;
-	if([objcObject isKindOfClass:[OMCService class]])
+    if ([objcObject conformsToProtocol:@protocol(OMCObserverDelegate)])
 	{
-		OMCService *__strong cocoaDelegate = (OMCService *)objcObject;
-		[cocoaDelegate receiveObserverMessage:inMessage forTaskId:inTaskID withData:inResult];
+		id<OMCObserverDelegate> __strong observerDelegate = objcObject;
+		[observerDelegate receiveObserverMessage:inMessage forTaskId:inTaskID withData:inResult];
 	}
 }
 
@@ -36,12 +38,9 @@ void OMCServiceObserverCallback( OmcObserverMessage inMessage, CFIndex inTaskID,
 
 - (void)dealloc
 {
-	if( mObserver != NULL )
-	{
-		OMCUnregisterObserver( mObserver );//we don't want to listen anymore
-		OMCReleaseObserver( mObserver );//release the observer
-		mObserver = NULL;
-	}
+    OMCUnregisterObserver( mObserver ); // we don't want to listen anymore
+    OMCReleaseObserver( mObserver ); // release the observer
+    mObserver = NULL;
     
 	if(mRunLoopStarted)
 	{
@@ -188,8 +187,10 @@ void OMCServiceObserverCallback( OmcObserverMessage inMessage, CFIndex inTaskID,
 		{
 			if(mObserver == NULL)
 			{
-                mObserver = OMCCreateObserver( kOmcObserverAllMessages, OMCServiceObserverCallback, (__bridge void *)self );
-				OMCAddObserver( omcExec, mObserver );
+                OMCObserverRef observer = OMCCreateObserver( kOmcObserverAllMessages, OMCServiceObserverCallback, (__bridge void *)self );
+				OMCAddObserver( omcExec, observer );
+                [self setObserver:observer]; // retaining and taking ownership
+                OMCReleaseObserver(observer); // release local ref
 			}
 			
 			if(wantsToReturnText)
@@ -235,6 +236,18 @@ void OMCServiceObserverCallback( OmcObserverMessage inMessage, CFIndex inTaskID,
 	OMCReleaseExecutor( omcExec );//safe to release here. task lives on if execution is asynchronous
 }
 
+- (void)setObserver:(OMCObserverRef)observer
+{
+    OMCRetainObserver(observer);
+    if (observer != mObserver)
+    {
+        OMCUnregisterObserver(mObserver);
+    }
+    OMCReleaseObserver(mObserver);
+
+    mObserver = observer;
+}
+
 - (void)receiveObserverMessage:(OmcObserverMessage)inMessage forTaskId:(CFIndex)inTaskID withData:(CFTypeRef)inResult
 {
 	//NSString *messageString = NULL;
@@ -264,9 +277,7 @@ void OMCServiceObserverCallback( OmcObserverMessage inMessage, CFIndex inTaskID,
 		case kOmcObserverAllTasksFinished:
 		{
 			//messageString = @"<<all tasks finished>>";
-			OMCUnregisterObserver( mObserver );//we don't want to listen anymore
-			OMCReleaseObserver( mObserver );//we are all done, release the observer
-			mObserver = NULL;
+            [self setObserver:nil];
 			
 			if(mRunLoopStarted)
 			{

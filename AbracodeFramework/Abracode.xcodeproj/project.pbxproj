@@ -406,6 +406,7 @@
 		1DCBC0D52F15FCE40002B8AB /* AbracodeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AbracodeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		1DCBC0E02F15FD220002B8AB /* AbracodeTests-target.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "AbracodeTests-target.xcconfig"; sourceTree = "<group>"; };
 		1DCBC16D2F176A9D0002B8AB /* TestBundles */ = {isa = PBXFileReference; lastKnownFileType = folder; path = TestBundles; sourceTree = "<group>"; };
+		1DCBC16F2F181B090002B8AB /* OMCObserverDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OMCObserverDelegate.h; sourceTree = "<group>"; };
 		1DCFB234231FAAB200D1C62E /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/Private.strings; sourceTree = "<group>"; };
 		1DCFB235231FAAB500D1C62E /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/Private.strings; sourceTree = "<group>"; };
 		1DCFB236231FAABB00D1C62E /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/input_clear.xib; sourceTree = "<group>"; };
@@ -957,6 +958,7 @@
 				E2ED3BB50D0B289B00481D8F /* OnMyCommand.h */,
 				E2C32CB50D2DF99C0023DA03 /* OMCObserver.cpp */,
 				E2C32CB40D2DF99C0023DA03 /* OMCObserver.h */,
+				1DCBC16F2F181B090002B8AB /* OMCObserverDelegate.h */,
 				1D9BCB8B22CCAB4F00F4EAB6 /* OMCStrings.mm */,
 				1D9B1F5821FF14AF004704A7 /* OMCStrings.h */,
 				E204EB7E0D7FD8A900595D15 /* OMCConstants.h */,

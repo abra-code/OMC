@@ -8,6 +8,7 @@
 #import "OMCTestCase.h"
 #import "OMCCommandExecutor.h"
 #import "OMCBundleTestHelper.h"
+#import "OMCTestExecutionObserver.h"
 
 @interface OMCScriptFileTests : XCTestCase
 @property (nonatomic, strong) NSMutableArray<NSURL *> *bundlesToCleanup;
@@ -39,7 +40,8 @@
         @"WAIT_FOR_TASK_COMPLETION": @YES
     };
     
-    NSString *script = @"#!/bin/bash\necho 'Hello from shell'\n";
+    NSString *expectedOutput = @"Hello from shell";
+    NSString *script = [NSString stringWithFormat:@"#!/bin/sh\necho '%@'\nexit 0\n", expectedOutput];
     
     NSURL *bundleURL = [OMCBundleTestHelper createTestBundle:@"ShellTest"
                                                  withCommands:@[command]
@@ -47,13 +49,22 @@
     XCTAssertNotNil(bundleURL, @"Should create test bundle");
     [self.bundlesToCleanup addObject:bundleURL];
     
+    OMCTestExecutionObserver *executionObserver = OMCTestExecutionObserver.new;
+
     OSStatus err = [OMCCommandExecutor runCommand:@"shell_test"
                                    forCommandFile:[bundleURL path]
                                       withContext:nil
                                      useNavDialog:NO
-                                         delegate:nil];
+                                         delegate:executionObserver];
     
     XCTAssertEqual(err, noErr, @"Should execute shell script");
+    
+    // Wait for completion and verify output
+    BOOL completed = [executionObserver waitForCompletionWithTimeout:5.0];
+    XCTAssertTrue(completed, @"Task should complete within timeout");
+    NSString *capturedOutput = executionObserver.capturedOutput;
+    XCTAssertTrue([capturedOutput containsString:expectedOutput], 
+                  @"Output should contain expected text. Got: %@", capturedOutput);
 }
 
 - (void)testScriptFileWithPython {
@@ -64,7 +75,8 @@
         @"WAIT_FOR_TASK_COMPLETION": @YES
     };
     
-    NSString *script = @"#!/usr/bin/env python3\nimport sys\nprint('Hello from Python')\nsys.exit(0)\n";
+    NSString *expectedOutput = @"Hello from Python";
+    NSString *script = [NSString stringWithFormat:@"#!/usr/bin/env python3\nimport sys\nprint('%@')\nsys.exit(0)\n", expectedOutput];
     
     NSURL *bundleURL = [OMCBundleTestHelper createTestBundle:@"PythonTest"
                                                  withCommands:@[command]
@@ -72,13 +84,21 @@
     XCTAssertNotNil(bundleURL);
     [self.bundlesToCleanup addObject:bundleURL];
     
+    OMCTestExecutionObserver *executionObserver = OMCTestExecutionObserver.new;
+    
     OSStatus err = [OMCCommandExecutor runCommand:@"python_test"
                                    forCommandFile:[bundleURL path]
                                       withContext:nil
                                      useNavDialog:NO
-                                         delegate:nil];
+                                         delegate:executionObserver];
     
     XCTAssertEqual(err, noErr, @"Should execute Python script");
+    
+    BOOL completed = [executionObserver waitForCompletionWithTimeout:5.0];
+    XCTAssertTrue(completed, @"Task should complete");
+    NSString *capturedOutput = executionObserver.capturedOutput;
+    XCTAssertTrue([capturedOutput containsString:expectedOutput],
+                  @"Output should contain expected text. Got: %@", capturedOutput);
 }
 
 - (void)testScriptFileWithPerl {
@@ -89,7 +109,8 @@
         @"WAIT_FOR_TASK_COMPLETION": @YES
     };
     
-    NSString *script = @"#!/usr/bin/env perl\nuse strict;\nuse warnings;\nprint \"Hello from Perl\\n\";\nexit 0;\n";
+    NSString *expectedOutput = @"Hello from Perl";
+    NSString *script = [NSString stringWithFormat:@"#!/usr/bin/env perl\nuse strict;\nuse warnings;\nprint \"%@\\n\";\nexit 0;\n", expectedOutput];
     
     NSURL *bundleURL = [OMCBundleTestHelper createTestBundle:@"PerlTest"
                                                  withCommands:@[command]
@@ -97,13 +118,21 @@
     XCTAssertNotNil(bundleURL);
     [self.bundlesToCleanup addObject:bundleURL];
     
+    OMCTestExecutionObserver *executionObserver = OMCTestExecutionObserver.new;
+    
     OSStatus err = [OMCCommandExecutor runCommand:@"perl_test"
                                    forCommandFile:[bundleURL path]
                                       withContext:nil
                                      useNavDialog:NO
-                                         delegate:nil];
+                                         delegate:executionObserver];
     
     XCTAssertEqual(err, noErr, @"Should execute Perl script");
+    
+    BOOL completed = [executionObserver waitForCompletionWithTimeout:5.0];
+    XCTAssertTrue(completed, @"Task should complete");
+    NSString *capturedOutput = executionObserver.capturedOutput;
+    XCTAssertTrue([capturedOutput containsString:expectedOutput],
+                  @"Output should contain expected text. Got: %@", capturedOutput);
 }
 
 - (void)testScriptFileWithJavaScript {
@@ -114,8 +143,8 @@
         @"WAIT_FOR_TASK_COMPLETION": @YES
     };
     
-    // JavaScriptCore console.log syntax
-    NSString *script = @"#!/usr/bin/jsc\nprint('Hello from JavaScript');\n";
+    NSString *expectedOutput = @"Hello from JavaScript";
+    NSString *script = [NSString stringWithFormat:@"#!/usr/bin/jsc\nprint('%@');\n", expectedOutput];
     
     NSURL *bundleURL = [OMCBundleTestHelper createTestBundle:@"JavaScriptTest"
                                                  withCommands:@[command]
@@ -123,13 +152,21 @@
     XCTAssertNotNil(bundleURL);
     [self.bundlesToCleanup addObject:bundleURL];
     
+    OMCTestExecutionObserver *executionObserver = OMCTestExecutionObserver.new;
+    
     OSStatus err = [OMCCommandExecutor runCommand:@"js_test"
                                    forCommandFile:[bundleURL path]
                                       withContext:nil
                                      useNavDialog:NO
-                                         delegate:nil];
+                                         delegate:executionObserver];
     
     XCTAssertEqual(err, noErr, @"Should execute JavaScript via jsc");
+    
+    BOOL completed = [executionObserver waitForCompletionWithTimeout:5.0];
+    XCTAssertTrue(completed, @"Task should complete");
+    NSString *capturedOutput = executionObserver.capturedOutput;
+    XCTAssertTrue([capturedOutput containsString:expectedOutput],
+                  @"Output should contain expected text. Got: %@", capturedOutput);
 }
 
 - (void)testScriptFileWithAppleScript {
@@ -140,7 +177,8 @@
         @"WAIT_FOR_TASK_COMPLETION": @YES
     };
     
-    NSString *script = @"#!/usr/bin/osascript\nlog \"Hello from AppleScript\"\n";
+    NSString *expectedOutput = @"Hello from AppleScript";
+    NSString *script = [NSString stringWithFormat:@"#!/usr/bin/osascript\nlog \"%@\"\n", expectedOutput];
     
     NSURL *bundleURL = [OMCBundleTestHelper createTestBundle:@"AppleScriptTest"
                                                  withCommands:@[command]
@@ -148,13 +186,19 @@
     XCTAssertNotNil(bundleURL);
     [self.bundlesToCleanup addObject:bundleURL];
     
+    OMCTestExecutionObserver *executionObserver = OMCTestExecutionObserver.new;
+    
     OSStatus err = [OMCCommandExecutor runCommand:@"applescript_test"
                                    forCommandFile:[bundleURL path]
                                       withContext:nil
                                      useNavDialog:NO
-                                         delegate:nil];
+                                         delegate:executionObserver];
     
     XCTAssertEqual(err, noErr, @"Should execute AppleScript");
+    
+    BOOL completed = [executionObserver waitForCompletionWithTimeout:5.0];
+    XCTAssertTrue(completed, @"Task should complete");
+    // Note: AppleScript log goes to stderr, may not capture in stdout
 }
 
 - (void)testScriptFileWithRuby {
@@ -165,7 +209,8 @@
         @"WAIT_FOR_TASK_COMPLETION": @YES
     };
     
-    NSString *script = @"#!/usr/bin/env ruby\nputs 'Hello from Ruby'\nexit 0\n";
+    NSString *expectedOutput = @"Hello from Ruby";
+    NSString *script = [NSString stringWithFormat:@"#!/usr/bin/env ruby\nputs '%@'\nexit 0\n", expectedOutput];
     
     NSURL *bundleURL = [OMCBundleTestHelper createTestBundle:@"RubyTest"
                                                  withCommands:@[command]
@@ -173,13 +218,21 @@
     XCTAssertNotNil(bundleURL);
     [self.bundlesToCleanup addObject:bundleURL];
     
+    OMCTestExecutionObserver *executionObserver = OMCTestExecutionObserver.new;
+    
     OSStatus err = [OMCCommandExecutor runCommand:@"ruby_test"
                                    forCommandFile:[bundleURL path]
                                       withContext:nil
                                      useNavDialog:NO
-                                         delegate:nil];
+                                         delegate:executionObserver];
     
     XCTAssertEqual(err, noErr, @"Should execute Ruby script");
+    
+    BOOL completed = [executionObserver waitForCompletionWithTimeout:5.0];
+    XCTAssertTrue(completed, @"Task should complete");
+    NSString *capturedOutput = executionObserver.capturedOutput;
+    XCTAssertTrue([capturedOutput containsString:expectedOutput],
+                  @"Output should contain expected text. Got: %@", capturedOutput);
 }
 
 #pragma mark - Main Command Tests (without explicit COMMAND_ID)
@@ -400,8 +453,6 @@
     
     NSString *omcBundlePath = [bundleURL path];
     
-    OSStatus err;
-    
     NSArray *scriptFileTests = @[
         @"shell_test",
         @"python_test",
@@ -412,13 +463,24 @@
     ];
     
     for (NSString *testName in scriptFileTests) {
-        err = [OMCCommandExecutor runCommand:testName
-                              forCommandFile:omcBundlePath
-                                 withContext:nil
-                                useNavDialog:NO
-                                    delegate:nil];
+        OMCTestExecutionObserver *executionObserver = OMCTestExecutionObserver.new;
+        
+        OSStatus err = [OMCCommandExecutor runCommand:testName
+                                       forCommandFile:omcBundlePath
+                                          withContext:nil
+                                         useNavDialog:NO
+                                             delegate:executionObserver];
         
         XCTAssertEqual(err, noErr, @"Should execute %@ command", testName);
+        
+        BOOL completed = [executionObserver waitForCompletionWithTimeout:5.0];
+        XCTAssertTrue(completed, @"%@ should complete within timeout", testName);
+        
+        // Verify some output was captured (except AppleScript which logs to stderr)
+        if (![testName isEqualToString:@"applescript_test"]) {
+            XCTAssertTrue(executionObserver.capturedOutput.length > 0,
+                         @"%@ should produce output. Got: %@", testName, executionObserver.capturedOutput);
+        }
     }
 }
 
