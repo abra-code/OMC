@@ -29,6 +29,13 @@
     }
     NSString *fullBundleName = [bundleName stringByAppendingPathExtension:@"omc"];
     NSURL *omcBundleURL = [testBundlesDir URLByAppendingPathComponent:fullBundleName];
+
+    // Check if bundle exists
+    BOOL exists = [[NSFileManager defaultManager] fileExistsAtPath:[omcBundleURL path]];
+    if (!exists) {
+        return nil;
+    }
+
     return omcBundleURL;
 }
 

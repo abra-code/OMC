@@ -252,13 +252,18 @@
     XCTAssertNotNil(bundleURL);
     [self.bundlesToCleanup addObject:bundleURL];
     
+    OMCTestExecutionObserver *executionObserver = OMCTestExecutionObserver.new;
+    
     OSStatus err = [OMCCommandExecutor runCommand:@"Main Test"
                                    forCommandFile:[bundleURL path]
                                       withContext:nil
                                      useNavDialog:NO
-                                         delegate:nil];
+                                         delegate:executionObserver];
     
     XCTAssertEqual(err, noErr, @"Should execute main command script");
+    
+    BOOL completed = [executionObserver waitForCompletionWithTimeout:5.0];
+    XCTAssertTrue(completed, @"Task should complete");
 }
 
 #pragma mark - Context Variable Tests
@@ -282,18 +287,24 @@
     
     // Create temp file to process
     NSString *tempFile = [NSTemporaryDirectory() stringByAppendingPathComponent:@"test.txt"];
-    [@"test content" writeToFile:tempFile atomically:YES encoding:NSUTF8StringEncoding error:nil];
+    BOOL written = [@"test content" writeToFile:tempFile atomically:YES encoding:NSUTF8StringEncoding error:nil];
+    XCTAssertTrue(written);
     NSURL *fileURL = [NSURL fileURLWithPath:tempFile];
+    
+    OMCTestExecutionObserver *executionObserver = OMCTestExecutionObserver.new;
     
     OSStatus err = [OMCCommandExecutor runCommand:@"process_file"
                                    forCommandFile:[bundleURL path]
                                       withContext:fileURL
                                      useNavDialog:NO
-                                         delegate:nil];
-    
-    [[NSFileManager defaultManager] removeItemAtPath:tempFile error:nil];
+                                         delegate:executionObserver];
     
     XCTAssertEqual(err, noErr, @"Should execute script with file context");
+    
+    BOOL completed = [executionObserver waitForCompletionWithTimeout:5.0];
+    XCTAssertTrue(completed, @"Task should complete");
+    
+    [[NSFileManager defaultManager] removeItemAtPath:tempFile error:nil];
 }
 
 - (void)testScriptFileWithTextContext {
@@ -313,13 +324,18 @@
     XCTAssertNotNil(bundleURL);
     [self.bundlesToCleanup addObject:bundleURL];
     
+    OMCTestExecutionObserver *executionObserver = OMCTestExecutionObserver.new;
+    
     OSStatus err = [OMCCommandExecutor runCommand:@"process_text"
                                    forCommandFile:[bundleURL path]
                                       withContext:@"Hello World"
                                      useNavDialog:NO
-                                         delegate:nil];
+                                         delegate:executionObserver];
     
     XCTAssertEqual(err, noErr, @"Should execute script with text context");
+    
+    BOOL completed = [executionObserver waitForCompletionWithTimeout:5.0];
+    XCTAssertTrue(completed, @"Task should complete");
 }
 
 - (void)testScriptFileWithMultipleFiles {
@@ -347,22 +363,28 @@
     for (int i = 0; i < 3; i++) {
         NSString *path = [NSTemporaryDirectory() stringByAppendingPathComponent:
                          [NSString stringWithFormat:@"test%d.txt", i]];
-        [@"content" writeToFile:path atomically:YES encoding:NSUTF8StringEncoding error:nil];
+        BOOL written = [@"content" writeToFile:path atomically:YES encoding:NSUTF8StringEncoding error:nil];
+        XCTAssertTrue(written);
         [files addObject:[NSURL fileURLWithPath:path]];
     }
+    
+    OMCTestExecutionObserver *executionObserver = OMCTestExecutionObserver.new;
     
     OSStatus err = [OMCCommandExecutor runCommand:@"batch_process"
                                    forCommandFile:[bundleURL path]
                                       withContext:files
                                      useNavDialog:NO
-                                         delegate:nil];
+                                         delegate:executionObserver];
     
-    // Cleanup
+    XCTAssertEqual(err, noErr, @"Should execute script for each file");
+    
+    BOOL completed = [executionObserver waitForCompletionWithTimeout:5.0];
+    XCTAssertTrue(completed, @"All tasks should complete");
+    
+    // Cleanup temp files
     for (NSURL *fileURL in files) {
         [[NSFileManager defaultManager] removeItemAtURL:fileURL error:nil];
     }
-    
-    XCTAssertEqual(err, noErr, @"Should execute script for each file");
 }
 
 #pragma mark - Error Cases
@@ -381,17 +403,22 @@
     XCTAssertNotNil(bundleURL);
     [self.bundlesToCleanup addObject:bundleURL];
     
+    OMCTestExecutionObserver *executionObserver = OMCTestExecutionObserver.new;
+    
     OSStatus err = [OMCCommandExecutor runCommand:@"missing_script"
                                    forCommandFile:[bundleURL path]
                                       withContext:nil
                                      useNavDialog:NO
-                                         delegate:nil];
+                                         delegate:executionObserver];
 
     // Current behavior is that OMC engine does not return an error when the script is missing but fails silently, just logging:
     // "OMC->CreateScriptPathAndShell: unable to find script file"
     // this could be improved but script file finding happens late and deep without well designed error propagation
     // XCTAssertNotEqual(err, noErr, @"Should fail when script file is missing");
     (void)err;
+    
+    BOOL completed = [executionObserver waitForCompletionWithTimeout:5.0];
+    XCTAssertTrue(completed, @"Task should complete even with missing script");
 }
 
 #pragma mark - Multiple Scripts in Bundle
@@ -423,20 +450,31 @@
     [self.bundlesToCleanup addObject:bundleURL];
     
     // Test both commands
+    OMCTestExecutionObserver *executionObserver1 = OMCTestExecutionObserver.new;
+    
     OSStatus err1 = [OMCCommandExecutor runCommand:@"cmd1"
                                     forCommandFile:[bundleURL path]
                                        withContext:nil
                                       useNavDialog:NO
-                                          delegate:nil];
+                                          delegate:executionObserver1];
+    
+    XCTAssertEqual(err1, noErr, @"Should execute first script");
+    
+    BOOL completed1 = [executionObserver1 waitForCompletionWithTimeout:5.0];
+    XCTAssertTrue(completed1, @"First command should complete");
+    
+    OMCTestExecutionObserver *executionObserver2 = OMCTestExecutionObserver.new;
     
     OSStatus err2 = [OMCCommandExecutor runCommand:@"cmd2"
                                     forCommandFile:[bundleURL path]
                                        withContext:nil
                                       useNavDialog:NO
-                                          delegate:nil];
+                                          delegate:executionObserver2];
     
-    XCTAssertEqual(err1, noErr, @"Should execute first script");
     XCTAssertEqual(err2, noErr, @"Should execute second script");
+    
+    BOOL completed2 = [executionObserver2 waitForCompletionWithTimeout:5.0];
+    XCTAssertTrue(completed2, @"Second command should complete");
 }
 
 #pragma mark - Static Bundle Tests (if available)

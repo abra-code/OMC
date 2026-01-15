@@ -112,7 +112,7 @@
 #pragma mark - File Context Tests
 
 - (void)testRunCommandWithSingleFile {
-    NSURL *testFile = [self createTempFileWithName:@"test.txt" content:@"line1\nline2\nline3"];
+    NSURL *testFile = [self createTempFileWithName:@"test_single.txt" content:@"line1\nline2\nline3"];
     
     OSStatus err = [OMCCommandExecutor runCommand:@"count_lines"
                                    forCommandFile:[self.testPlistURL path]
@@ -142,11 +142,12 @@
 
 - (void)testRunCommandWithFileAsPath {
     // Test passing file path as string instead of NSURL
-    NSURL *testFile = [self createTempFileWithName:@"test.txt" content:@"content"];
+    NSURL *testFile = [self createTempFileWithName:@"test_path.txt" content:@"content"];
+    NSString *filePath = [testFile path];
     
     OSStatus err = [OMCCommandExecutor runCommand:@"count_lines"
                                    forCommandFile:[self.testPlistURL path]
-                                      withContext:[testFile path]
+                                      withContext:filePath
                                      useNavDialog:NO
                                          delegate:nil];
     

@@ -210,7 +210,7 @@
     OMCExecutorRef executor = OMCCreateExecutor((__bridge CFDictionaryRef)self.testPlistDict);
     OMCCommandRef cmdRef = OMCFindCommand(executor, CFSTR("process_file"));
     
-    NSURL *testFile = [self createTempFileWithName:@"test.txt" content:@"test content"];
+    NSURL *testFile = [self createTempFileWithName:@"test_examine.txt" content:@"test content"];
     
     OSStatus err = OMCExamineContext(executor, cmdRef, (__bridge CFURLRef)testFile);
     XCTAssertEqual(err, noErr, @"Should examine file context successfully");
@@ -224,7 +224,7 @@
     
     NSMutableArray *files = [NSMutableArray array];
     for (int i = 0; i < 3; i++) {
-        NSURL *file = [self createTempFileWithName:[NSString stringWithFormat:@"test%d.txt", i] 
+        NSURL *file = [self createTempFileWithName:[NSString stringWithFormat:@"test_examine_%d.txt", i] 
                                            content:@"test"];
         [files addObject:file];
     }
