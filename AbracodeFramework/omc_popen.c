@@ -1,44 +1,6 @@
-/*
- * Copyright (c) 1988, 1993
- *	The Regents of the University of California.  All rights reserved.
- *
- * This code is derived from software written by Ken Arnold and
- * published in UNIX Review, Vol. 6, No. 8.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
- *    may be used to endorse or promote products derived from this software
- *    without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- * SUCH DAMAGE.
- */
-
 #include <sys/cdefs.h>
-
 #include <sys/param.h>
 #include <sys/wait.h>
-
 #include <signal.h>
 #include <errno.h>
 #include <unistd.h>
@@ -47,8 +9,8 @@
 #include <string.h>
 #include <paths.h>
 #include <pthread.h>
-
 #include <crt_externs.h>
+#include <spawn.h>
 
 #include "omc_popen.h"
 
@@ -79,7 +41,7 @@ if( (_fd) >= 0 ) { \
 	(_fd) = -1;\
 }
 
-
+#if 0
 void PrintEnv(void)
 {
 	char*** envPtr = _NSGetEnviron();	// pointer to the real 'environ'
@@ -90,21 +52,7 @@ void PrintEnv(void)
 		environ++;
 	}
 }
-
-/*
-void
-SetEnvironOneByOne(const EnvironmentPair *inEnvironList )
-{
-	if(inEnvironList != NULL)
-	{
-		while(inEnvironList->key != NULL)
-		{
-			setenv(inEnvironList->key, inEnvironList->value, 1);
-			inEnvironList += 1;//next entry
-		}
-	}
-}
-*/
+#endif // 0
 
 //caller responsible for freeing the result environ list with ReleaseEnviron()
 char **
@@ -235,183 +183,215 @@ ReleaseEnviron(char **inEnviron)
 int
 omc_popen(const char *command, char * const *inShell, char * const *inEnvironList, unsigned int inMode, ChildProcessInfo *outChildProcessInfo)
 {
-	char *argv[4];
-	ChildProcessInfoLink *thisLink;
-	ChildProcessInfoLink *oneLink;
-	int pid = 0;
-	int inputFDs[2] = {-1, -1};//file descriptors are valid in range <0, OPEN_MAX)
-	int outputFDs[2] = {-1, -1};
-	char **newArgs = NULL;
-	char **shellArguments = argv;
-	char *shellPath = _PATH_BSHELL;
+    //	PrintEnv();
+    
+    if( (command == NULL) || (outChildProcessInfo == NULL) )
+        return -1;
+    
+    outChildProcessInfo->inputFD = -1;
+    outChildProcessInfo->outputFD = -1;
+    outChildProcessInfo->pid = 0;
+    
+    int inputFDs[2] = {-1, -1}; // file descriptors are valid in range <0, OPEN_MAX)
+    int outputFDs[2] = {-1, -1};
 
-//	PrintEnv();
+    if( (inMode & kOMCPopenRead) != 0 )
+    {
+        if( pipe(outputFDs) < 0 )
+            return -1;
+    }
+    
+    if( (inMode & kOMCPopenWrite) != 0 )
+    {
+        if( pipe(inputFDs) < 0 )
+        {
+            CLOSE_FILE_DESCRIPTOR( outputFDs[kPipeReadEnd] );
+            CLOSE_FILE_DESCRIPTOR( outputFDs[kPipeWriteEnd]);
+            return -1;
+        }
+    }
+    
+    ChildProcessInfoLink *thisLink = malloc(sizeof(ChildProcessInfoLink));
+    thisLink->next = NULL;
+    thisLink->info.inputFD = -1;
+    thisLink->info.outputFD = -1;
+    thisLink->info.pid = 0;
+    
+    if(thisLink == NULL)
+    {
+        CLOSE_FILE_DESCRIPTOR( inputFDs[kPipeReadEnd] );
+        CLOSE_FILE_DESCRIPTOR( inputFDs[kPipeWriteEnd]);
+        CLOSE_FILE_DESCRIPTOR( outputFDs[kPipeReadEnd] );
+        CLOSE_FILE_DESCRIPTOR( outputFDs[kPipeWriteEnd]);
+        return -1;
+    }
+    
+    char *shellPath = _PATH_BSHELL;
+    char **shellArguments = NULL;
+    char **newArgs = NULL;
+    
+    if(inShell != NULL)
+    {
+        //a list of strings, starting with shell path and arguments, for example:
+        //	bin/sh
+        //	-l
+        //	-c
+        int i;
+        int itemCount = 0;
+        while( inShell[itemCount] != NULL )
+        {
+            itemCount++;
+        }
+        
+        if( itemCount > 0)
+        {
+            newArgs = (char **)malloc( sizeof(char *) * (itemCount+2) );//+2 for command and null terminator
+            //arg 0 is the path to executed tool so we need to copy all of them
+            for(i = 0; i < itemCount; i++)
+            {
+                newArgs[i] = inShell[i];
+            }
+            
+            newArgs[itemCount] = (char *)command;
+            newArgs[itemCount+1] = NULL;
+            shellPath = inShell[0];
+            shellArguments = newArgs;
+        }
+        else
+        {
+            inShell = NULL;
+        }
+    }
+    
+    if(inShell == NULL)
+    {
+        char *default_argv[] = { "sh", "-c", (char *)command, NULL };
+        shellArguments = default_argv;
+    }
+    
+    posix_spawnattr_t attr = NULL;
+    posix_spawn_file_actions_t file_actions = NULL;
+    bool attributes_initialized = false;
+    bool file_actions_initialized = false;
+    
+    THREAD_LOCK();
+    
+    // Set up posix_spawn attributes
+    if (posix_spawnattr_init(&attr) != 0) {
+        goto spawn_error;
+    }
+    attributes_initialized = true;
+    
+    if (posix_spawn_file_actions_init(&file_actions) != 0) {
+        goto spawn_error;
+    }
+    file_actions_initialized = true;
+    
+    // Set process group - equivalent to setpgid(0, 0)
+    if (posix_spawnattr_setpgroup(&attr, 0) != 0) {
+        goto spawn_error;
+    }
+    
+    if (posix_spawnattr_setflags(&attr, POSIX_SPAWN_SETPGROUP) != 0) {
+        goto spawn_error;
+    }
+    
+    // Configure file descriptors for child
+    if ((inMode & kOMCPopenRead) != 0) {
+        if (posix_spawn_file_actions_addclose(&file_actions, outputFDs[kPipeReadEnd]) != 0)
+            goto spawn_error;
+        if (outputFDs[kPipeWriteEnd] != STDOUT_FILENO) {
+            if (posix_spawn_file_actions_adddup2(&file_actions, outputFDs[kPipeWriteEnd], STDOUT_FILENO) != 0)
+                goto spawn_error;
+            if (posix_spawn_file_actions_addclose(&file_actions, outputFDs[kPipeWriteEnd]) != 0)
+                goto spawn_error;
+        }
+    }
+    
+    if ((inMode & kOMCPopenWrite) != 0) {
+        if (posix_spawn_file_actions_addclose(&file_actions, inputFDs[kPipeWriteEnd]) != 0)
+            goto spawn_error;
+        if (inputFDs[kPipeReadEnd] != STDIN_FILENO) {
+            if (posix_spawn_file_actions_adddup2(&file_actions, inputFDs[kPipeReadEnd], STDIN_FILENO) != 0)
+                goto spawn_error;
+            if (posix_spawn_file_actions_addclose(&file_actions, inputFDs[kPipeReadEnd]) != 0)
+                goto spawn_error;
+        }
+    }
+    
+    // Close inherited file descriptors from parent's child list
+    for (ChildProcessInfoLink *link = sChildProcessInfoList; link != NULL; link = link->next) {
+        if (link->info.inputFD >= 0)
+            posix_spawn_file_actions_addclose(&file_actions, link->info.inputFD);
+        if (link->info.outputFD >= 0)
+            posix_spawn_file_actions_addclose(&file_actions, link->info.outputFD);
+    }
+    
+    // Spawn the process
+    // NOTE: environ parameter must NOT be NULL - use empty array for no environment
+    char *empty_env[] = { NULL };
+    char *const *use_environ = (inEnvironList != NULL) ? inEnvironList : empty_env;
+    
+    int pid = 0;
+    int spawn_result = posix_spawn(&pid, shellPath, &file_actions, &attr,
+                                   shellArguments, use_environ);
+    
+    // Clean up attributes
+    if (file_actions_initialized) {
+        posix_spawn_file_actions_destroy(&file_actions);
+    }
+    if (attributes_initialized) {
+        posix_spawnattr_destroy(&attr);
+    }
+    
+    if (spawn_result != 0) {
+        goto spawn_error;
+    }
+    
+    THREAD_UNLOCK();
 
-	if( (command == NULL) || (outChildProcessInfo == NULL) )
-		return -1;
+    // Continue with existing parent code...
+    thisLink->info.pid = pid;
+    
+    /* Parent - rest stays the same */
+    if ((inMode & kOMCPopenRead) != 0) {
+        thisLink->info.outputFD = outputFDs[kPipeReadEnd];
+        close(outputFDs[kPipeWriteEnd]);
+    }
+    
+    if ((inMode & kOMCPopenWrite) != 0) {
+        thisLink->info.inputFD = inputFDs[kPipeWriteEnd];
+        close(inputFDs[kPipeReadEnd]);
+    }
+    
+    THREAD_LOCK();
+    thisLink->next = sChildProcessInfoList;
+    sChildProcessInfoList = thisLink;
+    THREAD_UNLOCK();
 
-	outChildProcessInfo->inputFD = -1;
-	outChildProcessInfo->outputFD = -1;
-	outChildProcessInfo->pid = 0;
+    *outChildProcessInfo = thisLink->info;
+    free(newArgs);
+    return 0;
 
-	if( (inMode & kOMCPopenRead) != 0 )
-	{
-		if( pipe(outputFDs) < 0 )
-			return -1;
-	}
-
-	if( (inMode & kOMCPopenWrite) != 0 )
-	{
-		if( pipe(inputFDs) < 0 )
-		{
-			CLOSE_FILE_DESCRIPTOR( outputFDs[kPipeReadEnd] );
-			CLOSE_FILE_DESCRIPTOR( outputFDs[kPipeWriteEnd]);
-			return -1;
-		}
-	}
-
-	thisLink = malloc( sizeof(ChildProcessInfoLink) );
-	thisLink->next = NULL;
-	thisLink->info.inputFD = -1;
-	thisLink->info.outputFD = -1;
-	thisLink->info.pid = 0;
-
-	if( thisLink == NULL )
-	{
-		CLOSE_FILE_DESCRIPTOR( inputFDs[kPipeReadEnd] );
-		CLOSE_FILE_DESCRIPTOR( inputFDs[kPipeWriteEnd]);
-		CLOSE_FILE_DESCRIPTOR( outputFDs[kPipeReadEnd] );
-		CLOSE_FILE_DESCRIPTOR( outputFDs[kPipeWriteEnd]);
-		return -1;
-	}
-
-	if(inShell != NULL)
-	{
-		//a list of strings, starting with shell path and arguments, for example:
-		//	bin/sh
-		//	-l
-		//	-c
-		int i;
-		int itemCount = 0;
-		while( inShell[itemCount] != NULL )
-			itemCount++;
-		
-		if( itemCount > 0)
-		{
-			newArgs = (char **)malloc( sizeof(char *) * (itemCount+2) );//+2 for command and null terminator
-			//arg 0 is the path to executed tool so we need to copy all of them
-			for(i = 0; i < itemCount; i++)
-			{
-				newArgs[i] = inShell[i];
-				
-			}
-
-			newArgs[itemCount] = (char *)command;
-			newArgs[itemCount+1] = NULL;
-			shellPath = inShell[0];
-			shellArguments = newArgs;
-		}
-		else
-		{
-			inShell = NULL;
-		}
-	}
-
-
-	if(inShell == NULL)
-	{
-		argv[0] = "sh";
-		argv[1] = "-c";
-		argv[2] = (char *)command;
-		argv[3] = NULL;
-		shellPath = _PATH_BSHELL;
-		shellArguments = argv;
-	}
-
-	THREAD_LOCK();
-
-	pid = vfork();
-	if(pid == -1) /* Error. */
-	{
-		THREAD_UNLOCK();
-
-		CLOSE_FILE_DESCRIPTOR( inputFDs[kPipeReadEnd] );
-		CLOSE_FILE_DESCRIPTOR( inputFDs[kPipeWriteEnd]);
-		CLOSE_FILE_DESCRIPTOR( outputFDs[kPipeReadEnd] );
-		CLOSE_FILE_DESCRIPTOR( outputFDs[kPipeWriteEnd]);
-
-		free(thisLink);
-		if(newArgs != NULL)
-			free(newArgs);
-		return -1;
-	}
-	else if(pid == 0) /* Child. */
-	{
-		setpgid(0, 0);//will it create a new group?
-
-		if( (inMode & kOMCPopenRead) != 0 )
-		{
-			close( outputFDs[kPipeReadEnd] );//do not uninit to -1 because this variable is shared by parent process too
-			if( outputFDs[kPipeWriteEnd] != STDOUT_FILENO )
-			{
-				(void)dup2(outputFDs[kPipeWriteEnd], STDOUT_FILENO);
-				close( outputFDs[kPipeWriteEnd]);
-			}
-		}
-		
-		if( (inMode & kOMCPopenWrite) != 0 )
-		{
-			close( inputFDs[kPipeWriteEnd] );//do not uninit to -1 because this varaible is shared by parent process too
-			if( inputFDs[kPipeReadEnd] != STDIN_FILENO )
-			{
-				(void)dup2(inputFDs[kPipeReadEnd], STDIN_FILENO);
-				close( inputFDs[kPipeReadEnd] );
-			}
-		}
-
-		//close duplicate file descriptors in child process
-		for( oneLink = sChildProcessInfoList; oneLink != NULL; oneLink = oneLink->next )
-		{
-			CLOSE_FILE_DESCRIPTOR( oneLink->info.inputFD );
-			CLOSE_FILE_DESCRIPTOR( oneLink->info.outputFD );
-		}
-
-		if(inEnvironList == NULL)
-			execv(shellPath, shellArguments);
-		else
-			execve(shellPath, shellArguments, inEnvironList);
-
-		_exit(127);
-		/* NOTREACHED */
-	}
-	THREAD_UNLOCK();
-
-	thisLink->info.pid = pid;
-
-	/* Parent */
-	if( (inMode & kOMCPopenRead) != 0 )
-	{
-		thisLink->info.outputFD = outputFDs[kPipeReadEnd];
-		close( outputFDs[kPipeWriteEnd] );
-	}
-	
-	if( (inMode & kOMCPopenWrite) != 0 )
-	{
-		thisLink->info.inputFD = inputFDs[kPipeWriteEnd];
-		close(  inputFDs[kPipeReadEnd] );
-	}
-	
-	THREAD_LOCK();
-	thisLink->next = sChildProcessInfoList;
-	sChildProcessInfoList = thisLink;
-	THREAD_UNLOCK();
-
-	*outChildProcessInfo = thisLink->info;
-
-	if(newArgs != NULL)
-		free(newArgs);
-
-	return 0;
+spawn_error:
+    if (file_actions_initialized) {
+        posix_spawn_file_actions_destroy(&file_actions);
+    }
+    if (attributes_initialized) {
+        posix_spawnattr_destroy(&attr);
+    }
+    
+    THREAD_UNLOCK();
+    
+    CLOSE_FILE_DESCRIPTOR(inputFDs[kPipeReadEnd]);
+    CLOSE_FILE_DESCRIPTOR(inputFDs[kPipeWriteEnd]);
+    CLOSE_FILE_DESCRIPTOR(outputFDs[kPipeReadEnd]);
+    CLOSE_FILE_DESCRIPTOR(outputFDs[kPipeWriteEnd]);
+    
+    free(thisLink);
+    free(newArgs);
+    
+    return -1;
 }
 
 /*
@@ -423,7 +403,7 @@ int
 omc_pclose(pid_t inChildPid)
 {
 	ChildProcessInfoLink *thisLink = NULL, *lastLink = NULL;
-	int pstat = 0;
+    int status = 0;
 	pid_t pid = 0;
 
 	/*
@@ -452,15 +432,15 @@ omc_pclose(pid_t inChildPid)
 	CLOSE_FILE_DESCRIPTOR( thisLink->info.inputFD );
 	CLOSE_FILE_DESCRIPTOR( thisLink->info.outputFD );
 
-	do
-	{
-		pid = wait4( thisLink->info.pid, &pstat, 0, (struct rusage *)0 );
-	}
-	while (pid == -1 && errno == EINTR);
+    do
+    {
+        pid = waitpid(inChildPid, &status, 0);
+    }
+    while (pid == -1 && errno == EINTR);
 
 	free(thisLink);
 
-	return (pid == -1 ? -1 : pstat);
+    return (pid == inChildPid) ? status : -1;
 }
 
 //half-close. needs to be followed by full omc_pclose() when really done
