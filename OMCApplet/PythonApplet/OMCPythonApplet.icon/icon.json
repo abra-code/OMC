@@ -5,16 +5,38 @@
   "groups" : [
     {
       "layers" : [
+
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.5
+      }
+    },
+    {
+      "layers" : [
         {
           "fill" : {
             "linear-gradient" : [
               "display-p3:0.91748,0.20398,0.14124,1.00000",
               "display-p3:0.60791,0.12158,0.08234,1.00000"
-            ]
+            ],
+            "orientation" : {
+              "start" : {
+                "x" : 0.5,
+                "y" : 0
+              },
+              "stop" : {
+                "x" : 0.5,
+                "y" : 0.7
+              }
+            }
           },
-          "hidden" : false,
-          "image-name" : "square-circle-thick.png",
-          "name" : "square-circle-thick"
+          "image-name" : "python.png",
+          "name" : "python"
         }
       ],
       "shadow" : {
