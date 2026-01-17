@@ -668,6 +668,46 @@ static CFStringRef GetPythonToolPath()
     return sPythonPath;
 }
 
+static CFStringRef
+PrependPythonBinDirToEnvironmentPATH(CFStringRef pythonPath)
+{
+    // Extract the directory from the python path by removing the last path component
+    CFObj<CFURLRef> pythonURL = ::CFURLCreateWithFileSystemPath(kCFAllocatorDefault,
+                                                                pythonPath,
+                                                                kCFURLPOSIXPathStyle,
+                                                                false);
+    if (pythonURL == NULL)
+    {
+        return NULL;
+    }
+    
+    CFObj<CFURLRef> binDirURL = ::CFURLCreateCopyDeletingLastPathComponent(kCFAllocatorDefault, pythonURL);
+    
+    if (binDirURL == NULL)
+    {
+        return NULL;
+    }
+    
+    CFObj<CFStringRef> binDir = ::CFURLCopyFileSystemPath(binDirURL, kCFURLPOSIXPathStyle);
+    
+    if (binDir == NULL)
+    {
+        return NULL;
+    }
+    
+    // Create the new PATH by prepending binDir
+    CFMutableStringRef newPath = ::CFStringCreateMutable(kCFAllocatorDefault, 0);
+    ::CFStringAppend(newPath, binDir);
+    ::CFStringAppend(newPath, CFSTR(":"));
+    CFObj<CFStringRef> currentPath = ::CFStringCreateWithCString(kCFAllocatorDefault,
+                                                                ::getenv("PATH"),
+                                                                kCFStringEncodingUTF8);
+
+    ::CFStringAppend(newPath, currentPath);
+    
+    return newPath;
+}
+
 static inline
 CFStringRef GetShellFromScriptExtension(CFStringRef inExt, CFMutableDictionaryRef envVariables)
 {
@@ -684,8 +724,16 @@ CFStringRef GetShellFromScriptExtension(CFStringRef inExt, CFMutableDictionaryRe
                 // add pyc cache location to env vars
                 // this is not a writable location for sandboxed apps but OMC applets are hard or impossible to sandbox
                 CFStringRef pycCachePath = CFSTR("/tmp/Pyc");
-                CFDictionaryAddValue(envVariables, CFSTR("PYTHONPYCACHEPREFIX"), pycCachePath);
-                return GetPythonToolPath();
+                ::CFDictionaryAddValue(envVariables, CFSTR("PYTHONPYCACHEPREFIX"), pycCachePath);
+                CFStringRef pythonToolPath = GetPythonToolPath();
+                // add the path to found python3 tool as the first search path
+                CFObj<CFStringRef> newPaths = PrependPythonBinDirToEnvironmentPATH(pythonToolPath);
+                if (newPaths != NULL)
+                {
+                    ::CFDictionaryAddValue(envVariables, CFSTR("PATH"), newPaths);
+                }
+
+                return pythonToolPath;
             }
 
 			return sExtensionToShellMap[i].shell;
