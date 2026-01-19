@@ -498,8 +498,8 @@ OmcHostTaskManager::ShowEndNotification()
         {
             iconFileName = iconName;
         }
-        
-        iconURL.Adopt( CFBundleCopyResourceURL(appBundleRef, iconFileName, CFSTR("icns"), nullptr) ); //main bundle first from host app
+        Boolean hasIcns = ::CFStringHasSuffix(iconFileName, CFSTR("icns"));
+        iconURL.Adopt( CFBundleCopyResourceURL(appBundleRef, iconFileName, hasIcns ? nullptr : CFSTR("icns"), nullptr) ); //main bundle first from host app
     }
 
 	if( (iconURL == nullptr) && (mBundle != nullptr) )//fall back to Abracode framework icon
