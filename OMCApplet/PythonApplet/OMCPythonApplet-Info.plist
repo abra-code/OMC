@@ -55,7 +55,7 @@
 		</dict>
 	</array>
 	<key>NSAppleEventsUsageDescription</key>
-	<string>OMC Applets send AppleEvents to other apps to provide some great functionality which is unique to each applet and should be explicitly explained here</string>
+	<string>OMCPythonApplet sends AppleEvents to other apps to provide some great functionality which is unique to each applet and should be explicitly explained here</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsArbitraryLoadsInWebContent</key>

@@ -44,6 +44,13 @@
 			remoteGlobalIDString = 8DC2EF4F0486A6940098B216;
 			remoteInfo = AbracodeFramework;
 		};
+		1DCBC2B62F1D7E1C0002B8AB /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1D039DB62E168DAF00D4924A /* Abracode.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 1DCBC0D52F15FCE40002B8AB;
+			remoteInfo = AbracodeTests;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -143,6 +150,7 @@
 				app.did.launch.sh,
 				app.will.launch.sh,
 				app.will.terminate.sh,
+				Welcome.main.py,
 			);
 			target = 8D1107260486CEB800E47090 /* OMCApplet */;
 		};
@@ -226,6 +234,7 @@
 			isa = PBXGroup;
 			children = (
 				1D039DBD2E168DAF00D4924A /* Abracode.framework */,
+				1DCBC2B72F1D7E1C0002B8AB /* AbracodeTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -376,6 +385,13 @@
 			fileType = wrapper.framework;
 			path = Abracode.framework;
 			remoteRef = 1D039DBC2E168DAF00D4924A /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		1DCBC2B72F1D7E1C0002B8AB /* AbracodeTests.xctest */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = AbracodeTests.xctest;
+			remoteRef = 1DCBC2B62F1D7E1C0002B8AB /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 /* End PBXReferenceProxy section */
