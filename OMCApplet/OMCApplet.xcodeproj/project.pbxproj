@@ -14,6 +14,8 @@
 		1D80D5312F12E81400E3B4FB /* AbracodeFrameworkVersion.c in Sources */ = {isa = PBXBuildFile; fileRef = E2ACB28C12EAE02700A8ACF6 /* AbracodeFrameworkVersion.c */; };
 		1D80D5332F12E81400E3B4FB /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
 		1D80D5342F12E81400E3B4FB /* Abracode.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E23EA1640DFB026E0070E63F /* Abracode.framework */; settings = {ATTRIBUTES = (Required, ); }; };
+		1DC32A862F1F34C100B4CE84 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 1DC32A852F1F34C100B4CE84 /* Credits.rtf */; };
+		1DC32A872F1F34C100B4CE84 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 1DC32A852F1F34C100B4CE84 /* Credits.rtf */; };
 		1DEE0AF62EB2261900729DAE /* OMCApplet.icon in Resources */ = {isa = PBXBuildFile; fileRef = 1DEE0AF52EB2261900729DAE /* OMCApplet.icon */; };
 		8D11072D0486CEB800E47090 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
@@ -109,6 +111,7 @@
 		1D7618BE231CEE28005F4AEB /* OMCApplet.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = OMCApplet.entitlements; sourceTree = "<group>"; };
 		1D80D53C2F12E81400E3B4FB /* OMCPythonApplet.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OMCPythonApplet.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1D94D4A4229D2D0C009938BB /* Base */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = Base; path = Base.lproj/MainMenu.nib; sourceTree = "<group>"; };
+		1DC32A852F1F34C100B4CE84 /* Credits.rtf */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; path = Credits.rtf; sourceTree = "<group>"; };
 		1DD21130259F43C90041BB8F /* OmcVersion.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcVersion.xcconfig; path = ../Common/OmcVersion.xcconfig; sourceTree = "<group>"; };
 		1DEE0AF52EB2261900729DAE /* OMCApplet.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = OMCApplet.icon; sourceTree = "<group>"; };
 		29B97316FDCFA39411CA2CEA /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
@@ -272,6 +275,7 @@
 			isa = PBXGroup;
 			children = (
 				1DEE0AF52EB2261900729DAE /* OMCApplet.icon */,
+				1DC32A852F1F34C100B4CE84 /* Credits.rtf */,
 				1DA51CBE2EACE01000BFF670 /* Scripts */,
 				E23EA2010DFB9B7C0070E63F /* Command.plist */,
 				8D1107310486CEB800E47090 /* Info.plist */,
@@ -401,6 +405,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1DC32A862F1F34C100B4CE84 /* Credits.rtf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -411,6 +416,7 @@
 				E23EA2030DFB9B7C0070E63F /* Command.plist in Resources */,
 				1D3BB16E229D0B6600542933 /* MainMenu.nib in Resources */,
 				1DEE0AF62EB2261900729DAE /* OMCApplet.icon in Resources */,
+				1DC32A872F1F34C100B4CE84 /* Credits.rtf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
