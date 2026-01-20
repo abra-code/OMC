@@ -11,8 +11,9 @@
 		1D386DB123BF06C400A16967 /* test.webkit.example.html in Resources */ = {isa = PBXBuildFile; fileRef = 1D386DB023BF06C400A16967 /* test.webkit.example.html */; };
 		1D386DB423BF0B4600A16967 /* test.webkitview.init.sh in CopyFiles */ = {isa = PBXBuildFile; fileRef = 1D386DB223BF0A7E00A16967 /* test.webkitview.init.sh */; };
 		1D57B6822320F6AD00FAF9CB /* test.exe.script.file.sh in CopyFiles */ = {isa = PBXBuildFile; fileRef = 1D57B6812320F6AD00FAF9CB /* test.exe.script.file.sh */; };
+		1D63C4132F1F1ACE0003586D /* Abracode.framework in Copy Abracode.framework */ = {isa = PBXBuildFile; fileRef = 1D63C40E2F1F1AB70003586D /* Abracode.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		1D63C4142F1F1ADC0003586D /* Abracode.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1D63C40E2F1F1AB70003586D /* Abracode.framework */; };
 		1D6D26B223C0A85700C6320D /* test.webkitview.execute.sh in CopyFiles */ = {isa = PBXBuildFile; fileRef = 1D6D26B023C0A84800C6320D /* test.webkitview.execute.sh */; };
-		1D7618BC231CEDD4005F4AEB /* Abracode.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E2C32C370D2CB56B0023DA03 /* Abracode.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		1DB9D8C02324C041003F6849 /* test.javascript.js in CopyFiles */ = {isa = PBXBuildFile; fileRef = 1DB9D8BE2324BDB5003F6849 /* test.javascript.js */; };
 		1DB9D8C22324D656003F6849 /* test.AppleScript.applescript in Sources */ = {isa = PBXBuildFile; fileRef = 1DB9D8C12324D656003F6849 /* test.AppleScript.applescript */; };
 		1DB9D8C32324D66A003F6849 /* test.AppleScript.applescript in CopyFiles */ = {isa = PBXBuildFile; fileRef = 1DB9D8C12324D656003F6849 /* test.AppleScript.applescript */; };
@@ -42,6 +43,30 @@
 		E2F5C7C80DCF017E00B4D4EC /* Introduction.qtz in Resources */ = {isa = PBXBuildFile; fileRef = E2F5C7C70DCF017E00B4D4EC /* Introduction.qtz */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		1D63C40D2F1F1AB70003586D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1D63C3B32F1F19E70003586D /* Abracode.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 8DC2EF5B0486A6940098B216;
+			remoteInfo = AbracodeFramework;
+		};
+		1D63C40F2F1F1AB70003586D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1D63C3B32F1F19E70003586D /* Abracode.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 1DCBC0D52F15FCE40002B8AB;
+			remoteInfo = AbracodeTests;
+		};
+		1D63C4112F1F1AC40003586D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1D63C3B32F1F19E70003586D /* Abracode.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 8DC2EF4F0486A6940098B216;
+			remoteInfo = AbracodeFramework;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXCopyFilesBuildPhase section */
 		1D57B6832320F6D400FAF9CB /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
@@ -60,6 +85,17 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		1D63C3E32F1F1A090003586D /* Copy Abracode.framework */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				1D63C4132F1F1ACE0003586D /* Abracode.framework in Copy Abracode.framework */,
+			);
+			name = "Copy Abracode.framework";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
@@ -69,6 +105,7 @@
 		1D386DB023BF06C400A16967 /* test.webkit.example.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; path = test.webkit.example.html; sourceTree = "<group>"; };
 		1D386DB223BF0A7E00A16967 /* test.webkitview.init.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = test.webkitview.init.sh; sourceTree = "<group>"; };
 		1D57B6812320F6AD00FAF9CB /* test.exe.script.file.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = test.exe.script.file.sh; sourceTree = "<group>"; };
+		1D63C3B32F1F19E70003586D /* Abracode.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Abracode.xcodeproj; path = ../AbracodeFramework/Abracode.xcodeproj; sourceTree = SOURCE_ROOT; };
 		1D6D26B023C0A84800C6320D /* test.webkitview.execute.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = test.webkitview.execute.sh; sourceTree = "<group>"; };
 		1D7618BD231CEE08005F4AEB /* OMCTestApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = OMCTestApp.entitlements; sourceTree = "<group>"; };
 		1DB9D8BE2324BDB5003F6849 /* test.javascript.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; path = test.javascript.js; sourceTree = "<group>"; };
@@ -94,7 +131,6 @@
 		E23C1AD410DE047300B2E8A1 /* OmcProjectCommon.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = OmcProjectCommon.xcconfig; path = ../Common/OmcProjectCommon.xcconfig; sourceTree = SOURCE_ROOT; };
 		E24DB4740DA0B06000F53AB5 /* Command.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Command.plist; sourceTree = SOURCE_ROOT; };
 		E29B53350D56D0A600F00B4A /* ForOutputObserver.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = ForOutputObserver.plist; sourceTree = SOURCE_ROOT; };
-		E2C32C370D2CB56B0023DA03 /* Abracode.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Abracode.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		E2C32C3D0D2CB64B0023DA03 /* OMCTestApp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCTestApp.h; sourceTree = "<group>"; };
 		E2C32C3E0D2CB64B0023DA03 /* OMCTestApp.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMCTestApp.m; sourceTree = "<group>"; };
 		E2C32C690D2CBB860023DA03 /* Example.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Example.plist; sourceTree = SOURCE_ROOT; };
@@ -110,8 +146,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1D63C4142F1F1ADC0003586D /* Abracode.framework in Frameworks */,
 				8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */,
-				1D7618BC231CEDD4005F4AEB /* Abracode.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -121,7 +157,6 @@
 		1058C7A0FEA54F0111CA2CBB /* Linked Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				E2C32C370D2CB56B0023DA03 /* Abracode.framework */,
 				1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */,
 			);
 			name = "Linked Frameworks";
@@ -145,6 +180,15 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		1D63C4092F1F1AB70003586D /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				1D63C40E2F1F1AB70003586D /* Abracode.framework */,
+				1D63C4102F1F1AB70003586D /* AbracodeTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		29B97314FDCFA39411CA2CEA /* OMCTestApp */ = {
 			isa = PBXGroup;
 			children = (
@@ -154,6 +198,7 @@
 				29B97317FDCFA39411CA2CEA /* Resources */,
 				29B97323FDCFA39411CA2CEA /* Frameworks */,
 				19C28FACFE9D520D11CA2CBB /* Products */,
+				1D63C3B32F1F19E70003586D /* Abracode.xcodeproj */,
 			);
 			name = OMCTestApp;
 			sourceTree = "<group>";
@@ -224,10 +269,12 @@
 				8D11072C0486CEB800E47090 /* Sources */,
 				8D11072E0486CEB800E47090 /* Frameworks */,
 				1D57B6832320F6D400FAF9CB /* CopyFiles */,
+				1D63C3E32F1F1A090003586D /* Copy Abracode.framework */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				1D63C4122F1F1AC40003586D /* PBXTargetDependency */,
 			);
 			name = OMCTestApp;
 			productInstallPath = "$(HOME)/Applications";
@@ -253,12 +300,35 @@
 			);
 			mainGroup = 29B97314FDCFA39411CA2CEA /* OMCTestApp */;
 			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = 1D63C4092F1F1AB70003586D /* Products */;
+					ProjectRef = 1D63C3B32F1F19E70003586D /* Abracode.xcodeproj */;
+				},
+			);
 			projectRoot = "";
 			targets = (
 				8D1107260486CEB800E47090 /* OMCTestApp */,
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXReferenceProxy section */
+		1D63C40E2F1F1AB70003586D /* Abracode.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = Abracode.framework;
+			remoteRef = 1D63C40D2F1F1AB70003586D /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		1D63C4102F1F1AB70003586D /* AbracodeTests.xctest */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = AbracodeTests.xctest;
+			remoteRef = 1D63C40F2F1F1AB70003586D /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+/* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
 		8D1107290486CEB800E47090 /* Resources */ = {
@@ -302,6 +372,14 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		1D63C4122F1F1AC40003586D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = AbracodeFramework;
+			targetProxy = 1D63C4112F1F1AC40003586D /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
 		089C165CFE840E0CC02AAC07 /* InfoPlist.strings */ = {
