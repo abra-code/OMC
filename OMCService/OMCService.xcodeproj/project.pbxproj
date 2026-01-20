@@ -7,30 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		1D039DC92E168E0D00D4924A /* Abracode.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1D039DC82E168DD600D4924A /* Abracode.framework */; };
-		1D039DCB2E168EFC00D4924A /* Abracode.framework in Copy Abracode.framework */ = {isa = PBXBuildFile; fileRef = 1D039DC82E168DD600D4924A /* Abracode.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		1DCFB24C231FACC800D1C62E /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1DCFB248231FACC800D1C62E /* MainMenu.xib */; };
 		1DEE0B1A2EB35B0200729DAE /* OMCService.icon in Resources */ = {isa = PBXBuildFile; fileRef = 1DEE0B192EB35B0200729DAE /* OMCService.icon */; };
 		8D11072D0486CEB800E47090 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
 /* End PBXBuildFile section */
-
-/* Begin PBXContainerItemProxy section */
-		1D039DC42E168DD600D4924A /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 1D039DC12E168DD600D4924A /* Abracode.xcodeproj */;
-			proxyType = 1;
-			remoteGlobalIDString = 8DC2EF4F0486A6940098B216;
-			remoteInfo = AbracodeFramework;
-		};
-		1D039DC72E168DD600D4924A /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 1D039DC12E168DD600D4924A /* Abracode.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 8DC2EF5B0486A6940098B216;
-			remoteInfo = AbracodeFramework;
-		};
-/* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
 		1D039DCA2E168EEF00D4924A /* Copy Abracode.framework */ = {
@@ -39,7 +20,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				1D039DCB2E168EFC00D4924A /* Abracode.framework in Copy Abracode.framework */,
 			);
 			name = "Copy Abracode.framework";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -50,7 +30,7 @@
 		1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		13E42FB307B3F0F600E4EEF1 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = /System/Library/Frameworks/CoreData.framework; sourceTree = "<absolute>"; };
 		1D039D772E1680B200D4924A /* OMCService-target.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "OMCService-target.xcconfig"; sourceTree = "<group>"; };
-		1D039DC12E168DD600D4924A /* Abracode.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Abracode.xcodeproj; path = /Users/tkukielk/Development/OMC/AbracodeFramework/Abracode.xcodeproj; sourceTree = "<absolute>"; };
+		1D039DC12E168DD600D4924A /* Abracode.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Abracode.xcodeproj; path = ../AbracodeFramework/Abracode.xcodeproj; sourceTree = SOURCE_ROOT; };
 		1D4971AA2575A68000F7131C /* OmcProjectDebug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectDebug.xcconfig; path = ../Common/OmcProjectDebug.xcconfig; sourceTree = "<group>"; };
 		1D4971AB2575A68000F7131C /* OmcProjectRelease.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectRelease.xcconfig; path = ../Common/OmcProjectRelease.xcconfig; sourceTree = "<group>"; };
 		1D7618BF231CEF80005F4AEB /* OMCService.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = OMCService.entitlements; sourceTree = "<group>"; };
@@ -71,7 +51,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1D039DC92E168E0D00D4924A /* Abracode.framework in Frameworks */,
 				8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -101,14 +80,6 @@
 			isa = PBXGroup;
 			children = (
 				8D1107320486CEB800E47090 /* OMCService.service */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
-		1D039DC22E168DD600D4924A /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				1D039DC82E168DD600D4924A /* Abracode.framework */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -174,7 +145,6 @@
 			buildRules = (
 			);
 			dependencies = (
-				1D039DC52E168DD600D4924A /* PBXTargetDependency */,
 			);
 			name = OMCService;
 			productInstallPath = "$(HOME)/Applications";
@@ -201,28 +171,12 @@
 			);
 			mainGroup = 29B97314FDCFA39411CA2CEA /* OMCService */;
 			projectDirPath = "";
-			projectReferences = (
-				{
-					ProductGroup = 1D039DC22E168DD600D4924A /* Products */;
-					ProjectRef = 1D039DC12E168DD600D4924A /* Abracode.xcodeproj */;
-				},
-			);
 			projectRoot = "";
 			targets = (
 				8D1107260486CEB800E47090 /* OMCService */,
 			);
 		};
 /* End PBXProject section */
-
-/* Begin PBXReferenceProxy section */
-		1D039DC82E168DD600D4924A /* Abracode.framework */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.framework;
-			path = Abracode.framework;
-			remoteRef = 1D039DC72E168DD600D4924A /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-/* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
 		8D1107290486CEB800E47090 /* Resources */ = {
@@ -246,14 +200,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
-
-/* Begin PBXTargetDependency section */
-		1D039DC52E168DD600D4924A /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			name = AbracodeFramework;
-			targetProxy = 1D039DC42E168DD600D4924A /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
 		1DCFB248231FACC800D1C62E /* MainMenu.xib */ = {
