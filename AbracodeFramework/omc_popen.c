@@ -227,6 +227,7 @@ omc_popen(const char *command, char * const *inShell, char * const *inEnvironLis
     }
     
     char *shellPath = _PATH_BSHELL;
+    char *default_argv[] = { "sh", "-c", (char *)command, NULL };
     char **shellArguments = NULL;
     char **newArgs = NULL;
     
@@ -265,7 +266,6 @@ omc_popen(const char *command, char * const *inShell, char * const *inEnvironLis
     
     if(inShell == NULL)
     {
-        char *default_argv[] = { "sh", "-c", (char *)command, NULL };
         shellArguments = default_argv;
     }
     
