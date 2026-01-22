@@ -27,6 +27,8 @@ if test "$?" != "0"; then
 fi
 
 entitlements_path="$self_dir/OMCApplet/OMCApplet.entitlements"
+entitlements_path_root="$self_dir/OMCApplet.entitlements"
+
 entitlements=""
 
 if test -z "$identity"; then
@@ -34,12 +36,24 @@ if test -z "$identity"; then
     timestamp="--timestamp=none"
     sign_options=""
 else
-	if [ -f "${entitlements_path}" ]; then
-    	entitlements="--entitlements $entitlements_path"
+    if [ -f "${entitlements_path}" ]; then
+        entitlements="--entitlements $entitlements_path"
+    elif [ -f "${entitlements_path_root}" ]; then
+        entitlements="--entitlements $entitlements_path_root"
     fi
     timestamp="--timestamp"
     sign_options="--options runtime"
 fi
+
+refresh_app() {
+    local app_path=$1
+    echo "Refreshing bundle modification date"
+    /usr/bin/touch -c "${app_path}"
+
+    echo "Registering applet with Launch Services"
+    /System/Library/Frameworks/CoreServices.framework/Versions/Current/Frameworks/LaunchServices.framework/Versions/Current/Support/lsregister \
+        -f -R -trusted "${app_path}" 2>/dev/null
+}
 
 # Function to sign all executables in a directory recursively
 sign_executables_in_dir() {
@@ -108,6 +122,8 @@ if test "$?" != "0"; then
     echo "error: failed to sign app bundle"
     exit 1
 fi
+
+refresh_app "$app_to_sign"
 
 echo ""
 echo "Verifying and validating codesigned app:"
