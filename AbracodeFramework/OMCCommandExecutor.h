@@ -27,6 +27,6 @@
 /// otherwise when the file context is missing the command is not executed
 /// if USE_NAV_DIALOG_FOR_MISSING_FILE_CONTEXT is false, the command always executes and no nav dialog is shown
 
-+ (OSStatus)runCommand:(NSString *)inCommandNameOrId forCommandFile:(NSString *)inFileName withContext:(id)inContext useNavDialog:(BOOL)useNavDialog delegate:(id)delegate;
++ (OSStatus)runCommand:(NSString *)inCommandNameOrId forCommandFile:(NSString *)inFileName withContext:(id)inContext useNavDialog:(BOOL)allowNavDialog delegate:(id)delegate;
 
 @end

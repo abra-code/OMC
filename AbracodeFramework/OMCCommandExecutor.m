@@ -29,6 +29,17 @@ void OMCDelegateObserverCallback(OmcObserverMessage inMessage, CFIndex inTaskID,
     }
 }
 
+static inline
+bool IsFileOrFolderActivation(UInt32 activationType)
+{
+    return ((activationType == kActiveFile) ||
+            (activationType == kActiveFolder) ||
+            (activationType == kActiveFileOrFolder) ||
+            (activationType == kActiveFinderWindow) ||
+            (activationType == kActiveFolderExcludeFinderWindow) ||
+            (activationType == kActiveFileOrFolderExcludeFinderWindow));
+}
+
 @interface OMCCommandExecutor()
 + (CFPropertyListRef)cachedPlistForCommandFile:(NSString *)inFileName;
 + (CFPropertyListRef)cachedPlistForURL:(NSURL *)inURL;
@@ -40,7 +51,7 @@ void OMCDelegateObserverCallback(OmcObserverMessage inMessage, CFIndex inTaskID,
 //when useNavDialog = TRUE, missing file context is obtained from nav dialog
 //otherwise when the file context is missing the command is not executed
 //if USE_NAV_DIALOG_FOR_MISSING_FILE_CONTEXT is false, the command always executes and no nav dialog is shown
-+ (OSStatus)runCommand:(NSString *)inCommandNameOrId forCommandFile:(NSString *)inFileName withContext:(id)inContext useNavDialog:(BOOL)useNavDialog delegate:(id)delegate
++ (OSStatus)runCommand:(NSString *)inCommandNameOrId forCommandFile:(NSString *)inFileName withContext:(id)inContext useNavDialog:(BOOL)clientAllowsNavDialog delegate:(id)delegate
 {
 	OSStatus error = userCanceledErr;//pessimistic scenario
 	
@@ -61,91 +72,97 @@ void OMCDelegateObserverCallback(OmcObserverMessage inMessage, CFIndex inTaskID,
 		if( OMCIsValidCommandRef(commandRef) )
 		{
 			error = noErr;
-				
-			UInt32 objectsInfo = kOmcCommandNoSpecialObjects;
-			OMCGetCommandInfo(omcExec, commandRef, kOmcInfo_CommandObjects, &objectsInfo);
-			CFArrayRef docList = NULL;
-			BOOL hasFiles = FALSE;
-			if( inContext != NULL )
-			{
+            
+            // evaluate if we have a path object context for requested path OR file or folder activation
+            bool hasFiles = false;
+            if (inContext != NULL)
+            {
                 CFTypeID contextType = CFGetTypeID((__bridge CFTypeRef)inContext);
-				hasFiles = ((contextType == CFArrayGetTypeID()) || (contextType == CFURLGetTypeID()));
-			}
-			
-			Boolean useNavDialogForMissingFileContext = true;
-			UInt32 executionOptions = 0;
-			OMCGetCommandInfo(omcExec, commandRef, kOmcInfo_ExecutionOptions, &executionOptions);
-			if( (executionOptions & kExecutionOption_UseNavDialogForMissingFileContext) == 0 )
-				useNavDialogForMissingFileContext = false;
-	
-			if( ((objectsInfo & kOmcCommandContainsFileObject) != 0) && !hasFiles && useNavDialogForMissingFileContext )
+                hasFiles = ((contextType == CFArrayGetTypeID()) || (contextType == CFURLGetTypeID()));
+            }
+            
+            bool requiresNavDialog = false;
+            UInt32 activationType = kActiveAlways;
+            CFArrayRef selectedFiles = NULL;
+            
+            if (!hasFiles) // no file context provided. consider carefully whether the command needs files and allows displaying nav dialog
+            {
+                // does the command description allows using nav dialogs for missing file context (default = true, must be explicitly disallowed)
+                UInt32 executionOptions = 0;
+                OMCGetCommandInfo(omcExec, commandRef, kOmcInfo_ExecutionOptions, &executionOptions);
+                if ((executionOptions & kExecutionOption_UseNavDialogForMissingFileContext) != 0)
+                {
+                    // do we have file/dir objects referenced in command or declared in environment variables?
+                    UInt32 objectsInfo = kOmcCommandNoSpecialObjects;
+                    OMCGetCommandInfo(omcExec, commandRef, kOmcInfo_CommandObjects, &objectsInfo);
+                    
+                    // does the command activation require file/dir?
+                    OMCGetCommandInfo(omcExec, commandRef, kOmcInfo_ActivationType, &activationType);
+                    requiresNavDialog = ((objectsInfo & kOmcCommandContainsFileObject) != 0) || IsFileOrFolderActivation(activationType);
+                }
+            }
+            
+			if (requiresNavDialog && clientAllowsNavDialog) // all good to go with nav dialog
 			{
-				error = userCanceledErr;//command will not execute if we don't specify files
-				if(useNavDialog)
-				{
-					UInt32 activationType = kActiveAlways;
-					error = OMCGetCommandInfo(omcExec, commandRef, kOmcInfo_ActivationType, &activationType);
-					
-					CFStringRef theMessage = CFCopyLocalizedStringFromTable(CFSTR("Choose Objects To Process"), CFSTR("Localizable"), "");
-					
-					NSBundle *appBundle = [NSBundle mainBundle];
-					NSString *appName = [appBundle objectForInfoDictionaryKey:@"CFBundleName"];
-					if(appName == NULL)
-						appName = @"OMCApplet";
-					
-					switch(activationType)
-					{
-						case kActiveFile:
-						{
-                            docList = CreateCFURLsFromOpenDialog( (__bridge CFStringRef)appName, theMessage, NULL, NULL, kOMCFilePanelCanChooseFiles | kOMCFilePanelAllowMultipleItems );
-						}
-						break;
-							
-						case kActiveFolder:
-						case kActiveFinderWindow:
-						case kActiveFolderExcludeFinderWindow:
-						{
-                            docList = CreateCFURLsFromOpenDialog( (__bridge CFStringRef)appName, theMessage, NULL, NULL, kOMCFilePanelCanChooseDirectories | kOMCFilePanelAllowMultipleItems );
-						}
-						break;
-							
-						default:
-						{
-                            docList = CreateCFURLsFromOpenDialog( (__bridge CFStringRef)appName, theMessage, NULL, NULL, kOMCFilePanelCanChooseFiles | kOMCFilePanelCanChooseDirectories | kOMCFilePanelAllowMultipleItems );
-						}
-						break;				
-					}
-					CFRelease(theMessage);
-					error = (docList != NULL) ? noErr : userCanceledErr;
-				}
-				
-				if( error == noErr )
-				{
-					error = OMCExamineContext( omcExec, commandRef, docList );
-					
-					if( (error == noErr) && (delegate != nil) && [delegate respondsToSelector:@selector(noteNewRecentDocumentURL:)] )
-					{
-						//add to open recent
-                        NSArray<NSURL*> *__weak absoluteURLArray = (__bridge NSArray<NSURL*> *)docList;
-                        for(NSURL *oneFileURL in absoluteURLArray)
-                        {
-                            [delegate noteNewRecentDocumentURL:oneFileURL];
-                        }
-					}
-				}
+                CFStringRef theMessage = CFCopyLocalizedStringFromTable(CFSTR("Choose Objects To Process"), CFSTR("Localizable"), "");
+                
+                NSBundle *appBundle = [NSBundle mainBundle];
+                NSString *appName = [appBundle objectForInfoDictionaryKey:@"CFBundleName"];
+                if(appName == NULL)
+                    appName = @"OMCApplet";
+                
+                switch(activationType)
+                {
+                    case kActiveFile:
+                    {
+                        selectedFiles = CreateCFURLsFromOpenDialog( (__bridge CFStringRef)appName, theMessage, NULL, NULL, kOMCFilePanelCanChooseFiles | kOMCFilePanelAllowMultipleItems );
+                    }
+                    break;
+                        
+                    case kActiveFolder:
+                    case kActiveFinderWindow:
+                    case kActiveFolderExcludeFinderWindow:
+                    {
+                        selectedFiles = CreateCFURLsFromOpenDialog( (__bridge CFStringRef)appName, theMessage, NULL, NULL, kOMCFilePanelCanChooseDirectories | kOMCFilePanelAllowMultipleItems );
+                    }
+                    break;
+                        
+                    default:
+                    {
+                        selectedFiles = CreateCFURLsFromOpenDialog( (__bridge CFStringRef)appName, theMessage, NULL, NULL, kOMCFilePanelCanChooseFiles | kOMCFilePanelCanChooseDirectories | kOMCFilePanelAllowMultipleItems );
+                    }
+                    break;
+                }
+                CFRelease(theMessage);
+                error = (selectedFiles != NULL) ? noErr : userCanceledErr;
 			}
-			else
+            else if (requiresNavDialog)
+            { // we don't have files, we need the nav dialog but command description explicitly disallows it
+                error = userCanceledErr; // command will not execute if we don't specify files
+            }
+
+            if (error == noErr)
+            {
+                error = OMCExamineContext( omcExec, commandRef, (selectedFiles != NULL) ? selectedFiles : (__bridge CFTypeRef)inContext );
+            }
+
+			if (selectedFiles != NULL)
 			{
-                error = OMCExamineContext( omcExec, commandRef, (__bridge CFTypeRef)inContext );
-			}
-			
-			if(docList != NULL)
-			{
-				CFRelease(docList);
-				docList = NULL;
+                if ((error == noErr) && (delegate != nil) && [delegate respondsToSelector:@selector(noteNewRecentDocumentURL:)])
+                {
+                    // add to open recent
+                    NSArray<NSURL*> *__weak absoluteURLArray = (__bridge NSArray<NSURL*> *)selectedFiles;
+                    for (NSURL *oneFileURL in absoluteURLArray)
+                    {
+                        [delegate noteNewRecentDocumentURL:oneFileURL];
+                    }
+                }
+
+                CFRelease(selectedFiles);
+                selectedFiles = NULL;
 			}
 
-			if( error == noErr )
+			if (error == noErr)
 			{
                 // Check if delegate wants to observe task execution
                 if ((delegate != nil) && [delegate conformsToProtocol:@protocol(OMCObserverDelegate)])
@@ -172,7 +189,7 @@ void OMCDelegateObserverCallback(OmcObserverMessage inMessage, CFIndex inTaskID,
 			}
 		}
 		
-		OMCReleaseExecutor( omcExec );//safe to release here. task lives on if execution is asynchronous
+		OMCReleaseExecutor( omcExec ); // safe to release here. task lives on if execution is asynchronous
 	}
 		
 	return error;
