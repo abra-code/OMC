@@ -60,7 +60,7 @@
     XCTAssertEqual(err, noErr, @"Should execute shell script");
     
     // Wait for completion and verify output
-    BOOL completed = [executionObserver waitForCompletionWithTimeout:5.0];
+    BOOL completed = [executionObserver waitForCompletionWithTimeout:kDefaultExecutionTimeout];
     XCTAssertTrue(completed, @"Task should complete within timeout");
     NSString *capturedOutput = executionObserver.capturedOutput;
     XCTAssertTrue([capturedOutput containsString:expectedOutput], 
@@ -94,7 +94,7 @@
     
     XCTAssertEqual(err, noErr, @"Should execute Python script");
     
-    BOOL completed = [executionObserver waitForCompletionWithTimeout:5.0];
+    BOOL completed = [executionObserver waitForCompletionWithTimeout:kDefaultExecutionTimeout];
     XCTAssertTrue(completed, @"Task should complete");
     NSString *capturedOutput = executionObserver.capturedOutput;
     XCTAssertTrue([capturedOutput containsString:expectedOutput],
@@ -128,7 +128,7 @@
     
     XCTAssertEqual(err, noErr, @"Should execute Perl script");
     
-    BOOL completed = [executionObserver waitForCompletionWithTimeout:5.0];
+    BOOL completed = [executionObserver waitForCompletionWithTimeout:kDefaultExecutionTimeout];
     XCTAssertTrue(completed, @"Task should complete");
     NSString *capturedOutput = executionObserver.capturedOutput;
     XCTAssertTrue([capturedOutput containsString:expectedOutput],
@@ -162,7 +162,7 @@
     
     XCTAssertEqual(err, noErr, @"Should execute JavaScript via jsc");
     
-    BOOL completed = [executionObserver waitForCompletionWithTimeout:5.0];
+    BOOL completed = [executionObserver waitForCompletionWithTimeout:kDefaultExecutionTimeout];
     XCTAssertTrue(completed, @"Task should complete");
     NSString *capturedOutput = executionObserver.capturedOutput;
     XCTAssertTrue([capturedOutput containsString:expectedOutput],
@@ -196,7 +196,7 @@
     
     XCTAssertEqual(err, noErr, @"Should execute AppleScript");
     
-    BOOL completed = [executionObserver waitForCompletionWithTimeout:5.0];
+    BOOL completed = [executionObserver waitForCompletionWithTimeout:kDefaultExecutionTimeout];
     XCTAssertTrue(completed, @"Task should complete");
     // Note: AppleScript log goes to stderr, may not capture in stdout
 }
@@ -228,7 +228,7 @@
     
     XCTAssertEqual(err, noErr, @"Should execute Ruby script");
     
-    BOOL completed = [executionObserver waitForCompletionWithTimeout:5.0];
+    BOOL completed = [executionObserver waitForCompletionWithTimeout:kDefaultExecutionTimeout];
     XCTAssertTrue(completed, @"Task should complete");
     NSString *capturedOutput = executionObserver.capturedOutput;
     XCTAssertTrue([capturedOutput containsString:expectedOutput],
@@ -262,7 +262,7 @@
     
     XCTAssertEqual(err, noErr, @"Should execute main command script");
     
-    BOOL completed = [executionObserver waitForCompletionWithTimeout:5.0];
+    BOOL completed = [executionObserver waitForCompletionWithTimeout:kDefaultExecutionTimeout];
     XCTAssertTrue(completed, @"Task should complete");
 }
 
@@ -301,7 +301,7 @@
     
     XCTAssertEqual(err, noErr, @"Should execute script with file context");
     
-    BOOL completed = [executionObserver waitForCompletionWithTimeout:5.0];
+    BOOL completed = [executionObserver waitForCompletionWithTimeout:kDefaultExecutionTimeout];
     XCTAssertTrue(completed, @"Task should complete");
     
     [[NSFileManager defaultManager] removeItemAtPath:tempFile error:nil];
@@ -334,7 +334,7 @@
     
     XCTAssertEqual(err, noErr, @"Should execute script with text context");
     
-    BOOL completed = [executionObserver waitForCompletionWithTimeout:5.0];
+    BOOL completed = [executionObserver waitForCompletionWithTimeout:kDefaultExecutionTimeout];
     XCTAssertTrue(completed, @"Task should complete");
 }
 
@@ -378,7 +378,7 @@
     
     XCTAssertEqual(err, noErr, @"Should execute script for each file");
     
-    BOOL completed = [executionObserver waitForCompletionWithTimeout:5.0];
+    BOOL completed = [executionObserver waitForCompletionWithTimeout:kDefaultExecutionTimeout];
     XCTAssertTrue(completed, @"All tasks should complete");
     
     // Cleanup temp files
@@ -417,7 +417,7 @@
     // XCTAssertNotEqual(err, noErr, @"Should fail when script file is missing");
     (void)err;
     
-    BOOL completed = [executionObserver waitForCompletionWithTimeout:5.0];
+    BOOL completed = [executionObserver waitForCompletionWithTimeout:kDefaultExecutionTimeout];
     XCTAssertTrue(completed, @"Task should complete even with missing script");
 }
 
@@ -460,7 +460,7 @@
     
     XCTAssertEqual(err1, noErr, @"Should execute first script");
     
-    BOOL completed1 = [executionObserver1 waitForCompletionWithTimeout:5.0];
+    BOOL completed1 = [executionObserver1 waitForCompletionWithTimeout:kDefaultExecutionTimeout];
     XCTAssertTrue(completed1, @"First command should complete");
     
     OMCTestExecutionObserver *executionObserver2 = OMCTestExecutionObserver.new;
@@ -473,15 +473,14 @@
     
     XCTAssertEqual(err2, noErr, @"Should execute second script");
     
-    BOOL completed2 = [executionObserver2 waitForCompletionWithTimeout:5.0];
+    BOOL completed2 = [executionObserver2 waitForCompletionWithTimeout:kDefaultExecutionTimeout];
     XCTAssertTrue(completed2, @"Second command should complete");
 }
 
 #pragma mark - Static Bundle Tests (if available)
 
 - (void)testStaticTestBundle {
-    // Try to load a static test bundle from test resources
-    // This test will be skipped if the bundle doesn't exist
+    // Load a static test bundle from test resources
     NSURL *bundleURL = [OMCBundleTestHelper testBundleURL:@"ScriptTest"];
     
     if (bundleURL == nil) {
@@ -511,7 +510,7 @@
         
         XCTAssertEqual(err, noErr, @"Should execute %@ command", testName);
         
-        BOOL completed = [executionObserver waitForCompletionWithTimeout:5.0];
+        BOOL completed = [executionObserver waitForCompletionWithTimeout:kDefaultExecutionTimeout];
         XCTAssertTrue(completed, @"%@ should complete within timeout", testName);
         
         NSString *capturedOutput = executionObserver.capturedOutput;
@@ -519,6 +518,72 @@
         BOOL containsScriptTestOutput = (range.location != NSNotFound);
         XCTAssertTrue(containsScriptTestOutput, @"Output should contain 'script test'. Got: %@", capturedOutput);
     }
+}
+
+- (void)testBrowserDialogBundle {
+    // Load a static test bundle with nib dialog from test resources
+    NSURL *bundleURL = [OMCBundleTestHelper testBundleURL:@"Browser"];
+    
+    if (bundleURL == nil) {
+        NSLog(@"Skipping static bundle test - Browser.omc not found in test resources");
+        return;
+    }
+    
+    NSString *omcBundlePath = [bundleURL path];
+    NSURL *homeURL = [NSURL fileURLWithPath:NSHomeDirectory()];
+    NSString *testName = @"Browser";
+    
+    OMCTestExecutionObserver *executionObserver = OMCTestExecutionObserver.new;
+    
+    OSStatus err = [OMCCommandExecutor runCommand:testName
+                                   forCommandFile:omcBundlePath
+                                      withContext:homeURL
+                                     useNavDialog:NO
+                                         delegate:executionObserver];
+
+    // the dialog is non-blocking, so it will display and return
+
+    XCTAssertEqual(err, noErr, @"Should execute %@ command", testName);
+    
+    BOOL completed = [executionObserver waitForCompletionWithTimeout:kDefaultExecutionTimeout];
+    XCTAssertTrue(completed, @"%@ should complete within timeout", testName);
+    NSString *capturedOutput = executionObserver.capturedOutput;
+    NSLog(@"%@", capturedOutput);
+    
+    // the command script is:
+    // echo "${OMC_NIB_DLG_GUID}"
+    // so the output should be the running dialog/window GUID/UUID
+    NSString *omcNibDlgGuid = capturedOutput;
+    
+    // let's display the dialog for 5 sec
+    NSDate *timeoutDate = [NSDate dateWithTimeIntervalSinceNow:5.0];
+    NSRunLoop *runLoop = [NSRunLoop currentRunLoop];
+    
+    while ([timeoutDate timeIntervalSinceNow] > 0)
+    {
+        BOOL ranLoop = [runLoop runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:1.0]];
+        if (!ranLoop)
+        {
+            [NSThread sleepForTimeInterval:0.1];
+        }
+    }
+    
+    // we are sending a command to close the window
+    // this is not a dialog subcommand so it has no dialog control environment context
+    executionObserver = OMCTestExecutionObserver.new;
+    testName = @"browser.close.window";
+    err = [OMCCommandExecutor runCommand:testName
+                                   forCommandFile:omcBundlePath
+                                      withContext:omcNibDlgGuid // the command expects gialog GUID as text context
+                                     useNavDialog:NO
+                                         delegate:executionObserver];
+
+    XCTAssertEqual(err, noErr, @"Should execute %@ command", testName);
+
+    completed = [executionObserver waitForCompletionWithTimeout:kDefaultExecutionTimeout];
+    XCTAssertTrue(completed, @"%@ should complete within timeout", testName);
+    capturedOutput = executionObserver.capturedOutput;
+    NSLog(@"%@", capturedOutput);
 }
 
 @end

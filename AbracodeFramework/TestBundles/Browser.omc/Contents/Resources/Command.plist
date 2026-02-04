@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>COMMAND_LIST</key>
+	<array>
+		<dict>
+			<key>ACTIVATION_MODE</key>
+			<string>act_folder</string>
+			<key>COMMAND</key>
+			<array>
+				<string># env | sort
+echo "${OMC_NIB_DLG_GUID}"
+				</string>
+			</array>
+			<key>EXECUTION_MODE</key>
+			<string>exe_shell_script</string>
+			<key>NAME</key>
+			<string>Browser</string>
+			<key>NIB_DIALOG</key>
+			<dict>
+				<key>INIT_SUBCOMMAND_ID</key>
+				<string>browser.dialog.init</string>
+				<key>IS_BLOCKING</key>
+				<false/>
+				<key>NIB_NAME</key>
+				<string>Browser</string>
+			</dict>
+			<key>NOTES</key>
+			<string>Data Browser control demo. Uses "ls" command to get a list of files and folders in selected folder. Allows navigation through folders and opening files.</string>
+			<key>NS_SERVICE_ITEM</key>
+			<dict>
+				<key>NSMenuItem</key>
+				<dict>
+					<key>default</key>
+					<string>Browser</string>
+				</dict>
+				<key>NSMessage</key>
+				<string>runOMCService</string>
+				<key>NSPortName</key>
+				<string>OMCService</string>
+				<key>NSRequiredContext</key>
+				<dict/>
+				<key>NSReturnTypes</key>
+				<array/>
+				<key>NSSendTypes</key>
+				<array>
+					<string>NSFilenamesPboardType</string>
+				</array>
+				<key>NSUserData</key>
+				<string>Browser</string>
+			</dict>
+			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
+			<string>11.0</string>
+			<key>REQUIRED_OMC_VERSION</key>
+			<string>4.4</string>
+			<key>VERSION</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>COMMAND</key>
+			<array>
+				<string>dialog_tool="$OMC_OMC_SUPPORT_PATH/omc_dialog_control"
+cd "${OMC_OBJ_PATH}"
+cur_dir=$(pwd)
+"$dialog_tool" "$OMC_NIB_DLG_GUID" 8 "$cur_dir"
+"$dialog_tool" "$OMC_NIB_DLG_GUID" 1 omc_table_set_columns "Name" "Mode" "Owner" "Group" "Size" "Date Modified"
+"$dialog_tool" "$OMC_NIB_DLG_GUID" 1 omc_table_set_column_widths 300 100 60 60 70 160
+ls -lahTp | /usr/bin/perl -e '$i=0; foreach(&lt;&gt;){chomp;@f=split/ +/,$_,10; if( $i &gt; 1) { print"$f[9]\t$f[0]\t$f[2]\t$f[3]\t$f[4]\t$f[5] $f[6], $f[8], $f[7]\n"; }; $i=$i+1; }' | "$dialog_tool" "$OMC_NIB_DLG_GUID" 1 omc_table_add_rows_from_stdin
+# uncomment the line below to show the window with environment variables
+# "$OMC_OMC_SUPPORT_PATH/omc_next_command" "$OMC_CURRENT_COMMAND_GUID" "browser.dialog.show.env"
+				</string>
+			</array>
+			<key>COMMAND_ID</key>
+			<string>browser.dialog.init</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_shell_script</string>
+			<key>NAME</key>
+			<string>Browser</string>
+		</dict>
+		<dict>
+			<key>COMMAND</key>
+			<array>
+				<string>env | sort</string>
+			</array>
+			<key>COMMAND_ID</key>
+			<string>browser.dialog.show.env</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_shell_script_with_output_window</string>
+			<key>NAME</key>
+			<string>Browser</string>
+			<key>OUTPUT_WINDOW_SETTINGS</key>
+			<dict>
+				<key>TEXT_FONT</key>
+				<string>Monaco</string>
+				<key>TEXT_SIZE</key>
+				<integer>10</integer>
+				<key>WINDOW_HEIGHT</key>
+				<integer>600</integer>
+				<key>WINDOW_POSITION</key>
+				<string>alert</string>
+				<key>WINDOW_TYPE</key>
+				<string>floating</string>
+				<key>WINDOW_WIDTH</key>
+				<integer>900</integer>
+			</dict>
+			<key>ENVIRONMENT_VARIABLES</key>
+			<dict>
+				<key>CUSTOM_VAR</key>
+				<string>browser</string>
+				<key>OMC_NIB_TABLE_1_COLUMN_1_ALL_ROWS</key>
+				<string></string>
+			</dict>
+		</dict>
+		<dict>
+			<key>COMMAND</key>
+			<array>
+				<string>dialog_tool="$OMC_OMC_SUPPORT_PATH/omc_dialog_control"
+cd "${OMC_NIB_DIALOG_CONTROL_8_VALUE}"
+cur_dir=$(pwd)
+"$dialog_tool" $OMC_NIB_DLG_GUID 8 "$cur_dir"
+"$dialog_tool" $OMC_NIB_DLG_GUID 1 omc_table_remove_all_rows
+ls -lahTp | /usr/bin/perl -e '$i=0; foreach(&lt;&gt;){chomp;@f=split/ +/,$_,10; if( $i &gt; 1) { print"$f[9]\t$f[0]\t$f[2]\t$f[3]\t$f[4]\t$f[5] $f[6], $f[8], $f[7]\n"; }; $i=$i+1; }' | "$dialog_tool" $OMC_NIB_DLG_GUID 1 omc_table_add_rows_from_stdin
+				</string>
+			</array>
+			<key>COMMAND_ID</key>
+			<string>browser.path.changed</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_shell_script</string>
+			<key>NAME</key>
+			<string>Browser</string>
+			<key>NOTES</key>
+			<string>Edit field path change handler</string>
+		</dict>
+		<dict>
+			<key>COMMAND</key>
+			<array>
+				<string>dialog_tool="$OMC_OMC_SUPPORT_PATH/omc_dialog_control"
+sel_object="${OMC_NIB_DIALOG_CONTROL_8_VALUE}/${OMC_NIB_TABLE_1_COLUMN_1_VALUE}"
+if [ -d "$sel_object" ]; then
+    cd "$sel_object"
+    cur_dir=$(pwd)
+    "$dialog_tool" $OMC_NIB_DLG_GUID 8 "$cur_dir"
+    "$dialog_tool" $OMC_NIB_DLG_GUID 1 omc_table_remove_all_rows
+    ls -lahTp | /usr/bin/perl -e '$i=0; foreach(&lt;&gt;){chomp;@f=split/ +/,$_,10; if( $i &gt; 1) { print"$f[9]\t$f[0]\t$f[2]\t$f[3]\t$f[4]\t$f[5] $f[6], $f[8], $f[7]\n"; }; $i=$i+1; }' | "$dialog_tool" $OMC_NIB_DLG_GUID 1 omc_table_add_rows_from_stdin
+else 
+    /usr/bin/open "$sel_object"
+fi
+				</string>
+			</array>
+			<key>COMMAND_ID</key>
+			<string>browser.open.selection</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_shell_script</string>
+			<key>NAME</key>
+			<string>Browser</string>
+			<key>NOTES</key>
+			<string>Double click handler</string>
+		</dict>
+		<dict>
+			<key>ACTIVATION_MODE</key>
+			<string>act_selected_text</string>
+			<key>COMMAND</key>
+			<array>
+				<string>WINDOW_UUID="${OMC_OBJ_TEXT}"
+if [ -n "${WINDOW_UUID}" ]; then
+    "$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$WINDOW_UUID" omc_window omc_terminate_cancel
+fi
+env | sort
+				</string>
+			</array>
+			<key>COMMAND_ID</key>
+			<string>browser.close.window</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_shell_script</string>
+			<key>NAME</key>
+			<string>Browser</string>
+			<key>NOTES</key>
+			<string>Test command designed to receive OMC_NIB_DLG_GUID from text context</string>
+		</dict>
+	</array>
+	<key>VERSION</key>
+	<integer>2</integer>
+</dict>
+</plist>

@@ -188,13 +188,14 @@ OMCCocoaDialog::CopyAllControlValues(CFSetRef requestedNibControls, SelectionIte
 
             if(oneValue != nullptr)
             {
-                StoreControlValue(controlID, oneValue, columnIndexStr);
+                CFObj<CFStringRef> allRowsControlID(CreateControlIDByAddingModifiers(controlID, kControlModifier_AllRows));
+                StoreControlValue(allRowsControlID, oneValue, columnIndexStr);
             
                 //custom escaping, prefix, suffix or separator
                 if(customProperties != nullptr)
                 {
                     ::CFDictionarySetValue( mNibControlCustomProperties,
-                                            (const void *)controlID,
+                                            (const void *)allRowsControlID,
                                             (const void *)(CFDictionaryRef)customProperties); //CFTypeRef is retained
                 }
             }

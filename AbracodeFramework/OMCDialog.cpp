@@ -204,7 +204,9 @@ OMCDialog::CreateNibControlValue(SInt32 inSpecialWordID, CFStringRef inNibContro
 		theItem = ::CFDictionaryGetValue(columnIds, (const void *)(CFStringRef)partIDStr);
 		oneValue.Adopt((CFTypeRef)theItem, kCFObjRetain);
 		if((oneValue != nullptr) && (mNibControlCustomProperties != nullptr))
-			customProperties = ACFType<CFDictionaryRef>::DynamicCast(CFDictionaryGetValue(mNibControlCustomProperties, (CFStringRef)controlID));
+        {
+            customProperties = ACFType<CFDictionaryRef>::DynamicCast(CFDictionaryGetValue(mNibControlCustomProperties, (CFStringRef)controlID));
+        }
 	}
 
 	CFStringRef controlValue = CreateControlValueString(oneValue, customProperties, escSpecialCharsMode, isEnvStyle);

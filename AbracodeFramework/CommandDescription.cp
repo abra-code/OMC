@@ -85,9 +85,11 @@ const CFIndex kMinSpecialWordLen = sizeof("__OBJ_TEXT__") - 1;
 //the longest is __DLG_CHOOSE_FOLDER_NAME_NO_EXTENSION__
 const CFIndex kMaxSpecialWordLen = sizeof("__DLG_CHOOSE_FOLDER_NAME_NO_EXTENSION__") - 1;
 
-//there are also 2 dynamic names:
-//                                          __NIB_DIALOG_CONTROL_NNN_VALUE__
-//                                          __NIB_TABLE_NNN_COLUMN_MMM_VALUE__
+//there are also dynamic names:
+//                 __NIB_DIALOG_CONTROL_NNN_VALUE__            OMC_NIB_DIALOG_CONTROL_NNN_VALUE
+//                 __NIB_TABLE_NNN_COLUMN_MMM_VALUE__          OMC_NIB_TABLE_NNN_COLUMN_MMM_VALUE
+//                 __NIB_TABLE_NNN_COLUMN_MMM_ALL_ROWS_VALUE__ OMC_NIB_TABLE_NNN_COLUMN_MMM_ALL_ROWS_VALUE
+//                 __NIB_WEBVIEW_NNN_ELEMENT_MMM_VALUE__       OMC_NIB_WEBVIEW_NNN_ELEMENT_MMM_VALUE
 
 static void
 GetMultiCommandParams(CommandDescription &outDesc, CFDictionaryRef inParams)
