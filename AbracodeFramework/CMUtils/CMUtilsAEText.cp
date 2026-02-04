@@ -223,7 +223,7 @@ CMUtils::ReplaceUnicodeCharacters(UniChar *ioText, UniCharCount inCount, UniChar
 std::string
 CMUtils::CreateUTF8StringFromCFString(CFStringRef inString)
 {
-	TRACE_CSTR("Entering CreateUTF8CStringFromCFString\n");
+//	TRACE_CSTR("Entering CreateUTF8CStringFromCFString\n");
 
 	if( inString == NULL )
 	{
