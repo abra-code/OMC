@@ -5,6 +5,14 @@
 
 #import <XCTest/XCTest.h>
 
+#if __has_feature(address_sanitizer)
+    #define IS_ASAN_ENABLED true
+    #define kDefaultExecutionTimeout 10.0
+#else
+    #define IS_ASAN_ENABLED false
+    #define kDefaultExecutionTimeout 5.0
+#endif
+
 NS_ASSUME_NONNULL_BEGIN
 
 @interface OMCTestCase : XCTestCase

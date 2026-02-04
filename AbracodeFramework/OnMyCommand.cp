@@ -2564,6 +2564,7 @@ OnMyCommandCM::PopulateEnvironList(CFMutableDictionaryRef ioEnvironList, Command
 		CFStringRef newStrRef = NULL;
 		CFObj<CFStringRef> newDel;
 		bool releaseNewString = true;
+        bool keepExistingKeyValue = false;
 
 		CFStringRef theKey = ACFType<CFStringRef>::DynamicCast( keyList[(size_t)i] );
 		SpecialWordID specialWordID = GetSpecialEnvironWordID(theKey);
@@ -2571,7 +2572,8 @@ OnMyCommandCM::PopulateEnvironList(CFMutableDictionaryRef ioEnvironList, Command
 		switch(specialWordID)
 		{
 			case NO_SPECIAL_WORD:
-				newStrRef = NULL;//we do not have special dynamic value, so don't set it in dict
+				newStrRef = NULL; // we do not have special dynamic value
+                keepExistingKeyValue = true; // it is a custom env var, keep it as-is
 			break;
 					
 			case OBJ_TEXT: //always exported
@@ -2851,7 +2853,7 @@ OnMyCommandCM::PopulateEnvironList(CFMutableDictionaryRef ioEnvironList, Command
 				newDel.Adopt(newStrRef, kCFObjDontRetain);
 			::CFDictionarySetValue(ioEnvironList, theKey, newStrRef);
 		}
-        else
+        else if(!keepExistingKeyValue)
         {
             CFDictionaryRemoveValue(ioEnvironList, theKey);
         }
