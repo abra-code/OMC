@@ -66,7 +66,8 @@ public:
 
 protected:
 	virtual void		SetInputString( CFStringRef /*inInputPipe*/ ) { }
-	virtual bool		Execute( const char *inCommand, OSStatus &outError ) = 0; //return true if task finished
+	 // return true from Execute() if task ended in a blocking manner and did not have a chance to call Finish()
+	virtual bool		Execute( const char *inCommand, OSStatus &outError ) = 0;
 
 protected:
 

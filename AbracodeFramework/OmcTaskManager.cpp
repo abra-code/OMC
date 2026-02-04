@@ -253,6 +253,9 @@ OmcHostTaskManager::AddTask(OmcExecutor *inNewExecutor,
 void
 OmcHostTaskManager::RunNext()
 {
+    // protect our OmcHostTaskManager object during execution so we never get released prematurely
+    ARefCountedObj<OmcHostTaskManager> localRetain(this, kARefCountRetain);
+    
     CFIndex pendingCount = ::CFArrayGetCount( mPendingTasks );
     CFIndex runningCount = ::CFArrayGetCount( mRunningTasks );
     if( (pendingCount == 0) && (runningCount == 0) )

@@ -98,25 +98,25 @@ OmcExecutor::ExecuteCFString( CFStringRef inCommand, CFStringRef inInputPipe )
 
 	SetInputString( inInputPipe );
 
-	bool finishedSynchronously = true;//in error condition finish right away
+	bool endedSynchronously = true;//in error condition finish right away
 	OSStatus resultErr = noErr;
 
 	if(inCommand != nullptr)
 	{
 	    std::string theString = CMUtils::CreateUTF8StringFromCFString(inCommand);
-	    finishedSynchronously = Execute( theString.c_str(), resultErr );
+        endedSynchronously = Execute( theString.c_str(), resultErr );
 	}
 	else
 	{
-		finishedSynchronously = Execute( nullptr, resultErr );
+        endedSynchronously = Execute( nullptr, resultErr );
 	}
 
-	if(finishedSynchronously)
+	if(endedSynchronously)
     {
-        Finish(finishedSynchronously, true, resultErr);
+        Finish(endedSynchronously, true, resultErr);
     }
     
-	return finishedSynchronously;
+	return endedSynchronously;
 }
 
 void
@@ -374,6 +374,10 @@ POpenExecutor::Execute( const char *inCommand, OSStatus &outError )
         
         if (mWaitForTaskCompletion)
         {
+            // keep us alive for the duration of the loop
+            // we may end up with Finish() while in runloop, get released and dealloced
+            ARefCountedObj<POpenExecutor> localRetain(this, kARefCountRetain);
+            
             TRACE_CSTR("POpenExecutor waiting for child process execution to finish\n");
             do
             {
@@ -386,13 +390,19 @@ POpenExecutor::Execute( const char *inCommand, OSStatus &outError )
             }
             while(mWaitForTaskCompletion);
 
-            return true;
+            // Even if we were waiting here in the loop, we don't consider this case
+            // a blocking execution for the purpose of OmcHostTaskManager::RunNext()
+            // With popen async execution the OMCHostTaskManager should receive NoteTaskEnded() and call RunNext()
+            // returning true here indicates the call was blocking and had no chance to call Finish()
+            // calling Finish() too many times causes overrelease and crash
+            bool hasFinished = this->mHasFinished;            
+            return !hasFinished;
         }
         
 		return false;
 	}
 	
-	return true; //error condition. finished
+	return true; // error condition. finished
 }
 
 POpenExecutor::~POpenExecutor()
@@ -478,11 +488,16 @@ POpenExecutor::Finish(bool wasSynchronous, bool sendNotification, OSStatus inErr
 		mWriteSource = nullptr;
 	}
 	
-    
     if(mWaitForTaskCompletion)
     {
         mWaitForTaskCompletion = false;
-        wasSynchronous = true;
+        
+        // even if we wait for the task completion in the runloop
+        // we don't consider popen a synchronous execution
+        // this matters because the logic for determining if all tasks finished is different
+        // for synchronous (blocking) and asynchronouse execution
+        // marking this a sync call here prevents sending kOmcAllTasksFinished to observers
+        // so we keep wasSynchronous = false
     }
 
 	OmcExecutor::Finish(wasSynchronous, sendNotification, (OSStatus)pipeResult );
@@ -882,7 +897,7 @@ SystemExecutor::Execute( const char *inCommand, OSStatus &outError )
 			LOG_CSTR( "OMC->SystemExecutor::Execute. system() returned error = %d\n", (int)outError );
 		}
 	}
-	return true; //finished synchronously. system() is blocking
+	return true; // ended synchronously. system() is blocking
 }
 
 #pragma mark -

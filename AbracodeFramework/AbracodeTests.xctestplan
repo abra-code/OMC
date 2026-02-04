@@ -1,0 +1,31 @@
+{
+  "configurations" : [
+    {
+      "id" : "D4A9C96D-E7D2-4DE5-A532-A47DA5448E08",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "addressSanitizer" : {
+      "detectStackUseAfterReturn" : true,
+      "enabled" : true
+    },
+    "mallocScribbleEnabled" : true,
+    "performanceAntipatternCheckerEnabled" : true,
+    "undefinedBehaviorSanitizerEnabled" : true
+  },
+  "testTargets" : [
+    {
+      "parallelizable" : true,
+      "target" : {
+        "containerPath" : "container:Abracode.xcodeproj",
+        "identifier" : "1DCBC0D42F15FCE30002B8AB",
+        "name" : "AbracodeTests"
+      }
+    }
+  ],
+  "version" : 1
+}
