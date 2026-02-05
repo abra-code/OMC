@@ -32,9 +32,6 @@
       location = "group:AbracodeFramework/Abracode.xcodeproj">
    </FileRef>
    <FileRef
-      location = "group:AbracodeFramework/AbracodeTests.xctestplan">
-   </FileRef>
-   <FileRef
       location = "group:OMCService/OMCService.xcodeproj">
    </FileRef>
    <FileRef

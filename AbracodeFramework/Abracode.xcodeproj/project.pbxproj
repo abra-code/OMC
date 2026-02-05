@@ -423,6 +423,7 @@
 		1DCFB243231FAC1100D1C62E /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/OMCOutputWindow.xib; sourceTree = "<group>"; };
 		1DCFB246231FAC1600D1C62E /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/OMCOutputPanel.xib; sourceTree = "<group>"; };
 		1DD21114259F42CE0041BB8F /* OmcVersion.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcVersion.xcconfig; path = ../Common/OmcVersion.xcconfig; sourceTree = "<group>"; };
+		1DDC44152F34284600604C66 /* AbracodeTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = AbracodeTests.xctestplan; sourceTree = "<group>"; };
 		1DE10DFB23C9D0EE003FCCDA /* OMCWebKitSupport.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; name = OMCWebKitSupport.js; path = Resources/OMCWebKitSupport.js; sourceTree = "<group>"; };
 		1DED3634232258A40086266F /* OMCScriptsManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCScriptsManager.h; sourceTree = "<group>"; };
 		1DED3635232258A40086266F /* OMCScriptsManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCScriptsManager.cpp; sourceTree = "<group>"; };
@@ -618,6 +619,7 @@
 				1D4971AC2575A69000F7131C /* OmcProjectDebug.xcconfig */,
 				1D4971AD2575A69000F7131C /* OmcProjectRelease.xcconfig */,
 				E2269C1B0EB6DCF30029CCF5 /* OmcProjectCommon.xcconfig */,
+				1DDC44152F34284600604C66 /* AbracodeTests.xctestplan */,
 				E234FA9D0D0FD06B001A7780 /* Support Tools */,
 				0867D69AFE84028FC02AAC07 /* External Frameworks and Libraries */,
 				1DCBC0D62F15FCE40002B8AB /* AbracodeTests */,
