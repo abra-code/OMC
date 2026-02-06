@@ -1,0 +1,84 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2867
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica-Bold;\f1\fswiss\fcharset0 Helvetica;\f2\fnil\fcharset0 Monaco;
+\f3\fswiss\fcharset0 Helvetica-BoldOblique;}
+{\colortbl;\red255\green255\blue255;\red0\green0\blue0;}
+{\*\expandedcolortbl;;\csgray\c0;}
+\vieww22660\viewh16340\viewkind0
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f0\b\fs30 \cf0 OMC
+\f1\b0\fs24 \
+\
+This distribution contains the following macOS products:\
+\
+
+\f0\b OMCApplet.app
+\f1\b0  - Base app template for creating OMC applets. Duplicate and modify to build your own macOS apps using the OMC engine.\
+\
+
+\f0\b OMCPythonApplet.app
+\f1\b0  - Python-based applet template containing an embedded Python distribution that can be further customized and tweaked. See {\field{\*\fldinst{HYPERLINK "https://github.com/abra-code/Python-Embedding"}}{\fldrslt https://github.com/abra-code/Python-Embedding}} for scripts and guidance.\
+\
+
+\f0\b OnMyCommandCM.plugin
+\f1\b0  - Contextual menu plugin for use with Shortcuts.app. Commands are loaded from 
+\f2\fs22 ~/Library/Preferences/com.abracode.OnMyCommandCMPrefs.plist
+\fs24 .
+\f1  Requires Shortcuts.app:{\field{\*\fldinst{HYPERLINK "https://github.com/abra-code/Shortcuts"}}{\fldrslt https://github.com/abra-code/Shortcuts}}\
+\
+
+\f0\b OMCService.service
+\f1\b0  - macOS service template for creating OMC-based system services. An applet may also advertise system services.\
+\
+\
+
+\f3\i\b\fs26 Building Applets
+\f1\i0\b0\fs24 \
+\
+Use the scripts in the 
+\f2\fs22 Scripts/
+\f1\fs24  directory to build and code-sign your applets:\
+\
+- 
+\f0\b build_applet.sh
+\f1\b0  - Builds an applet from the OMCApplet.app template. Run it from the terminal to create a distributable app bundle. Run 
+\f2\fs22 \cf2 \CocoaLigature0 build_applet.sh --help 
+\f1\fs24 \cf0 \CocoaLigature1 for usage.\
+\
+- 
+\f0\b thin_distribution.sh
+\f1\b0  - Change universal FAT binaries to arm64 (Apple Silicon) or x86_64 (Intel) only\
+\
+- 
+\f0\b codesign_applet.sh
+\f1\b0  - Code-signs a built applet for distribution outside the Mac App Store. Provide the path to the applet as the first parameter. With one argument, signs for local (ad-hoc) execution. Pass a codesigning identity as the second argument for public distribution. Uses 
+\f2\fs22 OMCApplet.entitlements
+\f1\fs24  for required entitlements.\
+\
+\
+\
+
+\f3\i\b\fs26 Installing Contextual Menu Plugin
+\f1\i0\b0\fs24 \
+\
+Run 
+\f0\b install_contextual_menu_plugin.sh
+\f1\b0  to install OnMyCommandCM.plugin:\
+\
+- Installs the plugin to 
+\f2\fs22 /Library/Contextual Menu Items/
+\f1\fs24  (requires administrator privileges - will prompt for sudo if needed)\
+\
+- Installs 
+\f2\fs22 com.abracode.OnMyCommandCMPrefs.plist
+\f1\fs24  with example commands to 
+\f2\fs22 ~/Library/Preferences/
+\f1\fs24  (skipped if already present)\
+\
+\
+
+\f3\i\b\fs26 Documentation
+\f1\i0\b0\fs24 \
+\
+See the main OMC README at {\field{\*\fldinst{HYPERLINK "https://github.com/abra-code/OMC/"}}{\fldrslt https://github.com/abra-code/OMC/}} for detailed documentation on commands, runtime context, and services.\
+}
