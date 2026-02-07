@@ -3005,24 +3005,30 @@ OnMyCommandCM::FindCommandIndex(CFArrayRef inName, CFStringRef inCommandID)
 	
 	for(UInt32 i = 0; i < mCommandCount; i++)
 	{
-		if( (inCommandID != NULL) && (mCommandList[i].commandID != NULL) && ::CFEqual(mCommandList[i].commandID, inCommandID) )
+		if((inCommandID != NULL) && (mCommandList[i].commandID != NULL) && ::CFEqual(mCommandList[i].commandID, inCommandID))
 		{
-			if(inName == NULL) //name not provided - use the first one found by id
+			if(inName == NULL) // name not provided - use the first one found by id
 				return i;
 			else if( (mCommandList[i].name != NULL) && ::CFEqual(mCommandList[i].name, inName) )
 				return i; //name and id matched - best case scenario
 			
 			foundByID = i;
 		}
-		else if( (inName != NULL) && (mCommandList[i].name != NULL)  && ::CFEqual(mCommandList[i].name, inName) )
-			foundByName = i;
+		else if((inName != NULL) && (mCommandList[i].name != NULL)  && ::CFEqual(mCommandList[i].name, inName))
+        {
+            if(foundByName < 0) // take the first one found by name, not the last one
+                foundByName = i;
+        }
 	}
 	
-	//id is more important than name
+	// id is more important than name
 	if(foundByID > -1)
 		return foundByID;
 	
-	return foundByName; //last resort
+    if(inCommandID == NULL)
+        return foundByName; // last resort if command id not provided
+    
+    return -1;
 }
 
 
