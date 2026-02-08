@@ -7,6 +7,7 @@
 
 #import "OMCCommandExecutor.h"
 #include "DebugSettings.h"
+#include "OMCPrivateConstants.h"
 
 @interface OMCAppLifetimeEvents : NSObject
 @end
@@ -37,9 +38,33 @@
     return self;
 }
 
+// On app launch precompile all .py code in Resources/Scripts if
+// the Python distribution is embedded in app bundle at Library/Python/.
+// Python only precompiles imported modules. It does not automatically create cache
+// for the main execution scripts. This function also precompiles the top level .py files.
+// Compiling .py code more than one time is a no-op: Python is smart enough not to re-compile .pyc files
+// if the source code has not changed.
+
++ (void)compilePythonScriptsIfEmbedded:(NSBundle *)bundle
+{
+    NSString *bundlePath = [bundle bundlePath];
+    NSString *pythonPath = [bundlePath stringByAppendingPathComponent:@"Contents/Library/Python/bin/python3"];
+
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    if ([fileManager fileExistsAtPath:pythonPath])
+    {
+        NSString *scriptsPath = [bundlePath stringByAppendingPathComponent:@"Contents/Resources/Scripts"];
+        NSString *command = [NSString stringWithFormat:@"export PYTHONPYCACHEPREFIX=\"%@\"; \"%@\" -m compileall \"%@\"", @(PYTHONPYCACHEPREFIX), pythonPath, scriptsPath];
+        // simple system() call is synchronous and does not enter a runloop to wait for the execution to end
+        system([command UTF8String]);
+    }
+}
+
 - (void)appWillFinishLaunching:(NSNotification *)notification
 {
     TRACE_CSTR("App will finish launching\n");
+    [OMCAppLifetimeEvents compilePythonScriptsIfEmbedded:[NSBundle mainBundle]];
+
     __unused OSStatus err = [OMCCommandExecutor runCommand:@"app.will.launch"
                                             forCommandFile:@"Command.plist"
                                                withContext:nil

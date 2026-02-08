@@ -388,6 +388,7 @@
 		1D80D4D42F12D96200E3B4FB /* filt.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = filt.xcodeproj; path = ../filt/filt.xcodeproj; sourceTree = SOURCE_ROOT; };
 		1D8189E723B45FAF00A13449 /* OMCGridView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMCGridView.m; sourceTree = "<group>"; };
 		1D8189E823B45FAF00A13449 /* OMCGridView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCGridView.h; sourceTree = "<group>"; };
+		1D94F4132F37FEBE0009C4E2 /* OMCPrivateConstants.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OMCPrivateConstants.h; sourceTree = "<group>"; };
 		1D9B1F5821FF14AF004704A7 /* OMCStrings.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OMCStrings.h; sourceTree = "<group>"; };
 		1D9B1F5C21FF1572004704A7 /* OnMyCommand.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OnMyCommand.cp; sourceTree = "<group>"; };
 		1D9B1F6321FF191D004704A7 /* SubmenuTree.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SubmenuTree.cp; sourceTree = "<group>"; };
@@ -987,6 +988,7 @@
 				E2735F360D7B9576004D81CE /* OMCDialog.h */,
 				E2ED3AE80D0B27D300481D8F /* DefaultExternBundle.cpp */,
 				E2ED3AE90D0B27D300481D8F /* DefaultExternBundle.h */,
+				1D94F4132F37FEBE0009C4E2 /* OMCPrivateConstants.h */,
 			);
 			name = OMC;
 			sourceTree = "<group>";

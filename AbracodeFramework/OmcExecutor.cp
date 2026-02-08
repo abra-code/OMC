@@ -19,6 +19,7 @@
 #include <sys/socket.h>
 #include "OnMyCommand.h"
 #include "OMCScriptsManager.h"
+#include "OMCPrivateConstants.h"
 
 static char oneLine[512];
 
@@ -738,8 +739,7 @@ CFStringRef GetShellFromScriptExtension(CFStringRef inExt, CFMutableDictionaryRe
             {
                 // add pyc cache location to env vars
                 // this is not a writable location for sandboxed apps but OMC applets are hard or impossible to sandbox
-                CFStringRef pycCachePath = CFSTR("/tmp/Pyc");
-                ::CFDictionaryAddValue(envVariables, CFSTR("PYTHONPYCACHEPREFIX"), pycCachePath);
+                ::CFDictionaryAddValue(envVariables, CFSTR("PYTHONPYCACHEPREFIX"), CFSTR(PYTHONPYCACHEPREFIX));
                 CFStringRef pythonToolPath = GetPythonToolPath();
                 // add the path to found python3 tool as the first search path
                 CFObj<CFStringRef> newPaths = PrependPythonBinDirToEnvironmentPATH(pythonToolPath);
