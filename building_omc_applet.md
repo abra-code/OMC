@@ -20,6 +20,15 @@ OMC (OnMyCommand) is a low-code macOS app development engine that lets you creat
 2. **Xcode**: Required for building applets and editing nibs
 3. **Git**: For version control (recommended)
 
+> **For AI Agents**: To check the latest OMC release:
+> ```bash
+> # Fetch latest releases from GitHub API
+> curl -s "https://api.github.com/repos/abra-code/OMC/releases?per_page=3"
+> # Filter for first non-draft, non-prerelease release
+> # Download URL: https://github.com/abra-code/OMC/releases/download/vX.X.X/OMC_X.X.X.zip
+> ```
+> Compare the latest version to local OMC version if given access to, e.g.:`~/Downloads/OMC_X.X.X/`
+
 ---
 
 ## Step 1: Create the Applet
@@ -31,12 +40,18 @@ OMC (OnMyCommand) is a low-code macOS app development engine that lets you creat
 | `OMCApplet.app` | Base template, minimal size | Shell scripts only, no Python needed |
 | `OMCPythonApplet.app` | Includes embedded Python 3 | Need Python modules (e.g., watchdog) |
 
+> **For AI Agents**: Always use the provided scripts to create applets:
+> - `build_applet.sh` - Creates applet from template, handles renaming, Info.plist updates
+> - `codesign_applet.sh` - Signs the applet after modifications
+>
+> Do NOT manually copy files from the template - let the scripts handle it.
+
 ### Build the Applet
 
 ```bash
-cd ~/git
-./OMC/build_applet.sh \
-    --omc-applet="OMC_4.4.0/Products/Applications/OMCPythonApplet.app" \
+cd ~/Downloads/OMC_4.4.1/
+./Scripts/build_applet.sh \
+    --omc-applet="Products/Applications/OMCApplet.app" \
     --icon="MyApp/Icon/MyIcon.icon" \
     --bundle-id=com.example.myapp \
     --creator=MApp \
@@ -46,7 +61,7 @@ cd ~/git
 ### Codesign for Local Execution
 
 ```bash
-./OMC/codesign_applet.sh "MyApp/MyApp.app"
+./Scripts/codesign_applet.sh "MyApp/MyApp.app"
 ```
 
 ### Initial Structure
@@ -91,17 +106,32 @@ MyApp.app/
 ```xml
 <dict>
     <key>NAME</key>
-    <string>My Command</string>              <!-- Menu label -->
+    <string>MyApp</string>              <!-- Menu label -->
     <key>COMMAND_ID</key>
-    <string>my.command.id</string>           <!-- Unique identifier -->
+    <string>myapp.mycommand</string>   <!-- Unique identifier for subcommands -->
 </dict>
 ```
+
+**Main Command**: The first command in `COMMAND_LIST` (without `COMMAND_ID`) is the main command. It is executed when files/folders are dropped on the applet. Subcommands have unique `COMMAND_ID` values.
+
+> **For AI Agents**: Understanding command structure is critical:
+> - The **main command** (first in list, no `COMMAND_ID`) handles file/folder drops on the app
+> - **Subcommands** have `COMMAND_ID` and are triggered by UI events (buttons, table selection)
+> - Multiple commands with same `NAME` but different `COMMAND_ID` form a **command group**
+> - The script naming convention is: `<NAME>.main.<ext>` for main, `<NAME>.<COMMAND_ID>.<ext>` for subcommands
+
+### Main vs Subcommand Scripts
+
+| Command Type | Script Location | Naming Convention |
+|--------------|----------------|------------------|
+| Main command | `Scripts/` | `<NAME>.main.<ext>` (e.g., `MyApp.main.sh`) |
+| Subcommand | `Scripts/` | `<NAME>.<COMMAND_ID>.<ext>` (e.g., `MyApp.mycommand.sh`) |
 
 ### Execution Modes
 
 | Mode | Description |
 |------|-------------|
-| `exe_script_file` | Executes script file in `Scripts/<COMMAND_ID>.<ext>` |
+| `exe_script_file` | Executes script file from `Scripts/` directory |
 | `exe_shell_script` | Executes inline shell command |
 | `exe_script_file_with_output_window` | Script + visible output pane |
 | `exe_system` | Synchronous, no env vars (use `__FOO__`) |
@@ -121,9 +151,7 @@ MyApp.app/
 ```xml
 <dict>
     <key>NAME</key>
-    <string>MyApp</string>
-    <key>COMMAND_ID</key>
-    <string>myapp.main</string>
+    <string>MyApp</string>          <!-- No COMMAND_ID = main command -->
     <key>ACTIVATION_MODE</key>
     <string>act_folder</string>
     <key>EXECUTION_MODE</key>
@@ -131,24 +159,45 @@ MyApp.app/
 </dict>
 ```
 
+Scripts: `Scripts/MyApp.main.sh`
+
 ---
 
 ## Step 3: Create Action Handler Scripts
 
-Scripts live in `MyApp.app/Contents/Resources/Scripts/` and are named by `COMMAND_ID` without extension.
+Scripts live in `MyApp.app/Contents/Resources/Scripts/` and are named based on command type:
+
+| Command Type | Script Location | Naming Convention |
+|--------------|----------------|------------------|
+| Main command | `Scripts/` | `<NAME>.main.<ext>` (e.g., `MyApp.main.sh`) |
+| Subcommand | `Scripts/` | `<NAME>.<COMMAND_ID>.<ext>` (e.g., `MyApp.mycommand.sh`) |
+
+| Extension | Interpreter |
+|-----------|-------------|
+| `.sh` | /bin/sh |
+| `.py` | /usr/bin/python3 |
+| `.pl` | /usr/bin/perl |
+| `.applescript`, `.scpt` | /usr/bin/osascript |
+| `.zsh` | /bin/zsh |
+| `.bash` | /bin/bash |
+| `.csh` | /bin/csh |
+| `.tcsh` | /bin/tcsh |
+| `.dash` | /bin/dash |
+| `.rb` | /usr/bin/ruby |
+| `.js`, `.mjs` | JavaScriptCore (macOS 11+)
 
 ### Environment Variables Available
 
-| Variable | Description | Always Exported |
-|----------|-------------|-----------------|
-| `$OMC_OBJ_PATH` | Selected file/folder path | Yes |
-| `$OMC_OBJ_NAME` | Base name | No |
-| `$OMC_APP_BUNDLE_PATH` | Applet bundle path | Yes |
-| `$OMC_OMC_SUPPORT_PATH` | OMC support tools | Yes |
-| `$OMC_NIB_DLG_GUID` | Dialog instance ID | Yes |
-| `$OMC_CURRENT_COMMAND_GUID` | Command execution ID | Yes |
+| Variable | Description |
+|----------|-------------|
+| `$OMC_OBJ_PATH` | Selected file/folder path |
+| `$OMC_OBJ_NAME` | Base name |
+| `$OMC_APP_BUNDLE_PATH` | Applet bundle path |
+| `$OMC_OMC_SUPPORT_PATH` | OMC support tools |
+| `$OMC_NIB_DLG_GUID` | Dialog instance ID |
+| `$OMC_CURRENT_COMMAND_GUID` | Command execution ID |
 
-### Example Script
+### Example Script (Scripts/MyApp.main.sh)
 
 ```bash
 #!/bin/bash
@@ -160,7 +209,7 @@ ls -la "${OMC_OBJ_PATH}"
 
 ### Forcing Environment Variables
 
-For `exe_script_file`, non-auto variables require forcing:
+For `exe_script_file`, environment variables that are not auto-exported must be explicitly declared using `ENVIRONMENT_VARIABLES`:
 
 ```xml
 <dict>
@@ -168,12 +217,15 @@ For `exe_script_file`, non-auto variables require forcing:
     <string>my.action</string>
     <key>EXECUTION_MODE</key>
     <string>exe_script_file</string>
-    <key>COMMAND</key>
-    <array>
-        <string># OMC_OBJ_NAME</string>  <!-- Forces export -->
-    </array>
+    <key>ENVIRONMENT_VARIABLES</key>
+    <dict>
+        <key>OMC_DLG_INPUT_TEXT</key>
+        <string></string>
+    </dict>
 </dict>
 ```
+
+> **For AI Agents**: Use `ENVIRONMENT_VARIABLES` dictionary for forcing env var exports. See [Runtime Context Reference](omc_runtime_context_reference.md) for details.
 
 ---
 
@@ -188,6 +240,20 @@ For `exe_script_file`, non-auto variables require forcing:
 | `.nib` (bundled) | Yes | Yes | Contains `designable.nib` + `keyedobjects.nib` |
 
 **Recommendation**: Use bundled `.nib` format for in-place editing.
+
+> **For AI Agents**: Prefer editing existing NIB files rather than creating new ones. Use [WatchdogMonitor.nib](`WatchdogApp/Watchdog.app/Contents/Resources/Base.lproj/WatchdogMonitor.nib/designable.nib`) as a reference. Key patterns:
+>
+> **Adding OMC properties** via `userDefinedRuntimeAttributes`:
+> ```xml
+> <userDefinedRuntimeAttributes>
+>     <userDefinedRuntimeAttribute type="string" keyPath="commandID" value="watchdog.ok"/>
+>     <userDefinedRuntimeAttribute type="string" keyPath="selectionCommandID" value="watchdog.selection"/>
+> </userDefinedRuntimeAttributes>
+> ```
+>
+> **Tags**: Most controls use direct `tag="123"` attribute. Only add `tag` to `userDefinedRuntimeAttributes` for OMC controls without native tag support (OMCBox, OMCIKImageView, OMCPDFView, OMCProgressIndicator, OMCTextView, OMCView, OMCWebView). See [omc_controls_user_defined_runtime_attributes.md](omc_controls_user_defined_runtime_attributes.md) for full property list.
+>
+> **Special chars**: base64-encoded in `base64-UTF8="YES"` (e.g., `\n` = `Cg==`, `\t` = `JQ==`)
 
 ### Create Window
 
@@ -298,10 +364,12 @@ Example: TextField with tag=4 → value available as `$OMC_NIB_DIALOG_CONTROL_4_
 
 ### Configure Table View
 
-1. Change class: `NSTableView` → `OMCTableView`
-2. Change Content Mode: `View Based` → `Cell Based`
-3. Set Tag: `0` → `1`
-4. Add columns in code or nib
+1. Add NSTableView inside NSScrollView
+2. Set `customClass="OMCTableView"`
+3. Add columns with header cells
+4. Set `tag="1"` directly as attribute on the table view
+
+> **Tip**: Copy from WatchdogMonitor.nib and modify for your needs.
 
 ---
 
@@ -433,7 +501,7 @@ Result: `$OMC_DLG_INPUT_TEXT` contains user input.
 
 ```bash
 next_command_tool="$OMC_OMC_SUPPORT_PATH/omc_next_command"
-"${next_command_tool}" "$OMC_CURRENT_COMMAND_GUID" "myapp.step2"
+"${next_command_tool}" "$OMC_CURRENT_COMMAND_GUID" "MyApp.step2"
 ```
 
 ---
@@ -444,7 +512,18 @@ Background processes started by scripts can outlive the parent applet. Handle cl
 
 ### Termination Handler
 
-Special `COMMAND_ID=app.will.terminate` runs when app quits:
+Special command with `NAME=app.will.terminate` runs when app quits:
+
+```xml
+<dict>
+    <key>NAME</key>
+    <string>app.will.terminate</string>
+    <key>EXECUTION_MODE</key>
+    <string>exe_script_file</string>
+</dict>
+```
+
+Script `Scripts/MyApp.app.will.terminate.sh`:
 
 ```bash
 #!/bin/bash
@@ -518,10 +597,10 @@ MyApp.app/
     ├── Resources/
     │   ├── Command.plist           <- Command definitions
     │   ├── Scripts/
-    │   │   ├── myapp.main.sh       <- Main launch script
-    │   │   ├── myapp.window.init    <- Window init handler
-    │   │   ├── myapp.window.close   <- Window close handler
-    │   │   └── app.will.terminate   <- App quit handler
+    │   │   ├── MyApp.main.sh       <- Main launch script
+    │   │   ├── MyApp.window.init   <- Window init handler
+    │   │   ├── MyApp.window.close  <- Window close handler
+    │   │   └── MyApp.app.will.terminate  <- App quit handler
     │   ├── Base.lproj/
     │   │   └── MyDialog.nib         <- Window definition
     │   └── *.lproj/                 <- Localizations
@@ -583,11 +662,9 @@ MyApp.app/
 ```xml
 <dict>
     <key>NAME</key>
-    <string>File Info</string>
-    <key>COMMAND_ID</key>
-    <string>file.info</string>
+    <string>FileInfo</string>
     <key>ACTIVATION_MODE</key>
-    <string>act_file</string>
+    <string>act_file_or_folder</string>
     <key>EXECUTION_MODE</key>
     <string>exe_script_file_with_output_window</string>
     <key>OUTPUT_WINDOW_SETTINGS</key>
@@ -600,13 +677,18 @@ MyApp.app/
 </dict>
 ```
 
-### Scripts/file.info.sh
+### Scripts/FileInfo.main.sh
 ```bash
 #!/bin/bash
-echo "File: ${OMC_OBJ_PATH}"
-echo "---"
 /usr/bin/stat -x "${OMC_OBJ_PATH}"
 ```
 
-Drop a file on the app → output window shows file information.
+> **Note**: The main command (first in list, no `COMMAND_ID`) is executed when files/folders are dropped on the applet. The script `FileInfo.main.sh` is the handler for this main command.
+
+Drop a file/folder on the app → output window shows file information.
+
+> **For AI Agents**: When creating example applets:
+> - Use the FileInfo example as a template for minimal applets
+> - The script MUST have a `.sh` (or appropriate) extension
+> - The script name must match: `<NAME>.main.<ext>` where `<NAME>` is the command's NAME field
 
