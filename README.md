@@ -67,4 +67,6 @@ Ready to learn more? Start here:
 [OMC Runtime Context Reference](Documentation/omc_runtime_context_reference.md)
 \
 [OMC Services Reference](Documentation/omc_services_reference.md)
+\
+[Building OMC Applets](Documentation/building_omc_applet.md)
 
