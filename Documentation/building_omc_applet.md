@@ -118,14 +118,6 @@ MyApp.app/
 > - The **main command** (first in list, no `COMMAND_ID`) handles file/folder drops on the app
 > - **Subcommands** have `COMMAND_ID` and are triggered by UI events (buttons, table selection)
 > - Multiple commands with same `NAME` but different `COMMAND_ID` form a **command group**
-> - The script naming convention is: `<NAME>.main.<ext>` for main, `<NAME>.<COMMAND_ID>.<ext>` for subcommands
-
-### Main vs Subcommand Scripts
-
-| Command Type | Script Location | Naming Convention |
-|--------------|----------------|------------------|
-| Main command | `Scripts/` | `<NAME>.main.<ext>` (e.g., `MyApp.main.sh`) |
-| Subcommand | `Scripts/` | `<NAME>.<COMMAND_ID>.<ext>` (e.g., `MyApp.mycommand.sh`) |
 
 ### Execution Modes
 
@@ -165,7 +157,7 @@ Scripts: `Scripts/MyApp.main.sh`
 
 ## Step 3: Create Action Handler Scripts
 
-Scripts live in `MyApp.app/Contents/Resources/Scripts/` and are named based on command type:
+Scripts for `exe_script_file` execution mode live in `MyApp.app/Contents/Resources/Scripts/` and are named based on command type:
 
 | Command Type | Script Location | Naming Convention |
 |--------------|----------------|------------------|
