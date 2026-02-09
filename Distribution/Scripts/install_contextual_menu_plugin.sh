@@ -131,6 +131,7 @@ if [ "$PLUGIN_ACTION" != "skip" ]; then
         /bin/mkdir -p "${PLUGIN_DEST_DIR}"
         /bin/rm -rf "${PLUGIN_DEST}"
         /bin/cp -R "${PLUGIN_SOURCE}" "${PLUGIN_DEST}"
+        /usr/bin/xattr -dr com.apple.quarantine "${PLUGIN_DEST}" 2>/dev/null
         echo "    Installed: ${PLUGIN_DEST}"
         echo "    Version: ${SOURCE_VERSION}"
         INSTALLED_SOMETHING=true
