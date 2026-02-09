@@ -19,6 +19,8 @@ https://github.com/abra-code/DeltaApp
 https://github.com/abra-code/XattrApp
 \
 https://github.com/abra-code/AIChatApp
+\
+https://github.com/abra-code/WatchdogApp
 
 
 ## Key Design Ideas
@@ -60,8 +62,9 @@ OMC engine runs your handler scripts in separate child processes. This has sever
 ## Documentation
 Ready to learn more? Start here:  
 
-[OMC Command Reference](omc_command_reference.md)<br>
-[OMC Runtime Context Reference](omc_runtime_context_reference.md)<br>
-[OMC Services Reference](omc_services_reference.md)<br>
-
+[OMC Command Reference](Documentation/omc_command_reference.md)
+\
+[OMC Runtime Context Reference](Documentation/omc_runtime_context_reference.md)
+\
+[OMC Services Reference](Documentation/omc_services_reference.md)
 
