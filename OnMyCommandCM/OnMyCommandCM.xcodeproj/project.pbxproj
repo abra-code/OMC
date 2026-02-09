@@ -295,7 +295,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "ditto \"$BUILT_PRODUCTS_DIR\"/OnMyCommandCM.plugin '/Library/Contextual Menu Items/OnMyCommandCM.plugin'\n";
+			shellScript = "/usr/bin/ditto \"$BUILT_PRODUCTS_DIR\"/OnMyCommandCM.plugin '/Library/Contextual Menu Items/OnMyCommandCM.plugin'\ncopy_result=$?\nif [ ${copy_result} != 0 ]; then\n    echo \"warning: could not copy OnMyCommandCM.plugin to '/Library/Contextual Menu Items/'\"\nfi\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
