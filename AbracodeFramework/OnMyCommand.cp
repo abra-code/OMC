@@ -765,6 +765,9 @@ OnMyCommandCM::DeleteCommandList()
 			if(mCommandList[i].nibDialog != NULL)
 				::CFRelease(mCommandList[i].nibDialog);
 
+			if(mCommandList[i].actionUIWindow != NULL)
+				::CFRelease(mCommandList[i].actionUIWindow);
+
 			if(mCommandList[i].appNames != NULL)
 				::CFRelease(mCommandList[i].appNames);
 
@@ -1022,6 +1025,12 @@ OnMyCommandCM::ExecuteCommandWithObjects(CommandRuntimeData *initialCommandRunti
 			{
 				throw OSStatus(userCanceledErr);
 			}
+        }
+        else if( currCommand.actionUIWindow != nullptr )
+        {
+			// ActionUI window handling will be added here
+			// For now, this is a placeholder that will need to be implemented
+			// once the ActionUI integration is complete
         }
 
 		UInt8 escapingMode = currCommand.escapeSpecialCharsMode;

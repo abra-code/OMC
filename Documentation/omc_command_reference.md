@@ -324,6 +324,156 @@ omc_dialog_control "${OMC_NIB_DLG_GUID}" 101 add_rows "$(cat /tmp/table_data)"
 
 ---
 
+## 6.1. ACTIONUI_WINDOW – ActionUI JSON Dialogs (under development)
+
+`ACTIONUI_WINDOW` allows an **action handler** to present a **custom dialog** defined by a JSON content view description using the [ActionUI library](https://github.com/abra-code/ActionUI). The JSON file is loaded from the applet bundle, and OMC bridges controls to command execution via **subcommands** and **runtime tools**, similar to `NIB_DIALOG`.
+
+> **Note**: This is a work-in-progress. ActionUI will be integrated into your OMC for this feature to work. The ActionUI library provides SwiftUI-like declarative UI definitions in JSON format.
+
+---
+
+### `ACTIONUI_WINDOW` Dictionary Keys
+
+| Key | Type | Required | Description & Best Practices |
+|-----|------|----------|------------------------------|
+| `JSON_FILE_NAME` | String | Yes | Name of the `.json` file **with extension** in app bundle resources. Case-sensitive. | `"MySettingsDialog.json"` |
+| `INIT_SUBCOMMAND_ID` | String | No | `COMMAND_ID` to run **before** dialog appears (e.g., populate values). | `"init_values"` |
+| `END_OK_SUBCOMMAND_ID` | String | No | `COMMAND_ID` to run on **OK / Confirm** button (actionID matching button's actionID). | `"save_changes"` |
+| `END_CANCEL_SUBCOMMAND_ID` | String | No | `COMMAND_ID` to run on **Cancel** (actionID matching button's actionID). | `"discard_changes"` |
+
+> **Note**: Unlike `NIB_DIALOG` which uses commandIDs for controls, `ACTIONUI_WINDOW` uses **actionIDs** defined in the JSON. Buttons in the JSON should have an `actionID` property that matches the `COMMAND_ID` of the handler you want to execute.
+
+---
+
+### Example: Full ACTIONUI_WINDOW Definition
+
+**JSON File** (`Resources/SettingsDialog.json`):
+```json
+{
+  "type": "VStack",
+  "properties": {
+    "spacing": 10.0,
+    "padding": "default"
+  },
+  "children": [
+    {
+      "type": "Text",
+      "properties": {
+        "text": "Settings"
+      },
+      "id": "title"
+    },
+    {
+      "type": "TextField",
+      "properties": {
+        "placeholder": "Enter name"
+      },
+      "id": 1
+    },
+    {
+      "type": "Button",
+      "properties": {
+        "title": "OK",
+        "buttonStyle": "borderedProminent",
+        "actionID": "save_settings"
+      },
+      "id": 2
+    },
+    {
+      "type": "Button",
+      "properties": {
+        "title": "Cancel",
+        "actionID": "cancel_settings"
+      },
+      "id": 3
+    }
+  ]
+}
+```
+
+**Command.plist**:
+```xml
+<dict>
+  <key>NAME</key>
+  <string>Edit Settings</string>
+  <key>COMMAND_ID</key>
+  <string>show_settings_dialog</string>
+  <key>EXECUTION_MODE</key>
+  <string>exe_script_file</string>
+  <key>ACTIONUI_WINDOW</key>
+  <dict>
+    <key>JSON_FILE_NAME</key>
+    <string>SettingsDialog.json</string>
+    <key>INIT_SUBCOMMAND_ID</key>
+    <string>init_settings</string>
+  </dict>
+</dict>
+
+<!-- Init: Set initial values -->
+<dict>
+  <key>NAME</key>
+  <string>Edit Settings</string>
+  <key>COMMAND_ID</key>
+  <string>init_settings</string>
+  <key>EXECUTION_MODE</key>
+  <string>exe_script_file</string>
+</dict>
+
+<!-- OK: Save settings -->
+<dict>
+  <key>NAME</key>
+  <string>Edit Settings</string>
+  <key>COMMAND_ID</key>
+  <string>save_settings</string>
+  <key>EXECUTION_MODE</key>
+  <string>exe_script_file</string>
+</dict>
+
+<!-- Cancel -->
+<dict>
+  <key>NAME</key>
+  <string>Edit Settings</string>
+  <key>COMMAND_ID</key>
+  <string>cancel_settings</string>
+  <key>EXECUTION_MODE</key>
+  <string>exe_script_file</string>
+</dict>
+```
+
+**Script** (`Scripts/init_settings.sh`):
+```bash
+#!/bin/bash
+# Set initial values for controls via runtime tool
+# View ID 1 is a TextField - set its value using omc_dialog_control
+omc_dialog_control "${OMC_ACTIONUI_WINDOW_UUID}" 1 set_value "Default Value"
+```
+
+---
+
+### ActionUI View Access
+
+View values are accessed via environment variables and special words similar to NIB_DIALOG:
+
+| Special Word | Environment Variable | Description |
+|--------------|---------------------|-------------|
+| `__ACTIONUI_WINDOW_UUID__` | `OMC_ACTIONUI_WINDOW_UUID` | Unique window identifier |
+| `__ACTIONUI_VIEW_N_VALUE__` | `OMC_ACTIONUI_VIEW_N_VALUE` | Value of view with ID N |
+
+> **Note**: ActionUI uses integer IDs for views (defined as `id` in JSON). Access them using the numeric ID: `__ACTIONUI_VIEW_1_VALUE__` or `$OMC_ACTIONUI_VIEW_1_VALUE`.
+
+---
+
+### Best Practices
+
+- **Prefer `exe_script_file`** for subcommands/action handlers.
+- **Use descriptive view IDs** in your JSON for easier scripting.
+- **Set initial values dynamically** using `omc_dialog_control` in init subcommand script.
+
+---
+
+*See [OMC Runtime Context Reference](omc_runtime_context_reference.md) for ActionUI-related special words and env vars.
+
+---
 
 ## 7. File Navigation Dialogs Options
 

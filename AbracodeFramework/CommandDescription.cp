@@ -63,6 +63,7 @@ static const SpecialWordAndID sSpecialWordAndIDList[] =
     { sizeof("__APP_BUNDLE_PATH__")-1,                        CFSTR("__APP_BUNDLE_PATH__"), CFSTR("OMC_APP_BUNDLE_PATH"),  APP_BUNDLE_PATH, true },//preferred for applets
     { sizeof("__MY_EXTERNAL_BUNDLE_PATH__")-1,                CFSTR("__MY_EXTERNAL_BUNDLE_PATH__"), CFSTR("OMC_MY_EXTERNAL_BUNDLE_PATH"),  MY_EXTERNAL_BUNDLE_PATH, false },//external bundle location
     { sizeof("__NIB_DLG_GUID__")-1,                            CFSTR("__NIB_DLG_GUID__"), CFSTR("OMC_NIB_DLG_GUID"),  NIB_DLG_GUID, true },
+    { sizeof("__ACTIONUI_WINDOW_UUID__")-1,                    CFSTR("__ACTIONUI_WINDOW_UUID__"), CFSTR("OMC_ACTIONUI_WINDOW_UUID"),  ACTIONUI_WINDOW_UUID, true },
     { sizeof("__CURRENT_COMMAND_GUID__")-1,                    CFSTR("__CURRENT_COMMAND_GUID__"), CFSTR("OMC_CURRENT_COMMAND_GUID"),  CURRENT_COMMAND_GUID, true },
     
     { sizeof("__FRONT_PROCESS_ID__")-1,                        CFSTR("__FRONT_PROCESS_ID__"), CFSTR("OMC_FRONT_PROCESS_ID"),  FRONT_PROCESS_ID, false },
@@ -90,6 +91,7 @@ const CFIndex kMaxSpecialWordLen = sizeof("__DLG_CHOOSE_FOLDER_NAME_NO_EXTENSION
 //                 __NIB_TABLE_NNN_COLUMN_MMM_VALUE__          OMC_NIB_TABLE_NNN_COLUMN_MMM_VALUE
 //                 __NIB_TABLE_NNN_COLUMN_MMM_ALL_ROWS_VALUE__ OMC_NIB_TABLE_NNN_COLUMN_MMM_ALL_ROWS_VALUE
 //                 __NIB_WEBVIEW_NNN_ELEMENT_MMM_VALUE__       OMC_NIB_WEBVIEW_NNN_ELEMENT_MMM_VALUE
+//                 __ACTIONUI_VIEW_N_VALUE__                   OMC_ACTIONUI_VIEW_N_VALUE
 
 static void
 GetMultiCommandParams(CommandDescription &outDesc, CFDictionaryRef inParams)
@@ -237,6 +239,11 @@ GetSpecialWordID(CFStringRef inStr)
     {
         return NIB_WEB_VIEW_VALUE;
     }
+    else if( ::CFStringHasPrefix(inStr, CFSTR("__ACTIONUI_VIEW_")) &&
+            ::CFStringHasSuffix(inStr, CFSTR("_VALUE__")) )
+    {
+        return ACTIONUI_VIEW_VALUE;
+    }
     
     return NO_SPECIAL_WORD;
 }
@@ -291,6 +298,11 @@ GetSpecialEnvironWordID(CFStringRef inStr)
             ::CFStringHasSuffix(inStr, CFSTR("_VALUE")) )
     {
         return NIB_WEB_VIEW_VALUE;
+    }
+    else if( ::CFStringHasPrefix(inStr, CFSTR("OMC_ACTIONUI_VIEW_")) &&
+            ::CFStringHasSuffix(inStr, CFSTR("_VALUE")) )
+    {
+        return ACTIONUI_VIEW_VALUE;
     }
 
     return NO_SPECIAL_WORD;
@@ -711,6 +723,9 @@ GetOneCommandParams(CommandDescription &outDesc, CFDictionaryRef inOneCommand, C
 //nib dialog settings
     oneCmd.CopyValue(CFSTR("NIB_DIALOG"), outDesc.nibDialog);
 
+//actionui window settings
+    oneCmd.CopyValue(CFSTR("ACTIONUI_WINDOW"), outDesc.actionUIWindow);
+
 //text replace option
     outDesc.textReplaceOptions = kTextReplaceNothing;
     if( oneCmd.GetValue(CFSTR("TEXT_REPLACE_OPTION"), theStr) )
@@ -943,6 +958,7 @@ ProcessOnePrescannedWord(CommandDescription &currCommand, SInt32 specialWordID, 
         case NIB_DLG_CONTROL_VALUE:
         case NIB_TABLE_VALUE:
         case NIB_WEB_VIEW_VALUE:
+        case ACTIONUI_VIEW_VALUE:
         break;
 
         case NIB_TABLE_ALL_ROWS: //special expensive case not always exported, only on demand

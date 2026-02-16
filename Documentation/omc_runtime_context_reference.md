@@ -58,7 +58,8 @@ The list is derived **directly** from the source files:
 | **System** | `__OMC_SUPPORT_PATH__` | `$OMC_OMC_SUPPORT_PATH` | Path to OMC support files. | **Always** |
 | **System** | `__APP_BUNDLE_PATH__` | `$OMC_APP_BUNDLE_PATH` | Applet bundle path (preferred). | **Always** |
 | **System** | `__MY_EXTERNAL_BUNDLE_PATH__` | `$OMC_MY_EXTERNAL_BUNDLE_PATH` | External `.omc` bundle path. | Scanned |
-| **Dialog** | `__NIB_DLG_GUID__` | `$OMC_NIB_DLG_GUID` | Unique dialog instance GUID. | **Always** |
+| **Dialog** | `__NIB_DLG_GUID__` | `$OMC_NIB_DLG_GUID` | Unique NIB dialog instance GUID. | **Always** |
+| **Dialog** | `__ACTIONUI_WINDOW_UUID__` | `$OMC_ACTIONUI_WINDOW_UUID` | Unique ActionUI window UUID. | **Always** |
 | **System** | `__CURRENT_COMMAND_GUID__` | `$OMC_CURRENT_COMMAND_GUID` | Unique command execution GUID. | **Always** |
 | **Frontmost** | `__FRONT_PROCESS_ID__` | `$OMC_FRONT_PROCESS_ID` | PID of frontmost app. | Scanned |
 | **Frontmost** | `__FRONT_APPLICATION_NAME__` | `$OMC_FRONT_APPLICATION_NAME` | Name of frontmost app. | Scanned |
@@ -119,6 +120,29 @@ echo "Input: ${OMC_DLG_INPUT_TEXT}"
   <string>__OBJ_NAME__</string>
 </array>
 ```
+
+---
+
+## Dynamic Control Access
+
+### NIB Dialog Controls
+
+Access NIB dialog control values using dynamic special words:
+
+| Special Word | Environment Variable | Description |
+|--------------|---------------------|-------------|
+| `__NIB_DIALOG_CONTROL_<ID>_VALUE__` | `OMC_NIB_DIALOG_CONTROL_<ID>_VALUE` | Value of NIB control with given tag. |
+| `__NIB_TABLE_<ID>_COLUMN_<COL>_VALUE__` | `OMC_NIB_TABLE_<ID>_COLUMN_<COL>_VALUE` | Table selected cell value. |
+| `__NIB_TABLE_<ID>_COLUMN_<COL>_ALL_ROWS__` | `OMC_NIB_TABLE_<ID>_COLUMN_<COL>_ALL_ROWS` | All rows in table column (expensive). |
+| `__NIB_WEBVIEW_<ID>_ELEMENT_<ELEM>_VALUE__` | `OMC_NIB_WEBVIEW_<ID>_ELEMENT_<ELEM>_VALUE` | WebView element value. |
+
+### ActionUI Views (under development)
+
+Access ActionUI view values using dynamic special words:
+
+| Special Word | Environment Variable | Description |
+|--------------|---------------------|-------------|
+| `__ACTIONUI_VIEW_N_VALUE__` | `OMC_ACTIONUI_VIEW_N_VALUE` | Value of ActionUI view with given integer ID. |
 
 ---
 

@@ -58,6 +58,8 @@ typedef enum SpecialWordID
     NIB_TABLE_VALUE,
     NIB_TABLE_ALL_ROWS,
     NIB_WEB_VIEW_VALUE,
+    ACTIONUI_WINDOW_UUID,
+    ACTIONUI_VIEW_VALUE,
     CURRENT_COMMAND_GUID,
     FRONT_PROCESS_ID,
     FRONT_APPLICATION_NAME
@@ -108,6 +110,7 @@ typedef struct CommandDescription
     CFDictionaryRef	chooseObjectParams {NULL};
     CFDictionaryRef	outputWindowOptions {NULL};
     CFDictionaryRef nibDialog {NULL};
+    CFDictionaryRef actionUIWindow {NULL};
     CFArrayRef		appNames {NULL};
     CFStringRef		commandID {NULL};//"top!" = main command, other value = command handler/subcommand - should not appear in contextual menu
     CFStringRef		nextCommandID {NULL}; //if not NULL, next command
