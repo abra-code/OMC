@@ -7,6 +7,7 @@
 //
 
 #import <Cocoa/Cocoa.h>
+#import "OMCControlAccessor.h"
 #include "CFObj.h"
 #include "ARefCounted.h"
 #include "AUniquePtr.h"

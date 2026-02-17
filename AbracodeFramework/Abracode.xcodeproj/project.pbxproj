@@ -91,7 +91,7 @@
 		E26B2797109C174D00DBA8CE /* OMCTableView.m in Sources */ = {isa = PBXBuildFile; fileRef = E26B2793109C174D00DBA8CE /* OMCTableView.m */; };
 		E27103CE0D8142DF0097D83E /* Quartz.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E27103CD0D8142DF0097D83E /* Quartz.framework */; };
 		E2735F370D7B9576004D81CE /* OMCDialog.h in Headers */ = {isa = PBXBuildFile; fileRef = E2735F360D7B9576004D81CE /* OMCDialog.h */; };
-		E2735F830D7BC89F004D81CE /* OMCDialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E2735F820D7BC89F004D81CE /* OMCDialog.cpp */; };
+		E2735F830D7BC89F004D81CE /* OMCDialog.mm in Sources */ = {isa = PBXBuildFile; fileRef = E2735F820D7BC89F004D81CE /* OMCDialog.mm */; };
 		E27F2D050D56F7410060D231 /* CFObj.h in Headers */ = {isa = PBXBuildFile; fileRef = E27F2D030D56F7410060D231 /* CFObj.h */; };
 		E28181AE0EBC228C00E9652F /* OMCProgressWindowController.h in Headers */ = {isa = PBXBuildFile; fileRef = E28181AA0EBC228C00E9652F /* OMCProgressWindowController.h */; };
 		E28181AF0EBC228C00E9652F /* OMCProgressWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = E28181AB0EBC228C00E9652F /* OMCProgressWindowController.m */; };
@@ -366,6 +366,7 @@
 		1D3F8CBC2E0B370A00B69493 /* OMCActionProtocol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OMCActionProtocol.h; sourceTree = "<group>"; };
 		1D4971AC2575A69000F7131C /* OmcProjectDebug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectDebug.xcconfig; path = ../Common/OmcProjectDebug.xcconfig; sourceTree = "<group>"; };
 		1D4971AD2575A69000F7131C /* OmcProjectRelease.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectRelease.xcconfig; path = ../Common/OmcProjectRelease.xcconfig; sourceTree = "<group>"; };
+		1D690D302F44F299006FECE8 /* OMCControlAccessor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OMCControlAccessor.h; sourceTree = "<group>"; };
 		1D71F3292206F116009FAF91 /* DebugSettings.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DebugSettings.h; sourceTree = "<group>"; };
 		1D71F32A2206F1A1009FAF91 /* ACMPlugin.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ACMPlugin.h; sourceTree = "<group>"; };
 		1D71F32B2206F1D8009FAF91 /* CMUtils.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CMUtils.h; sourceTree = "<group>"; };
@@ -491,7 +492,7 @@
 		E26B2793109C174D00DBA8CE /* OMCTableView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMCTableView.m; sourceTree = "<group>"; };
 		E27103CD0D8142DF0097D83E /* Quartz.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Quartz.framework; path = /System/Library/Frameworks/Quartz.framework; sourceTree = "<absolute>"; };
 		E2735F360D7B9576004D81CE /* OMCDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCDialog.h; sourceTree = "<group>"; };
-		E2735F820D7BC89F004D81CE /* OMCDialog.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCDialog.cpp; sourceTree = "<group>"; };
+		E2735F820D7BC89F004D81CE /* OMCDialog.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCDialog.mm; sourceTree = "<group>"; };
 		E27F2D030D56F7410060D231 /* CFObj.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CFObj.h; sourceTree = "<group>"; };
 		E28181AA0EBC228C00E9652F /* OMCProgressWindowController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCProgressWindowController.h; sourceTree = "<group>"; };
 		E28181AB0EBC228C00E9652F /* OMCProgressWindowController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMCProgressWindowController.m; sourceTree = "<group>"; };
@@ -931,6 +932,9 @@
 				E25D78950DBB24800065C7A3 /* OMCDropletController.h */,
 				E23AAC8B12F55FE0004C867B /* OMCService.h */,
 				E23AAC8C12F55FE0004C867B /* OMCService.m */,
+				1D690D302F44F299006FECE8 /* OMCControlAccessor.h */,
+				E2735F820D7BC89F004D81CE /* OMCDialog.mm */,
+				E2735F360D7B9576004D81CE /* OMCDialog.h */,
 				E22FBAED0D7A0D7700DC5BB4 /* OMCNibDialog.mm */,
 				E22FBAEC0D7A0D7700DC5BB4 /* OMCNibDialog.h */,
 				E29A6AB20D9F7A01006A97B0 /* OMCMainMenuController.m */,
@@ -986,8 +990,6 @@
 				E24243FA0DDD6A350002BF9E /* OutputWindowHandler.h */,
 				E2ED3AEE0D0B27F700481D8F /* NibDialogControl.cp */,
 				E22FCB220F5514220062D589 /* NibDialogControl.h */,
-				E2735F820D7BC89F004D81CE /* OMCDialog.cpp */,
-				E2735F360D7B9576004D81CE /* OMCDialog.h */,
 				E2ED3AE80D0B27D300481D8F /* DefaultExternBundle.cpp */,
 				E2ED3AE90D0B27D300481D8F /* DefaultExternBundle.h */,
 				1D94F4132F37FEBE0009C4E2 /* OMCPrivateConstants.h */,
@@ -1368,7 +1370,7 @@
 				1DED3637232258A40086266F /* OMCScriptsManager.cpp in Sources */,
 				E211D4F80D4346BB0065C23A /* OMCNibWindowController.mm in Sources */,
 				E22FBAEF0D7A0D7700DC5BB4 /* OMCNibDialog.mm in Sources */,
-				E2735F830D7BC89F004D81CE /* OMCDialog.cpp in Sources */,
+				E2735F830D7BC89F004D81CE /* OMCDialog.mm in Sources */,
 				1DBCC43522CE209300A1DD8F /* OMCHelpers.mm in Sources */,
 				E2E407000D8A5B00009AD8CA /* OMCSecureTextField.m in Sources */,
 				E2E4072A0D8AD1E3009AD8CA /* OMCSearchField.m in Sources */,

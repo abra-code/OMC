@@ -1,5 +1,5 @@
 /*
- *  OMCDialog.cpp
+ *  OMCDialog.mm
  *  Abracode
  *
  *  Created by Tomasz Kukielka on 3/2/08.
@@ -8,12 +8,14 @@
  */
 
 #include "OMCDialog.h"
+#import "OMCControlAccessor.h"
 #include "AppGroupIdentifier.h"
 #include "OnMyCommand.h"
 #include "NibDialogControl.h"
 #include "ACFType.h"
+#include "OmcTaskNotification.h"
 
-OMCDialog * OMCDialog::sChainHead = NULL;
+OMCDialog* sChainHead = nullptr;
 
 OMCDialog::OMCDialog()
 	: next(NULL),
@@ -199,4 +201,140 @@ OMCDialog::IsPredefinedDialogCommandID(CFStringRef inCommandID) noexcept
         return true;
     
     return false;
+}
+
+#pragma mark - Control value access via controller
+
+CFTypeRef
+OMCDialog::CopyControlValue(CFStringRef inControlID, CFStringRef inControlPart, SelectionIterator *inSelIterator, CFDictionaryRef *outCustomProperties) noexcept
+{
+	if(outCustomProperties != NULL)
+		*outCustomProperties = NULL;
+
+	id outValue = NULL;
+
+    @try
+    {
+        if(mControlAccessor != NULL)
+        {
+            id<OMCControlAccessor> controller = (__bridge id<OMCControlAccessor>)mControlAccessor;
+            outValue = [controller controlValueForID:(__bridge NSString *)inControlID
+                                             forPart:(__bridge NSString *)inControlPart
+                                        withIterator:inSelIterator
+                                       outProperties:outCustomProperties];
+        }
+    }
+    @catch (NSException *localException)
+    {
+        NSLog(@"OMCDialog::CopyControlValue received exception: %@", localException);
+    }
+
+    return (CFTypeRef)CFBridgingRetain(outValue);
+}
+
+void
+OMCDialog::CopyAllControlValues(CFSetRef requestedNibControls, SelectionIterator *inSelIterator) noexcept
+{
+    if(mControlValues == nullptr)
+        mControlValues.Adopt(CFDictionaryCreateMutable(kCFAllocatorDefault,
+                                                        0,
+                                                        &kCFTypeDictionaryKeyCallBacks,
+                                                        &kCFTypeDictionaryValueCallBacks),
+                                                        kCFObjDontRetain);
+
+    if(mControlCustomProperties == nullptr)
+        mControlCustomProperties.Adopt(CFDictionaryCreateMutable(kCFAllocatorDefault,
+                                                                    0,
+                                                                    &kCFTypeDictionaryKeyCallBacks,
+                                                                    &kCFTypeDictionaryValueCallBacks),
+                                                                    kCFObjDontRetain);
+
+    @try
+    {
+        if(mControlAccessor != NULL)
+        {
+            id<OMCControlAccessor> controller = (__bridge id<OMCControlAccessor>)mControlAccessor;
+            [controller allControlValues:(__bridge NSMutableDictionary *)mControlValues.Get()
+                            andProperties:(__bridge NSMutableDictionary *)mControlCustomProperties.Get()
+                             withIterator:inSelIterator];
+        }
+    }
+    @catch (NSException *localException)
+    {
+        NSLog(@"OMCDialog::CopyAllControlValues received exception: %@", localException);
+    }
+}
+
+
+// port communication support for dialog
+// when this port is set-up the command line tool "omc_dialog_control" sends messages to this port
+// instead of saving to file and wait for command to finish
+//inData is a plist XML data in exactly the same format as read from temp plist file for disk-based communication
+
+CFDataRef
+OMCDialog::ReceivePortMessage( SInt32 msgid, CFDataRef inData ) noexcept
+{
+	if( mControlAccessor == NULL )
+		return NULL;
+
+	CFObj<CFPropertyListRef> thePlist( CFPropertyListCreateWithData( kCFAllocatorDefault, inData,
+                                                                       kCFPropertyListImmutable, nullptr, nullptr) );
+	CFDictionaryRef plistDict = ACFType<CFDictionaryRef>::DynamicCast( (CFPropertyListRef)thePlist );
+
+    @try
+    {
+        if(plistDict != NULL)
+        {
+            id<OMCControlAccessor> controller = (__bridge id<OMCControlAccessor>)mControlAccessor;
+            [controller setControlValues:plistDict];
+        }
+    }
+    @catch (NSException *localException)
+    {
+        NSLog(@"OMCDialog::ReceivePortMessage received exception: %@", localException);
+    }
+
+	return NULL;
+}
+
+void
+OMCDialog::ReceiveNotification(void *ioData) noexcept
+{
+	if( (ioData == NULL) || (mControlAccessor == NULL) )
+		return;
+
+	OmcTaskData *taskData = (OmcTaskData *)ioData;
+
+	switch(taskData->messageID)
+	{
+		case kOmcTaskFinished:
+		{
+			if( taskData->dataType == kOmcDataTypeBoolean )
+			{
+			}
+
+			CFObj<CFDictionaryRef> controlValues( ReadControlValuesFromPlist(GetDialogUUID()) );
+
+            @try
+            {
+                if(controlValues != NULL)
+                {
+                    id<OMCControlAccessor> controller = (__bridge id<OMCControlAccessor>)mControlAccessor;
+                    [controller setControlValues:(CFDictionaryRef)controlValues];
+                }
+            }
+            @catch (NSException *localException)
+            {
+                NSLog(@"OMCDialog::ReceiveNotification received exception: %@", localException);
+            }
+		}
+		break;
+
+		case kOmcTaskProgress:
+			;
+		break;
+		
+		default:
+		break;
+	}
 }

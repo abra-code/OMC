@@ -120,7 +120,8 @@ FindArgumentType(const char *argTypeStr)
 	if(self == nil)
 		return nil;
     
-    mOMCDialogProxy.Adopt( new OMCNibDialog((__bridge OMCNibWindowControllerRef)self) );
+    mOMCDialogProxy.Adopt( new OMCNibDialog() );
+    mOMCDialogProxy->SetControlAccessor((__bridge void *)self);
     self->mCommandRuntimeData->SetAssociatedDialogUUID(mOMCDialogProxy->GetDialogUUID());
 
 	CommandDescription &currCommand = self->mPlugin->GetCurrentCommand();
@@ -265,7 +266,7 @@ FindArgumentType(const char *argTypeStr)
 {
 	OMCNibDialog *nibDialog = (OMCNibDialog *)mOMCDialogProxy.Get();
 	if(nibDialog != nullptr)
-		nibDialog->SetController(nil);
+		nibDialog->SetControlAccessor(nil);
 	
 	if(self.window != nil)
 	{

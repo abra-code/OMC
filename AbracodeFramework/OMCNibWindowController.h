@@ -9,10 +9,11 @@
 #import <Cocoa/Cocoa.h>
 #import "OMCCocoaNib.h"
 #import "OMCWindowController.h"
+#import "OMCControlAccessor.h"
 
 class OMCNibDialog;
 
-@interface OMCNibWindowController : OMCWindowController <NSWindowDelegate>
+@interface OMCNibWindowController : OMCWindowController <NSWindowDelegate, OMCControlAccessor>
 {
 	// we compile ObjC with the flag to invoke C++ constructors and destructor
 	// so we can use smart pointers as member variables

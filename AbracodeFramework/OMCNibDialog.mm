@@ -8,6 +8,7 @@
 
 #import "OMCNibDialog.h"
 #import "OMCNibWindowController.h"
+#import "OMCControlAccessor.h"
 #include "OnMyCommand.h"
 #include "CommandRuntimeData.h"
 #include "CMUtils.h"
@@ -28,16 +29,16 @@ ARefCountedObj<OMCDialog> RunNibDialog(OnMyCommandCM *inPlugin, CommandRuntimeDa
 	{
 		@try
 		{
-			OMCNibWindowController *myController = [[OMCNibWindowController alloc] initWithOmc:inPlugin
+			OMCNibWindowController *windowController = [[OMCNibWindowController alloc] initWithOmc:inPlugin
                                                                       commandRuntimeData:commandRuntimeData];
-			if(myController != nullptr)
+			if(windowController != nullptr)
 			{
-				outDialog.Adopt( [myController getOMCDialog], kARefCountRetain );
+				outDialog.Adopt( [windowController getOMCDialog], kARefCountRetain );
 
-				[myController run];
-				if( [myController isModal] )
+				[windowController run];
+				if( [windowController isModal] )
 				{
-					if( [myController isOkeyed] )
+					if( [windowController isOkeyed] )
 					{
 						if(outDialog != nullptr)
 						{
@@ -76,9 +77,9 @@ OMCNibDialog::CopyControlValue(CFStringRef inControlID, CFStringRef inControlPar
 
     @try
     {
-        if(mController != NULL)
+        if(mControlAccessor != NULL)
         {
-            OMCNibWindowController *__weak controller = (__bridge OMCNibWindowController*)mController;
+            id<OMCControlAccessor> controller = (__bridge id<OMCControlAccessor>)mControlAccessor;
             outValue = [controller controlValueForID:(__bridge NSString *)inControlID
                                              forPart:(__bridge NSString *)inControlPart
                                         withIterator:inSelIterator
@@ -141,9 +142,10 @@ OMCNibDialog::CopyAllControlValues(CFSetRef requestedNibControls, SelectionItera
 
     @try
     {
-        if(mController != NULL)
+        if(mControlAccessor != NULL)
         {
-            [(__bridge OMCNibWindowController*)mController
+            id<OMCControlAccessor> controller = (__bridge id<OMCControlAccessor>)mControlAccessor;
+            [controller
                          allControlValues:(__bridge NSMutableDictionary *)mControlValues.Get()
                             andProperties:(__bridge NSMutableDictionary *)mControlCustomProperties.Get()
                              withIterator:inSelIterator];
@@ -203,80 +205,7 @@ OMCNibDialog::CopyAllControlValues(CFSetRef requestedNibControls, SelectionItera
     }
 }
 
-
-//port communication support for dialog
-//when this port is set-up the command line tool "omc_dialog_control" sends messages to this port
-//instead of saving to file and wait for command to finish
-
-//inData is a plist XML data in exactly the same format as read from temp plist file for disk-based communication
-CFDataRef
-OMCNibDialog::ReceivePortMessage( SInt32 msgid, CFDataRef inData ) noexcept
-{
-	if( mController == NULL )
-		return NULL;
-
-	CFObj<CFPropertyListRef> thePlist( CFPropertyListCreateWithData( kCFAllocatorDefault, inData,
-                                                                       kCFPropertyListImmutable, nullptr, nullptr) );
-	CFDictionaryRef plistDict = ACFType<CFDictionaryRef>::DynamicCast( (CFPropertyListRef)thePlist );
-
-    @try
-    {
-        if(plistDict != NULL)
-        {
-            [(__bridge OMCNibWindowController*)mController setControlValues:plistDict];
-            
-        }
-    }
-    @catch (NSException *localException)
-    {
-        NSLog(@"OMCNibDialog::ReceivePortMessage received exception: %@", localException);
-    }
-
-	return NULL;
-}
-
-
-void
-OMCNibDialog::ReceiveNotification(void *ioData) noexcept // local message
-{
-	if( (ioData == NULL) || (mController == NULL) )
-		return;
-
-	OmcTaskData *taskData = (OmcTaskData *)ioData;
-
-	switch(taskData->messageID)
-	{
-		case kOmcTaskFinished:
-		{
-			if( taskData->dataType == kOmcDataTypeBoolean )
-			{
-				//bool wasSynchronous = taskData->data.test;
-			}
-
-			CFObj<CFDictionaryRef> controlValues( ReadControlValuesFromPlist(GetDialogUUID()) );
-
-            @try
-            {
-                if(controlValues != NULL)
-                {
-                    [(__bridge OMCNibWindowController*)mController setControlValues:(CFDictionaryRef)controlValues];
-                }
-            }
-            @catch (NSException *localException)
-            {
-                NSLog(@"OMCNibDialog::ReceiveNotification received exception: %@", localException);
-            }
-		}
-		break;
-
-		case kOmcTaskProgress:
-			;//we don't care about the subcommand progress messages here
-		break;
-		
-		default:
-		break;
-	}
-}
+// local message handling - Now implemented in OMCDialog base class
 
 CFStringRef
 OMCNibDialog::CreateControlValue(SInt32 inSpecialWordID, CFStringRef inControlString, UInt16 escSpecialCharsMode, bool isEnvStyle) noexcept
