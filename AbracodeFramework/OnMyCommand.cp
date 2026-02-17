@@ -2514,6 +2514,7 @@ OnMyCommandCM::AppendTextToCommand(CFMutableStringRef inCommandRef, CFStringRef 
 		case NIB_TABLE_VALUE:
 		case NIB_TABLE_ALL_ROWS:
 		case NIB_WEB_VIEW_VALUE:
+		case ACTIONUI_VIEW_VALUE:
         {
             if(activeDialog != nullptr)
             {
@@ -2524,6 +2525,7 @@ OnMyCommandCM::AppendTextToCommand(CFMutableStringRef inCommandRef, CFStringRef 
 		
 //no need to escape guid
 		case NIB_DLG_GUID:
+		case ACTIONUI_WINDOW_UUID:
 		{
             if(activeDialog != nullptr)
             {
@@ -2839,6 +2841,7 @@ OnMyCommandCM::PopulateEnvironList(CFMutableDictionaryRef ioEnvironList, Command
 			break;
 			
 			case NIB_DLG_GUID: //always exported
+			case ACTIONUI_WINDOW_UUID:
 			{
                 newStrRef = commandRuntimeData.GetAssociatedDialogUUID();
                 releaseNewString = false;
