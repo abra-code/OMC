@@ -166,8 +166,8 @@ NSString *NormalizeOMCVariableIDFromElementID(NSString *inElementID)
 			self.elementID = (NSString *)elemID;
 		}
 		
-		self.commandID = (NSString *)cmdID; //[OMCDialogController handleAction:] will ask for commandID to execute
-		[self.target performSelector:self.action withObject:self]; // = [(OMCDialogController*)_target handleAction:self];
+		self.commandID = (NSString *)cmdID; //[OMCNibWindowController handleAction:] will ask for commandID to execute
+		[self.target performSelector:self.action withObject:self]; // = [(OMCNibWindowController*)_target handleAction:self];
 		
 		self.commandID = nil;
 		self.elementID = nil;
@@ -177,7 +177,7 @@ NSString *NormalizeOMCVariableIDFromElementID(NSString *inElementID)
 // WKScriptMessageHandler protocol method:
 - (void)userContentController:(WKUserContentController *)userContentController didReceiveScriptMessage:(WKScriptMessage *)message
 {
-	// This should always be satisfied. OMCDialogController sets itself as target for all controls and views which support it
+	// This should always be satisfied. OMCNibWindowController sets itself as target for all controls and views which support it
 	if((self.target == nil) || (self.action == nil))
 		return;
 

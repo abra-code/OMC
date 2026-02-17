@@ -44,10 +44,10 @@
 		E20F1F69130BBE6300882872 /* alert in Copy Support Executables */ = {isa = PBXBuildFile; fileRef = E20F1F68130BBE5100882872 /* alert */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		E211D3C50D3F51010065C23A /* OMCCocoaNib.h in Headers */ = {isa = PBXBuildFile; fileRef = E211D3C30D3F51010065C23A /* OMCCocoaNib.h */; };
 		E211D3C60D3F51010065C23A /* OMCCocoaNib.m in Sources */ = {isa = PBXBuildFile; fileRef = E211D3C40D3F51010065C23A /* OMCCocoaNib.m */; };
-		E211D4F70D4346BB0065C23A /* OMCDialogController.h in Headers */ = {isa = PBXBuildFile; fileRef = E211D4F30D4346BA0065C23A /* OMCDialogController.h */; };
-		E211D4F80D4346BB0065C23A /* OMCDialogController.mm in Sources */ = {isa = PBXBuildFile; fileRef = E211D4F40D4346BB0065C23A /* OMCDialogController.mm */; };
-		E22FBAEE0D7A0D7700DC5BB4 /* OMCCocoaDialog.h in Headers */ = {isa = PBXBuildFile; fileRef = E22FBAEC0D7A0D7700DC5BB4 /* OMCCocoaDialog.h */; };
-		E22FBAEF0D7A0D7700DC5BB4 /* OMCCocoaDialog.mm in Sources */ = {isa = PBXBuildFile; fileRef = E22FBAED0D7A0D7700DC5BB4 /* OMCCocoaDialog.mm */; };
+		E211D4F70D4346BB0065C23A /* OMCNibWindowController.h in Headers */ = {isa = PBXBuildFile; fileRef = E211D4F30D4346BA0065C23A /* OMCNibWindowController.h */; };
+		E211D4F80D4346BB0065C23A /* OMCNibWindowController.mm in Sources */ = {isa = PBXBuildFile; fileRef = E211D4F40D4346BB0065C23A /* OMCNibWindowController.mm */; };
+		E22FBAEE0D7A0D7700DC5BB4 /* OMCNibDialog.h in Headers */ = {isa = PBXBuildFile; fileRef = E22FBAEC0D7A0D7700DC5BB4 /* OMCNibDialog.h */; };
+		E22FBAEF0D7A0D7700DC5BB4 /* OMCNibDialog.mm in Sources */ = {isa = PBXBuildFile; fileRef = E22FBAED0D7A0D7700DC5BB4 /* OMCNibDialog.mm */; };
 		E234F9FA0D0FC431001A7780 /* Private.strings in Resources */ = {isa = PBXBuildFile; fileRef = E234F9F80D0FC431001A7780 /* Private.strings */; };
 		E234FA290D0FCB28001A7780 /* stop.icns in Resources */ = {isa = PBXBuildFile; fileRef = E234FA1F0D0FCB28001A7780 /* stop.icns */; };
 		E234FA2A0D0FCB28001A7780 /* app.icns in Resources */ = {isa = PBXBuildFile; fileRef = E234FA200D0FCB28001A7780 /* app.icns */; };
@@ -439,12 +439,10 @@
 		E20F1F68130BBE5100882872 /* alert */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = alert; sourceTree = "<group>"; };
 		E211D3C30D3F51010065C23A /* OMCCocoaNib.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCCocoaNib.h; sourceTree = SOURCE_ROOT; };
 		E211D3C40D3F51010065C23A /* OMCCocoaNib.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMCCocoaNib.m; sourceTree = SOURCE_ROOT; };
-		E211D4F30D4346BA0065C23A /* OMCDialogController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCDialogController.h; sourceTree = SOURCE_ROOT; };
-		E211D4F40D4346BB0065C23A /* OMCDialogController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCDialogController.mm; sourceTree = SOURCE_ROOT; };
-		E21A29B910B67B0500C39261 /* OMCCustomWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCCustomWindow.h; sourceTree = "<group>"; };
-		E2269C1B0EB6DCF30029CCF5 /* OmcProjectCommon.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = OmcProjectCommon.xcconfig; path = ../Common/OmcProjectCommon.xcconfig; sourceTree = SOURCE_ROOT; };
-		E22FBAEC0D7A0D7700DC5BB4 /* OMCCocoaDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCCocoaDialog.h; sourceTree = "<group>"; };
-		E22FBAED0D7A0D7700DC5BB4 /* OMCCocoaDialog.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCCocoaDialog.mm; sourceTree = "<group>"; };
+E211D4F30D4346BA0065C23A /* OMCNibWindowController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCNibWindowController.h; sourceTree = SOURCE_ROOT; };
+		E211D4F40D4346BB0065C23A /* OMCNibWindowController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCNibWindowController.mm; sourceTree = SOURCE_ROOT; };
+		E22FBAEC0D7A0D7700DC5BB4 /* OMCNibDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCNibDialog.h; sourceTree = "<group>"; };
+		E22FBAED0D7A0D7700DC5BB4 /* OMCNibDialog.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCNibDialog.mm; sourceTree = "<group>"; };
 		E22FCB220F5514220062D589 /* NibDialogControl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NibDialogControl.h; sourceTree = "<group>"; };
 		E234FA1F0D0FCB28001A7780 /* stop.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = stop.icns; path = Resources/stop.icns; sourceTree = "<group>"; };
 		E234FA200D0FCB28001A7780 /* app.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = app.icns; path = Resources/app.icns; sourceTree = "<group>"; };
@@ -931,8 +929,8 @@
 				E25D78950DBB24800065C7A3 /* OMCDropletController.h */,
 				E23AAC8B12F55FE0004C867B /* OMCService.h */,
 				E23AAC8C12F55FE0004C867B /* OMCService.m */,
-				E22FBAED0D7A0D7700DC5BB4 /* OMCCocoaDialog.mm */,
-				E22FBAEC0D7A0D7700DC5BB4 /* OMCCocoaDialog.h */,
+				E22FBAED0D7A0D7700DC5BB4 /* OMCNibDialog.mm */,
+				E22FBAEC0D7A0D7700DC5BB4 /* OMCNibDialog.h */,
 				E29A6AB20D9F7A01006A97B0 /* OMCMainMenuController.m */,
 				E29A6AB10D9F7A00006A97B0 /* OMCMainMenuController.h */,
 				E2C84DE90DA9F30F0056DBC2 /* OMCCommandMenu.mm */,
@@ -941,8 +939,8 @@
 				E2C84D880DA9D2600056DBC2 /* OMCSingleCommand.h */,
 				E2C84DA90DA9D4CD0056DBC2 /* OMCCommandExecutor.m */,
 				E2C84DA80DA9D4CD0056DBC2 /* OMCCommandExecutor.h */,
-				E211D4F40D4346BB0065C23A /* OMCDialogController.mm */,
-				E211D4F30D4346BA0065C23A /* OMCDialogController.h */,
+				E211D4F40D4346BB0065C23A /* OMCNibWindowController.mm */,
+				E211D4F30D4346BA0065C23A /* OMCNibWindowController.h */,
 				E211D3C40D3F51010065C23A /* OMCCocoaNib.m */,
 				E211D3C30D3F51010065C23A /* OMCCocoaNib.h */,
 				E2E1892D1075BEBC001B7591 /* SelectionIterator.h */,
@@ -1021,9 +1019,9 @@
 				E2C32CB80D2DF99D0023DA03 /* OMCObserver.h in Headers */,
 				E2C32CF70D2E1F6C0023DA03 /* OmcTaskNotification.h in Headers */,
 				E211D3C50D3F51010065C23A /* OMCCocoaNib.h in Headers */,
-				E211D4F70D4346BB0065C23A /* OMCDialogController.h in Headers */,
+				E211D4F70D4346BB0065C23A /* OMCNibWindowController.h in Headers */,
 				E27F2D050D56F7410060D231 /* CFObj.h in Headers */,
-				E22FBAEE0D7A0D7700DC5BB4 /* OMCCocoaDialog.h in Headers */,
+				E22FBAEE0D7A0D7700DC5BB4 /* OMCNibDialog.h in Headers */,
 				E2735F370D7B9576004D81CE /* OMCDialog.h in Headers */,
 				E204EB7F0D7FD8A900595D15 /* OMCConstants.h in Headers */,
 				E2E407010D8A5B00009AD8CA /* OMCSecureTextField.h in Headers */,
@@ -1362,8 +1360,8 @@
 				1D8189E923B45FAF00A13449 /* OMCGridView.m in Sources */,
 				E211D3C60D3F51010065C23A /* OMCCocoaNib.m in Sources */,
 				1DED3637232258A40086266F /* OMCScriptsManager.cpp in Sources */,
-				E211D4F80D4346BB0065C23A /* OMCDialogController.mm in Sources */,
-				E22FBAEF0D7A0D7700DC5BB4 /* OMCCocoaDialog.mm in Sources */,
+				E211D4F80D4346BB0065C23A /* OMCNibWindowController.mm in Sources */,
+				E22FBAEF0D7A0D7700DC5BB4 /* OMCNibDialog.mm in Sources */,
 				E2735F830D7BC89F004D81CE /* OMCDialog.cpp in Sources */,
 				1DBCC43522CE209300A1DD8F /* OMCHelpers.mm in Sources */,
 				E2E407000D8A5B00009AD8CA /* OMCSecureTextField.m in Sources */,

@@ -1,5 +1,5 @@
 //
-//  OMCCocoaDialog.h
+//  OMCNibDialog.h
 //  Abracode
 //
 //  Created by Tomasz Kukielka on 3/1/08.
@@ -9,18 +9,18 @@
 class OnMyCommandCM;
 #include "OMCDialog.h"
 
-using OMCDialogControllerRef = void *;
+using OMCNibWindowControllerRef = void *;
 class CommandRuntimeData;
 
-class OMCCocoaDialog: public OMCDialog
+class OMCNibDialog: public OMCDialog
 {
 public:
-						OMCCocoaDialog(OMCDialogControllerRef inController)
+						OMCNibDialog(OMCNibWindowControllerRef inController)
 						{
 							mController = inController;
 						}
 
-	virtual				~OMCCocoaDialog() { }
+	virtual				~OMCNibDialog() { }
 
 	virtual CFTypeRef	CopyControlValue(CFStringRef inControlID, CFStringRef inControlPart, SelectionIterator *inSelIterator, CFDictionaryRef *outCustomProperties) noexcept;
 	virtual void		CopyAllControlValues(CFSetRef requestedNibControls, SelectionIterator *inSelIterator) noexcept;
@@ -28,7 +28,7 @@ public:
 	virtual CFDataRef	ReceivePortMessage( SInt32 msgid, CFDataRef inData );//remote message
 	virtual void		ReceiveNotification(void *ioData);//local message
 
-	void				SetController(OMCDialogControllerRef inController) noexcept
+	void				SetController(OMCNibWindowControllerRef inController) noexcept
 						{
 							mController = inController;
 						}
@@ -37,8 +37,8 @@ private:
 	void				StoreControlValue(CFStringRef controlID, CFTypeRef inValue, CFStringRef controlPart) noexcept;
 
 private:
-	OMCDialogControllerRef mController; //not owned
+	OMCNibWindowControllerRef mController; //not owned
 };
 
 
-ARefCountedObj<OMCDialog> RunCocoaDialog(OnMyCommandCM *inPlugin, CommandRuntimeData *commandRuntimeData);
+ARefCountedObj<OMCDialog> RunNibDialog(OnMyCommandCM *inPlugin, CommandRuntimeData *commandRuntimeData);

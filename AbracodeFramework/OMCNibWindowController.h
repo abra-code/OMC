@@ -1,5 +1,5 @@
 //
-//  OMCDialogController.h
+//  OMCNibWindowController.h
 //  Abracode
 //
 //  Created by Tomasz Kukielka on 1/20/08.
@@ -14,16 +14,16 @@
 #include "SelectionIterator.h"
 
 class OnMyCommandCM;
-class OMCCocoaDialog;
+class OMCNibDialog;
 class CommandRuntimeData;
 
-@interface OMCDialogController : NSObject <NSWindowDelegate>
+@interface OMCNibWindowController : NSObject <NSWindowDelegate>
 {
 	// we compile ObjC with the flag to invoke C++ constructors and destructor
 	// so we can use smart pointers as member variables
 
 	ARefCountedObj<OnMyCommandCM>	mPlugin;
-	ARefCountedObj<OMCCocoaDialog>	mOMCDialogProxy;
+	ARefCountedObj<OMCNibDialog>	mOMCDialogProxy;
     ARefCountedObj<CommandRuntimeData> mCommandRuntimeData;
 	CFObj<CFBundleRef>				mExternBundleRef;
 	CFObj<CFArrayRef>				mCommandName;
@@ -43,17 +43,17 @@ class CommandRuntimeData;
 - (Boolean)findNib:(NSString *)inNibName forBundlePath:(NSString *)inPath;
 - (void)initSubview:(NSView *)inView;
 - (void)resetSubview:(NSView *)inView;
-- (id)findViewInParent:(NSView *)inParentView forControlID:(NSString *)inControlID;//may return NSView or NSCell
-- (id)findControlOrViewWithID:(NSString *)inControlID;//may return NSView or NSCell
+- (id)findViewInParent:(NSView *)inParentView forControlID:(NSString *)inControlID; // may return NSView or NSCell
+- (id)findControlOrViewWithID:(NSString *)inControlID; // may return NSView or NSCell
 - (void)allControlValues:(NSMutableDictionary *)ioControlValues andProperties:(NSMutableDictionary *)ioCustomProperties withIterator:(SelectionIterator *)inSelIterator;
-- (id)controlValueForID:(NSString *)inControlID forPart:(NSString *)inControlPart withIterator:(SelectionIterator *)inSelIterator outProperties:(CFDictionaryRef *)outCustomProperties; //returns string or array of strings
+- (id)controlValueForID:(NSString *)inControlID forPart:(NSString *)inControlPart withIterator:(SelectionIterator *)inSelIterator outProperties:(CFDictionaryRef *)outCustomProperties; // returns string or array of strings
 - (id)controlValue:(id)controlOrView forPart:(NSString *)inControlPart withIterator:(SelectionIterator *)inSelIterator;
 - (void)setControlStringValue:(NSString *)inValue forControlID:(NSString *)inControlID;
 - (void)setControlValues:(CFDictionaryRef)inControlDict;
 - (CFDictionaryRef)copyControlProperties:(id)controlOrView;
 - (void)handleAction:(id)sender;
 - (void)handleDoubleClickAction:(id)sender;
-- (OMCCocoaDialog *)getOMCDialog;
+- (OMCNibDialog *)getOMCDialog;
 - (Boolean)isModal;
 - (void)run;
 - (BOOL)isOkeyed;
@@ -68,4 +68,4 @@ class CommandRuntimeData;
 - (SelectionIterator *)createSelectionIterator:(CFDictionaryRef)inIteratorParams;
 - (void)keepItem:(id)inItem;
 
-@end //OMCDialogController
+@end

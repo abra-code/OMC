@@ -8,12 +8,12 @@
 
 #import "OMCTableViewController.h"
 #import "OMCTableView.h"
-#import "OMCDialogController.h"
+#import "OMCNibWindowController.h"
 
 
 @implementation OMCTableViewController
 
-- (id)initWithTableView:(NSTableView *)aTableView dialogController:(OMCDialogController *)inController
+- (id)initWithTableView:(NSTableView *)aTableView dialogController:(OMCNibWindowController *)inController
 {
     self = [super init];
 	if(self != NULL)

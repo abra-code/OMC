@@ -1,5 +1,5 @@
 //
-//  OMCDialogController.m
+//  OMCNibWindowController.m
 //  Abracode
 //
 //  Created by Tomasz Kukielka on 1/20/08.
@@ -9,11 +9,11 @@
 #include <CoreServices/CoreServices.h>
 #import <Quartz/Quartz.h>
 #import <PDFKit/PDFKit.h>
-#import "OMCDialogController.h"
+#import "OMCNibWindowController.h"
 #import "OMCPopUpButton.h"
 #include "OnMyCommand.h"
 #include "ACFDict.h"
-#include "OMCCocoaDialog.h"
+#include "OMCNibDialog.h"
 #include "CommandRuntimeData.h"
 #include <vector>
 #import "OMCTableViewController.h"
@@ -111,10 +111,10 @@ FindArgumentType(const char *argTypeStr)
 	return (ObjCSelectorArgumentType)argTypeStr[0];
 }
 
-static NSMutableSet<OMCDialogController *> *
+static NSMutableSet<OMCNibWindowController *> *
 GetAllDialogControllers()
 {
-    static NSMutableSet<OMCDialogController *> *sAllDialogControllers = nil;
+    static NSMutableSet<OMCNibWindowController *> *sAllDialogControllers = nil;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         sAllDialogControllers = [[NSMutableSet alloc] init];
@@ -123,7 +123,7 @@ GetAllDialogControllers()
     return sAllDialogControllers;
 }
 
-@implementation OMCDialogController
+@implementation OMCNibWindowController
 
 
 - (id)initWithOmc:(OnMyCommandCM *)inOmc commandRuntimeData:(CommandRuntimeData *)inCommandRuntimeData
@@ -139,10 +139,10 @@ GetAllDialogControllers()
     assert(inCommandRuntimeData != nullptr);
     mCommandRuntimeData.Adopt(inCommandRuntimeData, kARefCountRetain);
     
-    NSMutableSet<OMCDialogController *> *allDialogControllers = GetAllDialogControllers();
+    NSMutableSet<OMCNibWindowController *> *allDialogControllers = GetAllDialogControllers();
     [allDialogControllers addObject:self];
     
-    mOMCDialogProxy.Adopt( new OMCCocoaDialog((__bridge OMCDialogControllerRef)self) );
+    mOMCDialogProxy.Adopt( new OMCNibDialog((__bridge OMCNibWindowControllerRef)self) );
     mCommandRuntimeData->SetAssociatedDialogUUID(mOMCDialogProxy->GetDialogUUID());
 
 	mExternBundleRef.Adopt(inOmc->GetCurrentCommandExternBundle(), kCFObjRetain);
@@ -203,7 +203,7 @@ GetAllDialogControllers()
 	{
 		CFBundleRef frameworkBundleRef = mPlugin->GetBundleRef();
 #if DEBUG
-        NSLog(@"[OMCDialogController initWithOmc], frameworkBundleRef=%@", (__bridge id)frameworkBundleRef);
+        NSLog(@"[OMCNibWindowController initWithOmc], frameworkBundleRef=%@", (__bridge id)frameworkBundleRef);
 		CFShow(frameworkBundleRef);
 #endif
 		if(frameworkBundleRef != NULL)
@@ -1714,13 +1714,13 @@ GetAllDialogControllers()
 
 	[self terminate];
 
-    NSMutableSet<OMCDialogController *> *allDialogControllers = GetAllDialogControllers();
+    NSMutableSet<OMCNibWindowController *> *allDialogControllers = GetAllDialogControllers();
     [allDialogControllers removeObject:self];
 }
 
-- (OMCCocoaDialog *)getOMCDialog
+- (OMCNibDialog *)getOMCDialog
 {
-	return (OMCCocoaDialog *)mOMCDialogProxy;
+	return (OMCNibDialog *)mOMCDialogProxy;
 }
 
 - (Boolean)isModal
@@ -1731,7 +1731,7 @@ GetAllDialogControllers()
 - (void)run
 {
 #if DEBUG
-	NSLog(@"[OMCDialogController run] self.window=%@", (id)self.window);
+	NSLog(@"[OMCNibWindowController run] self.window=%@", (id)self.window);
 #endif
 	
 	if( mIsModal )
@@ -2211,13 +2211,13 @@ GetAllDialogControllers()
 										else
 										{
 											okToAddArgument = NO;
-											NSLog(@"OMCDialogController sendObjCMessage: this structure type unsuppported for argument %d for \"%@\" selector", (int)argIndex+1, methodName);
+											NSLog(@"OMCNibWindowController sendObjCMessage: this structure type unsuppported for argument %d for \"%@\" selector", (int)argIndex+1, methodName);
 										}
 									}
 									else
 									{
 										okToAddArgument = NO;
-										NSLog(@"OMCDialogController sendObjCMessage: invalid count of members for structure argument %d for \"%@\" selector", (int)argIndex+1, methodName);
+										NSLog(@"OMCNibWindowController sendObjCMessage: invalid count of members for structure argument %d for \"%@\" selector", (int)argIndex+1, methodName);
 									}
 									
 								}
@@ -2236,7 +2236,7 @@ GetAllDialogControllers()
                                     else
 									{
 										okToAddArgument = NO;
-										NSLog(@"OMCDialogController sendObjCMessage: unsupported argument type for argument %d for \"%@\" selector", (int)argIndex+1, methodName);
+										NSLog(@"OMCNibWindowController sendObjCMessage: unsupported argument type for argument %d for \"%@\" selector", (int)argIndex+1, methodName);
 									}
 								}
 								break;
@@ -2247,7 +2247,7 @@ GetAllDialogControllers()
 								default:
 								{
 									okToAddArgument = NO;
-									NSLog(@"OMCDialogController sendObjCMessage: invalid argument %d for \"%@\" selector", (int)argIndex+1, methodName);
+									NSLog(@"OMCNibWindowController sendObjCMessage: invalid argument %d for \"%@\" selector", (int)argIndex+1, methodName);
 								}
 								break;
 							}
@@ -2264,7 +2264,7 @@ GetAllDialogControllers()
 					}
 					else
 					{
-						NSLog(@"OMCDialogController sendObjCMessage: argument count mismatch for \"%@\" selector", methodName);
+						NSLog(@"OMCNibWindowController sendObjCMessage: argument count mismatch for \"%@\" selector", methodName);
 					}
 				}
 				
@@ -2274,12 +2274,12 @@ GetAllDialogControllers()
 		}
 		else
 		{
-			NSLog(@"OMCDialogController sendObjCMessage: target object does not respond to \"%@\" selector", methodName);
+			NSLog(@"OMCNibWindowController sendObjCMessage: target object does not respond to \"%@\" selector", methodName);
 		}
 	}
 	@catch (NSException *localException)
 	{
-		NSLog(@"OMCDialogController sendObjCMessage received exception while trying to invoke a custom message: %@", localException);
+		NSLog(@"OMCNibWindowController sendObjCMessage received exception while trying to invoke a custom message: %@", localException);
 	}
 	
 	if( currentLocale != NULL )

@@ -36,7 +36,7 @@
 #include "OmcTaskManager.h"
 #include "ACFDict.h"
 #include "ACFArr.h"
-#include "OMCCocoaDialog.h"
+#include "OMCNibDialog.h"
 #include "OMCInputDialog.h"
 #include "SelectionIterator.h"
 #include "ACFPropertyList.h"
@@ -1015,7 +1015,7 @@ OnMyCommandCM::ExecuteCommandWithObjects(CommandRuntimeData *initialCommandRunti
 			StSwitchToFront switcher(false);
 			
 			 // we create one dialog for all objects or we create for each object when processing separately
-			activeDialog = RunCocoaDialog(this, commandRuntimeData);
+			activeDialog = RunNibDialog(this, commandRuntimeData);
 			if(activeDialog != nullptr)
 			{
 				SelectionIterator* selIterator = activeDialog->GetSelectionIterator();
@@ -1165,7 +1165,7 @@ OnMyCommandCM::ExecuteCommandWithText(CommandDescription &currCommand, CFStringR
         //don't restore because for non-modal dialogs this would bring executing app behind along with the dialog
         StSwitchToFront switcher(false);
         
-        activeDialog = RunCocoaDialog(this, commandRuntimeData);
+        activeDialog = RunNibDialog(this, commandRuntimeData);
         if(activeDialog == nullptr)
         {
             throw OSStatus(userCanceledErr);

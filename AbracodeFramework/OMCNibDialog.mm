@@ -1,13 +1,13 @@
 //
-//  OMCCocoaDialog.mm
+//  OMCNibDialog.mm
 //  Abracode
 //
 //  Created by Tomasz Kukielka on 3/1/08.
 //  Copyright 2008 Abracode. All rights reserved.
 //
 
-#import "OMCCocoaDialog.h"
-#import "OMCDialogController.h"
+#import "OMCNibDialog.h"
+#import "OMCNibWindowController.h"
 #include "OnMyCommand.h"
 #include "CommandRuntimeData.h"
 #include "CMUtils.h"
@@ -15,7 +15,7 @@
 #include "OmcTaskNotification.h"
 #include "NibDialogControl.h"
 
-ARefCountedObj<OMCDialog> RunCocoaDialog(OnMyCommandCM *inPlugin, CommandRuntimeData *commandRuntimeData)
+ARefCountedObj<OMCDialog> RunNibDialog(OnMyCommandCM *inPlugin, CommandRuntimeData *commandRuntimeData)
 {
 	ARefCountedObj<OMCDialog > outDialog;
 	if(inPlugin == nullptr)
@@ -28,7 +28,7 @@ ARefCountedObj<OMCDialog> RunCocoaDialog(OnMyCommandCM *inPlugin, CommandRuntime
 	{
 		@try
 		{
-			OMCDialogController *myController = [[OMCDialogController alloc] initWithOmc:inPlugin
+			OMCNibWindowController *myController = [[OMCNibWindowController alloc] initWithOmc:inPlugin
                                                                       commandRuntimeData:commandRuntimeData];
 			if(myController != nullptr)
 			{
@@ -53,7 +53,7 @@ ARefCountedObj<OMCDialog> RunCocoaDialog(OnMyCommandCM *inPlugin, CommandRuntime
 		}
 		@catch (NSException *localException)
 		{
-			NSLog(@"RunCocoaDialog received exception: %@", localException);
+			NSLog(@"RunNibDialog received exception: %@", localException);
 			outDialog.Adopt(nullptr);
 		}
 	} //@autoreleasepool
@@ -67,7 +67,7 @@ ARefCountedObj<OMCDialog> RunCocoaDialog(OnMyCommandCM *inPlugin, CommandRuntime
 
 
 CFTypeRef
-OMCCocoaDialog::CopyControlValue(CFStringRef inControlID, CFStringRef inControlPart, SelectionIterator *inSelIterator, CFDictionaryRef *outCustomProperties) noexcept
+OMCNibDialog::CopyControlValue(CFStringRef inControlID, CFStringRef inControlPart, SelectionIterator *inSelIterator, CFDictionaryRef *outCustomProperties) noexcept
 {
 	if(outCustomProperties != NULL)
 		*outCustomProperties = NULL;
@@ -78,7 +78,7 @@ OMCCocoaDialog::CopyControlValue(CFStringRef inControlID, CFStringRef inControlP
     {
         if(mController != NULL)
         {
-            OMCDialogController *__weak controller = (__bridge OMCDialogController*)mController;
+            OMCNibWindowController *__weak controller = (__bridge OMCNibWindowController*)mController;
             outValue = [controller controlValueForID:(__bridge NSString *)inControlID
                                              forPart:(__bridge NSString *)inControlPart
                                         withIterator:inSelIterator
@@ -87,7 +87,7 @@ OMCCocoaDialog::CopyControlValue(CFStringRef inControlID, CFStringRef inControlP
     }
     @catch (NSException *localException)
     {
-        NSLog(@"OMCCocoaDialog::CopyControlValue received exception: %@", localException);
+        NSLog(@"OMCNibDialog::CopyControlValue received exception: %@", localException);
     }
 
     return (CFTypeRef)CFBridgingRetain(outValue);
@@ -95,7 +95,7 @@ OMCCocoaDialog::CopyControlValue(CFStringRef inControlID, CFStringRef inControlP
 
 // private helper
 void
-OMCCocoaDialog::StoreControlValue(CFStringRef controlID, CFTypeRef inValue, CFStringRef controlPart) noexcept
+OMCNibDialog::StoreControlValue(CFStringRef controlID, CFTypeRef inValue, CFStringRef controlPart) noexcept
 {
 	CFObj<CFMutableDictionaryRef> columnIdAndValueDict;
 	CFTypeRef columnValues = CFDictionaryGetValue(mNibControlValues, controlID);
@@ -118,7 +118,7 @@ OMCCocoaDialog::StoreControlValue(CFStringRef controlID, CFTypeRef inValue, CFSt
 }
 
 void
-OMCCocoaDialog::CopyAllControlValues(CFSetRef requestedNibControls, SelectionIterator *inSelIterator) noexcept
+OMCNibDialog::CopyAllControlValues(CFSetRef requestedNibControls, SelectionIterator *inSelIterator) noexcept
 {
     //get values for all controls in the dialog
     //the code is generic to handle tables
@@ -143,7 +143,7 @@ OMCCocoaDialog::CopyAllControlValues(CFSetRef requestedNibControls, SelectionIte
     {
         if(mController != NULL)
         {
-            [(__bridge OMCDialogController*)mController
+            [(__bridge OMCNibWindowController*)mController
                          allControlValues:(__bridge NSMutableDictionary *)mNibControlValues.Get()
                             andProperties:(__bridge NSMutableDictionary *)mNibControlCustomProperties.Get()
                              withIterator:inSelIterator];
@@ -151,7 +151,7 @@ OMCCocoaDialog::CopyAllControlValues(CFSetRef requestedNibControls, SelectionIte
     }
     @catch (NSException *localException)
     {
-        NSLog(@"OMCCocoaDialog::CopyAllControlValues received exception: %@", localException);
+        NSLog(@"OMCNibDialog::CopyAllControlValues received exception: %@", localException);
     }
 
     // after getting all standard values from controls, also check if there is a request
@@ -210,7 +210,7 @@ OMCCocoaDialog::CopyAllControlValues(CFSetRef requestedNibControls, SelectionIte
 
 //inData is a plist XML data in exactly the same format as read from temp plist file for disk-based communication
 CFDataRef
-OMCCocoaDialog::ReceivePortMessage( SInt32 msgid, CFDataRef inData )
+OMCNibDialog::ReceivePortMessage( SInt32 msgid, CFDataRef inData )
 {
 	if( mController == NULL )
 		return NULL;
@@ -223,13 +223,13 @@ OMCCocoaDialog::ReceivePortMessage( SInt32 msgid, CFDataRef inData )
     {
         if(plistDict != NULL)
         {
-            [(__bridge OMCDialogController*)mController setControlValues:plistDict];
+            [(__bridge OMCNibWindowController*)mController setControlValues:plistDict];
             
         }
     }
     @catch (NSException *localException)
     {
-        NSLog(@"OMCCocoaDialog::ReceivePortMessage received exception: %@", localException);
+        NSLog(@"OMCNibDialog::ReceivePortMessage received exception: %@", localException);
     }
 
 	return NULL;
@@ -237,7 +237,7 @@ OMCCocoaDialog::ReceivePortMessage( SInt32 msgid, CFDataRef inData )
 
 
 void
-OMCCocoaDialog::ReceiveNotification(void *ioData)//local message
+OMCNibDialog::ReceiveNotification(void *ioData)//local message
 {
 	if( (ioData == NULL) || (mController == NULL) )
 		return;
@@ -259,12 +259,12 @@ OMCCocoaDialog::ReceiveNotification(void *ioData)//local message
             {
                 if(controlValues != NULL)
                 {
-                    [(__bridge OMCDialogController*)mController setControlValues:(CFDictionaryRef)controlValues];
+                    [(__bridge OMCNibWindowController*)mController setControlValues:(CFDictionaryRef)controlValues];
                 }
             }
             @catch (NSException *localException)
             {
-                NSLog(@"OMCCocoaDialog::ReceiveNotification received exception: %@", localException);
+                NSLog(@"OMCNibDialog::ReceiveNotification received exception: %@", localException);
             }
 		}
 		break;

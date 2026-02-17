@@ -16,21 +16,21 @@ typedef enum ColumnSeparatorFormat
 	kOMCColumnSeparatorSpace
 } ColumnSeparatorFormat;
 
-@class OMCDialogController;
+@class OMCNibWindowController;
 
 @interface OMCTableViewController : NSObject<NSTableViewDataSource, NSTableViewDelegate>
 {
 	ColumnSeparatorFormat mSeparator;
 }
 
-@property (nonatomic, weak) OMCDialogController *dialogController; //the dialog controller that owns us
+@property (nonatomic, weak) OMCNibWindowController *dialogController; //the dialog controller that owns us
 @property (nonatomic, strong) NSTableView *tableView; //the table we control
 @property (nonatomic, strong) NSMutableArray *rows;
 @property (nonatomic, strong) NSArray *columnNames;
 @property (nonatomic, strong) NSArray *columnWidths;
 @property (nonatomic, strong) NSString *selectionChangeCommandID;
 
-- (id)initWithTableView:(NSTableView *)aTableView dialogController:(OMCDialogController *)inController;
+- (id)initWithTableView:(NSTableView *)aTableView dialogController:(OMCNibWindowController *)inController;
 
 -(void)removeRows;
 -(void)addRows:(CFArrayRef)inRowArray;
