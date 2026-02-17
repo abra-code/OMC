@@ -98,7 +98,7 @@ void
 OMCNibDialog::StoreControlValue(CFStringRef controlID, CFTypeRef inValue, CFStringRef controlPart) noexcept
 {
 	CFObj<CFMutableDictionaryRef> columnIdAndValueDict;
-	CFTypeRef columnValues = CFDictionaryGetValue(mNibControlValues, controlID);
+	CFTypeRef columnValues = CFDictionaryGetValue(mControlValues, controlID);
 	if(columnValues == NULL)
 	{
 		columnIdAndValueDict.Adopt( ::CFDictionaryCreateMutable(
@@ -107,7 +107,7 @@ OMCNibDialog::StoreControlValue(CFStringRef controlID, CFTypeRef inValue, CFStri
 					&kCFTypeDictionaryKeyCallBacks,
 					&kCFTypeDictionaryValueCallBacks), kCFObjDontRetain );
 
-		CFDictionarySetValue(mNibControlValues, controlID, (CFMutableDictionaryRef)columnIdAndValueDict);
+		CFDictionarySetValue(mControlValues, controlID, (CFMutableDictionaryRef)columnIdAndValueDict);
 	}
 	else
 	{
@@ -125,15 +125,15 @@ OMCNibDialog::CopyAllControlValues(CFSetRef requestedNibControls, SelectionItera
     //regular controls do not have columns and the use 0 for column number to store their values
     //column index 0 is a meta value for table and means: get array of all column values
     //this way a regular method of querying controls works with table too: produces a selected row strings
-    if(mNibControlValues == nullptr)
-        mNibControlValues.Adopt(CFDictionaryCreateMutable(kCFAllocatorDefault,
+    if(mControlValues == nullptr)
+        mControlValues.Adopt(CFDictionaryCreateMutable(kCFAllocatorDefault,
                                                             0,
                                                             &kCFTypeDictionaryKeyCallBacks,
                                                             &kCFTypeDictionaryValueCallBacks),
                                                             kCFObjDontRetain);
 
-    if(mNibControlCustomProperties == nullptr)
-        mNibControlCustomProperties.Adopt(CFDictionaryCreateMutable(kCFAllocatorDefault,
+    if(mControlCustomProperties == nullptr)
+        mControlCustomProperties.Adopt(CFDictionaryCreateMutable(kCFAllocatorDefault,
                                                                         0,
                                                                         &kCFTypeDictionaryKeyCallBacks,
                                                                         &kCFTypeDictionaryValueCallBacks),
@@ -144,8 +144,8 @@ OMCNibDialog::CopyAllControlValues(CFSetRef requestedNibControls, SelectionItera
         if(mController != NULL)
         {
             [(__bridge OMCNibWindowController*)mController
-                         allControlValues:(__bridge NSMutableDictionary *)mNibControlValues.Get()
-                            andProperties:(__bridge NSMutableDictionary *)mNibControlCustomProperties.Get()
+                         allControlValues:(__bridge NSMutableDictionary *)mControlValues.Get()
+                            andProperties:(__bridge NSMutableDictionary *)mControlCustomProperties.Get()
                              withIterator:inSelIterator];
         }
     }
@@ -194,7 +194,7 @@ OMCNibDialog::CopyAllControlValues(CFSetRef requestedNibControls, SelectionItera
                 //custom escaping, prefix, suffix or separator
                 if(customProperties != nullptr)
                 {
-                    ::CFDictionarySetValue( mNibControlCustomProperties,
+                    ::CFDictionarySetValue( mControlCustomProperties,
                                             (const void *)allRowsControlID,
                                             (const void *)(CFDictionaryRef)customProperties); //CFTypeRef is retained
                 }
@@ -210,7 +210,7 @@ OMCNibDialog::CopyAllControlValues(CFSetRef requestedNibControls, SelectionItera
 
 //inData is a plist XML data in exactly the same format as read from temp plist file for disk-based communication
 CFDataRef
-OMCNibDialog::ReceivePortMessage( SInt32 msgid, CFDataRef inData )
+OMCNibDialog::ReceivePortMessage( SInt32 msgid, CFDataRef inData ) noexcept
 {
 	if( mController == NULL )
 		return NULL;
@@ -237,7 +237,7 @@ OMCNibDialog::ReceivePortMessage( SInt32 msgid, CFDataRef inData )
 
 
 void
-OMCNibDialog::ReceiveNotification(void *ioData)//local message
+OMCNibDialog::ReceiveNotification(void *ioData) noexcept // local message
 {
 	if( (ioData == NULL) || (mController == NULL) )
 		return;
@@ -275,5 +275,130 @@ OMCNibDialog::ReceiveNotification(void *ioData)//local message
 		
 		default:
 		break;
+	}
+}
+
+CFStringRef
+OMCNibDialog::CreateControlValue(SInt32 inSpecialWordID, CFStringRef inControlString, UInt16 escSpecialCharsMode, bool isEnvStyle) noexcept
+{
+	CFObj<CFTypeRef> oneValue;
+	CFObj<CFStringRef> partIDStr(CFSTR("0"), kCFObjRetain);
+	CFObj<CFStringRef> controlID;
+
+	TRACE_CFSTR(CFSTR("OMCNibDialog::CreateControlValue"));
+
+	if((mControlValues == nullptr) || (CFDictionaryGetCount(mControlValues) == 0))
+		return nullptr;
+
+	if( inSpecialWordID == NIB_DLG_CONTROL_VALUE )
+	{
+		controlID.Adopt( CreateControlIDFromString(inControlString, isEnvStyle), kCFObjDontRetain );
+	}
+	else if( (inSpecialWordID == NIB_TABLE_VALUE) || (inSpecialWordID == NIB_TABLE_ALL_ROWS) )
+	{
+		controlID.Adopt( CreateTableIDAndColumnFromString(inControlString, partIDStr, inSpecialWordID == NIB_TABLE_ALL_ROWS, isEnvStyle), kCFObjDontRetain );
+
+		if( inSpecialWordID == NIB_TABLE_ALL_ROWS )
+		{
+			CFObj<CFStringRef> newControlID( CreateControlIDByAddingModifiers(controlID, kControlModifier_AllRows) );
+			controlID.Swap(newControlID);
+		}
+	}
+	else if( inSpecialWordID == NIB_WEB_VIEW_VALUE )
+	{
+		partIDStr.Adopt(CFSTR(""), kCFObjRetain);
+		controlID.Adopt( CreateWebViewIDAndElementIDFromString(inControlString, partIDStr, isEnvStyle), kCFObjDontRetain );
+	}
+
+	DEBUG_CFSTR((CFStringRef)controlID);
+
+	CFDictionaryRef customProperties = nullptr;
+
+	const void *theItem = ::CFDictionaryGetValue(mControlValues, (CFStringRef)controlID);
+	CFDictionaryRef columnIds = ACFType<CFDictionaryRef>::DynamicCast(theItem);
+	if((columnIds != nullptr) && (partIDStr != nullptr))
+	{
+		theItem = ::CFDictionaryGetValue(columnIds, (const void *)(CFStringRef)partIDStr);
+		oneValue.Adopt((CFTypeRef)theItem, kCFObjRetain);
+		if((oneValue != nullptr) && (mControlCustomProperties != nullptr))
+        {
+            customProperties = ACFType<CFDictionaryRef>::DynamicCast(CFDictionaryGetValue(mControlCustomProperties, (CFStringRef)controlID));
+        }
+	}
+
+	CFStringRef controlValue = CreateControlValueString(oneValue, customProperties, escSpecialCharsMode, isEnvStyle);
+
+	TRACE_CSTR("\texiting CreateControlValue\n");
+
+	return controlValue;
+}
+
+void
+OMCNibDialog::AddEnvironmentVariablesForAllControls(CFMutableDictionaryRef ioEnvironList) noexcept
+{
+	if(mControlValues == nullptr)
+		return;
+
+	CFIndex controlCount = CFDictionaryGetCount(mControlValues);
+	if(controlCount == 0)
+		return;
+
+	std::vector<CFTypeRef> keyList(controlCount);
+	std::vector<CFTypeRef> valueList(controlCount);
+
+	CFDictionaryGetKeysAndValues(mControlValues, (const void **)keyList.data(), (const void **)valueList.data());
+	for(CFIndex i = 0; i < controlCount; i++)
+	{
+		CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
+		CFDictionaryRef partsDict = ACFType<CFDictionaryRef>::DynamicCast( valueList[i] );
+		if((controlID != nullptr) && (partsDict != nullptr))
+		{
+			CFDictionaryRef controlProperties = (CFDictionaryRef)CFDictionaryGetValue(mControlCustomProperties, controlID);
+			CFIndex partsCount = CFDictionaryGetCount(partsDict);
+			if(partsCount == 1)
+			{
+				CFTypeRef controlValue = CFDictionaryGetValue(partsDict, (void *)CFSTR("0"));
+				if(controlValue != nullptr)
+				{
+					CFObj<CFStringRef> controlValueString = CreateControlValueString(controlValue, controlProperties, kEscapeNone, true);
+					if(controlValueString != nullptr)
+					{
+						CFObj<CFStringRef> controlEnvName(CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("OMC_NIB_DIALOG_CONTROL_%@_VALUE"), controlID));
+						CFDictionarySetValue(ioEnvironList, controlEnvName, controlValueString);
+					}
+				}
+			}
+			else if(partsCount > 1)
+			{
+				std::vector<CFTypeRef> partIDs(partsCount);
+				std::vector<CFTypeRef> partValues(partsCount);
+				CFDictionaryGetKeysAndValues(partsDict, (const void **)partIDs.data(), (const void **)partValues.data());
+				
+				Boolean isWebView = CFDictionaryContainsKey(partsDict, CFSTR("@"));
+				
+				CFStringRef envVariableFormat = CFSTR("OMC_NIB_TABLE_%@_COLUMN_%@_VALUE");
+				if(isWebView)
+					envVariableFormat = CFSTR("OMC_NIB_WEBVIEW_%@_ELEMENT_%@_VALUE");
+				
+				for(CFIndex k = 0; k < partsCount; k++)
+				{
+					CFTypeRef partID = partIDs[k];
+					CFTypeRef partValue = partValues[k];
+					if( (partValue != nullptr) && (CFStringCompare((CFStringRef)partID, CFSTR("@"), 0) != kCFCompareEqualTo) )
+					{
+						CFObj<CFStringRef> partValueString = CreateControlValueString(partValue, controlProperties, kEscapeNone, true);
+						if(partValueString != nullptr)
+						{
+							CFObj<CFStringRef> controlAndPartEnvName(CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, envVariableFormat, controlID, partID));
+							CFDictionarySetValue(ioEnvironList, controlAndPartEnvName, partValueString);
+						}
+					}
+				}
+			}
+			else
+			{
+				continue;
+			}
+		}
 	}
 }

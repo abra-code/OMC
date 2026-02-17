@@ -2517,7 +2517,7 @@ OnMyCommandCM::AppendTextToCommand(CFMutableStringRef inCommandRef, CFStringRef 
         {
             if(activeDialog != nullptr)
             {
-                newStrRef = activeDialog->CreateNibControlValue(specialWordID, inStrRef, escSpecialCharsMode, false);
+                newStrRef = activeDialog->CreateControlValue(specialWordID, inStrRef, escSpecialCharsMode, false);
             }
 		}
 		break;
@@ -2834,7 +2834,7 @@ OnMyCommandCM::PopulateEnvironList(CFMutableDictionaryRef ioEnvironList, Command
 			case NIB_TABLE_ALL_ROWS:
 			{
 				if(activeDialog != nullptr)
-					newStrRef = activeDialog->CreateNibControlValue(specialWordID, theKey, kEscapeNone, true);
+					newStrRef = activeDialog->CreateControlValue(specialWordID, theKey, kEscapeNone, true);
 			}
 			break;
 			

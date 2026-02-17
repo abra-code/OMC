@@ -22,11 +22,14 @@ public:
 
 	virtual				~OMCNibDialog() { }
 
-	virtual CFTypeRef	CopyControlValue(CFStringRef inControlID, CFStringRef inControlPart, SelectionIterator *inSelIterator, CFDictionaryRef *outCustomProperties) noexcept;
-	virtual void		CopyAllControlValues(CFSetRef requestedNibControls, SelectionIterator *inSelIterator) noexcept;
+	virtual CFTypeRef	CopyControlValue(CFStringRef inControlID, CFStringRef inControlPart, SelectionIterator *inSelIterator, CFDictionaryRef *outCustomProperties) noexcept override;
+	virtual void		CopyAllControlValues(CFSetRef requestedNibControls, SelectionIterator *inSelIterator) noexcept override;
 
-	virtual CFDataRef	ReceivePortMessage( SInt32 msgid, CFDataRef inData );//remote message
-	virtual void		ReceiveNotification(void *ioData);//local message
+	virtual CFDataRef	ReceivePortMessage( SInt32 msgid, CFDataRef inData ) noexcept override; // remote message
+	virtual void		ReceiveNotification(void *ioData) noexcept override; // local message
+
+	virtual CFStringRef	CreateControlValue(SInt32 inSpecialWordID, CFStringRef inControlString, UInt16 escSpecialCharsMode, bool isEnvStyle) noexcept override;
+	virtual void		AddEnvironmentVariablesForAllControls(CFMutableDictionaryRef ioEnvironList) noexcept override;
 
 	void				SetController(OMCNibWindowControllerRef inController) noexcept
 						{

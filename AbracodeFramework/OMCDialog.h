@@ -69,24 +69,23 @@ public:
 	virtual CFTypeRef		CopyControlValue(CFStringRef inControlID, CFStringRef inControlPart, SelectionIterator *inSelIterator, CFDictionaryRef *outCustomProperties) noexcept = 0;
 	virtual void			CopyAllControlValues(CFSetRef requestedNibControls, SelectionIterator *inSelIterator) noexcept = 0;
 
-	virtual CFDataRef		ReceivePortMessage( SInt32 msgid, CFDataRef inData ) = 0;//remote message
-	virtual void			ReceiveNotification(void *ioData) = 0;//local message
+	virtual CFDataRef		ReceivePortMessage( SInt32 msgid, CFDataRef inData ) noexcept = 0; // remote message
+	virtual void			ReceiveNotification(void *ioData) noexcept = 0; // local message
+
+	virtual CFStringRef		CreateControlValue(SInt32 inSpecialWordID, CFStringRef inControlString, UInt16 escSpecialCharsMode, bool isEnvStyle) noexcept = 0;
+	virtual void			AddEnvironmentVariablesForAllControls(CFMutableDictionaryRef ioEnvironList) noexcept = 0;
 
 	static ARefCountedObj<OMCDialog> FindDialogByUUID(CFStringRef inUUID);
 	static CFStringRef		CreateControlValueString(CFTypeRef controlValue, CFDictionaryRef customProperties, UInt16 escSpecialCharsMode, bool isEnvStyle) noexcept;
     static Boolean          IsPredefinedDialogCommandID(CFStringRef inCommandID) noexcept;
 
-	CFStringRef				CreateNibControlValue(SInt32 inSpecialWordID, CFStringRef inNibControlString, UInt16 escSpecialCharsMode, bool isEnvStyle) noexcept;
-
-	void					AddEnvironmentVariablesForAllControls(CFMutableDictionaryRef ioEnvironList) noexcept;
-
-protected:
+ protected:
 	OMCDialog *				next;
 	ARefCountedObj< AObserver<OMCDialog> > mTaskObserver;
 	MessagePortListener<OMCDialog> mListener;
 	CFObj<CFStringRef>		mDialogUUID;
-	CFObj<CFMutableDictionaryRef> mNibControlValues;//key: controlID string, value: dictionary for columnID (as long) & value (CFType)
-	CFObj<CFMutableDictionaryRef> mNibControlCustomProperties;
+	CFObj<CFMutableDictionaryRef> mControlValues;//key: controlID string, value: dictionary for columnID (as long) & value (CFType)
+	CFObj<CFMutableDictionaryRef> mControlCustomProperties;
 	SelectionIterator *		mSelectionIterator;//temporary reference for subcommand execution
 	static OMCDialog *		sChainHead;
 };
