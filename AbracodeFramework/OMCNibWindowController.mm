@@ -111,44 +111,19 @@ FindArgumentType(const char *argTypeStr)
 	return (ObjCSelectorArgumentType)argTypeStr[0];
 }
 
-static NSMutableSet<OMCNibWindowController *> *
-GetAllDialogControllers()
-{
-    static NSMutableSet<OMCNibWindowController *> *sAllDialogControllers = nil;
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        sAllDialogControllers = [[NSMutableSet alloc] init];
-    });
-
-    return sAllDialogControllers;
-}
-
 @implementation OMCNibWindowController
 
 
 - (id)initWithOmc:(OnMyCommandCM *)inOmc commandRuntimeData:(CommandRuntimeData *)inCommandRuntimeData
 {
-   self = [super init];
+   self = [super initWithOmc:inOmc commandRuntimeData:inCommandRuntimeData];
 	if(self == nil)
 		return nil;
-
-    mIsModal = true;
-	mIsRunning = false;
-
-    mPlugin.Adopt(inOmc, kARefCountRetain);
-    assert(inCommandRuntimeData != nullptr);
-    mCommandRuntimeData.Adopt(inCommandRuntimeData, kARefCountRetain);
-    
-    NSMutableSet<OMCNibWindowController *> *allDialogControllers = GetAllDialogControllers();
-    [allDialogControllers addObject:self];
     
     mOMCDialogProxy.Adopt( new OMCNibDialog((__bridge OMCNibWindowControllerRef)self) );
-    mCommandRuntimeData->SetAssociatedDialogUUID(mOMCDialogProxy->GetDialogUUID());
+    self->mCommandRuntimeData->SetAssociatedDialogUUID(mOMCDialogProxy->GetDialogUUID());
 
-	mExternBundleRef.Adopt(inOmc->GetCurrentCommandExternBundle(), kCFObjRetain);
-
-	CommandDescription &currCommand = mPlugin->GetCurrentCommand();
-	mCommandName.Adopt(currCommand.name, kCFObjRetain);
+	CommandDescription &currCommand = self->mPlugin->GetCurrentCommand();
 
 	ACFDict params( currCommand.nibDialog );
     CFObj<CFStringRef> nibName;
@@ -165,15 +140,15 @@ GetAllDialogControllers()
 
     CFObj<CFStringRef> initSubcommandID;
 	params.CopyValue( CFSTR("INIT_SUBCOMMAND_ID"), initSubcommandID );
-    _dialogInitSubcommandID = (NSString *)CFBridgingRelease(initSubcommandID.Detach());
+    self.dialogInitSubcommandID = (NSString *)CFBridgingRelease(initSubcommandID.Detach());
     
     CFObj<CFStringRef> endOKSubcommandID;
 	params.CopyValue( CFSTR("END_OK_SUBCOMMAND_ID"), endOKSubcommandID );
-    _endOKSubcommandID = (NSString *)CFBridgingRelease(endOKSubcommandID.Detach());
+    self.endOKSubcommandID = (NSString *)CFBridgingRelease(endOKSubcommandID.Detach());
 
     CFObj<CFStringRef> endCancelSubcommandID;
 	params.CopyValue( CFSTR("END_CANCEL_SUBCOMMAND_ID"), endCancelSubcommandID );
-    _endCancelSubcommandID = (NSString *)CFBridgingRelease(endCancelSubcommandID.Detach());
+    self.endCancelSubcommandID = (NSString *)CFBridgingRelease(endCancelSubcommandID.Detach());
 
 	Boolean isBlocking = true;//default is modal
 	params.GetValue( CFSTR("IS_BLOCKING"), isBlocking );
@@ -222,12 +197,12 @@ GetAllDialogControllers()
 
 	if(_omcCocoaNib != nil)
 	{
-        _window = [_omcCocoaNib getFirstWindow];
-		if(_window != nil)
+        self.window = [_omcCocoaNib getFirstWindow];
+		if(self.window != nil)
 		{
-			[_window setReleasedWhenClosed:NO];//we will release it when unloading the nib
+			[self.window setReleasedWhenClosed:NO];//we will release it when unloading the nib
 
-            NSView *contentView = [_window contentView];
+            NSView *contentView = [self.window contentView];
 			if(contentView != nil)
 			{
 				[self initSubview:contentView];
@@ -240,8 +215,8 @@ GetAllDialogControllers()
                 if(fileURL != NULL)
                 {
                     NSURL *__weak associatedFileURL = (__bridge NSURL *)(fileURL);
-                    _window.representedURL = associatedFileURL;
-                    [_window setTitleWithRepresentedFilename:associatedFileURL.path];
+                    self.window.representedURL = associatedFileURL;
+                    [self.window setTitleWithRepresentedFilename:associatedFileURL.path];
                     // associating file with a window makes it appear as a document for user
                     // we may arrive here via different ways which may not end up calling `noteNewRecentDocumentURL:`
                     // but calling it twice on the same URL is not a problem
@@ -249,7 +224,7 @@ GetAllDialogControllers()
                 }
             }
             
-			[_window setDelegate: self];
+			[self.window setDelegate: self];
 		}
 		else
 			NSLog(@"Cocoa nib file does not contain a window");
@@ -288,19 +263,21 @@ GetAllDialogControllers()
 
 - (void)dealloc
 {
-	mOMCDialogProxy->SetController(nil);
+	OMCNibDialog *nibDialog = (OMCNibDialog *)mOMCDialogProxy.Get();
+	if(nibDialog != nullptr)
+		nibDialog->SetController(nil);
 	
-	if(_window != nil)
+	if(self.window != nil)
 	{
 		//the window may outlive us
 		//we are dying we need to unregister all delegates, targets, observers, etc
-		id contentViewObject = [_window contentView];
+		id contentViewObject = [self.window contentView];
 		if( (contentViewObject != nil) && [contentViewObject isKindOfClass:[NSView class] ] )
 		{
 			[self resetSubview: (NSView*)contentViewObject];
 		}
 	
-		[_window setDelegate:nil];//we are dying
+		[self.window setDelegate:nil];//we are dying
 	}
 }
 
@@ -1273,7 +1250,7 @@ GetAllDialogControllers()
 				//CFBooleanRef theVal = ACFType<CFBooleanRef>::DynamicCast( valueList[i] );
 				if( (controlID != NULL) /*&& (theVal != NULL)*/ )
 				{
-					if( kCFCompareEqualTo == CFStringCompare( controlID, CFSTR("omc_window"), 0) )
+					if( kCFCompareEqualTo == CFStringCompare( controlID, CFSTR("omcself.window"), 0) )
 					{
 						//the message targets our dialog window
 						[self.window makeKeyAndOrderFront:self];//bring it to front and select
@@ -1315,7 +1292,7 @@ GetAllDialogControllers()
 				CFBooleanRef theVal = ACFType<CFBooleanRef>::DynamicCast( valueList[i] );
 				if( (controlID != NULL) && (theVal != NULL) )
 				{
-					if( kCFCompareEqualTo == CFStringCompare( controlID, CFSTR("omc_window"), 0) )
+					if( kCFCompareEqualTo == CFStringCompare( controlID, CFSTR("omcself.window"), 0) )
 					{
 						//the message targets our dialog window
 						Boolean terminateOK = ::CFBooleanGetValue(theVal);
@@ -1391,7 +1368,7 @@ GetAllDialogControllers()
 								newTopLeftOrigin.y = ::CFStringGetIntValue(numString);
 						}
 
-						if( kCFCompareEqualTo == CFStringCompare( controlID, CFSTR("omc_window"), 0) )
+						if( kCFCompareEqualTo == CFStringCompare( controlID, CFSTR("omcself.window"), 0) )
 						{
 							[self setWindowTopLeftPosition:newTopLeftOrigin];
 						}
@@ -1561,7 +1538,7 @@ GetAllDialogControllers()
 								newSize.height = ::CFStringGetIntValue(numString);
 						}
 
-						if( kCFCompareEqualTo == CFStringCompare( controlID, CFSTR("omc_window"), 0) )
+						if( kCFCompareEqualTo == CFStringCompare( controlID, CFSTR("omcself.window"), 0) )
 						{
 							//the message targets our dialog window
 							[self.window setContentSize:newSize];
@@ -1600,7 +1577,7 @@ GetAllDialogControllers()
 				if( (controlID != NULL) && (theArr != NULL) )
 				{
 					id messageTarget = nil;
-					if( kCFCompareEqualTo == CFStringCompare( controlID, CFSTR("omc_window"), 0) )
+					if( kCFCompareEqualTo == CFStringCompare( controlID, CFSTR("omcself.window"), 0) )
 					{
 						//the message targets our dialog window
 						messageTarget = (id)self.window;
@@ -1700,205 +1677,6 @@ GetAllDialogControllers()
             [self dispatchCommand:commandID withContext:NULL];
         }
     }
-}
-
-//NSWindow delegate methods
-- (void)windowWillClose:(NSNotification *)notification
-{
-	if( mIsModal )
-	{
-		[NSApp stopModal];
-	//	NSInteger returnCode = 0;
-	//	[NSApp stopModalWithCode:returnCode];
-	}
-
-	[self terminate];
-
-    NSMutableSet<OMCNibWindowController *> *allDialogControllers = GetAllDialogControllers();
-    [allDialogControllers removeObject:self];
-}
-
-- (OMCNibDialog *)getOMCDialog
-{
-	return (OMCNibDialog *)mOMCDialogProxy;
-}
-
-- (Boolean)isModal
-{
-	return mIsModal;
-}
-
-- (void)run
-{
-#if DEBUG
-	NSLog(@"[OMCNibWindowController run] self.window=%@", (id)self.window);
-#endif
-	
-	if( mIsModal )
-	{
-		
-//		bool isInited = false;
-		if( [self initializeDialog] )
-		{
-/*
-			NSRunLoop *currRunLoop = [NSRunLoop currentRunLoop];
-			CFRunLoopRef cfRunLoop = [currRunLoop getCFRunLoop];
-			CFStringRef modeString = CFRunLoopCopyCurrentMode(cfRunLoop);
-			NSLog(@"OMCCialogController run loop modeString=%@", modeString);
-			if(modeString != NULL)
-				CFRelease(modeString);
-			
-			CFShow(cfRunLoop);
-			//NSLog( @"OMCCialogController cfRunLoop=%@", cfRunLoop);
-*/	
-#if 0
-			NSModalSession session = [NSApp beginModalSessionForWindow:self.window];
-			for (;;)
-			{
-				if( [NSApp runModalSession:session] != NSRunContinuesResponse )
-					break;
-
-			//	CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0.01, false);
-			}
-			[NSApp endModalSession:session];
-#else
-
-			[NSApp runModalForWindow:self.window];
-#endif
-			
-		}
-	}
-	else
-	{
-		if( [self initializeDialog] )
-			[self.window makeKeyAndOrderFront:self];
-	}
-}
-
-- (BOOL)isOkeyed
-{
-	
-	if(self.lastCommandID != nil)
-	{
-		if(self.endOKSubcommandID != nil)
-        {
-            return [self.lastCommandID isEqualToString:self.endOKSubcommandID];
-        }
-
-		return [self.lastCommandID isEqualToString:@"omc.dialog.ok"];
-	}
-	return false;
-}
-
-- (BOOL)isCanceled
-{
-	if(self.lastCommandID != nil)
-	{
-		if(self.endCancelSubcommandID != nil)
-        {
-            return [self.lastCommandID isEqualToString:self.endCancelSubcommandID];
-        }
-
-		return [self.lastCommandID isEqualToString:@"omc.dialog.cancel"];
-	}
-	return false;
-}
-
-- (BOOL)commandShouldCloseDialog
-{
-	return ([self isOkeyed] || [self isCanceled]);
-}
-
-
-- (BOOL)initializeDialog
-{
-	NSString *origCommand = self.lastCommandID;
-
-	self.lastCommandID = @"omc.dialog.initialize";
-	if(self.dialogInitSubcommandID != nil)
-    {
-        self.lastCommandID = self.dialogInitSubcommandID;
-    }
-    
-	mOMCDialogProxy->StartListening();
-
-    [self processCommandWithContext:NULL];
-
-	self.lastCommandID = origCommand;
-
-	if(mPlugin->GetError() != noErr)
-		return NO;//if there was an error during init command don't show the dialog
-
-	return YES;
-}
-
-- (BOOL)terminate
-{
-	BOOL wasOkeyed = [self isOkeyed];
-	NSString *origCommand = self.lastCommandID;
-	
-	self.lastCommandID = wasOkeyed ? @"omc.dialog.terminate.ok" : @"omc.dialog.terminate.cancel";
-
-	if( wasOkeyed && (self.endOKSubcommandID != nil) )
-    {
-        self.lastCommandID = self.endOKSubcommandID;
-    }
-	else if( !wasOkeyed && (self.endCancelSubcommandID != nil) )
-    {
-        self.lastCommandID = self.endCancelSubcommandID;
-    }
-    
-	[self processCommandWithContext:NULL];
-
-    self.lastCommandID = origCommand;
-
-	return YES;
-}
-
-- (OSStatus)processCommandWithContext:(CFTypeRef)inContext
-{
-	if(mPlugin == nullptr)
-    {
-        return paramErr;
-    }
-    
-	SInt32 cmdIndex = -1;
-    if(OMCDialog::IsPredefinedDialogCommandID((__bridge CFStringRef)self.lastCommandID))
-    {
-        cmdIndex = mPlugin->FindSubcommandIndex(mCommandName, (__bridge CFStringRef)self.lastCommandID); //only strict subcommand for predefined dialog commands
-    }
-	else																//(command name must match)
-    {
-        cmdIndex = mPlugin->FindCommandIndex(mCommandName, (__bridge CFStringRef)self.lastCommandID);//relaxed rules for custom command id
-        //(for example when used for next command)
-    }
-    
-	if(cmdIndex < 0)
-    {
-        return errAEEventNotHandled;//did not find the specified subcommand
-    }
-    
-	CommandDescription &currCommand = mPlugin->GetCurrentCommand();
-	SelectionIterator *oldIterator = mOMCDialogProxy->GetSelectionIterator();
-	SelectionIterator *currentSelectionIterator = nullptr;
-	if( currCommand.multipleSelectionIteratorParams != nullptr )
-		currentSelectionIterator = [self createSelectionIterator:currCommand.multipleSelectionIteratorParams];
-
-	mOMCDialogProxy->SetSelectionIterator(currentSelectionIterator);
-	
-	OSStatus status = noErr;
-
-	do
-	{
-		status = mPlugin->ExecuteSubcommand( cmdIndex, mCommandRuntimeData, inContext );//does not throw
-	}
-	while( (currentSelectionIterator != nullptr) && SelectionIterator_Next(currentSelectionIterator) );
-
-	mOMCDialogProxy->SetSelectionIterator(oldIterator);
-
-	SelectionIterator_Release(currentSelectionIterator);
-	
-	return status;
 }
 
 - (void)setWindowTopLeftPosition:(NSPoint)absolutePosition
@@ -2350,17 +2128,5 @@ GetAllDialogControllers()
 	
 	return NULL;
 }
-
--(void)keepItem:(id)inItem
-{
-	if(inItem == NULL)
-		return;
-	
-	if(self.dialogOwnedItems == NULL)
-        self.dialogOwnedItems = [[NSMutableSet alloc] init];
-	
-	[self.dialogOwnedItems addObject:inItem];
-}
-
 
 @end

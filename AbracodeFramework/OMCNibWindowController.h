@@ -8,38 +8,18 @@
 
 #import <Cocoa/Cocoa.h>
 #import "OMCCocoaNib.h"
-#include "CFObj.h"
-#include "ARefCounted.h"
-#include "AUniquePtr.h"
-#include "SelectionIterator.h"
+#import "OMCWindowController.h"
 
-class OnMyCommandCM;
 class OMCNibDialog;
-class CommandRuntimeData;
 
-@interface OMCNibWindowController : NSObject <NSWindowDelegate>
+@interface OMCNibWindowController : OMCWindowController <NSWindowDelegate>
 {
 	// we compile ObjC with the flag to invoke C++ constructors and destructor
 	// so we can use smart pointers as member variables
-
-	ARefCountedObj<OnMyCommandCM>	mPlugin;
-	ARefCountedObj<OMCNibDialog>	mOMCDialogProxy;
-    ARefCountedObj<CommandRuntimeData> mCommandRuntimeData;
-	CFObj<CFBundleRef>				mExternBundleRef;
-	CFObj<CFArrayRef>				mCommandName;
-	Boolean							mIsModal;
-	Boolean							mIsRunning;
 }
 
-@property (nonatomic, strong) NSWindow *window;
-@property (nonatomic, strong) NSString *dialogInitSubcommandID;
-@property (nonatomic, strong) NSString *endOKSubcommandID;
-@property (nonatomic, strong) NSString *endCancelSubcommandID;
-@property (nonatomic, strong) NSString *lastCommandID;
 @property (nonatomic, strong) OMCCocoaNib *omcCocoaNib;
-@property (nonatomic, strong) NSMutableSet *dialogOwnedItems;
 
-- (id)initWithOmc:(OnMyCommandCM *)inOmc commandRuntimeData:(CommandRuntimeData *)inCommandRuntimeData;
 - (Boolean)findNib:(NSString *)inNibName forBundlePath:(NSString *)inPath;
 - (void)initSubview:(NSView *)inView;
 - (void)resetSubview:(NSView *)inView;
@@ -53,19 +33,7 @@ class CommandRuntimeData;
 - (CFDictionaryRef)copyControlProperties:(id)controlOrView;
 - (void)handleAction:(id)sender;
 - (void)handleDoubleClickAction:(id)sender;
-- (OMCNibDialog *)getOMCDialog;
-- (Boolean)isModal;
-- (void)run;
-- (BOOL)isOkeyed;
-- (BOOL)isCanceled;
-- (BOOL)commandShouldCloseDialog;
-- (BOOL)initializeDialog;
-- (BOOL)terminate;
-- (void)dispatchCommand:(NSString *)inCommandID withContext:(CFTypeRef)inContext;
-- (OSStatus)processCommandWithContext:(CFTypeRef)inContext;
 - (void)setWindowTopLeftPosition:(NSPoint)absolutePosition;
 - (void) sendObjCMessage:(CFArrayRef)oneObjCMessage toTarget:(id)messageTarget;
-- (SelectionIterator *)createSelectionIterator:(CFDictionaryRef)inIteratorParams;
-- (void)keepItem:(id)inItem;
 
 @end
