@@ -37,6 +37,7 @@
 #include "ACFDict.h"
 #include "ACFArr.h"
 #include "OMCNibDialog.h"
+#include "OMCActionUIDialog.h"
 #include "OMCInputDialog.h"
 #include "SelectionIterator.h"
 #include "ACFPropertyList.h"
@@ -1028,9 +1029,18 @@ OnMyCommandCM::ExecuteCommandWithObjects(CommandRuntimeData *initialCommandRunti
         }
         else if( currCommand.actionUIWindow != nullptr )
         {
-			// ActionUI window handling will be added here
-			// For now, this is a placeholder that will need to be implemented
-			// once the ActionUI integration is complete
+			StSwitchToFront switcher(false);
+			
+			activeDialog = RunActionUIDialog(this, commandRuntimeData);
+			if(activeDialog != nullptr)
+			{
+				SelectionIterator* selIterator = activeDialog->GetSelectionIterator();
+				activeDialog->CopyAllControlValues(currCommand.specialRequestedNibControls, selIterator);
+			}
+			else
+			{
+				throw OSStatus(userCanceledErr);
+			}
         }
 
 		UInt8 escapingMode = currCommand.escapeSpecialCharsMode;
@@ -1166,6 +1176,16 @@ OnMyCommandCM::ExecuteCommandWithText(CommandDescription &currCommand, CFStringR
         StSwitchToFront switcher(false);
         
         activeDialog = RunNibDialog(this, commandRuntimeData);
+        if(activeDialog == nullptr)
+        {
+            throw OSStatus(userCanceledErr);
+        }
+    }
+    else if(currCommand.actionUIWindow != nullptr)
+    {
+        StSwitchToFront switcher(false);
+        
+        activeDialog = RunActionUIDialog(this, commandRuntimeData);
         if(activeDialog == nullptr)
         {
             throw OSStatus(userCanceledErr);

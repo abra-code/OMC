@@ -15,6 +15,10 @@
 		1D3EA06A2E40A00B0064354E /* CommandDescription.cp in Sources */ = {isa = PBXBuildFile; fileRef = 1D3EA0692E40A00B0064354E /* CommandDescription.cp */; };
 		1D3F8CBD2E0B7C8000B69493 /* OMCActionProtocol.h in Headers */ = {isa = PBXBuildFile; fileRef = 1D3F8CBC2E0B370A00B69493 /* OMCActionProtocol.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		1D690CA12F444FAC006FECE8 /* OMCWindowController.mm in Sources */ = {isa = PBXBuildFile; fileRef = AAAAAAAA2D4346BB0065C23A /* OMCWindowController.mm */; };
+		1D690DDE2F45096A006FECE8 /* OMCActionUIDialog.h in Headers */ = {isa = PBXBuildFile; fileRef = 1D690DDC2F45096A006FECE8 /* OMCActionUIDialog.h */; };
+		1D690DDF2F45096A006FECE8 /* OMCActionUIDialog.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1D690DDD2F45096A006FECE8 /* OMCActionUIDialog.mm */; };
+		1D690DE32F450991006FECE8 /* OMCActionUIWindowController.h in Headers */ = {isa = PBXBuildFile; fileRef = 1D690DE12F450991006FECE8 /* OMCActionUIWindowController.h */; };
+		1D690DE42F450991006FECE8 /* OMCActionUIWindowController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1D690DE22F450991006FECE8 /* OMCActionUIWindowController.mm */; };
 		1D71F337220702EA009FAF91 /* notify in Copy Support Executables */ = {isa = PBXBuildFile; fileRef = 1D71F336220702D7009FAF91 /* notify */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		1D742DC5193882BB005DFF97 /* pasteboard in Copy Support Executables */ = {isa = PBXBuildFile; fileRef = 1D742DC219388292005DFF97 /* pasteboard */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		1D80B9BA22E447E800CF1AF5 /* OMCiTermExecutor.cp in Sources */ = {isa = PBXBuildFile; fileRef = 1D80B9B822E447E800CF1AF5 /* OMCiTermExecutor.cp */; };
@@ -367,6 +371,10 @@
 		1D4971AC2575A69000F7131C /* OmcProjectDebug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectDebug.xcconfig; path = ../Common/OmcProjectDebug.xcconfig; sourceTree = "<group>"; };
 		1D4971AD2575A69000F7131C /* OmcProjectRelease.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectRelease.xcconfig; path = ../Common/OmcProjectRelease.xcconfig; sourceTree = "<group>"; };
 		1D690D302F44F299006FECE8 /* OMCControlAccessor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OMCControlAccessor.h; sourceTree = "<group>"; };
+		1D690DDC2F45096A006FECE8 /* OMCActionUIDialog.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OMCActionUIDialog.h; sourceTree = "<group>"; };
+		1D690DDD2F45096A006FECE8 /* OMCActionUIDialog.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCActionUIDialog.mm; sourceTree = "<group>"; };
+		1D690DE12F450991006FECE8 /* OMCActionUIWindowController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OMCActionUIWindowController.h; sourceTree = "<group>"; };
+		1D690DE22F450991006FECE8 /* OMCActionUIWindowController.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCActionUIWindowController.mm; sourceTree = "<group>"; };
 		1D71F3292206F116009FAF91 /* DebugSettings.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DebugSettings.h; sourceTree = "<group>"; };
 		1D71F32A2206F1A1009FAF91 /* ACMPlugin.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ACMPlugin.h; sourceTree = "<group>"; };
 		1D71F32B2206F1D8009FAF91 /* CMUtils.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CMUtils.h; sourceTree = "<group>"; };
@@ -937,6 +945,8 @@
 				E2735F360D7B9576004D81CE /* OMCDialog.h */,
 				E22FBAED0D7A0D7700DC5BB4 /* OMCNibDialog.mm */,
 				E22FBAEC0D7A0D7700DC5BB4 /* OMCNibDialog.h */,
+				1D690DDC2F45096A006FECE8 /* OMCActionUIDialog.h */,
+				1D690DDD2F45096A006FECE8 /* OMCActionUIDialog.mm */,
 				E29A6AB20D9F7A01006A97B0 /* OMCMainMenuController.m */,
 				E29A6AB10D9F7A00006A97B0 /* OMCMainMenuController.h */,
 				E2C84DE90DA9F30F0056DBC2 /* OMCCommandMenu.mm */,
@@ -949,6 +959,8 @@
 				AAAAAAAA1D4346BB0065C23A /* OMCWindowController.h */,
 				E211D4F40D4346BB0065C23A /* OMCNibWindowController.mm */,
 				E211D4F30D4346BA0065C23A /* OMCNibWindowController.h */,
+				1D690DE12F450991006FECE8 /* OMCActionUIWindowController.h */,
+				1D690DE22F450991006FECE8 /* OMCActionUIWindowController.mm */,
 				E211D3C40D3F51010065C23A /* OMCCocoaNib.m */,
 				E211D3C30D3F51010065C23A /* OMCCocoaNib.h */,
 				E2E1892D1075BEBC001B7591 /* SelectionIterator.h */,
@@ -1040,8 +1052,10 @@
 				E2C84D750DA9AC090056DBC2 /* OMCCommandMenu.h in Headers */,
 				E2C84D8C0DA9D2600056DBC2 /* OMCSingleCommand.h in Headers */,
 				E2C84DAC0DA9D4CD0056DBC2 /* OMCCommandExecutor.h in Headers */,
+				1D690DDE2F45096A006FECE8 /* OMCActionUIDialog.h in Headers */,
 				E25D78990DBB24800065C7A3 /* OMCDropletController.h in Headers */,
 				E24243570DDC140F0002BF9E /* OMCOutputWindowController.h in Headers */,
+				1D690DE32F450991006FECE8 /* OMCActionUIWindowController.h in Headers */,
 				E24B168B0DE934CC00E44A45 /* OMCWindow.h in Headers */,
 				E24B17270DE94DB800E44A45 /* OMCPanel.h in Headers */,
 				E24B18180DE96F6D00E44A45 /* OMCFilePanels.h in Headers */,
@@ -1351,6 +1365,7 @@
 				E2ED3BAE0D0B288400481D8F /* OmcTaskManager.cpp in Sources */,
 				E2ED3BB00D0B288400481D8F /* OmcExecutor.cp in Sources */,
 				E2ED3BB20D0B288400481D8F /* omc_popen.c in Sources */,
+				1D690DE42F450991006FECE8 /* OMCActionUIWindowController.mm in Sources */,
 				1DED8E572222BD8E00A2CAF7 /* MoreAppleEvents.cp in Sources */,
 				E2ED3BC10D0B293E00481D8F /* ACMPlugin.cp in Sources */,
 				E2FB11200D185A2C005EB1E8 /* OMC.cpp in Sources */,
@@ -1399,6 +1414,7 @@
 				E2D92E561043D74E003DC96B /* OMCInputDialogController.m in Sources */,
 				E2D92E8E1043E0E3003DC96B /* OMCInputDialog.mm in Sources */,
 				1D3EA06A2E40A00B0064354E /* CommandDescription.cp in Sources */,
+				1D690DDF2F45096A006FECE8 /* OMCActionUIDialog.mm in Sources */,
 				E26B2797109C174D00DBA8CE /* OMCTableView.m in Sources */,
 				E28D660210A039C500882DDE /* OMCTableViewController.mm in Sources */,
 				E20026D710B68F3200D5388F /* OMCCustomWindow.mm in Sources */,
