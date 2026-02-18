@@ -68,30 +68,25 @@
 			if(bundlePath != nullptr)
 			{
 				NSString *path = (__bridge NSString *)bundlePath.Get();
-				NSString *resourcePath = [[NSBundle bundleWithPath:path] resourcePath];
-				if(resourcePath != nil)
-				{
-					NSString *fullPath = [resourcePath stringByAppendingPathComponent:dialogJsonName];
-					if([[NSFileManager defaultManager] fileExistsAtPath:fullPath])
-					{
-						jsonURL = (__bridge CFURLRef)[NSURL fileURLWithPath:fullPath];
-					}
-				}
+                
+                NSBundle *externBundle = [NSBundle bundleWithPath:path];
+                NSString *jsonPath = [externBundle pathForResource:dialogJsonName ofType:@"json"];
+                if(jsonPath != nil)
+                {
+                    jsonURL = (__bridge CFURLRef)[NSURL fileURLWithPath:jsonPath];
+                }
 			}
 		}
 	}
 
 	if(jsonURL == NULL)
 	{
-		NSString *mainResourcePath = [[NSBundle mainBundle] resourcePath];
-		if(mainResourcePath != nil)
-		{
-			NSString *fullPath = [mainResourcePath stringByAppendingPathComponent:dialogJsonName];
-			if([[NSFileManager defaultManager] fileExistsAtPath:fullPath])
-			{
-				jsonURL = (__bridge CFURLRef)[NSURL fileURLWithPath:fullPath];
-			}
-		}
+        NSBundle *mainBundle = [NSBundle mainBundle];
+        NSString *jsonPath = [mainBundle pathForResource:dialogJsonName ofType:@"json"];
+        if(jsonPath != nil)
+        {
+            jsonURL = (__bridge CFURLRef)[NSURL fileURLWithPath:jsonPath];
+        }
 	}
 
 	if(jsonURL == NULL)
@@ -106,13 +101,13 @@
 				if(bundlePath != nullptr)
 				{
 					NSString *path = (__bridge NSString *)bundlePath.Get();
-					NSString *resourcePath = [[NSBundle bundleWithPath:path] resourcePath];
-					if(resourcePath != nil)
+                    NSBundle *omcBundle = [NSBundle bundleWithPath:path];
+					if(omcBundle != nil)
 					{
-						NSString *fullPath = [resourcePath stringByAppendingPathComponent:dialogJsonName];
-						if([[NSFileManager defaultManager] fileExistsAtPath:fullPath])
+                        NSString *jsonPath = [omcBundle pathForResource:dialogJsonName ofType:@"json"];
+						if(jsonPath != nil)
 						{
-							jsonURL = (__bridge CFURLRef)[NSURL fileURLWithPath:fullPath];
+							jsonURL = (__bridge CFURLRef)[NSURL fileURLWithPath:jsonPath];
 						}
 					}
 				}

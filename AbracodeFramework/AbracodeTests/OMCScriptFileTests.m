@@ -574,7 +574,73 @@
     testName = @"browser.close.window";
     err = [OMCCommandExecutor runCommand:testName
                                    forCommandFile:omcBundlePath
-                                      withContext:omcNibDlgGuid // the command expects gialog GUID as text context
+                                      withContext:omcNibDlgGuid // the command expects dialog GUID as text context
+                                     useNavDialog:NO
+                                         delegate:executionObserver];
+
+    XCTAssertEqual(err, noErr, @"Should execute %@ command", testName);
+
+    completed = [executionObserver waitForCompletionWithTimeout:kDefaultExecutionTimeout];
+    XCTAssertTrue(completed, @"%@ should complete within timeout", testName);
+    capturedOutput = executionObserver.capturedOutput;
+    NSLog(@"%@", capturedOutput);
+}
+
+- (void)testActionUIFormDialogBundle {
+    // Load a static test bundle with nib dialog from test resources
+    NSURL *bundleURL = [OMCBundleTestHelper testBundleURL:@"ActionUI-Form"];
+    
+    if (bundleURL == nil) {
+        NSLog(@"Skipping static bundle test - ActionUI-Form.omc not found in test resources");
+        return;
+    }
+    
+    NSString *omcBundlePath = [bundleURL path];
+    NSURL *homeURL = [NSURL fileURLWithPath:NSHomeDirectory()];
+    NSString *testName = @"Form";
+    
+    OMCTestExecutionObserver *executionObserver = OMCTestExecutionObserver.new;
+    
+    OSStatus err = [OMCCommandExecutor runCommand:testName
+                                   forCommandFile:omcBundlePath
+                                      withContext:homeURL
+                                     useNavDialog:NO
+                                         delegate:executionObserver];
+
+    // the dialog is non-blocking, so it will display and return
+
+    XCTAssertEqual(err, noErr, @"Should execute %@ command", testName);
+    
+    BOOL completed = [executionObserver waitForCompletionWithTimeout:kDefaultExecutionTimeout];
+    XCTAssertTrue(completed, @"%@ should complete within timeout", testName);
+    NSString *capturedOutput = executionObserver.capturedOutput;
+    NSLog(@"%@", capturedOutput);
+    
+    // the command script is:
+    // echo "${OMC_ACTIONUI_WINDOW_UUID}"
+    // so the output should be the running window UUID
+    NSString *omcActionUIWindowUUID = capturedOutput;
+    
+    // let's display the dialog for 5 sec
+    NSDate *timeoutDate = [NSDate dateWithTimeIntervalSinceNow:5.0];
+    NSRunLoop *runLoop = [NSRunLoop currentRunLoop];
+    
+    while ([timeoutDate timeIntervalSinceNow] > 0)
+    {
+        BOOL ranLoop = [runLoop runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:1.0]];
+        if (!ranLoop)
+        {
+            [NSThread sleepForTimeInterval:0.1];
+        }
+    }
+    
+    // we are sending a command to close the window
+    // this is not a dialog subcommand so it has no dialog control environment context
+    executionObserver = OMCTestExecutionObserver.new;
+    testName = @"form.close.window";
+    err = [OMCCommandExecutor runCommand:testName
+                                   forCommandFile:omcBundlePath
+                                      withContext:omcActionUIWindowUUID // the command expects window UUID as text context
                                      useNavDialog:NO
                                          delegate:executionObserver];
 

@@ -336,10 +336,10 @@ omc_dialog_control "${OMC_NIB_DLG_GUID}" 101 add_rows "$(cat /tmp/table_data)"
 
 | Key | Type | Required | Description & Best Practices |
 |-----|------|----------|------------------------------|
-| `JSON_FILE_NAME` | String | Yes | Name of the `.json` file **with extension** in app bundle resources. Case-sensitive. | `"MySettingsDialog.json"` |
-| `INIT_SUBCOMMAND_ID` | String | No | `COMMAND_ID` to run **before** dialog appears (e.g., populate values). | `"init_values"` |
-| `END_OK_SUBCOMMAND_ID` | String | No | `COMMAND_ID` to run on **OK / Confirm** button (actionID matching button's actionID). | `"save_changes"` |
-| `END_CANCEL_SUBCOMMAND_ID` | String | No | `COMMAND_ID` to run on **Cancel** (actionID matching button's actionID). | `"discard_changes"` |
+| `JSON_NAME` | String | Yes | Name of the `json` file **without extension** in app bundle resources. Case-sensitive. |
+| `IS_BLOCKING` | Boolean | No (default: `true`) | If `<false/>`, dialog is non-modal | `INIT_SUBCOMMAND_ID` | String | No | `COMMAND_ID` to run **before** dialog appears (e.g., populate values). |
+| `END_OK_SUBCOMMAND_ID` | String | No | `COMMAND_ID` to run on **OK / Confirm** button (actionID matching button's actionID). |
+| `END_CANCEL_SUBCOMMAND_ID` | String | No | `COMMAND_ID` to run on **Cancel** (actionID matching button's actionID). |
 
 > **Note**: Unlike `NIB_DIALOG` which uses commandIDs for controls, `ACTIONUI_WINDOW` uses **actionIDs** defined in the JSON. Buttons in the JSON should have an `actionID` property that matches the `COMMAND_ID` of the handler you want to execute.
 
@@ -402,8 +402,8 @@ omc_dialog_control "${OMC_NIB_DLG_GUID}" 101 add_rows "$(cat /tmp/table_data)"
   <string>exe_script_file</string>
   <key>ACTIONUI_WINDOW</key>
   <dict>
-    <key>JSON_FILE_NAME</key>
-    <string>SettingsDialog.json</string>
+    <key>JSON_NAME</key>
+    <string>SettingsDialog</string>
     <key>INIT_SUBCOMMAND_ID</key>
     <string>init_settings</string>
   </dict>
