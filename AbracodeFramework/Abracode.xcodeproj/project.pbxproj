@@ -43,6 +43,9 @@
 		1DE10DFC23C9D0EE003FCCDA /* OMCWebKitSupport.js in Resources */ = {isa = PBXBuildFile; fileRef = 1DE10DFB23C9D0EE003FCCDA /* OMCWebKitSupport.js */; };
 		1DED3637232258A40086266F /* OMCScriptsManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1DED3635232258A40086266F /* OMCScriptsManager.cpp */; };
 		1DED8E572222BD8E00A2CAF7 /* MoreAppleEvents.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED19F0D09528600C9D5E8 /* MoreAppleEvents.cp */; };
+		1DF2B2082F458F7D0069BD26 /* OMCViewSetupProtocol.h in Headers */ = {isa = PBXBuildFile; fileRef = 1DF2B2072F458F7D0069BD26 /* OMCViewSetupProtocol.h */; };
+		1DF2B4032F45A6CE0069BD26 /* ActionUI in Frameworks */ = {isa = PBXBuildFile; productRef = 1DF2B4022F45A6CE0069BD26 /* ActionUI */; };
+		1DF2B4052F45A6CE0069BD26 /* ActionUIObjCAdapter in Frameworks */ = {isa = PBXBuildFile; productRef = 1DF2B4042F45A6CE0069BD26 /* ActionUIObjCAdapter */; };
 		8DC2EF570486A6940098B216 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7B1FEA5585E11CA2CBB /* Cocoa.framework */; };
 		AAAAAA01D4346BB0065C23A /* OMCWindowController.h in Headers */ = {isa = PBXBuildFile; fileRef = AAAAAAAA1D4346BB0065C23A /* OMCWindowController.h */; };
 		E20026D710B68F3200D5388F /* OMCCustomWindow.mm in Sources */ = {isa = PBXBuildFile; fileRef = E20026D510B68F3200D5388F /* OMCCustomWindow.mm */; };
@@ -441,6 +444,8 @@
 		1DED3635232258A40086266F /* OMCScriptsManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCScriptsManager.cpp; sourceTree = "<group>"; };
 		1DED8E4C22229D1800A2CAF7 /* ACFArr.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ACFArr.h; sourceTree = "<group>"; };
 		1DED8E562222B65500A2CAF7 /* MoreAppleEvents.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoreAppleEvents.h; sourceTree = "<group>"; };
+		1DF2B2072F458F7D0069BD26 /* OMCViewSetupProtocol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OMCViewSetupProtocol.h; sourceTree = "<group>"; };
+		1DF2B4002F45A2110069BD26 /* OmcProjectCommon.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectCommon.xcconfig; path = ../Common/OmcProjectCommon.xcconfig; sourceTree = SOURCE_ROOT; };
 		32DBCF5E0370ADEE00C91783 /* Abracode_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Abracode_Prefix.pch; sourceTree = "<group>"; };
 		8DC2EF5A0486A6940098B216 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8DC2EF5B0486A6940098B216 /* Abracode.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Abracode.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -595,8 +600,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1DF2B4032F45A6CE0069BD26 /* ActionUI in Frameworks */,
 				8DC2EF570486A6940098B216 /* Cocoa.framework in Frameworks */,
 				E29ED0720D094EB000C9D5E8 /* Carbon.framework in Frameworks */,
+				1DF2B4052F45A6CE0069BD26 /* ActionUIObjCAdapter in Frameworks */,
 				E2FB14000D19EE9A005EB1E8 /* CoreServices.framework in Frameworks */,
 				E27103CE0D8142DF0097D83E /* Quartz.framework in Frameworks */,
 				E23DC9F60D9A289E009D2AD8 /* WebKit.framework in Frameworks */,
@@ -628,6 +635,7 @@
 				1D039D782E16823200D4924A /* AbracodeFramework-target.xcconfig */,
 				1DCBC0E02F15FD220002B8AB /* AbracodeTests-target.xcconfig */,
 				1DD21114259F42CE0041BB8F /* OmcVersion.xcconfig */,
+				1DF2B4002F45A2110069BD26 /* OmcProjectCommon.xcconfig */,
 				1D4971AC2575A69000F7131C /* OmcProjectDebug.xcconfig */,
 				1D4971AD2575A69000F7131C /* OmcProjectRelease.xcconfig */,
 				1DDC44152F34284600604C66 /* AbracodeTests.xctestplan */,
@@ -842,6 +850,7 @@
 				E2C8485E10D61C33002DFDB5 /* OMCBox.m */,
 				1D8189E823B45FAF00A13449 /* OMCGridView.h */,
 				1D8189E723B45FAF00A13449 /* OMCGridView.m */,
+				1DF2B2072F458F7D0069BD26 /* OMCViewSetupProtocol.h */,
 				1D386DA923BEED4A00A16967 /* OMCWebKitView.h */,
 				1D386DAA23BEED4A00A16967 /* OMCWebKitView.m */,
 				E23DC9600D9A2616009D2AD8 /* OMCIKImageView.m */,
@@ -1017,6 +1026,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				E2ACB25A12EADCF500A8ACF6 /* AbracodeFrameworkVersion.c in Headers */,
+				1DF2B2082F458F7D0069BD26 /* OMCViewSetupProtocol.h in Headers */,
 				E2B795870ECE9A1A00C8939E /* OMCPDFView.h in Headers */,
 				E29ED1B70D09532500C9D5E8 /* ACFType.h in Headers */,
 				E29ED21C0D09FD8D00C9D5E8 /* ARefCounted.h in Headers */,
@@ -1158,6 +1168,9 @@
 				en,
 			);
 			mainGroup = 0867D691FE84028FC02AAC07 /* Abracode */;
+			packageReferences = (
+				1DF2B4012F45A6CE0069BD26 /* XCRemoteSwiftPackageReference "ActionUI" */,
+			);
 			productRefGroup = 034768DFFF38A50411DB9C8B /* Products */;
 			projectDirPath = "";
 			projectReferences = (
@@ -1627,6 +1640,30 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		1DF2B4012F45A6CE0069BD26 /* XCRemoteSwiftPackageReference "ActionUI" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/abra-code/ActionUI";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		1DF2B4022F45A6CE0069BD26 /* ActionUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1DF2B4012F45A6CE0069BD26 /* XCRemoteSwiftPackageReference "ActionUI" */;
+			productName = ActionUI;
+		};
+		1DF2B4042F45A6CE0069BD26 /* ActionUIObjCAdapter */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1DF2B4012F45A6CE0069BD26 /* XCRemoteSwiftPackageReference "ActionUI" */;
+			productName = ActionUIObjCAdapter;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 0867D690FE84028FC02AAC07 /* Project object */;
 }

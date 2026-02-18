@@ -14,6 +14,8 @@
 #include "ACFDict.h"
 #include "OMCStrings.h"
 
+@import ActionUIObjCAdapter;
+
 @implementation OMCActionUIWindowController
 
 - (id)initWithOmc:(OnMyCommandCM *)inOmc commandRuntimeData:(CommandRuntimeData *)inCommandRuntimeData
