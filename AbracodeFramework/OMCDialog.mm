@@ -11,7 +11,7 @@
 #import "OMCControlAccessor.h"
 #include "AppGroupIdentifier.h"
 #include "OnMyCommand.h"
-#include "NibDialogControl.h"
+#include "OMCDialogControlHelpers.h"
 #include "ACFType.h"
 #include "OmcTaskNotification.h"
 

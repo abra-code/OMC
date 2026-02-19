@@ -14,7 +14,7 @@
 #include "CMUtils.h"
 #include "ACFType.h"
 #include "OmcTaskNotification.h"
-#include "NibDialogControl.h"
+#include "OMCDialogControlHelpers.h"
 
 ARefCountedObj<OMCDialog> RunNibDialog(OnMyCommandCM *inPlugin, CommandRuntimeData *commandRuntimeData)
 {

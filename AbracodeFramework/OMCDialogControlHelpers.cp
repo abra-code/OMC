@@ -1,5 +1,5 @@
 //**************************************************************************************
-// Filename:	NibDialogControl.cp
+// Filename:	OMCDialogControlHelpers.cp
 //				Part of Contextual Menu Workshop by Abracode Inc.
 //				http://free.abracode.com/cmworkshop/
 // Copyright � 2002-2004 Abracode, Inc.  All rights reserved.
@@ -10,7 +10,7 @@
 // July 21, 2004 - Original
 //**************************************************************************************
 
-#include "NibDialogControl.h"
+#include "OMCDialogControlHelpers.h"
 #include "ACFPropertyList.h"
 #include "OMCDialog.h"
 #include "ACFURL.h"

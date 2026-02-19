@@ -16,7 +16,7 @@
 #include "OmcTaskNotification.h"
 #include "ACFDict.h"
 //#include "NibDialog.h"
-//#include "NibDialogControl.h"
+//#include "OMCDialogControlHelpers.h"
 #include "ARefCounted.h"
 #include "DefaultExternBundle.h"
 

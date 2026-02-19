@@ -28,7 +28,7 @@
 //#include "OMCCocoaHelperExterns.h"
 #include "MoreAppleEvents.h"
 //#include "AAEDesc.h"
-#include "NibDialogControl.h"
+#include "OMCDialogControlHelpers.h"
 //#include "OMCCarbonDialog.h"
 #include "SubmenuTree.h"
 #include "StSwitchToFront.h"

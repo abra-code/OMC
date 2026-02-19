@@ -11,7 +11,7 @@
 #import "OMCControlAccessor.h"
 #include "OnMyCommand.h"
 #include "CommandRuntimeData.h"
-#include "NibDialogControl.h"
+#include "OMCDialogControlHelpers.h"
 #include "ACFType.h"
 #include "OMCStrings.h"
 

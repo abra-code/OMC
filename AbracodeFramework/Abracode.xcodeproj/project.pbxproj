@@ -160,7 +160,7 @@
 		E2ED3AEA0D0B27D300481D8F /* DefaultExternBundle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E2ED3AE80D0B27D300481D8F /* DefaultExternBundle.cpp */; };
 		E2ED3AEB0D0B27D300481D8F /* DefaultExternBundle.h in Headers */ = {isa = PBXBuildFile; fileRef = E2ED3AE90D0B27D300481D8F /* DefaultExternBundle.h */; };
 		E2ED3AED0D0B27E400481D8F /* StSwitchToFront.mm in Sources */ = {isa = PBXBuildFile; fileRef = E2ED3AEC0D0B27E400481D8F /* StSwitchToFront.mm */; };
-		E2ED3AF20D0B27F700481D8F /* NibDialogControl.cp in Sources */ = {isa = PBXBuildFile; fileRef = E2ED3AEE0D0B27F700481D8F /* NibDialogControl.cp */; };
+		E2ED3AF20D0B27F700481D8F /* OMCDialogControlHelpers.cp in Sources */ = {isa = PBXBuildFile; fileRef = E2ED3AEE0D0B27F700481D8F /* OMCDialogControlHelpers.cp */; };
 		E2ED3BA60D0B287000481D8F /* OutputWindowHandler.cp in Sources */ = {isa = PBXBuildFile; fileRef = E2ED3BA20D0B287000481D8F /* OutputWindowHandler.cp */; };
 		E2ED3BAE0D0B288400481D8F /* OmcTaskManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E2ED3BA80D0B288400481D8F /* OmcTaskManager.cpp */; };
 		E2ED3BAF0D0B288400481D8F /* OmcTaskManager.h in Headers */ = {isa = PBXBuildFile; fileRef = E2ED3BA90D0B288400481D8F /* OmcTaskManager.h */; };
@@ -461,7 +461,7 @@
 		E211D4F40D4346BB0065C23A /* OMCNibWindowController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCNibWindowController.mm; sourceTree = SOURCE_ROOT; };
 		E22FBAEC0D7A0D7700DC5BB4 /* OMCNibDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCNibDialog.h; sourceTree = "<group>"; };
 		E22FBAED0D7A0D7700DC5BB4 /* OMCNibDialog.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCNibDialog.mm; sourceTree = "<group>"; };
-		E22FCB220F5514220062D589 /* NibDialogControl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NibDialogControl.h; sourceTree = "<group>"; };
+		E22FCB220F5514220062D589 /* OMCDialogControlHelpers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCDialogControlHelpers.h; sourceTree = "<group>"; };
 		E234FA1F0D0FCB28001A7780 /* stop.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = stop.icns; path = Resources/stop.icns; sourceTree = "<group>"; };
 		E234FA200D0FCB28001A7780 /* app.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = app.icns; path = Resources/app.icns; sourceTree = "<group>"; };
 		E234FA9E0D0FD084001A7780 /* omc_dialog_control */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = omc_dialog_control; sourceTree = "<group>"; };
@@ -566,7 +566,7 @@
 		E2ED3AE80D0B27D300481D8F /* DefaultExternBundle.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DefaultExternBundle.cpp; sourceTree = "<group>"; };
 		E2ED3AE90D0B27D300481D8F /* DefaultExternBundle.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DefaultExternBundle.h; sourceTree = "<group>"; };
 		E2ED3AEC0D0B27E400481D8F /* StSwitchToFront.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = StSwitchToFront.mm; path = ../Common/StSwitchToFront.mm; sourceTree = SOURCE_ROOT; };
-		E2ED3AEE0D0B27F700481D8F /* NibDialogControl.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = NibDialogControl.cp; sourceTree = "<group>"; };
+		E2ED3AEE0D0B27F700481D8F /* OMCDialogControlHelpers.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCDialogControlHelpers.cp; sourceTree = "<group>"; };
 		E2ED3BA20D0B287000481D8F /* OutputWindowHandler.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OutputWindowHandler.cp; sourceTree = "<group>"; };
 		E2ED3BA80D0B288400481D8F /* OmcTaskManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OmcTaskManager.cpp; sourceTree = "<group>"; };
 		E2ED3BA90D0B288400481D8F /* OmcTaskManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OmcTaskManager.h; sourceTree = "<group>"; };
@@ -1009,8 +1009,8 @@
 				E2ED3BAD0D0B288400481D8F /* omc_popen.h */,
 				E2ED3BA20D0B287000481D8F /* OutputWindowHandler.cp */,
 				E24243FA0DDD6A350002BF9E /* OutputWindowHandler.h */,
-				E2ED3AEE0D0B27F700481D8F /* NibDialogControl.cp */,
-				E22FCB220F5514220062D589 /* NibDialogControl.h */,
+				E2ED3AEE0D0B27F700481D8F /* OMCDialogControlHelpers.cp */,
+				E22FCB220F5514220062D589 /* OMCDialogControlHelpers.h */,
 				E2ED3AE80D0B27D300481D8F /* DefaultExternBundle.cpp */,
 				E2ED3AE90D0B27D300481D8F /* DefaultExternBundle.h */,
 				1D94F4132F37FEBE0009C4E2 /* OMCPrivateConstants.h */,
@@ -1370,7 +1370,7 @@
 				E29ED21A0D09FD8800C9D5E8 /* ARefCounted.cp in Sources */,
 				E2ED3AEA0D0B27D300481D8F /* DefaultExternBundle.cpp in Sources */,
 				E2ED3AED0D0B27E400481D8F /* StSwitchToFront.mm in Sources */,
-				E2ED3AF20D0B27F700481D8F /* NibDialogControl.cp in Sources */,
+				E2ED3AF20D0B27F700481D8F /* OMCDialogControlHelpers.cp in Sources */,
 				1DB9D8C62324F01E003F6849 /* OMCEnvironmentExportScript.cpp in Sources */,
 				1D9BCB8C22CCAB4F00F4EAB6 /* OMCStrings.mm in Sources */,
 				1DA51CB62EACCD1B00BFF670 /* OMCAppLifetimeEvents.mm in Sources */,
