@@ -207,8 +207,14 @@
 
 #pragma mark - OMCControlAccessor protocol
 
-- (void)setControlValues:(CFDictionaryRef)inControlDict
+- (void)setControlStringValue:(NSString *)inValue forControlID:(NSString *)inControlID
 {
+    NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
+    if(windowUUID == nil || inValue == nil || inControlID == nil)
+        return;
+
+    NSInteger viewID = [inControlID integerValue];
+    [ActionUIObjC setElementValueFromStringWithWindowUUID:windowUUID viewID:viewID value:inValue viewPartID:0];
 }
 
 - (void)allControlValues:(NSMutableDictionary *)ioControlValues andProperties:(NSMutableDictionary *)ioCustomProperties withIterator:(SelectionIterator *)inSelIterator

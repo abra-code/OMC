@@ -20,6 +20,6 @@ class OMCActionUIDialog;
 
 - (void)allControlValues:(NSMutableDictionary *)ioControlValues andProperties:(NSMutableDictionary *)ioCustomProperties withIterator:(SelectionIterator *)inSelIterator;
 - (id)controlValueForID:(NSString *)inControlID forPart:(NSString *)inControlPart withIterator:(SelectionIterator *)inSelIterator outProperties:(CFDictionaryRef *)outCustomProperties;
-- (void)setControlValues:(CFDictionaryRef)inControlDict;
+- (void)setControlStringValue:(NSString *)inValue forControlID:(NSString *)inControlID;
 
 @end

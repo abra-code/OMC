@@ -23,93 +23,6 @@
 #import "OMCWebKitView.h"
 #import "OMCView.h"
 
-/*
- Method argument types. (Deprecated. These constants are used internally by NSInvocation—you should not use them directly.)
- 
- enum _NSObjCValueType {
- NSObjCNoType = 0,
- NSObjCVoidType = 'v',
- NSObjCCharType = 'c',
- NSObjCShortType = 's',
- NSObjCLongType = 'l',
- NSObjCLonglongType = 'q',
- NSObjCFloatType = 'f',
- NSObjCDoubleType = 'd',
- 
- NSObjCBoolType = 'B',
- 
- NSObjCSelectorType = ':',
- NSObjCObjectType = '@',
- NSObjCStructType = '{',
- NSObjCPointerType = '^',
- NSObjCStringType = '*',
- NSObjCArrayType = '[',
- NSObjCUnionType = '(',
- NSObjCBitfield = 'b'
- };
- 
- 
- argument types:
- @ = id
- : = selector
- c = signed char
- C = unsigned char
- s = signed short
- S = unsigned short
- i = signed int
- I = unsigned int, some enums too
- q = long long
- Q = unsigned long long
- f = float
- d = double
- ^@ = *id
- v = void
- ^v  = void *
- {_NSRange=II} = NSRange {unsigned int, unsigned int}
- {_NSPoint=ff} = NSPoint {float, float}
- {_NSRect={_NSPoint=ff}{_NSSize=ff}}
- r* = const char *
- r^^{_NSRect} = const NSRect **
- */
-
-typedef enum ObjCSelectorArgumentType
-{
-	kObjCArgNoType = 0,
-	kObjCArgVoidType = 'v',
-	kObjCArgCharType = 'c',
-	kObjCArgUCharType = 'C',
-	kObjCArgShortType = 's',
-	kObjCArgUShortType = 'S',
-	kObjCArgIntType = 'i',
-	kObjCArgUIntType = 'I',
-	kObjCArgLongType = 'l',
-	kObjCArgULongType = 'L',
-	kObjCArgLonglongType = 'q',
-	kObjCArgULonglongType = 'Q',
-	kObjCArgFloatType = 'f',
-	kObjCArgDoubleType = 'd',
-	
-	kObjCArgBoolType = 'B',
-	
-	kObjCArgSelectorType = ':',
-	kObjCArgObjectType = '@',
-	kObjCArgStructType = '{',
-	kObjCArgPointerType = '^',
-	kObjCArgStringType = '*',
-	kObjCArgArrayType = '[',
-	kObjCArgUnionType = '(',
-	kObjCArgBitfield = 'b'
-} ObjCSelectorArgumentType;
-
-static ObjCSelectorArgumentType
-FindArgumentType(const char *argTypeStr)
-{
-	if(argTypeStr == NULL)
-		return kObjCArgNoType;
-	if(argTypeStr[0] == 'r')//const - skip it
-		return (ObjCSelectorArgumentType)argTypeStr[1];
-	return (ObjCSelectorArgumentType)argTypeStr[0];
-}
 
 @implementation OMCNibWindowController
 
@@ -775,845 +688,298 @@ FindArgumentType(const char *argTypeStr)
 	}
 }
 
-//TODO: this method could use some serious refactoring to eliminate duplicate code
-- (void) setControlValues:(CFDictionaryRef)inControlDict
+- (void)setControlEnabled:(BOOL)enabled forControlID:(NSString *)inControlID
 {
-	if( inControlDict == NULL )
+	id controlOrView = [self findControlOrViewWithID:inControlID];
+	if(controlOrView != nil)
+	{
+		if( [controlOrView respondsToSelector:@selector(setEnabled:)] )
+			[(NSControl *)controlOrView setEnabled:enabled];
+	}
+}
+
+- (void)setControlVisible:(BOOL)visible forControlID:(NSString *)inControlID
+{
+	id controlOrView = [self findControlOrViewWithID:inControlID];
+	if( (controlOrView != nil) && [controlOrView respondsToSelector:@selector(setHidden:)] )
+		[controlOrView setHidden:(!visible)];
+}
+
+- (void)removeAllListItemsForControlID:(NSString *)inControlID
+{
+	id controlOrView = [self findControlOrViewWithID:inControlID];
+	if( controlOrView != NULL )
+	{
+		if( [controlOrView isKindOfClass:[NSPopUpButton class]] )
+		{
+			[(NSPopUpButton *)controlOrView removeAllItems];
+		}
+		else if( [controlOrView isKindOfClass:[NSComboBox class]] )
+		{
+			[(NSComboBox *)controlOrView removeAllItems];
+		}
+	}
+}
+
+- (void)setListItems:(CFArrayRef)items forControlID:(NSString *)inControlID
+{
+	id controlOrView = [self findControlOrViewWithID:inControlID];
+	if( controlOrView != NULL )
+	{
+		CFIndex itemCount = ::CFArrayGetCount(items);
+		if( [controlOrView isKindOfClass:[NSPopUpButton class]] )
+		{
+			NSPopUpButton *myPopupButton = (NSPopUpButton *)controlOrView;
+			[myPopupButton removeAllItems];
+			for(CFIndex i = 0; i < itemCount; i++)
+			{
+				CFStringRef oneString = ACFType<CFStringRef>::DynamicCast( ::CFArrayGetValueAtIndex(items, i) );
+				if(oneString != NULL)
+					[myPopupButton addItemWithTitle:(__bridge NSString *)oneString];
+			}
+		}
+		else if( [controlOrView isKindOfClass:[NSComboBox class]] )
+		{
+			NSComboBox *myCombo = (NSComboBox *)controlOrView;
+			[myCombo removeAllItems];
+			for(CFIndex i = 0; i < itemCount; i++)
+			{
+				CFStringRef oneString = ACFType<CFStringRef>::DynamicCast( ::CFArrayGetValueAtIndex(items, i) );
+				if(oneString != NULL)
+					[myCombo addItemWithObjectValue:(__bridge NSString *)oneString];
+			}
+		}
+	}
+}
+
+- (void)appendListItems:(CFArrayRef)items forControlID:(NSString *)inControlID
+{
+	id controlOrView = [self findControlOrViewWithID:inControlID];
+	if( controlOrView != NULL )
+	{
+		CFIndex itemCount = ::CFArrayGetCount(items);
+		if( [controlOrView isKindOfClass:[NSPopUpButton class]] )
+		{
+			NSPopUpButton *myPopupButton = (NSPopUpButton *)controlOrView;
+			for(CFIndex i = 0; i < itemCount; i++)
+			{
+				CFStringRef oneString = ACFType<CFStringRef>::DynamicCast( ::CFArrayGetValueAtIndex(items, i) );
+				if(oneString != NULL)
+					[myPopupButton addItemWithTitle:(__bridge NSString *)oneString];
+			}
+		}
+		else if( [controlOrView isKindOfClass:[NSComboBox class]] )
+		{
+			NSComboBox *myCombo = (NSComboBox *)controlOrView;
+			for(CFIndex i = 0; i < itemCount; i++)
+			{
+				CFStringRef oneString = ACFType<CFStringRef>::DynamicCast( ::CFArrayGetValueAtIndex(items, i) );
+				if(oneString != NULL)
+					[myCombo addItemWithObjectValue:(__bridge NSString *)oneString];
+			}
+		}
+	}
+}
+
+- (void)emptyTableForControlID:(NSString *)inControlID
+{
+	id controlOrView = [self findControlOrViewWithID:inControlID];
+	if( (controlOrView != nil) && [controlOrView isKindOfClass:[NSTableView class]] )
+	{
+		NSTableView *myTable = (NSTableView *)controlOrView;
+		id myDelegate = [myTable delegate];
+		if( (myDelegate != nil) && [myDelegate isKindOfClass:[OMCTableViewController class]] )
+		{
+			[myDelegate removeRows];
+			//intentional no reload here
+		}
+	}
+}
+
+- (void)removeTableRowsForControlID:(NSString *)inControlID
+{
+	id controlOrView = [self findControlOrViewWithID:inControlID];
+	if( (controlOrView != nil) && [controlOrView isKindOfClass:[NSTableView class]] )
+	{
+		NSTableView *myTable = (NSTableView *)controlOrView;
+		id myDelegate = [myTable delegate];
+		if( (myDelegate != nil) && [myDelegate isKindOfClass:[OMCTableViewController class]] )
+		{
+			[myDelegate removeRows];
+			[myDelegate reloadData];
+		}
+	}
+}
+
+- (void)setTableRows:(CFArrayRef)rows forControlID:(NSString *)inControlID
+{
+	id controlOrView = [self findControlOrViewWithID:inControlID];
+	if( (controlOrView != nil) && [controlOrView isKindOfClass:[NSTableView class]] )
+	{
+		NSTableView *myTable = (NSTableView *)controlOrView;
+		id myDelegate = [myTable delegate];
+		if( (myDelegate != nil) && [myDelegate isKindOfClass:[OMCTableViewController class]] )
+		{
+			[myDelegate removeRows];
+			[myDelegate addRows:rows];
+			[myDelegate reloadData];
+		}
+	}
+}
+
+- (void)addTableRows:(CFArrayRef)rows forControlID:(NSString *)inControlID
+{
+	id controlOrView = [self findControlOrViewWithID:inControlID];
+	if( (controlOrView != nil) && [controlOrView isKindOfClass:[NSTableView class]] )
+	{
+		NSTableView *myTable = (NSTableView *)controlOrView;
+		id myDelegate = [myTable delegate];
+		if( (myDelegate != nil) && [myDelegate isKindOfClass:[OMCTableViewController class]] )
+		{
+			[myDelegate addRows:rows];
+			[myDelegate reloadData];
+		}
+	}
+}
+
+- (void)setTableColumns:(CFArrayRef)columns forControlID:(NSString *)inControlID
+{
+	id controlOrView = [self findControlOrViewWithID:inControlID];
+	if( (controlOrView != nil) && [controlOrView isKindOfClass:[NSTableView class]] )
+	{
+		NSTableView *myTable = (NSTableView *)controlOrView;
+		id myDelegate = [myTable delegate];
+		if( (myDelegate != nil) && [myDelegate isKindOfClass:[OMCTableViewController class]] )
+			[myDelegate setColumns:(__bridge NSArray *)columns];
+	}
+}
+
+- (void)setTableColumnWidths:(CFArrayRef)widths forControlID:(NSString *)inControlID
+{
+	id controlOrView = [self findControlOrViewWithID:inControlID];
+	if( (controlOrView != nil) && [controlOrView isKindOfClass:[NSTableView class]] )
+	{
+		NSTableView *myTable = (NSTableView *)controlOrView;
+		id myDelegate = [myTable delegate];
+		if( (myDelegate != nil) && [myDelegate isKindOfClass:[OMCTableViewController class]] )
+			[myDelegate setColumnWidths:(__bridge NSArray *)widths];
+	}
+}
+
+- (void)selectControlWithID:(NSString *)inControlID
+{
+	NSView *controlOrView = [self findControlOrViewWithID:inControlID];
+	if(controlOrView != nil)
+		[self.window makeFirstResponder:controlOrView];
+}
+
+- (void)setCommandID:(NSString *)commandID forControlID:(NSString *)inControlID
+{
+	NSView *controlOrView = [self findControlOrViewWithID:inControlID];
+	if( (controlOrView != nil) && [controlOrView respondsToSelector:@selector(setCommandID:)] )
+		[controlOrView performSelector:@selector(setCommandID:) withObject:commandID];
+}
+
+- (void)moveControlWithID:(NSString *)inControlID toPosition:(NSPoint)position
+{
+	id controlOrView = [self findControlOrViewWithID:inControlID];
+	if( (controlOrView != nil) && [controlOrView isKindOfClass:[NSView class]] )
+	{
+		float viewHeight = NSHeight([controlOrView bounds]);
+		NSView *superView = [controlOrView superview];
+		float superHeight = NSHeight([superView bounds]);
+		float bottomOrigin = superHeight - viewHeight - position.y;
+		[controlOrView setFrameOrigin: NSMakePoint(position.x, bottomOrigin) ];
+		[controlOrView setNeedsDisplay:YES];
+	}
+}
+
+- (void)resizeControlWithID:(NSString *)inControlID toSize:(NSSize)size
+{
+	id controlOrView = [self findControlOrViewWithID:inControlID];
+	if( (controlOrView != nil) && [controlOrView isKindOfClass:[NSView class]] )
+	{
+		[controlOrView setFrameSize:size];
+		[controlOrView setNeedsDisplay:YES];
+	}
+}
+
+- (void)scrollControlWithID:(NSString *)inControlID toPosition:(NSPoint)position
+{
+	id myView = [self findControlOrViewWithID:inControlID];
+	if( myView == nil )
 		return;
-	
-	CFIndex itemCount = ::CFDictionaryGetCount(inControlDict);
-	if(itemCount == 0)
-		return;
 
-	ACFDict controlValues(inControlDict);
+	NSClipView *clipView = nil;
+	NSView *docView = nil;
+	if( [myView isKindOfClass:[NSScrollView class] ] )
+	{//we target scroll view
+		docView = [(NSScrollView *)myView documentView];
+		NSView *superView = [docView superview];
+		if( [superView isKindOfClass:[NSClipView class] ] )
+			clipView = (NSClipView *)superView;
+	}
+	else if( [myView isKindOfClass:[PDFView class] ] )
+	{//multiple view hierarchy freak
+		docView = [(PDFView *)myView documentView];
+		//the superview is matte view
+		NSView *matteView = [docView superview];
 
-	CFDictionaryRef removeListItemsDict;
-	if( controlValues.GetValue(CFSTR("REMOVE_LIST_ITEMS"), removeListItemsDict) )
-	{
-		itemCount = ::CFDictionaryGetCount(removeListItemsDict);
-		if(itemCount > 0)
+		NSView *superView = nil;
+		if(matteView != nil)
+			superView = [matteView superview];//get superview of matte view - this should be clipping view
+
+		if( (superView != nil) && [superView isKindOfClass:[NSClipView class] ] )
 		{
-			std::vector<CFTypeRef> keyList(itemCount);
-			std::vector<CFTypeRef> valueList(itemCount);
-
-			::CFDictionaryGetKeysAndValues(removeListItemsDict, (const void **)keyList.data(), (const void **)valueList.data());
-			for(CFIndex i = 0; i < itemCount; i++)
-			{
-				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
-				if(controlID != NULL)
-				{
-                    id controlOrView = [self findControlOrViewWithID:(__bridge NSString*)controlID];
-					if( controlOrView != NULL )
-					{
-						if( [controlOrView isKindOfClass:[NSPopUpButton class]] )
-						{
-							NSPopUpButton *myPopupButton = (NSPopUpButton *)controlOrView;
-							[myPopupButton removeAllItems];
-						}
-						else if( [controlOrView isKindOfClass:[NSComboBox class]] )
-						{
-							NSComboBox *myCombo = (NSComboBox *)controlOrView;
-							[myCombo removeAllItems];
-						}
-					}
-				}
-			}
+			docView = matteView;
+			clipView = (NSClipView *)superView;
 		}
 	}
-
-	//"set" operation replaces existing list items
-	CFDictionaryRef setListItemsDict;
-	if( controlValues.GetValue(CFSTR("SET_LIST_ITEMS"), setListItemsDict) )
+	else if( [myView isKindOfClass:[IKImageView class]] )
 	{
-		itemCount = ::CFDictionaryGetCount(setListItemsDict);
-		if(itemCount > 0)
+		IKImageView *imgView = (IKImageView *)myView;
+		NSSize imgSize = [imgView imageSize];
+
+		docView = myView;
+		NSView *superView = [docView superview];
+		if( [superView isKindOfClass:[NSClipView class] ] )
+			clipView = (NSClipView *)superView;
+
+		if( ![docView isFlipped] )
 		{
-			std::vector<CFTypeRef> keyList(itemCount);
-			std::vector<CFTypeRef> valueList(itemCount);
-
-			::CFDictionaryGetKeysAndValues(setListItemsDict, (const void **)keyList.data(), (const void **)valueList.data());
-			for(CFIndex i = 0; i < itemCount; i++)
-			{
-				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
-				CFArrayRef theArr = ACFType<CFArrayRef>::DynamicCast( valueList[i] );
-				if( (controlID != NULL) && (theArr != NULL) )
-				{
-                    id controlOrView = [self findControlOrViewWithID:(__bridge NSString*)controlID];
-					if( controlOrView != NULL )
-					{
-						CFIndex itemCount = ::CFArrayGetCount(theArr);
-						if( [controlOrView isKindOfClass:[NSPopUpButton class]] )
-						{
-							NSPopUpButton *myPopupButton = (NSPopUpButton *)controlOrView;
-							[myPopupButton removeAllItems];
-							
-							for(CFIndex i = 0; i < itemCount; i++)
-							{
-								CFTypeRef oneItem = ::CFArrayGetValueAtIndex(theArr,i);
-								CFStringRef oneString = ACFType<CFStringRef>::DynamicCast( oneItem );
-								if(oneString != NULL)
-                                    [myPopupButton addItemWithTitle:(__bridge NSString *)oneString];
-							}
-						}
-						else if( [controlOrView isKindOfClass:[NSComboBox class]] )
-						{
-							NSComboBox *myCombo = (NSComboBox *)controlOrView;
-							[myCombo removeAllItems];
-							
-							for(CFIndex i = 0; i < itemCount; i++)
-							{
-								CFTypeRef oneItem = ::CFArrayGetValueAtIndex(theArr,i);
-								CFStringRef oneString = ACFType<CFStringRef>::DynamicCast( oneItem );
-								if(oneString != NULL)
-                                    [myCombo addItemWithObjectValue:(__bridge NSString *)oneString];
-							}
-						}
-					}
-				}
-			}
+			float superHeight = NSHeight([clipView bounds]);
+			position.y = /*NSMaxY([myView frame])*/imgSize.height - superHeight - position.y;
 		}
+
+		[docView scrollPoint:position];
+		clipView = nil;//set to null to prevent scrolling attempts below
+	}
+	else if( [myView isKindOfClass:[NSView class]] )
+	{//we target document view which is inside clip view, which in turn is in NSScrollView
+		docView = myView;
+		NSView *superView = [docView superview];
+		if( [superView isKindOfClass:[NSClipView class] ] )
+			clipView = (NSClipView *)superView;
 	}
 
-	//"append" operation preserving existing list items
-	CFDictionaryRef appendListItemsDict;
-	if( controlValues.GetValue(CFSTR("APPEND_LIST_ITEMS"), appendListItemsDict) )
+	if(clipView != nil)
 	{
-		itemCount = ::CFDictionaryGetCount(appendListItemsDict);
-		if(itemCount > 0)
+		if( ![docView isFlipped] )
 		{
-			std::vector<CFTypeRef> keyList(itemCount);
-			std::vector<CFTypeRef> valueList(itemCount);
-
-			::CFDictionaryGetKeysAndValues(appendListItemsDict, (const void **)keyList.data(), (const void **)valueList.data());
-			for(CFIndex i = 0; i < itemCount; i++)
-			{
-				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
-				CFArrayRef theArr = ACFType<CFArrayRef>::DynamicCast( valueList[i] );
-				if( (controlID != NULL) && (theArr != NULL) )
-				{
-                    id controlOrView = [self findControlOrViewWithID:(__bridge NSString*)controlID];
-					if( controlOrView != NULL )
-					{
-						CFIndex itemCount = ::CFArrayGetCount(theArr);
-						if( [controlOrView isKindOfClass:[NSPopUpButton class]] )
-						{
-							NSPopUpButton *myPopupButton = (NSPopUpButton *)controlOrView;
-							for(CFIndex i = 0; i < itemCount; i++)
-							{
-								CFTypeRef oneItem = ::CFArrayGetValueAtIndex(theArr,i);
-								CFStringRef oneString = ACFType<CFStringRef>::DynamicCast( oneItem );
-								if(oneString != NULL)
-                                    [myPopupButton addItemWithTitle:(__bridge NSString *)oneString];
-							}
-						}
-						else if( [controlOrView isKindOfClass:[NSComboBox class]] )
-						{
-							NSComboBox *myCombo = (NSComboBox *)controlOrView;
-							
-							for(CFIndex i = 0; i < itemCount; i++)
-							{
-								CFTypeRef oneItem = ::CFArrayGetValueAtIndex(theArr,i);
-								CFStringRef oneString = ACFType<CFStringRef>::DynamicCast( oneItem );
-								if(oneString != NULL)
-                                    [myCombo addItemWithObjectValue:(__bridge NSString *)oneString];
-							}							
-						}
-					}
-				}
-			}
+			float superHeight = NSHeight([clipView bounds]);
+			float viewHeight = NSHeight([docView bounds]);
+			position.y = /*NSMaxY([myView frame])*/viewHeight - superHeight - position.y;
 		}
+
+		[docView scrollPoint:position];
 	}
+}
 
-	//empty the table without refresh/reload
-	CFDictionaryRef emptyTableDict;
-	if( controlValues.GetValue(CFSTR("PREPARE_TABLE_EMPTY"), emptyTableDict) )
-	{
-		itemCount = ::CFDictionaryGetCount(emptyTableDict);
-		if(itemCount > 0)
-		{
-			std::vector<CFTypeRef> keyList(itemCount);
-			std::vector<CFTypeRef> valueList(itemCount);
-
-			::CFDictionaryGetKeysAndValues(emptyTableDict, (const void **)keyList.data(), (const void **)valueList.data());
-			for(CFIndex i = 0; i < itemCount; i++)
-			{
-				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
-				if(controlID != NULL)
-				{
-                    id controlOrView = [self findControlOrViewWithID:(__bridge NSString*)controlID];
-					if( (controlOrView != nil) && [controlOrView isKindOfClass:[NSTableView class]] )
-					{
-						NSTableView *myTable = (NSTableView *)controlOrView;
-						id myDelegate = [myTable delegate];
-						if( (myDelegate != nil) && [myDelegate isKindOfClass:[OMCTableViewController class]] )
-						{
-							[myDelegate removeRows];
-							//intentional no reload here
-						}
-					}
-				}
-			}
-		}
-	}
-
-	//empty the table and refresh
-	CFDictionaryRef removeTableRowsDict;
-	if( controlValues.GetValue(CFSTR("REMOVE_TABLE_ROWS"), removeTableRowsDict) )
-	{
-		itemCount = ::CFDictionaryGetCount(removeTableRowsDict);
-		if(itemCount > 0)
-		{
-			std::vector<CFTypeRef> keyList(itemCount);
-			std::vector<CFTypeRef> valueList(itemCount);
-
-			::CFDictionaryGetKeysAndValues(removeTableRowsDict, (const void **)keyList.data(), (const void **)valueList.data());
-			for(CFIndex i = 0; i < itemCount; i++)
-			{
-				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
-				if(controlID != NULL)
-				{
-                    id controlOrView = [self findControlOrViewWithID:(__bridge NSString*)controlID];
-					if( (controlOrView != nil) && [controlOrView isKindOfClass:[NSTableView class]] )
-					{
-						NSTableView *myTable = (NSTableView *)controlOrView;
-						id myDelegate = [myTable delegate];
-						if( (myDelegate != nil) && [myDelegate isKindOfClass:[OMCTableViewController class]] )
-						{
-							[myDelegate removeRows];
-							[myDelegate reloadData];
-						}
-					}
-				}
-			}
-		}
-	}
-
-	//"set" operation replaces existing content and refreshes
-	CFDictionaryRef setTableRowsDict;
-	if( controlValues.GetValue(CFSTR("SET_TABLE_ROWS"), setTableRowsDict) )
-	{
-		itemCount = ::CFDictionaryGetCount(setTableRowsDict);
-		if(itemCount > 0)
-		{
-			std::vector<CFTypeRef> keyList(itemCount);
-			std::vector<CFTypeRef> valueList(itemCount);
-
-			::CFDictionaryGetKeysAndValues(setTableRowsDict, (const void **)keyList.data(), (const void **)valueList.data());
-			for(CFIndex i = 0; i < itemCount; i++)
-			{
-				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
-				CFArrayRef theArr = ACFType<CFArrayRef>::DynamicCast( valueList[i] );
-				if( (controlID != NULL) && (theArr != NULL) )
-				{
-                    id controlOrView = [self findControlOrViewWithID:(__bridge NSString*)controlID];
-					if( (controlOrView != nil) && [controlOrView isKindOfClass:[NSTableView class]] )
-					{
-						NSTableView *myTable = (NSTableView *)controlOrView;
-						id myDelegate = [myTable delegate];
-						if( (myDelegate != nil) && [myDelegate isKindOfClass:[OMCTableViewController class]] )
-						{
-							[myDelegate removeRows];
-							[myDelegate addRows:theArr];
-							[myDelegate reloadData];
-						}
-					}
-				}
-			}
-		}
-	}
-
-	//this is "append" operation
-	CFDictionaryRef addTableRowsDict;
-	if( controlValues.GetValue(CFSTR("ADD_TABLE_ROWS"), addTableRowsDict) )
-	{
-		itemCount = ::CFDictionaryGetCount(addTableRowsDict);
-		if(itemCount > 0)
-		{
-			std::vector<CFTypeRef> keyList(itemCount);
-			std::vector<CFTypeRef> valueList(itemCount);
-
-			::CFDictionaryGetKeysAndValues(addTableRowsDict, (const void **)keyList.data(), (const void **)valueList.data());
-			for(CFIndex i = 0; i < itemCount; i++)
-			{
-				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
-				CFArrayRef theArr = ACFType<CFArrayRef>::DynamicCast( valueList[i] );
-				if( (controlID != NULL) && (theArr != NULL) )
-				{
-                    id controlOrView = [self findControlOrViewWithID:(__bridge NSString*)controlID];
-					if( (controlOrView != nil) && [controlOrView isKindOfClass:[NSTableView class]] )
-					{
-						NSTableView *myTable = (NSTableView *)controlOrView;
-						id myDelegate = [myTable delegate];
-						if( (myDelegate != nil) && [myDelegate isKindOfClass:[OMCTableViewController class]] )
-						{
-							[myDelegate addRows:theArr];
-							[myDelegate reloadData];
-						}
-					}
-				}
-			}
-		}
-	}
-
-	CFDictionaryRef addTableColumnsDict;
-	if( controlValues.GetValue(CFSTR("SET_TABLE_COLUMNS"), addTableColumnsDict) )
-	{
-		itemCount = ::CFDictionaryGetCount(addTableColumnsDict);
-		if(itemCount > 0)
-		{
-			std::vector<CFTypeRef> keyList(itemCount);
-			std::vector<CFTypeRef> valueList(itemCount);
-
-			::CFDictionaryGetKeysAndValues(addTableColumnsDict, (const void **)keyList.data(), (const void **)valueList.data());
-			for(CFIndex i = 0; i < itemCount; i++)
-			{
-				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
-				CFArrayRef theArr = ACFType<CFArrayRef>::DynamicCast( valueList[i] );
-				if( (controlID != NULL) && (theArr != NULL) )
-				{
-                    id controlOrView = [self findControlOrViewWithID:(__bridge NSString*)controlID];
-					if( (controlOrView != nil) && [controlOrView isKindOfClass:[NSTableView class]] )
-					{
-						NSTableView *myTable = (NSTableView *)controlOrView;
-						id myDelegate = [myTable delegate];
-						
-						//BOOL isKindOf = [myDelegate isKindOfClass:[OMCTableViewController class]];
-						//BOOL isMemberOf = [myDelegate isMemberOfClass:[OMCTableViewController class]];
-						//NSLog(@"OMC tableview controller: isKindOf=%d, isMemberOf=%d", (int)isKindOf, (int)isMemberOf);
-						
-						if( (myDelegate != nil) && [myDelegate isKindOfClass:[OMCTableViewController class]] )
-                            [myDelegate setColumns:(__bridge NSArray *)theArr];
-					}
-				}
-			}
-		}
-	}
-
-	CFDictionaryRef setTableWidthsDict;
-	if( controlValues.GetValue(CFSTR("SET_TABLE_WIDTHS"), setTableWidthsDict) )
-	{
-		itemCount = ::CFDictionaryGetCount(setTableWidthsDict);
-		if(itemCount > 0)
-		{
-			std::vector<CFTypeRef> keyList(itemCount);
-			std::vector<CFTypeRef> valueList(itemCount);
-
-			::CFDictionaryGetKeysAndValues(setTableWidthsDict, (const void **)keyList.data(), (const void **)valueList.data());
-			for(CFIndex i = 0; i < itemCount; i++)
-			{
-				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
-				CFArrayRef theArr = ACFType<CFArrayRef>::DynamicCast( valueList[i] );
-				if( (controlID != NULL) && (theArr != NULL) )
-				{
-                    id controlOrView = [self findControlOrViewWithID:(__bridge NSString*)controlID];
-					if( (controlOrView != nil) && [controlOrView isKindOfClass:[NSTableView class]] )
-					{
-						NSTableView *myTable = (NSTableView *)controlOrView;
-						id myDelegate = [myTable delegate];
-						if( (myDelegate != nil) && [myDelegate isKindOfClass:[OMCTableViewController class]] )
-                            [myDelegate setColumnWidths:(__bridge NSArray *)theArr];
-					}
-				}
-			}
-		}
-	}
-
-	{
-	CFDictionaryRef valuesDict = NULL;
-	if( controlValues.GetValue(CFSTR("VALUES"), valuesDict) )
-	{
-		itemCount = ::CFDictionaryGetCount(valuesDict);
-		if(itemCount > 0)
-		{
-			std::vector<CFTypeRef> keyList(itemCount);
-			std::vector<CFTypeRef> valueList(itemCount);
-
-			::CFDictionaryGetKeysAndValues(valuesDict, (const void **)keyList.data(), (const void **)valueList.data());
-			for(CFIndex i = 0; i < itemCount; i++)
-			{
-				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
-				if(controlID != NULL)
-				{
-                    [self setControlStringValue:(__bridge NSString *)ACFType<CFStringRef>::DynamicCast( valueList[i] )
-                                   forControlID:(__bridge NSString*)controlID];
-				}
-			}
-		}
-	}
-	}
-	
-	{
-	CFDictionaryRef enableDisableDict = NULL;
-	if( controlValues.GetValue(CFSTR("ENABLE_DISABLE"), enableDisableDict) )
-	{
-		itemCount = ::CFDictionaryGetCount(enableDisableDict);
-		if(itemCount > 0)
-		{
-			std::vector<CFTypeRef> keyList(itemCount);
-			std::vector<CFTypeRef> valueList(itemCount);
-
-			::CFDictionaryGetKeysAndValues(enableDisableDict, (const void **)keyList.data(), (const void **)valueList.data());
-			for(CFIndex i = 0; i < itemCount; i++)
-			{
-				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
-				CFBooleanRef theVal = ACFType<CFBooleanRef>::DynamicCast( valueList[i] );
-				if( (controlID != NULL) && (theVal != NULL) )
-				{
-                    id controlOrView = [self findControlOrViewWithID:(__bridge NSString *)controlID];
-					if(controlOrView != nil)
-					{
-						Boolean doEnable = ::CFBooleanGetValue(theVal);
-						if( [controlOrView respondsToSelector:@selector(setEnabled:)] )
-								[(NSControl *)controlOrView setEnabled:doEnable];
-						else
-						{
-							//NSView does not have enable/disable
-						}
-					}
-				}
-			}
-		}
-	}
-	}
-
-	{
-	CFDictionaryRef showHideDict = NULL;
-	if( controlValues.GetValue(CFSTR("SHOW_HIDE"), showHideDict) )
-	{
-		itemCount = ::CFDictionaryGetCount(showHideDict);
-		if(itemCount > 0)
-		{
-			std::vector<CFTypeRef> keyList(itemCount);
-			std::vector<CFTypeRef> valueList(itemCount);
-
-			::CFDictionaryGetKeysAndValues(showHideDict, (const void **)keyList.data(), (const void **)valueList.data());
-			for(CFIndex i = 0; i < itemCount; i++)
-			{
-				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
-				CFBooleanRef theVal = ACFType<CFBooleanRef>::DynamicCast( valueList[i] );
-				if( (controlID != NULL) && (theVal != NULL) )
-				{
-                    id controlOrView = [self findControlOrViewWithID:(__bridge NSString *)controlID];
-					if( (controlOrView != nil) && [controlOrView respondsToSelector:@selector(setHidden:)] )
-					{
-						BOOL makeVisible = (BOOL)::CFBooleanGetValue(theVal);
-						[controlOrView setHidden:(!makeVisible)];
-					}
-				}
-			}
-		}
-	}
-	}
-
-	{
-	CFDictionaryRef commandIdsDict = NULL;
-	if( controlValues.GetValue(CFSTR("COMMAND_IDS"), commandIdsDict) )
-	{
-		itemCount = ::CFDictionaryGetCount(commandIdsDict);
-		if(itemCount > 0)
-		{
-			std::vector<CFTypeRef> keyList(itemCount);
-			std::vector<CFTypeRef> valueList(itemCount);
-
-			::CFDictionaryGetKeysAndValues(commandIdsDict, (const void **)keyList.data(), (const void **)valueList.data());
-			for(CFIndex i = 0; i < itemCount; i++)
-			{
-				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
-				CFStringRef theVal = ACFType<CFStringRef>::DynamicCast( valueList[i] );
-				if( (controlID != NULL) && (theVal != NULL) )
-				{
-                    NSView *controlOrView = [self findControlOrViewWithID:(__bridge NSString *)controlID];
-					if( (controlOrView != nil) && [controlOrView respondsToSelector:@selector(setCommandID:)] )
-					{
-                        [controlOrView performSelector:@selector(setCommandID:) withObject:(__bridge NSString *)theVal];
-					}
-				}
-			}
-		}
-	}
-	}
-
-	{
-	CFDictionaryRef selectDict = NULL;
-	if( controlValues.GetValue(CFSTR("SELECT"), selectDict) )
-	{
-		itemCount = ::CFDictionaryGetCount(selectDict);
-		if(itemCount > 0)
-		{
-			std::vector<CFTypeRef> keyList(itemCount);
-			std::vector<CFTypeRef> valueList(itemCount);
-			
-			::CFDictionaryGetKeysAndValues(selectDict, (const void **)keyList.data(), (const void **)valueList.data());
-			for(CFIndex i = 0; i < itemCount; i++)
-			{
-				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
-				//we don't care about the bool value
-				//CFBooleanRef theVal = ACFType<CFBooleanRef>::DynamicCast( valueList[i] );
-				if( (controlID != NULL) /*&& (theVal != NULL)*/ )
-				{
-					if( kCFCompareEqualTo == CFStringCompare( controlID, CFSTR("omcself.window"), 0) )
-					{
-						//the message targets our dialog window
-						[self.window makeKeyAndOrderFront:self];//bring it to front and select
-					}
-					else if( kCFCompareEqualTo == CFStringCompare( controlID, CFSTR("omc_application"), 0) )
-					{
-						NSApplication *myApp = [NSApplication sharedApplication];
-						if(myApp != nil)
-							[myApp activateIgnoringOtherApps:YES];
-					}
-					else
-					{
-						//"selecting" a control means putting a focus in it/making it the first responder
-                        NSView *controlOrView = [self findControlOrViewWithID:(__bridge NSString *)controlID];
-						if(controlOrView != nil)
-							[self.window makeFirstResponder:controlOrView];
-					}
-				}
-			}
-		}
-	}
-	}
-	
-
-	{
-	CFDictionaryRef terminateDict = NULL;
-	if( controlValues.GetValue(CFSTR("TERMINATE"), terminateDict) )
-	{
-		itemCount = ::CFDictionaryGetCount(terminateDict);
-		if(itemCount > 0)
-		{
-			std::vector<CFTypeRef> keyList(itemCount);
-			std::vector<CFTypeRef> valueList(itemCount);
-			
-			::CFDictionaryGetKeysAndValues(terminateDict, (const void **)keyList.data(), (const void **)valueList.data());
-			for(CFIndex i = 0; i < itemCount; i++)
-			{
-				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
-				CFBooleanRef theVal = ACFType<CFBooleanRef>::DynamicCast( valueList[i] );
-				if( (controlID != NULL) && (theVal != NULL) )
-				{
-					if( kCFCompareEqualTo == CFStringCompare( controlID, CFSTR("omcself.window"), 0) )
-					{
-						//the message targets our dialog window
-						Boolean terminateOK = ::CFBooleanGetValue(theVal);
-						NSString *commandID;
-						if(terminateOK)
-                        {
-                            commandID = self.endOKSubcommandID ?: @"omc.dialog.ok";
-                        }
-						else
-                        {
-                            commandID = self.endCancelSubcommandID ?: @"omc.dialog.cancel";
-                        }
-						
-						self.lastCommandID = commandID;
-
-						[self.window close];//our windowWillClose will be called, which calls "terminate", which executes the proper termination command
-						return;
-					}
-					else if( kCFCompareEqualTo == CFStringCompare( controlID, CFSTR("omc_application"), 0) )
-					{
-						NSApplication *myApp = [NSApplication sharedApplication];
-						if(myApp != NULL)
-						{
-							[myApp terminate:self];
-							return;
-						}
-					}
-					else
-					{//can a control/view respond to some kind of terminate message? probably not
-						//NSView *controlOrView = [self findControlOrViewWithID:controlId];
-						//if(controlOrView != NULL)
-						//	[controlOrView setHidden:(BOOL)::CFBooleanGetValue(theVal)];
-					}
-				}
-			}
-		}
-	}
-	}
-
-	{
-		CFDictionaryRef moveDict = NULL;
-		if( controlValues.GetValue(CFSTR("MOVE"), moveDict) )
-		{
-			itemCount = ::CFDictionaryGetCount(moveDict);
-			if(itemCount > 0)
-			{
-				std::vector<CFTypeRef> keyList(itemCount);
-				std::vector<CFTypeRef> valueList(itemCount);
-				
-				::CFDictionaryGetKeysAndValues(moveDict, (const void **)keyList.data(), (const void **)valueList.data());
-				for(CFIndex i = 0; i < itemCount; i++)
-				{
-					CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
-					CFArrayRef theArr = ACFType<CFArrayRef>::DynamicCast( valueList[i] );
-					
-					if( (controlID != NULL) && (theArr != NULL) )
-					{
-						NSPoint newTopLeftOrigin = {0, 0};
-						CFIndex theCount = ::CFArrayGetCount(theArr);
-						if(theCount > 0)
-						{
-							CFTypeRef oneItemRef = ::CFArrayGetValueAtIndex(theArr, 0);
-							CFStringRef numString = ACFType<CFStringRef>::DynamicCast( oneItemRef );
-							if(numString != NULL)
-								newTopLeftOrigin.x = ::CFStringGetIntValue(numString);
-						}
-
-						if(theCount > 1)
-						{
-							CFTypeRef oneItemRef = ::CFArrayGetValueAtIndex(theArr, 1);
-							CFStringRef numString = ACFType<CFStringRef>::DynamicCast( oneItemRef );
-							if(numString != NULL)
-								newTopLeftOrigin.y = ::CFStringGetIntValue(numString);
-						}
-
-						if( kCFCompareEqualTo == CFStringCompare( controlID, CFSTR("omcself.window"), 0) )
-						{
-							[self setWindowTopLeftPosition:newTopLeftOrigin];
-						}
-						else
-						{
-                            id controlOrView = [self findControlOrViewWithID:(__bridge NSString *)controlID];
-							if( (controlOrView != nil) && [controlOrView isKindOfClass:[NSView class]] )
-							{
-								float viewHeight = NSHeight([controlOrView bounds]);
-								NSView *superView = [controlOrView superview];
-								float superHeight = NSHeight([superView bounds]);
-								float bottomOrigin = superHeight - viewHeight - newTopLeftOrigin.y;
-								[controlOrView setFrameOrigin: NSMakePoint(newTopLeftOrigin.x, bottomOrigin) ];
-								[controlOrView setNeedsDisplay:YES];
-								//[[controlOrView superview] setNeedsDisplay: YES];//can it mess up the superview?
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-
-	{
-		CFDictionaryRef moveDict = NULL;
-		if( controlValues.GetValue(CFSTR("SCROLL"), moveDict) )
-		{
-			itemCount = ::CFDictionaryGetCount(moveDict);
-			if(itemCount > 0)
-			{
-				std::vector<CFTypeRef> keyList(itemCount);
-				std::vector<CFTypeRef> valueList(itemCount);
-				
-				::CFDictionaryGetKeysAndValues(moveDict, (const void **)keyList.data(), (const void **)valueList.data());
-				for(CFIndex i = 0; i < itemCount; i++)
-				{
-					CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
-					CFArrayRef theArr = ACFType<CFArrayRef>::DynamicCast( valueList[i] );
-					
-					if( (controlID != NULL) && (theArr != NULL) )
-					{
-						NSPoint newTopLeftOrigin = {0, 0};
-						CFIndex theCount = ::CFArrayGetCount(theArr);
-						if(theCount > 0)
-						{
-							CFTypeRef oneItemRef = ::CFArrayGetValueAtIndex(theArr, 0);
-							CFStringRef numString = ACFType<CFStringRef>::DynamicCast( oneItemRef );
-							if(numString != NULL)
-								newTopLeftOrigin.x = ::CFStringGetIntValue(numString);
-						}
-						
-						if(theCount > 1)
-						{
-							CFTypeRef oneItemRef = ::CFArrayGetValueAtIndex(theArr, 1);
-							CFStringRef numString = ACFType<CFStringRef>::DynamicCast( oneItemRef );
-							if(numString != NULL)
-								newTopLeftOrigin.y = ::CFStringGetIntValue(numString);
-						}
-
-						//NSInteger controlId = ::CFStringGetIntValue(theKey);
-                        id myView = [self findControlOrViewWithID:(__bridge NSString *)controlID];
-						
-						if( myView != nil )
-						{
-							NSClipView *clipView = nil;
-							NSView *docView = nil;
-							if( [myView isKindOfClass:[NSScrollView class] ] )
-							{//we target scroll view
-								docView = [(NSScrollView *)myView documentView];
-								NSView *superView = [docView superview];
-								if( [superView isKindOfClass:[NSClipView class] ] )
-									clipView = (NSClipView *)superView;
-							}
-							else if( [myView isKindOfClass:[PDFView	class] ] )
-							{//multiple view hierarchy freak
-								docView = [(PDFView *)myView documentView];
-								//the superview is matte view
-								NSView *matteView = [docView superview];
-								
-								NSView *superView = nil;
-								if(matteView != nil)
-									superView = [matteView superview];//get superview of matte view - this should be clipping view
-								
-								if( (superView != nil) && [superView isKindOfClass:[NSClipView class] ] )
-								{
-									docView = matteView;
-									clipView = (NSClipView *)superView;
-								}
-							}
-							else if( [myView isKindOfClass:[IKImageView	class]] )
-							{
-								IKImageView *imgView = (IKImageView *)myView;
-								NSSize imgSize = [imgView imageSize];
-								
-								docView = myView;
-								NSView *superView = [docView superview];
-								if( [superView isKindOfClass:[NSClipView class] ] )
-									clipView = (NSClipView *)superView;
-								
-								if( ![docView isFlipped] )
-								{
-									float superHeight = NSHeight([clipView bounds]);
-									newTopLeftOrigin.y = /*NSMaxY([myView frame])*/imgSize.height - superHeight - newTopLeftOrigin.y;
-								}
-
-								[docView scrollPoint:newTopLeftOrigin];
-								clipView = nil;//set to null to prevent scrolling attempts below
-							}
-							else if( [myView isKindOfClass:[NSView	class]] ) 
-							{//we target document view which is inside clip view, which in turn is in NSScrollView
-								docView = myView;
-								NSView *superView = [docView superview];
-								if( [superView isKindOfClass:[NSClipView class] ] )
-									clipView = (NSClipView *)superView;
-							}
-							
-							if(clipView != nil)
-							{
-								if( ![docView isFlipped] )
-								{
-									float superHeight = NSHeight([clipView bounds]);
-									float viewHeight = NSHeight([docView bounds]);
-									newTopLeftOrigin.y = /*NSMaxY([myView frame])*/viewHeight - superHeight - newTopLeftOrigin.y;
-								}
-								
-								[docView scrollPoint:newTopLeftOrigin];
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-	
-	{
-		CFDictionaryRef resizeDict = NULL;
-		if( controlValues.GetValue(CFSTR("RESIZE"), resizeDict) )
-		{
-			itemCount = ::CFDictionaryGetCount(resizeDict);
-			if(itemCount > 0)
-			{
-				std::vector<CFTypeRef> keyList(itemCount);
-				std::vector<CFTypeRef> valueList(itemCount);
-				
-				::CFDictionaryGetKeysAndValues(resizeDict, (const void **)keyList.data(), (const void **)valueList.data());
-				for(CFIndex i = 0; i < itemCount; i++)
-				{
-					CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
-					CFArrayRef theArr = ACFType<CFArrayRef>::DynamicCast( valueList[i] );
-					if( (controlID != NULL) && (theArr != NULL) )
-					{
-						NSSize newSize = { 0, 0 };
-						CFIndex theCount = ::CFArrayGetCount(theArr);
-						if(theCount > 0)
-						{
-							CFTypeRef oneItemRef = ::CFArrayGetValueAtIndex(theArr, 0);
-							CFStringRef numString = ACFType<CFStringRef>::DynamicCast( oneItemRef );
-							if(numString != NULL)
-								newSize.width = ::CFStringGetIntValue(numString);
-						}
-						
-						if(theCount > 1)
-						{
-							CFTypeRef oneItemRef = ::CFArrayGetValueAtIndex(theArr, 1);
-							CFStringRef numString = ACFType<CFStringRef>::DynamicCast( oneItemRef );
-							if(numString != NULL)
-								newSize.height = ::CFStringGetIntValue(numString);
-						}
-
-						if( kCFCompareEqualTo == CFStringCompare( controlID, CFSTR("omcself.window"), 0) )
-						{
-							//the message targets our dialog window
-							[self.window setContentSize:newSize];
-						}
-						else
-						{
-                            id controlOrView = [self findControlOrViewWithID:(__bridge NSString *)controlID];
-							
-							if( (controlOrView != nil) && [controlOrView isKindOfClass:[NSView class]] )
-							{
-								[controlOrView setFrameSize:newSize];
-								[controlOrView setNeedsDisplay:YES];
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-
-	{
-	CFDictionaryRef invokeDict;
-	if( controlValues.GetValue(CFSTR("INVOKE"), invokeDict) )
-	{
-		itemCount = ::CFDictionaryGetCount(invokeDict);
-		if(itemCount > 0)
-		{
-			std::vector<CFTypeRef> keyList(itemCount);
-			std::vector<CFTypeRef> valueList(itemCount);
-			
-			::CFDictionaryGetKeysAndValues(invokeDict, (const void **)keyList.data(), (const void **)valueList.data());
-			for(CFIndex i = 0; i < itemCount; i++)
-			{
-				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
-				CFArrayRef theArr = ACFType<CFArrayRef>::DynamicCast( valueList[i] );
-				if( (controlID != NULL) && (theArr != NULL) )
-				{
-					id messageTarget = nil;
-					if( kCFCompareEqualTo == CFStringCompare( controlID, CFSTR("omcself.window"), 0) )
-					{
-						//the message targets our dialog window
-						messageTarget = (id)self.window;
-					}
-					else if( kCFCompareEqualTo == CFStringCompare( controlID, CFSTR("omc_application"), 0) )
-					{
-						messageTarget = (id)[NSApplication sharedApplication];
-					}
-					else if( kCFCompareEqualTo == CFStringCompare( controlID, CFSTR("omc_workspace"), 0) )
-					{
-						messageTarget = (id)[NSWorkspace sharedWorkspace];
-					}
-					else
-					{
-                        messageTarget = [self findControlOrViewWithID:(__bridge NSString *)controlID];
-					}
-
-					if(messageTarget != nil)
-					{
-						CFIndex messageCount = ::CFArrayGetCount(theArr);
-						if(messageCount > 0)
-						{
-							for(CFIndex msgIndex = 0; msgIndex < messageCount; msgIndex++)
-							{
-								CFArrayRef oneObjCMessage = ACFType<CFArrayRef>::DynamicCast( ::CFArrayGetValueAtIndex(theArr, msgIndex) );
-								if(oneObjCMessage != NULL)
-									[self sendObjCMessage:oneObjCMessage toTarget:(id)messageTarget];
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-	}
+- (void)invokeMessagesForControlID:(NSString *)inControlID messages:(CFArrayRef)messages
+{
+	id messageTarget = [self findControlOrViewWithID:inControlID];
+	if(messageTarget != nil)
+		[self invokeMessages:messages onTarget:messageTarget];
 }
 
 - (void)handleAction:(id)sender
@@ -1663,394 +1029,6 @@ FindArgumentType(const char *argTypeStr)
             [self dispatchCommand:commandID withContext:NULL];
         }
     }
-}
-
-- (void)setWindowTopLeftPosition:(NSPoint)absolutePosition
-{	
-	NSRect windowFrame = [self.window frame];
-	
-	NSScreen *mainScreen = [NSScreen mainScreen];
-	NSRect screenRect = [mainScreen visibleFrame];
-
-	{//absolute position
-		absolutePosition.x += screenRect.origin.x;
-		absolutePosition.y = screenRect.origin.y + screenRect.size.height - absolutePosition.y - windowFrame.size.height;//bottom of the window
-		if( (absolutePosition.y + windowFrame.size.height) < screenRect.origin.y )
-			absolutePosition.y = screenRect.origin.y - windowFrame.size.height + 20;//winodw top visible at the bottom of the screen
-	}
-
-	[self.window setFrameOrigin:absolutePosition];
-}
-
-- (void) sendObjCMessage:(CFArrayRef)oneObjCMessage toTarget:(id)messageTarget
-{
-	CFLocaleRef currentLocale = NULL; 
-	CFNumberFormatterRef numberFormatter = NULL;
-
-	@try
-	{
-		//TODO:
-		//check if object responds to given message
-		//obtain NSMethodSignature, check argument types
-		//create NSInvocation and invoke on object
-		CFIndex elementCount = CFArrayGetCount(oneObjCMessage);
-		if( elementCount == 0 )
-			return;
-
-		NSMutableString *methodName = [NSMutableString string];
-		for(CFIndex i = 0; i < elementCount; i+=2)
-		{//first obtain method name
-			CFTypeRef oneItemRef = ::CFArrayGetValueAtIndex(oneObjCMessage, i);
-			CFStringRef oneString = ACFType<CFStringRef>::DynamicCast( oneItemRef );
-			if(oneString != NULL)
-            {
-                [methodName appendString:(__bridge NSString *)oneString];
-            }
-		}
-
-		SEL methodSelector = NSSelectorFromString(methodName);
-		NSMethodSignature *methodSig = [messageTarget methodSignatureForSelector:methodSelector];
-		if( methodSig != nil )
-		{//good news - object has this method implemented
-			
-			//const char *returnType = [methodSig methodReturnType];
-			//NSLog(@"methodReturnType=%s\n", returnType);
-
-			NSInvocation *messageInvocation = [NSInvocation invocationWithMethodSignature:methodSig];
-			if(messageInvocation != NULL)
-			{
-				BOOL okToAddArgument = YES;
-				[messageInvocation setTarget:messageTarget];
-				[messageInvocation setSelector:methodSelector];
-				char stackBuff[128];//128 bytes should be enough for most structures
-				NSUInteger argCount = [methodSig numberOfArguments] - 2;//count only real arguments, skip self and selector
-				for(NSUInteger argIndex = 0; argIndex < argCount; argIndex++)
-				{
-					const char *argTypeStr = [methodSig getArgumentTypeAtIndex:2+argIndex];
-	#if DEBUG
-					NSLog(@"argument %d type=%s\n", (int)argIndex+1, argTypeStr);
-	#endif
-					//set argument
-					if( (argIndex*2 + 1) < elementCount )
-					{
-						CFTypeRef oneItemRef = ::CFArrayGetValueAtIndex(oneObjCMessage, argIndex*2 + 1);
-						CFStringRef argString = ACFType<CFStringRef>::DynamicCast( oneItemRef );
-						if(argString != NULL)
-						{
-							ObjCSelectorArgumentType argType = FindArgumentType(argTypeStr);
-							okToAddArgument = YES;
-							
-							switch(argType)
-							{
-								case kObjCArgCharType:
-								{//this is also BOOL that's why we check for YES/NO true/false
-									char charVal = 0;
-									if( (kCFCompareEqualTo == ::CFStringCompare( CFSTR("YES"), argString, kCFCompareCaseInsensitive)) ||
-									   (kCFCompareEqualTo == ::CFStringCompare( CFSTR("true"), argString, kCFCompareCaseInsensitive)) )
-									{
-										charVal = 1;
-									}
-									else if( (kCFCompareEqualTo == ::CFStringCompare( CFSTR("NO"), argString, kCFCompareCaseInsensitive)) ||
-											(kCFCompareEqualTo == ::CFStringCompare( CFSTR("false"), argString, kCFCompareCaseInsensitive)) )
-									{
-										charVal = 0;
-									}
-									else
-									{
-										charVal = (char)CFStringGetIntValue(argString);
-									}
-									
-									*(char *)stackBuff = charVal;
-								}
-								break;
-								
-								case kObjCArgUCharType:
-								{
-									*(unsigned char *)stackBuff = (unsigned char)CFStringGetIntValue(argString);
-								}
-								break;
-								
-								case kObjCArgShortType:
-								{
-									*(short *)stackBuff = (short)CFStringGetIntValue(argString);
-								}
-								break;
-									
-								case kObjCArgUShortType:
-								{
-									*(unsigned short *)stackBuff = (unsigned short)CFStringGetIntValue(argString);
-								}
-								break;
-
-								case kObjCArgIntType:
-								{
-									*(int *)stackBuff = (int)CFStringGetIntValue(argString);
-								}
-
-								case kObjCArgLongType:
-								{
-									*(long *)stackBuff = (long)CFStringGetIntValue(argString);
-								}
-								break;
-									
-								case kObjCArgULongType:
-								case kObjCArgUIntType:
-								case kObjCArgLonglongType:
-								case kObjCArgULonglongType:
-								{
-									if(currentLocale == NULL)
-										currentLocale = CFLocaleCopyCurrent();
-									
-									if(numberFormatter == NULL)
-										numberFormatter = CFNumberFormatterCreate(kCFAllocatorDefault, currentLocale, kCFNumberFormatterDecimalStyle);
-
-									long long longlongVal = 0;
-									okToAddArgument = CFNumberFormatterGetValueFromString(numberFormatter, argString, NULL, kCFNumberLongLongType, &longlongVal);
-									if(okToAddArgument)
-									{
-										if(argType == kObjCArgULongType)
-										{
-											*(unsigned long *)stackBuff = (unsigned long)longlongVal;
-										}
-										else if(argType == kObjCArgUIntType)
-										{
-											*(unsigned int *)stackBuff = (unsigned int)longlongVal;
-										}
-										else if(argType == kObjCArgLonglongType)
-										{
-											*(long long *)stackBuff = longlongVal;
-										}
-										else if(argType == kObjCArgULonglongType)
-										{
-											*(unsigned long long *)stackBuff = (unsigned long long)longlongVal;
-										}
-									}
-								}
-								break;
-								
-								case kObjCArgFloatType:
-								{
-									*(float *)stackBuff = (float)CFStringGetDoubleValue(argString);
-								}
-								break;
-									
-								case kObjCArgDoubleType:
-								{
-									*(double *)stackBuff = (double)CFStringGetDoubleValue(argString);
-								}
-								break;
-								
-								case kObjCArgBoolType:
-								{
-									BOOL boolVal = NO;
-									if( (kCFCompareEqualTo == ::CFStringCompare( CFSTR("YES"), argString, kCFCompareCaseInsensitive)) ||
-										(kCFCompareEqualTo == ::CFStringCompare( CFSTR("true"), argString, kCFCompareCaseInsensitive)) )
-									{
-										boolVal = YES;
-									}
-									else if( (kCFCompareEqualTo == ::CFStringCompare( CFSTR("NO"), argString, kCFCompareCaseInsensitive)) ||
-											(kCFCompareEqualTo == ::CFStringCompare( CFSTR("false"), argString, kCFCompareCaseInsensitive)) )
-									{
-										boolVal = NO;
-									}
-									else
-									{
-										SInt32 intVal = CFStringGetIntValue(argString);
-										boolVal = (BOOL)intVal;
-									}
-									*(BOOL *)stackBuff = boolVal;
-								}
-								break;
-
-								case kObjCArgObjectType:
-								{//only NSString */CFStringRef supported as id/NSObject *
-									if( kCFCompareEqualTo == ::CFStringCompare( CFSTR("omc_nil"), argString, kCFCompareCaseInsensitive) )
-                                    {
-                                        *(CFTypeRef *)stackBuff = nil;
-                                    }
-                                    else
-                                    {
-                                        *(CFStringRef *)stackBuff = argString;
-                                    }
-								}
-								break;
-									
-								case kObjCArgStructType:
-								{
-									memset(stackBuff, 0, sizeof(stackBuff));
-									
-									CFArrayRef numberArray = CFStringCreateArrayBySeparatingStrings( kCFAllocatorDefault, argString, CFSTR(",") );
-									CFIndex numberCount = 0;
-									if(numberArray != NULL)
-										numberCount = CFArrayGetCount(numberArray);
-									//first char is '{', next follows the structure name
-									if(numberCount >= 2)
-									{//all structures here require at least 2 numbers
-										if( 0 == strncmp("_NSRange", argTypeStr+1, sizeof("_NSRange")-1) )
-										{
-											NSRange *theRange = (NSRange *)stackBuff;
-											
-											CFTypeRef oneItemRef = ::CFArrayGetValueAtIndex(numberArray, 0);
-											CFStringRef numString = ACFType<CFStringRef>::DynamicCast( oneItemRef );
-											if(numString != NULL)
-												theRange->location = ::CFStringGetIntValue(numString);
-											else
-												okToAddArgument = NO;
-											
-											oneItemRef = ::CFArrayGetValueAtIndex(numberArray, 1);
-											numString = ACFType<CFStringRef>::DynamicCast( oneItemRef );
-											if(numString != NULL)
-												theRange->length =  ::CFStringGetIntValue(numString);
-											else
-												okToAddArgument = NO;
-										}
-										else if( 0 == strncmp("_NSPoint", argTypeStr+1, sizeof("_NSPoint")-1) )
-										{
-											NSPoint *thePoint = (NSPoint *)stackBuff;
-											
-											CFTypeRef oneItemRef = ::CFArrayGetValueAtIndex(numberArray, 0);
-											CFStringRef numString = ACFType<CFStringRef>::DynamicCast( oneItemRef );
-											if(numString != NULL)
-												thePoint->x = (CGFloat)::CFStringGetDoubleValue(numString);
-											else
-												okToAddArgument = NO;
-											
-											oneItemRef = ::CFArrayGetValueAtIndex(numberArray, 1);
-											numString = ACFType<CFStringRef>::DynamicCast( oneItemRef );
-											if(numString != NULL)
-												thePoint->y =  (CGFloat)::CFStringGetDoubleValue(numString);
-											else
-												okToAddArgument = NO;
-										}
-										else if( 0 == strncmp("_NSSize", argTypeStr+1, sizeof("_NSSize")-1) )
-										{
-											NSSize *theSize = (NSSize *)stackBuff;
-
-											CFTypeRef oneItemRef = ::CFArrayGetValueAtIndex(numberArray, 0);
-											CFStringRef numString = ACFType<CFStringRef>::DynamicCast( oneItemRef );
-											if(numString != NULL)
-												theSize->width = (CGFloat)::CFStringGetDoubleValue(numString);
-											else
-												okToAddArgument = NO;
-											
-											oneItemRef = ::CFArrayGetValueAtIndex(numberArray, 1);
-											numString = ACFType<CFStringRef>::DynamicCast( oneItemRef );
-											if(numString != NULL)
-												theSize->height =  (CGFloat)::CFStringGetDoubleValue(numString);
-											else
-												okToAddArgument = NO;
-										}
-										else if( (numberCount >= 4) && (0 == strncmp("_NSRect", argTypeStr+1, sizeof("_NSRect")-1)) )
-										{
-											NSRect *theRect = (NSRect *)stackBuff;
-
-											CFTypeRef oneItemRef = ::CFArrayGetValueAtIndex(numberArray, 0);
-											CFStringRef numString = ACFType<CFStringRef>::DynamicCast( oneItemRef );
-											if(numString != NULL)
-												theRect->origin.x = (CGFloat)::CFStringGetDoubleValue(numString);
-											else
-												okToAddArgument = NO;
-											
-											oneItemRef = ::CFArrayGetValueAtIndex(numberArray, 1);
-											numString = ACFType<CFStringRef>::DynamicCast( oneItemRef );
-											if(numString != NULL)
-												theRect->origin.y =  (CGFloat)::CFStringGetDoubleValue(numString);
-											else
-												okToAddArgument = NO;
-
-											oneItemRef = ::CFArrayGetValueAtIndex(numberArray, 0);
-											numString = ACFType<CFStringRef>::DynamicCast( oneItemRef );
-											if(numString != NULL)
-												theRect->size.width = (CGFloat)::CFStringGetDoubleValue(numString);
-											else
-												okToAddArgument = NO;
-											
-											oneItemRef = ::CFArrayGetValueAtIndex(numberArray, 1);
-											numString = ACFType<CFStringRef>::DynamicCast( oneItemRef );
-											if(theRect != NULL)
-												theRect->size.height =  (CGFloat)::CFStringGetDoubleValue(numString);
-											else
-												okToAddArgument = NO;
-										}
-										else
-										{
-											okToAddArgument = NO;
-											NSLog(@"OMCNibWindowController sendObjCMessage: this structure type unsuppported for argument %d for \"%@\" selector", (int)argIndex+1, methodName);
-										}
-									}
-									else
-									{
-										okToAddArgument = NO;
-										NSLog(@"OMCNibWindowController sendObjCMessage: invalid count of members for structure argument %d for \"%@\" selector", (int)argIndex+1, methodName);
-									}
-									
-								}
-								break;
-									
-								case kObjCArgPointerType:
-								case kObjCArgStringType:
-								case kObjCArgArrayType:
-								case kObjCArgUnionType:
-								case kObjCArgBitfield:
-								{
-									if( kCFCompareEqualTo == ::CFStringCompare( CFSTR("omc_nil"), argString, kCFCompareCaseInsensitive) )
-                                    {
-                                        *(CFTypeRef *)stackBuff = nil;
-                                    }
-                                    else
-									{
-										okToAddArgument = NO;
-										NSLog(@"OMCNibWindowController sendObjCMessage: unsupported argument type for argument %d for \"%@\" selector", (int)argIndex+1, methodName);
-									}
-								}
-								break;
-								
-								case kObjCArgNoType:
-								case kObjCArgVoidType:
-								case kObjCArgSelectorType:
-								default:
-								{
-									okToAddArgument = NO;
-									NSLog(@"OMCNibWindowController sendObjCMessage: invalid argument %d for \"%@\" selector", (int)argIndex+1, methodName);
-								}
-								break;
-							}
-							
-							if(okToAddArgument)
-							{
-								[messageInvocation setArgument:(void *)stackBuff atIndex:2+argIndex];
-							}
-							else
-							{
-								break;//we will not be able to process this comamnd 
-							}
-						}
-					}
-					else
-					{
-						NSLog(@"OMCNibWindowController sendObjCMessage: argument count mismatch for \"%@\" selector", methodName);
-					}
-				}
-				
-				if(okToAddArgument)
-					[messageInvocation invoke];
-			}
-		}
-		else
-		{
-			NSLog(@"OMCNibWindowController sendObjCMessage: target object does not respond to \"%@\" selector", methodName);
-		}
-	}
-	@catch (NSException *localException)
-	{
-		NSLog(@"OMCNibWindowController sendObjCMessage received exception while trying to invoke a custom message: %@", localException);
-	}
-	
-	if( currentLocale != NULL )
-	   CFRelease(currentLocale);
-
-	if( numberFormatter != NULL )
-	   CFRelease(numberFormatter);
 }
 
 //call only when you have non-null inIteratorParams
