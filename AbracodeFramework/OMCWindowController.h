@@ -38,6 +38,8 @@ class CommandRuntimeData;
 @property (nonatomic, strong) NSString *lastCommandID;
 @property (nonatomic, strong) NSMutableSet *dialogOwnedItems;
 
++ (instancetype)findControllerByUUID:(NSString *)uuid;
+
 - (id)initWithOmc:(OnMyCommandCM *)inOmc commandRuntimeData:(CommandRuntimeData *)inCommandRuntimeData;
 - (OMCDialog *)getOMCDialog;
 - (Boolean)isModal;

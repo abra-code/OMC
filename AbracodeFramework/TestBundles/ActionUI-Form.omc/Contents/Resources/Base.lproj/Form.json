@@ -2,7 +2,13 @@
   "type": "Form",
   "id": 1,
   "properties": {
-    "padding": "default"
+    "padding": "default",
+    "frame": {
+        "minWidth": 400.0,
+        "minHeight": 300.0,
+        "idealWidth": 800.0,
+        "idealHeight": 600.0
+    }
   },
   "children": [
     {

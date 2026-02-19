@@ -25,6 +25,17 @@ GetAllDialogControllers()
 
 @implementation OMCWindowController
 
++ (instancetype)findControllerByUUID:(NSString *)uuid
+{
+    for(OMCWindowController *controller in GetAllDialogControllers())
+    {
+        CFStringRef controllerUUID = controller->mOMCDialogProxy->GetDialogUUID();
+        if(controllerUUID != NULL && [uuid isEqualToString:(__bridge NSString *)controllerUUID])
+            return controller;
+    }
+    return nil;
+}
+
 - (id)initWithOmc:(OnMyCommandCM *)inOmc commandRuntimeData:(CommandRuntimeData *)inCommandRuntimeData
 {
    self = [super init];

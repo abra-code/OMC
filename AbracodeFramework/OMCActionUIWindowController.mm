@@ -57,7 +57,7 @@
 
 	//now we need to find out where our json is
 
-	CFURLRef jsonURL = NULL;
+	NSURL *jsonURL = NULL;
 
 	if(mExternBundleRef != NULL)
 	{
@@ -73,7 +73,7 @@
                 NSString *jsonPath = [externBundle pathForResource:dialogJsonName ofType:@"json"];
                 if(jsonPath != nil)
                 {
-                    jsonURL = (__bridge CFURLRef)[NSURL fileURLWithPath:jsonPath];
+                    jsonURL = [NSURL fileURLWithPath:jsonPath];
                 }
 			}
 		}
@@ -85,7 +85,7 @@
         NSString *jsonPath = [mainBundle pathForResource:dialogJsonName ofType:@"json"];
         if(jsonPath != nil)
         {
-            jsonURL = (__bridge CFURLRef)[NSURL fileURLWithPath:jsonPath];
+            jsonURL = [NSURL fileURLWithPath:jsonPath];
         }
 	}
 
@@ -107,7 +107,7 @@
                         NSString *jsonPath = [omcBundle pathForResource:dialogJsonName ofType:@"json"];
 						if(jsonPath != nil)
 						{
-							jsonURL = (__bridge CFURLRef)[NSURL fileURLWithPath:jsonPath];
+							jsonURL = [NSURL fileURLWithPath:jsonPath];
 						}
 					}
 				}
@@ -116,10 +116,93 @@
 	}
 
 #if DEBUG
-	NSLog(@"[OMCActionUIWindowController initWithOmc], jsonURL=%@", (__bridge id)jsonURL);
+	NSLog(@"[OMCActionUIWindowController initWithOmc], jsonURL=%@", jsonURL);
 #endif
 
+    if(jsonURL == nil)
+    {
+        NSLog(@"Cannot find ActionUI JSON file: %@", dialogJsonName);
+        return self;
+    }
+
+    NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
+    self.hostingController = [ActionUIObjC loadHostingControllerWithURL:jsonURL
+                                                                 windowUUID:windowUUID
+                                                              isContentView:YES];
+    if (self.hostingController == nil)
+    {
+        NSLog(@"Unable to create a view from ActionUI JSON file: %@", dialogJsonName);
+        return self;
+    }
+    
+    NSWindow *window = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, 480, 320)
+                                                   styleMask:NSWindowStyleMaskTitled |
+                                                             NSWindowStyleMaskClosable |
+                                                             NSWindowStyleMaskResizable
+                                                     backing:NSBackingStoreBuffered
+                                                       defer:NO];
+    
+    [window setReleasedWhenClosed:NO];
+    [window setContentView:self.hostingController.view];
+    
+    // Autosave name: if a saved frame exists it overrides the fitting size above.
+    NSString *autosaveName = [NSString stringWithFormat:@"OMC.%@", dialogJsonName];
+    [window setFrameAutosaveName:autosaveName];
+
+    BOOL frameRestored = [window setFrameUsingName:autosaveName];
+    if(!frameRestored)
+    {
+        // First launch — no saved frame yet, use fitting size and center
+        // view.fitting size contains ideal size for the content view
+       NSSize fittingSize = self.hostingController.view.fittingSize;
+        if(fittingSize.width > 10 && fittingSize.height > 10)
+            [window setContentSize:fittingSize];
+        [window center];
+    }
+
+    [window setDelegate:self];
+    self.window = window;
+    
+    // Associated file (same as nib controller)
+    OneObjProperties *associatedObj = mCommandRuntimeData->GetAssociatedObject();
+    if(associatedObj != nullptr)
+    {
+        CFURLRef fileURL = associatedObj->url.Get();
+        if(fileURL != NULL)
+        {
+            NSURL *associatedFileURL = (__bridge NSURL *)fileURL;
+            window.representedURL = associatedFileURL;
+            [window setTitleWithRepresentedFilename:associatedFileURL.path];
+            [NSDocumentController.sharedDocumentController noteNewRecentDocumentURL:associatedFileURL];
+        }
+    }
+
+    // TODO: do not set the handler for each window. this needs to be done once only
+    // Global default handler — routes by windowUUID to the right controller instance
+    [ActionUIObjC setDefaultActionHandler:^(NSString *actionID, NSString *targetWindowUUID, NSInteger viewID, NSInteger viewPartID, id context) {
+        OMCWindowController *controller = [OMCWindowController findControllerByUUID:targetWindowUUID];
+        if (controller != nil)
+        {
+	        [controller dispatchCommand:actionID withContext:(__bridge CFTypeRef)context];
+	    }
+	    else
+	    {
+	    	NSLog(@"Window not found for provided UUID: %@ when handling actionID: %@ from viewID: %@", targetWindowUUID, actionID, viewID);
+	    }
+    }];
+
     return self;
+}
+
+
+- (void)dealloc
+{
+    OMCActionUIDialog *actionUIDialog = (OMCActionUIDialog *)mOMCDialogProxy.Get();
+    if(actionUIDialog != nullptr)
+        actionUIDialog->SetControlAccessor(nil);
+
+    [self.window setDelegate:nil];
+    // hostingController released by property, taking SwiftUI view hierarchy with it
 }
 
 #pragma mark - OMCControlAccessor protocol
