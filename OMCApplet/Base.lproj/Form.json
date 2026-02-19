@@ -1,0 +1,113 @@
+{
+  "type": "Form",
+  "id": 1,
+  "properties": {
+    "padding": "default",
+    "frame": {
+        "minWidth": 400.0,
+        "minHeight": 300.0,
+        "idealWidth": 800.0,
+        "idealHeight": 600.0
+    }
+  },
+  "children": [
+    {
+      "type": "Section",
+      "properties": {
+        "header": "User Information"
+      },
+      "children": [
+        {
+          "type": "TextField",
+          "id": 2,
+          "properties": {
+            "placeholder": "Enter your name",
+            "textContentType": "name",
+            "actionID": "text.submit",
+            "valueChangeActionID": "text.valueChanged"
+          }
+        },
+        {
+          "type": "SecureField",
+          "id": 3,
+          "properties": {
+            "placeholder": "Enter password",
+            "textContentType": "password",
+            "actionID": "secure.submit"
+          }
+        }
+      ]
+    },
+    {
+      "type": "Section",
+      "properties": {
+        "header": "Preferences"
+      },
+      "children": [
+        {
+          "type": "Picker",
+          "id": 4,
+          "properties": {
+            "title": "Theme",
+            "options": ["Light", "Dark", "System"],
+            "pickerStyle": "menu",
+            "actionID": "picker.selection"
+          }
+        },
+        {
+          "type": "Toggle",
+          "id": 5,
+          "properties": {
+            "title": "Enable Notifications",
+            "style": "switch"
+          }
+        },
+        {
+          "type": "Slider",
+          "id": 6,
+          "properties": {
+            "value": 50.0,
+            "range": {
+              "min": 0.0,
+              "max": 100.0
+            },
+            "step": 10.0
+          }
+        }
+      ]
+    },
+    {
+      "type": "HStack",
+      "properties": {
+        "spacing": 10.0,
+        "padding": "default",
+      },
+      "children": [
+          {
+            "type": "Spacer",
+            "properties": {
+            }
+          },
+          {
+            "type": "Button",
+            "id": 8,
+            "properties": {
+              "title": "Cancel",
+              "buttonStyle": "plain",
+              "role": "cancel",
+              "actionID": "form.cancel"
+            }
+          },
+          {
+            "type": "Button",
+            "id": 7,
+            "properties": {
+              "title": "Save",
+              "buttonStyle": "borderedProminent",
+              "actionID": "form.save"
+            }
+          }
+      ]
+    }
+  ]
+}

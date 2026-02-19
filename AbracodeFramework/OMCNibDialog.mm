@@ -64,36 +64,6 @@ ARefCountedObj<OMCDialog> RunNibDialog(OnMyCommandCM *inPlugin, CommandRuntimeDa
 
 #pragma mark -
 
-//proxy C++ class to comply with OMCDialog protocol in OMC
-
-
-CFTypeRef
-OMCNibDialog::CopyControlValue(CFStringRef inControlID, CFStringRef inControlPart, SelectionIterator *inSelIterator, CFDictionaryRef *outCustomProperties) noexcept
-{
-	if(outCustomProperties != NULL)
-		*outCustomProperties = NULL;
-
-	id outValue = NULL;
-
-    @try
-    {
-        if(mControlAccessor != NULL)
-        {
-            id<OMCControlAccessor> controller = (__bridge id<OMCControlAccessor>)mControlAccessor;
-            outValue = [controller controlValueForID:(__bridge NSString *)inControlID
-                                             forPart:(__bridge NSString *)inControlPart
-                                        withIterator:inSelIterator
-                                       outProperties:outCustomProperties];
-        }
-    }
-    @catch (NSException *localException)
-    {
-        NSLog(@"OMCNibDialog::CopyControlValue received exception: %@", localException);
-    }
-
-    return (CFTypeRef)CFBridgingRetain(outValue);
-}
-
 // private helper
 void
 OMCNibDialog::StoreControlValue(CFStringRef controlID, CFTypeRef inValue, CFStringRef controlPart) noexcept

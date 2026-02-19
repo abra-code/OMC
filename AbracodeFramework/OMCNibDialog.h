@@ -20,7 +20,6 @@ public:
 
 	virtual				~OMCNibDialog() { }
 
-	virtual CFTypeRef	CopyControlValue(CFStringRef inControlID, CFStringRef inControlPart, SelectionIterator *inSelIterator, CFDictionaryRef *outCustomProperties) noexcept override;
 	virtual void		CopyAllControlValues(CFSetRef requestedNibControls, SelectionIterator *inSelIterator) noexcept override;
 
 	virtual CFStringRef	CreateControlValue(SInt32 inSpecialWordID, CFStringRef inControlString, UInt16 escSpecialCharsMode, bool isEnvStyle) noexcept override;

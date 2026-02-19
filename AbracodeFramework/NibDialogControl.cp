@@ -187,6 +187,36 @@ CreateControlIDByAddingModifiers(CFStringRef inControlID, UInt32 inModifiers)
 	return outControlID.Detach();
 }
 
+// Extract view ID N from string: OMC_ACTIONUI_VIEW_N_VALUE or __ACTIONUI_VIEW_N_VALUE__
+CFStringRef
+CreateActionUIViewIDFromString(CFStringRef inActionUIViewIDString, bool isEnvStyle)
+{
+	if(inActionUIViewIDString == NULL)
+		return NULL;
+
+	CFStringRef prefixString = isEnvStyle ? CFSTR("OMC_ACTIONUI_VIEW_") : CFSTR("__ACTIONUI_VIEW_");
+	CFIndex prefixLen = ::CFStringGetLength(prefixString);
+	CFStringRef suffixString = isEnvStyle ? CFSTR("_VALUE") : CFSTR("_VALUE__");
+	CFIndex suffixLen = ::CFStringGetLength(suffixString);
+
+	CFIndex actualLen = ::CFStringGetLength(inActionUIViewIDString);
+
+	if(actualLen < (prefixLen + 1 + suffixLen))
+		return NULL;
+
+	if(::CFStringHasPrefix(inActionUIViewIDString, prefixString) == false)
+		return NULL;
+
+	if(::CFStringHasSuffix(inActionUIViewIDString, suffixString) == false)
+		return NULL;
+
+	CFRange idStrRange;
+	idStrRange.location = prefixLen;
+	idStrRange.length = actualLen - prefixLen - suffixLen;
+
+	return ::CFStringCreateWithSubstring(kCFAllocatorDefault, inActionUIViewIDString, idStrRange);
+}
+
 // Extract control ID XXX and HTML element ID YYYY from string: OMC_NIB_WEBVIEW_XXX_ELEMENT_YYY_VALUE or __NIB_WEBVIEW_XXX_ELEMENT_YYY_VALUE__
 
 CFStringRef

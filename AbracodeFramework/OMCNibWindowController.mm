@@ -1616,21 +1616,6 @@ FindArgumentType(const char *argTypeStr)
 	}
 }
 
-- (void)dispatchCommand:(NSString *)inCommandID withContext:(CFTypeRef)inContext
-{
-	//do some dispatching of the command here
-	self.lastCommandID = inCommandID;
-	
-	if( [self commandShouldCloseDialog] )
-	{
-		[self.window close];//our windowWillClose will be called, which calls "terminate", which executes the proper termination command
-	}
-	else
-	{
-		[self processCommandWithContext:inContext];
-	}
-}
-
 - (void)handleAction:(id)sender
 {
 	NSString *commandID = nil;

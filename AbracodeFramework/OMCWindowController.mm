@@ -62,8 +62,17 @@ GetAllDialogControllers()
 
 - (void)dispatchCommand:(NSString *)inCommandID withContext:(CFTypeRef)inContext
 {
-	self.lastCommandID = inCommandID;
-	[self processCommandWithContext:inContext];
+    self.lastCommandID = inCommandID;
+    
+    if( [self commandShouldCloseDialog] )
+    {
+        // our windowWillClose will be called, which calls "terminate", which executes the proper termination command
+        [self.window close];
+    }
+    else
+    {
+        [self processCommandWithContext:inContext];
+    }
 }
 
 - (OMCDialog *)getOMCDialog

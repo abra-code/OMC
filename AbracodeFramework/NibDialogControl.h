@@ -24,3 +24,5 @@ CFStringRef CreateControlIDByStrippingModifiers(CFStringRef inControlIDWithModif
 CFStringRef CreateControlIDByAddingModifiers(CFStringRef inControlID, UInt32 inModifiers);
 
 CFStringRef CreateWebViewIDAndElementIDFromString(CFStringRef inControlIDAndElementIDString, CFObj<CFStringRef> &outElementIDString, bool isEnvStyle);
+
+CFStringRef CreateActionUIViewIDFromString(CFStringRef inActionUIViewIDString, bool isEnvStyle);

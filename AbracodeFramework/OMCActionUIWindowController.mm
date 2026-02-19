@@ -187,7 +187,7 @@
 	    }
 	    else
 	    {
-	    	NSLog(@"Window not found for provided UUID: %@ when handling actionID: %@ from viewID: %@", targetWindowUUID, actionID, viewID);
+            NSLog(@"Window not found for provided UUID: %@ when handling actionID: %@ from viewID: %ld", targetWindowUUID, actionID, static_cast<long>(viewID));
 	    }
     }];
 
@@ -213,11 +213,49 @@
 
 - (void)allControlValues:(NSMutableDictionary *)ioControlValues andProperties:(NSMutableDictionary *)ioCustomProperties withIterator:(SelectionIterator *)inSelIterator
 {
+    NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
+    if(windowUUID == nil)
+        return;
+
+    NSDictionary *elementInfo = [ActionUIObjC getElementInfoWithWindowUUID:windowUUID];
+    if(elementInfo == nil || elementInfo.count == 0)
+        return;
+
+    for(NSNumber *viewIDNumber in elementInfo)
+    {
+        NSInteger viewID = [viewIDNumber integerValue];
+        NSString *value = [ActionUIObjC getElementValueAsStringWithWindowUUID:windowUUID viewID:viewID viewPartID:0];
+        if(value != nil)
+        {
+            NSString *controlID = [viewIDNumber stringValue];
+            NSMutableDictionary *partsDict = ioControlValues[controlID];
+            if(partsDict == nil)
+            {
+                partsDict = [NSMutableDictionary dictionaryWithObject:value forKey:@"0"];
+                ioControlValues[controlID] = partsDict;
+            }
+            else
+            {
+                partsDict[@"0"] = value;
+            }
+        }
+    }
 }
 
 - (id)controlValueForID:(NSString *)inControlID forPart:(NSString *)inControlPart withIterator:(SelectionIterator *)inSelIterator outProperties:(CFDictionaryRef *)outCustomProperties
 {
-    return nil;
+    if(outCustomProperties != NULL)
+        *outCustomProperties = NULL;
+
+    NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
+    if(windowUUID == nil)
+        return nil;
+
+    NSInteger viewID = [inControlID integerValue];
+    NSInteger viewPartID = (inControlPart != nil) ? [inControlPart integerValue] : 0;
+
+    NSString *value = [ActionUIObjC getElementValueAsStringWithWindowUUID:windowUUID viewID:viewID viewPartID:viewPartID];
+    return value;
 }
 
 @end

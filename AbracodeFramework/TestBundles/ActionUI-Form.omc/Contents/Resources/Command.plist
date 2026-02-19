@@ -84,6 +84,32 @@ echo "${OMC_ACTIONUI_WINDOW_UUID}"
 			</dict>
 		</dict>
 		<dict>
+			<key>COMMAND</key>
+			<array>
+				<string>echo "form.save: name=${OMC_ACTIONUI_VIEW_2_VALUE}"
+				</string>
+			</array>
+			<key>COMMAND_ID</key>
+			<string>form.save</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_shell_script</string>
+			<key>NAME</key>
+			<string>Form</string>
+		</dict>
+		<dict>
+			<key>COMMAND</key>
+			<array>
+				<string>echo "form.cancel"
+				</string>
+			</array>
+			<key>COMMAND_ID</key>
+			<string>form.cancel</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_shell_script</string>
+			<key>NAME</key>
+			<string>Form</string>
+		</dict>
+		<dict>
 			<key>ACTIVATION_MODE</key>
 			<string>act_selected_text</string>
 			<key>COMMAND</key>

@@ -17,6 +17,7 @@
 		1DC32A862F1F34C100B4CE84 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 1DC32A852F1F34C100B4CE84 /* Credits.rtf */; };
 		1DC32A872F1F34C100B4CE84 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 1DC32A852F1F34C100B4CE84 /* Credits.rtf */; };
 		1DEE0AF62EB2261900729DAE /* OMCApplet.icon in Resources */ = {isa = PBXBuildFile; fileRef = 1DEE0AF52EB2261900729DAE /* OMCApplet.icon */; };
+		1DF2B44D2F46E88D0069BD26 /* Form.json in Resources */ = {isa = PBXBuildFile; fileRef = 1DF2B44B2F46E88D0069BD26 /* Form.json */; };
 		8D11072D0486CEB800E47090 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
 		C14245B31502331500E6E946 /* Abracode.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E23EA1640DFB026E0070E63F /* Abracode.framework */; settings = {ATTRIBUTES = (Required, ); }; };
@@ -114,6 +115,7 @@
 		1DC32A852F1F34C100B4CE84 /* Credits.rtf */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; path = Credits.rtf; sourceTree = "<group>"; };
 		1DD21130259F43C90041BB8F /* OmcVersion.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcVersion.xcconfig; path = ../Common/OmcVersion.xcconfig; sourceTree = "<group>"; };
 		1DEE0AF52EB2261900729DAE /* OMCApplet.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = OMCApplet.icon; sourceTree = "<group>"; };
+		1DF2B44C2F46E88D0069BD26 /* Base */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = Base; path = Base.lproj/Form.json; sourceTree = "<group>"; };
 		29B97316FDCFA39411CA2CEA /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		29B97324FDCFA39411CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		29B97325FDCFA39411CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
@@ -279,6 +281,7 @@
 				1DA51CBE2EACE01000BFF670 /* Scripts */,
 				E23EA2010DFB9B7C0070E63F /* Command.plist */,
 				8D1107310486CEB800E47090 /* Info.plist */,
+				1DF2B44B2F46E88D0069BD26 /* Form.json */,
 				1D3BB16C229D0B6600542933 /* MainMenu.nib */,
 			);
 			name = Resources;
@@ -417,6 +420,7 @@
 				1D3BB16E229D0B6600542933 /* MainMenu.nib in Resources */,
 				1DEE0AF62EB2261900729DAE /* OMCApplet.icon in Resources */,
 				1DC32A872F1F34C100B4CE84 /* Credits.rtf in Resources */,
+				1DF2B44D2F46E88D0069BD26 /* Form.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -470,7 +474,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if test \"$CONFIGURATION\" != \"Debug\"; then\n\n\techo \"Removing droplet debugging resources\";\n\tcd \"$BUILT_PRODUCTS_DIR/$FULL_PRODUCT_NAME/Contents/Resources/\";\n    rm -fR \"Scripts\";   \n\trm -fR \"English.lproj/dialog.nib\";\n\trm -fR \"English.lproj/debug.nib\";\n\n\techo \"Copy standard Command.plist to droplet\";\n\trm -f \"Command.plist\";\n\n\tditto \"$PROJECT_DIR/Command-release.plist\" Command.plist;\n\nfi\n";
+			shellScript = "if test \"$CONFIGURATION\" != \"Debug\"; then\n\n\techo \"Removing droplet debugging resources\"\n\tcd \"$BUILT_PRODUCTS_DIR/$FULL_PRODUCT_NAME/Contents/Resources/\"\n    rm -fR \"Scripts\"\n    rm -fR \"Base.lproj/Form.json\"\n\n\techo \"Copy standard Command.plist to droplet\";\n\trm -f \"Command.plist\";\n\n\tditto \"$PROJECT_DIR/Command-release.plist\" Command.plist;\n\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -516,6 +520,14 @@
 				1D94D4A4229D2D0C009938BB /* Base */,
 			);
 			name = MainMenu.nib;
+			sourceTree = "<group>";
+		};
+		1DF2B44B2F46E88D0069BD26 /* Form.json */ = {
+			isa = PBXVariantGroup;
+			children = (
+				1DF2B44C2F46E88D0069BD26 /* Base */,
+			);
+			name = Form.json;
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */

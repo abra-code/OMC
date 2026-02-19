@@ -50,6 +50,140 @@
 			<key>NAME</key>
 			<string>OMCApplet</string>
 		</dict>
+		<dict>
+			<key>COMMAND</key>
+			<array>
+				<string>env | sort
+echo "OMC_ACTIONUI_WINDOW_UUID = ${OMC_ACTIONUI_WINDOW_UUID}"
+				</string>
+			</array>
+			<key>EXECUTION_MODE</key>
+			<string>exe_shell_script</string>
+			<key>NAME</key>
+			<string>Form</string>
+			<key>ACTIONUI_WINDOW</key>
+			<dict>
+				<key>INIT_SUBCOMMAND_ID</key>
+				<string>form.dialog.init</string>
+				<key>END_OK_SUBCOMMAND_ID</key>
+				<string>form.save</string>
+				<key>END_CANCEL_SUBCOMMAND_ID</key>
+				<string>form.cancel</string>
+				<key>IS_BLOCKING</key>
+				<false/>
+				<key>JSON_NAME</key>
+				<string>Form</string>
+			</dict>
+			<key>NOTES</key>
+			<string>ActionUI json window test</string>
+			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
+			<string>11.0</string>
+			<key>REQUIRED_OMC_VERSION</key>
+			<string>4.4.2</string>
+			<key>VERSION</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>COMMAND</key>
+			<array>
+				<string>echo "form.dialog.init"
+env | sort
+echo "------------------"
+dialog_tool="$OMC_OMC_SUPPORT_PATH/omc_dialog_control"
+echo "$dialog_tool \"$OMC_ACTIONUI_WINDOW_UUID\" 2 \"Papa Smurf\""
+"$dialog_tool" "$OMC_ACTIONUI_WINDOW_UUID" 2 "Papa Smurf"
+# uncomment the line below to show the window with environment variables
+# "$OMC_OMC_SUPPORT_PATH/omc_next_command" "$OMC_CURRENT_COMMAND_GUID" "form.dialog.show.env"
+				</string>
+			</array>
+			<key>COMMAND_ID</key>
+			<string>form.dialog.init</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_shell_script</string>
+			<key>NAME</key>
+			<string>Form</string>
+		</dict>
+		<dict>
+			<key>COMMAND</key>
+			<array>
+				<string>env | sort</string>
+			</array>
+			<key>COMMAND_ID</key>
+			<string>form.dialog.show.env</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_shell_script_with_output_window</string>
+			<key>NAME</key>
+			<string>Form</string>
+			<key>OUTPUT_WINDOW_SETTINGS</key>
+			<dict>
+				<key>TEXT_FONT</key>
+				<string>Monaco</string>
+				<key>TEXT_SIZE</key>
+				<integer>10</integer>
+				<key>WINDOW_HEIGHT</key>
+				<integer>600</integer>
+				<key>WINDOW_POSITION</key>
+				<string>alert</string>
+				<key>WINDOW_TYPE</key>
+				<string>floating</string>
+				<key>WINDOW_WIDTH</key>
+				<integer>900</integer>
+			</dict>
+			<key>ENVIRONMENT_VARIABLES</key>
+			<dict>
+				<key>CUSTOM_VAR</key>
+				<string>form</string>
+			</dict>
+		</dict>
+		<dict>
+			<key>COMMAND</key>
+			<array>
+				<string>env | sort
+echo "form.save: name=${OMC_ACTIONUI_VIEW_2_VALUE}"
+				</string>
+			</array>
+			<key>COMMAND_ID</key>
+			<string>form.save</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_shell_script_with_output_window</string>
+			<key>NAME</key>
+			<string>Form</string>
+		</dict>
+		<dict>
+			<key>COMMAND</key>
+			<array>
+				<string>env | sort
+echo "form.cancel"
+				</string>
+			</array>
+			<key>COMMAND_ID</key>
+			<string>form.cancel</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_shell_script_with_output_window</string>
+			<key>NAME</key>
+			<string>Form</string>
+		</dict>
+		<dict>
+			<key>ACTIVATION_MODE</key>
+			<string>act_selected_text</string>
+			<key>COMMAND</key>
+			<array>
+				<string>WINDOW_UUID="${OMC_OBJ_TEXT}"
+if [ -n "${WINDOW_UUID}" ]; then
+    "$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$WINDOW_UUID" omc_window omc_terminate_cancel
+fi
+env | sort
+				</string>
+			</array>
+			<key>COMMAND_ID</key>
+			<string>form.close.window</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_shell_script</string>
+			<key>NAME</key>
+			<string>Form</string>
+			<key>NOTES</key>
+			<string>Test command designed to receive OMC_ACTIONUI_WINDOW_UUID from text context</string>
+		</dict>
 	</array>
 	<key>VERSION</key>
 	<integer>2</integer>
