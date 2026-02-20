@@ -19,6 +19,8 @@ echo "${OMC_NIB_DLG_GUID}"
 			<string>Browser</string>
 			<key>NIB_DIALOG</key>
 			<dict>
+				<key>END_CANCEL_SUBCOMMAND_ID</key>
+				<string>browser.dialog.terminate.cancel</string>
 				<key>INIT_SUBCOMMAND_ID</key>
 				<string>browser.dialog.init</string>
 				<key>IS_BLOCKING</key>
@@ -67,6 +69,20 @@ cur_dir=$(pwd)
 "$dialog_tool" "$OMC_NIB_DLG_GUID" 1 omc_table_set_columns "Name" "Mode" "Owner" "Group" "Size" "Date Modified"
 "$dialog_tool" "$OMC_NIB_DLG_GUID" 1 omc_table_set_column_widths 300 100 60 60 70 160
 ls -lahTp | /usr/bin/perl -e '$i=0; foreach(&lt;&gt;){chomp;@f=split/ +/,$_,10; if( $i &gt; 1) { print"$f[9]\t$f[0]\t$f[2]\t$f[3]\t$f[4]\t$f[5] $f[6], $f[8], $f[7]\n"; }; $i=$i+1; }' | "$dialog_tool" "$OMC_NIB_DLG_GUID" 1 omc_table_add_rows_from_stdin
+# Exercise omc_dialog_control operations (tests setControlValues: code paths)
+"$dialog_tool" "$OMC_NIB_DLG_GUID" 8 omc_enable
+"$dialog_tool" "$OMC_NIB_DLG_GUID" 8 omc_show
+"$dialog_tool" "$OMC_NIB_DLG_GUID" omc_window omc_select
+
+# Write diagnostic file atomically (completion = all omc_dialog_control calls succeeded)
+init_file="/tmp/OMC_test_nib_init_${OMC_NIB_DLG_GUID}"
+init_tmp="${init_file}.tmp"
+echo "INIT_COMPLETE=YES" > "$init_tmp"
+echo "OMC_NIB_DLG_GUID=${OMC_NIB_DLG_GUID}" >> "$init_tmp"
+echo "OMC_OBJ_PATH=${OMC_OBJ_PATH}" >> "$init_tmp"
+echo "OMC_OMC_SUPPORT_PATH=${OMC_OMC_SUPPORT_PATH}" >> "$init_tmp"
+mv "$init_tmp" "$init_file"
+
 # uncomment the line below to show the window with environment variables
 # "$OMC_OMC_SUPPORT_PATH/omc_next_command" "$OMC_CURRENT_COMMAND_GUID" "browser.dialog.show.env"
 				</string>
@@ -177,6 +193,50 @@ env | sort
 			<string>Browser</string>
 			<key>NOTES</key>
 			<string>Test command designed to receive OMC_NIB_DLG_GUID from text context</string>
+		</dict>
+		<dict>
+			<key>ACTIVATION_MODE</key>
+			<string>act_selected_text</string>
+			<key>COMMAND</key>
+			<array>
+				<string>WINDOW_UUID="${OMC_OBJ_TEXT}"
+if [ -n "${WINDOW_UUID}" ]; then
+    "$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$WINDOW_UUID" omc_window omc_invoke close
+fi
+				</string>
+			</array>
+			<key>COMMAND_ID</key>
+			<string>browser.invoke.close</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_shell_script</string>
+			<key>NAME</key>
+			<string>Browser</string>
+			<key>NOTES</key>
+			<string>Test command: close window via INVOKE instead of omc_terminate_cancel</string>
+		</dict>
+		<dict>
+			<key>COMMAND</key>
+			<array>
+				<string>term_file="/tmp/OMC_test_nib_term_${OMC_NIB_DLG_GUID}"
+term_tmp="${term_file}.tmp"
+echo "TERM_COMPLETE=YES" > "$term_tmp"
+echo "OMC_NIB_DLG_GUID=${OMC_NIB_DLG_GUID}" >> "$term_tmp"
+echo "CONTROL_8_VALUE=${OMC_NIB_DIALOG_CONTROL_8_VALUE}" >> "$term_tmp"
+echo "TABLE_1_COL_1_ALL_ROWS=${OMC_NIB_TABLE_1_COLUMN_1_ALL_ROWS}" >> "$term_tmp"
+mv "$term_tmp" "$term_file"
+				</string>
+			</array>
+			<key>COMMAND_ID</key>
+			<string>browser.dialog.terminate.cancel</string>
+			<key>ENVIRONMENT_VARIABLES</key>
+			<dict>
+				<key>OMC_NIB_TABLE_1_COLUMN_1_ALL_ROWS</key>
+				<string></string>
+			</dict>
+			<key>EXECUTION_MODE</key>
+			<string>exe_shell_script</string>
+			<key>NAME</key>
+			<string>Browser</string>
 		</dict>
 	</array>
 	<key>VERSION</key>

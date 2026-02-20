@@ -632,7 +632,7 @@ GetAllDialogControllers()
 				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
 				if(controlID != NULL)
 				{
-					if( kCFCompareEqualTo == CFStringCompare( controlID, CFSTR("omcself.window"), 0) )
+					if( kCFCompareEqualTo == CFStringCompare( controlID, CFSTR("omc_window"), 0) )
 					{
 						[self.window makeKeyAndOrderFront:self];
 					}
@@ -668,7 +668,7 @@ GetAllDialogControllers()
 				CFBooleanRef theVal = ACFType<CFBooleanRef>::DynamicCast( valueList[i] );
 				if( (controlID != NULL) && (theVal != NULL) )
 				{
-					if( kCFCompareEqualTo == CFStringCompare( controlID, CFSTR("omcself.window"), 0) )
+					if( kCFCompareEqualTo == CFStringCompare( controlID, CFSTR("omc_window"), 0) )
 					{
 						Boolean terminateOK = ::CFBooleanGetValue(theVal);
 						NSString *commandID;
@@ -735,7 +735,7 @@ GetAllDialogControllers()
 								newTopLeftOrigin.y = ::CFStringGetIntValue(numString);
 						}
 
-						if( kCFCompareEqualTo == CFStringCompare( controlID, CFSTR("omcself.window"), 0) )
+						if( kCFCompareEqualTo == CFStringCompare( controlID, CFSTR("omc_window"), 0) )
 						{
 							[self setWindowTopLeftPosition:newTopLeftOrigin];
 						}
@@ -825,7 +825,7 @@ GetAllDialogControllers()
 								newSize.height = ::CFStringGetIntValue(numString);
 						}
 
-						if( kCFCompareEqualTo == CFStringCompare( controlID, CFSTR("omcself.window"), 0) )
+						if( kCFCompareEqualTo == CFStringCompare( controlID, CFSTR("omc_window"), 0) )
 						{
 							[self.window setContentSize:newSize];
 						}
@@ -856,7 +856,7 @@ GetAllDialogControllers()
 				if( (controlID != NULL) && (theArr != NULL) )
 				{
 					id messageTarget = nil;
-					if( kCFCompareEqualTo == CFStringCompare( controlID, CFSTR("omcself.window"), 0) )
+					if( kCFCompareEqualTo == CFStringCompare( controlID, CFSTR("omc_window"), 0) )
 					{
 						messageTarget = (id)self.window;
 					}

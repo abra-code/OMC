@@ -19,6 +19,8 @@ echo "${OMC_ACTIONUI_WINDOW_UUID}"
 			<string>Form</string>
 			<key>ACTIONUI_WINDOW</key>
 			<dict>
+				<key>END_CANCEL_SUBCOMMAND_ID</key>
+				<string>form.dialog.terminate.cancel</string>
 				<key>INIT_SUBCOMMAND_ID</key>
 				<string>form.dialog.init</string>
 				<key>IS_BLOCKING</key>
@@ -40,6 +42,20 @@ echo "${OMC_ACTIONUI_WINDOW_UUID}"
 			<array>
 				<string>dialog_tool="$OMC_OMC_SUPPORT_PATH/omc_dialog_control"
 "$dialog_tool" "$OMC_ACTIONUI_WINDOW_UUID" 2 "Papa Smurf"
+# Exercise omc_dialog_control operations (tests setControlValues: abstract methods)
+"$dialog_tool" "$OMC_ACTIONUI_WINDOW_UUID" 2 omc_enable
+"$dialog_tool" "$OMC_ACTIONUI_WINDOW_UUID" 2 omc_show
+"$dialog_tool" "$OMC_ACTIONUI_WINDOW_UUID" omc_window omc_select
+
+# Write diagnostic file atomically
+init_file="/tmp/OMC_test_actionui_init_${OMC_ACTIONUI_WINDOW_UUID}"
+init_tmp="${init_file}.tmp"
+echo "INIT_COMPLETE=YES" > "$init_tmp"
+echo "OMC_ACTIONUI_WINDOW_UUID=${OMC_ACTIONUI_WINDOW_UUID}" >> "$init_tmp"
+echo "OMC_OBJ_PATH=${OMC_OBJ_PATH}" >> "$init_tmp"
+echo "OMC_OMC_SUPPORT_PATH=${OMC_OMC_SUPPORT_PATH}" >> "$init_tmp"
+mv "$init_tmp" "$init_file"
+
 # uncomment the line below to show the window with environment variables
 # "$OMC_OMC_SUPPORT_PATH/omc_next_command" "$OMC_CURRENT_COMMAND_GUID" "form.dialog.show.env"
 				</string>
@@ -129,6 +145,44 @@ env | sort
 			<string>Form</string>
 			<key>NOTES</key>
 			<string>Test command designed to receive OMC_ACTIONUI_WINDOW_UUID from text context</string>
+		</dict>
+		<dict>
+			<key>ACTIVATION_MODE</key>
+			<string>act_selected_text</string>
+			<key>COMMAND</key>
+			<array>
+				<string>WINDOW_UUID="${OMC_OBJ_TEXT}"
+if [ -n "${WINDOW_UUID}" ]; then
+    "$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$WINDOW_UUID" omc_window omc_invoke close
+fi
+				</string>
+			</array>
+			<key>COMMAND_ID</key>
+			<string>form.invoke.close</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_shell_script</string>
+			<key>NAME</key>
+			<string>Form</string>
+			<key>NOTES</key>
+			<string>Test command: close window via INVOKE instead of omc_terminate_cancel</string>
+		</dict>
+		<dict>
+			<key>COMMAND</key>
+			<array>
+				<string>term_file="/tmp/OMC_test_actionui_term_${OMC_ACTIONUI_WINDOW_UUID}"
+term_tmp="${term_file}.tmp"
+echo "TERM_COMPLETE=YES" > "$term_tmp"
+echo "OMC_ACTIONUI_WINDOW_UUID=${OMC_ACTIONUI_WINDOW_UUID}" >> "$term_tmp"
+echo "VIEW_2_VALUE=${OMC_ACTIONUI_VIEW_2_VALUE}" >> "$term_tmp"
+mv "$term_tmp" "$term_file"
+				</string>
+			</array>
+			<key>COMMAND_ID</key>
+			<string>form.dialog.terminate.cancel</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_shell_script</string>
+			<key>NAME</key>
+			<string>Form</string>
 		</dict>
 	</array>
 	<key>VERSION</key>
