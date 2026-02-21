@@ -45,4 +45,7 @@
 // Generic property setter (ActionUI: JSON-deserialized value; Nib: not supported)
 - (void)setPropertyKey:(NSString *)propertyKey jsonValue:(NSString *)jsonValue forControlID:(NSString *)inControlID;
 
+// State setter (ActionUI: string or JSON-deserialized value; Nib: not supported)
+- (void)setStateKey:(NSString *)stateKey stringOrJsonValue:(NSString *)value forControlID:(NSString *)inControlID;
+
 @end

@@ -16,6 +16,39 @@
 
 @import ActionUIObjCAdapter;
 
+/// Returns YES if the string's first character suggests it could be a JSON fragment.
+/// Mirrors JSONHelper.looksLikeJSONFragment in Swift — avoids NSJSONSerialization overhead
+/// for plain strings, which are the most common case.
+static BOOL LooksLikeJSONFragment(NSString *s)
+{
+    if (s.length == 0) return NO;
+    unichar first = [s characterAtIndex:0];
+    switch (first) {
+        case '{': case '[':           // object, array
+        case '"':                     // quoted string fragment
+        case 't': case 'f': case 'n': // true, false, null
+            return YES;
+        default:
+            return (first >= '0' && first <= '9') || first == '-'; // number
+    }
+}
+
+/// Parses a string as JSON if it looks like a JSON fragment; otherwise returns the string as-is.
+/// Falls back to the original string if JSON parsing fails.
+static id ParseStringOrJSON(NSString *value)
+{
+    if (!LooksLikeJSONFragment(value))
+        return value;
+    NSData *data = [value dataUsingEncoding:NSUTF8StringEncoding];
+    if (data == nil)
+        return value;
+    NSError *error = nil;
+    id parsed = [NSJSONSerialization JSONObjectWithData:data
+                                               options:NSJSONReadingAllowFragments
+                                                 error:&error];
+    return (error == nil && parsed != nil) ? parsed : value;
+}
+
 @implementation OMCActionUIWindowController
 
 - (id)initWithOmc:(OnMyCommandCM *)inOmc commandRuntimeData:(CommandRuntimeData *)inCommandRuntimeData
@@ -237,25 +270,20 @@
 {
     NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
     if (windowUUID == nil || inControlID == nil || propertyKey == nil || jsonValue == nil)
-    	return;
-    NSInteger viewID = [inControlID integerValue];
-    NSData *data = [jsonValue dataUsingEncoding:NSUTF8StringEncoding];
-    if (data == nil)
-    {
-    	NSLog(@"[OMCActionUIWindowController] setPropertyKey:%@ - invalid JSON data: %@", propertyKey, jsonValue);
-    	return;
-    }
-    	
-    NSError *error = nil;
-    id parsedValue = [NSJSONSerialization JSONObjectWithData:data
-                                                     options:NSJSONReadingAllowFragments
-                                                       error:&error];
-    if (error != nil || parsedValue == nil)
-    {
-        NSLog(@"[OMCActionUIWindowController] setPropertyKey:%@ - invalid JSON value: %@, error: %@", propertyKey, jsonValue, error);
         return;
-    }
+    NSInteger viewID = [inControlID integerValue];
+    id parsedValue = ParseStringOrJSON(jsonValue);
     [ActionUIObjC setElementPropertyWithWindowUUID:windowUUID viewID:viewID propertyName:propertyKey value:parsedValue];
+}
+
+- (void)setStateKey:(NSString *)stateKey stringOrJsonValue:(NSString *)value forControlID:(NSString *)inControlID
+{
+    NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
+    if (windowUUID == nil || inControlID == nil || stateKey == nil || value == nil)
+        return;
+    NSInteger viewID = [inControlID integerValue];
+    id parsedValue = ParseStringOrJSON(value);
+    [ActionUIObjC setElementStateWithWindowUUID:windowUUID viewID:viewID key:stateKey value:parsedValue];
 }
 
 #pragma mark - List controls

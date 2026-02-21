@@ -550,6 +550,30 @@ GetAllDialogControllers()
 		}
 	}
 
+	CFDictionaryRef setStateDict;
+	if( controlValues.GetValue(CFSTR("SET_STATE"), setStateDict) )
+	{
+		itemCount = ::CFDictionaryGetCount(setStateDict);
+		if(itemCount > 0)
+		{
+			std::vector<CFTypeRef> keyList(itemCount);
+			std::vector<CFTypeRef> valueList(itemCount);
+			::CFDictionaryGetKeysAndValues(setStateDict, (const void **)keyList.data(), (const void **)valueList.data());
+			for(CFIndex i = 0; i < itemCount; i++)
+			{
+				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
+				CFArrayRef theArr = ACFType<CFArrayRef>::DynamicCast( valueList[i] );
+				if( (controlID != NULL) && (theArr != NULL) && (::CFArrayGetCount(theArr) >= 2) )
+				{
+					CFStringRef stateKey = ACFType<CFStringRef>::DynamicCast( ::CFArrayGetValueAtIndex(theArr, 0) );
+					CFStringRef stateVal = ACFType<CFStringRef>::DynamicCast( ::CFArrayGetValueAtIndex(theArr, 1) );
+					if( (stateKey != NULL) && (stateVal != NULL) )
+						[self setStateKey:(__bridge NSString *)stateKey stringOrJsonValue:(__bridge NSString *)stateVal forControlID:(__bridge NSString *)controlID];
+				}
+			}
+		}
+	}
+
 	{
 	CFDictionaryRef valuesDict = NULL;
 	if( controlValues.GetValue(CFSTR("VALUES"), valuesDict) )
@@ -1371,6 +1395,9 @@ GetAllDialogControllers()
 }
 - (void)setPropertyKey:(NSString *)propertyKey jsonValue:(NSString *)jsonValue forControlID:(NSString *)inControlID {
     NSLog(@"[OMCWindowController stub] setPropertyKey:%@ jsonValue:%@ forControlID: %@", propertyKey, jsonValue, inControlID);
+}
+- (void)setStateKey:(NSString *)stateKey stringOrJsonValue:(NSString *)value forControlID:(NSString *)inControlID {
+    NSLog(@"[OMCWindowController stub] setStateKey:%@ value:%@ forControlID: %@", stateKey, value, inControlID);
 }
 
 @end
