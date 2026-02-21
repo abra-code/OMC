@@ -446,6 +446,7 @@
 		1DED8E562222B65500A2CAF7 /* MoreAppleEvents.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoreAppleEvents.h; sourceTree = "<group>"; };
 		1DF2B2072F458F7D0069BD26 /* OMCViewSetupProtocol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OMCViewSetupProtocol.h; sourceTree = "<group>"; };
 		1DF2B4002F45A2110069BD26 /* OmcProjectCommon.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectCommon.xcconfig; path = ../Common/OmcProjectCommon.xcconfig; sourceTree = SOURCE_ROOT; };
+		1DF2B4552F4932E90069BD26 /* OMCWindowControlProtocol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OMCWindowControlProtocol.h; sourceTree = "<group>"; };
 		32DBCF5E0370ADEE00C91783 /* Abracode_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Abracode_Prefix.pch; sourceTree = "<group>"; };
 		8DC2EF5A0486A6940098B216 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8DC2EF5B0486A6940098B216 /* Abracode.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Abracode.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -964,6 +965,7 @@
 				E2C84D880DA9D2600056DBC2 /* OMCSingleCommand.h */,
 				E2C84DA90DA9D4CD0056DBC2 /* OMCCommandExecutor.m */,
 				E2C84DA80DA9D4CD0056DBC2 /* OMCCommandExecutor.h */,
+				1DF2B4552F4932E90069BD26 /* OMCWindowControlProtocol.h */,
 				AAAAAAAA2D4346BB0065C23A /* OMCWindowController.mm */,
 				AAAAAAAA1D4346BB0065C23A /* OMCWindowController.h */,
 				E211D4F40D4346BB0065C23A /* OMCNibWindowController.mm */,

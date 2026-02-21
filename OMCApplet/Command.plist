@@ -92,6 +92,11 @@ echo "------------------"
 dialog_tool="$OMC_OMC_SUPPORT_PATH/omc_dialog_control"
 echo "$dialog_tool \"$OMC_ACTIONUI_WINDOW_UUID\" 2 \"Papa Smurf\""
 "$dialog_tool" "$OMC_ACTIONUI_WINDOW_UUID" 2 "Papa Smurf"
+# hide password 
+"$dialog_tool" "$OMC_ACTIONUI_WINDOW_UUID" 3 omc_set_property "hidden" true
+# disable "Save" button 
+"$dialog_tool" "$OMC_ACTIONUI_WINDOW_UUID" 7 omc_set_property "disabled" true
+
 # uncomment the line below to show the window with environment variables
 # "$OMC_OMC_SUPPORT_PATH/omc_next_command" "$OMC_CURRENT_COMMAND_GUID" "form.dialog.show.env"
 				</string>

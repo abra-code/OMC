@@ -233,6 +233,24 @@
     [ActionUIObjC setElementPropertyWithWindowUUID:windowUUID viewID:viewID propertyName:@"hidden" value:@(!visible)];
 }
 
+- (void)setPropertyKey:(NSString *)propertyKey jsonValue:(NSString *)jsonValue forControlID:(NSString *)inControlID
+{
+    NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
+    if (windowUUID == nil || inControlID == nil || propertyKey == nil || jsonValue == nil) return;
+    NSInteger viewID = [inControlID integerValue];
+    NSData *data = [jsonValue dataUsingEncoding:NSUTF8StringEncoding];
+    NSError *error = nil;
+    id parsedValue = [NSJSONSerialization JSONObjectWithData:data
+                                                     options:NSJSONReadingAllowFragments
+                                                       error:&error];
+    if (error != nil || parsedValue == nil)
+    {
+        NSLog(@"[OMCActionUIWindowController] setPropertyKey:%@ - invalid JSON value: %@, error: %@", propertyKey, jsonValue, error);
+        return;
+    }
+    [ActionUIObjC setElementPropertyWithWindowUUID:windowUUID viewID:viewID propertyName:propertyKey value:parsedValue];
+}
+
 #pragma mark - List controls
 
 - (void)removeAllListItemsForControlID:(NSString *)inControlID

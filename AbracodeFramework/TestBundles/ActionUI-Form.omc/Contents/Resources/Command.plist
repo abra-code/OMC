@@ -47,6 +47,11 @@ echo "${OMC_ACTIONUI_WINDOW_UUID}"
 "$dialog_tool" "$OMC_ACTIONUI_WINDOW_UUID" 2 omc_show
 "$dialog_tool" "$OMC_ACTIONUI_WINDOW_UUID" omc_window omc_select
 
+# Exercise omc_set_property: disable Save button (id 7) and hide SecureField (id 3)
+# Visual check during tests: Save should be greyed out, password field should disappear
+"$dialog_tool" "$OMC_ACTIONUI_WINDOW_UUID" 7 omc_set_property "disabled" true
+"$dialog_tool" "$OMC_ACTIONUI_WINDOW_UUID" 3 omc_set_property "hidden" true
+
 # Write diagnostic file atomically
 init_file="/tmp/OMC_test_actionui_init_${OMC_ACTIONUI_WINDOW_UUID}"
 init_tmp="${init_file}.tmp"
@@ -54,6 +59,7 @@ echo "INIT_COMPLETE=YES" > "$init_tmp"
 echo "OMC_ACTIONUI_WINDOW_UUID=${OMC_ACTIONUI_WINDOW_UUID}" >> "$init_tmp"
 echo "OMC_OBJ_PATH=${OMC_OBJ_PATH}" >> "$init_tmp"
 echo "OMC_OMC_SUPPORT_PATH=${OMC_OMC_SUPPORT_PATH}" >> "$init_tmp"
+echo "SET_PROPERTY_COMPLETE=YES" >> "$init_tmp"
 mv "$init_tmp" "$init_file"
 
 # uncomment the line below to show the window with environment variables

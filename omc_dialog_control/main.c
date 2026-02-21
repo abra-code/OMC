@@ -32,6 +32,7 @@ typedef enum InstructionID
 	omc_table_set_rows_from_stdin,
 	omc_table_set_columns,
 	omc_table_set_column_widths,
+	omc_set_property,
 	omc_set_command_id,
 	omc_resize, //for window or control
 	omc_move, //for window or control
@@ -86,6 +87,7 @@ static InstructionWord sInstructionWordList[] =
 	{ sizeof("omc_table_set_rows_from_stdin")-1,			CFSTR("omc_table_set_rows_from_stdin"),			CFSTR("SET_TABLE_ROWS"),		false, false,	kArgumentCount_FromStdin },
 	{ sizeof("omc_table_set_columns")-1,					CFSTR("omc_table_set_columns"),					CFSTR("SET_TABLE_COLUMNS"),		false, false,	kArgumentCount_Variable },
 	{ sizeof("omc_table_set_column_widths")-1,				CFSTR("omc_table_set_column_widths"),			CFSTR("SET_TABLE_WIDTHS"),		false, false,	kArgumentCount_Variable },
+	{ sizeof("omc_set_property")-1,							CFSTR("omc_set_property"),						CFSTR("SET_PROPERTY"),			false, false,	2 },
 	{ sizeof("omc_set_command_id")-1,						CFSTR("omc_set_command_id"),					CFSTR("COMMAND_IDS"),			false, false,	1 },
 	{ sizeof("omc_resize")-1,								CFSTR("omc_resize"),							CFSTR("RESIZE"),				false, false,	2 },
 	{ sizeof("omc_move")-1,									CFSTR("omc_move"),								CFSTR("MOVE"),					false, false,	2 },
@@ -178,7 +180,8 @@ int main (int argc, const char * argv[])
 		fprintf(stdout, "\tomc_resize [followed by 2 space separated numbers] (for dialog window or controls)\n");
 		fprintf(stdout, "\tomc_move [followed by 2 space separated numbers] (for dialog window or controls)\n");
 		fprintf(stdout, "\tomc_scroll [followed by 2 space separated numbers] (for view within NSScrollerView)\n");
-		fprintf(stdout, "\tomc_invoke [followed by space separated ObjC message] (may be sent to control or window)\n\n");
+		fprintf(stdout, "\tomc_invoke [followed by space separated ObjC message] (may be sent to control or window)\n");
+		fprintf(stdout, "\tomc_set_property <property_key> <property_json_value> (ActionUI only; value is a JSON fragment)\n\n");
 		
 		fprintf(stdout, "Examples:\nomc_dialog_control __NIB_DLG_GUID__ 4 \"hello world!\"\n");
 		fprintf(stdout, "omc_dialog_control __NIB_DLG_GUID__ 2 omc_disable\n");
@@ -198,6 +201,8 @@ int main (int argc, const char * argv[])
 		fprintf(stdout, "omc_dialog_control __NIB_DLG_GUID__ 4 omc_scroll 0 0\n");
 		fprintf(stdout, "omc_dialog_control __NIB_DLG_GUID__ omc_window omc_terminate_cancel\n");
 		fprintf(stdout, "omc_dialog_control __NIB_DLG_GUID__ 2 omc_invoke setAlignment: 2\n");
+		fprintf(stdout, "omc_dialog_control __ACTIONUI_WINDOW_UUID__ 1 omc_set_property \"columns\" '[\"Name\",\"Action\"]'\n");
+		fprintf(stdout, "omc_dialog_control __ACTIONUI_WINDOW_UUID__ 2 omc_set_property \"disabled\" true\n");
 
 		result = -1;
 		goto error_exit;

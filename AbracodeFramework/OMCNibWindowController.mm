@@ -1093,4 +1093,9 @@
 	return NULL;
 }
 
+- (void)setPropertyKey:(NSString *)propertyKey jsonValue:(NSString *)jsonValue forControlID:(NSString *)inControlID
+{
+    NSLog(@"[OMCNibWindowController] setPropertyKey:%@ jsonValue:forControlID: %@ — not supported for Nib dialogs", propertyKey, inControlID);
+}
+
 @end

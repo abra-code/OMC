@@ -42,4 +42,7 @@
 // ObjC message dispatch
 - (void)invokeMessagesForControlID:(NSString *)inControlID messages:(CFArrayRef)messages;
 
+// Generic property setter (ActionUI: JSON-deserialized value; Nib: not supported)
+- (void)setPropertyKey:(NSString *)propertyKey jsonValue:(NSString *)jsonValue forControlID:(NSString *)inControlID;
+
 @end
