@@ -236,9 +236,16 @@
 - (void)setPropertyKey:(NSString *)propertyKey jsonValue:(NSString *)jsonValue forControlID:(NSString *)inControlID
 {
     NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
-    if (windowUUID == nil || inControlID == nil || propertyKey == nil || jsonValue == nil) return;
+    if (windowUUID == nil || inControlID == nil || propertyKey == nil || jsonValue == nil)
+    	return;
     NSInteger viewID = [inControlID integerValue];
     NSData *data = [jsonValue dataUsingEncoding:NSUTF8StringEncoding];
+    if (data == nil)
+    {
+    	NSLog(@"[OMCActionUIWindowController] setPropertyKey:%@ - invalid JSON data: %@", propertyKey, jsonValue);
+    	return;
+    }
+    	
     NSError *error = nil;
     id parsedValue = [NSJSONSerialization JSONObjectWithData:data
                                                      options:NSJSONReadingAllowFragments
