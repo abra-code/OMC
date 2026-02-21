@@ -217,6 +217,96 @@
     [ActionUIObjC setElementValueFromStringWithWindowUUID:windowUUID viewID:viewID value:inValue viewPartID:0];
 }
 
+- (void)setControlEnabled:(BOOL)enabled forControlID:(NSString *)inControlID
+{
+    NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
+    if (windowUUID == nil || inControlID == nil) return;
+    NSInteger viewID = [inControlID integerValue];
+    [ActionUIObjC setElementPropertyWithWindowUUID:windowUUID viewID:viewID propertyName:@"disabled" value:@(!enabled)];
+}
+
+- (void)setControlVisible:(BOOL)visible forControlID:(NSString *)inControlID
+{
+    NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
+    if (windowUUID == nil || inControlID == nil) return;
+    NSInteger viewID = [inControlID integerValue];
+    [ActionUIObjC setElementPropertyWithWindowUUID:windowUUID viewID:viewID propertyName:@"hidden" value:@(!visible)];
+}
+
+#pragma mark - List controls
+
+- (void)removeAllListItemsForControlID:(NSString *)inControlID
+{
+    // List items are stored as single-column rows in states["content"]
+    NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
+    if (windowUUID == nil || inControlID == nil) return;
+    NSInteger viewID = [inControlID integerValue];
+    [ActionUIObjC clearElementRowsWithWindowUUID:windowUUID viewID:viewID];
+}
+
+- (void)setListItems:(CFArrayRef)items forControlID:(NSString *)inControlID
+{
+    NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
+    if (windowUUID == nil || inControlID == nil) return;
+    NSInteger viewID = [inControlID integerValue];
+    CFIndex count = (items != NULL) ? CFArrayGetCount(items) : 0;
+    NSMutableArray<NSArray<NSString*>*> *rows = [NSMutableArray arrayWithCapacity:count];
+    for (CFIndex i = 0; i < count; i++) {
+        CFStringRef item = (CFStringRef)CFArrayGetValueAtIndex(items, i);
+        if (item != NULL)
+            [rows addObject:@[(__bridge NSString *)item]];
+    }
+    [ActionUIObjC setElementRowsWithWindowUUID:windowUUID viewID:viewID rows:rows];
+}
+
+- (void)appendListItems:(CFArrayRef)items forControlID:(NSString *)inControlID
+{
+    NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
+    if (windowUUID == nil || inControlID == nil) return;
+    NSInteger viewID = [inControlID integerValue];
+    CFIndex count = (items != NULL) ? CFArrayGetCount(items) : 0;
+    NSMutableArray<NSArray<NSString*>*> *rows = [NSMutableArray arrayWithCapacity:count];
+    for (CFIndex i = 0; i < count; i++) {
+        CFStringRef item = (CFStringRef)CFArrayGetValueAtIndex(items, i);
+        if (item != NULL)
+            [rows addObject:@[(__bridge NSString *)item]];
+    }
+    if (rows.count > 0)
+        [ActionUIObjC appendElementRowsWithWindowUUID:windowUUID viewID:viewID rows:rows];
+}
+
+#pragma mark - Control layout and focus (not applicable to declarative SwiftUI layout)
+
+- (void)selectControlWithID:(NSString *)inControlID
+{
+    NSLog(@"[OMCActionUIWindowController] selectControlWithID: %@ — not yet implemented (requires @FocusState wiring)", inControlID);
+}
+
+- (void)setCommandID:(NSString *)commandID forControlID:(NSString *)inControlID
+{
+    NSLog(@"[OMCActionUIWindowController] setCommandID:%@ forControlID: %@ — not supported (ActionUI actions are declared in JSON at load time)", commandID, inControlID);
+}
+
+- (void)moveControlWithID:(NSString *)inControlID toPosition:(NSPoint)position
+{
+    NSLog(@"[OMCActionUIWindowController] moveControlWithID: %@ — not supported (SwiftUI uses declarative layout)", inControlID);
+}
+
+- (void)resizeControlWithID:(NSString *)inControlID toSize:(NSSize)size
+{
+    NSLog(@"[OMCActionUIWindowController] resizeControlWithID: %@ — not supported (SwiftUI uses declarative layout)", inControlID);
+}
+
+- (void)scrollControlWithID:(NSString *)inControlID toPosition:(NSPoint)position
+{
+    NSLog(@"[OMCActionUIWindowController] scrollControlWithID: %@ — not yet implemented", inControlID);
+}
+
+- (void)invokeMessagesForControlID:(NSString *)inControlID messages:(CFArrayRef)messages
+{
+    NSLog(@"[OMCActionUIWindowController] invokeMessagesForControlID: %@ — not supported (ActionUI views do not expose an ObjC message dispatch interface)", inControlID);
+}
+
 - (void)allControlValues:(NSMutableDictionary *)ioControlValues andProperties:(NSMutableDictionary *)ioCustomProperties withIterator:(SelectionIterator *)inSelIterator
 {
     NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
@@ -230,19 +320,30 @@
     for(NSNumber *viewIDNumber in elementInfo)
     {
         NSInteger viewID = [viewIDNumber integerValue];
-        NSString *value = [ActionUIObjC getElementValueAsStringWithWindowUUID:windowUUID viewID:viewID viewPartID:0];
-        if(value != nil)
+        NSString *controlID = [viewIDNumber stringValue];
+
+        NSInteger columnCount = [ActionUIObjC getElementColumnCountWithWindowUUID:windowUUID viewID:viewID];
+        if(columnCount > 0)
         {
-            NSString *controlID = [viewIDNumber stringValue];
-            NSMutableDictionary *partsDict = ioControlValues[controlID];
-            if(partsDict == nil)
+            // Table: store key "0" (tab-joined selected row) plus one key per column (1..columnCount).
+            // Column keys are always stored so OMC_ACTIONUI_TABLE_N_COLUMN_M_VALUE is exported
+            // even when no row is selected (in which case values are empty strings).
+            NSMutableDictionary *partsDict = [NSMutableDictionary dictionaryWithCapacity:columnCount + 1];
+            partsDict[@"0"] = [ActionUIObjC getElementValueAsStringWithWindowUUID:windowUUID viewID:viewID viewPartID:0] ?: @"";
+            for(NSInteger colIdx = 1; colIdx <= columnCount; colIdx++)
             {
-                partsDict = [NSMutableDictionary dictionaryWithObject:value forKey:@"0"];
-                ioControlValues[controlID] = partsDict;
+                NSString *colKey = [NSString stringWithFormat:@"%ld", (long)colIdx];
+                partsDict[colKey] = [ActionUIObjC getElementValueAsStringWithWindowUUID:windowUUID viewID:viewID viewPartID:colIdx] ?: @"";
             }
-            else
+            ioControlValues[controlID] = partsDict;
+        }
+        else
+        {
+            // Non-table: single value under key "0"
+            NSString *value = [ActionUIObjC getElementValueAsStringWithWindowUUID:windowUUID viewID:viewID viewPartID:0];
+            if(value != nil)
             {
-                partsDict[@"0"] = value;
+                ioControlValues[controlID] = [NSMutableDictionary dictionaryWithObject:value forKey:@"0"];
             }
         }
     }
@@ -262,6 +363,92 @@
 
     NSString *value = [ActionUIObjC getElementValueAsStringWithWindowUUID:windowUUID viewID:viewID viewPartID:viewPartID];
     return value;
+}
+
+#pragma mark - Table setters
+
+/// Converts a CFArrayRef of tab-separated row strings into NSArray<NSArray<NSString*>*>.
+static NSArray<NSArray<NSString*>*> *OMCParseTabSeparatedRows(CFArrayRef cfRows)
+{
+    CFIndex count = (cfRows != NULL) ? CFArrayGetCount(cfRows) : 0;
+    NSMutableArray<NSArray<NSString*>*> *result = [NSMutableArray arrayWithCapacity:count];
+    for (CFIndex i = 0; i < count; i++) {
+        CFStringRef rowCFStr = (CFStringRef)CFArrayGetValueAtIndex(cfRows, i);
+        NSString *rowStr = (__bridge NSString *)rowCFStr;
+        [result addObject:[rowStr componentsSeparatedByString:@"\t"]];
+    }
+    return result;
+}
+
+- (void)emptyTableForControlID:(NSString *)inControlID
+{
+    NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
+    if (windowUUID == nil || inControlID == nil) return;
+    NSInteger viewID = [inControlID integerValue];
+    [ActionUIObjC clearElementRowsWithWindowUUID:windowUUID viewID:viewID];
+}
+
+- (void)removeTableRowsForControlID:(NSString *)inControlID
+{
+    // Same as emptyTable for ActionUI (no separate "remove without reload" distinction)
+    NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
+    if (windowUUID == nil || inControlID == nil) return;
+    NSInteger viewID = [inControlID integerValue];
+    [ActionUIObjC clearElementRowsWithWindowUUID:windowUUID viewID:viewID];
+}
+
+- (void)setTableRows:(CFArrayRef)rows forControlID:(NSString *)inControlID
+{
+    NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
+    if (windowUUID == nil || inControlID == nil) return;
+    NSInteger viewID = [inControlID integerValue];
+    NSArray<NSArray<NSString*>*> *parsedRows = OMCParseTabSeparatedRows(rows);
+    [ActionUIObjC setElementRowsWithWindowUUID:windowUUID viewID:viewID rows:parsedRows ?: @[]];
+}
+
+- (void)addTableRows:(CFArrayRef)rows forControlID:(NSString *)inControlID
+{
+    NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
+    if (windowUUID == nil || inControlID == nil) return;
+    NSInteger viewID = [inControlID integerValue];
+    NSArray<NSArray<NSString*>*> *parsedRows = OMCParseTabSeparatedRows(rows);
+    if (parsedRows.count > 0)
+        [ActionUIObjC appendElementRowsWithWindowUUID:windowUUID viewID:viewID rows:parsedRows];
+}
+
+- (void)setTableColumns:(CFArrayRef)columns forControlID:(NSString *)inControlID
+{
+    NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
+    if (windowUUID == nil || inControlID == nil) return;
+    NSInteger viewID = [inControlID integerValue];
+    CFIndex count = (columns != NULL) ? CFArrayGetCount(columns) : 0;
+    NSMutableArray<NSString*> *names = [NSMutableArray arrayWithCapacity:count];
+    for (CFIndex i = 0; i < count; i++) {
+        CFStringRef name = (CFStringRef)CFArrayGetValueAtIndex(columns, i);
+        [names addObject:(__bridge NSString *)name];
+    }
+    [ActionUIObjC setElementPropertyWithWindowUUID:windowUUID viewID:viewID propertyName:@"columns" value:names];
+}
+
+- (void)setTableColumnWidths:(CFArrayRef)widths forControlID:(NSString *)inControlID
+{
+    NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
+    if (windowUUID == nil || inControlID == nil) return;
+    NSInteger viewID = [inControlID integerValue];
+    CFIndex count = (widths != NULL) ? CFArrayGetCount(widths) : 0;
+    NSMutableArray<NSNumber*> *widthNumbers = [NSMutableArray arrayWithCapacity:count];
+    for (CFIndex i = 0; i < count; i++) {
+        CFTypeRef item = CFArrayGetValueAtIndex(widths, i);
+        if (CFGetTypeID(item) == CFNumberGetTypeID()) {
+            double val = 0;
+            CFNumberGetValue((CFNumberRef)item, kCFNumberDoubleType, &val);
+            [widthNumbers addObject:@(val)];
+        } else if (CFGetTypeID(item) == CFStringGetTypeID()) {
+            double val = [(__bridge NSString *)item doubleValue];
+            [widthNumbers addObject:@(val)];
+        }
+    }
+    [ActionUIObjC setElementPropertyWithWindowUUID:windowUUID viewID:viewID propertyName:@"widths" value:widthNumbers];
 }
 
 @end

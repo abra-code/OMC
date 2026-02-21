@@ -1,0 +1,35 @@
+{
+  "type": "VStack",
+  "properties": {
+    "spacing": 10.0,
+    "alignment": "center",
+    "padding": "default",
+    "frame": {
+        "minWidth": 400.0,
+        "minHeight": 300.0,
+        "idealWidth": 800.0,
+        "idealHeight": 600.0
+    }
+  },
+  "children": [
+    {
+      "type": "Table",
+      "id": 1,
+      "properties": {
+        "itemType": {
+          "viewType": "Text",
+          "actionContext": "rowColumnIndex"
+        },
+        "columns": [
+          "Name",
+          "Info"
+        ],
+        "widths": [
+          50,
+          50
+        ],
+        "doubleClickActionID": "table.double.click"
+      }
+    }
+  ]
+}

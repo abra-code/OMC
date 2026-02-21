@@ -217,6 +217,62 @@ CreateActionUIViewIDFromString(CFStringRef inActionUIViewIDString, bool isEnvSty
 	return ::CFStringCreateWithSubstring(kCFAllocatorDefault, inActionUIViewIDString, idStrRange);
 }
 
+// Extract view ID N and column index M from: OMC_ACTIONUI_TABLE_N_COLUMN_M_VALUE or __ACTIONUI_TABLE_N_COLUMN_M_VALUE__
+CFStringRef
+CreateActionUITableIDAndColumnFromString(CFStringRef inControlIDString, CFObj<CFStringRef> &outColumnIndexStr, bool useAllRows, bool isEnvStyle)
+{
+	if(inControlIDString == NULL)
+		return NULL;
+
+	CFStringRef prefixString = isEnvStyle ? CFSTR("OMC_ACTIONUI_TABLE_") : CFSTR("__ACTIONUI_TABLE_");
+	CFIndex prefixLen = ::CFStringGetLength(prefixString);
+
+	CFStringRef columnString = CFSTR("_COLUMN_");
+	CFIndex columnLen = ::CFStringGetLength(columnString);
+
+	CFStringRef suffixString = NULL;
+	if(useAllRows)
+		suffixString = isEnvStyle ? CFSTR("_ALL_ROWS") : CFSTR("_ALL_ROWS__");
+	else
+		suffixString = isEnvStyle ? CFSTR("_VALUE") : CFSTR("_VALUE__");
+
+	CFIndex suffixLen = ::CFStringGetLength(suffixString);
+
+	CFIndex actualLen = ::CFStringGetLength(inControlIDString);
+
+	// need at least one character for view ID and one for column index
+	if(actualLen < (prefixLen + 1 + columnLen + 1 + suffixLen))
+		return NULL;
+
+	if(::CFStringHasPrefix(inControlIDString, prefixString) == false)
+		return NULL;
+
+	if(::CFStringHasSuffix(inControlIDString, suffixString) == false)
+		return NULL;
+
+	CFRange columnStrRange = ::CFStringFind(inControlIDString, columnString, 0);
+	if(columnStrRange.length != columnLen)
+		return NULL;
+
+	CFStringRef controlID = NULL;
+	CFRange idStrRange;
+	idStrRange.location = prefixLen;
+	idStrRange.length = columnStrRange.location - prefixLen;
+	if(idStrRange.length > 0)
+	{
+		controlID = ::CFStringCreateWithSubstring(kCFAllocatorDefault, inControlIDString, idStrRange);
+	}
+
+	CFRange numberStrRange;
+	numberStrRange.location = columnStrRange.location + columnStrRange.length;
+	numberStrRange.length = actualLen - (columnStrRange.location + columnStrRange.length) - suffixLen;
+	if(numberStrRange.length > 0)
+	{
+		outColumnIndexStr = CFStringCreateWithSubstring(kCFAllocatorDefault, inControlIDString, numberStrRange);
+	}
+	return controlID;
+}
+
 // Extract control ID XXX and HTML element ID YYYY from string: OMC_NIB_WEBVIEW_XXX_ELEMENT_YYY_VALUE or __NIB_WEBVIEW_XXX_ELEMENT_YYY_VALUE__
 
 CFStringRef

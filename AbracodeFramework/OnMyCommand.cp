@@ -2854,6 +2854,7 @@ OnMyCommandCM::PopulateEnvironList(CFMutableDictionaryRef ioEnvironList, Command
 			
 			//special on-demand value, which is costly to obtain
 			case NIB_TABLE_ALL_ROWS:
+			case ACTIONUI_TABLE_ALL_ROWS:
 			{
 				if(activeDialog != nullptr)
 					newStrRef = activeDialog->CreateControlValue(specialWordID, theKey, kEscapeNone, true);

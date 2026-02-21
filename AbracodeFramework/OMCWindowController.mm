@@ -1287,27 +1287,63 @@ GetAllDialogControllers()
 
 #pragma mark - Abstract methods (no-op defaults)
 
-- (void)setControlStringValue:(NSString *)inValue forControlID:(NSString *)inControlID {}
-- (void)setControlEnabled:(BOOL)enabled forControlID:(NSString *)inControlID {}
-- (void)setControlVisible:(BOOL)visible forControlID:(NSString *)inControlID {}
+- (void)setControlStringValue:(NSString *)inValue forControlID:(NSString *)inControlID {
+    NSLog(@"[OMCWindowController stub] setControlStringValue:forControlID: %@", inControlID);
+}
+- (void)setControlEnabled:(BOOL)enabled forControlID:(NSString *)inControlID {
+    NSLog(@"[OMCWindowController stub] setControlEnabled:%d forControlID: %@", enabled, inControlID);
+}
+- (void)setControlVisible:(BOOL)visible forControlID:(NSString *)inControlID {
+    NSLog(@"[OMCWindowController stub] setControlVisible:%d forControlID: %@", visible, inControlID);
+}
 
-- (void)removeAllListItemsForControlID:(NSString *)inControlID {}
-- (void)setListItems:(CFArrayRef)items forControlID:(NSString *)inControlID {}
-- (void)appendListItems:(CFArrayRef)items forControlID:(NSString *)inControlID {}
+- (void)removeAllListItemsForControlID:(NSString *)inControlID {
+    NSLog(@"[OMCWindowController stub] removeAllListItemsForControlID: %@", inControlID);
+}
+- (void)setListItems:(CFArrayRef)items forControlID:(NSString *)inControlID {
+    NSLog(@"[OMCWindowController stub] setListItems:forControlID: %@", inControlID);
+}
+- (void)appendListItems:(CFArrayRef)items forControlID:(NSString *)inControlID {
+    NSLog(@"[OMCWindowController stub] appendListItems:forControlID: %@", inControlID);
+}
 
-- (void)emptyTableForControlID:(NSString *)inControlID {}
-- (void)removeTableRowsForControlID:(NSString *)inControlID {}
-- (void)setTableRows:(CFArrayRef)rows forControlID:(NSString *)inControlID {}
-- (void)addTableRows:(CFArrayRef)rows forControlID:(NSString *)inControlID {}
-- (void)setTableColumns:(CFArrayRef)columns forControlID:(NSString *)inControlID {}
-- (void)setTableColumnWidths:(CFArrayRef)widths forControlID:(NSString *)inControlID {}
+- (void)emptyTableForControlID:(NSString *)inControlID {
+    NSLog(@"[OMCWindowController stub] emptyTableForControlID: %@", inControlID);
+}
+- (void)removeTableRowsForControlID:(NSString *)inControlID {
+    NSLog(@"[OMCWindowController stub] removeTableRowsForControlID: %@", inControlID);
+}
+- (void)setTableRows:(CFArrayRef)rows forControlID:(NSString *)inControlID {
+    NSLog(@"[OMCWindowController stub] setTableRows:forControlID: %@", inControlID);
+}
+- (void)addTableRows:(CFArrayRef)rows forControlID:(NSString *)inControlID {
+    NSLog(@"[OMCWindowController stub] addTableRows:forControlID: %@", inControlID);
+}
+- (void)setTableColumns:(CFArrayRef)columns forControlID:(NSString *)inControlID {
+    NSLog(@"[OMCWindowController stub] setTableColumns:forControlID: %@", inControlID);
+}
+- (void)setTableColumnWidths:(CFArrayRef)widths forControlID:(NSString *)inControlID {
+    NSLog(@"[OMCWindowController stub] setTableColumnWidths:forControlID: %@", inControlID);
+}
 
-- (void)selectControlWithID:(NSString *)inControlID {}
-- (void)setCommandID:(NSString *)commandID forControlID:(NSString *)inControlID {}
-- (void)moveControlWithID:(NSString *)inControlID toPosition:(NSPoint)position {}
-- (void)resizeControlWithID:(NSString *)inControlID toSize:(NSSize)size {}
-- (void)scrollControlWithID:(NSString *)inControlID toPosition:(NSPoint)position {}
+- (void)selectControlWithID:(NSString *)inControlID {
+    NSLog(@"[OMCWindowController stub] selectControlWithID: %@", inControlID);
+}
+- (void)setCommandID:(NSString *)commandID forControlID:(NSString *)inControlID {
+    NSLog(@"[OMCWindowController stub] setCommandID:%@ forControlID: %@", commandID, inControlID);
+}
+- (void)moveControlWithID:(NSString *)inControlID toPosition:(NSPoint)position {
+    NSLog(@"[OMCWindowController stub] moveControlWithID: %@", inControlID);
+}
+- (void)resizeControlWithID:(NSString *)inControlID toSize:(NSSize)size {
+    NSLog(@"[OMCWindowController stub] resizeControlWithID: %@", inControlID);
+}
+- (void)scrollControlWithID:(NSString *)inControlID toPosition:(NSPoint)position {
+    NSLog(@"[OMCWindowController stub] scrollControlWithID: %@", inControlID);
+}
 
-- (void)invokeMessagesForControlID:(NSString *)inControlID messages:(CFArrayRef)messages {}
+- (void)invokeMessagesForControlID:(NSString *)inControlID messages:(CFArrayRef)messages {
+    NSLog(@"[OMCWindowController stub] invokeMessagesForControlID: %@", inControlID);
+}
 
 @end

@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>COMMAND_LIST</key>
+	<array>
+		<dict>
+			<key>ACTIVATION_MODE</key>
+			<string>act_folder</string>
+			<key>COMMAND</key>
+			<array>
+				<string># env | sort
+echo "${OMC_ACTIONUI_WINDOW_UUID}"
+				</string>
+			</array>
+			<key>EXECUTION_MODE</key>
+			<string>exe_shell_script</string>
+			<key>NAME</key>
+			<string>Table</string>
+			<key>ACTIONUI_WINDOW</key>
+			<dict>
+				<key>END_CANCEL_SUBCOMMAND_ID</key>
+				<string>table.dialog.terminate.cancel</string>
+				<key>INIT_SUBCOMMAND_ID</key>
+				<string>table.dialog.init</string>
+				<key>IS_BLOCKING</key>
+				<false/>
+				<key>JSON_NAME</key>
+				<string>Table</string>
+			</dict>
+			<key>NOTES</key>
+			<string>ActionUI json window test</string>
+			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
+			<string>11.0</string>
+			<key>REQUIRED_OMC_VERSION</key>
+			<string>4.4.2</string>
+			<key>VERSION</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>COMMAND</key>
+			<array>
+				<string>dialog_tool="$OMC_OMC_SUPPORT_PATH/omc_dialog_control"
+"$dialog_tool" "$OMC_ACTIONUI_WINDOW_UUID" 1 omc_table_set_columns "First Name" "Action"
+"$dialog_tool" "$OMC_ACTIONUI_WINDOW_UUID" 1 omc_table_set_column_widths 100 100
+"$dialog_tool" $OMC_ACTIONUI_WINDOW_UUID 1 omc_table_remove_all_rows
+printf "John\tEnable\nJack\tDisable\nJill\tHide\n" | "$dialog_tool" "$OMC_ACTIONUI_WINDOW_UUID" 1 omc_table_add_rows_from_stdin
+				</string>
+			</array>
+			<key>COMMAND_ID</key>
+			<string>table.dialog.init</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_shell_script</string>
+			<key>NAME</key>
+			<string>Table</string>
+		</dict>
+		<dict>
+			<key>ACTIVATION_MODE</key>
+			<string>act_selected_text</string>
+			<key>COMMAND</key>
+			<array>
+				<string>WINDOW_UUID="${OMC_OBJ_TEXT}"
+if [ -n "${WINDOW_UUID}" ]; then
+    "$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$WINDOW_UUID" omc_window omc_terminate_cancel
+fi
+				</string>
+			</array>
+			<key>COMMAND_ID</key>
+			<string>table.close.window</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_shell_script</string>
+			<key>NAME</key>
+			<string>Table</string>
+			<key>NOTES</key>
+			<string>Test command designed to receive OMC_ACTIONUI_WINDOW_UUID from text context</string>
+		</dict>
+		<dict>
+			<key>COMMAND</key>
+			<array>
+				<string>term_file="/tmp/OMC_test_actionui_term_${OMC_ACTIONUI_WINDOW_UUID}"
+term_tmp="${term_file}.tmp"
+echo "TERM_COMPLETE=YES" > "$term_tmp"
+echo "OMC_ACTIONUI_WINDOW_UUID=${OMC_ACTIONUI_WINDOW_UUID}" >> "$term_tmp"
+echo "VIEW_1_VALUE=${OMC_ACTIONUI_VIEW_1_VALUE}" >> "$term_tmp"
+echo "TABLE_1_COLUMN_0_VALUE=${OMC_ACTIONUI_TABLE_1_COLUMN_0_VALUE}" >> "$term_tmp"
+echo "TABLE_1_COLUMN_1_VALUE=${OMC_ACTIONUI_TABLE_1_COLUMN_1_VALUE}" >> "$term_tmp"
+echo "TABLE_1_COLUMN_2_VALUE=${OMC_ACTIONUI_TABLE_1_COLUMN_2_VALUE}" >> "$term_tmp"
+echo "TABLE_1_COLUMN_3_VALUE=${OMC_ACTIONUI_TABLE_1_COLUMN_3_VALUE}" >> "$term_tmp"
+echo "TABLE_1_COLUMN_0_ALL_ROWS=${OMC_ACTIONUI_TABLE_1_COLUMN_0_ALL_ROWS//$'\n'/,}" >> "$term_tmp"
+echo "TABLE_1_COLUMN_1_ALL_ROWS=${OMC_ACTIONUI_TABLE_1_COLUMN_1_ALL_ROWS//$'\n'/,}" >> "$term_tmp"
+echo "TABLE_1_COLUMN_2_ALL_ROWS=${OMC_ACTIONUI_TABLE_1_COLUMN_2_ALL_ROWS//$'\n'/,}" >> "$term_tmp"
+mv "$term_tmp" "$term_file"
+				</string>
+			</array>
+			<key>COMMAND_ID</key>
+			<string>table.dialog.terminate.cancel</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_shell_script</string>
+			<key>NAME</key>
+			<string>Table</string>
+		</dict>
+	</array>
+	<key>VERSION</key>
+	<integer>2</integer>
+</dict>
+</plist>

@@ -20,6 +20,7 @@ public:
 
 	virtual				~OMCActionUIDialog() { }
 
+	virtual void		CopyAllControlValues(CFSetRef requestedNibControls, SelectionIterator *inSelIterator) noexcept override;
 	virtual CFStringRef	CreateControlValue(SInt32 inSpecialWordID, CFStringRef inControlString, UInt16 escSpecialCharsMode, bool isEnvStyle) noexcept override;
 	virtual void		AddEnvironmentVariablesForAllControls(CFMutableDictionaryRef ioEnvironList) noexcept override;
 };

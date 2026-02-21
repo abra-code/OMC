@@ -92,6 +92,8 @@ const CFIndex kMaxSpecialWordLen = sizeof("__DLG_CHOOSE_FOLDER_NAME_NO_EXTENSION
 //                 __NIB_TABLE_NNN_COLUMN_MMM_ALL_ROWS_VALUE__ OMC_NIB_TABLE_NNN_COLUMN_MMM_ALL_ROWS_VALUE
 //                 __NIB_WEBVIEW_NNN_ELEMENT_MMM_VALUE__       OMC_NIB_WEBVIEW_NNN_ELEMENT_MMM_VALUE
 //                 __ACTIONUI_VIEW_N_VALUE__                   OMC_ACTIONUI_VIEW_N_VALUE
+//                 __ACTIONUI_TABLE_NNN_COLUMN_MMM_VALUE__     OMC_ACTIONUI_TABLE_NNN_COLUMN_MMM_VALUE
+//                 __ACTIONUI_TABLE_NNN_COLUMN_MMM_ALL_ROWS__  OMC_ACTIONUI_TABLE_NNN_COLUMN_MMM_ALL_ROWS
 
 static void
 GetMultiCommandParams(CommandDescription &outDesc, CFDictionaryRef inParams)
@@ -244,7 +246,17 @@ GetSpecialWordID(CFStringRef inStr)
     {
         return ACTIONUI_VIEW_VALUE;
     }
-    
+    else if( ::CFStringHasPrefix(inStr, CFSTR("__ACTIONUI_TABLE_")) &&
+            ::CFStringHasSuffix(inStr, CFSTR("_VALUE__")) )
+    {
+        return ACTIONUI_TABLE_VALUE;
+    }
+    else if( ::CFStringHasPrefix(inStr, CFSTR("__ACTIONUI_TABLE_")) &&
+            ::CFStringHasSuffix(inStr, CFSTR("_ALL_ROWS__")) )
+    {
+        return ACTIONUI_TABLE_ALL_ROWS;
+    }
+
     return NO_SPECIAL_WORD;
 }
 
@@ -303,6 +315,16 @@ GetSpecialEnvironWordID(CFStringRef inStr)
             ::CFStringHasSuffix(inStr, CFSTR("_VALUE")) )
     {
         return ACTIONUI_VIEW_VALUE;
+    }
+    else if( ::CFStringHasPrefix(inStr, CFSTR("OMC_ACTIONUI_TABLE_")) &&
+            ::CFStringHasSuffix(inStr, CFSTR("_VALUE")) )
+    {
+        return ACTIONUI_TABLE_VALUE;
+    }
+    else if( ::CFStringHasPrefix(inStr, CFSTR("OMC_ACTIONUI_TABLE_")) &&
+            ::CFStringHasSuffix(inStr, CFSTR("_ALL_ROWS")) )
+    {
+        return ACTIONUI_TABLE_ALL_ROWS;
     }
 
     return NO_SPECIAL_WORD;
@@ -962,6 +984,7 @@ ProcessOnePrescannedWord(CommandDescription &currCommand, SInt32 specialWordID, 
         break;
 
         case NIB_TABLE_ALL_ROWS: //special expensive case not always exported, only on demand
+        case ACTIONUI_TABLE_ALL_ROWS:
         {
 //            TRACE_CSTR("NIB_TABLE_VALUE\n" );
             if( currCommand.specialRequestedNibControls == nullptr)
