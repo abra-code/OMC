@@ -31,9 +31,9 @@ echo "${OMC_ACTIONUI_WINDOW_UUID}"
 			<key>NOTES</key>
 			<string>ActionUI json window test</string>
 			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
-			<string>11.0</string>
+			<string>14.6</string>
 			<key>REQUIRED_OMC_VERSION</key>
-			<string>4.4.2</string>
+			<string>5.0</string>
 			<key>VERSION</key>
 			<integer>1</integer>
 		</dict>

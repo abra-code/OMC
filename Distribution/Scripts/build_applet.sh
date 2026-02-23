@@ -163,7 +163,7 @@ handle_icon() {
         --platform macosx \
         --target-device mac \
         --output-format human-readable-text \
-        --minimum-deployment-target 11.0 \
+        --minimum-deployment-target 14.6 \
         --output-partial-info-plist "$temp_dir/partial.plist" \
         > "$log_file" 2>&1
 
