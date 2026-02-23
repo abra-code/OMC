@@ -1,12 +1,11 @@
 # OMC
 ## OnMyCommand
 
-OnMyCommand has been available for macOS for over 15 years. Some historical information and a lot of outdated documentation is available at:
-http://www.abracode.com/free/cmworkshop/on_my_command.html
+OnMyCommand has been available for macOS for over 15 years. Some historical information and legacy documentation is available [here](http://www.abracode.com/free/cmworkshop/on_my_command.html)
 
 OnMyCommand is an engine to execute command line tools and shell scripts - but not by typing in some command line interface: the idea is to create GUI access points to the rich underlying Unix foundation of macOS.  
 If the name of the engine may seem a bit strange, it is not random: it tries to convey the ease of accessibility to the command line environment.  
-OMC started life as a contextual menu plug-in allowing users to add menu items to execute custom mini scripts by editing the preference plist. This functionality is still available but as Apple gradually made contextual menu plug-ins obsolete, the usage has decreased. With recent macOS versions you need to use a special host app to load CM plug-ins. For more information see Shortcuts.app: http://www.abracode.com/free/cmworkshop/shortcuts.html
+OMC started life as a contextual menu plug-in allowing users to add menu items to execute custom mini scripts by editing the preference plist. This functionality is still available but as Apple made classic in-proc contextual menu plug-ins obsolete, the usage has decreased. With recent macOS versions you need to use a special host app to load CM plug-ins. For more information see [Abracode Shortcuts.app](https://github.com/abra-code/Shortcuts)
 
 Most of the OMC development effort nowadays is directed towards building apps based on Abracode.framework and OMCApplet.app.  
 In contemporary terms you could describe OMC as low code or no code macOS app development environment.  
@@ -45,7 +44,7 @@ At some point OMC added support for nib-based windows with controls and your com
 `$OMC_NIB_DIALOG_CONTROL_N_VALUE`  
 or:  
 `$OMC_NIB_TABLE_NNN_COLUMN_MMM_VALUE`  
-or the newest:  
+or WebView control:  
 `$OMC_NIB_WEBVIEW_XXX_ELEMENT_YYY_VALUE`
 
 Several other contextual or static environment variables are exported by the engine and the easiest way to find out what is available is to list them all in your script with:  
