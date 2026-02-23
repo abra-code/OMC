@@ -44,8 +44,6 @@
 		1DED3637232258A40086266F /* OMCScriptsManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1DED3635232258A40086266F /* OMCScriptsManager.cpp */; };
 		1DED8E572222BD8E00A2CAF7 /* MoreAppleEvents.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED19F0D09528600C9D5E8 /* MoreAppleEvents.cp */; };
 		1DF2B2082F458F7D0069BD26 /* OMCViewSetupProtocol.h in Headers */ = {isa = PBXBuildFile; fileRef = 1DF2B2072F458F7D0069BD26 /* OMCViewSetupProtocol.h */; };
-		1DF2B4032F45A6CE0069BD26 /* ActionUI in Frameworks */ = {isa = PBXBuildFile; productRef = 1DF2B4022F45A6CE0069BD26 /* ActionUI */; };
-		1DF2B4052F45A6CE0069BD26 /* ActionUIObjCAdapter in Frameworks */ = {isa = PBXBuildFile; productRef = 1DF2B4042F45A6CE0069BD26 /* ActionUIObjCAdapter */; };
 		8DC2EF570486A6940098B216 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7B1FEA5585E11CA2CBB /* Cocoa.framework */; };
 		AAAAAA01D4346BB0065C23A /* OMCWindowController.h in Headers */ = {isa = PBXBuildFile; fileRef = AAAAAAAA1D4346BB0065C23A /* OMCWindowController.h */; };
 		E20026D710B68F3200D5388F /* OMCCustomWindow.mm in Sources */ = {isa = PBXBuildFile; fileRef = E20026D510B68F3200D5388F /* OMCCustomWindow.mm */; };
@@ -601,10 +599,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1DF2B4032F45A6CE0069BD26 /* ActionUI in Frameworks */,
 				8DC2EF570486A6940098B216 /* Cocoa.framework in Frameworks */,
 				E29ED0720D094EB000C9D5E8 /* Carbon.framework in Frameworks */,
-				1DF2B4052F45A6CE0069BD26 /* ActionUIObjCAdapter in Frameworks */,
 				E2FB14000D19EE9A005EB1E8 /* CoreServices.framework in Frameworks */,
 				E27103CE0D8142DF0097D83E /* Quartz.framework in Frameworks */,
 				E23DC9F60D9A289E009D2AD8 /* WebKit.framework in Frameworks */,
@@ -1171,7 +1167,6 @@
 			);
 			mainGroup = 0867D691FE84028FC02AAC07 /* Abracode */;
 			packageReferences = (
-				1DF2B4012F45A6CE0069BD26 /* XCRemoteSwiftPackageReference "ActionUI" */,
 			);
 			productRefGroup = 034768DFFF38A50411DB9C8B /* Products */;
 			projectDirPath = "";
@@ -1642,30 +1637,6 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
-/* Begin XCRemoteSwiftPackageReference section */
-		1DF2B4012F45A6CE0069BD26 /* XCRemoteSwiftPackageReference "ActionUI" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/abra-code/ActionUI";
-			requirement = {
-				branch = main;
-				kind = branch;
-			};
-		};
-/* End XCRemoteSwiftPackageReference section */
-
-/* Begin XCSwiftPackageProductDependency section */
-		1DF2B4022F45A6CE0069BD26 /* ActionUI */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 1DF2B4012F45A6CE0069BD26 /* XCRemoteSwiftPackageReference "ActionUI" */;
-			productName = ActionUI;
-		};
-		1DF2B4042F45A6CE0069BD26 /* ActionUIObjCAdapter */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 1DF2B4012F45A6CE0069BD26 /* XCRemoteSwiftPackageReference "ActionUI" */;
-			productName = ActionUIObjCAdapter;
-		};
-/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 0867D690FE84028FC02AAC07 /* Project object */;
 }
