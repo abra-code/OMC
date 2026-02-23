@@ -15,12 +15,17 @@
 #include "ACFType.h"
 #include "OMCStrings.h"
 
+// enable only in OMC version 5.0 or later
+#if CURRENT_OMC_VERSION >= 50000
 @import ActionUIObjCAdapter;
+#endif
 
 ARefCountedObj<OMCDialog> RunActionUIDialog(OnMyCommandCM *inPlugin, CommandRuntimeData *commandRuntimeData)
 {
 	ARefCountedObj<OMCDialog> outDialog;
-	if(inPlugin == nullptr)
+
+#if CURRENT_OMC_VERSION >= 50000
+    if(inPlugin == nullptr)
 		return outDialog;
 
 	assert(commandRuntimeData != nullptr);
@@ -58,11 +63,14 @@ ARefCountedObj<OMCDialog> RunActionUIDialog(OnMyCommandCM *inPlugin, CommandRunt
 			outDialog.Adopt(nullptr);
 		}
 	}
+#endif // CURRENT_OMC_VERSION >= 50000
 
 	return outDialog;
 }
 
 #pragma mark -
+
+#if CURRENT_OMC_VERSION >= 50000
 
 void
 OMCActionUIDialog::CopyAllControlValues(CFSetRef requestedNibControls, SelectionIterator *inSelIterator) noexcept
@@ -263,3 +271,5 @@ OMCActionUIDialog::AddEnvironmentVariablesForAllControls(CFMutableDictionaryRef 
 		}
 	}
 }
+
+#endif // CURRENT_OMC_VERSION >= 50000

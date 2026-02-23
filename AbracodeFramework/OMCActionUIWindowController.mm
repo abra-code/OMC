@@ -14,6 +14,8 @@
 #include "ACFDict.h"
 #include "OMCStrings.h"
 
+// enable only in OMC version 5.0 or later
+#if CURRENT_OMC_VERSION >= 50000
 @import ActionUIObjCAdapter;
 
 /// Returns YES if the string's first character suggests it could be a JSON fragment.
@@ -505,3 +507,5 @@ static NSArray<NSArray<NSString*>*> *OMCParseTabSeparatedRows(CFArrayRef cfRows)
 }
 
 @end
+
+#endif // CURRENT_OMC_VERSION >= 50000

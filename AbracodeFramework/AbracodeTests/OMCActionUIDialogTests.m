@@ -10,6 +10,9 @@
 #import "OMCBundleTestHelper.h"
 #import "OMCTestExecutionObserver.h"
 
+// enable only in OMC version 5.0 or later
+#if CURRENT_OMC_VERSION >= 50000
+
 @interface OMCActionUIDialogTests : XCTestCase
 @end
 
@@ -229,3 +232,5 @@
 }
 
 @end
+
+#endif // CURRENT_OMC_VERSION >= 50000
