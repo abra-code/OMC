@@ -504,18 +504,20 @@ Background processes started by scripts can outlive the parent applet. Handle cl
 
 ### Termination Handler
 
-Special command with `NAME=app.will.terminate` runs when app quits:
+Special command with `COMMAND_ID=app.will.terminate` runs when app quits:
 
 ```xml
 <dict>
     <key>NAME</key>
+    <string>MyApp</string>
+    <key>COMMAND_ID</key>
     <string>app.will.terminate</string>
     <key>EXECUTION_MODE</key>
     <string>exe_script_file</string>
 </dict>
 ```
 
-Script `Scripts/MyApp.app.will.terminate.sh`:
+Script `Scripts/app.will.terminate.sh`:
 
 ```bash
 #!/bin/bash
