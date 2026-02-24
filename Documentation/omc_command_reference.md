@@ -324,11 +324,11 @@ omc_dialog_control "${OMC_NIB_DLG_GUID}" 101 add_rows "$(cat /tmp/table_data)"
 
 ---
 
-## 6.1. ACTIONUI_WINDOW – ActionUI JSON Dialogs (under development)
+## 6.1. ACTIONUI_WINDOW – ActionUI JSON Dialogs (OMC 5.0 or higher)
 
 `ACTIONUI_WINDOW` allows an **action handler** to present a **custom dialog** defined by a JSON content view description using the [ActionUI library](https://github.com/abra-code/ActionUI). The JSON file is loaded from the applet bundle, and OMC bridges controls to command execution via **subcommands** and **runtime tools**, similar to `NIB_DIALOG`.
 
-> **Note**: This is a work-in-progress. ActionUI will be integrated into your OMC for this feature to work. The ActionUI library provides SwiftUI-like declarative UI definitions in JSON format.
+> **Note**: ActionUI is supported in OMC 5.0 or higher and required macOS 14.6 or higher. The ActionUI library provides SwiftUI-like declarative UI definitions in JSON format.
 
 ---
 
@@ -460,6 +460,61 @@ View values are accessed via environment variables and special words similar to 
 | `__ACTIONUI_VIEW_N_VALUE__` | `OMC_ACTIONUI_VIEW_N_VALUE` | Value of view with ID N |
 
 > **Note**: ActionUI uses integer IDs for views (defined as `id` in JSON). Access them using the numeric ID: `__ACTIONUI_VIEW_1_VALUE__` or `$OMC_ACTIONUI_VIEW_1_VALUE`.
+
+---
+
+### ActionUI Table Views
+
+ActionUI Table views use **1-based column indexing**. Column 0 is special - it returns all columns combined as a tab-separated string.
+
+#### Hidden Columns
+
+There are two ways to create hidden columns in ActionUI tables:
+
+1. **Implicit (recommended)**: Declare fewer columns in JSON than you provide in data. Extra data elements are automatically hidden.
+
+   JSON: `"columns": ["Name"]` (1 visible column)  
+   Data: `"John	secret	extra"` (3 elements tab separated - 2 are hidden)  
+
+2. **Explicit**: Use `omc_hidden_column` keyword in `omc_table_set_columns`:
+
+   ```bash
+   omc_dialog_control "$window_uuid" 5 omc_table_set_columns "Name" omc_hidden_column "Info"
+   omc_dialog_control "$window_uuid" 5 omc_table_set_column_widths 150 0 100
+   ```
+
+#### Accessing Table Data
+
+```bash
+# Get selected row, column 2 (1-based)
+path="$OMC_ACTIONUI_TABLE_10_COLUMN_2_VALUE"
+
+# Get all rows in column 2
+all_paths="$OMC_ACTIONUI_TABLE_10_COLUMN_2_ALL_ROWS"
+
+# Get all columns combined (column 0)
+all_data="$OMC_ACTIONUI_TABLE_10_COLUMN_0_VALUE"
+```
+
+| Environment Variable | Description |
+|---------------------|-------------|
+| `OMC_ACTIONUI_TABLE_<ID>_COLUMN_<N>_VALUE` | Selected row value in column N (1-based) |
+| `OMC_ACTIONUI_TABLE_<ID>_COLUMN_<N>_ALL_ROWS` | All rows in column N |
+| `OMC_ACTIONUI_TABLE_<ID>_COLUMN_0_VALUE` | All columns combined (tab-separated) |
+
+---
+
+### ActionUI Runtime Control
+
+Use `omc_dialog_control` with `omc_set_property` and `omc_set_state` to modify ActionUI views at runtime:
+
+```bash
+# Set a view property
+omc_dialog_control "$OMC_ACTIONUI_WINDOW_UUID" 1 omc_set_property "foregroundStyle" "blue"
+
+# Set a view state (for views with observable state)
+omc_dialog_control "$OMC_ACTIONUI_WINDOW_UUID" 2 omc_set_state "isLoading" true
+```
 
 ---
 

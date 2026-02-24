@@ -59,7 +59,7 @@ The list is derived **directly** from the source files:
 | **System** | `__APP_BUNDLE_PATH__` | `$OMC_APP_BUNDLE_PATH` | Applet bundle path (preferred). | **Always** |
 | **System** | `__MY_EXTERNAL_BUNDLE_PATH__` | `$OMC_MY_EXTERNAL_BUNDLE_PATH` | External `.omc` bundle path. | Scanned |
 | **Dialog** | `__NIB_DLG_GUID__` | `$OMC_NIB_DLG_GUID` | Unique NIB dialog instance GUID. | **Always** |
-| **Dialog** | `__ACTIONUI_WINDOW_UUID__` | `$OMC_ACTIONUI_WINDOW_UUID` | Unique ActionUI window UUID. | **Always** |
+| **Dialog** | `__ACTIONUI_WINDOW_UUID__` | `$OMC_ACTIONUI_WINDOW_UUID` | Unique ActionUI window UUID. OMC 5.0 | **Always** |
 | **System** | `__CURRENT_COMMAND_GUID__` | `$OMC_CURRENT_COMMAND_GUID` | Unique command execution GUID. | **Always** |
 | **Frontmost** | `__FRONT_PROCESS_ID__` | `$OMC_FRONT_PROCESS_ID` | PID of frontmost app. | Scanned |
 | **Frontmost** | `__FRONT_APPLICATION_NAME__` | `$OMC_FRONT_APPLICATION_NAME` | Name of frontmost app. | Scanned |
@@ -136,13 +136,18 @@ Access NIB dialog control values using dynamic special words:
 | `__NIB_TABLE_<ID>_COLUMN_<COL>_ALL_ROWS__` | `OMC_NIB_TABLE_<ID>_COLUMN_<COL>_ALL_ROWS` | All rows in table column (expensive). |
 | `__NIB_WEBVIEW_<ID>_ELEMENT_<ELEM>_VALUE__` | `OMC_NIB_WEBVIEW_<ID>_ELEMENT_<ELEM>_VALUE` | WebView element value. |
 
-### ActionUI Views (under development)
+### ActionUI Views (OMC 5.0 or higher)
 
 Access ActionUI view values using dynamic special words:
 
 | Special Word | Environment Variable | Description |
 |--------------|---------------------|-------------|
 | `__ACTIONUI_VIEW_N_VALUE__` | `OMC_ACTIONUI_VIEW_N_VALUE` | Value of ActionUI view with given integer ID. |
+| `__ACTIONUI_TABLE_<ID>_COLUMN_<N>_VALUE__` | `OMC_ACTIONUI_TABLE_<ID>_COLUMN_<N>_VALUE` | ActionUI Table selected row, column N (1-based). |
+| `__ACTIONUI_TABLE_<ID>_COLUMN_<N>_ALL_ROWS__` | `OMC_ACTIONUI_TABLE_<ID>_COLUMN_<N>_ALL_ROWS` | ActionUI Table all rows in column N (1-based). |
+| `__ACTIONUI_TABLE_<ID>_COLUMN_0_VALUE__` | `OMC_ACTIONUI_TABLE_<ID>_COLUMN_0_VALUE` | ActionUI Table selected row, all columns combined (tab-separated). |
+
+> **Note**: Table column indexes are **1-based** (column 1, 2, 3, ...). Column 0 is special - it returns all columns combined as a tab-separated string.
 
 ---
 
