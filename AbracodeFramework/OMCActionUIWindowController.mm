@@ -218,7 +218,8 @@ static id ParseStringOrJSON(NSString *value)
         OMCWindowController *controller = [OMCWindowController findControllerByUUID:targetWindowUUID];
         if (controller != nil)
         {
-	        [controller dispatchCommand:actionID withContext:(__bridge CFTypeRef)context];
+            // context from ActionUI (like current control value) is not a context which OMC command expects or needs
+	        [controller dispatchCommand:actionID withContext:nil /*(__bridge CFTypeRef)context*/];
 	    }
 	    else
 	    {
