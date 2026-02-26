@@ -520,7 +520,32 @@ OnMyCommandCM::ExecuteCommand(AEDesc *inAEContext, SInt32 inCommandIndex, const 
             }
         }
         
+        // this is potentially new commandRuntimeData and contextData after copy from parent
         OMCContextData &contextData = commandRuntimeData->GetContextData();
+        
+        // If there was a parentCommandRuntimeData everything is copied from there, inheriting all,
+        // including ContextData. However, if our current command has explicit settings for
+        // multiple object processing we must preserve that in contextData 
+        // This is inconvenient but we have to maintain duplicate settings for multiple object processing
+        // in contextData for inheritance
+
+        // copy processing mode explicitly set in current command to contextData (override inherited)
+        if(currCommand.multipleObjectProcessing != kMulObjProcessUnspecified)
+        {
+            contextData.multipleObjectProcessing = currCommand.multipleObjectProcessing;
+        }
+        
+        // copy prefix, suffix, separator explicitly set from current command to contextData (override inherited)
+        if(contextData.multipleObjectProcessing == kMulObjProcessTogether)
+        {
+            if(currCommand.mulObjPrefix != nullptr)
+                contextData.mulObjPrefix.Adopt(currCommand.mulObjPrefix, kCFObjRetain);
+            if(currCommand.mulObjSuffix != nullptr)
+                contextData.mulObjSuffix.Adopt(currCommand.mulObjSuffix, kCFObjRetain);
+            if(currCommand.mulObjSeparator != nullptr)
+                contextData.mulObjSeparator.Adopt(currCommand.mulObjSeparator, kCFObjRetain);
+        }
+
 
 		CGEventFlags keyboardModifiers = GetKeyboardModifiers();
 		//only if lone control key is pressed we consider it a debug request
@@ -929,8 +954,10 @@ OnMyCommandCM::ExecuteCommandWithObjects(CommandRuntimeData *initialCommandRunti
                                                                     currCommand.localizationTableName,
                                                                     localizationBundle) );
 
-	CFIndex objectCount = initialContextData.objectList.size();
-	if( currCommand.multipleObjectProcessing == kMulObjProcessTogether )
+    CFIndex objectCount = initialContextData.objectList.size();
+    bool processMultipleObjectsTogether = (initialContextData.multipleObjectProcessing == kMulObjProcessTogether);
+    
+    if (processMultipleObjectsTogether)
     {
         objectCount = 1;
     }
@@ -989,7 +1016,7 @@ OnMyCommandCM::ExecuteCommandWithObjects(CommandRuntimeData *initialCommandRunti
 	for(CFIndex i = 0; i < objectCount; i++)
 	{
         ARefCountedObj<CommandRuntimeData> commandRuntimeData;
-		if(currCommand.multipleObjectProcessing == kMulObjProcessTogether)
+		if(processMultipleObjectsTogether)
         {
             initialContextData.currObjectIndex = -1; // invalid index means process them all together
             assert(objectCount == 1);
@@ -2118,6 +2145,12 @@ OnMyCommandCM::CreateCommandStringWithObjects(CFArrayRef inFragments,
 
 	ACFArr fragments(inFragments);
 	CFIndex theCount = fragments.GetCount();
+	
+	// command's explicit values take priority; fall back to potential parent context values if not set
+	CFStringRef mulObjPrefix = currCommand.mulObjPrefix != nullptr ? currCommand.mulObjPrefix : contextData.mulObjPrefix.Get();
+	CFStringRef mulObjSuffix = currCommand.mulObjSuffix != nullptr ? currCommand.mulObjSuffix : contextData.mulObjSuffix.Get();
+	CFStringRef mulObjSeparator = currCommand.mulObjSeparator != nullptr ? currCommand.mulObjSeparator : contextData.mulObjSeparator.Get();
+	
 	for(CFIndex i = 0; i < theCount; i++ )
 	{
 		CFStringRef fragmentRef = nullptr;
@@ -2127,7 +2160,7 @@ OnMyCommandCM::CreateCommandStringWithObjects(CFArrayRef inFragments,
                                 contextData.objectList.data(), contextData.objectList.size(), contextData.currObjectIndex,
                                 contextData.clipboardText, currCommand,
                                 commandRuntimeData, activeDialog,
-								currCommand.mulObjSeparator, currCommand.mulObjPrefix, currCommand.mulObjSuffix,
+								mulObjSeparator, mulObjPrefix, mulObjSuffix,
 								escSpecialCharsMode );
 		}
 	}
@@ -2201,10 +2234,15 @@ OnMyCommandCM::CreateEnvironmentVariablesDict(CFStringRef inObjTextRef, CommandR
             contextData.clipboardText.Adopt( CMUtils::CreateCFStringFromClipboardText(currCommand.textReplaceOptions), kCFObjDontRetain );
 		}
 
+		// command's explicit values take priority; fall back to potential parent context values if not set
+		CFStringRef mulObjPrefix = currCommand.mulObjPrefix != nullptr ? currCommand.mulObjPrefix : contextData.mulObjPrefix.Get();
+		CFStringRef mulObjSuffix = currCommand.mulObjSuffix != nullptr ? currCommand.mulObjSuffix : contextData.mulObjSuffix.Get();
+		CFStringRef mulObjSeparator = currCommand.mulObjSeparator != nullptr ? currCommand.mulObjSeparator : contextData.mulObjSeparator.Get();
+		
 		PopulateEnvironList( outEnviron, commandRuntimeData,
                             contextData.objectList.data(), contextData.objectList.size(), contextData.currObjectIndex,
                             contextData.clipboardText, currCommand,
-							currCommand.mulObjSeparator, currCommand.mulObjPrefix, currCommand.mulObjSuffix);
+							mulObjSeparator, mulObjPrefix, mulObjSuffix);
 	
 	}
 	else //if(inObjTextRef != NULL)
@@ -2535,6 +2573,8 @@ OnMyCommandCM::AppendTextToCommand(CFMutableStringRef inCommandRef, CFStringRef 
 		case NIB_TABLE_ALL_ROWS:
 		case NIB_WEB_VIEW_VALUE:
 		case ACTIONUI_VIEW_VALUE:
+        case ACTIONUI_TABLE_VALUE:
+        case ACTIONUI_TABLE_ALL_ROWS:
         {
             if(activeDialog != nullptr)
             {

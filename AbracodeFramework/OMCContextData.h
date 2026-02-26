@@ -40,10 +40,14 @@ public:
         chooseFilePath(otherContextData.chooseFilePath),
         chooseFolderPath(otherContextData.chooseFolderPath),
         chooseObjectPath(otherContextData.chooseObjectPath),
+        mulObjPrefix(otherContextData.mulObjPrefix),
+        mulObjSuffix(otherContextData.mulObjSuffix),
+        mulObjSeparator(otherContextData.mulObjSeparator),
         isNullContext(otherContextData.isNullContext),
         isTextContext(otherContextData.isTextContext),
         isTextInClipboard(otherContextData.isTextInClipboard),
         isOpenFolder(otherContextData.isOpenFolder),
+        multipleObjectProcessing(otherContextData.multipleObjectProcessing),
         isCopyFromParent(otherContextData.isCopyFromParent)
     {
     }
@@ -57,10 +61,14 @@ public:
     CFObj<CFURLRef>             chooseFilePath;
     CFObj<CFURLRef>             chooseFolderPath;
     CFObj<CFURLRef>             chooseObjectPath;
+    CFObj<CFStringRef>          mulObjPrefix;
+    CFObj<CFStringRef>          mulObjSuffix;
+    CFObj<CFStringRef>          mulObjSeparator;
     Boolean						isNullContext {false};
     Boolean						isTextContext {false};
     Boolean                     isTextInClipboard {false};
     Boolean                     isOpenFolder {false};
+    UInt8                       multipleObjectProcessing {kMulObjProcessUnspecified};
     Boolean                     isCopyFromParent {false};
 };
 

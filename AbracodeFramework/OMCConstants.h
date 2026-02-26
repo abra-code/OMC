@@ -30,7 +30,8 @@ enum
 
 enum
 {
-	kMulObjProcessSeparately = 0,
+    kMulObjProcessUnspecified = 0,
+	kMulObjProcessSeparately,
 	kMulObjProcessTogether
 };
 

@@ -82,7 +82,7 @@ typedef struct CommandDescription
     UInt8			executionOptions {kExecutionOption_None};
     UInt8			activationMode {kActiveAlways};
     UInt8			escapeSpecialCharsMode {kEscapeWithBackslash};
-    UInt8			multipleObjectProcessing {kMulObjProcessSeparately};
+    UInt8			multipleObjectProcessing {kMulObjProcessUnspecified};
     UInt8			sortMethod {kSortMethodNone};
     UInt8			sortAscending {true};
     UInt8			sortOptions {0};
