@@ -18,8 +18,8 @@ public:
     // New commandUUID is generated but dialogUUID, if any, is preserved
     CommandRuntimeData(const CommandRuntimeData &commandRuntimeData, CFIndex inObjectIndex)
         : contextData(commandRuntimeData.contextData), objectIndex(inObjectIndex),
-          cachedSaveAsPath(commandRuntimeData.cachedSaveAsPath), cachedChooseFilePath(commandRuntimeData.cachedChooseFilePath),
-          cachedChooseFolderPath(commandRuntimeData.cachedChooseFolderPath), cachedChooseObjectPath(commandRuntimeData.cachedChooseObjectPath),
+          cachedSaveAsPath(commandRuntimeData.cachedSaveAsPath), cachedChooseFilePaths(commandRuntimeData.cachedChooseFilePaths),
+          cachedChooseFolderPaths(commandRuntimeData.cachedChooseFolderPaths), cachedChooseObjectPaths(commandRuntimeData.cachedChooseObjectPaths),
           commandUUID(CommandRuntimeData::GenerateUUID()), dialogUUID(commandRuntimeData.dialogUUID)
     {
         auto element_count = contextData.objectList.size();
@@ -125,8 +125,8 @@ public:
 
     // if caching is requested the following objects are meant to remain valid and passed from command to subcommand
     CFObj<CFURLRef>    cachedSaveAsPath;
-    CFObj<CFURLRef>    cachedChooseFilePath;
-    CFObj<CFURLRef>    cachedChooseFolderPath;
-    CFObj<CFURLRef>    cachedChooseObjectPath;
+    CFObj<CFArrayRef>  cachedChooseFilePaths;
+    CFObj<CFArrayRef>  cachedChooseFolderPaths;
+    CFObj<CFArrayRef>  cachedChooseObjectPaths;
 
 };

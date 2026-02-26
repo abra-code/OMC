@@ -2436,63 +2436,78 @@ OnMyCommandCM::AppendTextToCommand(CFMutableStringRef inCommandRef, CFStringRef 
 		break;
 		
 		case DLG_CHOOSE_FILE_PATH:
-			newStrRef = CreatePathFromCFURL(contextData.chooseFilePath, escSpecialCharsMode);
+			newStrRef = CreateStringFromCFURLArray(contextData.chooseFilePaths, CreatePathFromCFURL,
+			                                      inMultiSeparator, inMultiPrefix, inMultiSuffix, escSpecialCharsMode);
 		break;
 		
 		case DLG_CHOOSE_FILE_PARENT_PATH:
-			newStrRef = CreateParentPathFromCFURL(contextData.chooseFilePath, escSpecialCharsMode);
+			newStrRef = CreateStringFromCFURLArray(contextData.chooseFilePaths, CreateParentPathFromCFURL,
+			                                      inMultiSeparator, inMultiPrefix, inMultiSuffix, escSpecialCharsMode);
 		break;
 		
 		case DLG_CHOOSE_FILE_NAME:
-			newStrRef = CreateNameFromCFURL(contextData.chooseFilePath, escSpecialCharsMode);
+			newStrRef = CreateStringFromCFURLArray(contextData.chooseFilePaths, CreateNameFromCFURL,
+			                                      inMultiSeparator, inMultiPrefix, inMultiSuffix, escSpecialCharsMode);
 		break;
 		
 		case DLG_CHOOSE_FILE_NAME_NO_EXTENSION:
-			newStrRef = CreateNameNoExtensionFromCFURL(contextData.chooseFilePath, escSpecialCharsMode);
+			newStrRef = CreateStringFromCFURLArray(contextData.chooseFilePaths, CreateNameNoExtensionFromCFURL,
+			                                      inMultiSeparator, inMultiPrefix, inMultiSuffix, escSpecialCharsMode);
 		break;
 		
 		case DLG_CHOOSE_FILE_EXTENSION_ONLY:
-			newStrRef = CreateExtensionOnlyFromCFURL(contextData.chooseFilePath, escSpecialCharsMode);
+			newStrRef = CreateStringFromCFURLArray(contextData.chooseFilePaths, CreateExtensionOnlyFromCFURL,
+			                                      inMultiSeparator, inMultiPrefix, inMultiSuffix, escSpecialCharsMode);
 		break;
 		
 		case DLG_CHOOSE_FOLDER_PATH:
-			newStrRef = CreatePathFromCFURL(contextData.chooseFolderPath, escSpecialCharsMode);
+			newStrRef = CreateStringFromCFURLArray(contextData.chooseFolderPaths, CreatePathFromCFURL,
+			                                      inMultiSeparator, inMultiPrefix, inMultiSuffix, escSpecialCharsMode);
 		break;
 		
 		case DLG_CHOOSE_FOLDER_PARENT_PATH:
-			newStrRef = CreateParentPathFromCFURL(contextData.chooseFolderPath, escSpecialCharsMode);
+			newStrRef = CreateStringFromCFURLArray(contextData.chooseFolderPaths, CreateParentPathFromCFURL,
+			                                      inMultiSeparator, inMultiPrefix, inMultiSuffix, escSpecialCharsMode);
 		break;
 		
 		case DLG_CHOOSE_FOLDER_NAME:
-			newStrRef = CreateNameFromCFURL(contextData.chooseFolderPath, escSpecialCharsMode);
+			newStrRef = CreateStringFromCFURLArray(contextData.chooseFolderPaths, CreateNameFromCFURL,
+			                                      inMultiSeparator, inMultiPrefix, inMultiSuffix, escSpecialCharsMode);
 		break;
 		
 		case DLG_CHOOSE_FOLDER_NAME_NO_EXTENSION:
-			newStrRef = CreateNameNoExtensionFromCFURL(contextData.chooseFolderPath, escSpecialCharsMode);
+			newStrRef = CreateStringFromCFURLArray(contextData.chooseFolderPaths, CreateNameNoExtensionFromCFURL,
+			                                      inMultiSeparator, inMultiPrefix, inMultiSuffix, escSpecialCharsMode);
 		break;
 		
 		case DLG_CHOOSE_FOLDER_EXTENSION_ONLY:
-			newStrRef = CreateExtensionOnlyFromCFURL(contextData.chooseFolderPath, escSpecialCharsMode);
+			newStrRef = CreateStringFromCFURLArray(contextData.chooseFolderPaths, CreateExtensionOnlyFromCFURL,
+			                                      inMultiSeparator, inMultiPrefix, inMultiSuffix, escSpecialCharsMode);
 		break;
 
 		case DLG_CHOOSE_OBJECT_PATH:
-			newStrRef = CreatePathFromCFURL(contextData.chooseObjectPath, escSpecialCharsMode);
+			newStrRef = CreateStringFromCFURLArray(contextData.chooseObjectPaths, CreatePathFromCFURL,
+			                                      inMultiSeparator, inMultiPrefix, inMultiSuffix, escSpecialCharsMode);
 		break;
 		
 		case DLG_CHOOSE_OBJECT_PARENT_PATH:
-			newStrRef = CreateParentPathFromCFURL(contextData.chooseObjectPath, escSpecialCharsMode);
+			newStrRef = CreateStringFromCFURLArray(contextData.chooseObjectPaths, CreateParentPathFromCFURL,
+			                                      inMultiSeparator, inMultiPrefix, inMultiSuffix, escSpecialCharsMode);
 		break;
 		
 		case DLG_CHOOSE_OBJECT_NAME:
-			newStrRef = CreateNameFromCFURL(contextData.chooseObjectPath, escSpecialCharsMode);
+			newStrRef = CreateStringFromCFURLArray(contextData.chooseObjectPaths, CreateNameFromCFURL,
+			                                      inMultiSeparator, inMultiPrefix, inMultiSuffix, escSpecialCharsMode);
 		break;
 		
 		case DLG_CHOOSE_OBJECT_NAME_NO_EXTENSION:
-			newStrRef = CreateNameNoExtensionFromCFURL(contextData.chooseObjectPath, escSpecialCharsMode);
+			newStrRef = CreateStringFromCFURLArray(contextData.chooseObjectPaths, CreateNameNoExtensionFromCFURL,
+			                                      inMultiSeparator, inMultiPrefix, inMultiSuffix, escSpecialCharsMode);
 		break;
 
 		case DLG_CHOOSE_OBJECT_EXTENSION_ONLY:
-			newStrRef = CreateExtensionOnlyFromCFURL(contextData.chooseObjectPath, escSpecialCharsMode);
+			newStrRef = CreateStringFromCFURLArray(contextData.chooseObjectPaths, CreateExtensionOnlyFromCFURL,
+			                                      inMultiSeparator, inMultiPrefix, inMultiSuffix, escSpecialCharsMode);
 		break;
 
 		case DLG_PASSWORD:
@@ -2749,63 +2764,78 @@ OnMyCommandCM::PopulateEnvironList(CFMutableDictionaryRef ioEnvironList, Command
 			break;
 			
 			case DLG_CHOOSE_FILE_PATH:
-				newStrRef = CreatePathFromCFURL(contextData.chooseFilePath, kEscapeNone);
+				newStrRef = CreateStringFromCFURLArray(contextData.chooseFilePaths, CreatePathFromCFURL,
+				                                      inMultiSeparator, inMultiPrefix, inMultiSuffix, kEscapeNone);
 			break;
 			
 			case DLG_CHOOSE_FILE_PARENT_PATH:
-				newStrRef = CreateParentPathFromCFURL(contextData.chooseFilePath, kEscapeNone);
+				newStrRef = CreateStringFromCFURLArray(contextData.chooseFilePaths, CreateParentPathFromCFURL,
+				                                      inMultiSeparator, inMultiPrefix, inMultiSuffix, kEscapeNone);
 			break;
 			
 			case DLG_CHOOSE_FILE_NAME:
-				newStrRef = CreateNameFromCFURL(contextData.chooseFilePath, kEscapeNone);
+				newStrRef = CreateStringFromCFURLArray(contextData.chooseFilePaths, CreateNameFromCFURL,
+				                                      inMultiSeparator, inMultiPrefix, inMultiSuffix, kEscapeNone);
 			break;
 			
 			case DLG_CHOOSE_FILE_NAME_NO_EXTENSION:
-				newStrRef = CreateNameNoExtensionFromCFURL(contextData.chooseFilePath, kEscapeNone);
+				newStrRef = CreateStringFromCFURLArray(contextData.chooseFilePaths, CreateNameNoExtensionFromCFURL,
+				                                      inMultiSeparator, inMultiPrefix, inMultiSuffix, kEscapeNone);
 			break;
 			
 			case DLG_CHOOSE_FILE_EXTENSION_ONLY:
-				newStrRef = CreateExtensionOnlyFromCFURL(contextData.chooseFilePath, kEscapeNone);
+				newStrRef = CreateStringFromCFURLArray(contextData.chooseFilePaths, CreateExtensionOnlyFromCFURL,
+				                                      inMultiSeparator, inMultiPrefix, inMultiSuffix, kEscapeNone);
 			break;
 			
 			case DLG_CHOOSE_FOLDER_PATH:
-				newStrRef = CreatePathFromCFURL(contextData.chooseFolderPath, kEscapeNone);
+				newStrRef = CreateStringFromCFURLArray(contextData.chooseFolderPaths, CreatePathFromCFURL,
+				                                      inMultiSeparator, inMultiPrefix, inMultiSuffix, kEscapeNone);
 			break;
 			
 			case DLG_CHOOSE_FOLDER_PARENT_PATH:
-				newStrRef = CreateParentPathFromCFURL(contextData.chooseFolderPath, kEscapeNone);
+				newStrRef = CreateStringFromCFURLArray(contextData.chooseFolderPaths, CreateParentPathFromCFURL,
+				                                      inMultiSeparator, inMultiPrefix, inMultiSuffix, kEscapeNone);
 			break;
 			
 			case DLG_CHOOSE_FOLDER_NAME:
-				newStrRef = CreateNameFromCFURL(contextData.chooseFolderPath, kEscapeNone);
+				newStrRef = CreateStringFromCFURLArray(contextData.chooseFolderPaths, CreateNameFromCFURL,
+				                                      inMultiSeparator, inMultiPrefix, inMultiSuffix, kEscapeNone);
 			break;
 			
 			case DLG_CHOOSE_FOLDER_NAME_NO_EXTENSION:
-				newStrRef = CreateNameNoExtensionFromCFURL(contextData.chooseFolderPath, kEscapeNone);
+				newStrRef = CreateStringFromCFURLArray(contextData.chooseFolderPaths, CreateNameNoExtensionFromCFURL,
+				                                      inMultiSeparator, inMultiPrefix, inMultiSuffix, kEscapeNone);
 			break;
 			
 			case DLG_CHOOSE_FOLDER_EXTENSION_ONLY:
-				newStrRef = CreateExtensionOnlyFromCFURL(contextData.chooseFolderPath, kEscapeNone);
+				newStrRef = CreateStringFromCFURLArray(contextData.chooseFolderPaths, CreateExtensionOnlyFromCFURL,
+				                                      inMultiSeparator, inMultiPrefix, inMultiSuffix, kEscapeNone);
 			break;
 
 			case DLG_CHOOSE_OBJECT_PATH:
-				newStrRef = CreatePathFromCFURL(contextData.chooseObjectPath, kEscapeNone);
+				newStrRef = CreateStringFromCFURLArray(contextData.chooseObjectPaths, CreatePathFromCFURL,
+				                                      inMultiSeparator, inMultiPrefix, inMultiSuffix, kEscapeNone);
 			break;
 			
 			case DLG_CHOOSE_OBJECT_PARENT_PATH:
-				newStrRef = CreateParentPathFromCFURL(contextData.chooseObjectPath, kEscapeNone);
+				newStrRef = CreateStringFromCFURLArray(contextData.chooseObjectPaths, CreateParentPathFromCFURL,
+				                                      inMultiSeparator, inMultiPrefix, inMultiSuffix, kEscapeNone);
 			break;
 			
 			case DLG_CHOOSE_OBJECT_NAME:
-				newStrRef = CreateNameFromCFURL(contextData.chooseObjectPath, kEscapeNone);
+				newStrRef = CreateStringFromCFURLArray(contextData.chooseObjectPaths, CreateNameFromCFURL,
+				                                      inMultiSeparator, inMultiPrefix, inMultiSuffix, kEscapeNone);
 			break;
 			
 			case DLG_CHOOSE_OBJECT_NAME_NO_EXTENSION:
-				newStrRef = CreateNameNoExtensionFromCFURL(contextData.chooseObjectPath, kEscapeNone);
+				newStrRef = CreateStringFromCFURLArray(contextData.chooseObjectPaths, CreateNameNoExtensionFromCFURL,
+				                                      inMultiSeparator, inMultiPrefix, inMultiSuffix, kEscapeNone);
 			break;
 
 			case DLG_CHOOSE_OBJECT_EXTENSION_ONLY:
-				newStrRef = CreateExtensionOnlyFromCFURL(contextData.chooseObjectPath, kEscapeNone);
+				newStrRef = CreateStringFromCFURLArray(contextData.chooseObjectPaths, CreateExtensionOnlyFromCFURL,
+				                                      inMultiSeparator, inMultiPrefix, inMultiSuffix, kEscapeNone);
 			break;
 
 			case DLG_PASSWORD:

@@ -37,9 +37,9 @@ public:
         objectListSorting(otherContextData.objectListSorting),
         currObjectIndex(0),
         saveAsPath(otherContextData.saveAsPath),
-        chooseFilePath(otherContextData.chooseFilePath),
-        chooseFolderPath(otherContextData.chooseFolderPath),
-        chooseObjectPath(otherContextData.chooseObjectPath),
+        chooseFilePaths(otherContextData.chooseFilePaths),
+        chooseFolderPaths(otherContextData.chooseFolderPaths),
+        chooseObjectPaths(otherContextData.chooseObjectPaths),
         mulObjPrefix(otherContextData.mulObjPrefix),
         mulObjSuffix(otherContextData.mulObjSuffix),
         mulObjSeparator(otherContextData.mulObjSeparator),
@@ -58,9 +58,9 @@ public:
     OMCSortSettings             objectListSorting; // keeps the current object sorting settings. updated after sorting changes
     CFIndex						currObjectIndex {0};
     CFObj<CFURLRef>             saveAsPath;
-    CFObj<CFURLRef>             chooseFilePath;
-    CFObj<CFURLRef>             chooseFolderPath;
-    CFObj<CFURLRef>             chooseObjectPath;
+    CFObj<CFArrayRef>           chooseFilePaths;
+    CFObj<CFArrayRef>           chooseFolderPaths;
+    CFObj<CFArrayRef>           chooseObjectPaths;
     CFObj<CFStringRef>          mulObjPrefix;
     CFObj<CFStringRef>          mulObjSuffix;
     CFObj<CFStringRef>          mulObjSeparator;

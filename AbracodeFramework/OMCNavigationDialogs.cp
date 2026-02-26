@@ -29,6 +29,9 @@ GetNavDialogParams(CFDictionaryRef inParams, CFStringRef &outMessage, CFArrayRef
     if( params.GetValue(CFSTR("SHOW_INVISIBLE_ITEMS"), boolValue) && boolValue )
         outAdditionalNavServiesFlags |= kOMCFilePanelAllowInvisibleItems;
 
+    if( params.GetValue(CFSTR("ALLOW_MULTIPLE_ITEMS"), boolValue) && boolValue )
+        outAdditionalNavServiesFlags |= kOMCFilePanelAllowMultipleItems;
+
     boolValue = true; //default is true: reuse cached path from main command or other subcommand
     params.GetValue(CFSTR("USE_PATH_CACHING"), boolValue);
 
@@ -107,7 +110,7 @@ PresentChooseFileDialog(OnMyCommandCM *inPlugin,
     CFObj<CFArrayRef> defaultDirPath;
     UInt32 additionalFlags = GetNavDialogParams(currCommand.chooseFileParams, message.GetReference(), defaultFileName.GetReference(), defaultDirPath.GetReference());
 
-    if( ((additionalFlags & kOMCFilePanelUseCachedPath) == 0) || (commandRuntimeData.cachedChooseFilePath == nullptr) )
+    if( ((additionalFlags & kOMCFilePanelUseCachedPath) == 0) || (commandRuntimeData.cachedChooseFilePaths == nullptr) )
     {
         TRACE_CSTR("OnMyCommandCM About to display choose file dialog\n" );
         CFObj<CFMutableStringRef> defaultName( inPlugin->CreateCombinedStringWithObjects(defaultFileName,
@@ -131,25 +134,18 @@ PresentChooseFileDialog(OnMyCommandCM *inPlugin,
         }
 
         StSwitchToFront switcher;
-        contextData.chooseFilePath = CreateCFURLFromOpenDialog(commandName, message, defaultName, defaultLocationStr, additionalFlags | kOMCFilePanelCanChooseFiles);
-        if(contextData.chooseFilePath == NULL)
+        contextData.chooseFilePaths.Adopt(CreateCFURLsFromOpenDialog(commandName, message, defaultName, defaultLocationStr, additionalFlags | kOMCFilePanelCanChooseFiles));
+        if(contextData.chooseFilePaths == NULL || CFArrayGetCount(contextData.chooseFilePaths) == 0)
         {
             throw OSStatus(userCanceledErr);
         }
         
         if(contextData.isNullContext)
-        { // if command is executed without context, the chosen object becomes the file/folder context
-            const void* urls[] = { contextData.chooseFilePath.Get() };
-            CFObj<CFArrayRef> urlContextArray(CFArrayCreate(kCFAllocatorDefault, urls, sizeof(urls)/sizeof(const void*), &kCFTypeArrayCallBacks));
-
-            contextData.objectList.resize(1);
+        { // if command is executed without context, the chosen objects become the file/folder context
+            contextData.objectList.resize(0);
             UInt32 theFlags = kListClear;
-            size_t validObjectCount = CMUtils::ProcessObjectList(urlContextArray.Get(), theFlags, CFURLCheckFileOrFolder, &contextData.objectList);
-            if(validObjectCount == 0)
-            {
-                contextData.objectList.resize(0);
-            }
-            else
+            size_t validObjectCount = CMUtils::ProcessObjectList(contextData.chooseFilePaths.Get(), theFlags, CFURLCheckFileOrFolder, &contextData.objectList);
+            if(validObjectCount > 0)
             {
                 contextData.isNullContext = false;
             }
@@ -157,12 +153,12 @@ PresentChooseFileDialog(OnMyCommandCM *inPlugin,
 
         if( (additionalFlags & kOMCFilePanelUseCachedPath) != 0 )
         {
-            commandRuntimeData.cachedChooseFilePath = contextData.chooseFilePath;
+            commandRuntimeData.cachedChooseFilePaths = contextData.chooseFilePaths;
         }
     }
     else
     {
-        contextData.chooseFilePath = commandRuntimeData.cachedChooseFilePath;
+        contextData.chooseFilePaths = commandRuntimeData.cachedChooseFilePaths;
     }
 }
 
@@ -180,7 +176,7 @@ PresentChooseFolderDialog(OnMyCommandCM *inPlugin,
     CFObj<CFArrayRef> defaultDirPath;
     UInt32 additionalFlags = GetNavDialogParams(currCommand.chooseFolderParams, message.GetReference(), defaultFileName.GetReference(), defaultDirPath.GetReference());
     
-    if( ((additionalFlags & kOMCFilePanelUseCachedPath) == 0) || (commandRuntimeData.cachedChooseFolderPath == nullptr) )
+    if( ((additionalFlags & kOMCFilePanelUseCachedPath) == 0) || (commandRuntimeData.cachedChooseFolderPaths == nullptr) )
     {
         TRACE_CSTR("OnMyCommandCM About to display choose folder dialog\n" );
         CFObj<CFMutableStringRef> defaultName( inPlugin->CreateCombinedStringWithObjects(defaultFileName,
@@ -204,25 +200,18 @@ PresentChooseFolderDialog(OnMyCommandCM *inPlugin,
         }
 
         StSwitchToFront switcher;
-        contextData.chooseFolderPath = CreateCFURLFromOpenDialog( commandName, message, defaultName, defaultLocationStr, additionalFlags | kOMCFilePanelCanChooseDirectories);
-        if(contextData.chooseFolderPath == NULL)
+        contextData.chooseFolderPaths.Adopt(CreateCFURLsFromOpenDialog( commandName, message, defaultName, defaultLocationStr, additionalFlags | kOMCFilePanelCanChooseDirectories));
+        if(contextData.chooseFolderPaths == NULL || CFArrayGetCount(contextData.chooseFolderPaths) == 0)
         {
             throw OSStatus(userCanceledErr);
         }
 
         if(contextData.isNullContext)
-        { // if command is executed without context, the chosen object becomes the file/folder context
-            const void* urls[] = { contextData.chooseFolderPath.Get() };
-            CFObj<CFArrayRef> urlContextArray(CFArrayCreate(kCFAllocatorDefault, urls, sizeof(urls)/sizeof(const void*), &kCFTypeArrayCallBacks));
-
-            contextData.objectList.resize(1);
+        { // if command is executed without context, the chosen objects become the file/folder context
+            contextData.objectList.resize(0);
             UInt32 theFlags = kListClear;
-            size_t validObjectCount = CMUtils::ProcessObjectList(urlContextArray.Get(), theFlags, CFURLCheckFileOrFolder, &contextData.objectList);
-            if(validObjectCount == 0)
-            {
-                contextData.objectList.resize(0);
-            }
-            else
+            size_t validObjectCount = CMUtils::ProcessObjectList(contextData.chooseFolderPaths.Get(), theFlags, CFURLCheckFileOrFolder, &contextData.objectList);
+            if(validObjectCount > 0)
             {
                 contextData.isNullContext = false;
             }
@@ -230,12 +219,12 @@ PresentChooseFolderDialog(OnMyCommandCM *inPlugin,
 
         if( (additionalFlags & kOMCFilePanelUseCachedPath) != 0 )
         {
-            commandRuntimeData.cachedChooseFolderPath = contextData.chooseFolderPath;
+            commandRuntimeData.cachedChooseFolderPaths = contextData.chooseFolderPaths;
         }
     }
     else
     {
-        contextData.chooseFolderPath = commandRuntimeData.cachedChooseFolderPath;
+        contextData.chooseFolderPaths = commandRuntimeData.cachedChooseFolderPaths;
     }
 }
 
@@ -253,7 +242,7 @@ PresentChooseObjectDialog(OnMyCommandCM *inPlugin,
     CFObj<CFArrayRef> defaultDirPath;
     UInt32 additionalFlags = GetNavDialogParams(currCommand.chooseObjectParams, message.GetReference(), defaultFileName.GetReference(), defaultDirPath.GetReference());
     
-    if( ((additionalFlags & kOMCFilePanelUseCachedPath) == 0) || (commandRuntimeData.cachedChooseObjectPath == nullptr) )
+    if( ((additionalFlags & kOMCFilePanelUseCachedPath) == 0) || (commandRuntimeData.cachedChooseObjectPaths == nullptr) )
     {
         TRACE_CSTR("OnMyCommandCM About to display choose object dialog\n" );
         CFObj<CFMutableStringRef> defaultName( inPlugin->CreateCombinedStringWithObjects(defaultFileName,
@@ -275,25 +264,18 @@ PresentChooseObjectDialog(OnMyCommandCM *inPlugin,
             message.Adopt( ::CFCopyLocalizedStringFromTableInBundle( message, currCommand.localizationTableName, localizationBundle, "") );
 
         StSwitchToFront switcher;
-        contextData.chooseObjectPath = CreateCFURLFromOpenDialog( commandName, message, defaultName, defaultLocationStr, additionalFlags | kOMCFilePanelCanChooseFiles | kOMCFilePanelCanChooseDirectories);
-        if(contextData.chooseObjectPath == NULL)
+        contextData.chooseObjectPaths.Adopt(CreateCFURLsFromOpenDialog( commandName, message, defaultName, defaultLocationStr, additionalFlags | kOMCFilePanelCanChooseFiles | kOMCFilePanelCanChooseDirectories));
+        if(contextData.chooseObjectPaths == NULL || CFArrayGetCount(contextData.chooseObjectPaths) == 0)
         {
             throw OSStatus(userCanceledErr);
         }
         
         if(contextData.isNullContext)
-        { // if command is executed without context, the chosen object becomes the file/folder context
-            const void* urls[] = { contextData.chooseObjectPath.Get() };
-            CFObj<CFArrayRef> urlContextArray(CFArrayCreate(kCFAllocatorDefault, urls, sizeof(urls)/sizeof(const void*), &kCFTypeArrayCallBacks));
-
-            contextData.objectList.resize(1);
+        { // if command is executed without context, the chosen objects become the file/folder context
+            contextData.objectList.resize(0);
             UInt32 theFlags = kListClear;
-            size_t validObjectCount = CMUtils::ProcessObjectList(urlContextArray.Get(), theFlags, CFURLCheckFileOrFolder, &contextData.objectList);
-            if(validObjectCount == 0)
-            {
-                contextData.objectList.resize(0);
-            }
-            else
+            size_t validObjectCount = CMUtils::ProcessObjectList(contextData.chooseObjectPaths.Get(), theFlags, CFURLCheckFileOrFolder, &contextData.objectList);
+            if(validObjectCount > 0)
             {
                 contextData.isNullContext = false;
             }
@@ -301,11 +283,11 @@ PresentChooseObjectDialog(OnMyCommandCM *inPlugin,
         
         if((additionalFlags & kOMCFilePanelUseCachedPath) != 0)
         {
-            commandRuntimeData.cachedChooseObjectPath = contextData.chooseObjectPath;
+            commandRuntimeData.cachedChooseObjectPaths = contextData.chooseObjectPaths;
         }
     }
     else
     {
-        contextData.chooseObjectPath = commandRuntimeData.cachedChooseObjectPath;
+        contextData.chooseObjectPaths = commandRuntimeData.cachedChooseObjectPaths;
     }
 }

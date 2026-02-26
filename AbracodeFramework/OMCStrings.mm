@@ -491,3 +491,33 @@ CreateExtensionOnlyFromCFURL(CFURLRef inPathURL, UInt16 escSpecialCharsMode)
     return escapedPathStr.Detach();
 }
 
+CFStringRef
+CreateStringFromCFURLArray(CFArrayRef inURLArray, CFURLToStringProc inProc, 
+                          CFStringRef inSeparator, CFStringRef inPrefix, 
+                          CFStringRef inSuffix, UInt16 escSpecialCharsMode)
+{
+    if(inURLArray == nullptr || inProc == nullptr)
+        return nullptr;
+
+    CFIndex count = CFArrayGetCount(inURLArray);
+    if(count == 0)
+        return nullptr;
+
+    CFObj<CFMutableArrayRef> stringArray(CFArrayCreateMutable(kCFAllocatorDefault, count, &kCFTypeArrayCallBacks));
+    if(stringArray == nullptr)
+        return nullptr;
+
+    for(CFIndex i = 0; i < count; i++)
+    {
+        CFURLRef url = (CFURLRef)CFArrayGetValueAtIndex(inURLArray, i);
+        CFStringRef str = inProc(url, escSpecialCharsMode);
+        if(str != nullptr)
+        {
+            CFArrayAppendValue(stringArray, str);
+            CFRelease(str);
+        }
+    }
+
+    return CreateCombinedString(stringArray, inSeparator, inPrefix, inSuffix, escSpecialCharsMode);
+}
+

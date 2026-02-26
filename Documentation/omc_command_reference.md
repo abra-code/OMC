@@ -537,6 +537,7 @@ All four dialogs share **most options**. Only `DEFAULT_FILE_NAME` option is excl
 | `DEFAULT_LOCATION` | Array<String> | None | All | Starting directory (resolved via special words). Use array for fallbacks. | `["__OBJ_PARENT_PATH__", "~"]` |
 | `SHOW_INVISIBLE_ITEMS` | Boolean | `false` | All | Show hidden files/folders. | `<true/>` for system paths |
 | `USE_PATH_CACHING` | Boolean | `false` | All | Remember last-used path (post-v2.5). | `<true/>` for repeat workflows |
+| `ALLOW_MULTIPLE_ITEMS` | Boolean | `false` | `CHOOSE_FILE_DIALOG`, `CHOOSE_FOLDER_DIALOG`, `CHOOSE_OBJECT_DIALOG` | Allow selecting multiple items. When true, the corresponding context variable (e.g., `OMC_DLG_CHOOSE_FILE_PATH`) will contain all selected paths combined using the multi-object separator, prefix, and suffix from `MULTIPLE_OBJECT_SETTINGS`. | `<true/>` for selecting multiple files/folders |
 
 ---
 
