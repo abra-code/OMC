@@ -469,19 +469,10 @@ ActionUI Table views use **1-based column indexing**. Column 0 is special - it r
 
 #### Hidden Columns
 
-There are two ways to create hidden columns in ActionUI tables:
-
-1. **Implicit (recommended)**: Declare fewer columns in JSON than you provide in data. Extra data elements are automatically hidden.
+Declare fewer columns in JSON than you provide in data. Extra data elements are automatically hidden.
 
    JSON: `"columns": ["Name"]` (1 visible column)  
-   Data: `"John	secret	extra"` (3 elements tab separated - 2 are hidden)  
-
-2. **Explicit**: Use `omc_hidden_column` keyword in `omc_table_set_columns`:
-
-   ```bash
-   omc_dialog_control "$window_uuid" 5 omc_table_set_columns "Name" omc_hidden_column "Info"
-   omc_dialog_control "$window_uuid" 5 omc_table_set_column_widths 150 0 100
-   ```
+   Data: `"John	secret	extra"` (3 elements tab separated - 2 are hidden)
 
 #### Accessing Table Data
 
