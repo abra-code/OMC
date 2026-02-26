@@ -19,6 +19,11 @@
 extern CFStringRef kBundleIDString;
 static OMCService *sOMCService = NULL;
 
+@interface OMCDropletController ()
+@property (nonatomic, strong) NSMutableArray<NSURL *> *pendingFiles;
+@property (nonatomic, assign) NSInteger debounceCounter;
+@end
+
 @implementation OMCDropletController
 
 - (id)init
@@ -31,6 +36,8 @@ static OMCService *sOMCService = NULL;
 	_startingUp = YES;
 	_startupModifiers = 0;
 	_runningCommandCount = 0;
+	_pendingFiles = nil;
+	_debounceCounter = 0;
 	
 	NSAppleEventManager *eventManager = [NSAppleEventManager sharedAppleEventManager];
 	[eventManager setEventHandler:self
@@ -51,6 +58,8 @@ static OMCService *sOMCService = NULL;
 	_startingUp = YES;
 	_startupModifiers = 0;
 	_runningCommandCount = 0;
+	_pendingFiles = nil;
+	_debounceCounter = 0;
 	
 	NSAppleEventManager *eventManager = [NSAppleEventManager sharedAppleEventManager];
 	[eventManager setEventHandler:self
@@ -160,14 +169,6 @@ static OMCService *sOMCService = NULL;
 	if( [selectorStr isEqualToString: @"openDocument:"] )
 		return YES;
 
-/* 10.5-only
-	if( sel_isEqual(actonSel, @selector(newDocument:)) )
-		return YES;
-	
-	if( sel_isEqual(actonSel, @selector(openDocument:)) )
-		return YES;
-*/
-
 //	const char* actionName = sel_getName(actonSel);
 //	printf(actionName); printf("\n");
 	return [super validateUserInterfaceItem:anItem];
@@ -175,39 +176,40 @@ static OMCService *sOMCService = NULL;
 
 #pragma mark --- NSApplication delegate methods ---
 
-- (void)application:(NSApplication *)sender openFiles:(NSArray *)filenames
+- (void)application:(NSApplication *)sender openURLs:(NSArray<NSURL *> *)urls
 {
 	if( _startingUp && ((_startupModifiers & kCGEventFlagMaskAlternate) != 0) )
 		return;
 	
-	NSUInteger fileCount = [filenames count];
-	NSMutableArray *urlArray = [NSMutableArray arrayWithCapacity:fileCount];
-	NSUInteger i;
-	for( i = 0; i < fileCount; i++ )
-	{
-		id oneFileName = [filenames objectAtIndex:i];
-		NSURL *fileURL = [NSURL fileURLWithPath:oneFileName];
-		if(fileURL != NULL)
-		{
-			NSURL *absURL = [fileURL absoluteURL];
-			if(absURL != NULL)
-				[urlArray addObject:absURL];
-		}
-	}
+	if(_pendingFiles == nil)
+		_pendingFiles = [NSMutableArray array];
+	[_pendingFiles addObjectsFromArray:urls];
 
-	[self openFiles:urlArray];
-	[sender replyToOpenOrPrint:NSApplicationDelegateReplySuccess];
+	_debounceCounter++;
+	NSInteger currentToken = _debounceCounter;
+
+	__weak __typeof(self) weakSelf = self;
+	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.25 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+		__strong __typeof(weakSelf) strongSelf = weakSelf;
+		if(strongSelf == nil)
+			return;
+		if(currentToken == strongSelf->_debounceCounter)
+		{
+			[strongSelf processAllGatheredFiles:sender];
+		}
+	});
 }
 
-- (BOOL)application:(NSApplication *)theApplication openFile:(NSString *)filename
+- (void)processAllGatheredFiles:(NSApplication *)sender
 {
-	if( _startingUp && ((_startupModifiers & kCGEventFlagMaskAlternate) != 0) )
-		return FALSE;
-
-	NSURL *fileURL = [NSURL fileURLWithPath:filename];
-    [self openDocumentWithContentsOfURL:[fileURL absoluteURL] display:YES completionHandler:^(NSDocument *, BOOL, NSError *) {}];
-
-	return YES;
+	NSArray *filesToProcess = [_pendingFiles copy];
+	[_pendingFiles removeAllObjects];
+	
+	if([filesToProcess count] > 0)
+	{
+		[self openFiles:filesToProcess];
+		[sender replyToOpenOrPrint:NSApplicationDelegateReplySuccess];
+	}
 }
 
 - (BOOL)applicationShouldHandleReopen:(NSApplication *)theApplication hasVisibleWindows:(BOOL)hasVisibleWindows
