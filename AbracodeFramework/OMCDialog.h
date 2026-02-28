@@ -81,12 +81,16 @@ public:
 							}
 
 protected:
-	OMCDialog *				next;
-	ARefCountedObj< AObserver<OMCDialog> > mTaskObserver;
-	MessagePortListener<OMCDialog> mListener;
-	CFObj<CFStringRef>		mDialogUUID;
+	void					StoreControlValue(CFStringRef controlID, CFTypeRef inValue, CFStringRef controlPart) noexcept;
+
 	CFObj<CFMutableDictionaryRef> mControlValues;//key: controlID string, value: dictionary for columnID (as long) & value (CFType)
 	CFObj<CFMutableDictionaryRef> mControlCustomProperties;
 	SelectionIterator *		mSelectionIterator;//temporary reference for subcommand execution
 	void *					mControlAccessor; // not owned - weak opaque reference to control accessor
+
+private:
+	OMCDialog *				next;
+	ARefCountedObj< AObserver<OMCDialog> > mTaskObserver;
+	MessagePortListener<OMCDialog> mListener;
+	CFObj<CFStringRef>		mDialogUUID;
 };

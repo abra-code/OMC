@@ -64,30 +64,6 @@ ARefCountedObj<OMCDialog> RunNibDialog(OnMyCommandCM *inPlugin, CommandRuntimeDa
 
 #pragma mark -
 
-// private helper
-void
-OMCNibDialog::StoreControlValue(CFStringRef controlID, CFTypeRef inValue, CFStringRef controlPart) noexcept
-{
-	CFObj<CFMutableDictionaryRef> columnIdAndValueDict;
-	CFTypeRef columnValues = CFDictionaryGetValue(mControlValues, controlID);
-	if(columnValues == NULL)
-	{
-		columnIdAndValueDict.Adopt( ::CFDictionaryCreateMutable(
-					kCFAllocatorDefault,
-					0,
-					&kCFTypeDictionaryKeyCallBacks,
-					&kCFTypeDictionaryValueCallBacks), kCFObjDontRetain );
-
-		CFDictionarySetValue(mControlValues, controlID, (CFMutableDictionaryRef)columnIdAndValueDict);
-	}
-	else
-	{
-		columnIdAndValueDict.Adopt((CFMutableDictionaryRef)columnValues, kCFObjRetain);
-	}
-
-	CFDictionarySetValue(columnIdAndValueDict, (const void *)controlPart, (const void *)inValue);
-}
-
 void
 OMCNibDialog::CopyAllControlValues(CFSetRef requestedNibControls, SelectionIterator *inSelIterator) noexcept
 {
@@ -96,19 +72,6 @@ OMCNibDialog::CopyAllControlValues(CFSetRef requestedNibControls, SelectionItera
     //regular controls do not have columns and the use 0 for column number to store their values
     //column index 0 is a meta value for table and means: get array of all column values
     //this way a regular method of querying controls works with table too: produces a selected row strings
-    if(mControlValues == nullptr)
-        mControlValues.Adopt(CFDictionaryCreateMutable(kCFAllocatorDefault,
-                                                            0,
-                                                            &kCFTypeDictionaryKeyCallBacks,
-                                                            &kCFTypeDictionaryValueCallBacks),
-                                                            kCFObjDontRetain);
-
-    if(mControlCustomProperties == nullptr)
-        mControlCustomProperties.Adopt(CFDictionaryCreateMutable(kCFAllocatorDefault,
-                                                                        0,
-                                                                        &kCFTypeDictionaryKeyCallBacks,
-                                                                        &kCFTypeDictionaryValueCallBacks),
-                                                                    kCFObjDontRetain);//values will be CFStringRefs
 
     @try
     {

@@ -8,6 +8,7 @@
  */
 
 #include "OMCDialog.h"
+#include "OMCDialogControlHelpers.h"
 #import "OMCControlAccessor.h"
 #include "AppGroupIdentifier.h"
 #include "OnMyCommand.h"
@@ -22,6 +23,14 @@ OMCDialog::OMCDialog()
 	mTaskObserver( new AObserver<OMCDialog>(this) ),
 	mSelectionIterator(NULL)
 {
+	mControlValues.Adopt(CFDictionaryCreateMutable(kCFAllocatorDefault, 0,
+												&kCFTypeDictionaryKeyCallBacks,
+												&kCFTypeDictionaryValueCallBacks), kCFObjDontRetain);
+	mControlCustomProperties.Adopt(CFDictionaryCreateMutable(kCFAllocatorDefault, 0,
+												&kCFTypeDictionaryKeyCallBacks,
+												&kCFTypeDictionaryValueCallBacks), kCFObjDontRetain);
+
+	//add ourselves to linked list
 	//add ourselves to linked list
 	if(sChainHead == NULL)
 	{
@@ -235,20 +244,6 @@ OMCDialog::CopyControlValue(CFStringRef inControlID, CFStringRef inControlPart, 
 void
 OMCDialog::CopyAllControlValues(CFSetRef requestedNibControls, SelectionIterator *inSelIterator) noexcept
 {
-    if(mControlValues == nullptr)
-        mControlValues.Adopt(CFDictionaryCreateMutable(kCFAllocatorDefault,
-                                                        0,
-                                                        &kCFTypeDictionaryKeyCallBacks,
-                                                        &kCFTypeDictionaryValueCallBacks),
-                                                        kCFObjDontRetain);
-
-    if(mControlCustomProperties == nullptr)
-        mControlCustomProperties.Adopt(CFDictionaryCreateMutable(kCFAllocatorDefault,
-                                                                    0,
-                                                                    &kCFTypeDictionaryKeyCallBacks,
-                                                                    &kCFTypeDictionaryValueCallBacks),
-                                                                    kCFObjDontRetain);
-
     @try
     {
         if(mControlAccessor != NULL)
@@ -334,7 +329,30 @@ OMCDialog::ReceiveNotification(void *ioData) noexcept
 			;
 		break;
 		
-		default:
-		break;
+	default:
+ 		break;
+ 	}
+}
+
+void
+OMCDialog::StoreControlValue(CFStringRef controlID, CFTypeRef inValue, CFStringRef controlPart) noexcept
+{
+	CFObj<CFMutableDictionaryRef> columnIdAndValueDict;
+	CFTypeRef columnValues = CFDictionaryGetValue(mControlValues, controlID);
+	if(columnValues == NULL)
+	{
+		columnIdAndValueDict.Adopt( ::CFDictionaryCreateMutable(
+					kCFAllocatorDefault,
+					0,
+					&kCFTypeDictionaryKeyCallBacks,
+					&kCFTypeDictionaryValueCallBacks), kCFObjDontRetain );
+
+		CFDictionarySetValue(mControlValues, controlID, (CFMutableDictionaryRef)columnIdAndValueDict);
 	}
+	else
+	{
+		columnIdAndValueDict.Adopt((CFMutableDictionaryRef)columnValues, kCFObjRetain);
+	}
+
+	CFDictionarySetValue(columnIdAndValueDict, (const void *)controlPart, (const void *)inValue);
 }

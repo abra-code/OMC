@@ -24,9 +24,6 @@ public:
 
 	virtual CFStringRef	CreateControlValue(SInt32 inSpecialWordID, CFStringRef inControlString, UInt16 escSpecialCharsMode, bool isEnvStyle) noexcept override;
 	virtual void		AddEnvironmentVariablesForAllControls(CFMutableDictionaryRef ioEnvironList) noexcept override;
-
-private:
-	void				StoreControlValue(CFStringRef controlID, CFTypeRef inValue, CFStringRef controlPart) noexcept;
 };
 
 

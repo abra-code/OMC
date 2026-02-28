@@ -118,8 +118,8 @@ OMCActionUIDialog::CopyAllControlValues(CFSetRef requestedNibControls, Selection
 
         // Fetch all content rows from ActionUI
         NSArray<NSArray<NSString*>*> *allRows = [ActionUIObjC getElementRowsWithWindowUUID:windowUUID viewID:viewID];
-        if(allRows == nil || allRows.count == 0)
-            continue;
+        if (allRows == nil)
+            allRows = @[];
 
         NSInteger colIdx = [((__bridge NSString *)(CFStringRef)columnIndexStr) integerValue]; // 0 = whole row, 1..N = column
 
@@ -144,22 +144,7 @@ OMCActionUIDialog::CopyAllControlValues(CFSetRef requestedNibControls, Selection
         CFObj<CFStringRef> allRowsCFStr((__bridge CFStringRef)allRowsString, kCFObjRetain);
         CFObj<CFStringRef> allRowsControlID( CreateControlIDByAddingModifiers(controlID, kControlModifier_AllRows) );
 
-        // Store as mControlValues[allRowsControlID][columnIndexStr] = allRowsCFStr
-        // (same nested dict structure used by StoreControlValue in OMCNibDialog)
-        CFObj<CFMutableDictionaryRef> columnIdAndValueDict;
-        CFTypeRef existing = ::CFDictionaryGetValue(mControlValues, (CFStringRef)allRowsControlID);
-        if(existing == NULL)
-        {
-            columnIdAndValueDict.Adopt( ::CFDictionaryCreateMutable(kCFAllocatorDefault, 0,
-                                                                    &kCFTypeDictionaryKeyCallBacks,
-                                                                    &kCFTypeDictionaryValueCallBacks), kCFObjDontRetain );
-            ::CFDictionarySetValue(mControlValues, (CFStringRef)allRowsControlID, (CFMutableDictionaryRef)columnIdAndValueDict);
-        }
-        else
-        {
-            columnIdAndValueDict.Adopt((CFMutableDictionaryRef)existing, kCFObjRetain);
-        }
-        ::CFDictionarySetValue(columnIdAndValueDict, (const void *)(CFStringRef)columnIndexStr, (const void *)(CFStringRef)allRowsCFStr);
+        StoreControlValue(allRowsControlID, allRowsCFStr, columnIndexStr);
     }
 }
 
