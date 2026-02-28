@@ -538,6 +538,8 @@ All four dialogs share **most options**. Only `DEFAULT_FILE_NAME` option is excl
 | `SHOW_INVISIBLE_ITEMS` | Boolean | `false` | All | Show hidden files/folders. | `<true/>` for system paths |
 | `USE_PATH_CACHING` | Boolean | `false` | All | Remember last-used path (post-v2.5). | `<true/>` for repeat workflows |
 | `ALLOW_MULTIPLE_ITEMS` | Boolean | `false` | `CHOOSE_FILE_DIALOG`, `CHOOSE_FOLDER_DIALOG`, `CHOOSE_OBJECT_DIALOG` | Allow selecting multiple items. When true, the corresponding context variable (e.g., `OMC_DLG_CHOOSE_FILE_PATH`) will contain all selected paths combined using the multi-object separator, prefix, and suffix from `MULTIPLE_OBJECT_SETTINGS`. | `<true/>` for selecting multiple files/folders |
+| `DIALOG_IDENTIFIER` | String | `COMMAND_ID` (if set) or none | All | Panel identifier for state persistence. If set, the panel remembers last position/size. Defaults to `COMMAND_ID` if not specified. Use the same identifier across multiple commands to share panel state. | `"com.example.sharedPanel"` |
+| `BUTTON_PROMPT` | String | `"Open"` / `"Save"` | All | Custom button text (e.g., "Import", "Select", "Choose"). Improves context for users. | `"Import"` for import dialogs |
 
 ---
 
@@ -552,7 +554,7 @@ All four dialogs share **most options**. Only `DEFAULT_FILE_NAME` option is excl
 ### Example: Shared + Exclusive Usage
 
 ```xml
-<!-- Save As with pre-filled name and cached location -->
+<!-- Save As with pre-filled name, cached location, and custom button -->
 <key>SAVE_AS_DIALOG</key>
 <dict>
   <key>MESSAGE</key>
@@ -568,9 +570,11 @@ All four dialogs share **most options**. Only `DEFAULT_FILE_NAME` option is excl
   </array>
   <key>USE_PATH_CACHING</key>
   <true/>
+  <key>BUTTON_PROMPT</key>
+  <string>Export</string>
 </dict>
 
-<!-- Choose Folder with cached path -->
+<!-- Choose Folder with shared panel state -->
 <key>CHOOSE_FOLDER_DIALOG</key>
 <dict>
   <key>MESSAGE</key>
@@ -581,6 +585,10 @@ All four dialogs share **most options**. Only `DEFAULT_FILE_NAME` option is excl
   </array>
   <key>USE_PATH_CACHING</key>
   <true/>
+  <key>DIALOG_IDENTIFIER</key>
+  <string>com.example.folderPicker</string>
+  <key>BUTTON_PROMPT</key>
+  <string>Select</string>
 </dict>
 
 <key>COMMAND</key>
@@ -594,6 +602,8 @@ All four dialogs share **most options**. Only `DEFAULT_FILE_NAME` option is excl
 > ### Best Practices:
 > - **Dynamic Paths**: Use `__OBJ_PARENT_PATH__` or `~` in `DEFAULT_LOCATION`.
 > - **Caching**: Enable `USE_PATH_CACHING` for consistent user experience.
+> - **Panel Identity**: Use `DIALOG_IDENTIFIER` to share panel state across commands, or leave unset to default to `COMMAND_ID`.
+> - **Button Labels**: Use `BUTTON_PROMPT` to clarify action (e.g., "Import" instead of "Open").
 > - **Error Handling**: Always check for cancellation:
 >   
 >   if [ -z "${OMC_DLG_SAVE_AS_PATH}" ]; then

@@ -19,9 +19,8 @@ enum
 	kOMCFilePanelUseCachedPath			= 0x10 //subcommands may reuse the path already obtained by the main command or another subcommand
 };
 
-CFURLRef CreateCFURLFromSaveAsDialog( CFStringRef inClientName, CFStringRef inMessage, CFStringRef inDefaultName, CFStringRef inDefaultDirPath, UInt32 inAdditonalFlags);
-CFURLRef CreateCFURLFromOpenDialog( CFStringRef inClientName, CFStringRef inMessage, CFStringRef inDefaultName, CFStringRef inDefaultDirPath, UInt32 inAdditonalFlags);
-CFArrayRef CreateCFURLsFromOpenDialog( CFStringRef inClientName, CFStringRef inMessage, CFStringRef inDefaultName, CFStringRef inDefaultDirPath, UInt32 inAdditonalFlags);
+CFURLRef CreateCFURLFromSaveAsDialog( CFStringRef inClientName, CFStringRef inMessage, CFStringRef inDefaultName, CFStringRef inDefaultDirPath, CFStringRef inIdentifier, CFStringRef inPrompt, UInt32 inAdditonalFlags);
+CFArrayRef CreateCFURLsFromOpenDialog( CFStringRef inClientName, CFStringRef inMessage, CFStringRef inDefaultName, CFStringRef inDefaultDirPath, CFStringRef inIdentifier, CFStringRef inPrompt, UInt32 inAdditonalFlags);
 
 #ifdef __cplusplus
 }

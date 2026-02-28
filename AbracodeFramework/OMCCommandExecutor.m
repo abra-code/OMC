@@ -115,7 +115,7 @@ bool IsFileOrFolderActivation(UInt32 activationType)
                 {
                     case kActiveFile:
                     {
-                        selectedFiles = CreateCFURLsFromOpenDialog( (__bridge CFStringRef)appName, theMessage, NULL, NULL, kOMCFilePanelCanChooseFiles | kOMCFilePanelAllowMultipleItems );
+                        selectedFiles = CreateCFURLsFromOpenDialog( (__bridge CFStringRef)appName, theMessage, NULL, NULL, NULL, NULL, kOMCFilePanelCanChooseFiles | kOMCFilePanelAllowMultipleItems );
                     }
                     break;
                         
@@ -123,13 +123,13 @@ bool IsFileOrFolderActivation(UInt32 activationType)
                     case kActiveFinderWindow:
                     case kActiveFolderExcludeFinderWindow:
                     {
-                        selectedFiles = CreateCFURLsFromOpenDialog( (__bridge CFStringRef)appName, theMessage, NULL, NULL, kOMCFilePanelCanChooseDirectories | kOMCFilePanelAllowMultipleItems );
+                        selectedFiles = CreateCFURLsFromOpenDialog( (__bridge CFStringRef)appName, theMessage, NULL, NULL, NULL, NULL, kOMCFilePanelCanChooseDirectories | kOMCFilePanelAllowMultipleItems );
                     }
                     break;
                         
                     default:
                     {
-                        selectedFiles = CreateCFURLsFromOpenDialog( (__bridge CFStringRef)appName, theMessage, NULL, NULL, kOMCFilePanelCanChooseFiles | kOMCFilePanelCanChooseDirectories | kOMCFilePanelAllowMultipleItems );
+                        selectedFiles = CreateCFURLsFromOpenDialog( (__bridge CFStringRef)appName, theMessage, NULL, NULL, NULL, NULL, kOMCFilePanelCanChooseFiles | kOMCFilePanelCanChooseDirectories | kOMCFilePanelAllowMultipleItems );
                     }
                     break;
                 }
