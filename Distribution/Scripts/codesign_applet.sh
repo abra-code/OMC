@@ -26,7 +26,7 @@ if test "$?" != "0"; then
     exit 1
 fi
 
-log "Removing quarantine xattr"
+echo "Removing quarantine xattr"
 /usr/bin/xattr -dr 'com.apple.quarantine' "$app_to_sign" 2>/dev/null
 
 entitlements_path="$self_dir/OMCApplet/OMCApplet.entitlements"
