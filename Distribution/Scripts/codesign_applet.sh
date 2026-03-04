@@ -34,7 +34,7 @@ entitlements_path_root="$self_dir/OMCApplet.entitlements"
 
 entitlements=""
 
-if test -z "$identity"; then
+if test -z "$identity" || test "$identity" = "-"; then
     identity="-"
     timestamp="--timestamp=none"
     sign_options=""
