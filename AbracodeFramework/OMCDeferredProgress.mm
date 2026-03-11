@@ -1,5 +1,5 @@
 //
-//  OMCDeferredProgress.m
+//  OMCDeferredProgress.mm
 //  Abracode
 //
 //  Created by Tomasz Kukielka on 8/2/08.
@@ -296,12 +296,10 @@ SplitStatusTemplateString(CFStringRef inString)
 
 			if(numEnd > numStart)
 			{
-				CFStringRef numString = ::CFStringCreateWithSubstring( kCFAllocatorDefault, inString, CFRangeMake(numStart, numEnd-numStart) );
+				CFObj<CFStringRef> numString( ::CFStringCreateWithSubstring( kCFAllocatorDefault, inString, CFRangeMake(numStart, numEnd-numStart) ) );
 				if(numString != NULL)
 				{
 					SInt32 groupIndex = ::CFStringGetIntValue(numString);
-					CFRelease(numString);
-					
 					StatusTemplateItem *newItem = new StatusTemplateItem(groupIndex);
 					linkTail = newItem->AppendToTail(linkHead, linkTail);
 				}
@@ -343,30 +341,30 @@ CounterParams::Init(CFDictionaryRef counterDict, CFStringRef inLocTable, CFBundl
 	Boolean caseInsensitive = false;
 	counterParams.GetValue(CFSTR("COMPARE_CASE_INSENSITIVE"), caseInsensitive);
 
-	CFStringRef theStr = NULL;
-	if( counterParams.GetValue(CFSTR("REGULAR_EXPRESSION_MATCH"), theStr) )
+	CFStringRef regExStr = NULL;
+	if( counterParams.GetValue(CFSTR("REGULAR_EXPRESSION_MATCH"), regExStr) )
 	{
-        std::string matchString = CMUtils::CreateUTF8StringFromCFString(theStr);
+        std::string matchString = CMUtils::CreateUTF8StringFromCFString(regExStr);
 		int regFlags = REG_EXTENDED;
 		if( caseInsensitive )
 			regFlags |= REG_ICASE;
 		regExprValid = ::regcomp(&(regularExpression), matchString.c_str(), regFlags) == 0;
 	}
-	
-	
-	if( counterParams.CopyValue(CFSTR("STATUS"), theStr) )
+
+	CFStringRef statusStr = NULL;
+	if( counterParams.CopyValue(CFSTR("STATUS"), statusStr) )
 	{
-		if( (theStr != NULL) && (inLocTable != NULL) && (inLocBundle != NULL) )
+		if( (statusStr != NULL) && (inLocTable != NULL) && (inLocBundle != NULL) )
 		{
-			CFStringRef locStr = CFCopyLocalizedStringFromTableInBundle( theStr, inLocTable, inLocBundle, "");
-			CFRelease(theStr);
-			theStr = locStr;
+			CFStringRef locStr = CFCopyLocalizedStringFromTableInBundle( statusStr, inLocTable, inLocBundle, "");
+			CFRelease(statusStr);
+			statusStr = locStr;
 		}
-		
-		if(theStr != NULL)
+
+		if(statusStr != NULL)
 		{
-			mStatusTemplate = SplitStatusTemplateString(theStr);
-			CFRelease(theStr);
+			mStatusTemplate = SplitStatusTemplateString(statusStr);
+			CFRelease(statusStr);
 		}
 	}
 
@@ -395,7 +393,7 @@ CounterParams::Init(CFDictionaryRef counterDict, CFStringRef inLocTable, CFBundl
 CFStringRef
 CounterParams::CalculateProgress(CFArrayRef inOutputLines, OMCTaskProgress &outTaskProgress)
 {
-	outTaskProgress.statusString = NULL;//will be set with the last valid statusString
+	outTaskProgress.statusString.Release();//will be set with the last valid statusString
 
 	if( !regExprValid )
 		return NULL;
@@ -511,13 +509,50 @@ CounterParams::CalculateProgress(CFArrayRef inOutputLines, OMCTaskProgress &outT
 			if( (newProgress >= outTaskProgress.progress) || (outTaskProgress.progress == 0) )
 			{
 				outTaskProgress.progress = newProgress;
+
+				// Build status string from template with captured regex groups
+				if(mStatusTemplate != NULL)
+				{
+					CFObj<CFMutableStringRef> statusString(::CFStringCreateMutable(kCFAllocatorDefault, 0));
+					StatusTemplateItem *oneTemplateItem = mStatusTemplate;
+					while (oneTemplateItem != NULL)
+					{
+						if( oneTemplateItem->type == kTemplateItemString )
+						{
+							if(oneTemplateItem->item.text != NULL)
+								::CFStringAppend(statusString, oneTemplateItem->item.text);
+						}
+						else
+						{
+							CFIndex groupIndex = oneTemplateItem->item.groupIndex;
+							if( (groupIndex >= 0) && ((size_t)groupIndex < maxMatchCount) )
+							{
+								regoff_t grpStart = matches[groupIndex].rm_so;
+								regoff_t grpEnd = matches[groupIndex].rm_eo;
+								if( (grpStart >= 0) && (grpEnd > grpStart) )
+								{
+									const char *grpChars = searchedString.c_str() + grpStart;
+									CFIndex grpLen = grpEnd - grpStart;
+									CFObj<CFStringRef> groupStr(::CFStringCreateWithBytes(kCFAllocatorDefault, (const UInt8 *)grpChars, grpLen, kCFStringEncodingUTF8, true));
+									if(groupStr != NULL)
+										::CFStringAppend(statusString, groupStr);
+								}
+							}
+						}
+
+						oneTemplateItem = oneTemplateItem->next;
+					}
+
+					if( ::CFStringGetLength(statusString) > 0 )
+					{
+						outTaskProgress.statusString.Adopt((CFStringRef)statusString.Detach());
+					}
+				}
 			}
 		}
 		else
 		{
-#if 0//_DEBUG_
-			NSLog(@"CounterParams::CalculaeProgress() Regex not matched for string = %@", oneLine);
-#endif
+			TRACE_CSTR("CounterParams::CalculateProgress() Regex not matched for string = %s\n", ((__bridge NSString *)oneLine).UTF8String);
 		}
 	}
 
@@ -536,14 +571,8 @@ StepsParams::~StepsParams()
 				::regfree( &steps[stepIndex].regularExpression );
 				steps[stepIndex].regExprValid = false;
 			}
-
-            if(steps[stepIndex].status != NULL)
-			{
-				CFRelease(steps[stepIndex].status);
-				steps[stepIndex].status = NULL;
-			}
 		}
-		delete steps;
+		delete [] steps;
 	}
 }
 
@@ -584,10 +613,6 @@ StepsParams::Init(CFDictionaryRef stepsDict, CFStringRef inLocTable, CFBundleRef
 
 		for(CFIndex stepIndex = 0; stepIndex < stepsCount; stepIndex++)
 		{
-			steps[stepIndex].matchString = NULL;
-			steps[stepIndex].value = 0;
-			steps[stepIndex].status = NULL;
-			steps[stepIndex].regExprValid = false;
 			CFDictionaryRef oneStepDict = ACFType<CFDictionaryRef>::DynamicCast( CFArrayGetValueAtIndex(stepsArray, stepIndex) );
 			if(oneStepDict != NULL)
 			{
@@ -610,12 +635,16 @@ StepsParams::Init(CFDictionaryRef stepsDict, CFStringRef inLocTable, CFBundleRef
 				
 				oneStepParams.GetValue( CFSTR("VALUE"), steps[stepIndex].value );
 				
-				oneStepParams.CopyValue( CFSTR("STATUS"), steps[stepIndex].status );//need to release status string
-				if( (steps[stepIndex].status != NULL) && (inLocTable != NULL) && (inLocBundle != NULL) )
+				CFStringRef statusStr = NULL;
+				if( oneStepParams.CopyValue( CFSTR("STATUS"), statusStr ) )
 				{
-					CFStringRef locStr = CFCopyLocalizedStringFromTableInBundle( steps[stepIndex].status, inLocTable, inLocBundle, "");
-					CFRelease(steps[stepIndex].status);
-					steps[stepIndex].status = locStr;
+					if( (statusStr != NULL) && (inLocTable != NULL) && (inLocBundle != NULL) )
+					{
+						CFStringRef locStr = CFCopyLocalizedStringFromTableInBundle( statusStr, inLocTable, inLocBundle, "");
+						CFRelease(statusStr);
+						statusStr = locStr;
+					}
+					steps[stepIndex].status = statusStr; // CFObj takes ownership
 				}
 			}
 		}
@@ -630,8 +659,8 @@ StepsParams::CalculateProgress(CFArrayRef inOutputLines, OMCTaskProgress &outTas
 	if(inOutputLines != NULL)
 		lineCount = CFArrayGetCount(inOutputLines);
 	
-	outTaskProgress.statusString = NULL;//will be set with the last valid statusString
-	
+	outTaskProgress.statusString.Release();//will be set with the last valid statusString
+
 	CFStringRef lastMatchedLine = NULL;
 
 	for(CFIndex i = 0; i < lineCount; i++)
@@ -652,13 +681,13 @@ StepsParams::CalculateProgress(CFArrayRef inOutputLines, OMCTaskProgress &outTas
 						{//found a match
 							outTaskProgress.nextStepIndex = currStepIndex+1;
 							outTaskProgress.progress = (double)currStep.value;
-							outTaskProgress.statusString = currStep.status;
+							outTaskProgress.statusString.Adopt(currStep.status, kCFObjRetain);
 							foundAMatch = true;
 						}
 					}
 				}
 				break;
-				
+
 				case kMatchContains:
 				{
 					if(currStep.matchString != NULL)
@@ -668,13 +697,13 @@ StepsParams::CalculateProgress(CFArrayRef inOutputLines, OMCTaskProgress &outTas
 						{
 							outTaskProgress.nextStepIndex = currStepIndex+1;
 							outTaskProgress.progress = (double)currStep.value;
-							outTaskProgress.statusString = currStep.status;
+							outTaskProgress.statusString.Adopt(currStep.status, kCFObjRetain);
 							foundAMatch = true;
 						}
 					}
 				}
 				break;
-				
+
 				case kMatchRegularExpression:
 				{
 					if( currStep.regExprValid )
@@ -687,7 +716,7 @@ StepsParams::CalculateProgress(CFArrayRef inOutputLines, OMCTaskProgress &outTas
 						{
 							outTaskProgress.nextStepIndex = currStepIndex+1;
 							outTaskProgress.progress = (double)currStep.value;
-							outTaskProgress.statusString = currStep.status;
+							outTaskProgress.statusString.Adopt(currStep.status, kCFObjRetain);
 							foundAMatch = true;
 						}
 					}
@@ -697,14 +726,11 @@ StepsParams::CalculateProgress(CFArrayRef inOutputLines, OMCTaskProgress &outTas
 			if(foundAMatch)
 				break;
 		}
-		
+
 		if(foundAMatch)
 			lastMatchedLine = oneLine;
 	}
 
-//caller wants to take ownership of the oputput string so let's retain it 
-	if(outTaskProgress.statusString != NULL)
-		::CFRetain(outTaskProgress.statusString);
 	return lastMatchedLine;
 }
 
@@ -736,31 +762,46 @@ inline double CalculateTotalProgress(OMCTaskProgress *allTasks, CFIndex inCount)
 #endif
 
 	mProgressType = (inTaskCount > 1) ? kOMCProgressDeterminateTaskCount : kOMCProgressIndeterminate;
-	mProgressParams = inParams;
-	if(mProgressParams != NULL)
-		CFRetain(mProgressParams);
+	mProgressParams.Adopt(inParams, kCFObjRetain);
 
 	mTaskCount = inTaskCount;
 	mTasks = new OMCTaskProgress[mTaskCount];
-	memset( mTasks, 0, mTaskCount*sizeof(OMCTaskProgress) );
 
 	ACFDict params(mProgressParams);
-	mTitleString = NULL;
-	if( params.CopyValue( CFSTR("TITLE"), mTitleString ) )
+
+    CFDictionaryRef stepsDict = NULL;
+    params.GetValue( CFSTR("DETERMINATE_STEPS"), stepsDict );
+    if(stepsDict != NULL)
+    {//either steps:
+        mProgressType = kOMCProgressDeterminateSteps;
+        mStepsParams.Init(stepsDict, inLocTable, inLocBundle);
+    }
+    else
+    {//or counter:
+        CFDictionaryRef counterDict = NULL;
+        params.GetValue( CFSTR("DETERMINATE_COUNTER"), counterDict );
+        if(counterDict != NULL)
+        {
+            mProgressType = kOMCProgressDeterminateCounter;
+            mCounterParams.Init(counterDict, inLocTable, inLocBundle);
+        }
+    }
+
+	CFStringRef titleStr = NULL;
+	if( params.CopyValue( CFSTR("TITLE"), titleStr ) )
 	{
-		if( (mTitleString != NULL) && (inLocTable != NULL) && (inLocBundle != NULL) )
+		if( (titleStr != NULL) && (inLocTable != NULL) && (inLocBundle != NULL) )
 		{
-			CFStringRef locString = CFCopyLocalizedStringFromTableInBundle( mTitleString, inLocTable, inLocBundle, "");
-			CFRelease(mTitleString);
-			mTitleString = locString;
+			CFStringRef locString = CFCopyLocalizedStringFromTableInBundle( titleStr, inLocTable, inLocBundle, "");
+			CFRelease(titleStr);
+			titleStr = locString;
 		}
+		mTitleString = titleStr; // CFObj takes ownership
 	}
-	
+
 	if(mTitleString == NULL)
 	{
-        mTitleString = inCommandName;
-		if(mTitleString != NULL)
-			CFRetain(mTitleString);
+		mTitleString.Adopt(inCommandName, kCFObjRetain);
 	}
 
 	mController = NULL;
@@ -790,42 +831,12 @@ inline double CalculateTotalProgress(OMCTaskProgress *allTasks, CFIndex inCount)
 	{
 		[self showProgressWindow];
 	}
-
-	CFDictionaryRef stepsDict = NULL;
-	params.GetValue( CFSTR("DETERMINATE_STEPS"), stepsDict );
-	if(stepsDict != NULL)
-	{//either steps:
-		mProgressType = kOMCProgressDeterminateSteps;
-		mStepsParams.Init(stepsDict, inLocTable, inLocBundle);
-	}
-	else
-	{//or counter:
-		CFDictionaryRef counterDict = NULL;
-		params.GetValue( CFSTR("DETERMINATE_COUNTER"), counterDict );
-		if(counterDict != NULL)
-		{
-			mProgressType = kOMCProgressDeterminateCounter;
-			mCounterParams.Init(counterDict, inLocTable, inLocBundle);
-		}
-	}
 	
 	return self;
 }
 
 - (void)dealloc
 {
-	if(mProgressParams != NULL)
-	{
-		CFRelease(mProgressParams);
-		mProgressParams = NULL;
-	}
-
-	if(mTitleString != NULL)
-	{
-		CFRelease(mTitleString);
-		mTitleString = NULL;
-	}
-
 	if(mDeferTimer != NULL)
 	{
 		CFRunLoopTimerInvalidate(mDeferTimer);
@@ -843,12 +854,10 @@ inline double CalculateTotalProgress(OMCTaskProgress *allTasks, CFIndex inCount)
 	mTasks = NULL;
 }
 
-//returns true if user cancelled
+// returns true if user cancelled
 - (Boolean)advanceProgressForTask:(CFIndex)inTaskIndex childPid:(pid_t)inChildPID withOutputString:(NSString *)inOutputStr taskEnded:(Boolean)isTaskEnded
 {
-#if 0//_DEBUG_
-	NSLog(@"advanceProgressForTask: %@", inOutputStr);
-#endif
+	TRACE_CSTR("advanceProgressForTask: %s\n", inOutputStr.UTF8String);
 
     CFObj<CFArrayRef> lineArray( SplitStringIntoLines((__bridge CFStringRef)inOutputStr, mLastPartialLineStr.GetReference()) );
 	CFIndex lineCount = 0;
@@ -921,17 +930,15 @@ inline double CalculateTotalProgress(OMCTaskProgress *allTasks, CFIndex inCount)
 	
 	if( currTaskProgress.statusString != NULL )
 	{
-		mLastLineStr.Adopt(currTaskProgress.statusString, kCFObjDontRetain);//take ownership of the returned string
-		currTaskProgress.statusString = NULL;
+		mLastLineStr = currTaskProgress.statusString;
 	}
 	else
 	{
 		if( suppressNonMatchingText )
 			mLastLineStr.Adopt(lastMatchedLine, kCFObjRetain);
 
-#if 0//_DEBUG_
-		NSLog(@"calculateOneTaskProgress: CalculateProgress returned NULL string, using mLastLineStr=%@", (CFStringRef)mLastLineStr);
-#endif		
+		TRACE_CSTR("calculateOneTaskProgress: CalculateProgress returned NULL string, using mLastLineStr=%s\n",
+                   ((__bridge NSString *)(CFStringRef)mLastLineStr).UTF8String);
 	}
 }
 
@@ -947,9 +954,9 @@ inline double CalculateTotalProgress(OMCTaskProgress *allTasks, CFIndex inCount)
 	if(mController == NULL)
 	{
 		mController = [[OMCProgressWindowController alloc] initWithWindowNibName:@"progress"];
-        [[mController window] setTitle:(__bridge NSString *)mTitleString];
+        [[mController window] setTitle:(__bridge NSString *)(CFStringRef)mTitleString];
 
-		NSString *frameAutosaveName = [NSString stringWithFormat: @"omc_progress_window %@", mTitleString];
+		NSString *frameAutosaveName = [NSString stringWithFormat: @"omc_progress_window %@", (__bridge NSString *)(CFStringRef)mTitleString];
 		[mController setWindowFrameAutosaveName:frameAutosaveName];
 		
 		double totalProgress = -1.0;

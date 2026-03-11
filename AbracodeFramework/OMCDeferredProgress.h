@@ -11,14 +11,14 @@
 #include "CFObj.h"
 #include <regex.h>
 
-//single task progress state
-typedef struct OMCTaskProgress
+// single task progress state
+struct OMCTaskProgress
 {
-	double progress;
-	pid_t childPID;
-	CFIndex nextStepIndex; //for step progress
-	CFStringRef statusString;
-} OMCTaskProgress;
+	double progress = 0.0;
+	pid_t childPID = 0;
+	CFIndex nextStepIndex = 0; //for step progress
+	CFObj<CFStringRef> statusString;
+};
 
 
 enum
@@ -145,14 +145,14 @@ struct CounterParams
 	Boolean regExprValid;
 };
 
-typedef struct OneStep
+struct OneStep
 {
-	CFStringRef matchString;
-	regex_t regularExpression;
-	Boolean regExprValid;
-	CFIndex value;
-	CFStringRef status;
-} OneStep;
+	CFStringRef matchString = NULL;
+	regex_t regularExpression = {};
+	Boolean regExprValid = false;
+	CFIndex value = 0;
+	CFObj<CFStringRef> status;
+};
 
 struct StepsParams
 {
@@ -191,14 +191,14 @@ enum
 
 @interface OMCDeferredProgress : NSObject
 {
-	CFDictionaryRef mProgressParams;
+	CFObj<CFDictionaryRef> mProgressParams;
 	UInt32			mProgressType;
 	StepsParams		mStepsParams;
 	CounterParams	mCounterParams;
 	CFIndex			mTaskCount;
 	OMCTaskProgress *mTasks;
 	CFRunLoopTimerRef mDeferTimer;
-	CFStringRef mTitleString;
+	CFObj<CFStringRef> mTitleString;
 	OMCProgressWindowController *mController;
 
 	CFObj<CFStringRef> mLastLineStr;

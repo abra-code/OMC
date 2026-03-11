@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>VERSION</key>
+    <integer>2</integer>
+    <key>COMMAND_LIST</key>
+    <array>
+        <dict>
+            <key>NAME</key>
+            <string>Indeterminate Progress</string>
+            <key>COMMAND_ID</key>
+            <string>indeterminate_progress</string>
+            <key>EXECUTION_MODE</key>
+            <string>exe_script_file</string>
+            <key>PROGRESS</key>
+            <dict>
+                <key>TITLE</key>
+                <string>Indeterminate Test</string>
+            </dict>
+        </dict>
+
+        <dict>
+            <key>NAME</key>
+            <string>Counter Progress</string>
+            <key>COMMAND_ID</key>
+            <string>counter_progress</string>
+            <key>EXECUTION_MODE</key>
+            <string>exe_script_file</string>
+            <key>PROGRESS</key>
+            <dict>
+                <key>TITLE</key>
+                <string>Counter Test</string>
+                <key>DETERMINATE_COUNTER</key>
+                <dict>
+                    <key>REGULAR_EXPRESSION_MATCH</key>
+                    <string>#+ *(.+)%</string>
+                    <key>STATUS</key>
+                    <string>Downloading: $1%</string>
+                    <key>SUBSTRING_INDEX_FOR_COUNTER</key>
+                    <integer>1</integer>
+                    <key>RANGE_END</key>
+                    <real>100</real>
+                </dict>
+            </dict>
+        </dict>
+
+        <dict>
+            <key>NAME</key>
+            <string>Steps Progress</string>
+            <key>COMMAND_ID</key>
+            <string>steps_progress</string>
+            <key>EXECUTION_MODE</key>
+            <string>exe_script_file</string>
+            <key>PROGRESS</key>
+            <dict>
+                <key>TITLE</key>
+                <string>Steps Test</string>
+                <key>DETERMINATE_STEPS</key>
+                <dict>
+                    <key>MATCH_METHOD</key>
+                    <string>match_contains</string>
+                    <key>STEPS</key>
+                    <array>
+                        <dict>
+                            <key>STRING</key>
+                            <string>Initializing</string>
+                            <key>VALUE</key>
+                            <integer>0</integer>
+                            <key>STATUS</key>
+                            <string>Initializing...</string>
+                        </dict>
+                        <dict>
+                            <key>STRING</key>
+                            <string>Compiling</string>
+                            <key>VALUE</key>
+                            <integer>25</integer>
+                            <key>STATUS</key>
+                            <string>Compiling...</string>
+                        </dict>
+                        <dict>
+                            <key>STRING</key>
+                            <string>Linking</string>
+                            <key>VALUE</key>
+                            <integer>50</integer>
+                            <key>STATUS</key>
+                            <string>Linking...</string>
+                        </dict>
+                        <dict>
+                            <key>STRING</key>
+                            <string>Running tests</string>
+                            <key>VALUE</key>
+                            <integer>75</integer>
+                            <key>STATUS</key>
+                            <string>Testing...</string>
+                        </dict>
+                        <dict>
+                            <key>STRING</key>
+                            <string>complete</string>
+                            <key>VALUE</key>
+                            <integer>100</integer>
+                            <key>STATUS</key>
+                            <string>Build Complete!</string>
+                        </dict>
+                    </array>
+                </dict>
+            </dict>
+        </dict>
+
+        <dict>
+            <key>NAME</key>
+            <string>Multi Group Counter</string>
+            <key>COMMAND_ID</key>
+            <string>multi_group_counter</string>
+            <key>EXECUTION_MODE</key>
+            <string>exe_script_file</string>
+            <key>PROGRESS</key>
+            <dict>
+                <key>TITLE</key>
+                <string>Multi Group Test</string>
+                <key>DETERMINATE_COUNTER</key>
+                <dict>
+                    <key>REGULAR_EXPRESSION_MATCH</key>
+                    <string>file ([0-9]+) of ([0-9]+)</string>
+                    <key>STATUS</key>
+                    <string>Processing $1 of $2</string>
+                    <key>SUBSTRING_INDEX_FOR_COUNTER</key>
+                    <integer>1</integer>
+                    <key>SUBSTRING_INDEX_FOR_RANGE_END</key>
+                    <integer>2</integer>
+                    <key>RANGE_START</key>
+                    <real>0</real>
+                </dict>
+            </dict>
+        </dict>
+
+        <dict>
+            <key>NAME</key>
+            <string>Steps Regex Progress</string>
+            <key>COMMAND_ID</key>
+            <string>steps_regex_progress</string>
+            <key>EXECUTION_MODE</key>
+            <string>exe_script_file</string>
+            <key>PROGRESS</key>
+            <dict>
+                <key>TITLE</key>
+                <string>Steps Regex Test</string>
+                <key>DETERMINATE_STEPS</key>
+                <dict>
+                    <key>MATCH_METHOD</key>
+                    <string>match_regular_expression</string>
+                    <key>STEPS</key>
+                    <array>
+                        <dict>
+                            <key>STRING</key>
+                            <string>^Initializing</string>
+                            <key>VALUE</key>
+                            <integer>0</integer>
+                        </dict>
+                        <dict>
+                            <key>STRING</key>
+                            <string>^Compiling</string>
+                            <key>VALUE</key>
+                            <integer>30</integer>
+                        </dict>
+                        <dict>
+                            <key>STRING</key>
+                            <string>complete$</string>
+                            <key>VALUE</key>
+                            <integer>100</integer>
+                        </dict>
+                    </array>
+                </dict>
+            </dict>
+        </dict>
+
+        <dict>
+            <key>NAME</key>
+            <string>Counter Suppress</string>
+            <key>COMMAND_ID</key>
+            <string>counter_suppress</string>
+            <key>EXECUTION_MODE</key>
+            <string>exe_script_file</string>
+            <key>PROGRESS</key>
+            <dict>
+                <key>TITLE</key>
+                <string>Suppress Test</string>
+                <key>DETERMINATE_COUNTER</key>
+                <dict>
+                    <key>REGULAR_EXPRESSION_MATCH</key>
+                    <string>#+ *(.+)%</string>
+                    <key>SUBSTRING_INDEX_FOR_COUNTER</key>
+                    <integer>1</integer>
+                    <key>SUPPRESS_NON_MATCHING_TEXT</key>
+                    <true/>
+                </dict>
+            </dict>
+        </dict>
+    </array>
+</dict>
+</plist>
