@@ -1,0 +1,111 @@
+{
+  "fill" : {
+    "linear-gradient" : [
+      "display-p3:0.34546,0.74561,0.96338,1.00000",
+      "display-p3:0.20850,0.42554,0.94727,1.00000"
+    ],
+    "orientation" : {
+      "start" : {
+        "x" : 0.5,
+        "y" : 0
+      },
+      "stop" : {
+        "x" : 0.5,
+        "y" : 0.7
+      }
+    }
+  },
+  "groups" : [
+    {
+      "layers" : [
+        {
+          "fill-specializations" : [
+            {
+              "value" : {
+                "linear-gradient" : [
+                  "display-p3:0.20000,0.20000,0.20000,1.00000",
+                  "extended-gray:0.00000,1.00000"
+                ],
+                "orientation" : {
+                  "start" : {
+                    "x" : 0.49999999999999994,
+                    "y" : 0.7806063145915353
+                  },
+                  "stop" : {
+                    "x" : 0.5228655573326771,
+                    "y" : 1
+                  }
+                }
+              }
+            },
+            {
+              "appearance" : "dark",
+              "value" : {
+                "linear-gradient" : [
+                  "display-p3:0.82500,0.82500,0.82500,1.00000",
+                  "extended-gray:0.50000,1.00000"
+                ],
+                "orientation" : {
+                  "start" : {
+                    "x" : 0.49999999999999994,
+                    "y" : 0
+                  },
+                  "stop" : {
+                    "x" : 0.49999999999999994,
+                    "y" : 0.5318423966535433
+                  }
+                }
+              }
+            },
+            {
+              "appearance" : "tinted",
+              "value" : {
+                "linear-gradient" : [
+                  "extended-gray:1.00000,1.00000",
+                  "extended-gray:0.25000,1.00000"
+                ],
+                "orientation" : {
+                  "start" : {
+                    "x" : 0.49999999999999994,
+                    "y" : 0
+                  },
+                  "stop" : {
+                    "x" : 0.49999999999999994,
+                    "y" : 0.7310957492618109
+                  }
+                }
+              }
+            }
+          ],
+          "image-name" : "hammer.circle.fill.svg",
+          "name" : "hammer.circle.fill",
+          "position-specializations" : [
+            {
+              "idiom" : "macOS",
+              "value" : {
+                "scale" : 3.2,
+                "translation-in-points" : [
+                  0,
+                  0
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.5
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "squares" : [
+      "macOS"
+    ]
+  }
+}
