@@ -211,6 +211,22 @@ static id ParseStringOrJSON(NSString *value)
             [NSDocumentController.sharedDocumentController noteNewRecentDocumentURL:associatedFileURL];
         }
     }
+    else
+    {
+        CFBundleRef localizationBundle = NULL;
+        if(currCommand.localizationTableName != NULL)//client wants to be localized
+        {
+            localizationBundle = self->mPlugin->GetCurrentCommandExternBundle();
+            if(localizationBundle == NULL)
+                localizationBundle = CFBundleGetMainBundle();
+        }
+
+        CFObj<CFStringRef> dynamicCommandName( self->mPlugin->CreateDynamicCommandName(currCommand,
+                                                                                  *mCommandRuntimeData,
+                                                                                  currCommand.localizationTableName,
+                                                                                  localizationBundle) );
+        [window setTitle:(__bridge NSString *)(CFStringRef)dynamicCommandName];
+    }
 
     // TODO: do not set the handler for each window. this needs to be done once only
     // Global default handler — routes by windowUUID to the right controller instance
