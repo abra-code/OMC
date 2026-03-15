@@ -106,7 +106,6 @@
 		13E42FB307B3F0F600E4EEF1 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = /System/Library/Frameworks/CoreData.framework; sourceTree = "<absolute>"; };
 		1D039D762E167EC300D4924A /* OMCApplet-target.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "OMCApplet-target.xcconfig"; sourceTree = "<group>"; };
 		1D039DB62E168DAF00D4924A /* Abracode.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Abracode.xcodeproj; path = ../AbracodeFramework/Abracode.xcodeproj; sourceTree = SOURCE_ROOT; };
-		1D3BB170229D0B8400542933 /* de */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = de; path = de.lproj/MainMenu.nib; sourceTree = "<group>"; };
 		1D4971A82575A67700F7131C /* OmcProjectRelease.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectRelease.xcconfig; path = ../Common/OmcProjectRelease.xcconfig; sourceTree = "<group>"; };
 		1D4971A92575A67700F7131C /* OmcProjectDebug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectDebug.xcconfig; path = ../Common/OmcProjectDebug.xcconfig; sourceTree = "<group>"; };
 		1D7618BE231CEE28005F4AEB /* OMCApplet.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = OMCApplet.entitlements; sourceTree = "<group>"; };
@@ -516,7 +515,6 @@
 		1D3BB16C229D0B6600542933 /* MainMenu.nib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				1D3BB170229D0B8400542933 /* de */,
 				1D94D4A4229D2D0C009938BB /* Base */,
 			);
 			name = MainMenu.nib;

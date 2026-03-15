@@ -509,5 +509,10 @@
                 <userDefinedRuntimeAttribute type="string" keyPath="commandFilePath" value="Command.plist"/>
             </userDefinedRuntimeAttributes>
         </customObject>
+        <customObject id="UJM-UQ-3YR" customClass="OMCMainMenuController">
+            <userDefinedRuntimeAttributes>
+                <userDefinedRuntimeAttribute type="string" keyPath="commandFilePath" value="Command.plist"/>
+            </userDefinedRuntimeAttributes>
+        </customObject>
     </objects>
 </document>
