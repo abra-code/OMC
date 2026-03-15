@@ -90,6 +90,12 @@ static id ParseStringOrJSON(NSString *value)
 	params.GetValue( CFSTR("IS_BLOCKING"), isBlocking );
 	mIsModal = isBlocking;
 
+    CFObj<CFStringRef> windowTitle;
+    params.CopyValue( CFSTR("WINDOW_TITLE"), windowTitle );
+
+    CFStringRef windowType = nullptr;
+    params.GetValue( CFSTR("WINDOW_TYPE"), windowType );
+
 	//now we need to find out where our json is
 
 	NSURL *jsonURL = NULL;
@@ -170,16 +176,54 @@ static id ParseStringOrJSON(NSString *value)
         return self;
     }
     
-    NSWindow *window = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, 480, 320)
-                                                   styleMask:NSWindowStyleMaskTitled |
-                                                             NSWindowStyleMaskClosable |
-                                                             NSWindowStyleMaskResizable
-                                                     backing:NSBackingStoreBuffered
-                                                       defer:NO];
-    
+    // Determine window style and class based on WINDOW_TYPE
+    NSWindowStyleMask styleMask = NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskResizable;
+    BOOL usePanel = NO;
+    NSWindowLevel windowLevel = NSNormalWindowLevel;
+
+    if(windowType != nullptr)
+    {
+        if( kCFCompareEqualTo == ::CFStringCompare( windowType, CFSTR("floating"), 0 ) )
+        {
+            styleMask |= NSWindowStyleMaskUtilityWindow;
+            usePanel = YES;
+            windowLevel = NSFloatingWindowLevel;
+        }
+        else if( kCFCompareEqualTo == ::CFStringCompare( windowType, CFSTR("global_floating"), 0 ) )
+        {
+            styleMask |= NSWindowStyleMaskUtilityWindow;
+            usePanel = YES;
+            windowLevel = kCGUtilityWindowLevel;
+        }
+        // "regular" is the default, no changes needed
+    }
+
+    NSWindow *window;
+    if(usePanel)
+    {
+        NSPanel *panel = [[NSPanel alloc] initWithContentRect:NSMakeRect(0, 0, 480, 320)
+                                                    styleMask:styleMask
+                                                      backing:NSBackingStoreBuffered
+                                                        defer:NO];
+        [panel setFloatingPanel:YES];
+        if(windowLevel == kCGUtilityWindowLevel)
+            [panel setHidesOnDeactivate:NO];
+        window = panel;
+    }
+    else
+    {
+        window = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, 480, 320)
+                                             styleMask:styleMask
+                                               backing:NSBackingStoreBuffered
+                                                 defer:NO];
+    }
+
+    if(windowLevel != NSNormalWindowLevel)
+        [window setLevel:windowLevel];
+
     [window setReleasedWhenClosed:NO];
     [window setContentView:self.hostingController.view];
-    
+
     // Autosave name: if a saved frame exists it overrides the fitting size above.
     NSString *autosaveName = [NSString stringWithFormat:@"OMC.%@", dialogJsonName];
     [window setFrameAutosaveName:autosaveName];
@@ -197,35 +241,42 @@ static id ParseStringOrJSON(NSString *value)
 
     [window setDelegate:self];
     self.window = window;
-    
-    // Associated file (same as nib controller)
-    OneObjProperties *associatedObj = mCommandRuntimeData->GetAssociatedObject();
-    if(associatedObj != nullptr)
+
+    // Set window title: WINDOW_TITLE param > associated file > dynamic command name
+    if(windowTitle != nullptr)
     {
-        CFURLRef fileURL = associatedObj->url.Get();
-        if(fileURL != NULL)
-        {
-            NSURL *associatedFileURL = (__bridge NSURL *)fileURL;
-            window.representedURL = associatedFileURL;
-            [window setTitleWithRepresentedFilename:associatedFileURL.path];
-            [NSDocumentController.sharedDocumentController noteNewRecentDocumentURL:associatedFileURL];
-        }
+        [window setTitle:(__bridge NSString *)(CFStringRef)windowTitle];
     }
     else
     {
-        CFBundleRef localizationBundle = NULL;
-        if(currCommand.localizationTableName != NULL)//client wants to be localized
+        OneObjProperties *associatedObj = mCommandRuntimeData->GetAssociatedObject();
+        if(associatedObj != nullptr)
         {
-            localizationBundle = self->mPlugin->GetCurrentCommandExternBundle();
-            if(localizationBundle == NULL)
-                localizationBundle = CFBundleGetMainBundle();
+            CFURLRef fileURL = associatedObj->url.Get();
+            if(fileURL != NULL)
+            {
+                NSURL *associatedFileURL = (__bridge NSURL *)fileURL;
+                window.representedURL = associatedFileURL;
+                [window setTitleWithRepresentedFilename:associatedFileURL.path];
+                [NSDocumentController.sharedDocumentController noteNewRecentDocumentURL:associatedFileURL];
+            }
         }
+        else
+        {
+            CFBundleRef localizationBundle = NULL;
+            if(currCommand.localizationTableName != NULL)//client wants to be localized
+            {
+                localizationBundle = self->mPlugin->GetCurrentCommandExternBundle();
+                if(localizationBundle == NULL)
+                    localizationBundle = CFBundleGetMainBundle();
+            }
 
-        CFObj<CFStringRef> dynamicCommandName( self->mPlugin->CreateDynamicCommandName(currCommand,
-                                                                                  *mCommandRuntimeData,
-                                                                                  currCommand.localizationTableName,
-                                                                                  localizationBundle) );
-        [window setTitle:(__bridge NSString *)(CFStringRef)dynamicCommandName];
+            CFObj<CFStringRef> dynamicCommandName( self->mPlugin->CreateDynamicCommandName(currCommand,
+                                                                                      *mCommandRuntimeData,
+                                                                                      currCommand.localizationTableName,
+                                                                                      localizationBundle) );
+            [window setTitle:(__bridge NSString *)(CFStringRef)dynamicCommandName];
+        }
     }
 
     // TODO: do not set the handler for each window. this needs to be done once only

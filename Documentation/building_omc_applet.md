@@ -365,6 +365,73 @@ Example: TextField with tag=4 → value available as `$OMC_NIB_DIALOG_CONTROL_4_
 
 ---
 
+## Step 5b: Alternative — ActionUI JSON Dialogs (OMC 5.0+)
+
+Instead of NIBs, you can define windows using **ActionUI** — a declarative JSON format for SwiftUI-based views. Requires macOS 14.6+.
+
+### Connect JSON to Command
+
+```xml
+<dict>
+    <key>NAME</key>
+    <string>MyApp</string>
+    <key>COMMAND_ID</key>
+    <string>myapp.show.window</string>
+    <key>EXECUTION_MODE</key>
+    <string>exe_script_file</string>
+    <key>ACTIONUI_WINDOW</key>
+    <dict>
+        <key>JSON_NAME</key>
+        <string>MyDialog</string>
+        <key>IS_BLOCKING</key>
+        <false/>
+        <key>INIT_SUBCOMMAND_ID</key>
+        <string>myapp.window.init</string>
+        <key>END_CANCEL_SUBCOMMAND_ID</key>
+        <string>myapp.window.close</string>
+        <key>WINDOW_TITLE</key>
+        <string>My Dialog</string>
+        <key>WINDOW_TYPE</key>
+        <string>floating</string>
+    </dict>
+</dict>
+```
+
+### ACTIONUI_WINDOW Keys
+
+| Key | Description |
+|-----|-------------|
+| `JSON_NAME` | JSON filename without extension (in Resources) |
+| `IS_BLOCKING` | `true`=modal, `false`=non-modal |
+| `INIT_SUBCOMMAND_ID` | Command on window open |
+| `END_OK_SUBCOMMAND_ID` | Command on OK button |
+| `END_CANCEL_SUBCOMMAND_ID` | Command on Cancel/close |
+| `WINDOW_TITLE` | Static window title (overrides default) |
+| `WINDOW_TYPE` | `floating` (utility panel) or `global_floating` (always-on-top utility panel) |
+
+### Communicating with ActionUI
+
+```bash
+dialog_tool="$OMC_OMC_SUPPORT_PATH/omc_dialog_control"
+window_uuid="$OMC_ACTIONUI_WINDOW_UUID"
+
+# Set a value on view with id 1
+"${dialog_tool}" "${window_uuid}" "1" "Hello"
+
+# Set a property
+"${dialog_tool}" "${window_uuid}" "1" omc_set_property "disabled" true
+
+# Set window title dynamically
+"${dialog_tool}" "${window_uuid}" omc_window "New Title"
+
+# Close the window
+"${dialog_tool}" "${window_uuid}" omc_window omc_terminate_cancel
+```
+
+> See [Command Reference — ACTIONUI_WINDOW](omc_command_reference.md#61-actionui_window--actionui-json-dialogs-omc-50-or-higher) for full details.
+
+---
+
 ## Step 6: Communicate with UI
 
 ### omc_dialog_control Tool
@@ -394,6 +461,9 @@ echo -e "row1\tdata1\tdata2" | "${dialog_tool}" "${dlg_guid}" "1" "omc_table_add
 # Enable/disable control
 "${dialog_tool}" "${dlg_guid}" "5" "omc_enable"
 "${dialog_tool}" "${dlg_guid}" "5" "omc_disable"
+
+# Set window title
+"${dialog_tool}" "${dlg_guid}" "omc_window" "My Window Title"
 
 # Close dialog
 "${dialog_tool}" "${dlg_guid}" "omc_window" "omc_terminate_ok"

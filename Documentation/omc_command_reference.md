@@ -337,11 +337,16 @@ omc_dialog_control "${OMC_NIB_DLG_GUID}" 101 add_rows "$(cat /tmp/table_data)"
 | Key | Type | Required | Description & Best Practices |
 |-----|------|----------|------------------------------|
 | `JSON_NAME` | String | Yes | Name of the `json` file **without extension** in app bundle resources. Case-sensitive. |
-| `IS_BLOCKING` | Boolean | No (default: `true`) | If `<false/>`, dialog is non-modal | `INIT_SUBCOMMAND_ID` | String | No | `COMMAND_ID` to run **before** dialog appears (e.g., populate values). |
+| `IS_BLOCKING` | Boolean | No (default: `true`) | If `<false/>`, dialog is non-modal. |
+| `INIT_SUBCOMMAND_ID` | String | No | `COMMAND_ID` to run **before** dialog appears (e.g., populate values). |
 | `END_OK_SUBCOMMAND_ID` | String | No | `COMMAND_ID` to run on **OK / Confirm** button (actionID matching button's actionID). |
 | `END_CANCEL_SUBCOMMAND_ID` | String | No | `COMMAND_ID` to run on **Cancel** (actionID matching button's actionID). |
+| `WINDOW_TITLE` | String | No | Static window title. Overrides the default title derived from the associated file or command name. |
+| `WINDOW_TYPE` | String | No | Window type: `floating` (utility panel, stays above normal windows), `global_floating` (utility panel, stays above all windows including from other apps). Default is a regular window. |
 
 > **Note**: Unlike `NIB_DIALOG` which uses commandIDs for controls, `ACTIONUI_WINDOW` uses **actionIDs** defined in the JSON. Buttons in the JSON should have an `actionID` property that matches the `COMMAND_ID` of the handler you want to execute.
+>
+> **Window types**: `floating` and `global_floating` create an `NSPanel` with the utility window appearance (small title bar). `floating` uses `NSFloatingWindowLevel` and hides when the app is deactivated. `global_floating` uses `kCGUtilityWindowLevel` and remains visible even when the app is not active. These match the behavior of `OUTPUT_WINDOW_SETTINGS` window types.
 
 ---
 
@@ -406,6 +411,10 @@ omc_dialog_control "${OMC_NIB_DLG_GUID}" 101 add_rows "$(cat /tmp/table_data)"
     <string>SettingsDialog</string>
     <key>INIT_SUBCOMMAND_ID</key>
     <string>init_settings</string>
+    <key>WINDOW_TITLE</key>
+    <string>Settings</string>
+    <key>WINDOW_TYPE</key>
+    <string>floating</string>
   </dict>
 </dict>
 
@@ -505,6 +514,12 @@ omc_dialog_control "$OMC_ACTIONUI_WINDOW_UUID" 1 omc_set_property "foregroundSty
 
 # Set a view state (for views with observable state)
 omc_dialog_control "$OMC_ACTIONUI_WINDOW_UUID" 2 omc_set_state "isLoading" true
+
+# Set window title dynamically
+omc_dialog_control "$OMC_ACTIONUI_WINDOW_UUID" omc_window "My Window Title"
+
+# Close the window
+omc_dialog_control "$OMC_ACTIONUI_WINDOW_UUID" omc_window omc_terminate_cancel
 ```
 
 ---
