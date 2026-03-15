@@ -11,14 +11,22 @@
 		<dict>
 			<key>CFBundleTypeExtensions</key>
 			<array>
-				<string>*</string>
+				<string>app</string>
+				<string>omc</string>
+				<string>droplet</string>
+				<string>applet</string>
 			</array>
-			<key>CFBundleTypeOSTypes</key>
-			<array>
-				<string>****</string>
-			</array>
+			<key>CFBundleTypeName</key>
+			<string>Bundle</string>
 			<key>CFBundleTypeRole</key>
 			<string>Viewer</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>com.apple.bundle</string>
+				<string>com.apple.package</string>
+			</array>
+			<key>LSTypeIsPackage</key>
+			<integer>1</integer>
 		</dict>
 	</array>
 	<key>CFBundleExecutable</key>

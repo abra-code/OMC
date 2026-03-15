@@ -1,0 +1,167 @@
+{
+  "type": "ScrollView",
+  "properties": {
+    "axis": "vertical",
+    "padding": "default"
+  },
+  "content": {
+    "type": "VStack",
+    "properties": {
+      "spacing": 16,
+      "alignment": "leading",
+      "frame": {
+        "maxWidth": 560
+      }
+    },
+    "children": [
+      {
+        "type": "HStack",
+        "properties": {
+          "spacing": 12,
+          "alignment": "center"
+        },
+        "children": [
+          {
+            "type": "Image",
+            "id": 307,
+            "properties": {
+              "scaleMode": "fit",
+              "frame": { "width": 64, "height": 64 }
+            }
+          },
+          {
+            "type": "Text",
+            "id": 308,
+            "properties": {
+              "text": "",
+              "font": "title"
+            }
+          }
+        ]
+      },
+      {
+        "type": "Form",
+        "children": [
+          {
+            "type": "Section",
+            "properties": {
+            },
+            "children": [
+              {
+                "type": "HStack",
+                "properties": { "spacing": 8 },
+                "children": [
+                  {
+                    "type": "Text",
+                    "properties": {
+                      "text": "Name",
+                      "frame": { "width": 110, "alignment": "trailing" }
+                    }
+                  },
+                  {
+                    "type": "TextField",
+                    "id": 302,
+                    "properties": {
+                      "prompt": "AppName",
+                      "actionID": "AppletBuilder.general.name.changed"
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "HStack",
+                "properties": { "spacing": 8 },
+                "children": [
+                  {
+                    "type": "Text",
+                    "properties": {
+                      "text": "Bundle ID",
+                      "frame": { "width": 110, "alignment": "trailing" }
+                    }
+                  },
+                  {
+                    "type": "TextField",
+                    "id": 303,
+                    "properties": {
+                      "prompt": "com.omc.applet.myapp"
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "HStack",
+                "properties": { "spacing": 8 },
+                "children": [
+                  {
+                    "type": "Text",
+                    "properties": {
+                      "text": "Version",
+                      "frame": { "width": 110, "alignment": "trailing" }
+                    }
+                  },
+                  {
+                    "type": "TextField",
+                    "id": 305,
+                    "properties": {
+                      "prompt": "1.0.0",
+                      "frame": { "width": 100 }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "Section",
+            "properties": {
+            },
+            "children": [
+              {
+                "type": "HStack",
+                "properties": { "spacing": 8 },
+                "children": [
+                  {
+                    "type": "Button",
+                    "properties": {
+                      "title": "Change Icon\u2026",
+                      "buttonStyle": "bordered",
+                      "actionID": "AppletBuilder.general.browse.icon"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "HStack",
+        "properties": {
+          "spacing": 12
+        },
+        "children": [
+          {
+            "type": "Text",
+            "id": 320,
+            "properties": {
+              "text": "",
+              "font": "caption",
+              "foregroundStyle": "secondary"
+            }
+          },
+          {
+            "type": "Spacer"
+          },
+          {
+            "type": "Button",
+            "properties": {
+              "title": "Apply Changes",
+              "buttonStyle": "borderedProminent",
+              "actionID": "AppletBuilder.general.save"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

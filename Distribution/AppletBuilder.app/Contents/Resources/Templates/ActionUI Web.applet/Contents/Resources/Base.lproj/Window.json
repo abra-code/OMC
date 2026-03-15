@@ -1,0 +1,15 @@
+{
+  "type": "WebView",
+  "id": 1,
+  "properties": {
+    "url": "https://www.example.com",
+    "backForwardNavigationGestures": true,
+    "magnificationGestures": true,
+    "frame": {
+      "minWidth": 400.0,
+      "minHeight": 300.0,
+      "idealWidth": 800.0,
+      "idealHeight": 600.0
+    }
+  }
+}

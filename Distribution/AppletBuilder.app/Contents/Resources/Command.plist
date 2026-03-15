@@ -4,18 +4,293 @@
 <dict>
 	<key>COMMAND_LIST</key>
 	<array>
+
+		<!-- ════════════════════════════════════════════════════════
+		     Main command: detect context and dispatch
+		     ════════════════════════════════════════════════════════ -->
 		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>ACTIVATION_MODE</key>
+			<string>act_always</string>
 			<key>EXECUTION_MODE</key>
 			<string>exe_script_file</string>
-			<key>END_NOTIFICATION</key>
-			<dict/>
-			<key>NAME</key>
-			<string>Welcome</string>
-			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
-			<string>14.6</string>
 			<key>REQUIRED_OMC_VERSION</key>
 			<string>5.0</string>
+			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
+			<string>14.6</string>
 		</dict>
+
+		<!-- ════════════════════════════════════════════════════════
+		     Open Applet (from menu)
+		     ════════════════════════════════════════════════════════ -->
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.open</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+			<key>CHOOSE_OBJECT_DIALOG</key>
+			<dict>
+				<key>MESSAGE</key>
+				<string>Select an applet (.app) to open</string>
+				<key>BUTTON_PROMPT</key>
+				<string>Open</string>
+				<key>USE_PATH_CACHING</key>
+				<true/>
+			</dict>
+		</dict>
+
+		<!-- ════════════════════════════════════════════════════════
+		     New Applet dialog
+		     ════════════════════════════════════════════════════════ -->
+
+		<!-- Opens the New Applet dialog window -->
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.new.applet</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+			<key>ACTIONUI_WINDOW</key>
+			<dict>
+				<key>JSON_NAME</key>
+				<string>NewApplet</string>
+				<key>INIT_SUBCOMMAND_ID</key>
+				<string>AppletBuilder.new.init</string>
+				<key>END_CANCEL_SUBCOMMAND_ID</key>
+				<string>AppletBuilder.new.cancel</string>
+				<key>IS_BLOCKING</key>
+				<false/>
+			</dict>
+		</dict>
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.new.init</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.new.cancel</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.new.template.changed</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.new.name.changed</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.new.bundleid.changed</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.new.icon.changed</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.new.python.changed</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.new.browse.template</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+			<key>CHOOSE_OBJECT_DIALOG</key>
+			<dict>
+				<key>MESSAGE</key>
+				<string>Select a template applet (.app)</string>
+				<key>ALLOW_MULTIPLE_ITEMS</key>
+				<false/>
+			</dict>
+		</dict>
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.new.browse.icon</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+			<key>CHOOSE_OBJECT_DIALOG</key>
+			<dict>
+				<key>MESSAGE</key>
+				<string>Select an .icon file</string>
+				<key>ALLOW_MULTIPLE_ITEMS</key>
+				<false/>
+			</dict>
+		</dict>
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.new.create</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+			<key>CHOOSE_FOLDER_DIALOG</key>
+			<dict>
+				<key>MESSAGE</key>
+				<string>Select destination folder for the new applet</string>
+				<key>BUTTON_PROMPT</key>
+				<string>Create Here</string>
+			</dict>
+		</dict>
+
+		<!-- ════════════════════════════════════════════════════════
+		     Project window (editing an existing applet)
+		     ════════════════════════════════════════════════════════ -->
+
+		<!-- Opens the project editor window -->
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.project</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+			<key>ACTIONUI_WINDOW</key>
+			<dict>
+				<key>JSON_NAME</key>
+				<string>AppletBuilder</string>
+				<key>INIT_SUBCOMMAND_ID</key>
+				<string>AppletBuilder.project.init</string>
+				<key>END_CANCEL_SUBCOMMAND_ID</key>
+				<string>AppletBuilder.project.cancel</string>
+				<key>IS_BLOCKING</key>
+				<false/>
+			</dict>
+		</dict>
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.project.init</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.project.cancel</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.general.loaded</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.general.browse.icon</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+			<key>CHOOSE_OBJECT_DIALOG</key>
+			<dict>
+				<key>MESSAGE</key>
+				<string>Select an .icon file</string>
+				<key>ALLOW_MULTIPLE_ITEMS</key>
+				<false/>
+			</dict>
+		</dict>
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.general.name.changed</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.general.save</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.build</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.run</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.reveal</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
 	</array>
 	<key>VERSION</key>
 	<integer>2</integer>

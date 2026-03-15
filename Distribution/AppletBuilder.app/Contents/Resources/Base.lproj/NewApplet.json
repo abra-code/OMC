@@ -1,0 +1,161 @@
+{
+  "type": "VStack",
+  "properties": {
+    "spacing": 16,
+    "alignment": "leading",
+    "padding": "default",
+    "frame": {
+      "width": 500
+    }
+  },
+  "children": [
+    {
+      "type": "HStack",
+      "properties": {
+        "spacing": 12,
+        "alignment": "center",
+        "padding": { "leading": 8 }
+      },
+      "children": [
+        {
+          "type": "Image",
+          "id": 211,
+          "properties": {
+            "scaleMode": "fit",
+            "frame": { "width": 64, "height": 64 }
+          }
+        },
+        {
+          "type": "Text",
+          "id": 212,
+          "properties": {
+            "text": "MyApp",
+            "font": "title"
+          }
+        }
+      ]
+    },
+    {
+      "type": "Form",
+      "children": [
+        {
+          "type": "Picker",
+          "id": 201,
+          "properties": {
+            "title": "Template",
+            "options": [
+              {"title": "Empty", "tag": "Empty"}
+            ],
+            "actionID": "AppletBuilder.new.template.changed"
+          }
+        },
+        {
+          "type": "Toggle",
+          "id": 208,
+          "properties": {
+            "title": "Requires Python",
+            "value": false,
+            "actionID": "AppletBuilder.new.python.changed"
+          }
+        },
+        {
+          "type": "HStack",
+          "id": 207,
+          "properties": {
+            "spacing": 8,
+            "hidden": true
+          },
+          "children": [
+            {
+              "type": "Text",
+              "id": 202,
+              "properties": {
+                "text": "",
+                "foregroundStyle": "secondary",
+                "lineLimit": 1
+              }
+            }
+          ]
+        },
+        {
+          "type": "TextField",
+          "id": 203,
+          "properties": {
+            "title": "App Name",
+            "prompt": "MyApp",
+            "actionID": "AppletBuilder.new.name.changed"
+          }
+        },
+        {
+          "type": "TextField",
+          "id": 204,
+          "properties": {
+            "title": "Bundle ID",
+            "prompt": "com.omc.applet.myapp",
+            "actionID": "AppletBuilder.new.bundleid.changed"
+          }
+        },
+        {
+          "type": "Picker",
+          "id": 209,
+          "properties": {
+            "title": "Icon",
+            "options": [
+              {"title": "Default", "tag": "OMCApplet"}
+            ],
+            "actionID": "AppletBuilder.new.icon.changed"
+          }
+        },
+        {
+          "type": "HStack",
+          "id": 210,
+          "properties": {
+            "spacing": 8,
+            "hidden": true
+          },
+          "children": [
+            {
+              "type": "Text",
+              "id": 206,
+              "properties": {
+                "text": "",
+                "foregroundStyle": "secondary",
+                "lineLimit": 1
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "HStack",
+      "properties": {
+        "spacing": 12
+      },
+      "children": [
+        {
+          "type": "Text",
+          "id": 220,
+          "properties": {
+            "text": "",
+            "font": "caption",
+            "foregroundStyle": "red"
+          }
+        },
+        {
+          "type": "Spacer"
+        },
+        {
+          "type": "Button",
+          "id": 221,
+          "properties": {
+            "title": "Create\u2026",
+            "buttonStyle": "borderedProminent",
+            "disabled": true,
+            "actionID": "AppletBuilder.new.create"
+          }
+        }
+      ]
+    }
+  ]
+}

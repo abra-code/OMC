@@ -1,0 +1,24 @@
+{
+  "type": "VStack",
+  "properties": {
+    "spacing": 10.0,
+    "alignment": "center",
+    "frame": {
+      "minWidth": 400.0,
+      "minHeight": 300.0,
+      "idealWidth": 600.0,
+      "idealHeight": 400.0
+    },
+    "padding": "default"
+  },
+  "children": [
+    {
+      "type": "Text",
+      "id": 1,
+      "properties": {
+        "text": "Hello, ActionUI Window!",
+        "font": "title"
+      }
+    }
+  ]
+}

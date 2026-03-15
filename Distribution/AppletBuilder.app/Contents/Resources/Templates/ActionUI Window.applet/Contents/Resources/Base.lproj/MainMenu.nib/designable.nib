@@ -13,10 +13,10 @@
         </customObject>
         <menu title="AMainMenu" systemMenu="main" id="29" userLabel="MainMenu">
             <items>
-                <menuItem title="AppletBuilder" id="56">
-                    <menu key="submenu" title="AppletBuilder" systemMenu="apple" id="57">
+                <menuItem title="ActionUI Window" id="56">
+                    <menu key="submenu" title="ActionUI Window" systemMenu="apple" id="57">
                         <items>
-                            <menuItem title="About AppletBuilder" id="58">
+                            <menuItem title="About ActionUI Window" id="58">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="orderFrontStandardAboutPanel:" target="-2" id="142"/>
@@ -35,7 +35,7 @@
                             <menuItem isSeparatorItem="YES" id="144">
                                 <modifierMask key="keyEquivalentModifierMask" command="YES"/>
                             </menuItem>
-                            <menuItem title="Hide AppletBuilder" keyEquivalent="h" id="134">
+                            <menuItem title="Hide ActionUI Window" keyEquivalent="h" id="134">
                                 <connections>
                                     <action selector="hide:" target="-1" id="367"/>
                                 </connections>
@@ -54,7 +54,7 @@
                             <menuItem isSeparatorItem="YES" id="149">
                                 <modifierMask key="keyEquivalentModifierMask" command="YES"/>
                             </menuItem>
-                            <menuItem title="Quit AppletBuilder" keyEquivalent="q" id="136">
+                            <menuItem title="Quit ActionUI Window" keyEquivalent="q" id="136">
                                 <connections>
                                     <action selector="terminate:" target="-3" id="449"/>
                                 </connections>
@@ -72,7 +72,7 @@
                             </menuItem>
                             <menuItem title="Open…" keyEquivalent="o" id="72" customClass="OMCMenuItem">
                                 <userDefinedRuntimeAttributes>
-                                    <userDefinedRuntimeAttribute type="string" keyPath="commandID" value="AppletBuilder.open"/>
+                                    <userDefinedRuntimeAttribute type="string" keyPath="commandID" value="ActionUI Window.open"/>
                                 </userDefinedRuntimeAttributes>
                             </menuItem>
                             <menuItem title="Open Recent" id="124">
@@ -491,7 +491,7 @@
                 <menuItem title="Help" id="103">
                     <menu key="submenu" title="Help" id="106">
                         <items>
-                            <menuItem title="AppletBuilder Help" keyEquivalent="?" id="111">
+                            <menuItem title="ActionUI Window Help" keyEquivalent="?" id="111">
                                 <connections>
                                     <action selector="showHelp:" target="-1" id="360"/>
                                 </connections>

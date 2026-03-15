@@ -1,0 +1,46 @@
+{
+  "type": "TabView",
+  "id": 10,
+  "properties": {
+    "selection": 0,
+    "style": "sidebarAdaptable",
+    "frame": {
+      "minWidth": 780,
+      "minHeight": 500,
+      "idealWidth": 900,
+      "idealHeight": 620
+    }
+  },
+  "children": [
+    {
+      "type": "Tab",
+      "properties": {
+        "title": "General",
+        "systemImage": "info.circle"
+      },
+      "content": {
+        "type": "LoadableView",
+        "id": 101,
+        "properties": {
+          "name": "General.json",
+          "viewDidLoadActionID": "AppletBuilder.general.loaded"
+        }
+      }
+    },
+    {
+      "type": "Tab",
+      "properties": {
+        "title": "Build & Run",
+        "systemImage": "hammer"
+      },
+      "content": {
+        "type": "LoadableView",
+        "id": 102,
+        "properties": {
+          "name": "BuildRun.json",
+          "viewDidLoadActionID": "AppletBuilder.buildrun.loaded"
+        }
+      }
+    }
+  ]
+}

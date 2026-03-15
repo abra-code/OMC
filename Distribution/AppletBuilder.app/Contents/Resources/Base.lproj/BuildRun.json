@@ -1,0 +1,113 @@
+{
+  "type": "ScrollView",
+  "properties": {
+    "axis": "vertical",
+    "padding": "default"
+  },
+  "content": {
+    "type": "VStack",
+    "properties": {
+        "spacing": 20,
+        "alignment": "leading",
+        "frame": {
+          "maxWidth": 560
+        }
+    },
+    "children": [
+      {
+        "type": "Text",
+        "properties": {
+          "text": "Build & Run",
+          "font": "title"
+        }
+      },
+      {
+        "type": "Text",
+        "properties": {
+          "text": "Build signs the applet with an ad-hoc signature. Run launches it.",
+          "font": "subheadline",
+          "foregroundStyle": "secondary"
+        }
+      },
+      {
+        "type": "GroupBox",
+        "properties": {
+          "title": "Actions"
+        },
+        "children": [
+          {
+            "type": "VStack",
+            "properties": {
+              "spacing": 12,
+              "padding": {
+                "top": 8,
+                "bottom": 8
+              }
+            },
+            "children": [
+              {
+                "type": "HStack",
+                "properties": {
+                  "spacing": 12
+                },
+                "children": [
+                  {
+                    "type": "Button",
+                    "properties": {
+                      "title": "Build",
+                      "systemImage": "hammer",
+                      "buttonStyle": "borderedProminent",
+                      "actionID": "AppletBuilder.build"
+                    }
+                  },
+                  {
+                    "type": "Button",
+                    "properties": {
+                      "title": "Run",
+                      "systemImage": "play.fill",
+                      "buttonStyle": "bordered",
+                      "actionID": "AppletBuilder.run"
+                    }
+                  },
+                  {
+                    "type": "Spacer"
+                  },
+                  {
+                    "type": "Button",
+                    "properties": {
+                      "title": "Reveal in Finder",
+                      "systemImage": "folder",
+                      "buttonStyle": "bordered",
+                      "actionID": "AppletBuilder.reveal"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "GroupBox",
+        "properties": {
+          "title": "Build Log"
+        },
+        "children": [
+          {
+            "type": "TextEditor",
+            "id": 401,
+            "properties": {
+              "text": "",
+              "font": "system(size: 11)",
+              "frame": {
+                "minHeight": 200,
+                "idealHeight": 300
+              },
+              "disabled": true
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
