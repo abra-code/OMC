@@ -106,6 +106,11 @@ save_bundle_id_prefix() {
     "$pasteboard_tool" "$BUNDLE_ID_PREFIX_PB" set "$prefix" 2>/dev/null
 }
 
+set_window_title() {
+    local title="$1"
+    "$dialog_tool" "$window_uuid" omc_window "$title"
+}
+
 set_enabled() {
     local view_id="$1"
     local enabled="$2"

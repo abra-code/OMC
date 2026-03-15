@@ -64,6 +64,8 @@
 				<string>AppletBuilder.new.cancel</string>
 				<key>IS_BLOCKING</key>
 				<false/>
+				<key>WINDOW_TITLE</key>
+				<string>New Applet</string>
 			</dict>
 		</dict>
 

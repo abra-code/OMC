@@ -3,6 +3,8 @@
 
 source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.builder.sh"
 
+# set_window_title "New Applet"
+
 templates_dir="${OMC_APP_BUNDLE_PATH}/Contents/Resources/Templates"
 icons_dir="${OMC_APP_BUNDLE_PATH}/Contents/Resources/Icons"
 
