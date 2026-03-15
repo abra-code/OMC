@@ -589,8 +589,17 @@ GetAllDialogControllers()
 				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
 				if(controlID != NULL)
 				{
-					[self setControlStringValue:(__bridge NSString *)ACFType<CFStringRef>::DynamicCast( valueList[i] )
-									forControlID:(__bridge NSString *)controlID];
+					if( kCFCompareEqualTo == CFStringCompare( controlID, CFSTR("omc_window"), 0) )
+					{
+						CFStringRef titleStr = ACFType<CFStringRef>::DynamicCast( valueList[i] );
+						if(titleStr != NULL)
+							[self.window setTitle:(__bridge NSString *)titleStr];
+					}
+					else
+					{
+						[self setControlStringValue:(__bridge NSString *)ACFType<CFStringRef>::DynamicCast( valueList[i] )
+										forControlID:(__bridge NSString *)controlID];
+					}
 				}
 			}
 		}

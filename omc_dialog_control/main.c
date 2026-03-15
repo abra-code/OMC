@@ -202,6 +202,7 @@ int main (int argc, const char * argv[])
 		fprintf(stdout, "omc_dialog_control __NIB_DLG_GUID__ omc_window omc_resize 600 200\n");
 		fprintf(stdout, "omc_dialog_control __NIB_DLG_GUID__ 2 omc_move 20 20\n");
 		fprintf(stdout, "omc_dialog_control __NIB_DLG_GUID__ 4 omc_scroll 0 0\n");
+		fprintf(stdout, "omc_dialog_control __NIB_DLG_GUID__ omc_window \"My Window Title\"\n");
 		fprintf(stdout, "omc_dialog_control __NIB_DLG_GUID__ omc_window omc_terminate_cancel\n");
 		fprintf(stdout, "omc_dialog_control __NIB_DLG_GUID__ 2 omc_invoke setAlignment: 2\n");
 		fprintf(stdout, "omc_dialog_control __ACTIONUI_WINDOW_UUID__ 1 omc_set_property \"columns\" '[\"Name\",\"Action\"]'\n");

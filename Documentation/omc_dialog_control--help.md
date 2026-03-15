@@ -57,6 +57,7 @@ cat mydata.tsv | omc_dialog_control __NIB_DLG_GUID__ 5 omc_table_add_rows_from_s
 omc_dialog_control __NIB_DLG_GUID__ omc_window omc_resize 600 200
 omc_dialog_control __NIB_DLG_GUID__ 2 omc_move 20 20
 omc_dialog_control __NIB_DLG_GUID__ 4 omc_scroll 0 0
+omc_dialog_control __NIB_DLG_GUID__ omc_window "My Window Title"
 omc_dialog_control __NIB_DLG_GUID__ omc_window omc_terminate_cancel
 omc_dialog_control __NIB_DLG_GUID__ 2 omc_invoke setAlignment: 2
 omc_dialog_control __ACTIONUI_WINDOW_UUID__ 1 omc_set_property "columns" '["Name","Action"]'
