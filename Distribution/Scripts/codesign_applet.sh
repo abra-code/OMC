@@ -29,8 +29,23 @@ fi
 echo "Removing quarantine xattr"
 /usr/bin/xattr -dr 'com.apple.quarantine' "$app_to_sign" 2>/dev/null
 
-entitlements_path="$self_dir/OMCApplet/OMCApplet.entitlements"
-entitlements_path_root="$self_dir/OMCApplet.entitlements"
+app_dir=$(/usr/bin/dirname "$app_to_sign")
+
+# Look for entitlements:
+# 1. OMCApplet.entitlements next to the applet being signed
+# 2. First *.entitlements file next to the applet
+# 3. Default fallback in directory next to this script
+entitlements_file=""
+if [ -f "$app_dir/OMCApplet.entitlements" ]; then
+    entitlements_file="$app_dir/OMCApplet.entitlements"
+else
+    first_ent=$(/bin/ls "$app_dir"/*.entitlements 2>/dev/null | /usr/bin/head -1)
+    if [ -n "$first_ent" ] && [ -f "$first_ent" ]; then
+        entitlements_file="$first_ent"
+    elif [ -f "$self_dir/OMCApplet.entitlements" ]; then
+        entitlements_file="$self_dir/OMCApplet.entitlements"
+    fi
+fi
 
 entitlements=""
 
@@ -41,10 +56,9 @@ if test -z "$identity" || test "$identity" = "-"; then
     timestamp="--timestamp=none"
     sign_options=""
 else
-    if [ -f "${entitlements_path}" ]; then
-        entitlements="--entitlements $entitlements_path"
-    elif [ -f "${entitlements_path_root}" ]; then
-        entitlements="--entitlements $entitlements_path_root"
+    if [ -n "$entitlements_file" ]; then
+        echo "Using entitlements: $entitlements_file"
+        entitlements="--entitlements $entitlements_file"
     fi
 
     # Check if this is an Apple-issued Developer ID certificate
