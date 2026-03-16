@@ -7,12 +7,14 @@
 //
 
 #import <Cocoa/Cocoa.h>
+#import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 #import "OMCFilePanels.h"
 #include "CFObj.h"
 #include "ACFType.h"
+#include "OMCNavigationDialogs.h"
 
 CFURLRef
-CreateCFURLFromSaveAsDialog( CFStringRef inClientName, CFStringRef inMessage, CFStringRef inDefaultName, CFStringRef inDefaultDirPath, CFStringRef inIdentifier, CFStringRef inPrompt, UInt32 inAdditonalFlags )
+CreateCFURLFromSaveAsDialog( CFStringRef inClientName, CFStringRef inMessage, CFStringRef inDefaultName, CFStringRef inDefaultDirPath, CFStringRef inIdentifier, CFStringRef inPrompt, CFArrayRef inAllowedContentTypes, UInt32 inAdditonalFlags )
 {
 	NSURL *outURL = nil;
 
@@ -34,10 +36,23 @@ CreateCFURLFromSaveAsDialog( CFStringRef inClientName, CFStringRef inMessage, CF
             savePanel.identifier = (__bridge NSString *)inIdentifier;
         if(inPrompt != nullptr)
             savePanel.prompt = (__bridge NSString *)inPrompt;
-        
+
         savePanel.showsHiddenFiles = ((inAdditonalFlags & kOMCFilePanelAllowInvisibleItems) != 0);
         savePanel.treatsFilePackagesAsDirectories = YES;
         savePanel.canCreateDirectories = YES;
+
+        if(inAllowedContentTypes != nullptr)
+        {
+            NSMutableArray<UTType *> *types = [NSMutableArray array];
+            for(NSString *utiString in (__bridge NSArray *)inAllowedContentTypes)
+            {
+                UTType *type = [UTType typeWithIdentifier:utiString];
+                if(type != nil)
+                    [types addObject:type];
+            }
+            if([types count] > 0)
+                savePanel.allowedContentTypes = types;
+        }
 
         if(inDefaultDirPath != nullptr)
         {
@@ -64,17 +79,17 @@ CreateCFURLFromSaveAsDialog( CFStringRef inClientName, CFStringRef inMessage, CF
 }
 
 CFArrayRef
-CreateCFURLsFromOpenDialog( CFStringRef inClientName, CFStringRef inMessage, CFStringRef inDefaultName, CFStringRef inDefaultDirPath, CFStringRef inIdentifier, CFStringRef inPrompt, UInt32 inAdditonalFlags)
+CreateCFURLsFromOpenDialog( CFStringRef inClientName, CFStringRef inMessage, CFStringRef inDefaultName, CFStringRef inDefaultDirPath, CFStringRef inIdentifier, CFStringRef inPrompt, CFArrayRef inAllowedContentTypes, UInt32 inAdditonalFlags)
 {
 #pragma unused(inDefaultName) //NSOpenPanel API no longer supports default name
 	NSArray *outURLs = nil;
-	
+
 	@try
 	{
 		NSOpenPanel *openPanel	= [NSOpenPanel openPanel];
 		if(openPanel == NULL)
 			return NULL;
-				
+
 		if(inClientName == NULL)
 			inClientName = CFSTR("OMC");
 
@@ -87,13 +102,26 @@ CreateCFURLsFromOpenDialog( CFStringRef inClientName, CFStringRef inMessage, CFS
             openPanel.identifier = (__bridge NSString *)inIdentifier;
         if(inPrompt != nullptr)
             openPanel.prompt = (__bridge NSString *)inPrompt;
-		
+
 		openPanel.canChooseFiles = ((inAdditonalFlags & kOMCFilePanelCanChooseFiles) != 0);
 		openPanel.canChooseDirectories = ((inAdditonalFlags & kOMCFilePanelCanChooseDirectories) != 0);
         openPanel.allowsMultipleSelection = ((inAdditonalFlags & kOMCFilePanelAllowMultipleItems) != 0);
         openPanel.showsHiddenFiles = ((inAdditonalFlags & kOMCFilePanelAllowInvisibleItems) != 0);
         openPanel.treatsFilePackagesAsDirectories = YES;
         openPanel.canCreateDirectories = YES;
+
+        if(inAllowedContentTypes != nullptr)
+        {
+            NSMutableArray<UTType *> *types = [NSMutableArray array];
+            for(NSString *utiString in (__bridge NSArray *)inAllowedContentTypes)
+            {
+                UTType *type = [UTType typeWithIdentifier:utiString];
+                if(type != nil)
+                    [types addObject:type];
+            }
+            if([types count] > 0)
+                openPanel.allowedContentTypes = types;
+        }
 
         if(inDefaultDirPath != nullptr)
         {
@@ -113,4 +141,12 @@ CreateCFURLsFromOpenDialog( CFStringRef inClientName, CFStringRef inMessage, CFS
 	}
 	
     return (CFArrayRef)CFBridgingRetain(outURLs);
+}
+
+// C-compatible wrapper for GetNavDialogParams (uses pointers instead of C++ references)
+UInt32
+CopyNavDialogParams(CFDictionaryRef inParams, CFStringRef *outMessage, CFArrayRef *outDefaultName, CFArrayRef *outDefaultLocation, CFStringRef *outIdentifier, CFStringRef *outPrompt, CFArrayRef *outAllowedContentTypes)
+{
+    // The C++ version in OMCNavigationDialogs.cp uses references — forward to it
+    return ::GetNavDialogParams(inParams, *outMessage, *outDefaultName, *outDefaultLocation, *outIdentifier, *outPrompt, *outAllowedContentTypes);
 }

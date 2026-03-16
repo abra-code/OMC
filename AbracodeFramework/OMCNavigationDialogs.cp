@@ -17,7 +17,7 @@
 #include "CMUtils.h"
 
 UInt32
-GetNavDialogParams(CFDictionaryRef inParams, CFStringRef &outMessage, CFArrayRef &outDefaultName, CFArrayRef &outDefaultLocation, CFStringRef &outIdentifier, CFStringRef &outPrompt)
+GetNavDialogParams(CFDictionaryRef inParams, CFStringRef &outMessage, CFArrayRef &outDefaultName, CFArrayRef &outDefaultLocation, CFStringRef &outIdentifier, CFStringRef &outPrompt, CFArrayRef &outAllowedContentTypes)
 {
     ACFDict params(inParams);
     params.CopyValue( CFSTR("MESSAGE"), outMessage );
@@ -25,7 +25,8 @@ GetNavDialogParams(CFDictionaryRef inParams, CFStringRef &outMessage, CFArrayRef
     params.CopyValue( CFSTR("DEFAULT_LOCATION"), outDefaultLocation );
     params.CopyValue( CFSTR("DIALOG_IDENTIFIER"), outIdentifier );
     params.CopyValue( CFSTR("BUTTON_PROMPT"), outPrompt );
-    
+    params.CopyValue( CFSTR("ALLOWED_CONTENT_TYPES"), outAllowedContentTypes );
+
     UInt32 outAdditionalNavServiesFlags = 0;
     Boolean boolValue;
     if( params.GetValue(CFSTR("SHOW_INVISIBLE_ITEMS"), boolValue) && boolValue )
@@ -41,7 +42,7 @@ GetNavDialogParams(CFDictionaryRef inParams, CFStringRef &outMessage, CFArrayRef
     {
         outAdditionalNavServiesFlags |= kOMCFilePanelUseCachedPath;
     }
-    
+
     return outAdditionalNavServiesFlags;
 }
 
@@ -59,10 +60,11 @@ PresentSaveAsDialog(OnMyCommandCM *inPlugin,
     CFObj<CFArrayRef> defaultDirPath;
     CFObj<CFStringRef> identifier;
     CFObj<CFStringRef> prompt;
-    UInt32 additionalFlags = GetNavDialogParams(currCommand.saveAsParams, message.GetReference(), defaultFileName.GetReference(), defaultDirPath.GetReference(), identifier.GetReference(), prompt.GetReference());
+    CFObj<CFArrayRef> allowedContentTypes;
+    UInt32 additionalFlags = GetNavDialogParams(currCommand.saveAsParams, message.GetReference(), defaultFileName.GetReference(), defaultDirPath.GetReference(), identifier.GetReference(), prompt.GetReference(), allowedContentTypes.GetReference());
     if(identifier == nullptr)
         identifier.Adopt(currCommand.commandID, kCFObjRetain);
-    
+
     if( ((additionalFlags & kOMCFilePanelUseCachedPath) == 0) || (commandRuntimeData.cachedSaveAsPath == nullptr) )
     {
         TRACE_CSTR("OnMyCommandCM About to display save as dialog\n" );
@@ -70,7 +72,7 @@ PresentSaveAsDialog(OnMyCommandCM *inPlugin,
                                                                                commandRuntimeData,
                                                                                currCommand.localizationTableName,
                                                                                localizationBundle) );
-        
+
         CFObj<CFStringRef> expandedDirStr;
         CFObj<CFMutableStringRef> defaultLocationStr( inPlugin->CreateCombinedStringWithObjects(defaultDirPath,
                                                                                       commandRuntimeData,
@@ -80,12 +82,12 @@ PresentSaveAsDialog(OnMyCommandCM *inPlugin,
         {
             expandedDirStr.Adopt( CreatePathByExpandingTilde( defaultLocationStr ) );
         }
-        
+
         if( (currCommand.localizationTableName != NULL) && (localizationBundle != NULL) && (message != NULL) )
             message.Adopt( ::CFCopyLocalizedStringFromTableInBundle( message, currCommand.localizationTableName, localizationBundle, "") );
 
         StSwitchToFront switcher;
-        contextData.saveAsPath.Adopt(CreateCFURLFromSaveAsDialog( commandName, message, defaultName, expandedDirStr, identifier, prompt, additionalFlags));
+        contextData.saveAsPath.Adopt(CreateCFURLFromSaveAsDialog( commandName, message, defaultName, expandedDirStr, identifier, prompt, allowedContentTypes, additionalFlags));
         if(contextData.saveAsPath == nullptr)
         {
             throw OSStatus(userCanceledErr);
@@ -116,7 +118,8 @@ PresentChooseFileDialog(OnMyCommandCM *inPlugin,
     CFObj<CFArrayRef> defaultDirPath;
     CFObj<CFStringRef> identifier;
     CFObj<CFStringRef> prompt;
-    UInt32 additionalFlags = GetNavDialogParams(currCommand.chooseFileParams, message.GetReference(), defaultFileName.GetReference(), defaultDirPath.GetReference(), identifier.GetReference(), prompt.GetReference());
+    CFObj<CFArrayRef> allowedContentTypes;
+    UInt32 additionalFlags = GetNavDialogParams(currCommand.chooseFileParams, message.GetReference(), defaultFileName.GetReference(), defaultDirPath.GetReference(), identifier.GetReference(), prompt.GetReference(), allowedContentTypes.GetReference());
     if(identifier == nullptr)
         identifier.Adopt(currCommand.commandID, kCFObjRetain);
 
@@ -127,7 +130,7 @@ PresentChooseFileDialog(OnMyCommandCM *inPlugin,
                                                                                commandRuntimeData,
                                                                                currCommand.localizationTableName,
                                                                                localizationBundle) );
-        
+
         CFObj<CFStringRef> expandedDirStr;
         CFObj<CFMutableStringRef> defaultLocationStr( inPlugin->CreateCombinedStringWithObjects(defaultDirPath,
                                                                                       commandRuntimeData,
@@ -144,7 +147,7 @@ PresentChooseFileDialog(OnMyCommandCM *inPlugin,
         }
 
         StSwitchToFront switcher;
-        contextData.chooseFilePaths.Adopt(CreateCFURLsFromOpenDialog(commandName, message, defaultName, defaultLocationStr, identifier, prompt, additionalFlags | kOMCFilePanelCanChooseFiles));
+        contextData.chooseFilePaths.Adopt(CreateCFURLsFromOpenDialog(commandName, message, defaultName, defaultLocationStr, identifier, prompt, allowedContentTypes, additionalFlags | kOMCFilePanelCanChooseFiles));
         if(contextData.chooseFilePaths == NULL || CFArrayGetCount(contextData.chooseFilePaths) == 0)
         {
             throw OSStatus(userCanceledErr);
@@ -186,10 +189,11 @@ PresentChooseFolderDialog(OnMyCommandCM *inPlugin,
     CFObj<CFArrayRef> defaultDirPath;
     CFObj<CFStringRef> identifier;
     CFObj<CFStringRef> prompt;
-    UInt32 additionalFlags = GetNavDialogParams(currCommand.chooseFolderParams, message.GetReference(), defaultFileName.GetReference(), defaultDirPath.GetReference(), identifier.GetReference(), prompt.GetReference());
+    CFObj<CFArrayRef> allowedContentTypes;
+    UInt32 additionalFlags = GetNavDialogParams(currCommand.chooseFolderParams, message.GetReference(), defaultFileName.GetReference(), defaultDirPath.GetReference(), identifier.GetReference(), prompt.GetReference(), allowedContentTypes.GetReference());
     if(identifier == nullptr)
         identifier.Adopt(currCommand.commandID, kCFObjRetain);
-    
+
     if( ((additionalFlags & kOMCFilePanelUseCachedPath) == 0) || (commandRuntimeData.cachedChooseFolderPaths == nullptr) )
     {
         TRACE_CSTR("OnMyCommandCM About to display choose folder dialog\n" );
@@ -197,7 +201,7 @@ PresentChooseFolderDialog(OnMyCommandCM *inPlugin,
                                                                                commandRuntimeData,
                                                                                currCommand.localizationTableName,
                                                                                localizationBundle) );
-        
+
         CFObj<CFStringRef> expandedDirStr;
         CFObj<CFMutableStringRef> defaultLocationStr( inPlugin->CreateCombinedStringWithObjects(defaultDirPath,
                                                                                       commandRuntimeData,
@@ -207,14 +211,14 @@ PresentChooseFolderDialog(OnMyCommandCM *inPlugin,
         {
             expandedDirStr.Adopt( CreatePathByExpandingTilde( defaultLocationStr ) );
         }
-        
+
         if( (currCommand.localizationTableName != NULL) && (localizationBundle != NULL) && (message != NULL) )
         {
             message.Adopt( ::CFCopyLocalizedStringFromTableInBundle( message, currCommand.localizationTableName, localizationBundle, "") );
         }
 
         StSwitchToFront switcher;
-        contextData.chooseFolderPaths.Adopt(CreateCFURLsFromOpenDialog( commandName, message, defaultName, defaultLocationStr, identifier, prompt, additionalFlags | kOMCFilePanelCanChooseDirectories));
+        contextData.chooseFolderPaths.Adopt(CreateCFURLsFromOpenDialog( commandName, message, defaultName, defaultLocationStr, identifier, prompt, allowedContentTypes, additionalFlags | kOMCFilePanelCanChooseDirectories));
         if(contextData.chooseFolderPaths == NULL || CFArrayGetCount(contextData.chooseFolderPaths) == 0)
         {
             throw OSStatus(userCanceledErr);
@@ -256,10 +260,11 @@ PresentChooseObjectDialog(OnMyCommandCM *inPlugin,
     CFObj<CFArrayRef> defaultDirPath;
     CFObj<CFStringRef> identifier;
     CFObj<CFStringRef> prompt;
-    UInt32 additionalFlags = GetNavDialogParams(currCommand.chooseObjectParams, message.GetReference(), defaultFileName.GetReference(), defaultDirPath.GetReference(), identifier.GetReference(), prompt.GetReference());
+    CFObj<CFArrayRef> allowedContentTypes;
+    UInt32 additionalFlags = GetNavDialogParams(currCommand.chooseObjectParams, message.GetReference(), defaultFileName.GetReference(), defaultDirPath.GetReference(), identifier.GetReference(), prompt.GetReference(), allowedContentTypes.GetReference());
     if(identifier == nullptr)
         identifier.Adopt(currCommand.commandID, kCFObjRetain);
-    
+
     if( ((additionalFlags & kOMCFilePanelUseCachedPath) == 0) || (commandRuntimeData.cachedChooseObjectPaths == nullptr) )
     {
         TRACE_CSTR("OnMyCommandCM About to display choose object dialog\n" );
@@ -267,7 +272,7 @@ PresentChooseObjectDialog(OnMyCommandCM *inPlugin,
                                                                                commandRuntimeData,
                                                                                currCommand.localizationTableName,
                                                                                localizationBundle) );
-        
+
         CFObj<CFStringRef> expandedDirStr;
         CFObj<CFMutableStringRef> defaultLocationStr( inPlugin->CreateCombinedStringWithObjects(defaultDirPath,
                                                                                       commandRuntimeData,
@@ -277,12 +282,12 @@ PresentChooseObjectDialog(OnMyCommandCM *inPlugin,
         {
             expandedDirStr.Adopt( CreatePathByExpandingTilde( defaultLocationStr ) );
         }
-        
+
         if( (currCommand.localizationTableName != NULL) && (localizationBundle != NULL) && (message != NULL) )
             message.Adopt( ::CFCopyLocalizedStringFromTableInBundle( message, currCommand.localizationTableName, localizationBundle, "") );
 
         StSwitchToFront switcher;
-        contextData.chooseObjectPaths.Adopt(CreateCFURLsFromOpenDialog( commandName, message, defaultName, defaultLocationStr, identifier, prompt, additionalFlags | kOMCFilePanelCanChooseFiles | kOMCFilePanelCanChooseDirectories));
+        contextData.chooseObjectPaths.Adopt(CreateCFURLsFromOpenDialog( commandName, message, defaultName, defaultLocationStr, identifier, prompt, allowedContentTypes, additionalFlags | kOMCFilePanelCanChooseFiles | kOMCFilePanelCanChooseDirectories));
         if(contextData.chooseObjectPaths == NULL || CFArrayGetCount(contextData.chooseObjectPaths) == 0)
         {
             throw OSStatus(userCanceledErr);

@@ -730,6 +730,9 @@ GetOneCommandParams(CommandDescription &outDesc, CFDictionaryRef inOneCommand, C
 //choose object dialog
     oneCmd.CopyValue(CFSTR("CHOOSE_OBJECT_DIALOG"), outDesc.chooseObjectParams);
 
+//open object dialog (customizes the open dialog shown when main command requires file context but none was provided)
+    oneCmd.CopyValue(CFSTR("OPEN_OBJECT_DIALOG"), outDesc.openObjectParams);
+
 //output window settings
     oneCmd.CopyValue(CFSTR("OUTPUT_WINDOW_SETTINGS"), outDesc.outputWindowOptions);
 

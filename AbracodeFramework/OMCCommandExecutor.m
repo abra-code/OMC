@@ -104,36 +104,78 @@ bool IsFileOrFolderActivation(UInt32 activationType)
             
 			if (requiresNavDialog && clientAllowsNavDialog) // all good to go with nav dialog
 			{
-                CFStringRef theMessage = CFCopyLocalizedStringFromTable(CFSTR("Choose Objects To Process"), CFSTR("Localizable"), "");
-                
                 NSBundle *appBundle = [NSBundle mainBundle];
                 NSString *appName = [appBundle objectForInfoDictionaryKey:@"CFBundleName"];
                 if(appName == NULL)
                     appName = @"OMCApplet";
-                
+
+                // Check if the command has OPEN_OBJECT_DIALOG customization
+                CFDictionaryRef openDialogParams = NULL;
+                OMCGetCommandInfo(omcExec, commandRef, kOmcInfo_OpenObjectDialogParams, &openDialogParams);
+
+                CFStringRef dialogMessage = NULL;
+                CFArrayRef dialogDefaultName = NULL;
+                CFArrayRef dialogDefaultLocation = NULL;
+                CFStringRef dialogIdentifier = NULL;
+                CFStringRef dialogPrompt = NULL;
+                CFArrayRef dialogAllowedContentTypes = NULL;
+                UInt32 dialogFlags = 0;
+
+                if (openDialogParams != NULL)
+                {
+                    dialogFlags = CopyNavDialogParams(openDialogParams, &dialogMessage, &dialogDefaultName, &dialogDefaultLocation, &dialogIdentifier, &dialogPrompt, &dialogAllowedContentTypes);
+                    dialogFlags &= ~kOMCFilePanelUseCachedPath; // not applicable to the startup open dialog
+                }
+
+                // Use first element of DEFAULT_LOCATION array as default directory path
+                CFStringRef dialogDefaultDir = NULL;
+                if (dialogDefaultLocation != NULL && CFArrayGetCount(dialogDefaultLocation) > 0)
+                    dialogDefaultDir = (CFStringRef)CFArrayGetValueAtIndex(dialogDefaultLocation, 0);
+
+                if (dialogMessage == NULL)
+                {
+                    dialogMessage = CFCopyLocalizedStringFromTable(CFSTR("Choose Objects To Process"), CFSTR("Localizable"), "");
+                }
+
+                // If OPEN_OBJECT_DIALOG didn't set ALLOW_MULTIPLE_ITEMS, default to allowing multiple
+                if (openDialogParams == NULL)
+                    dialogFlags |= kOMCFilePanelAllowMultipleItems;
+
                 switch(activationType)
                 {
                     case kActiveFile:
                     {
-                        selectedFiles = CreateCFURLsFromOpenDialog( (__bridge CFStringRef)appName, theMessage, NULL, NULL, NULL, NULL, kOMCFilePanelCanChooseFiles | kOMCFilePanelAllowMultipleItems );
+                        selectedFiles = CreateCFURLsFromOpenDialog( (__bridge CFStringRef)appName, dialogMessage, NULL, dialogDefaultDir, dialogIdentifier, dialogPrompt, dialogAllowedContentTypes, dialogFlags | kOMCFilePanelCanChooseFiles );
                     }
                     break;
-                        
+
                     case kActiveFolder:
                     case kActiveFinderWindow:
                     case kActiveFolderExcludeFinderWindow:
                     {
-                        selectedFiles = CreateCFURLsFromOpenDialog( (__bridge CFStringRef)appName, theMessage, NULL, NULL, NULL, NULL, kOMCFilePanelCanChooseDirectories | kOMCFilePanelAllowMultipleItems );
+                        selectedFiles = CreateCFURLsFromOpenDialog( (__bridge CFStringRef)appName, dialogMessage, NULL, dialogDefaultDir, dialogIdentifier, dialogPrompt, dialogAllowedContentTypes, dialogFlags | kOMCFilePanelCanChooseDirectories );
                     }
                     break;
-                        
+
                     default:
                     {
-                        selectedFiles = CreateCFURLsFromOpenDialog( (__bridge CFStringRef)appName, theMessage, NULL, NULL, NULL, NULL, kOMCFilePanelCanChooseFiles | kOMCFilePanelCanChooseDirectories | kOMCFilePanelAllowMultipleItems );
+                        selectedFiles = CreateCFURLsFromOpenDialog( (__bridge CFStringRef)appName, dialogMessage, NULL, dialogDefaultDir, dialogIdentifier, dialogPrompt, dialogAllowedContentTypes, dialogFlags | kOMCFilePanelCanChooseFiles | kOMCFilePanelCanChooseDirectories );
                     }
                     break;
                 }
-                CFRelease(theMessage);
+
+                if (dialogMessage != NULL)
+                    CFRelease(dialogMessage);
+                if (dialogDefaultName != NULL)
+                    CFRelease(dialogDefaultName);
+                if (dialogDefaultLocation != NULL)
+                    CFRelease(dialogDefaultLocation);
+                if (dialogIdentifier != NULL)
+                    CFRelease(dialogIdentifier);
+                if (dialogPrompt != NULL)
+                    CFRelease(dialogPrompt);
+                if (dialogAllowedContentTypes != NULL)
+                    CFRelease(dialogAllowedContentTypes);
                 error = (selectedFiles != NULL) ? noErr : userCanceledErr;
 			}
             else if (requiresNavDialog)

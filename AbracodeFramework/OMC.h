@@ -91,7 +91,8 @@ typedef enum OMCInfoType
 {
 	kOmcInfo_CommandObjects, //sizeof(UInt32)
 	kOmcInfo_ActivationType, //sizeof(UInt32)
-	kOmcInfo_ExecutionOptions //sizeof(UInt32)
+	kOmcInfo_ExecutionOptions, //sizeof(UInt32)
+	kOmcInfo_OpenObjectDialogParams //sizeof(CFDictionaryRef) - OPEN_OBJECT_DIALOG settings or NULL
 } OMCInfoType;
 
 	

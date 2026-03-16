@@ -555,6 +555,7 @@ All four dialogs share **most options**. Only `DEFAULT_FILE_NAME` option is excl
 | `ALLOW_MULTIPLE_ITEMS` | Boolean | `false` | `CHOOSE_FILE_DIALOG`, `CHOOSE_FOLDER_DIALOG`, `CHOOSE_OBJECT_DIALOG` | Allow selecting multiple items. When true, the corresponding context variable (e.g., `OMC_DLG_CHOOSE_FILE_PATH`) will contain all selected paths combined using the multi-object separator, prefix, and suffix from `MULTIPLE_OBJECT_SETTINGS`. | `<true/>` for selecting multiple files/folders |
 | `DIALOG_IDENTIFIER` | String | `COMMAND_ID` (if set) or none | All | Panel identifier for state persistence. If set, the panel remembers last position/size. Defaults to `COMMAND_ID` if not specified. Use the same identifier across multiple commands to share panel state. | `"com.example.sharedPanel"` |
 | `BUTTON_PROMPT` | String | `"Open"` / `"Save"` | All | Custom button text (e.g., "Import", "Select", "Choose"). Improves context for users. | `"Import"` for import dialogs |
+| `ALLOWED_CONTENT_TYPES` | Array<String> | None | All | Array of UTI strings to filter visible files (e.g., `public.image`, `public.audio`, `com.adobe.pdf`). Uses the `allowedContentTypes` property of `NSOpenPanel`/`NSSavePanel`. When set, only files matching the specified Uniform Type Identifiers are selectable. | `["public.image", "public.jpeg"]` for image-only selection |
 
 ---
 
@@ -610,6 +611,42 @@ All four dialogs share **most options**. Only `DEFAULT_FILE_NAME` option is excl
 <array>
   <string>cp "${OMC_OBJ_PATH}" "${OMC_DLG_SAVE_AS_PATH}"</string>
 </array>
+```
+
+---
+
+### `OPEN_OBJECT_DIALOG` – Main Command Open Dialog
+
+`OPEN_OBJECT_DIALOG` customizes the open dialog shown when the **main command** requires file/folder context (via `ACTIVATION_MODE` set to `act_file`, `act_folder`, `act_file_or_folder`, etc.) but no files were provided — for example, when the applet is launched by double-clicking rather than by dropping files on it.
+
+Unlike `CHOOSE_FILE_DIALOG` / `CHOOSE_FOLDER_DIALOG` / `CHOOSE_OBJECT_DIALOG`, which are triggered by `OMC_DLG_*` context variables during command execution, `OPEN_OBJECT_DIALOG` controls the **startup open dialog** that gathers the main object context. The files or folders selected by the user become the primary context and are accessible via `OMC_OBJ_PATH` (and other `__OBJ_*__` special words), just as if they had been dropped on the applet icon.
+
+The dialog type (files only, folders only, or both) is automatically determined by the command's `ACTIVATION_MODE`. Without `OPEN_OBJECT_DIALOG`, a generic "Choose Objects To Process" dialog is shown with multiple selection enabled.
+
+**Supported options**: `MESSAGE`, `DEFAULT_LOCATION`, `SHOW_INVISIBLE_ITEMS`, `ALLOW_MULTIPLE_ITEMS`, `DIALOG_IDENTIFIER`, `BUTTON_PROMPT`, `ALLOWED_CONTENT_TYPES` (same as other navigation dialogs). `USE_PATH_CACHING` is not applicable — the open dialog always presents a fresh panel.
+
+```xml
+<!-- Main command with customized open dialog for an image processor -->
+<key>ACTIVATION_MODE</key>
+<string>act_file</string>
+
+<key>OPEN_OBJECT_DIALOG</key>
+<dict>
+  <key>MESSAGE</key>
+  <string>Select images to process</string>
+  <key>BUTTON_PROMPT</key>
+  <string>Import</string>
+  <key>ALLOW_MULTIPLE_ITEMS</key>
+  <true/>
+  <key>DEFAULT_LOCATION</key>
+  <array>
+    <string>~/Pictures</string>
+  </array>
+  <key>ALLOWED_CONTENT_TYPES</key>
+  <array>
+    <string>public.image</string>
+  </array>
+</dict>
 ```
 
 ---

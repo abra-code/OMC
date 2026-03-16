@@ -785,6 +785,9 @@ OnMyCommandCM::DeleteCommandList()
 			if(mCommandList[i].chooseObjectParams != NULL)
 				::CFRelease(mCommandList[i].chooseObjectParams);
 
+			if(mCommandList[i].openObjectParams != NULL)
+				::CFRelease(mCommandList[i].openObjectParams);
+
 			if(mCommandList[i].outputWindowOptions != NULL)
 				::CFRelease(mCommandList[i].outputWindowOptions);
 				
@@ -1511,6 +1514,13 @@ OnMyCommandCM::GetCommandInfo(SInt32 inCommandRef, OMCInfoType infoType, void *o
 		{
 			UInt32 *outInfoData = (UInt32 *)outInfo;
 			*outInfoData = (UInt32)currCommand.executionOptions;
+		}
+		break;
+
+		case kOmcInfo_OpenObjectDialogParams:
+		{
+			CFDictionaryRef *outInfoData = (CFDictionaryRef *)outInfo;
+			*outInfoData = currCommand.openObjectParams; // may be NULL if not specified
 		}
 		break;
 

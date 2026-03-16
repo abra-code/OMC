@@ -10,7 +10,8 @@ UInt32 GetNavDialogParams(CFDictionaryRef inFileDialogDict,
                           CFArrayRef &outDefaultName,
                           CFArrayRef &outDefaultLocation,
                           CFStringRef &outIdentifier,
-                          CFStringRef &outPrompt);
+                          CFStringRef &outPrompt,
+                          CFArrayRef &outAllowedContentTypes);
 
 void
 PresentSaveAsDialog(OnMyCommandCM *inPlugin,

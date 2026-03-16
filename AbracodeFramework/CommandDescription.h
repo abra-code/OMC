@@ -110,6 +110,7 @@ typedef struct CommandDescription
     CFDictionaryRef	chooseFileParams {NULL};
     CFDictionaryRef	chooseFolderParams {NULL};
     CFDictionaryRef	chooseObjectParams {NULL};
+    CFDictionaryRef	openObjectParams {NULL}; // OPEN_OBJECT_DIALOG: customizes the open dialog shown when main command requires file context
     CFDictionaryRef	outputWindowOptions {NULL};
     CFDictionaryRef nibDialog {NULL};
     CFDictionaryRef actionUIWindow {NULL};

@@ -19,8 +19,13 @@ enum
 	kOMCFilePanelUseCachedPath			= 0x10 //subcommands may reuse the path already obtained by the main command or another subcommand
 };
 
-CFURLRef CreateCFURLFromSaveAsDialog( CFStringRef inClientName, CFStringRef inMessage, CFStringRef inDefaultName, CFStringRef inDefaultDirPath, CFStringRef inIdentifier, CFStringRef inPrompt, UInt32 inAdditonalFlags);
-CFArrayRef CreateCFURLsFromOpenDialog( CFStringRef inClientName, CFStringRef inMessage, CFStringRef inDefaultName, CFStringRef inDefaultDirPath, CFStringRef inIdentifier, CFStringRef inPrompt, UInt32 inAdditonalFlags);
+CFURLRef CreateCFURLFromSaveAsDialog( CFStringRef inClientName, CFStringRef inMessage, CFStringRef inDefaultName, CFStringRef inDefaultDirPath, CFStringRef inIdentifier, CFStringRef inPrompt, CFArrayRef inAllowedContentTypes, UInt32 inAdditonalFlags);
+CFArrayRef CreateCFURLsFromOpenDialog( CFStringRef inClientName, CFStringRef inMessage, CFStringRef inDefaultName, CFStringRef inDefaultDirPath, CFStringRef inIdentifier, CFStringRef inPrompt, CFArrayRef inAllowedContentTypes, UInt32 inAdditonalFlags);
+
+// Parse shared navigation dialog options from a dialog settings dictionary (CHOOSE_FILE_DIALOG, OPEN_OBJECT_DIALOG, etc.)
+// Returns additional flags (kOMCFilePanelAllowInvisibleItems, kOMCFilePanelAllowMultipleItems, kOMCFilePanelUseCachedPath)
+// outAllowedContentTypes: array of UTI strings (e.g. "public.image", "public.audio") or NULL
+UInt32 CopyNavDialogParams(CFDictionaryRef inParams, CFStringRef *outMessage, CFArrayRef *outDefaultName, CFArrayRef *outDefaultLocation, CFStringRef *outIdentifier, CFStringRef *outPrompt, CFArrayRef *outAllowedContentTypes);
 
 #ifdef __cplusplus
 }
