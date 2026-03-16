@@ -34,6 +34,8 @@ entitlements_path_root="$self_dir/OMCApplet.entitlements"
 
 entitlements=""
 
+is_developer_id="no"
+
 if test -z "$identity" || test "$identity" = "-"; then
     identity="-"
     timestamp="--timestamp=none"
@@ -44,8 +46,25 @@ else
     elif [ -f "${entitlements_path_root}" ]; then
         entitlements="--entitlements $entitlements_path_root"
     fi
-    timestamp="--timestamp"
-    sign_options="--options runtime"
+
+    # Check if this is an Apple-issued Developer ID certificate
+    # Developer ID certs have an anchor in Apple's CA chain
+    if echo "$identity" | /usr/bin/grep -q "Developer ID"; then
+        is_developer_id="yes"
+        timestamp="--timestamp"
+        sign_options="--options runtime"
+    else
+        # Self-signed or other non-Apple certs:
+        # - No timestamp server (Apple's TSA won't service non-Apple certs)
+        # - No hardened runtime (requires Gatekeeper trust)
+        echo ""
+        echo "NOTE: \"$identity\" does not appear to be an Apple Developer ID certificate."
+        echo "The signed app will not pass Gatekeeper and may not launch without"
+        echo "manual approval (right-click > Open, or System Settings > Privacy)."
+        echo ""
+        timestamp="--timestamp=none"
+        sign_options=""
+    fi
 fi
 
 refresh_app() {
@@ -113,6 +132,29 @@ if test -d "$app_to_sign/Contents/Support"; then
     sign_executables_in_dir "$app_to_sign/Contents/Support"
 fi
 
+# Sign frameworks in Contents/Frameworks
+if test -d "$app_to_sign/Contents/Frameworks"; then
+    # Sign executables inside each framework first (e.g. Support tools)
+    for fw in "$app_to_sign/Contents/Frameworks"/*.framework; do
+        test -d "$fw" || continue
+        sign_executables_in_dir "$fw/Versions/Current/Support"
+    done
+
+    echo ""
+    echo "Signing frameworks in: $app_to_sign/Contents/Frameworks"
+    echo "-----------------------------------"
+    for fw in "$app_to_sign/Contents/Frameworks"/*.framework; do
+        test -d "$fw" || continue
+        fw_name=$(/usr/bin/basename "$fw")
+        echo "Signing framework: $fw_name"
+        /usr/bin/codesign --verbose --force $sign_options $timestamp --sign "$identity" "$fw"
+        if test "$?" != "0"; then
+            echo "warning: failed to sign $fw_name"
+        fi
+    done
+    echo "-----------------------------------"
+fi
+
 echo ""
 
 # Finally sign the app bundle itself
@@ -129,15 +171,46 @@ fi
 refresh_app "$app_to_sign"
 
 echo ""
-echo "Verifying and validating codesigned app:"
+echo "Verifying codesigned app:"
 echo "-----------------------------------------"
-/usr/bin/codesign --verify --display --verbose=4 "$app_to_sign"
+/usr/bin/codesign --verify --display --verbose=4 "$app_to_sign" 2>&1
 
 if test "$?" = "0"; then
     echo "-----------------------------------------"
-    echo "✓ App signature is valid"
+    echo "✓ Code signature is valid (integrity check passed)"
 else
     echo "-----------------------------------------"
-    echo "✗ App signature validation failed"
+    echo "✗ Code signature validation failed"
     exit 1
+fi
+
+echo ""
+echo "Gatekeeper assessment:"
+echo "-----------------------------------------"
+spctl_output=$(/usr/sbin/spctl --assess --verbose=4 --type execute "$app_to_sign" 2>&1)
+spctl_status=$?
+
+echo "$spctl_output"
+echo "-----------------------------------------"
+
+if test "$spctl_status" = "0"; then
+    echo "✓ App is accepted by Gatekeeper"
+elif test "$identity" = "-"; then
+    echo "⚠ Ad-hoc signed apps are not accepted by Gatekeeper (expected)"
+    echo "  The app will run on this Mac"
+elif test "$is_developer_id" = "yes"; then
+    # Check if it's just a notarization issue
+    if echo "$spctl_output" | /usr/bin/grep -qi "unnotarized"; then
+        echo "⚠ App is signed with Developer ID but not notarized"
+        echo "  The app will run on this Mac. For distribution, notarize with:"
+        echo "  xcrun notarytool submit <path> --apple-id <ID> --team-id <TEAM>"
+    else
+        echo "✗ App is rejected by Gatekeeper (unexpected for Developer ID)"
+        echo "  Check that the certificate is valid and not expired"
+        exit 1
+    fi
+else
+    echo "⚠ App is rejected by Gatekeeper (self-signed certificate)"
+    echo "  To launch: right-click the app > Open, or allow it in"
+    echo "  System Settings > Privacy & Security"
 fi
