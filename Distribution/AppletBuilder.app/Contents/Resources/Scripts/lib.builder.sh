@@ -18,6 +18,9 @@ window_uuid="$OMC_ACTIONUI_WINDOW_UUID"
 TAB_VIEW_ID=10
 GENERAL_TAB_VIEW_ID=101
 BUILD_RUN_TAB_VIEW_ID=102
+COMMANDS_TAB_VIEW_ID=103
+SCRIPTS_TAB_VIEW_ID=104
+UI_FILES_TAB_VIEW_ID=105
 
 # New Applet form
 NEW_TYPE_PICKER_ID=201
@@ -42,7 +45,33 @@ GEN_ICON_IMAGE_ID=307
 GEN_HEADER_NAME_ID=308
 GEN_STATUS_ID=320
 
+# Commands tab
+CMD_TABLE_ID=501
+CMD_DETAIL_ID=502
+CMD_ADD_BTN_ID=511
+CMD_REMOVE_BTN_ID=512
+CMD_EDIT_BTN_ID=513
+CMD_REVEAL_BTN_ID=514
+
+# Scripts tab
+SCRIPTS_TABLE_ID=601
+SCRIPTS_DETAIL_ID=602
+SCRIPTS_ADD_BTN_ID=611
+SCRIPTS_REMOVE_BTN_ID=612
+SCRIPTS_EDIT_BTN_ID=613
+SCRIPTS_REVEAL_BTN_ID=614
+
+# UI Files tab
+UI_TABLE_ID=701
+UI_DETAIL_ID=702
+UI_NIB_PANE_ID=703
+UI_ADD_BTN_ID=711
+UI_REMOVE_BTN_ID=712
+UI_EDIT_BTN_ID=713
+UI_REVEAL_BTN_ID=714
+
 # Build & Run
+BUILD_IDENTITY_PICKER_ID=402
 BUILD_LOG_ID=401
 
 # ──────────────────────────────────────────────────────────────
@@ -118,6 +147,16 @@ set_enabled() {
         "$dialog_tool" "$window_uuid" "$view_id" omc_enable
     else
         "$dialog_tool" "$window_uuid" "$view_id" omc_disable
+    fi
+}
+
+set_visible() {
+    local view_id="$1"
+    local visible="$2"
+    if [ "$visible" = "1" ] || [ "$visible" = "true" ]; then
+        "$dialog_tool" "$window_uuid" "$view_id" omc_show
+    else
+        "$dialog_tool" "$window_uuid" "$view_id" omc_hide
     fi
 }
 

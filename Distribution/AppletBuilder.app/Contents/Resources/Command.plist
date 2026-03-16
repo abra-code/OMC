@@ -5,40 +5,23 @@
 	<key>COMMAND_LIST</key>
 	<array>
 
-		<!-- ════════════════════════════════════════════════════════
-		     Main command: detect context and dispatch
-		     ════════════════════════════════════════════════════════ -->
 		<dict>
 			<key>NAME</key>
 			<string>AppletBuilder</string>
 			<key>ACTIVATION_MODE</key>
-			<string>act_always</string>
+			<string>act_folder</string>
 			<key>EXECUTION_MODE</key>
 			<string>exe_script_file</string>
 			<key>REQUIRED_OMC_VERSION</key>
 			<string>5.0</string>
 			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
 			<string>14.6</string>
-		</dict>
-
-		<!-- ════════════════════════════════════════════════════════
-		     Open Applet (from menu)
-		     ════════════════════════════════════════════════════════ -->
-		<dict>
-			<key>NAME</key>
-			<string>AppletBuilder</string>
-			<key>COMMAND_ID</key>
-			<string>AppletBuilder.open</string>
-			<key>EXECUTION_MODE</key>
-			<string>exe_script_file</string>
-			<key>CHOOSE_OBJECT_DIALOG</key>
+			<key>OPEN_OBJECT_DIALOG</key>
 			<dict>
 				<key>MESSAGE</key>
 				<string>Select an applet (.app) to open</string>
 				<key>BUTTON_PROMPT</key>
 				<string>Open</string>
-				<key>USE_PATH_CACHING</key>
-				<true/>
 			</dict>
 		</dict>
 
@@ -262,6 +245,193 @@
 			<string>AppletBuilder</string>
 			<key>COMMAND_ID</key>
 			<string>AppletBuilder.general.save</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
+		<!-- ════════════════════════════════════════════════════════
+		     Commands tab
+		     ════════════════════════════════════════════════════════ -->
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.commands.loaded</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.commands.selected</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.commands.add</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.commands.remove</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.commands.edit</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.commands.reveal</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
+		<!-- ════════════════════════════════════════════════════════
+		     Scripts tab
+		     ════════════════════════════════════════════════════════ -->
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.scripts.loaded</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.scripts.selected</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.scripts.add</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.scripts.remove</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.scripts.edit</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.scripts.reveal</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
+		<!-- ════════════════════════════════════════════════════════
+		     UI Files tab
+		     ════════════════════════════════════════════════════════ -->
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.uifiles.loaded</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.uifiles.selected</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.uifiles.add</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.uifiles.remove</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.uifiles.edit</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.uifiles.reveal</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
+		<!-- ════════════════════════════════════════════════════════
+		     Build & Run
+		     ════════════════════════════════════════════════════════ -->
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.buildrun.loaded</string>
 			<key>EXECUTION_MODE</key>
 			<string>exe_script_file</string>
 		</dict>

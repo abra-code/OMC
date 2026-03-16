@@ -30,6 +30,51 @@
     {
       "type": "Tab",
       "properties": {
+        "title": "Commands",
+        "systemImage": "list.bullet.rectangle"
+      },
+      "content": {
+        "type": "LoadableView",
+        "id": 103,
+        "properties": {
+          "name": "Commands.json",
+          "viewDidLoadActionID": "AppletBuilder.commands.loaded"
+        }
+      }
+    },
+    {
+      "type": "Tab",
+      "properties": {
+        "title": "Scripts",
+        "systemImage": "apple.terminal"
+      },
+      "content": {
+        "type": "LoadableView",
+        "id": 104,
+        "properties": {
+          "name": "Scripts.json",
+          "viewDidLoadActionID": "AppletBuilder.scripts.loaded"
+        }
+      }
+    },
+    {
+      "type": "Tab",
+      "properties": {
+        "title": "UI Files",
+        "systemImage": "rectangle.on.rectangle"
+      },
+      "content": {
+        "type": "LoadableView",
+        "id": 105,
+        "properties": {
+          "name": "UIFiles.json",
+          "viewDidLoadActionID": "AppletBuilder.uifiles.loaded"
+        }
+      }
+    },
+    {
+      "type": "Tab",
+      "properties": {
         "title": "Build & Run",
         "systemImage": "hammer"
       },

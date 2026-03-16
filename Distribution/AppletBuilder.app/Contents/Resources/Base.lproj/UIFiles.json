@@ -1,0 +1,157 @@
+{
+  "type": "HSplitView",
+  "properties": {},
+  "children": [
+    {
+      "type": "VStack",
+      "properties": {
+        "spacing": 0,
+        "frame": {
+          "minWidth": 180,
+          "idealWidth": 240,
+          "maxHeight": "infinity"
+        }
+      },
+      "children": [
+        {
+          "type": "Table",
+          "id": 701,
+          "properties": {
+            "columns": ["UI File"],
+            "widths": [220],
+            "actionID": "AppletBuilder.uifiles.selected",
+            "frame": {
+              "maxWidth": "infinity",
+              "maxHeight": "infinity"
+            }
+          }
+        },
+        {
+          "type": "HStack",
+          "properties": {
+            "spacing": 0
+          },
+          "children": [
+            {
+              "type": "Button",
+              "id": 711,
+              "properties": {
+                "systemImage": "plus.circle",
+                "imageScale": "large",
+                "buttonStyle": "plain",
+                "actionID": "AppletBuilder.uifiles.add",
+                "frame": { "width": 32, "height": 28 }
+              }
+            },
+            {
+              "type": "Button",
+              "id": 712,
+              "properties": {
+                "systemImage": "minus.circle",
+                "imageScale": "large",
+                "buttonStyle": "plain",
+                "actionID": "AppletBuilder.uifiles.remove",
+                "disabled": true,
+                "frame": { "width": 32, "height": 28 }
+              }
+            },
+            {
+              "type": "Divider",
+              "properties": {
+                "padding": { "leading": 6, "trailing": 6 },
+                "frame": { "height": 16 }
+              }
+            },
+            {
+              "type": "Button",
+              "id": 713,
+              "properties": {
+                "systemImage": "pencil",
+                "imageScale": "medium",
+                "buttonStyle": "plain",
+                "actionID": "AppletBuilder.uifiles.edit",
+                "disabled": true,
+                "frame": { "width": 32, "height": 28 }
+              }
+            },
+            {
+              "type": "Button",
+              "id": 714,
+              "properties": {
+                "systemImage": "finder",
+                "imageScale": "medium",
+                "buttonStyle": "plain",
+                "actionID": "AppletBuilder.uifiles.reveal",
+                "disabled": true,
+                "frame": { "width": 32, "height": 28 }
+              }
+            },
+            { "type": "Spacer" }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "ZStack",
+      "properties": {
+        "frame": {
+          "maxWidth": "infinity",
+          "maxHeight": "infinity"
+        }
+      },
+      "children": [
+        {
+          "type": "TextEditor",
+          "id": 702,
+          "properties": {
+            "text": "",
+            "font": { "name": "Menlo", "size": 12 },
+            "frame": {
+              "maxWidth": "infinity",
+              "maxHeight": "infinity"
+            }
+          }
+        },
+        {
+          "type": "VStack",
+          "id": 703,
+          "properties": {
+            "hidden": true,
+            "spacing": 12,
+            "frame": {
+              "maxWidth": "infinity",
+              "maxHeight": "infinity"
+            }
+          },
+          "children": [
+            {
+              "type": "Image",
+              "properties": {
+                "systemName": "uiwindow.split.2x1",
+                "foregroundColor": "#888888",
+                "imageScale": "large"
+              }
+            },
+            {
+              "type": "Text",
+              "properties": {
+                "text": "Interface Builder Nib",
+                "foregroundColor": "#888888"
+              }
+            },
+            {
+              "type": "Button",
+              "id": 715,
+              "properties": {
+                "title": "Open in Xcode",
+                "systemImage": "hammer",
+                "buttonStyle": "bordered",
+                "actionID": "AppletBuilder.uifiles.edit"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -154,9 +154,20 @@ update_python() {
 do_codesign() {
     local target_path="$1"
     log ""
-    log "Codesigning..."
 
-    local log_output=$(applet_codesign "$target_path" "-" 2>&1)
+    # Read selected signing identity from picker (tag value)
+    local identity="$OMC_ACTIONUI_VIEW_402_VALUE"
+    if [ -z "$identity" ]; then
+        identity="-"
+    fi
+
+    if [ "$identity" = "-" ]; then
+        log "Codesigning (ad-hoc)..."
+    else
+        log "Codesigning with \"${identity}\"..."
+    fi
+
+    local log_output=$(applet_codesign "$target_path" "$identity" 2>&1)
     local status=$?
     local timestamp=$(/bin/date "+%Y-%m-%d %H:%M:%S")
 

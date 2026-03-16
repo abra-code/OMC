@@ -20,8 +20,11 @@
 			<string>Bundle</string>
 			<key>CFBundleTypeRole</key>
 			<string>Viewer</string>
+			<key>LSHandlerRank</key>
+			<string>Default</string>
 			<key>LSItemContentTypes</key>
 			<array>
+				<string>com.apple.application-bundle</string>
 				<string>com.apple.bundle</string>
 				<string>com.apple.package</string>
 			</array>

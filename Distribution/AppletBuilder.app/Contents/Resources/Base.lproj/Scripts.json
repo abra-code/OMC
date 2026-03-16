@@ -1,0 +1,107 @@
+{
+  "type": "HSplitView",
+  "properties": {},
+  "children": [
+    {
+      "type": "VStack",
+      "properties": {
+        "spacing": 0,
+        "frame": {
+          "minWidth": 180,
+          "idealWidth": 240,
+          "maxHeight": "infinity"
+        }
+      },
+      "children": [
+        {
+          "type": "Table",
+          "id": 601,
+          "properties": {
+            "columns": ["Script"],
+            "widths": [220],
+            "actionID": "AppletBuilder.scripts.selected",
+            "frame": {
+              "maxWidth": "infinity",
+              "maxHeight": "infinity"
+            }
+          }
+        },
+        {
+          "type": "HStack",
+          "properties": {
+            "spacing": 0
+          },
+          "children": [
+            {
+              "type": "Button",
+              "id": 611,
+              "properties": {
+                "systemImage": "plus.circle",
+                "imageScale": "large",
+                "buttonStyle": "plain",
+                "actionID": "AppletBuilder.scripts.add",
+                "frame": { "width": 32, "height": 28 }
+              }
+            },
+            {
+              "type": "Button",
+              "id": 612,
+              "properties": {
+                "systemImage": "minus.circle",
+                "imageScale": "large",
+                "buttonStyle": "plain",
+                "actionID": "AppletBuilder.scripts.remove",
+                "disabled": true,
+                "frame": { "width": 32, "height": 28 }
+              }
+            },
+            {
+              "type": "Divider",
+              "properties": {
+                "padding": { "leading": 6, "trailing": 6 },
+                "frame": { "height": 16 }
+              }
+            },
+            {
+              "type": "Button",
+              "id": 613,
+              "properties": {
+                "systemImage": "pencil",
+                "imageScale": "medium",
+                "buttonStyle": "plain",
+                "actionID": "AppletBuilder.scripts.edit",
+                "disabled": true,
+                "frame": { "width": 32, "height": 28 }
+              }
+            },
+            {
+              "type": "Button",
+              "id": 614,
+              "properties": {
+                "systemImage": "finder",
+                "imageScale": "medium",
+                "buttonStyle": "plain",
+                "actionID": "AppletBuilder.scripts.reveal",
+                "disabled": true,
+                "frame": { "width": 32, "height": 28 }
+              }
+            },
+            { "type": "Spacer" }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "TextEditor",
+      "id": 602,
+      "properties": {
+        "text": "",
+        "font": { "name": "Menlo", "size": 12 },
+        "frame": {
+          "maxWidth": "infinity",
+          "maxHeight": "infinity"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+#!/bin/bash
+# AppletBuilder.commands.selected - Show selected command details and enable buttons
+
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.builder.sh"
+
+project_path=$(load_project_path)
+cmd_plist="$project_path/Contents/Resources/Command.plist"
+
+# Get selected command index from hidden column 2
+cmd_index="$OMC_ACTIONUI_TABLE_501_COLUMN_2_VALUE"
+
+if [ -z "$cmd_index" ]; then
+    # No selection — disable buttons, clear detail
+    set_enabled "$CMD_REMOVE_BTN_ID" false
+    set_enabled "$CMD_EDIT_BTN_ID" false
+    set_enabled "$CMD_REVEAL_BTN_ID" false
+    set_value "$CMD_DETAIL_ID" ""
+    exit 0
+fi
+
+# Enable action buttons
+set_enabled "$CMD_REMOVE_BTN_ID" true
+set_enabled "$CMD_EDIT_BTN_ID" true
+set_enabled "$CMD_REVEAL_BTN_ID" true
+
+if [ ! -f "$cmd_plist" ]; then
+    exit 0
+fi
+
+# Extract the command dict as XML fragment
+cmd_xml=$(/usr/bin/plutil -extract "COMMAND_LIST.$cmd_index" xml1 -o - "$cmd_plist" 2>/dev/null)
+set_value "$CMD_DETAIL_ID" "$cmd_xml"

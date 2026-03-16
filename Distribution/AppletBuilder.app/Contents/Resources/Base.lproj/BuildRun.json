@@ -1,10 +1,4 @@
 {
-  "type": "ScrollView",
-  "properties": {
-    "axis": "vertical",
-    "padding": "default"
-  },
-  "content": {
     "type": "VStack",
     "properties": {
         "spacing": 20,
@@ -22,12 +16,22 @@
         }
       },
       {
-        "type": "Text",
+        "type": "LabeledContent",
         "properties": {
-          "text": "Build signs the applet with an ad-hoc signature. Run launches it.",
-          "font": "subheadline",
-          "foregroundStyle": "secondary"
-        }
+          "title": "Signing Identity:"
+        },
+        "children": [
+          {
+            "type": "Picker",
+            "id": 402,
+            "properties": {
+              "options": [
+                { "title": "Sign to Run Locally (ad-hoc)", "tag": "-" }
+              ],
+              "pickerStyle": "menu"
+            }
+          }
+        ]
       },
       {
         "type": "GroupBox",
@@ -75,8 +79,8 @@
                   {
                     "type": "Button",
                     "properties": {
-                      "title": "Reveal in Finder",
-                      "systemImage": "folder",
+                      "title": "Show",
+                      "systemImage": "finder",
                       "buttonStyle": "bordered",
                       "actionID": "AppletBuilder.reveal"
                     }
@@ -98,16 +102,15 @@
             "id": 401,
             "properties": {
               "text": "",
-              "font": "system(size: 11)",
+              "font": { "size": 11, "design": "monospaced" },
+              "readOnly": true,
               "frame": {
                 "minHeight": 200,
                 "idealHeight": 300
-              },
-              "disabled": true
+              }
             }
           }
         ]
       }
     ]
-  }
 }
