@@ -30,9 +30,14 @@ fi
 
 # Disable buttons
 set_enabled "$UI_REMOVE_BTN_ID" false
-set_enabled "$UI_EDIT_BTN_ID" false
 set_enabled "$UI_REVEAL_BTN_ID" false
+set_enabled "$UI_VALIDATE_BTN_ID" false
+set_enabled "$UI_PRETTIFY_BTN_ID" false
+set_enabled "$UI_PREVIEW_BTN_ID" false
+set_enabled "$UI_SAVE_BTN_ID" false
+set_enabled "$UI_EXT_EDIT_BTN_ID" false
 set_value "$UI_DETAIL_ID" ""
+set_value "$UI_EDITED_LABEL_ID" ""
 
 # Refresh the UI files table
 "$OMC_OMC_SUPPORT_PATH/omc_next_command" "${OMC_CURRENT_COMMAND_GUID}" "AppletBuilder.uifiles.loaded"

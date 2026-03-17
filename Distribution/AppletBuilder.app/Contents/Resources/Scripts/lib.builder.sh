@@ -8,7 +8,11 @@ echo "loading lib.builder.sh"
 # ──────────────────────────────────────────────────────────────
 
 dialog_tool="$OMC_OMC_SUPPORT_PATH/omc_dialog_control"
+next_cmd="$OMC_OMC_SUPPORT_PATH/omc_next_command"
+pasteboard_tool="$OMC_OMC_SUPPORT_PATH/pasteboard"
+python3="${OMC_APP_BUNDLE_PATH}/Contents/Library/Python/bin/python3"
 window_uuid="$OMC_ACTIONUI_WINDOW_UUID"
+cmd_guid="$OMC_CURRENT_COMMAND_GUID"
 
 # ──────────────────────────────────────────────────────────────
 # Control IDs
@@ -50,25 +54,37 @@ CMD_TABLE_ID=501
 CMD_DETAIL_ID=502
 CMD_ADD_BTN_ID=511
 CMD_REMOVE_BTN_ID=512
-CMD_EDIT_BTN_ID=513
 CMD_REVEAL_BTN_ID=514
+CMD_VALIDATE_BTN_ID=520
+CMD_SAVE_BTN_ID=523
+CMD_EDITED_LABEL_ID=524
+CMD_EXT_EDIT_BTN_ID=525
+CMD_TOOLBAR_ID=526
 
 # Scripts tab
 SCRIPTS_TABLE_ID=601
 SCRIPTS_DETAIL_ID=602
 SCRIPTS_ADD_BTN_ID=611
 SCRIPTS_REMOVE_BTN_ID=612
-SCRIPTS_EDIT_BTN_ID=613
 SCRIPTS_REVEAL_BTN_ID=614
+SCRIPTS_SAVE_BTN_ID=623
+SCRIPTS_EDITED_LABEL_ID=624
+SCRIPTS_EXT_EDIT_BTN_ID=625
+SCRIPTS_TOOLBAR_ID=626
 
 # UI Files tab
 UI_TABLE_ID=701
 UI_DETAIL_ID=702
-UI_NIB_PANE_ID=703
 UI_ADD_BTN_ID=711
 UI_REMOVE_BTN_ID=712
-UI_EDIT_BTN_ID=713
 UI_REVEAL_BTN_ID=714
+UI_VALIDATE_BTN_ID=720
+UI_PRETTIFY_BTN_ID=721
+UI_PREVIEW_BTN_ID=722
+UI_SAVE_BTN_ID=723
+UI_EDITED_LABEL_ID=724
+UI_EXT_EDIT_BTN_ID=725
+UI_TOOLBAR_ID=726
 
 # Build & Run
 BUILD_IDENTITY_PICKER_ID=402
@@ -102,6 +118,19 @@ cleanup_state() {
 }
 
 # ──────────────────────────────────────────────────────────────
+# Error display
+# ──────────────────────────────────────────────────────────────
+
+APPLET_BUILDER_ERRORS_PB="APPLET_BUILDER_ERRORS"
+
+# Show error details in an output window via private pasteboard
+show_errors() {
+    local error_text="$1"
+    "$pasteboard_tool" "$APPLET_BUILDER_ERRORS_PB" set "$error_text"
+    "$next_cmd" "$cmd_guid" "AppletBuilder.show.errors"
+}
+
+# ──────────────────────────────────────────────────────────────
 # UI helpers
 # ──────────────────────────────────────────────────────────────
 
@@ -117,11 +146,10 @@ set_status() {
     set_value "$view_id" "$message"
 }
 
-pasteboard_tool="$OMC_OMC_SUPPORT_PATH/pasteboard"
-BUNDLE_ID_PREFIX_PB="APPLET_BUILDER_BUNDLE_ID_PREFIX"
+prefs_domain="com.abracode.applet-builder"
 
 get_bundle_id_prefix() {
-    local prefix=$("$pasteboard_tool" "$BUNDLE_ID_PREFIX_PB" get 2>/dev/null)
+    local prefix=$(/usr/bin/defaults read "$prefs_domain" BundleIDPrefix 2>/dev/null)
     if [ -z "$prefix" ]; then
         prefix="com.omc.applet."
     fi
@@ -132,7 +160,19 @@ save_bundle_id_prefix() {
     local bundle_id="$1"
     # Extract prefix: everything up to and including the last dot
     local prefix="${bundle_id%.*}."
-    "$pasteboard_tool" "$BUNDLE_ID_PREFIX_PB" set "$prefix" 2>/dev/null
+    /usr/bin/defaults write "$prefs_domain" BundleIDPrefix "$prefix"
+}
+
+get_external_editor() {
+    local editor=$(/usr/bin/defaults read "$prefs_domain" ExternalEditor 2>/dev/null)
+    if [ -z "$editor" ]; then
+        editor="/System/Applications/TextEdit.app"
+    fi
+    echo "$editor"
+}
+
+save_external_editor() {
+    /usr/bin/defaults write "$prefs_domain" ExternalEditor "$1"
 }
 
 set_window_title() {

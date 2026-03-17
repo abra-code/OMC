@@ -27,9 +27,11 @@ fi
 
 # Disable buttons
 set_enabled "$SCRIPTS_REMOVE_BTN_ID" false
-set_enabled "$SCRIPTS_EDIT_BTN_ID" false
 set_enabled "$SCRIPTS_REVEAL_BTN_ID" false
+set_enabled "$SCRIPTS_SAVE_BTN_ID" false
+set_enabled "$SCRIPTS_EXT_EDIT_BTN_ID" false
 set_value "$SCRIPTS_DETAIL_ID" ""
+set_value "$SCRIPTS_EDITED_LABEL_ID" ""
 
 # Refresh the scripts table
 "$OMC_OMC_SUPPORT_PATH/omc_next_command" "${OMC_CURRENT_COMMAND_GUID}" "AppletBuilder.scripts.loaded"

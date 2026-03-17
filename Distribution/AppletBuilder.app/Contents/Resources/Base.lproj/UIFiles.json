@@ -64,18 +64,6 @@
             },
             {
               "type": "Button",
-              "id": 713,
-              "properties": {
-                "systemImage": "pencil",
-                "imageScale": "medium",
-                "buttonStyle": "plain",
-                "actionID": "AppletBuilder.uifiles.edit",
-                "disabled": true,
-                "frame": { "width": 32, "height": 28 }
-              }
-            },
-            {
-              "type": "Button",
               "id": 714,
               "properties": {
                 "systemImage": "finder",
@@ -92,8 +80,9 @@
       ]
     },
     {
-      "type": "ZStack",
+      "type": "VStack",
       "properties": {
+        "spacing": 0,
         "frame": {
           "maxWidth": "infinity",
           "maxHeight": "infinity"
@@ -101,55 +90,101 @@
       },
       "children": [
         {
+          "type": "HStack",
+          "id": 726,
+          "properties": {
+            "spacing": 4,
+            "padding": { "leading": 6, "trailing": 6, "top": 4, "bottom": 4 }
+          },
+          "children": [
+            {
+              "type": "Button",
+              "id": 720,
+              "properties": {
+                "systemImage": "checkmark.circle",
+                "title": "Validate",
+                "buttonStyle": "bordered",
+                "controlSize": "small",
+                "actionID": "AppletBuilder.uifiles.validate",
+                "disabled": true
+              }
+            },
+            {
+              "type": "Button",
+              "id": 721,
+              "properties": {
+                "systemImage": "text.alignleft",
+                "title": "Prettify",
+                "buttonStyle": "bordered",
+                "controlSize": "small",
+                "actionID": "AppletBuilder.uifiles.prettify",
+                "disabled": true
+              }
+            },
+            {
+              "type": "Button",
+              "id": 722,
+              "properties": {
+                "systemImage": "eye",
+                "title": "Preview",
+                "buttonStyle": "bordered",
+                "controlSize": "small",
+                "actionID": "AppletBuilder.uifiles.preview",
+                "disabled": true
+              }
+            },
+            {
+              "type": "Button",
+              "id": 723,
+              "properties": {
+                "systemImage": "square.and.arrow.down",
+                "title": "Save",
+                "buttonStyle": "bordered",
+                "controlSize": "small",
+                "actionID": "AppletBuilder.uifiles.save.detail",
+                "disabled": true
+              }
+            },
+            {
+              "type": "Text",
+              "id": 724,
+              "properties": {
+                "text": "",
+                "foregroundColor": "#CC6600",
+                "font": { "size": 11 }
+              }
+            },
+            { "type": "Spacer" },
+            {
+              "type": "Button",
+              "id": 725,
+              "properties": {
+                "systemImage": "pencil",
+                "title": "Edit",
+                "buttonStyle": "bordered",
+                "controlSize": "small",
+                "actionID": "AppletBuilder.uifiles.edit",
+                "disabled": true
+              }
+            }
+          ]
+        },
+        {
+          "type": "Divider",
+          "properties": {}
+        },
+        {
           "type": "TextEditor",
           "id": 702,
           "properties": {
             "text": "",
             "font": { "name": "Menlo", "size": 12 },
+            "valueChangeActionID": "AppletBuilder.uifiles.text.changed",
             "frame": {
               "maxWidth": "infinity",
               "maxHeight": "infinity"
             }
           }
-        },
-        {
-          "type": "VStack",
-          "id": 703,
-          "properties": {
-            "hidden": true,
-            "spacing": 12,
-            "frame": {
-              "maxWidth": "infinity",
-              "maxHeight": "infinity"
-            }
-          },
-          "children": [
-            {
-              "type": "Image",
-              "properties": {
-                "systemName": "uiwindow.split.2x1",
-                "foregroundColor": "#888888",
-                "imageScale": "large"
-              }
-            },
-            {
-              "type": "Text",
-              "properties": {
-                "text": "Interface Builder Nib",
-                "foregroundColor": "#888888"
-              }
-            },
-            {
-              "type": "Button",
-              "id": 715,
-              "properties": {
-                "title": "Open in Xcode",
-                "systemImage": "hammer",
-                "buttonStyle": "bordered",
-                "actionID": "AppletBuilder.uifiles.edit"
-              }
-            }
-          ]
         }
       ]
     }

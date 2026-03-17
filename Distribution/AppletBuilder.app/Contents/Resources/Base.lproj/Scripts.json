@@ -64,18 +64,6 @@
             },
             {
               "type": "Button",
-              "id": 613,
-              "properties": {
-                "systemImage": "pencil",
-                "imageScale": "medium",
-                "buttonStyle": "plain",
-                "actionID": "AppletBuilder.scripts.edit",
-                "disabled": true,
-                "frame": { "width": 32, "height": 28 }
-              }
-            },
-            {
-              "type": "Button",
               "id": 614,
               "properties": {
                 "systemImage": "finder",
@@ -92,16 +80,77 @@
       ]
     },
     {
-      "type": "TextEditor",
-      "id": 602,
+      "type": "VStack",
       "properties": {
-        "text": "",
-        "font": { "name": "Menlo", "size": 12 },
+        "spacing": 0,
         "frame": {
           "maxWidth": "infinity",
           "maxHeight": "infinity"
         }
-      }
+      },
+      "children": [
+        {
+          "type": "HStack",
+          "id": 626,
+          "properties": {
+            "spacing": 4,
+            "padding": { "leading": 6, "trailing": 6, "top": 4, "bottom": 4 }
+          },
+          "children": [
+            {
+              "type": "Button",
+              "id": 623,
+              "properties": {
+                "systemImage": "square.and.arrow.down",
+                "title": "Save",
+                "buttonStyle": "bordered",
+                "controlSize": "small",
+                "actionID": "AppletBuilder.scripts.save.detail",
+                "disabled": true
+              }
+            },
+            {
+              "type": "Text",
+              "id": 624,
+              "properties": {
+                "text": "",
+                "foregroundColor": "#CC6600",
+                "font": { "size": 11 }
+              }
+            },
+            { "type": "Spacer" },
+            {
+              "type": "Button",
+              "id": 625,
+              "properties": {
+                "systemImage": "pencil",
+                "title": "Edit",
+                "buttonStyle": "bordered",
+                "controlSize": "small",
+                "actionID": "AppletBuilder.scripts.edit",
+                "disabled": true
+              }
+            }
+          ]
+        },
+        {
+          "type": "Divider",
+          "properties": {}
+        },
+        {
+          "type": "TextEditor",
+          "id": 602,
+          "properties": {
+            "text": "",
+            "font": { "name": "Menlo", "size": 12 },
+            "valueChangeActionID": "AppletBuilder.scripts.text.changed",
+            "frame": {
+              "maxWidth": "infinity",
+              "maxHeight": "infinity"
+            }
+          }
+        }
+      ]
     }
   ]
 }

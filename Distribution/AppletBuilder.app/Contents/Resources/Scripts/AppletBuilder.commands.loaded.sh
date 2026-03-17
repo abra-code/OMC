@@ -14,7 +14,9 @@ fi
 # Extract command names and populate the table
 # Column 1 (visible): command label
 # Column 2 (hidden): plist array index
-count=$(/usr/bin/plutil -extract COMMAND_LIST raw "$cmd_plist" 2>/dev/null)
+plister="$OMC_OMC_SUPPORT_PATH/plister"
+
+count=$("$plister" get count "$cmd_plist" /COMMAND_LIST 2>/dev/null)
 if [ -z "$count" ] || [ "$count" -eq 0 ]; then
     set_value "$CMD_DETAIL_ID" "No commands found in Command.plist"
     exit 0
@@ -23,13 +25,15 @@ fi
 buffer=""
 i=0
 while [ "$i" -lt "$count" ]; do
-    name=$(/usr/bin/plutil -extract "COMMAND_LIST.$i.NAME" raw "$cmd_plist" 2>/dev/null)
-    cmd_id=$(/usr/bin/plutil -extract "COMMAND_LIST.$i.COMMAND_ID" raw "$cmd_plist" 2>/dev/null)
+    # plister get value handles NAME as both string and array of strings
+    # For arrays, plister prints one element per line — join them without separator
+    name=$("$plister" get value "$cmd_plist" "/COMMAND_LIST/$i/NAME" 2>/dev/null | /usr/bin/tr -d '\n')
+    cmd_id=$("$plister" get value "$cmd_plist" "/COMMAND_LIST/$i/COMMAND_ID" 2>/dev/null)
 
     if [ -n "$cmd_id" ]; then
         label="$cmd_id"
     elif [ -n "$name" ]; then
-        label="$name (main)"
+        label="$name.main"
     else
         label="Command $i"
     fi

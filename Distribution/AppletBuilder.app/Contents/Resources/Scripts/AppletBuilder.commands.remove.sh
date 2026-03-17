@@ -29,9 +29,12 @@ fi
 
 # Disable buttons (no selection after removal)
 set_enabled "$CMD_REMOVE_BTN_ID" false
-set_enabled "$CMD_EDIT_BTN_ID" false
 set_enabled "$CMD_REVEAL_BTN_ID" false
+set_enabled "$CMD_VALIDATE_BTN_ID" false
+set_enabled "$CMD_SAVE_BTN_ID" false
+set_enabled "$CMD_EXT_EDIT_BTN_ID" false
 set_value "$CMD_DETAIL_ID" ""
+set_value "$CMD_EDITED_LABEL_ID" ""
 
 # Refresh the commands table
 "$OMC_OMC_SUPPORT_PATH/omc_next_command" "${OMC_CURRENT_COMMAND_GUID}" "AppletBuilder.commands.loaded"

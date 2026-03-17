@@ -307,6 +307,33 @@
 			<string>exe_script_file</string>
 		</dict>
 
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.commands.validate</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.commands.save.detail</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.commands.text.changed</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
 		<!-- ════════════════════════════════════════════════════════
 		     Scripts tab
 		     ════════════════════════════════════════════════════════ -->
@@ -361,6 +388,24 @@
 			<string>AppletBuilder</string>
 			<key>COMMAND_ID</key>
 			<string>AppletBuilder.scripts.reveal</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.scripts.save.detail</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.scripts.text.changed</string>
 			<key>EXECUTION_MODE</key>
 			<string>exe_script_file</string>
 		</dict>
@@ -421,6 +466,81 @@
 			<string>AppletBuilder.uifiles.reveal</string>
 			<key>EXECUTION_MODE</key>
 			<string>exe_script_file</string>
+		</dict>
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.uifiles.validate</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.uifiles.prettify</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.uifiles.preview</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.uifiles.save.detail</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.uifiles.text.changed</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
+		<!-- ════════════════════════════════════════════════════════
+		     Shared: Error output window
+		     ════════════════════════════════════════════════════════ -->
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.show.errors</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file_with_output_window</string>
+			<key>OUTPUT_WINDOW_SETTINGS</key>
+			<dict>
+				<key>TEXT_FONT</key>
+				<string>Menlo</string>
+				<key>TEXT_SIZE</key>
+				<integer>12</integer>
+				<key>WINDOW_TITLE</key>
+				<string>Validation Errors</string>
+				<key>WINDOW_WIDTH</key>
+				<integer>600</integer>
+				<key>WINDOW_HEIGHT</key>
+				<integer>300</integer>
+				<key>WINDOW_POSITION</key>
+				<string>cascade</string>
+				<key>WINDOW_TYPE</key>
+				<string>regular</string>
+			</dict>
 		</dict>
 
 		<!-- ════════════════════════════════════════════════════════
