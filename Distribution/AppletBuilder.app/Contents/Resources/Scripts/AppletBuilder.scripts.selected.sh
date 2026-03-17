@@ -31,7 +31,8 @@ echo "$selected_path" > "$state_dir/scripts_selected_path"
 
 if [ -f "$selected_path" ]; then
     content=$(/bin/cat "$selected_path")
-    set_value "$SCRIPTS_DETAIL_ID" "$content"
+    set_value "$SCRIPTS_DETAIL_ID" "$content
+"
 else
     set_value "$SCRIPTS_DETAIL_ID" "File not found: $selected_path"
 fi

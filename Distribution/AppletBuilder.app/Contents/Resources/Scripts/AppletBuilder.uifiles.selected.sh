@@ -47,7 +47,8 @@ elif [ -f "$selected_path" ]; then
     set_value "$UI_EDITED_LABEL_ID" ""
 
     content=$(/bin/cat "$selected_path")
-    set_value "$UI_DETAIL_ID" "$content"
+    set_value "$UI_DETAIL_ID" "$content
+"
 else
     set_value "$UI_DETAIL_ID" "File not found: $selected_path"
     set_value "$UI_EDITED_LABEL_ID" ""
