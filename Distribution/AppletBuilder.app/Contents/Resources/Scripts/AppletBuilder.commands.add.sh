@@ -12,17 +12,7 @@ if [ ! -f "$cmd_plist" ]; then
     exit 0
 fi
 
-# Get current count to determine new index
-count=$(/usr/bin/plutil -extract COMMAND_LIST raw "$cmd_plist" 2>/dev/null)
-if [ -z "$count" ]; then
-    count=0
-fi
-
-# Insert a new command template dict at the end of the array
-/usr/bin/plutil -insert "COMMAND_LIST.$count" -dictionary "$cmd_plist" 2>/dev/null
-/usr/bin/plutil -insert "COMMAND_LIST.$count.NAME" -string "$app_name" "$cmd_plist" 2>/dev/null
-/usr/bin/plutil -insert "COMMAND_LIST.$count.COMMAND_ID" -string "$app_name.new.command" "$cmd_plist" 2>/dev/null
-/usr/bin/plutil -insert "COMMAND_LIST.$count.EXECUTION_MODE" -string "exe_script_file" "$cmd_plist" 2>/dev/null
+plist_edit "$cmd_plist" append_command "$app_name"
 
 # Refresh the commands table
 "$OMC_OMC_SUPPORT_PATH/omc_next_command" "${OMC_CURRENT_COMMAND_GUID}" "AppletBuilder.commands.loaded"

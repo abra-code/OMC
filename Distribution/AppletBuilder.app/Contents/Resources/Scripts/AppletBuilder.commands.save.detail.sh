@@ -20,9 +20,9 @@ if [ -z "$edited_xml" ]; then
     exit 1
 fi
 
-# Write edited XML to a temp file, convert to plist, then replace the command entry
-temp_file=$(/usr/bin/mktemp /tmp/appletbuilder_cmd.XXXXXX)
-cat > "$temp_file" <<EOF
+# Wrap the dict fragment in a plist envelope for validation and JSON conversion
+temp_plist=$(/usr/bin/mktemp /tmp/appletbuilder_cmd.XXXXXX.plist)
+cat > "$temp_plist" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -31,20 +31,26 @@ ${edited_xml}
 EOF
 
 # Validate the XML is a valid plist
-if ! /usr/bin/plutil -lint "$temp_file" > /dev/null 2>&1; then
+if ! /usr/bin/plutil -lint "$temp_plist" > /dev/null 2>&1; then
     set_value "$CMD_EDITED_LABEL_ID" "Error: invalid plist XML"
-    /bin/rm -f "$temp_file"
+    /bin/rm -f "$temp_plist"
     exit 1
 fi
 
-# Replace the command entry in the plist
-/usr/bin/plutil -replace "COMMAND_LIST.$cmd_index" -xml "$temp_file" "$cmd_plist" 2>/dev/null
+# Convert edited dict to JSON
+temp_json=$(/usr/bin/mktemp /tmp/appletbuilder_cmd.XXXXXX.json)
+/usr/bin/plutil -convert json -o "$temp_json" "$temp_plist"
+/bin/rm -f "$temp_plist"
+
+# Replace the command entry via JSON round-trip
+plist_edit "$cmd_plist" replace_command "$cmd_index" "$temp_json"
 result=$?
-/bin/rm -f "$temp_file"
+/bin/rm -f "$temp_json"
 
 if [ "$result" -eq 0 ]; then
     set_enabled "$CMD_SAVE_BTN_ID" false
     set_value "$CMD_EDITED_LABEL_ID" "Saved"
+    "$next_cmd" "${OMC_CURRENT_COMMAND_GUID}" "AppletBuilder.commands.loaded"
 else
     set_value "$CMD_EDITED_LABEL_ID" "Error: failed to save"
 fi

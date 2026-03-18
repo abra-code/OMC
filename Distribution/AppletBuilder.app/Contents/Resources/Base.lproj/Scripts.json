@@ -10,7 +10,8 @@
           "minWidth": 180,
           "idealWidth": 240,
           "maxHeight": "infinity"
-        }
+        },
+        "padding": { "leading": 8, "bottom": 4 }
       },
       "children": [
         {

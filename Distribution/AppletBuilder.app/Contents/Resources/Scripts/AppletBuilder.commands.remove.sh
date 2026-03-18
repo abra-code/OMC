@@ -25,7 +25,7 @@ if [ "$result" -ne 0 ]; then
 fi
 
 # Remove the command at the given index
-/usr/bin/plutil -remove "COMMAND_LIST.$cmd_index" "$cmd_plist" 2>/dev/null
+plist_edit "$cmd_plist" remove_command "$cmd_index"
 
 # Disable buttons (no selection after removal)
 set_enabled "$CMD_REMOVE_BTN_ID" false

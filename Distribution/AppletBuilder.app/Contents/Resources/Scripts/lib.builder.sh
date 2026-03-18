@@ -86,6 +86,16 @@ UI_EDITED_LABEL_ID=724
 UI_EXT_EDIT_BTN_ID=725
 UI_TOOLBAR_ID=726
 
+# Services (in General tab)
+SVC_TABLE_ID=330
+SVC_MENU_TITLE_ID=331
+SVC_COMMAND_PICKER_ID=332
+SVC_INPUT_PICKER_ID=333
+SVC_ADD_BTN_ID=334
+SVC_REMOVE_BTN_ID=335
+SVC_SAVE_BTN_ID=336
+SVC_STATUS_ID=337
+
 # Build & Run
 BUILD_IDENTITY_PICKER_ID=402
 BUILD_LOG_ID=401
@@ -215,6 +225,27 @@ plist_write() {
     local key="$2"
     local value="$3"
     /usr/bin/plutil -replace "$key" -string "$value" "$plist" 2>/dev/null
+}
+
+# Edit a plist via JSON round-trip with Python.
+# Converts plist to JSON, calls plist_edit.py with the operation and args,
+# then converts back to xml1 plist.
+#
+# Usage:
+#   plist_edit "$plist" set_keys CFBundleName "$name"
+#   plist_edit "$plist" append_service "$title" "$cmd"
+#   plist_edit "$plist" replace_command "$index" "$json_file"
+plist_edit() {
+    local plist="$1"
+    local operation="$2"
+    shift 2
+    local tmp=$(/usr/bin/mktemp /tmp/plist_edit_XXXXXX.json)
+    /usr/bin/plutil -convert json -o "$tmp" "$plist" || { /bin/rm -f "$tmp"; return 1; }
+    "$python3" "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/plist_edit.py" "$tmp" "$operation" "$@" || { /bin/rm -f "$tmp"; return 1; }
+    /usr/bin/plutil -convert xml1 -o "$plist" "$tmp"
+    local rc=$?
+    /bin/rm -f "$tmp"
+    return $rc
 }
 
 # ──────────────────────────────────────────────────────────────

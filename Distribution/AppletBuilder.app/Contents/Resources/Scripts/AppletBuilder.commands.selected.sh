@@ -38,6 +38,9 @@ fi
 state_dir=$(get_state_dir)
 echo "$cmd_index" > "$state_dir/cmd_selected_index"
 
-# Extract the command dict as XML fragment
-cmd_xml=$(/usr/bin/plutil -extract "COMMAND_LIST.$cmd_index" xml1 -o - "$cmd_plist" 2>/dev/null)
-set_value "$CMD_DETAIL_ID" "$cmd_xml"
+# Extract the command dict as XML fragment, stripping the plist wrapper
+# so the user sees and edits only the <dict>...</dict> content
+cmd_xml=$(/usr/bin/plutil -extract "COMMAND_LIST.$cmd_index" xml1 -o - "$cmd_plist" 2>/dev/null \
+    | /usr/bin/sed -n '/<dict>/,/<\/dict>/p')
+set_value "$CMD_DETAIL_ID" "$cmd_xml
+"

@@ -14,7 +14,7 @@
       "properties": {
         "spacing": 12,
         "alignment": "center",
-        "padding": { "leading": 8 }
+        "padding": { "leading": 8, "trailing": 16 }
       },
       "children": [
         {
@@ -22,7 +22,7 @@
           "id": 211,
           "properties": {
             "scaleMode": "fit",
-            "frame": { "width": 64, "height": 64 }
+            "frame": { "width": 96, "height": 96 }
           }
         },
         {
@@ -37,6 +37,11 @@
     },
     {
       "type": "Form",
+      "properties": {
+        "spacing": 12,
+        "alignment": "center",
+        "padding": { "leading": 8, "trailing": 16 }
+      },
       "children": [
         {
           "type": "Picker",

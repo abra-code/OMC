@@ -1,20 +1,14 @@
 {
     "type": "VStack",
     "properties": {
-        "spacing": 20,
+        "spacing": 16,
         "alignment": "leading",
         "frame": {
           "maxWidth": 560
-        }
+        },
+        "padding": { "top": 16, "leading": 16, "trailing": 16, "bottom": 4 },
     },
     "children": [
-      {
-        "type": "Text",
-        "properties": {
-          "text": "Build & Run",
-          "font": "title"
-        }
-      },
       {
         "type": "LabeledContent",
         "properties": {
@@ -34,9 +28,10 @@
         ]
       },
       {
-        "type": "GroupBox",
+        "type": "Section",
         "properties": {
-          "title": "Actions"
+          "header": "Actions",
+          "padding": { "top": 0, "bottom": 0 }
         },
         "children": [
           {
@@ -92,9 +87,10 @@
         ]
       },
       {
-        "type": "GroupBox",
+        "type": "Section",
         "properties": {
-          "title": "Build Log"
+          "header": "Log",
+          "padding": { "top": 0, "bottom": 0 }
         },
         "children": [
           {
