@@ -518,6 +518,11 @@ OnMyCommandCM::ExecuteCommand(AEDesc *inAEContext, SInt32 inCommandIndex, const 
                 // TODO: decide what are we going to do with both non-null conext and a parent runtime data
                 assert(false);
             }
+
+            // set parent command UUID so the child command can reference its parent
+            commandRuntimeData->SetParentCommandUUID(parentCommandRuntimeData->GetCommandUUID());
+            // note: parentDialogUUID is not set here - it is set in ExecuteCommandWithObjects
+            // when a new dialog is about to be created, moving the existing dialogUUID into parentDialogUUID
         }
         
         // this is potentially new commandRuntimeData and contextData after copy from parent
@@ -1039,12 +1044,19 @@ OnMyCommandCM::ExecuteCommandWithObjects(CommandRuntimeData *initialCommandRunti
                 
         ARefCountedObj<OMCDialog> activeDialog;
         // is this command creating a new dialog?
+        // Before creating a new dialog, move the current dialogUUID into parentDialogUUID
+        // so that subcommands of the new dialog can reference the parent dialog
+        if( currCommand.nibDialog != nullptr || currCommand.actionUIWindow != nullptr )
+        {
+            commandRuntimeData->SetParentDialogUUID(commandRuntimeData->GetAssociatedDialogUUID());
+        }
+
         if( currCommand.nibDialog != nullptr )
         {
 			// bring executing application to front. important when running within ShortcutsObserver
 			// don't restore because for non-modal dialogs this would bring executing app behind along with the dialog
 			StSwitchToFront switcher(false);
-			
+
 			 // we create one dialog for all objects or we create for each object when processing separately
 			activeDialog = RunNibDialog(this, commandRuntimeData);
 			if(activeDialog != nullptr)
@@ -1060,7 +1072,7 @@ OnMyCommandCM::ExecuteCommandWithObjects(CommandRuntimeData *initialCommandRunti
         else if( currCommand.actionUIWindow != nullptr )
         {
 			StSwitchToFront switcher(false);
-			
+
 			activeDialog = RunActionUIDialog(this, commandRuntimeData);
 			if(activeDialog != nullptr)
 			{
@@ -1199,12 +1211,19 @@ OnMyCommandCM::ExecuteCommandWithText(CommandDescription &currCommand, CFStringR
     
     ARefCountedObj<OMCDialog> activeDialog;
     // is this command creating a new dialog?
+    // Before creating a new dialog, move the current dialogUUID into parentDialogUUID
+    // so that subcommands of the new dialog can reference the parent dialog
+    if( currCommand.nibDialog != nullptr || currCommand.actionUIWindow != nullptr )
+    {
+        commandRuntimeData->SetParentDialogUUID(commandRuntimeData->GetAssociatedDialogUUID());
+    }
+
     if(currCommand.nibDialog != nullptr)
     {
         //bring executing application to front. important when running within ShortcutsObserver
         //don't restore because for non-modal dialogs this would bring executing app behind along with the dialog
         StSwitchToFront switcher(false);
-        
+
         activeDialog = RunNibDialog(this, commandRuntimeData);
         if(activeDialog == nullptr)
         {
@@ -1214,7 +1233,7 @@ OnMyCommandCM::ExecuteCommandWithText(CommandDescription &currCommand, CFStringR
     else if(currCommand.actionUIWindow != nullptr)
     {
         StSwitchToFront switcher(false);
-        
+
         activeDialog = RunActionUIDialog(this, commandRuntimeData);
         if(activeDialog == nullptr)
         {
@@ -2626,6 +2645,20 @@ OnMyCommandCM::AppendTextToCommand(CFMutableStringRef inCommandRef, CFStringRef 
             releaseNewString = false;
 		}
 		break;
+
+		case PARENT_COMMAND_GUID:
+		{
+            newStrRef = commandRuntimeData.GetParentCommandUUID();
+            releaseNewString = false;
+		}
+		break;
+
+		case PARENT_DIALOG_GUID:
+		{
+            newStrRef = commandRuntimeData.GetParentDialogUUID();
+            releaseNewString = false;
+		}
+		break;
 	}
 
 	if(newStrRef != NULL)
@@ -2955,7 +2988,21 @@ OnMyCommandCM::PopulateEnvironList(CFMutableDictionaryRef ioEnvironList, Command
                 releaseNewString = false;
 			}
 			break;
-			
+
+			case PARENT_COMMAND_GUID: //always exported
+			{
+                newStrRef = commandRuntimeData.GetParentCommandUUID();
+                releaseNewString = false;
+			}
+			break;
+
+			case PARENT_DIALOG_GUID: //always exported
+			{
+                newStrRef = commandRuntimeData.GetParentDialogUUID();
+                releaseNewString = false;
+			}
+			break;
+
 			default:
 			break;
 		}

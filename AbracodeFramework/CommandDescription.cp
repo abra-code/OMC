@@ -65,7 +65,9 @@ static const SpecialWordAndID sSpecialWordAndIDList[] =
     { sizeof("__NIB_DLG_GUID__")-1,                            CFSTR("__NIB_DLG_GUID__"), CFSTR("OMC_NIB_DLG_GUID"),  NIB_DLG_GUID, true },
     { sizeof("__ACTIONUI_WINDOW_UUID__")-1,                    CFSTR("__ACTIONUI_WINDOW_UUID__"), CFSTR("OMC_ACTIONUI_WINDOW_UUID"),  ACTIONUI_WINDOW_UUID, true },
     { sizeof("__CURRENT_COMMAND_GUID__")-1,                    CFSTR("__CURRENT_COMMAND_GUID__"), CFSTR("OMC_CURRENT_COMMAND_GUID"),  CURRENT_COMMAND_GUID, true },
-    
+    { sizeof("__PARENT_COMMAND_GUID__")-1,                    CFSTR("__PARENT_COMMAND_GUID__"), CFSTR("OMC_PARENT_COMMAND_GUID"),  PARENT_COMMAND_GUID, true },
+    { sizeof("__PARENT_DIALOG_GUID__")-1,                     CFSTR("__PARENT_DIALOG_GUID__"), CFSTR("OMC_PARENT_DIALOG_GUID"),  PARENT_DIALOG_GUID, true },
+
     { sizeof("__FRONT_PROCESS_ID__")-1,                        CFSTR("__FRONT_PROCESS_ID__"), CFSTR("OMC_FRONT_PROCESS_ID"),  FRONT_PROCESS_ID, false },
     { sizeof("__FRONT_APPLICATION_NAME__")-1,                CFSTR("__FRONT_APPLICATION_NAME__"), CFSTR("OMC_FRONT_APPLICATION_NAME"),  FRONT_APPLICATION_NAME, false },
     

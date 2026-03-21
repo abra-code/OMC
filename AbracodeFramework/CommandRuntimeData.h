@@ -20,7 +20,8 @@ public:
         : contextData(commandRuntimeData.contextData), objectIndex(inObjectIndex),
           cachedSaveAsPath(commandRuntimeData.cachedSaveAsPath), cachedChooseFilePaths(commandRuntimeData.cachedChooseFilePaths),
           cachedChooseFolderPaths(commandRuntimeData.cachedChooseFolderPaths), cachedChooseObjectPaths(commandRuntimeData.cachedChooseObjectPaths),
-          commandUUID(CommandRuntimeData::GenerateUUID()), dialogUUID(commandRuntimeData.dialogUUID)
+          commandUUID(CommandRuntimeData::GenerateUUID()), dialogUUID(commandRuntimeData.dialogUUID),
+          parentCommandUUID(commandRuntimeData.parentCommandUUID), parentDialogUUID(commandRuntimeData.parentDialogUUID)
     {
         auto element_count = contextData.objectList.size();
         if((objectIndex < 0) || (objectIndex >= element_count))
@@ -105,6 +106,30 @@ public:
         return commandUUID;
     }
 
+    void
+    SetParentCommandUUID(CFStringRef inParentCommandUUID)
+    {
+        parentCommandUUID.Adopt(inParentCommandUUID, kCFObjRetain);
+    }
+
+    CFStringRef
+    GetParentCommandUUID() const
+    {
+        return parentCommandUUID;
+    }
+
+    void
+    SetParentDialogUUID(CFStringRef inParentDialogUUID)
+    {
+        parentDialogUUID.Adopt(inParentDialogUUID, kCFObjRetain);
+    }
+
+    CFStringRef
+    GetParentDialogUUID() const
+    {
+        return parentDialogUUID;
+    }
+
     static CFObj<CFStringRef>
     GenerateUUID()
     {
@@ -118,6 +143,8 @@ private:
     CFIndex            objectIndex {-1}; // negative if processing objects together or no objects
     CFObj<CFStringRef> commandUUID;
     CFObj<CFStringRef> dialogUUID;// dialog UUID used instead of dialog ptr to look up the instance
+    CFObj<CFStringRef> parentCommandUUID;
+    CFObj<CFStringRef> parentDialogUUID;
 
 public:
     CFObj<CFStringRef> inputText;
