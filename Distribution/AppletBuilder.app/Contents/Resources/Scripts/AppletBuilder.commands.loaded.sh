@@ -11,36 +11,4 @@ if [ ! -f "$cmd_plist" ]; then
     exit 0
 fi
 
-# Extract command names and populate the table
-# Column 1 (visible): command label
-# Column 2 (hidden): plist array index
-plister="$OMC_OMC_SUPPORT_PATH/plister"
-
-count=$("$plister" get count "$cmd_plist" /COMMAND_LIST 2>/dev/null)
-if [ -z "$count" ] || [ "$count" -eq 0 ]; then
-    set_value "$CMD_DETAIL_ID" "No commands found in Command.plist"
-    exit 0
-fi
-
-buffer=""
-i=0
-while [ "$i" -lt "$count" ]; do
-    # plister get value handles NAME as both string and array of strings
-    # For arrays, plister prints one element per line — join them without separator
-    name=$("$plister" get value "$cmd_plist" "/COMMAND_LIST/$i/NAME" 2>/dev/null | /usr/bin/tr -d '\n')
-    cmd_id=$("$plister" get value "$cmd_plist" "/COMMAND_LIST/$i/COMMAND_ID" 2>/dev/null)
-
-    if [ -n "$cmd_id" ]; then
-        label="$cmd_id"
-    elif [ -n "$name" ]; then
-        label="$name.main"
-    else
-        label="Command $i"
-    fi
-
-    buffer="${buffer}${label}	${i}
-"
-    i=$((i + 1))
-done
-
-printf "%s" "$buffer" | "$dialog_tool" "$window_uuid" "$CMD_TABLE_ID" omc_table_set_rows_from_stdin
+refresh_commands_table "$cmd_plist"

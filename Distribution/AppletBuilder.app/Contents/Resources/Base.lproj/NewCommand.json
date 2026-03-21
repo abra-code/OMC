@@ -1,0 +1,125 @@
+{
+  "type": "VStack",
+  "properties": {
+    "spacing": 16,
+    "alignment": "leading",
+    "padding": "default",
+    "frame": {
+      "width": 480
+    }
+  },
+  "children": [
+    {
+      "type": "Form",
+      "properties": {
+        "spacing": 10
+      },
+      "children": [
+        {
+          "type": "TextField",
+          "id": 801,
+          "properties": {
+            "title": "Name",
+            "prompt": "AppName",
+            "actionID": "AppletBuilder.commands.new.name.changed"
+          }
+        },
+        {
+          "type": "TextField",
+          "id": 802,
+          "properties": {
+            "title": "Command ID",
+            "prompt": "appname.new.command"
+          }
+        },
+        {
+          "type": "Picker",
+          "id": 803,
+          "properties": {
+            "title": "Execution",
+            "options": [
+              {"title": "Script File", "tag": "exe_script_file"},
+              {"title": "Script File + Output Window", "tag": "exe_script_file_with_output_window"},
+              {"title": "Inline Shell Script", "tag": "exe_shell_script"},
+              {"title": "Inline Shell Script + Output Window", "tag": "exe_shell_script_with_output_window"},
+              {"title": "AppleScript", "tag": "exe_applescript"},
+              {"title": "AppleScript + Output Window", "tag": "exe_applescript_with_output_window"},
+              {"title": "Terminal", "tag": "exe_terminal"},
+              {"title": "iTerm", "tag": "exe_iterm"},
+              {"title": "System (sync)", "tag": "exe_system"}
+            ],
+            "actionID": "AppletBuilder.commands.new.execution.changed"
+          }
+        },
+        {
+          "type": "Picker",
+          "id": 804,
+          "properties": {
+            "title": "Activation",
+            "options": [
+              {"title": "Always", "tag": "act_always"},
+              {"title": "File(s)", "tag": "act_file"},
+              {"title": "Folder(s)", "tag": "act_folder"},
+              {"title": "File(s) or Folder(s)", "tag": "act_file_or_folder"},
+              {"title": "Selected Text", "tag": "act_selected_text"}
+            ]
+          }
+        },
+        {
+          "type": "Picker",
+          "id": 805,
+          "properties": {
+            "title": "Create Script",
+            "options": [
+              {"title": "None", "tag": "none"},
+              {"title": "Shell (sh)", "tag": "sh"},
+              {"title": "Bash", "tag": "bash"},
+              {"title": "Zsh", "tag": "zsh"},
+              {"title": "Python", "tag": "py"},
+              {"title": "Ruby", "tag": "rb"},
+              {"title": "Perl", "tag": "pl"},
+              {"title": "AppleScript", "tag": "applescript"}
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "type": "HStack",
+      "properties": {
+        "spacing": 8
+      },
+      "children": [
+        {
+          "type": "Text",
+          "id": 810,
+          "properties": {
+            "text": "",
+            "font": "caption",
+            "foregroundStyle": "secondary"
+          }
+        },
+        { "type": "Spacer" },
+        {
+          "type": "Button",
+          "properties": {
+            "title": "Cancel",
+            "buttonStyle": "bordered",
+            "keyEquivalent": "escape",
+            "actionID": "AppletBuilder.commands.new.cancel"
+          }
+        },
+        {
+          "type": "Button",
+          "id": 811,
+          "properties": {
+            "title": "Create",
+            "buttonStyle": "borderedProminent",
+            "keyEquivalent": "return",
+            "actionID": "AppletBuilder.commands.new.create"
+          }
+        }
+      ]
+    }
+  ]
+}

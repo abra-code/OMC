@@ -1,0 +1,82 @@
+{
+  "type": "VStack",
+  "properties": {
+    "spacing": 16,
+    "alignment": "leading",
+    "padding": "default",
+    "frame": {
+      "width": 400
+    }
+  },
+  "children": [
+    {
+      "type": "Form",
+      "properties": {
+        "spacing": 10
+      },
+      "children": [
+        {
+          "type": "TextField",
+          "id": 821,
+          "properties": {
+            "title": "Script Name",
+            "prompt": "my.script"
+          }
+        },
+        {
+          "type": "Picker",
+          "id": 822,
+          "properties": {
+            "title": "Shell Type",
+            "options": [
+              {"title": "Shell (sh)", "tag": "sh"},
+              {"title": "Bash", "tag": "bash"},
+              {"title": "Zsh", "tag": "zsh"},
+              {"title": "Python", "tag": "py"},
+              {"title": "Ruby", "tag": "rb"},
+              {"title": "Perl", "tag": "pl"},
+              {"title": "AppleScript", "tag": "applescript"}
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "type": "HStack",
+      "properties": {
+        "spacing": 8
+      },
+      "children": [
+        {
+          "type": "Text",
+          "id": 830,
+          "properties": {
+            "text": "",
+            "font": "caption",
+            "foregroundStyle": "secondary"
+          }
+        },
+        { "type": "Spacer" },
+        {
+          "type": "Button",
+          "properties": {
+            "title": "Cancel",
+            "buttonStyle": "bordered",
+            "keyEquivalent": "escape",
+            "actionID": "AppletBuilder.scripts.new.cancel"
+          }
+        },
+        {
+          "type": "Button",
+          "id": 831,
+          "properties": {
+            "title": "Create",
+            "buttonStyle": "borderedProminent",
+            "keyEquivalent": "return",
+            "actionID": "AppletBuilder.scripts.new.create"
+          }
+        }
+      ]
+    }
+  ]
+}

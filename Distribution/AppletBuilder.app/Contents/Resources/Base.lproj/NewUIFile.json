@@ -1,0 +1,77 @@
+{
+  "type": "VStack",
+  "properties": {
+    "spacing": 16,
+    "alignment": "leading",
+    "padding": "default",
+    "frame": {
+      "width": 400
+    }
+  },
+  "children": [
+    {
+      "type": "Form",
+      "properties": {
+        "spacing": 10
+      },
+      "children": [
+        {
+          "type": "TextField",
+          "id": 841,
+          "properties": {
+            "title": "Name",
+            "prompt": "Window"
+          }
+        },
+        {
+          "type": "Picker",
+          "id": 842,
+          "properties": {
+            "title": "Type",
+            "options": [
+              {"title": "ActionUI (JSON)", "tag": "actionui"},
+              {"title": "Nib (Interface Builder)", "tag": "nib"}
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "type": "HStack",
+      "properties": {
+        "spacing": 8
+      },
+      "children": [
+        {
+          "type": "Text",
+          "id": 850,
+          "properties": {
+            "text": "",
+            "font": "caption",
+            "foregroundStyle": "secondary"
+          }
+        },
+        { "type": "Spacer" },
+        {
+          "type": "Button",
+          "properties": {
+            "title": "Cancel",
+            "buttonStyle": "bordered",
+            "keyEquivalent": "escape",
+            "actionID": "AppletBuilder.uifiles.new.cancel"
+          }
+        },
+        {
+          "type": "Button",
+          "id": 851,
+          "properties": {
+            "title": "Create",
+            "buttonStyle": "borderedProminent",
+            "keyEquivalent": "return",
+            "actionID": "AppletBuilder.uifiles.new.create"
+          }
+        }
+      ]
+    }
+  ]
+}

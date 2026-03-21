@@ -7,5 +7,6 @@ project_path=$(load_project_path)
 cmd_plist="$project_path/Contents/Resources/Command.plist"
 
 if [ -f "$cmd_plist" ]; then
-    /usr/bin/open -e "$cmd_plist"
+    editor=$(get_external_editor)
+    /usr/bin/open -a "$editor" "$cmd_plist"
 fi

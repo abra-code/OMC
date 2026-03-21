@@ -1,0 +1,64 @@
+{
+  "type": "VStack",
+  "properties": {
+    "spacing": 16,
+    "alignment": "leading",
+    "padding": "default",
+    "frame": {
+      "width": 450
+    }
+  },
+  "children": [
+    {
+      "type": "Form",
+      "properties": {
+        "spacing": 10
+      },
+      "children": [
+        {
+          "type": "HStack",
+          "properties": {
+            "spacing": 8
+          },
+          "children": [
+            {
+              "type": "Text",
+              "properties": {
+                "text": "External Editor",
+                "font": "body"
+              }
+            },
+            {
+              "type": "Image",
+              "id": 862,
+              "properties": {
+                "systemName": "app.dashed",
+                "frame": {
+                  "width": 16,
+                  "height": 16
+                }
+              }
+            },
+            {
+              "type": "Text",
+              "id": 861,
+              "properties": {
+                "text": "",
+                "font": "body"
+              }
+            },
+            { "type": "Spacer" },
+            {
+              "type": "Button",
+              "properties": {
+                "title": "Choose...",
+                "buttonStyle": "bordered",
+                "actionID": "AppletBuilder.settings.browse.editor"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

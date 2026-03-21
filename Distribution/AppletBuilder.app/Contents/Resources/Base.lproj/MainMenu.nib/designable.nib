@@ -25,7 +25,11 @@
                             <menuItem isSeparatorItem="YES" id="236">
                                 <modifierMask key="keyEquivalentModifierMask" command="YES"/>
                             </menuItem>
-                            <menuItem title="Preferences…" keyEquivalent="," id="129"/>
+                            <menuItem title="Settings…" image="gear" catalog="system" keyEquivalent="," id="129" customClass="OMCMenuItem">
+                                <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="string" keyPath="commandID" value="AppletBuilder.settings.dialog"/>
+                                </userDefinedRuntimeAttributes>
+                            </menuItem>
                             <menuItem isSeparatorItem="YES" id="143">
                                 <modifierMask key="keyEquivalentModifierMask" command="YES"/>
                             </menuItem>
@@ -517,4 +521,7 @@
             </userDefinedRuntimeAttributes>
         </customObject>
     </objects>
+    <resources>
+        <image name="gear" catalog="system" width="17" height="16"/>
+    </resources>
 </document>
