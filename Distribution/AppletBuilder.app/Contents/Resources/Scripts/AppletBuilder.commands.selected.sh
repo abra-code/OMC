@@ -15,7 +15,6 @@ if [ -z "$cmd_index" ]; then
     set_enabled "$CMD_REVEAL_BTN_ID" false
     set_enabled "$CMD_VALIDATE_BTN_ID" false
     set_enabled "$CMD_SAVE_BTN_ID" false
-    set_enabled "$CMD_EXT_EDIT_BTN_ID" false
     set_value "$CMD_DETAIL_ID" ""
     set_value "$CMD_EDITED_LABEL_ID" ""
     exit 0
@@ -25,7 +24,6 @@ fi
 set_enabled "$CMD_REMOVE_BTN_ID" true
 set_enabled "$CMD_REVEAL_BTN_ID" true
 set_enabled "$CMD_VALIDATE_BTN_ID" true
-set_enabled "$CMD_EXT_EDIT_BTN_ID" true
 # Save starts disabled until text is edited
 set_enabled "$CMD_SAVE_BTN_ID" false
 set_value "$CMD_EDITED_LABEL_ID" ""

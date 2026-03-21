@@ -12,7 +12,7 @@ pretty=$(echo "$edited_content" | "$python3" -m json.tool 2>&1)
 if [ "$?" -eq 0 ]; then
     set_value "$UI_DETAIL_ID" "$pretty"
     set_enabled "$UI_SAVE_BTN_ID" true
-    set_value "$UI_EDITED_LABEL_ID" "Modified"
+    set_value "$UI_EDITED_LABEL_ID" "🔴 Modified"
 else
     set_value "$UI_EDITED_LABEL_ID" "Invalid JSON"
     show_errors "Cannot prettify — JSON syntax error:

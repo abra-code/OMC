@@ -7,5 +7,6 @@ source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.builder.sh"
 selected_path="$OMC_ACTIONUI_TABLE_601_COLUMN_2_VALUE"
 
 if [ -n "$selected_path" ] && [ -f "$selected_path" ]; then
-    /usr/bin/open -e "$selected_path"
+    editor=$(get_external_editor)
+    /usr/bin/open -a "$editor" "$selected_path"
 fi

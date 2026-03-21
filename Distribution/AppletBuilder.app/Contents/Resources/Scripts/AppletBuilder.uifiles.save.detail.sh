@@ -16,7 +16,7 @@ edited_content="${OMC_ACTIONUI_VIEW_702_VALUE}"
 printf "%s" "$edited_content" > "$selected_path"
 if [ "$?" -eq 0 ]; then
     set_enabled "$UI_SAVE_BTN_ID" false
-    set_value "$UI_EDITED_LABEL_ID" "Saved"
+    set_value "$UI_EDITED_LABEL_ID" "✅ Saved"
 else
     set_value "$UI_EDITED_LABEL_ID" "Error: failed to save"
 fi

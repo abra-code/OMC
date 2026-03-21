@@ -57,6 +57,17 @@
               }
             },
             {
+              "type": "Button",
+              "id": 715,
+              "properties": {
+                "systemImage": "arrow.clockwise",
+                "imageScale": "medium",
+                "buttonStyle": "plain",
+                "actionID": "AppletBuilder.uifiles.loaded",
+                "frame": { "width": 32, "height": 28 }
+              }
+            },
+            {
               "type": "Divider",
               "properties": {
                 "padding": { "leading": 6, "trailing": 6 },

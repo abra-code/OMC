@@ -5,6 +5,16 @@
 	<key>COMMAND_LIST</key>
 	<array>
 
+		<!-- App lifecycle: disable smart quotes and smart insert/delete for code editing -->
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>app.will.launch</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
 		<dict>
 			<key>NAME</key>
 			<string>AppletBuilder</string>
@@ -43,8 +53,6 @@
 				<string>NewApplet</string>
 				<key>INIT_SUBCOMMAND_ID</key>
 				<string>AppletBuilder.new.init</string>
-				<key>END_CANCEL_SUBCOMMAND_ID</key>
-				<string>AppletBuilder.new.cancel</string>
 				<key>IS_BLOCKING</key>
 				<false/>
 				<key>WINDOW_TITLE</key>
@@ -57,15 +65,6 @@
 			<string>AppletBuilder</string>
 			<key>COMMAND_ID</key>
 			<string>AppletBuilder.new.init</string>
-			<key>EXECUTION_MODE</key>
-			<string>exe_script_file</string>
-		</dict>
-
-		<dict>
-			<key>NAME</key>
-			<string>AppletBuilder</string>
-			<key>COMMAND_ID</key>
-			<string>AppletBuilder.new.cancel</string>
 			<key>EXECUTION_MODE</key>
 			<string>exe_script_file</string>
 		</dict>
@@ -343,6 +342,79 @@
 			<string>exe_script_file</string>
 		</dict>
 
+		<!-- New Command dialog -->
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.commands.new.dialog</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+			<key>ACTIONUI_WINDOW</key>
+			<dict>
+				<key>JSON_NAME</key>
+				<string>NewCommand</string>
+				<key>INIT_SUBCOMMAND_ID</key>
+				<string>AppletBuilder.commands.new.init</string>
+				<key>END_OK_SUBCOMMAND_ID</key>
+				<string>AppletBuilder.commands.new.create</string>
+				<key>END_CANCEL_SUBCOMMAND_ID</key>
+				<string>AppletBuilder.commands.new.cancel</string>
+				<key>IS_BLOCKING</key>
+				<true/>
+				<key>WINDOW_TITLE</key>
+				<string>New Command</string>
+			</dict>
+		</dict>
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.commands.new.init</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
+		<!-- No-op cancel: exe_shell_script with empty command, no script file needed -->
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.commands.new.cancel</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_shell_script</string>
+			<key>COMMAND</key>
+			<array/>
+		</dict>
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.commands.new.name.changed</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.commands.new.execution.changed</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.commands.new.create</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
 		<dict>
 			<key>NAME</key>
 			<string>AppletBuilder</string>
@@ -428,6 +500,61 @@
 			<string>exe_script_file</string>
 		</dict>
 
+		<!-- New Script dialog -->
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.scripts.new.dialog</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+			<key>ACTIONUI_WINDOW</key>
+			<dict>
+				<key>JSON_NAME</key>
+				<string>NewScript</string>
+				<key>INIT_SUBCOMMAND_ID</key>
+				<string>AppletBuilder.scripts.new.init</string>
+				<key>END_OK_SUBCOMMAND_ID</key>
+				<string>AppletBuilder.scripts.new.create</string>
+				<key>END_CANCEL_SUBCOMMAND_ID</key>
+				<string>AppletBuilder.scripts.new.cancel</string>
+				<key>IS_BLOCKING</key>
+				<true/>
+				<key>WINDOW_TITLE</key>
+				<string>New Script</string>
+			</dict>
+		</dict>
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.scripts.new.init</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
+		<!-- No-op cancel: exe_shell_script with empty command, no script file needed -->
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.scripts.new.cancel</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_shell_script</string>
+			<key>COMMAND</key>
+			<array/>
+		</dict>
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.scripts.new.create</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
 		<dict>
 			<key>NAME</key>
 			<string>AppletBuilder</string>
@@ -504,6 +631,61 @@
 			<string>exe_script_file</string>
 		</dict>
 
+		<!-- New UI File dialog -->
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.uifiles.new.dialog</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+			<key>ACTIONUI_WINDOW</key>
+			<dict>
+				<key>JSON_NAME</key>
+				<string>NewUIFile</string>
+				<key>INIT_SUBCOMMAND_ID</key>
+				<string>AppletBuilder.uifiles.new.init</string>
+				<key>END_OK_SUBCOMMAND_ID</key>
+				<string>AppletBuilder.uifiles.new.create</string>
+				<key>END_CANCEL_SUBCOMMAND_ID</key>
+				<string>AppletBuilder.uifiles.new.cancel</string>
+				<key>IS_BLOCKING</key>
+				<true/>
+				<key>WINDOW_TITLE</key>
+				<string>New UI File</string>
+			</dict>
+		</dict>
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.uifiles.new.init</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
+		<!-- No-op cancel: exe_shell_script with empty command, no script file needed -->
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.uifiles.new.cancel</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_shell_script</string>
+			<key>COMMAND</key>
+			<array/>
+		</dict>
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.uifiles.new.create</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
 		<dict>
 			<key>NAME</key>
 			<string>AppletBuilder</string>
@@ -574,6 +756,61 @@
 			<string>AppletBuilder.uifiles.text.changed</string>
 			<key>EXECUTION_MODE</key>
 			<string>exe_script_file</string>
+		</dict>
+
+		<!-- ════════════════════════════════════════════════════════
+		     Settings
+		     ════════════════════════════════════════════════════════ -->
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.settings.dialog</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+			<key>ACTIONUI_WINDOW</key>
+			<dict>
+				<key>JSON_NAME</key>
+				<string>Settings</string>
+				<key>INIT_SUBCOMMAND_ID</key>
+				<string>AppletBuilder.settings.init</string>
+				<key>IS_BLOCKING</key>
+				<false/>
+				<key>WINDOW_TITLE</key>
+				<string>Settings</string>
+			</dict>
+		</dict>
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.settings.init</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.settings.browse.editor</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+			<key>CHOOSE_OBJECT_DIALOG</key>
+			<dict>
+				<key>MESSAGE</key>
+				<string>Select an application</string>
+				<key>ALLOW_MULTIPLE_ITEMS</key>
+				<false/>
+				<key>DEFAULT_LOCATION</key>
+				<string>/Applications</string>
+				<key>ALLOWED_CONTENT_TYPES</key>
+				<array>
+					<string>com.apple.application-bundle</string>
+				</array>
+			</dict>
 		</dict>
 
 		<!-- ════════════════════════════════════════════════════════
