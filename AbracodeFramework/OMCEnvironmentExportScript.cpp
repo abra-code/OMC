@@ -168,7 +168,7 @@ bool IsShDefaultInITem()
 		CFDictionaryRef foundDefaultProfile = nullptr;
 		CFIndex profileCount = 0;
 
-		if(profileArray == nullptr)
+		if(profileArray != nullptr)
 			profileCount = CFArrayGetCount(profileArray);
 
 		if(profileCount == 1)
