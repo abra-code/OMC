@@ -11,3 +11,4 @@ Distribution/AppletBuilder.app/Contents/Frameworks
 Distribution/AppletBuilder.app/Contents/_CodeSignature
 Distribution/AppletBuilder.app/Contents/MacOS
 Distribution/AppletBuilder.app/Contents/Helpers
+.build
