@@ -1,0 +1,41 @@
+ActionUI License Exception for OMC
+
+Copyright (c) 2025 Tomasz Kukielka
+
+As the copyright holder of both OMC and ActionUI, I grant the following
+additional permission regarding ActionUI components used by the OMC
+engine (OnMyCommand):
+
+Exception Grant
+
+Notwithstanding the terms of the PolyForm Small Business License 1.0.0
+under which ActionUI is licensed, the following uses of ActionUI are
+permitted without regard to the Small Business revenue and employee
+thresholds:
+
+  1. Authoring ActionUI JSON UI definitions for use with the OMC engine,
+     whether by hand, with any tooling, or with AI agents.
+
+  2. Distributing and running OMC applications, contextual menu items,
+     and system services that incorporate ActionUI JSON UI definitions
+     and rely on ActionUI runtime rendering provided by the OMC engine.
+
+  3. Using ActionUI documentation, JSON schemas, and element templates
+     distributed with OMC for the purpose of authoring UI definitions
+     for OMC.
+
+Scope
+
+This exception applies solely to ActionUI as used through the OMC
+engine. It does not extend to standalone use of the ActionUI library,
+framework, or tools outside the context of OMC.
+
+The ActionUI project itself remains licensed under the PolyForm Small
+Business License 1.0.0. This exception does not alter the license of
+ActionUI for any use beyond what is described above.
+
+No Warranty
+
+ActionUI components covered by this exception are provided "as is",
+without warranty of any kind. See the OMC LICENSE (MIT) and the
+ActionUI LICENSE.txt (PolyForm Small Business 1.0.0) for full terms.
