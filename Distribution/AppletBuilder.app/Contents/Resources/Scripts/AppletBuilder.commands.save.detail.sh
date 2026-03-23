@@ -6,8 +6,7 @@ source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.builder.sh"
 project_path=$(load_project_path)
 cmd_plist="$project_path/Contents/Resources/Command.plist"
 
-state_dir=$(get_state_dir)
-cmd_index=$(cat "$state_dir/cmd_selected_index" 2>/dev/null)
+cmd_index=$(pb_get "$PB_CMD_SELECTED")
 
 if [ -z "$cmd_index" ] || [ ! -f "$cmd_plist" ]; then
     set_value "$CMD_EDITED_LABEL_ID" "Error: no command selected"

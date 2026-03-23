@@ -7,12 +7,11 @@ env | sort
 source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.builder.sh"
 
 # Read the pending project path stashed by the main dispatch script
-# general.loaded may have already consumed the pending file (race), so
-# check the window-keyed state dir as a fallback
-pending="/tmp/appletbuilder_pending_project"
-if [ -f "$pending" ]; then
-    app_path=$(cat "$pending")
-    /bin/rm -f "$pending"
+# general.loaded may have already consumed it (race), so
+# check our own pasteboard as a fallback
+app_path=$("$pasteboard_tool" "appletbuilder_pending_project" get)
+if [ -n "$app_path" ]; then
+    "$pasteboard_tool" "appletbuilder_pending_project" set ""
 else
     app_path=$(load_project_path)
 fi

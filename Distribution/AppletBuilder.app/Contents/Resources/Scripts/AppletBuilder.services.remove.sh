@@ -34,8 +34,7 @@ set_value "$SVC_MENU_TITLE_ID" ""
 set_value "$SVC_STATUS_ID" "Service removed"
 
 # Clear selected index
-state_dir=$(get_state_dir)
-/bin/rm -f "$state_dir/svc_selected_index"
+pb_set "$PB_SVC_SELECTED" ""
 
 # Reload services table
 "$next_cmd" "${OMC_CURRENT_COMMAND_GUID}" "AppletBuilder.services.reload"

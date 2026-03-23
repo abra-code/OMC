@@ -6,11 +6,7 @@ source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.builder.sh"
 ensure_help_docs_converted
 
 # Determine start page based on selected UI file type
-state_dir=$(get_state_dir)
-selected_path=""
-if [ -f "$state_dir/uifiles_selected_path" ]; then
-    selected_path=$(cat "$state_dir/uifiles_selected_path")
-fi
+selected_path=$(pb_get "$PB_UIFILES_SELECTED")
 
 if [ -d "$selected_path" ]; then
     start_page="file://${HELP_HTML_DIR}/Nib-Guide.html"

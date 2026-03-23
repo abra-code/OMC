@@ -3,8 +3,7 @@
 
 source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.builder.sh"
 
-state_dir=$(get_state_dir)
-selected_path=$(cat "$state_dir/uifiles_selected_path" 2>/dev/null)
+selected_path=$(pb_get "$PB_UIFILES_SELECTED")
 
 if [ -z "$selected_path" ] || [ ! -f "$selected_path" ]; then
     set_value "$UI_EDITED_LABEL_ID" "No file selected"

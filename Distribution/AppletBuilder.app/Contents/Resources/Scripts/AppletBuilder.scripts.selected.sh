@@ -26,8 +26,7 @@ set_enabled "$SCRIPTS_SAVE_BTN_ID" false
 set_value "$SCRIPTS_EDITED_LABEL_ID" ""
 
 # Store selected path for save handler
-state_dir=$(get_state_dir)
-echo "$selected_path" > "$state_dir/scripts_selected_path"
+pb_set "$PB_SCRIPTS_SELECTED" "$selected_path"
 
 if [ -f "$selected_path" ]; then
     content=$(/bin/cat "$selected_path")

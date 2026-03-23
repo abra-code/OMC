@@ -133,30 +133,42 @@ BUILD_IDENTITY_PICKER_ID=402
 BUILD_LOG_ID=401
 
 # ──────────────────────────────────────────────────────────────
-# State management (temp files keyed by window UUID)
+# State management (private pasteboards keyed by window UUID)
 # ──────────────────────────────────────────────────────────────
 
-state_dir="/tmp/appletbuilder_${OMC_ACTIONUI_WINDOW_UUID}"
+# Pasteboard key names (suffixed with window_uuid)
+PB_PROJECT_PATH="project_path_${window_uuid}"
+PB_UIFILES_SELECTED="uifiles_selected_path_${window_uuid}"
+PB_SCRIPTS_SELECTED="scripts_selected_path_${window_uuid}"
+PB_CMD_SELECTED="cmd_selected_index_${window_uuid}"
+PB_SVC_SELECTED="svc_selected_index_${window_uuid}"
+PB_HELP_NAV_COUNT="help_nav_count_${window_uuid}"
+PB_HELP_WENT_BACK="help_went_back_${window_uuid}"
 
-get_state_dir() {
-    /bin/mkdir -p "$state_dir"
-    echo "$state_dir"
+pb_set() {
+    "$pasteboard_tool" "$1" set "$2"
+}
+
+pb_get() {
+    "$pasteboard_tool" "$1" get
 }
 
 save_project_path() {
-    local dir=$(get_state_dir)
-    echo "$1" > "$dir/project_path"
+    pb_set "$PB_PROJECT_PATH" "$1"
 }
 
 load_project_path() {
-    local dir=$(get_state_dir)
-    if [ -f "$dir/project_path" ]; then
-        cat "$dir/project_path"
-    fi
+    pb_get "$PB_PROJECT_PATH"
 }
 
 cleanup_state() {
-    /bin/rm -rf "$state_dir"
+    pb_set "$PB_PROJECT_PATH" ""
+    pb_set "$PB_UIFILES_SELECTED" ""
+    pb_set "$PB_SCRIPTS_SELECTED" ""
+    pb_set "$PB_CMD_SELECTED" ""
+    pb_set "$PB_SVC_SELECTED" ""
+    pb_set "$PB_HELP_NAV_COUNT" ""
+    pb_set "$PB_HELP_WENT_BACK" ""
 }
 
 # ──────────────────────────────────────────────────────────────

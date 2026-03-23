@@ -33,8 +33,7 @@ if [ ! -f "$cmd_plist" ]; then
 fi
 
 # Store selected index for save/validate handlers
-state_dir=$(get_state_dir)
-echo "$cmd_index" > "$state_dir/cmd_selected_index"
+pb_set "$PB_CMD_SELECTED" "$cmd_index"
 
 # Extract the command dict as XML fragment, stripping the plist wrapper
 # (xml declaration, DOCTYPE, <plist> header and </plist> footer)

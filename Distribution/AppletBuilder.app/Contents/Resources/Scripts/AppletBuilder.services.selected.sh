@@ -24,8 +24,7 @@ if [ ! -f "$plist" ]; then
 fi
 
 # Store selected index for save/remove
-state_dir=$(get_state_dir)
-echo "$svc_index" > "$state_dir/svc_selected_index"
+pb_set "$PB_SVC_SELECTED" "$svc_index"
 
 # Enable editing controls
 set_enabled "$SVC_REMOVE_BTN_ID" true

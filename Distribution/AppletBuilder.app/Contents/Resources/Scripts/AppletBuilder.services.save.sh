@@ -6,8 +6,7 @@ source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.builder.sh"
 project_path=$(load_project_path)
 plist="$project_path/Contents/Info.plist"
 
-state_dir=$(get_state_dir)
-svc_index=$(cat "$state_dir/svc_selected_index" 2>/dev/null)
+svc_index=$(pb_get "$PB_SVC_SELECTED")
 
 if [ -z "$svc_index" ] || [ ! -f "$plist" ]; then
     exit 0

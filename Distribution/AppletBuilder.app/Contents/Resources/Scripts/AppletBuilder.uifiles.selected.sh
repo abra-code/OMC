@@ -21,8 +21,7 @@ if [ -z "$selected_path" ]; then
 fi
 
 # Store selected path for save/validate/preview handlers
-state_dir=$(get_state_dir)
-echo "$selected_path" > "$state_dir/uifiles_selected_path"
+pb_set "$PB_UIFILES_SELECTED" "$selected_path"
 
 # Enable common action buttons
 set_enabled "$UI_REMOVE_BTN_ID" true

@@ -5,16 +5,13 @@
 
 source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.builder.sh"
 
-state_dir=$(get_state_dir)
-nav_count_file="$state_dir/help_nav_count_${window_uuid}"
-
 # Read and increment navigation count
-nav_count=0
-if [ -f "$nav_count_file" ]; then
-    nav_count=$(cat "$nav_count_file")
+nav_count=$(pb_get "$PB_HELP_NAV_COUNT")
+if [ -z "$nav_count" ]; then
+    nav_count=0
 fi
 nav_count=$((nav_count + 1))
-echo "$nav_count" > "$nav_count_file"
+pb_set "$PB_HELP_NAV_COUNT" "$nav_count"
 
 # Enable back button after at least one navigation beyond initial page
 if [ "$nav_count" -gt 1 ]; then
@@ -22,7 +19,7 @@ if [ "$nav_count" -gt 1 ]; then
 fi
 
 # Forward button: enable after user has gone back at least once
-fwd_file="$state_dir/help_went_back_${window_uuid}"
-if [ -f "$fwd_file" ]; then
+went_back=$(pb_get "$PB_HELP_WENT_BACK")
+if [ -n "$went_back" ]; then
     set_enabled "$HELP_FORWARD_BTN_ID" true
 fi

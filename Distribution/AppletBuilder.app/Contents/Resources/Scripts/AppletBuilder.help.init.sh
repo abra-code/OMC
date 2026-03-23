@@ -4,9 +4,8 @@
 source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.builder.sh"
 
 # Reset navigation tracking state
-state_dir=$(get_state_dir)
-rm -f "$state_dir/help_nav_count_${window_uuid}"
-rm -f "$state_dir/help_went_back_${window_uuid}"
+pb_set "$PB_HELP_NAV_COUNT" ""
+pb_set "$PB_HELP_WENT_BACK" ""
 
 # Read start page from parent dialog's pasteboard
 start_page=""
