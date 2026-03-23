@@ -1,0 +1,10 @@
+{
+  "type": "AsyncImage",
+  "id": 1,
+  "properties": {
+    "url": "https://example.com/image.jpg",
+    "placeholder": "photo",
+    "resizable": true,
+    "contentMode": "fit"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "type": "CommandGroup",
+  "id": 4,
+  "properties": {
+    "placement": "after",
+    "placementTarget": "help"
+  },
+  "children": [
+    {
+      "type": "Button",
+      "id": 5,
+      "properties": {
+        "title": "Custom Action",
+        "actionID": "custom.action",
+        "keyboardShortcut": {
+          "key": "n",
+          "modifiers": ["command"]
+        }
+      }
+    }
+  ]
+}

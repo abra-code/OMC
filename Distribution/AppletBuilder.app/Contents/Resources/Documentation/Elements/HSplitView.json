@@ -1,0 +1,21 @@
+{
+  "type": "HSplitView",
+  "id": 1,
+  "properties": {
+    "padding": "default"
+  },
+  "children": [
+    {
+      "type": "List",
+      "id": 2,
+      "properties": {}
+    },
+    {
+      "type": "TextEditor",
+      "id": 3,
+      "properties": {
+        "text": ""
+      }
+    }
+  ]
+}

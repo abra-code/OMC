@@ -1,0 +1,10 @@
+{
+  "type": "ColorPicker",
+  "id": 1,
+  "properties": {
+    "title": "Pick a Color",
+    "selectedColor": "#FF0000",
+    "actionID": "color.selected",
+    "valueChangeActionID": "color.value.changed"
+  }
+}

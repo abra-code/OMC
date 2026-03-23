@@ -1,0 +1,8 @@
+{
+  "type": "Link",
+  "id": 1,
+  "properties": {
+    "title": "Visit Site",
+    "url": "https://example.com"
+  }
+}

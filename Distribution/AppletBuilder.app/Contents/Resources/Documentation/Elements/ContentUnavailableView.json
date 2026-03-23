@@ -1,0 +1,9 @@
+{
+  "type": "ContentUnavailableView",
+  "id": 1,
+  "properties": {
+    "title": "No Results",
+    "systemImage": "magnifyingglass",
+    "description": "Try a different search term."
+  }
+}

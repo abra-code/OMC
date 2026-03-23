@@ -1,0 +1,16 @@
+{
+  "type": "NavigationLink",
+  "id": 1,
+  "properties": {
+    "padding": "default"
+  },
+  "destination": {
+    "type": "Text",
+    "properties": {
+      "text": "Detail"
+    }
+  },
+  "properties": {
+    "title": "Go to Detail"
+  }
+}

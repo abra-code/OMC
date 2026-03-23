@@ -1,0 +1,10 @@
+{
+  "type": "ProgressView",
+  "id": 1,
+  "properties": {
+    "value": 0.5,
+    "total": 1.0,
+    "title": "Loading",
+    "actionID": "progress.tapped"
+  }
+}

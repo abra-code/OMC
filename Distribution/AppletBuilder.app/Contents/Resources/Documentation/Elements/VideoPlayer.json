@@ -1,0 +1,8 @@
+{
+  "type": "VideoPlayer",
+  "id": 1,
+  "properties": {
+    "url": "https://example.com/video.mp4",
+    "autoplay": true
+  }
+}

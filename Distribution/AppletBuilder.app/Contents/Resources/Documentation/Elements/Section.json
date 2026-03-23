@@ -1,0 +1,16 @@
+{
+  "type": "Section",
+  "id": 1,
+  "properties": {
+    "header": "Details",
+    "padding": "default"
+  },
+  "children": [
+    {
+      "type": "Text",
+      "properties": {
+        "text": "Item 1"
+      }
+    }
+  ]
+}

@@ -814,6 +814,103 @@
 		</dict>
 
 		<!-- ════════════════════════════════════════════════════════
+		     Help Viewer
+		     ════════════════════════════════════════════════════════ -->
+
+		<!-- Converts docs and opens help viewer -->
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.help.show</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.help.show.commands</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.help.show.services</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.help.show.scripts</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.help.dialog</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+			<key>ACTIONUI_WINDOW</key>
+			<dict>
+				<key>JSON_NAME</key>
+				<string>HelpViewer</string>
+				<key>INIT_SUBCOMMAND_ID</key>
+				<string>AppletBuilder.help.init</string>
+				<key>IS_BLOCKING</key>
+				<false/>
+				<key>WINDOW_TITLE</key>
+				<string>OMC Help</string>
+			</dict>
+		</dict>
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.help.init</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.help.back</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.help.forward</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.help.url.changed</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
+		<!-- ════════════════════════════════════════════════════════
 		     Shared: Error output window
 		     ════════════════════════════════════════════════════════ -->
 

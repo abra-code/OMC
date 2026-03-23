@@ -1,0 +1,13 @@
+{
+  "type": "Slider",
+  "id": 1,
+  "properties": {
+    "value": 50.0,
+    "range": {
+      "min": 0.0,
+      "max": 100.0
+    },
+    "step": 1.0,
+    "valueChangeActionID": "slider.value.changed"
+  }
+}

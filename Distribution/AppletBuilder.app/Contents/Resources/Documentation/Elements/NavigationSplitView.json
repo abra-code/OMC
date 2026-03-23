@@ -1,0 +1,27 @@
+{
+  "type": "NavigationSplitView",
+  "id": 1,
+  "properties": {
+    "columnVisibility": "all",
+    "style": "balanced",
+    "padding": "default"
+  },
+  "sidebar": {
+    "type": "Text",
+    "properties": {
+      "text": "Sidebar"
+    }
+  },
+  "content": {
+    "type": "Text",
+    "properties": {
+      "text": "Content"
+    }
+  },
+  "detail": {
+    "type": "Text",
+    "properties": {
+      "text": "Detail"
+    }
+  }
+}

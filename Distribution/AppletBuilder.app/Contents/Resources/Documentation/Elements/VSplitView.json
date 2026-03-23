@@ -1,0 +1,23 @@
+{
+  "type": "VSplitView",
+  "id": 1,
+  "properties": {
+    "padding": "default"
+  },
+  "children": [
+    {
+      "type": "TextEditor",
+      "id": 2,
+      "properties": {
+        "text": "Top pane"
+      }
+    },
+    {
+      "type": "TextEditor",
+      "id": 3,
+      "properties": {
+        "text": "Bottom pane"
+      }
+    }
+  ]
+}

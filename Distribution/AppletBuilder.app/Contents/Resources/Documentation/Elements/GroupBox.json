@@ -1,0 +1,16 @@
+{
+  "type": "GroupBox",
+  "id": 1,
+  "properties": {
+    "title": "Settings",
+    "padding": "default"
+  },
+  "children": [
+    {
+      "type": "Text",
+      "properties": {
+        "text": "Content"
+      }
+    }
+  ]
+}

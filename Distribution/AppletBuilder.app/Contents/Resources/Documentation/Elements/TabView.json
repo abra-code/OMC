@@ -1,0 +1,51 @@
+{
+  "type": "TabView",
+  "id": 1,
+  "properties": {
+    "selection": 0,
+    "style": "automatic",
+    "padding": "default",
+    "background": "clear",
+    "opacity": 1.0,
+    "accessibilityIdentifier": "tabview_1",
+    "actionID": "tab.selected"
+  },
+  "children": [
+    {
+      "type": "Tab",
+      "properties": {
+        "title": "Home",
+        "systemImage": "house",
+        "badge": 5
+      },
+      "content": {
+        "type": "VStack",
+        "properties": {
+          "spacing": 10
+        },
+        "children": [
+          {
+            "type": "Text",
+            "properties": {
+              "text": "Home Content"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Tab",
+      "properties": {
+        "title": "Settings",
+        "systemImage": "gear",
+        "badge": "!"
+      },
+      "content": {
+        "type": "Text",
+        "properties": {
+          "text": "Settings Content"
+        }
+      }
+    }
+  ]
+}

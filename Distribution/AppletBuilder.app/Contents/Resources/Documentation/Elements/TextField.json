@@ -1,0 +1,28 @@
+{
+  "type": "TextField",
+  "id": 1,
+  "properties": {
+    "title": "Username",
+    "prompt": "Enter text",
+    "axis": "vertical",
+    "lineLimit": 5,
+    "format": "decimal",
+    "fractionLength": {
+      "min": 0,
+      "max": 2
+    },
+    "value": 9.99,
+    "textContentType": "username",
+    "padding": 8.0,
+    "foregroundStyle": "primary",
+    "background": "clear",
+    "font": "body",
+    "opacity": 1.0,
+    "cornerRadius": 4.0,
+    "disabled": false,
+    "accessibilityLabel": "Username",
+    "accessibilityIdentifier": "textfield_1",
+    "actionID": "text.submitted",
+    "valueChangeActionID": "text.value.changed"
+  }
+}

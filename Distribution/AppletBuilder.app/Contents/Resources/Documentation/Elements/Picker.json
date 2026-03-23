@@ -1,0 +1,12 @@
+{
+  "type": "Picker",
+  "id": 1,
+  "properties": {
+    "title": "Select Option",
+    "options": ["One", "Two", "Three"],
+    "pickerStyle": "menu",
+    "horizontalRadioGroupLayout": false,
+    "actionID": "picker.selection",
+    "valueChangeActionID": "picker.value.changed"
+  }
+}

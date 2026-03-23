@@ -1,0 +1,34 @@
+{
+  "type": "Grid",
+  "id": 1,
+  "rows": [
+    [
+      {
+        "type": "Text",
+        "properties": {
+          "text": "Cell1"
+        }
+      },
+      {
+        "type": "Button",
+        "properties": {
+          "title": "Click"
+        }
+      }
+    ],
+    [
+      {
+        "type": "Image",
+        "properties": {
+          "systemName": "star"
+        }
+      }
+    ]
+  ],
+  "properties": {
+    "alignment": "center",
+    "horizontalSpacing": 8.0,
+    "verticalSpacing": 8.0,
+    "padding": "default"
+  }
+}

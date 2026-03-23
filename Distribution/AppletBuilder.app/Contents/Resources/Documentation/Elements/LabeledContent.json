@@ -1,0 +1,17 @@
+{
+  "type": "LabeledContent",
+  "id": 1,
+  "properties": {
+    "title": "Username",
+    "padding": "default"
+  },
+  "children": [
+    {
+      "type": "TextField",
+      "id": 2,
+      "properties": {
+        "prompt": "Enter username"
+      }
+    }
+  ]
+}

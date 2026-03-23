@@ -122,6 +122,24 @@
               }
             },
             {
+              "type": "Divider",
+              "properties": {
+                "frame": { "height": 16 }
+              }
+            },
+            {
+              "type": "Button",
+              "id": 625,
+              "properties": {
+                "systemImage": "pencil",
+                "title": "Edit",
+                "buttonStyle": "bordered",
+                "controlSize": "small",
+                "actionID": "AppletBuilder.scripts.edit",
+                "disabled": true
+              }
+            },
+            {
               "type": "Text",
               "id": 624,
               "properties": {
@@ -133,14 +151,11 @@
             { "type": "Spacer" },
             {
               "type": "Button",
-              "id": 625,
+              "id": 627,
               "properties": {
-                "systemImage": "pencil",
-                "title": "Edit",
-                "buttonStyle": "bordered",
-                "controlSize": "small",
-                "actionID": "AppletBuilder.scripts.edit",
-                "disabled": true
+                "systemImage": "questionmark.circle",
+                "buttonStyle": "plain",
+                "actionID": "AppletBuilder.help.show.scripts"
               }
             }
           ]

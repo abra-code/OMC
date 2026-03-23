@@ -1,0 +1,20 @@
+{
+  "type": "Canvas",
+  "id": 1,
+  "properties": {
+    "operations": [
+      {
+        "type": "fill",
+        "path": {
+          "type": "circle",
+          "center": [0.5, 0.5],
+          "radius": 0.4
+        },
+        "color": "#FF0000"
+      }
+    ],
+    "backgroundColor": "#F5F5F5",
+    "coordinateMode": "normalized",
+    "actionID": "canvas.tapped"
+  }
+}

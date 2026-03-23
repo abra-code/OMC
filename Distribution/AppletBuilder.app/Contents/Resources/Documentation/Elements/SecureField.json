@@ -1,0 +1,12 @@
+{
+  "type": "SecureField",
+  "id": 1,
+  "properties": {
+    "title": "Password",
+    "text": "",
+    "prompt": "Enter password",
+    "textContentType": "password",
+    "actionID": "password.submitted",
+    "valueChangeActionID": "password.value.changed"
+  }
+}

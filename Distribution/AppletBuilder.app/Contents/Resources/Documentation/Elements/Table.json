@@ -1,0 +1,32 @@
+{
+  "type": "Table",
+  "id": 1,
+  "properties": {
+    "columns": [
+      "Name",
+      "Action",
+      "Icon"
+    ],
+    "columnTypes": [
+      {
+        "viewType": "Text"
+      },
+      {
+        "viewType": "Button",
+        "actionContext": "rowIndex",
+        "actionID": "row.action"
+      },
+      {
+        "viewType": "Image",
+        "dataInterpretation": "systemName"
+      }
+    ],
+    "widths": [
+      100,
+      80,
+      40
+    ],
+    "actionID": "table.item.selected",
+    "doubleClickActionID": "table.double.click"
+  }
+}

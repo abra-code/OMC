@@ -121,6 +121,12 @@ NEWUI_CREATE_BTN_ID=851
 SETTINGS_EDITOR_PATH_ID=861
 SETTINGS_EDITOR_NAME_ID=862
 
+# Help Viewer
+HELP_BACK_BTN_ID=901
+HELP_FORWARD_BTN_ID=902
+HELP_TITLE_ID=903
+HELP_WEBVIEW_ID=910
+
 # Build & Run
 BUILD_IDENTITY_PICKER_ID=402
 BUILD_LOG_ID=401
@@ -312,6 +318,40 @@ refresh_uifiles_table() {
 "
     done
     printf "%s" "$buffer" | "$dialog_tool" "$target" "$UI_TABLE_ID" omc_table_set_rows_from_stdin
+}
+
+# ──────────────────────────────────────────────────────────────
+# Help documentation
+# ──────────────────────────────────────────────────────────────
+
+HELP_HTML_DIR="/tmp/appletbuilder_help"
+
+ensure_help_docs_converted() {
+    local docs_dir="${OMC_APP_BUNDLE_PATH}/Contents/Resources/Documentation"
+    local html_dir="$HELP_HTML_DIR"
+    local needs_convert=0
+
+    if [ ! -d "$html_dir" ]; then
+        needs_convert=1
+    else
+        for src in "$docs_dir"/*.md "$docs_dir"/Schemas/*.md "$docs_dir"/Elements/*.json; do
+            [ ! -f "$src" ] && continue
+            local rel="${src#$docs_dir/}"
+            local out
+            case "$src" in
+                *.md) out="$html_dir/${rel%.md}.html" ;;
+                *)    out="$html_dir/$rel" ;;
+            esac
+            if [ ! -f "$out" ] || [ "$src" -nt "$out" ]; then
+                needs_convert=1
+                break
+            fi
+        done
+    fi
+
+    if [ "$needs_convert" -eq 1 ]; then
+        "$python3" "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/md2html.py" --dir "$docs_dir" "$html_dir"
+    fi
 }
 
 # ──────────────────────────────────────────────────────────────

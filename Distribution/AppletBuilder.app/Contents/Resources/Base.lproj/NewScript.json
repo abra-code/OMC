@@ -62,7 +62,7 @@
           "properties": {
             "title": "Cancel",
             "buttonStyle": "bordered",
-            "keyEquivalent": "escape",
+            "keyboardShortcut": { "key": "escape" },
             "actionID": "AppletBuilder.scripts.new.cancel"
           }
         },
@@ -72,7 +72,7 @@
           "properties": {
             "title": "Create",
             "buttonStyle": "borderedProminent",
-            "keyEquivalent": "return",
+            "keyboardShortcut": { "key": "return" },
             "actionID": "AppletBuilder.scripts.new.create"
           }
         }

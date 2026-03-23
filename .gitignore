@@ -1,11 +1,12 @@
 .DS_Store
+__pycache__
 *.xcuserstate
 xcuserdata
 build/
 Common/OmcDistribution.xcconfig
 **/*.xcuserdatad/xcschemes/xcschememanagement.plist
 **/*.xcuserdatad/UserInterfaceState.xcuserstate
-Distribution/AppletBuilder.app/Contents/Library
+Distribution/AppletBuilder.app/Contents/Library/Python
 Distribution/AppletBuilder.app/Contents/Frameworks
 Distribution/AppletBuilder.app/Contents/_CodeSignature
 Distribution/AppletBuilder.app/Contents/MacOS

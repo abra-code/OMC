@@ -1,0 +1,50 @@
+{
+  "type": "View",
+  "id": 1,
+  "properties": {
+    "padding": 10.0,
+    "hidden": false,
+    "foregroundStyle": "blue",
+    "font": "body",
+    "background": "white",
+    "frame": {
+      "width": 100.0,
+      "height": 100.0,
+      "alignment": "center"
+    },
+    "offset": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "opacity": 1.0,
+    "cornerRadius": 5.0,
+    "actionID": "view.action",
+    "valueChangeActionID": "view.value.changed",
+    "openURLActionID": "view.open.url",
+    "onAppearActionID": "view.appeared",
+    "onDisappearActionID": "view.disappeared",
+    "disabled": false,
+    "accessibilityLabel": "View",
+    "accessibilityHint": "Base view",
+    "accessibilityHidden": false,
+    "accessibilityIdentifier": "view_1",
+    "controlSize": "regular",
+    "labelsHidden": false,
+    "shadow": {
+      "color": "black",
+      "radius": 5.0,
+      "x": 0.0,
+      "y": 2.0
+    },
+    "border": {
+      "color": "blue",
+      "width": 1.0
+    },
+    "navigationTitle": "View",
+    "destinationViewId": 2,
+    "keyboardShortcut": {
+      "key": "v",
+      "modifiers": ["command"]
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "type": "GeometryReader",
+  "id": 1,
+  "content": {
+    "type": "Text",
+    "properties": {
+      "text": "Content"
+    }
+  },
+  "properties": {
+    "alignment": "center",
+    "padding": 0
+  }
+}

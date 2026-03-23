@@ -1,0 +1,23 @@
+{
+  "type": "LazyVStack",
+  "id": 1,
+  "properties": {
+    "spacing": 10.0,
+    "alignment": "center",
+    "padding": "default"
+  },
+  "children": [
+    {
+      "type": "Text",
+      "properties": {
+        "text": "Item 1"
+      }
+    },
+    {
+      "type": "Text",
+      "properties": {
+        "text": "Item 2"
+      }
+    }
+  ]
+}

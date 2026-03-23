@@ -1,0 +1,8 @@
+{
+  "type": "Label",
+  "id": 1,
+  "properties": {
+    "title": "Title",
+    "systemImage": "star.fill"
+  }
+}

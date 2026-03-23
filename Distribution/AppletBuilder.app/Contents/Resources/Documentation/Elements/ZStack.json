@@ -1,0 +1,22 @@
+{
+  "type": "ZStack",
+  "id": 1,
+  "properties": {
+    "alignment": "center",
+    "padding": "default"
+  },
+  "children": [
+    {
+      "type": "Text",
+      "properties": {
+        "text": "Background"
+      }
+    },
+    {
+      "type": "Text",
+      "properties": {
+        "text": "Foreground"
+      }
+    }
+  ]
+}

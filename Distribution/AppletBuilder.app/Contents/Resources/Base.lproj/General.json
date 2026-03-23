@@ -165,12 +165,29 @@
       },
       "children": [
         {
-          "type": "Text",
-          "properties": {
-            "text": "Services",
-            "padding": { "leading": 16, "trailing": 16, "bottom": 16 },
-            "font": "headline"
-          }
+          "type": "HStack",
+          "properties": {},
+          "children": [
+            {
+              "type": "Text",
+              "properties": {
+                "text": "Services",
+                "padding": { "leading": 16, "trailing": 16, "bottom": 16 },
+                "font": "headline"
+              }
+            },
+            { "type": "Spacer" },
+            {
+              "type": "Button",
+              "id": 338,
+              "properties": {
+                "systemImage": "questionmark.circle",
+                "buttonStyle": "plain",
+                "actionID": "AppletBuilder.help.show.services",
+                "padding": { "trailing": 16 }
+              }
+            }
+          ]
         }
       ]
     },

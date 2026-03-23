@@ -1,0 +1,4 @@
+#!/bin/bash
+# AppletBuilder.help.dialog - Opens the Help Viewer dialog
+# The dialog is opened by the ACTIONUI_WINDOW declaration in Command.plist
+exit 0

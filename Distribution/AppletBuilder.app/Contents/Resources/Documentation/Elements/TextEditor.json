@@ -1,0 +1,10 @@
+{
+  "type": "TextEditor",
+  "id": 1,
+  "properties": {
+    "text": "Initial content",
+    "placeholder": "Enter text here",
+    "readOnly": false,
+    "valueChangeActionID": "text.editor.changed"
+  }
+}

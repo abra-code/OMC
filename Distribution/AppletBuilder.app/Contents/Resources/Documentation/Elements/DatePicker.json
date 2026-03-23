@@ -1,0 +1,14 @@
+{
+  "type": "DatePicker",
+  "id": 1,
+  "properties": {
+    "title": "Select Date",
+    "displayStyle": "automatic",
+    "range": {
+      "start": "2023-01-01",
+      "end": "2025-12-31"
+    },
+    "selectedDate": "2024-07-16",
+    "valueChangeActionID": "date.value.changed"
+  }
+}

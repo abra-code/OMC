@@ -1,0 +1,20 @@
+{
+  "type": "ScrollViewReader",
+  "id": 1,
+  "content": {
+    "type": "ScrollView",
+    "properties": {
+      "content": {
+        "type": "Text",
+        "properties": {
+          "text": "Item 1"
+        }
+      }
+    }
+  },
+  "properties": {
+    "scrollTo": 5,
+    "anchor": "top",
+    "padding": "default"
+  }
+}

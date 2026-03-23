@@ -1,0 +1,14 @@
+{
+  "type": "WebView",
+  "id": 1,
+  "properties": {
+    "url": "https://www.swift.org",
+    "backForwardNavigationGestures": true,
+    "magnificationGestures": true,
+    "linkPreviews": true,
+    "limitsNavigationsToAppBoundDomains": false,
+    "upgradeKnownHostsToHTTPS": false,
+    "valueChangeActionID": "web.url.changed",
+    "navigationActionID": "web.navigated"
+  }
+}

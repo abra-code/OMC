@@ -1,0 +1,13 @@
+{
+  "type": "Gauge",
+  "id": 1,
+  "properties": {
+    "value": 0.75,
+    "title": "Progress",
+    "style": "accessoryCircular",
+    "range": {
+      "min": 0.0,
+      "max": 100.0
+    }
+  }
+}

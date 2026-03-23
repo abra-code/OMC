@@ -1,0 +1,17 @@
+{
+  "type": "DisclosureGroup",
+  "id": 1,
+  "properties": {
+    "title": "Details",
+    "isExpanded": true,
+    "padding": "default"
+  },
+  "children": [
+    {
+      "type": "Text",
+      "properties": {
+        "text": "Content"
+      }
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "type": "CommandMenu",
+  "id": 8,
+  "properties": {
+    "name": "Test"
+  },
+  "children": [
+    {
+      "type": "Button",
+      "id": 9,
+      "properties": {
+        "title": "Test Something",
+        "actionID": "test.something",
+        "keyboardShortcut": {
+          "key": "t",
+          "modifiers": ["command", "shift"]
+        }
+      }
+    }
+  ]
+}

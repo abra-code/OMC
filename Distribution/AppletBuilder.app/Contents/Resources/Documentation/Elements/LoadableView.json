@@ -1,0 +1,8 @@
+{
+  "type": "LoadableView",
+  "id": 1,
+  "properties": {
+    "url": "https://example.com/view.json",
+    "viewDidLoadActionID": "view.loaded"
+  }
+}

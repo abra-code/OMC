@@ -35,7 +35,8 @@ if [ -d "$selected_path" ]; then
     set_enabled "$UI_PRETTIFY_BTN_ID" false
     set_enabled "$UI_PREVIEW_BTN_ID" false
     set_enabled "$UI_SAVE_BTN_ID" false
-    set_value "$UI_DETAIL_ID" "Interface Builder Nib — use 'Edit' to open in Xcode"
+    set_value "$UI_DETAIL_ID" "Interface Builder Nib — use 'Edit' to open in Xcode
+Use Help button to learn about OMC nib controls"
     set_value "$UI_EDITED_LABEL_ID" ""
 elif [ -f "$selected_path" ]; then
     # JSON or other text file — enable all toolbar buttons

@@ -1,0 +1,15 @@
+{
+  "type": "ScrollView",
+  "id": 1,
+  "content": {
+    "type": "Text",
+    "properties": {
+      "text": "Scrollable content"
+    }
+  },
+  "properties": {
+    "axis": "vertical",
+    "showsIndicators": true,
+    "padding": "default"
+  }
+}

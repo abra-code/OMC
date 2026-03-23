@@ -1,0 +1,10 @@
+{
+  "type": "Toggle",
+  "id": 1,
+  "properties": {
+    "isOn": true,
+    "title": "Enable Feature",
+    "style": "switch",
+    "actionID": "toggle.changed"
+  }
+}

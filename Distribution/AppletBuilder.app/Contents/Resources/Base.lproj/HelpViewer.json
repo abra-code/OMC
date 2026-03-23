@@ -1,0 +1,71 @@
+{
+  "type": "VStack",
+  "properties": {
+    "spacing": 0,
+    "frame": {
+      "minWidth": 700,
+      "minHeight": 500,
+      "idealWidth": 800,
+      "idealHeight": 600
+    }
+  },
+  "children": [
+    {
+      "type": "HStack",
+      "properties": {
+        "spacing": 8,
+        "padding": { "horizontal": 12, "vertical": 8 },
+        "background": "#f5f5f5"
+      },
+      "children": [
+        {
+          "type": "Button",
+          "id": 901,
+          "properties": {
+            "systemImage": "chevron.left",
+            "buttonStyle": "bordered",
+            "controlSize": "small",
+            "disabled": true,
+            "actionID": "AppletBuilder.help.back"
+          }
+        },
+        {
+          "type": "Button",
+          "id": 902,
+          "properties": {
+            "systemImage": "chevron.right",
+            "buttonStyle": "bordered",
+            "controlSize": "small",
+            "disabled": true,
+            "actionID": "AppletBuilder.help.forward"
+          }
+        },
+        {
+          "type": "Text",
+          "id": 903,
+          "properties": {
+            "text": "",
+            "font": "caption",
+            "foregroundStyle": "secondary"
+          }
+        },
+        { "type": "Spacer" }
+      ]
+    },
+    {
+      "type": "Divider"
+    },
+    {
+      "type": "WebView",
+      "id": 910,
+      "properties": {
+        "backForwardNavigationGestures": true,
+        "valueChangeActionID": "AppletBuilder.help.url.changed",
+        "frame": {
+          "maxWidth": "infinity",
+          "maxHeight": "infinity"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "type": "Form",
+  "id": 1,
+  "properties": {
+    "padding": "default"
+  },
+  "children": [
+    {
+      "type": "Text",
+      "properties": {
+        "text": "Field 1"
+      }
+    }
+  ]
+}

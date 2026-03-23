@@ -1,0 +1,21 @@
+{
+  "type": "Group",
+  "id": 1,
+  "properties": {
+    "padding": "default"
+  },
+  "children": [
+    {
+      "type": "Text",
+      "properties": {
+        "text": "Item 1"
+      }
+    },
+    {
+      "type": "Text",
+      "properties": {
+        "text": "Item 2"
+      }
+    }
+  ]
+}
