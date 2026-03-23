@@ -186,6 +186,18 @@
             },
             { "type": "Spacer" },
             {
+              "type": "Picker",
+              "id": 728,
+              "properties": {
+                "title": "Element",
+                "options": [],
+                "pickerStyle": "menu",
+                "controlSize": "small",
+                "hidden": true,
+                "actionID": "AppletBuilder.uifiles.template.copy"
+              }
+            },
+            {
               "type": "Button",
               "id": 727,
               "properties": {

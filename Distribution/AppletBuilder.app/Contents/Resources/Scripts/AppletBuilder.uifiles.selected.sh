@@ -35,6 +35,7 @@ if [ -d "$selected_path" ]; then
     set_enabled "$UI_PRETTIFY_BTN_ID" false
     set_enabled "$UI_PREVIEW_BTN_ID" false
     set_enabled "$UI_SAVE_BTN_ID" false
+    set_visible "$UI_TEMPLATE_PICKER_ID" false
     set_value "$UI_DETAIL_ID" "Interface Builder Nib — use 'Edit' to open in Xcode
 Use Help button to learn about OMC nib controls"
     set_value "$UI_EDITED_LABEL_ID" ""
@@ -43,6 +44,7 @@ elif [ -f "$selected_path" ]; then
     set_enabled "$UI_VALIDATE_BTN_ID" true
     set_enabled "$UI_PRETTIFY_BTN_ID" true
     set_enabled "$UI_PREVIEW_BTN_ID" true
+    set_visible "$UI_TEMPLATE_PICKER_ID" true
     # Save starts disabled until text is edited
     set_enabled "$UI_SAVE_BTN_ID" false
     set_value "$UI_EDITED_LABEL_ID" ""
