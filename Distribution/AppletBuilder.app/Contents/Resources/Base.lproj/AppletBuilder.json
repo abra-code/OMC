@@ -5,9 +5,9 @@
     "selection": 0,
     "style": "sidebarAdaptable",
     "frame": {
-      "minWidth": 780,
+      "minWidth": 860,
       "minHeight": 500,
-      "idealWidth": 900,
+      "idealWidth": 980,
       "idealHeight": 620
     }
   },

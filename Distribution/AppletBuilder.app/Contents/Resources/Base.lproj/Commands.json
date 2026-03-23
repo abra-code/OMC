@@ -7,8 +7,8 @@
       "properties": {
         "spacing": 0,
         "frame": {
-          "minWidth": 180,
-          "idealWidth": 240,
+          "minWidth": 240,
+          "idealWidth": 300,
           "maxHeight": "infinity"
         },
         "padding": { "leading": 8, "bottom": 4 }
@@ -19,7 +19,7 @@
           "id": 501,
           "properties": {
             "columns": ["Command"],
-            "widths": [220],
+            "widths": [280],
             "actionID": "AppletBuilder.commands.selected",
             "frame": {
               "maxWidth": "infinity",
