@@ -439,6 +439,17 @@ plist_edit() {
 # Build functions (extracted from build_applet.sh)
 # ──────────────────────────────────────────────────────────────
 
+# Update bundle identifier
+applet_set_bundle_id() {
+    local app_path="$1"
+    local bundle_id="$2"
+
+    local plist="$app_path/Contents/Info.plist"
+    if [ -f "$plist" ]; then
+        plist_write "$plist" "CFBundleIdentifier" "$bundle_id"
+    fi
+}
+
 # Compile and install icon
 applet_install_icon() {
     local icon_source="$1"
@@ -485,37 +496,6 @@ applet_install_icon() {
     return $( [ $success -eq 1 ] && echo 0 || echo 1 )
 }
 
-# Update creator code in PkgInfo and Info.plist
-applet_set_creator_code() {
-    local app_path="$1"
-    local creator="$2"
-
-    if [ -z "$creator" ] || [ ${#creator} -ne 4 ]; then
-        return 1
-    fi
-
-    local pkginfo="$app_path/Contents/PkgInfo"
-    if [ -f "$pkginfo" ]; then
-        printf 'APPL%s' "$creator" > "$pkginfo"
-    fi
-
-    local plist="$app_path/Contents/Info.plist"
-    if [ -f "$plist" ]; then
-        plist_write "$plist" "CFBundleSignature" "$creator"
-    fi
-}
-
-# Update bundle identifier
-applet_set_bundle_id() {
-    local app_path="$1"
-    local bundle_id="$2"
-
-    local plist="$app_path/Contents/Info.plist"
-    if [ -f "$plist" ]; then
-        plist_write "$plist" "CFBundleIdentifier" "$bundle_id"
-    fi
-}
-
 # Recompile MainMenu.nib with new name
 applet_recompile_nib() {
     local app_path="$1"
@@ -544,51 +524,6 @@ applet_finalize() {
     /usr/bin/touch -c "$app_path"
     /System/Library/Frameworks/CoreServices.framework/Versions/Current/Frameworks/LaunchServices.framework/Versions/Current/Support/lsregister \
         -f -R -trusted "$app_path" 2>/dev/null
-}
-
-# Install runtime binaries (executable + Abracode.framework) from AppletBuilder
-applet_install_binaries() {
-    local app_path="$1"
-    local app_name="$2"
-
-    local builder_exe="${OMC_APP_BUNDLE_PATH}/Contents/MacOS/$(/usr/bin/basename "${OMC_APP_BUNDLE_PATH%.app}")"
-    local builder_fw="${OMC_APP_BUNDLE_PATH}/Contents/Frameworks/Abracode.framework"
-
-    # Copy executable, renamed to match the applet
-    /bin/mkdir -p "$app_path/Contents/MacOS"
-    /bin/cp "$builder_exe" "$app_path/Contents/MacOS/$app_name"
-    /bin/chmod +x "$app_path/Contents/MacOS/$app_name"
-
-    # Copy framework if AppletBuilder's is newer or destination doesn't have one
-    local dest_fw="$app_path/Contents/Frameworks/Abracode.framework"
-    if [ -d "$builder_fw" ]; then
-        local need_copy=0
-        if [ ! -d "$dest_fw" ]; then
-            need_copy=1
-        else
-            local src_ver=$(/usr/bin/plutil -extract CFBundleVersion raw "$builder_fw/Resources/Info.plist" 2>/dev/null)
-            local dst_ver=$(/usr/bin/plutil -extract CFBundleVersion raw "$dest_fw/Resources/Info.plist" 2>/dev/null)
-            if [ "$src_ver" != "$dst_ver" ]; then
-                need_copy=1
-            fi
-        fi
-        if [ "$need_copy" -eq 1 ]; then
-            /bin/mkdir -p "$app_path/Contents/Frameworks"
-            /bin/rm -rf "$dest_fw"
-            /bin/cp -Rp "$builder_fw" "$dest_fw"
-        fi
-    fi
-
-}
-
-# Install Python runtime from AppletBuilder into target applet
-applet_install_python() {
-    local app_path="$1"
-    local src="${OMC_APP_BUNDLE_PATH}/Contents/Library/Python"
-    if [ -d "$src" ]; then
-        /bin/mkdir -p "$app_path/Contents/Library"
-        /bin/cp -Rp "$src" "$app_path/Contents/Library/Python"
-    fi
 }
 
 # Rename scripts to match new applet name
@@ -672,20 +607,6 @@ applet_update_url_scheme() {
     local url_scheme=$(echo "$new_name" | /usr/bin/tr '[:upper:]' '[:lower:]' | /usr/bin/tr ' ' '-' | /usr/bin/tr -cd 'a-z0-9-')
     /usr/bin/plutil -replace "CFBundleURLTypes.0.CFBundleURLName" -string "$new_name" "$plist" 2>/dev/null
     /usr/bin/plutil -replace "CFBundleURLTypes.0.CFBundleURLSchemes.0" -string "$url_scheme" "$plist" 2>/dev/null
-}
-
-# Remove stale .icns files that don't match the given name
-applet_cleanup_icons() {
-    local app_path="$1"
-    local keep_name="$2"
-
-    for old_icns in "$app_path/Contents/Resources/"*.icns; do
-        [ ! -f "$old_icns" ] && continue
-        local old_base=$(/usr/bin/basename "${old_icns%.icns}")
-        if [ "$old_base" != "$keep_name" ]; then
-            /bin/rm -f "$old_icns"
-        fi
-    done
 }
 
 # Full rename pipeline: renames all parts of an applet from old_name to new_name

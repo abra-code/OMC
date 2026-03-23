@@ -3,6 +3,86 @@
 
 source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.builder.sh"
 
+# ── Functions used only during applet creation ──
+
+# Update creator code in PkgInfo and Info.plist
+applet_set_creator_code() {
+    local app_path="$1"
+    local creator="$2"
+
+    if [ -z "$creator" ] || [ ${#creator} -ne 4 ]; then
+        return 1
+    fi
+
+    local pkginfo="$app_path/Contents/PkgInfo"
+    if [ -f "$pkginfo" ]; then
+        printf 'APPL%s' "$creator" > "$pkginfo"
+    fi
+
+    local plist="$app_path/Contents/Info.plist"
+    if [ -f "$plist" ]; then
+        plist_write "$plist" "CFBundleSignature" "$creator"
+    fi
+}
+
+# Install runtime binaries (executable + Abracode.framework) from AppletBuilder
+applet_install_binaries() {
+    local app_path="$1"
+    local app_name="$2"
+
+    local builder_exe="${OMC_APP_BUNDLE_PATH}/Contents/MacOS/$(/usr/bin/basename "${OMC_APP_BUNDLE_PATH%.app}")"
+    local builder_fw="${OMC_APP_BUNDLE_PATH}/Contents/Frameworks/Abracode.framework"
+
+    # Copy executable, renamed to match the applet
+    /bin/mkdir -p "$app_path/Contents/MacOS"
+    /bin/cp "$builder_exe" "$app_path/Contents/MacOS/$app_name"
+    /bin/chmod +x "$app_path/Contents/MacOS/$app_name"
+
+    # Copy framework if AppletBuilder's is newer or destination doesn't have one
+    local dest_fw="$app_path/Contents/Frameworks/Abracode.framework"
+    if [ -d "$builder_fw" ]; then
+        local need_copy=0
+        if [ ! -d "$dest_fw" ]; then
+            need_copy=1
+        else
+            local src_ver=$(/usr/bin/plutil -extract CFBundleVersion raw "$builder_fw/Resources/Info.plist" 2>/dev/null)
+            local dst_ver=$(/usr/bin/plutil -extract CFBundleVersion raw "$dest_fw/Resources/Info.plist" 2>/dev/null)
+            if [ "$src_ver" != "$dst_ver" ]; then
+                need_copy=1
+            fi
+        fi
+        if [ "$need_copy" -eq 1 ]; then
+            /bin/mkdir -p "$app_path/Contents/Frameworks"
+            /bin/rm -rf "$dest_fw"
+            /bin/cp -Rp "$builder_fw" "$dest_fw"
+        fi
+    fi
+}
+
+# Install Python runtime from AppletBuilder into target applet
+applet_install_python() {
+    local app_path="$1"
+    local src="${OMC_APP_BUNDLE_PATH}/Contents/Library/Python"
+    if [ -d "$src" ]; then
+        /bin/mkdir -p "$app_path/Contents/Library"
+        /bin/cp -Rp "$src" "$app_path/Contents/Library/Python"
+    fi
+}
+
+# Remove stale .icns files that don't match the given name
+applet_cleanup_icons() {
+    local app_path="$1"
+    local keep_name="$2"
+
+    for old_icns in "$app_path/Contents/Resources/"*.icns; do
+        [ ! -f "$old_icns" ] && continue
+        local old_base=$(/usr/bin/basename "${old_icns%.icns}")
+        if [ "$old_base" != "$keep_name" ]; then
+            /bin/rm -f "$old_icns"
+        fi
+    done
+}
+
 # Read form values
 template_tag="${OMC_ACTIONUI_VIEW_201_VALUE}"
 template_path="${OMC_ACTIONUI_VIEW_202_VALUE}"
