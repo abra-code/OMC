@@ -1,6 +1,5 @@
 {
   "type": "ShareLink",
-  "id": 1,
   "properties": {
     "item": "https://example.com",
     "subject": "Check this out",

@@ -1,14 +1,9 @@
 {
   "type": "HStack",
-  "id": 1,
   "properties": {
     "spacing": 10.0,
     "alignment": "center",
-    "padding": "default",
-    "background": "clear",
-    "opacity": 1.0,
-    "cornerRadius": 0.0,
-    "accessibilityIdentifier": "hstack_1"
+    "padding": "default"
   },
   "children": [
     {

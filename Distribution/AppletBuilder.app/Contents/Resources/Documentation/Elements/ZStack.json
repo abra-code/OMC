@@ -1,6 +1,5 @@
 {
   "type": "ZStack",
-  "id": 1,
   "properties": {
     "alignment": "center",
     "padding": "default"

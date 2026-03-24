@@ -1,6 +1,5 @@
 {
   "type": "PhaseAnimator",
-  "id": 1,
   "content": {
     "type": "Text",
     "properties": {
@@ -8,27 +7,13 @@
     }
   },
   "properties": {
-    "values": [
-      0.0,
-      1.0,
-      2.0
-    ],
+    "values": [0.0, 1.0, 2.0],
     "trigger": "onAppear",
-    "timerInterval": 2.0,
-    "stateKey": "counter",
     "animation": {
       "type": "spring",
       "duration": 0.5,
       "response": 0.5,
-      "dampingFraction": 0.7,
-      "blendDuration": 0.0,
-      "extraBounce": 0.1,
-      "controlPoints": [
-        0.2,
-        0.8,
-        0.4,
-        1.0
-      ]
+      "dampingFraction": 0.7
     }
   }
 }

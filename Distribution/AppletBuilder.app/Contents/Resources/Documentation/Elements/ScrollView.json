@@ -1,6 +1,5 @@
 {
   "type": "ScrollView",
-  "id": 1,
   "content": {
     "type": "Text",
     "properties": {

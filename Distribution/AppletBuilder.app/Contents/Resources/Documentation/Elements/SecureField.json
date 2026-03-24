@@ -3,7 +3,6 @@
   "id": 1,
   "properties": {
     "title": "Password",
-    "text": "",
     "prompt": "Enter password",
     "textContentType": "password",
     "actionID": "password.submitted",

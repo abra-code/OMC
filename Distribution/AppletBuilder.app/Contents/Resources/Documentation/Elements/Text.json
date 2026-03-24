@@ -2,13 +2,6 @@
   "type": "Text",
   "id": 1,
   "properties": {
-    "text": "Hello, World!",
-    "foregroundStyle": "primary",
-    "font": "body",
-    "padding": 0.0,
-    "background": "clear",
-    "opacity": 1.0,
-    "accessibilityLabel": "Hello, World!",
-    "accessibilityIdentifier": "text_1"
+    "text": "Hello, World!"
   }
 }

@@ -1,6 +1,5 @@
 {
   "type": "CommandMenu",
-  "id": 8,
   "properties": {
     "name": "Test"
   },

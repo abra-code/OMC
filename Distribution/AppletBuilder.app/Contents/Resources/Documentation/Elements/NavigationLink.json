@@ -2,15 +2,12 @@
   "type": "NavigationLink",
   "id": 1,
   "properties": {
-    "padding": "default"
+    "title": "Go to Detail"
   },
   "destination": {
     "type": "Text",
     "properties": {
       "text": "Detail"
     }
-  },
-  "properties": {
-    "title": "Go to Detail"
   }
 }

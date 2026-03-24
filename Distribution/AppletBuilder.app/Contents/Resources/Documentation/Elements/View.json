@@ -1,6 +1,5 @@
 {
   "type": "View",
-  "id": 1,
   "properties": {
     "padding": 10.0,
     "hidden": false,
@@ -10,6 +9,12 @@
     "frame": {
       "width": 100.0,
       "height": 100.0,
+      "minWidth": 100.0,
+      "minHeight": 100.0,
+      "maxWidth": "infinity",
+      "maxHeight": "infinity",
+      "idealWidth": 200.0,
+      "idealHeight": 200.0,
       "alignment": "center"
     },
     "offset": {

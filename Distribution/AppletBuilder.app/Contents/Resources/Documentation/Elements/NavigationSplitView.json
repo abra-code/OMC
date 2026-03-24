@@ -1,6 +1,5 @@
 {
   "type": "NavigationSplitView",
-  "id": 1,
   "properties": {
     "columnVisibility": "all",
     "style": "balanced",

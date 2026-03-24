@@ -1,7 +1,4 @@
 {
   "type": "Spacer",
-  "id": 1,
-  "properties": {
-    "minLength": 20.0
-  }
+  "properties": {}
 }

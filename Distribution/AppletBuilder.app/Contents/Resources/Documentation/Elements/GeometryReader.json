@@ -1,6 +1,5 @@
 {
   "type": "GeometryReader",
-  "id": 1,
   "content": {
     "type": "Text",
     "properties": {
@@ -8,7 +7,6 @@
     }
   },
   "properties": {
-    "alignment": "center",
-    "padding": 0
+    "alignment": "center"
   }
 }

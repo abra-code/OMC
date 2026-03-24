@@ -1,6 +1,5 @@
 {
   "type": "LazyVGrid",
-  "id": 1,
   "properties": {
     "columns": [
       {

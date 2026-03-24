@@ -2,7 +2,7 @@
   "type": "Gauge",
   "id": 1,
   "properties": {
-    "value": 0.75,
+    "value": 75.0,
     "title": "Progress",
     "style": "accessoryCircular",
     "range": {

@@ -1,6 +1,5 @@
 {
   "type": "ScrollViewReader",
-  "id": 1,
   "content": {
     "type": "ScrollView",
     "properties": {

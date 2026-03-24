@@ -1,6 +1,5 @@
 {
   "type": "GroupBox",
-  "id": 1,
   "properties": {
     "title": "Settings",
     "padding": "default"

@@ -1,6 +1,5 @@
 {
   "type": "LazyVStack",
-  "id": 1,
   "properties": {
     "spacing": 10.0,
     "alignment": "center",

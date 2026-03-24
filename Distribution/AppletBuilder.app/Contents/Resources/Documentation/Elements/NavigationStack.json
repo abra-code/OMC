@@ -1,6 +1,5 @@
 {
   "type": "NavigationStack",
-  "id": 1,
   "properties": {
     "padding": "default"
   },

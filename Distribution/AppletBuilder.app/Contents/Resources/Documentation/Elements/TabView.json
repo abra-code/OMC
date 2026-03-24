@@ -4,19 +4,14 @@
   "properties": {
     "selection": 0,
     "style": "automatic",
-    "padding": "default",
-    "background": "clear",
-    "opacity": 1.0,
-    "accessibilityIdentifier": "tabview_1",
-    "actionID": "tab.selected"
+    "padding": "default"
   },
   "children": [
     {
       "type": "Tab",
       "properties": {
         "title": "Home",
-        "systemImage": "house",
-        "badge": 5
+        "systemImage": "house"
       },
       "content": {
         "type": "VStack",
@@ -37,8 +32,7 @@
       "type": "Tab",
       "properties": {
         "title": "Settings",
-        "systemImage": "gear",
-        "badge": "!"
+        "systemImage": "gear"
       },
       "content": {
         "type": "Text",

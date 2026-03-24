@@ -1,6 +1,5 @@
 {
   "type": "KeyframeAnimator",
-  "id": 1,
   "content": {
     "type": "Text",
     "properties": {
@@ -10,17 +9,13 @@
   "properties": {
     "initialValue": {
       "opacity": 0.0,
-      "scale": 1.0,
-      "rotation": 0.0
+      "scale": 1.0
     },
     "trigger": "onAppear",
-    "timerInterval": 2.0,
-    "stateKey": "counter",
     "repeat": {
       "count": 3,
       "autoreverses": true
     },
-    "delay": 1.0,
     "keyframes": {
       "0%": {
         "type": "linear",
@@ -30,34 +25,15 @@
         },
         "duration": 0.8
       },
-      "50%": {
+      "100%": {
         "type": "spring",
         "value": {
           "opacity": 1.0,
-          "scale": 1.5
+          "scale": 1.0
         },
         "duration": 0.5,
         "response": 0.4,
         "dampingRatio": 0.6
-      },
-      "100%": {
-        "type": "cubic",
-        "value": {
-          "opacity": 0.5,
-          "scale": 1.0
-        },
-        "duration": 0.6,
-        "startVelocity": 0.2,
-        "endVelocity": 0.4
-      },
-      "25%": {
-        "type": "spring",
-        "value": {
-          "opacity": 0.5
-        },
-        "duration": 0.4,
-        "response": 0.5,
-        "dampingRatio": 1.0
       }
     }
   }

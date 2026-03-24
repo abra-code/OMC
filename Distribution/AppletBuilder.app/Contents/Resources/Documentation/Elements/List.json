@@ -2,18 +2,8 @@
   "type": "List",
   "id": 1,
   "properties": {
-    "itemType": {
-      "viewType": "Button",
-      "actionContext": "rowIndex",
-      "actionID": "list.button.click",
-      "dataInterpretation": "systemName"
-    },
     "actionID": "list.item.selected",
-    "doubleClickActionID": "list.double.click",
-    "padding": "default",
-    "background": "clear",
-    "opacity": 1.0,
-    "accessibilityIdentifier": "list_1"
+    "doubleClickActionID": "list.double.click"
   },
   "children": [
     {

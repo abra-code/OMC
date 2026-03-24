@@ -1,17 +1,22 @@
 {
   "type": "VStack",
-  "id": 1,
   "properties": {
     "spacing": 10.0,
     "alignment": "center",
-    "padding": "default",
-    "background": "clear",
-    "opacity": 1.0,
-    "cornerRadius": 0.0,
-    "accessibilityIdentifier": "vstack_1"
+    "padding": "default"
   },
   "children": [
-    { "type": "Text", "properties": { "text": "Item 1" } },
-    { "type": "Text", "properties": { "text": "Item 2" } }
+    {
+      "type": "Text",
+      "properties": {
+        "text": "Item 1"
+      }
+    },
+    {
+      "type": "Text",
+      "properties": {
+        "text": "Item 2"
+      }
+    }
   ]
 }

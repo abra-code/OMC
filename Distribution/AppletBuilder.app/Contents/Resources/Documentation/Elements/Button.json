@@ -5,23 +5,8 @@
     "title": "Click Me",
     "systemImage": "plus.circle",
     "imageScale": "large",
-    "disabled": false,
     "buttonStyle": "bordered",
-    "role": "destructive",
-    "padding": 10.0,
-    "foregroundStyle": "blue",
-    "background": "clear",
-    "font": "body",
-    "frame": {
-      "width": 120.0,
-      "height": 44.0,
-      "alignment": "center"
-    },
-    "opacity": 1.0,
-    "cornerRadius": 8.0,
     "controlSize": "regular",
-    "accessibilityLabel": "Click Me",
-    "accessibilityIdentifier": "button_1",
     "actionID": "button.clicked"
   }
 }

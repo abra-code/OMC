@@ -5,18 +5,6 @@
     "systemName": "star.fill",
     "resizable": true,
     "scaleMode": "fit",
-    "imageScale": "large",
-    "padding": 0.0,
-    "background": "clear",
-    "opacity": 1.0,
-    "cornerRadius": 0.0,
-    "accessibilityLabel": "Star image",
-    "accessibilityIdentifier": "image_1",
-    "shadow": {
-      "color": "black",
-      "radius": 2.0,
-      "x": 0.0,
-      "y": 1.0
-    }
+    "imageScale": "large"
   }
 }
