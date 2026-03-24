@@ -1,7 +1,7 @@
 #!/bin/bash
 # lib.builder.sh - Shared functions for AppletBuilder
 
-echo "loading lib.builder.sh"
+# echo "loading lib.builder.sh"
 
 # ──────────────────────────────────────────────────────────────
 # Dialog tool setup
@@ -182,6 +182,15 @@ show_errors() {
     local error_text="$1"
     "$pasteboard_tool" "$APPLET_BUILDER_ERRORS_PB" set "$error_text"
     "$next_cmd" "$cmd_guid" "AppletBuilder.show.errors"
+}
+
+APPLET_BUILDER_REFERENCE_PB="APPLET_BUILDER_REFERENCE"
+
+# Show reference content in an output window via private pasteboard
+show_reference() {
+    local content="$1"
+    "$pasteboard_tool" "$APPLET_BUILDER_REFERENCE_PB" set "$content"
+    "$next_cmd" "$cmd_guid" "AppletBuilder.show.reference"
 }
 
 # ──────────────────────────────────────────────────────────────
