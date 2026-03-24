@@ -1,8 +1,8 @@
 #!/bin/bash
 # AppletBuilder.commands.add - Open the New Command dialog
 
-echo "[$(/usr/bin/basename "$0")]"
-env | sort
+# echo "[$(/usr/bin/basename "$0")]"
+# env | sort
 
 source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.builder.sh"
 

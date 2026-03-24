@@ -1,7 +1,7 @@
 #!/bin/bash
 # builder.reveal - Reveal the current project applet in Finder
-echo "[$(/usr/bin/basename "$0")]"
-env | sort
+# echo "[$(/usr/bin/basename "$0")]"
+# env | sort
 
 source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.builder.sh"
 

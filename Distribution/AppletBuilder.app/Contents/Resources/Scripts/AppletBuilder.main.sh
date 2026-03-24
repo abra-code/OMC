@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#echo "[$(/usr/bin/basename "$0")]"
-#env | sort
+# echo "[$(/usr/bin/basename "$0")]"
+# env | sort
 
 # Main command: detect context and dispatch to the appropriate window
 next_cmd="$OMC_OMC_SUPPORT_PATH/omc_next_command"
