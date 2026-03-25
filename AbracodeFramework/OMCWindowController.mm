@@ -126,6 +126,20 @@ GetAllDialogControllers()
     return nil;
 }
 
++ (instancetype)findControllerForKeyWindow
+{
+    NSWindow *keyWindow = [NSApp keyWindow];
+    if(keyWindow == nil)
+        return nil;
+
+    for(OMCWindowController *controller in GetAllDialogControllers())
+    {
+        if(controller.window == keyWindow)
+            return controller;
+    }
+    return nil;
+}
+
 - (id)initWithOmc:(OnMyCommandCM *)inOmc commandRuntimeData:(CommandRuntimeData *)inCommandRuntimeData
 {
    self = [super init];

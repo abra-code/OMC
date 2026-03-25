@@ -46,6 +46,8 @@
 		1DF2B2082F458F7D0069BD26 /* OMCViewSetupProtocol.h in Headers */ = {isa = PBXBuildFile; fileRef = 1DF2B2072F458F7D0069BD26 /* OMCViewSetupProtocol.h */; };
 		1DF2B4032F45A6CE0069BD26 /* ActionUI in Frameworks */ = {isa = PBXBuildFile; productRef = 1DF2B4022F45A6CE0069BD26 /* ActionUI */; };
 		1DF2B4052F45A6CE0069BD26 /* ActionUIObjCAdapter in Frameworks */ = {isa = PBXBuildFile; productRef = 1DF2B4042F45A6CE0069BD26 /* ActionUIObjCAdapter */; };
+		1DF2B4482F46A88E0069BD26 /* ActionUI in Frameworks */ = {isa = PBXBuildFile; productRef = 1DF2B4472F46A88E0069BD26 /* ActionUI */; };
+		1DF2B44A2F46A88E0069BD26 /* ActionUIObjCAdapter in Frameworks */ = {isa = PBXBuildFile; productRef = 1DF2B4492F46A88E0069BD26 /* ActionUIObjCAdapter */; };
 		8DC2EF570486A6940098B216 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7B1FEA5585E11CA2CBB /* Cocoa.framework */; };
 		AAAAAA01D4346BB0065C23A /* OMCWindowController.h in Headers */ = {isa = PBXBuildFile; fileRef = AAAAAAAA1D4346BB0065C23A /* OMCWindowController.h */; };
 		E20026D710B68F3200D5388F /* OMCCustomWindow.mm in Sources */ = {isa = PBXBuildFile; fileRef = E20026D510B68F3200D5388F /* OMCCustomWindow.mm */; };
@@ -106,7 +108,7 @@
 		E29407BE12796077004CDB05 /* OMCComboBox.h in Headers */ = {isa = PBXBuildFile; fileRef = E29407BA12796077004CDB05 /* OMCComboBox.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E29407BF12796077004CDB05 /* OMCComboBox.m in Sources */ = {isa = PBXBuildFile; fileRef = E29407BB12796077004CDB05 /* OMCComboBox.m */; };
 		E29A6AB50D9F7A01006A97B0 /* OMCMainMenuController.h in Headers */ = {isa = PBXBuildFile; fileRef = E29A6AB10D9F7A00006A97B0 /* OMCMainMenuController.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		E29A6AB60D9F7A01006A97B0 /* OMCMainMenuController.m in Sources */ = {isa = PBXBuildFile; fileRef = E29A6AB20D9F7A01006A97B0 /* OMCMainMenuController.m */; };
+		E29A6AB60D9F7A01006A97B0 /* OMCMainMenuController.mm in Sources */ = {isa = PBXBuildFile; fileRef = E29A6AB20D9F7A01006A97B0 /* OMCMainMenuController.mm */; };
 		E29ED0720D094EB000C9D5E8 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E29ED0710D094EB000C9D5E8 /* Carbon.framework */; };
 		E29ED17F0D09525700C9D5E8 /* CMUtilsBundle.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED1720D09525700C9D5E8 /* CMUtilsBundle.cp */; };
 		E29ED1800D09525700C9D5E8 /* CMUtilsMenu.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED1730D09525700C9D5E8 /* CMUtilsMenu.cp */; };
@@ -516,7 +518,7 @@
 		E29407BA12796077004CDB05 /* OMCComboBox.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCComboBox.h; sourceTree = "<group>"; };
 		E29407BB12796077004CDB05 /* OMCComboBox.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMCComboBox.m; sourceTree = "<group>"; };
 		E29A6AB10D9F7A00006A97B0 /* OMCMainMenuController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCMainMenuController.h; sourceTree = "<group>"; };
-		E29A6AB20D9F7A01006A97B0 /* OMCMainMenuController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMCMainMenuController.m; sourceTree = "<group>"; };
+		E29A6AB20D9F7A01006A97B0 /* OMCMainMenuController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCMainMenuController.mm; sourceTree = "<group>"; };
 		E29ED0710D094EB000C9D5E8 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = /System/Library/Frameworks/Carbon.framework; sourceTree = "<absolute>"; };
 		E29ED1720D09525700C9D5E8 /* CMUtilsBundle.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CMUtilsBundle.cp; sourceTree = "<group>"; };
 		E29ED1730D09525700C9D5E8 /* CMUtilsMenu.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CMUtilsMenu.cp; sourceTree = "<group>"; };
@@ -605,6 +607,8 @@
 				8DC2EF570486A6940098B216 /* Cocoa.framework in Frameworks */,
 				E29ED0720D094EB000C9D5E8 /* Carbon.framework in Frameworks */,
 				1DF2B4052F45A6CE0069BD26 /* ActionUIObjCAdapter in Frameworks */,
+				1DF2B44A2F46A88E0069BD26 /* ActionUIObjCAdapter in Frameworks */,
+				1DF2B4482F46A88E0069BD26 /* ActionUI in Frameworks */,
 				E2FB14000D19EE9A005EB1E8 /* CoreServices.framework in Frameworks */,
 				E27103CE0D8142DF0097D83E /* Quartz.framework in Frameworks */,
 				E23DC9F60D9A289E009D2AD8 /* WebKit.framework in Frameworks */,
@@ -957,7 +961,7 @@
 				E22FBAEC0D7A0D7700DC5BB4 /* OMCNibDialog.h */,
 				1D690DDC2F45096A006FECE8 /* OMCActionUIDialog.h */,
 				1D690DDD2F45096A006FECE8 /* OMCActionUIDialog.mm */,
-				E29A6AB20D9F7A01006A97B0 /* OMCMainMenuController.m */,
+				E29A6AB20D9F7A01006A97B0 /* OMCMainMenuController.mm */,
 				E29A6AB10D9F7A00006A97B0 /* OMCMainMenuController.h */,
 				E2C84DE90DA9F30F0056DBC2 /* OMCCommandMenu.mm */,
 				E2C84D710DA9AC090056DBC2 /* OMCCommandMenu.h */,
@@ -1171,7 +1175,7 @@
 			);
 			mainGroup = 0867D691FE84028FC02AAC07 /* Abracode */;
 			packageReferences = (
-				1DF2B4012F45A6CE0069BD26 /* XCRemoteSwiftPackageReference "ActionUI" */,
+				1DF2B4462F46A88E0069BD26 /* XCLocalSwiftPackageReference "../../ActionUI" */,
 			);
 			productRefGroup = 034768DFFF38A50411DB9C8B /* Products */;
 			projectDirPath = "";
@@ -1410,7 +1414,7 @@
 				1D3EA0602E38A1E00064354E /* OneObjProperties.cp in Sources */,
 				1D9BCB7F22CC95E500F4EAB6 /* ACFPropertyList.m in Sources */,
 				E23DC9680D9A2616009D2AD8 /* OMCIKImageView.m in Sources */,
-				E29A6AB60D9F7A01006A97B0 /* OMCMainMenuController.m in Sources */,
+				E29A6AB60D9F7A01006A97B0 /* OMCMainMenuController.mm in Sources */,
 				E2C84D8B0DA9D2600056DBC2 /* OMCSingleCommand.m in Sources */,
 				E2C84DAD0DA9D4CD0056DBC2 /* OMCCommandExecutor.m in Sources */,
 				E2C84DEB0DA9F30F0056DBC2 /* OMCCommandMenu.mm in Sources */,
@@ -1643,6 +1647,13 @@
 		};
 /* End XCConfigurationList section */
 
+/* Begin XCLocalSwiftPackageReference section */
+		1DF2B4462F46A88E0069BD26 /* XCLocalSwiftPackageReference "../../ActionUI" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../../ActionUI;
+		};
+/* End XCLocalSwiftPackageReference section */
+
 /* Begin XCRemoteSwiftPackageReference section */
 		1DF2B4012F45A6CE0069BD26 /* XCRemoteSwiftPackageReference "ActionUI" */ = {
 			isa = XCRemoteSwiftPackageReference;
@@ -1663,6 +1674,14 @@
 		1DF2B4042F45A6CE0069BD26 /* ActionUIObjCAdapter */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 1DF2B4012F45A6CE0069BD26 /* XCRemoteSwiftPackageReference "ActionUI" */;
+			productName = ActionUIObjCAdapter;
+		};
+		1DF2B4472F46A88E0069BD26 /* ActionUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = ActionUI;
+		};
+		1DF2B4492F46A88E0069BD26 /* ActionUIObjCAdapter */ = {
+			isa = XCSwiftPackageProductDependency;
 			productName = ActionUIObjCAdapter;
 		};
 /* End XCSwiftPackageProductDependency section */

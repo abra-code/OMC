@@ -279,20 +279,23 @@ static id ParseStringOrJSON(NSString *value)
         }
     }
 
-    // TODO: do not set the handler for each window. this needs to be done once only
-    // Global default handler — routes by windowUUID to the right controller instance
-    [ActionUIObjC setDefaultActionHandler:^(NSString *actionID, NSString *targetWindowUUID, NSInteger viewID, NSInteger viewPartID, id context) {
-        OMCWindowController *controller = [OMCWindowController findControllerByUUID:targetWindowUUID];
-        if (controller != nil)
-        {
-            // context from ActionUI (like current control value) is not a context which OMC command expects or needs
-	        [controller dispatchCommand:actionID withContext:nil /*(__bridge CFTypeRef)context*/];
-	    }
-	    else
-	    {
-            NSLog(@"Window not found for provided UUID: %@ when handling actionID: %@ from viewID: %ld", targetWindowUUID, actionID, static_cast<long>(viewID));
-	    }
-    }];
+    // Global default handler — routes by windowUUID to the right controller instance.
+    // Set once for all windows since it finds the controller by UUID anyway.
+    static dispatch_once_t actionHandlerOnceToken;
+    dispatch_once(&actionHandlerOnceToken, ^{
+        [ActionUIObjC setDefaultActionHandler:^(NSString *actionID, NSString *targetWindowUUID, NSInteger viewID, NSInteger viewPartID, id context) {
+            OMCWindowController *controller = [OMCWindowController findControllerByUUID:targetWindowUUID];
+            if (controller != nil)
+            {
+                // context from ActionUI (like current control value) is not a context which OMC command expects or needs
+                [controller dispatchCommand:actionID withContext:nil /*(__bridge CFTypeRef)context*/];
+            }
+            else
+            {
+                NSLog(@"Window not found for provided UUID: %@ when handling actionID: %@ from viewID: %ld", targetWindowUUID, actionID, static_cast<long>(viewID));
+            }
+        }];
+    });
 
     return self;
 }

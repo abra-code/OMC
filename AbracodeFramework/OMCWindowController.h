@@ -41,6 +41,7 @@ class CommandRuntimeData;
 @property (nonatomic, strong) NSMutableSet *dialogOwnedItems;
 
 + (instancetype)findControllerByUUID:(NSString *)uuid;
++ (instancetype)findControllerForKeyWindow;
 
 - (id)initWithOmc:(OnMyCommandCM *)inOmc commandRuntimeData:(CommandRuntimeData *)inCommandRuntimeData;
 - (OMCDialog *)getOMCDialog;
