@@ -101,6 +101,17 @@
                                     <action selector="performClose:" target="-1" id="193"/>
                                 </connections>
                             </menuItem>
+                            <menuItem isSeparatorItem="YES" id="adA-gc-LoH">
+                                <modifierMask key="keyEquivalentModifierMask" command="YES"/>
+                            </menuItem>
+                            <menuItem title="Save" image="square.and.arrow.down" catalog="system" keyEquivalent="s" id="0wD-E5-jCB" customClass="OMCMenuItem">
+                                <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="string" keyPath="commandID" value="AppletBuilder.save"/>
+                                </userDefinedRuntimeAttributes>
+                                <connections>
+                                    <action selector="performClose:" target="-1" id="CEm-eW-faX"/>
+                                </connections>
+                            </menuItem>
                             <menuItem isSeparatorItem="YES" id="74">
                                 <modifierMask key="keyEquivalentModifierMask" command="YES"/>
                             </menuItem>
@@ -523,5 +534,6 @@
     </objects>
     <resources>
         <image name="gear" catalog="system" width="17" height="16"/>
+        <image name="square.and.arrow.down" catalog="system" width="15" height="17"/>
     </resources>
 </document>

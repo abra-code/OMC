@@ -15,6 +15,16 @@
 			<string>exe_script_file</string>
 		</dict>
 
+		<!-- Cmd+S: dispatch save to the active tab's TextEditor -->
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.save</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
 		<dict>
 			<key>NAME</key>
 			<string>AppletBuilder</string>
