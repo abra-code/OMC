@@ -246,24 +246,24 @@ NSString *NormalizeOMCVariableIDFromElementID(NSString *inElementID)
 	}
 
 	// Navigation commands
-	if([aString isEqualToString:@"goBack"])
+	if([aString isEqualToString:@"#goBack"])
 	{
 		if(self.wkWebView.canGoBack)
 			[self.wkWebView goBack];
 		return;
 	}
-	if([aString isEqualToString:@"goForward"])
+	if([aString isEqualToString:@"#goForward"])
 	{
 		if(self.wkWebView.canGoForward)
 			[self.wkWebView goForward];
 		return;
 	}
-	if([aString isEqualToString:@"reload"])
+	if([aString isEqualToString:@"#reload"])
 	{
 		[self.wkWebView reload];
 		return;
 	}
-	if([aString isEqualToString:@"stop"])
+	if([aString isEqualToString:@"#stop"])
 	{
 		[self.wkWebView stopLoading];
 		return;
