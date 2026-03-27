@@ -11,7 +11,7 @@ dialog_tool="$OMC_OMC_SUPPORT_PATH/omc_dialog_control"
 next_cmd="$OMC_OMC_SUPPORT_PATH/omc_next_command"
 pasteboard_tool="$OMC_OMC_SUPPORT_PATH/pasteboard"
 python3="${OMC_APP_BUNDLE_PATH}/Contents/Library/Python/bin/python3"
-window_uuid="$OMC_ACTIONUI_WINDOW_UUID"
+window_uuid="${OMC_ACTIONUI_WINDOW_UUID:-$OMC_NIB_DLG_GUID}"
 cmd_guid="$OMC_CURRENT_COMMAND_GUID"
 
 # ──────────────────────────────────────────────────────────────
@@ -125,8 +125,7 @@ SETTINGS_EDITOR_NAME_ID=862
 # Help Viewer
 HELP_BACK_BTN_ID=901
 HELP_FORWARD_BTN_ID=902
-HELP_TITLE_ID=903
-HELP_WEBVIEW_ID=910
+HELP_WEBVIEW_ID=2
 
 # Build & Run
 BUILD_IDENTITY_PICKER_ID=402

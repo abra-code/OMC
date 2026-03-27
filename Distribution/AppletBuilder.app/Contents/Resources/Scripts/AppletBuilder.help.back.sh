@@ -16,4 +16,4 @@ if [ -n "$nav_count" ]; then
     pb_set "$PB_HELP_NAV_COUNT" "$nav_count"
 fi
 
-set_value "$HELP_WEBVIEW_ID" "goBack"
+set_value "$HELP_WEBVIEW_ID" "#goBack"

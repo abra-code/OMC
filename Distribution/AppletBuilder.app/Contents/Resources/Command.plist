@@ -879,16 +879,14 @@
 			<string>AppletBuilder.help.dialog</string>
 			<key>EXECUTION_MODE</key>
 			<string>exe_script_file</string>
-			<key>ACTIONUI_WINDOW</key>
+			<key>NIB_DIALOG</key>
 			<dict>
-				<key>JSON_NAME</key>
+				<key>NIB_NAME</key>
 				<string>HelpViewer</string>
 				<key>INIT_SUBCOMMAND_ID</key>
 				<string>AppletBuilder.help.init</string>
 				<key>IS_BLOCKING</key>
 				<false/>
-				<key>WINDOW_TITLE</key>
-				<string>OMC Help</string>
 			</dict>
 		</dict>
 
