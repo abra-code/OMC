@@ -5,7 +5,6 @@
     "title": "Select Option",
     "options": ["One", "Two", "Three"],
     "pickerStyle": "menu",
-    "actionID": "picker.selection",
-    "valueChangeActionID": "picker.value.changed"
+    "actionID": "picker.selection"
   }
 }

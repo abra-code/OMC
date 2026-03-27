@@ -9,7 +9,7 @@ JSON schema and usage documentation for `ColorPicker`.
    "type": "ColorPicker",
    "id": 1,              // Optional: Non-zero positive integer for runtime programmatic interaction
    "properties": {
-     "title": "Pick a Color", // Optional: String for title, defaults to "Color" in buildView
+     "title": "Pick a Color", // Optional: String for title, defaults to empty in buildView
      "selectedColor": "#FF0000", // Optional: Initial color (hex or named color), defaults to clear in buildView
      "actionID": "colorpicker.action" // Optional: String for action identifier, triggers on color change
    }
