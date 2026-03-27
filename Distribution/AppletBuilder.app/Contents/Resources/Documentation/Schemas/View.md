@@ -48,6 +48,8 @@ JSON schema and usage documentation for `View`.
        "key": "a",         // Required: String for KeyEquivalent (single character like "a" or special key like "return", "space", "upArrow")
        "modifiers": ["command", "shift"] // Optional: Array of strings for modifiers (e.g., ["command", "shift"]), defaults to ["command"], must contain unique elements
      },
+     "buttonStyle": "automatic", // Optional: "automatic", "plain", "borderless", "bordered", "borderedProminent"; defaults to "automatic".
+                                // Applicable to Button, Menu, Link, NavigationLink. On container views (VStack, HStack, List, Form, etc.) the style propagates to all buttons inside.
      "controlSize": "regular", // Optional: "mini", "small", "regular", "large", "extraLarge"; no default (system default)
      "labelsHidden": true,  // Optional: Boolean to hide labels on child views (e.g., within LabeledContent/Form); defaults to false
      "disabled": false,     // Optional: Boolean to disable user interaction
@@ -72,6 +74,9 @@ JSON schema and usage documentation for `View`.
      },
      "navigationSplitViewColumnWidth": 400.0, // Number – fixed column width
      "navigationTitle": "Detail",            // Optional: String for navigation title (for views navigated to)
+     "scrollContentBackground": "visible", // Optional: "visible" or "hidden"; controls the default background of scrollable views (List, TextEditor, Form). Defaults to "visible".
+     "popoverArrowEdge": "top",             // Optional: Arrow edge for popover ("top", "bottom", "leading", "trailing"); defaults to "top". Only meaningful when "popover" subview is present.
+     "popoverActionID": "view.popover",     // Optional: String for action identifier triggered when the popover is shown. Only meaningful when "popover" subview is present.
      "destinationViewId": 10,               // Optional: Int linking this view to a destination in a navigation container.
                                             // Does not apply any modifier; the value is kept in validatedProperties for navigation logic.
                                             // Used by NavigationLink (Form 2) to identify the push target in NavigationStack,
@@ -81,7 +86,11 @@ JSON schema and usage documentation for `View`.
 
 //  NOTE:
 //  Supported semantic styles for foregroundStyle/background:
-//    - "background", "foreground", "primary", "secondary", "tertiary", "quaternary", "separator", "placeholder"
+//    - "background", "background.secondary", "background.tertiary", "background.quaternary"
+//    - "foreground", "foreground.secondary", "foreground.tertiary", "foreground.quaternary"
+//    - "primary", "secondary", "tertiary", "quaternary", "quinary"
+//    - "fill", "fill.secondary", "fill.tertiary", "fill.quaternary"
+//    - "separator", "placeholder", "link", "selection", "tint", "windowBackground"
 //  Supported named colors:
 //    - "red", "blue", "green", "yellow", "orange", "purple", "pink", "mint", "teal", "cyan", "indigo", "brown", "gray", "black", "white", "clear", "accentcolor"
 //  You can also use hex color strings (e.g., "#FF0000", "#FF000080")

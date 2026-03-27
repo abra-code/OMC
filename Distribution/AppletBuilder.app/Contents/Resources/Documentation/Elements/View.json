@@ -33,6 +33,7 @@
     "accessibilityHint": "Base view",
     "accessibilityHidden": false,
     "accessibilityIdentifier": "view_1",
+    "buttonStyle": "automatic",
     "controlSize": "regular",
     "labelsHidden": false,
     "shadow": {
@@ -46,6 +47,9 @@
       "width": 1.0
     },
     "navigationTitle": "View",
+    "scrollContentBackground": "visible",
+    "popoverArrowEdge": "top",
+    "popoverActionID": "view.popover",
     "destinationViewId": 2,
     "keyboardShortcut": {
       "key": "v",

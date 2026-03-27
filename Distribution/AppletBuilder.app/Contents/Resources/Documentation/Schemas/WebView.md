@@ -41,10 +41,10 @@ JSON schema and usage documentation for `WebView`.
 // Observable state:
 //   value (String)                      Current page URL (via getElementValue / setElementValue).
 //                                       Write a URL string to navigate, or one of these commands:
-//                                         "goBack"    – navigate back  (no-op if canGoBack is false)
-//                                         "goForward" – navigate forward (no-op if canGoForward is false)
-//                                         "reload"    – reload the current page
-//                                         "stop"      – cancel an in-flight load
+//                                         "#goBack"    – navigate back  (no-op if canGoBack is false)
+//                                         "#goForward" – navigate forward (no-op if canGoForward is false)
+//                                         "#reload"    – reload the current page
+//                                         "#stop"      – cancel an in-flight load
 //   states["title"]            String?  Page <title> text; absent until first load completes.
 //   states["isLoading"]        Bool     true while a navigation is in flight.
 //   states["estimatedProgress"] Double  0.0–1.0 load progress.

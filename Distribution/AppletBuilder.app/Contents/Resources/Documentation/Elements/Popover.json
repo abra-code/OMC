@@ -1,0 +1,16 @@
+{
+  "type": "Button",
+  "id": 1,
+  "properties": {
+    "title": "Show Info",
+    "buttonStyle": "bordered",
+    "popoverArrowEdge": "bottom"
+  },
+  "popover": {
+    "type": "Text",
+    "properties": {
+      "text": "Popover content",
+      "padding": "default"
+    }
+  }
+}

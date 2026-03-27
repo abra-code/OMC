@@ -45,6 +45,7 @@ All views inherit baseline properties from [View](Schemas/View.md) ([template](E
 | NavigationStack | [Schemas/NavigationStack.md](Schemas/NavigationStack.md) | [Elements/NavigationStack.json](Elements/NavigationStack.json) |
 | PhaseAnimator | [Schemas/PhaseAnimator.md](Schemas/PhaseAnimator.md) | [Elements/PhaseAnimator.json](Elements/PhaseAnimator.json) |
 | Picker | [Schemas/Picker.md](Schemas/Picker.md) | [Elements/Picker.json](Elements/Picker.json) |
+| Popover (modifier) | [Schemas/Popover.md](Schemas/Popover.md) | [Elements/Popover.json](Elements/Popover.json) |
 | ProgressView | [Schemas/ProgressView.md](Schemas/ProgressView.md) | [Elements/ProgressView.json](Elements/ProgressView.json) |
 | ScrollView | [Schemas/ScrollView.md](Schemas/ScrollView.md) | [Elements/ScrollView.json](Elements/ScrollView.json) |
 | ScrollViewReader | [Schemas/ScrollViewReader.md](Schemas/ScrollViewReader.md) | [Elements/ScrollViewReader.json](Elements/ScrollViewReader.json) |
