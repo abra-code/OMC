@@ -4,9 +4,9 @@
         "spacing": 16,
         "alignment": "leading",
         "frame": {
-          "maxWidth": 560
+          "minWidth": 300
         },
-        "padding": { "top": 16, "leading": 16, "trailing": 16, "bottom": 4 },
+        "padding": { "top": 16, "leading": 16, "trailing": 16, "bottom": 4 }
     },
     "children": [
       {
@@ -99,6 +99,8 @@
             "properties": {
               "text": "",
               "font": { "size": 11, "design": "monospaced" },
+              "background": "background.secondary",
+              "scrollContentBackground": "hidden",
               "readOnly": true,
               "frame": {
                 "minHeight": 200,

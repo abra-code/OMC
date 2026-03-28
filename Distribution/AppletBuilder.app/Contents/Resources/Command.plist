@@ -972,13 +972,13 @@
 				<key>TEXT_FONT</key>
 				<string>Menlo</string>
 				<key>TEXT_SIZE</key>
-				<integer>12</integer>
+				<integer>11</integer>
 				<key>WINDOW_TITLE</key>
 				<string>Base View Properties</string>
 				<key>WINDOW_WIDTH</key>
-				<integer>600</integer>
+				<integer>500</integer>
 				<key>WINDOW_HEIGHT</key>
-				<integer>400</integer>
+				<integer>800</integer>
 				<key>WINDOW_POSITION</key>
 				<string>cascade</string>
 				<key>WINDOW_TYPE</key>

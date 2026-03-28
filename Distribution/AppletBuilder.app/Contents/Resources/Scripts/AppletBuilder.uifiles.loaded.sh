@@ -12,6 +12,6 @@ refresh_uifiles_table "$project_path"
 # Populate the template picker from ElementTemplates.json
 templates_json="${OMC_APP_BUNDLE_PATH}/Contents/Resources/Base.lproj/ElementTemplates.json"
 if [ -f "$templates_json" ]; then
-    options=$(/bin/cat "$templates_json" | /usr/bin/tr -d '\n ')
+    options=$(/bin/cat "$templates_json" | /usr/bin/tr -d '\n')
     "$dialog_tool" "$window_uuid" "$UI_TEMPLATE_PICKER_ID" omc_set_property options "$options"
 fi
