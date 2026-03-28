@@ -37,7 +37,9 @@ class CommandRuntimeData;
 @property (nonatomic, strong) NSString *dialogInitSubcommandID;
 @property (nonatomic, strong) NSString *endOKSubcommandID;
 @property (nonatomic, strong) NSString *endCancelSubcommandID;
-@property (nonatomic, strong) NSString *lastCommandID;
+@property (nonatomic, strong) NSString *windowDidActivateSubcommandID;
+@property (nonatomic, strong) NSString *windowDidDeactivateSubcommandID;
+@property (nonatomic, strong) NSString *currentCommandID;
 @property (nonatomic, strong) NSMutableSet *dialogOwnedItems;
 
 + (instancetype)findControllerByUUID:(NSString *)uuid;

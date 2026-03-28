@@ -166,7 +166,7 @@ GetAllDialogControllers()
 
 - (void)dispatchCommand:(NSString *)inCommandID withContext:(CFTypeRef)inContext
 {
-    self.lastCommandID = inCommandID;
+    self.currentCommandID = inCommandID;
     
     if( [self commandShouldCloseDialog] )
     {
@@ -211,28 +211,28 @@ GetAllDialogControllers()
 
 - (BOOL)isOkeyed
 {
-	if(self.lastCommandID != nil)
+	if(self.currentCommandID != nil)
 	{
 		if(self.endOKSubcommandID != nil)
         {
-            return [self.lastCommandID isEqualToString:self.endOKSubcommandID];
+            return [self.currentCommandID isEqualToString:self.endOKSubcommandID];
         }
 
-		return [self.lastCommandID isEqualToString:@"omc.dialog.ok"];
+		return [self.currentCommandID isEqualToString:@"omc.dialog.ok"];
 	}
 	return false;
 }
 
 - (BOOL)isCanceled
 {
-	if(self.lastCommandID != nil)
+	if(self.currentCommandID != nil)
 	{
 		if(self.endCancelSubcommandID != nil)
         {
-            return [self.lastCommandID isEqualToString:self.endCancelSubcommandID];
+            return [self.currentCommandID isEqualToString:self.endCancelSubcommandID];
         }
 
-		return [self.lastCommandID isEqualToString:@"omc.dialog.cancel"];
+		return [self.currentCommandID isEqualToString:@"omc.dialog.cancel"];
 	}
 	return false;
 }
@@ -244,19 +244,19 @@ GetAllDialogControllers()
 
 - (BOOL)initializeDialog
 {
-	NSString *origCommand = self.lastCommandID;
+	NSString *origCommand = self.currentCommandID;
 
-	self.lastCommandID = @"omc.dialog.initialize";
+	self.currentCommandID = @"omc.dialog.initialize";
 	if(self.dialogInitSubcommandID != nil)
     {
-        self.lastCommandID = self.dialogInitSubcommandID;
+        self.currentCommandID = self.dialogInitSubcommandID;
     }
     
 	mOMCDialogProxy->StartListening();
 
     [self processCommandWithContext:NULL];
 
-	self.lastCommandID = origCommand;
+	self.currentCommandID = origCommand;
 
 	if(mPlugin->GetError() != noErr)
 		return NO;
@@ -267,22 +267,22 @@ GetAllDialogControllers()
 - (BOOL)terminate
 {
 	BOOL wasOkeyed = [self isOkeyed];
-	NSString *origCommand = self.lastCommandID;
+	NSString *origCommand = self.currentCommandID;
 	
-	self.lastCommandID = wasOkeyed ? @"omc.dialog.terminate.ok" : @"omc.dialog.terminate.cancel";
+	self.currentCommandID = wasOkeyed ? @"omc.dialog.terminate.ok" : @"omc.dialog.terminate.cancel";
 
 	if( wasOkeyed && (self.endOKSubcommandID != nil) )
     {
-        self.lastCommandID = self.endOKSubcommandID;
+        self.currentCommandID = self.endOKSubcommandID;
     }
 	else if( !wasOkeyed && (self.endCancelSubcommandID != nil) )
     {
-        self.lastCommandID = self.endCancelSubcommandID;
+        self.currentCommandID = self.endCancelSubcommandID;
     }
     
 	[self processCommandWithContext:NULL];
 
-    self.lastCommandID = origCommand;
+    self.currentCommandID = origCommand;
 
 	return YES;
 }
@@ -300,6 +300,28 @@ GetAllDialogControllers()
     [allDialogControllers removeObject:self];
 }
 
+- (void)windowDidBecomeKey:(NSNotification *)notification
+{
+    if(self.windowDidActivateSubcommandID != nil)
+    {
+        NSString *origCommand = self.currentCommandID;
+        self.currentCommandID = self.windowDidActivateSubcommandID;
+        [self processCommandWithContext:NULL];
+        self.currentCommandID = origCommand;
+    }
+}
+
+- (void)windowDidResignKey:(NSNotification *)notification
+{
+    if(self.windowDidDeactivateSubcommandID != nil)
+    {
+        NSString *origCommand = self.currentCommandID;
+        self.currentCommandID = self.windowDidDeactivateSubcommandID;
+        [self processCommandWithContext:NULL];
+        self.currentCommandID = origCommand;
+    }
+}
+
 - (OSStatus)processCommandWithContext:(CFTypeRef)inContext
 {
 	if(mPlugin == nullptr)
@@ -308,13 +330,13 @@ GetAllDialogControllers()
     }
     
 	SInt32 cmdIndex = -1;
-    if(OMCDialog::IsPredefinedDialogCommandID((__bridge CFStringRef)self.lastCommandID))
+    if(OMCDialog::IsPredefinedDialogCommandID((__bridge CFStringRef)self.currentCommandID))
     {
-        cmdIndex = mPlugin->FindSubcommandIndex(mCommandName, (__bridge CFStringRef)self.lastCommandID);
+        cmdIndex = mPlugin->FindSubcommandIndex(mCommandName, (__bridge CFStringRef)self.currentCommandID);
     }
 	else
     {
-        cmdIndex = mPlugin->FindCommandIndex(mCommandName, (__bridge CFStringRef)self.lastCommandID);
+        cmdIndex = mPlugin->FindCommandIndex(mCommandName, (__bridge CFStringRef)self.currentCommandID);
     }
     
 	if(cmdIndex < 0)
@@ -752,7 +774,7 @@ GetAllDialogControllers()
 							commandID = self.endCancelSubcommandID ?: @"omc.dialog.cancel";
 						}
 
-						self.lastCommandID = commandID;
+						self.currentCommandID = commandID;
 						[self.window close];
 						return;
 					}

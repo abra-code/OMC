@@ -64,6 +64,14 @@
 	params.CopyValue( CFSTR("END_CANCEL_SUBCOMMAND_ID"), endCancelSubcommandID );
     self.endCancelSubcommandID = (NSString *)CFBridgingRelease(endCancelSubcommandID.Detach());
 
+    CFObj<CFStringRef> windowDidActivateID;
+	params.CopyValue( CFSTR("WINDOW_DID_ACTIVATE_SUBCOMMAND_ID"), windowDidActivateID );
+    self.windowDidActivateSubcommandID = (NSString *)CFBridgingRelease(windowDidActivateID.Detach());
+
+    CFObj<CFStringRef> windowDidDeactivateID;
+	params.CopyValue( CFSTR("WINDOW_DID_DEACTIVATE_SUBCOMMAND_ID"), windowDidDeactivateID );
+    self.windowDidDeactivateSubcommandID = (NSString *)CFBridgingRelease(windowDidDeactivateID.Detach());
+
 	Boolean isBlocking = true;//default is modal
 	params.GetValue( CFSTR("IS_BLOCKING"), isBlocking );
 	mIsModal = isBlocking;

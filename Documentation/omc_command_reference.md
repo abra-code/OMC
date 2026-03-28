@@ -231,6 +231,8 @@ See the full **[OMC Runtime Context Reference](omc_runtime_context_reference.md)
 | `INIT_SUBCOMMAND_ID` | String | No | `COMMAND_ID` to run **before** dialog appears (e.g., populate table). | `"init_table"` |
 | `END_OK_SUBCOMMAND_ID` | String | No | `COMMAND_ID` to run on **OK / Confirm** button. | `"apply_changes"` |
 | `END_CANCEL_SUBCOMMAND_ID` | String | No | `COMMAND_ID` to run on **Cancel**. | `"cleanup"` |
+| `WINDOW_DID_ACTIVATE_SUBCOMMAND_ID` | String | No | `COMMAND_ID` to run when the window becomes key (gains focus). Use to detect external changes. | `"myapp.window.activated"` |
+| `WINDOW_DID_DEACTIVATE_SUBCOMMAND_ID` | String | No | `COMMAND_ID` to run when the window resigns key (loses focus). | `"myapp.window.deactivated"` |
 
 > **Note**: `IS_COCOA` is **removed** in recent OMC versions.
 
@@ -341,6 +343,8 @@ omc_dialog_control "${OMC_NIB_DLG_GUID}" 101 add_rows "$(cat /tmp/table_data)"
 | `INIT_SUBCOMMAND_ID` | String | No | `COMMAND_ID` to run **before** dialog appears (e.g., populate values). |
 | `END_OK_SUBCOMMAND_ID` | String | No | `COMMAND_ID` to run on **OK / Confirm** button (actionID matching button's actionID). |
 | `END_CANCEL_SUBCOMMAND_ID` | String | No | `COMMAND_ID` to run on **Cancel** (actionID matching button's actionID). |
+| `WINDOW_DID_ACTIVATE_SUBCOMMAND_ID` | String | No | `COMMAND_ID` to run when the window becomes key (gains focus). Use to detect external changes or refresh content. |
+| `WINDOW_DID_DEACTIVATE_SUBCOMMAND_ID` | String | No | `COMMAND_ID` to run when the window resigns key (loses focus). |
 | `WINDOW_TITLE` | String | No | Static window title. Overrides the default title derived from the associated file or command name. |
 | `WINDOW_TYPE` | String | No | Window type: `floating` (utility panel, stays above normal windows), `global_floating` (utility panel, stays above all windows including from other apps). Default is a regular window. |
 
@@ -1206,6 +1210,66 @@ Escapes inserted objects (paths/text) for safe execution. Applies only to inline
 ---
 
 
+
+## App Lifetime Events
+
+OMC automatically dispatches commands for application and window lifecycle events. These are triggered by matching `COMMAND_ID` values — no special configuration is needed beyond defining the command in `COMMAND_LIST`.
+
+### App-Level Events
+
+These fire once for the entire application, regardless of how many windows are open:
+
+| `COMMAND_ID` | Trigger | Typical Use |
+|--------------|---------|-------------|
+| `app.will.launch` | `NSApplicationWillFinishLaunchingNotification` | Pre-launch setup |
+| `app.did.launch` | `NSApplicationDidFinishLaunchingNotification` | Post-launch initialization |
+| `app.did.activate` | `NSApplicationDidBecomeActiveNotification` | App came to foreground |
+| `app.did.deactivate` | `NSApplicationDidResignActiveNotification` | App went to background |
+| `app.will.terminate` | `NSApplicationWillTerminateNotification` | Cleanup before quit |
+
+**Example** — detect when the app returns from background:
+
+```xml
+<dict>
+    <key>COMMAND_ID</key>
+    <string>app.did.activate</string>
+    <key>EXECUTION_MODE</key>
+    <string>exe_script_file</string>
+    <key>NAME</key>
+    <string>MyApp</string>
+</dict>
+```
+
+> **Note**: App-level events have no window context. For per-window activation handling, use `WINDOW_DID_ACTIVATE_SUBCOMMAND_ID` instead.
+
+### Window-Level Events
+
+These fire per-window and run in the window's command context (with access to the window's UUID and controls). Configure them in `ACTIONUI_WINDOW` or `NIB_DIALOG`:
+
+| Key | Trigger | Typical Use |
+|-----|---------|-------------|
+| `WINDOW_DID_ACTIVATE_SUBCOMMAND_ID` | Window becomes key (gains focus) | Reload content that may have been modified externally |
+| `WINDOW_DID_DEACTIVATE_SUBCOMMAND_ID` | Window resigns key (loses focus) | Save draft state |
+
+**Example** — refresh file lists when switching back to a window:
+
+```xml
+<key>ACTIONUI_WINDOW</key>
+<dict>
+    <key>JSON_NAME</key>
+    <string>Editor</string>
+    <key>IS_BLOCKING</key>
+    <false/>
+    <key>INIT_SUBCOMMAND_ID</key>
+    <string>myapp.editor.init</string>
+    <key>WINDOW_DID_ACTIVATE_SUBCOMMAND_ID</key>
+    <string>myapp.editor.activated</string>
+</dict>
+```
+
+Window-level events are especially useful in multi-window apps where each window edits a different document. Each window's activation callback runs in its own context, so `OMC_ACTIONUI_WINDOW_UUID` correctly identifies which window was activated.
+
+---
 
 ## Related Documentation
 

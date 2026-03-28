@@ -35,6 +35,16 @@
                                                  name:NSApplicationWillTerminateNotification
                                                object:nil];
 
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(appDidBecomeActive:)
+                                                 name:NSApplicationDidBecomeActiveNotification
+                                               object:nil];
+
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(appDidResignActive:)
+                                                 name:NSApplicationDidResignActiveNotification
+                                               object:nil];
+
     return self;
 }
 
@@ -76,6 +86,26 @@
 {
     TRACE_CSTR("App did finish launching");
     __unused OSStatus err = [OMCCommandExecutor runCommand:@"app.did.launch"
+                                            forCommandFile:@"Command.plist"
+                                               withContext:nil
+                                              useNavDialog:NO
+                                                  delegate:self];
+}
+
+- (void)appDidBecomeActive:(NSNotification *)notification
+{
+    TRACE_CSTR("App did become active");
+    __unused OSStatus err = [OMCCommandExecutor runCommand:@"app.did.activate"
+                                            forCommandFile:@"Command.plist"
+                                               withContext:nil
+                                              useNavDialog:NO
+                                                  delegate:self];
+}
+
+- (void)appDidResignActive:(NSNotification *)notification
+{
+    TRACE_CSTR("App did resign active");
+    __unused OSStatus err = [OMCCommandExecutor runCommand:@"app.did.deactivate"
                                             forCommandFile:@"Command.plist"
                                                withContext:nil
                                               useNavDialog:NO
