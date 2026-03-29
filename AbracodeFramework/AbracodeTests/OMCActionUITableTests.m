@@ -77,6 +77,7 @@
                                    forCommandFile:omcBundlePath
                                       withContext:homeURL
                                      useNavDialog:NO
+                                         allowKeyWindowSubcommand:NO
                                          delegate:executionObserver];
 
     XCTAssertEqual(err, noErr, @"Should execute Table command");
@@ -98,6 +99,7 @@
                                    forCommandFile:omcBundlePath
                                       withContext:uuid
                                      useNavDialog:NO
+                                         allowKeyWindowSubcommand:NO
                                          delegate:closeObserver];
 
     XCTAssertEqual(err, noErr, @"Should execute table.close.window command");

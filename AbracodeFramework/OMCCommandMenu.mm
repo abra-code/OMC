@@ -305,7 +305,7 @@ PopulateCommandsMenu(OnMyCommandCM *inPlugin, NSMenu *topMenu)
 	if( myCommandID == nil )
 		return;
 
-	/*OSStatus err = */[OMCCommandExecutor runCommand:myCommandID forCommandFile:self.commandFilePath withContext:NULL useNavDialog:YES delegate:self];
+	/*OSStatus err = */[OMCCommandExecutor runCommand:myCommandID forCommandFile:self.commandFilePath withContext:NULL useNavDialog:YES allowKeyWindowSubcommand:YES delegate:self];
 }
 
 @end

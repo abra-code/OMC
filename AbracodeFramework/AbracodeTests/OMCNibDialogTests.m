@@ -68,6 +68,7 @@
                                    forCommandFile:omcBundlePath
                                       withContext:homeURL
                                      useNavDialog:NO
+                                         allowKeyWindowSubcommand:NO
                                          delegate:executionObserver];
 
     XCTAssertEqual(err, noErr, @"Should execute Browser command");
@@ -88,6 +89,7 @@
                                    forCommandFile:omcBundlePath
                                       withContext:uuid
                                      useNavDialog:NO
+                                         allowKeyWindowSubcommand:NO
                                          delegate:closeObserver];
 
     XCTAssertEqual(err, noErr, @"Should execute browser.close.window command");
@@ -212,6 +214,7 @@
                                    forCommandFile:omcBundlePath
                                       withContext:uuid
                                      useNavDialog:NO
+                                         allowKeyWindowSubcommand:NO
                                          delegate:invokeObserver];
 
     XCTAssertEqual(err, noErr, @"Should execute browser.invoke.close command");

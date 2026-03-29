@@ -9,7 +9,6 @@
 #import "OMCMainMenuController.h"
 #import "OMCMenuItem.h"
 #import "OMCCommandExecutor.h"
-#import "OMCWindowController.h"
 
 @implementation OMCMainMenuController
 
@@ -84,17 +83,7 @@
 		return;
 
 	NSString *myCommandID = [sender commandID];
-
-	// If the key window is managed by an OMCWindowController, dispatch the command
-	// as a dialog subcommand so it inherits the window's dialog context and control values
-	OMCWindowController *keyWindowController = [OMCWindowController findControllerForKeyWindow];
-	if(keyWindowController != nil)
-	{
-		[keyWindowController dispatchCommand:myCommandID withContext:nil];
-		return;
-	}
-
-	/*OSStatus err = */[OMCCommandExecutor runCommand:myCommandID forCommandFile:self.commandFilePath withContext:NULL useNavDialog:YES delegate:self];
+	/*OSStatus err = */[OMCCommandExecutor runCommand:myCommandID forCommandFile:self.commandFilePath withContext:NULL useNavDialog:YES allowKeyWindowSubcommand:YES delegate:self];
 }
 
 @end //OMCMainMenuController

@@ -43,6 +43,7 @@
 	                                forCommandFile:bundlePath
 	                                   withContext:nil
 	                                  useNavDialog:NO
+	                                      allowKeyWindowSubcommand:NO
 	                                      delegate:observer];
 
 	XCTAssertEqual(err, noErr, @"Indeterminate progress command should start");
@@ -68,6 +69,7 @@
 	                                forCommandFile:bundlePath
 	                                   withContext:nil
 	                                  useNavDialog:NO
+	                                      allowKeyWindowSubcommand:NO
 	                                      delegate:observer];
 
 	XCTAssertEqual(err, noErr, @"Counter progress command should start");
@@ -95,6 +97,7 @@
 	                                forCommandFile:bundlePath
 	                                   withContext:nil
 	                                  useNavDialog:NO
+	                                      allowKeyWindowSubcommand:NO
 	                                      delegate:observer];
 
 	XCTAssertEqual(err, noErr, @"Steps progress command should start");
@@ -122,6 +125,7 @@
 	                                forCommandFile:bundlePath
 	                                   withContext:nil
 	                                  useNavDialog:NO
+	                                      allowKeyWindowSubcommand:NO
 	                                      delegate:observer];
 
 	XCTAssertEqual(err, noErr, @"Multi group counter command should start");
@@ -147,6 +151,7 @@
 	                                forCommandFile:bundlePath
 	                                   withContext:nil
 	                                  useNavDialog:NO
+	                                      allowKeyWindowSubcommand:NO
 	                                      delegate:observer];
 
 	XCTAssertEqual(err, noErr, @"Steps regex progress command should start");
@@ -172,6 +177,7 @@
 	                                forCommandFile:bundlePath
 	                                   withContext:nil
 	                                  useNavDialog:NO
+	                                      allowKeyWindowSubcommand:NO
 	                                      delegate:observer];
 
 	XCTAssertEqual(err, noErr, @"Counter suppress command should start");
@@ -242,6 +248,7 @@
 	                                forCommandFile:[bundleURL path]
 	                                   withContext:nil
 	                                  useNavDialog:NO
+	                                      allowKeyWindowSubcommand:NO
 	                                      delegate:observer];
 
 	XCTAssertEqual(err, noErr, @"Dynamic counter command should start");
@@ -290,6 +297,7 @@
 	                                forCommandFile:[bundleURL path]
 	                                   withContext:nil
 	                                  useNavDialog:NO
+	                                      allowKeyWindowSubcommand:NO
 	                                      delegate:observer];
 
 	XCTAssertEqual(err, noErr, @"Dynamic steps command should start");
@@ -330,6 +338,7 @@
 	                                forCommandFile:[bundleURL path]
 	                                   withContext:nil
 	                                  useNavDialog:NO
+	                                      allowKeyWindowSubcommand:NO
 	                                      delegate:observer];
 
 	XCTAssertEqual(err, noErr, @"Dynamic indeterminate command should start");
@@ -380,6 +389,7 @@
 	                                forCommandFile:[bundleURL path]
 	                                   withContext:nil
 	                                  useNavDialog:NO
+	                                      allowKeyWindowSubcommand:NO
 	                                      delegate:observer];
 
 	XCTAssertEqual(err, noErr);
@@ -425,6 +435,7 @@
 	                                forCommandFile:[bundleURL path]
 	                                   withContext:nil
 	                                  useNavDialog:NO
+	                                      allowKeyWindowSubcommand:NO
 	                                      delegate:observer];
 
 	XCTAssertEqual(err, noErr);

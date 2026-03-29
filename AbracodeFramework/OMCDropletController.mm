@@ -108,7 +108,7 @@ static OMCService *sOMCService = NULL;
         [self noteNewRecentDocumentURL:absoluteURL];
     
     _runningCommandCount++;
-    /*OSStatus err = */[OMCCommandExecutor runCommand:self.commandID forCommandFile:self.commandFilePath withContext:absoluteURL useNavDialog:YES delegate:self];
+    /*OSStatus err = */[OMCCommandExecutor runCommand:self.commandID forCommandFile:self.commandFilePath withContext:absoluteURL useNavDialog:YES allowKeyWindowSubcommand:NO delegate:self];
     _runningCommandCount--;
 
     completionHandler(NULL, NO, NULL);
@@ -129,7 +129,7 @@ static OMCService *sOMCService = NULL;
 	}
 	
 	_runningCommandCount++;
-	/*OSStatus err = */[OMCCommandExecutor runCommand:self.commandID forCommandFile:self.commandFilePath withContext:absoluteURLArray useNavDialog:YES delegate:self];
+	/*OSStatus err = */[OMCCommandExecutor runCommand:self.commandID forCommandFile:self.commandFilePath withContext:absoluteURLArray useNavDialog:YES allowKeyWindowSubcommand:NO delegate:self];
 	_runningCommandCount--;
 }
 
@@ -137,7 +137,7 @@ static OMCService *sOMCService = NULL;
 - (IBAction)newDocument:(id)sender
 {
 	_runningCommandCount++;
-	/*OSStatus err = */[OMCCommandExecutor runCommand:self.commandID forCommandFile:self.commandFilePath withContext:NULL useNavDialog:YES delegate:self];
+	/*OSStatus err = */[OMCCommandExecutor runCommand:self.commandID forCommandFile:self.commandFilePath withContext:NULL useNavDialog:YES allowKeyWindowSubcommand:NO delegate:self];
 	_runningCommandCount--;
 	
 }
@@ -145,7 +145,7 @@ static OMCService *sOMCService = NULL;
 - (IBAction)openDocument:(id)sender
 {
 	_runningCommandCount++;
-	/*OSStatus err = */[OMCCommandExecutor runCommand:self.commandID forCommandFile:self.commandFilePath withContext:NULL useNavDialog:YES delegate:self];
+	/*OSStatus err = */[OMCCommandExecutor runCommand:self.commandID forCommandFile:self.commandFilePath withContext:NULL useNavDialog:YES allowKeyWindowSubcommand:NO delegate:self];
 	_runningCommandCount--;
 }
 
@@ -239,7 +239,7 @@ static OMCService *sOMCService = NULL;
 		return FALSE;
 		
 	_runningCommandCount++;
-	OSStatus err = [OMCCommandExecutor runCommand:self.commandID forCommandFile:self.commandFilePath withContext:NULL useNavDialog:YES delegate:self];
+	OSStatus err = [OMCCommandExecutor runCommand:self.commandID forCommandFile:self.commandFilePath withContext:NULL useNavDialog:YES allowKeyWindowSubcommand:NO delegate:self];
 	_runningCommandCount--;
 	
 	return (err == noErr);
@@ -341,7 +341,7 @@ myapp://exe?commandID=my.file.command.id&file=file1.txt&file=file2.txt
 	}
 
 	_runningCommandCount++;
-	OSStatus err = [OMCCommandExecutor runCommand:urlCommandID forCommandFile:_commandFilePath withContext:urlContext useNavDialog:NO delegate:self];
+	OSStatus err = [OMCCommandExecutor runCommand:urlCommandID forCommandFile:_commandFilePath withContext:urlContext useNavDialog:NO allowKeyWindowSubcommand:NO delegate:self];
 	(void)err;
 	_runningCommandCount--;
 }

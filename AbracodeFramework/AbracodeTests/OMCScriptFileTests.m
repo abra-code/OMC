@@ -55,6 +55,7 @@
                                    forCommandFile:[bundleURL path]
                                       withContext:nil
                                      useNavDialog:NO
+                                         allowKeyWindowSubcommand:NO
                                          delegate:executionObserver];
     
     XCTAssertEqual(err, noErr, @"Should execute shell script");
@@ -90,6 +91,7 @@
                                    forCommandFile:[bundleURL path]
                                       withContext:nil
                                      useNavDialog:NO
+                                         allowKeyWindowSubcommand:NO
                                          delegate:executionObserver];
     
     XCTAssertEqual(err, noErr, @"Should execute Python script");
@@ -124,6 +126,7 @@
                                    forCommandFile:[bundleURL path]
                                       withContext:nil
                                      useNavDialog:NO
+                                         allowKeyWindowSubcommand:NO
                                          delegate:executionObserver];
     
     XCTAssertEqual(err, noErr, @"Should execute Perl script");
@@ -158,6 +161,7 @@
                                    forCommandFile:[bundleURL path]
                                       withContext:nil
                                      useNavDialog:NO
+                                         allowKeyWindowSubcommand:NO
                                          delegate:executionObserver];
     
     XCTAssertEqual(err, noErr, @"Should execute JavaScript via jsc");
@@ -192,6 +196,7 @@
                                    forCommandFile:[bundleURL path]
                                       withContext:nil
                                      useNavDialog:NO
+                                         allowKeyWindowSubcommand:NO
                                          delegate:executionObserver];
     
     XCTAssertEqual(err, noErr, @"Should execute AppleScript");
@@ -224,6 +229,7 @@
                                    forCommandFile:[bundleURL path]
                                       withContext:nil
                                      useNavDialog:NO
+                                         allowKeyWindowSubcommand:NO
                                          delegate:executionObserver];
     
     XCTAssertEqual(err, noErr, @"Should execute Ruby script");
@@ -258,6 +264,7 @@
                                    forCommandFile:[bundleURL path]
                                       withContext:nil
                                      useNavDialog:NO
+                                         allowKeyWindowSubcommand:NO
                                          delegate:executionObserver];
     
     XCTAssertEqual(err, noErr, @"Should execute main command script");
@@ -297,6 +304,7 @@
                                    forCommandFile:[bundleURL path]
                                       withContext:fileURL
                                      useNavDialog:NO
+                                         allowKeyWindowSubcommand:NO
                                          delegate:executionObserver];
     
     XCTAssertEqual(err, noErr, @"Should execute script with file context");
@@ -330,6 +338,7 @@
                                    forCommandFile:[bundleURL path]
                                       withContext:@"Hello World"
                                      useNavDialog:NO
+                                         allowKeyWindowSubcommand:NO
                                          delegate:executionObserver];
     
     XCTAssertEqual(err, noErr, @"Should execute script with text context");
@@ -374,6 +383,7 @@
                                    forCommandFile:[bundleURL path]
                                       withContext:files
                                      useNavDialog:NO
+                                         allowKeyWindowSubcommand:NO
                                          delegate:executionObserver];
     
     XCTAssertEqual(err, noErr, @"Should execute script for each file");
@@ -409,6 +419,7 @@
                                    forCommandFile:[bundleURL path]
                                       withContext:nil
                                      useNavDialog:NO
+                                         allowKeyWindowSubcommand:NO
                                          delegate:executionObserver];
 
     // Current behavior is that OMC engine does not return an error when the script is missing but fails silently, just logging:
@@ -456,6 +467,7 @@
                                     forCommandFile:[bundleURL path]
                                        withContext:nil
                                       useNavDialog:NO
+                                          allowKeyWindowSubcommand:NO
                                           delegate:executionObserver1];
     
     XCTAssertEqual(err1, noErr, @"Should execute first script");
@@ -469,6 +481,7 @@
                                     forCommandFile:[bundleURL path]
                                        withContext:nil
                                       useNavDialog:NO
+                                          allowKeyWindowSubcommand:NO
                                           delegate:executionObserver2];
     
     XCTAssertEqual(err2, noErr, @"Should execute second script");
@@ -506,6 +519,7 @@
                                        forCommandFile:omcBundlePath
                                           withContext:nil
                                          useNavDialog:NO
+                                             allowKeyWindowSubcommand:NO
                                              delegate:executionObserver];
         
         XCTAssertEqual(err, noErr, @"Should execute %@ command", testName);

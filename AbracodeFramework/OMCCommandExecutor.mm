@@ -7,6 +7,7 @@
 //
 
 #import "OMCCommandExecutor.h"
+#import "OMCWindowController.h"
 #include "OMC.h"
 #include "OMCFilePanels.h"
 #include "ACFPropertyList.h"
@@ -51,7 +52,7 @@ bool IsFileOrFolderActivation(UInt32 activationType)
 //when useNavDialog = TRUE, missing file context is obtained from nav dialog
 //otherwise when the file context is missing the command is not executed
 //if USE_NAV_DIALOG_FOR_MISSING_FILE_CONTEXT is false, the command always executes and no nav dialog is shown
-+ (OSStatus)runCommand:(NSString *)inCommandNameOrId forCommandFile:(NSString *)inFileName withContext:(id)inContext useNavDialog:(BOOL)clientAllowsNavDialog delegate:(id)delegate
++ (OSStatus)runCommand:(NSString *)inCommandNameOrId forCommandFile:(NSString *)inFileName withContext:(id)inContext useNavDialog:(BOOL)clientAllowsNavDialog allowKeyWindowSubcommand:(BOOL)allowKeyWindowSubcommand delegate:(id)delegate
 {
 	OSStatus error = userCanceledErr;//pessimistic scenario
 	
@@ -71,8 +72,24 @@ bool IsFileOrFolderActivation(UInt32 activationType)
         OMCCommandRef commandRef = OMCFindCommand( omcExec, (__bridge CFStringRef)inCommandNameOrId );
 		if( OMCIsValidCommandRef(commandRef) )
 		{
+            // If the key window is managed by an OMCWindowController, dispatch the command
+            // as a dialog subcommand so it inherits the window's dialog context and control values.
+            // Exception: commands with OPEN_OBJECT_DIALOG need to run independently to show the open panel.
+            OMCWindowController *keyWindowController = allowKeyWindowSubcommand ? [OMCWindowController findControllerForKeyWindow] : nil;
+            if (keyWindowController != nil)
+            {
+                CFDictionaryRef openDialogParams = NULL;
+                OMCGetCommandInfo(omcExec, commandRef, kOmcInfo_OpenObjectDialogParams, &openDialogParams);
+                if (openDialogParams == NULL) // no open dialog — dispatch as window subcommand
+                {
+                    [keyWindowController dispatchCommand:inCommandNameOrId withContext:(__bridge CFTypeRef)inContext];
+                    OMCReleaseExecutor(omcExec);
+                    return noErr;
+                }
+            }
+
 			error = noErr;
-            
+
             // evaluate if we have a path object context for requested path OR file or folder activation
             bool hasFiles = false;
             if (inContext != NULL)
@@ -190,13 +207,13 @@ bool IsFileOrFolderActivation(UInt32 activationType)
 
 			if (selectedFiles != NULL)
 			{
-                if ((error == noErr) && (delegate != nil) && [delegate respondsToSelector:@selector(noteNewRecentDocumentURL:)])
+                if (error == noErr)
                 {
                     // add to open recent
                     NSArray<NSURL*> *__weak absoluteURLArray = (__bridge NSArray<NSURL*> *)selectedFiles;
                     for (NSURL *oneFileURL in absoluteURLArray)
                     {
-                        [delegate noteNewRecentDocumentURL:oneFileURL];
+                        [NSDocumentController.sharedDocumentController noteNewRecentDocumentURL:oneFileURL];
                     }
                 }
 

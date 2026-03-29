@@ -79,6 +79,7 @@
                                             forCommandFile:@"Command.plist"
                                                withContext:nil
                                               useNavDialog:NO
+                                      allowKeyWindowSubcommand:NO
                                                   delegate:self];
 }
 
@@ -89,6 +90,7 @@
                                             forCommandFile:@"Command.plist"
                                                withContext:nil
                                               useNavDialog:NO
+                                      allowKeyWindowSubcommand:NO
                                                   delegate:self];
 }
 
@@ -99,6 +101,7 @@
                                             forCommandFile:@"Command.plist"
                                                withContext:nil
                                               useNavDialog:NO
+                                      allowKeyWindowSubcommand:NO
                                                   delegate:self];
 }
 
@@ -109,6 +112,7 @@
                                             forCommandFile:@"Command.plist"
                                                withContext:nil
                                               useNavDialog:NO
+                                      allowKeyWindowSubcommand:NO
                                                   delegate:self];
 }
 
@@ -119,6 +123,7 @@
                                             forCommandFile:@"Command.plist"
                                                withContext:nil
                                               useNavDialog:NO
+                                      allowKeyWindowSubcommand:NO
                                                   delegate:self];
 
     [[NSNotificationCenter defaultCenter] removeObserver:self];

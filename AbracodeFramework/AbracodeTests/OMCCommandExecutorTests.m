@@ -83,7 +83,8 @@
     OSStatus err = [OMCCommandExecutor runCommand:@"simple_echo"
                                    forCommandFile:[self.testPlistURL path]
                                       withContext:nil 
-                                     useNavDialog:NO 
+                                     useNavDialog:NO
+                                         allowKeyWindowSubcommand:NO
                                          delegate:nil];
     
     XCTAssertEqual(err, noErr, @"Should run find and run simple command by ID without context");
@@ -94,6 +95,7 @@
                                    forCommandFile:[self.testPlistURL path]
                                       withContext:nil
                                      useNavDialog:NO
+                                         allowKeyWindowSubcommand:NO
                                          delegate:nil];
     
     XCTAssertEqual(err, noErr, @"Should find and run command by name");
@@ -104,6 +106,7 @@
                                    forCommandFile:[self.testPlistURL path]
                                       withContext:nil
                                      useNavDialog:NO
+                                         allowKeyWindowSubcommand:NO
                                          delegate:nil];
     
     XCTAssertNotEqual(err, noErr, @"Should fail for nonexistent command");
@@ -118,6 +121,7 @@
                                    forCommandFile:[self.testPlistURL path]
                                       withContext:testFile
                                      useNavDialog:NO
+                                         allowKeyWindowSubcommand:NO
                                          delegate:nil];
     
     XCTAssertEqual(err, noErr, @"Should process single file");
@@ -135,6 +139,7 @@
                                    forCommandFile:[self.testPlistURL path]
                                       withContext:files
                                      useNavDialog:NO
+                                         allowKeyWindowSubcommand:NO
                                          delegate:nil];
     
     XCTAssertEqual(err, noErr, @"Should process multiple files");
@@ -149,6 +154,7 @@
                                    forCommandFile:[self.testPlistURL path]
                                       withContext:filePath
                                      useNavDialog:NO
+                                         allowKeyWindowSubcommand:NO
                                          delegate:nil];
     
     // This may or may not work depending on OMC implementation
@@ -163,6 +169,7 @@
                                    forCommandFile:[self.testPlistURL path]
                                       withContext:folderURL
                                      useNavDialog:NO
+                                         allowKeyWindowSubcommand:NO
                                          delegate:nil];
     
     XCTAssertEqual(err, noErr, @"Should process folder");
@@ -177,6 +184,7 @@
                                    forCommandFile:[self.testPlistURL path]
                                       withContext:testText
                                      useNavDialog:NO
+                                         allowKeyWindowSubcommand:NO
                                          delegate:nil];
     
     XCTAssertEqual(err, noErr, @"Should process text context");
@@ -189,6 +197,7 @@
                                    forCommandFile:[self.testPlistURL path]
                                       withContext:emptyText
                                      useNavDialog:NO
+                                         allowKeyWindowSubcommand:NO
                                          delegate:nil];
     
     XCTAssertEqual(err, noErr, @"Should handle empty text");
@@ -203,6 +212,7 @@
                                    forCommandFile:absolutePath
                                       withContext:nil
                                      useNavDialog:NO
+                                         allowKeyWindowSubcommand:NO
                                          delegate:nil];
     
     XCTAssertEqual(err, noErr, @"Should load plist from absolute path");
@@ -221,6 +231,7 @@
                                    forCommandFile:tildePath
                                       withContext:nil
                                      useNavDialog:NO
+                                         allowKeyWindowSubcommand:NO
                                          delegate:nil];
     
     [[NSFileManager defaultManager] removeItemAtURL:homeURL error:nil];
@@ -233,6 +244,7 @@
                                    forCommandFile:@"/nonexistent/path.plist"
                                       withContext:nil
                                      useNavDialog:NO
+                                         allowKeyWindowSubcommand:NO
                                          delegate:nil];
     
     XCTAssertNotEqual(err, noErr, @"Should fail for invalid plist path");
@@ -246,6 +258,7 @@
                                    forCommandFile:[self.testPlistURL path]
                                       withContext:nil
                                      useNavDialog:NO
+                                         allowKeyWindowSubcommand:NO
                                          delegate:nil];
     
     XCTAssertNotEqual(err, noErr, @"Should fail when file context required but not provided");
@@ -259,6 +272,7 @@
                                    forCommandFile:[self.testPlistURL path]
                                       withContext:testFile
                                      useNavDialog:NO
+                                         allowKeyWindowSubcommand:NO
                                          delegate:nil];
     
     XCTAssertNotEqual(err, noErr, @"Should fail when context type doesn't match");

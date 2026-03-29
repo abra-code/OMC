@@ -71,6 +71,7 @@
                                    forCommandFile:omcBundlePath
                                       withContext:homeURL
                                      useNavDialog:NO
+                                         allowKeyWindowSubcommand:NO
                                          delegate:executionObserver];
 
     XCTAssertEqual(err, noErr, @"Should execute Form command");
@@ -91,6 +92,7 @@
                                    forCommandFile:omcBundlePath
                                       withContext:uuid
                                      useNavDialog:NO
+                                         allowKeyWindowSubcommand:NO
                                          delegate:closeObserver];
 
     XCTAssertEqual(err, noErr, @"Should execute form.close.window command");
@@ -211,6 +213,7 @@
                                    forCommandFile:omcBundlePath
                                       withContext:uuid
                                      useNavDialog:NO
+                                         allowKeyWindowSubcommand:NO
                                          delegate:invokeObserver];
 
     XCTAssertEqual(err, noErr, @"Should execute form.invoke.close command");
