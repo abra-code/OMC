@@ -74,7 +74,7 @@ JSON schema and usage documentation for `View`.
      },
      "navigationSplitViewColumnWidth": 400.0, // Number – fixed column width
      "navigationTitle": "Detail",            // Optional: String for navigation title (for views navigated to)
-     "scrollContentBackground": "visible", // Optional: "visible" or "hidden"; controls the default background of scrollable views (List, TextEditor, Form). Defaults to "visible".
+     "scrollContentBackground": "visible",   // Optional: "visible", "hidden" or "automatic"; controls the default background of scrollable views (List, TextEditor, Form). Defaults to "automatic".
      "popoverArrowEdge": "top",             // Optional: Arrow edge for popover ("top", "bottom", "leading", "trailing"); defaults to "top". Only meaningful when "popover" subview is present.
      "popoverActionID": "view.popover",     // Optional: String for action identifier triggered when the popover is shown. Only meaningful when "popover" subview is present.
      "destinationViewId": 10,               // Optional: Int linking this view to a destination in a navigation container.

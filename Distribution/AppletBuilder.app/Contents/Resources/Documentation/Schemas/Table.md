@@ -10,13 +10,14 @@ JSON schema and usage documentation for `Table`.
    "id": 1,              // Required: Non-zero positive integer for runtime programmatic interaction and diffing
    "properties": {
      "columns": ["Name", "Action", "Icon"], // Required: Array of strings for column headers
+     "columnHeadersVisibility": "hidden",   // Optional: column headers visibility: "automatic", "hidden", "visible"
      "columnTypes": [                       // Optional: Per-column type config array. Defaults to all Text.
        { "viewType": "Text" },              // Each entry: { "viewType": "Text"|"Button"|"Image"|"AsyncImage"
        { "viewType": "Button",              // Columns without an entry default to Text.
          "actionContext": "rowIndex",       // "actionContext": "title"|"rowIndex"|"columnIndex"|"rowColumnIndex" (Button only)
          "actionID": "row.action" },        // "actionID": "..." (Button only — fires on button click) }
        { "viewType": "Image",
-         "dataInterpretation": "systemName" } // "dataInterpretation": "path"|"systemName"|"assetName"|"resourceName"|"mixed" (Image only)
+         "dataInterpretation": "systemName" } // "dataInterpretation": "path"|"systemName"|"assetName"|"resourceName"|"mixed" (Image & Button)
      ],
      "widths": [100, 80, 40],               // Optional: Array of integers for ideal column widths (resizable; last column fills remaining space)
      "actionID": "table.selection.changed", // Optional: Fires on selection change (all cell types)

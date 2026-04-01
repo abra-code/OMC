@@ -572,6 +572,20 @@ next_command_tool="$OMC_OMC_SUPPORT_PATH/omc_next_command"
 
 Background processes started by scripts can outlive the parent applet. Handle cleanup properly.
 
+### App Lifetime Events
+
+OMC dispatches commands for app lifecycle events when a matching `COMMAND_ID` is defined in `COMMAND_LIST`:
+
+| `COMMAND_ID` | When it fires |
+|--------------|---------------|
+| `app.will.launch` | Before the app finishes launching |
+| `app.did.launch` | After the app finishes launching |
+| `app.did.activate` | App came to foreground (e.g., user switched back to it) |
+| `app.did.deactivate` | App went to background (e.g., user switched to another app) |
+| `app.will.terminate` | App is about to quit |
+
+`app.did.activate` is useful for detecting external changes made while the app was in the background. For per-window activation, use `WINDOW_DID_ACTIVATE_SUBCOMMAND_ID` in `ACTIONUI_WINDOW` or `NIB_DIALOG` (see [Command Reference](omc_command_reference.md)).
+
 ### Termination Handler
 
 Special command with `COMMAND_ID=app.will.terminate` runs when app quits:
