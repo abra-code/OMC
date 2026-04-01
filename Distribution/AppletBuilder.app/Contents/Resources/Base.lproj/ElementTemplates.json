@@ -55,6 +55,7 @@
 {"title": "Map", "tag": "Map"},
 {"title": "Canvas", "tag": "Canvas"},
 {"section": "Other"},
+{"title": "Popover", "tag": "Popover"},
 {"title": "LoadableView", "tag": "LoadableView"},
 {"title": "ScrollView", "tag": "ScrollView"},
 {"title": "ScrollViewReader", "tag": "ScrollViewReader"},
