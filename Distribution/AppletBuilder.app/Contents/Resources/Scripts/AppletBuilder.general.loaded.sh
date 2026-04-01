@@ -19,6 +19,7 @@ fi
 
 if [ -n "$project_path" ] && [ -f "$project_path/Contents/Info.plist" ]; then
     plist="$project_path/Contents/Info.plist"
+    pb_set "$PB_PLIST_HASH" "$(file_hash "$plist")"
 
     app_name=$(plist_read "$plist" CFBundleName)
     set_value "$GEN_NAME_ID" "$app_name"

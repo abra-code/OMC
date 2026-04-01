@@ -143,6 +143,13 @@ PB_CMD_SELECTED="cmd_selected_index_${window_uuid}"
 PB_SVC_SELECTED="svc_selected_index_${window_uuid}"
 PB_HELP_NAV_COUNT="help_nav_count_${window_uuid}"
 PB_HELP_WENT_BACK="help_went_back_${window_uuid}"
+PB_SCRIPTS_HASH="scripts_file_hash_${window_uuid}"
+PB_CMD_HASH="cmd_file_hash_${window_uuid}"
+PB_UIFILES_HASH="uifiles_file_hash_${window_uuid}"
+PB_SCRIPTS_DIRTY="scripts_dirty_${window_uuid}"
+PB_CMD_DIRTY="cmd_dirty_${window_uuid}"
+PB_UIFILES_DIRTY="uifiles_dirty_${window_uuid}"
+PB_PLIST_HASH="plist_hash_${window_uuid}"
 
 pb_set() {
     "$pasteboard_tool" "$1" set "$2"
@@ -168,6 +175,49 @@ cleanup_state() {
     pb_set "$PB_SVC_SELECTED" ""
     pb_set "$PB_HELP_NAV_COUNT" ""
     pb_set "$PB_HELP_WENT_BACK" ""
+    pb_set "$PB_SCRIPTS_HASH" ""
+    pb_set "$PB_CMD_HASH" ""
+    pb_set "$PB_UIFILES_HASH" ""
+    pb_set "$PB_SCRIPTS_DIRTY" ""
+    pb_set "$PB_CMD_DIRTY" ""
+    pb_set "$PB_UIFILES_DIRTY" ""
+    pb_set "$PB_PLIST_HASH" ""
+}
+
+# Compute SHA-256 hash of a file (just the hash, no filename)
+file_hash() {
+    /usr/bin/shasum -a 256 "$1" 2>/dev/null | /usr/bin/cut -d ' ' -f 1
+}
+
+# Check if a file was modified externally since it was loaded.
+# Usage: check_file_modified "$file_path" "$hash_pb_key"
+# Returns: 0 = no conflict or user chose "Save Anyway"
+#          1 = user chose "Reload from Disk"
+#          2 = user chose "Cancel"
+check_file_modified() {
+    local file_path="$1"
+    local hash_pb_key="$2"
+    local stored_hash=$(pb_get "$hash_pb_key")
+    if [ -z "$stored_hash" ]; then
+        return 0
+    fi
+    local current_hash=$(file_hash "$file_path")
+    if [ "$stored_hash" = "$current_hash" ]; then
+        return 0
+    fi
+    local alert_tool="$OMC_OMC_SUPPORT_PATH/alert"
+    "$alert_tool" --level caution \
+        --title "File Modified Externally" \
+        --ok "Save Anyway" \
+        --cancel "Reload from Disk" \
+        --other "Cancel" \
+        "This file has been modified by another application since it was loaded into the editor."
+    local choice=$?
+    case $choice in
+        0) return 0 ;;  # Save Anyway
+        1) return 1 ;;  # Reload from Disk
+        *)  return 2 ;;  # Cancel (or timeout)
+    esac
 }
 
 # ──────────────────────────────────────────────────────────────

@@ -27,6 +27,7 @@ set_enabled "$CMD_VALIDATE_BTN_ID" true
 # Save starts disabled until text is edited
 set_enabled "$CMD_SAVE_BTN_ID" false
 set_value "$CMD_EDITED_LABEL_ID" ""
+pb_set "$PB_CMD_DIRTY" ""
 
 if [ ! -f "$cmd_plist" ]; then
     exit 0
@@ -34,6 +35,9 @@ fi
 
 # Store selected index for save/validate handlers
 pb_set "$PB_CMD_SELECTED" "$cmd_index"
+
+# Store hash of Command.plist for external modification detection
+pb_set "$PB_CMD_HASH" "$(file_hash "$cmd_plist")"
 
 # Extract the command dict as XML fragment, stripping the plist wrapper
 # (xml declaration, DOCTYPE, <plist> header and </plist> footer)

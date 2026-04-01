@@ -24,14 +24,17 @@ set_enabled "$SCRIPTS_EXT_EDIT_BTN_ID" true
 # Save starts disabled until text is edited
 set_enabled "$SCRIPTS_SAVE_BTN_ID" false
 set_value "$SCRIPTS_EDITED_LABEL_ID" ""
+pb_set "$PB_SCRIPTS_DIRTY" ""
 
 # Store selected path for save handler
 pb_set "$PB_SCRIPTS_SELECTED" "$selected_path"
 
 if [ -f "$selected_path" ]; then
+    pb_set "$PB_SCRIPTS_HASH" "$(file_hash "$selected_path")"
     content=$(/bin/cat "$selected_path")
     set_value "$SCRIPTS_DETAIL_ID" "$content
 "
 else
+    pb_set "$PB_SCRIPTS_HASH" ""
     set_value "$SCRIPTS_DETAIL_ID" "File not found: $selected_path"
 fi

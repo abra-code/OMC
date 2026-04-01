@@ -47,7 +47,9 @@ elif [ -f "$selected_path" ]; then
     # Save starts disabled until text is edited
     set_enabled "$UI_SAVE_BTN_ID" false
     set_value "$UI_EDITED_LABEL_ID" ""
+    pb_set "$PB_UIFILES_DIRTY" ""
 
+    pb_set "$PB_UIFILES_HASH" "$(file_hash "$selected_path")"
     content=$(/bin/cat "$selected_path")
     set_value "$UI_DETAIL_ID" "$content
 "

@@ -192,9 +192,20 @@
 				<string>AppletBuilder.project.init</string>
 				<key>END_CANCEL_SUBCOMMAND_ID</key>
 				<string>AppletBuilder.project.cancel</string>
+				<key>WINDOW_DID_ACTIVATE_SUBCOMMAND_ID</key>
+				<string>AppletBuilder.project.activated</string>
 				<key>IS_BLOCKING</key>
 				<false/>
 			</dict>
+		</dict>
+
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.project.activated</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
 		</dict>
 
 		<dict>

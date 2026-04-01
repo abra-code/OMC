@@ -79,6 +79,8 @@ fi
 # Finalize
 applet_finalize "$project_path"
 
+pb_set "$PB_PLIST_HASH" "$(file_hash "$project_path/Contents/Info.plist")"
+
 if [ "$name_changed" -eq 1 ]; then
     set_status "$GEN_STATUS_ID" "Renamed to ${new_name}.app — reopening..."
 

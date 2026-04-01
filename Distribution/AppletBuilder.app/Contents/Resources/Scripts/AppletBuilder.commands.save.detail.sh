@@ -19,6 +19,25 @@ if [ -z "$edited_xml" ]; then
     exit 1
 fi
 
+check_file_modified "$cmd_plist" "$PB_CMD_HASH"
+case $? in
+    1)  # Reload from Disk — re-extract the command at the selected index
+        cmd_xml=$(/usr/bin/plutil -extract "COMMAND_LIST.$cmd_index" xml1 -o - "$cmd_plist" 2>/dev/null \
+            | /usr/bin/sed '1,3d; $d')
+        set_value "$CMD_DETAIL_ID" "$cmd_xml
+"
+        pb_set "$PB_CMD_HASH" "$(file_hash "$cmd_plist")"
+        pb_set "$PB_CMD_DIRTY" ""
+        set_enabled "$CMD_SAVE_BTN_ID" false
+        set_value "$CMD_EDITED_LABEL_ID" "Reloaded from disk"
+        "$next_cmd" "${OMC_CURRENT_COMMAND_GUID}" "AppletBuilder.commands.loaded"
+        exit 0
+        ;;
+    2)  # Cancel
+        exit 0
+        ;;
+esac
+
 # Wrap the dict fragment in a plist envelope for validation and JSON conversion
 temp_plist=$(/usr/bin/mktemp /tmp/appletbuilder_cmd.XXXXXX.plist)
 cat > "$temp_plist" <<EOF
@@ -47,6 +66,8 @@ result=$?
 /bin/rm -f "$temp_json"
 
 if [ "$result" -eq 0 ]; then
+    pb_set "$PB_CMD_HASH" "$(file_hash "$cmd_plist")"
+    pb_set "$PB_CMD_DIRTY" ""
     set_enabled "$CMD_SAVE_BTN_ID" false
     set_value "$CMD_EDITED_LABEL_ID" "✅ Saved"
     "$next_cmd" "${OMC_CURRENT_COMMAND_GUID}" "AppletBuilder.commands.loaded"
