@@ -37,9 +37,17 @@ JSON schema and usage documentation for `List`.
         "id": 11,                            // Recommended: Set unique ID for selection support
         "properties": { "title": "Item 2" } 
       }
-    ]
+    ],
+    // Form 3: Data-driven list with template (replaces itemType with full ActionUI template)
+    "template": {                           // "template" presence activates data-driven template mode; "id" required
+      "type": "HStack",
+      "children": [
+        { "type": "Image", "properties": { "systemName": "$1" } }, // $1, $2, etc. are 1-based data column indexes
+        { "type": "Text",  "properties": { "text": "$2" } }
+      ]
+    }
   }
-    // Note: The List can operate in two modes:
+    // Note: The List can operate in three modes (Form 1, 2, and 3):
     //   1. Homogeneous list: Shows a single-column list of homogeneous views (Text, Button, Image, AsyncImage) 
     //      specified by itemType.viewType. Selection is stored as [String] in state, using the item string or id. 
     //      The list-level actionID fires on selection change. Button items have their own actionID in itemType, 
@@ -68,6 +76,12 @@ JSON schema and usage documentation for `List`.
     //      cornerRadius, actionID, disabled) and additional View protocol modifiers are inherited and
     //      applied via ActionUIRegistry.shared.applyViewModifiers(to: baseView, properties: element.properties).
     //      The applyModifiers implementation is provided by the ActionUIViewConstruction protocol extension.
+    //   3. Template-based list: homogeneous rows of ActionUI views based on pre-declared template
+    //      Column text values are assigned to specific sub-view values by index
+    //      Column indexes are 1-based: $1 (col 0), $2 (col 1), $N (col N-1), $0 (all)
+    //      Data set via setElementRows/appendElementRows/clearElementRows.
+    //      Selection and doubleClickActionID work the same as Form 1.
+    //
     //    Performance: For homogeneous lists, child views are strongly typed to avoid AnyView overhead, 
     //    identified by stable indices in ForEach, optimizing SwiftUI diffing for large lists (e.g., 10,000 items). 
     //    For heterogeneous lists, views are constructed dynamically. Image creation uses SwiftUI.Image extension, 

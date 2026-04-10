@@ -1,0 +1,31 @@
+{
+  "type": "Button",
+  "id": 1,
+  "properties": {
+    "title": "Open Settings",
+    "buttonStyle": "bordered",
+    "sheetOnDismissActionID": "settings.closed"
+  },
+  "sheet": {
+    "type": "VStack",
+    "properties": {
+      "padding": "default",
+      "spacing": 12.0
+    },
+    "children": [
+      {
+        "type": "Text",
+        "properties": {
+          "text": "Settings",
+          "font": "headline"
+        }
+      },
+      {
+        "type": "Text",
+        "properties": {
+          "text": "Sheet content goes here."
+        }
+      }
+    ]
+  }
+}

@@ -89,9 +89,9 @@ Declared with `<key>EXECUTION_MODE</key>`. Default `exe_shell_script` if key not
 | `exe_applescript_with_output_window` | **Sync** | No | AppleScript + output | |
 
 > **Deprecated aliases**:
-> - `exe_popen`, `exe_silent_popen`, `exe_silent` → use `exe_shell_script` 
-> - `exe_popen_with_output_window` → use `exe_shell_script_with_output_window`
-> - `exe_silent_system` → use `exe_system`
+> - `exe_popen`, `exe_silent_popen`, `exe_silent`: use `exe_shell_script` 
+> - `exe_popen_with_output_window`: use `exe_shell_script_with_output_window`
+> - `exe_silent_system`: use `exe_system`
 >
 > **New in v4.3**: `WAIT_FOR_TASK_COMPLETION` (boolean) forces sync for some async modes.
 
@@ -196,7 +196,7 @@ xattr -dr com.apple.quarantine "${OMC_OBJ_PATH}"
 > - When using environment variables you don't need to chop the script into multiple strings in `COMMAND` array so one string is sufficient.
 > - **Always quote** environment variables: `"${OMC_OBJ_PATH}"`
 > - Use `{}` to avoid shell parsing issues.
-> - Multiple strings in `COMMAND` array are concatenated without spaces. So an array like: `["gzip", "-d", "${OMC_OBJ_PATH}"]` → `gzip-d/path` → **broken**.
+> - Multiple strings in `COMMAND` array are concatenated without spaces. So an array like: `["gzip", "-d", "${OMC_OBJ_PATH}"]` becomes `gzip-d/path` and is **broken**.
 
 ---
 
@@ -528,11 +528,135 @@ omc_dialog_control "$OMC_ACTIONUI_WINDOW_UUID" omc_window omc_terminate_cancel
 
 ---
 
+---
+
+### ActionUI Template Containers
+
+Any ActionUI container view (VStack, HStack, ZStack, List, DisclosureGroup, Group, GroupBox, LazyHStack, LazyVStack, Section) can render **data-driven repeated content** from a row dataset when its JSON uses a `"template"` key instead of `"children"`. The same `omc_dialog_control` commands used for List and Table — `omc_list_*` and `omc_table_*` — work for any container with a non-zero `id`. OMC does not restrict row operations to List/Table views.
+
+#### Template JSON
+
+Define the container with `"template"` and a non-zero `"id"`. Placeholder tokens `$1`, `$2`, … (1-based column index) are substituted per row:
+
+```json
+{
+  "type": "VStack",
+  "id": 5,
+  "template": {
+    "type": "Label",
+    "properties": {
+      "title": "$2",
+      "systemImage": "$1"
+    }
+  }
+}
+```
+
+#### Populating Template Containers at Runtime
+
+```bash
+# Single-column template: use omc_list_set_items (one value per row, use $1)
+omc_dialog_control "$OMC_ACTIONUI_WINDOW_UUID" 5 omc_list_set_items "Apple" "Banana" "Cherry"
+
+# Multi-column template: use omc_table_set_rows (tab-separated columns, use $1, $2, …)
+omc_dialog_control "$OMC_ACTIONUI_WINDOW_UUID" 5 omc_table_set_rows \
+    "star.fill	Favorites" \
+    "heart.fill	Liked"
+
+# Append additional rows without replacing existing ones
+omc_dialog_control "$OMC_ACTIONUI_WINDOW_UUID" 5 omc_list_append_items "More"
+
+# Clear all rows
+omc_dialog_control "$OMC_ACTIONUI_WINDOW_UUID" 5 omc_list_remove_all
+```
+
+> **Requirement**: The container element must have a non-zero integer `"id"` in its JSON so ActionUI registers a ViewModel for it — the same requirement as any interactive view.
+
+> **Note**: Template elements are stateless blueprints; only the parent container has a ViewModel. Buttons inside templates dispatch with the container's viewID and the 0-based row index as viewPartID. Retrieve the clicked row via `getElementRows` or read `states["content"]`.
+
+---
+
+### ActionUI Modal Presentation
+
+ActionUI windows support **programmatic modal overlays** triggered from subcommand scripts via `omc_dialog_control`. All operations are fire-and-forget (async) — the script sends the IPC message and continues. User interactions with modals are handled via **actionID callbacks** that fire the corresponding `COMMAND_ID` as a subcommand.
+
+#### Presenting a Sheet or Full-Screen Cover
+
+Load a JSON file from the app bundle and present it as a sheet attached to the window:
+
+```bash
+# Present a sheet
+omc_dialog_control "$OMC_ACTIONUI_WINDOW_UUID" omc_window \
+    omc_present_modal "ConfirmSheet" "sheet.dismissed"
+
+# Dismiss programmatically (also fires the onDismissActionID if set)
+omc_dialog_control "$OMC_ACTIONUI_WINDOW_UUID" omc_window omc_dismiss_modal
+```
+
+`omc_present_modal` arguments:
+1. **resource name or path** — bundle resource name (without `.json` extension) searched in the same bundle chain as the main window JSON, or an absolute file path.
+2. **dismiss action ID** *(optional)* — `COMMAND_ID` dispatched as a subcommand when the modal is dismissed (either programmatically or via a button inside the modal).
+
+#### System Alert and Confirmation Dialog
+
+Present a system-style alert or action-sheet confirmation dialog attached to the window:
+
+```bash
+# Alert with two buttons; tapping "Delete" fires the "delete.confirmed" subcommand
+omc_dialog_control "$OMC_ACTIONUI_WINDOW_UUID" omc_window \
+    omc_present_alert "Delete File?" "This cannot be undone." \
+    "Cancel:cancel:" \
+    "Delete:destructive:delete.confirmed"
+
+# Confirmation dialog (action-sheet style on iPad/Mac Catalyst)
+omc_dialog_control "$OMC_ACTIONUI_WINDOW_UUID" omc_window \
+    omc_present_confirmation_dialog "Save Changes?" "" \
+    "Save::save.action" \
+    "Discard:destructive:discard.action" \
+    "Cancel:cancel:"
+
+# Dismiss the active alert/confirmation dialog programmatically
+omc_dialog_control "$OMC_ACTIONUI_WINDOW_UUID" omc_window omc_dismiss_dialog
+```
+
+#### Button Spec Format
+
+Each button is specified as a single argument in the format `"title:role:actionID"`:
+
+| Field | Values | Notes |
+|-------|--------|-------|
+| `title` | Any string | Required — button label |
+| `role` | `cancel` \| `destructive` \| *(empty)* | Optional — empty string means default role |
+| `actionID` | A `COMMAND_ID` string \| *(empty)* | Optional — empty means no subcommand on tap |
+
+Examples:
+- `"Cancel:cancel:"` — Cancel button, default role, no callback
+- `"Delete:destructive:delete.confirmed"` — destructive button, fires `delete.confirmed`
+- `"OK::ok.action"` — default button, fires `ok.action`
+- `"OK::"` — default button, no callback
+
+#### Modal Subcommand Callback
+
+When a modal button fires an actionID or `omc_dismiss_modal` fires an `onDismissActionID`, OMC dispatches the matching `COMMAND_ID` as a subcommand. The subcommand runs with the full ActionUI window context, including `$OMC_ACTIONUI_WINDOW_UUID`, so it can read control values or send further `omc_dialog_control` messages:
+
+```bash
+# Command handler for "delete.confirmed"
+dialog_tool="$OMC_OMC_SUPPORT_PATH/omc_dialog_control"
+item_path="$OMC_ACTIONUI_VIEW_1_VALUE"   # read text field value
+rm -f "$item_path"
+"$dialog_tool" "$OMC_ACTIONUI_WINDOW_UUID" omc_window omc_terminate_ok
+```
+
+> **Synchronous blocking**: Modal operations are intentionally async. For a blocking (run-loop-based) alert not attached to a window, use the standalone `alert` tool instead.
+
+---
+
 ### Best Practices
 
 - **Prefer `exe_script_file`** for subcommands/action handlers.
 - **Use descriptive view IDs** in your JSON for easier scripting.
 - **Set initial values dynamically** using `omc_dialog_control` in init subcommand script.
+- **Assign non-zero `id` to any view** you need to control at runtime (template containers, dynamic lists, tables).
 
 ---
 

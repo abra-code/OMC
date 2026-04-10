@@ -1,0 +1,10 @@
+{
+  "type": "Button",
+  "id": 1,
+  "properties": {
+    "title": "Delete Item",
+    "buttonStyle": "bordered",
+    "role": "destructive",
+    "actionID": "item.requestDelete"
+  }
+}

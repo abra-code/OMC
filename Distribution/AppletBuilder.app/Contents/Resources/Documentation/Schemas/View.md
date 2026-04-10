@@ -77,6 +77,8 @@ JSON schema and usage documentation for `View`.
      "scrollContentBackground": "visible",   // Optional: "visible", "hidden" or "automatic"; controls the default background of scrollable views (List, TextEditor, Form). Defaults to "automatic".
      "popoverArrowEdge": "top",             // Optional: Arrow edge for popover ("top", "bottom", "leading", "trailing"); defaults to "top". Only meaningful when "popover" subview is present.
      "popoverActionID": "view.popover",     // Optional: String for action identifier triggered when the popover is shown. Only meaningful when "popover" subview is present.
+     "sheetOnDismissActionID": "sheet.dismissed",           // Optional: String for action identifier triggered when the sheet is dismissed. Only meaningful when "sheet" subview is present.
+     "fullScreenCoverOnDismissActionID": "cover.dismissed", // Optional: String for action identifier triggered when the full-screen cover is dismissed. Only meaningful when "fullScreenCover" subview is present.
      "destinationViewId": 10,               // Optional: Int linking this view to a destination in a navigation container.
                                             // Does not apply any modifier; the value is kept in validatedProperties for navigation logic.
                                             // Used by NavigationLink (Form 2) to identify the push target in NavigationStack,
