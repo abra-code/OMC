@@ -107,7 +107,7 @@ OMCActionUIDialog::CopyAllControlValues(CFSetRef requestedNibControls, Selection
         if(specialWordID != ACTIONUI_TABLE_ALL_ROWS)
             continue;
 
-        // Parse "OMC_ACTIONUI_TABLE_N_COLUMN_M_ALL_ROWS" → controlID="N", columnIndexStr="M"
+        // Parse "OMC_ACTIONUI_TABLE_N_COLUMN_M_ALL_ROWS": controlID="N", columnIndexStr="M"
         CFObj<CFStringRef> columnIndexStr(CFSTR("0"), kCFObjRetain);
         CFObj<CFStringRef> controlID( CreateActionUITableIDAndColumnFromString(specialWord, columnIndexStr, true, isEnvironVariable), kCFObjDontRetain );
         if(controlID == nullptr)
@@ -133,7 +133,7 @@ OMCActionUIDialog::CopyAllControlValues(CFSetRef requestedNibControls, Selection
             }
             else
             {
-                // Specific column (1-based) → 0-based array index
+                // Specific column (1-based) to 0-based array index
                 NSInteger arrayIdx = colIdx - 1;
                 [columnValues addObject:(arrayIdx < (NSInteger)row.count) ? row[arrayIdx] : @""];
             }

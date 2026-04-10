@@ -1,0 +1,21 @@
+{
+  "type": "VStack",
+  "properties": {
+    "spacing": 10.0,
+    "padding": "default"
+  },
+  "children": [
+    {
+      "type": "Text",
+      "properties": {
+        "text": "Sheet Modal"
+      }
+    },
+    {
+      "type": "Text",
+      "properties": {
+        "text": "Presented via omc_present_modal"
+      }
+    }
+  ]
+}

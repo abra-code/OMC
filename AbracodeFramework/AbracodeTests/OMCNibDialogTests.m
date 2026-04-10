@@ -222,7 +222,7 @@
     BOOL completed = [invokeObserver waitForCompletionWithTimeout:kDefaultExecutionTimeout];
     XCTAssertTrue(completed, @"browser.invoke.close should complete within timeout");
 
-    // The INVOKE close triggers windowWillClose: → terminate → END_CANCEL_SUBCOMMAND_ID
+    // The INVOKE close triggers windowWillClose: -> terminate -> END_CANCEL_SUBCOMMAND_ID
     // which writes the termination diagnostic file
     NSString *termPath = [NSString stringWithFormat:@"/tmp/OMC_test_nib_term_%@", uuid];
     BOOL termFound = [self pollForFileAtPath:termPath timeout:5.0];

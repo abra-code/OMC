@@ -1,0 +1,40 @@
+{
+  "type": "VStack",
+  "properties": {
+    "spacing": 8.0,
+    "padding": "default",
+    "frame": {
+      "minWidth": 300.0,
+      "minHeight": 200.0
+    }
+  },
+  "children": [
+    {
+      "type": "Text",
+      "properties": {
+        "text": "Modal Test Window"
+      }
+    },
+    {
+      "type": "VStack",
+      "id": 2,
+      "template": {
+        "type": "Text",
+        "properties": {
+          "text": "$1"
+        }
+      }
+    },
+    {
+      "type": "VStack",
+      "id": 3,
+      "template": {
+        "type": "Label",
+        "properties": {
+          "title": "$2",
+          "systemImage": "$1"
+        }
+      }
+    }
+  ]
+}

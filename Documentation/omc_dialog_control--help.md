@@ -38,6 +38,15 @@ Special values:
 	omc_invoke [followed by space separated ObjC message] (may be sent to control or window)
 	omc_set_property <property_key> <value> (ActionUI only; value is a string or a JSON fragment)
 	omc_set_state <state_key> <value> (ActionUI only; value is a string or JSON fragment)
+	omc_present_modal <resource_name_or_path> [dismiss_action_id] (ActionUI only)
+	omc_dismiss_modal (ActionUI only)
+	omc_present_alert <title> [message] ["button_title:role:action_id" ...] (ActionUI only)
+	omc_present_confirmation_dialog <title> [message] ["button_title:role:action_id" ...] (ActionUI only)
+	omc_dismiss_dialog (ActionUI only)
+
+Modal button spec format: "title:role:actionID"
+  role: cancel | destructive | (omit for default)
+  actionID: COMMAND_ID to dispatch as subcommand when button is tapped; omit for no callback
 
 Examples:
 omc_dialog_control __NIB_DLG_GUID__ 4 "hello world!"
@@ -64,4 +73,18 @@ omc_dialog_control __ACTIONUI_WINDOW_UUID__ 1 omc_set_property "columns" '["Name
 omc_dialog_control __ACTIONUI_WINDOW_UUID__ 2 omc_set_property "disabled" true
 omc_dialog_control __ACTIONUI_WINDOW_UUID__ 4 omc_set_state "isLoading" true
 omc_dialog_control __ACTIONUI_WINDOW_UUID__ 4 omc_set_state "label" "Hello"
+
+# Modal presentation (ActionUI only; all operations are fire-and-forget async)
+omc_dialog_control __ACTIONUI_WINDOW_UUID__ omc_window omc_present_modal "MyModal" "modal.dismissed"
+omc_dialog_control __ACTIONUI_WINDOW_UUID__ omc_window omc_dismiss_modal
+omc_dialog_control __ACTIONUI_WINDOW_UUID__ omc_window omc_present_alert "Confirm Delete" "Are you sure?" "Cancel:cancel:" "Delete:destructive:delete.action"
+omc_dialog_control __ACTIONUI_WINDOW_UUID__ omc_window omc_present_confirmation_dialog "Title" "Message" "OK::ok.action" "Cancel:cancel:"
+omc_dialog_control __ACTIONUI_WINDOW_UUID__ omc_window omc_dismiss_dialog
+
+
+# Template container row operations — omc_list_* and omc_table_* work on any
+# ActionUI container view with a non-zero id and a "template" key in the JSON,
+# not just List and Table views.
+omc_dialog_control __ACTIONUI_WINDOW_UUID__ 5 omc_list_set_items "Apple" "Banana" "Cherry"
+omc_dialog_control __ACTIONUI_WINDOW_UUID__ 6 omc_table_set_rows "star.fill	Favorites" "heart.fill	Liked"
 ```

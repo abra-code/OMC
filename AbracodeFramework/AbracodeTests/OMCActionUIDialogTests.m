@@ -158,7 +158,7 @@
 
     // Verify control value round-trip: init set control 2 to "Papa Smurf"
     XCTAssertEqualObjects(diag[@"VIEW_2_VALUE"], @"Papa Smurf",
-                          @"Control 2 value should round-trip through init → termination");
+                          @"Control 2 value should round-trip through init to termination");
 
     [self cleanupDiagnosticFilesForUUID:uuid prefix:@"actionui"];
 }
@@ -221,7 +221,7 @@
     BOOL completed = [invokeObserver waitForCompletionWithTimeout:kDefaultExecutionTimeout];
     XCTAssertTrue(completed, @"form.invoke.close should complete within timeout");
 
-    // The INVOKE close triggers windowWillClose: → terminate → END_CANCEL_SUBCOMMAND_ID
+    // The INVOKE close triggers windowWillClose: -> terminate -> END_CANCEL_SUBCOMMAND_ID
     // which writes the termination diagnostic file
     NSString *termPath = [NSString stringWithFormat:@"/tmp/OMC_test_actionui_term_%@", uuid];
     BOOL termFound = [self pollForFileAtPath:termPath timeout:5.0];

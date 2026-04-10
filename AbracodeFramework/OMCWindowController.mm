@@ -610,6 +610,84 @@ GetAllDialogControllers()
 		}
 	}
 
+	// Modal presentation (ActionUI only; Nib controller stubs log and return)
+	{
+	CFDictionaryRef presentModalDict = NULL;
+	if( controlValues.GetValue(CFSTR("PRESENT_MODAL"), presentModalDict) )
+	{
+		CFArrayRef theArr = (CFArrayRef)::CFDictionaryGetValue(presentModalDict, CFSTR("omc_window"));
+		if( theArr != NULL && ::CFArrayGetCount(theArr) >= 1 )
+		{
+			NSString *resourceNameOrPath = (__bridge NSString *)ACFType<CFStringRef>::DynamicCast( ::CFArrayGetValueAtIndex(theArr, 0) );
+			NSString *dismissActionID = (::CFArrayGetCount(theArr) >= 2) ? (__bridge NSString *)ACFType<CFStringRef>::DynamicCast( ::CFArrayGetValueAtIndex(theArr, 1) ) : nil;
+			if( resourceNameOrPath != nil )
+				[self presentModalWithResourceNameOrPath:resourceNameOrPath onDismissActionID:dismissActionID];
+		}
+	}
+	}
+
+	{
+	CFDictionaryRef dismissModalDict = NULL;
+	if( controlValues.GetValue(CFSTR("DISMISS_MODAL"), dismissModalDict) )
+	{
+		if( dismissModalDict != NULL && ::CFDictionaryGetValue(dismissModalDict, CFSTR("omc_window")) != NULL )
+			[self dismissModal];
+	}
+	}
+
+	{
+	CFDictionaryRef presentAlertDict = NULL;
+	if( controlValues.GetValue(CFSTR("PRESENT_ALERT"), presentAlertDict) )
+	{
+		CFArrayRef theArr = (CFArrayRef)::CFDictionaryGetValue(presentAlertDict, CFSTR("omc_window"));
+		if( theArr != NULL && ::CFArrayGetCount(theArr) >= 1 )
+		{
+			NSString *title = (__bridge NSString *)ACFType<CFStringRef>::DynamicCast( ::CFArrayGetValueAtIndex(theArr, 0) );
+			NSString *message = (::CFArrayGetCount(theArr) >= 2) ? (__bridge NSString *)ACFType<CFStringRef>::DynamicCast( ::CFArrayGetValueAtIndex(theArr, 1) ) : nil;
+			NSMutableArray *buttonSpecs = [NSMutableArray array];
+			for( CFIndex i = 2; i < ::CFArrayGetCount(theArr); i++ )
+			{
+				NSString *spec = (__bridge NSString *)ACFType<CFStringRef>::DynamicCast( ::CFArrayGetValueAtIndex(theArr, i) );
+				if( spec != nil )
+					[buttonSpecs addObject:spec];
+			}
+			if( title != nil )
+				[self presentAlertWithTitle:title message:message buttonSpecs:buttonSpecs];
+		}
+	}
+	}
+
+	{
+	CFDictionaryRef presentConfirmDict = NULL;
+	if( controlValues.GetValue(CFSTR("PRESENT_CONFIRMATION_DIALOG"), presentConfirmDict) )
+	{
+		CFArrayRef theArr = (CFArrayRef)::CFDictionaryGetValue(presentConfirmDict, CFSTR("omc_window"));
+		if( theArr != NULL && ::CFArrayGetCount(theArr) >= 1 )
+		{
+			NSString *title = (__bridge NSString *)ACFType<CFStringRef>::DynamicCast( ::CFArrayGetValueAtIndex(theArr, 0) );
+			NSString *message = (::CFArrayGetCount(theArr) >= 2) ? (__bridge NSString *)ACFType<CFStringRef>::DynamicCast( ::CFArrayGetValueAtIndex(theArr, 1) ) : nil;
+			NSMutableArray *buttonSpecs = [NSMutableArray array];
+			for( CFIndex i = 2; i < ::CFArrayGetCount(theArr); i++ )
+			{
+				NSString *spec = (__bridge NSString *)ACFType<CFStringRef>::DynamicCast( ::CFArrayGetValueAtIndex(theArr, i) );
+				if( spec != nil )
+					[buttonSpecs addObject:spec];
+			}
+			if( title != nil )
+				[self presentConfirmationDialogWithTitle:title message:message buttonSpecs:buttonSpecs];
+		}
+	}
+	}
+
+	{
+	CFDictionaryRef dismissDialogDict = NULL;
+	if( controlValues.GetValue(CFSTR("DISMISS_DIALOG"), dismissDialogDict) )
+	{
+		if( dismissDialogDict != NULL && ::CFDictionaryGetValue(dismissDialogDict, CFSTR("omc_window")) != NULL )
+			[self dismissDialog];
+	}
+	}
+
 	{
 	CFDictionaryRef valuesDict = NULL;
 	if( controlValues.GetValue(CFSTR("VALUES"), valuesDict) )
@@ -1443,6 +1521,22 @@ GetAllDialogControllers()
 }
 - (void)setStateKey:(NSString *)stateKey stringOrJsonValue:(NSString *)value forControlID:(NSString *)inControlID {
     NSLog(@"[OMCWindowController stub] setStateKey:%@ value:%@ forControlID: %@", stateKey, value, inControlID);
+}
+
+- (void)presentModalWithResourceNameOrPath:(NSString *)resourceNameOrPath onDismissActionID:(NSString *)onDismissActionID {
+    NSLog(@"[OMCWindowController stub] presentModalWithResourceNameOrPath: %@ — not supported by this window controller", resourceNameOrPath);
+}
+- (void)dismissModal {
+    NSLog(@"[OMCWindowController stub] dismissModal — not supported by this window controller");
+}
+- (void)presentAlertWithTitle:(NSString *)title message:(NSString *)message buttonSpecs:(NSArray *)buttonSpecs {
+    NSLog(@"[OMCWindowController stub] presentAlertWithTitle: %@ — not supported by this window controller", title);
+}
+- (void)presentConfirmationDialogWithTitle:(NSString *)title message:(NSString *)message buttonSpecs:(NSArray *)buttonSpecs {
+    NSLog(@"[OMCWindowController stub] presentConfirmationDialogWithTitle: %@ — not supported by this window controller", title);
+}
+- (void)dismissDialog {
+    NSLog(@"[OMCWindowController stub] dismissDialog — not supported by this window controller");
 }
 
 @end

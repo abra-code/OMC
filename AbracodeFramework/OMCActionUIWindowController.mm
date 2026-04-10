@@ -51,6 +51,33 @@ static id ParseStringOrJSON(NSString *value)
     return (error == nil && parsed != nil) ? parsed : value;
 }
 
+/// Parses an array of "title:role:actionID" button spec strings into ActionUIObjCDialogButton objects.
+/// Role field: "cancel": cancel, "destructive": destructive, anything else: default.
+/// actionID field: empty string or missing = nil (no action fired on tap).
+static NSArray<ActionUIObjCDialogButton *> *OMCParseButtonSpecs(NSArray *specs)
+{
+    NSMutableArray<ActionUIObjCDialogButton *> *buttons = [NSMutableArray array];
+    for (NSString *spec in specs) {
+        if (![spec isKindOfClass:[NSString class]]) continue;
+        NSArray<NSString *> *parts = [spec componentsSeparatedByString:@":"];
+        NSString *btnTitle = (parts.count >= 1) ? parts[0] : @"";
+        if (btnTitle.length == 0) continue;
+        NSString *roleStr  = (parts.count >= 2) ? parts[1] : @"";
+        NSString *actionID = (parts.count >= 3 && parts[2].length > 0) ? parts[2] : nil;
+        ActionUIObjCButtonRole role;
+        if ([roleStr isEqualToString:@"cancel"])
+            role = ActionUIObjCButtonRoleCancel;
+        else if ([roleStr isEqualToString:@"destructive"])
+            role = ActionUIObjCButtonRoleDestructive;
+        else
+            role = ActionUIObjCButtonRoleDefault;
+        [buttons addObject:[[ActionUIObjCDialogButton alloc] initWithTitle:(NSString *)btnTitle
+                                                                      role:role
+                                                                  actionID:(NSString *)actionID]];
+    }
+    return buttons;
+}
+
 @implementation OMCActionUIWindowController
 
 - (id)initWithOmc:(OnMyCommandCM *)inOmc commandRuntimeData:(CommandRuntimeData *)inCommandRuntimeData
@@ -105,64 +132,7 @@ static id ParseStringOrJSON(NSString *value)
     params.GetValue( CFSTR("WINDOW_TYPE"), windowType );
 
 	//now we need to find out where our json is
-
-	NSURL *jsonURL = NULL;
-
-	if(mExternBundleRef != NULL)
-	{
-		CFObj<CFURLRef> bundleURL( CFBundleCopyBundleURL( mExternBundleRef ) );
-		if(bundleURL != NULL)
-		{
-			CFObj<CFStringRef> bundlePath = CreatePathFromCFURL(bundleURL, kEscapeNone);
-			if(bundlePath != nullptr)
-			{
-				NSString *path = (__bridge NSString *)bundlePath.Get();
-                
-                NSBundle *externBundle = [NSBundle bundleWithPath:path];
-                NSString *jsonPath = [externBundle pathForResource:dialogJsonName ofType:@"json"];
-                if(jsonPath != nil)
-                {
-                    jsonURL = [NSURL fileURLWithPath:jsonPath];
-                }
-			}
-		}
-	}
-
-	if(jsonURL == NULL)
-	{
-        NSBundle *mainBundle = [NSBundle mainBundle];
-        NSString *jsonPath = [mainBundle pathForResource:dialogJsonName ofType:@"json"];
-        if(jsonPath != nil)
-        {
-            jsonURL = [NSURL fileURLWithPath:jsonPath];
-        }
-	}
-
-	if(jsonURL == NULL)
-	{
-		CFBundleRef frameworkBundleRef = mPlugin->GetBundleRef();
-		if(frameworkBundleRef != NULL)
-		{
-			CFObj<CFURLRef> bundleURL( CFBundleCopyBundleURL( frameworkBundleRef ) );
-			if(bundleURL != NULL)
-			{
-				CFObj<CFStringRef> bundlePath = CreatePathFromCFURL(bundleURL, kEscapeNone);
-				if(bundlePath != nullptr)
-				{
-					NSString *path = (__bridge NSString *)bundlePath.Get();
-                    NSBundle *omcBundle = [NSBundle bundleWithPath:path];
-					if(omcBundle != nil)
-					{
-                        NSString *jsonPath = [omcBundle pathForResource:dialogJsonName ofType:@"json"];
-						if(jsonPath != nil)
-						{
-							jsonURL = [NSURL fileURLWithPath:jsonPath];
-						}
-					}
-				}
-			}
-		}
-	}
+	NSURL *jsonURL = [self resolveJSONURL:dialogJsonName];
 
 #if DEBUG
 	NSLog(@"[OMCActionUIWindowController initWithOmc], jsonURL=%@", jsonURL);
@@ -564,10 +534,126 @@ static NSArray<NSArray<NSString*>*> *OMCParseTabSeparatedRows(CFArrayRef cfRows)
     [ActionUIObjC setElementPropertyWithWindowUUID:windowUUID viewID:viewID propertyName:@"columns" value:names];
 }
 
+/// Resolves a resource name or absolute path to a file URL.
+/// Searches the same bundle chain used for the main dialog JSON (external bundle > main bundle > framework bundle).
+- (NSURL *)resolveJSONURL:(NSString *)resourceNameOrPath
+{
+    if (resourceNameOrPath.length == 0) return nil;
+
+    // Absolute path: use directly
+    if ([resourceNameOrPath hasPrefix:@"/"])
+        return [NSURL fileURLWithPath:resourceNameOrPath];
+
+    // Strip .json extension for resource lookup if present
+    NSString *baseName = [resourceNameOrPath hasSuffix:@".json"]
+        ? [resourceNameOrPath stringByDeletingPathExtension]
+        : resourceNameOrPath;
+
+    if (mExternBundleRef != NULL) {
+        CFObj<CFURLRef> bundleURL( CFBundleCopyBundleURL(mExternBundleRef) );
+        if (bundleURL != NULL) {
+            CFObj<CFStringRef> bundlePath = CreatePathFromCFURL(bundleURL, kEscapeNone);
+            if (bundlePath != nullptr) {
+                NSBundle *externBundle = [NSBundle bundleWithPath:(__bridge NSString *)bundlePath.Get()];
+                NSString *jsonPath = [externBundle pathForResource:baseName ofType:@"json"];
+                if (jsonPath != nil)
+                    return [NSURL fileURLWithPath:jsonPath];
+            }
+        }
+    }
+
+    NSString *jsonPath = [[NSBundle mainBundle] pathForResource:baseName ofType:@"json"];
+    if (jsonPath != nil)
+        return [NSURL fileURLWithPath:jsonPath];
+
+    CFBundleRef frameworkBundleRef = mPlugin->GetBundleRef();
+    if (frameworkBundleRef != NULL) {
+        CFObj<CFURLRef> bundleURL( CFBundleCopyBundleURL(frameworkBundleRef) );
+        if (bundleURL != NULL) {
+            CFObj<CFStringRef> bundlePath = CreatePathFromCFURL(bundleURL, kEscapeNone);
+            if (bundlePath != nullptr) {
+                NSBundle *omcBundle = [NSBundle bundleWithPath:(__bridge NSString *)bundlePath.Get()];
+                NSString *path = [omcBundle pathForResource:baseName ofType:@"json"];
+                if (path != nil) return [NSURL fileURLWithPath:path];
+            }
+        }
+    }
+
+    return nil;
+}
+
+#pragma mark - Modal presentation (ActionUI)
+
+- (void)presentModalWithResourceNameOrPath:(NSString *)resourceNameOrPath onDismissActionID:(NSString *)onDismissActionID
+{
+    NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
+    if (windowUUID == nil || resourceNameOrPath.length == 0)
+        return;
+
+    NSURL *jsonURL = [self resolveJSONURL:resourceNameOrPath];
+    if (jsonURL == nil) {
+        NSLog(@"[OMCActionUIWindowController] presentModal: cannot find JSON: %@", resourceNameOrPath);
+        return;
+    }
+    NSData *data = [NSData dataWithContentsOfURL:jsonURL];
+    if (data == nil) {
+        NSLog(@"[OMCActionUIWindowController] presentModal: cannot read JSON at: %@", jsonURL);
+        return;
+    }
+
+    NSError *error = nil;
+    BOOL success = [ActionUIObjC presentModalWithWindowUUID:windowUUID
+                                        data:(NSData *)data
+                                      format:@"json"
+                                       style:ActionUIObjCModalStyleSheet
+                          onDismissActionID:onDismissActionID
+                                       error:&error];
+    if (!success && (error != nil))
+        NSLog(@"[OMCActionUIWindowController] presentModal error: %@", error);
+}
+
+- (void)dismissModal
+{
+    NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
+    if (windowUUID != nil)
+        [ActionUIObjC dismissModalWithWindowUUID:windowUUID];
+}
+
+- (void)presentAlertWithTitle:(NSString *)title message:(NSString *)message buttonSpecs:(NSArray *)buttonSpecs
+{
+    NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
+    if (windowUUID == nil || title.length == 0)
+        return;
+    NSArray<ActionUIObjCDialogButton *> *buttons = OMCParseButtonSpecs(buttonSpecs);
+    NSString *msg = (message.length > 0) ? message : nil;
+    if (buttons.count > 0)
+        [ActionUIObjC presentAlertWithWindowUUID:windowUUID title:title message:msg buttons:buttons];
+    else
+        [ActionUIObjC presentAlertWithWindowUUID:windowUUID title:title message:msg buttons:nil];
+}
+
+- (void)presentConfirmationDialogWithTitle:(NSString *)title message:(NSString *)message buttonSpecs:(NSArray *)buttonSpecs
+{
+    NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
+    if (windowUUID == nil || title.length == 0)
+        return;
+    NSArray<ActionUIObjCDialogButton *> *buttons = OMCParseButtonSpecs(buttonSpecs);
+    NSString *msg = (message.length > 0) ? message : nil;
+    [ActionUIObjC presentConfirmationDialogWithWindowUUID:windowUUID title:title message:msg buttons:(NSArray *)buttons];
+}
+
+- (void)dismissDialog
+{
+    NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
+    if (windowUUID != nil)
+        [ActionUIObjC dismissDialogWithWindowUUID:windowUUID];
+}
+
 - (void)setTableColumnWidths:(CFArrayRef)widths forControlID:(NSString *)inControlID
 {
     NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
-    if (windowUUID == nil || inControlID == nil) return;
+    if (windowUUID == nil || inControlID == nil)
+        return;
     NSInteger viewID = [inControlID integerValue];
     CFIndex count = (widths != NULL) ? CFArrayGetCount(widths) : 0;
     NSMutableArray<NSNumber*> *widthNumbers = [NSMutableArray arrayWithCapacity:count];

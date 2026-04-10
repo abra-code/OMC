@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>COMMAND_LIST</key>
+	<array>
+		<!-- Main command: opens non-modal ActionUI window, prints UUID to stdout -->
+		<dict>
+			<key>ACTIVATION_MODE</key>
+			<string>act_folder</string>
+			<key>COMMAND</key>
+			<array>
+				<string>echo "${OMC_ACTIONUI_WINDOW_UUID}"
+				</string>
+			</array>
+			<key>EXECUTION_MODE</key>
+			<string>exe_shell_script</string>
+			<key>NAME</key>
+			<string>Modal</string>
+			<key>ACTIONUI_WINDOW</key>
+			<dict>
+				<key>JSON_NAME</key>
+				<string>Modal</string>
+				<key>INIT_SUBCOMMAND_ID</key>
+				<string>modal.dialog.init</string>
+				<key>END_CANCEL_SUBCOMMAND_ID</key>
+				<string>modal.dialog.terminate.cancel</string>
+				<key>IS_BLOCKING</key>
+				<false/>
+			</dict>
+			<key>NOTES</key>
+			<string>ActionUI modal presentation test window</string>
+			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
+			<string>14.6</string>
+			<key>REQUIRED_OMC_VERSION</key>
+			<string>5.0</string>
+			<key>VERSION</key>
+			<integer>1</integer>
+		</dict>
+
+		<!-- Init: exercise modal APIs and template container row operations -->
+		<dict>
+			<key>COMMAND</key>
+			<array>
+				<string>dialog_tool="$OMC_OMC_SUPPORT_PATH/omc_dialog_control"
+UUID="$OMC_ACTIONUI_WINDOW_UUID"
+
+# 1. Present alert and dismiss programmatically (tests omc_present_alert + omc_dismiss_dialog)
+"$dialog_tool" "$UUID" omc_window omc_present_alert "Test Alert" "Alert from automated test"
+"$dialog_tool" "$UUID" omc_window omc_dismiss_dialog
+
+# 2. Present confirmation dialog and dismiss programmatically (tests omc_present_confirmation_dialog)
+"$dialog_tool" "$UUID" omc_window omc_present_confirmation_dialog "Test Confirm" "Confirmation from automated test" "OK::confirm_action" "Cancel:cancel:"
+"$dialog_tool" "$UUID" omc_window omc_dismiss_dialog
+
+# 3. Present modal sheet with dismiss action, then dismiss programmatically
+#    omc_dismiss_modal fires "modal.dismiss.action" subcommand which writes its own diagnostic file
+"$dialog_tool" "$UUID" omc_window omc_present_modal "Sheet" "modal.dismiss.action"
+"$dialog_tool" "$UUID" omc_window omc_dismiss_modal
+
+# 4. Populate template VStack (id=2) with single-column data via omc_list_set_items
+#    Tests that OMC does not restrict setElementRows to List/Table only
+"$dialog_tool" "$UUID" 2 omc_list_set_items "Apple" "Banana" "Cherry"
+
+# 5. Populate template VStack (id=3) with multi-column data via omc_table_set_rows
+#    Tests multi-column template container support
+"$dialog_tool" "$UUID" 3 omc_table_set_rows "star.fill	Favorites" "heart.fill	Liked"
+
+# Write init diagnostic atomically
+init_file="/tmp/OMC_test_modal_init_${UUID}"
+{
+  echo "INIT_COMPLETE=YES"
+  echo "OMC_ACTIONUI_WINDOW_UUID=${UUID}"
+} > "${init_file}.tmp"
+mv "${init_file}.tmp" "$init_file"
+				</string>
+			</array>
+			<key>COMMAND_ID</key>
+			<string>modal.dialog.init</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_shell_script</string>
+			<key>NAME</key>
+			<string>Modal</string>
+		</dict>
+
+		<!-- Fired when omc_dismiss_modal fires the onDismissActionID -->
+		<dict>
+			<key>COMMAND</key>
+			<array>
+				<string>UUID="$OMC_ACTIONUI_WINDOW_UUID"
+dismiss_file="/tmp/OMC_test_modal_dismiss_${UUID}"
+{
+  echo "MODAL_DISMISS_OK=YES"
+  echo "OMC_ACTIONUI_WINDOW_UUID=${UUID}"
+} > "${dismiss_file}.tmp"
+mv "${dismiss_file}.tmp" "$dismiss_file"
+				</string>
+			</array>
+			<key>COMMAND_ID</key>
+			<string>modal.dismiss.action</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_shell_script</string>
+			<key>NAME</key>
+			<string>Modal</string>
+		</dict>
+
+		<!-- Close window via omc_terminate_cancel (for test teardown) -->
+		<dict>
+			<key>ACTIVATION_MODE</key>
+			<string>act_selected_text</string>
+			<key>COMMAND</key>
+			<array>
+				<string>WINDOW_UUID="${OMC_OBJ_TEXT}"
+if [ -n "${WINDOW_UUID}" ]; then
+    "$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$WINDOW_UUID" omc_window omc_terminate_cancel
+fi
+				</string>
+			</array>
+			<key>COMMAND_ID</key>
+			<string>modal.close.window</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_shell_script</string>
+			<key>NAME</key>
+			<string>Modal</string>
+			<key>NOTES</key>
+			<string>Test command: receive UUID as text context, close window</string>
+		</dict>
+
+		<!-- Terminate cancel: write term diagnostic -->
+		<dict>
+			<key>COMMAND</key>
+			<array>
+				<string>term_file="/tmp/OMC_test_modal_term_${OMC_ACTIONUI_WINDOW_UUID}"
+{
+  echo "TERM_COMPLETE=YES"
+  echo "OMC_ACTIONUI_WINDOW_UUID=${OMC_ACTIONUI_WINDOW_UUID}"
+} > "${term_file}.tmp"
+mv "${term_file}.tmp" "$term_file"
+				</string>
+			</array>
+			<key>COMMAND_ID</key>
+			<string>modal.dialog.terminate.cancel</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_shell_script</string>
+			<key>NAME</key>
+			<string>Modal</string>
+		</dict>
+	</array>
+	<key>VERSION</key>
+	<integer>2</integer>
+</dict>
+</plist>

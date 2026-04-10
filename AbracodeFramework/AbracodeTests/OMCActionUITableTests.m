@@ -111,7 +111,7 @@
 #pragma mark - Tests
 
 - (void)testActionUITableDialogOpensAndClosesCleanly {
-    // Verifies the basic lifecycle: open → UUID captured → close → terminate script ran.
+    // Verifies the basic lifecycle: open -> UUID captured -> close -> terminate script ran.
     NSURL *bundleURL = [OMCBundleTestHelper testBundleURL:@"ActionUI-Table"];
     if (bundleURL == nil) {
         NSLog(@"Skipping - ActionUI-Table.omc not found in test resources");
@@ -169,10 +169,10 @@
 
 - (void)testActionUITableColumnValues {
     // Column indexing is 1-based:
-    //   OMC_ACTIONUI_TABLE_1_COLUMN_0_VALUE  → whole selected row, tab-separated (empty if no selection)
-    //   OMC_ACTIONUI_TABLE_1_COLUMN_1_VALUE  → first data column "First Name" (empty if no selection)
-    //   OMC_ACTIONUI_TABLE_1_COLUMN_2_VALUE  → second data column "Action" (empty if no selection)
-    //   OMC_ACTIONUI_TABLE_1_COLUMN_3_VALUE  → absent/empty (no third data column)
+    //   OMC_ACTIONUI_TABLE_1_COLUMN_0_VALUE  -> whole selected row, tab-separated (empty if no selection)
+    //   OMC_ACTIONUI_TABLE_1_COLUMN_1_VALUE  -> first data column "First Name" (empty if no selection)
+    //   OMC_ACTIONUI_TABLE_1_COLUMN_2_VALUE  -> second data column "Action" (empty if no selection)
+    //   OMC_ACTIONUI_TABLE_1_COLUMN_3_VALUE  -> absent/empty (no third data column)
     //
     // The init script does not explicitly select a row, so all column values are empty strings.
     // This test verifies that TABLE env vars for all defined columns ARE exported (keys present in
@@ -235,8 +235,8 @@
 }
 
 - (void)testActionUITableAllRows {
-    // OMC_ACTIONUI_TABLE_1_COLUMN_0_ALL_ROWS  → newline-joined tab-separated rows (whole rows)
-    // OMC_ACTIONUI_TABLE_1_COLUMN_1_ALL_ROWS  → newline-joined values for the "First Name" column
+    // OMC_ACTIONUI_TABLE_1_COLUMN_0_ALL_ROWS  -> newline-joined tab-separated rows (whole rows)
+    // OMC_ACTIONUI_TABLE_1_COLUMN_1_ALL_ROWS  -> newline-joined values for the "First Name" column
     NSURL *bundleURL = [OMCBundleTestHelper testBundleURL:@"ActionUI-Table"];
     if (bundleURL == nil) {
         NSLog(@"Skipping - ActionUI-Table.omc not found in test resources");

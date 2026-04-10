@@ -27,7 +27,10 @@ class OMCActionUIDialog;
 // Implemented: setControlStringValue, setControlEnabled, setControlVisible,
 //              removeAllListItemsForControlID, setListItems, appendListItems,
 //              emptyTableForControlID, removeTableRowsForControlID,
-//              setTableRows, addTableRows, setTableColumns, setTableColumnWidths
+//              setTableRows, addTableRows, setTableColumns, setTableColumnWidths,
+//              presentModalWithResourceNameOrPath:onDismissActionID:,
+//              dismissModal, presentAlertWithTitle:message:buttonSpecs:,
+//              presentConfirmationDialogWithTitle:message:buttonSpecs:, dismissDialog
 // Stub (not applicable to declarative SwiftUI layout):
 //              selectControlWithID, setCommandID:forControlID,
 //              moveControlWithID, resizeControlWithID, scrollControlWithID,

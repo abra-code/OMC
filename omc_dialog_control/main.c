@@ -41,7 +41,12 @@ typedef enum InstructionID
 	omc_select, //bring window to front, maybe for some controls too (tab control?)
 	omc_terminate_ok, //for dialog
 	omc_terminate_cancel, //for dialog
-	omc_invoke
+	omc_invoke,
+	omc_present_modal,        //ActionUI: present modal sheet
+	omc_dismiss_modal,        //ActionUI: dismiss active modal
+	omc_present_alert,        //ActionUI: present system alert dialog
+	omc_present_confirmation_dialog, //ActionUI: present confirmation dialog
+	omc_dismiss_dialog        //ActionUI: dismiss active alert/confirmation dialog
 } InstructionID;
 
 
@@ -97,7 +102,12 @@ static InstructionWord sInstructionWordList[] =
 	{ sizeof("omc_select")-1,								CFSTR("omc_select"),							CFSTR("SELECT"),				true, false,	0 },
 	{ sizeof("omc_terminate_ok")-1,							CFSTR("omc_terminate_ok"),						CFSTR("TERMINATE"),				true, false,	0 },
 	{ sizeof("omc_terminate_cancel")-1,						CFSTR("omc_terminate_cancel"),					CFSTR("TERMINATE"),				false, false,	0 },
-	{ sizeof("omc_invoke")-1,								CFSTR("omc_invoke"),							CFSTR("INVOKE"),				false, false,	kArgumentCount_Variable }
+	{ sizeof("omc_invoke")-1,								CFSTR("omc_invoke"),							CFSTR("INVOKE"),				false, false,	kArgumentCount_Variable },
+	{ sizeof("omc_present_modal")-1,						CFSTR("omc_present_modal"),						CFSTR("PRESENT_MODAL"),			false, false,	kArgumentCount_Variable },
+	{ sizeof("omc_dismiss_modal")-1,						CFSTR("omc_dismiss_modal"),						CFSTR("DISMISS_MODAL"),			true,  false,	0 },
+	{ sizeof("omc_present_alert")-1,						CFSTR("omc_present_alert"),						CFSTR("PRESENT_ALERT"),			false, false,	kArgumentCount_Variable },
+	{ sizeof("omc_present_confirmation_dialog")-1,			CFSTR("omc_present_confirmation_dialog"),		CFSTR("PRESENT_CONFIRMATION_DIALOG"), false, false, kArgumentCount_Variable },
+	{ sizeof("omc_dismiss_dialog")-1,						CFSTR("omc_dismiss_dialog"),					CFSTR("DISMISS_DIALOG"),		true,  false,	0 }
 
 };
 
@@ -184,8 +194,17 @@ int main (int argc, const char * argv[])
 		fprintf(stdout, "\tomc_scroll [followed by 2 space separated numbers] (for view within NSScrollerView)\n");
 		fprintf(stdout, "\tomc_invoke [followed by space separated ObjC message] (may be sent to control or window)\n");
 		fprintf(stdout, "\tomc_set_property <property_key> <value> (ActionUI only; value is a string or a JSON fragment)\n");
-		fprintf(stdout, "\tomc_set_state <state_key> <value> (ActionUI only; value is a string or JSON fragment)\n\n");
-		
+		fprintf(stdout, "\tomc_set_state <state_key> <value> (ActionUI only; value is a string or JSON fragment)\n");
+		fprintf(stdout, "\tomc_present_modal <resource_name_or_path> [dismiss_action_id] (ActionUI only)\n");
+		fprintf(stdout, "\tomc_dismiss_modal (ActionUI only)\n");
+		fprintf(stdout, "\tomc_present_alert <title> [message] [\"button_title:role:action_id\" ...] (ActionUI only; role: cancel|destructive|omit for default)\n");
+		fprintf(stdout, "\tomc_present_confirmation_dialog <title> [message] [\"button_title:role:action_id\" ...] (ActionUI only)\n");
+		fprintf(stdout, "\tomc_dismiss_dialog (ActionUI only)\n\n");
+
+		fprintf(stdout, "Modal button spec format: \"title:role:actionID\"\n");
+		fprintf(stdout, "\trole: cancel | destructive | (omit for default)\n");
+		fprintf(stdout, "\tactionID: COMMAND_ID to dispatch as subcommand when button is tapped; omit for no callback\n\n");
+
 		fprintf(stdout, "Examples:\nomc_dialog_control __NIB_DLG_GUID__ 4 \"hello world!\"\n");
 		fprintf(stdout, "omc_dialog_control __NIB_DLG_GUID__ 2 omc_disable\n");
 		fprintf(stdout, "omc_dialog_control __NIB_DLG_GUID__ 1 omc_set_command_id \"Exec\"\n");
@@ -209,6 +228,11 @@ int main (int argc, const char * argv[])
 		fprintf(stdout, "omc_dialog_control __ACTIONUI_WINDOW_UUID__ 2 omc_set_property \"disabled\" true\n");
 		fprintf(stdout, "omc_dialog_control __ACTIONUI_WINDOW_UUID__ 4 omc_set_state \"isLoading\" true\n");
 		fprintf(stdout, "omc_dialog_control __ACTIONUI_WINDOW_UUID__ 4 omc_set_state \"label\" \"Hello\"\n");
+		fprintf(stdout, "omc_dialog_control __ACTIONUI_WINDOW_UUID__ omc_window omc_present_modal \"MyModal\" \"modal.dismissed\"\n");
+		fprintf(stdout, "omc_dialog_control __ACTIONUI_WINDOW_UUID__ omc_window omc_dismiss_modal\n");
+		fprintf(stdout, "omc_dialog_control __ACTIONUI_WINDOW_UUID__ omc_window omc_present_alert \"Confirm Delete\" \"Are you sure?\" \"Cancel:cancel:\" \"Delete:destructive:delete.action\"\n");
+		fprintf(stdout, "omc_dialog_control __ACTIONUI_WINDOW_UUID__ omc_window omc_present_confirmation_dialog \"Title\" \"Message\" \"OK::ok.action\" \"Cancel:cancel:\"\n");
+		fprintf(stdout, "omc_dialog_control __ACTIONUI_WINDOW_UUID__ omc_window omc_dismiss_dialog\n");
 
 		result = -1;
 		goto error_exit;
@@ -356,10 +380,11 @@ int main (int argc, const char * argv[])
 			}
 		}
 		//bool switches or 0 argument instructions for which we set bool but we don't care about the value
-		else if( (instruction == omc_enable) || (instruction == omc_disable) || 
+		else if( (instruction == omc_enable) || (instruction == omc_disable) ||
 			(instruction == omc_show) || (instruction == omc_hide) ||
 			(instruction == omc_select) ||
-		    (instruction == omc_terminate_ok) || (instruction == omc_terminate_cancel) //ok=true, cancel=false
+		    (instruction == omc_terminate_ok) || (instruction == omc_terminate_cancel) || //ok=true, cancel=false
+			(instruction == omc_dismiss_modal) || (instruction == omc_dismiss_dialog)
 		   )
 		{
 			CFMutableDictionaryRef disableDict = NULL;

@@ -48,4 +48,14 @@
 // State setter (ActionUI: string or JSON-deserialized value; Nib: not supported)
 - (void)setStateKey:(NSString *)stateKey stringOrJsonValue:(NSString *)value forControlID:(NSString *)inControlID;
 
+// Modal presentation (ActionUI only; fire-and-forget async; results delivered via actionID subcommand callbacks)
+// resourceNameOrPath: bundle resource name searched in external/main/framework bundle, or an absolute file path
+// onDismissActionID: actionID dispatched as a subcommand when the modal is dismissed; nil for none
+- (void)presentModalWithResourceNameOrPath:(NSString *)resourceNameOrPath onDismissActionID:(NSString *)onDismissActionID;
+- (void)dismissModal;
+// buttonSpecs: NSArray of "title:role:actionID" strings; role is "cancel", "destructive", or "" for default
+- (void)presentAlertWithTitle:(NSString *)title message:(NSString *)message buttonSpecs:(NSArray *)buttonSpecs;
+- (void)presentConfirmationDialogWithTitle:(NSString *)title message:(NSString *)message buttonSpecs:(NSArray *)buttonSpecs;
+- (void)dismissDialog;
+
 @end
