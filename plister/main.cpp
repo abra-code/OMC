@@ -1233,24 +1233,21 @@ OSStatus CreateCFItemString( CFTypeRef inItem, CFStringRef *outResult, Container
 	}
 	else if( itemType == kCFTypeIDs[kCFType_integer] )
 	{
-		long long intValue = 0LL;
+		// kCFType_integer and kCFType_real share CFNumberGetTypeID(), so this branch handles both.
+		// Distinguish them via CFNumberIsFloatType to preserve the decimal representation for reals.
 		Boolean isFloat = ::CFNumberIsFloatType( (CFNumberRef)inItem );
 		if(isFloat)
 		{
 			double doubleValue = 0.0;
 			::CFNumberGetValue( (CFNumberRef)inItem, kCFNumberDoubleType, &doubleValue );
-			intValue = (long long)(doubleValue+0.5);
+			*outResult = ::CFStringCreateWithFormat( kCFAllocatorDefault, NULL, CFSTR("%f"), doubleValue );
 		}
 		else
+		{
+			long long intValue = 0LL;
 			::CFNumberGetValue( (CFNumberRef)inItem, kCFNumberLongLongType, &intValue );
-
-		*outResult = CFStringCreateWithFormat( kCFAllocatorDefault, NULL, CFSTR("%lld"), intValue );
-	}
-	else if( itemType ==  kCFTypeIDs[kCFType_real] )
-	{
-		double doubleValue = 0.0;
-		::CFNumberGetValue( (CFNumberRef)inItem, kCFNumberDoubleType, &doubleValue );
-		*outResult = ::CFStringCreateWithFormat( kCFAllocatorDefault, NULL, CFSTR("%f"), doubleValue );
+			*outResult = CFStringCreateWithFormat( kCFAllocatorDefault, NULL, CFSTR("%lld"), intValue );
+		}
 	}
 	else if( itemType == kCFTypeIDs[kCFType_bool] )
 	{
@@ -1273,7 +1270,9 @@ OSStatus CreateCFItemString( CFTypeRef inItem, CFStringRef *outResult, Container
             std::vector<char> buff(buffSize+1);
             unsigned long encodedSize = EncodeBase64(rawData, dataSize, (unsigned char *)buff.data(), buffSize);
             buff[encodedSize] = 0;
-            *outResult = ::CFStringCreateWithCStringNoCopy(kCFAllocatorDefault, buff.data(), kCFStringEncodingASCII, kCFAllocatorMalloc);
+            // Use CFStringCreateWithCString (copies the buffer) rather than the NoCopy variant,
+            // which would require the buffer to outlive the CFString and be freed by CFAllocatorMalloc.
+            *outResult = ::CFStringCreateWithCString(kCFAllocatorDefault, buff.data(), kCFStringEncodingASCII);
             if(*outResult != NULL)
             {
                 result = noErr;
@@ -1873,6 +1872,8 @@ void
 DisplayHelp()
 {
 	std::cerr << "Usage: plister command command_params path/to/plist/file plist/property/pseudopath" << std::endl;
+	std::cerr << "File format is auto-detected by extension: use .json for JSON, .plist for XML/binary plist" << std::endl;
+	std::cerr << "All commands work identically for both JSON and plist formats. Output format matches input format." << std::endl << std::endl;
 	std::cerr << "Available commands: get, set, remove|delete, add|append, insert, find, findall, iterate" << std::endl;
 	std::cerr << "\"insert\" command is for dict or array and must be followed by a key or index respectively" << std::endl;
 	std::cerr << "\"set\" command is for replacing existing value with new value" << std::endl;
@@ -1915,4 +1916,10 @@ DisplayHelp()
 	std::cerr << "Find a command named \"Touch File\" in COMMAND_LIST array in OMC plist:" << std::endl;
 	std::cerr << "plister find string \"Touch File\" Command.plist /COMMAND_LIST /NAME" << std::endl << std::endl;
 	std::cerr << "plister iterate example.plist /NewArray get string /" << std::endl << std::endl;
+	std::cerr << "JSON examples (same commands work on .json files):" << std::endl;
+	std::cerr << "plister set dict config.json /" << std::endl;
+	std::cerr << "plister insert \"host\" string \"localhost\" config.json /" << std::endl;
+	std::cerr << "plister insert \"port\" integer 8080 config.json /" << std::endl;
+	std::cerr << "plister get value config.json /host" << std::endl;
+	std::cerr << "plister set string \"192.168.1.1\" config.json /host" << std::endl << std::endl;
 }

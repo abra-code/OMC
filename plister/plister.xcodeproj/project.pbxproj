@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		1D9BCB8622CC9A2A00F4EAB6 /* ACFPropertyList.m in Sources */ = {isa = PBXBuildFile; fileRef = 1D9BCB8422CC9A2900F4EAB6 /* ACFPropertyList.m */; };
+		1D9BCB8622CC9A2A00F4EAB6 /* ACFPropertyList.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1D9BCB8422CC9A2900F4EAB6 /* ACFPropertyList.mm */; };
 		8DD76F650486A84900D96B5E /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.cpp */; settings = {ATTRIBUTES = (); }; };
 		8DD76F6A0486A84900D96B5E /* plister.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = C6859E8B029090EE04C91782 /* plister.1 */; };
 		E20397CA0948328E0068714F /* ABase64.c in Sources */ = {isa = PBXBuildFile; fileRef = E20397C90948328E0068714F /* ABase64.c */; };
@@ -33,7 +33,7 @@
 		1D3BB167229BECA800542933 /* AUniquePtr.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = AUniquePtr.h; path = ../Common/AUniquePtr.h; sourceTree = "<group>"; };
 		1D4971AE2575A69B00F7131C /* OmcProjectRelease.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectRelease.xcconfig; path = ../Common/OmcProjectRelease.xcconfig; sourceTree = "<group>"; };
 		1D4971AF2575A69B00F7131C /* OmcProjectDebug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectDebug.xcconfig; path = ../Common/OmcProjectDebug.xcconfig; sourceTree = "<group>"; };
-		1D9BCB8422CC9A2900F4EAB6 /* ACFPropertyList.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = ACFPropertyList.m; path = ../Common/ACFPropertyList.m; sourceTree = "<group>"; };
+		1D9BCB8422CC9A2900F4EAB6 /* ACFPropertyList.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = ACFPropertyList.mm; path = ../Common/ACFPropertyList.mm; sourceTree = "<group>"; };
 		1D9BCB8522CC9A2A00F4EAB6 /* ACFPropertyList.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ACFPropertyList.h; path = ../Common/ACFPropertyList.h; sourceTree = "<group>"; };
 		1DD2112E259F43AA0041BB8F /* OmcVersion.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcVersion.xcconfig; path = /Users/tkukielk/Development/OMC/notify/../Common/OmcVersion.xcconfig; sourceTree = "<absolute>"; };
 		8DD76F6C0486A84900D96B5E /* plister */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = plister; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -83,7 +83,7 @@
 				E2EE798F0946DCCD00CD3EFF /* ABase64.h */,
 				E2AA0C380903482400EA94FD /* CFObj.h */,
 				1D9BCB8522CC9A2A00F4EAB6 /* ACFPropertyList.h */,
-				1D9BCB8422CC9A2900F4EAB6 /* ACFPropertyList.m */,
+				1D9BCB8422CC9A2900F4EAB6 /* ACFPropertyList.mm */,
 				1D3BB167229BECA800542933 /* AUniquePtr.h */,
 			);
 			name = Source;
@@ -156,7 +156,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1D9BCB8622CC9A2A00F4EAB6 /* ACFPropertyList.m in Sources */,
+				1D9BCB8622CC9A2A00F4EAB6 /* ACFPropertyList.mm in Sources */,
 				8DD76F650486A84900D96B5E /* main.cpp in Sources */,
 				E20397CA0948328E0068714F /* ABase64.c in Sources */,
 			);

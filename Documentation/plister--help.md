@@ -1,7 +1,10 @@
-./pasteboard --help
+./plister --help
 
 ```
 Usage: plister command command_params path/to/plist/file plist/property/pseudopath
+File format is auto-detected by extension: use .json for JSON, .plist for XML/binary plist
+All commands work identically for both JSON and plist formats. Output format matches input format.
+
 Available commands: get, set, remove|delete, add|append, insert, find, findall, iterate
 "insert" command is for dict or array and must be followed by a key or index respectively
 "set" command is for replacing existing value with new value
@@ -48,5 +51,12 @@ Find a command named "Touch File" in COMMAND_LIST array in OMC plist:
 plister find string "Touch File" Command.plist /COMMAND_LIST /NAME
 
 plister iterate example.plist /NewArray get string /
+
+JSON examples (same commands work on .json files):
+plister set dict config.json /
+plister insert "host" string "localhost" config.json /
+plister insert "port" integer 8080 config.json /
+plister get value config.json /host
+plister set string "192.168.1.1" config.json /host
 
 ```
