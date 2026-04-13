@@ -28,6 +28,14 @@
         ]
       },
       {
+        "type": "Toggle",
+        "id": 403,
+        "properties": {
+          "title": "Force Update Binaries",
+          "value": false
+        }
+      },
+      {
         "type": "Section",
         "properties": {
           "header": "Actions",

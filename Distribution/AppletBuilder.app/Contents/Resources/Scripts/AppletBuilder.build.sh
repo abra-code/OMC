@@ -63,6 +63,16 @@ update_framework() {
     fi
 
     local dst_version=$(plist_read "$dst_fw/Resources/Info.plist" CFBundleVersion)
+    local force_update="$OMC_ACTIONUI_VIEW_403_VALUE"
+
+    if [ "$force_update" = "1" ] || [ "$force_update" = "true" ]; then
+        log "Updating Abracode.framework: v${dst_version} -> v${src_version} (forced)"
+        /bin/rm -rf "$dst_fw"
+        /bin/cp -Rp "$src_fw" "$dst_fw"
+        copy_executable "$target_path"
+        return
+    fi
+
     local cmp=$(compare_versions "$src_version" "$dst_version")
 
     if [ "$cmp" = "newer" ]; then
