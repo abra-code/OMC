@@ -2,11 +2,13 @@
 # update_appletbuilder.sh - Sync bundled resources in AppletBuilder.app
 #
 # Updates:
+#   0. OMCApplet — builds universal (arm64 + x86_64) Release binary and Abracode.framework
 #   1. ActionUI products (ActionUIViewer, ActionUIVerifier, ActionUIDocumentation) — built from SPM
 #   2. mistune (markdown-to-HTML converter)
 #   3. OMC documentation
 #   4. ActionUI documentation (from built ActionUIDocumentation bundle)
 #   5. Validates ElementTemplates.json against Elements/
+#   6. Codesigns AppletBuilder.app (ad-hoc)
 #
 # Usage:
 #   ./update_appletbuilder.sh [OMC_ROOT]
@@ -41,6 +43,9 @@ fi
 
 ACTIONUI_DOCS="$ACTIONUI_ROOT/Documentation"
 OMC_DOCS="$OMC_ROOT/Documentation"
+OMC_WORKSPACE="$OMC_ROOT/OMC.xcworkspace"
+OMCAPPLET_BUILD="$OMC_ROOT/.build/OMCApplet"
+CODESIGN_SCRIPT="$OMC_ROOT/Distribution/Scripts/codesign_applet.sh"
 
 # ── Colors ──
 RED='\033[0;31m'
@@ -56,6 +61,76 @@ files_match() {
 updated=0
 
 echo "Updating AppletBuilder resources..."
+echo ""
+
+# ════════════════════════════════════════════════════════════
+# 0. Build OMCApplet — Abracode.framework + binary (universal)
+# ════════════════════════════════════════════════════════════
+
+echo "── Building OMCApplet (universal) ──"
+
+if [ ! -d "$OMC_WORKSPACE" ]; then
+    echo -e "  ${RED}OMC workspace not found at: $OMC_WORKSPACE${NC}"
+    exit 1
+fi
+
+echo "  Running xcodebuild..."
+build_log_file=$(/usr/bin/mktemp)
+/usr/bin/xcodebuild \
+    -workspace "$OMC_WORKSPACE" \
+    -scheme "OMC Distribution" \
+    -configuration Release \
+    -derivedDataPath "$OMCAPPLET_BUILD" \
+    ARCHS="arm64 x86_64" \
+    ONLY_ACTIVE_ARCH=NO \
+    build > "$build_log_file" 2>&1
+xcode_rc=$?
+
+if [ "$xcode_rc" -ne 0 ]; then
+    echo -e "  ${RED}OMCApplet build failed:${NC}"
+    /bin/cat "$build_log_file"
+    /bin/rm -f "$build_log_file"
+    exit 1
+fi
+/bin/rm -f "$build_log_file"
+
+OMCAPPLET_APP="$OMCAPPLET_BUILD/Build/Products/Release/OMCApplet.app"
+if [ ! -d "$OMCAPPLET_APP" ]; then
+    echo -e "  ${RED}Build succeeded but OMCApplet.app not found at: $OMCAPPLET_APP${NC}"
+    exit 1
+fi
+
+# Copy Abracode.framework (built standalone alongside the app)
+src_fw="$OMCAPPLET_BUILD/Build/Products/Release/Abracode.framework"
+# Fall back to the copy embedded inside the app if the standalone isn't present
+if [ ! -d "$src_fw" ]; then
+    src_fw="$OMCAPPLET_APP/Contents/Frameworks/Abracode.framework"
+fi
+dst_fw="$APPLET_BUILDER/Contents/Frameworks/Abracode.framework"
+
+if [ ! -d "$src_fw" ]; then
+    echo -e "  ${RED}Abracode.framework not found in build output: $src_fw${NC}"
+    exit 1
+fi
+
+/bin/rm -rf "$dst_fw"
+/bin/cp -Rp "$src_fw" "$dst_fw"
+echo -e "  ${GREEN}Updated: Abracode.framework${NC}"
+updated=1
+
+# Copy OMCApplet binary → AppletBuilder binary
+src_bin="$OMCAPPLET_APP/Contents/MacOS/OMCApplet"
+dst_bin="$APPLET_BUILDER/Contents/MacOS/AppletBuilder"
+
+if [ ! -f "$src_bin" ]; then
+    echo -e "  ${RED}OMCApplet binary not found: $src_bin${NC}"
+    exit 1
+fi
+
+/bin/cp -p "$src_bin" "$dst_bin"
+echo -e "  ${GREEN}Updated: MacOS/AppletBuilder (from OMCApplet binary)${NC}"
+updated=1
+
 echo ""
 
 # ════════════════════════════════════════════════════════════
@@ -394,6 +469,26 @@ else
     if [ ! -d "$ELEMENTS_DIR" ]; then
         echo -e "  ${YELLOW}Elements/ directory not found${NC}"
     fi
+fi
+
+echo ""
+
+# ════════════════════════════════════════════════════════════
+# 6. Codesign AppletBuilder.app (ad-hoc, for local execution)
+# ════════════════════════════════════════════════════════════
+
+echo "── Codesigning AppletBuilder.app ──"
+
+if [ ! -f "$CODESIGN_SCRIPT" ]; then
+    echo -e "  ${RED}codesign_applet.sh not found at: $CODESIGN_SCRIPT${NC}"
+    exit 1
+fi
+
+"$CODESIGN_SCRIPT" "$APPLET_BUILDER" "-"
+rc=$?
+if [ "$rc" -ne 0 ]; then
+    echo -e "  ${RED}Codesigning failed${NC}"
+    exit 1
 fi
 
 echo ""
