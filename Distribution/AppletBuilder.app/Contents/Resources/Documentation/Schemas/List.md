@@ -17,25 +17,38 @@ JSON schema and usage documentation for `List`.
         "dataInterpretation": "systemName"     // "path"|"systemName"|"assetName"|"resourceName"|"mixed" (Image only)
       },
       "actionID": "list.selection.changed",    // Optional: Fires on selection change (all cell types)
-      "doubleClickActionID": "list.double.click"  // Optional: String for double-click action (macOS only, context = row index)
+      "doubleClickActionID": "list.double.click",  // Optional: String for double-click action (macOS only, context = row index)
+      // List styling
+      "listStyle": "plain",                   // Optional: list style — platform availability below
+                                              //   "automatic"    — all platforms (system default)
+                                              //   "plain"        — all platforms
+                                              //   "inset"        — iOS, macOS, visionOS
+                                              //   "sidebar"      — iOS, macOS, visionOS
+                                              //   "grouped"      — iOS, tvOS, visionOS
+                                              //   "insetGrouped" — iOS, visionOS only
+      // Row styling — applied uniformly to all rows
+      "listRowBackground": "blue",            // Optional: Color string (e.g., "blue", "#FF0000") — all platforms
+      "listRowSeparator": "hidden",           // Optional: "visible"|"hidden"|"automatic" — iOS/macOS/visionOS only
+      "listRowSeparatorTint": "gray",         // Optional: Color string for separator tint — iOS/macOS/visionOS only
+      "listRowInsets": 16,                    // Optional: Number for uniform insets or {"top": 8, "leading": 16, "bottom": 8, "trailing": 16}
     },
     // Form 2: Heterogeneous list from embedded JSON
     "children": [                            // Optional: Array of child views for complex lists
-      { 
-        "type": "NavigationLink", 
+      {
+        "type": "NavigationLink",
         "id": 10,                            // Recommended: Set unique ID for selection support
-        "properties": { 
-          "title": "Item 1" 
+        "properties": {
+          "title": "Item 1"
         },
         "destination": {                   // Destination must be a full view element
           "type": "Text",
           "properties": { "title": "Item 1 Detail" }
         }
       },
-      { 
-        "type": "Button", 
+      {
+        "type": "Button",
         "id": 11,                            // Recommended: Set unique ID for selection support
-        "properties": { "title": "Item 2" } 
+        "properties": { "title": "Item 2" }
       }
     ],
     // Form 3: Data-driven list with template (replaces itemType with full ActionUI template)
@@ -48,10 +61,10 @@ JSON schema and usage documentation for `List`.
     }
   }
     // Note: The List can operate in three modes (Form 1, 2, and 3):
-    //   1. Homogeneous list: Shows a single-column list of homogeneous views (Text, Button, Image, AsyncImage) 
-    //      specified by itemType.viewType. Selection is stored as [String] in state, using the item string or id. 
-    //      The list-level actionID fires on selection change. Button items have their own actionID in itemType, 
-    //      fired on click — this cleanly separates selection events from button click events. On macOS, 
+    //   1. Homogeneous list: Shows a single-column list of homogeneous views (Text, Button, Image, AsyncImage)
+    //      specified by itemType.viewType. Selection is stored as [String] in state, using the item string or id.
+    //      The list-level actionID fires on selection change. Button items have their own actionID in itemType,
+    //      fired on click — this cleanly separates selection events from button click events. On macOS,
     //      double-click triggers doubleClickActionID with row index as context.
     //   2. Heterogeneous list: Shows a list of arbitrary views defined in the "children" array.
     //      Operates in two sub-modes depending on whether actionID is set:
@@ -63,12 +76,15 @@ JSON schema and usage documentation for `List`.
     //         because List(selection:) intercepts taps on iOS.
     //         When used inside NavigationStack with destinations, NavigationStack detects this pattern
     //         and handles push navigation — see NavigationStack.swift.
+    //         Row styling (listRowBackground/listRowSeparator/listRowInsets) is applied via
+    //         a rowModifier closure passed to SelectionListHelper.buildSelectableList.
     //
     //      b) Without actionID (no-selection mode): No selection binding. NavigationLinks handle
     //         their own taps. Action callbacks:
     //           - Button children: fire their own actionID on tap.
     //           - NavigationLink children: push destinations via NavigationStack.
     //           - Label/Text children: display-only; use Button if tap action is needed.
+    //         Row styling properties are applied to each child view.
     //
     //      Note: NavigationSplitView sidebar selection is handled by NavigationSplitView.buildSidebarList(),
     //      which constructs its own List(selection:) — it does not go through this List.buildView path.
@@ -82,10 +98,11 @@ JSON schema and usage documentation for `List`.
     //      Data set via setElementRows/appendElementRows/clearElementRows.
     //      Selection and doubleClickActionID work the same as Form 1.
     //
-    //    Performance: For homogeneous lists, child views are strongly typed to avoid AnyView overhead, 
-    //    identified by stable indices in ForEach, optimizing SwiftUI diffing for large lists (e.g., 10,000 items). 
-    //    For heterogeneous lists, views are constructed dynamically. Image creation uses SwiftUI.Image extension, 
-    //    aligned with Image.swift, to minimize overhead. Ensure state updates are targeted to minimize re-renders.
+    //    Performance: Rows are identified by stable indices in ForEach, optimizing SwiftUI diffing for
+    //    large lists (e.g., 10,000 items). When row styling properties (listRowBackground, listRowSeparator,
+    //    listRowInsets) are set, rows are wrapped with AnyView to support modifier chaining. Without row
+    //    styling, this is a no-op wrapper with negligible overhead. Image creation uses SwiftUI.Image
+    //    extension, aligned with Image.swift. Ensure state updates are targeted to minimize re-renders.
 
 //  Observable state:
 //    value ([String])                   Selected item as a one-element string array (or empty when nothing selected).

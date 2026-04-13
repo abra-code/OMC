@@ -67,6 +67,13 @@ All views inherit baseline properties from [View](Schemas/View.md) ([template](E
 | WebView | [Schemas/WebView.md](Schemas/WebView.md) | [Elements/WebView.json](Elements/WebView.json) |
 | ZStack | [Schemas/ZStack.md](Schemas/ZStack.md) | [Elements/ZStack.json](Elements/ZStack.json) |
 
+## Toolbar
+
+| Element | Schema | Template |
+|---------|--------|----------|
+| ToolbarItem (modifier) | [Schemas/Toolbar.md](Schemas/Toolbar.md) | [Elements/ToolbarItem.json](Elements/ToolbarItem.json) |
+| ToolbarItemGroup (modifier) | [Schemas/ToolbarItemGroup.md](Schemas/ToolbarItemGroup.md) | [Elements/ToolbarItemGroup.json](Elements/ToolbarItemGroup.json) |
+
 ## Commands (Menu Bar)
 
 | Element | Schema | Template |

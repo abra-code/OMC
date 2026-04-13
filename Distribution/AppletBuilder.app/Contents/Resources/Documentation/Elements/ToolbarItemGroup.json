@@ -1,0 +1,35 @@
+{
+  "type": "NavigationStack",
+  "content": {
+    "type": "List",
+    "id": 1,
+    "properties": {
+      "navigationTitle": "Screen Title"
+    },
+    "toolbar": [
+      {
+        "type": "ToolbarItemGroup",
+        "id": 10,
+        "properties": {
+          "placement": "topBarTrailing"
+        },
+        "children": [
+          {
+            "type": "Button",
+            "properties": {
+              "title": "Edit",
+              "actionID": "toolbar.edit"
+            }
+          },
+          {
+            "type": "Button",
+            "properties": {
+              "title": "Share",
+              "actionID": "toolbar.share"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

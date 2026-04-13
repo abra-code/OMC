@@ -1,0 +1,41 @@
+{
+  "type": "NavigationStack",
+  "content": {
+    "type": "List",
+    "id": 1,
+    "properties": {
+      "navigationTitle": "Screen Title",
+      "toolbarTitleDisplayMode": "automatic"
+    },
+    "toolbar": [
+      {
+        "type": "ToolbarItem",
+        "id": 10,
+        "properties": {
+          "placement": "topBarTrailing"
+        },
+        "content": {
+          "type": "Button",
+          "properties": {
+            "title": "Done",
+            "actionID": "toolbar.done"
+          }
+        }
+      },
+      {
+        "type": "ToolbarItem",
+        "id": 11,
+        "properties": {
+          "placement": "topBarLeading"
+        },
+        "content": {
+          "type": "Button",
+          "properties": {
+            "title": "Edit",
+            "actionID": "toolbar.edit"
+          }
+        }
+      }
+    ]
+  }
+}

@@ -44,6 +44,19 @@ JSON schema and usage documentation for `View`.
      "openURLActionID": "view.openURL", // Optional: String for action identifier triggered on open URL (via .onOpenURL modifier)
      "onAppearActionID": "view.onAppear", // Optional: String for action identifier triggered on view appear (via .onAppear modifier)
      "onDisappearActionID": "view.onDisappear", // Optional: String for action identifier triggered on view disappear (via .onDisappear modifier)
+     "onHoverActionID": "view.hovered", // Optional: String for action identifier triggered when the pointer enters or exits this view (via .onHover modifier).
+                           //   macOS primary; iPadOS with pointer. Silently ignored on other platforms.
+                           //   Context: { "isHovering": Bool }
+     "onDropTypes": ["public.utf8-plain-text"], // Optional: [String] of UTType identifiers this view accepts as a drop target. Required alongside onDropActionID.
+                           //   Must be a non-empty array of strings. Discarded otherwise.
+                           //   Common values: "public.utf8-plain-text", "public.plain-text", "public.url", "public.file-url"
+     "onDropActionID": "view.dropped", // Optional: String for action identifier triggered when a valid drop lands on this view.
+                           //   Requires onDropTypes to be set and non-empty; ignored without it.
+                           //   Items are extracted as UTF-8 text before firing; non-extractable items are omitted.
+                           //   Context: { "items": [String], "location": { "x": Double, "y": Double } }
+     "onDropTargetedActionID": "view.dropTargeted", // Optional: String for action identifier triggered when a drag enters or exits this drop zone.
+                           //   Use to drive visual feedback (border, scale) via setElementState.
+                           //   Context: { "isTargeted": Bool }
      "keyboardShortcut": { // Optional: Dictionary for keyboard shortcut, supports key with array of modifiers
        "key": "a",         // Required: String for KeyEquivalent (single character like "a" or special key like "return", "space", "upArrow")
        "modifiers": ["command", "shift"] // Optional: Array of strings for modifiers (e.g., ["command", "shift"]), defaults to ["command"], must contain unique elements
@@ -79,6 +92,10 @@ JSON schema and usage documentation for `View`.
      "popoverActionID": "view.popover",     // Optional: String for action identifier triggered when the popover is shown. Only meaningful when "popover" subview is present.
      "sheetOnDismissActionID": "sheet.dismissed",           // Optional: String for action identifier triggered when the sheet is dismissed. Only meaningful when "sheet" subview is present.
      "fullScreenCoverOnDismissActionID": "cover.dismissed", // Optional: String for action identifier triggered when the full-screen cover is dismissed. Only meaningful when "fullScreenCover" subview is present.
+     "toolbarTitleDisplayMode": "automatic", // Optional: Navigation title display mode; "automatic", "inline", "large", "inlineLarge".
+                                            // Meaningful when the view is inside a NavigationStack or NavigationSplitView.
+                                            // "automatic": platform default. "inline": compact nav bar title.
+                                            // "large": large expandable title (iOS style). "inlineLarge": collapses on scroll (iOS 17+).
      "destinationViewId": 10,               // Optional: Int linking this view to a destination in a navigation container.
                                             // Does not apply any modifier; the value is kept in validatedProperties for navigation logic.
                                             // Used by NavigationLink (Form 2) to identify the push target in NavigationStack,

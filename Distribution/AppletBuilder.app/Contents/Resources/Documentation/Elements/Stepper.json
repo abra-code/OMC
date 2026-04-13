@@ -1,0 +1,14 @@
+{
+  "type": "Stepper",
+  "id": 1,
+  "properties": {
+    "value": 5.0,
+    "range": {
+      "min": 0.0,
+      "max": 10.0
+    },
+    "step": 1.0,
+    "labelFormat": "Quantity: %.0f",
+    "actionID": "stepper.changed"
+  }
+}

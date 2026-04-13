@@ -2,6 +2,7 @@
   "type": "List",
   "id": 1,
   "properties": {
+    "listStyle": "plain",
     "actionID": "list.item.selected",
     "doubleClickActionID": "list.double.click"
   },
