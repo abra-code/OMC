@@ -51,6 +51,24 @@ static id ParseStringOrJSON(NSString *value)
     return (error == nil && parsed != nil) ? parsed : value;
 }
 
+/// Converts the opaque ActionUI action-callback context to a string suitable for env-var export.
+/// NSDictionary/NSArray → compact JSON; NSNumber → numeric string; NSString → as-is.
+static NSString *SerializeActionContext(id context)
+{
+    if (context == nil)
+        return nil;
+    if ([context isKindOfClass:[NSString class]])
+        return (NSString *)context;
+    if ([context isKindOfClass:[NSNumber class]])
+        return [(NSNumber *)context stringValue];
+    if ([context isKindOfClass:[NSDictionary class]] || [context isKindOfClass:[NSArray class]]) {
+        NSData *data = [NSJSONSerialization dataWithJSONObject:context options:0 error:nil];
+        if (data != nil)
+            return [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+    }
+    return [context description];
+}
+
 /// Parses an array of "title:role:actionID" button spec strings into ActionUIObjCDialogButton objects.
 /// Role field: "cancel": cancel, "destructive": destructive, anything else: default.
 /// actionID field: empty string or missing = nil (no action fired on tap).
@@ -265,8 +283,12 @@ static NSArray<ActionUIObjCDialogButton *> *OMCParseButtonSpecs(NSArray *specs)
             OMCWindowController *controller = [OMCWindowController findControllerByUUID:targetWindowUUID];
             if (controller != nil)
             {
-                // context from ActionUI (like current control value) is not a context which OMC command expects or needs
-                [controller dispatchCommand:actionID withContext:nil /*(__bridge CFTypeRef)context*/];
+                // Carry ActionUI's control-trigger context into the subcommand via CommandRuntimeData.
+                // The OMC command context (files/text) is unaffected — inContext stays nil.
+                NSString *contextString = SerializeActionContext(context);
+                [controller setControlContextViewID:viewID viewPartID:viewPartID contextString:contextString];
+                [controller dispatchCommand:actionID withContext:nil];
+                [controller clearControlContext];
             }
             else
             {

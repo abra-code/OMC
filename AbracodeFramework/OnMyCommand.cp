@@ -2973,7 +2973,36 @@ OnMyCommandCM::PopulateEnvironList(CFMutableDictionaryRef ioEnvironList, Command
 					newStrRef = activeDialog->CreateControlValue(specialWordID, theKey, kEscapeNone, true);
 			}
 			break;
-			
+
+			// ActionUI control-trigger context — only set when the subcommand was dispatched
+			// from an ActionUI action handler (e.g. a row-click in a table).
+			// Always exported via alwaysExport=true; absent when not triggered from a control.
+			case ACTIONUI_TRIGGER_VIEW_ID:
+			{
+				if(commandRuntimeData.controlContextViewID >= 0)
+					newStrRef = ::CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("%ld"),
+					                                       (long)commandRuntimeData.controlContextViewID);
+			}
+			break;
+
+			case ACTIONUI_TRIGGER_VIEW_PART_ID:
+			{
+				if(commandRuntimeData.controlContextViewPartID >= 0)
+					newStrRef = ::CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("%ld"),
+					                                       (long)commandRuntimeData.controlContextViewPartID);
+			}
+			break;
+
+			case ACTIONUI_TRIGGER_CONTEXT:
+			{
+				if(commandRuntimeData.controlContextJSON != nullptr)
+				{
+					newStrRef = commandRuntimeData.controlContextJSON;
+					releaseNewString = false;
+				}
+			}
+			break;
+
 			case NIB_DLG_GUID: //always exported
 			case ACTIONUI_WINDOW_UUID:
 			{

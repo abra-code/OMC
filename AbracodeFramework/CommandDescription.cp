@@ -64,6 +64,9 @@ static const SpecialWordAndID sSpecialWordAndIDList[] =
     { sizeof("__MY_EXTERNAL_BUNDLE_PATH__")-1,                CFSTR("__MY_EXTERNAL_BUNDLE_PATH__"), CFSTR("OMC_MY_EXTERNAL_BUNDLE_PATH"),  MY_EXTERNAL_BUNDLE_PATH, false },//external bundle location
     { sizeof("__NIB_DLG_GUID__")-1,                            CFSTR("__NIB_DLG_GUID__"), CFSTR("OMC_NIB_DLG_GUID"),  NIB_DLG_GUID, true },
     { sizeof("__ACTIONUI_WINDOW_UUID__")-1,                    CFSTR("__ACTIONUI_WINDOW_UUID__"), CFSTR("OMC_ACTIONUI_WINDOW_UUID"),  ACTIONUI_WINDOW_UUID, true },
+    { sizeof("__ACTIONUI_TRIGGER_VIEW_ID__")-1,               CFSTR("__ACTIONUI_TRIGGER_VIEW_ID__"), CFSTR("OMC_ACTIONUI_TRIGGER_VIEW_ID"),  ACTIONUI_TRIGGER_VIEW_ID, true },
+    { sizeof("__ACTIONUI_TRIGGER_VIEW_PART_ID__")-1,          CFSTR("__ACTIONUI_TRIGGER_VIEW_PART_ID__"), CFSTR("OMC_ACTIONUI_TRIGGER_VIEW_PART_ID"),  ACTIONUI_TRIGGER_VIEW_PART_ID, true },
+    { sizeof("__ACTIONUI_TRIGGER_CONTEXT__")-1,               CFSTR("__ACTIONUI_TRIGGER_CONTEXT__"), CFSTR("OMC_ACTIONUI_TRIGGER_CONTEXT"),  ACTIONUI_TRIGGER_CONTEXT, true },
     { sizeof("__CURRENT_COMMAND_GUID__")-1,                    CFSTR("__CURRENT_COMMAND_GUID__"), CFSTR("OMC_CURRENT_COMMAND_GUID"),  CURRENT_COMMAND_GUID, true },
     { sizeof("__PARENT_COMMAND_GUID__")-1,                    CFSTR("__PARENT_COMMAND_GUID__"), CFSTR("OMC_PARENT_COMMAND_GUID"),  PARENT_COMMAND_GUID, true },
     { sizeof("__PARENT_DIALOG_GUID__")-1,                     CFSTR("__PARENT_DIALOG_GUID__"), CFSTR("OMC_PARENT_DIALOG_GUID"),  PARENT_DIALOG_GUID, true },
@@ -96,6 +99,11 @@ const CFIndex kMaxSpecialWordLen = sizeof("__DLG_CHOOSE_FOLDER_NAME_NO_EXTENSION
 //                 __ACTIONUI_VIEW_N_VALUE__                   OMC_ACTIONUI_VIEW_N_VALUE
 //                 __ACTIONUI_TABLE_NNN_COLUMN_MMM_VALUE__     OMC_ACTIONUI_TABLE_NNN_COLUMN_MMM_VALUE
 //                 __ACTIONUI_TABLE_NNN_COLUMN_MMM_ALL_ROWS__  OMC_ACTIONUI_TABLE_NNN_COLUMN_MMM_ALL_ROWS
+//
+// ActionUI control-trigger context (set only when a subcommand is dispatched from an ActionUI action handler):
+//                 __ACTIONUI_TRIGGER_VIEW_ID__                OMC_ACTIONUI_TRIGGER_VIEW_ID
+//                 __ACTIONUI_TRIGGER_VIEW_PART_ID__           OMC_ACTIONUI_TRIGGER_VIEW_PART_ID
+//                 __ACTIONUI_TRIGGER_CONTEXT__                OMC_ACTIONUI_TRIGGER_CONTEXT
 
 static void
 GetMultiCommandParams(CommandDescription &outDesc, CFDictionaryRef inParams)

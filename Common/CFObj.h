@@ -53,7 +53,7 @@ public:
             CFRetain(mRef);
     }
 
-    // Copy constructor from another CFObj<> amkes this instance a second owner of the same CF object
+    // Copy constructor from another CFObj<> makes this instance a second owner of the same CF object
     explicit CFObj(const CFObj& inRef) noexcept
         : mRef(inRef)
     {

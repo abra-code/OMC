@@ -56,6 +56,12 @@ class CommandRuntimeData;
 - (BOOL)terminate;
 - (void)dispatchCommand:(NSString *)inCommandID withContext:(CFTypeRef)inContext;
 - (OSStatus)processCommandWithContext:(CFTypeRef)inContext;
+
+/// Sets ActionUI control-trigger context on the receiver's CommandRuntimeData before dispatching a
+/// subcommand from an action handler.  Pass nil for contextString when the ActionUI context is absent.
+- (void)setControlContextViewID:(NSInteger)viewID viewPartID:(NSInteger)viewPartID contextString:(NSString *)contextString;
+/// Clears the ActionUI control-trigger context set by -setControlContextViewID:viewPartID:contextString:.
+- (void)clearControlContext;
 - (SelectionIterator *)createSelectionIterator:(CFDictionaryRef)inIteratorParams;
 - (void)keepItem:(id)inItem;
 - (void)windowWillClose:(NSNotification *)notification;

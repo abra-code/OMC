@@ -367,6 +367,27 @@ GetAllDialogControllers()
 	return status;
 }
 
+- (void)setControlContextViewID:(NSInteger)viewID viewPartID:(NSInteger)viewPartID contextString:(NSString *)contextString
+{
+    if(mCommandRuntimeData == nullptr)
+        return;
+    mCommandRuntimeData->controlContextViewID     = static_cast<CFIndex>(viewID);
+    mCommandRuntimeData->controlContextViewPartID = static_cast<CFIndex>(viewPartID);
+    if(contextString != nil)
+        mCommandRuntimeData->controlContextJSON.Adopt((__bridge CFStringRef)contextString, kCFObjRetain);
+    else
+        mCommandRuntimeData->controlContextJSON = nullptr;
+}
+
+- (void)clearControlContext
+{
+    if(mCommandRuntimeData == nullptr)
+        return;
+    mCommandRuntimeData->controlContextViewID     = -1;
+    mCommandRuntimeData->controlContextViewPartID = -1;
+    mCommandRuntimeData->controlContextJSON       = nullptr;
+}
+
 -(void)keepItem:(id)inItem
 {
 	if(inItem == NULL)

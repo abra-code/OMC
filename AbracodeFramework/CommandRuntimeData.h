@@ -21,7 +21,9 @@ public:
           cachedSaveAsPath(commandRuntimeData.cachedSaveAsPath), cachedChooseFilePaths(commandRuntimeData.cachedChooseFilePaths),
           cachedChooseFolderPaths(commandRuntimeData.cachedChooseFolderPaths), cachedChooseObjectPaths(commandRuntimeData.cachedChooseObjectPaths),
           commandUUID(CommandRuntimeData::GenerateUUID()), dialogUUID(commandRuntimeData.dialogUUID),
-          parentCommandUUID(commandRuntimeData.parentCommandUUID), parentDialogUUID(commandRuntimeData.parentDialogUUID)
+          parentCommandUUID(commandRuntimeData.parentCommandUUID), parentDialogUUID(commandRuntimeData.parentDialogUUID),
+          controlContextViewID(commandRuntimeData.controlContextViewID), controlContextViewPartID(commandRuntimeData.controlContextViewPartID),
+          controlContextJSON(commandRuntimeData.controlContextJSON)
     {
         auto element_count = contextData.objectList.size();
         if((objectIndex < 0) || (objectIndex >= element_count))
@@ -149,6 +151,13 @@ private:
 public:
     CFObj<CFStringRef> inputText;
     CFObj<CFStringRef> cachedCommonParentPath;
+
+    // ActionUI control-trigger context — populated by the action handler before subcommand dispatch,
+    // cleared after. Carried into child CommandRuntimeData via the copy constructor so all subcommands
+    // in the chain can read it.  -1 means "not set".
+    CFIndex            controlContextViewID     { -1 };
+    CFIndex            controlContextViewPartID { -1 };
+    CFObj<CFStringRef> controlContextJSON; // JSON or plain-string serialisation of the opaque ActionUI context; nullptr = not set
 
     // if caching is requested the following objects are meant to remain valid and passed from command to subcommand
     CFObj<CFURLRef>    cachedSaveAsPath;

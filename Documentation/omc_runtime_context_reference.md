@@ -60,6 +60,9 @@ The list is derived **directly** from the source files:
 | **System** | `__MY_EXTERNAL_BUNDLE_PATH__` | `$OMC_MY_EXTERNAL_BUNDLE_PATH` | External `.omc` bundle path. | Scanned |
 | **Dialog** | `__NIB_DLG_GUID__` | `$OMC_NIB_DLG_GUID` | Unique NIB dialog instance GUID. | **Always** |
 | **Dialog** | `__ACTIONUI_WINDOW_UUID__` | `$OMC_ACTIONUI_WINDOW_UUID` | Unique ActionUI window UUID. OMC 5.0 | **Always** |
+| **ActionUI Trigger** | `__ACTIONUI_TRIGGER_VIEW_ID__` | `$OMC_ACTIONUI_TRIGGER_VIEW_ID` | ViewID of the ActionUI control that fired an action. Available only when subcommand is dispatched from a control action. | **Always (when set)** |
+| **ActionUI Trigger** | `__ACTIONUI_TRIGGER_VIEW_PART_ID__` | `$OMC_ACTIONUI_TRIGGER_VIEW_PART_ID` | ViewPartID of the control event (e.g. row index for table row tap). Available only when subcommand is dispatched from a control action. | **Always (when set)** |
+| **ActionUI Trigger** | `__ACTIONUI_TRIGGER_CONTEXT__` | `$OMC_ACTIONUI_TRIGGER_CONTEXT` | Opaque context payload from the ActionUI control event (string, JSON, or number). Available only when subcommand is dispatched from a control action AND the control provided context data. | **Always (when set)** |
 | **System** | `__CURRENT_COMMAND_GUID__` | `$OMC_CURRENT_COMMAND_GUID` | Unique command execution GUID. | **Always** |
 | **Frontmost** | `__FRONT_PROCESS_ID__` | `$OMC_FRONT_PROCESS_ID` | PID of frontmost app. | Scanned |
 | **Frontmost** | `__FRONT_APPLICATION_NAME__` | `$OMC_FRONT_APPLICATION_NAME` | Name of frontmost app. | Scanned |
@@ -148,6 +151,60 @@ Access ActionUI view values using dynamic special words:
 | `__ACTIONUI_TABLE_<ID>_COLUMN_0_VALUE__` | `OMC_ACTIONUI_TABLE_<ID>_COLUMN_0_VALUE` | ActionUI Table selected row, all columns combined (tab-separated). |
 
 > **Note**: Table column indexes are **1-based** (column 1, 2, 3, ...). Column 0 is special - it returns all columns combined as a tab-separated string.
+
+### ActionUI Control Trigger Context (OMC 5.0+)
+
+When a subcommand is dispatched by tapping / clicking an ActionUI control (button, table row, picker option, etc.), three context variables become available in the child process environment:
+
+| Special Word | Environment Variable | Description | Availability |
+|--------------|---------------------|---|---|
+| `__ACTIONUI_TRIGGER_VIEW_ID__` | `$OMC_ACTIONUI_TRIGGER_VIEW_ID` | The integer ID of the ActionUI control that fired the action. | Only when dispatched from a control action. |
+| `__ACTIONUI_TRIGGER_VIEW_PART_ID__` | `$OMC_ACTIONUI_TRIGGER_VIEW_PART_ID` | The integer part ID within that control — typically a row or column index. | Only when dispatched from a control action. |
+| `__ACTIONUI_TRIGGER_CONTEXT__` | `$OMC_ACTIONUI_TRIGGER_CONTEXT` | The opaque context payload from the control, if any. Serialized as string, number, or compact JSON. | Only when dispatched from a control action AND the control provided context data. |
+
+**When are these available?**
+
+These variables are **only present** when the subcommand is dispatched by a control action. They are **not** available when the subcommand is triggered by:
+- Dialog initialization (`init` subcommand)
+- Command activation (`activate` subcommand)
+- Command deactivation (`deactivate` subcommand)
+- Dialog or window close
+
+**How to check if context is available:**
+
+```bash
+if [ -n "$OMC_ACTIONUI_TRIGGER_VIEW_ID" ]; then
+    # Subcommand was triggered from a control action
+    echo "View: $OMC_ACTIONUI_TRIGGER_VIEW_ID, Part: $OMC_ACTIONUI_TRIGGER_VIEW_PART_ID"
+    echo "View Context: $OMC_ACTIONUI_TRIGGER_CONTEXT"
+fi
+```
+
+**Example: Handling a table row tap**
+
+```bash
+#!/bin/bash
+# A table changed selected row
+
+if [ -n "$OMC_ACTIONUI_TRIGGER_VIEW_ID" ]; then
+    view_id="${OMC_ACTIONUI_TRIGGER_VIEW_ID}"
+    view_part_id="${OMC_ACTIONUI_TRIGGER_VIEW_PART_ID}"
+    view_context_json="${OMC_ACTIONUI_TRIGGER_CONTEXT}"    
+	echo "Table ${view_id} changed selected row"
+	echo "Table row selection context: ${view_context_json}"
+fi
+```
+
+**Serialization of `$OMC_ACTIONUI_TRIGGER_CONTEXT`:**
+
+The context is an opaque value provided by the ActionUI control and is serialized as follows:
+- **String** → passed as-is
+- **Number** → converted to string form (e.g., `"42"`)
+- **Dictionary / Array** → serialized as compact JSON (no pretty-printing)
+- **Other** → stringified via description
+- **nil / absent** → env var is not exported (variable is absent from environment)
+
+**Important:** `$OMC_ACTIONUI_TRIGGER_VIEW_ID` and `$OMC_ACTIONUI_TRIGGER_VIEW_PART_ID` are always available when any control action fires, but `$OMC_ACTIONUI_TRIGGER_CONTEXT` may or may not be present depending on whether the control provided data.
 
 ---
 
