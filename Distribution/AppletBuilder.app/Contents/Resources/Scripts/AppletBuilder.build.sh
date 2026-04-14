@@ -40,8 +40,9 @@ compare_versions() {
 # Copy the app executable from builder to target (with proper name)
 copy_executable() {
     local target_path="$1"
-    local src_exe_name=$(plist_read "$builder_path/Contents/Info.plist" CFBundleExecutable)
-    local dst_exe_name=$(plist_read "$target_path/Contents/Info.plist" CFBundleExecutable)
+    local src_exe_name="$(plist_read "$builder_path/Contents/Info.plist" CFBundleExecutable)"
+    local dst_exe_name="$(plist_read "$target_path/Contents/Info.plist" CFBundleExecutable)"
+    /bin/mkdir -p "$target_path/Contents/MacOS"
     /bin/cp -p "$builder_path/Contents/MacOS/$src_exe_name" \
                "$target_path/Contents/MacOS/$dst_exe_name"
     log "Executable updated: $dst_exe_name"
