@@ -61,9 +61,12 @@ else
         entitlements="--entitlements $entitlements_file"
     fi
 
-    # Check if this is an Apple-issued Developer ID certificate
-    # Developer ID certs have an anchor in Apple's CA chain
-    if echo "$identity" | /usr/bin/grep -q "Developer ID"; then
+    # Check if this is an Apple-issued Developer ID certificate by resolving the
+    # identity (team ID, fingerprint, or full name) to its certificate name in
+    # the keychain, then checking for "Developer ID" in the result.
+    full_cert_name=$(/usr/bin/security find-identity -v -p codesigning | /usr/bin/grep "$identity" | /usr/bin/sed 's/.*"\(.*\)".*/\1/' | /usr/bin/head -1)
+    developer_id_check=$(echo "$full_cert_name" | /usr/bin/grep "Developer ID")
+    if test -n "$developer_id_check"; then
         is_developer_id="yes"
         timestamp="--timestamp"
         sign_options="--options runtime"
