@@ -12,4 +12,12 @@ if [ -z "$project_path" ] || [ ! -d "$project_path" ]; then
     exit 1
 fi
 
+# Scrub all OMC_ env vars so the child applet launches without AppletBuilder's context
+for _omc_key in $(env | /usr/bin/grep '^OMC_' | /usr/bin/cut -d= -f1); do
+    unset "$_omc_key"
+done
+
+# echo "env vars after scrubbing:"
+# env | sort
+
 /usr/bin/open "$project_path"
