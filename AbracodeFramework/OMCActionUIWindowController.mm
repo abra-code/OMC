@@ -52,7 +52,9 @@ static id ParseStringOrJSON(NSString *value)
 }
 
 /// Converts the opaque ActionUI action-callback context to a string suitable for env-var export.
-/// NSDictionary/NSArray → compact JSON; NSNumber → numeric string; NSString → as-is.
+/// NSDictionary/NSArray to compact JSON
+/// NSNumber to numeric string
+/// NSString: as-is.
 static NSString *SerializeActionContext(id context)
 {
     if (context == nil)

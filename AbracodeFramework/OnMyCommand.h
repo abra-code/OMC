@@ -164,6 +164,8 @@ public:
 private:
 
 	void				InitOmcBundlePaths();
+	void				SynthesizeCommandsFromScripts();
+	CFArrayRef			FindGroupNameForCommandID(CFStringRef inCommandID); // returns retained ref
 
 protected:
     static SInt32				sMacOSVersion;

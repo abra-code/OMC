@@ -18,6 +18,23 @@ CFStringRef OMCGetScriptPath(CFBundleRef inBundle, CFStringRef inScriptName)
 }
 
 
+CFDictionaryRef
+OMCScriptsManager::GetAllScriptPaths(CFBundleRef inBundle)
+{
+	if(inBundle == nullptr)
+		return nullptr;
+
+	CFMutableDictionaryRef scriptsDict = (CFMutableDictionaryRef)CFDictionaryGetValue(mBundles, inBundle);
+	if(scriptsDict == nullptr)
+	{
+		CFObj<CFMutableDictionaryRef> newScriptsDict = CreateScriptsCacheForBundle(inBundle);
+		CFDictionaryAddValue(mBundles, inBundle, newScriptsDict);
+		scriptsDict = newScriptsDict;
+	}
+	return scriptsDict;
+}
+
+
 OMCScriptsManager::OMCScriptsManager()
 	: mBundles(CFDictionaryCreateMutable(kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks))
 {

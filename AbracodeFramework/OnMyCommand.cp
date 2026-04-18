@@ -45,6 +45,7 @@
 #include "OMCHelpers.h"
 #include "OMCStrings.h"
 #include "OMCTerminalExecutor.h"
+#include "OMCScriptsManager.h"
 #include "OMCiTermExecutor.h"
 #include "OMCEnvironmentExportScript.h"
 
@@ -2138,6 +2139,210 @@ OnMyCommandCM::ParseCommandList(CFArrayRef commandArrayRef)
 	{
 		if( (mCommandList[i].commandID != NULL) && ! ::CFEqual(mCommandList[i].commandID, kOMCTopCommandID) )
 			mCommandList[i].isSubcommand = IsSubcommand(mCommandList[i].name, i);
+	}
+
+	// Create synthetic command entries for script files present in the bundle
+	// that have no matching COMMAND_ID declared in Command.plist.
+	SynthesizeCommandsFromScripts();
+}
+
+
+// Returns a retained CFArrayRef with the name array of the command group whose
+// combined name best matches the prefix of inCommandID (the segment before the
+// first '.' or '_'). Falls back to the first command group's name array.
+// Returns nullptr only when mCommandList is empty or every name is null.
+CFArrayRef
+OnMyCommandCM::FindGroupNameForCommandID(CFStringRef inCommandID)
+{
+	CFIndex len = (inCommandID != nullptr) ? ::CFStringGetLength(inCommandID) : 0;
+
+	// Extract the prefix: characters before the first '.' or '_' separator
+	CFIndex prefixLen = len;
+	for(CFIndex i = 0; i < len; i++)
+	{
+		UniChar c = ::CFStringGetCharacterAtIndex(inCommandID, i);
+		if(c == '.' || c == '_') { prefixLen = i; break; }
+	}
+
+	if(prefixLen > 0 && prefixLen < len)
+	{
+		CFObj<CFStringRef> prefix(
+			::CFStringCreateWithSubstring(kCFAllocatorDefault, inCommandID,
+			                              CFRangeMake(0, prefixLen)));
+		if(prefix != nullptr)
+		{
+			for(UInt32 i = 0; i < mCommandCount; i++)
+			{
+				if(mCommandList[i].name == nullptr) continue;
+				CFObj<CFStringRef> combinedName(
+					::CFStringCreateByCombiningStrings(kCFAllocatorDefault,
+					                                   mCommandList[i].name, CFSTR("")));
+				if(combinedName == nullptr) continue;
+				if(::CFStringCompare(combinedName, prefix, kCFCompareCaseInsensitive)
+				   == kCFCompareEqualTo)
+				{
+					::CFRetain(mCommandList[i].name);
+					return mCommandList[i].name;
+				}
+			}
+		}
+	}
+
+	// Fallback: use the first command group's name
+	if(mCommandCount > 0 && mCommandList[0].name != nullptr)
+	{
+		::CFRetain(mCommandList[0].name);
+		return mCommandList[0].name;
+	}
+	return nullptr;
+}
+
+// Enumerate all files in the bundle's Scripts directory. For each whose name
+// (without extension) has no matching COMMAND_ID in mCommandList, synthesize a
+// CommandDescription with exe_script_file execution and append it to mCommandList.
+//
+// This allows ActionUI (or other callers) to reference command IDs that exist as
+// script files without requiring an explicit Command.plist entry.
+void
+OnMyCommandCM::SynthesizeCommandsFromScripts()
+{
+	if(mCommandList == nullptr)
+		return;
+
+    // SynthesizeCommandsFromScripts should be called before any comamnd execution
+    // mCurrCommandIndex should stay at initial 0 value
+    // but let's not make assumptions and explicitly obtain the first command extern bundle ref
+    // by changing mCurrCommandIndex to 0 for GetCurrentCommandExternBundle() call and restoring to previous value after
+    UInt32 origCommandIndex = this->mCurrCommandIndex;
+    this->mCurrCommandIndex = 0;
+    CFBundleRef externBundle = GetCurrentCommandExternBundle();
+    this->mCurrCommandIndex = origCommandIndex;
+
+    CFBundleRef hostBundle = externBundle;
+
+    if(hostBundle == nullptr)
+        hostBundle = CFBundleGetMainBundle();
+
+    if(hostBundle == nullptr)
+		return;
+
+	// Delegate discovery to OMCScriptsManager so the scan result is cached and
+	// consistent with the subsequent script-path lookups at execution time.
+	// Keys are lowercase name-without-extension; values are absolute POSIX paths.
+	CFDictionaryRef scriptsDict =
+		OMCScriptsManager::GetScriptsManager()->GetAllScriptPaths(hostBundle);
+	if(scriptsDict == nullptr)
+		return;
+
+	CFIndex dictCount = ::CFDictionaryGetCount(scriptsDict);
+	if(dictCount == 0)
+		return;
+
+	std::vector<CFTypeRef> dictKeys(dictCount), dictValues(dictCount);
+	::CFDictionaryGetKeysAndValues(scriptsDict, dictKeys.data(), dictValues.data());
+
+	// Collect original-case script names that need a synthetic command entry
+	CFObj<CFMutableArrayRef> pendingNames(
+		::CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks));
+
+	for(CFIndex i = 0; i < dictCount; i++)
+	{
+		// The key is the lowercase name; use it for cheap filtering.
+		CFStringRef lowercaseKey = (CFStringRef)dictKeys[i];
+
+		// Skip library/helper modules (names beginning with "lib_" or "lib.")
+		if(::CFStringFind(lowercaseKey, CFSTR("lib_"), kCFCompareAnchored).location != kCFNotFound)
+			continue;
+		if(::CFStringFind(lowercaseKey, CFSTR("lib."), kCFCompareAnchored).location != kCFNotFound)
+			continue;
+
+		// Skip reserved internal command IDs
+		if(::CFStringCompare(lowercaseKey, kOMCTopCommandID, kCFCompareCaseInsensitive) == kCFCompareEqualTo)
+            continue;
+		if(::CFStringCompare(lowercaseKey, CFSTR("main"), kCFCompareCaseInsensitive) == kCFCompareEqualTo)
+            continue;
+
+		// Skip <CommandName>.main scripts — they match the main (no-COMMAND_ID) command of
+		// a group, exactly like the legacy "main.sh" convention but with an explicit prefix.
+		if(::CFStringFind(lowercaseKey, CFSTR(".main"), kCFCompareAnchored | kCFCompareBackwards).location != kCFNotFound)
+            continue;
+
+		// Skip if a command with this ID is already declared in mCommandList
+		bool alreadyDeclared = false;
+		for(UInt32 j = 0; j < mCommandCount; j++)
+		{
+			if(mCommandList[j].commandID == nullptr) continue;
+			if(::CFStringCompare(mCommandList[j].commandID, lowercaseKey,
+			                     kCFCompareCaseInsensitive) == kCFCompareEqualTo)
+			{
+				alreadyDeclared = true;
+				break;
+			}
+		}
+		if(alreadyDeclared)
+            continue;
+
+		// The dict key is lowercased; recover the original filesystem-case name from
+		// the path value so the commandID is usable as a case-sensitive lookup key
+		// (FindCommandIndex uses CFEqual, not kCFCompareCaseInsensitive).
+		CFStringRef scriptPath = (CFStringRef)dictValues[i];
+		CFObj<CFURLRef> scriptURL(::CFURLCreateWithFileSystemPath(
+			kCFAllocatorDefault, scriptPath, kCFURLPOSIXPathStyle, false));
+		if(scriptURL == nullptr)
+            continue;
+
+		CFObj<CFURLRef> noExtURL(
+			::CFURLCreateCopyDeletingPathExtension(kCFAllocatorDefault, scriptURL));
+		if(noExtURL == nullptr)
+            continue;
+
+		CFObj<CFStringRef> originalName(::CFURLCopyLastPathComponent(noExtURL));
+		if(originalName == nullptr)
+            continue;
+
+		::CFArrayAppendValue(pendingNames, originalName);
+	}
+
+	CFIndex synthCount = ::CFArrayGetCount(pendingNames);
+	if(synthCount == 0)
+		return;
+
+	// Grow mCommandList by reallocating.
+	// Existing entries are shallow-copied: CF object pointers are transferred
+	// without retain/release. CommandDescription has no user-defined destructor,
+	// so delete[] on the old array only frees memory — the CF objects remain live
+	// in the new array.
+	UInt32 oldCount = mCommandCount;
+	UInt32 newCount = oldCount + (UInt32)synthCount;
+	CommandDescription *newList = new CommandDescription[newCount];
+
+	for(UInt32 i = 0; i < oldCount; i++)
+		newList[i] = mCommandList[i];
+
+	delete [] mCommandList;
+	mCommandList = newList;
+	mCommandCount = newCount;
+
+	// Populate the synthetic entries (slots oldCount … newCount-1)
+	for(CFIndex i = 0; i < synthCount; i++)
+	{
+		CFStringRef scriptName =
+			(CFStringRef)::CFArrayGetValueAtIndex(pendingNames, i);
+		CommandDescription &synth = mCommandList[oldCount + (UInt32)i];
+		// All fields are default-initialized to NULL/false/0 by CommandDescription's
+		// in-class initializers; only the fields we need differ from defaults.
+
+		synth.commandID    = (CFStringRef)::CFRetain(scriptName);
+		synth.name         = FindGroupNameForCommandID(scriptName); // returned retained
+		synth.executionMode = kExecPopenScriptFile;
+		synth.isSubcommand  = IsSubcommand(synth.name, (CFIndex)(oldCount + (UInt32)i));
+		// Pre-populate the bundle cache so GetCurrentCommandExternBundle() at
+		// execution time returns the same bundle used during script discovery,
+		// rather than falling back to CFBundleGetMainBundle().
+		synth.externBundle = (externBundle != NULL) ? (CFBundleRef)::CFRetain(externBundle) : NULL;
+		synth.externBundleResolved = true;
+
+		LOG_CSTR("OMC->SynthesizeCommandsFromScripts: synthesized command entry for undeclared script\n");
 	}
 }
 

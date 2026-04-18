@@ -59,7 +59,7 @@ The starting point for OMC engine is a `Command.plist` file in applet's bundle i
 | Key | Type | Required | Description & Best Practice | Example |
 |-----|------|----------|-------------------------------|----------|
 | `NAME` | String or Array<String> | Yes | Visible label in menus. Use array for dynamic labels. Shared across a **command group**. | `["Set Xattr: ", "__OBJ_NAME__"]` (only `__FOO__` form works here) |
-| `COMMAND_ID` | String | Yes | **Unique identifier** for the action handler. **Unique readable strings are recommended**. Used to name script files and for subcommand chaining. | `"my.action.handler"` |
+| `COMMAND_ID` | String | Recommended | **Unique identifier** for the action handler. **Unique readable strings are recommended**. Used to name script files and for subcommand chaining. If omitted, the engine assigns the internal ID `top!` (valid only for a single top-level command per group). For `exe_script_file` action handlers, a matching script file in `Scripts/` without a plist entry is auto-synthesized — see note below. | `"my.action.handler"` |
 | `VERSION` | Integer or String | No | Semantic version for your reference (ignored by OMC). | `"1.0"` |
 | `NOTES` | String | No | Developer comments (ignored by OMC). | `"Removes quarantine bit"` |
 | `DISABLED` | Boolean | No | `<true/>` disables the action handler. | — |
@@ -69,6 +69,16 @@ The starting point for OMC engine is a `Command.plist` file in applet's bundle i
 > **Best Practices**:
 > - Group related action handlers (e.g., dialog init, OK, cancel) under **one `NAME`** with **unique `COMMAND_ID`s**. A command group shows as one item in a menu.
 > - `VERSION`, `DISABLED`, `CATEGORIES`, `SUBMENU_NAME` are rarely used. Skip adding unnecessary key-value pairs for concise and readable command description.
+
+> **Automatic synthesis of undeclared `exe_script_file` action handlers (applets only)**
+>
+> When OMC loads `Command.plist` for an applet, it scans the bundle's `Scripts/` directory and automatically creates command entries for any script file whose name-without-extension has no matching `COMMAND_ID` in the plist. This means an ActionUI `actionID` (e.g. `onDropActionID: "MyApp.layer.drop"`) will dispatch correctly even if the corresponding `Command.plist` entry was accidentally omitted, as long as the script file exists.
+>
+> **Naming convention for group assignment.** The synthesized command is assigned to the command group whose `NAME` matches the prefix of the script filename — the segment before the first `.` or `_`. For example, `MyApp.layer.drop.py` is assigned to the group named `MyApp`. If no group name matches the prefix, the first command group is used as a fallback.
+>
+> **Filtering.** Scripts whose names begin with `lib_` or `lib.` are treated as helper modules and never synthesized. The reserved names `main` and `top!` are also excluded.
+>
+> **Scope.** Synthesis applies only to the main application bundle (applets). Extern `.omc` plugin bundles must still declare all command entries explicitly.
 
 ---
 

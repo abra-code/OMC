@@ -19,6 +19,11 @@ public:
 
 	CFStringRef GetScriptPath(CFBundleRef inBundle, CFStringRef inScriptName);
 
+	// Returns the full name to path dictionary for the bundle, building the cache if needed.
+	// Keys are lowercase script names without extension; values are absolute POSIX path strings.
+	// The returned dictionary is owned by the singleton — do NOT release it.
+	CFDictionaryRef GetAllScriptPaths(CFBundleRef inBundle);
+
 private:
 	CFMutableDictionaryRef CreateScriptsCacheForBundle(CFBundleRef inBundle);
 
