@@ -114,6 +114,28 @@
                       }
                     }
                   ]
+                },
+                {
+                  "type": "HStack",
+                  "properties": { "spacing": 8 },
+                  "children": [
+                    {
+                      "type": "Text",
+                      "properties": {
+                        "text": "Min macOS",
+                        "frame": { "width": 110, "alignment": "trailing" }
+                      }
+                    },
+                    {
+                      "type": "TextField",
+                      "id": 306,
+                      "properties": {
+                        "prompt": "14.0",
+                        "frame": { "width": 100 },
+                        "actionID": "AppletBuilder.general.minosversion.changed"
+                      }
+                    }
+                  ]
                 }
               ]
             },

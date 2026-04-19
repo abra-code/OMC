@@ -26,6 +26,7 @@ if [ -n "$project_path" ] && [ -f "$project_path/Contents/Info.plist" ]; then
     set_value "$GEN_HEADER_NAME_ID" "$app_name"
     set_value "$GEN_BUNDLE_ID_ID" "$(plist_read "$plist" CFBundleIdentifier)"
     set_value "$GEN_VERSION_ID" "$(plist_read "$plist" CFBundleVersion)"
+    set_value "$GEN_MIN_OS_ID" "$(plist_read "$plist" LSMinimumSystemVersion)"
 
     # Set header icon
     icon_name=$(plist_read "$plist" CFBundleIconFile)
