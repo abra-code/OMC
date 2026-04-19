@@ -1,0 +1,9 @@
+{
+  "type": "RoundedRectangle",
+  "properties": {
+    "cornerRadius": 12.0,
+    "cornerStyle": "continuous",
+    "fill": "blue",
+    "frame": { "width": 100.0, "height": 60.0 }
+  }
+}

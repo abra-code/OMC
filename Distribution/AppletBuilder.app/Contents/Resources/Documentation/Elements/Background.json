@@ -1,0 +1,14 @@
+{
+  "type": "Text",
+  "properties": {
+    "text": "Label",
+    "foregroundStyle": "white",
+    "padding": { "leading": 10.0, "trailing": 10.0, "top": 5.0, "bottom": 5.0 }
+  },
+  "background": {
+    "type": "Capsule",
+    "properties": {
+      "fill": "blue"
+    }
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "type": "Ellipse",
+  "properties": {
+    "fill": "blue",
+    "frame": { "width": 100.0, "height": 60.0 }
+  }
+}

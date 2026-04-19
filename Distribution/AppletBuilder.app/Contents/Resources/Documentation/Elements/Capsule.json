@@ -1,0 +1,7 @@
+{
+  "type": "Capsule",
+  "properties": {
+    "fill": "blue",
+    "frame": { "width": 100.0, "height": 40.0 }
+  }
+}

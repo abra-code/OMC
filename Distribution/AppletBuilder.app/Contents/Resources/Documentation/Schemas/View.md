@@ -39,6 +39,28 @@ JSON schema and usage documentation for `View`.
      },
      "opacity": 1.0,       // Optional: Double (0.0 to 1.0) for view transparency
      "cornerRadius": 5.0,  // Optional: Double for rounded corners
+     "rotationEffect": 45.0, // Optional: Double — rotation angle in degrees (positive = clockwise). Negative values rotate counter-clockwise.
+     "scaleEffect": 1.5,   // Optional: Uniform scale factor (Double), or dictionary for non-uniform scaling:
+     "scaleEffect": {      // Optional: Dictionary form for per-axis scaling
+       "x": 1.5,           // Optional: Double for horizontal scale; defaults to 1.0
+       "y": 0.8,           // Optional: Double for vertical scale; defaults to 1.0
+       "anchor": "center"  // Optional: UnitPoint anchor for scaling origin; defaults to "center"
+                           //   Allowed: "center", "leading", "trailing", "top", "bottom",
+                           //            "topLeading", "topTrailing", "bottomLeading", "bottomTrailing"
+     },
+     "animation": "spring", // Optional: String shorthand (curve name), or dictionary:
+     "animation": {        // Optional: Dictionary form for full control
+       "curve": "spring",  // Required: animation curve. Allowed: "default", "linear", "easeIn",
+                           //   "easeOut", "easeInOut", "spring", "bouncy", "smooth", "snappy",
+                           //   "interactiveSpring".
+       "duration": 0.3,    // Optional: positive Double — seconds. Applies to time-based curves.
+       "delay": 0.1,       // Optional: non-negative Double — seconds before animation starts.
+       "speed": 1.0,       // Optional: positive Double — speed multiplier.
+       "value": "opacity"  // Optional: String — property name or state key to watch.
+                           //   When set, animation fires only when that property/state changes.
+                           //   When omitted, animation fires on any mutation (setElementProperty,
+                           //   setElementState, setElementValue).
+     },
      "actionID": "view.action", // Optional: String for action identifier
      "valueChangeActionID": "view.valueChanged", // Optional: String for action triggered on any value change initiated by user
      "openURLActionID": "view.openURL", // Optional: String for action identifier triggered on open URL (via .onOpenURL modifier)

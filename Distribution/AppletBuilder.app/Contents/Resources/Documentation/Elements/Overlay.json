@@ -1,0 +1,16 @@
+{
+  "type": "Image",
+  "properties": {
+    "systemName": "envelope.fill",
+    "imageScale": "large",
+    "foregroundStyle": "blue",
+    "overlayAlignment": "topTrailing"
+  },
+  "overlay": {
+    "type": "Circle",
+    "properties": {
+      "fill": "red",
+      "frame": { "width": 14.0, "height": 14.0 }
+    }
+  }
+}

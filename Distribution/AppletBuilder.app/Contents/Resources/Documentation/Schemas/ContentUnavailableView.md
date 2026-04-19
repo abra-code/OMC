@@ -14,7 +14,7 @@ JSON schema and usage documentation for `ContentUnavailableView`.
      "description": "Try a different search term." // Optional: String for secondary descriptive text, defaults to nil
    }
    // Note: ContentUnavailableView is the standard SwiftUI view for displaying empty states, missing data,
-   // or no-results conditions. Available on macOS 14.0+, iOS 17.0+.
+   // or no-results conditions.
    // Baseline View properties (padding, hidden, foregroundColor, font, background, frame, opacity, cornerRadius, actionID, disabled)
    // and additional View protocol modifiers are inherited and applied via
    // ActionUIRegistry.shared.applyViewModifiers(to: baseView, properties: element.properties).

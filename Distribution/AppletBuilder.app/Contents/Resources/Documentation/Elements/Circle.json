@@ -1,0 +1,7 @@
+{
+  "type": "Circle",
+  "properties": {
+    "fill": "blue",
+    "frame": { "width": 60.0, "height": 60.0 }
+  }
+}
