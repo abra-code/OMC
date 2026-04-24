@@ -315,14 +315,14 @@ static NSArray<ActionUIObjCDialogButton *> *OMCParseButtonSpecs(NSArray *specs)
 
 #pragma mark - OMCControlAccessor protocol
 
-- (void)setControlStringValue:(NSString *)inValue forControlID:(NSString *)inControlID
+- (void)setControlStringValue:(NSString *)inValue forControlID:(NSString *)inControlID contentType:(NSString *)contentType
 {
     NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
     if(windowUUID == nil || inValue == nil || inControlID == nil)
         return;
 
     NSInteger viewID = [inControlID integerValue];
-    [ActionUIObjC setElementValueFromStringWithWindowUUID:windowUUID viewID:viewID value:inValue viewPartID:0];
+    [ActionUIObjC setElementValueFromStringWithWindowUUID:windowUUID viewID:viewID viewPartID:0 value:inValue contentType:contentType];
 }
 
 - (void)setControlEnabled:(BOOL)enabled forControlID:(NSString *)inControlID
@@ -457,18 +457,18 @@ static NSArray<ActionUIObjCDialogButton *> *OMCParseButtonSpecs(NSArray *specs)
             // Column keys are always stored so OMC_ACTIONUI_TABLE_N_COLUMN_M_VALUE is exported
             // even when no row is selected (in which case values are empty strings).
             NSMutableDictionary *partsDict = [NSMutableDictionary dictionaryWithCapacity:columnCount + 1];
-            partsDict[@"0"] = [ActionUIObjC getElementValueAsStringWithWindowUUID:windowUUID viewID:viewID viewPartID:0] ?: @"";
+            partsDict[@"0"] = [ActionUIObjC getElementValueAsStringWithWindowUUID:windowUUID viewID:viewID viewPartID:0 contentType:nil] ?: @"";
             for(NSInteger colIdx = 1; colIdx <= columnCount; colIdx++)
             {
                 NSString *colKey = [NSString stringWithFormat:@"%ld", (long)colIdx];
-                partsDict[colKey] = [ActionUIObjC getElementValueAsStringWithWindowUUID:windowUUID viewID:viewID viewPartID:colIdx] ?: @"";
+                partsDict[colKey] = [ActionUIObjC getElementValueAsStringWithWindowUUID:windowUUID viewID:viewID viewPartID:colIdx contentType:nil] ?: @"";
             }
             ioControlValues[controlID] = partsDict;
         }
         else
         {
             // Non-table: single value under key "0"
-            NSString *value = [ActionUIObjC getElementValueAsStringWithWindowUUID:windowUUID viewID:viewID viewPartID:0];
+            NSString *value = [ActionUIObjC getElementValueAsStringWithWindowUUID:windowUUID viewID:viewID viewPartID:0 contentType:nil];
             if(value != nil)
             {
                 ioControlValues[controlID] = [NSMutableDictionary dictionaryWithObject:value forKey:@"0"];
@@ -489,7 +489,7 @@ static NSArray<ActionUIObjCDialogButton *> *OMCParseButtonSpecs(NSArray *specs)
     NSInteger viewID = [inControlID integerValue];
     NSInteger viewPartID = (inControlPart != nil) ? [inControlPart integerValue] : 0;
 
-    NSString *value = [ActionUIObjC getElementValueAsStringWithWindowUUID:windowUUID viewID:viewID viewPartID:viewPartID];
+    NSString *value = [ActionUIObjC getElementValueAsStringWithWindowUUID:windowUUID viewID:viewID viewPartID:viewPartID contentType:nil];
     return value;
 }
 

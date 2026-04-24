@@ -15,7 +15,7 @@
 @required
 
 // Control value and state
-- (void)setControlStringValue:(NSString *)inValue forControlID:(NSString *)inControlID;
+- (void)setControlStringValue:(NSString *)inValue forControlID:(NSString *)inControlID contentType:(NSString *)contentType;
 - (void)setControlEnabled:(BOOL)enabled forControlID:(NSString *)inControlID;
 - (void)setControlVisible:(BOOL)visible forControlID:(NSString *)inControlID;
 

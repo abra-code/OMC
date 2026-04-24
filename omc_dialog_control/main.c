@@ -161,13 +161,16 @@ int main (int argc, const char * argv[])
 
 	if(argc < 4)
 	{
-		fprintf(stdout, "\nUsage: omc_dialog_control __NIB_DLG_GUID__ <controlID> <value>\n\n");
+		fprintf(stdout, "\nUsage: omc_dialog_control __NIB_DLG_GUID__ <controlID> <value>\n");
+		fprintf(stdout, "       omc_dialog_control __NIB_DLG_GUID__ <controlID> <contentType> <value>\n\n");
+		fprintf(stdout, "<contentType> is an optional hint for parsing rich content (ActionUI only):\n");
+		fprintf(stdout, "\t\"plain\", \"markdown\", \"html\", \"rtf\", \"json\"\n\n");
 		fprintf(stdout, "<controlID> is an integer for control tag or special values:\n");
 		fprintf(stdout, "\t\"omc_window\" to specify that the target is dialog window\n");
 		fprintf(stdout, "\t\"omc_application\" to specify that the target is host application\n");
 		fprintf(stdout, "\t\"omc_workspace\" to specify that the target is shared NSWorkspace\n");
 		fprintf(stdout, "Special values:\n\tomc_enable, omc_disable\n\tomc_show, omc_hide\n");
-		fprintf(stdout, "\tomc_set_value_from_stdin (read from stdin or pipe)\n");
+		fprintf(stdout, "\tomc_set_value_from_stdin [contentType] (read from stdin or pipe)\n");
 		fprintf(stdout, "\tomc_set_command_id [followed by command id string]\n");
 		fprintf(stdout, "\tomc_list_remove_all\n");
 		fprintf(stdout, "\tomc_list_append_items [followed by variable number of arguments]\n");
@@ -206,6 +209,8 @@ int main (int argc, const char * argv[])
 		fprintf(stdout, "\tactionID: COMMAND_ID to dispatch as subcommand when button is tapped; omit for no callback\n\n");
 
 		fprintf(stdout, "Examples:\nomc_dialog_control __NIB_DLG_GUID__ 4 \"hello world!\"\n");
+		fprintf(stdout, "omc_dialog_control __ACTIONUI_WINDOW_UUID__ 4 markdown \"# Hello\"\n");
+		fprintf(stdout, "echo \"# Hello\" | omc_dialog_control __ACTIONUI_WINDOW_UUID__ 4 omc_set_value_from_stdin markdown\n");
 		fprintf(stdout, "omc_dialog_control __NIB_DLG_GUID__ 2 omc_disable\n");
 		fprintf(stdout, "omc_dialog_control __NIB_DLG_GUID__ 1 omc_set_command_id \"Exec\"\n");
 		fprintf(stdout, "omc_dialog_control __NIB_DLG_GUID__ 3 omc_list_remove_all\n");
@@ -276,6 +281,15 @@ int main (int argc, const char * argv[])
 	InstructionID instruction = GetInstructionID(valueStr);//must return valid index
 	key = sInstructionWordList[instruction].key;
 
+	// When argv[3] is not a recognized instruction and a 4th argument is present,
+	// treat argv[3] as a contentType hint and argv[4] as the actual value.
+	CFStringRef contentTypeStr = NULL;
+	if( (instruction == omc_set_control_value) && (argc == 5) )
+	{
+		contentTypeStr = valueStr;
+		valueStr = CFStringCreateWithCString(kCFAllocatorDefault, argv[4], kCFStringEncodingUTF8);
+	}
+
 	CFStringRef portName = CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("%s.OMCDialogControlPort-%s"), GetAppGroupIdentifier(), argv[1]);
 	if(portName != NULL)
 	{
@@ -334,7 +348,7 @@ int main (int argc, const char * argv[])
 			theResult = CFDictionaryGetValue(plistDict, (const void *)key);
 			if( (theResult != NULL) && (CFDictionaryGetTypeID() == CFGetTypeID(theResult)) )
 				valuesDict = (CFMutableDictionaryRef)theResult;
-			
+
 			if(valuesDict == NULL)
 			{//create new one
 				valuesDict = CFDictionaryCreateMutable( kCFAllocatorDefault, 0,
@@ -350,9 +364,13 @@ int main (int argc, const char * argv[])
 					goto error_exit;
 				}
 			}
-			
+
 			if(sInstructionWordList[instruction].argumentCount == kArgumentCount_FromStdin)
 			{
+				// Optional contentType after omc_set_value_from_stdin: argv[4]
+				if( (contentTypeStr == NULL) && (argc == 5) )
+					contentTypeStr = CFStringCreateWithCString(kCFAllocatorDefault, argv[4], kCFStringEncodingUTF8);
+
 				static UInt8 sStdinBuff[1024];
 				CFMutableDataRef wholeStdinData = CFDataCreateMutable(kCFAllocatorDefault, 0);
 				if(wholeStdinData != NULL)
@@ -366,7 +384,7 @@ int main (int argc, const char * argv[])
 					UInt8 *wholeBuff = CFDataGetMutableBytePtr(wholeStdinData);
 					CFStringRef wholeStr = CFStringCreateWithBytes(kCFAllocatorDefault, wholeBuff, wholeLen, kCFStringEncodingUTF8, true);
 					CFRelease(wholeStdinData);
-					
+
 					if(wholeStr != NULL)
 					{
 						//CFShow(wholeStr);
@@ -377,6 +395,34 @@ int main (int argc, const char * argv[])
 			else
 			{
 				CFDictionarySetValue(valuesDict, controlIDStr, valueStr);
+			}
+
+			// Store contentType hint in VALUE_CONTENT_TYPES when provided
+			if(contentTypeStr != NULL)
+			{
+				CFStringRef contentTypesKey = CFSTR("VALUE_CONTENT_TYPES");
+				CFMutableDictionaryRef contentTypesDict = NULL;
+				theResult = CFDictionaryGetValue(plistDict, (const void *)contentTypesKey);
+				if( (theResult != NULL) && (CFDictionaryGetTypeID() == CFGetTypeID(theResult)) )
+					contentTypesDict = (CFMutableDictionaryRef)theResult;
+
+				if(contentTypesDict == NULL)
+				{
+					contentTypesDict = CFDictionaryCreateMutable( kCFAllocatorDefault, 0,
+																  &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+					if(contentTypesDict != NULL)
+					{
+						CFDictionarySetValue(plistDict, contentTypesKey, contentTypesDict);
+					}
+					else
+					{
+						fprintf(stderr, "An error ocurred when creating new CFDictionary. Out of memory?!\n");
+						result = -1;
+						goto error_exit;
+					}
+				}
+
+				CFDictionarySetValue(contentTypesDict, controlIDStr, contentTypeStr);
 			}
 		}
 		//bool switches or 0 argument instructions for which we set bool but we don't care about the value

@@ -662,7 +662,7 @@
 	return nil;
 }
 
-- (void)setControlStringValue:(NSString *)inValue forControlID:(NSString *)inControlID
+- (void)setControlStringValue:(NSString *)inValue forControlID:(NSString *)inControlID contentType:(NSString *)contentType
 {
 	id controlOrView = [self findControlOrViewWithID:inControlID];
 	if( controlOrView != nil )

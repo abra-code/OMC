@@ -716,6 +716,9 @@ GetAllDialogControllers()
 		itemCount = ::CFDictionaryGetCount(valuesDict);
 		if(itemCount > 0)
 		{
+			CFDictionaryRef contentTypesDict = NULL;
+			controlValues.GetValue(CFSTR("VALUE_CONTENT_TYPES"), contentTypesDict);
+
 			std::vector<CFTypeRef> keyList(itemCount);
 			std::vector<CFTypeRef> valueList(itemCount);
 			::CFDictionaryGetKeysAndValues(valuesDict, (const void **)keyList.data(), (const void **)valueList.data());
@@ -732,8 +735,17 @@ GetAllDialogControllers()
 					}
 					else
 					{
+						NSString *contentType = nil;
+						if(contentTypesDict != NULL)
+						{
+							CFStringRef ct = ACFType<CFStringRef>::DynamicCast(
+								::CFDictionaryGetValue(contentTypesDict, controlID));
+							if(ct != NULL)
+								contentType = (__bridge NSString *)ct;
+						}
 						[self setControlStringValue:(__bridge NSString *)ACFType<CFStringRef>::DynamicCast( valueList[i] )
-										forControlID:(__bridge NSString *)controlID];
+										forControlID:(__bridge NSString *)controlID
+										contentType:contentType];
 					}
 				}
 			}
@@ -1479,7 +1491,7 @@ GetAllDialogControllers()
 
 #pragma mark - Abstract methods (no-op defaults)
 
-- (void)setControlStringValue:(NSString *)inValue forControlID:(NSString *)inControlID {
+- (void)setControlStringValue:(NSString *)inValue forControlID:(NSString *)inControlID contentType:(NSString *)contentType {
     NSLog(@"[OMCWindowController stub] setControlStringValue:forControlID: %@", inControlID);
 }
 - (void)setControlEnabled:(BOOL)enabled forControlID:(NSString *)inControlID {

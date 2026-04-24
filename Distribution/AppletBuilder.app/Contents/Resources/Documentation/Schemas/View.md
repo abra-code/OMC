@@ -122,6 +122,9 @@ JSON schema and usage documentation for `View`.
                                             // Does not apply any modifier; the value is kept in validatedProperties for navigation logic.
                                             // Used by NavigationLink (Form 2) to identify the push target in NavigationStack,
                                             // and by sidebar List children in NavigationSplitView to select a destination view.
+     "textSelection": "enabled",            // Optional: "enabled" or "disabled". Controls whether the user can select text in this view.
+                                            // SwiftUI does not enable text selection by default; set "enabled" to allow it.
+                                            // Applies to Text and any container holding Text views.
    }
  }
 
