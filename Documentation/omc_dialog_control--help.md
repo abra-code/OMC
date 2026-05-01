@@ -43,10 +43,16 @@ Special values:
 	omc_present_alert <title> [message] ["button_title:role:action_id" ...] (ActionUI only)
 	omc_present_confirmation_dialog <title> [message] ["button_title:role:action_id" ...] (ActionUI only)
 	omc_dismiss_dialog (ActionUI only)
+	omc_insert_element <json> [container] [position] (ActionUI only; controlID is the parent viewID)
+	omc_insert_element_row <json> [container] [position] (ActionUI only; controlID is the parent Grid viewID)
+	omc_remove_element (ActionUI only; controlID is the target viewID)
 
 Modal button spec format: "title:role:actionID"
   role: cancel | destructive | (omit for default)
   actionID: COMMAND_ID to dispatch as subcommand when button is tapped; omit for no callback
+
+Insert position format for omc_insert_element: append (default) | prepend | at:<index> | before:<siblingID> | after:<siblingID>
+Insert position format for omc_insert_element_row: append (default) | prepend | at:<index>
 
 Examples:
 omc_dialog_control __NIB_DLG_GUID__ 4 "hello world!"
@@ -80,6 +86,14 @@ omc_dialog_control __ACTIONUI_WINDOW_UUID__ omc_window omc_dismiss_modal
 omc_dialog_control __ACTIONUI_WINDOW_UUID__ omc_window omc_present_alert "Confirm Delete" "Are you sure?" "Cancel:cancel:" "Delete:destructive:delete.action"
 omc_dialog_control __ACTIONUI_WINDOW_UUID__ omc_window omc_present_confirmation_dialog "Title" "Message" "OK::ok.action" "Cancel:cancel:"
 omc_dialog_control __ACTIONUI_WINDOW_UUID__ omc_window omc_dismiss_dialog
+
+# Runtime structural mutations (ActionUI only; controlID is the target viewID)
+omc_dialog_control __ACTIONUI_WINDOW_UUID__ 10 omc_insert_element '{"id":30,"type":"Text","properties":{"text":"Appended"}}'
+omc_dialog_control __ACTIONUI_WINDOW_UUID__ 10 omc_insert_element '{"id":31,"type":"Text","properties":{"text":"Prepended"}}' children prepend
+omc_dialog_control __ACTIONUI_WINDOW_UUID__ 10 omc_insert_element '{"id":32,"type":"Text","properties":{"text":"After B"}}' children after:12
+omc_dialog_control __ACTIONUI_WINDOW_UUID__ 5 omc_insert_element_row '[{"id":40,"type":"Text","properties":{"text":"R1C0"}},{"id":41,"type":"Text","properties":{"text":"R1C1"}}]'
+omc_dialog_control __ACTIONUI_WINDOW_UUID__ 5 omc_insert_element_row '[{"id":42,"type":"Text","properties":{"text":"R0"}}]' rows at:0
+omc_dialog_control __ACTIONUI_WINDOW_UUID__ 11 omc_remove_element
 
 
 # Template container row operations — omc_list_* and omc_table_* work on any

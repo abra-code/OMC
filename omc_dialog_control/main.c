@@ -46,7 +46,10 @@ typedef enum InstructionID
 	omc_dismiss_modal,        //ActionUI: dismiss active modal
 	omc_present_alert,        //ActionUI: present system alert dialog
 	omc_present_confirmation_dialog, //ActionUI: present confirmation dialog
-	omc_dismiss_dialog        //ActionUI: dismiss active alert/confirmation dialog
+	omc_dismiss_dialog,       //ActionUI: dismiss active alert/confirmation dialog
+	omc_insert_element,       //ActionUI: insert element into a container
+	omc_insert_element_row,   //ActionUI: insert row into a grid container
+	omc_remove_element        //ActionUI: remove element from its parent
 } InstructionID;
 
 
@@ -107,7 +110,10 @@ static InstructionWord sInstructionWordList[] =
 	{ sizeof("omc_dismiss_modal")-1,						CFSTR("omc_dismiss_modal"),						CFSTR("DISMISS_MODAL"),			true,  false,	0 },
 	{ sizeof("omc_present_alert")-1,						CFSTR("omc_present_alert"),						CFSTR("PRESENT_ALERT"),			false, false,	kArgumentCount_Variable },
 	{ sizeof("omc_present_confirmation_dialog")-1,			CFSTR("omc_present_confirmation_dialog"),		CFSTR("PRESENT_CONFIRMATION_DIALOG"), false, false, kArgumentCount_Variable },
-	{ sizeof("omc_dismiss_dialog")-1,						CFSTR("omc_dismiss_dialog"),					CFSTR("DISMISS_DIALOG"),		true,  false,	0 }
+	{ sizeof("omc_dismiss_dialog")-1,						CFSTR("omc_dismiss_dialog"),					CFSTR("DISMISS_DIALOG"),		true,  false,	0 },
+	{ sizeof("omc_insert_element")-1,						CFSTR("omc_insert_element"),					CFSTR("INSERT_ELEMENT"),		false, false,	kArgumentCount_Variable },
+	{ sizeof("omc_insert_element_row")-1,					CFSTR("omc_insert_element_row"),				CFSTR("INSERT_ELEMENT_ROW"),	false, false,	kArgumentCount_Variable },
+	{ sizeof("omc_remove_element")-1,						CFSTR("omc_remove_element"),					CFSTR("REMOVE_ELEMENT"),		true,  false,	0 }
 
 };
 
@@ -202,7 +208,10 @@ int main (int argc, const char * argv[])
 		fprintf(stdout, "\tomc_dismiss_modal (ActionUI only)\n");
 		fprintf(stdout, "\tomc_present_alert <title> [message] [\"button_title:role:action_id\" ...] (ActionUI only; role: cancel|destructive|omit for default)\n");
 		fprintf(stdout, "\tomc_present_confirmation_dialog <title> [message] [\"button_title:role:action_id\" ...] (ActionUI only)\n");
-		fprintf(stdout, "\tomc_dismiss_dialog (ActionUI only)\n\n");
+		fprintf(stdout, "\tomc_dismiss_dialog (ActionUI only)\n");
+		fprintf(stdout, "\tomc_insert_element <json> [container] [position] (ActionUI only; position: append|prepend|at:<index>|before:<siblingID>|after:<siblingID>)\n");
+		fprintf(stdout, "\tomc_insert_element_row <json> [container] [position] (ActionUI only; position for grid rows: append|prepend|at:<index>)\n");
+		fprintf(stdout, "\tomc_remove_element (ActionUI only; use integer controlID as the target viewID)\n\n");
 
 		fprintf(stdout, "Modal button spec format: \"title:role:actionID\"\n");
 		fprintf(stdout, "\trole: cancel | destructive | (omit for default)\n");
@@ -238,6 +247,11 @@ int main (int argc, const char * argv[])
 		fprintf(stdout, "omc_dialog_control __ACTIONUI_WINDOW_UUID__ omc_window omc_present_alert \"Confirm Delete\" \"Are you sure?\" \"Cancel:cancel:\" \"Delete:destructive:delete.action\"\n");
 		fprintf(stdout, "omc_dialog_control __ACTIONUI_WINDOW_UUID__ omc_window omc_present_confirmation_dialog \"Title\" \"Message\" \"OK::ok.action\" \"Cancel:cancel:\"\n");
 		fprintf(stdout, "omc_dialog_control __ACTIONUI_WINDOW_UUID__ omc_window omc_dismiss_dialog\n");
+		fprintf(stdout, "omc_dialog_control __ACTIONUI_WINDOW_UUID__ 10 omc_insert_element '{\"id\":20,\"type\":\"Text\",\"value\":\"Hello\"}'\n");
+		fprintf(stdout, "omc_dialog_control __ACTIONUI_WINDOW_UUID__ 10 omc_insert_element '{\"id\":21,\"type\":\"Text\",\"value\":\"Hello\"}' children after:20\n");
+		fprintf(stdout, "omc_dialog_control __ACTIONUI_WINDOW_UUID__ 5 omc_insert_element_row '[{\"id\":30,\"type\":\"Text\",\"value\":\"A\"},{\"id\":31,\"type\":\"Text\",\"value\":\"B\"}]'\n");
+		fprintf(stdout, "omc_dialog_control __ACTIONUI_WINDOW_UUID__ 5 omc_insert_element_row '[{\"id\":32,\"type\":\"Text\",\"value\":\"C\"}]' rows at:0\n");
+		fprintf(stdout, "omc_dialog_control __ACTIONUI_WINDOW_UUID__ 20 omc_remove_element\n");
 
 		result = -1;
 		goto error_exit;
@@ -430,7 +444,8 @@ int main (int argc, const char * argv[])
 			(instruction == omc_show) || (instruction == omc_hide) ||
 			(instruction == omc_select) ||
 		    (instruction == omc_terminate_ok) || (instruction == omc_terminate_cancel) || //ok=true, cancel=false
-			(instruction == omc_dismiss_modal) || (instruction == omc_dismiss_dialog)
+			(instruction == omc_dismiss_modal) || (instruction == omc_dismiss_dialog) ||
+			(instruction == omc_remove_element)
 		   )
 		{
 			CFMutableDictionaryRef disableDict = NULL;

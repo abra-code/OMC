@@ -673,6 +673,75 @@ static NSArray<NSArray<NSString*>*> *OMCParseTabSeparatedRows(CFArrayRef cfRows)
         [ActionUIObjC dismissDialogWithWindowUUID:windowUUID];
 }
 
+#pragma mark - Runtime Structural Mutations (ActionUI)
+
+/// Parses "append" | "prepend" | "at:<index>" | "before:<siblingID>" | "after:<siblingID>" into position + param.
+static void OMCParsePositionString(NSString *positionStr, ActionUIObjCInsertPosition *outPosition, NSInteger *outParam)
+{
+    *outPosition = ActionUIObjCInsertPositionAppend;
+    *outParam = 0;
+    if (positionStr.length == 0) return;
+    if ([positionStr isEqualToString:@"prepend"])
+        { *outPosition = ActionUIObjCInsertPositionPrepend; return; }
+    if ([positionStr hasPrefix:@"at:"])
+        { *outPosition = ActionUIObjCInsertPositionAt; *outParam = [[positionStr substringFromIndex:3] integerValue]; return; }
+    if ([positionStr hasPrefix:@"before:"])
+        { *outPosition = ActionUIObjCInsertPositionBefore; *outParam = [[positionStr substringFromIndex:7] integerValue]; return; }
+    if ([positionStr hasPrefix:@"after:"])
+        { *outPosition = ActionUIObjCInsertPositionAfter; *outParam = [[positionStr substringFromIndex:6] integerValue]; return; }
+}
+
+- (void)insertElementWithParentID:(NSInteger)parentID json:(NSString *)json container:(NSString *)container positionString:(NSString *)positionStr
+{
+    NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
+    if (windowUUID == nil || json.length == 0)
+        return;
+    ActionUIObjCInsertPosition position;
+    NSInteger positionParam;
+    OMCParsePositionString(positionStr, &position, &positionParam);
+    NSError *error = nil;
+    NSInteger insertedID = [ActionUIObjC insertElementIntoWindowUUID:windowUUID
+                                                            parentID:parentID
+                                                                json:(NSString *)json
+                                                           container:(NSString *)container
+                                                            position:position
+                                                      positionParam:positionParam
+                                                              error:&error];
+    if (insertedID < 0 && error != nil)
+        NSLog(@"[OMCActionUIWindowController] insertElement error: %@", error);
+}
+
+- (void)insertElementRowWithParentID:(NSInteger)parentID json:(NSString *)json container:(NSString *)container positionString:(NSString *)positionStr
+{
+    NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
+    if (windowUUID == nil || json.length == 0)
+        return;
+    ActionUIObjCInsertPosition position;
+    NSInteger positionIndex;
+    OMCParsePositionString(positionStr, &position, &positionIndex);
+    NSError *error = nil;
+    NSArray *insertedIDs = [ActionUIObjC insertRowIntoWindowUUID:windowUUID
+                                                        parentID:parentID
+                                                            json:(NSString *)json
+                                                       container:(NSString *)container
+                                                        position:position
+                                                   positionIndex:positionIndex
+                                                          error:&error];
+    if (insertedIDs == nil && error != nil)
+        NSLog(@"[OMCActionUIWindowController] insertElementRow error: %@", error);
+}
+
+- (void)removeElementWithViewID:(NSInteger)viewID
+{
+    NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
+    if (windowUUID == nil)
+        return;
+    NSError *error = nil;
+    BOOL success = [ActionUIObjC removeElementFromWindowUUID:windowUUID viewID:viewID error:&error];
+    if (!success && error != nil)
+        NSLog(@"[OMCActionUIWindowController] removeElement error: %@", error);
+}
+
 - (void)setTableColumnWidths:(CFArrayRef)widths forControlID:(NSString *)inControlID
 {
     NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();

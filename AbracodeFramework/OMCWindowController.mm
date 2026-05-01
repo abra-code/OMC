@@ -709,6 +709,86 @@ GetAllDialogControllers()
 	}
 	}
 
+	// Runtime structural mutations (ActionUI only; Nib controller stubs log and return)
+	{
+	CFDictionaryRef insertElementDict = NULL;
+	if( controlValues.GetValue(CFSTR("INSERT_ELEMENT"), insertElementDict) )
+	{
+		itemCount = ::CFDictionaryGetCount(insertElementDict);
+		if(itemCount > 0)
+		{
+			std::vector<CFTypeRef> keyList(itemCount);
+			std::vector<CFTypeRef> valueList(itemCount);
+			::CFDictionaryGetKeysAndValues(insertElementDict, (const void **)keyList.data(), (const void **)valueList.data());
+			for(CFIndex i = 0; i < itemCount; i++)
+			{
+				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
+				CFArrayRef theArr = ACFType<CFArrayRef>::DynamicCast( valueList[i] );
+				if( controlID != NULL && theArr != NULL && ::CFArrayGetCount(theArr) >= 1 )
+				{
+					NSString *json = (__bridge NSString *)ACFType<CFStringRef>::DynamicCast( ::CFArrayGetValueAtIndex(theArr, 0) );
+					NSString *container = (::CFArrayGetCount(theArr) >= 2) ? (__bridge NSString *)ACFType<CFStringRef>::DynamicCast( ::CFArrayGetValueAtIndex(theArr, 1) ) : nil;
+					NSString *positionStr = (::CFArrayGetCount(theArr) >= 3) ? (__bridge NSString *)ACFType<CFStringRef>::DynamicCast( ::CFArrayGetValueAtIndex(theArr, 2) ) : nil;
+					NSInteger parentID = [(__bridge NSString *)controlID integerValue];
+					if( json != nil )
+						[self insertElementWithParentID:parentID json:json container:container positionString:positionStr];
+				}
+			}
+		}
+	}
+	}
+
+	{
+	CFDictionaryRef insertRowDict = NULL;
+	if( controlValues.GetValue(CFSTR("INSERT_ELEMENT_ROW"), insertRowDict) )
+	{
+		itemCount = ::CFDictionaryGetCount(insertRowDict);
+		if(itemCount > 0)
+		{
+			std::vector<CFTypeRef> keyList(itemCount);
+			std::vector<CFTypeRef> valueList(itemCount);
+			::CFDictionaryGetKeysAndValues(insertRowDict, (const void **)keyList.data(), (const void **)valueList.data());
+			for(CFIndex i = 0; i < itemCount; i++)
+			{
+				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
+				CFArrayRef theArr = ACFType<CFArrayRef>::DynamicCast( valueList[i] );
+				if( controlID != NULL && theArr != NULL && ::CFArrayGetCount(theArr) >= 1 )
+				{
+					NSString *json = (__bridge NSString *)ACFType<CFStringRef>::DynamicCast( ::CFArrayGetValueAtIndex(theArr, 0) );
+					NSString *container = (::CFArrayGetCount(theArr) >= 2) ? (__bridge NSString *)ACFType<CFStringRef>::DynamicCast( ::CFArrayGetValueAtIndex(theArr, 1) ) : nil;
+					NSString *positionStr = (::CFArrayGetCount(theArr) >= 3) ? (__bridge NSString *)ACFType<CFStringRef>::DynamicCast( ::CFArrayGetValueAtIndex(theArr, 2) ) : nil;
+					NSInteger parentID = [(__bridge NSString *)controlID integerValue];
+					if( json != nil )
+						[self insertElementRowWithParentID:parentID json:json container:container positionString:positionStr];
+				}
+			}
+		}
+	}
+	}
+
+	{
+	CFDictionaryRef removeElementDict = NULL;
+	if( controlValues.GetValue(CFSTR("REMOVE_ELEMENT"), removeElementDict) )
+	{
+		itemCount = ::CFDictionaryGetCount(removeElementDict);
+		if(itemCount > 0)
+		{
+			std::vector<CFTypeRef> keyList(itemCount);
+			std::vector<CFTypeRef> valueList(itemCount);
+			::CFDictionaryGetKeysAndValues(removeElementDict, (const void **)keyList.data(), (const void **)valueList.data());
+			for(CFIndex i = 0; i < itemCount; i++)
+			{
+				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
+				if( controlID != NULL )
+				{
+					NSInteger viewID = [(__bridge NSString *)controlID integerValue];
+					[self removeElementWithViewID:viewID];
+				}
+			}
+		}
+	}
+	}
+
 	{
 	CFDictionaryRef valuesDict = NULL;
 	if( controlValues.GetValue(CFSTR("VALUES"), valuesDict) )
@@ -1570,6 +1650,15 @@ GetAllDialogControllers()
 }
 - (void)dismissDialog {
     NSLog(@"[OMCWindowController stub] dismissDialog — not supported by this window controller");
+}
+- (void)insertElementWithParentID:(NSInteger)parentID json:(NSString *)json container:(NSString *)container positionString:(NSString *)positionStr {
+    NSLog(@"[OMCWindowController stub] insertElementWithParentID:%ld — not supported by this window controller", (long)parentID);
+}
+- (void)insertElementRowWithParentID:(NSInteger)parentID json:(NSString *)json container:(NSString *)container positionString:(NSString *)positionStr {
+    NSLog(@"[OMCWindowController stub] insertElementRowWithParentID:%ld — not supported by this window controller", (long)parentID);
+}
+- (void)removeElementWithViewID:(NSInteger)viewID {
+    NSLog(@"[OMCWindowController stub] removeElementWithViewID:%ld — not supported by this window controller", (long)viewID);
 }
 
 @end

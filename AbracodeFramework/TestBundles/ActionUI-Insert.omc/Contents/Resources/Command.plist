@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>COMMAND_LIST</key>
+	<array>
+		<!-- Main command: opens non-modal ActionUI window, prints UUID to stdout -->
+		<dict>
+			<key>ACTIVATION_MODE</key>
+			<string>act_folder</string>
+			<key>COMMAND</key>
+			<array>
+				<string>echo "${OMC_ACTIONUI_WINDOW_UUID}"
+				</string>
+			</array>
+			<key>EXECUTION_MODE</key>
+			<string>exe_shell_script</string>
+			<key>NAME</key>
+			<string>Insert</string>
+			<key>ACTIONUI_WINDOW</key>
+			<dict>
+				<key>JSON_NAME</key>
+				<string>Insert</string>
+				<key>INIT_SUBCOMMAND_ID</key>
+				<string>insert.dialog.init</string>
+				<key>END_CANCEL_SUBCOMMAND_ID</key>
+				<string>insert.dialog.terminate.cancel</string>
+				<key>IS_BLOCKING</key>
+				<false/>
+			</dict>
+			<key>NOTES</key>
+			<string>ActionUI structural mutation test window (omc_insert_element, omc_insert_element_row, omc_remove_element)</string>
+			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
+			<string>14.6</string>
+			<key>REQUIRED_OMC_VERSION</key>
+			<string>5.0</string>
+			<key>VERSION</key>
+			<integer>1</integer>
+		</dict>
+
+		<!-- Init: insert elements, insert row, remove element, write diagnostic -->
+		<dict>
+			<key>COMMAND_ID</key>
+			<string>insert.dialog.init</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+			<key>NAME</key>
+			<string>Insert</string>
+		</dict>
+
+		<!-- Close window via omc_terminate_cancel (for test teardown) -->
+		<dict>
+			<key>ACTIVATION_MODE</key>
+			<string>act_selected_text</string>
+			<key>COMMAND_ID</key>
+			<string>insert.close.window</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+			<key>NAME</key>
+			<string>Insert</string>
+			<key>NOTES</key>
+			<string>Test command: receives UUID as text context, closes window</string>
+		</dict>
+
+		<!-- Terminate cancel: write term diagnostic -->
+		<dict>
+			<key>COMMAND_ID</key>
+			<string>insert.dialog.terminate.cancel</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+			<key>NAME</key>
+			<string>Insert</string>
+		</dict>
+	</array>
+	<key>VERSION</key>
+	<integer>2</integer>
+</dict>
+</plist>

@@ -58,4 +58,13 @@
 - (void)presentConfirmationDialogWithTitle:(NSString *)title message:(NSString *)message buttonSpecs:(NSArray *)buttonSpecs;
 - (void)dismissDialog;
 
+// Runtime structural mutations (ActionUI only; Nib controller stubs log and return)
+// json: JSON string encoding the new element object (for insertElement) or array of cell objects (for insertElementRow)
+// container: container name (e.g. "children", "rows"); nil auto-derives when unambiguous
+// positionStr: "append" (default) | "prepend" | "at:<index>" | "before:<siblingID>" | "after:<siblingID>"
+//              insertElementRow accepts only append/prepend/at:<index>
+- (void)insertElementWithParentID:(NSInteger)parentID json:(NSString *)json container:(NSString *)container positionString:(NSString *)positionStr;
+- (void)insertElementRowWithParentID:(NSInteger)parentID json:(NSString *)json container:(NSString *)container positionString:(NSString *)positionStr;
+- (void)removeElementWithViewID:(NSInteger)viewID;
+
 @end

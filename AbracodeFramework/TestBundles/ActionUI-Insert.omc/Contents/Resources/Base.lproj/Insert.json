@@ -1,0 +1,29 @@
+{
+  "type": "VStack",
+  "properties": {
+    "spacing": 8,
+    "padding": "default",
+    "frame": { "minWidth": 300, "minHeight": 200 }
+  },
+  "children": [
+    { "type": "Text", "id": 1, "properties": { "text": "Insert Test Window" } },
+    {
+      "type": "VStack",
+      "id": 10,
+      "children": [
+        { "type": "Text", "id": 11, "properties": { "text": "Item A" } },
+        { "type": "Text", "id": 12, "properties": { "text": "Item B" } }
+      ]
+    },
+    {
+      "type": "Grid",
+      "id": 5,
+      "rows": [
+        [
+          { "type": "Text", "id": 20, "properties": { "text": "R0C0" } },
+          { "type": "Text", "id": 21, "properties": { "text": "R0C1" } }
+        ]
+      ]
+    }
+  ]
+}
