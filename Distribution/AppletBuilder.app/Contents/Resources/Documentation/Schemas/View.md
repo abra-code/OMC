@@ -12,6 +12,7 @@ JSON schema and usage documentation for `View`.
      "padding": 10.0,      // Optional: Double for padding around the view, string "default" or EdgeInsets dictionary {"top": 10, "bottom": 10, "leading": 5, "trailing": 5}
      "hidden": false,      // Optional: Boolean to hide the view
      "foregroundStyle": "blue", // Optional: SwiftUI color (e.g., "red", "blue") or semantic style for text/content tint, resolved via foregroundStyle
+     "tint": "red",        // Optional: SwiftUI color for tinting interactive controls (buttons, toggles, sliders, etc.), resolved via tint
      "font": "body",       // Optional: String for named text style (e.g., "title", "body") or font name (e.g., "Menlo"),
                            //   or dictionary: { "name": "Menlo", "size": 12, "weight": "bold", "design": "monospaced" }
                            //   "name" (String, optional): font family name; omit for system font
@@ -39,6 +40,13 @@ JSON schema and usage documentation for `View`.
      },
      "opacity": 1.0,       // Optional: Double (0.0 to 1.0) for view transparency
      "cornerRadius": 5.0,  // Optional: Double for rounded corners
+     "clipShape": "circle",    // Optional: clip view to named shape: "circle" | "capsule" | "rectangle" | "ellipse"
+     "clipShape": {            // Optional: dict form for rounded rectangle
+       "type": "roundedRectangle",  // Required: only "roundedRectangle" supported in dict form
+       "cornerRadius": 12.0,        // Uniform corner radius — OR use per-axis form:
+       "cornerRadiusX": 12.0,       // Horizontal radius (used together with cornerRadiusY)
+       "cornerRadiusY": 8.0         // Vertical radius
+     },
      "rotationEffect": 45.0, // Optional: Double — rotation angle in degrees (positive = clockwise). Negative values rotate counter-clockwise.
      "scaleEffect": 1.5,   // Optional: Uniform scale factor (Double), or dictionary for non-uniform scaling:
      "scaleEffect": {      // Optional: Dictionary form for per-axis scaling
@@ -125,8 +133,10 @@ JSON schema and usage documentation for `View`.
      "textSelection": "enabled",            // Optional: "enabled" or "disabled". Controls whether the user can select text in this view.
                                             // SwiftUI does not enable text selection by default; set "enabled" to allow it.
                                             // Applies to Text and any container holding Text views.
-   }
- }
+      "zIndex": 0.0,                        // Optional: Number for layer ordering within a container (e.g. ZStack)
+                                            // Higher values render in front of lower values. Defaults to 0.0.
+    }
+  }
 
 //  NOTE:
 //  Supported semantic styles for foregroundStyle/background:

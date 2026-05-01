@@ -661,12 +661,104 @@ rm -f "$item_path"
 
 ---
 
+### ActionUI Runtime Structural Mutations
+
+Inject or remove view elements from a live ActionUI window at runtime without rebuilding the whole hierarchy. All three operations are async (fire-and-forget via IPC) — use an init subcommand or an actionID callback to sequence them with other control operations.
+
+#### Inserting Elements into Flat Containers
+
+`omc_insert_element` inserts a JSON-encoded element into any flat container (VStack, HStack, LazyVStack, LazyHStack, ZStack, ScrollView, Form, List, NavigationStack, Section, Group, GroupBox, ControlGroup, DisclosureGroup, Tab, TabView, Menu, HSplitView, VSplitView, NavigationSplitView).
+
+**Argument format:**
+
+```bash
+omc_dialog_control "$OMC_ACTIONUI_WINDOW_UUID" <parentID> omc_insert_element <json> [container] [position]
+```
+
+| Argument | Required | Description |
+|----------|----------|-------------|
+| `<parentID>` (controlID) | Yes | The integer `id` of the container element to insert into |
+| `<json>` | Yes | JSON string encoding the new element object (must include `"type"`) |
+| `[container]` | No | Container name — e.g. `children`, `destinations`; auto-derived when unambiguous |
+| `[position]` | No | Insert position (see table below); defaults to `append` |
+
+**Position values:**
+
+| Value | Effect |
+|-------|--------|
+| `append` *(default)* | Add after the last existing child |
+| `prepend` | Add before the first existing child |
+| `at:<index>` | Insert at the given 0-based index |
+| `before:<siblingID>` | Insert immediately before the element with the given id |
+| `after:<siblingID>` | Insert immediately after the element with the given id |
+
+```bash
+# Append a Text element to VStack id=10
+omc_dialog_control "$OMC_ACTIONUI_WINDOW_UUID" 10 omc_insert_element \
+    '{"id":30,"type":"Text","properties":{"text":"New Item"}}'
+
+# Prepend (explicit container name)
+omc_dialog_control "$OMC_ACTIONUI_WINDOW_UUID" 10 omc_insert_element \
+    '{"id":31,"type":"Text","properties":{"text":"First"}}' children prepend
+
+# Insert after the sibling whose id is 12
+omc_dialog_control "$OMC_ACTIONUI_WINDOW_UUID" 10 omc_insert_element \
+    '{"id":32,"type":"Text","properties":{"text":"After B"}}' children after:12
+
+# Insert a Button at index 0
+omc_dialog_control "$OMC_ACTIONUI_WINDOW_UUID" 10 omc_insert_element \
+    '{"id":33,"type":"Button","properties":{"title":"Go"},"actionID":"go.tapped"}' children at:0
+```
+
+#### Inserting Rows into Grid Containers
+
+`omc_insert_element_row` inserts a row of cells into a Grid's `rows` container. The JSON argument must be an array of cell objects.
+
+**Argument format:**
+
+```bash
+omc_dialog_control "$OMC_ACTIONUI_WINDOW_UUID" <parentID> omc_insert_element_row <json> [container] [position]
+```
+
+Valid positions: `append` (default), `prepend`, `at:<index>`. `before:` and `after:` are not supported for rows (rows have no addressable identity).
+
+```bash
+# Append a two-cell row to Grid id=5
+omc_dialog_control "$OMC_ACTIONUI_WINDOW_UUID" 5 omc_insert_element_row \
+    '[{"id":40,"type":"Text","properties":{"text":"Col A"}},{"id":41,"type":"Text","properties":{"text":"Col B"}}]'
+
+# Insert a row at the top of the grid
+omc_dialog_control "$OMC_ACTIONUI_WINDOW_UUID" 5 omc_insert_element_row \
+    '[{"id":42,"type":"Text","properties":{"text":"Header"}}]' rows at:0
+```
+
+#### Removing Elements
+
+`omc_remove_element` removes the element with the given viewID from its parent container. All descendant ViewModels are cascade-removed. The root element of a window cannot be removed.
+
+```bash
+# Remove element id=11 (the controlID is the target viewID)
+omc_dialog_control "$OMC_ACTIONUI_WINDOW_UUID" 11 omc_remove_element
+```
+
+#### ID Requirements
+
+- Every element passed to `omc_insert_element` or `omc_insert_element_row` must have a unique `"id"` field (non-zero integer). If `"id"` is `0` or omitted, ActionUI assigns a synthetic ID automatically.
+- IDs must not conflict with any element already present in the live window — ActionUI checks before inserting and returns an error on conflict.
+
+#### Nib Windows
+
+These three commands are not supported by legacy Nib-based windows. Sending them to a Nib window logs a warning and returns without effect.
+
+---
+
 ### Best Practices
 
 - **Prefer `exe_script_file`** for subcommands/action handlers.
 - **Use descriptive view IDs** in your JSON for easier scripting.
 - **Set initial values dynamically** using `omc_dialog_control` in init subcommand script.
-- **Assign non-zero `id` to any view** you need to control at runtime (template containers, dynamic lists, tables).
+- **Assign non-zero `id` to any view** you need to control at runtime (template containers, dynamic lists, tables, insertion targets).
+- **Unique IDs are required** for `omc_insert_element` and `omc_insert_element_row` — conflicts cause the insert to fail silently in scripts; check `omc_dialog_control` exit code to detect errors.
 
 ---
 
