@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 __all__ = ["Image", "Figure"]
 
-_num_re = re.compile(r"^\d+(?:\.\d*)?")
+_num_re = re.compile(r"^\d+(?:\.\d*)?(?:px|ch|em|rem|ex|rex|vw|vh|%)?$")
 _allowed_aligns = ["top", "middle", "bottom", "left", "center", "right"]
 
 
@@ -160,11 +160,11 @@ def render_figure(
     if align:
         _cls += " align-" + align
     if figclass:
-        _cls += " " + figclass
+        _cls += " " + escape_text(figclass)
 
     html = '<figure class="' + _cls + '"'
     if figwidth:
-        html += ' style="width:' + figwidth + '"'
+        html += ' style="width:' + escape_text(figwidth) + '"'
     return html + ">\n" + text + "</figure>\n"
 
 

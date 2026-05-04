@@ -80,7 +80,7 @@ class HTMLRenderer(BaseRenderer):
 
     def image(self, text: str, url: str, title: Optional[str] = None) -> str:
         src = self.safe_url(url)
-        alt = escape_text(striptags(text))
+        alt = striptags(text)
         s = '<img src="' + src + '" alt="' + alt + '"'
         if title:
             s += ' title="' + safe_entity(title) + '"'
@@ -108,7 +108,7 @@ class HTMLRenderer(BaseRenderer):
         html = "<" + tag
         _id = attrs.get("id")
         if _id:
-            html += ' id="' + _id + '"'
+            html += ' id="' + escape_text(_id) + '"'
         return html + ">" + text + "</" + tag + ">\n"
 
     def blank_line(self) -> str:
@@ -138,7 +138,7 @@ class HTMLRenderer(BaseRenderer):
         return html + "\n"
 
     def block_error(self, text: str) -> str:
-        return '<div class="error"><pre>' + text + "</pre></div>\n"
+        return '<div class="error"><pre>' + escape_text(text) + "</pre></div>\n"
 
     def list(self, text: str, ordered: bool, **attrs: Any) -> str:
         if ordered:
