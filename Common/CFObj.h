@@ -31,8 +31,8 @@
 
 typedef enum CFObjRetainType
 {
-	kCFObjRetain,			//< Retain the object (+1 ref count)
-	kCFObjDontRetain		//< Don't retain, take ownership of +1 ref (default)
+	kCFObjRetain,			///< Retain the object (+1 ref count)
+	kCFObjDontRetain		///< Don't retain, take ownership of +1 ref (default)
 } CFObjRetainType;
 
 template <typename T> class CFObj
