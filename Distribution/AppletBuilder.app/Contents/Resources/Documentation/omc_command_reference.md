@@ -14,7 +14,7 @@ This document reorganizes and updates the legacy [Command Description Manual](ht
 > - **Action Handler** = A command triggered by a user action (e.g., button click, file drop, dialog init).
 > - **Command Group** = Multiple action handlers sharing the same `NAME` but with unique `COMMAND_ID`s (e.g., one group for a dialog: init, OK, cancel, table selection).
 > - **Applet** = A standalone mini-app (formerly "droplet").
-> - **OnMyCommandCM.plugin** = Legacy contextual menu plug-in formerly loaded in-proc by applications in early macOSes. Apple removed that functionality and nowadays the only way to load and execute old style contextual menu plug-ins is via [Abracode Shortcuts.app] (https://github.com/abra-code/Shortcuts).
+> - **OnMyCommandCM.plugin** = Legacy contextual menu plug-in formerly loaded in-proc by applications in early macOSes. Apple removed that functionality and nowadays the only way to load and execute old style contextual menu plug-ins is via [Abracode Shortcuts.app](https://github.com/abra-code/Shortcuts).
 
 ---
 
