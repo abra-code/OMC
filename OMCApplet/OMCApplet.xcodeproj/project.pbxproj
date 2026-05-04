@@ -459,7 +459,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "source \"${PROJECT_DIR}/PythonApplet/Build-Embedded-Python.sh\"\n";
+			shellScript = "source \"${PROJECT_DIR}/PythonApplet/Build-Embedded-Python.sh\" --lzma-version=auto\n";
 		};
 		E23EA1B50DFB05B50070E63F /* Remove Debug Resources */ = {
 			isa = PBXShellScriptBuildPhase;
