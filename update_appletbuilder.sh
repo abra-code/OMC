@@ -8,7 +8,8 @@
 #   3. OMC documentation
 #   4. ActionUI documentation (from built ActionUIDocumentation bundle)
 #   5. Validates ElementTemplates.json against Elements/
-#   6. Codesigns AppletBuilder.app (ad-hoc)
+#   6. Thins Python distribution (strips .pyc files)
+#   7. Codesigns AppletBuilder.app (ad-hoc)
 #
 # Usage:
 #   ./update_appletbuilder.sh [OMC_ROOT]
@@ -474,7 +475,32 @@ fi
 echo ""
 
 # ════════════════════════════════════════════════════════════
-# 6. Codesign AppletBuilder.app (ad-hoc, for local execution)
+# 6. Thin Python distribution (strip .pyc files)
+# ════════════════════════════════════════════════════════════
+
+echo "── Thinning Python distribution (removing .pyc files) ──"
+
+THIN_SCRIPT="${OMC_ROOT}/../Python-Embedding/thin_python_distribution.sh"
+LIBRARY_DIR="$APPLET_BUILDER/Contents/Library"
+
+if [ -f "$THIN_SCRIPT" ]; then
+    "$THIN_SCRIPT" "$LIBRARY_DIR" pyc
+    rc=$?
+    if [ "$rc" -ne 0 ]; then
+        echo -e "  ${YELLOW}thin_python_distribution.sh failed on Library/, retrying subdirectories${NC}"
+        "$THIN_SCRIPT" "$LIBRARY_DIR/Python" pyc
+        "$THIN_SCRIPT" "$LIBRARY_DIR/mistune" pyc
+    else
+        echo -e "  ${GREEN}Python distribution thinned${NC}"
+    fi
+else
+    echo -e "  ${YELLOW}thin_python_distribution.sh not found, skipping${NC}"
+fi
+
+echo ""
+
+# ════════════════════════════════════════════════════════════
+# 7. Codesign AppletBuilder.app (ad-hoc, for local execution)
 # ════════════════════════════════════════════════════════════
 
 echo "── Codesigning AppletBuilder.app ──"
