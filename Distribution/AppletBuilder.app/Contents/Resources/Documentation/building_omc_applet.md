@@ -16,8 +16,8 @@ OMC (OnMyCommand) is a low-code macOS app development engine that lets you creat
 
 ## Prerequisites
 
-1. **OMC Release**: Download from https://github.com/abra-code/OMC/releases
-2. **Xcode**: Required for building applets and editing nibs
+1. **AppletBuilder**: Download OMC 5.0+ from https://github.com/abra-code/OMC/releases — `AppletBuilder.app` is the integrated development studio for building OMC applets
+2. **Xcode**: Required for editing NIBs and compiling/installing `.icon` documents into apps
 3. **Git**: For version control (recommended)
 
 > **For AI Agents**: To check the latest OMC release:
@@ -33,34 +33,37 @@ OMC (OnMyCommand) is a low-code macOS app development engine that lets you creat
 
 ## Step 1: Create the Applet
 
-### Choose a Template
+### AppletBuilder.app
 
-| Template | Description | Use When |
-|----------|-------------|----------|
-| `OMCApplet.app` | Base template, minimal size | Shell scripts only, no Python needed |
-| `OMCPythonApplet.app` | Includes embedded Python 3 | Need Python modules (e.g., watchdog) |
+`AppletBuilder.app` (included in the OMC 5.0+ release) is the integrated development studio for OMC applets. It handles creating new applets from templates, editing an existing applet's commands and scripts, managing services, and building (updating the runtime + codesigning).
 
-> **For AI Agents**: Always use the provided scripts to create applets:
-> - `build_applet.sh` - Creates applet from template, handles renaming, Info.plist updates
-> - `codesign_applet.sh` - Signs the applet after modifications
->
-> Do NOT manually copy files from the template - let the scripts handle it.
+**To create a new applet**: Launch `AppletBuilder.app` — the New Applet dialog opens automatically. Fill in the name, bundle ID, choose a template, optionally enable embedded Python, pick an icon, and select a destination folder.
 
-### Build the Applet
+**To open an existing applet**: Drop the `.app` onto `AppletBuilder.app` (or onto its Dock icon) to open the project editor.
 
-```bash
-cd ~/Downloads/OMC_4.4.1/
-./Scripts/build_applet.sh \
-    --omc-applet="Products/Applications/OMCApplet.app" \
-    --icon="MyApp/Icon/MyIcon.icon" \
-    --bundle-id=com.example.myapp \
-    --creator=MApp \
-    MyApp/MyApp.app
-```
+### Templates
+
+| Template | Description |
+|----------|-------------|
+| `Empty` | Bare-bones applet — only Command.plist and a main script |
+| `ActionUI Window` | Pre-wired with an ActionUI JSON window (requires macOS 14.6+) |
+| `ActionUI Web` | ActionUI window with an embedded WebView for web-based UI |
+| `Nib Window` | Pre-wired with a NIB-based window |
+| `Nib Web` | NIB window with an embedded WebView |
+
+**Python**: Check "Include Python" in the New Applet dialog to embed a Python 3 runtime — there is no separate Python template.
+
+> **For AI Agents**: When assisting with applet development:
+> - **New applet**: Ask the user to create it via `AppletBuilder.app` (GUI-only workflow). You then edit the generated `Command.plist`, scripts, and UI files.
+> - **Existing applet**: Edit `Command.plist`, `Scripts/`, NIB, and ActionUI files in place.
+> - **After editing**: Ask the user to click Build in AppletBuilder's Build & Run pane — it updates the runtime and re-signs. Do NOT manually copy runtime binaries or Abracode.framework.
 
 ### Codesign for Local Execution
 
+Codesigning is handled by the **Build & Run** pane inside AppletBuilder. For scripted or CI workflows, `codesign_applet.sh` is provided in the distribution's `Scripts/` folder:
+
 ```bash
+# OMC_5.0/Scripts/codesign_applet.sh
 ./Scripts/codesign_applet.sh "MyApp/MyApp.app"
 ```
 
@@ -77,7 +80,7 @@ MyApp.app/
 │   │   └── Base.lproj/
 │   │       └── *.nib                  (window definitions)
 │   └── _CodeSignature/                (codesigning)
-└── Library/                           (Python if OMCPythonApplet)
+└── Library/                           (Python runtime, if Python was enabled)
 ```
 
 ---
