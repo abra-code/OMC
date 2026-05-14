@@ -2,6 +2,10 @@
 
 ```
 Usage: omc_dialog_control __NIB_DLG_GUID__ <controlID> <value>
+       omc_dialog_control __NIB_DLG_GUID__ <controlID> <contentType> <value>
+
+<contentType> is an optional hint for parsing rich content (ActionUI only):
+	"plain", "markdown", "html", "rtf", "json"
 
 <controlID> is an integer for control tag or special values:
 	"omc_window" to specify that the target is dialog window
@@ -10,7 +14,7 @@ Usage: omc_dialog_control __NIB_DLG_GUID__ <controlID> <value>
 Special values:
 	omc_enable, omc_disable
 	omc_show, omc_hide
-	omc_set_value_from_stdin (read from stdin or pipe)
+	omc_set_value_from_stdin [contentType] (read from stdin or pipe)
 	omc_set_command_id [followed by command id string]
 	omc_list_remove_all
 	omc_list_append_items [followed by variable number of arguments]
@@ -40,22 +44,21 @@ Special values:
 	omc_set_state <state_key> <value> (ActionUI only; value is a string or JSON fragment)
 	omc_present_modal <resource_name_or_path> [dismiss_action_id] (ActionUI only)
 	omc_dismiss_modal (ActionUI only)
-	omc_present_alert <title> [message] ["button_title:role:action_id" ...] (ActionUI only)
+	omc_present_alert <title> [message] ["button_title:role:action_id" ...] (ActionUI only; role: cancel|destructive|omit for default)
 	omc_present_confirmation_dialog <title> [message] ["button_title:role:action_id" ...] (ActionUI only)
 	omc_dismiss_dialog (ActionUI only)
-	omc_insert_element <json> [container] [position] (ActionUI only; controlID is the parent viewID)
-	omc_insert_element_row <json> [container] [position] (ActionUI only; controlID is the parent Grid viewID)
-	omc_remove_element (ActionUI only; controlID is the target viewID)
+	omc_insert_element <json> [container] [position] (ActionUI only; position: append|prepend|at:<index>|before:<siblingID>|after:<siblingID>)
+	omc_insert_element_row <json> [container] [position] (ActionUI only; position for grid rows: append|prepend|at:<index>)
+	omc_remove_element (ActionUI only; use integer controlID as the target viewID)
 
 Modal button spec format: "title:role:actionID"
-  role: cancel | destructive | (omit for default)
-  actionID: COMMAND_ID to dispatch as subcommand when button is tapped; omit for no callback
-
-Insert position format for omc_insert_element: append (default) | prepend | at:<index> | before:<siblingID> | after:<siblingID>
-Insert position format for omc_insert_element_row: append (default) | prepend | at:<index>
+	role: cancel | destructive | (omit for default)
+	actionID: COMMAND_ID to dispatch as subcommand when button is tapped; omit for no callback
 
 Examples:
 omc_dialog_control __NIB_DLG_GUID__ 4 "hello world!"
+omc_dialog_control __ACTIONUI_WINDOW_UUID__ 4 markdown "# Hello"
+echo "# Hello" | omc_dialog_control __ACTIONUI_WINDOW_UUID__ 4 omc_set_value_from_stdin markdown
 omc_dialog_control __NIB_DLG_GUID__ 2 omc_disable
 omc_dialog_control __NIB_DLG_GUID__ 1 omc_set_command_id "Exec"
 omc_dialog_control __NIB_DLG_GUID__ 3 omc_list_remove_all
@@ -79,14 +82,20 @@ omc_dialog_control __ACTIONUI_WINDOW_UUID__ 1 omc_set_property "columns" '["Name
 omc_dialog_control __ACTIONUI_WINDOW_UUID__ 2 omc_set_property "disabled" true
 omc_dialog_control __ACTIONUI_WINDOW_UUID__ 4 omc_set_state "isLoading" true
 omc_dialog_control __ACTIONUI_WINDOW_UUID__ 4 omc_set_state "label" "Hello"
-
-# Modal presentation (ActionUI only; all operations are fire-and-forget async)
 omc_dialog_control __ACTIONUI_WINDOW_UUID__ omc_window omc_present_modal "MyModal" "modal.dismissed"
 omc_dialog_control __ACTIONUI_WINDOW_UUID__ omc_window omc_dismiss_modal
 omc_dialog_control __ACTIONUI_WINDOW_UUID__ omc_window omc_present_alert "Confirm Delete" "Are you sure?" "Cancel:cancel:" "Delete:destructive:delete.action"
 omc_dialog_control __ACTIONUI_WINDOW_UUID__ omc_window omc_present_confirmation_dialog "Title" "Message" "OK::ok.action" "Cancel:cancel:"
 omc_dialog_control __ACTIONUI_WINDOW_UUID__ omc_window omc_dismiss_dialog
+omc_dialog_control __ACTIONUI_WINDOW_UUID__ 10 omc_insert_element '{"id":20,"type":"Text","value":"Hello"}'
+omc_dialog_control __ACTIONUI_WINDOW_UUID__ 10 omc_insert_element '{"id":21,"type":"Text","value":"Hello"}' children after:20
+omc_dialog_control __ACTIONUI_WINDOW_UUID__ 5 omc_insert_element_row '[{"id":30,"type":"Text","value":"A"},{"id":31,"type":"Text","value":"B"}]'
+omc_dialog_control __ACTIONUI_WINDOW_UUID__ 5 omc_insert_element_row '[{"id":32,"type":"Text","value":"C"}]' rows at:0
+omc_dialog_control __ACTIONUI_WINDOW_UUID__ 20 omc_remove_element
+```
 
+Additional examples:  
+```
 # Runtime structural mutations (ActionUI only; controlID is the target viewID)
 omc_dialog_control __ACTIONUI_WINDOW_UUID__ 10 omc_insert_element '{"id":30,"type":"Text","properties":{"text":"Appended"}}'
 omc_dialog_control __ACTIONUI_WINDOW_UUID__ 10 omc_insert_element '{"id":31,"type":"Text","properties":{"text":"Prepended"}}' children prepend
