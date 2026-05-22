@@ -1,0 +1,12 @@
+{
+  "type": "ControlGroup",
+  "description": "A semantically grouped set of controls (typically buttons) rendered with platform-appropriate styling.",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": true,
+  "topLevelKeys": ["children"],
+  "children": { "required": false, "description": "Child controls (typically Button elements)" },
+  "ownProperties": {
+    "title": { "types": ["string"], "required": false, "description": "Optional group title" }
+  },
+  "observable": {}
+}

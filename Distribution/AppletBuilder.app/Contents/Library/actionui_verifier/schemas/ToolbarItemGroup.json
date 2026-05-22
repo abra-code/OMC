@@ -1,0 +1,24 @@
+{
+  "type": "ToolbarItemGroup",
+  "description": "A group of related toolbar items at one placement. Prefer over ToolbarItem when placing two or more controls at the same slot. Never rendered standalone.",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": false,
+  "topLevelKeys": ["children"],
+  "children": { "required": true, "description": "Child views (typically Button elements) grouped at the same placement" },
+  "ownProperties": {
+    "placement": {
+      "types": ["string"],
+      "required": false,
+      "enum": [
+        "automatic","principal",
+        "confirmationAction","cancellationAction","destructiveAction",
+        "primaryAction","secondaryAction",
+        "topBarLeading","topBarTrailing",
+        "bottomBar","keyboard",
+        "navigation","status"
+      ],
+      "description": "Where in the toolbar to place the group; platform-unavailable values fall back to 'automatic' at runtime; default 'automatic'"
+    }
+  },
+  "observable": {}
+}

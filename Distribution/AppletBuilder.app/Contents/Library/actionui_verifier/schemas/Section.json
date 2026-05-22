@@ -1,0 +1,13 @@
+{
+  "type": "Section",
+  "description": "Named group within Form, List, or other containers",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": true,
+  "topLevelKeys": ["children", "template"],
+  "children": { "required": false, "description": "Array of child view elements" },
+  "template": { "required": false, "description": "Data-driven template; rows set via setElementRows; id required" },
+  "ownProperties": {
+    "header": { "types": ["string"], "required": false, "description": "Section header text" }
+  },
+  "observable": {}
+}

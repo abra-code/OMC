@@ -1,0 +1,12 @@
+{
+  "type": "LabeledContent",
+  "description": "Label-value layout; shows a title on the leading side and content on the trailing side",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": true,
+  "topLevelKeys": ["children"],
+  "children": { "required": false, "description": "Content views shown on the trailing side" },
+  "ownProperties": {
+    "title": { "types": ["string"], "required": false, "description": "Label text on the leading side" }
+  },
+  "observable": {}
+}

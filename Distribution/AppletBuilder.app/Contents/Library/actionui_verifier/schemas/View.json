@@ -1,0 +1,199 @@
+{
+  "type": "View",
+  "description": "Base properties inherited by all ActionUI elements",
+  "id": { "policy": "optional", "description": "Needed for programmatic interaction (setElementRows, getElementValue, etc.) and selection diffing; auto-generated as negative when absent" },
+  "inheritsViewProperties": false,
+  "topLevelKeys": [],
+  "universalSubviewKeys": ["overlay", "sheet", "popover", "fullScreenCover", "background", "backgroundView", "toolbar"],
+  "properties": {
+    "padding": {
+      "required": false,
+      "description": "Padding around the view: uniform number, 'default' string, or per-edge dict",
+      "oneOf": [
+        { "types": ["number"] },
+        { "types": ["string"], "const": "default" },
+        {
+          "types": ["object"],
+          "properties": {
+            "top":      { "types": ["number"], "required": false },
+            "leading":  { "types": ["number"], "required": false },
+            "bottom":   { "types": ["number"], "required": false },
+            "trailing": { "types": ["number"], "required": false }
+          }
+        }
+      ]
+    },
+    "hidden": { "types": ["boolean"], "required": false },
+    "foregroundStyle": { "types": ["string"], "required": false, "description": "SwiftUI color, hex, or semantic style" },
+    "tint": { "types": ["string"], "required": false, "description": "Color tint for interactive controls" },
+    "font": {
+      "required": false,
+      "description": "Named text style string or font dict",
+      "oneOf": [
+        { "types": ["string"] },
+        {
+          "types": ["object"],
+          "properties": {
+            "name":   { "types": ["string"], "required": false },
+            "size":   { "types": ["number"], "required": false },
+            "weight": { "types": ["string"], "required": false, "enum": ["ultraLight","thin","light","regular","medium","semibold","bold","heavy","black"] },
+            "design": { "types": ["string"], "required": false, "enum": ["default","monospaced","rounded","serif"] }
+          }
+        }
+      ]
+    },
+    "background": { "types": ["string"], "required": false, "description": "SwiftUI color, hex, or semantic style" },
+    "frame": {
+      "required": false,
+      "types": ["object"],
+      "description": "Fixed form (width/height) and flexible form (minWidth…maxHeight) are mutually exclusive. Use 'infinity' string for .infinity values.",
+      "mutuallyExclusiveGroups": [
+        ["width", "height"],
+        ["minWidth", "idealWidth", "maxWidth", "minHeight", "idealHeight", "maxHeight"]
+      ],
+      "properties": {
+        "width":       { "required": false, "oneOf": [{"types":["number"]},{"types":["string"],"const":"infinity"}] },
+        "height":      { "required": false, "oneOf": [{"types":["number"]},{"types":["string"],"const":"infinity"}] },
+        "minWidth":    { "required": false, "oneOf": [{"types":["number"]},{"types":["string"],"const":"infinity"}] },
+        "idealWidth":  { "required": false, "oneOf": [{"types":["number"]},{"types":["string"],"const":"infinity"}] },
+        "maxWidth":    { "required": false, "oneOf": [{"types":["number"]},{"types":["string"],"const":"infinity"}] },
+        "minHeight":   { "required": false, "oneOf": [{"types":["number"]},{"types":["string"],"const":"infinity"}] },
+        "idealHeight": { "required": false, "oneOf": [{"types":["number"]},{"types":["string"],"const":"infinity"}] },
+        "maxHeight":   { "required": false, "oneOf": [{"types":["number"]},{"types":["string"],"const":"infinity"}] },
+        "alignment":   { "types": ["string"], "required": false, "enum": ["leading","center","trailing","top","bottom","topLeading","topTrailing","bottomLeading","bottomTrailing"] }
+      }
+    },
+    "offset": {
+      "required": false,
+      "types": ["object"],
+      "properties": {
+        "x": { "types": ["number"], "required": false },
+        "y": { "types": ["number"], "required": false }
+      }
+    },
+    "opacity":      { "types": ["number"], "required": false, "description": "0.0 to 1.0" },
+    "cornerRadius": { "types": ["number"], "required": false },
+    "clipShape": {
+      "required": false,
+      "description": "Named shape string or roundedRectangle dict",
+      "oneOf": [
+        { "types": ["string"], "enum": ["circle","capsule","rectangle","ellipse"] },
+        {
+          "types": ["object"],
+          "properties": {
+            "type":          { "types": ["string"], "required": true, "enum": ["roundedRectangle"] },
+            "cornerRadius":  { "types": ["number"], "required": false },
+            "cornerRadiusX": { "types": ["number"], "required": false },
+            "cornerRadiusY": { "types": ["number"], "required": false }
+          }
+        }
+      ]
+    },
+    "rotationEffect": { "types": ["number"], "required": false, "description": "Degrees; positive = clockwise" },
+    "scaleEffect": {
+      "required": false,
+      "description": "Uniform scale number or per-axis dict",
+      "oneOf": [
+        { "types": ["number"] },
+        {
+          "types": ["object"],
+          "properties": {
+            "x":      { "types": ["number"], "required": false },
+            "y":      { "types": ["number"], "required": false },
+            "anchor": { "types": ["string"], "required": false, "enum": ["center","leading","trailing","top","bottom","topLeading","topTrailing","bottomLeading","bottomTrailing"] }
+          }
+        }
+      ]
+    },
+    "animation": {
+      "required": false,
+      "description": "Curve name string or animation dict",
+      "oneOf": [
+        { "types": ["string"], "enum": ["default","linear","easeIn","easeOut","easeInOut","spring","bouncy","smooth","snappy","interactiveSpring"] },
+        {
+          "types": ["object"],
+          "properties": {
+            "curve":    { "types": ["string"], "required": true, "enum": ["default","linear","easeIn","easeOut","easeInOut","spring","bouncy","smooth","snappy","interactiveSpring"] },
+            "duration": { "types": ["number"], "required": false, "description": "Positive seconds" },
+            "delay":    { "types": ["number"], "required": false, "description": "Non-negative seconds" },
+            "speed":    { "types": ["number"], "required": false, "description": "Positive multiplier" },
+            "value":    { "types": ["string"], "required": false, "description": "Property/state key to watch" }
+          }
+        }
+      ]
+    },
+    "foregroundColor": { "types": ["string"], "required": false, "description": "Alias for foregroundStyle; SwiftUI color, hex, or semantic style" },
+    "imageScale":      { "types": ["string"], "required": false, "enum": ["small","medium","large"], "description": "SF Symbol image scale modifier" },
+    "actionID":                       { "types": ["string"], "required": false },
+    "valueChangeActionID":             { "types": ["string"], "required": false },
+    "openURLActionID":                 { "types": ["string"], "required": false },
+    "onAppearActionID":                { "types": ["string"], "required": false },
+    "onDisappearActionID":             { "types": ["string"], "required": false },
+    "onHoverActionID":                 { "types": ["string"], "required": false, "description": "macOS pointer hover; context: {isHovering: Bool}" },
+    "onDropTypes":                     { "types": ["array"],  "required": false, "itemTypes": ["string"], "description": "UTType identifiers accepted as drop target; required with onDropActionID" },
+    "onDropActionID":                  { "types": ["string"], "required": false, "description": "Requires onDropTypes" },
+    "onDropTargetedActionID":          { "types": ["string"], "required": false },
+    "keyboardShortcut": {
+      "required": false,
+      "types": ["object"],
+      "properties": {
+        "key":       { "types": ["string"], "required": true, "description": "Single char or special key name" },
+        "modifiers": { "types": ["array"],  "required": false, "itemTypes": ["string"], "itemEnum": ["command","shift","option","control","capsLock"] }
+      }
+    },
+    "buttonStyle":   { "types": ["string"], "required": false, "enum": ["automatic","plain","borderless","bordered","borderedProminent"] },
+    "controlSize":   { "types": ["string"], "required": false, "enum": ["mini","small","regular","large","extraLarge"] },
+    "labelsHidden":  { "types": ["boolean"], "required": false },
+    "disabled":      { "types": ["boolean"], "required": false },
+    "accessibilityLabel":      { "types": ["string"],  "required": false },
+    "accessibilityHint":       { "types": ["string"],  "required": false },
+    "accessibilityHidden":     { "types": ["boolean"], "required": false },
+    "accessibilityIdentifier": { "types": ["string"],  "required": false },
+    "shadow": {
+      "required": false,
+      "types": ["object"],
+      "properties": {
+        "color":  { "types": ["string"], "required": false },
+        "radius": { "types": ["number"], "required": false },
+        "x":      { "types": ["number"], "required": false },
+        "y":      { "types": ["number"], "required": false }
+      }
+    },
+    "border": {
+      "required": false,
+      "types": ["object"],
+      "properties": {
+        "color": { "types": ["string"], "required": false },
+        "width": { "types": ["number"], "required": false }
+      }
+    },
+    "navigationSplitViewColumnWidth": {
+      "required": false,
+      "description": "Fixed number or {ideal (required), min?, max?} dict",
+      "oneOf": [
+        { "types": ["number"] },
+        {
+          "types": ["object"],
+          "properties": {
+            "ideal": { "types": ["number"], "required": true },
+            "min":   { "types": ["number"], "required": false },
+            "max":   { "types": ["number"], "required": false }
+          }
+        }
+      ]
+    },
+    "navigationTitle":                   { "types": ["string"], "required": false },
+    "scrollContentBackground":           { "types": ["string"], "required": false, "enum": ["visible","hidden","automatic"] },
+    "popoverArrowEdge":                  { "types": ["string"], "required": false, "enum": ["top","bottom","leading","trailing"] },
+    "popoverActionID":                   { "types": ["string"], "required": false },
+    "sheetOnDismissActionID":            { "types": ["string"], "required": false },
+    "fullScreenCoverOnDismissActionID":  { "types": ["string"], "required": false },
+    "overlayAlignment":                  { "types": ["string"], "required": false, "enum": ["center","leading","trailing","top","bottom","topLeading","topTrailing","bottomLeading","bottomTrailing"] },
+    "backgroundAlignment":               { "types": ["string"], "required": false, "enum": ["center","leading","trailing","top","bottom","topLeading","topTrailing","bottomLeading","bottomTrailing"] },
+    "toolbarTitleDisplayMode":           { "types": ["string"], "required": false, "enum": ["automatic","inline","large","inlineLarge"] },
+    "destinationViewId":                 { "types": ["integer"], "required": false },
+    "textSelection":             { "types": ["string"],  "required": false, "enum": ["enabled","disabled"] },
+    "multilineTextAlignment":    { "types": ["string"],  "required": false, "enum": ["leading","center","trailing"] },
+    "zIndex":                    { "types": ["number"],  "required": false }
+  }
+}

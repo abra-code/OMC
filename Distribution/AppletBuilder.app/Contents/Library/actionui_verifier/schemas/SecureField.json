@@ -1,0 +1,16 @@
+{
+  "type": "SecureField",
+  "description": "Secure password-style text input; text is masked",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": true,
+  "topLevelKeys": [],
+  "ownProperties": {
+    "title":           { "types": ["string"], "required": false, "description": "Label text; defaults to empty" },
+    "text":            { "types": ["string"], "required": false, "description": "Initial text value" },
+    "prompt":          { "types": ["string"], "required": false, "description": "Placeholder shown when empty" },
+    "textContentType": { "types": ["string"], "required": false, "description": "Content type hint; ignored on macOS" }
+  },
+  "observable": {
+    "value": { "types": ["string"], "description": "Current text in the field" }
+  }
+}

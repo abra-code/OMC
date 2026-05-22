@@ -1,0 +1,14 @@
+{
+  "type": "HStack",
+  "description": "Horizontal stack container",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": true,
+  "topLevelKeys": ["children", "template"],
+  "children": { "required": false, "description": "Array of child view elements" },
+  "template": { "required": false, "description": "Data-driven template; rows set via setElementRows" },
+  "ownProperties": {
+    "spacing":   { "types": ["number"], "required": false, "description": "Spacing between children" },
+    "alignment": { "types": ["string"], "required": false, "enum": ["top","center","bottom","firstTextBaseline","lastTextBaseline"], "description": "Vertical alignment of children; defaults to 'center'" }
+  },
+  "observable": {}
+}

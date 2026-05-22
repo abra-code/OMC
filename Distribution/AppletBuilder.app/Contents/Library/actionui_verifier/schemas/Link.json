@@ -1,0 +1,12 @@
+{
+  "type": "Link",
+  "description": "A tappable link that opens a URL in the system browser; renders EmptyView if the URL is missing or invalid.",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": true,
+  "topLevelKeys": [],
+  "ownProperties": {
+    "title": { "types": ["string"], "required": false, "description": "Link label text; default 'Link'" },
+    "url":   { "types": ["string"], "required": false, "description": "Destination URL string; view renders as EmptyView if nil or invalid" }
+  },
+  "observable": {}
+}

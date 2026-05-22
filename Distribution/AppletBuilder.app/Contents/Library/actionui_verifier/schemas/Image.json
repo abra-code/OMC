@@ -1,0 +1,19 @@
+{
+  "type": "Image",
+  "description": "Displays an image from SF Symbols, asset catalog, resource bundle, file path, or URL",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": true,
+  "topLevelKeys": [],
+  "ownProperties": {
+    "systemName":   { "types": ["string"], "required": false, "description": "SF Symbol name" },
+    "assetName":    { "types": ["string"], "required": false, "description": "Asset name from Assets.xcassets" },
+    "resourceName": { "types": ["string"], "required": false, "description": "Image file name in the resource bundle" },
+    "filePath":     { "types": ["string"], "required": false, "description": "Absolute file path to an image or PDF" },
+    "url":          { "types": ["string"], "required": false, "description": "Remote image URL (uses AsyncImage behavior)" },
+    "resizable":    { "types": ["boolean"], "required": false, "description": "Allow image to scale with frame; defaults to false" },
+    "contentMode":  { "types": ["string"],  "required": false, "enum": ["fit","fill"], "description": "Aspect-ratio scaling mode when resizable; defaults to 'fit'" },
+    "scaleMode":    { "types": ["string"],  "required": false, "enum": ["fit","fill"], "description": "Deprecated: alias for contentMode; prefer contentMode" },
+    "imageScale":   { "types": ["string"],  "required": false, "enum": ["small","medium","large"], "description": "SF Symbol rendering scale" }
+  },
+  "observable": {}
+}

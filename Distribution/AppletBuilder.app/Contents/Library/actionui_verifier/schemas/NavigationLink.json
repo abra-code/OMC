@@ -1,0 +1,13 @@
+{
+  "type": "NavigationLink",
+  "description": "Push-navigation link. Uses 'destinationViewId' (inherited View property) to reference a destination in a NavigationStack.",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": true,
+  "topLevelKeys": ["destination"],
+  "destination": { "required": false, "description": "Inline destination view (Form 1). Alternatively use destinationViewId in properties." },
+  "ownProperties": {
+    "title":       { "types": ["string"], "required": false, "description": "Link label text" },
+    "systemImage": { "types": ["string"], "required": false, "description": "SF Symbol name for link icon" }
+  },
+  "observable": {}
+}

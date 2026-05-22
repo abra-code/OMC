@@ -1,0 +1,10 @@
+{
+  "type": "HSplitView",
+  "description": "Horizontally split pane container with a draggable divider. macOS only; falls back to HStack on other platforms.",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": true,
+  "topLevelKeys": ["children"],
+  "children": { "required": true, "description": "Two or more child views rendered as resizable horizontal panes" },
+  "ownProperties": {},
+  "observable": {}
+}

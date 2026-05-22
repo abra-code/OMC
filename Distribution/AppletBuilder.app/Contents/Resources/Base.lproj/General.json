@@ -22,8 +22,7 @@
         {
           "type": "HStack",
           "properties": {
-            "spacing": 12,
-            "alignment": "leading"
+            "spacing": 12
           },
           "children": [
             {

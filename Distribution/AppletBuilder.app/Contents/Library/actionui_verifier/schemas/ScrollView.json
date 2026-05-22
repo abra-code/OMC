@@ -1,0 +1,13 @@
+{
+  "type": "ScrollView",
+  "description": "Scrollable container along one or both axes",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": true,
+  "topLevelKeys": ["content"],
+  "content": { "required": true, "description": "Single child view to scroll" },
+  "ownProperties": {
+    "axis":            { "types": ["string"],  "required": false, "enum": ["vertical","horizontal","both"], "description": "Scroll direction; defaults to 'vertical'" },
+    "showsIndicators": { "types": ["boolean"], "required": false, "description": "Show scroll indicators; defaults to true" }
+  },
+  "observable": {}
+}

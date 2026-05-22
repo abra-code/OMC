@@ -1,0 +1,13 @@
+{
+  "type": "CommandGroup",
+  "description": "Menu command group that replaces, precedes, or follows a system-defined command slot",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": false,
+  "topLevelKeys": ["children"],
+  "children": { "required": false, "description": "Array of Button or Divider child elements" },
+  "ownProperties": {
+    "placement":      { "types": ["string"], "required": false, "enum": ["replacing","before","after"], "description": "Where to insert relative to placementTarget; defaults to 'after'" },
+    "placementTarget":{ "types": ["string"], "required": false, "enum": ["appInfo","appSettings","systemServices","appVisibility","appTermination","newItem","saveItem","importExport","printItem","undoRedo","pasteboard","textEditing","textFormatting","toolbar","sidebar","windowSize","windowList","singleWindowList","windowArrangement","help"], "description": "System command group to target; defaults to 'help'" }
+  },
+  "observable": {}
+}

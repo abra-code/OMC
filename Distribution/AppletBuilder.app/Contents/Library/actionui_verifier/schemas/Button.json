@@ -1,0 +1,15 @@
+{
+  "type": "Button",
+  "description": "Tappable button that triggers an action",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": true,
+  "topLevelKeys": [],
+  "ownProperties": {
+    "title":       { "types": ["string"], "required": false, "description": "Button label text; defaults to empty" },
+    "systemImage": { "types": ["string"], "required": false, "description": "SF Symbol name" },
+    "assetImage":  { "types": ["string"], "required": false, "description": "Asset name from Assets.xcassets" },
+    "imageScale":  { "types": ["string"], "required": false, "enum": ["small","medium","large"], "description": "Defaults to 'medium'" },
+    "role":        { "types": ["string"], "required": false, "enum": ["destructive","cancel"] }
+  },
+  "observable": {}
+}

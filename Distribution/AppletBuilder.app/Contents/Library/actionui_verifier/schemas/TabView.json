@@ -1,0 +1,20 @@
+{
+  "type": "TabView",
+  "description": "A tabbed container; children must be Tab elements. Selected tab index is the observable value.",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": true,
+  "topLevelKeys": ["children"],
+  "children": { "required": true, "description": "Array of Tab elements" },
+  "ownProperties": {
+    "selection": { "types": ["integer"], "required": false, "description": "Initially selected tab index (0-based); default 0" },
+    "style":     {
+      "types": ["string"],
+      "required": false,
+      "enum": ["automatic","tabBarOnly","sidebarAdaptable","page","verticalPage","grouped"],
+      "description": "'page' is iOS/tvOS/watchOS/visionOS only; 'verticalPage' is watchOS only; 'grouped' is macOS only; 'tabBarOnly'/'sidebarAdaptable' require iOS 18+/macOS 15+"
+    }
+  },
+  "observable": {
+    "value": { "types": ["integer"], "description": "Currently selected tab index; set via setElementValue to switch tabs programmatically" }
+  }
+}

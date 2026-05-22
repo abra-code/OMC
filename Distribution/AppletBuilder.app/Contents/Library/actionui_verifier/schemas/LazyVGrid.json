@@ -1,0 +1,25 @@
+{
+  "type": "LazyVGrid",
+  "description": "Vertical lazy-loading grid; children are arranged into fixed columns that scroll vertically.",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": true,
+  "topLevelKeys": ["children"],
+  "children": { "required": false, "description": "Child views placed into the grid" },
+  "ownProperties": {
+    "columns": {
+      "types": ["array"],
+      "required": false,
+      "description": "Column definitions; each entry is {minimum: number} for fixed width or {flexible: true} for flexible; default [flexible]",
+      "items": {
+        "types": ["object"],
+        "properties": {
+          "minimum":  { "types": ["number"],  "required": false, "description": "Fixed column width in points" },
+          "flexible": { "types": ["boolean"], "required": false, "description": "When true, column takes available space" }
+        }
+      }
+    },
+    "spacing":   { "types": ["number"], "required": false, "description": "Spacing between grid items; default 0" },
+    "alignment": { "types": ["string"], "required": false, "enum": ["leading","center","trailing"], "description": "Horizontal alignment of items; default 'center'" }
+  },
+  "observable": {}
+}

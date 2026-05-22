@@ -10,7 +10,7 @@ JSON schema and usage documentation for `HStack`.
    "id": 1,              // Optional: Non-zero positive integer for runtime programmatic interaction
    "properties": {
      "spacing": 10.0,     // Optional: Double for spacing between elements
-     "alignment": "center" // Optional: Vertical alignment (e.g., "top", "center", "bottom")
+     "alignment": "center" // Optional: Vertical alignment — "top", "center", "bottom", "firstTextBaseline", "lastTextBaseline"; defaults to "center"
    },
    "children": [         // Static children — mutually exclusive with "template"
      { "type": "Text", "properties": { "text": "Item 1" } },

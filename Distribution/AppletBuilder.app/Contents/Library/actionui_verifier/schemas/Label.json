@@ -1,0 +1,13 @@
+{
+  "type": "Label",
+  "description": "Icon + text label; title next to a system or asset image",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": true,
+  "topLevelKeys": [],
+  "ownProperties": {
+    "title":       { "types": ["string"], "required": false, "description": "Label text" },
+    "systemImage": { "types": ["string"], "required": false, "description": "SF Symbol name" },
+    "imageName":   { "types": ["string"], "required": false, "description": "Asset image name from Assets.xcassets" }
+  },
+  "observable": {}
+}

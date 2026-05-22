@@ -1,0 +1,29 @@
+{
+  "type": "Gauge",
+  "description": "A gauge-style indicator for a value within a range; primarily an accessory/widget view.",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": true,
+  "topLevelKeys": [],
+  "ownProperties": {
+    "value": { "types": ["number"], "required": false, "description": "Current gauge value; default 0.0" },
+    "title": { "types": ["string"], "required": false, "description": "Optional label shown inside or near the gauge" },
+    "style": {
+      "types": ["string"],
+      "required": false,
+      "enum": ["accessoryCircular","accessoryCircularCapacity","accessoryLinear","accessoryLinearCapacity"],
+      "description": "Visual style; default 'accessoryCircular'"
+    },
+    "range": {
+      "types": ["object"],
+      "required": false,
+      "description": "Minimum/maximum range; default {min: 0.0, max: 1.0}",
+      "properties": {
+        "min": { "types": ["number"], "required": true },
+        "max": { "types": ["number"], "required": true }
+      }
+    }
+  },
+  "observable": {
+    "value": { "types": ["number"], "description": "Current gauge value; set via setElementValue" }
+  }
+}

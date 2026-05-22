@@ -1,0 +1,42 @@
+{
+  "type": "WebView",
+  "description": "WebKit web view. Requires iOS 26+ / macOS 26+; shows a fallback label on older OS. Load via url or inline html.",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": true,
+  "topLevelKeys": [],
+  "ownProperties": {
+    "url":             { "types": ["string"],  "required": false, "description": "Initial URL to load; takes precedence over html" },
+    "html":            { "types": ["string"],  "required": false, "description": "Inline HTML to render when url is absent" },
+    "baseURL":         { "types": ["string"],  "required": false, "description": "Base URL for resolving relative links in html" },
+    "customUserAgent": { "types": ["string"],  "required": false, "description": "Overrides the default WebKit user agent string" },
+    "backForwardNavigationGestures":   { "types": ["boolean"], "required": false, "description": "Enable swipe back/forward gestures; default true" },
+    "magnificationGestures":           { "types": ["boolean"], "required": false, "description": "Enable pinch-to-zoom; default true" },
+    "linkPreviews":                    { "types": ["boolean"], "required": false, "description": "Enable long-press link previews; default true" },
+    "limitsNavigationsToAppBoundDomains": { "types": ["boolean"], "required": false, "description": "Restrict navigation to app-bound domains; default false" },
+    "upgradeKnownHostsToHTTPS":        { "types": ["boolean"], "required": false, "description": "Auto-upgrade known HTTP hosts to HTTPS; default false" },
+    "navigationActionID":              { "types": ["string"],  "required": false, "description": "Fired when isLoading changes (navigation started/finished)" },
+    "userScripts": {
+      "types": ["array"],
+      "required": false,
+      "description": "JS descriptors injected before/after page load",
+      "items": {
+        "types": ["object"],
+        "properties": {
+          "injectionTime":   { "types": ["string"],  "required": true,  "enum": ["documentStart","documentEnd"] },
+          "source":          { "types": ["string"],  "required": false, "description": "Inline JS string" },
+          "filePath":        { "types": ["string"],  "required": false, "description": "Absolute path to a .js file" },
+          "resourceName":    { "types": ["string"],  "required": false, "description": ".js filename in the app bundle" },
+          "forMainFrameOnly":{ "types": ["boolean"], "required": false, "description": "When false, inject into all frames; default false" }
+        }
+      }
+    }
+  },
+  "observable": {
+    "value":                      { "types": ["string"],  "description": "Current page URL; write a URL string to navigate, or '#goBack'/'#goForward'/'#reload'/'#stop'" },
+    "states.title":               { "types": ["string"],  "description": "Page <title> text; absent until first load completes" },
+    "states.isLoading":           { "types": ["boolean"], "description": "true while a navigation is in flight" },
+    "states.estimatedProgress":   { "types": ["number"],  "description": "Load progress 0.0–1.0" },
+    "states.canGoBack":           { "types": ["boolean"], "description": "Back history list has items" },
+    "states.canGoForward":        { "types": ["boolean"], "description": "Forward history list has items" }
+  }
+}

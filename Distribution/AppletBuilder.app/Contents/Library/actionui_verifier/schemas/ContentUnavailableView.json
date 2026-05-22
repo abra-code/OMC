@@ -1,0 +1,17 @@
+{
+  "type": "ContentUnavailableView",
+  "description": "Standard empty-state view; either a custom layout (title/systemImage/description) or a built-in search variant.",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": true,
+  "topLevelKeys": [],
+  "ownProperties": {
+    "title":       { "types": ["string"],  "required": false, "description": "Primary message; ignored when search=true" },
+    "systemImage": { "types": ["string"],  "required": false, "description": "SF Symbol name; ignored when search=true" },
+    "description": { "types": ["string"],  "required": false, "description": "Secondary descriptive text; ignored when search=true" },
+    "search":      { "types": ["boolean"], "required": false, "description": "When true, uses the built-in 'No results for <query>' appearance; overrides title/systemImage/description" },
+    "query":       { "types": ["string"],  "required": false, "description": "Search query text displayed in search variant; settable at runtime via value" }
+  },
+  "observable": {
+    "value": { "types": ["string"], "description": "In search variant: the query string. In title variant: the title string. Settable via setElementValue." }
+  }
+}

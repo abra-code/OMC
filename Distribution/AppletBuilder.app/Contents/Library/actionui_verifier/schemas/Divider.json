@@ -1,0 +1,9 @@
+{
+  "type": "Divider",
+  "description": "Visual separator line",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": true,
+  "topLevelKeys": [],
+  "ownProperties": {},
+  "observable": {}
+}

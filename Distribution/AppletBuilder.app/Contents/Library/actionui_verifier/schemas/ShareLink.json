@@ -1,0 +1,13 @@
+{
+  "type": "ShareLink",
+  "description": "A button that presents the system share sheet for a URL; renders EmptyView if the URL is missing or invalid.",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": true,
+  "topLevelKeys": [],
+  "ownProperties": {
+    "item":    { "types": ["string"], "required": false, "description": "URL string to share; view renders as EmptyView if nil or invalid" },
+    "subject": { "types": ["string"], "required": false, "description": "Subject line hint for mail/message share targets" },
+    "message": { "types": ["string"], "required": false, "description": "Body text hint for mail/message share targets" }
+  },
+  "observable": {}
+}

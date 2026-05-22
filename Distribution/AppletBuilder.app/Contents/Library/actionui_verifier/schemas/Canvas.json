@@ -1,0 +1,94 @@
+{
+  "type": "Canvas",
+  "description": "Custom 2D drawing surface rendered via an array of composable drawing operations.",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": true,
+  "topLevelKeys": [],
+  "ownProperties": {
+    "operations": {
+      "types": ["array"],
+      "required": false,
+      "description": "Drawing operations executed in order. Each object requires a 'type' field that selects the operation.",
+      "discriminatedItems": {
+        "discriminator": "type",
+        "schemas": {
+          "fill": {
+            "type":     { "types": ["string"], "required": true },
+            "path":     { "types": ["object"], "required": true,  "description": "Path shape dict: circle, ellipse, rect, roundedRect, or path" },
+            "color":    { "types": ["string"], "required": false, "description": "Fill color; hex, named, or system color. Mutually exclusive with gradient" },
+            "gradient": { "types": ["object"], "required": false, "description": "Gradient shading: {type: linear|radial, colors:[...], ...}. Mutually exclusive with color" }
+          },
+          "stroke": {
+            "type":       { "types": ["string"], "required": true },
+            "path":       { "types": ["object"], "required": true },
+            "color":      { "types": ["string"], "required": true },
+            "lineWidth":  { "types": ["number"], "required": false, "description": "Default 1" },
+            "lineCap":    { "types": ["string"], "required": false, "enum": ["butt","round","square"], "description": "Default butt" },
+            "lineJoin":   { "types": ["string"], "required": false, "enum": ["miter","round","bevel"], "description": "Default miter" },
+            "miterLimit": { "types": ["number"], "required": false, "description": "Default 10" },
+            "dash":       { "types": ["array"],  "required": false, "description": "[on, off, ...] dash pattern" },
+            "dashPhase":  { "types": ["number"], "required": false, "description": "Default 0" }
+          },
+          "text": {
+            "type":       { "types": ["string"], "required": true },
+            "text":       { "types": ["string"], "required": true },
+            "frame":      { "types": ["array"],  "required": true,  "description": "[x, y, width, height] in coordinate space" },
+            "fontSize":   { "types": ["number"], "required": false },
+            "fontWeight": { "types": ["string"], "required": false, "enum": ["ultralight","thin","light","regular","medium","semibold","bold","heavy","black"] },
+            "color":      { "types": ["string"], "required": false, "description": "Default black" },
+            "alignment":  { "types": ["string"], "required": false, "enum": ["leading","left","center","trailing","right"], "description": "Currently logged as info — not yet applied by CanvasRenderer" }
+          },
+          "image": {
+            "type":         { "types": ["string"], "required": true },
+            "frame":        { "types": ["array"],  "required": true,  "description": "[x, y, width, height] in coordinate space" },
+            "systemName":   { "types": ["string"], "required": false, "description": "SF Symbol name" },
+            "assetName":    { "types": ["string"], "required": false },
+            "resourceName": { "types": ["string"], "required": false },
+            "filePath":     { "types": ["string"], "required": false },
+            "opacity":      { "types": ["number"], "required": false, "description": "Default 1.0" }
+          },
+          "clip": {
+            "type": { "types": ["string"], "required": true },
+            "path": { "types": ["object"], "required": true, "description": "Clip region; affects subsequent operations" }
+          },
+          "translate": {
+            "type": { "types": ["string"], "required": true },
+            "x":    { "types": ["number"], "required": false, "description": "Default 0" },
+            "y":    { "types": ["number"], "required": false, "description": "Default 0" }
+          },
+          "scale": {
+            "type": { "types": ["string"], "required": true },
+            "x":    { "types": ["number"], "required": false, "description": "Default 1" },
+            "y":    { "types": ["number"], "required": false, "description": "Default 1" }
+          },
+          "rotate": {
+            "type":  { "types": ["string"], "required": true },
+            "angle": { "types": ["number"], "required": true, "description": "Degrees; positive = clockwise" }
+          },
+          "shadow": {
+            "type":      { "types": ["string"], "required": true },
+            "color":     { "types": ["string"], "required": false, "description": "Default black" },
+            "radius":    { "types": ["number"], "required": false, "description": "Normalized to min dimension; default 0.005" },
+            "x":         { "types": ["number"], "required": false, "description": "Normalized horizontal offset; default 0.002" },
+            "y":         { "types": ["number"], "required": false, "description": "Normalized vertical offset; default 0.004" },
+            "blendMode": { "types": ["string"], "required": false, "enum": ["normal","multiply","screen","overlay"], "description": "Default normal" }
+          },
+          "blur": {
+            "type":   { "types": ["string"], "required": true },
+            "radius": { "types": ["number"], "required": true, "description": "Normalized to min dimension" }
+          },
+          "layer": {
+            "type":       { "types": ["string"], "required": true },
+            "frame":      { "types": ["array"],  "required": true,  "description": "[x, y, width, height]; sub-context is translated to origin and sized to width×height" },
+            "opacity":    { "types": ["number"], "required": false, "description": "Default 1.0" },
+            "blendMode":  { "types": ["string"], "required": false, "enum": ["normal","multiply","screen","overlay"], "description": "Default normal" },
+            "operations": { "types": ["array"],  "required": false, "description": "Nested operations in the same format as the top-level operations array" }
+          }
+        }
+      }
+    },
+    "backgroundColor": { "types": ["string"],  "required": false, "description": "Background fill color applied before operations; default clear" },
+    "coordinateMode":  { "types": ["string"],  "required": false, "enum": ["normalized","points"], "description": "'normalized' (0.0–1.0, default) or 'points' (absolute pixels)" }
+  },
+  "observable": {}
+}

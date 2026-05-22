@@ -1,0 +1,23 @@
+{
+  "type": "Slider",
+  "description": "Continuous value selector along a linear range",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": true,
+  "topLevelKeys": [],
+  "ownProperties": {
+    "value": { "types": ["number"], "required": false, "description": "Initial value; defaults to 0.0" },
+    "range": {
+      "types": ["object"],
+      "required": false,
+      "description": "min/max range; defaults to 0.0…1.0",
+      "properties": {
+        "min": { "types": ["number"], "required": true },
+        "max": { "types": ["number"], "required": true }
+      }
+    },
+    "step": { "types": ["number"], "required": false, "description": "Increment step; must be positive and not exceed range" }
+  },
+  "observable": {
+    "value": { "types": ["number"], "description": "Current slider value" }
+  }
+}

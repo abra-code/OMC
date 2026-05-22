@@ -1,0 +1,19 @@
+{
+  "type": "GeometryReader",
+  "description": "Greedy container that expands to fill all available space; exposes its size via states['size']. SwiftUI default alignment is topLeading.",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": true,
+  "topLevelKeys": ["content"],
+  "content": { "required": true, "description": "Single child view" },
+  "ownProperties": {
+    "alignment": {
+      "types": ["string"],
+      "required": false,
+      "enum": ["topLeading","top","topTrailing","leading","center","trailing","bottomLeading","bottom","bottomTrailing"],
+      "description": "Alignment of content within the geometry reader; default 'topLeading' (SwiftUI native default)"
+    }
+  },
+  "observable": {
+    "states.size": { "types": ["array"], "description": "Container size as [width, height] doubles; updated whenever the container resizes" }
+  }
+}

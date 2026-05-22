@@ -1,0 +1,36 @@
+{
+  "type": "PhaseAnimator",
+  "description": "Animates a child view through a sequence of numeric phase values, applying opacity for each phase.",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": true,
+  "topLevelKeys": ["content"],
+  "content": { "required": true, "description": "Single child view to animate" },
+  "ownProperties": {
+    "values": { "types": ["array"], "required": false, "description": "Array of numbers cycled as phase values; default [0.0, 1.0]", "itemTypes": ["number"] },
+    "trigger": {
+      "types": ["string"],
+      "required": false,
+      "enum": ["onAppear","onTap","onTimer","onStateChange"],
+      "description": "What initiates each animation cycle; default 'onAppear'"
+    },
+    "timerInterval": { "types": ["number"], "required": false, "description": "Timer interval in seconds for 'onTimer' trigger; default 1.0" },
+    "stateKey":      { "types": ["string"], "required": false, "description": "State key watched for 'onStateChange' trigger; increment its Int value to fire; default 'counter'" },
+    "animation": {
+      "types": ["object"],
+      "required": false,
+      "description": "Animation curve spec; type must be one of: linear/easeIn/easeOut/easeInOut/spring/interactiveSpring/smooth/bouncy/timingCurve",
+      "properties": {
+        "type":            { "types": ["string"], "required": false, "enum": ["linear","easeIn","easeOut","easeInOut","spring","interactiveSpring","smooth","bouncy","timingCurve"] },
+        "duration":        { "types": ["number"], "required": false },
+        "response":        { "types": ["number"], "required": false, "description": "Spring/interactiveSpring only" },
+        "dampingFraction": { "types": ["number"], "required": false, "description": "Spring/interactiveSpring only" },
+        "blendDuration":   { "types": ["number"], "required": false, "description": "Spring/interactiveSpring only" },
+        "extraBounce":     { "types": ["number"], "required": false, "description": "Smooth/bouncy only" },
+        "controlPoints":   { "types": ["array"],  "required": false, "description": "timingCurve only: [c0x, c0y, c1x, c1y]", "itemTypes": ["number"] }
+      }
+    }
+  },
+  "observable": {
+    "states": { "description": "stateKey state watched for onStateChange trigger; increment Int value to fire" }
+  }
+}

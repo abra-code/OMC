@@ -1,0 +1,12 @@
+{
+  "type": "CommandMenu",
+  "description": "Named menu added to the macOS menu bar; used inside a WindowGroup commands array",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": false,
+  "topLevelKeys": ["children"],
+  "children": { "required": false, "description": "Array of Button or Divider child elements" },
+  "ownProperties": {
+    "name": { "types": ["string"], "required": true, "description": "Non-empty menu title displayed in the menu bar" }
+  },
+  "observable": {}
+}

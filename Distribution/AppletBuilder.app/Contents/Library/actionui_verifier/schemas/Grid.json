@@ -1,0 +1,19 @@
+{
+  "type": "Grid",
+  "description": "A fixed-layout 2D grid. Rows are declared inline as an array of arrays of element nodes.",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": true,
+  "topLevelKeys": ["rows"],
+  "rows": { "required": true, "description": "2D array: each entry is a row (array of child elements placed into grid cells)" },
+  "ownProperties": {
+    "alignment": {
+      "types": ["string"],
+      "required": false,
+      "enum": ["topLeading","top","topTrailing","leading","center","trailing","bottomLeading","bottom","bottomTrailing"],
+      "description": "Cell alignment within each grid cell; default 'center'"
+    },
+    "horizontalSpacing": { "types": ["number"], "required": false, "description": "Horizontal spacing between columns" },
+    "verticalSpacing":   { "types": ["number"], "required": false, "description": "Vertical spacing between rows" }
+  },
+  "observable": {}
+}

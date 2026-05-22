@@ -21,6 +21,8 @@
 {"title": "Form", "tag": "Form"},
 {"title": "ToolbarItem", "tag": "ToolbarItem"},
 {"title": "ToolbarItemGroup", "tag": "ToolbarItemGroup"},
+{"title": "ControlGroup", "tag": "ControlGroup"},
+{"title": "Tab", "tag": "Tab"},
 {"section": "Controls"},
 {"title": "Button", "tag": "Button"},
 {"title": "TextField", "tag": "TextField"},
@@ -53,6 +55,7 @@
 {"title": "ContentUnavailableView", "tag": "ContentUnavailableView"},
 {"section": "Navigation"},
 {"title": "TabView", "tag": "TabView"},
+{"title": "Tab", "tag": "Tab"},
 {"title": "NavigationStack", "tag": "NavigationStack"},
 {"title": "NavigationSplitView", "tag": "NavigationSplitView"},
 {"title": "NavigationLink", "tag": "NavigationLink"},
@@ -75,5 +78,6 @@
 {"title": "KeyframeAnimator", "tag": "KeyframeAnimator"},
 {"title": "PhaseAnimator", "tag": "PhaseAnimator"},
 {"title": "CommandMenu", "tag": "CommandMenu"},
-{"title": "CommandGroup", "tag": "CommandGroup"}
+{"title": "CommandGroup", "tag": "CommandGroup"},
+{"title": "WindowGroup", "tag": "WindowGroup"}
 ]

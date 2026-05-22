@@ -1,0 +1,16 @@
+{
+  "type": "WindowGroup",
+  "id": 1,
+  "properties": {
+    "title": "ActionUI Window",
+    "windowGroupID": "MainWindow"
+  },
+  "content": {
+    "type": "VStack",
+    "id": 2,
+    "properties": { "alignment": "center", "spacing": 10.0 },
+    "children": [
+      { "type": "Text", "id": 3, "properties": { "text": "Welcome to ActionUI" } }
+    ]
+  }
+}

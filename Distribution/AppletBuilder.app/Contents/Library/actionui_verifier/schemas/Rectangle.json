@@ -1,0 +1,13 @@
+{
+  "type": "Rectangle",
+  "description": "A rectangle shape; use 'fill' or 'stroke' (mutually exclusive) to apply color.",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": true,
+  "topLevelKeys": [],
+  "ownProperties": {
+    "fill":            { "types": ["string"], "required": false, "description": "Fill color/style string; takes priority over stroke" },
+    "stroke":          { "types": ["string"], "required": false, "description": "Stroke color/style string; ignored when fill is set" },
+    "strokeLineWidth": { "types": ["number"], "required": false, "description": "Stroke line width in points; default 1.0" }
+  },
+  "observable": {}
+}

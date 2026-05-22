@@ -1,0 +1,46 @@
+{
+  "type": "KeyframeAnimator",
+  "description": "Animates a child view using keyframe tracks for opacity, scale, and rotation with precise timing control.",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": true,
+  "topLevelKeys": ["content"],
+  "content": { "required": true, "description": "Single child view to animate" },
+  "ownProperties": {
+    "initialValue": {
+      "types": ["object"],
+      "required": false,
+      "description": "Starting animated values before the first keyframe",
+      "properties": {
+        "opacity":  { "types": ["number"], "required": false, "description": "Initial opacity (0.0–1.0); default 1.0" },
+        "scale":    { "types": ["number"], "required": false, "description": "Initial scale factor; default 1.0" },
+        "rotation": { "types": ["number"], "required": false, "description": "Initial rotation in degrees; default 0.0" }
+      }
+    },
+    "trigger": {
+      "types": ["string"],
+      "required": false,
+      "enum": ["onAppear","onTap","onTimer","onStateChange"],
+      "description": "What starts each animation cycle; default 'onAppear'"
+    },
+    "timerInterval": { "types": ["number"], "required": false, "description": "Timer interval in seconds for 'onTimer' trigger; default 1.0" },
+    "stateKey":      { "types": ["string"], "required": false, "description": "State key watched for 'onStateChange' trigger; default 'counter'" },
+    "repeat": {
+      "types": ["object"],
+      "required": false,
+      "description": "Repeat behavior; default 1 non-reversing cycle",
+      "properties": {
+        "count":        { "types": ["integer"], "required": false, "description": "Number of cycles; default 1" },
+        "autoreverses": { "types": ["boolean"], "required": false, "description": "Reverse on alternate cycles; default false" }
+      }
+    },
+    "delay": { "types": ["number"], "required": false, "description": "Delay in seconds before the animation starts; default 0" },
+    "keyframes": {
+      "types": ["object"],
+      "required": false,
+      "description": "Object keyed by percentage strings ('0%', '50%', '100%'). Each value is a keyframe: {type, value: {opacity?, scale?, rotation?}, duration, [spring/cubic params]}"
+    }
+  },
+  "observable": {
+    "states.currentRepeatCount": { "types": ["integer"], "description": "Number of animation cycles completed; read-only" }
+  }
+}

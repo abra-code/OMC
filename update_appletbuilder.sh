@@ -164,7 +164,7 @@ else
     ACTIONUI_BUILD_X86="$ACTIONUI_BUILD/x86_64"
 
     # Executable products — built as universal binaries
-    actionui_products=(ActionUIViewer ActionUIVerifier)
+    actionui_products=(ActionUIViewer)
 
     for product in "${actionui_products[@]}"; do
         echo "  Building $product (universal)..."
@@ -224,6 +224,21 @@ else
         fi
     else
         echo -e "  ${RED}Failed to build ActionUIDocumentation${NC}"
+        build_failed=1
+    fi
+
+    # Python verifier — copy from Tools/verifier/ next to embedded Python
+    echo "  Copying actionui_verifier..."
+    VERIFIER_SRC="$ACTIONUI_ROOT/Tools/verifier"
+    VERIFIER_DST="$APPLET_BUILDER/Contents/Library/actionui_verifier"
+    if [ -d "$VERIFIER_SRC" ]; then
+        /bin/rm -rf "$VERIFIER_DST"
+        /bin/cp -R "$VERIFIER_SRC" "$VERIFIER_DST"
+        /usr/bin/find "$VERIFIER_DST" -name "__pycache__" -type d -exec /bin/rm -rf {} + 2>/dev/null
+        echo -e "  ${GREEN}Updated: actionui_verifier${NC}"
+        updated=1
+    else
+        echo -e "  ${RED}ActionUI verifier source not found at: $VERIFIER_SRC${NC}"
         build_failed=1
     fi
 

@@ -1,0 +1,10 @@
+{
+  "type": "Form",
+  "description": "Grouped form layout; typically contains Section, TextField, Toggle, Picker",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": true,
+  "topLevelKeys": ["children"],
+  "children": { "required": true, "description": "Array of child view elements" },
+  "ownProperties": {},
+  "observable": {}
+}

@@ -1,0 +1,13 @@
+{
+  "type": "NavigationStack",
+  "description": "Push-based navigation container. Content is the root view; destinations are pushed by NavigationLinks or programmatically.",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": true,
+  "topLevelKeys": ["content", "destinations"],
+  "content":      { "required": true,  "description": "Root view element" },
+  "destinations": { "required": false, "description": "Array of destination view elements; each must have a unique id" },
+  "ownProperties": {},
+  "observable": {
+    "states.navigationPath": { "types": ["array"], "description": "Current push stack as [Int] destination IDs; empty at root" }
+  }
+}

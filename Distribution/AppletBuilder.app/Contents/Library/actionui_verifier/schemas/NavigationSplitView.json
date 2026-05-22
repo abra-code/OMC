@@ -1,0 +1,19 @@
+{
+  "type": "NavigationSplitView",
+  "description": "Two- or three-pane split navigation. Sidebar selection can drive destination switching via destinationViewId on children.",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": true,
+  "topLevelKeys": ["sidebar", "content", "detail", "destinations"],
+  "sidebar":      { "required": true,  "description": "Sidebar column view; must be a List when using destinations" },
+  "content":      { "required": false, "description": "Middle content column (3-pane only)" },
+  "detail":       { "required": true,  "description": "Detail column view" },
+  "destinations": { "required": false, "description": "Array of destination views; sidebar List children link via destinationViewId" },
+  "ownProperties": {
+    "columnVisibility": { "types": ["string"], "required": false, "enum": ["automatic","all","doubleColumn","detail"], "description": "Defaults to 'all'" },
+    "style":            { "types": ["string"], "required": false, "enum": ["automatic","balanced","prominentDetail"], "description": "Defaults to 'automatic'" }
+  },
+  "observable": {
+    "states.columnVisibility":    { "types": ["string"], "description": "Current column visibility state" },
+    "states.selectedDestination": { "types": ["integer"], "description": "ID of selected destination; null when none selected" }
+  }
+}

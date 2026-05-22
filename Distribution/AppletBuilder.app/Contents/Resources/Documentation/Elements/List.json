@@ -16,7 +16,7 @@
       "destination": {
         "type": "Text",
         "properties": {
-          "title": "Item 1 Detail"
+          "text": "Item 1 Detail"
         }
       }
     },

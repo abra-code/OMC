@@ -2,12 +2,10 @@
   "type": "ScrollViewReader",
   "content": {
     "type": "ScrollView",
-    "properties": {
-      "content": {
-        "type": "Text",
-        "properties": {
-          "text": "Item 1"
-        }
+    "content": {
+      "type": "Text",
+      "properties": {
+        "text": "Item 1"
       }
     }
   },

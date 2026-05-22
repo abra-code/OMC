@@ -133,6 +133,8 @@ JSON schema and usage documentation for `View`.
      "textSelection": "enabled",            // Optional: "enabled" or "disabled". Controls whether the user can select text in this view.
                                             // SwiftUI does not enable text selection by default; set "enabled" to allow it.
                                             // Applies to Text and any container holding Text views.
+     "multilineTextAlignment": "center",   // Optional: "leading", "center", or "trailing". Aligns wrapped lines within a text block.
+                                            // Also propagates to child Text views when set on a container (VStack, HStack, etc.).
       "zIndex": 0.0,                        // Optional: Number for layer ordering within a container (e.g. ZStack)
                                             // Higher values render in front of lower values. Defaults to 0.0.
     }

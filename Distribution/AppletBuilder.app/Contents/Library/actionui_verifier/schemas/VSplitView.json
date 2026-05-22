@@ -1,0 +1,10 @@
+{
+  "type": "VSplitView",
+  "description": "Vertically split pane container with a draggable divider. macOS only; falls back to VStack on other platforms.",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": true,
+  "topLevelKeys": ["children"],
+  "children": { "required": true, "description": "Two or more child views rendered as resizable vertical panes" },
+  "ownProperties": {},
+  "observable": {}
+}

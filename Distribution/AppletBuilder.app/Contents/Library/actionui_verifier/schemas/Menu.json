@@ -1,0 +1,13 @@
+{
+  "type": "Menu",
+  "description": "A pull-down menu control; children are the menu items (Button, Divider, Section). Optionally replaces the title with a custom label view.",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": true,
+  "topLevelKeys": ["children", "label"],
+  "children": { "required": false, "description": "Menu items — typically Button, Divider, or Section elements" },
+  "label":    { "required": false, "description": "Single custom view shown as the menu trigger instead of title (e.g. Image with SF Symbol)" },
+  "ownProperties": {
+    "title": { "types": ["string"], "required": false, "description": "Text label for the menu trigger; ignored when a custom label view is provided" }
+  },
+  "observable": {}
+}

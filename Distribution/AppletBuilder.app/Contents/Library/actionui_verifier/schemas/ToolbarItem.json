@@ -1,0 +1,24 @@
+{
+  "type": "ToolbarItem",
+  "description": "A single toolbar item declared inside the 'toolbar' array of any view. Never rendered standalone; the parent view's .toolbar modifier consumes it.",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": false,
+  "topLevelKeys": ["content"],
+  "content": { "required": true, "description": "Single child view for the toolbar slot (Button, Menu, Image, ControlGroup, or a layout container)" },
+  "ownProperties": {
+    "placement": {
+      "types": ["string"],
+      "required": false,
+      "enum": [
+        "automatic","principal",
+        "confirmationAction","cancellationAction","destructiveAction",
+        "primaryAction","secondaryAction",
+        "topBarLeading","topBarTrailing",
+        "bottomBar","keyboard",
+        "navigation","status"
+      ],
+      "description": "Where in the toolbar to place the item; platform-unavailable values fall back to 'automatic' at runtime; default 'automatic'"
+    }
+  },
+  "observable": {}
+}

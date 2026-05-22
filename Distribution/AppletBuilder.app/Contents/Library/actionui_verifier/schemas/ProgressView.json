@@ -1,0 +1,15 @@
+{
+  "type": "ProgressView",
+  "description": "A determinate or indeterminate progress indicator. Omit 'value'/'total' for an indeterminate spinner; supply both for a determinate bar.",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": true,
+  "topLevelKeys": [],
+  "ownProperties": {
+    "value": { "types": ["number"], "required": false, "description": "Current progress (0.0 to total); omit for indeterminate spinner" },
+    "total": { "types": ["number"], "required": false, "description": "Maximum value; default 1.0 when value is set" },
+    "title": { "types": ["string"], "required": false, "description": "Optional label shown with the progress view" }
+  },
+  "observable": {
+    "states.progress": { "types": ["number"], "description": "Override progress at runtime (0.0–total); set to null to revert to indeterminate" }
+  }
+}

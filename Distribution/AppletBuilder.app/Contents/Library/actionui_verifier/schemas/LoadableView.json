@@ -1,0 +1,16 @@
+{
+  "type": "LoadableView",
+  "description": "Loads and renders another ActionUI view description from a URL, file path, or app bundle resource. Exactly one of url/filePath/name must be set.",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": true,
+  "topLevelKeys": [],
+  "ownProperties": {
+    "url":                  { "types": ["string"], "required": false, "description": "Remote http/https URL to a JSON or binary plist view description; loaded asynchronously" },
+    "filePath":             { "types": ["string"], "required": false, "description": "Absolute file path to a local JSON or binary plist view description" },
+    "name":                 { "types": ["string"], "required": false, "description": "Filename of a JSON or plist resource in the app bundle" },
+    "viewDidLoadActionID":  { "types": ["string"], "required": false, "description": "Fired once after a new sub-view is successfully loaded (not re-fired on SwiftUI rebuilds)" }
+  },
+  "observable": {
+    "value": { "types": ["string"], "description": "Source string (URL / file path / bundle name); set via setElementValue to reload from a different source" }
+  }
+}

@@ -14,7 +14,7 @@
       "type": "HStack",
       "properties": {
         "spacing": 8,
-        "padding": { "horizontal": 12, "vertical": 8 },
+        "padding": { "leading": 12, "trailing": 12, "top": 4, "bottom": 4 },
         "background": "#f5f5f5"
       },
       "children": [

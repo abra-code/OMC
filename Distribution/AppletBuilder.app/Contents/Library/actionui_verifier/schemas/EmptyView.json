@@ -1,0 +1,9 @@
+{
+  "type": "EmptyView",
+  "description": "A view that renders nothing; useful as a placeholder or conditional no-op in view trees.",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": true,
+  "topLevelKeys": [],
+  "ownProperties": {},
+  "observable": {}
+}

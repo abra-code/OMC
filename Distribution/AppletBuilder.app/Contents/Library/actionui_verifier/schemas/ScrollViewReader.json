@@ -1,0 +1,13 @@
+{
+  "type": "ScrollViewReader",
+  "description": "Wraps a ScrollView to enable programmatic scrolling to specific element IDs.",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": true,
+  "topLevelKeys": ["content"],
+  "content": { "required": true, "description": "Single child view — typically a ScrollView" },
+  "ownProperties": {
+    "scrollTo": { "types": ["integer"], "required": false, "description": "Element ID to scroll to on appear" },
+    "anchor":   { "types": ["string"],  "required": false, "enum": ["top","center","bottom"], "description": "Alignment anchor for the scrolled-to item; default 'center'" }
+  },
+  "observable": {}
+}

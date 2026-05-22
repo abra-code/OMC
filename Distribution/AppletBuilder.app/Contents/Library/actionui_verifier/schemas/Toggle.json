@@ -1,0 +1,15 @@
+{
+  "type": "Toggle",
+  "description": "On/off switch",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": true,
+  "topLevelKeys": [],
+  "ownProperties": {
+    "isOn":  { "types": ["boolean"], "required": false, "description": "Initial on/off state; defaults to false" },
+    "title": { "types": ["string"],  "required": false, "description": "Label text; defaults to 'Toggle'" },
+    "style": { "types": ["string"],  "required": false, "enum": ["switch","button","checkbox"], "description": "'checkbox' is macOS only; defaults to 'switch'" }
+  },
+  "observable": {
+    "value": { "types": ["boolean"], "description": "Current on/off state" }
+  }
+}

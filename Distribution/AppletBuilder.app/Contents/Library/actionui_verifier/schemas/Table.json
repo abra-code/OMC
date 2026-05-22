@@ -1,0 +1,47 @@
+{
+  "type": "Table",
+  "description": "Multi-column data table. macOS only (renders EmptyView on other platforms). Rows are set at runtime via setElementRows.",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": true,
+  "topLevelKeys": [],
+  "ownProperties": {
+    "columns": {
+      "types": ["array"],
+      "required": true,
+      "description": "Column header strings",
+      "itemTypes": ["string"]
+    },
+    "columnHeadersVisibility": {
+      "types": ["string"],
+      "required": false,
+      "enum": ["automatic","visible","hidden"],
+      "description": "Column header visibility; default 'automatic'"
+    },
+    "columnTypes": {
+      "types": ["array"],
+      "required": false,
+      "description": "Per-column cell type config; array length should match columns; missing entries default to Text",
+      "items": {
+        "types": ["object"],
+        "properties": {
+          "viewType":          { "types": ["string"], "required": false, "enum": ["Text","Button","Image","AsyncImage"] },
+          "actionContext":     { "types": ["string"], "required": false, "enum": ["title","rowIndex","columnIndex","rowColumnIndex"], "description": "Button only" },
+          "actionID":          { "types": ["string"], "required": false, "description": "Button only — fires on button click" },
+          "dataInterpretation":{ "types": ["string"], "required": false, "enum": ["path","systemName","assetName","resourceName","mixed"], "description": "Image/Button only" }
+        }
+      }
+    },
+    "widths": {
+      "types": ["array"],
+      "required": false,
+      "description": "Ideal column widths in points; last column fills remaining space",
+      "itemTypes": ["integer"]
+    },
+    "doubleClickActionID": { "types": ["string"], "required": false, "description": "macOS only; fires on double-click; context = row index" }
+  },
+  "observable": {
+    "value":                { "types": ["array"],  "description": "Selected row as [String] (column values); access via getElementValue" },
+    "states.content":       { "types": ["array"],  "description": "All rows as [[String]]; use getElementRows/setElementRows" },
+    "states.selectedRowID": { "types": ["string"], "description": "Stable row ID of selected row; nil when nothing selected" }
+  }
+}

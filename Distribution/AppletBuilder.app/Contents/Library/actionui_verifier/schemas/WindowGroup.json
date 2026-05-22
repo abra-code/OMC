@@ -1,0 +1,14 @@
+{
+  "type": "WindowGroup",
+  "description": "Scene-level window group; root element of an ActionUI window description",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": false,
+  "topLevelKeys": ["content", "commands"],
+  "content":  { "required": false, "description": "Single view element rendered as the window content" },
+  "commands": { "required": false, "description": "Array of CommandMenu or CommandGroup elements (max 10)" },
+  "ownProperties": {
+    "title":        { "types": ["string"], "required": false, "description": "Window title; defaults to 'Untitled'" },
+    "windowGroupID":{ "types": ["string"], "required": false, "description": "Unique window group identifier; defaults to title value" }
+  },
+  "observable": {}
+}

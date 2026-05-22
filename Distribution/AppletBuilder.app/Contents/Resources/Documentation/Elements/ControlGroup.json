@@ -1,0 +1,11 @@
+{
+  "type": "ControlGroup",
+  "id": 1,
+  "properties": {
+    "title": "Navigation"
+  },
+  "children": [
+    { "type": "Button", "properties": { "title": "Back", "actionID": "navigate.back" } },
+    { "type": "Button", "properties": { "title": "Forward", "actionID": "navigate.forward" } }
+  ]
+}

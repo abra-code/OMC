@@ -1,0 +1,29 @@
+{
+  "type": "DatePicker",
+  "description": "A date-picking control. Selected date is stored as an ISO 8601 string value.",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": true,
+  "topLevelKeys": [],
+  "ownProperties": {
+    "title":        { "types": ["string"], "required": false, "description": "Picker label; default 'Date'" },
+    "displayStyle": {
+      "types": ["string"],
+      "required": false,
+      "enum": ["automatic","compact","graphical","stepperField","field"],
+      "description": "'stepperField' and 'field' are macOS only; 'graphical' is iOS/macOS; default 'automatic'"
+    },
+    "range": {
+      "types": ["object"],
+      "required": false,
+      "description": "Selectable date range",
+      "properties": {
+        "start": { "types": ["string"], "required": true,  "description": "ISO 8601 date string (e.g. '2024-01-01')" },
+        "end":   { "types": ["string"], "required": true,  "description": "ISO 8601 date string (e.g. '2025-12-31')" }
+      }
+    },
+    "selectedDate": { "types": ["string"], "required": false, "description": "Initial selected date as ISO 8601 string; default today" }
+  },
+  "observable": {
+    "value": { "types": ["string"], "description": "Selected date as ISO 8601 string; set via setElementValue" }
+  }
+}

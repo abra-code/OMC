@@ -1,0 +1,52 @@
+{
+  "type": "List",
+  "description": "Scrollable list. Three modes: homogeneous (itemType), heterogeneous (children), template-driven (template).",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": true,
+  "topLevelKeys": ["children", "template"],
+  "children": { "required": false, "description": "Heterogeneous mode: arbitrary child views" },
+  "template": { "required": false, "description": "Template mode: one template rendered per data row" },
+  "ownProperties": {
+    "itemType": {
+      "types": ["object"],
+      "required": false,
+      "description": "Homogeneous mode: describes row view type. Defaults to {viewType: 'Text'}",
+      "properties": {
+        "viewType":          { "types": ["string"], "required": false, "enum": ["Text","Button","Image","AsyncImage"] },
+        "actionContext":     { "types": ["string"], "required": false, "enum": ["title","rowIndex"], "description": "Button only" },
+        "actionID":          { "types": ["string"], "required": false, "description": "Button only" },
+        "dataInterpretation":{ "types": ["string"], "required": false, "enum": ["path","systemName","assetName","resourceName","mixed"], "description": "Image only" }
+      }
+    },
+    "doubleClickActionID": { "types": ["string"],  "required": false, "description": "macOS only; context = row index" },
+    "listStyle": {
+      "types": ["string"],
+      "required": false,
+      "enum": ["automatic","plain","inset","sidebar","grouped","insetGrouped"],
+      "description": "'grouped'/'insetGrouped' are iOS only; 'inset'/'sidebar' are macOS/iOS/visionOS"
+    },
+    "listRowBackground":     { "types": ["string"], "required": false, "description": "Color string applied to all rows" },
+    "listRowSeparator":      { "types": ["string"], "required": false, "enum": ["visible","hidden","automatic"] },
+    "listRowSeparatorTint":  { "types": ["string"], "required": false, "description": "Color string" },
+    "listRowInsets": {
+      "required": false,
+      "description": "Uniform number or per-edge dict",
+      "oneOf": [
+        { "types": ["number"] },
+        {
+          "types": ["object"],
+          "properties": {
+            "top":      { "types": ["number"], "required": false },
+            "leading":  { "types": ["number"], "required": false },
+            "bottom":   { "types": ["number"], "required": false },
+            "trailing": { "types": ["number"], "required": false }
+          }
+        }
+      ]
+    }
+  },
+  "observable": {
+    "value":          { "types": ["array"],  "description": "Selected item as one-element string array; empty when nothing selected" },
+    "states.content": { "types": ["array"],  "description": "All list rows as [[String]]; use getElementRows/setElementRows" }
+  }
+}

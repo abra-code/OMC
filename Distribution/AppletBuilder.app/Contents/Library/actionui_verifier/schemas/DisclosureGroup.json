@@ -1,0 +1,17 @@
+{
+  "type": "DisclosureGroup",
+  "description": "A collapsible container with a disclosure chevron and a title. Supports static children or data-driven template mode.",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": true,
+  "topLevelKeys": ["children", "template"],
+  "children": { "required": false, "description": "Static child views shown when expanded" },
+  "template":  { "required": false, "description": "Template rendered once per data row; set rows via setElementRows" },
+  "ownProperties": {
+    "title":      { "types": ["string"],  "required": false, "description": "Disclosure group label" },
+    "isExpanded": { "types": ["boolean"], "required": false, "description": "Initial expanded state; default false" }
+  },
+  "observable": {
+    "states.isExpanded": { "types": ["boolean"], "description": "Current expanded state; write to expand/collapse programmatically" },
+    "states.content":    { "types": ["array"],   "description": "All rows in template mode as [[String]]; use getElementRows/setElementRows" }
+  }
+}

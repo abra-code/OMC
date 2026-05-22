@@ -1,0 +1,25 @@
+{
+  "type": "Stepper",
+  "description": "An increment/decrement stepper control. Current value is a Double stored as the element value.",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": true,
+  "topLevelKeys": [],
+  "ownProperties": {
+    "value": { "types": ["number"], "required": false, "description": "Initial value; default 0.0" },
+    "range": {
+      "types": ["object"],
+      "required": false,
+      "description": "Clamping range; omit for unconstrained stepping",
+      "properties": {
+        "min": { "types": ["number"], "required": true,  "description": "Minimum value (inclusive)" },
+        "max": { "types": ["number"], "required": true,  "description": "Maximum value (inclusive); must be >= min" }
+      }
+    },
+    "step":        { "types": ["number"], "required": false, "description": "Step increment (positive); default 1.0" },
+    "label":       { "types": ["string"], "required": false, "description": "Static label text; ignored when labelFormat is set" },
+    "labelFormat": { "types": ["string"], "required": false, "description": "printf-style format embedding current value (e.g. 'Count: %.0f'); takes precedence over label" }
+  },
+  "observable": {
+    "value": { "types": ["number"], "description": "Current stepper value; set via setElementValue" }
+  }
+}

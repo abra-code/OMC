@@ -1,0 +1,48 @@
+{
+  "type": "Map",
+  "description": "A MapKit interactive map centered on a coordinate; supports annotations and interaction mode control.",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": true,
+  "topLevelKeys": [],
+  "ownProperties": {
+    "coordinate": {
+      "types": ["object"],
+      "required": false,
+      "description": "Initial map center; defaults to (0, 0) if omitted",
+      "properties": {
+        "latitude":  { "types": ["number"], "required": true },
+        "longitude": { "types": ["number"], "required": true }
+      }
+    },
+    "showsUserLocation": { "types": ["boolean"], "required": false, "description": "Show the user's current location pin; default false" },
+    "interactionModes": {
+      "types": ["array"],
+      "required": false,
+      "description": "Enabled interaction modes; default all three",
+      "itemTypes": ["string"],
+      "itemEnum": ["pan","zoom","rotate"]
+    },
+    "annotations": {
+      "types": ["array"],
+      "required": false,
+      "description": "Array of map annotation descriptors",
+      "items": {
+        "types": ["object"],
+        "properties": {
+          "coordinate": {
+            "types": ["object"], "required": true,
+            "properties": {
+              "latitude":  { "types": ["number"], "required": true },
+              "longitude": { "types": ["number"], "required": true }
+            }
+          },
+          "title":    { "types": ["string"], "required": false },
+          "subtitle": { "types": ["string"], "required": false }
+        }
+      }
+    }
+  },
+  "observable": {
+    "value": { "types": ["string"], "description": "Current center coordinate as JSON string {latitude, longitude}; set via setElementValue to pan the map" }
+  }
+}

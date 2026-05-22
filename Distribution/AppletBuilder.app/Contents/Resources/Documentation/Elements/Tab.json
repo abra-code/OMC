@@ -1,0 +1,14 @@
+{
+  "type": "Tab",
+  "properties": {
+    "title": "Home",
+    "systemImage": "house"
+  },
+  "content": {
+    "type": "VStack",
+    "properties": { "spacing": 10 },
+    "children": [
+      { "type": "Text", "properties": { "text": "Home Content" } }
+    ]
+  }
+}

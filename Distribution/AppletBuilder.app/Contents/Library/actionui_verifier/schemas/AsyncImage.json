@@ -1,0 +1,16 @@
+{
+  "type": "AsyncImage",
+  "description": "Loads and displays an image from a URL asynchronously; shows placeholder on failure or while loading.",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": true,
+  "topLevelKeys": [],
+  "ownProperties": {
+    "url":         { "types": ["string"], "required": false, "description": "Web or local file URL string; AsyncImage handles download failure gracefully" },
+    "placeholder": { "types": ["string"], "required": false, "description": "SF Symbol name shown while loading or on error; default 'photo'" },
+    "resizable":   { "types": ["boolean"], "required": false, "description": "Make image resizable; default true" },
+    "contentMode": { "types": ["string"],  "required": false, "enum": ["fit","fill"], "description": "Scaling mode when resizable; default 'fit'" }
+  },
+  "observable": {
+    "value": { "types": ["string"], "description": "Current URL string; set via setElementValue to navigate to a new URL" }
+  }
+}

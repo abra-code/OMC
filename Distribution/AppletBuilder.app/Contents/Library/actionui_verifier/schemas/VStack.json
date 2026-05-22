@@ -1,0 +1,14 @@
+{
+  "type": "VStack",
+  "description": "Vertical stack container",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": true,
+  "topLevelKeys": ["children", "template"],
+  "children": { "required": false, "description": "Array of child view elements" },
+  "template": { "required": false, "description": "Data-driven template; rows set via setElementRows" },
+  "ownProperties": {
+    "spacing":   { "types": ["number"], "required": false, "description": "Spacing between children; defaults to 0" },
+    "alignment": { "types": ["string"], "required": false, "enum": ["leading","center","trailing"], "description": "Horizontal alignment; defaults to center" }
+  },
+  "observable": {}
+}

@@ -15,6 +15,7 @@ All views inherit baseline properties from [View](Schemas/View.md) ([template](E
 | Canvas | [Schemas/Canvas.md](Schemas/Canvas.md) | [Elements/Canvas.json](Elements/Canvas.json) |
 | ColorPicker | [Schemas/ColorPicker.md](Schemas/ColorPicker.md) | [Elements/ColorPicker.json](Elements/ColorPicker.json) |
 | ContentUnavailableView | [Schemas/ContentUnavailableView.md](Schemas/ContentUnavailableView.md) | [Elements/ContentUnavailableView.json](Elements/ContentUnavailableView.json) |
+| ControlGroup | [Schemas/ControlGroup.md](Schemas/ControlGroup.md) | [Elements/ControlGroup.json](Elements/ControlGroup.json) |
 | DatePicker | [Schemas/DatePicker.md](Schemas/DatePicker.md) | [Elements/DatePicker.json](Elements/DatePicker.json) |
 | DisclosureGroup | [Schemas/DisclosureGroup.md](Schemas/DisclosureGroup.md) | [Elements/DisclosureGroup.json](Elements/DisclosureGroup.json) |
 | Divider | [Schemas/Divider.md](Schemas/Divider.md) | [Elements/Divider.json](Elements/Divider.json) |
@@ -54,6 +55,7 @@ All views inherit baseline properties from [View](Schemas/View.md) ([template](E
 | ShareLink | [Schemas/ShareLink.md](Schemas/ShareLink.md) | [Elements/ShareLink.json](Elements/ShareLink.json) |
 | Slider | [Schemas/Slider.md](Schemas/Slider.md) | [Elements/Slider.json](Elements/Slider.json) |
 | Spacer | [Schemas/Spacer.md](Schemas/Spacer.md) | [Elements/Spacer.json](Elements/Spacer.json) |
+| Tab | [Schemas/Tab.md](Schemas/Tab.md) | [Elements/Tab.json](Elements/Tab.json) |
 | TabView | [Schemas/TabView.md](Schemas/TabView.md) | [Elements/TabView.json](Elements/TabView.json) |
 | Table | [Schemas/Table.md](Schemas/Table.md) | [Elements/Table.json](Elements/Table.json) |
 | Text | [Schemas/Text.md](Schemas/Text.md) | [Elements/Text.json](Elements/Text.json) |
@@ -80,3 +82,9 @@ All views inherit baseline properties from [View](Schemas/View.md) ([template](E
 |---------|--------|----------|
 | CommandGroup | [Schemas/CommandGroup.md](Schemas/CommandGroup.md) | [Elements/CommandGroup.json](Elements/CommandGroup.json) |
 | CommandMenu | [Schemas/CommandMenu.md](Schemas/CommandMenu.md) | [Elements/CommandMenu.json](Elements/CommandMenu.json) |
+
+## Scenes
+
+| Element | Schema | Template |
+|---------|--------|----------|
+| WindowGroup | [Schemas/WindowGroup.md](Schemas/WindowGroup.md) | [Elements/WindowGroup.json](Elements/WindowGroup.json) |

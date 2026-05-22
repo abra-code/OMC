@@ -1,0 +1,14 @@
+{
+  "type": "VideoPlayer",
+  "description": "Plays a video from a URL using AVKit; shows an error label if URL is missing or invalid.",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": true,
+  "topLevelKeys": [],
+  "ownProperties": {
+    "url":      { "types": ["string"],  "required": false, "description": "Video URL string (http/https or file); shows error label if invalid" },
+    "autoplay": { "types": ["boolean"], "required": false, "description": "Start playback automatically when the view appears" }
+  },
+  "observable": {
+    "value": { "types": ["string"], "description": "Current video URL; set via setElementValue to load a different URL" }
+  }
+}

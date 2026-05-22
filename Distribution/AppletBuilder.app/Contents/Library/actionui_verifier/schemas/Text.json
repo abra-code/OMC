@@ -1,0 +1,14 @@
+{
+  "type": "Text",
+  "description": "Static text display; supports plain text or Markdown",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": true,
+  "topLevelKeys": [],
+  "ownProperties": {
+    "text":     { "types": ["string"], "required": false, "description": "Plain text; defaults to empty string" },
+    "markdown": { "types": ["string"], "required": false, "description": "Markdown string; takes precedence over 'text'" }
+  },
+  "observable": {
+    "value": { "types": ["string"], "description": "Current text content" }
+  }
+}

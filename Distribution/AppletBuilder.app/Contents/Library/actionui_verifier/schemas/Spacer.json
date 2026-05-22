@@ -1,0 +1,11 @@
+{
+  "type": "Spacer",
+  "description": "Flexible space that expands to fill available space along the stack axis",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": true,
+  "topLevelKeys": [],
+  "ownProperties": {
+    "minLength": { "types": ["number"], "required": false, "description": "Minimum size in points" }
+  },
+  "observable": {}
+}

@@ -1,0 +1,14 @@
+{
+  "type": "ColorPicker",
+  "description": "A color-picking control; selected color is stored as the element value and reported via actionID.",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": true,
+  "topLevelKeys": [],
+  "ownProperties": {
+    "title":         { "types": ["string"], "required": false, "description": "Label shown next to the color well; default empty" },
+    "selectedColor": { "types": ["string"], "required": false, "description": "Initial color as hex (#RRGGBB) or named color; default clear" }
+  },
+  "observable": {
+    "value": { "types": ["string"], "description": "Currently selected color as a hex string; set via setElementValue" }
+  }
+}

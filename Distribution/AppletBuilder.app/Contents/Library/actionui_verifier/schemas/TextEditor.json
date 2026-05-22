@@ -1,0 +1,16 @@
+{
+  "type": "TextEditor",
+  "description": "Multi-line text editing area. Supports plain text and (macOS/iOS 26+) attributed/markdown text.",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": true,
+  "topLevelKeys": [],
+  "ownProperties": {
+    "text":        { "types": ["string"],  "required": false, "description": "Initial plain-text content; default empty" },
+    "markdown":    { "types": ["string"],  "required": false, "description": "Initial content as a markdown string (macOS 26 / iOS 26+); takes precedence over 'text'" },
+    "placeholder": { "types": ["string"],  "required": false, "description": "Placeholder text shown when the editor is empty" },
+    "readOnly":    { "types": ["boolean"], "required": false, "description": "When true, text is selectable and scrollable but not editable; default false" }
+  },
+  "observable": {
+    "value": { "types": ["string"], "description": "Current plain-text content; set via setElementValue" }
+  }
+}

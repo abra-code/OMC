@@ -12,7 +12,6 @@
     {
       "type": "Form",
       "properties": {
-        "spacing": 10
       },
       "children": [
         {

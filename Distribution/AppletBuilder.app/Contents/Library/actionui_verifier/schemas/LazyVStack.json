@@ -1,0 +1,16 @@
+{
+  "type": "LazyVStack",
+  "description": "Vertical lazy-loading stack; renders children only as they scroll into view. Supports static children or data-driven template mode.",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": true,
+  "topLevelKeys": ["children", "template"],
+  "children": { "required": false, "description": "Static child views" },
+  "template":  { "required": false, "description": "Template rendered once per data row; set rows via setElementRows" },
+  "ownProperties": {
+    "spacing":   { "types": ["number"], "required": false, "description": "Spacing between children; default 0" },
+    "alignment": { "types": ["string"], "required": false, "enum": ["leading","center","trailing"], "description": "Horizontal alignment of children; default 'center'" }
+  },
+  "observable": {
+    "states.content": { "types": ["array"], "description": "All data rows as [[String]]; use getElementRows/setElementRows" }
+  }
+}

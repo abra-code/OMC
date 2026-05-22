@@ -1,0 +1,22 @@
+{
+  "type": "Tab",
+  "description": "A tab definition used exclusively inside TabView children. Not rendered standalone; defines the tab label and content.",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": false,
+  "topLevelKeys": ["content"],
+  "content": { "required": true, "description": "Single child view shown when this tab is selected" },
+  "ownProperties": {
+    "title":       { "types": ["string"], "required": true,  "description": "Tab label text" },
+    "systemImage": { "types": ["string"], "required": false, "description": "SF Symbol name for the tab icon" },
+    "assetImage":  { "types": ["string"], "required": false, "description": "Asset catalog image name for the tab icon" },
+    "badge": {
+      "required": false,
+      "description": "Badge shown on the tab; integer count or string; capped at '99+' for integers > 99",
+      "oneOf": [
+        { "types": ["integer"] },
+        { "types": ["string"] }
+      ]
+    }
+  },
+  "observable": {}
+}

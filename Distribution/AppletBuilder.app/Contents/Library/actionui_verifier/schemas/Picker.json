@@ -1,0 +1,20 @@
+{
+  "type": "Picker",
+  "description": "Selection control with a list of options",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": true,
+  "topLevelKeys": [],
+  "ownProperties": {
+    "title":   { "types": ["string"], "required": false, "description": "Label text" },
+    "options": {
+      "types": ["array"],
+      "required": true,
+      "description": "Array of strings (auto-tagged 1-based) or [{title, tag}] dicts. May include {section: 'Name'} and {divider: true} entries."
+    },
+    "pickerStyle": { "types": ["string"], "required": false, "enum": ["menu","segmented","wheel","radioGroup"], "description": "'wheel' is iOS only; 'radioGroup' is macOS only" },
+    "horizontalRadioGroupLayout": { "types": ["boolean"], "required": false, "description": "Horizontal layout for radioGroup style; macOS only; defaults to false" }
+  },
+  "observable": {
+    "value": { "types": ["string"], "description": "Tag of the selected option; 1-based index string for simple arrays" }
+  }
+}
