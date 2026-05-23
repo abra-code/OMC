@@ -15,7 +15,7 @@ The list is derived **directly** from the source files:
 | **1. Substitution** | Every `__FOO__` separate string in a command array (`COMMAND`, `NAME`, `WARNING`, etc.) is replaced with its resolved value **before** execution. |
 | **2. Automatic Export** | The following variables are **always exported** (regardless of scanning):<br>`$OMC_OBJ_TEXT`, `$OMC_OBJ_PATH`, `$OMC_OMC_RESOURCES_PATH`, `$OMC_OMC_SUPPORT_PATH`, `$OMC_APP_BUNDLE_PATH`, `$OMC_NIB_DLG_GUID`, `$OMC_CURRENT_COMMAND_GUID`. |
 | **3. Export detection** | For all other variables, the engine scans the `COMMAND` array for the literal string `OMC_FOO`. If found, the resolved value is exported (for modes that support env vars). |
-| **4. External scripts** | `exe_script_file` scripts are **not** scanned. Force export via comment trick or `ENVIRONMENT_VARIABLES`. |
+| **4. External scripts** | `exe_script_file` scripts are **not** scanned. Force export via `ENVIRONMENT_VARIABLES`. |
 | **5. `NAME` arrays** | Only `__FOO__` works in dynamic labels – env vars are not expanded. |
 
 ---
@@ -86,24 +86,25 @@ The list is derived **directly** from the source files:
 
 ## Forcing Exports in `exe_script_file`
 
+`exe_script_file` does not scan the script body for `OMC_FOO` references, so non-auto variables must be declared explicitly via `ENVIRONMENT_VARIABLES`:
+
 ```xml
 <dict>
   <key>COMMAND_ID</key>
   <string>my_action</string>
   <key>EXECUTION_MODE</key>
   <string>exe_script_file</string>
-  <key>COMMAND</key>
-  <array>
-    <!-- Force export of non-auto variable -->
-    <string># OMC_OBJ_NAME</string>
-  </array>
   <key>ENVIRONMENT_VARIABLES</key>
   <dict>
+    <key>OMC_OBJ_NAME</key>
+    <string></string>
     <key>OMC_DLG_INPUT_TEXT</key>
     <string></string>
   </dict>
 </dict>
 ```
+
+The empty string values are placeholders — the resolved values are substituted at runtime.
 
 Script:
 ```bash

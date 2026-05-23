@@ -15,7 +15,7 @@ if [ -n "$OMC_PARENT_DIALOG_GUID" ]; then
 fi
 
 if [ -z "$start_page" ]; then
-    start_page="file:///tmp/appletbuilder_help/ActionUI-JSON-Guide.html"
+    start_page="file:///tmp/appletbuilder_help/appletbuilder_user_guide.html"
 fi
 
 set_value "$HELP_WEBVIEW_ID" "$start_page"

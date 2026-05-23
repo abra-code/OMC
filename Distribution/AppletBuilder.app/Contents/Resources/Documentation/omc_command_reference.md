@@ -221,7 +221,7 @@ See the full **[OMC Runtime Context Reference](omc_runtime_context_reference.md)
 **Best Practices**:
 - Use `$OMC_FOO` in scripts.
 - Use `__FOO__` only in `NAME` arrays or when env vars are unavailable.
-- Force export for `exe_script_file` by putting an env var in a comment in `COMMAND` or add explicit `ENVIRONMENT_VARIABLES`.
+- Force export for `exe_script_file` via the `ENVIRONMENT_VARIABLES` dictionary.
 
 ---
 
