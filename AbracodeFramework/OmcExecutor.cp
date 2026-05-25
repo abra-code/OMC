@@ -724,6 +724,44 @@ PrependPythonBinDirToEnvironmentPATH(CFStringRef pythonPath)
     return newPath;
 }
 
+static CFStringRef
+PrependBundlePackagesToEnvironmentPYTHONPATH()
+{
+    CFObj<CFURLRef> bundleURL = ::CFBundleCopyBundleURL(::CFBundleGetMainBundle());
+    if (bundleURL == nullptr)
+        return nullptr;
+
+    CFObj<CFURLRef> packagesURL(::CFURLCreateCopyAppendingPathComponent(
+                                    kCFAllocatorDefault,
+                                    bundleURL,
+                                    CFSTR("Contents/Library/Packages"),
+                                    true));
+    if (packagesURL == nullptr)
+        return nullptr;
+
+    CFObj<CFBooleanRef> isDir;
+    if (!::CFURLCopyResourcePropertyForKey(packagesURL, kCFURLIsDirectoryKey, &isDir, nullptr)
+        || (isDir == nullptr) || !::CFBooleanGetValue(isDir))
+        return nullptr;
+
+    CFObj<CFStringRef> packagesPath = ::CFURLCopyFileSystemPath(packagesURL, kCFURLPOSIXPathStyle);
+    if (packagesPath == nullptr)
+        return nullptr;
+
+    CFMutableStringRef newPythonPath = ::CFStringCreateMutable(kCFAllocatorDefault, 0);
+    ::CFStringAppend(newPythonPath, packagesPath);
+    const char *existingPythonPath = ::getenv("PYTHONPATH");
+    if (existingPythonPath != nullptr && existingPythonPath[0] != '\0')
+    {
+        ::CFStringAppend(newPythonPath, CFSTR(":"));
+        CFObj<CFStringRef> existing = ::CFStringCreateWithCString(kCFAllocatorDefault,
+                                                                  existingPythonPath,
+                                                                  kCFStringEncodingUTF8);
+        ::CFStringAppend(newPythonPath, existing);
+    }
+    return newPythonPath;
+}
+
 static inline
 CFStringRef GetShellFromScriptExtension(CFStringRef inExt, CFMutableDictionaryRef envVariables)
 {
@@ -746,6 +784,12 @@ CFStringRef GetShellFromScriptExtension(CFStringRef inExt, CFMutableDictionaryRe
                 if (newPaths != NULL)
                 {
                     ::CFDictionaryAddValue(envVariables, CFSTR("PATH"), newPaths);
+                }
+
+                CFObj<CFStringRef> newPythonPath = PrependBundlePackagesToEnvironmentPYTHONPATH();
+                if (newPythonPath != NULL)
+                {
+                    ::CFDictionaryAddValue(envVariables, CFSTR("PYTHONPATH"), newPythonPath);
                 }
 
                 return pythonToolPath;
