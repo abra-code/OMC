@@ -647,30 +647,38 @@ static_assert(kScriptExtCount == sizeof(sExtensionToShellMap)/sizeof(ExtensionAn
 // sh is the default fallback for any script with no extension
 CFStringRef kDefaultShell = sExtensionToShellMap[0].shell;
 
+// Returns the path to the embedded python3 binary if present, nullptr otherwise.
+// the expected location for bundled Python is OMCApplet.app/Contents/Library/Python/
+// A relocatable Python 3 distribution suitable for embeddeding in the applets can be produced with this infra:
+// https://github.com/abra-code/Python-Embedding
+static CFStringRef GetEmbeddedPythonPath()
+{
+    static CFStringRef sEmbeddedPythonPath = nullptr;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        CFObj<CFURLRef> bundleURL = ::CFBundleCopyBundleURL(::CFBundleGetMainBundle());
+        if(bundleURL != nullptr)
+        {
+            CFObj<CFURLRef> pythonURL(::CFURLCreateCopyAppendingPathComponent(
+                                         kCFAllocatorDefault,
+                                         bundleURL,
+                                         CFSTR("Contents/Library/Python/bin/python3"),
+                                         false));
+            if((pythonURL != nullptr) && IsFileExecutable(pythonURL))
+                sEmbeddedPythonPath = CreatePathFromCFURL(pythonURL, kEscapeNone);
+        }
+    });
+    return sEmbeddedPythonPath;
+}
+
 static CFStringRef GetPythonToolPath()
 {
     static CFStringRef sPythonPath = nullptr;
 
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        // Check if the app has embeded Python 3 in its bundle
-        // the expected location for bundled Python is OMCApplet.app/Contents/Library/Python/
-        // A relocatable Python 3 distribution suitable for embeddeding in the applets can be produced with this infra:
-        // https://github.com/abra-code/Python-Embedding
-        CFObj<CFURLRef> hostAppBundleURL = ::CFBundleCopyBundleURL(::CFBundleGetMainBundle());
-        if(hostAppBundleURL != nullptr)
-        {
-            CFObj<CFURLRef> pythonPathURL(::CFURLCreateCopyAppendingPathComponent(
-                                              kCFAllocatorDefault,
-                                              hostAppBundleURL,
-                                              CFSTR("Contents/Library/Python/bin/python3"),
-                                              false));
-            if((pythonPathURL != nullptr) && IsFileExecutable(pythonPathURL))
-            {
-                sPythonPath = CreatePathFromCFURL(pythonPathURL, kEscapeNone);
-            }
-        }
-        
+        sPythonPath = GetEmbeddedPythonPath();
+
         // Embedded Python 3 distribution not found
         // The command assumes Python is installed on deployment machine
         // Let's find the location, if any
@@ -768,6 +776,22 @@ CFStringRef GetShellFromScriptExtension(CFStringRef inExt, CFMutableDictionaryRe
 	if(inExt == nullptr)
 		return kDefaultShell;
 
+    // Export Python env vars whenever the app bundles its own Python distribution,
+    // regardless of the script type being executed (e.g. a .sh script calling python3).
+    CFStringRef embeddedPythonPath = GetEmbeddedPythonPath();
+    if(embeddedPythonPath != nullptr)
+    {
+        // add pyc cache location to env vars
+        // this is not a writable location for sandboxed apps but OMC applets are hard or impossible to sandbox
+        ::CFDictionaryAddValue(envVariables, CFSTR("PYTHONPYCACHEPREFIX"), CFSTR(PYTHONPYCACHEPREFIX));
+        CFObj<CFStringRef> newPaths = PrependPythonBinDirToEnvironmentPATH(embeddedPythonPath);
+        if (newPaths != NULL)
+            ::CFDictionaryAddValue(envVariables, CFSTR("PATH"), newPaths);
+        CFObj<CFStringRef> newPythonPath = PrependBundlePackagesToEnvironmentPYTHONPATH();
+        if (newPythonPath != NULL)
+            ::CFDictionaryAddValue(envVariables, CFSTR("PYTHONPATH"), newPythonPath);
+    }
+
 	size_t mapElementsCount = sizeof(sExtensionToShellMap)/sizeof(ExtensionAndShell);
 	for(size_t i = 0; i < mapElementsCount; i++)
 	{
@@ -775,26 +799,16 @@ CFStringRef GetShellFromScriptExtension(CFStringRef inExt, CFMutableDictionaryRe
 		{
             if(i == kScriptExtPy)
             {
-                // add pyc cache location to env vars
-                // this is not a writable location for sandboxed apps but OMC applets are hard or impossible to sandbox
-                ::CFDictionaryAddValue(envVariables, CFSTR("PYTHONPYCACHEPREFIX"), CFSTR(PYTHONPYCACHEPREFIX));
-                CFStringRef pythonToolPath = GetPythonToolPath();
-                // add the path to found python3 tool as the first search path
-                CFObj<CFStringRef> newPaths = PrependPythonBinDirToEnvironmentPATH(pythonToolPath);
-                if (newPaths != NULL)
+                if(embeddedPythonPath == nullptr)
                 {
-                    ::CFDictionaryAddValue(envVariables, CFSTR("PATH"), newPaths);
+                    // external Python: only prepend its bin dir to PATH so the right python3 is found
+                    CFStringRef pythonToolPath = GetPythonToolPath();
+                    CFObj<CFStringRef> newPaths = PrependPythonBinDirToEnvironmentPATH(pythonToolPath);
+                    if (newPaths != NULL)
+                        ::CFDictionaryAddValue(envVariables, CFSTR("PATH"), newPaths);
                 }
-
-                CFObj<CFStringRef> newPythonPath = PrependBundlePackagesToEnvironmentPYTHONPATH();
-                if (newPythonPath != NULL)
-                {
-                    ::CFDictionaryAddValue(envVariables, CFSTR("PYTHONPATH"), newPythonPath);
-                }
-
-                return pythonToolPath;
+                return GetPythonToolPath();
             }
-
 			return sExtensionToShellMap[i].shell;
 		}
 	}
