@@ -161,6 +161,16 @@ update_python() {
     fi
 }
 
+# Remove any __pycache__ directories left behind during development
+clean_pycache() {
+    local target_path="$1"
+    local count=$(/usr/bin/find "$target_path" -type d -name "__pycache__" 2>/dev/null | /usr/bin/wc -l | /usr/bin/tr -d ' ')
+    if [ "$count" -gt 0 ]; then
+        /usr/bin/find "$target_path" -type d -name "__pycache__" -exec /bin/rm -rf {} + 2>/dev/null
+        log "Removed ${count} __pycache__ director$([ "$count" -eq 1 ] && echo "y" || echo "ies")"
+    fi
+}
+
 # Codesign and report result
 do_codesign() {
     local target_path="$1"
@@ -208,4 +218,5 @@ set_value "$BUILD_LOG_ID" "$build_log"
 
 update_framework "$project_path"
 update_python "$project_path"
+clean_pycache "$project_path"
 do_codesign "$project_path"
