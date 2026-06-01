@@ -621,6 +621,15 @@
 			<string>exe_script_file</string>
 		</dict>
 
+		<dict>
+			<key>NAME</key>
+			<string>AppletBuilder</string>
+			<key>COMMAND_ID</key>
+			<string>AppletBuilder.scripts.validate</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+
 		<!-- ════════════════════════════════════════════════════════
 		     UI Files tab
 		     ════════════════════════════════════════════════════════ -->

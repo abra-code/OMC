@@ -111,6 +111,18 @@
           "children": [
             {
               "type": "Button",
+              "id": 620,
+              "properties": {
+                "systemImage": "checkmark.circle",
+                "title": "Validate",
+                "buttonStyle": "bordered",
+                "controlSize": "small",
+                "actionID": "AppletBuilder.scripts.validate",
+                "disabled": true
+              }
+            },
+            {
+              "type": "Button",
               "id": 623,
               "properties": {
                 "systemImage": "square.and.arrow.down",

@@ -171,6 +171,22 @@ clean_pycache() {
     fi
 }
 
+# Thin universal binaries to a single architecture (selected in Build & Run picker).
+# Must run before codesigning — modifying binaries invalidates their signatures.
+thin_binaries() {
+    local target_path="$1"
+    local arch="$OMC_ACTIONUI_VIEW_404_VALUE"
+
+    if [ -z "$arch" ] || [ "$arch" = "none" ]; then
+        return
+    fi
+
+    log ""
+    log "Thinning universal executables to ${arch}..."
+    local thin_output=$(/bin/bash "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/thin_distribution.sh" --arch "$arch" "$target_path" 2>&1)
+    log "$thin_output"
+}
+
 # Codesign and report result
 do_codesign() {
     local target_path="$1"
@@ -219,4 +235,5 @@ set_value "$BUILD_LOG_ID" "$build_log"
 update_framework "$project_path"
 update_python "$project_path"
 clean_pycache "$project_path"
+thin_binaries "$project_path"
 do_codesign "$project_path"

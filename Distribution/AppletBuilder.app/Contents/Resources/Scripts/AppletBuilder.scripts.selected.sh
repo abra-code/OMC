@@ -10,6 +10,7 @@ if [ -z "$selected_path" ]; then
     # No selection — disable buttons, clear detail
     set_enabled "$SCRIPTS_REMOVE_BTN_ID" false
     set_enabled "$SCRIPTS_REVEAL_BTN_ID" false
+    set_enabled "$SCRIPTS_VALIDATE_BTN_ID" false
     set_enabled "$SCRIPTS_SAVE_BTN_ID" false
     set_enabled "$SCRIPTS_EXT_EDIT_BTN_ID" false
     set_value "$SCRIPTS_DETAIL_ID" ""
@@ -20,6 +21,7 @@ fi
 # Enable action buttons
 set_enabled "$SCRIPTS_REMOVE_BTN_ID" true
 set_enabled "$SCRIPTS_REVEAL_BTN_ID" true
+set_enabled "$SCRIPTS_VALIDATE_BTN_ID" true
 set_enabled "$SCRIPTS_EXT_EDIT_BTN_ID" true
 # Save starts disabled until text is edited
 set_enabled "$SCRIPTS_SAVE_BTN_ID" false

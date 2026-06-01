@@ -28,6 +28,26 @@
         ]
       },
       {
+        "type": "LabeledContent",
+        "properties": {
+          "title": "Thin Universal Executables:"
+        },
+        "children": [
+          {
+            "type": "Picker",
+            "id": 404,
+            "properties": {
+              "options": [
+                { "title": "None", "tag": "none" },
+                { "title": "Apple Silicon (arm64)", "tag": "arm64" },
+                { "title": "Intel (x86_64)", "tag": "x86_64" }
+              ],
+              "pickerStyle": "menu"
+            }
+          }
+        ]
+      },
+      {
         "type": "Toggle",
         "id": 403,
         "properties": {
@@ -38,7 +58,6 @@
       {
         "type": "Section",
         "properties": {
-          "header": "Actions",
           "padding": { "top": 0, "bottom": 0 }
         },
         "children": [
