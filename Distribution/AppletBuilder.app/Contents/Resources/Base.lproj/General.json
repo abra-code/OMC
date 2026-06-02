@@ -29,7 +29,7 @@
               "type": "Image",
               "id": 307,
               "properties": {
-                "scaleMode": "fit",
+                "contentMode": "fit",
                 "frame": { "width": 96, "height": 96 }
               }
             },

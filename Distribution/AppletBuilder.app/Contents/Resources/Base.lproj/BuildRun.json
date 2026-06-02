@@ -56,6 +56,14 @@
         }
       },
       {
+        "type": "Toggle",
+        "id": 405,
+        "properties": {
+          "title": "Treat Validation Warnings As Errors",
+          "isOn": false
+        }
+      },
+      {
         "type": "Section",
         "properties": {
           "padding": { "top": 0, "bottom": 0 }

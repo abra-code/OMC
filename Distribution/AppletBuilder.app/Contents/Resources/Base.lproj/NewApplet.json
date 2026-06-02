@@ -24,7 +24,7 @@
                     "type": "Image",
                     "id": 211,
                     "properties": {
-                        "scaleMode": "fit",
+                        "contentMode": "fit",
                         "frame": {
                             "width": 96,
                             "height": 96

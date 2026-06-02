@@ -130,18 +130,30 @@ update_python() {
         return
     fi
 
+    local cmp=$(compare_versions "$src_version" "$dst_version")
+
+    # Applet already has a newer Python than AppletBuilder (older builder).
+    # Replacing would DOWNGRADE the runtime and likely break the applet's
+    # scripts and site-packages — never do that automatically.
+    if [ "$cmp" = "older" ]; then
+        log "Applet has newer Python v${dst_version} than AppletBuilder (v${src_version}) — keeping the applet's runtime."
+        log "Update AppletBuilder to manage this applet's Python."
+        return
+    fi
+
+    # From here AppletBuilder's Python is newer than the applet's.
     local src_major=$(echo "$src_version" | /usr/bin/cut -d. -f1-2)
     local dst_major=$(echo "$dst_version" | /usr/bin/cut -d. -f1-2)
 
     if [ "$src_major" != "$dst_major" ]; then
-        # Major version change — ask user
+        # Major/minor upgrade — confirm, since it may break dependencies.
         "$alert_tool" --level caution \
             --title "Python Version Change" \
-            --ok "Replace" --cancel "Keep Current" \
-            "Target applet has Python ${dst_version}. AppletBuilder has Python ${src_version}. Major version change may break dependencies. Replace?"
+            --ok "Upgrade" --cancel "Keep Current" \
+            "Applet has Python ${dst_version}. AppletBuilder has newer Python ${src_version}. Upgrading may break dependencies. Upgrade?"
 
         if [ $? -eq 0 ]; then
-            log "Replacing Python: v${dst_version} -> v${src_version}"
+            log "Upgrading Python: v${dst_version} -> v${src_version}"
             /bin/rm -rf "$dst_python"
             /bin/cp -Rp "$src_python" "$dst_python"
         else
@@ -150,15 +162,10 @@ update_python() {
         return
     fi
 
-    # Same major — upgrade if src is newer
-    local cmp=$(compare_versions "$src_version" "$dst_version")
-    if [ "$cmp" = "newer" ]; then
-        log "Updating Python: v${dst_version} -> v${src_version}"
-        /bin/rm -rf "$dst_python"
-        /bin/cp -Rp "$src_python" "$dst_python"
-    else
-        log "Python v${dst_version} is current"
-    fi
+    # Same major.minor, builder has newer patch — upgrade silently.
+    log "Updating Python: v${dst_version} -> v${src_version}"
+    /bin/rm -rf "$dst_python"
+    /bin/cp -Rp "$src_python" "$dst_python"
 }
 
 # Remove any __pycache__ directories left behind during development
@@ -185,6 +192,125 @@ thin_binaries() {
     log "Thinning universal executables to ${arch}..."
     local thin_output=$(/bin/bash "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/thin_distribution.sh" --arch "$arch" "$target_path" 2>&1)
     log "$thin_output"
+}
+
+# Run all bundled validators (Command.plist, scripts, ActionUI JSON) against the
+# target applet. Logs a per-file summary. Hard errors return 1 so the build
+# aborts before codesigning a broken applet; warnings are reported but don't block.
+validate_project() {
+    local target_path="$1"
+    local resources_dir="$target_path/Contents/Resources"
+    local error_count=0
+    local warning_count=0
+    local report=""
+
+    # "Treat Validation Warnings As Errors" toggle (Build & Run pane)
+    local warnings_as_errors=0
+    local waeval="$OMC_ACTIONUI_VIEW_405_VALUE"
+    if [ "$waeval" = "1" ] || [ "$waeval" = "true" ]; then
+        warnings_as_errors=1
+    fi
+
+    log ""
+    log "Validating project..."
+
+    # Command.plist — plutil -lint
+    local cmd_plist="$resources_dir/Command.plist"
+    if [ -f "$cmd_plist" ]; then
+        local plist_out
+        plist_out=$(/usr/bin/plutil -lint "$cmd_plist" 2>&1)
+        if [ $? -eq 0 ]; then
+            log "  Command.plist: OK"
+        else
+            log "  Command.plist: INVALID"
+            error_count=$((error_count + 1))
+            report="${report}Command.plist:
+${plist_out}
+
+"
+        fi
+    fi
+
+    # Scripts — per-type syntax check (skips files with no validator)
+    local scripts_dir="$resources_dir/Scripts"
+    if [ -d "$scripts_dir" ]; then
+        local script_ok=0
+        local sf sname srci
+        for sf in "$scripts_dir"/*; do
+            [ ! -f "$sf" ] && continue
+            sname=$(/usr/bin/basename "$sf")
+            validate_script_file "$sf"
+            srci=$?
+            if [ "$srci" -eq 0 ]; then
+                script_ok=$((script_ok + 1))
+            elif [ "$srci" -ne 99 ]; then
+                log "  Script ${sname}: SYNTAX ERROR"
+                error_count=$((error_count + 1))
+                report="${report}Script ${sname}:
+${SCRIPT_VALIDATE_OUTPUT}
+
+"
+            fi
+        done
+        log "  Scripts: ${script_ok} OK"
+    fi
+
+    # ActionUI JSON — bundled verifier (rc 0 = valid, 2 = warnings, else errors)
+    local verifier="${OMC_APP_BUNDLE_PATH}/Contents/Library/actionui_verifier/validate_actionui.py"
+    if [ -f "$verifier" ] && [ -x "$python3" ]; then
+        local jf jname vout vrc
+        for jf in "$resources_dir/Base.lproj"/*.json "$resources_dir"/*.json; do
+            [ ! -f "$jf" ] && continue
+            jname=$(/usr/bin/basename "$jf")
+            vout=$("$python3" "$verifier" "$jf" 2>&1)
+            vrc=$?
+            if [ "$vrc" -eq 0 ]; then
+                log "  UI ${jname}: OK"
+            elif [ "$vrc" -eq 2 ]; then
+                log "  UI ${jname}: warnings"
+                warning_count=$((warning_count + 1))
+                report="${report}UI ${jname} (warnings):
+${vout}
+
+"
+            else
+                log "  UI ${jname}: VALIDATION ERROR"
+                error_count=$((error_count + 1))
+                report="${report}UI ${jname}:
+${vout}
+
+"
+            fi
+        done
+    fi
+
+    if [ "$error_count" -eq 0 ] && [ "$warning_count" -eq 0 ]; then
+        log "Validation passed."
+        return 0
+    fi
+
+    log "Validation: ${error_count} error(s), ${warning_count} warning(s)."
+    if [ "$error_count" -gt 0 ]; then
+        show_errors "Build halted — validation found ${error_count} error(s) and ${warning_count} warning(s):
+
+${report}"
+        return 1
+    fi
+
+    # Warnings only.
+    if [ "$warnings_as_errors" -eq 1 ]; then
+        log "  Treating warnings as errors."
+        show_errors "Build halted — validation found ${warning_count} warning(s), treated as errors:
+
+${report}"
+        return 1
+    fi
+
+    # Surface warnings but let the build continue.
+    show_errors "Validation found ${warning_count} warning(s); the build will continue:
+
+${report}"
+    return 0
 }
 
 # Codesign and report result
@@ -231,6 +357,13 @@ fi
 app_name=$(/usr/bin/basename "$project_path")
 build_log="Building ${app_name}..."
 set_value "$BUILD_LOG_ID" "$build_log"
+
+if ! validate_project "$project_path"; then
+    timestamp=$(/bin/date "+%Y-%m-%d %H:%M:%S")
+    log ""
+    log "Build halted — fix validation errors and try again. (${timestamp})"
+    exit 1
+fi
 
 update_framework "$project_path"
 update_python "$project_path"
