@@ -37,6 +37,17 @@ compare_versions() {
     echo "same"
 }
 
+# Strip the com.apple.quarantine attribute Gatekeeper attaches to files brought
+# in from another machine (e.g. an applet codesigned locally elsewhere). Left in
+# place it makes codesign / launch report the applet as "damaged". Best-effort
+# and recursive over the whole bundle; runs before anything else.
+strip_quarantine() {
+    local target_path="$1"
+    log "Stripping quarantine attribute..."
+    /usr/bin/xattr -r -d com.apple.quarantine "$target_path" 2>/dev/null
+    return 0
+}
+
 # Copy the app executable from builder to target (with proper name)
 copy_executable() {
     local target_path="$1"
@@ -204,15 +215,31 @@ validate_project() {
     local warning_count=0
     local report=""
 
-    # "Treat Validation Warnings As Errors" toggle (Build & Run pane)
-    local warnings_as_errors=0
-    local waeval="$OMC_ACTIONUI_VIEW_405_VALUE"
-    if [ "$waeval" = "1" ] || [ "$waeval" = "true" ]; then
-        warnings_as_errors=1
-    fi
-
     log ""
     log "Validating project..."
+
+    # Info.plist — plutil -lint
+    local info_plist="$target_path/Contents/Info.plist"
+    if [ -f "$info_plist" ]; then
+        local info_out
+        info_out=$(/usr/bin/plutil -lint "$info_plist" 2>&1)
+        if [ $? -eq 0 ]; then
+            log "  Info.plist: OK"
+        else
+            log "  Info.plist: INVALID"
+            error_count=$((error_count + 1))
+            report="${report}Info.plist:
+${info_out}
+
+"
+        fi
+    else
+        log "  Info.plist: MISSING"
+        error_count=$((error_count + 1))
+        report="${report}Info.plist: missing (Contents/Info.plist not found)
+
+"
+    fi
 
     # Command.plist — plutil -lint
     local cmd_plist="$resources_dir/Command.plist"
@@ -284,32 +311,149 @@ ${vout}
         done
     fi
 
-    if [ "$error_count" -eq 0 ] && [ "$warning_count" -eq 0 ]; then
-        log "Validation passed."
+    finish_validation "Validation" "$error_count" "$warning_count" "$report"
+}
+
+# Sanity-check Info.plist *content* against the on-disk bundle. Runs AFTER the
+# framework/executable are copied so CFBundleExecutable can be verified against
+# the real binary. Missing executable / nib are errors (halt); icon problems are
+# warnings (unless "Treat Validation Warnings As Errors" is on).
+validate_info_content() {
+    local target_path="$1"
+    local contents_dir="$target_path/Contents"
+    local resources_dir="$contents_dir/Resources"
+    local info_plist="$contents_dir/Info.plist"
+    local error_count=0
+    local warning_count=0
+    local report=""
+
+    log ""
+    log "Checking Info.plist content..."
+
+    if [ ! -f "$info_plist" ]; then
+        # Absence already reported by validate_project; nothing to check against.
+        log "  Info.plist: MISSING"
         return 0
     fi
 
-    log "Validation: ${error_count} error(s), ${warning_count} warning(s)."
-    if [ "$error_count" -gt 0 ]; then
-        show_errors "Build halted — validation found ${error_count} error(s) and ${warning_count} warning(s):
+    # CFBundleExecutable → Contents/MacOS/<exe> must exist (checked post-copy).
+    local exe
+    exe=$(plist_read "$info_plist" CFBundleExecutable)
+    if [ -z "$exe" ]; then
+        log "  CFBundleExecutable: NOT SET"
+        error_count=$((error_count + 1))
+        report="${report}CFBundleExecutable: not set in Info.plist
 
-${report}"
+"
+    elif [ ! -f "$contents_dir/MacOS/$exe" ]; then
+        log "  CFBundleExecutable '${exe}': MISSING"
+        error_count=$((error_count + 1))
+        report="${report}CFBundleExecutable '${exe}': Contents/MacOS/${exe} not found
+
+"
+    else
+        log "  CFBundleExecutable '${exe}': OK"
+    fi
+
+    # NSMainNibFile → matching .nib must exist in Base.lproj or Resources. Only
+    # checked when present (an app may use a storyboard or no main nib).
+    local nib
+    nib=$(plist_read "$info_plist" NSMainNibFile)
+    if [ -n "$nib" ]; then
+        local nib_base="${nib%.nib}"
+        if [ -e "$resources_dir/Base.lproj/${nib_base}.nib" ] || [ -e "$resources_dir/${nib_base}.nib" ]; then
+            log "  NSMainNibFile '${nib}': OK"
+        else
+            log "  NSMainNibFile '${nib}': MISSING"
+            error_count=$((error_count + 1))
+            report="${report}NSMainNibFile '${nib}': ${nib_base}.nib not found in Base.lproj or Resources
+
+"
+        fi
+    fi
+
+    # CFBundleIconFile → Resources/<icon>.icns should exist (warning only).
+    local iconfile
+    iconfile=$(plist_read "$info_plist" CFBundleIconFile)
+    if [ -n "$iconfile" ]; then
+        local icon_base="${iconfile%.icns}"
+        if [ -f "$resources_dir/${icon_base}.icns" ]; then
+            log "  CFBundleIconFile '${iconfile}': OK"
+        else
+            log "  CFBundleIconFile '${iconfile}': missing .icns"
+            warning_count=$((warning_count + 1))
+            report="${report}CFBundleIconFile '${iconfile}' (warning): ${icon_base}.icns not found in Resources
+
+"
+        fi
+    fi
+
+    # CFBundleIconName → asset-catalog icon; requires Assets.car. When assetutil
+    # is available we confirm the named asset is actually inside it (warning only).
+    local iconname
+    iconname=$(plist_read "$info_plist" CFBundleIconName)
+    if [ -n "$iconname" ]; then
+        local assets="$resources_dir/Assets.car"
+        if [ ! -f "$assets" ]; then
+            log "  CFBundleIconName '${iconname}': Assets.car missing"
+            warning_count=$((warning_count + 1))
+            report="${report}CFBundleIconName '${iconname}' (warning): Assets.car not found in Resources
+
+"
+        elif [ -x /usr/bin/assetutil ]; then
+            if /usr/bin/assetutil --info "$assets" 2>/dev/null | /usr/bin/grep -Fq "\"Name\" : \"${iconname}\""; then
+                log "  CFBundleIconName '${iconname}': OK"
+            else
+                log "  CFBundleIconName '${iconname}': not found in Assets.car"
+                warning_count=$((warning_count + 1))
+                report="${report}CFBundleIconName '${iconname}' (warning): no asset named '${iconname}' found in Assets.car
+
+"
+            fi
+        else
+            # Assets.car present but no assetutil to inspect it — can't confirm.
+            log "  CFBundleIconName '${iconname}': Assets.car present (not inspected)"
+        fi
+    fi
+
+    finish_validation "Info.plist content" "$error_count" "$warning_count" "$report"
+}
+
+# Summarize a validation phase and decide whether the build may continue.
+# Args: label  error_count  warning_count  report_text
+# Reads global WARNINGS_AS_ERRORS ("1" = treat warnings as errors).
+# Returns 0 = passed / continue, 1 = halt the build.
+finish_validation() {
+    local label="$1"
+    local errs="$2"
+    local warns="$3"
+    local rep="$4"
+
+    if [ "$errs" -eq 0 ] && [ "$warns" -eq 0 ]; then
+        log "${label} passed."
+        return 0
+    fi
+
+    log "${label}: ${errs} error(s), ${warns} warning(s)."
+
+    if [ "$errs" -gt 0 ]; then
+        show_errors "Build halted — ${label} found ${errs} error(s) and ${warns} warning(s):
+
+${rep}"
         return 1
     fi
 
-    # Warnings only.
-    if [ "$warnings_as_errors" -eq 1 ]; then
+    if [ "$WARNINGS_AS_ERRORS" = "1" ]; then
         log "  Treating warnings as errors."
-        show_errors "Build halted — validation found ${warning_count} warning(s), treated as errors:
+        show_errors "Build halted — ${label} found ${warns} warning(s), treated as errors:
 
-${report}"
+${rep}"
         return 1
     fi
 
-    # Surface warnings but let the build continue.
-    show_errors "Validation found ${warning_count} warning(s); the build will continue:
+    show_errors "${label} found ${warns} warning(s); the build will continue:
 
-${report}"
+${rep}"
     return 0
 }
 
@@ -358,6 +502,16 @@ app_name=$(/usr/bin/basename "$project_path")
 build_log="Building ${app_name}..."
 set_value "$BUILD_LOG_ID" "$build_log"
 
+# "Treat Validation Warnings As Errors" toggle (Build & Run pane) — shared by
+# every validation phase via finish_validation.
+WARNINGS_AS_ERRORS=0
+__wae="$OMC_ACTIONUI_VIEW_405_VALUE"
+if [ "$__wae" = "1" ] || [ "$__wae" = "true" ]; then
+    WARNINGS_AS_ERRORS=1
+fi
+
+strip_quarantine "$project_path"
+
 if ! validate_project "$project_path"; then
     timestamp=$(/bin/date "+%Y-%m-%d %H:%M:%S")
     log ""
@@ -369,4 +523,12 @@ update_framework "$project_path"
 update_python "$project_path"
 clean_pycache "$project_path"
 thin_binaries "$project_path"
+
+if ! validate_info_content "$project_path"; then
+    timestamp=$(/bin/date "+%Y-%m-%d %H:%M:%S")
+    log ""
+    log "Build halted — fix Info.plist and try again. (${timestamp})"
+    exit 1
+fi
+
 do_codesign "$project_path"
