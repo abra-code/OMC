@@ -1,7 +1,8 @@
 #!/bin/bash
 # AppletBuilder.commands.remove - Remove selected command from Command.plist
 
-source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.builder.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.tables.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.plist.sh"
 
 project_path=$(load_project_path)
 cmd_plist="$project_path/Contents/Resources/Command.plist"

@@ -1,7 +1,7 @@
 #!/bin/bash
 # AppletBuilder.general.loaded - Populate General tab when its LoadableView finishes loading
 
-source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.builder.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.plist.sh"
 
 project_path=$(load_project_path)
 

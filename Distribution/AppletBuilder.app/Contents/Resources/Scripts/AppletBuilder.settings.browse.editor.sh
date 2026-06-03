@@ -1,7 +1,7 @@
 #!/bin/bash
 # AppletBuilder.settings.browse.editor - Handle editor selection from file picker
 
-source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.builder.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.prefs.sh"
 
 if [ -n "$OMC_DLG_CHOOSE_OBJECT_PATH" ]; then
     save_external_editor "$OMC_DLG_CHOOSE_OBJECT_PATH"

@@ -1,7 +1,7 @@
 #!/bin/bash
 # AppletBuilder.help.show.services - Open help viewer with Services Reference
 
-source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.builder.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.help.sh"
 
 ensure_help_docs_converted
 

@@ -4,7 +4,7 @@
 # echo "[$(/usr/bin/basename "$0")]"
 # env | sort
 
-source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.builder.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.common.sh"
 
 project_path=$(load_project_path)
 cmd_plist="$project_path/Contents/Resources/Command.plist"

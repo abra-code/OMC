@@ -1,7 +1,7 @@
 #!/bin/bash
 # AppletBuilder.uifiles.loaded - Populate UI Files table (nibs + ActionUI JSONs)
 
-source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.builder.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.tables.sh"
 
 project_path=$(load_project_path)
 resources_dir="$project_path/Contents/Resources"

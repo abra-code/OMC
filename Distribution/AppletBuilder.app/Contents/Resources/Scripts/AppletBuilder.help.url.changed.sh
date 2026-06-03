@@ -3,7 +3,7 @@
 # Note: omc_dialog_control cannot read WebView states (canGoBack/canGoForward),
 # so we track navigation history ourselves using a counter file.
 
-source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.builder.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.common.sh"
 
 # Read and increment navigation count
 nav_count=$(pb_get "$PB_HELP_NAV_COUNT")

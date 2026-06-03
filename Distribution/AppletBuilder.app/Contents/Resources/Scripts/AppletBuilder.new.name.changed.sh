@@ -1,7 +1,7 @@
 #!/bin/bash
 # AppletBuilder.new.name.changed - Auto-fill bundle ID and update header name
 
-source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.builder.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.prefs.sh"
 
 name="${OMC_ACTIONUI_VIEW_203_VALUE}"
 

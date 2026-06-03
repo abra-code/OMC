@@ -2,7 +2,7 @@
 # AppletBuilder.general.minosversion.changed - Save LSMinimumSystemVersion on end editing
 
 echo "AppletBuilder.general.minosversion.changed"
-source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.builder.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.plist.sh"
 
 env
 

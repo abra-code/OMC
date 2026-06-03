@@ -1,7 +1,7 @@
 #!/bin/bash
 # AppletBuilder.scripts.remove - Remove selected script file
 
-source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.builder.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.common.sh"
 
 # Get selected path from hidden column 2
 selected_path="$OMC_ACTIONUI_TABLE_601_COLUMN_2_VALUE"

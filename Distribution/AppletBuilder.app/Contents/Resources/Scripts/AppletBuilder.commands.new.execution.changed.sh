@@ -1,7 +1,7 @@
 #!/bin/bash
 # AppletBuilder.commands.new.execution.changed - Update Create Script picker when Execution changes
 
-source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.builder.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.common.sh"
 
 execution="${OMC_ACTIONUI_VIEW_803_VALUE}"
 

@@ -2,7 +2,8 @@
 # AppletBuilder.project.activated - Refresh lists and detect external file changes
 # Called when the project window becomes key (gains focus)
 
-source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.builder.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.tables.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.plist.sh"
 
 project_path=$(load_project_path)
 if [ -z "$project_path" ]; then

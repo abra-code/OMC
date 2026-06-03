@@ -1,7 +1,9 @@
 #!/bin/bash
 # AppletBuilder.general.save - Apply changes from General form to the applet
 
-source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.builder.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.prefs.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.plist.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.build.sh"
 
 project_path=$(load_project_path)
 

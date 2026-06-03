@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """plist_edit.py - Edit plist data via JSON intermediate format.
 
-Called by plist_edit() shell function in lib.builder.sh.
+Called by plist_edit() shell function in lib.common.sh.
 The shell function handles plist <-> JSON conversion.
 This script operates on the JSON file directly.
 

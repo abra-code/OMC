@@ -1,7 +1,7 @@
 #!/bin/bash
 # Cmd+S handler: dispatch save to the active tab's save command
 
-source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.builder.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.common.sh"
 
 active_tab="${OMC_ACTIONUI_VIEW_10_VALUE}"
 

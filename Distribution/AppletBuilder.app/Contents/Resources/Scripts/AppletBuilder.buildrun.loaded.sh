@@ -1,7 +1,7 @@
 #!/bin/bash
 # AppletBuilder.buildrun.loaded - Populate signing identity picker
 
-source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.builder.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.common.sh"
 
 # Build the options array as a JSON string
 # Always include ad-hoc signing as first option

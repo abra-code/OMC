@@ -1,7 +1,7 @@
 #!/bin/bash
 # Validate ActionUI JSON with the bundled Python verifier
 
-source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.builder.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.errors.sh"
 
 selected_path=$(pb_get "$PB_UIFILES_SELECTED")
 

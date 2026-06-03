@@ -1,7 +1,7 @@
 #!/bin/bash
 # AppletBuilder.new.template.changed - React to template picker selection
 
-source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.builder.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.common.sh"
 
 selected="${OMC_ACTIONUI_VIEW_201_VALUE}"
 templates_dir="${OMC_APP_BUNDLE_PATH}/Contents/Resources/Templates"

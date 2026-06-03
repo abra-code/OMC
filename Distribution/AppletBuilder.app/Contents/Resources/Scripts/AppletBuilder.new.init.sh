@@ -1,7 +1,7 @@
 #!/bin/bash
 # AppletBuilder.new.init - Initialize the New Applet dialog, populate pickers
 
-source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.builder.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.common.sh"
 
 # set_window_title "New Applet"
 

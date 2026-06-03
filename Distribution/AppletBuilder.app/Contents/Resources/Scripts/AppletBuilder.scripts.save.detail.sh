@@ -1,7 +1,7 @@
 #!/bin/bash
 # Save edited script content back to file
 
-source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.builder.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.common.sh"
 
 selected_path=$(pb_get "$PB_SCRIPTS_SELECTED")
 

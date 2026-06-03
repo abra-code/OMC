@@ -1,7 +1,7 @@
 #!/bin/bash
 # AppletBuilder.new.bundleid.changed - Remember bundle ID prefix when user edits it
 
-source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.builder.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.prefs.sh"
 
 bundle_id="${OMC_ACTIONUI_VIEW_204_VALUE}"
 

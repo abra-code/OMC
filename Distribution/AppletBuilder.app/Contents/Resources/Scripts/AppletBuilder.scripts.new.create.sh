@@ -1,7 +1,7 @@
 #!/bin/bash
 # AppletBuilder.scripts.new.create - Create new script file
 
-source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.builder.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.tables.sh"
 
 project_path=$(load_project_path)
 scripts_dir="$project_path/Contents/Resources/Scripts"

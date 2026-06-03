@@ -1,7 +1,8 @@
 #!/bin/bash
 # AppletBuilder.general.name.changed - Auto-fill bundle ID only when name actually changed
 
-source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.builder.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.prefs.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.plist.sh"
 
 name="${OMC_ACTIONUI_VIEW_302_VALUE}"
 

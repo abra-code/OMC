@@ -1,7 +1,7 @@
 #!/bin/bash
 # AppletBuilder.uifiles.new.init - Populate New UI File dialog with defaults
 
-source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.builder.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.common.sh"
 
 project_path=$(load_project_path)
 # Dialog has its own window UUID — read project path from parent dialog's pasteboard

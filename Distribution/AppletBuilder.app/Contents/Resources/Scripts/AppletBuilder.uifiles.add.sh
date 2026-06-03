@@ -1,7 +1,7 @@
 #!/bin/bash
 # AppletBuilder.uifiles.add - Open New UI File dialog
 
-source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.builder.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.common.sh"
 
 project_path=$(load_project_path)
 

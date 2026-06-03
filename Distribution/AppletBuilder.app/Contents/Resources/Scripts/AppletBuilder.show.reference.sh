@@ -1,7 +1,7 @@
 #!/bin/bash
 # Display reference content in output window, read from private pasteboard
 
-source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.builder.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.common.sh"
 
 APPLET_BUILDER_REFERENCE_PB="APPLET_BUILDER_REFERENCE"
 

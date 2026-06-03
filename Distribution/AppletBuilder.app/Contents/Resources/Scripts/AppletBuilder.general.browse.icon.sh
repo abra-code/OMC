@@ -1,7 +1,7 @@
 #!/bin/bash
 # AppletBuilder.general.browse.icon - Install selected .icon into the applet
 
-source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.builder.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.build.sh"
 
 icon_source="$OMC_DLG_CHOOSE_OBJECT_PATH"
 if [ -z "$icon_source" ] || [ ! -e "$icon_source" ]; then

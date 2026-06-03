@@ -1,7 +1,7 @@
 #!/bin/bash
 # AppletBuilder.general.version.changed - Save version on end editing
 
-source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.builder.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.plist.sh"
 
 new_version="${OMC_ACTIONUI_VIEW_305_VALUE}"
 project_path=$(load_project_path)

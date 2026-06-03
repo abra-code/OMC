@@ -1,7 +1,7 @@
 #!/bin/bash
 # AppletBuilder.services.selected - Show selected service details
 
-source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.builder.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.common.sh"
 
 # Get selected index from hidden column 2
 svc_index="$OMC_ACTIONUI_TABLE_330_COLUMN_2_VALUE"

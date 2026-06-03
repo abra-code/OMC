@@ -1,7 +1,8 @@
 #!/bin/bash
 # AppletBuilder.scripts.validate - Syntax-check the selected script by type
 
-source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.builder.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.errors.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.validate.sh"
 
 selected_path=$(pb_get "$PB_SCRIPTS_SELECTED")
 

@@ -1,7 +1,7 @@
 #!/bin/bash
 # AppletBuilder.help.back - Navigate back in help viewer
 
-source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.builder.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.common.sh"
 
 # Mark that user went back so forward button can be enabled
 pb_set "$PB_HELP_WENT_BACK" "1"

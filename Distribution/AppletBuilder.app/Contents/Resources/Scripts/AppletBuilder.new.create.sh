@@ -1,7 +1,9 @@
 #!/bin/bash
 # AppletBuilder.new.create - Create a new applet from template
 
-source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.builder.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.prefs.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.plist.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.build.sh"
 
 # ── Functions used only during applet creation ──
 

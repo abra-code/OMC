@@ -1,7 +1,7 @@
 #!/bin/bash
 # AppletBuilder.services.reload - Refresh just the services table
 
-source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.builder.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.common.sh"
 
 project_path=$(load_project_path)
 plist="$project_path/Contents/Info.plist"

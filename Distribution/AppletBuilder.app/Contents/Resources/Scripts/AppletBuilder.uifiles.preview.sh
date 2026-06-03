@@ -1,7 +1,7 @@
 #!/bin/bash
 # Preview ActionUI JSON file with ActionUIViewer
 
-source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.builder.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.errors.sh"
 
 selected_path=$(pb_get "$PB_UIFILES_SELECTED")
 

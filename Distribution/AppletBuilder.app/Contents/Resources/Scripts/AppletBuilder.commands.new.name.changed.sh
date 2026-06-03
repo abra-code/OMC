@@ -1,7 +1,7 @@
 #!/bin/bash
 # AppletBuilder.commands.new.name.changed - Update Command ID when Name changes
 
-source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.builder.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.plist.sh"
 
 name="${OMC_ACTIONUI_VIEW_801_VALUE}"
 

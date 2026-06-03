@@ -1,7 +1,7 @@
 #!/bin/bash
 # Prettify JSON in the UI file editor
 
-source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.builder.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.errors.sh"
 
 edited_content="${OMC_ACTIONUI_VIEW_702_VALUE}"
 if [ -z "$edited_content" ]; then

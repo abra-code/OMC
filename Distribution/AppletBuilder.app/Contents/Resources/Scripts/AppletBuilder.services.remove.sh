@@ -1,7 +1,7 @@
 #!/bin/bash
 # AppletBuilder.services.remove - Remove selected NSService from Info.plist
 
-source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.builder.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.plist.sh"
 
 project_path=$(load_project_path)
 plist="$project_path/Contents/Info.plist"

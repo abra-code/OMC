@@ -2,7 +2,7 @@
 # Validate Command.plist: plutil syntax gate, then the advanced command_verifier
 # (Layer 1 key/type/enum/required/conditional checks + Layer 2 bundle cross-references).
 
-source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.builder.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.errors.sh"
 
 project_path=$(load_project_path)
 cmd_plist="$project_path/Contents/Resources/Command.plist"

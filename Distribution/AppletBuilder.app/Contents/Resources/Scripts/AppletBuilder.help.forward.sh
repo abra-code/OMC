@@ -1,7 +1,7 @@
 #!/bin/bash
 # AppletBuilder.help.forward - Navigate forward in help viewer
 
-source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.builder.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.common.sh"
 
 # Increment nav count when going forward
 nav_count=$(pb_get "$PB_HELP_NAV_COUNT")

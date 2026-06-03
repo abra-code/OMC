@@ -1,7 +1,7 @@
 #!/bin/bash
 # AppletBuilder.help.init - Load initial page into help viewer WebView
 
-source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.builder.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.common.sh"
 
 # Reset navigation tracking state
 pb_set "$PB_HELP_NAV_COUNT" ""

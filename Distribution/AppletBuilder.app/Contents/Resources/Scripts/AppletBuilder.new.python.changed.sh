@@ -1,7 +1,7 @@
 #!/bin/bash
 # AppletBuilder.new.python.changed - Switch default icon when Python toggled
 
-source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.builder.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.common.sh"
 
 python_on="${OMC_ACTIONUI_VIEW_208_VALUE}"
 icon_selected="${OMC_ACTIONUI_VIEW_209_VALUE}"

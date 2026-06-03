@@ -3,7 +3,10 @@
 # echo "[$(/usr/bin/basename "$0")]"
 # env | sort
 
-source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.builder.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.errors.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.plist.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.validate.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.build.sh"
 
 alert_tool="$OMC_OMC_SUPPORT_PATH/alert"
 builder_path="${OMC_APP_BUNDLE_PATH}"

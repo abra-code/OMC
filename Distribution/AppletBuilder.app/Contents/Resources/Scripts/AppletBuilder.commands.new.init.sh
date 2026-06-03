@@ -4,7 +4,7 @@
 # echo "[$(/usr/bin/basename "$0")]"
 # env | sort
 
-source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.builder.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.plist.sh"
 
 project_path=$(load_project_path)
 # Dialog has its own window UUID — read project path from parent dialog's pasteboard

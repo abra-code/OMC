@@ -1,7 +1,7 @@
 #!/bin/bash
 # AppletBuilder.general.bundleid.changed - Save bundle ID on end editing
 
-source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.builder.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.plist.sh"
 
 new_bundle_id="${OMC_ACTIONUI_VIEW_303_VALUE}"
 project_path=$(load_project_path)

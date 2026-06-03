@@ -1,7 +1,7 @@
 #!/bin/bash
 # AppletBuilder.uifiles.template.copy - Copy element template JSON to clipboard
 
-source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.builder.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.errors.sh"
 
 element_name="$OMC_ACTIONUI_VIEW_728_VALUE"
 

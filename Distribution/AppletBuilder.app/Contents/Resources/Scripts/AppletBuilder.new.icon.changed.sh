@@ -1,7 +1,7 @@
 #!/bin/bash
 # AppletBuilder.new.icon.changed - React to icon picker selection
 
-source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.builder.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.common.sh"
 
 selected="${OMC_ACTIONUI_VIEW_209_VALUE}"
 icons_dir="${OMC_APP_BUNDLE_PATH}/Contents/Resources/Icons"
