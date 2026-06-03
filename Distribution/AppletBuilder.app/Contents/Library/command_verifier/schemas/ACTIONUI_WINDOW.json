@@ -1,0 +1,15 @@
+{
+  "name": "ACTIONUI_WINDOW",
+  "description": "ActionUI JSON dialog (OMC 5.0+). JSON_NAME resolves to a bundle resource <name>.json (Layer 2). Subcommand-ID keys reference COMMAND_IDs (Layer 2).",
+  "properties": {
+    "JSON_NAME": { "types": ["string"], "required": true, "description": "JSON resource name without extension; case-sensitive." },
+    "IS_BLOCKING": { "types": ["boolean"], "description": "Default true (modal)." },
+    "WINDOW_TITLE": { "types": ["string"], "description": "Static window title." },
+    "WINDOW_TYPE": { "types": ["string"], "enum": ["floating", "global_floating"], "description": "Default is a regular window." },
+    "INIT_SUBCOMMAND_ID": { "types": ["string"], "subcommandRef": true },
+    "END_OK_SUBCOMMAND_ID": { "types": ["string"], "subcommandRef": true },
+    "END_CANCEL_SUBCOMMAND_ID": { "types": ["string"], "subcommandRef": true },
+    "WINDOW_DID_ACTIVATE_SUBCOMMAND_ID": { "types": ["string"], "subcommandRef": true },
+    "WINDOW_DID_DEACTIVATE_SUBCOMMAND_ID": { "types": ["string"], "subcommandRef": true }
+  }
+}

@@ -87,6 +87,13 @@
       "description": "Inline few-shot examples for lite/local models"
     },
     {
+      "id": "validation",
+      "file": "content/09-validation.md",
+      "level": 1,
+      "flavors": ["claude", "capable", "lite"],
+      "description": "How to run the Command.plist verifier and act on its findings"
+    },
+    {
       "id": "reference",
       "file": "content/08-reference.md",
       "level": 1,
@@ -97,6 +104,7 @@
 
   "build": {
     "docs_source": "Documentation/",
+    "verifier_source": "Distribution/AppletBuilder.app/Contents/Library/command_verifier",
     "output_dir": "Skill/dist/",
     "flavors_output": {
       "claude":   "Skill/dist/claude/",

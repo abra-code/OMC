@@ -2049,6 +2049,16 @@ OnMyCommandCM::LoadCommandsFromPlistFile(CFURLRef inPlistFileURL)
 }
 
 
+// Command.plist SCHEMA SOURCE OF TRUTH — the ROOT dict (Root.json): VERSION and
+// COMMAND_LIST. Note the engine loads NOTHING unless VERSION == 2 (absent VERSION
+// defaults to 2, which is fine) and COMMAND_LIST is present — both are hard errors
+// in the verifier. CreateAugmentedCommandArray() below also defines the synthetic-
+// command synthesis the verifier mirrors (Scripts/* auto-promoted to commands).
+// If you change the root keys, the VERSION rule, or the synthesis filter, update the
+// verifier (Root.json + bundle_resolver.py) and rebuild the skill, else it drifts:
+//   verifier: Distribution/AppletBuilder.app/Contents/Library/command_verifier/schemas/Root.json
+//             (synthesis: .../command_verifier/verifier/bundle_resolver.py)
+//   rebuild:  python3 Skill/build_skill.py   (refs: Private/CommandPlist-Verifier-Design.md, Private/CommandPlist-Keys.csv)
 void
 OnMyCommandCM::LoadCommandsFromPlistRef(CFPropertyListRef inPlistRef)
 {

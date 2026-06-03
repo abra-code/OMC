@@ -439,6 +439,12 @@ OmcHostTaskManager::CancelAllTasks()
 #endif
 }
 
+// Command.plist SCHEMA SOURCE OF TRUTH — END_NOTIFICATION (TITLE, MESSAGE, and the
+// commented-out AUTO_CLOSE_TIMEOUT). Shown when an async command finishes.
+// Adding/removing/renaming/deprecating/retyping any key here REQUIRES updating the matching
+// verifier schema and rebuilding the skill, else the Command.plist verifier drifts:
+//   verifier schema: Distribution/AppletBuilder.app/Contents/Library/command_verifier/schemas/END_NOTIFICATION.json
+//   rebuild skill:   python3 Skill/build_skill.py   (design: Private/CommandPlist-Verifier-Design.md; keys: Private/CommandPlist-Keys.csv)
 void
 OmcHostTaskManager::ShowEndNotification()
 {

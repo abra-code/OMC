@@ -1,0 +1,10 @@
+{
+  "name": "ACTIVATION_OBJECT_STRING_MATCH",
+  "description": "Advanced name/path matching for activation. MATCH_STRING must be present for the rest to take effect.",
+  "properties": {
+    "MATCH_STRING": { "types": ["string"], "description": "Pattern to match; required for matching to be applied." },
+    "MATCH_METHOD": { "types": ["string"], "enum": ["match_exact", "match_contains", "match_regular_expression"] },
+    "FILE_OPTIONS": { "types": ["string"], "enum": ["match_file_name", "match_file_path"] },
+    "COMPARE_CASE_INSENSITIVE": { "types": ["boolean"] }
+  }
+}

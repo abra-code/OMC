@@ -1,0 +1,6 @@
+{
+  "name": "NIB_CONTROL_MULTIPLE_SELECTION_ITERATION",
+  "description": "Legacy selection-iterator parameters. createSelectionIterator is a stub in the base controller, so sub-keys are not parsed; modeled as an open dict to avoid false positives.",
+  "open": true,
+  "properties": {}
+}

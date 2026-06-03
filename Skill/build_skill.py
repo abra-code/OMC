@@ -76,6 +76,16 @@ def load_content_pieces(meta: dict) -> dict[str, tuple[dict, str]]:
 
 def apply_transforms(body: str, content_id: str, flavor: str, flavor_cfg: dict) -> str:
     """Apply per-flavor transformations to a content piece body."""
+    # Validation section: adapt the script-execution instruction for non-script flavors.
+    if content_id == "validation" and not flavor_cfg.get("script_execution", True):
+        body = body.replace(
+            "```bash\npython3 Skill/scripts/validate_command_plist.py <App.app | Command.plist>\n```",
+            "```bash\n# If you have Python available:\npython3 validate_command_plist.py <App.app | Command.plist>\n```\n\n"
+            "If you cannot run scripts, manually verify: root VERSION is 2; no unknown keys; "
+            "value types match (DEFAULT_LOCATION / DEFAULT_FILE_NAME are arrays); EXECUTION_MODE "
+            "is a current value; and every referenced script file and COMMAND_ID exists in the bundle."
+        )
+
     # Lite: strip Markdown tables
     if flavor_cfg.get("format") == "markdown":
         body = _strip_tables(body)
@@ -178,13 +188,44 @@ def _copy_docs(meta: dict, docs_out: Path) -> None:
             shutil.copy2(src, docs_out / src.name)
 
 
+def _copy_verifier(meta: dict, scripts_out: Path) -> None:
+    """Copy the Command.plist verifier into scripts/ inside the dist flavor.
+
+    Source is meta.build.verifier_source (the AppletBuilder bundle copy, which is the
+    single source of truth). Skips dev-only / generated artifacts.
+    """
+    src_rel = meta["build"].get("verifier_source")
+    if not src_rel:
+        return
+    src = REPO_ROOT / src_rel
+    if not src.exists():
+        print(f"[WARN] verifier_source not found: {src}", file=sys.stderr)
+        return
+
+    if scripts_out.exists():
+        shutil.rmtree(scripts_out)
+    scripts_out.mkdir(parents=True)
+
+    skip = {"tests", "__pycache__", ".DS_Store"}
+    for item in src.iterdir():
+        if item.name in skip:
+            continue
+        dst = scripts_out / item.name
+        if item.is_dir():
+            shutil.copytree(item, dst, ignore=shutil.ignore_patterns("__pycache__", "*.pyc", ".DS_Store"))
+        else:
+            shutil.copy2(item, dst)
+
+
 def package_flavor(meta: dict, skill_md: str, flavor: str) -> None:
-    """Write SKILL.md + docs into Skill/dist/<flavor>/."""
+    """Write SKILL.md + verifier + docs into Skill/dist/<flavor>/."""
     out_dir = REPO_ROOT / "Skill" / "dist" / flavor
     docs_out = out_dir / "docs"
+    scripts_out = out_dir / "scripts"
     out_dir.mkdir(parents=True, exist_ok=True)
 
     (out_dir / "SKILL.md").write_text(skill_md, encoding="utf-8")
+    _copy_verifier(meta, scripts_out)
     _copy_docs(meta, docs_out)
     print(f"  [{flavor}] → {out_dir}")
 

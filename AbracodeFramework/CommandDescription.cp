@@ -105,12 +105,20 @@ const CFIndex kMaxSpecialWordLen = sizeof("__DLG_CHOOSE_FOLDER_NAME_NO_EXTENSION
 //                 __ACTIONUI_TRIGGER_VIEW_PART_ID__           OMC_ACTIONUI_TRIGGER_VIEW_PART_ID
 //                 __ACTIONUI_TRIGGER_CONTEXT__                OMC_ACTIONUI_TRIGGER_CONTEXT
 
+// Command.plist SCHEMA SOURCE OF TRUTH — MULTIPLE_OBJECT_SETTINGS (PROCESSING_MODE,
+// PREFIX, SUFFIX, SEPARATOR, SORT_METHOD, SORT_OPTIONS{SORT_ASCENDING,
+// COMPARE_CASE_INSENSITIVE, COMPARE_NONLITERAL, COMPARE_LOCALIZED, COMPARE_NUMERICAL}).
+// Adding/removing/renaming/deprecating/retyping any key (or enum value) here REQUIRES
+// updating the matching verifier schema and rebuilding the skill, else the Command.plist
+// verifier drifts (false positives/negatives):
+//   verifier schemas: Distribution/AppletBuilder.app/Contents/Library/command_verifier/schemas/MULTIPLE_OBJECT_SETTINGS.json + SORT_OPTIONS.json
+//   rebuild skill:    python3 Skill/build_skill.py   (design: Private/CommandPlist-Verifier-Design.md; keys: Private/CommandPlist-Keys.csv)
 static void
 GetMultiCommandParams(CommandDescription &outDesc, CFDictionaryRef inParams)
 {
     CFStringRef theStr;
     ACFDict params(inParams);
-    
+
     if( params.GetValue(CFSTR("PROCESSING_MODE"), theStr) )
     {
         if( kCFCompareEqualTo == ::CFStringCompare( theStr, CFSTR("proc_separately"), 0 ) )
@@ -340,6 +348,15 @@ GetSpecialEnvironWordID(CFStringRef inStr)
     return NO_SPECIAL_WORD;
 }
 
+// Command.plist SCHEMA SOURCE OF TRUTH — INPUT_DIALOG (INPUT_TYPE enum
+// [input_clear_text, input_password_text, input_popup_menu, input_combo_box],
+// OK_BUTTON_NAME, CANCEL_BUTTON_NAME, MESSAGE, DEFAULT_VALUE (array) / DEFAULT
+// (string), INPUT_MENU).
+// Adding/removing/renaming/deprecating/retyping any key (or enum value) here REQUIRES
+// updating the matching verifier schema and rebuilding the skill, else the Command.plist
+// verifier drifts (false positives/negatives):
+//   verifier schema: Distribution/AppletBuilder.app/Contents/Library/command_verifier/schemas/INPUT_DIALOG.json
+//   rebuild skill:   python3 Skill/build_skill.py   (design: Private/CommandPlist-Verifier-Design.md; keys: Private/CommandPlist-Keys.csv)
 static void
 GetInputDialogParams(CommandDescription &outDesc, CFDictionaryRef inParams)
 {
@@ -431,6 +448,14 @@ static void AddRequestedSpecialNibDialogValuesToMutableSet(const void *key, cons
 }
 
 
+// Command.plist SCHEMA SOURCE OF TRUTH — ACTIVATION_OBJECT_STRING_MATCH (MATCH_STRING,
+// MATCH_METHOD enum [match_exact, match_contains, match_regular_expression],
+// FILE_OPTIONS enum [match_file_name, match_file_path], COMPARE_CASE_INSENSITIVE).
+// Adding/removing/renaming/deprecating/retyping any key (or enum value) here REQUIRES
+// updating the matching verifier schema and rebuilding the skill, else the Command.plist
+// verifier drifts (false positives/negatives):
+//   verifier schema: Distribution/AppletBuilder.app/Contents/Library/command_verifier/schemas/ACTIVATION_OBJECT_STRING_MATCH.json
+//   rebuild skill:   python3 Skill/build_skill.py   (design: Private/CommandPlist-Verifier-Design.md; keys: Private/CommandPlist-Keys.csv)
 void
 GetContextMatchingParams(CommandDescription &outDesc, CFDictionaryRef inParams)
 {
@@ -477,6 +502,23 @@ GetContextMatchingParams(CommandDescription &outDesc, CFDictionaryRef inParams)
 }
 
 
+// ════════════════════════════════════════════════════════════════════════════
+// Command.plist SCHEMA SOURCE OF TRUTH — the top-level COMMAND dict (Command.json).
+// This is the master parser for a single command: NAME, COMMAND_ID, COMMAND,
+// EXECUTION_MODE, ACTIVATION_MODE, ESCAPE_SPECIAL_CHARS, TEXT_REPLACE_OPTION,
+// activation/required-version keys, and every sub-dictionary (it copies them here
+// and they are parsed by their own controllers — see those files' SOURCE OF TRUTH
+// banners). EXECUTION_MODE deprecated aliases are handled here too.
+//
+// Whenever you add, remove, rename, deprecate, or change the type/enum/default of
+// ANY Command.plist key or value here, you MUST update the verifier schemas to match
+// and rebuild the skill, or the Command.plist verifier will drift (false positives
+// or missed errors):
+//   verifier schemas: Distribution/AppletBuilder.app/Contents/Library/command_verifier/schemas/Command.json
+//                     (+ the relevant sub-dict <KEY>.json for any sub-dictionary key)
+//   rebuild skill:    python3 Skill/build_skill.py
+//   refs:             Private/CommandPlist-Verifier-Design.md, Private/CommandPlist-Keys.csv
+// ════════════════════════════════════════════════════════════════════════════
 void
 GetOneCommandParams(CommandDescription &outDesc, CFDictionaryRef inOneCommand, CFURLRef externBundleOverrideURL)
 {

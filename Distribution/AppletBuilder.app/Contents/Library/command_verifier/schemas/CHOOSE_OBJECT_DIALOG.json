@@ -1,0 +1,6 @@
+{
+  "name": "CHOOSE_OBJECT_DIALOG",
+  "extends": "_shared/NavDialog",
+  "description": "Choose-file-or-folder panel triggered by $OMC_DLG_CHOOSE_OBJECT_PATH.",
+  "properties": {}
+}

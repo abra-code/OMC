@@ -1,0 +1,6 @@
+{
+  "name": "ENVIRONMENT_VARIABLES",
+  "description": "Force-exported environment variables: arbitrary variable name -> value string. Keys are user-defined (OMC_* or custom), so the dict is open.",
+  "open": true,
+  "properties": {}
+}

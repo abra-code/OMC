@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>COMMAND_LIST</key>
+  <array>
+    <dict>
+      <key>NAME</key>
+      <string>Conditional Test</string>
+      <key>COMMAND_ID</key>
+      <string>cond.test</string>
+      <key>EXECUTION_MODE</key>
+      <string>exe_script_file</string>
+      <!-- OUTPUT_WINDOW_SETTINGS with a non-output mode -> has no effect -->
+      <key>OUTPUT_WINDOW_SETTINGS</key>
+      <dict>
+        <key>WINDOW_TYPE</key>
+        <string>regular</string>
+        <key>WINDOW_ALPHA</key>
+        <real>1.5</real>
+        <key>TEXT_COLOR</key>
+        <string>not-a-color</string>
+        <!-- CUSTOM_* without WINDOW_TYPE=custom -> no effect -->
+        <key>CUSTOM_TEXTBOX_WIDTH</key>
+        <integer>300</integer>
+        <!-- FRACT_* without WINDOW_POSITION=absolute -> no effect -->
+        <key>FRACT_POSITION_LEFT</key>
+        <real>0.5</real>
+      </dict>
+      <!-- INPUT_TYPE popup but no INPUT_MENU -> requiredWhen -->
+      <key>INPUT_DIALOG</key>
+      <dict>
+        <key>INPUT_TYPE</key>
+        <string>input_popup_menu</string>
+        <key>MESSAGE</key>
+        <string>Pick one</string>
+      </dict>
+    </dict>
+  </array>
+  <key>VERSION</key>
+  <integer>2</integer>
+</dict>
+</plist>

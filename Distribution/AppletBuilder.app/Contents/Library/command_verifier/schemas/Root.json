@@ -1,0 +1,8 @@
+{
+  "name": "Root",
+  "description": "Top dictionary of Command.plist. VERSION is validated specially in plist_validator (absent defaults to 2; present must equal 2 or the engine loads nothing).",
+  "properties": {
+    "COMMAND_LIST": { "types": ["array"], "required": true, "itemTypes": ["dict"], "description": "All action handlers (commands)." },
+    "VERSION": { "types": ["integer"], "const": 2, "description": "Command format version. Optional, defaults to 2." }
+  }
+}

@@ -333,6 +333,13 @@ CounterParams::~CounterParams()
 	delete mStatusTemplate;//this chain is self-destructing, just delete the head
 }
 
+// Command.plist SCHEMA SOURCE OF TRUTH — PROGRESS.DETERMINATE_COUNTER (COMPARE_CASE_INSENSITIVE,
+// REGULAR_EXPRESSION_MATCH, STATUS, SUBSTRING_INDEX_FOR_COUNTER/RANGE_END/RANGE_START,
+// IS_COUNTDOWN, RANGE_START, RANGE_END, SUPPRESS_NON_MATCHING_TEXT).
+// Adding/removing/renaming/deprecating/retyping any key here REQUIRES updating the matching
+// verifier schema and rebuilding the skill, else the Command.plist verifier drifts:
+//   verifier schema: Distribution/AppletBuilder.app/Contents/Library/command_verifier/schemas/DETERMINATE_COUNTER.json
+//   rebuild skill:   python3 Skill/build_skill.py   (design: Private/CommandPlist-Verifier-Design.md; keys: Private/CommandPlist-Keys.csv)
 void
 CounterParams::Init(CFDictionaryRef counterDict, CFStringRef inLocTable, CFBundleRef inLocBundle)
 {
@@ -576,6 +583,12 @@ StepsParams::~StepsParams()
 	}
 }
 
+// Command.plist SCHEMA SOURCE OF TRUTH — PROGRESS.DETERMINATE_STEPS (MATCH_METHOD enum,
+// COMPARE_CASE_INSENSITIVE, SUPPRESS_NON_MATCHING_TEXT, STEPS array).
+// Adding/removing/renaming/deprecating/retyping any key (or enum value) here REQUIRES updating
+// the matching verifier schema and rebuilding the skill, else the Command.plist verifier drifts:
+//   verifier schema: Distribution/AppletBuilder.app/Contents/Library/command_verifier/schemas/DETERMINATE_STEPS.json
+//   rebuild skill:   python3 Skill/build_skill.py   (design: Private/CommandPlist-Verifier-Design.md; keys: Private/CommandPlist-Keys.csv)
 void
 StepsParams::Init(CFDictionaryRef stepsDict, CFStringRef inLocTable, CFBundleRef inLocBundle)
 {
@@ -750,6 +763,12 @@ inline double CalculateTotalProgress(OMCTaskProgress *allTasks, CFIndex inCount)
 
 @implementation OMCDeferredProgress
 
+// Command.plist SCHEMA SOURCE OF TRUTH — the PROGRESS dict (TITLE, DELAY, and the
+// mutually exclusive DETERMINATE_STEPS / DETERMINATE_COUNTER sub-dicts parsed above).
+// Adding/removing/renaming/deprecating/retyping any key here REQUIRES updating the matching
+// verifier schema and rebuilding the skill, else the Command.plist verifier drifts:
+//   verifier schema: Distribution/AppletBuilder.app/Contents/Library/command_verifier/schemas/PROGRESS.json
+//   rebuild skill:   python3 Skill/build_skill.py   (design: Private/CommandPlist-Verifier-Design.md; keys: Private/CommandPlist-Keys.csv)
 -(id)initWithParams:(CFDictionaryRef)inParams forCommand:(CFStringRef)inCommandName taskCount:(CFIndex)inTaskCount locTable:(CFStringRef)inLocTable locBundle:(CFBundleRef)inLocBundle
 {
 	self = [super init];

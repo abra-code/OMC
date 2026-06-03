@@ -1,0 +1,20 @@
+{
+  "name": "DETERMINATE_STEPS",
+  "description": "Fixed-text-match progress steps.",
+  "properties": {
+    "MATCH_METHOD": { "types": ["string"], "enum": ["match_exact", "match_contains", "match_regular_expression"] },
+    "COMPARE_CASE_INSENSITIVE": { "types": ["boolean"] },
+    "SUPPRESS_NON_MATCHING_TEXT": { "types": ["boolean"] },
+    "STEPS": {
+      "types": ["array"],
+      "itemSpec": {
+        "types": ["dict"],
+        "properties": {
+          "STRING": { "types": ["string"], "required": true, "description": "Text to match in output." },
+          "VALUE": { "types": ["number"], "required": true, "range": { "min": 0, "max": 100 }, "description": "Progress percentage 0–100." },
+          "STATUS": { "types": ["string"], "description": "Optional replacement status text." }
+        }
+      }
+    }
+  }
+}

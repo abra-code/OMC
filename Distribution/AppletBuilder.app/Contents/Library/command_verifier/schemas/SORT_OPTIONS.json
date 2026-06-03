@@ -1,0 +1,11 @@
+{
+  "name": "SORT_OPTIONS",
+  "description": "Sort flags for MULTIPLE_OBJECT_SETTINGS when SORT_METHOD is sort_by_name.",
+  "properties": {
+    "SORT_ASCENDING": { "types": ["boolean"] },
+    "COMPARE_CASE_INSENSITIVE": { "types": ["boolean"] },
+    "COMPARE_NONLITERAL": { "types": ["boolean"] },
+    "COMPARE_LOCALIZED": { "types": ["boolean"] },
+    "COMPARE_NUMERICAL": { "types": ["boolean"] }
+  }
+}

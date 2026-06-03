@@ -1,0 +1,40 @@
+{
+  "name": "OUTPUT_WINDOW_SETTINGS",
+  "description": "Output window appearance for *_with_output_window modes. FRACT_/ABSOLUTE_ position keys apply when WINDOW_POSITION=absolute; CUSTOM_ keys apply when WINDOW_TYPE=custom (enforced in Phase 3).",
+  "removedKeys": {
+    "LINE_OUTPUT_INTERVAL": { "note": "no longer read by the engine" }
+  },
+  "properties": {
+    "WINDOW_TITLE": { "oneOf": [ { "types": ["string"] }, { "types": ["array"], "itemTypes": ["string"] } ], "description": "Defaults to the command NAME." },
+    "WINDOW_TYPE": { "types": ["string"], "enum": ["regular", "floating", "global_floating", "custom"] },
+    "WINDOW_POSITION": { "types": ["string"], "enum": ["absolute", "alert", "center", "cascade"] },
+    "WINDOW_WIDTH": { "types": ["number"] },
+    "WINDOW_HEIGHT": { "types": ["number"] },
+    "WINDOW_ALPHA": { "types": ["number"], "range": { "min": 0.0, "max": 1.0 }, "description": "0.0–1.0." },
+    "FRACT_POSITION_LEFT": { "types": ["number"], "appliesWhen": "WINDOW_POSITION=absolute" },
+    "FRACT_POSITION_TOP": { "types": ["number"], "appliesWhen": "WINDOW_POSITION=absolute" },
+    "ABSOLUTE_POSITION_TOP": { "types": ["number"], "appliesWhen": "WINDOW_POSITION=absolute" },
+    "ABSOLUTE_POSITION_LEFT": { "types": ["number"], "appliesWhen": "WINDOW_POSITION=absolute" },
+    "TEXT_FONT": { "types": ["string"], "description": "Font family; defaults to Monaco." },
+    "TEXT_SIZE": { "types": ["number"] },
+    "TEXT_COLOR": { "types": ["string"], "hexColor": true, "description": "6-hex RRGGBB." },
+    "BACKGROUND_COLOR": { "types": ["string"], "hexColor": true, "description": "6-hex RRGGBB." },
+    "CUSTOM_WINDOW_PNG_IMAGE": { "types": ["string"], "appliesWhen": "WINDOW_TYPE=custom", "resourceRef": "image" },
+    "CUSTOM_TEXTBOX_POSITION_TOP": { "types": ["number"], "appliesWhen": "WINDOW_TYPE=custom" },
+    "CUSTOM_TEXTBOX_POSITION_LEFT": { "types": ["number"], "appliesWhen": "WINDOW_TYPE=custom" },
+    "CUSTOM_TEXTBOX_WIDTH": { "types": ["number"], "appliesWhen": "WINDOW_TYPE=custom" },
+    "CUSTOM_TEXTBOX_HEIGHT": { "types": ["number"], "appliesWhen": "WINDOW_TYPE=custom" },
+    "CUSTOM_CLOSEBOX_POSITION_TOP": { "types": ["number"], "appliesWhen": "WINDOW_TYPE=custom" },
+    "CUSTOM_CLOSEBOX_POSITION_LEFT": { "types": ["number"], "appliesWhen": "WINDOW_TYPE=custom" },
+    "CUSTOM_CLOSEBOX_WIDTH": { "types": ["number"], "appliesWhen": "WINDOW_TYPE=custom" },
+    "CUSTOM_CLOSEBOX_HEIGHT": { "types": ["number"], "appliesWhen": "WINDOW_TYPE=custom" },
+    "CUSTOM_RESIZEBOX_POSITION_BOTTOM": { "types": ["number"], "appliesWhen": "WINDOW_TYPE=custom" },
+    "CUSTOM_RESIZEBOX_POSITION_RIGHT": { "types": ["number"], "appliesWhen": "WINDOW_TYPE=custom" },
+    "CUSTOM_RESIZEBOX_WIDTH": { "types": ["number"], "appliesWhen": "WINDOW_TYPE=custom" },
+    "CUSTOM_RESIZEBOX_HEIGHT": { "types": ["number"], "appliesWhen": "WINDOW_TYPE=custom" },
+    "WINDOW_OPEN_FADE_IN": { "types": ["boolean"] },
+    "WINDOW_CLOSE_FADE_OUT": { "types": ["boolean"] },
+    "AUTO_CLOSE_TIMEOUT": { "types": ["number"], "description": "Seconds; 0 = no auto-close." },
+    "AUTO_CLOSE_ON_SUCCESS_ONLY": { "types": ["boolean"] }
+  }
+}

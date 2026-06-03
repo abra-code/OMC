@@ -1,0 +1,11 @@
+{
+  "name": "END_NOTIFICATION",
+  "description": "Task-completion notification for async modes.",
+  "removedKeys": {
+    "DISPLAY_NOTIFICATION": { "note": "obsolete; the presence of the END_NOTIFICATION dict now enables it" }
+  },
+  "properties": {
+    "TITLE": { "types": ["string"], "description": "Defaults to the command NAME." },
+    "MESSAGE": { "types": ["string"], "description": "Defaults to the last output line." }
+  }
+}

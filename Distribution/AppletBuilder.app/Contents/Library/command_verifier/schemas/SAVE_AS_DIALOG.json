@@ -1,0 +1,6 @@
+{
+  "name": "SAVE_AS_DIALOG",
+  "extends": "_shared/NavDialog",
+  "description": "Save panel. DEFAULT_FILE_NAME (inherited from the shared nav options) is meaningful only here.",
+  "properties": {}
+}

@@ -27,12 +27,21 @@
 @implementation OMCNibWindowController
 
 
+// Command.plist SCHEMA SOURCE OF TRUTH — NIB_DIALOG (NIB_NAME, WINDOW_NAME,
+// INIT_SUBCOMMAND_ID, END_OK_SUBCOMMAND_ID, END_CANCEL_SUBCOMMAND_ID,
+// WINDOW_DID_ACTIVATE_SUBCOMMAND_ID, WINDOW_DID_DEACTIVATE_SUBCOMMAND_ID;
+// IS_COCOA is removed/ignored). NIB_NAME resolves to a .nib anywhere under Resources
+// (root / Nibs/ / localized .lproj); the subcommand-ID keys reference COMMAND_IDs.
+// Adding/removing/renaming/deprecating/retyping any key here REQUIRES updating the matching
+// verifier schema and rebuilding the skill, else the Command.plist verifier drifts:
+//   verifier schema: Distribution/AppletBuilder.app/Contents/Library/command_verifier/schemas/NIB_DIALOG.json
+//   rebuild skill:   python3 Skill/build_skill.py   (design: Private/CommandPlist-Verifier-Design.md; keys: Private/CommandPlist-Keys.csv)
 - (id)initWithOmc:(OnMyCommandCM *)inOmc commandRuntimeData:(CommandRuntimeData *)inCommandRuntimeData
 {
    self = [super initWithOmc:inOmc commandRuntimeData:inCommandRuntimeData];
 	if(self == nil)
 		return nil;
-    
+
     mOMCDialogProxy.Adopt( new OMCNibDialog() );
     mOMCDialogProxy->SetControlAccessor((__bridge void *)self);
     self->mCommandRuntimeData->SetAssociatedDialogUUID(mOMCDialogProxy->GetDialogUUID());

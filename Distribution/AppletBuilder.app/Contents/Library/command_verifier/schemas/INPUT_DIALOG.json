@@ -1,0 +1,14 @@
+{
+  "name": "INPUT_DIALOG",
+  "description": "Prompt shown before the command runs; value exposed via $OMC_DLG_INPUT_TEXT. INPUT_MENU is read only for popup/combo types.",
+  "mutuallyExclusiveGroups": [ ["DEFAULT_VALUE"], ["DEFAULT"] ],
+  "properties": {
+    "INPUT_TYPE": { "types": ["string"], "enum": ["input_clear_text", "input_password_text", "input_popup_menu", "input_combo_box"], "description": "Defaults to input_clear_text." },
+    "MESSAGE": { "types": ["string"] },
+    "OK_BUTTON_NAME": { "types": ["string"] },
+    "CANCEL_BUTTON_NAME": { "types": ["string"] },
+    "DEFAULT_VALUE": { "types": ["array"], "itemTypes": ["string"], "description": "Pre-filled value (array form; supports __FOO__ tokens)." },
+    "DEFAULT": { "types": ["string"], "description": "Pre-filled value (string form)." },
+    "INPUT_MENU": { "types": ["array"], "itemTypes": ["string"], "appliesWhen": "INPUT_TYPE in [input_popup_menu, input_combo_box]", "requiredWhen": "INPUT_TYPE in [input_popup_menu, input_combo_box]" }
+  }
+}

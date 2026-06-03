@@ -1,0 +1,19 @@
+{
+  "name": "NIB_DIALOG",
+  "description": "Custom Interface Builder (.nib) dialog. NIB_NAME (no extension) resolves to <name>.nib anywhere under Contents/Resources, including a localized .lproj (Base.lproj / English.lproj / en.lproj) — Cocoa finds it via the bundle's localization search (Layer 2). Subcommand-ID keys reference COMMAND_IDs (Layer 2).",
+  "removedKeys": {
+    "IS_COCOA": { "note": "removed; delete it" }
+  },
+  "properties": {
+    "NIB_NAME": { "types": ["string"], "required": true, "description": "Nib resource name without extension; case-sensitive." },
+    "WINDOW_NAME": { "types": ["string"] },
+    "IS_BLOCKING": { "types": ["boolean"], "description": "Default true (modal)." },
+    "INIT_SUBCOMMAND_ID": { "types": ["string"], "subcommandRef": true },
+    "END_OK_SUBCOMMAND_ID": { "types": ["string"], "subcommandRef": true },
+    "END_CANCEL_SUBCOMMAND_ID": { "types": ["string"], "subcommandRef": true },
+    "WINDOW_DID_ACTIVATE_SUBCOMMAND_ID": { "types": ["string"], "subcommandRef": true },
+    "WINDOW_DID_DEACTIVATE_SUBCOMMAND_ID": { "types": ["string"], "subcommandRef": true },
+    "CONTROL_ID": { "types": ["string"], "description": "Legacy; recognized." },
+    "IS_REVERSE": { "types": ["boolean"], "description": "Legacy; recognized." }
+  }
+}

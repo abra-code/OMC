@@ -24,9 +24,12 @@ AppletBuilder copies the template, renames all files to match the applet name, i
 
 **General** — Applet name, bundle ID, version, minimum OS, icon. Add or edit System Services. Save writes to `Info.plist`.
 
-**Build & Run** — Codesign identity picker + build log. Click Build to sign the applet; required after editing scripts or binaries.
+**Build & Run** — Codesign identity picker + build log. Click Build to validate the project (Info.plist, Command.plist, scripts, ActionUI JSON) and then sign the applet; required after editing scripts or binaries. Validation errors halt the build before signing; warnings are reported and can be made blocking via the "Treat Validation Warnings As Errors" toggle.
 
-**Commands** — Table of `Command.plist` entries. Right panel: Plist editor for the selected command. Buttons: Validate (runs `plutil -lint`), Save, external editor.
+**Commands** — Table of `Command.plist` entries. Right panel: Plist editor for the selected command. Buttons:
+- **Validate** — runs `plutil -lint` (syntax) then the Python Command.plist verifier (`Contents/Library/command_verifier/validate_command_plist.py`): key/type/enum/required checks, conditional rules (e.g. `CUSTOM_*` need `WINDOW_TYPE=custom`), deprecated/removed keys, and Layer-2 bundle cross-references (script files, `JSON_NAME`/`NIB_NAME` resources, subcommand IDs, duplicate `COMMAND_ID`s).
+- **Save** — writes to `Command.plist`
+- external editor
 
 **Scripts** — Table of files in `Scripts/`. Right panel: text editor. Buttons: Save, external editor, reveal in Finder.
 

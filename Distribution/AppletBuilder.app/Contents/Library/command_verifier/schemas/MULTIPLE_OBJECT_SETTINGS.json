@@ -1,0 +1,12 @@
+{
+  "name": "MULTIPLE_OBJECT_SETTINGS",
+  "description": "Controls how multiple selected objects are composed. PREFIX/SUFFIX/SEPARATOR are read only when PROCESSING_MODE is proc_together; SORT_OPTIONS only when SORT_METHOD is not sort_none.",
+  "properties": {
+    "PROCESSING_MODE": { "types": ["string"], "enum": ["proc_separately", "proc_together"], "description": "Run once per object (default) or once with composed paths." },
+    "PREFIX": { "types": ["string"], "appliesWhen": "PROCESSING_MODE=proc_together" },
+    "SUFFIX": { "types": ["string"], "appliesWhen": "PROCESSING_MODE=proc_together" },
+    "SEPARATOR": { "types": ["string"], "appliesWhen": "PROCESSING_MODE=proc_together" },
+    "SORT_METHOD": { "types": ["string"], "enum": ["sort_none", "sort_by_name"] },
+    "SORT_OPTIONS": { "types": ["dict"], "subschema": "SORT_OPTIONS", "appliesWhen": "SORT_METHOD=sort_by_name" }
+  }
+}

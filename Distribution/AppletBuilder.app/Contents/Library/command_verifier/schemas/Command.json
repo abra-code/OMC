@@ -1,0 +1,81 @@
+{
+  "name": "Command",
+  "description": "One action handler dictionary inside COMMAND_LIST. Key surface ground-truthed against AbracodeFramework GetOneCommandParams (see CommandPlist-Keys.csv).",
+  "annotationKeys": ["VERSION", "NOTES", "CATEGORIES"],
+  "removedKeys": {
+    "SEND_TASK_TO_BACKGROUND_APP": { "note": "background-app delegation is no longer supported" },
+    "NS_SERVICE_ITEM": { "note": "macOS Services are declared via NSServices in Info.plist now" },
+    "IS_COCOA": { "note": "removed; delete it" }
+  },
+  "mutuallyExclusiveGroups": [
+    ["ACTIVATE_ONLY_IN"], ["NEVER_ACTIVATE_IN"]
+  ],
+  "properties": {
+    "NAME": { "oneOf": [ { "types": ["string"] }, { "types": ["array"], "itemTypes": ["string"] } ], "required": true, "description": "Visible menu label. Array form = dynamic name with __FOO__ tokens." },
+    "COMMAND_ID": { "types": ["string"], "description": "Unique handler id; defaults to reserved 'top!' if absent. Needed for subcommand dispatch and exe_script_file filename." },
+    "NAME_PLURAL": { "types": ["string"], "description": "Plural menu label for multi-object selections." },
+    "DISABLED": { "types": ["boolean"], "description": "When true the command is skipped." },
+    "SUBMENU_NAME": { "types": ["string"], "description": "Contextual-menu nesting path; '/' for root." },
+
+    "COMMAND": { "types": ["array"], "itemTypes": ["string"], "description": "Inline command. Multiple strings are concatenated WITHOUT spaces." },
+    "EXECUTION_MODE": {
+      "types": ["string"],
+      "enum": ["exe_shell_script", "exe_script_file", "exe_system", "exe_applescript", "exe_terminal", "exe_iterm", "exe_shell_script_with_output_window", "exe_script_file_with_output_window", "exe_applescript_with_output_window"],
+      "enumDeprecated": {
+        "exe_popen": { "replacement": "exe_shell_script" },
+        "exe_silent_popen": { "replacement": "exe_shell_script" },
+        "exe_silent": { "replacement": "exe_shell_script" },
+        "exe_silent_system": { "replacement": "exe_system" },
+        "exe_popen_with_output_window": { "replacement": "exe_shell_script_with_output_window" }
+      },
+      "description": "Default: exe_shell_script when COMMAND present, else exe_script_file."
+    },
+    "WAIT_FOR_TASK_COMPLETION": { "types": ["boolean"], "description": "Forces sync for otherwise-async modes (v4.3)." },
+    "STANDARD_INPUT_PIPE": { "types": ["array"], "itemTypes": ["string"], "appliesWhen": "mode:popen", "description": "Content piped to stdin (popen modes)." },
+    "TEXT_REPLACE_OPTION": { "types": ["string"], "enum": ["txt_replace_none", "txt_replace_lf_with_cr", "txt_replace_cr_with_lf"] },
+    "ESCAPE_SPECIAL_CHARS": { "types": ["string"], "enum": ["esc_none", "esc_with_backslash", "esc_with_percent", "esc_with_percent_all", "esc_for_applescript", "esc_wrap_with_single_quotes_for_shell"], "description": "Applies to __FOO__ inserts only." },
+    "POPEN_SHELL": { "types": ["array"], "itemTypes": ["string"], "appliesWhen": "mode:popen", "description": "Shell path + flags; defaults to /bin/sh -c." },
+    "ENVIRONMENT_VARIABLES": { "types": ["dict"], "subschema": "ENVIRONMENT_VARIABLES", "description": "Force-exported env vars: name -> value string." },
+    "ITERM_SHELL_PATH": { "types": ["string"], "appliesWhen": "mode:iterm", "appliesWhenSeverity": "info", "description": "Only read when EXECUTION_MODE = exe_iterm." },
+    "TERM_BRING_TO_FRONT": { "types": ["boolean"], "appliesWhen": "mode:terminal", "appliesWhenSeverity": "info", "description": "Terminal/iTerm modes." },
+    "TERM_OPEN_NEW_SESSION": { "types": ["boolean"], "appliesWhen": "mode:terminal", "appliesWhenSeverity": "info", "description": "Terminal/iTerm modes." },
+    "MAX_PARALLEL_TASK_COUNT": { "types": ["integer"] },
+    "EXTERNAL_BUNDLE_PATH": { "types": ["string"], "description": "Tilde-expanded path to an extern .omc bundle." },
+
+    "ACTIVATION_MODE": { "types": ["string"], "enum": ["act_always", "act_file", "act_folder", "act_file_or_folder", "act_finder_window", "act_selected_text", "act_clipboard_text", "act_selected_or_clipboard_text", "act_folder_not_finder_window", "act_file_or_folder_not_finder_window"], "description": "When the handler is available." },
+    "ACTIVATION_EXTENSIONS": { "types": ["array"], "itemTypes": ["string"], "description": "File extensions without dot, case-insensitive." },
+    "ACTIVATION_FILE_TYPES": { "types": ["array"], "itemTypes": ["string"], "description": "OSType / UTI codes." },
+    "ACTIVATION_OBJECT_STRING_MATCH": { "types": ["dict"], "subschema": "ACTIVATION_OBJECT_STRING_MATCH" },
+    "ACTIVATE_ONLY_IN": { "types": ["array"], "itemTypes": ["string"], "description": "App names / bundle ids the command is restricted to." },
+    "NEVER_ACTIVATE_IN": { "types": ["array"], "itemTypes": ["string"], "description": "App names / bundle ids the command is hidden in." },
+
+    "MULTIPLE_OBJECT_SETTINGS": { "types": ["dict"], "subschema": "MULTIPLE_OBJECT_SETTINGS" },
+
+    "WARNING": { "types": ["string"], "description": "Confirmation dialog message shown before execution." },
+    "WARNING_EXECUTE": { "types": ["string"], "description": "Execute-button label for WARNING." },
+    "WARNING_CANCEL": { "types": ["string"], "description": "Cancel-button label for WARNING." },
+
+    "INPUT_DIALOG": { "types": ["dict"], "subschema": "INPUT_DIALOG" },
+    "SAVE_AS_DIALOG": { "types": ["dict"], "subschema": "SAVE_AS_DIALOG" },
+    "CHOOSE_FILE_DIALOG": { "types": ["dict"], "subschema": "CHOOSE_FILE_DIALOG" },
+    "CHOOSE_FOLDER_DIALOG": { "types": ["dict"], "subschema": "CHOOSE_FOLDER_DIALOG" },
+    "CHOOSE_OBJECT_DIALOG": { "types": ["dict"], "subschema": "CHOOSE_OBJECT_DIALOG" },
+    "OPEN_OBJECT_DIALOG": { "types": ["dict"], "subschema": "OPEN_OBJECT_DIALOG" },
+    "OUTPUT_WINDOW_SETTINGS": { "types": ["dict"], "subschema": "OUTPUT_WINDOW_SETTINGS", "appliesWhen": "mode:output_window" },
+    "PROGRESS": { "types": ["dict"], "subschema": "PROGRESS", "appliesWhen": "mode:popen", "description": "Progress dialog; created lazily for popen-based modes (incl. exe_script_file). Not just output-window modes." },
+    "END_NOTIFICATION": { "types": ["dict"], "subschema": "END_NOTIFICATION", "appliesWhen": "mode:async", "appliesWhenSeverity": "info" },
+    "NIB_DIALOG": { "types": ["dict"], "subschema": "NIB_DIALOG" },
+    "ACTIONUI_WINDOW": { "types": ["dict"], "subschema": "ACTIONUI_WINDOW" },
+    "NIB_CONTROL_MULTIPLE_SELECTION_ITERATION": { "types": ["dict"], "subschema": "NIB_CONTROL_MULTIPLE_SELECTION_ITERATION", "description": "Legacy; iterator is a stub in the base controller." },
+
+    "REFRESH_PATH": { "oneOf": [ { "types": ["string"] }, { "types": ["array"], "itemTypes": ["string"] } ], "description": "Finder path(s) to refresh after execution." },
+    "PASTE_AFTER_EXECUTION": { "types": ["boolean"], "description": "Simulate paste of the command output." },
+    "NEXT_COMMAND_ID": { "types": ["string"], "description": "Static chain to another command on success (subcommand id reference)." },
+    "LOCALIZATION_TABLE_NAME": { "types": ["string"], "description": "Strings table for droplets / extern modules." },
+
+    "USE_NAV_DIALOG_FOR_MISSING_FILE_CONTEXT": { "types": ["boolean"], "description": "Default true; show an open dialog when file context is required but absent." },
+    "REQUIRED_OMC_VERSION": { "types": ["string"], "description": "Minimum OMC version (e.g. \"5.0\")." },
+    "REQUIRED_MAC_OS_MIN_VERSION": { "types": ["string"] },
+    "REQUIRED_MAC_OS_MAX_VERSION": { "types": ["string"] }
+  }
+}

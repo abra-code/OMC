@@ -1,0 +1,15 @@
+{
+  "name": "PROGRESS",
+  "description": "Progress dialog for output-window modes. DETERMINATE_STEPS and DETERMINATE_COUNTER are mutually exclusive; absent both = indeterminate.",
+  "mutuallyExclusiveGroups": [ ["DETERMINATE_STEPS"], ["DETERMINATE_COUNTER"] ],
+  "removedKeys": {
+    "DISPLAY_PROGRESS": { "note": "obsolete; the presence of the PROGRESS dict now enables the dialog" }
+  },
+  "properties": {
+    "TITLE": { "types": ["string"] },
+    "DELAY": { "types": ["number"], "description": "Seconds to wait before showing." },
+    "SUPPRESS_NON_MATCHING_TEXT": { "types": ["boolean"] },
+    "DETERMINATE_STEPS": { "types": ["dict"], "subschema": "DETERMINATE_STEPS" },
+    "DETERMINATE_COUNTER": { "types": ["dict"], "subschema": "DETERMINATE_COUNTER" }
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "name": "DETERMINATE_COUNTER",
+  "description": "Regex-extracted counter mapped to progress.",
+  "properties": {
+    "REGULAR_EXPRESSION_MATCH": { "types": ["string"], "description": "Regex with capture groups for counter/range." },
+    "STATUS": { "types": ["string"], "description": "Replacement text with $1/$2 group references." },
+    "SUPPRESS_NON_MATCHING_TEXT": { "types": ["boolean"] },
+    "SUBSTRING_INDEX_FOR_COUNTER": { "types": ["number"] },
+    "SUBSTRING_INDEX_FOR_RANGE_END": { "types": ["number"] },
+    "SUBSTRING_INDEX_FOR_RANGE_START": { "types": ["number"] },
+    "IS_COUNTDOWN": { "types": ["boolean"] },
+    "IS_REVERSE": { "types": ["boolean"] },
+    "RANGE_START": { "types": ["number"] },
+    "RANGE_END": { "types": ["number"] }
+  }
+}

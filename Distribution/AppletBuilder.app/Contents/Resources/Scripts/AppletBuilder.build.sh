@@ -241,20 +241,45 @@ ${info_out}
 "
     fi
 
-    # Command.plist — plutil -lint
+    # Command.plist — plutil -lint (syntax gate), then the advanced command_verifier
+    # (Layer 1 key/type/enum/required/conditional + Layer 2 bundle cross-references).
     local cmd_plist="$resources_dir/Command.plist"
     if [ -f "$cmd_plist" ]; then
         local plist_out
         plist_out=$(/usr/bin/plutil -lint "$cmd_plist" 2>&1)
-        if [ $? -eq 0 ]; then
-            log "  Command.plist: OK"
-        else
+        if [ $? -ne 0 ]; then
             log "  Command.plist: INVALID"
             error_count=$((error_count + 1))
             report="${report}Command.plist:
 ${plist_out}
 
 "
+        else
+            local cmd_verifier="${OMC_APP_BUNDLE_PATH}/Contents/Library/command_verifier/validate_command_plist.py"
+            if [ -f "$cmd_verifier" ] && [ -x "$python3" ]; then
+                local cmd_vout cmd_vrc
+                cmd_vout=$("$python3" "$cmd_verifier" "$target_path" 2>&1)   # bundle path → Layer 1 + 2
+                cmd_vrc=$?
+                if [ "$cmd_vrc" -eq 0 ]; then
+                    log "  Command.plist: OK"
+                elif [ "$cmd_vrc" -eq 2 ]; then
+                    log "  Command.plist: warnings"
+                    warning_count=$((warning_count + 1))
+                    report="${report}Command.plist (warnings):
+${cmd_vout}
+
+"
+                else
+                    log "  Command.plist: VALIDATION ERROR"
+                    error_count=$((error_count + 1))
+                    report="${report}Command.plist:
+${cmd_vout}
+
+"
+                fi
+            else
+                log "  Command.plist: OK"
+            fi
         fi
     fi
 
@@ -286,7 +311,9 @@ ${SCRIPT_VALIDATE_OUTPUT}
     local verifier="${OMC_APP_BUNDLE_PATH}/Contents/Library/actionui_verifier/validate_actionui.py"
     if [ -f "$verifier" ] && [ -x "$python3" ]; then
         local jf jname vout vrc
-        for jf in "$resources_dir/Base.lproj"/*.json "$resources_dir"/*.json; do
+        # Scan every localized .lproj (Base.lproj / English.lproj / en.lproj / …)
+        # plus the Resources root.
+        for jf in "$resources_dir"/*.lproj/*.json "$resources_dir"/*.json; do
             [ ! -f "$jf" ] && continue
             jname=$(/usr/bin/basename "$jf")
             vout=$("$python3" "$verifier" "$jf" 2>&1)
@@ -355,18 +382,34 @@ validate_info_content() {
         log "  CFBundleExecutable '${exe}': OK"
     fi
 
-    # NSMainNibFile → matching .nib must exist in Base.lproj or Resources. Only
-    # checked when present (an app may use a storyboard or no main nib).
+    # NSMainNibFile → matching .nib must exist in Resources, Base.lproj, or any
+    # localized .lproj (English.lproj / en.lproj / …). Cocoa resolves the main nib
+    # through the bundle's localization search, so a nib living in the development
+    # region's .lproj is valid. Only checked when present (an app may use a
+    # storyboard or no main nib).
     local nib
     nib=$(plist_read "$info_plist" NSMainNibFile)
     if [ -n "$nib" ]; then
         local nib_base="${nib%.nib}"
-        if [ -e "$resources_dir/Base.lproj/${nib_base}.nib" ] || [ -e "$resources_dir/${nib_base}.nib" ]; then
+        local nib_found=""
+        if [ -e "$resources_dir/${nib_base}.nib" ] || [ -e "$resources_dir/Base.lproj/${nib_base}.nib" ]; then
+            nib_found="yes"
+        else
+            local lproj
+            for lproj in "$resources_dir"/*.lproj; do
+                [ -d "$lproj" ] || continue
+                if [ -e "$lproj/${nib_base}.nib" ]; then
+                    nib_found="yes"
+                    break
+                fi
+            done
+        fi
+        if [ -n "$nib_found" ]; then
             log "  NSMainNibFile '${nib}': OK"
         else
             log "  NSMainNibFile '${nib}': MISSING"
             error_count=$((error_count + 1))
-            report="${report}NSMainNibFile '${nib}': ${nib_base}.nib not found in Base.lproj or Resources
+            report="${report}NSMainNibFile '${nib}': ${nib_base}.nib not found in Resources, Base.lproj, or any .lproj
 
 "
         fi

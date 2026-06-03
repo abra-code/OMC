@@ -843,7 +843,9 @@
 				<key>ALLOW_MULTIPLE_ITEMS</key>
 				<false/>
 				<key>DEFAULT_LOCATION</key>
-				<string>/Applications</string>
+				<array>
+					<string>/Applications</string>
+				</array>
 				<key>ALLOWED_CONTENT_TYPES</key>
 				<array>
 					<string>com.apple.application-bundle</string>

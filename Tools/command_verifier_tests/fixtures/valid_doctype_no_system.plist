@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN">
+<plist version="1.0">
+<dict>
+	<key>COMMAND_LIST</key>
+	<array>
+		<dict>
+			<key>NAME</key>
+			<string>Sample</string>
+			<key>COMMAND_ID</key>
+			<string>sample.run</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_shell_script</string>
+			<key>COMMAND</key>
+			<array>
+				<string>echo hi</string>
+			</array>
+		</dict>
+	</array>
+	<key>VERSION</key>
+	<integer>2</integer>
+</dict>
+</plist>

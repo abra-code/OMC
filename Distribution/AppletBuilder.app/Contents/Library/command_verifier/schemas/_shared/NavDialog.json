@@ -1,0 +1,15 @@
+{
+  "name": "NavDialog",
+  "description": "Shared options for the file-navigation dialogs (SAVE_AS / CHOOSE_FILE / CHOOSE_FOLDER / CHOOSE_OBJECT / OPEN_OBJECT).",
+  "properties": {
+    "MESSAGE": { "types": ["string"], "description": "Custom prompt text." },
+    "DEFAULT_LOCATION": { "types": ["array"], "itemTypes": ["string"], "description": "Starting directory candidates (special words / ~ allowed)." },
+    "SHOW_INVISIBLE_ITEMS": { "types": ["boolean"] },
+    "USE_PATH_CACHING": { "types": ["boolean"], "description": "Remember last-used path." },
+    "ALLOW_MULTIPLE_ITEMS": { "types": ["boolean"] },
+    "DIALOG_IDENTIFIER": { "types": ["string"], "description": "Panel identifier for state persistence; defaults to COMMAND_ID." },
+    "BUTTON_PROMPT": { "types": ["string"], "description": "Custom action-button label." },
+    "ALLOWED_CONTENT_TYPES": { "types": ["array"], "itemTypes": ["string"], "description": "UTI strings to filter selectable files." },
+    "DEFAULT_FILE_NAME": { "types": ["array"], "itemTypes": ["string"], "appliesWhen": "dialog=SAVE_AS_DIALOG", "description": "Pre-filled filename fragments (array; combined). Read by the shared nav function but only the Save panel uses it. NOTE: engine requires an array — a plain string is silently ignored." }
+  }
+}

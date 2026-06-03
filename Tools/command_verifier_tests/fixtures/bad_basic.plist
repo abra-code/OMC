@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>COMMAND_LIST</key>
+  <array>
+    <dict>
+      <key>COMMAND_ID</key>
+      <string>broken</string>
+      <key>EXECUTION_MODE</key>
+      <string>exe_popen</string>
+      <key>ACTIVATION_MODE</key>
+      <string>act_whatever</string>
+      <key>WAIT_FOR_TASK_COMPLETION</key>
+      <string>yes</string>
+      <key>ACTIVATE_ONLY_IN</key>
+      <array><string>com.apple.finder</string></array>
+      <key>NEVER_ACTIVATE_IN</key>
+      <array><string>com.apple.Safari</string></array>
+      <key>IS_COCOA</key>
+      <true/>
+      <key>TYPpO_KEY</key>
+      <string>oops</string>
+    </dict>
+  </array>
+  <key>VERSION</key>
+  <integer>3</integer>
+</dict>
+</plist>

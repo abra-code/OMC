@@ -1,0 +1,8 @@
+{
+  "name": "OPEN_OBJECT_DIALOG",
+  "extends": "_shared/NavDialog",
+  "description": "Startup open dialog for the main command when file context is required but none was provided. USE_PATH_CACHING is not applicable (a fresh panel is always shown).",
+  "properties": {
+    "USE_PATH_CACHING": { "types": ["boolean"], "deprecated": { "note": "not applicable to OPEN_OBJECT_DIALOG; the open panel is always fresh" } }
+  }
+}

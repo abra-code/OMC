@@ -793,7 +793,7 @@ All four dialogs share **most options**. Only `DEFAULT_FILE_NAME` option is excl
 
 | Key | Type | Default | Description & Best Practices | Example |
 |-----|------|---------|------------------------------|---------|
-| `DEFAULT_FILE_NAME` | String or Array<String> | None | Pre-filled filename in the save field. Use array for dynamic names. | `["Backup-", __OBJ_NAME__, ".zip"]` |
+| `DEFAULT_FILE_NAME` | Array<String> | None | Pre-filled filename in the save field (fragments are combined). Must be an array — a plain string is **ignored**. | `["Backup-", __OBJ_NAME__, ".zip"]` |
 
 ---
 
@@ -1215,11 +1215,15 @@ Prompts **before** command runs. Value available via `$OMC_DLG_INPUT_TEXT`.
 
 | Key | Type | Default | Description & Best Practices | Example |
 |-----|------|---------|------------------------------|---------|
-| `INPUT_TYPE` | String | `"text"` | `"text"`, `"password"`, `"popup"`, `"combo"`. | `"password"` for secure |
-| `TITLE` | String | Command `NAME` | Dialog title. | `"Enter Value"` |
+| `INPUT_TYPE` | String | `"input_clear_text"` | One of `"input_clear_text"`, `"input_password_text"`, `"input_popup_menu"`, `"input_combo_box"`. | `"input_password_text"` for secure |
 | `MESSAGE` | String | `""` | Prompt text. | `"Enter name:"` |
-| `DEFAULT_VALUE` | String or Array<String> | `""` | Pre-filled value. Use array for dynamic. | `["User: ", __OBJ_NAME__]` |
-| `INPUT_MENU` | Array<String> | None | Menu items for `popup`/`combo`. | `["Option 1", "Option 2"]` |
+| `DEFAULT_VALUE` | Array<String> | `""` | Pre-filled value, array form (fragments are combined; supports `__FOO__` tokens). A plain string under this key is **ignored** — use `DEFAULT` for a string value. | `["User: ", __OBJ_NAME__]` |
+| `DEFAULT` | String | `""` | Pre-filled value, string form (alternative to `DEFAULT_VALUE`). | `"__OBJ_NAME__"` |
+| `INPUT_MENU` | Array<String> | None | Menu items for `input_popup_menu` / `input_combo_box`. | `["Option 1", "Option 2"]` |
+| `OK_BUTTON_NAME` | String | System default | Custom confirm-button label. | `"Apply"` |
+| `CANCEL_BUTTON_NAME` | String | System default | Custom cancel-button label. | `"Dismiss"` |
+
+> **Note**: There is no `TITLE` key. The dialog's window title is the command's `NAME`.
 
 **Examples**:
 
@@ -1228,12 +1232,10 @@ Prompts **before** command runs. Value available via `$OMC_DLG_INPUT_TEXT`.
 <key>INPUT_DIALOG</key>
 <dict>
   <key>INPUT_TYPE</key>
-  <string>text</string>
-  <key>TITLE</key>
-  <string>Enter Name</string>
+  <string>input_clear_text</string>
   <key>MESSAGE</key>
   <string>Please enter a name:</string>
-  <key>DEFAULT_VALUE</key>
+  <key>DEFAULT</key>
   <string>__OBJ_NAME__</string>
 </dict>
 ```
@@ -1243,7 +1245,7 @@ Prompts **before** command runs. Value available via `$OMC_DLG_INPUT_TEXT`.
 <key>INPUT_DIALOG</key>
 <dict>
   <key>INPUT_TYPE</key>
-  <string>password</string>
+  <string>input_password_text</string>
   <key>MESSAGE</key>
   <string>Enter password:</string>
 </dict>
@@ -1254,7 +1256,7 @@ Prompts **before** command runs. Value available via `$OMC_DLG_INPUT_TEXT`.
 <key>INPUT_DIALOG</key>
 <dict>
   <key>INPUT_TYPE</key>
-  <string>popup</string>
+  <string>input_popup_menu</string>
   <key>MESSAGE</key>
   <string>Select option:</string>
   <key>INPUT_MENU</key>
@@ -1263,18 +1265,18 @@ Prompts **before** command runs. Value available via `$OMC_DLG_INPUT_TEXT`.
     <string>Medium</string>
     <string>High</string>
   </array>
-  <key>DEFAULT_VALUE</key>
+  <key>DEFAULT</key>
   <string>Medium</string>
 </dict>
 ```
 
 **Notes**:
 - `$OMC_DLG_INPUT_TEXT` returns:
-  - Text/password: entered string
-  - Popup/combo: selected item
+  - `input_clear_text` / `input_password_text`: entered string
+  - `input_popup_menu` / `input_combo_box`: selected item
 - Use `__DLG_INPUT_TEXT__` in `COMMAND` for substitution.
 - Dialog is **blocking**.
-- `combo` allows typing; `popup` is dropdown only.
+- `input_combo_box` allows typing; `input_popup_menu` is dropdown only.
 
 ---
 

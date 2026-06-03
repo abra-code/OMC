@@ -206,6 +206,17 @@ void OutputWindowHandlerDeleterCallBack(CFRunLoopTimerRef timer, void* info)
 	delete theHandler;//the destructor will remove the timer
 }
 
+// Command.plist SCHEMA SOURCE OF TRUTH — OUTPUT_WINDOW_SETTINGS (WINDOW_TITLE,
+// WINDOW_ALPHA, WINDOW_OPEN_FADE_IN/CLOSE_FADE_OUT, AUTO_CLOSE_TIMEOUT,
+// AUTO_CLOSE_ON_SUCCESS_ONLY, WINDOW_TYPE enum [regular/floating/global_floating/
+// custom], WINDOW_POSITION enum [absolute/alert/center/cascade], ABSOLUTE/FRACT
+// positions, CUSTOM_WINDOW_PNG_IMAGE, WINDOW_WIDTH/HEIGHT, BACKGROUND/TEXT_COLOR,
+// TEXT_FONT/SIZE, CUSTOM_TEXTBOX_* / CUSTOM_RESIZEBOX_*).
+// Adding/removing/renaming/deprecating/retyping any key (or enum value) here REQUIRES
+// updating the matching verifier schema and rebuilding the skill, else the Command.plist
+// verifier drifts (false positives/negatives):
+//   verifier schema: Distribution/AppletBuilder.app/Contents/Library/command_verifier/schemas/OUTPUT_WINDOW_SETTINGS.json
+//   rebuild skill:   python3 Skill/build_skill.py   (design: Private/CommandPlist-Verifier-Design.md; keys: Private/CommandPlist-Keys.csv)
 void
 OutputWindowHandler::GetOutputWindowSettings(CFArrayRef inCommandName,
 											CFDictionaryRef inSettingsDict,
