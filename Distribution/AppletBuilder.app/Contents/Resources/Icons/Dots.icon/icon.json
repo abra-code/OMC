@@ -1,0 +1,29 @@
+{
+  "fill": {
+    "automatic-gradient": "extended-srgb:0.00000,0.00000,0.00000,1.00000"
+  },
+  "groups": [
+    {
+      "layers": [
+        {
+          "name": "blur_on",
+          "image-name": "blur_on.svg",
+          "position": {
+            "scale": 1.1,
+            "translation-in-points": [
+              0,
+              0
+            ]
+          },
+          "glass": true,
+          "fill": {
+            "automatic-gradient": "extended-srgb:1.00000,1.00000,1.00000,1.00000"
+          }
+        }
+      ]
+    }
+  ],
+  "supported-platforms": {
+    "squares": "shared"
+  }
+}
