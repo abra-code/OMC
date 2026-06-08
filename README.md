@@ -1,26 +1,25 @@
 # OMC
 ## OnMyCommand
 
-OnMyCommand has been available for macOS for over 15 years. Some historical information and legacy documentation is available [here](http://www.abracode.com/free/cmworkshop/on_my_command.html)
+OnMyCommand is an engine to execute command line tools and shell scripts - but not by typing in some command line interface - the idea is to create GUI access points to the rich underlying Unix foundation of macOS. If the name of the engine may seem a bit strange, it is not random: it tries to convey the ease of accessibility to the command line environment.  
 
-OnMyCommand is an engine to execute command line tools and shell scripts - but not by typing in some command line interface: the idea is to create GUI access points to the rich underlying Unix foundation of macOS.  
-If the name of the engine may seem a bit strange, it is not random: it tries to convey the ease of accessibility to the command line environment.  
-OMC started life as a contextual menu plug-in allowing users to add menu items to execute custom mini scripts by editing the preference plist. This functionality is still available but as Apple made classic in-proc contextual menu plug-ins obsolete, the usage has decreased. With recent macOS versions you need to use a special host app to load CM plug-ins. For more information see [Abracode Shortcuts.app](https://github.com/abra-code/Shortcuts)
-
-Most of the OMC development effort nowadays is directed towards building apps based on Abracode.framework and OMCApplet.app.  
+Most of the OMC development effort nowadays is directed towards **building apps** based on Abracode.framework and OMCApplet.app.  
 In contemporary terms you could describe OMC as low code or no code macOS app development environment.  
-Example OMC applets using the latest features are:
-\
-https://github.com/abra-code/FindApp
-\
-https://github.com/abra-code/DeltaApp
-\
-https://github.com/abra-code/XattrApp
-\
-https://github.com/abra-code/AIChatApp
-\
-https://github.com/abra-code/WatchdogApp
+One exemple of OMC app is [AppletBuilder](https://github.com/abra-code/OMC/tree/master/Distribution/AppletBuilder.app) itself in OMC 5 distribution. Other apps:  
 
+[AIChat](https://github.com/abra-code/AIChatApp)  
+[ICEdit](https://github.com/abra-code/ICEditApp)  
+[TextUtil](https://github.com/abra-code/TextUtilApp)  
+[DocToDoc](https://github.com/abra-code/DocToDocApp)  
+[Sips](https://github.com/abra-code/SipsApp)  
+[Enoch](https://github.com/abra-code/EnochApp)  
+[Find](https://github.com/abra-code/FindApp)  
+[Delta](https://github.com/abra-code/DeltaApp)  
+[Xattr](https://github.com/abra-code/XattrApp)  
+[Watchdog](https://github.com/abra-code/WatchdogApp)  
+
+OnMyCommand has been available for macOS for over 15 years. Some historical information and legacy documentation is available [here](http://www.abracode.com/free/cmworkshop/on_my_command.html).  
+OMC started life as a **contextual menu plug-in** allowing users to add menu items to execute custom mini scripts by editing the preference plist. This functionality is still available but as Apple made classic in-proc contextual menu plug-ins obsolete, the usage has decreased. With recent macOS versions you need to use a special host app to load CM plug-ins. For more information see [Abracode Shortcuts.app](https://github.com/abra-code/Shortcuts)
 
 ## Key Design Ideas
 ### (Basic concepts under 5 minutes)
