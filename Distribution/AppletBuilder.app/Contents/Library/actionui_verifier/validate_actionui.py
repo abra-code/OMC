@@ -3,9 +3,16 @@
 ActionUI JSON Verifier
 
 Usage:
-    validate_actionui.py <file.json>           validate a single file
-    validate_actionui.py <directory/>          validate all *.json files in directory
-    validate_actionui.py --strict <path>       treat warnings as errors
+    validate_actionui.py <file.json>            validate a single file
+    validate_actionui.py <directory/>           validate all *.json files in directory
+    validate_actionui.py -r <directory/>        recurse into subdirectories
+    validate_actionui.py --strict <path>        treat warnings as errors
+    validate_actionui.py --platform <p> <path>  validate as deployed to platform <p>
+
+Without --platform, files are validated as cross-platform authoring documents:
+platform-specific keys must carry a `:<platform>` suffix. With --platform, the
+document is validated as if deployed to that one platform (other-platform
+variants are dropped, just as they are at runtime).
 
 Exit codes:
     0  no issues
@@ -30,7 +37,7 @@ _SCRIPT_DIR = Path(__file__).parent
 _SCHEMAS_DIR = _SCRIPT_DIR / "schemas"
 
 sys.path.insert(0, str(_SCRIPT_DIR))
-from verifier import SchemaLoader, ElementValidator
+from verifier import SchemaLoader, ElementValidator, ALL_PLATFORMS
 
 
 def validate_file(path: Path, validator: ElementValidator, strict: bool) -> tuple[int, int]:
@@ -65,11 +72,13 @@ def validate_file(path: Path, validator: ElementValidator, strict: bool) -> tupl
     return len(errors), len(warnings)
 
 
-def validate_path(target: Path, validator: ElementValidator, strict: bool) -> tuple[int, int]:
+def validate_path(
+    target: Path, validator: ElementValidator, strict: bool, recursive: bool = False
+) -> tuple[int, int]:
     total_errors, total_warnings = 0, 0
 
     if target.is_dir():
-        json_files = sorted(target.glob("*.json"))
+        json_files = sorted(target.rglob("*.json") if recursive else target.glob("*.json"))
         if not json_files:
             print(f"No *.json files found in {target}", file=sys.stderr)
             return 0, 0
@@ -87,15 +96,45 @@ def validate_path(target: Path, validator: ElementValidator, strict: bool) -> tu
 
 
 def main():
-    args = sys.argv[1:]
     strict = False
+    recursive = False
+    target_platform = None
+    paths = []
 
-    if "--strict" in args:
-        strict = True
-        args = [a for a in args if a != "--strict"]
+    raw = sys.argv[1:]
+    i = 0
+    while i < len(raw):
+        arg = raw[i]
+        if arg == "--strict":
+            strict = True
+        elif arg in ("--recursive", "-r"):
+            recursive = True
+        elif arg == "--platform":
+            i += 1
+            if i >= len(raw):
+                print("[ERROR] --platform requires a value", file=sys.stderr)
+                sys.exit(2)
+            target_platform = raw[i]
+        elif arg.startswith("--platform="):
+            target_platform = arg.split("=", 1)[1]
+        elif arg.startswith("-") and arg != "-":
+            print(f"[ERROR] unknown option: {arg}", file=sys.stderr)
+            print(__doc__, file=sys.stderr)
+            sys.exit(2)
+        else:
+            paths.append(arg)
+        i += 1
 
-    if not args:
+    if not paths:
         print(__doc__, file=sys.stderr)
+        sys.exit(2)
+
+    if target_platform is not None and target_platform not in ALL_PLATFORMS:
+        print(
+            f"[ERROR] unknown platform '{target_platform}'. "
+            f"Known platforms: {', '.join(sorted(ALL_PLATFORMS))}",
+            file=sys.stderr,
+        )
         sys.exit(2)
 
     if not _SCHEMAS_DIR.exists():
@@ -107,11 +146,11 @@ def main():
         sys.exit(1)
 
     loader = SchemaLoader(_SCHEMAS_DIR)
-    validator = ElementValidator(loader)
+    validator = ElementValidator(loader, target_platform=target_platform)
 
     total_errors, total_warnings = 0, 0
-    for arg in args:
-        e, w = validate_path(Path(arg), validator, strict)
+    for arg in paths:
+        e, w = validate_path(Path(arg), validator, strict, recursive)
         total_errors += e
         total_warnings += w
 

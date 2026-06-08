@@ -29,6 +29,7 @@
     "onAppearActionID": "view.appeared",
     "onDisappearActionID": "view.disappeared",
     "disabled": false,
+    "help": "Run action",
     "accessibilityLabel": "View",
     "accessibilityHint": "Base view",
     "accessibilityHidden": false,

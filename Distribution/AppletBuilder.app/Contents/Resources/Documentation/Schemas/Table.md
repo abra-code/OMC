@@ -20,6 +20,7 @@ JSON schema and usage documentation for `Table`.
          "dataInterpretation": "systemName" } // "dataInterpretation": "path"|"systemName"|"assetName"|"resourceName"|"mixed" (Image & Button)
      ],
      "widths": [100, 80, 40],               // Optional: Array of integers for ideal column widths (resizable; last column fills remaining space)
+     "minWidths": [80, 60, 30],             // Optional: Array of integers for minimum column widths in points; columns cannot be resized below these. Missing entries default to 10.
      "actionID": "table.selection.changed", // Optional: Fires on selection change (all cell types)
      "doubleClickActionID": "table.double.click" // Optional: String for double-click action (context = row index)
    }

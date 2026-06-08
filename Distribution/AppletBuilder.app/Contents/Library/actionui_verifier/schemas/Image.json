@@ -12,8 +12,12 @@
     "url":          { "types": ["string"], "required": false, "description": "Remote image URL (uses AsyncImage behavior)" },
     "resizable":    { "types": ["boolean"], "required": false, "description": "Allow image to scale with frame; defaults to false" },
     "contentMode":  { "types": ["string"],  "required": false, "enum": ["fit","fill"], "description": "Aspect-ratio scaling mode when resizable; defaults to 'fit'" },
-    "scaleMode":    { "types": ["string"],  "required": false, "enum": ["fit","fill"], "description": "Deprecated: alias for contentMode; prefer contentMode" },
-    "imageScale":   { "types": ["string"],  "required": false, "enum": ["small","medium","large"], "description": "SF Symbol rendering scale" }
+    "imageScale":   { "types": ["string"],  "required": false, "enum": ["small","medium","large"], "description": "SF Symbol / Material Symbol rendering scale" },
+    "materialName":  { "types": ["string"],  "required": false, "description": "(Android only; author as materialName:android) Material Symbol name, rendered as a variable-font glyph - the Android stand-in for systemName" },
+    "materialWeight":{ "types": ["number"],  "required": false, "description": "(Android only) Material Symbols 'wght' axis, 100..700; defaults to 400" },
+    "materialFill":  { "types": ["number","boolean"], "required": false, "description": "(Android only) Material Symbols 'FILL' axis, 0..1 (or boolean); defaults to 0" },
+    "materialGrade": { "types": ["number"],  "required": false, "description": "(Android only) Material Symbols 'GRAD' axis, -50..200; defaults to 0" },
+    "materialSize":  { "types": ["number"],  "required": false, "description": "(Android only) explicit glyph size in sp; defaults to the imageScale-scaled ambient font size" }
   },
   "observable": {}
 }

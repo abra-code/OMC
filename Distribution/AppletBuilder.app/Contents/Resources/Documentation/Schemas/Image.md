@@ -15,7 +15,6 @@ JSON schema and usage documentation for `Image`.
      "filePath": "/path/to/image.jpg", // Optional: String for local file path
      "resizable": true,          // Optional: Boolean to make image resizable, defaults to true if contentMode is specified
      "contentMode": "fit",       // Optional: String ("fit" or "fill") for aspect-ratio scaling mode, defaults to "fit"
-     "scaleMode": "fit",         // Deprecated: alias for contentMode; prefer contentMode
      "imageScale": "large"       // Optional: String ("small", "medium", "large") for image scale, applies to SF Symbols, no default
    }
    // Note: These properties are specific to Image. Baseline View properties (padding, hidden, foregroundColor, font, background, frame, opacity, cornerRadius, actionID, disabled, accessibilityLabel, accessibilityHint, accessibilityHidden, accessibilityIdentifier, shadow) and additional View protocol modifiers are inherited and applied via ActionUIRegistry.shared.applyModifiers(to: baseView, properties: element.properties).

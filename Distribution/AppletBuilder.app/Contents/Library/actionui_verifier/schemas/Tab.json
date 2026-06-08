@@ -9,6 +9,11 @@
     "title":       { "types": ["string"], "required": true,  "description": "Tab label text" },
     "systemImage": { "types": ["string"], "required": false, "description": "SF Symbol name for the tab icon" },
     "assetImage":  { "types": ["string"], "required": false, "description": "Asset catalog image name for the tab icon" },
+    "materialName":  { "types": ["string"], "required": false, "description": "(Android only; author as materialName:android) Material Symbol name, the Android stand-in for systemImage" },
+    "materialWeight":{ "types": ["number"], "required": false, "description": "(Android only) Material Symbols 'wght' axis, 100..700; defaults to 400" },
+    "materialFill":  { "types": ["number","boolean"], "required": false, "description": "(Android only) Material Symbols 'FILL' axis, 0..1 (or boolean); defaults to 0" },
+    "materialGrade": { "types": ["number"], "required": false, "description": "(Android only) Material Symbols 'GRAD' axis, -50..200; defaults to 0" },
+    "materialSize":  { "types": ["number"], "required": false, "description": "(Android only) explicit icon size in sp; defaults to the nav-bar icon size" },
     "badge": {
       "required": false,
       "description": "Badge shown on the tab; integer count or string; capped at '99+' for integers > 99",

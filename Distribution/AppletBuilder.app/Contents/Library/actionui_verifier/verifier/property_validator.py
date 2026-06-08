@@ -5,6 +5,7 @@ from __future__ import annotations
 
 from .errors import ValidationIssue
 from .type_checker import json_type_of, matches_types, matches_spec, check_one_of
+from .platform_filter import ALL_PLATFORMS, split_platform_suffix, format_suffix_label
 
 # Keys intentionally used as JSON comments inside any object; silently skipped.
 _ANNOTATION_KEYS = {"description", "note", "comment", "info"}
@@ -106,7 +107,13 @@ def validate_property(key: str, value, prop_spec: dict, path: str) -> list[Valid
 
 
 def _validate_object_props(obj: dict, spec: dict, path: str) -> list[ValidationIssue]:
-    """Validate sub-properties of an object against its spec's 'properties' dict."""
+    """Validate sub-properties of an object against its spec's 'properties' dict.
+
+    Sub-keys may carry a `:<platform>` suffix; the base name is looked up in the
+    spec and unknown suffixes are reported. Mutual-exclusivity and required-key
+    checks compare base names so a `maxWidth:macos` variant satisfies the same
+    constraint as plain `maxWidth`.
+    """
     issues = []
     sub_specs = spec.get("properties")
 
@@ -114,37 +121,48 @@ def _validate_object_props(obj: dict, spec: dict, path: str) -> list[ValidationI
     if sub_specs is None:
         return issues
 
-    # Check required sub-properties
+    # Base-name set of present sub-keys, for required and mutex checks below.
+    present_bases: set[str] = set()
+    for k in obj:
+        base, _ = split_platform_suffix(k)
+        present_bases.add(base)
+
+    # Check required sub-properties (any platform variant satisfies)
     for sub_key, sub_spec in sub_specs.items():
-        if sub_spec.get("required") and sub_key not in obj:
+        if sub_spec.get("required") and sub_key not in present_bases:
             issues.append(ValidationIssue(
                 "error", f"{path}.{sub_key}",
                 f"required key '{sub_key}' is missing"
             ))
 
-    # Validate present sub-properties
+    # Validate present sub-properties (including platform variants)
     for sub_key, sub_value in obj.items():
-        if sub_key in _ANNOTATION_KEYS:
-            pass  # intentional JSON comment; silently accepted anywhere
-        elif sub_key in sub_specs:
-            issues += validate_property(sub_key, sub_value, sub_specs[sub_key], path)
-        else:
-            # Unknown key inside a known object: warn (may be a new platform key)
+        base, suffix = split_platform_suffix(sub_key)
+        if suffix is not None and suffix not in ALL_PLATFORMS:
             issues.append(ValidationIssue(
-                "warning", f"{path}.{sub_key}",
-                f"unexpected key '{sub_key}' inside object"
+                "warning", path,
+                f"unknown platform suffix in key '{sub_key}' (suffix='{suffix}'); "
+                f"key will be dropped at runtime. Known platforms: "
+                f"{', '.join(sorted(ALL_PLATFORMS))}"
+            ))
+            continue
+        label = format_suffix_label(base, suffix)
+        if base in _ANNOTATION_KEYS:
+            pass  # intentional JSON comment; silently accepted anywhere
+        elif base in sub_specs:
+            issues += validate_property(label, sub_value, sub_specs[base], path)
+        else:
+            issues.append(ValidationIssue(
+                "warning", f"{path}.{label}",
+                f"unexpected key '{label}' inside object"
             ))
 
-    # Check mutual exclusivity (frame fixed vs flexible form)
-    for group in spec.get("mutuallyExclusiveGroups", []):
-        present = [k for k in group if k in obj]
-        if present and len(present) != len([k for k in group if k in obj]):
-            pass  # groups that partially overlap are checked together
-    # Full mutual exclusivity: if keys from group 0 AND group 1 are both present, error
+    # Mutual exclusivity: if any base from group 0 AND any base from group 1
+    # are both present (any platform variant counts), it's a conflict.
     groups = spec.get("mutuallyExclusiveGroups", [])
     if len(groups) == 2:
-        g0_present = any(k in obj for k in groups[0])
-        g1_present = any(k in obj for k in groups[1])
+        g0_present = any(k in present_bases for k in groups[0])
+        g1_present = any(k in present_bases for k in groups[1])
         if g0_present and g1_present:
             issues.append(ValidationIssue(
                 "error", path,

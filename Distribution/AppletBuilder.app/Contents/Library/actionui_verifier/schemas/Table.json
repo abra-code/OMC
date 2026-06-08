@@ -37,6 +37,12 @@
       "description": "Ideal column widths in points; last column fills remaining space",
       "itemTypes": ["integer"]
     },
+    "minWidths": {
+      "types": ["array"],
+      "required": false,
+      "description": "Minimum column widths in points; columns cannot be resized below these. Missing entries default to 10",
+      "itemTypes": ["integer"]
+    },
     "doubleClickActionID": { "types": ["string"], "required": false, "description": "macOS only; fires on double-click; context = row index" }
   },
   "observable": {

@@ -145,6 +145,7 @@
     "controlSize":   { "types": ["string"], "required": false, "enum": ["mini","small","regular","large","extraLarge"] },
     "labelsHidden":  { "types": ["boolean"], "required": false },
     "disabled":      { "types": ["boolean"], "required": false },
+    "help":          { "types": ["string"],  "required": false },
     "accessibilityLabel":      { "types": ["string"],  "required": false },
     "accessibilityHint":       { "types": ["string"],  "required": false },
     "accessibilityHidden":     { "types": ["boolean"], "required": false },
@@ -192,8 +193,9 @@
     "backgroundAlignment":               { "types": ["string"], "required": false, "enum": ["center","leading","trailing","top","bottom","topLeading","topTrailing","bottomLeading","bottomTrailing"] },
     "toolbarTitleDisplayMode":           { "types": ["string"], "required": false, "enum": ["automatic","inline","large","inlineLarge"] },
     "destinationViewId":                 { "types": ["integer"], "required": false },
-    "textSelection":             { "types": ["string"],  "required": false, "enum": ["enabled","disabled"] },
-    "multilineTextAlignment":    { "types": ["string"],  "required": false, "enum": ["leading","center","trailing"] },
-    "zIndex":                    { "types": ["number"],  "required": false }
+    "textSelection":             { "types": ["string"], "required": false, "enum": ["enabled","disabled"] },
+    "multilineTextAlignment":    { "types": ["string"], "required": false, "enum": ["leading","center","trailing"] },
+    "zIndex":                    { "types": ["number"], "required": false },
+    "weight":                    { "types": ["number"], "required": false, "platforms": ["android"], "description": "Flex weight of a child within a Row/Column (Jetpack Compose). No SwiftUI equivalent; suffix as 'weight:android' in cross-platform documents." }
   }
 }

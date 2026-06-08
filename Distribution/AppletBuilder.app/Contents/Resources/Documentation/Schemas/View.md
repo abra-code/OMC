@@ -96,6 +96,7 @@ JSON schema and usage documentation for `View`.
      "controlSize": "regular", // Optional: "mini", "small", "regular", "large", "extraLarge"; no default (system default)
      "labelsHidden": true,  // Optional: Boolean to hide labels on child views (e.g., within LabeledContent/Form); defaults to false
      "disabled": false,     // Optional: Boolean to disable user interaction
+     "help": "Run action",  // Optional: String for help tooltip 
      "accessibilityLabel": "View", // Optional: Accessibility label for VoiceOver
      "accessibilityHint": "Base view", // Optional: Accessibility hint for VoiceOver
      "accessibilityHidden": false, // Optional: Boolean to hide view from VoiceOver

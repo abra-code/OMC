@@ -6,9 +6,14 @@
   "topLevelKeys": [],
   "ownProperties": {
     "title":       { "types": ["string"], "required": false, "description": "Button label text; defaults to empty" },
-    "systemImage": { "types": ["string"], "required": false, "description": "SF Symbol name" },
+    "systemImage": { "types": ["string"], "required": false, "description": "SF Symbol name for a leading icon" },
     "assetImage":  { "types": ["string"], "required": false, "description": "Asset name from Assets.xcassets" },
-    "imageScale":  { "types": ["string"], "required": false, "enum": ["small","medium","large"], "description": "Defaults to 'medium'" },
+    "imageScale":  { "types": ["string"], "required": false, "enum": ["small","medium","large"], "description": "Icon rendering scale; defaults to 'medium'" },
+    "materialName":  { "types": ["string"], "required": false, "description": "(Android only; author as materialName:android) Material Symbol name, the Android stand-in for systemImage" },
+    "materialWeight":{ "types": ["number"], "required": false, "description": "(Android only) Material Symbols 'wght' axis, 100..700; defaults to 400" },
+    "materialFill":  { "types": ["number","boolean"], "required": false, "description": "(Android only) Material Symbols 'FILL' axis, 0..1 (or boolean); defaults to 0" },
+    "materialGrade": { "types": ["number"], "required": false, "description": "(Android only) Material Symbols 'GRAD' axis, -50..200; defaults to 0" },
+    "materialSize":  { "types": ["number"], "required": false, "description": "(Android only) explicit icon size in sp; defaults to the imageScale-scaled label font size" },
     "role":        { "types": ["string"], "required": false, "enum": ["destructive","cancel"] }
   },
   "observable": {}
