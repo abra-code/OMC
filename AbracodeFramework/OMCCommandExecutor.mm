@@ -202,7 +202,11 @@ bool IsFileOrFolderActivation(UInt32 activationType)
 
             if (error == noErr)
             {
-                error = OMCExamineContext( omcExec, commandRef, (selectedFiles != NULL) ? selectedFiles : (__bridge CFTypeRef)inContext );
+                // Applet execution path: examine the context and prepare runtime data, but do not reject
+                // the command when its ACTIVATION_MODE does not match the context (e.g. ACTIVATION_MODE=act_file
+                // with USE_NAV_DIALOG_FOR_MISSING_FILE_CONTEXT=false launched with no files). Activation matching
+                // gating is a contextual-menu/service concern; here the command was invoked explicitly and must run.
+                error = OMCExamineContext( omcExec, commandRef, (selectedFiles != NULL) ? selectedFiles : (__bridge CFTypeRef)inContext, kOMCAllowContextMismatch );
             }
 
 			if (selectedFiles != NULL)

@@ -212,7 +212,7 @@
     
     NSURL *testFile = [self createTempFileWithName:@"test_examine.txt" content:@"test content"];
     
-    OSStatus err = OMCExamineContext(executor, cmdRef, (__bridge CFURLRef)testFile);
+    OSStatus err = OMCExamineContext(executor, cmdRef, (__bridge CFURLRef)testFile, kOMCExamineContextDefault);
     XCTAssertEqual(err, noErr, @"Should examine file context successfully");
     
     OMCReleaseExecutor(executor);
@@ -229,7 +229,7 @@
         [files addObject:file];
     }
     
-    OSStatus err = OMCExamineContext(executor, cmdRef, (__bridge CFArrayRef)files);
+    OSStatus err = OMCExamineContext(executor, cmdRef, (__bridge CFArrayRef)files, kOMCExamineContextDefault);
     XCTAssertEqual(err, noErr, @"Should examine multiple files");
     
     OMCReleaseExecutor(executor);
@@ -239,7 +239,7 @@
     OMCExecutorRef executor = OMCCreateExecutor((__bridge CFDictionaryRef)self.testPlistDict);
     OMCCommandRef cmdRef = OMCFindCommand(executor, CFSTR("process_text"));
     
-    OSStatus err = OMCExamineContext(executor, cmdRef, CFSTR("Test text content"));
+    OSStatus err = OMCExamineContext(executor, cmdRef, CFSTR("Test text content"), kOMCExamineContextDefault);
     XCTAssertEqual(err, noErr, @"Should examine text context");
     
     OMCReleaseExecutor(executor);
@@ -250,7 +250,7 @@
     OMCCommandRef cmdRef = OMCFindCommand(executor, CFSTR("echo_test"));
     
     // act_always commands should work with nil context
-    OSStatus err = OMCExamineContext(executor, cmdRef, NULL);
+    OSStatus err = OMCExamineContext(executor, cmdRef, NULL, kOMCExamineContextDefault);
     XCTAssertEqual(err, noErr, @"Should handle nil context for always-active command");
     
     OMCReleaseExecutor(executor);
@@ -261,9 +261,24 @@
     OMCCommandRef cmdRef = OMCFindCommand(executor, CFSTR("process_file"));
     
     // Passing text to a file-only command
-    OSStatus err = OMCExamineContext(executor, cmdRef, CFSTR("text instead of file"));
+    OSStatus err = OMCExamineContext(executor, cmdRef, CFSTR("text instead of file"), kOMCExamineContextDefault);
     XCTAssertNotEqual(err, noErr, @"Should fail with wrong context type");
-    
+
+    OMCReleaseExecutor(executor);
+}
+
+- (void)testExamineContextAllowMismatchSkipsActivationGating {
+    OMCExecutorRef executor = OMCCreateExecutor((__bridge CFDictionaryRef)self.testPlistDict);
+    OMCCommandRef cmdRef = OMCFindCommand(executor, CFSTR("process_file"));
+
+    // A file-only command invoked with no file context fails the activation gate by default...
+    OSStatus errDefault = OMCExamineContext(executor, cmdRef, NULL, kOMCExamineContextDefault);
+    XCTAssertNotEqual(errDefault, noErr, @"Default gating should reject file command with empty context");
+
+    // ...but kOMCAllowContextMismatch (explicit execution path) lets it proceed so the command can run.
+    OSStatus errAllow = OMCExamineContext(executor, cmdRef, NULL, kOMCAllowContextMismatch);
+    XCTAssertEqual(errAllow, noErr, @"kOMCAllowContextMismatch should bypass activation gating for empty context");
+
     OMCReleaseExecutor(executor);
 }
 
@@ -274,7 +289,7 @@
     // Use NSTemporaryDirectory as a test folder
     NSURL *folderURL = [NSURL fileURLWithPath:NSTemporaryDirectory()];
     
-    OSStatus err = OMCExamineContext(executor, cmdRef, (__bridge CFURLRef)folderURL);
+    OSStatus err = OMCExamineContext(executor, cmdRef, (__bridge CFURLRef)folderURL, kOMCExamineContextDefault);
     XCTAssertEqual(err, noErr, @"Should examine folder context");
     
     OMCReleaseExecutor(executor);

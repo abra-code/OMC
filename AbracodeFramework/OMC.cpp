@@ -156,18 +156,22 @@ extern "C" OSStatus OMCExamineContextAE(OMCExecutorRef inOMCExecutor, OMCCommand
 	return paramErr;
 }
 
-extern "C" OSStatus OMCExamineContext(OMCExecutorRef inOMCExecutor, OMCCommandRef inCmdRef, CFTypeRef inContext)
+extern "C" OSStatus OMCExamineContext(OMCExecutorRef inOMCExecutor, OMCCommandRef inCmdRef, CFTypeRef inContext, UInt32 inOptions)
 {
 	try
 	{
 		if(inOMCExecutor != nullptr)
         {
-            return inOMCExecutor->ExamineContext(inContext, inCmdRef);
+            // kOMCAllowContextMismatch (explicit applet execution) examines the context and prepares
+            // runtime data but does not reject the command on an ACTIVATION_MODE mismatch. Without it
+            // (contextual menu / service) a mismatch is gated with errAEWrongDataType.
+            bool enforceActivationMatch = ((inOptions & kOMCAllowContextMismatch) == 0);
+            return inOMCExecutor->ExamineContext(inContext, inCmdRef, enforceActivationMatch);
         }
 	}
 	catch(...)
 	{
-	
+
 	}
 	return paramErr;
 }

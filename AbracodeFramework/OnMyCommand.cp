@@ -183,7 +183,7 @@ OnMyCommandCM::ExamineContext( const AEDesc *inAEContext, SInt32 inCommandRef, A
 
 //new API for OMC.h
 OSStatus
-OnMyCommandCM::ExamineContext( CFTypeRef inContext, SInt32 inCommandRef )
+OnMyCommandCM::ExamineContext( CFTypeRef inContext, SInt32 inCommandRef, bool inEnforceActivationMatch )
 {
 	SInt32 cmdIndex = -1;
 	if(inCommandRef >= kCMCommandStart)
@@ -191,13 +191,13 @@ OnMyCommandCM::ExamineContext( CFTypeRef inContext, SInt32 inCommandRef )
 	else
 		mCurrCommandIndex = 0;
 
-	return CommonContextCheck( nullptr, inContext, nullptr, nullptr, cmdIndex );
+	return CommonContextCheck( nullptr, inContext, nullptr, nullptr, cmdIndex, inEnforceActivationMatch );
 }
 
 // it is OK to have NULL AE or CF, or both contexts here
 
 OSStatus
-OnMyCommandCM::CommonContextCheck( const AEDesc *inAEContext, CFTypeRef inContext, const OMCContextData *inParentContextData, AEDescList *outCommandPairs, SInt32 inCmdIndex )
+OnMyCommandCM::CommonContextCheck( const AEDesc *inAEContext, CFTypeRef inContext, const OMCContextData *inParentContextData, AEDescList *outCommandPairs, SInt32 inCmdIndex, bool inEnforceActivationMatch )
 {
 	TRACE_CSTR( "OnMyCommandCM::CommonContextCheck\n" );
 	OSStatus err = noErr;
@@ -429,7 +429,11 @@ OnMyCommandCM::CommonContextCheck( const AEDesc *inAEContext, CFTypeRef inContex
 								frontProcessName);
 	}
 	
-	if(inCmdIndex >= 0)
+	// Activation matching gates contextual-menu and service invocations: a command whose
+	// ACTIVATION_MODE does not match the context is rejected so it is not shown / handled.
+	// For explicit applet execution (inEnforceActivationMatch == false) we skip this gate -
+	// the command was invoked directly and must run even with empty/mismatched context.
+	if(inCmdIndex >= 0 && inEnforceActivationMatch)
 	{
 		bool isEnabled = IsCommandEnabled(inCmdIndex,
                                           inAEContext,

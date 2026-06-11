@@ -82,7 +82,19 @@ OMCCommandRef	OMCFindCommand( OMCExecutorRef inOMCExecutor, CFStringRef inNameOr
 //outCommandPairs may be NULL
 //proceed only when this function returns noErr
 OSStatus		OMCExamineContextAE( OMCExecutorRef inOMCExecutor, OMCCommandRef inCommandRef, const AEDesc *inAEContext, AEDescList *outCommandPairs );
-OSStatus		OMCExamineContext( OMCExecutorRef inOMCExecutor, OMCCommandRef inCommandRef, CFTypeRef inContext );
+//Options for OMCExamineContext() inOptions
+enum
+{
+	kOMCExamineContextDefault	= 0x00,
+	//Do not reject the command when its ACTIVATION_MODE does not match the supplied context
+	//(e.g. ACTIVATION_MODE=act_file invoked with no file context). Use for explicit command
+	//execution (applets) where the command is invoked directly and the command designer is
+	//responsible for handling the missing/mismatched context. Without this option a context
+	//mismatch makes OMCExamineContext() return errAEWrongDataType (contextual-menu/service gating).
+	kOMCAllowContextMismatch	= 0x01
+};
+
+OSStatus		OMCExamineContext( OMCExecutorRef inOMCExecutor, OMCCommandRef inCommandRef, CFTypeRef inContext, UInt32 inOptions );
 
 	
 //Querying for information about the command:

@@ -183,7 +183,7 @@ void OMCServiceObserverCallback( OmcObserverMessage inMessage, CFIndex inTaskID,
     OMCCommandRef commandRef = OMCFindCommand( omcExec, (__bridge CFStringRef)userData );
 	if( OMCIsValidCommandRef(commandRef) )
 	{
-        if( noErr == OMCExamineContext(omcExec, commandRef, (__bridge CFTypeRef)(contextObj)) )
+        if( noErr == OMCExamineContext(omcExec, commandRef, (__bridge CFTypeRef)(contextObj), kOMCExamineContextDefault) )
 		{
 			if(mObserver == NULL)
 			{

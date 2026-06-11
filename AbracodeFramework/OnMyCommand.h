@@ -41,13 +41,18 @@ public:
 
 	virtual OSStatus	ExamineContext( const AEDesc *inAEContext, AEDescList *outCommandPairs );
 	virtual OSStatus	ExamineContext( const AEDesc *inAEContext, SInt32 inCommandRef, AEDescList *outCommandPairs );
-	virtual OSStatus	ExamineContext( CFTypeRef inContext, SInt32 inCommandRef );
+	// inEnforceActivationMatch == true (contextual menu / services): the command is rejected
+	// with errAEWrongDataType when its ACTIVATION_MODE does not match the supplied context.
+	// inEnforceActivationMatch == false (explicit applet execution): the context is still examined
+	// and runtime data prepared, but a mismatch (e.g. act_file with empty file context) does not
+	// reject the command - the command designer is responsible for handling missing context.
+	virtual OSStatus	ExamineContext( CFTypeRef inContext, SInt32 inCommandRef, bool inEnforceActivationMatch = true );
 
     // the contextual menu API to execute a command
 	virtual OSStatus	HandleSelection( AEDesc *inAEContext, SInt32 inCommandRef ); // pass NULL for inAEContext when executing with CF Context
     virtual void		PostMenuCleanup();
 
-	OSStatus			CommonContextCheck( const AEDesc *inAEContext, CFTypeRef inContext, const OMCContextData *inParentContext, AEDescList *outCommandPairs, SInt32 inCmdIndex );
+	OSStatus			CommonContextCheck( const AEDesc *inAEContext, CFTypeRef inContext, const OMCContextData *inParentContext, AEDescList *outCommandPairs, SInt32 inCmdIndex, bool inEnforceActivationMatch = true );
     // internal API to execute a command
     OSStatus            ExecuteCommand( AEDesc *inAEContext, SInt32 inCommandIndex, const CommandRuntimeData *parentCommandRuntimeData ); // pass NULL for inAEContext when executing with CF Context
 

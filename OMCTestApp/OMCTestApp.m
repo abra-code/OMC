@@ -156,7 +156,7 @@ void OMCTestAppObserverCallback( OmcObserverMessage inMessage, CFIndex inTaskID,
 			OMCCommandRef commandRef = OMCFindCommand( omcExec, (CFStringRef)@"Echo text" );
 			if( OMCIsValidCommandRef(commandRef) )
 			{
-				if( noErr == OMCExamineContext(omcExec, commandRef, (CFStringRef)@"The quick brown fox jumps over the lazy dog" ) )
+				if( noErr == OMCExamineContext(omcExec, commandRef, (CFStringRef)@"The quick brown fox jumps over the lazy dog", kOMCExamineContextDefault ) )
 				{
 					if(mObserver == NULL)
 					{
