@@ -1,0 +1,573 @@
+{
+  "COMMAND_LIST": [
+    {
+      "NOTES": "App lifecycle: disable smart quotes and smart insert/delete for code editing",
+      "COMMAND_ID": "app.will.launch",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "NOTES": "Cmd+S: dispatch save to the active tab's TextEditor",
+      "COMMAND_ID": "AppletBuilder.save",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "ACTIVATION_MODE": "act_folder",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder",
+      "OPEN_OBJECT_DIALOG": {
+        "BUTTON_PROMPT": "Open",
+        "MESSAGE": "Select an applet (.app) to open"
+      },
+      "REQUIRED_MAC_OS_MIN_VERSION": "14.6",
+      "REQUIRED_OMC_VERSION": "5.1"
+    },
+    {
+      "NOTES": "New Applet dialog — opens the New Applet dialog window",
+      "ACTIONUI_WINDOW": {
+        "INIT_SUBCOMMAND_ID": "AppletBuilder.new.init",
+        "IS_BLOCKING": false,
+        "JSON_NAME": "NewApplet",
+        "WINDOW_TITLE": "New Applet"
+      },
+      "COMMAND_ID": "AppletBuilder.new.applet",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.new.init",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.new.template.changed",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.new.name.changed",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.new.bundleid.changed",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.new.icon.changed",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.new.python.changed",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "CHOOSE_OBJECT_DIALOG": {
+        "ALLOW_MULTIPLE_ITEMS": false,
+        "MESSAGE": "Select a template applet (.app)"
+      },
+      "COMMAND_ID": "AppletBuilder.new.browse.template",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "CHOOSE_OBJECT_DIALOG": {
+        "ALLOW_MULTIPLE_ITEMS": false,
+        "MESSAGE": "Select an .icon file"
+      },
+      "COMMAND_ID": "AppletBuilder.new.browse.icon",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "CHOOSE_FOLDER_DIALOG": {
+        "BUTTON_PROMPT": "Create Here",
+        "MESSAGE": "Select destination folder for the new applet"
+      },
+      "COMMAND_ID": "AppletBuilder.new.create",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "NOTES": "Project window (editing an existing applet) — opens the project editor window",
+      "ACTIONUI_WINDOW": {
+        "END_CANCEL_SUBCOMMAND_ID": "AppletBuilder.project.cancel",
+        "INIT_SUBCOMMAND_ID": "AppletBuilder.project.init",
+        "IS_BLOCKING": false,
+        "JSON_NAME": "AppletBuilder",
+        "WINDOW_DID_ACTIVATE_SUBCOMMAND_ID": "AppletBuilder.project.activated"
+      },
+      "COMMAND_ID": "AppletBuilder.project",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.project.activated",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.project.init",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.project.cancel",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.general.loaded",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "CHOOSE_OBJECT_DIALOG": {
+        "ALLOW_MULTIPLE_ITEMS": false,
+        "MESSAGE": "Select an .icon file"
+      },
+      "COMMAND_ID": "AppletBuilder.general.browse.icon",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.general.name.changed",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.general.save",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.general.bundleid.changed",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.general.version.changed",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.services.reload",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.services.selected",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.services.add",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.services.remove",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.services.save",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "NOTES": "═══ Commands tab ═══",
+      "COMMAND_ID": "AppletBuilder.commands.loaded",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.commands.selected",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.commands.add",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "NOTES": "New Command dialog",
+      "ACTIONUI_WINDOW": {
+        "END_CANCEL_SUBCOMMAND_ID": "AppletBuilder.commands.new.cancel",
+        "END_OK_SUBCOMMAND_ID": "AppletBuilder.commands.new.create",
+        "INIT_SUBCOMMAND_ID": "AppletBuilder.commands.new.init",
+        "IS_BLOCKING": true,
+        "JSON_NAME": "NewCommand",
+        "WINDOW_TITLE": "New Command"
+      },
+      "COMMAND_ID": "AppletBuilder.commands.new.dialog",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.commands.new.init",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "NOTES": "No-op cancel: exe_shell_script with empty command, no script file needed",
+      "COMMAND": [],
+      "COMMAND_ID": "AppletBuilder.commands.new.cancel",
+      "EXECUTION_MODE": "exe_shell_script",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.commands.new.name.changed",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.commands.new.execution.changed",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.commands.new.create",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.commands.remove",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.commands.edit",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.commands.reveal",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.commands.validate",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.commands.save.detail",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.commands.text.changed",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "NOTES": "═══ Scripts tab ═══",
+      "COMMAND_ID": "AppletBuilder.scripts.loaded",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.scripts.selected",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.scripts.add",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "NOTES": "New Script dialog",
+      "ACTIONUI_WINDOW": {
+        "END_CANCEL_SUBCOMMAND_ID": "AppletBuilder.scripts.new.cancel",
+        "END_OK_SUBCOMMAND_ID": "AppletBuilder.scripts.new.create",
+        "INIT_SUBCOMMAND_ID": "AppletBuilder.scripts.new.init",
+        "IS_BLOCKING": true,
+        "JSON_NAME": "NewScript",
+        "WINDOW_TITLE": "New Script"
+      },
+      "COMMAND_ID": "AppletBuilder.scripts.new.dialog",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.scripts.new.init",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "NOTES": "No-op cancel: exe_shell_script with empty command, no script file needed",
+      "COMMAND": [],
+      "COMMAND_ID": "AppletBuilder.scripts.new.cancel",
+      "EXECUTION_MODE": "exe_shell_script",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.scripts.new.create",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.scripts.remove",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.scripts.edit",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.scripts.reveal",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.scripts.save.detail",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.scripts.text.changed",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.scripts.validate",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "NOTES": "═══ UI Files tab ═══",
+      "COMMAND_ID": "AppletBuilder.uifiles.loaded",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.uifiles.selected",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.uifiles.add",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "NOTES": "New UI File dialog",
+      "ACTIONUI_WINDOW": {
+        "END_CANCEL_SUBCOMMAND_ID": "AppletBuilder.uifiles.new.cancel",
+        "END_OK_SUBCOMMAND_ID": "AppletBuilder.uifiles.new.create",
+        "INIT_SUBCOMMAND_ID": "AppletBuilder.uifiles.new.init",
+        "IS_BLOCKING": true,
+        "JSON_NAME": "NewUIFile",
+        "WINDOW_TITLE": "New UI File"
+      },
+      "COMMAND_ID": "AppletBuilder.uifiles.new.dialog",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.uifiles.new.init",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "NOTES": "No-op cancel: exe_shell_script with empty command, no script file needed",
+      "COMMAND": [],
+      "COMMAND_ID": "AppletBuilder.uifiles.new.cancel",
+      "EXECUTION_MODE": "exe_shell_script",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.uifiles.new.create",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.uifiles.remove",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.uifiles.edit",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.uifiles.reveal",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.uifiles.validate",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.uifiles.prettify",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.uifiles.preview",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.uifiles.save.detail",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.uifiles.text.changed",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.uifiles.template.copy",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "NOTES": "═══ Settings ═══",
+      "ACTIONUI_WINDOW": {
+        "INIT_SUBCOMMAND_ID": "AppletBuilder.settings.init",
+        "IS_BLOCKING": false,
+        "JSON_NAME": "Settings",
+        "WINDOW_TITLE": "Settings"
+      },
+      "COMMAND_ID": "AppletBuilder.settings.dialog",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.settings.init",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "CHOOSE_OBJECT_DIALOG": {
+        "ALLOW_MULTIPLE_ITEMS": false,
+        "ALLOWED_CONTENT_TYPES": [
+          "com.apple.application-bundle"
+        ],
+        "DEFAULT_LOCATION": [
+          "/Applications"
+        ],
+        "MESSAGE": "Select an application"
+      },
+      "COMMAND_ID": "AppletBuilder.settings.browse.editor",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "NOTES": "═══ Help Viewer ═══ — converts docs and opens help viewer",
+      "COMMAND_ID": "AppletBuilder.help.show",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.help.show.commands",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.help.show.services",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.help.show.scripts",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "ACTIONUI_WINDOW": {
+        "INIT_SUBCOMMAND_ID": "AppletBuilder.help.init",
+        "JSON_NAME": "HelpViewer"
+      },
+      "COMMAND_ID": "AppletBuilder.help.dialog",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.help.init",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.help.back",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.help.forward",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.help.url.changed",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "NOTES": "Shared: Error output window",
+      "COMMAND_ID": "AppletBuilder.show.errors",
+      "EXECUTION_MODE": "exe_script_file_with_output_window",
+      "NAME": "AppletBuilder",
+      "OUTPUT_WINDOW_SETTINGS": {
+        "TEXT_FONT": "Menlo",
+        "TEXT_SIZE": 12,
+        "WINDOW_HEIGHT": 300,
+        "WINDOW_POSITION": "cascade",
+        "WINDOW_TITLE": "Validation Errors",
+        "WINDOW_TYPE": "regular",
+        "WINDOW_WIDTH": 600
+      }
+    },
+    {
+      "NOTES": "Shared: Reference output window",
+      "COMMAND_ID": "AppletBuilder.show.reference",
+      "EXECUTION_MODE": "exe_script_file_with_output_window",
+      "NAME": "AppletBuilder",
+      "OUTPUT_WINDOW_SETTINGS": {
+        "TEXT_FONT": "Menlo",
+        "TEXT_SIZE": 11,
+        "WINDOW_HEIGHT": 800,
+        "WINDOW_POSITION": "cascade",
+        "WINDOW_TITLE": "Base View Properties",
+        "WINDOW_TYPE": "regular",
+        "WINDOW_WIDTH": 500
+      }
+    },
+    {
+      "NOTES": "═══ Build & Run ═══",
+      "COMMAND_ID": "AppletBuilder.buildrun.loaded",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.build",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.run",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.reveal",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    }
+  ],
+  "VERSION": 2
+}
