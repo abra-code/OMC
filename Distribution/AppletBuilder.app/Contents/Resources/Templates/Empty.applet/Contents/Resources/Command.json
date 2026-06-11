@@ -1,0 +1,12 @@
+{
+  "COMMAND_LIST": [
+    {
+      "NAME": "Empty",
+      "ACTIVATION_MODE": "act_always",
+      "EXECUTION_MODE": "exe_script_file_with_output_window",
+      "REQUIRED_OMC_VERSION": "5.0",
+      "REQUIRED_MAC_OS_MIN_VERSION": "14.6"
+    }
+  ],
+  "VERSION": 2
+}

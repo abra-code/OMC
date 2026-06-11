@@ -4,7 +4,7 @@ JSON schema and usage documentation for `WebView`.
 
 ```jsonc
 // Sources/Views/WebView.swift
-// JSON specification for ActionUI.WebView (iOS 26.0+ / macOS 26.0+ only):
+// JSON specification for ActionUI.WebView:
  {
    "type": "WebView",
    "id": 1,              // Required: Non-zero positive integer for runtime programmatic interaction
@@ -30,9 +30,15 @@ JSON schema and usage documentation for `WebView`.
      "valueChangeActionID": "onURLChange",  // Optional: Fired when the page URL changes after navigation completes
      "navigationActionID": "onNavigation"   // Optional: Fired when isLoading changes (navigation started / finished)
    }
-   // Note: Requires iOS 26.0+ / macOS 26.0+. On older OS versions a fallback Label is shown instead.
-   // Note: userScripts are applied to WebPage.Configuration.userContentController at WebPage init time,
-   //   so they persist across reloads but cannot be changed after the view is first rendered.
+   // Note: Two backings exist and are selected globally by the host app via
+   //   ActionUIRegistry.shared.webViewImplementation:
+   //     .native  (default) – a UIKit/AppKit WKWebView wrapped in NS/UIViewRepresentable.
+   //                          Works on the package baseline (macOS 14.6+ / iOS 17.6+).
+   //     .swiftUI            – SwiftUI's WebKit.WebView. Requires iOS 26.0+ / macOS 26.0+;
+   //                          on older OS versions it falls back to the native backing.
+   //   Both backings expose the identical observable surface and honour the same properties.
+   // Note: userScripts are injected via WKUserScript on each page load, so they persist across reloads
+   //   but cannot be changed after the view is first rendered.
    //   Use "source" for inline JS, "filePath" for an absolute path to a .js file on disk, or
    //   "resourceName" to load a .js file from the app's main bundle (strip .js extension or include it).
    // Baseline View properties (padding, hidden, foregroundStyle, font, background, frame, opacity,

@@ -83,7 +83,7 @@ OnMyCommandCM::OnMyCommandCM(CFPropertyListRef inPlistRef)
 					mExternBundleOverrideURL.Adopt( mPlistURL, kCFObjRetain );//it is a bundle URL actually
 					CFObj<CFBundleRef> externBundle( CMUtils::CFBundleCreate(mPlistURL), kCFObjDontRetain );
 					if(externBundle != NULL)
-						mPlistURL.Adopt( ::CFBundleCopyResourceURL( externBundle, CFSTR("Command.plist"), NULL, NULL ), kCFObjDontRetain );
+						mPlistURL.Adopt( CopyCommandFileURLInBundle( externBundle, CFSTR("Command") ), kCFObjDontRetain );
 				}
 			}
 		}

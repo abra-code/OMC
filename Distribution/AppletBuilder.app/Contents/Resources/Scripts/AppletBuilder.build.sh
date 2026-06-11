@@ -51,6 +51,16 @@ strip_quarantine() {
     return 0
 }
 
+# Heuristic: return 0 (true) if a JSON file looks like an ActionUI declaration.
+# ActionUI JSON has a root dictionary whose values are element dicts containing
+# a "type" key.  Non-ActionUI JSON (e.g. Info.plist-style arrays, bare values,
+# or unrelated dictionaries) will return 1.
+is_actionui_json() {
+    local file="$1"
+    local checker="${OMC_APP_BUNDLE_PATH}/Contents/Library/actionui_verifier/is_actionui_json.py"
+    "$python3" "$checker" "$file" 2>/dev/null
+}
+
 # Copy the app executable from builder to target (with proper name)
 copy_executable() {
     local target_path="$1"
@@ -244,16 +254,24 @@ ${info_out}
 "
     fi
 
-    # Command.plist — plutil -lint (syntax gate), then the advanced command_verifier
-    # (Layer 1 key/type/enum/required/conditional + Layer 2 bundle cross-references).
-    local cmd_plist="$resources_dir/Command.plist"
+    # Command file (Command.json or Command.plist) — fast syntax gate, then the
+    # advanced command_verifier (Layer 1 key/type/enum/required/conditional +
+    # Layer 2 bundle cross-references).
+    local cmd_plist
+    cmd_plist=$(command_file_path "$target_path")
+    local cmd_label
+    cmd_label=$(/usr/bin/basename "$cmd_plist")
     if [ -f "$cmd_plist" ]; then
         local plist_out
-        plist_out=$(/usr/bin/plutil -lint "$cmd_plist" 2>&1)
+        if is_json_command_file "$cmd_plist"; then
+            plist_out=$("$python3" -m json.tool "$cmd_plist" 2>&1 >/dev/null)
+        else
+            plist_out=$(/usr/bin/plutil -lint "$cmd_plist" 2>&1)
+        fi
         if [ $? -ne 0 ]; then
-            log "  Command.plist: INVALID"
+            log "  $cmd_label: INVALID"
             error_count=$((error_count + 1))
-            report="${report}Command.plist:
+            report="${report}${cmd_label}:
 ${plist_out}
 
 "
@@ -264,24 +282,24 @@ ${plist_out}
                 cmd_vout=$("$python3" "$cmd_verifier" "$target_path" 2>&1)   # bundle path → Layer 1 + 2
                 cmd_vrc=$?
                 if [ "$cmd_vrc" -eq 0 ]; then
-                    log "  Command.plist: OK"
+                    log "  $cmd_label: OK"
                 elif [ "$cmd_vrc" -eq 2 ]; then
-                    log "  Command.plist: warnings"
+                    log "  $cmd_label: warnings"
                     warning_count=$((warning_count + 1))
-                    report="${report}Command.plist (warnings):
+                    report="${report}${cmd_label} (warnings):
 ${cmd_vout}
 
 "
                 else
-                    log "  Command.plist: VALIDATION ERROR"
+                    log "  $cmd_label: VALIDATION ERROR"
                     error_count=$((error_count + 1))
-                    report="${report}Command.plist:
+                    report="${report}${cmd_label}:
 ${cmd_vout}
 
 "
                 fi
             else
-                log "  Command.plist: OK"
+                log "  $cmd_label: OK"
             fi
         fi
     fi
@@ -311,20 +329,28 @@ ${SCRIPT_VALIDATE_OUTPUT}
     fi
 
     # ActionUI JSON — bundled verifier (rc 0 = valid, 2 = warnings, else errors)
+    # Only files matching the ActionUI heuristic (root dict with "type" elements)
+    # are validated; unrelated JSON is skipped.
     local verifier="${OMC_APP_BUNDLE_PATH}/Contents/Library/actionui_verifier/validate_actionui.py"
     if [ -f "$verifier" ] && [ -x "$python3" ]; then
         local jf jname vout vrc
+        local ui_ok=0
         # Scan every localized .lproj (Base.lproj / English.lproj / en.lproj / …)
         # plus the Resources root.
         for jf in "$resources_dir"/*.lproj/*.json "$resources_dir"/*.json; do
             [ ! -f "$jf" ] && continue
+            if ! is_actionui_json "$jf"; then
+                continue
+            fi
             jname=$(/usr/bin/basename "$jf")
             vout=$("$python3" "$verifier" "$jf" 2>&1)
             vrc=$?
             if [ "$vrc" -eq 0 ]; then
                 log "  UI ${jname}: OK"
+                ui_ok=$((ui_ok + 1))
             elif [ "$vrc" -eq 2 ]; then
                 log "  UI ${jname}: warnings"
+                ui_ok=$((ui_ok + 1))
                 warning_count=$((warning_count + 1))
                 report="${report}UI ${jname} (warnings):
 ${vout}
@@ -339,6 +365,7 @@ ${vout}
 "
             fi
         done
+        log "  ActionUI JSON: ${ui_ok} validated"
     fi
 
     finish_validation "Validation" "$error_count" "$warning_count" "$report"

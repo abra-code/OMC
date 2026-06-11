@@ -5,7 +5,7 @@ source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.tables.sh"
 source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.plist.sh"
 
 project_path=$(load_project_path)
-cmd_plist="$project_path/Contents/Resources/Command.plist"
+cmd_plist=$(command_file_path "$project_path")
 
 # Get selected command index from hidden column 2
 cmd_index="$OMC_ACTIONUI_TABLE_501_COLUMN_2_VALUE"

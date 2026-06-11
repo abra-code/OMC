@@ -199,10 +199,29 @@ applet_rename_contents() {
     applet_recompile_nib "$app_path" "$old_name" "$new_name"
     applet_recompile_other_nibs "$app_path" "$old_name" "$new_name"
 
-    # Update Command.plist NAME
-    local cmd_plist="$app_path/Contents/Resources/Command.plist"
+    # Update the command file: rename any string value equal to the old app name
+    # (NAME, window titles, …). Done per-format so it works for Command.json too.
+    local cmd_plist=$(command_file_path "$app_path")
     if [ -f "$cmd_plist" ]; then
-        /usr/bin/sed -i '' "s|<string>${old_name}</string>|<string>${new_name}</string>|" "$cmd_plist"
+        if is_json_command_file "$cmd_plist"; then
+            "$python3" - "$cmd_plist" "$old_name" "$new_name" <<'PY'
+import json, sys
+path, old, new = sys.argv[1], sys.argv[2], sys.argv[3]
+def walk(o):
+    if isinstance(o, dict):
+        return {k: walk(v) for k, v in o.items()}
+    if isinstance(o, list):
+        return [walk(v) for v in o]
+    return new if o == old else o
+with open(path) as f:
+    data = json.load(f)
+with open(path, 'w') as f:
+    json.dump(walk(data), f, ensure_ascii=False, indent=2)
+    f.write('\n')
+PY
+        else
+            /usr/bin/sed -i '' "s|<string>${old_name}</string>|<string>${new_name}</string>|" "$cmd_plist"
+        fi
     fi
 
     # Rename and update scripts

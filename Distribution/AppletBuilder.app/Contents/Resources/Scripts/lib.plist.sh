@@ -51,9 +51,13 @@ unique_command_id() {
     echo "$candidate"
 }
 
-# Edit a plist via JSON round-trip with Python.
-# Converts plist to JSON, calls plist_edit.py with the operation and args,
-# then converts back to xml1 plist.
+# Edit a plist or JSON file via plist_edit.py.
+#
+# A .json file (e.g. Command.json) is edited in place — plist_edit.py already
+# operates on JSON, so no format conversion is needed. Any other file (Info.plist,
+# Command.plist) is round-tripped through JSON: plist -> json -> edit -> xml1.
+# Both paths edit a temp copy and only replace the original on success, so a
+# failed edit never corrupts the file.
 #
 # Usage:
 #   plist_edit "$plist" set_keys CFBundleName "$name"
@@ -63,9 +67,18 @@ plist_edit() {
     local plist="$1"
     local operation="$2"
     shift 2
+    local editor="${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/plist_edit.py"
     local tmp=$(/usr/bin/mktemp /tmp/plist_edit_XXXXXX.json)
+
+    if is_json_command_file "$plist"; then
+        /bin/cp "$plist" "$tmp" || { /bin/rm -f "$tmp"; return 1; }
+        "$python3" "$editor" "$tmp" "$operation" "$@" || { /bin/rm -f "$tmp"; return 1; }
+        /bin/mv "$tmp" "$plist"
+        return $?
+    fi
+
     /usr/bin/plutil -convert json -o "$tmp" "$plist" || { /bin/rm -f "$tmp"; return 1; }
-    "$python3" "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/plist_edit.py" "$tmp" "$operation" "$@" || { /bin/rm -f "$tmp"; return 1; }
+    "$python3" "$editor" "$tmp" "$operation" "$@" || { /bin/rm -f "$tmp"; return 1; }
     /usr/bin/plutil -convert xml1 -o "$plist" "$tmp"
     local rc=$?
     /bin/rm -f "$tmp"

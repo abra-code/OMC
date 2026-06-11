@@ -34,9 +34,9 @@ MyApp.app/
 
 ## Command.plist
 
-`Command.plist` is an XML plist at `Contents/Resources/Command.plist`. It declares every command the applet handles.
+The command manifest lives at `Contents/Resources/Command.plist` (XML/binary plist) **or** `Contents/Resources/Command.json` (JSON). OMC reads either, preferring `Command.json` when both are present; AppletBuilder creates new applets with `Command.json`. The two formats are structurally identical — the same keys, value types, and `VERSION == 2` rule apply (a JSON number `2` for `VERSION`, JSON `true`/`false` for booleans). This guide shows plist XML, but every example maps directly to JSON.
 
-**Root structure:**
+**Root structure (plist):**
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <plist version="1.0">
@@ -49,6 +49,16 @@ MyApp.app/
     <integer>2</integer>
 </dict>
 </plist>
+```
+
+**Root structure (JSON equivalent):**
+```json
+{
+  "COMMAND_LIST": [
+    {  }
+  ],
+  "VERSION": 2
+}
 ```
 
 ### Command Identity Keys

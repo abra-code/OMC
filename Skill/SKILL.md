@@ -38,9 +38,9 @@ MyApp.app/
 
 ## Command.plist
 
-`Command.plist` is an XML plist at `Contents/Resources/Command.plist`. It declares every command the applet handles.
+The command manifest lives at `Contents/Resources/Command.plist` (XML/binary plist) **or** `Contents/Resources/Command.json` (JSON). OMC reads either, preferring `Command.json` when both are present; AppletBuilder creates new applets with `Command.json`. The two formats are structurally identical — the same keys, value types, and `VERSION == 2` rule apply (a JSON number `2` for `VERSION`, JSON `true`/`false` for booleans). This guide shows plist XML, but every example maps directly to JSON.
 
-**Root structure:**
+**Root structure (plist):**
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <plist version="1.0">
@@ -53,6 +53,16 @@ MyApp.app/
     <integer>2</integer>
 </dict>
 </plist>
+```
+
+**Root structure (JSON equivalent):**
+```json
+{
+  "COMMAND_LIST": [
+    {  }
+  ],
+  "VERSION": 2
+}
 ```
 
 ### Command Identity Keys
@@ -433,12 +443,12 @@ Direct them to launch AppletBuilder and pick one of the templates:
 | `Nib Window` | NIB (Interface Builder) dialog |
 | `Nib Web` | NIB dialog with embedded WebView |
 
-The user enters **Name** (also becomes the executable name and script prefix), **Bundle ID**, optional icon, and can opt to embed Python. AppletBuilder copies the template, installs `Abracode.framework`, and codesigns the bundle.
+The user enters **Name** (also becomes the executable name and script prefix), **Bundle ID**, optional icon, and can opt to embed Python. AppletBuilder copies the template, installs `Abracode.framework`, and codesigns the bundle. New applets are created with a `Command.json` manifest.
 
 ### For an existing applet
 
 The agent edits files directly:
-- `Contents/Resources/Command.plist`
+- `Contents/Resources/Command.json` (or `Command.plist` — OMC reads either, preferring `Command.json` when both exist)
 - `Contents/Resources/Scripts/*`
 - `Contents/Resources/Base.lproj/*.json` (ActionUI) or `*.nib` (NIB — edit in Xcode)
 
@@ -590,13 +600,13 @@ Dump the full environment from any script:
 
 ## Validating Command.plist
 
-After creating or editing a `Command.plist`, validate it before building:
+After creating or editing a command manifest, validate it before building. The verifier handles both formats — `Command.plist` and `Command.json` — transparently (by extension):
 
 ```bash
-python3 Skill/scripts/validate_command_plist.py <App.app | Command.plist>
+python3 Skill/scripts/validate_command_plist.py <App.app | Command.plist | Command.json>
 ```
 
-Pass the **applet bundle** (`.app` / `.omc`) rather than the bare plist to also run bundle cross-checks (Layer 2): every `exe_script_file` command has a matching `Scripts/<COMMAND_ID>.*`, the `ACTIONUI_WINDOW` JSON / `NIB_DIALOG` nib resources exist, and subcommand IDs (`INIT_SUBCOMMAND_ID`, `END_OK_SUBCOMMAND_ID`, `NEXT_COMMAND_ID`, …) resolve.
+Pass the **applet bundle** (`.app` / `.omc`) rather than the bare file to also run bundle cross-checks (Layer 2); for a bundle the verifier resolves the command file itself, preferring `Command.json` when both exist (as OMC does): every `exe_script_file` command has a matching `Scripts/<COMMAND_ID>.*`, the `ACTIONUI_WINDOW` JSON / `NIB_DIALOG` nib resources exist, and subcommand IDs (`INIT_SUBCOMMAND_ID`, `END_OK_SUBCOMMAND_ID`, `NEXT_COMMAND_ID`, …) resolve.
 
 Exit codes: `0` clean · `2` warnings only · `1` errors (`[INFO]` lines are advisory and never affect the exit code). Fix every `[ERROR]` before building; investigate each `[WARNING]` (usually a typo, a wrong value type, or a key with no effect in its context); `[INFO]` lines are just FYI.
 

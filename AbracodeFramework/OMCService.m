@@ -7,6 +7,7 @@
 //
 
 #import "OMCService.h"
+#include "ACFPropertyList.h"
 
 void OMCServiceObserverCallback( OmcObserverMessage inMessage, CFIndex inTaskID, CFTypeRef inResult, void *userData )
 {
@@ -69,14 +70,15 @@ void OMCServiceObserverCallback( OmcObserverMessage inMessage, CFIndex inTaskID,
     // otherwise we find Command.plist in the applet bundle here:
     if(!runningInOMCServiceApp)
     {
-        NSString *plistPath = [appBundle pathForResource:@"Command" ofType:@"plist"];
-        if(plistPath == NULL)
+        // Prefer Command.json over Command.plist in the applet bundle.
+        CFURLRef resolvedURL = CopyCommandFileURLInBundle(CFBundleGetMainBundle(), CFSTR("Command"));
+        if(resolvedURL == NULL)
         {
             if(error != NULL)
-                *error = @"Could not find Command.plist in app bundle";
+                *error = @"Could not find Command.json or Command.plist in app bundle";
             return;
         }
-        commandURL = [NSURL fileURLWithPath:plistPath];
+        commandURL = CFBridgingRelease(resolvedURL);
     }
 
     OMCExecutorRef omcExec = OMCCreateExecutor( (__bridge CFURLRef)commandURL );

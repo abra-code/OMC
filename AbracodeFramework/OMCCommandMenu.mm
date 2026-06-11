@@ -13,6 +13,7 @@
 #include "ARefCounted.h"
 #include "CFObj.h"
 #include "StAEDesc.h"
+#include "ACFPropertyList.h"
 
 typedef struct OneSubmenuName
 {
@@ -234,14 +235,12 @@ PopulateCommandsMenu(OnMyCommandCM *inPlugin, NSMenu *topMenu)
 	//populate menu and register commands
 	
 	OSStatus error = noErr;
-	NSBundle *appBundle = [NSBundle mainBundle];
-	NSString *plistPath = [appBundle pathForResource:self.commandFilePath ofType:nil];
-	if(plistPath == nil)
+	// Resolve the command description file in the app bundle, preferring Command.json over Command.plist.
+	CFURLRef resolvedURL = CopyCommandFileURLInBundle(CFBundleGetMainBundle(), (__bridge CFStringRef)self.commandFilePath);
+	if(resolvedURL == nil)
 		return;
 
-	NSURL *commandURL = [NSURL fileURLWithPath:plistPath];
-	if(commandURL == nil)
-		return;
+	NSURL *commandURL = CFBridgingRelease(resolvedURL);
 
     ARefCountedObj<OnMyCommandCM> omcPlugin( new OnMyCommandCM( (__bridge CFURLRef)commandURL ), kARefCountDontRetain );
 	StAEDesc contextDesc;//empty context

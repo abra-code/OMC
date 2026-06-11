@@ -36,7 +36,7 @@ if [ -n "$project_path" ] && [ -f "$project_path/Contents/Info.plist" ]; then
     fi
 
     # Populate command ID picker from Command.plist
-    cmd_plist="$project_path/Contents/Resources/Command.plist"
+    cmd_plist=$(command_file_path "$project_path")
     plister="$OMC_OMC_SUPPORT_PATH/plister"
     cmd_options='['
     cmd_first=""

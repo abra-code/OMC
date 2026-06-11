@@ -47,6 +47,27 @@ CFPropertyListRef CreatePropertyList(CFURLRef plistURL, CFPropertyListMutability
 	return thePlist;
 }
 
+CFURLRef CopyCommandFileURLInBundle(CFBundleRef inBundle, CFStringRef inFileName)
+{
+    if (inBundle == NULL)
+        return NULL;
+
+    NSString *baseName = nil;
+    if (inFileName != NULL)
+        baseName = [(__bridge NSString *)inFileName stringByDeletingPathExtension];
+    if (baseName.length == 0)
+        baseName = @"Command";
+
+    // JSON preferred, plist fallback — an applet may ship either format.
+    for (NSString *ext in @[@"json", @"plist"])
+    {
+        CFURLRef url = CFBundleCopyResourceURL(inBundle, (__bridge CFStringRef)baseName, (__bridge CFStringRef)ext, NULL);
+        if (url != NULL)
+            return url; // +1, caller releases
+    }
+    return NULL;
+}
+
 bool
 WritePropertyList(CFPropertyListRef propertyList, CFURLRef plistURL, CFPropertyListFormat plistFormat)
 {

@@ -11,7 +11,7 @@ if [ -z "$project_path" ]; then
 fi
 
 # Refresh all three tables to pick up added/removed files
-cmd_plist="$project_path/Contents/Resources/Command.plist"
+cmd_plist=$(command_file_path "$project_path")
 scripts_dir="$project_path/Contents/Resources/Scripts"
 
 if [ -f "$cmd_plist" ]; then

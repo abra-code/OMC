@@ -12,7 +12,7 @@ if [ ! -f "$plist" ]; then
 fi
 
 # Get the first available command ID for default
-cmd_plist="$project_path/Contents/Resources/Command.plist"
+cmd_plist=$(command_file_path "$project_path")
 plister="$OMC_OMC_SUPPORT_PATH/plister"
 default_cmd=""
 if [ -f "$cmd_plist" ]; then

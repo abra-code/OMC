@@ -187,6 +187,31 @@ load_project_path() {
     pb_get "$PB_PROJECT_PATH"
 }
 
+# Resolve a project's command description file.
+# OMC reads either Command.json or Command.plist, preferring Command.json when
+# both exist; this mirrors that resolution. When neither file exists yet, the
+# Command.json path is returned (the format new applets are created in), so
+# callers that create the file land on the modern default.
+# Usage: cmd_file=$(command_file_path "$project_path")
+command_file_path() {
+    local resources="$1/Contents/Resources"
+    if [ -f "$resources/Command.json" ]; then
+        echo "$resources/Command.json"
+    elif [ -f "$resources/Command.plist" ]; then
+        echo "$resources/Command.plist"
+    else
+        echo "$resources/Command.json"
+    fi
+}
+
+# True (rc 0) when the given command file is JSON (by extension).
+is_json_command_file() {
+    case "$1" in
+        *.json) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
 cleanup_state() {
     pb_set "$PB_PROJECT_PATH" ""
     pb_set "$PB_UIFILES_SELECTED" ""

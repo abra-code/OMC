@@ -4,7 +4,7 @@
 source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.common.sh"
 
 project_path=$(load_project_path)
-cmd_plist="$project_path/Contents/Resources/Command.plist"
+cmd_plist=$(command_file_path "$project_path")
 
 # Get selected command index from hidden column 2
 cmd_index="$OMC_ACTIONUI_TABLE_501_COLUMN_2_VALUE"
@@ -39,10 +39,16 @@ pb_set "$PB_CMD_SELECTED" "$cmd_index"
 # Store hash of Command.plist for external modification detection
 pb_set "$PB_CMD_HASH" "$(file_hash "$cmd_plist")"
 
-# Extract the command dict as XML fragment, stripping the plist wrapper
-# (xml declaration, DOCTYPE, <plist> header and </plist> footer)
-# so the user sees and edits only the <dict>...</dict> content
-cmd_xml=$(/usr/bin/plutil -extract "COMMAND_LIST.$cmd_index" xml1 -o - "$cmd_plist" 2>/dev/null \
-    | /usr/bin/sed '1,3d; $d')
-set_value "$CMD_DETAIL_ID" "$cmd_xml
+# Show the selected command for editing. For a JSON command file we show a
+# pretty-printed JSON object; for a plist we show the command dict as an XML
+# fragment, stripping the plist wrapper (xml declaration, DOCTYPE, <plist> header
+# and </plist> footer) so the user sees only the <dict>...</dict> content.
+if is_json_command_file "$cmd_plist"; then
+    cmd_text=$(/usr/bin/plutil -extract "COMMAND_LIST.$cmd_index" json -o - "$cmd_plist" 2>/dev/null \
+        | "$python3" -m json.tool)
+else
+    cmd_text=$(/usr/bin/plutil -extract "COMMAND_LIST.$cmd_index" xml1 -o - "$cmd_plist" 2>/dev/null \
+        | /usr/bin/sed '1,3d; $d')
+fi
+set_value "$CMD_DETAIL_ID" "$cmd_text
 "

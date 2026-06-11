@@ -20,12 +20,12 @@ Direct them to launch AppletBuilder and pick one of the templates:
 | `Nib Window` | NIB (Interface Builder) dialog |
 | `Nib Web` | NIB dialog with embedded WebView |
 
-The user enters **Name** (also becomes the executable name and script prefix), **Bundle ID**, optional icon, and can opt to embed Python. AppletBuilder copies the template, installs `Abracode.framework`, and codesigns the bundle.
+The user enters **Name** (also becomes the executable name and script prefix), **Bundle ID**, optional icon, and can opt to embed Python. AppletBuilder copies the template, installs `Abracode.framework`, and codesigns the bundle. New applets are created with a `Command.json` manifest.
 
 ### For an existing applet
 
 The agent edits files directly:
-- `Contents/Resources/Command.plist`
+- `Contents/Resources/Command.json` (or `Command.plist` — OMC reads either, preferring `Command.json` when both exist)
 - `Contents/Resources/Scripts/*`
 - `Contents/Resources/Base.lproj/*.json` (ActionUI) or `*.nib` (NIB — edit in Xcode)
 

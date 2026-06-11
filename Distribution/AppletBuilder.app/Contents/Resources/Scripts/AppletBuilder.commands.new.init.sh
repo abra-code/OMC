@@ -16,7 +16,7 @@ if [ -z "$project_path" ] && [ -n "$OMC_PARENT_DIALOG_GUID" ]; then
     fi
 fi
 
-cmd_plist="$project_path/Contents/Resources/Command.plist"
+cmd_plist=$(command_file_path "$project_path")
 plister="$OMC_OMC_SUPPORT_PATH/plister"
 
 # Check if COMMAND_LIST is empty — suggest a main command

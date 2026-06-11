@@ -43,7 +43,11 @@ def main():
     func(data, args)
 
     with open(json_path, 'w') as f:
-        json.dump(data, f, ensure_ascii=False)
+        # Pretty-print: for a JSON command file this is the on-disk format the user
+        # sees and may hand-edit; for the plist round-trip the result is reconverted
+        # to xml1, so indentation is harmless there.
+        json.dump(data, f, ensure_ascii=False, indent=2)
+        f.write('\n')
 
 
 def op_set_keys(data, args):

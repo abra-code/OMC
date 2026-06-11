@@ -5,7 +5,7 @@ source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.tables.sh"
 source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.plist.sh"
 
 project_path=$(load_project_path)
-cmd_plist="$project_path/Contents/Resources/Command.plist"
+cmd_plist=$(command_file_path "$project_path")
 
 name="${OMC_ACTIONUI_VIEW_801_VALUE}"
 command_id="${OMC_ACTIONUI_VIEW_802_VALUE}"

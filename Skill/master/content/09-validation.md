@@ -6,13 +6,13 @@ flavors: [claude, capable, lite]
 
 ## Validating Command.plist
 
-After creating or editing a `Command.plist`, validate it before building:
+After creating or editing a command manifest, validate it before building. The verifier handles both formats — `Command.plist` and `Command.json` — transparently (by extension):
 
 ```bash
-python3 Skill/scripts/validate_command_plist.py <App.app | Command.plist>
+python3 Skill/scripts/validate_command_plist.py <App.app | Command.plist | Command.json>
 ```
 
-Pass the **applet bundle** (`.app` / `.omc`) rather than the bare plist to also run bundle cross-checks (Layer 2): every `exe_script_file` command has a matching `Scripts/<COMMAND_ID>.*`, the `ACTIONUI_WINDOW` JSON / `NIB_DIALOG` nib resources exist, and subcommand IDs (`INIT_SUBCOMMAND_ID`, `END_OK_SUBCOMMAND_ID`, `NEXT_COMMAND_ID`, …) resolve.
+Pass the **applet bundle** (`.app` / `.omc`) rather than the bare file to also run bundle cross-checks (Layer 2); for a bundle the verifier resolves the command file itself, preferring `Command.json` when both exist (as OMC does): every `exe_script_file` command has a matching `Scripts/<COMMAND_ID>.*`, the `ACTIONUI_WINDOW` JSON / `NIB_DIALOG` nib resources exist, and subcommand IDs (`INIT_SUBCOMMAND_ID`, `END_OK_SUBCOMMAND_ID`, `NEXT_COMMAND_ID`, …) resolve.
 
 Exit codes: `0` clean · `2` warnings only · `1` errors (`[INFO]` lines are advisory and never affect the exit code). Fix every `[ERROR]` before building; investigate each `[WARNING]` (usually a typo, a wrong value type, or a key with no effect in its context); `[INFO]` lines are just FYI.
 

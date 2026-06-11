@@ -4,7 +4,7 @@
 source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.common.sh"
 
 project_path=$(load_project_path)
-cmd_plist="$project_path/Contents/Resources/Command.plist"
+cmd_plist=$(command_file_path "$project_path")
 
 if [ -f "$cmd_plist" ]; then
     /usr/bin/open -R "$cmd_plist"

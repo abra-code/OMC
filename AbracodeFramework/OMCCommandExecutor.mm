@@ -265,14 +265,17 @@ bool IsFileOrFolderActivation(UInt32 activationType)
 	if( inFileName != NULL )
 	{
 		inFileName = [inFileName stringByExpandingTildeInPath];
-		if( ![inFileName isAbsolutePath] )
+		if( [inFileName isAbsolutePath] )
 		{
-			NSBundle *appBundle = [NSBundle mainBundle];
-			inFileName = [appBundle pathForResource:inFileName ofType:NULL];
-		}
-		
-		if(inFileName != NULL)
 			commandURL = [NSURL fileURLWithPath:inFileName];
+		}
+		else
+		{
+			// Relative name resolved in the app bundle; prefer Command.json over Command.plist.
+			CFURLRef resolvedURL = CopyCommandFileURLInBundle(CFBundleGetMainBundle(), (__bridge CFStringRef)inFileName);
+			if(resolvedURL != NULL)
+				commandURL = CFBridgingRelease(resolvedURL);
+		}
 	}
 	
 	return [OMCCommandExecutor cachedPlistForURL:commandURL];

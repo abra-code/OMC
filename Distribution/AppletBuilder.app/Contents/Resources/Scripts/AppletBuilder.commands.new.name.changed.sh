@@ -10,7 +10,7 @@ if [ -z "$name" ]; then
 fi
 
 project_path=$(load_project_path)
-cmd_plist="$project_path/Contents/Resources/Command.plist"
+cmd_plist=$(command_file_path "$project_path")
 plister="$OMC_OMC_SUPPORT_PATH/plister"
 
 # If no commands exist yet, this will be a main command — leave Command ID empty
