@@ -71,6 +71,7 @@ refresh_uifiles_table() {
         for json in "$lproj_dir"/*.json; do
             [ ! -f "$json" ] && continue
             local json_name=$(/usr/bin/basename "$json")
+            is_command_file_name "$json_name" && continue
             buffer="${buffer}${json_name}	${json}
 "
         done
@@ -78,6 +79,7 @@ refresh_uifiles_table() {
     for json in "$resources_dir"/*.json; do
         [ ! -f "$json" ] && continue
         local json_name=$(/usr/bin/basename "$json")
+        is_command_file_name "$json_name" && continue
         buffer="${buffer}${json_name}	${json}
 "
     done

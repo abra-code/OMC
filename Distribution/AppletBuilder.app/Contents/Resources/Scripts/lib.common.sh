@@ -212,6 +212,17 @@ is_json_command_file() {
     esac
 }
 
+# True (rc 0) when a basename is the reserved command-description file.
+# OMC reads the command list from Command.json (preferred) or Command.plist;
+# neither is a UI file, so callers that enumerate Resources for UI use this to
+# skip them. Usage: is_command_file_name "$(basename "$f")"
+is_command_file_name() {
+    case "$1" in
+        Command.json|Command.plist) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
 cleanup_state() {
     pb_set "$PB_PROJECT_PATH" ""
     pb_set "$PB_UIFILES_SELECTED" ""
