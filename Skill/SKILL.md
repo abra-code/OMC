@@ -157,10 +157,6 @@ Set up aliases once in `lib.myapp.sh`:
 ```bash
 dialog_tool="$OMC_OMC_SUPPORT_PATH/omc_dialog_control"
 next_cmd="$OMC_OMC_SUPPORT_PATH/omc_next_command"
-alert_tool="$OMC_OMC_SUPPORT_PATH/alert"
-pasteboard_tool="$OMC_OMC_SUPPORT_PATH/pasteboard"
-notify_tool="$OMC_OMC_SUPPORT_PATH/notify"
-plister_tool="$OMC_OMC_SUPPORT_PATH/plister"
 ```
 
 ### omc_dialog_control — set control values and state
@@ -212,44 +208,50 @@ Button spec for alerts: `"title:role:actionID"` — role is `cancel`, `destructi
 
 Schedules `MyApp.next.step` to run after the current script exits. The chained script runs in a fresh environment with the same window context.
 
-### alert — modal alert dialog
+### Other support tools (full usage in `docs/<tool>--help.md`)
 
-The choice is returned via exit code, not stdout.
+| Tool | Purpose | Typical call |
+|------|---------|--------------|
+| `alert` | Modal alert; choice returned via **exit code** (0=OK, 1=Cancel) | `alert --level caution --ok "Go" --cancel "Cancel" "Sure?"` |
+| `pasteboard` | Cross-script key-value store; prefix keys with app name + window UUID | `pasteboard my_key set "v"` / `pasteboard my_key get` |
+| `notify` | macOS notification | `notify --title "MyApp" "Done."` |
+| `plister` | Plist read/write (for complex edits: `plutil -convert json` → edit → `xml1`) | `plister get value "$plist" /COMMAND_LIST/0/NAME` |
 
-```bash
-"$alert_tool" --level caution --title "MyApp" \
-  --ok "Proceed" --cancel "Cancel" "Are you sure?"
-result=$?
-# 0 = OK/Proceed, 1 = Cancel, 2 = Other, 3 = timeout, -1 = error
-```
 
-Levels: `plain` (default), `note`, `caution`, `stop`.
 
-### pasteboard — cross-script key-value store
+## Hard Rules for Agents — read before writing scripts
 
-```bash
-"$pasteboard_tool" my_key set "value"
-value=$("$pasteboard_tool" my_key get)
-```
+Each of these caused a real applet failure for an AI agent. The full
+explanations, workaround tables, a script test harness, and a debug-logging
+recipe are in `docs/omc_agent_tips_and_troubleshooting.md` — read it when any
+of these bites or when behavior can't be explained from the code.
 
-Use for state that must survive across separate script invocations (e.g., passing the selected file path from a `selected` handler to a later `save` handler). Key names should be unique — prefix with app name + window UUID to avoid collisions between windows.
-
-### notify — macOS notification
-
-```bash
-"$notify_tool" --title "MyApp" "Task complete."
-# Optional: --sound default
-```
-
-### plister — plist file read/write
-
-```bash
-# Read a count or value from a plist
-count=$("$plister_tool" get count "$plist" /COMMAND_LIST)
-name=$("$plister_tool" get value "$plist" /COMMAND_LIST/0/NAME)
-```
-
-For complex plist edits, use `plutil -convert json` → Python edit → `plutil -convert xml1` (the pattern used in `plist_edit.py`).
+1. **`.sh` scripts run under `/bin/sh` = macOS bash 3.2 in POSIX mode.** There
+   is no bash 4/5 on macOS. Process substitution (`done < <(cmd)`),
+   `mapfile`, `declare -A`, and `${var,,}` are fatal parse errors that kill
+   the script mid-file with no UI feedback. **Validate with `sh -n`, never
+   `bash -n`** — `bash -n` passes scripts that die under OMC.
+2. **Window init code goes in `INIT_SUBCOMMAND_ID`** (runs before the window
+   appears). A non-blocking window's main command script runs at an
+   unpredictable time — keep it `exit 0`.
+3. **Views inside a not-yet-loaded `LoadableView` can't be targeted** by
+   `omc_dialog_control`. Populate them in their `viewDidLoadActionID` handler
+   from state files; have init write its readiness file last (atomic `mv`)
+   and let handlers poll for it.
+4. **Never set a Table's value** — it replaces the rows with one string, not
+   the selection. There is no programmatic row-select; track the current item
+   in a state file. Feed rows via `omc_table_set_rows_from_stdin`; extra
+   tab-separated fields beyond the declared columns act as hidden columns
+   (read via `$OMC_ACTIONUI_TABLE_<ID>_COLUMN_<N>_VALUE`).
+5. **Pickers deliver (and are set by) the 1-based option INDEX**, not the
+   option title; TabView delivers the 0-based tab index as trigger context.
+   Persist each picker's ordered option list to a state file and resolve
+   index → name in handlers. Validate every control-event value before using
+   it — programmatic options/value updates can fire actions with bogus values.
+6. **When runtime behavior can't be determined from code, instrument it**:
+   add a `dbg()` logger to `/tmp` (gated on a flag file), log
+   `$OMC_ACTIONUI_TRIGGER_VIEW_ID/_PART_ID/_CONTEXT` in every handler, ask
+   the user to perform the UI operation once, read the log back. Don't guess.
 
 
 
@@ -259,19 +261,13 @@ Set via `EXECUTION_MODE` in a command dictionary.
 
 | Mode | Description | Use when |
 |------|-------------|----------|
-| `exe_script_file` | Runs matching script from `Scripts/`; async; full env vars | **Primary mode for all applets** |
+| `exe_script_file` | Runs matching script from `Scripts/`; async; full env vars | **Primary mode for all applets** — every handler |
 | `exe_script_file_with_output_window` | Like above; stdout shown in an output window | Debugging; long-running tasks |
 | `exe_shell_script` | Inline `COMMAND` string; `__SPECIAL_WORDS__` substituted; async | Contextual menu one-liners |
-| `exe_shell_script_with_output_window` | Inline script with output window | |
-| `exe_system` | Inline `COMMAND`; synchronous; no env vars | Simple `open` or `launch` calls |
-| `exe_applescript` | Inline AppleScript `COMMAND`; synchronous | AppleScript-only tasks |
-| `exe_applescript_with_output_window` | AppleScript with output window | |
-| `exe_terminal` | Runs `COMMAND` in a new Terminal window | Interactive CLI tasks |
-| `exe_iterm` | Like above but uses iTerm2 | |
 
-**Recommended patterns:**
-- ActionUI / NIB applet: `exe_script_file` for every handler. The main command (no `COMMAND_ID`) attaches `ACTIONUI_WINDOW` or `NIB_DIALOG` and opens the window on launch.
-- Contextual menu plugin: `exe_shell_script` for simple inline commands; `exe_script_file` for anything requiring env-var access or UI manipulation.
+Other modes exist for special cases — `exe_shell_script_with_output_window`, `exe_system`, `exe_applescript[_with_output_window]`, `exe_terminal`, `exe_iterm` — see `docs/omc_command_reference.md`.
+
+The main command (no `COMMAND_ID`) attaches `ACTIONUI_WINDOW` or `NIB_DIALOG` and opens the window on launch.
 
 ## Activation Modes
 
@@ -308,27 +304,11 @@ Attach a dialog to a command by adding one of these keys to the command dict:
 
 The JSON file `Contents/Resources/Base.lproj/MainWindow.json` defines the UI (see ActionUI skill).
 
-### NIB_DIALOG
+### NIB_DIALOG (legacy)
 
-```xml
-<key>NIB_DIALOG</key>
-<dict>
-    <key>NIB_NAME</key>
-    <string>MyDialog</string>            <!-- .nib bundle in Base.lproj/ -->
-    <key>IS_BLOCKING</key>
-    <false/>                             <!-- false = modeless window -->
-    <key>INIT_SUBCOMMAND_ID</key>
-    <string>MyApp.dialog.init</string>
-    <key>END_OK_SUBCOMMAND_ID</key>
-    <string>MyApp.dialog.ok</string>
-    <key>END_CANCEL_SUBCOMMAND_ID</key>
-    <string>MyApp.dialog.cancel</string>
-</dict>
-```
+Same shape with `NIB_NAME` instead of `JSON_NAME`, plus `IS_BLOCKING` (false = modeless), `END_OK_SUBCOMMAND_ID`, `END_CANCEL_SUBCOMMAND_ID`. See `docs/Nib-Guide.md`.
 
-`INIT_SUBCOMMAND_ID` fires when the window opens — use it to populate initial data.
-`END_OK_SUBCOMMAND_ID` fires when the user confirms (OK button or `omc_terminate_ok`).
-`END_CANCEL_SUBCOMMAND_ID` fires on cancel.
+`INIT_SUBCOMMAND_ID` fires when the window opens — use it to populate initial data. `END_OK_SUBCOMMAND_ID` / `END_CANCEL_SUBCOMMAND_ID` fire on confirm / cancel (these and `IS_BLOCKING` work for `ACTIONUI_WINDOW` too).
 
 ## Other Useful Command Keys
 
@@ -393,37 +373,9 @@ source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.myapp.sh"
 "$dialog_tool" "$OMC_ACTIONUI_WINDOW_UUID" 10 omc_enable
 ```
 
-### NIB Dialogs (AppKit, Interface Builder)
+### NIB Dialogs (legacy — do not use for new applets)
 
-Nib files define UI using AppKit controls. Edit `.nib` files in Xcode via Interface Builder. Use the "Edit" button in AppletBuilder's UI Files or Scripts tabs to open a file in the configured external editor.
-
-**Three steps to make a control interactive:**
-
-1. Rename its class from the standard AppKit version to the OMC version in Xcode's Identity Inspector:
-
-   | Standard class | OMC class |
-   |----------------|-----------|
-   | `NSButton` | `OMCButton` |
-   | `NSTextField` | `OMCTextField` |
-   | `NSTableView` | `OMCTableView` |
-   | `NSPopUpButton` | `OMCPopUpButton` |
-   | `NSSlider` | `OMCSlider` |
-   | `NSTextView` | `OMCTextView` |
-   | `NSView` (web content) | `OMCWebKitView` |
-
-   Static labels, images, and separators do not need OMC class names.
-
-2. Set the control's **tag** (Identity Inspector → View → Tag) to a non-zero integer. This is the numeric ID scripts use to read/write the control. Some classes (`OMCBox`, `OMCIKImageView`, `OMCPDFView`, `OMCProgressIndicator`, `OMCTextView`, `OMCView`, `OMCWebKitView`) have no native `tag` attribute — add `tag` (Number) as a User Defined Runtime Attribute instead.
-
-3. Add User Defined Runtime Attributes in the Identity Inspector as needed:
-   - `commandID` (String) — `COMMAND_ID` to fire when the control is activated (for tables use `selectionCommandID` / `doubleClickCommandID`)
-   - `escapingMode` (String) — how the control's value is escaped for `__FOO__` substitution (e.g. `esc_with_backslash`, `esc_wrap_with_single_quotes_for_shell`); not needed when reading via env vars
-
-4. Access the value in scripts via `$OMC_NIB_DIALOG_CONTROL_<tag>_VALUE`.
-
-Connect the nib to a command via `NIB_DIALOG` in `Command.plist` (see execution-modes section for the full key reference). The window UUID for NIB scripts is `$OMC_NIB_DLG_GUID`.
-
-For full NIB documentation: `docs/Nib-Guide.md` and `docs/omc_controls_user_defined_runtime_attributes.md`.
+Nib (Interface Builder) dialogs predate ActionUI. `.nib` files can only be edited in Xcode, so agents cannot work on them directly. When maintaining an *existing* NIB applet: the window UUID is `$OMC_NIB_DLG_GUID`, control values arrive as `$OMC_NIB_DIALOG_CONTROL_<tag>_VALUE`, and the dialog attaches via a `NIB_DIALOG` dict in the command manifest. Full reference: `docs/Nib-Guide.md` and `docs/omc_controls_user_defined_runtime_attributes.md`.
 
 
 
@@ -452,9 +404,9 @@ The agent edits files directly:
 - `Contents/Resources/Scripts/*`
 - `Contents/Resources/Base.lproj/*.json` (ActionUI) or `*.nib` (NIB — edit in Xcode)
 
-### After the agent edits scripts or framework binaries
+### Code signing during development
 
-Ask the user to click **Build** in AppletBuilder's Build & Run pane to re-codesign the bundle. For scripted workflows, `Scripts/codesign_applet.sh` in the distribution does the same.
+Applets are signed for local execution; editing bundle resources (scripts, ActionUI JSONs, `Command.json`) does not stop the app from launching during development — macOS (as of 26) does not block resource-modified locally-signed apps. Re-sign — **Build** in AppletBuilder's Build & Run pane, or `Scripts/codesign_applet.sh` — after changing binaries/frameworks, before distributing, or if the OS refuses to launch the app.
 
 For full UI-navigation help (Project Editor tabs, Commands editor, UI Files Validate/Preview/Prettify buttons, etc.), see `docs/appletbuilder_user_guide.md`.
 
@@ -629,6 +581,7 @@ Full OMC reference is in the `docs/` folder (also bundled in `AppletBuilder.app/
 
 | File | Contents |
 |------|----------|
+| `docs/omc_agent_tips_and_troubleshooting.md` | **For AI agents**: sh-vs-bash fatal syntax, script test harness, init/LoadableView lifecycle, table & picker runtime semantics, debug-logging workflow, pre-flight checklist — with real failure case studies |
 | `docs/building_omc_applet.md` | Step-by-step applet creation guide with all details |
 | `docs/appletbuilder_user_guide.md` | UI navigation reference for the AppletBuilder GUI app (for human users) |
 | `docs/omc_command_reference.md` | Complete `Command.plist` key reference — all execution modes, dialog keys, output window settings, progress dialogs, input dialogs, services |
@@ -638,12 +591,12 @@ Full OMC reference is in the `docs/` folder (also bundled in `AppletBuilder.app/
 | `docs/omc_dialog_control--help.md` | Full `omc_dialog_control` command reference with all operations |
 | `docs/omc_next_command--help.md` | `omc_next_command` reference |
 | `docs/alert--help.md` | `alert` tool reference with all flags |
-| `docs/Nib-Guide.md` | NIB dialog creation: editing in Xcode, control classes, connecting to OMC |
-| `docs/omc_controls_user_defined_runtime_attributes.md` | All OMC control classes and their settable properties |
-| `docs/omc_services_reference.md` | macOS Services integration via `NSServices` in `Info.plist` |
 | `docs/pasteboard--help.md` | `pasteboard` tool reference |
 | `docs/notify--help.md` | `notify` tool reference |
 | `docs/plister--help.md` | `plister` plist tool reference |
+| `docs/omc_services_reference.md` | macOS Services integration via `NSServices` in `Info.plist` |
+| `docs/Nib-Guide.md` | Nib dialog creation: editing in Xcode, control classes, connecting to OMC |
+| `docs/omc_controls_user_defined_runtime_attributes.md` | All OMC control classes in Nibs and their settable properties |
 
 When you need the exact keys for `NIB_DIALOG`, the complete list of `omc_dialog_control` operations, or the full env-var table, read the relevant `docs/` file directly.
 

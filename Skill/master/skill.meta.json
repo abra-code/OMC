@@ -2,13 +2,15 @@
   "name": "omc",
   "version": "1.0",
   "description": "Create, edit, and debug OMC applets for macOS. Use when the user asks to build an OMC applet, add a command, write an action script, configure Command.plist, use omc_dialog_control, chain commands, or work with AppletBuilder. For ActionUI JSON UI design, also activate the actionui skill.",
-
   "flavors": {
     "claude": {
       "label": "Claude (Anthropic Claude Code skill)",
       "notes": "Delivered via Claude Code SKILL.md protocol. Full prose, tables OK. Script execution available. Can read docs/ for detail. Levels 1+2.",
       "max_skill_tokens": 4000,
-      "disclosure_levels": [1, 2],
+      "disclosure_levels": [
+        1,
+        2
+      ],
       "script_execution": true,
       "format": "markdown-tables",
       "triggers": []
@@ -17,7 +19,10 @@
       "label": "Capable frontier models (Gemini, Grok, GPT-4o, Llama-3-70B+)",
       "notes": "Delivered as system prompt. Standard Markdown + tables. No shell exec assumed. Levels 1+2. Targets Gemini 2.x, Grok 3+, GPT-4o, strong open-source models. Reassess annually.",
       "max_skill_tokens": 3500,
-      "disclosure_levels": [1, 2],
+      "disclosure_levels": [
+        1,
+        2
+      ],
       "script_execution": false,
       "format": "markdown-tables",
       "triggers": []
@@ -26,90 +31,138 @@
       "label": "Small / local models (Phi-3, Mistral-7B, Llama-3-8B class)",
       "notes": "Delivered as system prompt. Level 1 only. No macOS dev knowledge assumed. Inline examples. Keyword triggers. Tables stripped.",
       "max_skill_tokens": 1800,
-      "disclosure_levels": [1],
+      "disclosure_levels": [
+        1
+      ],
       "script_execution": false,
       "format": "markdown",
       "triggers": [
-        "omc", "OMC", "On My Command", "omc applet", "contextual menu applet",
-        "Command.plist", "omc_dialog_control", "abracode"
+        "omc",
+        "OMC",
+        "On My Command",
+        "omc applet",
+        "contextual menu applet",
+        "Command.plist",
+        "omc_dialog_control",
+        "abracode"
       ]
     }
   },
-
   "content": [
     {
       "id": "core",
       "file": "content/01-core.md",
       "level": 1,
-      "flavors": ["claude", "capable", "lite"],
+      "flavors": [
+        "claude",
+        "capable",
+        "lite"
+      ],
       "description": "What OMC is + applet bundle structure + Command.plist format + script naming"
     },
     {
       "id": "env-tools",
       "file": "content/02-env-tools.md",
       "level": 1,
-      "flavors": ["claude", "capable", "lite"],
+      "flavors": [
+        "claude",
+        "capable",
+        "lite"
+      ],
       "description": "Key environment variables + six runtime tools with usage snippets"
+    },
+    {
+      "id": "agent-tips",
+      "file": "content/10-agent-tips.md",
+      "level": 1,
+      "flavors": [
+        "claude",
+        "capable",
+        "lite"
+      ],
+      "description": "Hard rules for AI agents: sh-not-bash, init placement, table/picker runtime semantics, debug-log workflow"
     },
     {
       "id": "execution-modes",
       "file": "content/03-execution-modes.md",
       "level": 2,
-      "flavors": ["claude", "capable"],
+      "flavors": [
+        "claude",
+        "capable"
+      ],
       "description": "All execution modes, activation modes, dialog integration keys, app lifetime events"
     },
     {
       "id": "ui-dialog",
       "file": "content/04-ui-dialog.md",
       "level": 1,
-      "flavors": ["claude", "capable", "lite"],
+      "flavors": [
+        "claude",
+        "capable",
+        "lite"
+      ],
       "description": "NIB + ActionUI dialog integration overview; cross-reference to ActionUI skill"
     },
     {
       "id": "appletbuilder",
       "file": "content/05-appletbuilder.md",
       "level": 1,
-      "flavors": ["claude", "capable", "lite"],
+      "flavors": [
+        "claude",
+        "capable",
+        "lite"
+      ],
       "description": "AppletBuilder workflow: create, edit commands/scripts/UI, build"
     },
     {
       "id": "script-patterns",
       "file": "content/06-script-patterns.md",
       "level": 2,
-      "flavors": ["claude", "capable"],
+      "flavors": [
+        "claude",
+        "capable"
+      ],
       "description": "Shared lib pattern, state management, table feeding, command chaining"
     },
     {
       "id": "examples",
       "file": "content/07-examples.md",
       "level": 1,
-      "flavors": ["lite"],
+      "flavors": [
+        "lite"
+      ],
       "description": "Inline few-shot examples for lite/local models"
     },
     {
       "id": "validation",
       "file": "content/09-validation.md",
       "level": 1,
-      "flavors": ["claude", "capable", "lite"],
+      "flavors": [
+        "claude",
+        "capable",
+        "lite"
+      ],
       "description": "How to run the Command.plist verifier and act on its findings"
     },
     {
       "id": "reference",
       "file": "content/08-reference.md",
       "level": 1,
-      "flavors": ["claude", "capable"],
+      "flavors": [
+        "claude",
+        "capable"
+      ],
       "description": "Index of docs/ reference files"
     }
   ],
-
   "build": {
     "docs_source": "Documentation/",
     "verifier_source": "Distribution/AppletBuilder.app/Contents/Library/command_verifier",
     "output_dir": "Skill/dist/",
     "flavors_output": {
-      "claude":   "Skill/dist/claude/",
-      "capable":  "Skill/dist/capable/",
-      "lite":     "Skill/dist/lite/"
+      "claude": "Skill/dist/claude/",
+      "capable": "Skill/dist/capable/",
+      "lite": "Skill/dist/lite/"
     },
     "master_skill_output": "Skill/SKILL.md"
   }

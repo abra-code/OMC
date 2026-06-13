@@ -55,10 +55,6 @@ Set up aliases once in `lib.myapp.sh`:
 ```bash
 dialog_tool="$OMC_OMC_SUPPORT_PATH/omc_dialog_control"
 next_cmd="$OMC_OMC_SUPPORT_PATH/omc_next_command"
-alert_tool="$OMC_OMC_SUPPORT_PATH/alert"
-pasteboard_tool="$OMC_OMC_SUPPORT_PATH/pasteboard"
-notify_tool="$OMC_OMC_SUPPORT_PATH/notify"
-plister_tool="$OMC_OMC_SUPPORT_PATH/plister"
 ```
 
 ### omc_dialog_control — set control values and state
@@ -110,41 +106,11 @@ Button spec for alerts: `"title:role:actionID"` — role is `cancel`, `destructi
 
 Schedules `MyApp.next.step` to run after the current script exits. The chained script runs in a fresh environment with the same window context.
 
-### alert — modal alert dialog
+### Other support tools (full usage in `docs/<tool>--help.md`)
 
-The choice is returned via exit code, not stdout.
-
-```bash
-"$alert_tool" --level caution --title "MyApp" \
-  --ok "Proceed" --cancel "Cancel" "Are you sure?"
-result=$?
-# 0 = OK/Proceed, 1 = Cancel, 2 = Other, 3 = timeout, -1 = error
-```
-
-Levels: `plain` (default), `note`, `caution`, `stop`.
-
-### pasteboard — cross-script key-value store
-
-```bash
-"$pasteboard_tool" my_key set "value"
-value=$("$pasteboard_tool" my_key get)
-```
-
-Use for state that must survive across separate script invocations (e.g., passing the selected file path from a `selected` handler to a later `save` handler). Key names should be unique — prefix with app name + window UUID to avoid collisions between windows.
-
-### notify — macOS notification
-
-```bash
-"$notify_tool" --title "MyApp" "Task complete."
-# Optional: --sound default
-```
-
-### plister — plist file read/write
-
-```bash
-# Read a count or value from a plist
-count=$("$plister_tool" get count "$plist" /COMMAND_LIST)
-name=$("$plister_tool" get value "$plist" /COMMAND_LIST/0/NAME)
-```
-
-For complex plist edits, use `plutil -convert json` → Python edit → `plutil -convert xml1` (the pattern used in `plist_edit.py`).
+| Tool | Purpose | Typical call |
+|------|---------|--------------|
+| `alert` | Modal alert; choice returned via **exit code** (0=OK, 1=Cancel) | `alert --level caution --ok "Go" --cancel "Cancel" "Sure?"` |
+| `pasteboard` | Cross-script key-value store; prefix keys with app name + window UUID | `pasteboard my_key set "v"` / `pasteboard my_key get` |
+| `notify` | macOS notification | `notify --title "MyApp" "Done."` |
+| `plister` | Plist read/write (for complex edits: `plutil -convert json` → edit → `xml1`) | `plister get value "$plist" /COMMAND_LIST/0/NAME` |

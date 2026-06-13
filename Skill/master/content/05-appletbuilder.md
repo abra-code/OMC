@@ -29,8 +29,8 @@ The agent edits files directly:
 - `Contents/Resources/Scripts/*`
 - `Contents/Resources/Base.lproj/*.json` (ActionUI) or `*.nib` (NIB — edit in Xcode)
 
-### After the agent edits scripts or framework binaries
+### Code signing during development
 
-Ask the user to click **Build** in AppletBuilder's Build & Run pane to re-codesign the bundle. For scripted workflows, `Scripts/codesign_applet.sh` in the distribution does the same.
+Applets are signed for local execution; editing bundle resources (scripts, ActionUI JSONs, `Command.json`) does not stop the app from launching during development — macOS (as of 26) does not block resource-modified locally-signed apps. Re-sign — **Build** in AppletBuilder's Build & Run pane, or `Scripts/codesign_applet.sh` — after changing binaries/frameworks, before distributing, or if the OS refuses to launch the app.
 
 For full UI-navigation help (Project Editor tabs, Commands editor, UI Files Validate/Preview/Prettify buttons, etc.), see `docs/appletbuilder_user_guide.md`.

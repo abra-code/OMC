@@ -10,19 +10,13 @@ Set via `EXECUTION_MODE` in a command dictionary.
 
 | Mode | Description | Use when |
 |------|-------------|----------|
-| `exe_script_file` | Runs matching script from `Scripts/`; async; full env vars | **Primary mode for all applets** |
+| `exe_script_file` | Runs matching script from `Scripts/`; async; full env vars | **Primary mode for all applets** — every handler |
 | `exe_script_file_with_output_window` | Like above; stdout shown in an output window | Debugging; long-running tasks |
 | `exe_shell_script` | Inline `COMMAND` string; `__SPECIAL_WORDS__` substituted; async | Contextual menu one-liners |
-| `exe_shell_script_with_output_window` | Inline script with output window | |
-| `exe_system` | Inline `COMMAND`; synchronous; no env vars | Simple `open` or `launch` calls |
-| `exe_applescript` | Inline AppleScript `COMMAND`; synchronous | AppleScript-only tasks |
-| `exe_applescript_with_output_window` | AppleScript with output window | |
-| `exe_terminal` | Runs `COMMAND` in a new Terminal window | Interactive CLI tasks |
-| `exe_iterm` | Like above but uses iTerm2 | |
 
-**Recommended patterns:**
-- ActionUI / NIB applet: `exe_script_file` for every handler. The main command (no `COMMAND_ID`) attaches `ACTIONUI_WINDOW` or `NIB_DIALOG` and opens the window on launch.
-- Contextual menu plugin: `exe_shell_script` for simple inline commands; `exe_script_file` for anything requiring env-var access or UI manipulation.
+Other modes exist for special cases — `exe_shell_script_with_output_window`, `exe_system`, `exe_applescript[_with_output_window]`, `exe_terminal`, `exe_iterm` — see `docs/omc_command_reference.md`.
+
+The main command (no `COMMAND_ID`) attaches `ACTIONUI_WINDOW` or `NIB_DIALOG` and opens the window on launch.
 
 ## Activation Modes
 
@@ -59,27 +53,11 @@ Attach a dialog to a command by adding one of these keys to the command dict:
 
 The JSON file `Contents/Resources/Base.lproj/MainWindow.json` defines the UI (see ActionUI skill).
 
-### NIB_DIALOG
+### NIB_DIALOG (legacy)
 
-```xml
-<key>NIB_DIALOG</key>
-<dict>
-    <key>NIB_NAME</key>
-    <string>MyDialog</string>            <!-- .nib bundle in Base.lproj/ -->
-    <key>IS_BLOCKING</key>
-    <false/>                             <!-- false = modeless window -->
-    <key>INIT_SUBCOMMAND_ID</key>
-    <string>MyApp.dialog.init</string>
-    <key>END_OK_SUBCOMMAND_ID</key>
-    <string>MyApp.dialog.ok</string>
-    <key>END_CANCEL_SUBCOMMAND_ID</key>
-    <string>MyApp.dialog.cancel</string>
-</dict>
-```
+Same shape with `NIB_NAME` instead of `JSON_NAME`, plus `IS_BLOCKING` (false = modeless), `END_OK_SUBCOMMAND_ID`, `END_CANCEL_SUBCOMMAND_ID`. See `docs/Nib-Guide.md`.
 
-`INIT_SUBCOMMAND_ID` fires when the window opens — use it to populate initial data.
-`END_OK_SUBCOMMAND_ID` fires when the user confirms (OK button or `omc_terminate_ok`).
-`END_CANCEL_SUBCOMMAND_ID` fires on cancel.
+`INIT_SUBCOMMAND_ID` fires when the window opens — use it to populate initial data. `END_OK_SUBCOMMAND_ID` / `END_CANCEL_SUBCOMMAND_ID` fire on confirm / cancel (these and `IS_BLOCKING` work for `ACTIONUI_WINDOW` too).
 
 ## Other Useful Command Keys
 

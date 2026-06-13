@@ -316,6 +316,14 @@ ${cmd_vout}
             srci=$?
             if [ "$srci" -eq 0 ]; then
                 script_ok=$((script_ok + 1))
+                if [ -n "$SCRIPT_VALIDATE_WARNINGS" ]; then
+                    log "  Script ${sname}: warnings (bash 4+ syntax)"
+                    warning_count=$((warning_count + 1))
+                    report="${report}Script ${sname} (warnings — macOS ships bash 3.2; these constructs fail at runtime):
+${SCRIPT_VALIDATE_WARNINGS}
+
+"
+                fi
             elif [ "$srci" -ne 99 ]; then
                 log "  Script ${sname}: SYNTAX ERROR"
                 error_count=$((error_count + 1))

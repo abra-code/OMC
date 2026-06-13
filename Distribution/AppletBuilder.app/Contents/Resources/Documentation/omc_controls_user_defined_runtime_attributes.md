@@ -1,5 +1,5 @@
-OMC Controls Custom Properties
-The following custom properties are supported by OMC controls to put in “User Defined Runtime Attributes” in “Identity” inspector in Xcode.
+OMC Controls Custom Properties in Nibs  
+The following custom properties are supported by OMC controls to put in “User Defined Runtime Attributes” in “Identity” inspector in Xcode when editing Nibs.
 
 ```
 The strings below are for columns:

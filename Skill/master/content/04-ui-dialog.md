@@ -42,34 +42,6 @@ source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.myapp.sh"
 "$dialog_tool" "$OMC_ACTIONUI_WINDOW_UUID" 10 omc_enable
 ```
 
-### NIB Dialogs (AppKit, Interface Builder)
+### NIB Dialogs (legacy — do not use for new applets)
 
-Nib files define UI using AppKit controls. Edit `.nib` files in Xcode via Interface Builder. Use the "Edit" button in AppletBuilder's UI Files or Scripts tabs to open a file in the configured external editor.
-
-**Three steps to make a control interactive:**
-
-1. Rename its class from the standard AppKit version to the OMC version in Xcode's Identity Inspector:
-
-   | Standard class | OMC class |
-   |----------------|-----------|
-   | `NSButton` | `OMCButton` |
-   | `NSTextField` | `OMCTextField` |
-   | `NSTableView` | `OMCTableView` |
-   | `NSPopUpButton` | `OMCPopUpButton` |
-   | `NSSlider` | `OMCSlider` |
-   | `NSTextView` | `OMCTextView` |
-   | `NSView` (web content) | `OMCWebKitView` |
-
-   Static labels, images, and separators do not need OMC class names.
-
-2. Set the control's **tag** (Identity Inspector → View → Tag) to a non-zero integer. This is the numeric ID scripts use to read/write the control. Some classes (`OMCBox`, `OMCIKImageView`, `OMCPDFView`, `OMCProgressIndicator`, `OMCTextView`, `OMCView`, `OMCWebKitView`) have no native `tag` attribute — add `tag` (Number) as a User Defined Runtime Attribute instead.
-
-3. Add User Defined Runtime Attributes in the Identity Inspector as needed:
-   - `commandID` (String) — `COMMAND_ID` to fire when the control is activated (for tables use `selectionCommandID` / `doubleClickCommandID`)
-   - `escapingMode` (String) — how the control's value is escaped for `__FOO__` substitution (e.g. `esc_with_backslash`, `esc_wrap_with_single_quotes_for_shell`); not needed when reading via env vars
-
-4. Access the value in scripts via `$OMC_NIB_DIALOG_CONTROL_<tag>_VALUE`.
-
-Connect the nib to a command via `NIB_DIALOG` in `Command.plist` (see execution-modes section for the full key reference). The window UUID for NIB scripts is `$OMC_NIB_DLG_GUID`.
-
-For full NIB documentation: `docs/Nib-Guide.md` and `docs/omc_controls_user_defined_runtime_attributes.md`.
+Nib (Interface Builder) dialogs predate ActionUI. `.nib` files can only be edited in Xcode, so agents cannot work on them directly. When maintaining an *existing* NIB applet: the window UUID is `$OMC_NIB_DLG_GUID`, control values arrive as `$OMC_NIB_DIALOG_CONTROL_<tag>_VALUE`, and the dialog attaches via a `NIB_DIALOG` dict in the command manifest. Full reference: `docs/Nib-Guide.md` and `docs/omc_controls_user_defined_runtime_attributes.md`.

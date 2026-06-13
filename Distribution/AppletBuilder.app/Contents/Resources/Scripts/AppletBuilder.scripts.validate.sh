@@ -23,7 +23,14 @@ if [ "$rc" -eq 99 ]; then
 fi
 
 if [ "$rc" -eq 0 ]; then
-    set_value "$SCRIPTS_EDITED_LABEL_ID" "✅ Valid"
+    if [ -n "$SCRIPT_VALIDATE_WARNINGS" ]; then
+        set_value "$SCRIPTS_EDITED_LABEL_ID" "⚠️ bash 4+ syntax"
+        show_errors "Warnings in ${filename} — macOS ships bash 3.2, these constructs fail at runtime:
+
+$SCRIPT_VALIDATE_WARNINGS"
+    else
+        set_value "$SCRIPTS_EDITED_LABEL_ID" "✅ Valid"
+    fi
 else
     set_value "$SCRIPTS_EDITED_LABEL_ID" "🛑 Syntax errors"
     show_errors "Syntax errors in ${filename}:

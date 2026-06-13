@@ -37,9 +37,9 @@ Standard AppKit controls (NSButton, NSTextField, etc.) inserted in Interface Bui
 
 After renaming a control to its OMC class, add **User Defined Runtime Attributes** in Xcode's Identity Inspector:
 
-- **commandID** (String) — the command identifier to execute when the control is activated
+- **commandID** (String) — the command identifier to execute when the control is activated. Tables use **selectionCommandID** and **doubleClickCommandID** instead.
 - **escapingMode** (String) — how to escape the control's value for the script
-- **tag** (Number) — numeric identifier for reading/writing control values from scripts
+- **tag** (Number) — numeric identifier for reading/writing control values from scripts. Most controls can use the native Tag field (Identity Inspector → View → Tag) instead; classes without a native tag attribute (`OMCBox`, `OMCIKImageView`, `OMCPDFView`, `OMCProgressIndicator`, `OMCTextView`, `OMCView`, `OMCWebKitView`) must set it as this runtime attribute.
 
 **When is a tag needed?** Only when your script needs to interact with the control — reading its value via environment variables or setting its value/state via `omc_dialog_control`. An OMCButton that simply triggers a command but is never enabled/disabled/hidden from a script does not need a unique tag.
 
@@ -51,8 +51,9 @@ For detailed property reference, see:
 
 Control values are available as environment variables:
 
+- `$OMC_NIB_DLG_GUID` — the window UUID (pass to `omc_dialog_control`)
 - `$OMC_NIB_DIALOG_CONTROL_<ID>_VALUE` — value of control with given tag
-- `$OMC_NIB_TABLE_<ID>_COLUMN_<n>_VALUE` — table column value (1-based)
+- `$OMC_NIB_TABLE_<ID>_COLUMN_<n>_VALUE` — selected-row value from table column `n` (1-based; column 0 = all columns tab-joined)
 
 ## Escaping Modes
 
@@ -73,7 +74,9 @@ Nib dialogs are connected via `NIB_DIALOG` dictionary in Command.plist:
 <key>NIB_DIALOG</key>
 <dict>
     <key>NIB_NAME</key>
-    <string>MyDialog</string>
+    <string>MyDialog</string>            <!-- .nib bundle in Base.lproj/ -->
+    <key>IS_BLOCKING</key>
+    <false/>                             <!-- false = modeless window -->
     <key>INIT_SUBCOMMAND_ID</key>
     <string>MyApp.dialog.init</string>
     <key>END_OK_SUBCOMMAND_ID</key>

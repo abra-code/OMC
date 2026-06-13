@@ -10,6 +10,7 @@ Full OMC reference is in the `docs/` folder (also bundled in `AppletBuilder.app/
 
 | File | Contents |
 |------|----------|
+| `docs/omc_agent_tips_and_troubleshooting.md` | **For AI agents**: sh-vs-bash fatal syntax, script test harness, init/LoadableView lifecycle, table & picker runtime semantics, debug-logging workflow, pre-flight checklist — with real failure case studies |
 | `docs/building_omc_applet.md` | Step-by-step applet creation guide with all details |
 | `docs/appletbuilder_user_guide.md` | UI navigation reference for the AppletBuilder GUI app (for human users) |
 | `docs/omc_command_reference.md` | Complete `Command.plist` key reference — all execution modes, dialog keys, output window settings, progress dialogs, input dialogs, services |
@@ -19,12 +20,12 @@ Full OMC reference is in the `docs/` folder (also bundled in `AppletBuilder.app/
 | `docs/omc_dialog_control--help.md` | Full `omc_dialog_control` command reference with all operations |
 | `docs/omc_next_command--help.md` | `omc_next_command` reference |
 | `docs/alert--help.md` | `alert` tool reference with all flags |
-| `docs/Nib-Guide.md` | NIB dialog creation: editing in Xcode, control classes, connecting to OMC |
-| `docs/omc_controls_user_defined_runtime_attributes.md` | All OMC control classes and their settable properties |
-| `docs/omc_services_reference.md` | macOS Services integration via `NSServices` in `Info.plist` |
 | `docs/pasteboard--help.md` | `pasteboard` tool reference |
 | `docs/notify--help.md` | `notify` tool reference |
 | `docs/plister--help.md` | `plister` plist tool reference |
+| `docs/omc_services_reference.md` | macOS Services integration via `NSServices` in `Info.plist` |
+| `docs/Nib-Guide.md` | Nib dialog creation: editing in Xcode, control classes, connecting to OMC |
+| `docs/omc_controls_user_defined_runtime_attributes.md` | All OMC control classes in Nibs and their settable properties |
 
 When you need the exact keys for `NIB_DIALOG`, the complete list of `omc_dialog_control` operations, or the full env-var table, read the relevant `docs/` file directly.
 
