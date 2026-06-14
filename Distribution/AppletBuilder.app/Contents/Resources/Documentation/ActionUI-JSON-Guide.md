@@ -158,6 +158,13 @@ See [ActionUI-Elements.md](ActionUI-Elements.md) for the full list of all elemen
 - **Schema** (.md) — complete JSON specification with all properties documented
 - **Template** (.json) — clean, copy-paste-ready JSON for each element
 
+## Menu Bar
+
+A **view** document has an object root (above). A **menu-bar** document
+(`MainMenu.json`) has an **array** root and customizes the application menu bar —
+adding menus, inserting/replacing items in the standard menus, or removing them.
+See [ActionUI-MenuBar-JSON-Guide.md](ActionUI-MenuBar-JSON-Guide.md).
+
 ## Examples
 
 Working examples of every element type are available at:

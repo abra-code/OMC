@@ -339,6 +339,7 @@ else
     actionui_doc_files=(
         "ActionUI-JSON-Guide.md"
         "ActionUI-Elements.md"
+        "ActionUI-MenuBar-JSON-Guide.md"
     )
 
     actionui_updated=0

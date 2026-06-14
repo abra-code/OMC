@@ -224,6 +224,11 @@ PopulateCommandsMenu(OnMyCommandCM *inPlugin, NSMenu *topMenu)
 
 - (void)awakeFromNib
 {
+	[self populateFromCommandFile];
+}
+
+- (void)populateFromCommandFile
+{
 	//remove all items first (should only be a one placeholder anyway)
 	NSInteger itemCount = [self numberOfItems];
 	NSInteger i;
@@ -233,7 +238,7 @@ PopulateCommandsMenu(OnMyCommandCM *inPlugin, NSMenu *topMenu)
 	}
 
 	//populate menu and register commands
-	
+
 	OSStatus error = noErr;
 	// Resolve the command description file in the app bundle, preferring Command.json over Command.plist.
 	CFURLRef resolvedURL = CopyCommandFileURLInBundle(CFBundleGetMainBundle(), (__bridge CFStringRef)self.commandFilePath);

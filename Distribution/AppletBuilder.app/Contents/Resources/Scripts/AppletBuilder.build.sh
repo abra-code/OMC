@@ -453,6 +453,33 @@ validate_info_content() {
         fi
     fi
 
+    # Menu source: a nib applet builds its bar from MainMenu.nib (NSMainNibFile,
+    # checked above).  A nibless applet (OMC 5.1+) builds the standard macOS menu
+    # bar (App/File/Edit/Format/Window/Help) programmatically; an optional
+    # MainMenu.json layers additions/mutations/removals on top.  So when
+    # NSMainNibFile is absent neither file is required — just note which menu
+    # source is in effect (informational, no warning either way).
+    if [ -z "$nib" ]; then
+        local menu_json_found=""
+        if [ -e "$resources_dir/MainMenu.json" ] || [ -e "$resources_dir/Base.lproj/MainMenu.json" ]; then
+            menu_json_found="yes"
+        else
+            local mlproj
+            for mlproj in "$resources_dir"/*.lproj; do
+                [ -d "$mlproj" ] || continue
+                if [ -e "$mlproj/MainMenu.json" ]; then
+                    menu_json_found="yes"
+                    break
+                fi
+            done
+        fi
+        if [ -n "$menu_json_found" ]; then
+            log "  Menu source: standard bar + MainMenu.json overrides"
+        else
+            log "  Menu source: standard bar (programmatic; no MainMenu.json overrides)"
+        fi
+    fi
+
     # CFBundleIconFile → Resources/<icon>.icns should exist (warning only).
     local iconfile
     iconfile=$(plist_read "$info_plist" CFBundleIconFile)

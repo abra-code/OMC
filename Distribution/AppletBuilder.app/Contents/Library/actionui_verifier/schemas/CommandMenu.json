@@ -6,7 +6,8 @@
   "topLevelKeys": ["children"],
   "children": { "required": false, "description": "Array of Button or Divider child elements" },
   "ownProperties": {
-    "name": { "types": ["string"], "required": true, "description": "Non-empty menu title displayed in the menu bar" }
+    "name": { "types": ["string"], "required": true, "description": "Non-empty menu title displayed in the menu bar" },
+    "autoPopulate": { "types": ["boolean"], "required": false, "description": "Host extension: when true, the host fills this menu's items dynamically at launch instead of from 'children'. Hosts that don't support it ignore it." }
   },
   "observable": {}
 }

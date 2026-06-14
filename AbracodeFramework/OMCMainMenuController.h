@@ -16,5 +16,11 @@ IB_DESIGNABLE
 - (void)connectOMCMenuItems:(NSMenu *)inMenu;
 - (void)executeCommand:(id)sender;
 
+// Builds the main menu bar programmatically using the shared ActionUIMenuBar
+// engine.  The standard macOS bar (App/File/Edit/Window/Help) is always
+// installed; an optional MainMenu.json resource layers the applet's CommandMenu
+// / CommandGroup additions on top.  Returns YES once the bar is installed.
+- (BOOL)installMenuBar;
+
 
 @end

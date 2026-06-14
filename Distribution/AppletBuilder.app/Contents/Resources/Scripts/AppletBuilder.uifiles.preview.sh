@@ -1,5 +1,6 @@
 #!/bin/bash
-# Preview ActionUI JSON file with ActionUIViewer
+# Preview an ActionUI view JSON with ActionUIViewer, or summarize a MainMenu.json
+# menu-bar document (which is not a view and cannot be rendered).
 
 source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.errors.sh"
 
@@ -17,6 +18,17 @@ if [ "$?" -ne 0 ]; then
     show_errors "Cannot preview — JSON syntax error in $(/usr/bin/basename "$selected_path"):
 
 $json_error"
+    exit 0
+fi
+
+# A menu-bar document (MainMenu.json) has a top-level JSON array; it describes
+# the menu bar, not a view, so ActionUIViewer cannot render it. Show a textual
+# menu summary in the reference window instead.
+is_menubar=$("$python3" -c 'import json,sys; print("yes" if isinstance(json.load(open(sys.argv[1])),list) else "no")' "$selected_path" 2>/dev/null)
+if [ "$is_menubar" = "yes" ]; then
+    summary=$("$python3" "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/menubar_summary.py" "$selected_path" 2>&1)
+    set_value "$UI_EDITED_LABEL_ID" "Menu bar (no view preview)"
+    show_reference "$summary"
     exit 0
 fi
 

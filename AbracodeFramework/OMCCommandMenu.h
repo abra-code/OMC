@@ -13,6 +13,12 @@ IB_DESIGNABLE
 
 @property (nonatomic, strong) IBInspectable NSString * commandFilePath;
 
+// Clears the menu and (re)populates it from the command file (Command.json /
+// Command.plist) in the main bundle.  Invoked automatically from awakeFromNib
+// for nib-loaded menus; call directly to build the menu programmatically
+// (e.g. from a MainMenu.json autoPopulate Commands menu).
+- (void)populateFromCommandFile;
+
 - (void)executeCommand:(id)sender;
 
 @end

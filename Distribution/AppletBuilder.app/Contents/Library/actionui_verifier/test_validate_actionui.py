@@ -250,5 +250,63 @@ class CliTests(unittest.TestCase):
             self.assertEqual(r.returncode, 1)
 
 
+class MenuBarCliTests(unittest.TestCase):
+    """A top-level JSON array is validated as a MainMenu.json menu-bar document."""
+
+    def _run(self, *args):
+        return subprocess.run(
+            [sys.executable, str(_VALIDATOR), *args],
+            capture_output=True, text=True,
+        )
+
+    def _write(self, dirpath: Path, doc) -> Path:
+        p = dirpath / "MainMenu.json"
+        p.write_text(json.dumps(doc))
+        return p
+
+    def test_command_menu_autopopulate_valid(self):
+        with tempfile.TemporaryDirectory() as d:
+            f = self._write(Path(d), [
+                {"type": "CommandMenu", "properties": {"name": "Commands", "autoPopulate": True}},
+            ])
+            r = self._run(str(f))
+            self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+
+    def test_remove_item_valid(self):
+        with tempfile.TemporaryDirectory() as d:
+            f = self._write(Path(d), [
+                {"type": "RemoveItem", "properties": {"menu": "File", "title": "New"}},
+            ])
+            r = self._run(str(f))
+            self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+
+    def test_command_group_with_button_child_valid(self):
+        with tempfile.TemporaryDirectory() as d:
+            f = self._write(Path(d), [
+                {"type": "CommandGroup",
+                 "properties": {"placement": "after", "placementTarget": "newItem"},
+                 "children": [
+                     {"type": "Button", "properties": {"title": "Import…", "actionID": "file.import"}},
+                     {"type": "Divider"},
+                 ]},
+            ])
+            r = self._run(str(f))
+            self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+
+    def test_remove_item_missing_title_errors(self):
+        with tempfile.TemporaryDirectory() as d:
+            f = self._write(Path(d), [{"type": "RemoveItem", "properties": {"menu": "File"}}])
+            r = self._run(str(f))
+            self.assertEqual(r.returncode, 1)
+            self.assertIn("title", (r.stdout + r.stderr))
+
+    def test_view_type_at_top_level_errors(self):
+        with tempfile.TemporaryDirectory() as d:
+            f = self._write(Path(d), [{"type": "VStack", "properties": {}}])
+            r = self._run(str(f))
+            self.assertEqual(r.returncode, 1)
+            self.assertIn("not valid at the top level", (r.stdout + r.stderr))
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

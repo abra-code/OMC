@@ -50,6 +50,7 @@
 		1DF2B4052F45A6CE0069BD26 /* ActionUIObjCAdapter in Frameworks */ = {isa = PBXBuildFile; productRef = 1DF2B4042F45A6CE0069BD26 /* ActionUIObjCAdapter */; };
 		1DF2B4482F46A88E0069BD26 /* ActionUI in Frameworks */ = {isa = PBXBuildFile; productRef = 1DF2B4472F46A88E0069BD26 /* ActionUI */; };
 		1DF2B44A2F46A88E0069BD26 /* ActionUIObjCAdapter in Frameworks */ = {isa = PBXBuildFile; productRef = 1DF2B4492F46A88E0069BD26 /* ActionUIObjCAdapter */; };
+		1DAACE122FDE9A0100C0FFEE /* ActionUIMenuBar in Frameworks */ = {isa = PBXBuildFile; productRef = 1DAACE112FDE9A0100C0FFEE /* ActionUIMenuBar */; };
 		8DC2EF570486A6940098B216 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7B1FEA5585E11CA2CBB /* Cocoa.framework */; };
 		AAAAAA01D4346BB0065C23A /* OMCWindowController.h in Headers */ = {isa = PBXBuildFile; fileRef = AAAAAAAA1D4346BB0065C23A /* OMCWindowController.h */; };
 		E20026D710B68F3200D5388F /* OMCCustomWindow.mm in Sources */ = {isa = PBXBuildFile; fileRef = E20026D510B68F3200D5388F /* OMCCustomWindow.mm */; };
@@ -616,6 +617,7 @@
 				E27103CE0D8142DF0097D83E /* Quartz.framework in Frameworks */,
 				E23DC9F60D9A289E009D2AD8 /* WebKit.framework in Frameworks */,
 				1DA696E12F7CDACE00935D4B /* ActionUIObjCAdapter in Frameworks */,
+				1DAACE122FDE9A0100C0FFEE /* ActionUIMenuBar in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1698,6 +1700,10 @@
 		1DF2B4492F46A88E0069BD26 /* ActionUIObjCAdapter */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = ActionUIObjCAdapter;
+		};
+		1DAACE112FDE9A0100C0FFEE /* ActionUIMenuBar */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = ActionUIMenuBar;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

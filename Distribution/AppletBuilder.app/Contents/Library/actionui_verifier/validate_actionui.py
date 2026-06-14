@@ -37,7 +37,81 @@ _SCRIPT_DIR = Path(__file__).parent
 _SCHEMAS_DIR = _SCRIPT_DIR / "schemas"
 
 sys.path.insert(0, str(_SCRIPT_DIR))
-from verifier import SchemaLoader, ElementValidator, ALL_PLATFORMS
+from verifier import SchemaLoader, ElementValidator, ValidationIssue, ALL_PLATFORMS
+
+
+# Top-level element types allowed in a menu-bar document (MainMenu.json).
+_MENUBAR_TYPES = ("CommandMenu", "CommandGroup", "RemoveMenu", "RemoveItem")
+
+
+def _validate_remove_menu(element: dict, path: str) -> list:
+    props = element.get("properties")
+    if not isinstance(props, dict):
+        return [ValidationIssue("error", path, "RemoveMenu requires a 'properties' object")]
+    name = props.get("name")
+    if not isinstance(name, str) or not name:
+        return [ValidationIssue("error", path,
+            "RemoveMenu 'properties.name' must be a non-empty string "
+            "(the title of the top-level menu to remove, e.g. \"Format\")")]
+    return []
+
+
+def _validate_remove_item(element: dict, path: str) -> list:
+    props = element.get("properties")
+    if not isinstance(props, dict):
+        return [ValidationIssue("error", path, "RemoveItem requires a 'properties' object")]
+    issues = []
+    title = props.get("title")
+    if not isinstance(title, str) or not title:
+        issues.append(ValidationIssue("error", path,
+            "RemoveItem 'properties.title' must be a non-empty string "
+            "(the title of the item to remove, e.g. \"New\")"))
+    menu = props.get("menu")
+    if menu is not None and (not isinstance(menu, str) or not menu):
+        issues.append(ValidationIssue("error", path,
+            "RemoveItem 'properties.menu', when present, must be a non-empty string "
+            "(the top-level menu to scope the search to, e.g. \"File\")"))
+    return issues
+
+
+def validate_menubar(data: list, path: str, validator: ElementValidator) -> list:
+    """Validate a menu-bar document (MainMenu.json): a top-level JSON array of
+    CommandMenu / CommandGroup / RemoveMenu / RemoveItem elements."""
+    issues: list = []
+    seen_ids: set = set()
+    for index, element in enumerate(data):
+        epath = f"{path}[{index}]"
+        if not isinstance(element, dict):
+            issues.append(ValidationIssue("error", epath, "menu-bar element must be a JSON object"))
+            continue
+        etype = element.get("type")
+        if etype in ("CommandMenu", "CommandGroup"):
+            issues += validator.validate(element, epath, seen_ids)
+        elif etype == "RemoveMenu":
+            issues += _validate_remove_menu(element, epath)
+        elif etype == "RemoveItem":
+            issues += _validate_remove_item(element, epath)
+        elif etype is None:
+            issues.append(ValidationIssue("error", epath, "menu-bar element missing 'type'"))
+        else:
+            issues.append(ValidationIssue("error", epath,
+                f"'{etype}' is not valid at the top level of a menu-bar document; "
+                f"expected one of: {', '.join(_MENUBAR_TYPES)}"))
+    return issues
+
+
+def _report_issues(path: Path, issues: list) -> tuple[int, int]:
+    errors = [i for i in issues if i.severity == "error"]
+    warnings = [i for i in issues if i.severity == "warning"]
+
+    for issue in sorted(issues, key=lambda i: (i.path, i.severity)):
+        stream = sys.stderr if issue.severity == "error" else sys.stdout
+        print(str(issue), file=stream)
+
+    if not issues:
+        print(f"[OK] {path}")
+
+    return len(errors), len(warnings)
 
 
 def validate_file(path: Path, validator: ElementValidator, strict: bool) -> tuple[int, int]:
@@ -52,24 +126,19 @@ def validate_file(path: Path, validator: ElementValidator, strict: bool) -> tupl
         print(f"[ERROR] {path}: cannot read file — {e}", file=sys.stderr)
         return 1, 0
 
+    # A top-level JSON array is a menu-bar document (MainMenu.json) — an array of
+    # CommandMenu / CommandGroup / RemoveMenu / RemoveItem elements.  A view
+    # document has an object root.
+    if isinstance(data, list):
+        return _report_issues(path, validate_menubar(data, str(path), validator))
+
     if not isinstance(data, dict):
-        print(f"[ERROR] {path}: root element must be a JSON object", file=sys.stderr)
+        print(f"[ERROR] {path}: root must be a JSON object (a view) or array (a menu bar)",
+              file=sys.stderr)
         return 1, 0
 
     seen_ids: set = set()
-    issues = validator.validate(data, str(path), seen_ids)
-
-    errors = [i for i in issues if i.severity == "error"]
-    warnings = [i for i in issues if i.severity == "warning"]
-
-    for issue in sorted(issues, key=lambda i: (i.path, i.severity)):
-        stream = sys.stderr if issue.severity == "error" else sys.stdout
-        print(str(issue), file=stream)
-
-    if not issues:
-        print(f"[OK] {path}")
-
-    return len(errors), len(warnings)
+    return _report_issues(path, validator.validate(data, str(path), seen_ids))
 
 
 def validate_path(

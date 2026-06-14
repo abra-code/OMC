@@ -8,7 +8,7 @@
         "JSON_NAME": "Window",
         "IS_BLOCKING": false
       },
-      "REQUIRED_OMC_VERSION": "5.0",
+      "REQUIRED_OMC_VERSION": "5.1",
       "REQUIRED_MAC_OS_MIN_VERSION": "14.6"
     }
   ],

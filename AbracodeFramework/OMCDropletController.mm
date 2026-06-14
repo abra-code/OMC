@@ -174,6 +174,93 @@ static OMCService *sOMCService = NULL;
 	return [super validateUserInterfaceItem:anItem];
 }
 
+#pragma mark --- Open Recent menu (programmatic population) ---
+
+- (void)installOpenRecentMenu
+{
+	NSMenu *mainMenu = [NSApp mainMenu];
+	if(mainMenu == nil)
+		return;
+
+	// The shared programmatic menu bar (ActionUIMenuBar) does not include an
+	// "Open Recent" submenu, because AppKit only auto-populates Open Recent for
+	// nib-based menus. OMC builds it here and drives it manually via
+	// -menuNeedsUpdate:. Locate the File menu by its "Open…" item and insert the
+	// submenu just after it.
+	for(NSMenuItem *topItem in mainMenu.itemArray)
+	{
+		NSMenu *fileMenu = topItem.submenu;
+		if(fileMenu == nil)
+			continue;
+
+		NSInteger openIndex = [fileMenu indexOfItemWithTitle:@"Open…"];
+		if(openIndex < 0)
+			continue;
+
+		// Don't insert twice if called more than once.
+		if([fileMenu indexOfItemWithTitle:@"Open Recent"] >= 0)
+			return;
+
+		NSMenuItem *openRecentItem = [[NSMenuItem alloc] initWithTitle:@"Open Recent" action:NULL keyEquivalent:@""];
+		NSMenu *openRecentMenu = [[NSMenu alloc] initWithTitle:@"Open Recent"];
+		openRecentMenu.delegate = self;
+		openRecentItem.submenu = openRecentMenu;
+		[fileMenu insertItem:openRecentItem atIndex:(openIndex + 1)];
+		return;
+	}
+}
+
+- (void)menuNeedsUpdate:(NSMenu *)menu
+{
+	// Rebuild the Open Recent submenu from the shared document controller's
+	// recent documents each time it is about to open.
+	[menu removeAllItems];
+
+	NSArray<NSURL *> *recentURLs = [NSDocumentController.sharedDocumentController recentDocumentURLs];
+	NSWorkspace *workspace = [NSWorkspace sharedWorkspace];
+	NSFileManager *fileManager = [NSFileManager defaultManager];
+
+	for(NSURL *url in recentURLs)
+	{
+		NSString *title = [fileManager displayNameAtPath:url.path];
+		if(title.length == 0)
+			title = url.lastPathComponent;
+
+		NSMenuItem *item = [menu addItemWithTitle:title
+										   action:@selector(omcOpenRecentDocument:)
+									keyEquivalent:@""];
+		item.target = self;
+		item.representedObject = url;
+
+		NSImage *icon = [workspace iconForFile:url.path];
+		icon.size = NSMakeSize(16.0, 16.0);
+		item.image = icon;
+	}
+
+	if(recentURLs.count > 0)
+		[menu addItem:[NSMenuItem separatorItem]];
+
+	// "Clear Menu" targets the first responder → the shared NSDocumentController.
+	[menu addItemWithTitle:@"Clear Menu"
+					action:@selector(clearRecentDocuments:)
+			 keyEquivalent:@""];
+}
+
+- (void)omcOpenRecentDocument:(NSMenuItem *)sender
+{
+	NSURL *url = sender.representedObject;
+	if(![url isKindOfClass:[NSURL class]])
+		return;
+
+	// OMCDropletController overrides -openDocumentWithContentsOfURL:display:completionHandler:
+	// to run the applet's command with the file — the same path used for drops
+	// and File ▸ Open….
+	[NSDocumentController.sharedDocumentController
+		openDocumentWithContentsOfURL:url
+							  display:YES
+					completionHandler:^(NSDocument *document, BOOL alreadyOpen, NSError *error) { }];
+}
+
 #pragma mark --- NSApplication delegate methods ---
 
 - (void)application:(NSApplication *)sender openURLs:(NSArray<NSURL *> *)urls
