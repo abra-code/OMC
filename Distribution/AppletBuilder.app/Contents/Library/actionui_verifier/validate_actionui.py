@@ -41,42 +41,14 @@ from verifier import SchemaLoader, ElementValidator, ValidationIssue, ALL_PLATFO
 
 
 # Top-level element types allowed in a menu-bar document (MainMenu.json).
-_MENUBAR_TYPES = ("CommandMenu", "CommandGroup", "RemoveMenu", "RemoveItem")
-
-
-def _validate_remove_menu(element: dict, path: str) -> list:
-    props = element.get("properties")
-    if not isinstance(props, dict):
-        return [ValidationIssue("error", path, "RemoveMenu requires a 'properties' object")]
-    name = props.get("name")
-    if not isinstance(name, str) or not name:
-        return [ValidationIssue("error", path,
-            "RemoveMenu 'properties.name' must be a non-empty string "
-            "(the title of the top-level menu to remove, e.g. \"Format\")")]
-    return []
-
-
-def _validate_remove_item(element: dict, path: str) -> list:
-    props = element.get("properties")
-    if not isinstance(props, dict):
-        return [ValidationIssue("error", path, "RemoveItem requires a 'properties' object")]
-    issues = []
-    title = props.get("title")
-    if not isinstance(title, str) or not title:
-        issues.append(ValidationIssue("error", path,
-            "RemoveItem 'properties.title' must be a non-empty string "
-            "(the title of the item to remove, e.g. \"New\")"))
-    menu = props.get("menu")
-    if menu is not None and (not isinstance(menu, str) or not menu):
-        issues.append(ValidationIssue("error", path,
-            "RemoveItem 'properties.menu', when present, must be a non-empty string "
-            "(the top-level menu to scope the search to, e.g. \"File\")"))
-    return issues
+_MENUBAR_TYPES = ("CommandMenu", "CommandGroup")
 
 
 def validate_menubar(data: list, path: str, validator: ElementValidator) -> list:
     """Validate a menu-bar document (MainMenu.json): a top-level JSON array of
-    CommandMenu / CommandGroup / RemoveMenu / RemoveItem elements."""
+    CommandMenu / CommandGroup elements.  Deletion is expressed as a CommandGroup
+    with placement "replacing" and no children (matching SwiftUI's
+    CommandGroup(replacing:))."""
     issues: list = []
     seen_ids: set = set()
     for index, element in enumerate(data):
@@ -87,10 +59,6 @@ def validate_menubar(data: list, path: str, validator: ElementValidator) -> list
         etype = element.get("type")
         if etype in ("CommandMenu", "CommandGroup"):
             issues += validator.validate(element, epath, seen_ids)
-        elif etype == "RemoveMenu":
-            issues += _validate_remove_menu(element, epath)
-        elif etype == "RemoveItem":
-            issues += _validate_remove_item(element, epath)
         elif etype is None:
             issues.append(ValidationIssue("error", epath, "menu-bar element missing 'type'"))
         else:
@@ -127,8 +95,7 @@ def validate_file(path: Path, validator: ElementValidator, strict: bool) -> tupl
         return 1, 0
 
     # A top-level JSON array is a menu-bar document (MainMenu.json) — an array of
-    # CommandMenu / CommandGroup / RemoveMenu / RemoveItem elements.  A view
-    # document has an object root.
+    # CommandMenu / CommandGroup elements.  A view document has an object root.
     if isinstance(data, list):
         return _report_issues(path, validate_menubar(data, str(path), validator))
 

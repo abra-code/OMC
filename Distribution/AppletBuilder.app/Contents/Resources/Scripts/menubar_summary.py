@@ -2,9 +2,9 @@
 """Render a human-readable summary of a MainMenu.json menu-bar document.
 
 A MainMenu.json is a top-level JSON array of menu-bar elements (CommandMenu,
-CommandGroup, RemoveMenu, RemoveItem) — not an ActionUI view — so it cannot be
-rendered by ActionUIViewer.  AppletBuilder's Preview shows this textual summary
-instead.
+CommandGroup) — not an ActionUI view — so it cannot be rendered by
+ActionUIViewer.  AppletBuilder's Preview shows this textual summary instead.
+(Deletion is a CommandGroup with placement "replacing" and no children.)
 """
 
 import json
@@ -76,14 +76,11 @@ def summarize(data):
         elif etype == "CommandGroup":
             placement = props.get("placement", "after")
             target = props.get("placementTarget", "help")
-            out.append(f"Group  {placement} {target}")
-            out += _render_children(children, "    ")
-        elif etype == "RemoveMenu":
-            out.append(f'Remove menu  "{props.get("name", "?")}"')
-        elif etype == "RemoveItem":
-            menu = props.get("menu")
-            scope = f"{menu} ▸ " if menu else ""
-            out.append(f'Remove item  {scope}"{props.get("title", "?")}"')
+            if placement == "replacing" and not children:
+                out.append(f"Delete  {target}")
+            else:
+                out.append(f"Group  {placement} {target}")
+                out += _render_children(children, "    ")
         else:
             out.append(f"• <unknown type: {etype}>")
         out.append("")

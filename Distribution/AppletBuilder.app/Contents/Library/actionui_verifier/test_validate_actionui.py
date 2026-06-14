@@ -272,10 +272,32 @@ class MenuBarCliTests(unittest.TestCase):
             r = self._run(str(f))
             self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
 
-    def test_remove_item_valid(self):
+    def test_command_group_replacing_region_delete_valid(self):
+        # Deletion is a CommandGroup "replacing" a region with no children.
         with tempfile.TemporaryDirectory() as d:
             f = self._write(Path(d), [
-                {"type": "RemoveItem", "properties": {"menu": "File", "title": "New"}},
+                {"type": "CommandGroup",
+                 "properties": {"placement": "replacing", "placementTarget": "newItem"}},
+            ])
+            r = self._run(str(f))
+            self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+
+    def test_command_group_replacing_single_item_valid(self):
+        # placementTarget may be an individual item id (surgical, e.g. delete only New).
+        with tempfile.TemporaryDirectory() as d:
+            f = self._write(Path(d), [
+                {"type": "CommandGroup",
+                 "properties": {"placement": "replacing", "placementTarget": "new"}},
+            ])
+            r = self._run(str(f))
+            self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+
+    def test_command_group_replacing_menu_title_valid(self):
+        # placementTarget may be a top-level menu title (e.g. delete the Format menu).
+        with tempfile.TemporaryDirectory() as d:
+            f = self._write(Path(d), [
+                {"type": "CommandGroup",
+                 "properties": {"placement": "replacing", "placementTarget": "Format"}},
             ])
             r = self._run(str(f))
             self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
@@ -293,12 +315,14 @@ class MenuBarCliTests(unittest.TestCase):
             r = self._run(str(f))
             self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
 
-    def test_remove_item_missing_title_errors(self):
-        with tempfile.TemporaryDirectory() as d:
-            f = self._write(Path(d), [{"type": "RemoveItem", "properties": {"menu": "File"}}])
-            r = self._run(str(f))
-            self.assertEqual(r.returncode, 1)
-            self.assertIn("title", (r.stdout + r.stderr))
+    def test_retired_remove_types_now_invalid(self):
+        # RemoveItem / RemoveMenu were retired in favour of CommandGroup replacing.
+        for retired in ("RemoveItem", "RemoveMenu"):
+            with tempfile.TemporaryDirectory() as d:
+                f = self._write(Path(d), [{"type": retired, "properties": {"name": "Format"}}])
+                r = self._run(str(f))
+                self.assertEqual(r.returncode, 1, f"{retired} should be rejected")
+                self.assertIn("not valid at the top level", (r.stdout + r.stderr))
 
     def test_view_type_at_top_level_errors(self):
         with tempfile.TemporaryDirectory() as d:

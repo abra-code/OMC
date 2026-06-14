@@ -597,7 +597,7 @@ Full OMC reference is in the `docs/` folder (also bundled in `AppletBuilder.app/
 | `docs/omc_services_reference.md` | macOS Services integration via `NSServices` in `Info.plist` |
 | `docs/Nib-Guide.md` | Nib dialog creation: editing in Xcode, control classes, connecting to OMC |
 | `docs/omc_controls_user_defined_runtime_attributes.md` | All OMC control classes in Nibs and their settable properties |
-| `docs/MenuBar-Guide.md` | Menu bar JSON (`MainMenu.json`) in 5.1 applets: `actionID` command wiring, the `autoPopulate` Commands menu, `RemoveItem`/`RemoveMenu`, Open Recent — the base array-root format is in the ActionUI skill (`ActionUI-MenuBar-JSON-Guide.md`) |
+| `docs/MenuBar-Guide.md` | Menu bar JSON (`MainMenu.json`) in 5.1 applets: `actionID` command wiring, the `autoPopulate` Commands menu, deletion via `replacing`, Open Recent — the base array-root format is in the ActionUI skill (`ActionUI-MenuBar-JSON-Guide.md`) |
 
 When you need the exact keys for `NIB_DIALOG`, the complete list of `omc_dialog_control` operations, or the full env-var table, read the relevant `docs/` file directly.
 

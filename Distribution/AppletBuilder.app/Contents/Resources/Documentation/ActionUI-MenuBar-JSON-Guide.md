@@ -49,23 +49,27 @@ A menu-bar document is a **JSON array** of *menu-bar elements*:
 ```json
 [
   { "type": "CommandMenu", "properties": { "name": "Tools" }, "children": [ /* Button | Divider */ ] },
+  { "type": "CommandGroup", "properties": { "placement": "replacing", "placementTarget": "new" } },
   { "type": "CommandGroup", "properties": { "placement": "after", "placementTarget": "newItem" }, "children": [ /* … */ ] },
-  { "type": "RemoveMenu", "properties": { "name": "Format" } },
-  { "type": "RemoveItem", "properties": { "menu": "File", "title": "New" } }
+  { "type": "CommandGroup", "properties": { "placement": "replacing", "placementTarget": "Format" } }
 ]
 ```
 
-Elements are applied in array order. The four top-level element types are:
+Elements are applied in array order. There are just two top-level element types:
 
 | Type | Purpose |
 |------|---------|
 | [`CommandMenu`](#3-commandmenu) | Add a new top-level menu (inserted before Window). |
-| [`CommandGroup`](#4-commandgroup) | Insert/replace items inside an existing menu at a named region. |
-| [`RemoveMenu`](#5-removemenu) | Delete a whole top-level menu by title. |
-| [`RemoveItem`](#6-removeitem) | Delete a single item by title. |
+| [`CommandGroup`](#4-commandgroup) | Insert, replace, or delete — targeting a single item (by id), a SwiftUI group, or a whole top-level menu. |
 
 `Button` and `Divider`/`Separator` are the only valid **children** of
-`CommandMenu` and `CommandGroup` (see [§7](#7-children-button--divider)).
+`CommandMenu` and `CommandGroup` (see [§5](#5-children-button--divider)).
+
+> **Deletion.** There is no separate "remove" element. To delete, use a
+> `CommandGroup` with `placement: "replacing"` and **no children** — it removes
+> its target: a single item (by id), a SwiftUI group, or a whole top-level menu.
+> Targeting one item by id is surgical; targeting a group removes the whole group
+> (see [§4](#4-commandgroup)).
 
 ---
 
@@ -101,15 +105,16 @@ See also [Schemas/CommandMenu.md](Schemas/CommandMenu.md).
 
 ## 4. CommandGroup
 
-Inserts items into — or replaces a region of — an **existing** menu, located by a
-named sentinel (`placementTarget`) and a `placement`.
+Targets part of the standard bar and inserts, replaces, or deletes there. The
+target is named by `placementTarget`; how the children relate to it is set by
+`placement`.
 
 ```json
 {
   "type": "CommandGroup",
-  "properties": { "placement": "replacing", "placementTarget": "newItem" },
+  "properties": { "placement": "replacing", "placementTarget": "new" },
   "children": [
-    { "type": "Button", "properties": { "title": "New Window", "actionID": "win.new",
+    { "type": "Button", "properties": { "title": "New Project", "actionID": "doc.new",
         "keyboardShortcut": { "key": "n" } } }
   ]
 }
@@ -118,59 +123,91 @@ named sentinel (`placementTarget`) and a `placement`.
 | Property | Type | Required | Notes |
 |----------|------|----------|-------|
 | `placement` | string | no | `"replacing"`, `"before"`, or `"after"`. Default `"after"`. |
-| `placementTarget` | string | no | A region name (below). Default `"help"`. |
+| `placementTarget` | string | no | An **item id**, a **group placement**, or a **top-level menu title** — resolved in that order. Default `"help"`. |
 
-### placementTarget regions
+`placement` applies to whatever the target resolves to:
 
-Grouped by the menu they belong to:
-
-- **App** — `appInfo`, `appSettings`, `systemServices`, `appVisibility`, `appTermination`
-- **File** — `newItem`, `saveItem`, `importExport`, `printItem`
-- **Edit** — `undoRedo`, `pasteboard`, `textEditing`, `textFormatting`
-- **Window** — `windowSize`, `windowArrangement`, `windowList`, `singleWindowList`
-- **Help** — `help`
-- **View** — `toolbar`, `sidebar` *(the standard bar has no View menu; these fall back to a positional heuristic and warn if no View menu exists)*
-
-`placement` relative to the sentinel:
-- `"after"` — insert the children just after the region marker (most common).
+- `"after"` — insert the children just after the target (most common).
 - `"before"` — insert just before it.
-- `"replacing"` — remove the sentinel and put the children in its place.
+- `"replacing"` — remove the target and put the children in its place. With **no
+  children**, this deletes the target (see [§2](#2-document-structure)).
+
+`placementTarget` is resolved in order of specificity:
+
+### 4.1 Individual item — by id (surgical, recommended)
+
+The way to touch exactly one default item. Every default item has a stable,
+**locale-independent** id (set on the item itself — never its displayed title, so
+it works in any localization). `replacing` / `before` / `after` affect **only
+that item**.
+
+```json
+{ "type": "CommandGroup", "properties": { "placement": "replacing", "placementTarget": "new" } }
+```
+
+deletes only **New** (and leaves Open untouched). The complete set of assigned
+item ids:
+
+| Menu | Item ids |
+|------|----------|
+| **App** | `about`, `services`, `hide`, `hideOthers`, `showAll`, `quit` |
+| **File** | `new`, `open`, `close` |
+| **Edit** | `undo`, `redo`, `cut`, `copy`, `paste`, `delete`, `selectAll` |
+| **Window** | `minimize`, `zoom`, `bringAllToFront` |
+| **Help** | `help` |
+
+The App menu's Settings slot has no default item (so no id — add Settings with
+`after` `about`). The Format menu's Font/Text submenus aren't individually
+addressable; target the whole `Format` menu by title (§4.3).
+
+**Icon inheritance (macOS 26+).** macOS 26 shows an SF Symbol next to many
+standard menu items. When you `replacing` such an item, the replacement keeps
+that system icon automatically — so a custom *Help* command still shows the help
+symbol. Set an explicit `systemImage` on the replacement to override it, or use
+an item with no system icon (older macOS) to get none. Inheritance applies only
+to single-item `replacing` (§4.1), not group (§4.2) or menu-title (§4.3) targets.
+
+### 4.2 SwiftUI group placement — ⚠️ the WHOLE group
+
+> **⚠️ Group placements are coarse.** A group name follows SwiftUI's
+> `CommandGroupPlacement`, where a single name covers *several* items.
+> `replacing` a group removes **all** of them. In particular **`newItem` is the
+> New *and* Open group**, so `replacing newItem` deletes **both** — not just New.
+> This is SwiftUI's (frequently surprising) behavior, kept here for parity. To
+> affect one item, use its **item id** from §4.1 instead.
+
+`placement` acts on the whole group span. Group names, with the defaults each
+covers in parentheses:
+
+- **App** — `appInfo` (About), `appSettings`, `systemServices` (Services), `appVisibility` (Hide / Hide Others / Show All), `appTermination` (Quit)
+- **File** — `newItem` (New / Open), `saveItem` (Close / Save), `importExport`, `printItem`
+- **Edit** — `undoRedo` (Undo / Redo), `pasteboard` (Cut / Copy / Paste / Delete / Select All), `textEditing`, `textFormatting`
+- **Window** — `windowSize` (Minimize / Zoom), `windowArrangement` (Bring All to Front), `windowList`, `singleWindowList`
+- **Help** — `help`
+- **View** — `toolbar`, `sidebar` *(no View menu in the standard bar; falls back to a positional heuristic and warns)*
+
+Group names with no parenthesised items (e.g. `appSettings`, `importExport`,
+`printItem`, `textEditing`, `textFormatting`, `windowList`) are empty
+placeholders; `after`/`before` still target them so you can add items there.
+(`help` is both an item id and a group name; item-first resolution targets the
+Help item — equivalent in practice, since the group holds only that item.)
+
+### 4.3 Top-level menu — by title
+
+When `placementTarget` is a top-level menu title, `replacing` operates on the
+whole menu — **no children** deletes it; with children its items are replaced
+(title kept). `before`/`after` are not supported on a menu title (use
+`CommandMenu` to add one).
+
+```json
+{ "type": "CommandGroup", "properties": { "placement": "replacing", "placementTarget": "Format" } }
+```
 
 See also [Schemas/CommandGroup.md](Schemas/CommandGroup.md).
 
 ---
 
-## 5. RemoveMenu
-
-Deletes a whole top-level menu by its title. Use it to pare the standard bar down
-to what an app needs.
-
-```json
-{ "type": "RemoveMenu", "properties": { "name": "Format" } }
-```
-
-| Property | Type | Required | Notes |
-|----------|------|----------|-------|
-| `name` | string | yes | Title of the top-level menu to remove (e.g. `"Format"`). |
-
----
-
-## 6. RemoveItem
-
-Deletes a single item by title, optionally scoped to one menu.
-
-```json
-{ "type": "RemoveItem", "properties": { "menu": "File", "title": "New" } }
-```
-
-| Property | Type | Required | Notes |
-|----------|------|----------|-------|
-| `title` | string | yes | Title of the item to remove (e.g. `"New"`). |
-| `menu` | string | no | Restrict the search to this top-level menu (e.g. `"File"`). When omitted, the first match across all menus is removed. |
-
----
-
-## 7. Children: Button & Divider
+## 5. Children: Button & Divider
 
 Only `CommandMenu` and `CommandGroup` take children, and only these two types:
 
@@ -180,6 +217,7 @@ Only `CommandMenu` and `CommandGroup` take children, and only these two types:
 { "type": "Button", "properties": {
     "title": "Save As…",
     "actionID": "file.saveAs",
+    "systemImage": "square.and.arrow.down",
     "keyboardShortcut": { "key": "s", "modifiers": ["command", "shift"] }
 } }
 ```
@@ -188,9 +226,10 @@ Only `CommandMenu` and `CommandGroup` take children, and only these two types:
 |----------|------|----------|-------|
 | `title` | string | yes | Menu item title. |
 | `actionID` | string | host | Action identifier the host dispatches when the item is chosen. |
+| `systemImage` | string | no | SF Symbol name for a leading icon (e.g. `"gear"`). Rendered as a template image; AppKit sizes it for the menu. |
 | `keyboardShortcut` | object | no | See below. |
 
-The engine fills in the item's title and shortcut; the **host** turns the action
+The engine fills in the item's title, icon, and shortcut; the **host** turns the action
 identifier into a wired menu item. The ActionUI app host uses `actionID`; a host
 that routes items differently may read its own property instead. Provide whatever
 identifier your host expects.
@@ -217,7 +256,7 @@ identifier your host expects.
 
 ---
 
-## 8. Examples
+## 6. Examples
 
 ### Add a Tools menu
 
@@ -230,7 +269,26 @@ identifier your host expects.
 ]
 ```
 
-### Add items after File ▸ New, drop the Format menu
+### Delete only File ▸ New (keep Open)
+
+```json
+[
+  { "type": "CommandGroup", "properties": { "placement": "replacing", "placementTarget": "new" } }
+]
+```
+
+### Replace only New with a custom command (keep Open)
+
+```json
+[
+  { "type": "CommandGroup", "properties": { "placement": "replacing", "placementTarget": "new" },
+    "children": [
+      { "type": "Button", "properties": { "title": "New Project", "actionID": "doc.new", "keyboardShortcut": { "key": "n" } } }
+    ] }
+]
+```
+
+### Add items after the File ▸ New/Open group, and delete the Format menu
 
 ```json
 [
@@ -239,7 +297,7 @@ identifier your host expects.
       { "type": "Button", "properties": { "title": "Import…", "actionID": "file.import" } },
       { "type": "Divider" }
     ] },
-  { "type": "RemoveMenu", "properties": { "name": "Format" } }
+  { "type": "CommandGroup", "properties": { "placement": "replacing", "placementTarget": "Format" } }
 ]
 ```
 
@@ -249,7 +307,7 @@ Ship no `MainMenu.json` at all — the app launches with the standard bar unchan
 
 ---
 
-## 9. Validation & preview
+## 7. Validation & preview
 
 - **Validate**: the ActionUI verifier (`Tools/verifier/validate_actionui.py`)
   detects an array root and validates it as a menu-bar document — element types,
@@ -260,11 +318,14 @@ Ship no `MainMenu.json` at all — the app launches with the standard bar unchan
 
 ---
 
-## 10. Notes & limits
+## 8. Notes & limits
 
-- Elements apply in array order; removals act on the standard bar, so order among
-  unrelated elements rarely matters.
-- Removal matches by **title**, so it tracks the title the engine assigns (e.g.
-  `"New"`). Keep this in mind if a host relabels default items.
+- Elements apply in array order; since each element targets an item, group, or
+  menu by name, order among unrelated elements rarely matters.
+- To affect **one** item, target it by **item id** (§4.1) — surgical. A **group
+  placement** (§4.2) targets the whole group: `replacing newItem` affects New
+  *and* Open together (SwiftUI's behavior). Item ids resolve before group names.
+- Matching is by stable **id**, never the displayed title, so it is unaffected by
+  localization.
 - A full-custom bar (defining every top-level menu from scratch) is not
-  expressible; the model is "standard bar + add / modify / remove".
+  expressible; the model is "standard bar + add / modify / replace / delete".

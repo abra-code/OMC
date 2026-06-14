@@ -6,8 +6,8 @@
   "topLevelKeys": ["children"],
   "children": { "required": false, "description": "Array of Button or Divider child elements" },
   "ownProperties": {
-    "placement":      { "types": ["string"], "required": false, "enum": ["replacing","before","after"], "description": "Where to insert relative to placementTarget; defaults to 'after'" },
-    "placementTarget":{ "types": ["string"], "required": false, "enum": ["appInfo","appSettings","systemServices","appVisibility","appTermination","newItem","saveItem","importExport","printItem","undoRedo","pasteboard","textEditing","textFormatting","toolbar","sidebar","windowSize","windowList","singleWindowList","windowArrangement","help"], "description": "System command group to target; defaults to 'help'" }
+    "placement":      { "types": ["string"], "required": false, "enum": ["replacing","before","after"], "description": "Where to insert relative to placementTarget; 'replacing' with no children deletes the target. Defaults to 'after'" },
+    "placementTarget":{ "types": ["string"], "required": false, "description": "What to target, resolved in order: (1) an individual item id [new, open, close, undo, redo, cut, copy, paste, delete, selectAll, about, services, hide, hideOthers, showAll, quit, minimize, zoom, bringAllToFront, help] (surgical); (2) a SwiftUI group placement [appInfo, appSettings, systemServices, appVisibility, appTermination, newItem, saveItem, importExport, printItem, undoRedo, pasteboard, textEditing, textFormatting, toolbar, sidebar, windowSize, windowList, singleWindowList, windowArrangement, help] which targets the WHOLE group; (3) a top-level menu title (e.g. \"Format\"). Defaults to 'help'" }
   },
   "observable": {}
 }

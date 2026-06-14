@@ -1,0 +1,48 @@
+[
+  {
+    "type": "CommandGroup",
+    "properties": { "placement": "after", "placementTarget": "appSettings" },
+    "children": [
+      { "type": "Button", "properties": {
+          "title": "Settings…",
+          "actionID": "AppletBuilder.settings.dialog",
+          "systemImage": "gear",
+          "keyboardShortcut": { "key": "," }
+      } }
+    ]
+  },
+  {
+    "type": "CommandGroup",
+    "properties": { "placement": "replacing", "placementTarget": "new" },
+    "children": [
+      { "type": "Button", "properties": {
+          "title": "New",
+          "actionID": "AppletBuilder.new.applet",
+          "keyboardShortcut": { "key": "n" }
+      } }
+    ]
+  },
+  {
+    "type": "CommandGroup",
+    "properties": { "placement": "after", "placementTarget": "saveItem" },
+    "children": [
+      { "type": "Button", "properties": {
+          "title": "Save",
+          "actionID": "AppletBuilder.save",
+          "systemImage": "square.and.arrow.down",
+          "keyboardShortcut": { "key": "s" }
+      } }
+    ]
+  },
+  {
+    "type": "CommandGroup",
+    "properties": { "placement": "replacing", "placementTarget": "help" },
+    "children": [
+      { "type": "Button", "properties": {
+          "title": "AppletBuilder Help",
+          "actionID": "AppletBuilder.help.show.app",
+          "keyboardShortcut": { "key": "?" }
+      } }
+    ]
+  }
+]
