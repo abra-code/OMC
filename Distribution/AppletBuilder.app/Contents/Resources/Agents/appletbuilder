@@ -1,0 +1,376 @@
+#!/bin/bash
+# appletbuilder — agent-facing CLI for AppletBuilder operations.
+#
+# Exposes the same operations AppletBuilder.app offers through its GUI — create an
+# applet from a template, validate the command manifest / scripts / ActionUI JSON,
+# prettify and preview ActionUI, and rebuild (validate + refresh runtime + thin +
+# codesign) — driving the *same* shared library code the GUI uses. All progress and
+# validation output goes to stderr; results an agent should capture (a created
+# applet path, prettified JSON, a screenshot path, list output) go to stdout.
+#
+# Exit codes mirror the validators: 0 = ok, 2 = warnings only, 1 = errors,
+# 2 is also used for CLI usage errors.
+#
+# See README.md in this folder for the full guide.
+
+# ── Locate the enclosing AppletBuilder.app and load the shared libraries ──
+
+resolve_self() {
+    # Print the real directory containing this script, following symlinks.
+    local src="$1" dir
+    while [ -h "$src" ]; do
+        dir=$(cd -P "$(dirname "$src")" >/dev/null 2>&1 && pwd)
+        src=$(readlink "$src")
+        case "$src" in
+            /*) ;;
+            *) src="$dir/$src" ;;
+        esac
+    done
+    cd -P "$(dirname "$src")" >/dev/null 2>&1 && pwd
+}
+
+AGENTS_DIR=$(resolve_self "$0")
+# Agents → Resources → Contents → <App>.app
+APP_BUNDLE=$(cd "$AGENTS_DIR/../../.." >/dev/null 2>&1 && pwd)
+export OMC_APP_BUNDLE_PATH="$APP_BUNDLE"
+
+LIB="$APP_BUNDLE/Contents/Resources/Scripts"
+if [ ! -f "$LIB/lib.create.sh" ]; then
+    echo "appletbuilder: cannot find AppletBuilder libraries under $LIB" >&2
+    exit 1
+fi
+# lib.create.sh pulls in lib.build.sh + lib.validate.sh + lib.prefs.sh + the common
+# base, i.e. every shared function these subcommands use. The default stderr
+# reporters (ab_log / ab_report / ab_confirm) from lib.common.sh are left in place.
+source "$LIB/lib.create.sh"
+
+# Ensure $python3 (set by lib.common.sh to AppletBuilder's embedded interpreter) is
+# usable; fall back to the system one so prettify/preview/verifiers always work.
+[ -x "$python3" ] || python3="/usr/bin/python3"
+
+# Build/create options the shared pipeline reads (overridable per subcommand flags).
+AB_IDENTITY=""
+AB_NO_CODESIGN=""
+AB_FORCE_UPDATE=""
+AB_THIN_ARCH="none"
+AB_WARNINGS_AS_ERRORS=0
+AB_ASSUME_YES=""
+
+usage() {
+    cat >&2 <<'EOF'
+appletbuilder — create, validate, build, and preview OMC applets (agent CLI)
+
+Usage:
+  appletbuilder create   (--template <name|path> | --clone <App.app>)
+                         --name <Name> --dest <dir>
+                         [--bundle-id <id>] [--python] [--icon <name|path>]
+                         [--identity <id>] [--no-codesign]
+  appletbuilder validate <App.app | Command.json | UI.json | script-file>
+  appletbuilder build    <App.app> [--identity <id>] [--thin arm64|x86_64|none]
+                         [--warnings-as-errors] [--force]
+  appletbuilder prettify <file.json> [--stdout]
+  appletbuilder preview  <UI.json> [--screenshot <out.png>]
+  appletbuilder list-templates
+  appletbuilder list-icons
+
+Progress and validation detail go to stderr. Capturable results (created applet
+path, prettified JSON, screenshot path, listings) go to stdout.
+Exit: 0 ok, 2 warnings, 1 errors. See README.md for details.
+EOF
+}
+
+# ── Listings ──────────────────────────────────────────────────────────────────
+
+cmd_list_templates() {
+    local t
+    for t in "$APP_BUNDLE/Contents/Resources/Templates"/*.applet; do
+        [ -d "$t" ] || continue
+        /usr/bin/basename "$t" .applet
+    done
+}
+
+cmd_list_icons() {
+    local f
+    for f in "$APP_BUNDLE/Contents/Resources/Icons"/*.icon; do
+        [ -e "$f" ] || continue
+        /usr/bin/basename "$f" .icon
+    done
+}
+
+# ── Create ──────────────────────────────────────────────────────────────────--
+
+cmd_create() {
+    local template="" clone="" name="" dest="" bundle_id="" python="" icon=""
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --template)    template="$2"; shift 2 ;;
+            --clone)       clone="$2"; shift 2 ;;
+            --name)        name="$2"; shift 2 ;;
+            --dest)        dest="$2"; shift 2 ;;
+            --bundle-id)   bundle_id="$2"; shift 2 ;;
+            --python)      python="1"; shift ;;
+            --icon)        icon="$2"; shift 2 ;;
+            --identity)    AB_IDENTITY="$2"; shift 2 ;;
+            --no-codesign) AB_NO_CODESIGN="1"; shift ;;
+            -h|--help)     usage; return 2 ;;
+            *) echo "create: unknown option: $1" >&2; return 2 ;;
+        esac
+    done
+
+    local template_path="" is_clone=""
+    if [ -n "$clone" ]; then
+        template_path="$clone"; is_clone="1"
+    elif [ -n "$template" ]; then
+        case "$template" in
+            */*) template_path="$template" ;;
+            *)
+                if [ -d "$template" ]; then
+                    template_path="$template"
+                else
+                    template_path="$APP_BUNDLE/Contents/Resources/Templates/${template}.applet"
+                fi
+                ;;
+        esac
+    else
+        echo "create: --template <name|path> or --clone <App.app> is required" >&2
+        return 2
+    fi
+
+    if [ -z "$dest" ]; then
+        echo "create: --dest <dir> is required" >&2
+        return 2
+    fi
+
+    local icon_path=""
+    if [ -n "$icon" ]; then
+        if [ -e "$icon" ]; then
+            icon_path="$icon"
+        else
+            icon_path="$APP_BUNDLE/Contents/Resources/Icons/${icon}.icon"
+            if [ ! -e "$icon_path" ]; then
+                echo "create: '$icon' is neither a file nor a known icon (see 'appletbuilder list-icons')" >&2
+                return 2
+            fi
+        fi
+    fi
+
+    applet_create_from_template \
+        "$template_path" "$name" "$dest" \
+        "$bundle_id" "$icon_path" "$python" "$is_clone" || return 1
+
+    local new_app_path="${dest%/}/${name}.app"
+    echo "Created: $new_app_path" >&2
+    echo "$new_app_path"
+}
+
+# ── Validate ──────────────────────────────────────────────────────────────────
+
+# Report a per-file validation result; returns 0 ok / 2 warnings / 1 errors.
+_report_command() {
+    local f="$1" label
+    label=$(/usr/bin/basename "$f")
+    validate_command_file "$f"
+    case "$?" in
+        0)  echo "OK: $label (command)" >&2; return 0 ;;
+        2)  printf '%s\n' "$COMMAND_VALIDATE_OUTPUT" >&2; echo "WARNINGS: $label" >&2; return 2 ;;
+        3)  printf '%s\n' "$COMMAND_VALIDATE_OUTPUT" >&2; echo "INVALID (syntax): $label" >&2; return 1 ;;
+        99) echo "No command file found: $f" >&2; return 1 ;;
+        *)  printf '%s\n' "$COMMAND_VALIDATE_OUTPUT" >&2; echo "ERRORS: $label" >&2; return 1 ;;
+    esac
+}
+
+_report_actionui() {
+    local f="$1" label
+    label=$(/usr/bin/basename "$f")
+    validate_actionui_file "$f"
+    case "$?" in
+        0)  echo "OK: $label (ActionUI)" >&2; return 0 ;;
+        2)  printf '%s\n' "$ACTIONUI_VALIDATE_OUTPUT" >&2; echo "WARNINGS: $label" >&2; return 2 ;;
+        99) echo "ActionUI verifier not found" >&2; return 1 ;;
+        *)  printf '%s\n' "$ACTIONUI_VALIDATE_OUTPUT" >&2; echo "ERRORS: $label" >&2; return 1 ;;
+    esac
+}
+
+_report_script() {
+    local f="$1" label
+    label=$(/usr/bin/basename "$f")
+    validate_script_file "$f"
+    case "$?" in
+        99) echo "No validator for $label — skipped" >&2; return 0 ;;
+        0)
+            if [ -n "$SCRIPT_VALIDATE_WARNINGS" ]; then
+                printf '%s\n' "$SCRIPT_VALIDATE_WARNINGS" >&2
+                echo "WARNINGS (bash 4+): $label" >&2; return 2
+            fi
+            echo "OK: $label (script)" >&2; return 0 ;;
+        *)  printf '%s\n' "$SCRIPT_VALIDATE_OUTPUT" >&2; echo "SYNTAX ERROR: $label" >&2; return 1 ;;
+    esac
+}
+
+# Full applet bundle: the shared build-time validators. Returns 0 ok / 1 errors
+# (warnings are printed but do not change the exit code, matching the GUI build).
+_validate_bundle() {
+    local bundle="$1" rc=0
+    validate_project "$bundle" || rc=1
+    validate_info_content "$bundle" || rc=1
+    if [ "$rc" -eq 0 ]; then
+        echo "Bundle validation passed: $(/usr/bin/basename "$bundle")" >&2
+    fi
+    return $rc
+}
+
+cmd_validate() {
+    local target="$1"
+    if [ -z "$target" ]; then echo "validate: a path is required" >&2; return 2; fi
+    if [ ! -e "$target" ]; then echo "validate: not found: $target" >&2; return 2; fi
+
+    if [ -d "$target" ]; then
+        if [ -d "$target/Contents" ]; then
+            _validate_bundle "$target"; return $?
+        fi
+        echo "validate: $target is a directory but not an applet bundle" >&2
+        return 2
+    fi
+
+    local base ext
+    base=$(/usr/bin/basename "$target")
+    ext=$(echo "${base##*.}" | /usr/bin/tr '[:upper:]' '[:lower:]')
+
+    case "$base" in
+        Command.json|Command.plist) _report_command "$target"; return $? ;;
+    esac
+
+    case "$ext" in
+        json)
+            if is_actionui_json "$target"; then
+                _report_actionui "$target"; return $?
+            fi
+            echo "Note: $base is not a recognized ActionUI view; validating as ActionUI anyway." >&2
+            _report_actionui "$target"; return $? ;;
+        sh|bash|zsh|py|js|applescript|scpt)
+            _report_script "$target"; return $? ;;
+        plist)
+            _report_command "$target"; return $? ;;
+        *)
+            echo "validate: don't know how to validate '$base'" >&2; return 2 ;;
+    esac
+}
+
+# ── Build ─────────────────────────────────────────────────────────────────────
+
+cmd_build() {
+    local target=""
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --identity)           AB_IDENTITY="$2"; shift 2 ;;
+            --thin)               AB_THIN_ARCH="$2"; shift 2 ;;
+            --warnings-as-errors) AB_WARNINGS_AS_ERRORS=1; shift ;;
+            --force)              AB_FORCE_UPDATE=1; AB_ASSUME_YES=1; shift ;;
+            -h|--help)            usage; return 2 ;;
+            -*) echo "build: unknown option: $1" >&2; return 2 ;;
+            *)  if [ -z "$target" ]; then target="$1"; else echo "build: unexpected argument: $1" >&2; return 2; fi; shift ;;
+        esac
+    done
+    if [ -z "$target" ]; then echo "build: an applet bundle path is required" >&2; return 2; fi
+    if [ ! -d "$target" ]; then echo "build: not an applet bundle: $target" >&2; return 2; fi
+    applet_build "$target"
+}
+
+# ── Prettify ──────────────────────────────────────────────────────────────────
+
+cmd_prettify() {
+    local to_stdout="" file=""
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --stdout)  to_stdout=1; shift ;;
+            -h|--help) usage; return 2 ;;
+            -*) echo "prettify: unknown option: $1" >&2; return 2 ;;
+            *)  file="$1"; shift ;;
+        esac
+    done
+    if [ -z "$file" ] || [ ! -f "$file" ]; then echo "prettify: file not found: $file" >&2; return 2; fi
+
+    local pretty
+    pretty=$("$python3" -m json.tool "$file" 2>&1)
+    if [ $? -ne 0 ]; then
+        echo "prettify: invalid JSON in $(/usr/bin/basename "$file"):" >&2
+        printf '%s\n' "$pretty" >&2
+        return 1
+    fi
+
+    if [ -n "$to_stdout" ]; then
+        printf '%s\n' "$pretty"
+    else
+        printf '%s\n' "$pretty" > "$file"
+        echo "Prettified: $file" >&2
+    fi
+}
+
+# ── Preview ───────────────────────────────────────────────────────────────────
+
+cmd_preview() {
+    local screenshot="" file=""
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --screenshot) screenshot="$2"; shift 2 ;;
+            -h|--help)    usage; return 2 ;;
+            -*) echo "preview: unknown option: $1" >&2; return 2 ;;
+            *)  file="$1"; shift ;;
+        esac
+    done
+    if [ -z "$file" ] || [ ! -f "$file" ]; then echo "preview: file not found: $file" >&2; return 2; fi
+
+    local jerr
+    jerr=$("$python3" -m json.tool "$file" 2>&1 >/dev/null)
+    if [ $? -ne 0 ]; then
+        echo "preview: invalid JSON in $(/usr/bin/basename "$file"):" >&2
+        printf '%s\n' "$jerr" >&2
+        return 1
+    fi
+
+    # A MainMenu.json (top-level array) is a menu-bar document, not a view, so it
+    # can't be rendered — print the textual menu summary to stdout instead.
+    local is_menubar
+    is_menubar=$("$python3" -c 'import json,sys; print("yes" if isinstance(json.load(open(sys.argv[1])),list) else "no")' "$file" 2>/dev/null)
+    if [ "$is_menubar" = "yes" ]; then
+        "$python3" "$LIB/menubar_summary.py" "$file"
+        return $?
+    fi
+
+    local viewer="$APP_BUNDLE/Contents/Helpers/ActionUIViewer"
+    if [ ! -x "$viewer" ]; then
+        echo "preview: ActionUIViewer not found at $viewer" >&2
+        return 1
+    fi
+
+    local out="$screenshot"
+    if [ -z "$out" ]; then
+        out=$(/usr/bin/mktemp "${TMPDIR:-/tmp}/actionui_preview_XXXXXX.png")
+    fi
+
+    # ActionUIViewer needs a window-server session; its own logs go to stderr.
+    "$viewer" --screenshot "$out" "$file" >&2
+    local rc=$?
+    if [ $rc -ne 0 ] || [ ! -s "$out" ]; then
+        echo "preview: failed to capture screenshot (a logged-in GUI / window-server session is required)" >&2
+        return 1
+    fi
+    echo "$out"
+}
+
+# ── Dispatch ──────────────────────────────────────────────────────────────────
+
+if [ $# -gt 0 ]; then sub="$1"; shift; else sub=""; fi
+
+case "$sub" in
+    create)         cmd_create "$@" ;;
+    validate)       cmd_validate "$@" ;;
+    build)          cmd_build "$@" ;;
+    prettify)       cmd_prettify "$@" ;;
+    preview)        cmd_preview "$@" ;;
+    list-templates) cmd_list_templates ;;
+    list-icons)     cmd_list_icons ;;
+    ""|-h|--help|help) usage; exit 2 ;;
+    *) echo "appletbuilder: unknown command: $sub" >&2; usage; exit 2 ;;
+esac
+exit $?

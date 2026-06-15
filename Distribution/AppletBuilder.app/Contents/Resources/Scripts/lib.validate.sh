@@ -121,3 +121,61 @@ except SyntaxError as e:
 
     return $rc
 }
+
+# Validate a project's command description (Command.json / Command.plist).
+# The argument may be a bundle (.app/.omc/.applet/…) — the verifier resolves the
+# command file and runs Layer 1 (key/type/enum/required/conditional) + Layer 2
+# (bundle cross-references) — or a bare command file (Layer 1 only). A fast syntax
+# gate runs first so a malformed file yields a precise location.
+# Sets COMMAND_VALIDATE_OUTPUT. Returns: 0 valid, 2 warnings, 1 verifier errors,
+# 3 syntax-gate failure (malformed file), 99 no command file.
+COMMAND_VALIDATE_OUTPUT=""
+validate_command_file() {
+    local target="$1"
+    COMMAND_VALIDATE_OUTPUT=""
+    local cmd_file
+    if [ -d "$target" ]; then
+        cmd_file=$(command_file_path "$target")
+    else
+        cmd_file="$target"
+    fi
+    if [ ! -f "$cmd_file" ]; then
+        COMMAND_VALIDATE_OUTPUT="No command file found"
+        return 99
+    fi
+
+    # 1) Fast syntax gate — JSON via json.tool, classic plist via plutil -lint.
+    local lint_output
+    if is_json_command_file "$cmd_file"; then
+        lint_output=$("$python3" -m json.tool "$cmd_file" 2>&1 >/dev/null)
+    else
+        lint_output=$(/usr/bin/plutil -lint "$cmd_file" 2>&1)
+    fi
+    if [ "$?" -ne 0 ]; then
+        COMMAND_VALIDATE_OUTPUT="$lint_output"
+        return 3
+    fi
+
+    # 2) Advanced verifier. Passing the bundle enables Layer 2 cross-references.
+    local verifier="${OMC_APP_BUNDLE_PATH}/Contents/Library/command_verifier/validate_command_plist.py"
+    if [ ! -f "$verifier" ] || [ ! -x "$python3" ]; then
+        return 0
+    fi
+    COMMAND_VALIDATE_OUTPUT=$("$python3" "$verifier" "$target" 2>&1)
+    return $?
+}
+
+# Validate one ActionUI JSON file with the bundled verifier.
+# Sets ACTIONUI_VALIDATE_OUTPUT. Returns: 0 valid, 2 warnings, 1 errors, 99 no verifier.
+ACTIONUI_VALIDATE_OUTPUT=""
+validate_actionui_file() {
+    local file="$1"
+    ACTIONUI_VALIDATE_OUTPUT=""
+    local verifier="${OMC_APP_BUNDLE_PATH}/Contents/Library/actionui_verifier/validate_actionui.py"
+    if [ ! -f "$verifier" ] || [ ! -x "$python3" ]; then
+        ACTIONUI_VALIDATE_OUTPUT="Verifier not found"
+        return 99
+    fi
+    ACTIONUI_VALIDATE_OUTPUT=$("$python3" "$verifier" "$file" 2>&1)
+    return $?
+}

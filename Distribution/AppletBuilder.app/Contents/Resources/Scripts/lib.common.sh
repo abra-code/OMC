@@ -316,3 +316,40 @@ set_visible() {
         "$dialog_tool" "$window_uuid" "$view_id" omc_hide
     fi
 }
+
+# ──────────────────────────────────────────────────────────────
+# Reporting (output indirection)
+# ──────────────────────────────────────────────────────────────
+#
+# Shared pipeline code (lib.build.sh / lib.create.sh) reports through these three
+# functions instead of touching the UI directly, so the same logic serves two
+# front ends:
+#
+#   • GUI command handlers override them (after sourcing) to write to dialog
+#     controls / show_errors windows / the alert tool — preserving exact UI behavior.
+#   • The agent CLI leaves the defaults in place, so everything lands on stderr
+#     (progress + error reports) and decisions are taken non-interactively.
+#
+# Override pattern (in a caller, AFTER sourcing the libs, BEFORE invoking a
+# pipeline function — last definition wins):
+#
+#   ab_log()     { set_value "$SOME_LOG_ID" "$1"; }
+#   ab_report()  { show_errors "$1"; }
+#   ab_confirm() { "$alert_tool" --ok Yes --cancel No "$1"; }   # rc 0 = yes
+#
+# ab_log     — a progress / status line.
+# ab_report  — a detailed (often multi-line) error or warning block.
+# ab_confirm — a yes/no question; return 0 for "yes", non-zero for "no".
+#              The agent default answers from $AB_ASSUME_YES (set by --force).
+
+ab_log() {
+    printf '%s\n' "$1" >&2
+}
+
+ab_report() {
+    printf '%s\n' "$1" >&2
+}
+
+ab_confirm() {
+    [ "$AB_ASSUME_YES" = "1" ]
+}
