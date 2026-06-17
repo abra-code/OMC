@@ -1,7 +1,7 @@
 ---
 name: omc
 description: >
-  Create, edit, and debug OMC applets for macOS. Use when the user asks to build an OMC applet, add a command, write an action script, configure Command.plist, use omc_dialog_control, chain commands, or work with AppletBuilder. For ActionUI JSON UI design, also activate the actionui skill.
+  Create, edit, debug, rebuild, or codesign OMC applets for macOS. Use when the user asks to build/rebuild or codesign an applet, add a command, write an action script, configure Command.plist or Command.json, use omc_dialog_control, chain commands, or work with AppletBuilder (incl. the appletbuilder CLI / Build & Run). For ActionUI JSON UI design, also activate the actionui skill.
 version: "1.0"
 ---
 
