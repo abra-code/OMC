@@ -30,7 +30,10 @@ JSON schema and usage documentation for `Table`.
 
 // Observable state:
 //   value ([String])                    Selected row as an array of column strings (first column = display value).
-//                                       Access via getElementValue / setElementValue.
+//                                       Access via getElementValue / setElementValue. Select a row
+//                                       programmatically (without replacing rows, firing no actionID) via
+//                                       selectElementRow(index:), selectElementRow(matching:column:), or
+//                                       clearElementSelection.
 //   states["content"]   [[String]]      All table rows; each inner array holds one row's column values.
 //                                       Access via getElementRows / setElementRows / appendElementRows /
 //                                       clearElementRows / getElementColumnCount.

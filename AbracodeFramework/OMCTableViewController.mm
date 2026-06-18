@@ -207,6 +207,67 @@
 	return rowColumnsArray;
 }
 
+#pragma mark - Programmatic selection
+
+-(void)selectRowByIndex:(NSInteger)inRowIndex
+{
+	NSUInteger rowCount = [self.rows count];
+	// Suppress the selection-change command for the duration of the programmatic change,
+	// so programmatic selection is silent (matches the ActionUI path). NSTableView posts the
+	// selection-did-change notification synchronously from selectRowIndexes:/deselectAll:.
+	NSString *savedCommandID = self.selectionChangeCommandID;
+	self.selectionChangeCommandID = nil;
+	if( (inRowIndex >= 0) && ((NSUInteger)inRowIndex < rowCount) )
+	{
+		[self.tableView selectRowIndexes:[NSIndexSet indexSetWithIndex:(NSUInteger)inRowIndex] byExtendingSelection:NO];
+		[self.tableView scrollRowToVisible:inRowIndex];
+	}
+	else
+	{
+		[self.tableView deselectAll:nil];
+	}
+	self.selectionChangeCommandID = savedCommandID;
+}
+
+-(NSInteger)selectRowWithContent:(NSString *)inText column:(NSInteger)inColumnNumber
+{
+	if(inText == nil)
+		return -1;
+	// inColumnNumber is 1-based ($OMC_NIB_TABLE_<N>_COLUMN_<M>_VALUE); 0 or negative = any column.
+	NSInteger zeroBasedColumn = (inColumnNumber > 0) ? (inColumnNumber - 1) : -1;
+	NSUInteger rowCount = [self.rows count];
+	for(NSUInteger rowIndex = 0; rowIndex < rowCount; rowIndex++)
+	{
+		NSArray *columns = [self columnArrayForRow:rowIndex];
+		if(columns == nil)
+			continue;
+		BOOL matched = NO;
+		if(zeroBasedColumn >= 0)
+		{
+			if((NSUInteger)zeroBasedColumn < [columns count])
+				matched = [[columns objectAtIndex:(NSUInteger)zeroBasedColumn] isEqual:inText];
+		}
+		else
+		{
+			matched = [columns containsObject:inText];
+		}
+		if(matched)
+		{
+			[self selectRowByIndex:(NSInteger)rowIndex];
+			return (NSInteger)rowIndex;
+		}
+	}
+	return -1;
+}
+
+-(void)deselectAllRows
+{
+	NSString *savedCommandID = self.selectionChangeCommandID;
+	self.selectionChangeCommandID = nil;
+	[self.tableView deselectAll:nil];
+	self.selectionChangeCommandID = savedCommandID;
+}
+
 //NSTableDataSource/NSTableViewDataSource protocol
 - (NSInteger)numberOfRowsInTableView:(NSTableView *)aTableView
 {

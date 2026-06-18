@@ -883,6 +883,42 @@
 	}
 }
 
+- (void)selectRow:(NSInteger)rowIndex forControlID:(NSString *)inControlID
+{
+	id controlOrView = [self findControlOrViewWithID:inControlID];
+	if( (controlOrView != nil) && [controlOrView isKindOfClass:[NSTableView class]] )
+	{
+		NSTableView *myTable = (NSTableView *)controlOrView;
+		id myDelegate = [myTable delegate];
+		if( (myDelegate != nil) && [myDelegate isKindOfClass:[OMCTableViewController class]] )
+			[myDelegate selectRowByIndex:rowIndex];
+	}
+}
+
+- (void)selectRowWithContent:(NSString *)text column:(NSInteger)columnNumber forControlID:(NSString *)inControlID
+{
+	id controlOrView = [self findControlOrViewWithID:inControlID];
+	if( (controlOrView != nil) && [controlOrView isKindOfClass:[NSTableView class]] )
+	{
+		NSTableView *myTable = (NSTableView *)controlOrView;
+		id myDelegate = [myTable delegate];
+		if( (myDelegate != nil) && [myDelegate isKindOfClass:[OMCTableViewController class]] )
+			(void)[myDelegate selectRowWithContent:text column:columnNumber];
+	}
+}
+
+- (void)deselectRowForControlID:(NSString *)inControlID
+{
+	id controlOrView = [self findControlOrViewWithID:inControlID];
+	if( (controlOrView != nil) && [controlOrView isKindOfClass:[NSTableView class]] )
+	{
+		NSTableView *myTable = (NSTableView *)controlOrView;
+		id myDelegate = [myTable delegate];
+		if( (myDelegate != nil) && [myDelegate isKindOfClass:[OMCTableViewController class]] )
+			[myDelegate deselectAllRows];
+	}
+}
+
 - (void)selectControlWithID:(NSString *)inControlID
 {
 	NSView *controlOrView = [self findControlOrViewWithID:inControlID];

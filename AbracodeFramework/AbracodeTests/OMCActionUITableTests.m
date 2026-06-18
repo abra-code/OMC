@@ -66,6 +66,9 @@
     NSString *path = [NSString stringWithFormat:@"/tmp/OMC_test_actionui_term_%@", uuid];
     [fm removeItemAtPath:path error:nil];
     [fm removeItemAtPath:[path stringByAppendingString:@".tmp"] error:nil];
+    NSString *readyPath = [NSString stringWithFormat:@"/tmp/OMC_test_actionui_ready_%@", uuid];
+    [fm removeItemAtPath:readyPath error:nil];
+    [fm removeItemAtPath:[readyPath stringByAppendingString:@".tmp"] error:nil];
 }
 
 /// Opens the ActionUI Table dialog, waits for observer completion, returns captured UUID.
@@ -91,6 +94,18 @@
     return uuid;
 }
 
+/// Opens the dialog and waits for the init subcommand to finish populating rows. init writes a
+/// readiness marker as its last step (after all its omc_dialog_control sends), so polling for it
+/// — rather than sleeping a fixed interval — is robust to a window whose init is delayed because a
+/// previous dialog is still tearing down. Returns the captured window UUID.
+- (NSString *)openPopulatedTableDialogWithBundlePath:(NSString *)omcBundlePath {
+    NSString *uuid = [self openActionUITableDialogWithBundlePath:omcBundlePath];
+    NSString *readyPath = [NSString stringWithFormat:@"/tmp/OMC_test_actionui_ready_%@", uuid];
+    BOOL ready = [self pollForFileAtPath:readyPath timeout:10.0];
+    XCTAssertTrue(ready, @"init subcommand should populate rows and signal readiness");
+    return uuid;
+}
+
 /// Closes the ActionUI table dialog by sending table.close.window with the UUID as text context.
 - (void)closeActionUITableDialogWithUUID:(NSString *)uuid bundlePath:(NSString *)omcBundlePath {
     OMCTestExecutionObserver *closeObserver = OMCTestExecutionObserver.new;
@@ -106,6 +121,50 @@
 
     BOOL completed = [closeObserver waitForCompletionWithTimeout:kDefaultExecutionTimeout];
     XCTAssertTrue(completed, @"table.close.window should complete within timeout");
+}
+
+/// Runs a subcommand (by COMMAND_ID) against the running dialog, passing the window UUID
+/// as text context — the same channel table.close.window uses to address the dialog by UUID.
+- (void)runSubcommandID:(NSString *)commandID withUUID:(NSString *)uuid bundlePath:(NSString *)omcBundlePath {
+    OMCTestExecutionObserver *observer = OMCTestExecutionObserver.new;
+
+    OSStatus err = [OMCCommandExecutor runCommand:commandID
+                                   forCommandFile:omcBundlePath
+                                      withContext:uuid
+                                     useNavDialog:NO
+                                         allowKeyWindowSubcommand:NO
+                                         delegate:observer];
+
+    XCTAssertEqual(err, noErr, @"Should execute %@ command", commandID);
+
+    BOOL completed = [observer waitForCompletionWithTimeout:kDefaultExecutionTimeout];
+    XCTAssertTrue(completed, @"%@ should complete within timeout", commandID);
+}
+
+/// Full programmatic-selection round trip: open the dialog, let the init subcommand populate
+/// rows, run the given selection subcommand, close, and return the parsed termination diagnostic.
+/// The selection verbs fire no actionID, so the only observable effect is the selected row
+/// surfaced through OMC_ACTIONUI_TABLE_1_COLUMN_*_VALUE that the terminate script captures.
+- (NSDictionary<NSString *, NSString *> *)diagnosticAfterSelectionSubcommand:(NSString *)selectionCommandID
+                                                                 bundlePath:(NSString *)omcBundlePath
+                                                                       uuid:(NSString **)outUUID {
+    NSString *uuid = [self openPopulatedTableDialogWithBundlePath:omcBundlePath];
+    if (outUUID != NULL) { *outUUID = uuid; }
+
+    [self runSubcommandID:selectionCommandID withUUID:uuid bundlePath:omcBundlePath];
+
+    // Give the dialog time to apply the (async, fire-and-forget) selection before terminating.
+    // omc_dialog_control returns once the message is posted, not once it is processed, so this
+    // settle window must comfortably cover the dialog's runloop turn even under full-suite load.
+    [NSThread sleepForTimeInterval:2.0];
+
+    [self closeActionUITableDialogWithUUID:uuid bundlePath:omcBundlePath];
+
+    NSString *termPath = [NSString stringWithFormat:@"/tmp/OMC_test_actionui_term_%@", uuid];
+    BOOL termFound = [self pollForFileAtPath:termPath timeout:5.0];
+    XCTAssertTrue(termFound, @"Termination diagnostic file should be created after %@", selectionCommandID);
+
+    return [self readDiagnosticFile:termPath];
 }
 
 #pragma mark - Tests
@@ -149,10 +208,8 @@
     }
 
     NSString *omcBundlePath = [bundleURL path];
-    NSString *uuid = [self openActionUITableDialogWithBundlePath:omcBundlePath];
-
-    // Allow the init subcommand time to finish (it runs asynchronously after window opens)
-    [NSThread sleepForTimeInterval:2.0];
+    // Waits for the init subcommand's readiness marker (it runs asynchronously after window opens).
+    NSString *uuid = [self openPopulatedTableDialogWithBundlePath:omcBundlePath];
 
     [self closeActionUITableDialogWithUUID:uuid bundlePath:omcBundlePath];
 
@@ -177,8 +234,8 @@
     // The init script does not explicitly select a row, so all column values are empty strings.
     // This test verifies that TABLE env vars for all defined columns ARE exported (keys present in
     // the diagnostic file) and that column 3 (beyond the defined column count) is not exported.
-    // Once omc_table_select_row support is added, the assertions can be tightened to check
-    // for specific row values.
+    // Specific selected-row values are asserted by the testActionUISelectRow* tests below, which
+    // drive the omc_select_row / omc_select_row_with_content / omc_deselect verbs.
     NSURL *bundleURL = [OMCBundleTestHelper testBundleURL:@"ActionUI-Table"];
     if (bundleURL == nil) {
         NSLog(@"Skipping - ActionUI-Table.omc not found in test resources");
@@ -186,10 +243,7 @@
     }
 
     NSString *omcBundlePath = [bundleURL path];
-    NSString *uuid = [self openActionUITableDialogWithBundlePath:omcBundlePath];
-
-    // Wait for init subcommand to finish populating rows
-    [NSThread sleepForTimeInterval:2.0];
+    NSString *uuid = [self openPopulatedTableDialogWithBundlePath:omcBundlePath];
 
     [self closeActionUITableDialogWithUUID:uuid bundlePath:omcBundlePath];
 
@@ -244,9 +298,7 @@
     }
 
     NSString *omcBundlePath = [bundleURL path];
-    NSString *uuid = [self openActionUITableDialogWithBundlePath:omcBundlePath];
-
-    [NSThread sleepForTimeInterval:2.0];
+    NSString *uuid = [self openPopulatedTableDialogWithBundlePath:omcBundlePath];
 
     [self closeActionUITableDialogWithUUID:uuid bundlePath:omcBundlePath];
 
@@ -277,6 +329,100 @@
                   @"All-rows column 1 should contain 'Disable'");
     XCTAssertTrue([allRows1 containsString:@"Hide"],
                   @"All-rows column 1 should contain 'Hide'");
+
+    [self cleanupTermDiagnosticForUUID:uuid];
+}
+
+#pragma mark - Programmatic row selection
+
+- (void)testActionUISelectRowByIndex {
+    // table.select.row.index runs: omc_dialog_control <uuid> 1 omc_select_row 1
+    // 0-based index 1 -> second populated row (Jack / Disable).
+    NSURL *bundleURL = [OMCBundleTestHelper testBundleURL:@"ActionUI-Table"];
+    if (bundleURL == nil) {
+        NSLog(@"Skipping - ActionUI-Table.omc not found in test resources");
+        return;
+    }
+
+    NSString *uuid = nil;
+    NSDictionary *diag = [self diagnosticAfterSelectionSubcommand:@"table.select.row.index"
+                                                       bundlePath:[bundleURL path]
+                                                             uuid:&uuid];
+
+    XCTAssertEqualObjects(diag[@"TABLE_1_COLUMN_1_VALUE"], @"Jack",
+                          @"Selecting index 1 should put 'Jack' in column 1, got '%@'", diag[@"TABLE_1_COLUMN_1_VALUE"]);
+    XCTAssertEqualObjects(diag[@"TABLE_1_COLUMN_2_VALUE"], @"Disable",
+                          @"Selecting index 1 should put 'Disable' in column 2, got '%@'", diag[@"TABLE_1_COLUMN_2_VALUE"]);
+    XCTAssertTrue([diag[@"TABLE_1_COLUMN_0_VALUE"] containsString:@"Jack"],
+                  @"Whole-row column 0 should contain the selected row, got '%@'", diag[@"TABLE_1_COLUMN_0_VALUE"]);
+
+    [self cleanupTermDiagnosticForUUID:uuid];
+}
+
+- (void)testActionUISelectRowByContentAnyColumn {
+    // table.select.row.content runs: omc_select_row_with_content "Jill"
+    // First row containing "Jill" in any column -> third row (Jill / Hide).
+    NSURL *bundleURL = [OMCBundleTestHelper testBundleURL:@"ActionUI-Table"];
+    if (bundleURL == nil) {
+        NSLog(@"Skipping - ActionUI-Table.omc not found in test resources");
+        return;
+    }
+
+    NSString *uuid = nil;
+    NSDictionary *diag = [self diagnosticAfterSelectionSubcommand:@"table.select.row.content"
+                                                       bundlePath:[bundleURL path]
+                                                             uuid:&uuid];
+
+    XCTAssertEqualObjects(diag[@"TABLE_1_COLUMN_1_VALUE"], @"Jill",
+                          @"Matching 'Jill' should select the Jill row, got column 1 '%@'", diag[@"TABLE_1_COLUMN_1_VALUE"]);
+    XCTAssertEqualObjects(diag[@"TABLE_1_COLUMN_2_VALUE"], @"Hide",
+                          @"Jill's row column 2 should be 'Hide', got '%@'", diag[@"TABLE_1_COLUMN_2_VALUE"]);
+
+    [self cleanupTermDiagnosticForUUID:uuid];
+}
+
+- (void)testActionUISelectRowByContentSpecificColumn {
+    // table.select.row.content.column runs: omc_select_row_with_content "Hide" 2
+    // Matches "Hide" only in column 2 (1-based) -> Jill / Hide; exercises the 1-based->0-based
+    // column conversion in OMCActionUIWindowController.
+    NSURL *bundleURL = [OMCBundleTestHelper testBundleURL:@"ActionUI-Table"];
+    if (bundleURL == nil) {
+        NSLog(@"Skipping - ActionUI-Table.omc not found in test resources");
+        return;
+    }
+
+    NSString *uuid = nil;
+    NSDictionary *diag = [self diagnosticAfterSelectionSubcommand:@"table.select.row.content.column"
+                                                       bundlePath:[bundleURL path]
+                                                             uuid:&uuid];
+
+    XCTAssertEqualObjects(diag[@"TABLE_1_COLUMN_1_VALUE"], @"Jill",
+                          @"Matching 'Hide' in column 2 should select the Jill row, got column 1 '%@'", diag[@"TABLE_1_COLUMN_1_VALUE"]);
+    XCTAssertEqualObjects(diag[@"TABLE_1_COLUMN_2_VALUE"], @"Hide",
+                          @"Selected row column 2 should be 'Hide', got '%@'", diag[@"TABLE_1_COLUMN_2_VALUE"]);
+
+    [self cleanupTermDiagnosticForUUID:uuid];
+}
+
+- (void)testActionUIDeselectRow {
+    // table.deselect runs: omc_select_row 1 then omc_deselect — the selection must end empty.
+    NSURL *bundleURL = [OMCBundleTestHelper testBundleURL:@"ActionUI-Table"];
+    if (bundleURL == nil) {
+        NSLog(@"Skipping - ActionUI-Table.omc not found in test resources");
+        return;
+    }
+
+    NSString *uuid = nil;
+    NSDictionary<NSString *, NSString *> *diag = [self diagnosticAfterSelectionSubcommand:@"table.deselect"
+                                                       bundlePath:[bundleURL path]
+                                                             uuid:&uuid];
+
+    XCTAssertEqual(diag[@"TABLE_1_COLUMN_1_VALUE"].length, (NSUInteger)0,
+                   @"After deselect, column 1 should be empty, got '%@'", diag[@"TABLE_1_COLUMN_1_VALUE"]);
+    XCTAssertEqual(diag[@"TABLE_1_COLUMN_2_VALUE"].length, (NSUInteger)0,
+                   @"After deselect, column 2 should be empty, got '%@'", diag[@"TABLE_1_COLUMN_2_VALUE"]);
+    XCTAssertEqual(diag[@"TABLE_1_COLUMN_0_VALUE"].length, (NSUInteger)0,
+                   @"After deselect, whole-row column 0 should be empty, got '%@'", diag[@"TABLE_1_COLUMN_0_VALUE"]);
 
     [self cleanupTermDiagnosticForUUID:uuid];
 }

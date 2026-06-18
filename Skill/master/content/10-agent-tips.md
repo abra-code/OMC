@@ -23,11 +23,15 @@ of these bites or when behavior can't be explained from the code.
    `omc_dialog_control`. Populate them in their `viewDidLoadActionID` handler
    from state files; have init write its readiness file last (atomic `mv`)
    and let handlers poll for it.
-4. **Never set a Table's value** — it replaces the rows with one string, not
-   the selection. There is no programmatic row-select; track the current item
-   in a state file. Feed rows via `omc_table_set_rows_from_stdin`; extra
-   tab-separated fields beyond the declared columns act as hidden columns
-   (read via `$OMC_ACTIONUI_TABLE_<ID>_COLUMN_<N>_VALUE`).
+4. **Never set a Table's value to select a row** — a plain value (`omc_dialog_control
+   <id> "text"`) replaces the rows with one string, it does not move the selection.
+   To select programmatically use the dedicated verbs: `omc_select_row <0-based
+   index>`, `omc_select_row_with_content <text> [1-based column]` (omit column or
+   `0` = match any column; selects the first match), or `omc_deselect` to clear.
+   These work on Table and List, fire no actionID, and leave the rows untouched; read the
+   result back via `$OMC_ACTIONUI_VIEW_<id>_VALUE`. Feed rows via
+   `omc_table_set_rows_from_stdin`; extra tab-separated fields beyond the declared columns
+   act as hidden columns (read via `$OMC_ACTIONUI_TABLE_<ID>_COLUMN_<N>_VALUE`).
 5. **Pickers deliver (and are set by) the 1-based option INDEX**, not the
    option title; TabView delivers the 0-based tab index as trigger context.
    Persist each picker's ordered option list to a state file and resolve

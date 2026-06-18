@@ -49,7 +49,10 @@ typedef enum InstructionID
 	omc_dismiss_dialog,       //ActionUI: dismiss active alert/confirmation dialog
 	omc_insert_element,       //ActionUI: insert element into a container
 	omc_insert_element_row,   //ActionUI: insert row into a grid container
-	omc_remove_element        //ActionUI: remove element from its parent
+	omc_remove_element,       //ActionUI: remove element from its parent
+	omc_select_row,             //ActionUI/Nib: select Table/List row by 0-based index
+	omc_select_row_with_content, //ActionUI/Nib: select first Table/List row matching content
+	omc_deselect                //ActionUI/Nib: clear Table/List selection
 } InstructionID;
 
 
@@ -113,15 +116,18 @@ static InstructionWord sInstructionWordList[] =
 	{ sizeof("omc_dismiss_dialog")-1,						CFSTR("omc_dismiss_dialog"),					CFSTR("DISMISS_DIALOG"),		true,  false,	0 },
 	{ sizeof("omc_insert_element")-1,						CFSTR("omc_insert_element"),					CFSTR("INSERT_ELEMENT"),		false, false,	kArgumentCount_Variable },
 	{ sizeof("omc_insert_element_row")-1,					CFSTR("omc_insert_element_row"),				CFSTR("INSERT_ELEMENT_ROW"),	false, false,	kArgumentCount_Variable },
-	{ sizeof("omc_remove_element")-1,						CFSTR("omc_remove_element"),					CFSTR("REMOVE_ELEMENT"),		true,  false,	0 }
+	{ sizeof("omc_remove_element")-1,						CFSTR("omc_remove_element"),					CFSTR("REMOVE_ELEMENT"),		true,  false,	0 },
+	{ sizeof("omc_select_row")-1,							CFSTR("omc_select_row"),						CFSTR("SELECT_ROW"),			false, false,	1 },
+	{ sizeof("omc_select_row_with_content")-1,				CFSTR("omc_select_row_with_content"),			CFSTR("SELECT_ROW_CONTENT"),	false, false,	kArgumentCount_Variable },
+	{ sizeof("omc_deselect")-1,								CFSTR("omc_deselect"),							CFSTR("DESELECT_ROW"),			true,  false,	0 }
 
 };
 
 //min and max len defined for slight optimization in resolving instructions
 //the shortest is omc_show
 const size_t kMinInstructionWordLen = sizeof("omc_show") - 1;
-//the longest is omc_list_append_items_from_stdin
-const size_t kMaxInstructionWordLen = sizeof("omc_list_append_items_from_stdin") - 1;
+//the longest is omc_present_confirmation_dialog
+const size_t kMaxInstructionWordLen = sizeof("omc_present_confirmation_dialog") - 1;
 
 
 static inline InstructionID
@@ -195,6 +201,9 @@ int main (int argc, const char * argv[])
 		fprintf(stdout, "\tomc_table_set_rows [followed by tab-separated row strings]\n");
 		fprintf(stdout, "\tomc_table_set_rows_from_file [followed by file name - tab separated data]\n");
 		fprintf(stdout, "\tomc_table_set_rows_from_stdin (read from stdin or pipe - tab separated data)\n");
+		fprintf(stdout, "\tomc_select_row [0-based row index] (selects a Table/List row; out-of-range clears selection)\n");
+		fprintf(stdout, "\tomc_select_row_with_content <text> [1-based column] (selects first row whose column matches text; omit column or 0 = any column)\n");
+		fprintf(stdout, "\tomc_deselect (clears the Table/List selection)\n");
 		fprintf(stdout, "\tomc_select (brings dialog window or app to front, sets control focus)\n");
 		fprintf(stdout, "\tomc_terminate_ok (close dialog with OK message)\n");
 		fprintf(stdout, "\tomc_terminate_cancel (close dialog with Cancel message)\n");
@@ -232,6 +241,10 @@ int main (int argc, const char * argv[])
 		fprintf(stdout, "omc_dialog_control __NIB_DLG_GUID__ 5 omc_table_add_rows \"11	Hidden1	12	13\" \"21	Hidden2	22	23\"\n");
 		fprintf(stdout, "omc_dialog_control __NIB_DLG_GUID__ 5 omc_table_add_rows_from_file mydata.tsv\n");
 		fprintf(stdout, "cat mydata.tsv | omc_dialog_control __NIB_DLG_GUID__ 5 omc_table_add_rows_from_stdin\n");
+		fprintf(stdout, "omc_dialog_control __ACTIONUI_WINDOW_UUID__ 5 omc_select_row 3\n");
+		fprintf(stdout, "omc_dialog_control __ACTIONUI_WINDOW_UUID__ 5 omc_select_row_with_content \"Report.pdf\"\n");
+		fprintf(stdout, "omc_dialog_control __ACTIONUI_WINDOW_UUID__ 5 omc_select_row_with_content \"42\" 1\n");
+		fprintf(stdout, "omc_dialog_control __ACTIONUI_WINDOW_UUID__ 5 omc_deselect\n");
 		fprintf(stdout, "omc_dialog_control __NIB_DLG_GUID__ omc_window omc_resize 600 200\n");
 		fprintf(stdout, "omc_dialog_control __NIB_DLG_GUID__ 2 omc_move 20 20\n");
 		fprintf(stdout, "omc_dialog_control __NIB_DLG_GUID__ 4 omc_scroll 0 0\n");
@@ -445,7 +458,7 @@ int main (int argc, const char * argv[])
 			(instruction == omc_select) ||
 		    (instruction == omc_terminate_ok) || (instruction == omc_terminate_cancel) || //ok=true, cancel=false
 			(instruction == omc_dismiss_modal) || (instruction == omc_dismiss_dialog) ||
-			(instruction == omc_remove_element)
+			(instruction == omc_remove_element) || (instruction == omc_deselect)
 		   )
 		{
 			CFMutableDictionaryRef disableDict = NULL;

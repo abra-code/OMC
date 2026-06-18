@@ -36,6 +36,15 @@ typedef enum ColumnSeparatorFormat
 -(void)addRows:(CFArrayRef)inRowArray;
 -(void)reloadData;
 -(void)setColumns:(NSArray *)columnArray;
+
+// Programmatic row selection. These suppress the selection-change command so programmatic
+// selection is silent (matching the ActionUI path) — read the result back from the table.
+-(void)selectRowByIndex:(NSInteger)inRowIndex;            // 0-based; out-of-range clears the selection
+// inText matched (exact) against a row's column value(s). inColumnNumber is 1-based
+// (mirrors $OMC_NIB_TABLE_<N>_COLUMN_<M>_VALUE); 0 or negative matches any column.
+// Returns the 0-based index of the selected row, or -1 if no row matched.
+-(NSInteger)selectRowWithContent:(NSString *)inText column:(NSInteger)inColumnNumber;
+-(void)deselectAllRows;
 -(NSArray *)splitRowString:(NSString *)inRowString;
 -(NSArray *)columnArrayForRow:(NSUInteger)inRowIndex;
 -(id)selectionValueForColumn:(NSInteger)inColumnIndex withIterator:(SelectionIterator *)inSelIterator;

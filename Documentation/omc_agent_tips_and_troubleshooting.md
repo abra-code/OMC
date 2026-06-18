@@ -121,13 +121,26 @@ wait_for_state() {
 
 - Feed rows with `omc_table_set_rows_from_stdin` (tab-separated fields, one
   row per line).
-- **Never set a Table's *value*** (`omc_dialog_control <win> <tableID> "text"`)
-  — it replaces the table's *rows* with that single string, not the
-  selection. A real build wiped a freshly fed 12-row sidebar down to one
+- **Never set a Table's *value* to select a row** (`omc_dialog_control <win>
+  <tableID> "text"`) — it replaces the table's *rows* with that single string,
+  not the selection. A real build wiped a freshly fed 12-row sidebar down to one
   blank-looking row this way.
-- **There is no programmatic row-selection operation.** Keep the "current
-  item" in a state file; let handlers read it instead of relying on a visual
-  selection existing.
+- **Select rows with the dedicated verbs** (work on Table *and* List):
+  - `omc_select_row <0-based index>` — select by position; an out-of-range
+    index clears the selection.
+  - `omc_select_row_with_content <text> [1-based column]` — select the
+    *first* row whose column equals `text` (exact, case-sensitive). Omit the
+    column (or pass `0`) to match against *any* column, including hidden ones;
+    the 1-based column numbering matches `$OMC_ACTIONUI_TABLE_<ID>_COLUMN_<N>_VALUE`.
+  - `omc_deselect` — clear the selection.
+
+  These set the selection without touching the rows and fire **no** actionID
+  (programmatic selection is silent — no selection-changed feedback loop). Apply
+  them *after* feeding rows; read the result back from `$OMC_ACTIONUI_VIEW_<id>_VALUE`
+  (or the per-column `$OMC_ACTIONUI_TABLE_<ID>_COLUMN_<N>_VALUE`). They apply to
+  Table, homogeneous List, and template List; heterogeneous List children (which
+  select by child element ID) are not covered. You may still want to keep the
+  "current item" in a state file so handlers don't depend on a visual selection.
 - **Hidden data columns**: feed *more* tab-separated fields than the JSON
   declares as columns. Extras are invisible but readable in handlers via
   `$OMC_ACTIONUI_TABLE_<ID>_COLUMN_<N>_VALUE` (1-based across declared +

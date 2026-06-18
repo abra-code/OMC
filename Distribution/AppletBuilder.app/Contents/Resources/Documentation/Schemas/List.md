@@ -106,7 +106,10 @@ JSON schema and usage documentation for `List`.
 
 //  Observable state:
 //    value ([String])                   Selected item as a one-element string array (or empty when nothing selected).
-//                                       Access via getElementValue / setElementValue.
+//                                       Access via getElementValue / setElementValue. Select a row
+//                                       programmatically (without replacing rows, firing no actionID) via
+//                                       selectElementRow(index:), selectElementRow(matching:column:), or
+//                                       clearElementSelection (content-backed list modes only).
 //    states["content"]  [[String]]      All list items; each inner array holds the item string and any optional
 //                                       hidden-column data. Access via getElementRows / setElementRows /
 //                                       appendElementRows / clearElementRows.

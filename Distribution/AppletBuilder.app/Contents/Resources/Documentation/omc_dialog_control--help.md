@@ -33,6 +33,9 @@ Special values:
 	omc_table_set_rows [followed by tab-separated row strings]
 	omc_table_set_rows_from_file [followed by file name - tab separated data]
 	omc_table_set_rows_from_stdin (read from stdin or pipe - tab separated data)
+	omc_select_row [0-based row index] (selects a Table/List row; out-of-range clears selection)
+	omc_select_row_with_content <text> [1-based column] (selects first row whose column matches text; omit column or 0 = any column)
+	omc_deselect (clears the Table/List selection)
 	omc_select (brings dialog window or app to front, sets control focus)
 	omc_terminate_ok (close dialog with OK message)
 	omc_terminate_cancel (close dialog with Cancel message)
@@ -72,6 +75,10 @@ omc_dialog_control __NIB_DLG_GUID__ 5 omc_table_remove_all_rows
 omc_dialog_control __NIB_DLG_GUID__ 5 omc_table_add_rows "11	Hidden1	12	13" "21	Hidden2	22	23"
 omc_dialog_control __NIB_DLG_GUID__ 5 omc_table_add_rows_from_file mydata.tsv
 cat mydata.tsv | omc_dialog_control __NIB_DLG_GUID__ 5 omc_table_add_rows_from_stdin
+omc_dialog_control __ACTIONUI_WINDOW_UUID__ 5 omc_select_row 3
+omc_dialog_control __ACTIONUI_WINDOW_UUID__ 5 omc_select_row_with_content "Report.pdf"
+omc_dialog_control __ACTIONUI_WINDOW_UUID__ 5 omc_select_row_with_content "42" 1
+omc_dialog_control __ACTIONUI_WINDOW_UUID__ 5 omc_deselect
 omc_dialog_control __NIB_DLG_GUID__ omc_window omc_resize 600 200
 omc_dialog_control __NIB_DLG_GUID__ 2 omc_move 20 20
 omc_dialog_control __NIB_DLG_GUID__ 4 omc_scroll 0 0

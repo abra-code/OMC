@@ -32,6 +32,15 @@
 - (void)setTableColumns:(CFArrayRef)columns forControlID:(NSString *)inControlID;
 - (void)setTableColumnWidths:(CFArrayRef)widths forControlID:(NSString *)inControlID;
 
+// Table / List row selection (implemented for both ActionUI and Nib NSTableView)
+// rowIndex: 0-based index into the element's content rows; out-of-range clears the selection
+- (void)selectRow:(NSInteger)rowIndex forControlID:(NSString *)inControlID;
+// text: matched (exact, case-sensitive) against a row's column value(s)
+// columnNumber: 1-based column to match (mirrors $OMC_ACTIONUI_TABLE_<ID>_COLUMN_<M>_VALUE);
+//               0 or negative matches any column. Selects the first matching row.
+- (void)selectRowWithContent:(NSString *)text column:(NSInteger)columnNumber forControlID:(NSString *)inControlID;
+- (void)deselectRowForControlID:(NSString *)inControlID;
+
 // Control layout and focus
 - (void)selectControlWithID:(NSString *)inControlID;
 - (void)setCommandID:(NSString *)commandID forControlID:(NSString *)inControlID;

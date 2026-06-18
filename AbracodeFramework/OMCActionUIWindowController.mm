@@ -567,6 +567,35 @@ static NSArray<NSArray<NSString*>*> *OMCParseTabSeparatedRows(CFArrayRef cfRows)
     [ActionUIObjC setElementPropertyWithWindowUUID:windowUUID viewID:viewID propertyName:@"columns" value:names];
 }
 
+#pragma mark - Table / List row selection
+
+- (void)selectRow:(NSInteger)rowIndex forControlID:(NSString *)inControlID
+{
+    NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
+    if (windowUUID == nil || inControlID == nil) return;
+    NSInteger viewID = [inControlID integerValue];
+    [ActionUIObjC selectElementRowWithWindowUUID:windowUUID viewID:viewID index:rowIndex];
+}
+
+- (void)selectRowWithContent:(NSString *)text column:(NSInteger)columnNumber forControlID:(NSString *)inControlID
+{
+    NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
+    if (windowUUID == nil || inControlID == nil || text == nil) return;
+    NSInteger viewID = [inControlID integerValue];
+    // OMC exposes table columns 1-based ($OMC_ACTIONUI_TABLE_<ID>_COLUMN_<M>_VALUE), with 0 meaning
+    // "any column". ActionUI's column index is 0-based and uses a negative value to mean "any column".
+    NSInteger zeroBasedColumn = (columnNumber > 0) ? (columnNumber - 1) : -1;
+    [ActionUIObjC selectElementRowWithWindowUUID:windowUUID viewID:viewID matchingText:text column:zeroBasedColumn];
+}
+
+- (void)deselectRowForControlID:(NSString *)inControlID
+{
+    NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
+    if (windowUUID == nil || inControlID == nil) return;
+    NSInteger viewID = [inControlID integerValue];
+    [ActionUIObjC clearElementSelectionWithWindowUUID:windowUUID viewID:viewID];
+}
+
 /// Resolves a resource name or absolute path to a file URL.
 /// Searches the same bundle chain used for the main dialog JSON (external bundle > main bundle > framework bundle).
 - (NSURL *)resolveJSONURL:(NSString *)resourceNameOrPath

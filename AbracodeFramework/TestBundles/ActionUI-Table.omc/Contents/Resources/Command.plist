@@ -45,6 +45,12 @@ echo "${OMC_ACTIONUI_WINDOW_UUID}"
 "$dialog_tool" "$OMC_ACTIONUI_WINDOW_UUID" 1 omc_table_set_column_widths 100 100
 "$dialog_tool" $OMC_ACTIONUI_WINDOW_UUID 1 omc_table_remove_all_rows
 printf "John\tEnable\nJack\tDisable\nJill\tHide\n" | "$dialog_tool" "$OMC_ACTIONUI_WINDOW_UUID" 1 omc_table_add_rows_from_stdin
+# Signal readiness last (atomic mv) so selection tests can wait for rows to be populated
+# before selecting. omc_dialog_control messages are processed in order per window, so a
+# select sent after this marker is guaranteed to run after the add_rows above.
+ready_file="/tmp/OMC_test_actionui_ready_${OMC_ACTIONUI_WINDOW_UUID}"
+printf "READY\n" > "${ready_file}.tmp"
+mv "${ready_file}.tmp" "${ready_file}"
 				</string>
 			</array>
 			<key>COMMAND_ID</key>
@@ -73,6 +79,87 @@ fi
 			<string>Table</string>
 			<key>NOTES</key>
 			<string>Test command designed to receive OMC_ACTIONUI_WINDOW_UUID from text context</string>
+		</dict>
+		<dict>
+			<key>ACTIVATION_MODE</key>
+			<string>act_selected_text</string>
+			<key>COMMAND</key>
+			<array>
+				<string>WINDOW_UUID="${OMC_OBJ_TEXT}"
+if [ -n "${WINDOW_UUID}" ]; then
+    "$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$WINDOW_UUID" 1 omc_select_row 1
+fi
+				</string>
+			</array>
+			<key>COMMAND_ID</key>
+			<string>table.select.row.index</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_shell_script</string>
+			<key>NAME</key>
+			<string>Table</string>
+			<key>NOTES</key>
+			<string>Selects table row index 1 (Jack/Disable) via omc_select_row; UUID from text context</string>
+		</dict>
+		<dict>
+			<key>ACTIVATION_MODE</key>
+			<string>act_selected_text</string>
+			<key>COMMAND</key>
+			<array>
+				<string>WINDOW_UUID="${OMC_OBJ_TEXT}"
+if [ -n "${WINDOW_UUID}" ]; then
+    "$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$WINDOW_UUID" 1 omc_select_row_with_content "Jill"
+fi
+				</string>
+			</array>
+			<key>COMMAND_ID</key>
+			<string>table.select.row.content</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_shell_script</string>
+			<key>NAME</key>
+			<string>Table</string>
+			<key>NOTES</key>
+			<string>Selects first row containing "Jill" (Jill/Hide) via omc_select_row_with_content; UUID from text context</string>
+		</dict>
+		<dict>
+			<key>ACTIVATION_MODE</key>
+			<string>act_selected_text</string>
+			<key>COMMAND</key>
+			<array>
+				<string>WINDOW_UUID="${OMC_OBJ_TEXT}"
+if [ -n "${WINDOW_UUID}" ]; then
+    "$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$WINDOW_UUID" 1 omc_select_row_with_content "Hide" 2
+fi
+				</string>
+			</array>
+			<key>COMMAND_ID</key>
+			<string>table.select.row.content.column</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_shell_script</string>
+			<key>NAME</key>
+			<string>Table</string>
+			<key>NOTES</key>
+			<string>Selects first row whose column 2 (1-based) equals "Hide" (Jill/Hide); exercises the column param</string>
+		</dict>
+		<dict>
+			<key>ACTIVATION_MODE</key>
+			<string>act_selected_text</string>
+			<key>COMMAND</key>
+			<array>
+				<string>WINDOW_UUID="${OMC_OBJ_TEXT}"
+if [ -n "${WINDOW_UUID}" ]; then
+    "$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$WINDOW_UUID" 1 omc_select_row 1
+    "$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$WINDOW_UUID" 1 omc_deselect
+fi
+				</string>
+			</array>
+			<key>COMMAND_ID</key>
+			<string>table.deselect</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_shell_script</string>
+			<key>NAME</key>
+			<string>Table</string>
+			<key>NOTES</key>
+			<string>Selects row 1 then clears it via omc_deselect; selection must end empty. UUID from text context</string>
 		</dict>
 		<dict>
 			<key>COMMAND</key>

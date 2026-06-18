@@ -82,6 +82,12 @@ next_cmd="$OMC_OMC_SUPPORT_PATH/omc_next_command"
 printf "Label1\t/data/1\nLabel2\t/data/2\n" | \
   "$dialog_tool" "$window_uuid" <tableID> omc_table_set_rows_from_stdin
 
+# Select a Table/List row programmatically (works for Table and List; fires no actionID)
+"$dialog_tool" "$window_uuid" <tableID> omc_select_row 3              # by 0-based index
+"$dialog_tool" "$window_uuid" <tableID> omc_select_row_with_content "Report.pdf"  # first row with text in any column
+"$dialog_tool" "$window_uuid" <tableID> omc_select_row_with_content "42" 1        # text must be in column 1 (1-based)
+"$dialog_tool" "$window_uuid" <tableID> omc_deselect                  # clear selection
+
 # ActionUI only: set a property directly (value is string or JSON fragment)
 "$dialog_tool" "$window_uuid" <id> omc_set_property "options" '["A","B","C"]'
 "$dialog_tool" "$window_uuid" <id> omc_set_property "disabled" true

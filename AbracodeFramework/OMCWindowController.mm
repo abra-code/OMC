@@ -583,6 +583,74 @@ GetAllDialogControllers()
 		}
 	}
 
+	// Row selection is applied after the row-setting blocks above so that a single message
+	// that both sets rows and selects a row populates the content first.
+	CFDictionaryRef selectRowDict;
+	if( controlValues.GetValue(CFSTR("SELECT_ROW"), selectRowDict) )
+	{
+		itemCount = ::CFDictionaryGetCount(selectRowDict);
+		if(itemCount > 0)
+		{
+			std::vector<CFTypeRef> keyList(itemCount);
+			std::vector<CFTypeRef> valueList(itemCount);
+			::CFDictionaryGetKeysAndValues(selectRowDict, (const void **)keyList.data(), (const void **)valueList.data());
+			for(CFIndex i = 0; i < itemCount; i++)
+			{
+				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
+				CFStringRef indexStr = ACFType<CFStringRef>::DynamicCast( valueList[i] );
+				if( (controlID != NULL) && (indexStr != NULL) )
+					[self selectRow:[(__bridge NSString *)indexStr integerValue] forControlID:(__bridge NSString *)controlID];
+			}
+		}
+	}
+
+	CFDictionaryRef selectRowContentDict;
+	if( controlValues.GetValue(CFSTR("SELECT_ROW_CONTENT"), selectRowContentDict) )
+	{
+		itemCount = ::CFDictionaryGetCount(selectRowContentDict);
+		if(itemCount > 0)
+		{
+			std::vector<CFTypeRef> keyList(itemCount);
+			std::vector<CFTypeRef> valueList(itemCount);
+			::CFDictionaryGetKeysAndValues(selectRowContentDict, (const void **)keyList.data(), (const void **)valueList.data());
+			for(CFIndex i = 0; i < itemCount; i++)
+			{
+				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
+				CFArrayRef theArr = ACFType<CFArrayRef>::DynamicCast( valueList[i] );
+				if( (controlID != NULL) && (theArr != NULL) && (::CFArrayGetCount(theArr) >= 1) )
+				{
+					CFStringRef text = ACFType<CFStringRef>::DynamicCast( ::CFArrayGetValueAtIndex(theArr, 0) );
+					NSInteger columnNumber = 0; // 0 = match any column
+					if( ::CFArrayGetCount(theArr) >= 2 )
+					{
+						CFStringRef colStr = ACFType<CFStringRef>::DynamicCast( ::CFArrayGetValueAtIndex(theArr, 1) );
+						if( colStr != NULL )
+							columnNumber = [(__bridge NSString *)colStr integerValue];
+					}
+					if( text != NULL )
+						[self selectRowWithContent:(__bridge NSString *)text column:columnNumber forControlID:(__bridge NSString *)controlID];
+				}
+			}
+		}
+	}
+
+	CFDictionaryRef deselectRowDict;
+	if( controlValues.GetValue(CFSTR("DESELECT_ROW"), deselectRowDict) )
+	{
+		itemCount = ::CFDictionaryGetCount(deselectRowDict);
+		if(itemCount > 0)
+		{
+			std::vector<CFTypeRef> keyList(itemCount);
+			::CFDictionaryGetKeysAndValues(deselectRowDict, (const void **)keyList.data(), NULL);
+			for(CFIndex i = 0; i < itemCount; i++)
+			{
+				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
+				if( controlID != NULL )
+					[self deselectRowForControlID:(__bridge NSString *)controlID];
+			}
+		}
+	}
+
 	CFDictionaryRef setPropertyDict;
 	if( controlValues.GetValue(CFSTR("SET_PROPERTY"), setPropertyDict) )
 	{
@@ -1608,6 +1676,16 @@ GetAllDialogControllers()
 }
 - (void)setTableColumnWidths:(CFArrayRef)widths forControlID:(NSString *)inControlID {
     NSLog(@"[OMCWindowController stub] setTableColumnWidths:forControlID: %@", inControlID);
+}
+
+- (void)selectRow:(NSInteger)rowIndex forControlID:(NSString *)inControlID {
+    NSLog(@"[OMCWindowController stub] selectRow:%ld forControlID: %@", (long)rowIndex, inControlID);
+}
+- (void)selectRowWithContent:(NSString *)text column:(NSInteger)columnNumber forControlID:(NSString *)inControlID {
+    NSLog(@"[OMCWindowController stub] selectRowWithContent:%@ column:%ld forControlID: %@", text, (long)columnNumber, inControlID);
+}
+- (void)deselectRowForControlID:(NSString *)inControlID {
+    NSLog(@"[OMCWindowController stub] deselectRowForControlID: %@", inControlID);
 }
 
 - (void)selectControlWithID:(NSString *)inControlID {
