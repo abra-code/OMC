@@ -4,6 +4,7 @@
 #include <signal.h>
 #include <errno.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -181,6 +182,24 @@ ReleaseEnviron(char **inEnviron)
 }
 
 
+// Mark a pipe fd close-on-exec so it cannot leak into an unrelated child that happens to
+// be spawned concurrently. The explicit close loop below only covers children already
+// registered in sChildProcessInfoList; a pipe still being set up here is not yet in that
+// list. The child's own stdin/stdout are re-established by the adddup2 file actions, and
+// dup2 target fds are never close-on-exec, so this does not affect the command's std
+// streams. (macOS has no pipe2(), so this is done with fcntl right after pipe(); in the
+// current single-threaded usage there is no concurrent spawn, so the tiny pipe()->fcntl
+// window is not a real race - this is future-proofing should omc_popen ever be threaded.)
+static inline void SetCloseOnExec(int fd)
+{
+    if(fd >= 0)
+    {
+        int flags = fcntl(fd, F_GETFD);
+        if(flags >= 0)
+            (void)fcntl(fd, F_SETFD, flags | FD_CLOEXEC);
+    }
+}
+
 int
 omc_popen(const char *command, char * const *inShell, char * const *inEnvironList, unsigned int inMode, ChildProcessInfo *outChildProcessInfo)
 {
@@ -200,8 +219,10 @@ omc_popen(const char *command, char * const *inShell, char * const *inEnvironLis
     {
         if( pipe(outputFDs) < 0 )
             return -1;
+        SetCloseOnExec( outputFDs[kPipeReadEnd] );
+        SetCloseOnExec( outputFDs[kPipeWriteEnd] );
     }
-    
+
     if( (inMode & kOMCPopenWrite) != 0 )
     {
         if( pipe(inputFDs) < 0 )
@@ -210,6 +231,8 @@ omc_popen(const char *command, char * const *inShell, char * const *inEnvironLis
             CLOSE_FILE_DESCRIPTOR( outputFDs[kPipeWriteEnd]);
             return -1;
         }
+        SetCloseOnExec( inputFDs[kPipeReadEnd] );
+        SetCloseOnExec( inputFDs[kPipeWriteEnd] );
     }
     
     ChildProcessInfoLink *thisLink = malloc(sizeof(ChildProcessInfoLink));
