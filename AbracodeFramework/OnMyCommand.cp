@@ -990,7 +990,14 @@ OnMyCommandCM::ExecuteCommandWithObjects(CommandRuntimeData *initialCommandRunti
         }
 	}
 
-	OmcHostTaskManager *taskManager = new OmcHostTaskManager( this, currCommand, dynamicCommandName, mBundleRef, maxTaskCount );
+	// Own the task manager's creation reference in a smart pointer for the duration of the
+	// setup below. If anything between here and Start() throws (most commonly the user
+	// cancelling a nib/ActionUI dialog, see the throws further down), the smart pointer
+	// releases the reference during stack unwinding, so the task manager (and any tasks
+	// already added to it) are destroyed instead of leaked.
+	// The reference is handed off to the asynchronous task lifecycle via Detach() right
+	// before Start() - see the comment there.
+	ARefCountedObj<OmcHostTaskManager> taskManager( new OmcHostTaskManager( this, currCommand, dynamicCommandName, mBundleRef, maxTaskCount ) );
 
     ARefCountedObj<OMCDialog> initalActiveDialog;
     // is this a subcommand triggered from already active dialog?
@@ -1176,8 +1183,13 @@ OnMyCommandCM::ExecuteCommandWithObjects(CommandRuntimeData *initialCommandRunti
     {
         taskManager->AddObserver( mObserver );
     }
-    
-	taskManager->Start();
+
+	// Hand the creation reference off to the asynchronous task lifecycle (Finalize() now
+	// owns and releases it). Detach() must happen BEFORE Start() because Start() can run
+	// the tasks and reach Finalize() - which deletes the object - synchronously (when a
+	// task finishes inline or when there are no tasks). Detaching first prevents the smart
+	// pointer from releasing an already-deleted object.
+	taskManager.Detach()->Start();
 
 	return noErr;
 }
@@ -1267,7 +1279,11 @@ OnMyCommandCM::ExecuteCommandWithText(CommandDescription &currCommand, CFStringR
 	CFObj<CFStringRef> objName; //what should the object name be for text?
 
 	CFIndex maxTaskCount = 1;//text command processes one task anyway
-	OmcHostTaskManager *taskManager = new OmcHostTaskManager( this, currCommand, dynamicCommandName, mBundleRef, maxTaskCount );
+	// Own the creation reference in a smart pointer so an exception before Start() (e.g.
+	// std::bad_alloc while creating an executor) destroys the task manager instead of
+	// leaking it. The reference is handed off to the async lifecycle via Detach() before
+	// Start() - see the comment there.
+	ARefCountedObj<OmcHostTaskManager> taskManager( new OmcHostTaskManager( this, currCommand, dynamicCommandName, mBundleRef, maxTaskCount ) );
 
 	ARefCountedObj<OmcExecutor> theExec;
 
@@ -1336,7 +1352,10 @@ OnMyCommandCM::ExecuteCommandWithText(CommandDescription &currCommand, CFStringR
 	if(mObserver != nullptr)
 		taskManager->AddObserver( mObserver );
 
-	taskManager->Start();
+	// Hand the creation reference off to the asynchronous task lifecycle (Finalize() now
+	// owns and releases it). Detach() must happen BEFORE Start() because Start() can reach
+	// Finalize() - which deletes the object - synchronously.
+	taskManager.Detach()->Start();
 
 	return noErr;
 }
