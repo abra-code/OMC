@@ -543,7 +543,17 @@ POpenExecutor::WriteInputStringChunk()
 
 		CFSocketNativeHandle fd = ::CFSocketGetNative( mWriteSocket );
 		ssize_t bytesWritten = write(fd, dataToWrite, byteCount);
-		mWrittenInputBytesCount += bytesWritten;
+		if(bytesWritten > 0)
+		{
+			mWrittenInputBytesCount += bytesWritten;
+		}
+		else
+		{
+			// write() returned 0 or -1 (e.g. EPIPE when the child closed stdin, EINTR, EAGAIN).
+			// Never add a negative result to the unsigned counter - that underflows it.
+			// Force the completion path below so the pipe is closed deterministically.
+			mWrittenInputBytesCount = mInputString.length();
+		}
 	}
 	
 	if( (mWrittenInputBytesCount >= mInputString.length()) || (mWriteSocket == nullptr) )

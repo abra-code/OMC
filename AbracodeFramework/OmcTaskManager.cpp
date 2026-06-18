@@ -79,10 +79,23 @@ CopyNextCommandID(const CommandDescription &currCommand, CFStringRef currCommand
             FILE *fp = fopen(sFilePath, "r");
             if(fp != NULL)
             {
-                fgets(sCommandUUID, sizeof(sCommandUUID), fp);//now store the next command ID in sCommandGUID
+                //now store the next command ID in sCommandUUID.
+                //check the return value: on an empty file fgets returns NULL and leaves
+                //sCommandUUID holding the CURRENT command UUID from the CFStringGetCString above,
+                //which must not be mistaken for a next command id.
+                char *readResult = fgets(sCommandUUID, sizeof(sCommandUUID), fp);
                 fclose(fp);
-                
+
+                if(readResult == NULL)
+                    sCommandUUID[0] = 0;
+
+                //strip a trailing newline if the file was written with one
                 size_t idLen = strlen(sCommandUUID);
+                while( (idLen > 0) && ((sCommandUUID[idLen-1] == '\n') || (sCommandUUID[idLen-1] == '\r')) )
+                {
+                    sCommandUUID[--idLen] = 0;
+                }
+
                 if(idLen > 0)
                 {
                     if(theNextID != NULL)

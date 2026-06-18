@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 #include <paths.h>
 #include <pthread.h>
@@ -212,11 +213,6 @@ omc_popen(const char *command, char * const *inShell, char * const *inEnvironLis
     }
     
     ChildProcessInfoLink *thisLink = malloc(sizeof(ChildProcessInfoLink));
-    thisLink->next = NULL;
-    thisLink->info.inputFD = -1;
-    thisLink->info.outputFD = -1;
-    thisLink->info.pid = 0;
-    
     if(thisLink == NULL)
     {
         CLOSE_FILE_DESCRIPTOR( inputFDs[kPipeReadEnd] );
@@ -225,6 +221,11 @@ omc_popen(const char *command, char * const *inShell, char * const *inEnvironLis
         CLOSE_FILE_DESCRIPTOR( outputFDs[kPipeWriteEnd]);
         return -1;
     }
+
+    thisLink->next = NULL;
+    thisLink->info.inputFD = -1;
+    thisLink->info.outputFD = -1;
+    thisLink->info.pid = 0;
     
     char *shellPath = _PATH_BSHELL;
     char *default_argv[] = { "sh", "-c", (char *)command, NULL };
