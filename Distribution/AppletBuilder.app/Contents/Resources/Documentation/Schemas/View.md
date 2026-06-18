@@ -123,6 +123,7 @@ JSON schema and usage documentation for `View`.
      "popoverActionID": "view.popover",     // Optional: String for action identifier triggered when the popover is shown. Only meaningful when "popover" subview is present.
      "sheetOnDismissActionID": "sheet.dismissed",           // Optional: String for action identifier triggered when the sheet is dismissed. Only meaningful when "sheet" subview is present.
      "fullScreenCoverOnDismissActionID": "cover.dismissed", // Optional: String for action identifier triggered when the full-screen cover is dismissed. Only meaningful when "fullScreenCover" subview is present.
+     "searchable": { "prompt": "Search", "actionID": "view.search" }, // Optional: Adds a search field (.searchable) to a List / NavigationStack. "actionID" (required String) fires on each query change with the query string as the action context; "prompt" (optional String) is the placeholder. The host filters and re-pushes rows.
      "toolbarTitleDisplayMode": "automatic", // Optional: Navigation title display mode; "automatic", "inline", "large", "inlineLarge".
                                             // Meaningful when the view is inside a NavigationStack or NavigationSplitView.
                                             // "automatic": platform default. "inline": compact nav bar title.

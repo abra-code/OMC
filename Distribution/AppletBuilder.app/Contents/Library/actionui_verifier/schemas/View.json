@@ -189,6 +189,14 @@
     "popoverActionID":                   { "types": ["string"], "required": false },
     "sheetOnDismissActionID":            { "types": ["string"], "required": false },
     "fullScreenCoverOnDismissActionID":  { "types": ["string"], "required": false },
+    "searchable": {
+      "required": false,
+      "types": ["object"],
+      "properties": {
+        "prompt":   { "types": ["string"], "required": false },
+        "actionID": { "types": ["string"], "required": true }
+      }
+    },
     "overlayAlignment":                  { "types": ["string"], "required": false, "enum": ["center","leading","trailing","top","bottom","topLeading","topTrailing","bottomLeading","bottomTrailing"] },
     "backgroundAlignment":               { "types": ["string"], "required": false, "enum": ["center","leading","trailing","top","bottom","topLeading","topTrailing","bottomLeading","bottomTrailing"] },
     "toolbarTitleDisplayMode":           { "types": ["string"], "required": false, "enum": ["automatic","inline","large","inlineLarge"] },
