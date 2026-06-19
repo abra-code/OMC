@@ -907,7 +907,7 @@ KeyPressSimulationCallBack(CFRunLoopTimerRef timer, void* context)
         OSStatus err = PasteboardCreate( kPasteboardClipboard, &thePasteboard );
         if( (err == noErr) && (thePasteboard != nullptr) )
         {
-            PasteboardSyncFlags syncFlags = PasteboardSynchronize( thePasteboard );
+            [[maybe_unused]] PasteboardSyncFlags syncFlags = PasteboardSynchronize( thePasteboard );
     #if _DEBUG_
             printf("OMC: PasteboardSyncFlags = 0x%.8X\n", (unsigned int)syncFlags);
     #endif

@@ -3,7 +3,7 @@
 */
 
 #import <Cocoa/Cocoa.h>
-#import "OMCActionProtocol.h"
+#import <Abracode/OMCActionProtocol.h>
 
 IB_DESIGNABLE
 @interface OMCView : NSView<OMCActionProtocol>

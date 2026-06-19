@@ -167,7 +167,12 @@ NSString *NormalizeOMCVariableIDFromElementID(NSString *inElementID)
 		}
 		
 		self.commandID = (NSString *)cmdID; //[OMCNibWindowController handleAction:] will ask for commandID to execute
+		// self.action is a fixed, known selector (handleAction:), not an arbitrary one, so the
+		// ARC "may cause a leak" heuristic does not apply here.
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
 		[self.target performSelector:self.action withObject:self]; // = [(OMCNibWindowController*)_target handleAction:self];
+#pragma clang diagnostic pop
 		
 		self.commandID = nil;
 		self.elementID = nil;

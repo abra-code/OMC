@@ -1443,10 +1443,10 @@ OSStatus CreateCFDictItemKey( CFDictionaryRef inDict, CFIndex inIndex, CFStringR
 	CFIndex itemCount = ::CFDictionaryGetCount( inDict );
 	if( (inIndex >= 0) && (inIndex < itemCount) )
 	{
-		const void *dictKeys[itemCount];
+		std::vector<const void *> dictKeys(itemCount);
 		::CFDictionaryGetKeysAndValues(
 			(CFDictionaryRef)inDict,
-			dictKeys, //keys,
+			dictKeys.data(), //keys,
 			NULL);
 		
 		if(outResult != NULL)

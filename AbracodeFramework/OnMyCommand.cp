@@ -2876,6 +2876,14 @@ OnMyCommandCM::AppendTextToCommand(CFMutableStringRef inCommandRef, CFStringRef 
             releaseNewString = false;
 		}
 		break;
+
+		case ACTIONUI_TRIGGER_VIEW_ID:
+		case ACTIONUI_TRIGGER_VIEW_PART_ID:
+		case ACTIONUI_TRIGGER_CONTEXT:
+			// Trigger-context tokens are resolved when the triggering event is dispatched, not as
+			// inline command-text substitutions, so nothing is appended here. Listed explicitly to
+			// keep the SpecialWordID switch exhaustive (-Wswitch).
+			break;
 	}
 
 	if(newStrRef != NULL)

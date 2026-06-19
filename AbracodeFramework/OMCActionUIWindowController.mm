@@ -585,7 +585,8 @@ static NSArray<NSArray<NSString*>*> *OMCParseTabSeparatedRows(CFArrayRef cfRows)
     // OMC exposes table columns 1-based ($OMC_ACTIONUI_TABLE_<ID>_COLUMN_<M>_VALUE), with 0 meaning
     // "any column". ActionUI's column index is 0-based and uses a negative value to mean "any column".
     NSInteger zeroBasedColumn = (columnNumber > 0) ? (columnNumber - 1) : -1;
-    [ActionUIObjC selectElementRowWithWindowUUID:windowUUID viewID:viewID matchingText:text column:zeroBasedColumn];
+    NSInteger selectedRow = [ActionUIObjC selectElementRowWithWindowUUID:windowUUID viewID:viewID matchingText:text column:zeroBasedColumn];
+    (void)selectedRow; // matched-row index is best-effort; a non-match is non-fatal here
 }
 
 - (void)deselectRowForControlID:(NSString *)inControlID

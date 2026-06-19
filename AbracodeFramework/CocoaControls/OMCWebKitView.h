@@ -4,7 +4,7 @@
 
 #import <AppKit/AppKit.h>
 #import <WebKit/WebKit.h>
-#import "OMCActionProtocol.h"
+#import <Abracode/OMCActionProtocol.h>
 #import "OMCViewSetupProtocol.h"
 
 // Note that OMCWebKitView inherits from NSView and not WKWebView
