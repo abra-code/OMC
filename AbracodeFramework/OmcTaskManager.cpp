@@ -24,6 +24,7 @@
 #include "CommandRuntimeData.h"
 #include "OMCDialog.h"
 #include "OMCHelpers.h"
+#include "OMCEngineTempDir.h"
 
 #include <mach/host_info.h>
 #include <mach/mach_host.h>
@@ -73,8 +74,11 @@ CopyNextCommandID(const CommandDescription &currCommand, CFStringRef currCommand
     Boolean isOK = ::CFStringGetCString(currCommandUUID, sCommandUUID, sizeof(sCommandUUID), kCFStringEncodingUTF8);
     if(isOK)
     {
-        snprintf(sFilePath, sizeof(sFilePath), "/tmp/OMC/%s.id", sCommandUUID);
-        if( access(sFilePath, F_OK) == 0 )//check if file with next command id exists
+        // Engine-internal IPC file in the per-user temp dir (see OMCEngineTempDir.h).
+        char leafName[512];
+        snprintf(leafName, sizeof(leafName), "%s.id", sCommandUUID);
+        if( OMCGetEngineTempFilePath(leafName, false /*reader: do not create dir*/, sFilePath, sizeof(sFilePath))
+            && (access(sFilePath, F_OK) == 0) )//check if file with next command id exists
         {
             FILE *fp = fopen(sFilePath, "r");
             if(fp != NULL)

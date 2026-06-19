@@ -4,6 +4,7 @@
 #include <sys/stat.h>
 #include "ACFPropertyList.h"
 #include "AppGroupIdentifier.h"
+#include "OMCEngineTempDir.h"
 
 static char sFilePath[1024];
 
@@ -327,15 +328,13 @@ int main (int argc, const char * argv[])
 	{//not communicating through port - write to file
 		//fprintf(stderr, "Could not create a communication port with dialog. Saving params to plist file\n");
 
-		if( access("/tmp/OMC", F_OK|R_OK|W_OK|X_OK) != 0 )
+		// Engine-internal IPC file in the per-user temp dir (see OMCEngineTempDir.h).
+		char leafName[512];
+		snprintf(leafName, sizeof(leafName), "%s.plist", argv[1]);
+		if( OMCGetEngineTempFilePath(leafName, true /*create dir*/, sFilePath, sizeof(sFilePath)) )
 		{
-			mkdir("/tmp/OMC", S_IRWXU|S_IRWXG|S_IRWXO);
-			//for some reason the mkdir does not set the writable flag for group and others so do it again with chmod
-			chmod("/tmp/OMC", S_IRWXU|S_IRWXG|S_IRWXO);
+			urlRef = CFURLCreateFromFileSystemRepresentation(kCFAllocatorDefault, (const UInt8*)sFilePath, strlen(sFilePath), false);
 		}
-
-		snprintf(sFilePath, sizeof(sFilePath), "/tmp/OMC/%s.plist", argv[1]);
-		urlRef = CFURLCreateFromFileSystemRepresentation(kCFAllocatorDefault, (const UInt8*)sFilePath, strlen(sFilePath), false);
 	}
 	
 	if(urlRef != NULL)

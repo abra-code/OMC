@@ -16,13 +16,29 @@
 #include "ACFURL.h"
 #include "CFObj.h"
 #include "ACFType.h"
+#include "OMCEngineTempDir.h"
 
 //read values and delete the plist file immediately
 
 CFDictionaryRef
 ReadControlValuesFromPlist(CFStringRef inDialogUniqueID)
 {
-    CFObj<CFStringRef> filePathStr( ::CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("/tmp/OMC/%@.plist"), inDialogUniqueID ) );
+    if(inDialogUniqueID == NULL)
+        return NULL;
+
+    // Engine-internal IPC file in the per-user temp dir (see OMCEngineTempDir.h).
+    char uuidBuf[256];
+    if( !::CFStringGetCString(inDialogUniqueID, uuidBuf, sizeof(uuidBuf), kCFStringEncodingUTF8) )
+        return NULL;
+
+    char leafName[512];
+    snprintf(leafName, sizeof(leafName), "%s.plist", uuidBuf);
+
+    char filePath[PATH_MAX];
+    if( !OMCGetEngineTempFilePath(leafName, false /*reader: do not create dir*/, filePath, sizeof(filePath)) )
+        return NULL;
+
+    CFObj<CFStringRef> filePathStr( ::CFStringCreateWithCString(kCFAllocatorDefault, filePath, kCFStringEncodingUTF8) );
     if(filePathStr == NULL)
         return NULL;
     

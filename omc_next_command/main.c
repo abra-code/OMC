@@ -2,6 +2,7 @@
 #include <sys/stat.h>
 #include <stdio.h>
 #include <string.h>
+#include "OMCEngineTempDir.h"
 
 static char sFilePath[1024];
 
@@ -23,15 +24,15 @@ int main (int argc, const char * argv[])
 		return -1;
 	}
 
-	if( access("/tmp/OMC", F_OK|R_OK|W_OK|X_OK) != 0 )
+	// Engine-internal IPC file in the per-user temp dir (see OMCEngineTempDir.h).
+	char leafName[512];
+	snprintf(leafName, sizeof(leafName), "%s.id", argv[1]);
+	if( !OMCGetEngineTempFilePath(leafName, true /*create dir*/, sFilePath, sizeof(sFilePath)) )
 	{
-		mkdir("/tmp/OMC", S_IRWXU|S_IRWXG|S_IRWXO);
-		//for some reason the mkdir does not set the writable flag for group and others so do it again with chmod
-		chmod("/tmp/OMC", S_IRWXU|S_IRWXG|S_IRWXO);
+		fprintf(stderr, "could not resolve engine temp path for next command id\n");
+		return -1;
 	}
 
-	snprintf(sFilePath, sizeof(sFilePath), "/tmp/OMC/%s.id", argv[1]);
-	
 	FILE *fp = fopen(sFilePath, "w");
 	if(fp != NULL)
 	{
