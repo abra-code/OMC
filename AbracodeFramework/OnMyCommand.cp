@@ -1461,6 +1461,11 @@ DisplayVersionWarning(CFBundleRef inBundleRef, CFStringRef dynamicCommandName, C
 	CFObj<CFStringRef> requiredVersionStr( CreateVersionString(requiredVersion) );
 	CFObj<CFStringRef> currVersionStr( CreateVersionString(currVersion) );
 
+	// inString is used as the format here, so it MUST contain exactly two %@ specifiers
+	// (required version, then current version). It always comes from this framework's own
+	// Private.strings (TOO_LOW_OMC / TOO_LOW_MAC_OS / TOO_HIGH_MAC_OS) - never from user or
+	// applet-author input - so this is a fixed internal contract, not external attack surface.
+	// Any localization of those keys must preserve both %@ placeholders in that order.
 	CFObj<CFStringRef> warningText( ::CFStringCreateWithFormat(kCFAllocatorDefault, NULL, inString, (CFStringRef)requiredVersionStr, (CFStringRef)currVersionStr) );
 	if(warningText == NULL)
 		return false;

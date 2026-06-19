@@ -295,6 +295,11 @@ ReadCommandAndParameters(int argumentCount, char * const argv[], int &paramIndex
 	{//plister set string "My New Value" [path/to/file.plist] /path/to/item
 		ioOneCommand.commandID = kPCmd_set;
 
+		if(paramIndex >= argumentCount)
+		{
+			std::cerr << "Plister error: value type not specified" << std::endl;
+			return -1;
+		}
 		const char *typeStr = argv[paramIndex++];
 		ioOneCommand.cfObjType = GetPropertyType(typeStr);
 		
@@ -336,6 +341,11 @@ ReadCommandAndParameters(int argumentCount, char * const argv[], int &paramIndex
 		}
 		else
 		{
+			if(paramIndex >= argumentCount)
+			{
+				std::cerr << "Plister error: value not specified" << std::endl;
+				return -1;
+			}
 			const char *valueStr = argv[paramIndex++];
 			ioOneCommand.newValue.Adopt( CreateCFItemFromArgumentString(ioOneCommand.cfObjType, valueStr) );
 		}

@@ -8,6 +8,7 @@
 
 //#import <Foundation/Foundation.h>
 #import <Cocoa/Cocoa.h>
+#include <limits.h>
 
 typedef enum
 {
@@ -64,6 +65,12 @@ CreateCStringFromStdIn(void)
 				fprintf(stderr, "error: cannot allocate memory block for stdin text");
 				return NULL;
 			}
+		}
+		else if(len > (ULONG_MAX - 1 - inputDataSize))
+		{//defensive: refuse input large enough to overflow the size computation
+			fprintf(stderr, "error: stdin text too large");
+			free(inputData);
+			return NULL;
 		}
 		else
 		{//increase block size and copy data

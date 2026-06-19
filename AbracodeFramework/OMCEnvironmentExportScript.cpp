@@ -10,15 +10,19 @@
 #include <vector>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>   // confstr
+#include <fcntl.h>    // open, O_NOFOLLOW
+#include <errno.h>
+#include <limits.h>   // PATH_MAX
 
 /* The content of environment variable exports script:
 for .sh family of shells:
  export OMC_FOO='omc foo'
- /bin/unlink "/tmp/omc_environment_setup_123456789.sh"
+ /bin/unlink "$TMPDIR/omc_environment_setup_123456789.sh"
 
 for .csh and .tcsh shells
  setenv OMC_FOO 'omc foo'
- /bin/unlink "/tmp/omc_environment_setup_123456789.csh"
+ /bin/unlink "$TMPDIR/omc_environment_setup_123456789.csh"
 
  */
 
@@ -63,33 +67,113 @@ static inline CFStringRef CreateEnvironmentExportScript(CFDictionaryRef inEnviro
 	return scriptContent.Detach();
 }
 
+// Returns the per-user temporary directory (mode 0700, e.g. /var/folders/.../T/), which
+// is private to the current user - unlike the world-accessible /tmp. Falls back to
+// $TMPDIR then /tmp/ if the platform call is unavailable. The result always ends with '/'.
+static CFStringRef CreatePerUserTempDir()
+{
+	char buf[PATH_MAX];
+	size_t n = confstr(_CS_DARWIN_USER_TEMP_DIR, buf, sizeof(buf));
+	const char *dir = nullptr;
+	if((n > 0) && (n <= sizeof(buf)))
+		dir = buf; // confstr guarantees a trailing '/'
+	else
+	{
+		dir = getenv("TMPDIR");
+		if((dir == nullptr) || (dir[0] == '\0'))
+			dir = "/tmp/";
+	}
+	return CFStringCreateWithCString(kCFAllocatorDefault, dir, kCFStringEncodingUTF8);
+}
+
+// Builds the path of the environment-setup script. Both the writer
+// (WriteEnvironmentSetupScriptToTmp) and the shell command generator
+// (CreateEnvironmentSetupCommandForShell) must agree on this exact path.
+static CFStringRef CreateEnvironmentSetupScriptPath(CFStringRef inCommandGUID, bool isSh)
+{
+	CFStringRef ext = isSh ? CFSTR("sh") : CFSTR("csh");
+	CFObj<CFStringRef> tempDir(CreatePerUserTempDir());
+	Boolean hasSlash = (tempDir != nullptr) && CFStringHasSuffix(tempDir, CFSTR("/"));
+	return CFStringCreateWithFormat(kCFAllocatorDefault, nullptr,
+									hasSlash ? CFSTR("%@omc_environment_setup_%@.%@")
+											 : CFSTR("%@/omc_environment_setup_%@.%@"),
+									(CFStringRef)tempDir, inCommandGUID, ext);
+}
+
+// Writes the script with O_CREAT|O_TRUNC|O_NOFOLLOW and mode 0600. O_NOFOLLOW refuses to
+// follow a symlink planted at the final path (defense in depth - the per-user temp dir is
+// already inaccessible to other users), and 0600 keeps the file private. This replaces the
+// previous WriteStringToFile (NSString writeToFile), which follows symlinks.
+static bool WriteScriptFileSecurely(CFStringRef inContent, CFStringRef inPath)
+{
+	if((inContent == nullptr) || (inPath == nullptr))
+		return false;
+
+	char pathBuf[PATH_MAX];
+	if(!CFStringGetFileSystemRepresentation(inPath, pathBuf, sizeof(pathBuf)))
+		return false;
+
+	int fd = open(pathBuf, O_WRONLY | O_CREAT | O_TRUNC | O_NOFOLLOW, 0600);
+	if(fd < 0)
+		return false;
+
+	bool ok = false;
+	CFIndex contentLen = CFStringGetLength(inContent);
+	CFIndex maxBytes = CFStringGetMaximumSizeForEncoding(contentLen, kCFStringEncodingUTF8);
+	char *bytes = (char *)malloc((size_t)maxBytes + 1);
+	if(bytes != nullptr)
+	{
+		CFIndex usedLen = 0;
+		CFStringGetBytes(inContent, CFRangeMake(0, contentLen), kCFStringEncodingUTF8,
+						 0, false, (UInt8 *)bytes, maxBytes, &usedLen);
+		ssize_t totalWritten = 0;
+		ok = true;
+		while(totalWritten < usedLen)
+		{
+			ssize_t w = write(fd, bytes + totalWritten, (size_t)(usedLen - totalWritten));
+			if(w <= 0)
+			{
+				if((w < 0) && (errno == EINTR))
+					continue;
+				ok = false;
+				break;
+			}
+			totalWritten += w;
+		}
+		free(bytes);
+	}
+
+	close(fd);
+	return ok;
+}
+
 bool
 WriteEnvironmentSetupScriptToTmp(CFDictionaryRef inEnvironmentDict, CFStringRef inCommandGUID, bool isSh)
 {
-	CFStringRef ext = isSh ? CFSTR("sh") : CFSTR("csh");
-	CFObj<CFStringRef> scriptPath = CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("/tmp/omc_environment_setup_%@.%@"), inCommandGUID, ext);
+	CFObj<CFStringRef> scriptPath(CreateEnvironmentSetupScriptPath(inCommandGUID, isSh));
 
 	CFObj<CFStringRef> scriptContent = CreateEnvironmentExportScript(inEnvironmentDict, scriptPath, isSh);
-	return WriteStringToFile(scriptContent, scriptPath);
+	return WriteScriptFileSecurely(scriptContent, scriptPath);
 }
 
 /* Invocation command to source the script at the beginning of terminal session
 for .sh family of shells:
- . "/tmp/omc_environment_setup_123456789.sh"
+ . "$TMPDIR/omc_environment_setup_123456789.sh"
 
 for .csh and .tcsh shells
- source "/tmp/omc_environment_setup_123456789.csh"
+ source "$TMPDIR/omc_environment_setup_123456789.csh"
 
  */
 
 CFStringRef CreateEnvironmentSetupCommandForShell(CFStringRef inCommandGUID, bool isSh)
 {
-	CFStringRef ext = isSh ? CFSTR("sh") : CFSTR("csh");
 	// "." command works in most shells
 	// dash does not have a 'source' command but works with "."
 	// in csh and tcsh "." command if failing for me with unaccessible PATH dir while 'source' is working
 	CFStringRef sourceCmd = isSh ? CFSTR(".") : CFSTR("source");
-	return CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("%@ \"/tmp/omc_environment_setup_%@.%@\"\n"), sourceCmd, inCommandGUID, ext);
+	// Must match the path used by WriteEnvironmentSetupScriptToTmp exactly.
+	CFObj<CFStringRef> scriptPath(CreateEnvironmentSetupScriptPath(inCommandGUID, isSh));
+	return CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("%@ \"%@\"\n"), sourceCmd, (CFStringRef)scriptPath);
 }
 
 static inline bool IsShDefaultLoginShell()

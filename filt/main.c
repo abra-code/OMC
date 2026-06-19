@@ -209,7 +209,7 @@ int main (int argc, const char * argv[])
 	{
 		lineLen = 0;
 		inputLine = fgetln(stdin, &lineLen);//string not terminated with null char
-		if(inputLine != NULL)
+		if((inputLine != NULL) && (lineLen > 0))//lineLen > 0 guards the inputLine[lineLen-1] accesses below
 		{
 			if(matches != NULL)
 			{
@@ -234,10 +234,13 @@ int main (int argc, const char * argv[])
 								}
 								else if( nextReplace->sub_index < maxMatchCount )
 								{
-									//regex match
-									size_t range_start = matches[nextReplace->sub_index].rm_so;
-									size_t range_len = matches[nextReplace->sub_index].rm_eo - range_start;
-									fwrite(inputLine+range_start, range_len, 1, stdout);
+									//regex match. rm_so/rm_eo are -1 for an optional subgroup
+									//that did not participate in the match - skip it to avoid
+									//forming an out-of-bounds pointer (inputLine + (size_t)-1).
+									regoff_t range_start = matches[nextReplace->sub_index].rm_so;
+									regoff_t range_end = matches[nextReplace->sub_index].rm_eo;
+									if( (range_start >= 0) && (range_end >= range_start) )
+										fwrite(inputLine+range_start, (size_t)(range_end - range_start), 1, stdout);
 								}
 								else
 								{

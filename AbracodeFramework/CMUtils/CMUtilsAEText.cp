@@ -268,6 +268,12 @@ CMUtils::CreateUTF16DataFromCFString(CFStringRef inString, UniCharCount *outChar
 		allocCount = 1;
 
 	UniChar* newString = (UniChar*)malloc(sizeof(UniChar)*allocCount);
+	if(newString == NULL)
+	{
+		if(outCharCount != NULL)
+			*outCharCount = 0;
+		return NULL;
+	}
 
 	CFRange theRange;
 	theRange.location = 0;

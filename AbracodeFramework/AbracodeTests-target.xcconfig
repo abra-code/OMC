@@ -2,6 +2,10 @@
 PRODUCT_BUNDLE_IDENTIFIER = com.abracode.AbracodeTests
 PRODUCT_NAME = $(TARGET_NAME)
 
+// Common/ holds shared header-only code (e.g. OMCEngineTempDir.h) that unit tests compile
+// directly. It is not on the test target's default header map, so add it explicitly.
+USER_HEADER_SEARCH_PATHS = $(inherited) $(SRCROOT)/../Common
+
 ENABLE_TESTABILITY[config=Debug] = YES
 GENERATE_INFOPLIST_FILE = YES
 

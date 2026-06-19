@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
 #include "ABase64.h"
 
 int main (int argc, const char * argv[])
@@ -41,15 +42,22 @@ int main (int argc, const char * argv[])
 		if(fp != NULL)
 		{
 			fseek(fp, 0, SEEK_END);
-			inputDataSize = ftell(fp);
-			if(inputDataSize != 0)
+			long fileLen = ftell(fp);//returns -1 on error
+			if(fileLen > 0)
 			{
+				inputDataSize = (unsigned long)fileLen;
 				fseek(fp, 0, SEEK_SET);
 				inputData = (unsigned char *)calloc(1, inputDataSize);
 				if(inputData != NULL)
 				{
 					freeInputBuff = 1;
-					fread(inputData, inputDataSize, 1, fp);
+					if(fread(inputData, inputDataSize, 1, fp) != 1)
+					{//short read - discard the partial buffer so we report a clean error below
+						free(inputData);
+						inputData = NULL;
+						freeInputBuff = 0;
+						inputDataSize = 0;
+					}
 				}
 			}
 			fclose(fp);
@@ -76,6 +84,12 @@ int main (int argc, const char * argv[])
 						inputDataSize = len;
 						memcpy(inputData, buff, len);
 					}
+				}
+				else if(len > (ULONG_MAX - inputDataSize))
+				{//defensive: refuse input large enough to overflow the size computation
+					fprintf(stderr, "b64 error: input too large");
+					free(inputData);
+					return -1;
 				}
 				else
 				{//increase block size and copy data

@@ -267,7 +267,10 @@
 - (void)testRunTextCommandWithFileContext {
     NSURL *testFile = [self createTempFileWithName:@"test.txt" content:@"content"];
     
-    // Text command with file context should fail
+    // A context whose type does not match the command's activation type (here a file context
+    // given to a text / act_selected_text command) is intentionally accepted: the engine no
+    // longer rejects the mismatch - it runs the command anyway, with whatever OMC_OBJ_TEXT it
+    // can derive. (This previously asserted failure, before that behavior was changed.)
     OSStatus err = [OMCCommandExecutor runCommand:@"uppercase_text"
                                    forCommandFile:[self.testPlistURL path]
                                       withContext:testFile
@@ -275,7 +278,7 @@
                                          allowKeyWindowSubcommand:NO
                                          delegate:nil];
     
-    XCTAssertNotEqual(err, noErr, @"Should fail when context type doesn't match");
+    XCTAssertEqual(err, noErr, @"A mismatched context type is accepted; the command should still run");
 }
 
 @end
