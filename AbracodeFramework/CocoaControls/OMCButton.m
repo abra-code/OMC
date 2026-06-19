@@ -65,7 +65,7 @@
 	{
 		NSMutableArray *typesArray = [NSMutableArray array];
 		if(self.acceptFileDrop)
-			[typesArray addObject:NSURLPboardType];
+			[typesArray addObject:NSPasteboardTypeFileURL];
 		if(self.acceptTextDrop)
 			[typesArray addObject:NSPasteboardTypeString];
 		[self registerForDraggedTypes:typesArray];
@@ -79,7 +79,7 @@
 
     NSPasteboard *pboard = [sender draggingPasteboard];
 	NSArray *pboardTypes = [pboard types];
-    if( (self.acceptFileDrop && [pboardTypes containsObject:NSURLPboardType]) ||
+    if( (self.acceptFileDrop && [pboardTypes containsObject:NSPasteboardTypeFileURL]) ||
 		(self.acceptTextDrop && [pboardTypes containsObject:NSPasteboardTypeString]) )
 	{
 		[self highlight:YES];
@@ -97,7 +97,7 @@
 {
     NSPasteboard *pboard = [sender draggingPasteboard];
 	NSArray *pboardTypes = [pboard types];
-    if( (self.acceptFileDrop && [pboardTypes containsObject:NSURLPboardType]) ||
+    if( (self.acceptFileDrop && [pboardTypes containsObject:NSPasteboardTypeFileURL]) ||
 		(self.acceptTextDrop && [pboardTypes containsObject:NSPasteboardTypeString]) )
 	{
 		return YES;
@@ -110,7 +110,7 @@
 {
     NSPasteboard *pboard = [sender draggingPasteboard];
 	NSArray *pboardTypes = [pboard types];
-    if (self.acceptFileDrop && [pboardTypes containsObject:NSURLPboardType])
+    if (self.acceptFileDrop && [pboardTypes containsObject:NSPasteboardTypeFileURL])
     {
         NSArray *urls = [pboard readObjectsForClasses:@[[NSURL class]] options:nil];
 		self.droppedItems = urls;

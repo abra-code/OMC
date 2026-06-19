@@ -21,7 +21,7 @@ StSwitchToFront::StSwitchToFront(bool inRestore /*= true*/) noexcept
                 NSRunningApplication *frontmostApp = [[NSWorkspace sharedWorkspace] frontmostApplication];
                 mPreviousFrontAppPID = [frontmostApp processIdentifier];
             }
-            /*BOOL isOK =*/ [currentApp activateWithOptions:(NSApplicationActivateAllWindows | NSApplicationActivateIgnoringOtherApps)];
+            /*BOOL isOK =*/ [currentApp activateWithOptions:NSApplicationActivateAllWindows];
         }
     }
 }
@@ -35,7 +35,7 @@ StSwitchToFront::~StSwitchToFront(void) noexcept
             NSRunningApplication *previousFrontApp = [NSRunningApplication runningApplicationWithProcessIdentifier:mPreviousFrontAppPID];
             if(previousFrontApp != nil)
             {
-                /*BOOL isOK =*/ [previousFrontApp activateWithOptions:(NSApplicationActivateAllWindows | NSApplicationActivateIgnoringOtherApps)];
+                /*BOOL isOK =*/ [previousFrontApp activateWithOptions:NSApplicationActivateAllWindows];
             }
         }
     }

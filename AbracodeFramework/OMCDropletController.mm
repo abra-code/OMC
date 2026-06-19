@@ -514,11 +514,13 @@ myapp://exe?commandID=my.file.command.id&file=file1.txt&file=file2.txt
 	return NULL;
 }
 
-- (BOOL)reopenDocumentForURL:(NSURL *)absoluteDocumentURL withContentsOfURL:(NSURL *)absoluteDocumentContentsURL error:(NSError **)outError
+- (void)reopenDocumentForURL:(NSURL *)absoluteDocumentURL withContentsOfURL:(NSURL *)absoluteDocumentContentsURL display:(BOOL)displayDocument completionHandler:(void (^)(NSDocument * _Nullable document, BOOL documentWasAlreadyOpen, NSError * _Nullable error))completionHandler
 {
-	if(outError != NULL)
-		*outError = [NSError errorWithDomain:@"Not implemented" code:-1 userInfo:NULL];
-	return NO;
+	// OMC droplets do not reopen documents. Override the modern (completion-handler) variant the same
+	// way the deprecated reopenDocumentForURL:withContentsOfURL:error: override used to neutralize it,
+	// so reopen/state-restoration never routes back into openDocument... and re-runs the command.
+	NSError *notImplementedError = [NSError errorWithDomain:@"Not implemented" code:-1 userInfo:NULL];
+	completionHandler(NULL, NO, notImplementedError);
 }
 
 - (void)reviewUnsavedDocumentsWithAlertTitle:(NSString *)title cancellable:(BOOL)cancellable delegate:(id)delegate didReviewAllSelector:(SEL)didReviewAllSelector contextInfo:(void *)contextInfo

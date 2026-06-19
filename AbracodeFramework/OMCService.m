@@ -9,6 +9,12 @@
 #import "OMCService.h"
 #include "ACFPropertyList.h"
 
+// AppletBuilder writes the legacy NSPasteboard type *name* (not a UTI) into a generated applet's
+// Info.plist NSServices entries, e.g. <string>NSStringPboardType</string> for NSSendTypes/NSReturnTypes.
+// Match that literal token here so we keep recognizing OMC-generated services without referencing the
+// deprecated AppKit constant. This is plist data, not a pasteboard type used at runtime.
+static NSString * const kOMCLegacyStringPboardTypeName = @"NSStringPboardType";
+
 void OMCServiceObserverCallback( OmcObserverMessage inMessage, CFIndex inTaskID, CFTypeRef inResult, void *userData )
 {
 	if(userData == NULL)
@@ -114,7 +120,7 @@ void OMCServiceObserverCallback( OmcObserverMessage inMessage, CFIndex inTaskID,
                 {
                     NSString *oneType = (NSString *)[sendTypesArray objectAtIndex:0];
                     if( [oneType isKindOfClass:NSString.class] &&
-                       ([oneType isEqualToString:NSStringPboardType] || [oneType isEqualToString:NSPasteboardTypeString]) )
+                       ([oneType isEqualToString:kOMCLegacyStringPboardTypeName] || [oneType isEqualToString:NSPasteboardTypeString]) )
                     {
                         prefersTextContext = YES;
                     }
@@ -127,7 +133,7 @@ void OMCServiceObserverCallback( OmcObserverMessage inMessage, CFIndex inTaskID,
                 NSString *oneType = (NSString *)[returnTypesArray objectAtIndex:0];
                 if( (oneType != NULL) &&
                     [oneType isKindOfClass:NSString.class] &&
-                    ([oneType isEqualToString:NSStringPboardType] || [oneType isEqualToString:NSPasteboardTypeString]) )
+                    ([oneType isEqualToString:kOMCLegacyStringPboardTypeName] || [oneType isEqualToString:NSPasteboardTypeString]) )
                 {
                     wantsToReturnText = YES;
                 }
@@ -142,41 +148,32 @@ void OMCServiceObserverCallback( OmcObserverMessage inMessage, CFIndex inTaskID,
         
 		if(prefersTextContext)
 		{
-			NSArray *supportedTextTypes = @[NSPasteboardTypeString, NSStringPboardType];
+			NSArray *supportedTextTypes = @[NSPasteboardTypeString];
 			NSString *bestType = [pboard availableTypeFromArray:supportedTextTypes];
 			if(bestType != NULL)
             {
+                // NSPasteboard auto-bridges the legacy "NSStringPboardType" content to NSPasteboardTypeString.
                 contextObj = [pboard stringForType:NSPasteboardTypeString];
-                if(contextObj == nil)
-                {
-                    contextObj = [pboard stringForType:NSStringPboardType];
-                }
             }
 		}
 
 		if((contextObj == nil) && (pasteboardTypes.count > 0)) //also will enter here if prefersTextContext == false
 		{ //try files
-			NSArray *supportedFileTypes = @[NSFilenamesPboardType, NSPasteboardTypeFileURL];
+			NSArray *supportedFileTypes = @[NSPasteboardTypeFileURL];
 			NSString *bestType = [pboard availableTypeFromArray:supportedFileTypes];
 			if(bestType != NULL)
 			{
+                // readObjectsForClasses:@[NSURL] also reads legacy "NSFilenamesPboardType" file paths
+                // via NSPasteboard's automatic bridging, returning them as NSURLs.
                 contextObj = [pboard readObjectsForClasses:@[NSURL.class] options:nil];
-                if(contextObj == nil)
-                {
-                    contextObj = [pboard propertyListForType:NSFilenamesPboardType];
-                }
 			}
 			else if(!prefersTextContext)//we don't have file paths and did not try text yet: do it now
 			{
-				NSArray *supportedTextTypes = @[NSPasteboardTypeString, NSStringPboardType];
+				NSArray *supportedTextTypes = @[NSPasteboardTypeString];
 				NSString *bestType = [pboard availableTypeFromArray:supportedTextTypes];
 				if(bestType != NULL)
                 {
                     contextObj = [pboard stringForType:NSPasteboardTypeString];
-                    if(contextObj == nil)
-                    {
-                        contextObj = [pboard stringForType:NSStringPboardType];
-                    }
                 }
 			}
 		}
@@ -222,9 +219,9 @@ void OMCServiceObserverCallback( OmcObserverMessage inMessage, CFIndex inTaskID,
 				if(self.resultString != NULL)
 				{
 					//NSLog(@"Setting pasteboard text to: %@", mResultString);
-					NSArray *supportedTextTypes = @[NSStringPboardType];
+					NSArray<NSPasteboardType> *supportedTextTypes = @[NSPasteboardTypeString];
 					[pboard declareTypes:supportedTextTypes owner:NULL];
-					[pboard setString:self.resultString forType:NSStringPboardType];
+					[pboard setString:self.resultString forType:NSPasteboardTypeString];
 				}
 			}
 		}
