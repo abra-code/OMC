@@ -132,6 +132,62 @@ _BROKEN_BUNDLE = """<?xml version="1.0" encoding="UTF-8"?>
 """
 
 
+# A subcommand that chains to the no-COMMAND_ID main command by its conventional
+# implicit id "<NAME>.main" (here MyApp.main). The engine's FindCommandIndex maps
+# <NAME>.main / main / top! to the main command, so this reference must resolve.
+# Regression test: it used to be flagged as unresolved because the main command was
+# only recorded under the legacy 'top!' id and <NAME>.main scripts aren't synthesized.
+_MAIN_REF_BUNDLE = """<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+  <key>COMMAND_LIST</key><array>
+    <dict>
+      <key>NAME</key><string>MyApp</string>
+      <key>EXECUTION_MODE</key><string>exe_script_file</string>
+      <key>ACTIONUI_WINDOW</key><dict>
+        <key>JSON_NAME</key><string>MyWindow</string>
+      </dict>
+    </dict>
+    <dict>
+      <key>NAME</key><string>MyApp</string>
+      <key>COMMAND_ID</key><string>myapp.open</string>
+      <key>EXECUTION_MODE</key><string>exe_script_file</string>
+      <key>NEXT_COMMAND_ID</key><string>MyApp.main</string>
+    </dict>
+  </array>
+  <key>VERSION</key><integer>2</integer>
+</dict></plist>
+"""
+
+
+# The main command identified the explicit way — COMMAND_ID="<NAME>.main" — must behave
+# exactly like a no-COMMAND_ID main command (backward compat both ways). A subcommand
+# chaining to it via the legacy "top!" must still resolve, and the explicit-id main must
+# not be flagged as a duplicate or a no-op.
+_EXPLICIT_MAIN_BUNDLE = """<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+  <key>COMMAND_LIST</key><array>
+    <dict>
+      <key>NAME</key><string>MyApp</string>
+      <key>COMMAND_ID</key><string>MyApp.main</string>
+      <key>EXECUTION_MODE</key><string>exe_script_file</string>
+      <key>ACTIONUI_WINDOW</key><dict>
+        <key>JSON_NAME</key><string>MyWindow</string>
+      </dict>
+    </dict>
+    <dict>
+      <key>NAME</key><string>MyApp</string>
+      <key>COMMAND_ID</key><string>myapp.open</string>
+      <key>EXECUTION_MODE</key><string>exe_script_file</string>
+      <key>NEXT_COMMAND_ID</key><string>top!</string>
+    </dict>
+  </array>
+  <key>VERSION</key><integer>2</integer>
+</dict></plist>
+"""
+
+
 def _make_bundle(root: Path, plist: str, scripts: list[str],
                  resources: dict[str, str] | None = None) -> Path:
     res = root / "Contents" / "Resources"
@@ -168,6 +224,28 @@ def test_layer2() -> None:
         check("no-op command: info note, not error/warning",
               "[INFO]" in out and "[ERROR]" not in out and "[WARNING]" not in out, out.strip())
         check("no-op command: names missing script", "no script named 'myapp.missing.*'" in out)
+
+        # NEXT_COMMAND_ID referencing the main command by its implicit "<NAME>.main"
+        # id must resolve (regression: previously flagged as unresolved).
+        mainref = _make_bundle(Path(d) / "MainRef.app", _MAIN_REF_BUNDLE,
+                               ["MyApp.main.sh", "myapp.open.sh"],
+                               {"MyWindow.json": "{}\n"})
+        rc, out = run(str(mainref))
+        check("<NAME>.main reference → exit 0", rc == 0, f"got {rc}: {out.strip()}")
+        check("<NAME>.main resolves (no dangling error)",
+              "'MyApp.main' does not resolve" not in out, out.strip())
+
+        # Explicit COMMAND_ID="<NAME>.main" main command behaves like a no-id main:
+        # a legacy "top!" reference resolves, and it is not flagged duplicate/no-op.
+        explicit = _make_bundle(Path(d) / "ExplicitMain.app", _EXPLICIT_MAIN_BUNDLE,
+                                ["MyApp.main.sh", "myapp.open.sh"],
+                                {"MyWindow.json": "{}\n"})
+        rc, out = run(str(explicit))
+        check("explicit <NAME>.main main → exit 0", rc == 0, f"got {rc}: {out.strip()}")
+        check("explicit main: legacy top! reference resolves",
+              "'top!' does not resolve" not in out, out.strip())
+        check("explicit main: no error/warning",
+              "[ERROR]" not in out and "[WARNING]" not in out, out.strip())
 
         broken = _make_bundle(Path(d) / "Broken.app", _BROKEN_BUNDLE, [])
         rc, out = run(str(broken))

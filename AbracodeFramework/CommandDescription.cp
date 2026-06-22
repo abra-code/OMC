@@ -565,6 +565,37 @@ GetOneCommandParams(CommandDescription &outDesc, CFDictionaryRef inOneCommand, C
         outDesc.commandID = kOMCTopCommandID;
         ::CFRetain( outDesc.commandID );
     }
+    else if( !::CFEqual(outDesc.commandID, kOMCTopCommandID) )
+    {
+        // An explicit COMMAND_ID equal to the main command's conventional implicit id
+        // — "<NAME>.main" (matching the <NAME>.main.<ext> handler script) or the bare
+        // "main" — is normalized to the 'top!' sentinel so it behaves IDENTICALLY to a
+        // main command with no COMMAND_ID: launch/New/drop (which resolve nil -> top!),
+        // contextual-menu exclusion, subcommand marking and script lookup all treat it
+        // as the main command. This removes the "missing COMMAND_ID is special" rule —
+        // writing COMMAND_ID=<NAME>.main is the logical, consistent way to identify the
+        // main command and no longer breaks anything.
+        bool isMainID = (kCFCompareEqualTo == ::CFStringCompare(outDesc.commandID, CFSTR("main"), 0));
+        if( !isMainID && (outDesc.name != NULL) )
+        {
+            CFStringRef combinedName = ::CFStringCreateByCombiningStrings(kCFAllocatorDefault, outDesc.name, CFSTR(""));
+            if(combinedName != NULL)
+            {
+                CFStringRef implicitMainID = ::CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("%@.main"), combinedName);
+                if( (implicitMainID != NULL) && ::CFEqual(outDesc.commandID, implicitMainID) )
+                    isMainID = true;
+                if(implicitMainID != NULL)
+                    ::CFRelease(implicitMainID);
+                ::CFRelease(combinedName);
+            }
+        }
+        if(isMainID)
+        {
+            ::CFRelease(outDesc.commandID);
+            outDesc.commandID = kOMCTopCommandID;
+            ::CFRetain( outDesc.commandID );
+        }
+    }
 
 //if the command is disabled we do not bother reading the rest
     if(outDesc.disabled)

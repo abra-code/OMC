@@ -856,6 +856,44 @@ OnMyCommandCM::DeleteCommandList()
 	mCommandCount = 0;
 }
 
+// Resolve the main command by its implicit "<NAME>.main" id (or the bare "main"
+// fallback). The main command has no explicit COMMAND_ID and carries the internal
+// sentinel commandID 'top!'; its conventional, user-facing id is "<NAME>.main",
+// matching its <NAME>.main.<ext> handler script (see GetOneCommandParams script
+// synthesis and CreateScriptPathAndShell). This lets command references — e.g.
+// NEXT_COMMAND_ID — target the main command by that conventional id instead of the
+// legacy 'top!'. Returns -1 if inID is not such an implicit main-command id.
+SInt32
+OnMyCommandCM::FindMainCommandByImplicitID( CFStringRef inID )
+{
+	if( (inID == NULL) || (mCommandList == NULL) )
+		return -1;
+
+	bool isBareMain = (kCFCompareEqualTo == ::CFStringCompare(inID, CFSTR("main"), 0));
+
+	for(SInt32 i = 0; i < (SInt32)mCommandCount; i++)
+	{
+		// only the main command (implicit 'top!' id) has an implicit "<NAME>.main" id
+		if( (mCommandList[i].commandID == NULL) || !::CFEqual(mCommandList[i].commandID, kOMCTopCommandID) )
+			continue;
+
+		if(isBareMain)
+			return i;
+
+		if(mCommandList[i].name != NULL)
+		{
+			CFObj<CFStringRef> combinedName( ::CFStringCreateByCombiningStrings(kCFAllocatorDefault, mCommandList[i].name, CFSTR("")) );
+			if(combinedName != NULL)
+			{
+				CFObj<CFStringRef> implicitID( ::CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("%@.main"), (CFStringRef)combinedName) );
+				if( (implicitID != NULL) && ::CFEqual((CFStringRef)implicitID, inID) )
+					return i;
+			}
+		}
+	}
+	return -1;
+}
+
 //external API, needs to load commands if needed
 SInt32
 OnMyCommandCM::FindCommandIndex( CFStringRef inNameOrId )
@@ -916,6 +954,14 @@ OnMyCommandCM::FindCommandIndex( CFStringRef inNameOrId )
 
 	if(idCandidate >= 0)
 		return idCandidate;
+
+	// fall back to the main command's implicit "<NAME>.main" / "main" id
+	if(inNameOrId != NULL)
+	{
+		SInt32 mainIndex = FindMainCommandByImplicitID(inNameOrId);
+		if(mainIndex >= 0)
+			return mainIndex;
+	}
 
 	return nameCandidate;
 }
@@ -3438,10 +3484,18 @@ OnMyCommandCM::FindCommandIndex(CFArrayRef inName, CFStringRef inCommandID)
 	// id is more important than name
 	if(foundByID > -1)
 		return foundByID;
-	
+
     if(inCommandID == NULL)
         return foundByName; // last resort if command id not provided
-    
+
+	// resolve the main command by its implicit "<NAME>.main" / "main" id
+	// (e.g. NEXT_COMMAND_ID pointing at the main command by its conventional id)
+	{
+		SInt32 mainIndex = FindMainCommandByImplicitID(inCommandID);
+		if(mainIndex >= 0)
+			return mainIndex;
+	}
+
     return -1;
 }
 

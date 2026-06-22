@@ -9,6 +9,8 @@ references actually exists / resolves:
   * resource index  — *.json and *.nib basenames (for JSON_NAME / NIB_NAME), plus all
                       resource file basenames (for CUSTOM_WINDOW_PNG_IMAGE).
   * command graph   — declared COMMAND_IDs (+ group) ∪ synthesizable script IDs.
+                      The no-COMMAND_ID main command also contributes its implicit
+                      '<NAME>.main' / 'main' / 'top!' ids so references resolve.
                       Subcommand-ID references must resolve into this set.
 
 Synthesizable IDs mirror the engine's CreateAugmentedCommandArray filter
@@ -254,9 +256,32 @@ class BundleResolver:
                 continue
             cid = cmd.get("COMMAND_ID")
             cid_lc = cid.lower() if isinstance(cid, str) and cid else _TOP_ID
-            declared_lc.add(cid_lc)
+            aliases = self._main_command_aliases(cmd)  # {'top!', 'main', '<name>.main'}
+            if cid_lc in aliases:
+                # The main command, identified either the legacy way (no COMMAND_ID ->
+                # 'top!') or the explicit way (COMMAND_ID = '<NAME>.main' / 'main'). Both
+                # are equivalent — register every alias so references via any of them
+                # resolve, and normalize the group key to 'top!' for duplicate detection.
+                # Mirrors the engine, which normalizes an explicit '<NAME>.main' / 'main'
+                # COMMAND_ID to the 'top!' sentinel.
+                declared_lc |= aliases
+                cid_lc = _TOP_ID
+            else:
+                declared_lc.add(cid_lc)
             group_pairs.append((self._group_key(cmd), cid_lc, idx))
         return declared_lc, group_pairs
+
+    @staticmethod
+    def _main_command_aliases(cmd: dict) -> set[str]:
+        """Implicit ids that resolve to a no-COMMAND_ID main command: its
+        '<NAME>.main' id, the bare 'main' fallback, and the legacy 'top!'."""
+        aliases = {_TOP_ID, "main"}
+        name = cmd.get("NAME")
+        if isinstance(name, list):
+            name = "".join(str(p) for p in name)
+        if isinstance(name, str) and name:
+            aliases.add(f"{name}.main".lower())
+        return aliases
 
     @staticmethod
     def _group_key(cmd: dict) -> str:
