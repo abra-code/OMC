@@ -578,15 +578,12 @@ GetOneCommandParams(CommandDescription &outDesc, CFDictionaryRef inOneCommand, C
         bool isMainID = (kCFCompareEqualTo == ::CFStringCompare(outDesc.commandID, CFSTR("main"), 0));
         if( !isMainID && (outDesc.name != NULL) )
         {
-            CFStringRef combinedName = ::CFStringCreateByCombiningStrings(kCFAllocatorDefault, outDesc.name, CFSTR(""));
-            if(combinedName != NULL)
+            CFObj<CFStringRef> combinedName = ::CFStringCreateByCombiningStrings(kCFAllocatorDefault, outDesc.name, CFSTR(""));
+            if(combinedName != nullptr)
             {
-                CFStringRef implicitMainID = ::CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("%@.main"), combinedName);
-                if( (implicitMainID != NULL) && ::CFEqual(outDesc.commandID, implicitMainID) )
+                CFObj<CFStringRef> implicitMainID = ::CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("%@.main"), (CFStringRef)combinedName);
+                if( (implicitMainID != nullptr) && ::CFEqual(outDesc.commandID, implicitMainID) )
                     isMainID = true;
-                if(implicitMainID != NULL)
-                    ::CFRelease(implicitMainID);
-                ::CFRelease(combinedName);
             }
         }
         if(isMainID)
