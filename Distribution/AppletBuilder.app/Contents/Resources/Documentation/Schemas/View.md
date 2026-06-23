@@ -69,6 +69,27 @@ JSON schema and usage documentation for `View`.
                            //   When omitted, animation fires on any mutation (setElementProperty,
                            //   setElementState, setElementValue).
      },
+     "transition": "opacity", // Optional: how this view animates when it is inserted/removed at runtime
+     "transition": {          //   (via insertElement / removeElement). String shorthand ("opacity",
+                              //   "slide", "scale", "identity") or a dictionary:
+       "type": "move",        // Required: "opacity", "slide", "scale", "move", "offset", "identity",
+                              //   or "asymmetric".
+       "edge": "bottom",      // For "move": edge to move from/to ("top"/"bottom"/"leading"/"trailing"; default "bottom").
+       "scale": 0.5,          // For "scale": start/end scale factor (Double; default 0).
+       "anchor": "center",    // For "scale": the scale anchor (UnitPoint; default "center").
+       "x": 0.0, "y": 20.0,   // For "offset": the start/end offset.
+       "insertion": "opacity",// For "asymmetric": the insertion transition (shorthand or dict).
+       "removal": { "type": "move", "edge": "bottom" } // For "asymmetric": the removal transition.
+     },
+     "transition": ["opacity", { "type": "scale" }], // Array form: the transitions combined.
+                              //   A view without "transition" is inserted/removed instantly (the default).
+                              //   Platform note: Apple animates both insertion and removal; Android and Web
+                              //   animate the insertion (entrance) only - removal is instant there.
+                              //   Container note: stack containers (VStack/HStack/ZStack/LazyVStack/LazyHStack)
+                              //   honor the full transition (geometry + fade). SwiftUI's List substitutes its
+                              //   own row animation - on iOS only the opacity (fade) survives, custom geometry
+                              //   (move/slide/scale) is not honored, and macOS List does not animate row
+                              //   insert/remove at all - so use a stack container when you need the motion.
      "actionID": "view.action", // Optional: String for action identifier
      "valueChangeActionID": "view.valueChanged", // Optional: String for action triggered on any value change initiated by user
      "openURLActionID": "view.openURL", // Optional: String for action identifier triggered on open URL (via .onOpenURL modifier)
@@ -139,6 +160,35 @@ JSON schema and usage documentation for `View`.
                                             // Also propagates to child Text views when set on a container (VStack, HStack, etc.).
       "zIndex": 0.0,                        // Optional: Number for layer ordering within a container (e.g. ZStack)
                                             // Higher values render in front of lower values. Defaults to 0.0.
+      "ignoresSafeArea": true,             // Optional: extend this view into the safe area (e.g. a background under the notch /
+                                            // home indicator). true = all edges+regions; or an object to narrow:
+                                            // { "edges": "top"|"bottom"|"leading"|"trailing"|"horizontal"|"vertical"|"all",
+                                            //   "regions": "all"|"container"|"keyboard" }. SwiftUI's .ignoresSafeArea(_:edges:).
+    },
+    // contextMenu (optional): a context menu attached to ANY view — long-press (iOS) / right-click (macOS).
+    // A TOP-LEVEL subview key (sibling of "properties"), modeled as two slots to match SwiftUI's
+    // `.contextMenu(menuItems:preview:)`, which is itself two ViewBuilders:
+    "contextMenu": [                        // The menu's action items: an array of real elements (Buttons carry their own
+      { "type": "Button", "properties": { "title": "Rename", "systemImage": "pencil", "actionID": "view.rename" } },   //   title / systemImage / role / actionID), plus Divider / Section / sub-Menu.
+      { "type": "Divider" },                //   These render as native menu rows.
+      { "type": "Button", "properties": { "title": "Delete", "systemImage": "trash", "role": "destructive", "actionID": "view.delete" } }
+    ],
+    "contextMenuPreview": {                 // Optional: a single arbitrary view shown enlarged above the menu (iOS only;
+      "type": "Image", "properties": { "systemName": "photo", "imageScale": "large" }   //   macOS right-click menus have no preview). Any element — an Image, an HStack of items, etc.
+    },
+    // swipeActions (optional): leading/trailing swipe-to-action Buttons on a List row — SwiftUI's
+    // `.swipeActions(edge:allowsFullSwipe:)`. A TOP-LEVEL subview key (sibling of "properties"), honored only inside a List.
+    "swipeActions": [                       // An array of real Button elements. Each carries its own title / systemImage / role / tint / actionID,
+      { "type": "Button", "properties": { "title": "Flag", "systemImage": "flag", "tint": "orange", "edge": "leading", "actionID": "row.flag" } },     //   plus an optional "edge" ("leading"/"trailing", default trailing) and
+      { "type": "Button", "properties": { "title": "Delete", "systemImage": "trash", "role": "destructive", "edge": "trailing", "actionID": "row.delete" } }  //   "allowsFullSwipe" (default true; a full swipe fires that edge's first button).
+    ],
+    // safeAreaInset (optional): a single view placed in the safe area on an edge; the main content insets to avoid it
+    // (SwiftUI's `.safeAreaInset(edge:alignment:spacing:)` — e.g. a bottom bar that scrollable content clears). A TOP-LEVEL
+    // subview key. The inset view's own properties parameterize it (safe-area-specific names): "safeAreaEdge"
+    // ("top"/"bottom"/"leading"/"trailing", default bottom), "safeAreaAlignment", "safeAreaSpacing".
+    "safeAreaInset": {
+      "type": "HStack", "properties": { "safeAreaEdge": "bottom", "padding": 10.0, "background": "bar" },
+      "children": [ { "type": "Text", "properties": { "text": "Bottom bar in the safe area" } } ]
     }
   }
 

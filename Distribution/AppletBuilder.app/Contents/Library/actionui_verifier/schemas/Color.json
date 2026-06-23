@@ -1,0 +1,11 @@
+{
+  "type": "Color",
+  "description": "A solid color used as a view (SwiftUI's Color is itself a View): a greedy block that fills the proposed space - a colored divider or tinted block. Give it a 'frame' to size it.",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": true,
+  "topLevelKeys": [],
+  "ownProperties": {
+    "color": { "types": ["string"], "required": false, "description": "Color string: a named color (\"red\", \"primary\"/\"secondary\"), a hex string (\"#RRGGBB\" / \"#RRGGBBAA\"), or \"<color>.opacity(<fraction>)\"" }
+  },
+  "observable": {}
+}

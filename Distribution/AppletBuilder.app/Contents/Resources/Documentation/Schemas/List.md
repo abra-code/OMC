@@ -18,6 +18,7 @@ JSON schema and usage documentation for `List`.
       },
       "actionID": "list.selection.changed",    // Optional: Fires on selection change (all cell types)
       "doubleClickActionID": "list.double.click",  // Optional: String for double-click action (macOS only, context = row index)
+      "onRefreshActionID": "list.refresh",      // Optional: String. When set, enables pull-to-refresh; fires this actionID on pull. The spinner stays until the client delivers fresh data to this list or anything inside it (any setElementRows/appendElementRows/clearElementRows/setElementValue/setElementState call targeting this list or a descendant), or a safety timeout elapses.
       // List styling
       "listStyle": "plain",                   // Optional: list style — platform availability below
                                               //   "automatic"    — all platforms (system default)

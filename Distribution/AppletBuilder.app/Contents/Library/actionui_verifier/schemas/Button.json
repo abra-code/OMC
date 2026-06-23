@@ -14,7 +14,9 @@
     "materialFill":  { "types": ["number","boolean"], "required": false, "description": "(Android only) Material Symbols 'FILL' axis, 0..1 (or boolean); defaults to 0" },
     "materialGrade": { "types": ["number"], "required": false, "description": "(Android only) Material Symbols 'GRAD' axis, -50..200; defaults to 0" },
     "materialSize":  { "types": ["number"], "required": false, "description": "(Android only) explicit icon size in sp; defaults to the imageScale-scaled label font size" },
-    "role":        { "types": ["string"], "required": false, "enum": ["destructive","cancel"] }
+    "role":        { "types": ["string"], "required": false, "enum": ["destructive","cancel"] },
+    "edge":            { "types": ["string"], "required": false, "enum": ["leading","trailing"], "description": "Only inside a swipeActions array: which edge this swipe action sits on; defaults to 'trailing'" },
+    "allowsFullSwipe": { "types": ["boolean"], "required": false, "description": "Only inside a swipeActions array: whether a full swipe of that edge triggers its first button; defaults to true" }
   },
   "observable": {}
 }

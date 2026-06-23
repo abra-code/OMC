@@ -122,6 +122,27 @@
         }
       ]
     },
+    "transition": {
+      "required": false,
+      "description": "How the view animates when inserted/removed at runtime (insertElement/removeElement): a shorthand string, a transition dict, or an array (= the transitions combined)",
+      "oneOf": [
+        { "types": ["string"], "enum": ["opacity","slide","scale","identity"] },
+        {
+          "types": ["object"],
+          "properties": {
+            "type":      { "types": ["string"], "required": true, "enum": ["opacity","slide","scale","move","offset","identity","asymmetric"] },
+            "edge":      { "types": ["string"], "required": false, "enum": ["top","bottom","leading","trailing"], "description": "For 'move': which edge to move from/to" },
+            "scale":     { "types": ["number"], "required": false, "description": "For 'scale': start/end scale factor" },
+            "anchor":    { "types": ["string"], "required": false, "enum": ["center","leading","trailing","top","bottom","topLeading","topTrailing","bottomLeading","bottomTrailing"], "description": "For 'scale': the scale anchor" },
+            "x":         { "types": ["number"], "required": false, "description": "For 'offset': horizontal offset" },
+            "y":         { "types": ["number"], "required": false, "description": "For 'offset': vertical offset" },
+            "insertion": { "types": ["string","object"], "required": false, "description": "For 'asymmetric': the insertion transition" },
+            "removal":   { "types": ["string","object"], "required": false, "description": "For 'asymmetric': the removal transition" }
+          }
+        },
+        { "types": ["array"], "itemTypes": ["string","object"], "description": "The transitions combined" }
+      ]
+    },
     "foregroundColor": { "types": ["string"], "required": false, "description": "Alias for foregroundStyle; SwiftUI color, hex, or semantic style" },
     "imageScale":      { "types": ["string"], "required": false, "enum": ["small","medium","large"], "description": "SF Symbol image scale modifier" },
     "actionID":                       { "types": ["string"], "required": false },
@@ -204,6 +225,13 @@
     "textSelection":             { "types": ["string"], "required": false, "enum": ["enabled","disabled"] },
     "multilineTextAlignment":    { "types": ["string"], "required": false, "enum": ["leading","center","trailing"] },
     "zIndex":                    { "types": ["number"], "required": false },
-    "weight":                    { "types": ["number"], "required": false, "platforms": ["android"], "description": "Flex weight of a child within a Row/Column (Jetpack Compose). No SwiftUI equivalent; suffix as 'weight:android' in cross-platform documents." }
+    "ignoresSafeArea":           { "types": ["boolean", "object"], "required": false, "description": "Extend this view into the safe area. true = all edges+regions; or an object { edges, regions }. SwiftUI's .ignoresSafeArea(_:edges:)." },
+    "safeAreaEdge":              { "types": ["string"], "required": false, "enum": ["top","bottom","leading","trailing"], "description": "On a view used as a safeAreaInset: which edge it pins to (default bottom)." },
+    "safeAreaAlignment":         { "types": ["string"], "required": false, "enum": ["leading","trailing","top","bottom","center"], "description": "On a safeAreaInset view: cross-axis alignment (horizontal for top/bottom, vertical for leading/trailing)." },
+    "safeAreaSpacing":           { "types": ["number"], "required": false, "description": "On a safeAreaInset view: spacing between the inset and the main content." },
+    "weight":                    { "types": ["number"], "required": false, "platforms": ["android"], "description": "Flex weight of a child within a Row/Column (Jetpack Compose). No SwiftUI equivalent; suffix as 'weight:android' in cross-platform documents." },
+    "onForegroundActionID":      { "types": ["string"], "required": false, "platforms": ["web"], "description": "ActionUIWeb page lifecycle: fires when the page becomes visible again (visibilitychange). Window-level (viewID 0). Suffix as 'onForegroundActionID:web'." },
+    "onBackgroundActionID":      { "types": ["string"], "required": false, "platforms": ["web"], "description": "ActionUIWeb page lifecycle: fires when the page becomes hidden - tab/app switch or close (visibilitychange). The reliable 'persist now' point. Window-level (viewID 0). Suffix as 'onBackgroundActionID:web'." },
+    "onTerminateActionID":       { "types": ["string"], "required": false, "platforms": ["web"], "description": "ActionUIWeb page lifecycle: fires when the page is being unloaded (pagehide). Window-level (viewID 0). Suffix as 'onTerminateActionID:web'." }
   }
 }

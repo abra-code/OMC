@@ -6,8 +6,9 @@
   "topLevelKeys": ["content"],
   "content": { "required": true, "description": "Single child view to scroll" },
   "ownProperties": {
-    "axis":            { "types": ["string"],  "required": false, "enum": ["vertical","horizontal","both"], "description": "Scroll direction; defaults to 'vertical'" },
-    "showsIndicators": { "types": ["boolean"], "required": false, "description": "Show scroll indicators; defaults to true" }
+    "axis":             { "types": ["string"],  "required": false, "enum": ["vertical","horizontal","both"], "description": "Scroll direction; defaults to 'vertical'" },
+    "showsIndicators":  { "types": ["boolean"], "required": false, "description": "Show scroll indicators; defaults to true" },
+    "onRefreshActionID":{ "types": ["string"],  "required": false, "description": "Pull-to-refresh: fired on pull; indicator stays until the client updates this view or a descendant" }
   },
   "observable": {}
 }

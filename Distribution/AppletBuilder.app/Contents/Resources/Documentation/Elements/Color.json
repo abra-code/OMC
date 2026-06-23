@@ -1,0 +1,7 @@
+{
+  "type": "Color",
+  "properties": {
+    "color": "blue",
+    "frame": { "width": 100.0, "height": 60.0 }
+  }
+}

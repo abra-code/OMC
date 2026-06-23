@@ -19,6 +19,7 @@
       }
     },
     "doubleClickActionID": { "types": ["string"],  "required": false, "description": "macOS only; context = row index" },
+    "onRefreshActionID":   { "types": ["string"],  "required": false, "description": "Pull-to-refresh: fired on pull; indicator stays until the client delivers fresh rows (or updates a descendant)" },
     "listStyle": {
       "types": ["string"],
       "required": false,

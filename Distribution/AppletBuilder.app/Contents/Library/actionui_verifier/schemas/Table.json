@@ -43,7 +43,8 @@
       "description": "Minimum column widths in points; columns cannot be resized below these. Missing entries default to 10",
       "itemTypes": ["integer"]
     },
-    "doubleClickActionID": { "types": ["string"], "required": false, "description": "macOS only; fires on double-click; context = row index" }
+    "doubleClickActionID": { "types": ["string"], "required": false, "description": "macOS only; fires on double-click; context = row index" },
+    "stackedCards": { "types": ["boolean"], "required": false, "platforms": ["web"], "description": "ActionUIWeb-only: on a phone-width screen, render each row as a label:value card instead of a horizontal table (a lossy convenience). Suffix as 'stackedCards:web'." }
   },
   "observable": {
     "value":                { "types": ["array"],  "description": "Selected row as [String] (column values); access via getElementValue" },

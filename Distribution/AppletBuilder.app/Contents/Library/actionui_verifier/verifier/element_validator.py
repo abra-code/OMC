@@ -18,8 +18,13 @@ from .platform_filter import (
 # Top-level keys that are structural (never element-specific properties)
 _STRUCTURAL_KEYS = {"type", "id", "properties"}
 
-# Universal subview keys any element may carry (from View schema)
-_UNIVERSAL_SUBVIEW_KEYS = {"overlay", "sheet", "popover", "fullScreenCover", "background", "backgroundView", "toolbar"}
+# Universal subview keys any element may carry (from View schema). contextMenu (the
+# menu's action-item array) and contextMenuPreview (the optional preview view) mirror
+# SwiftUI's `.contextMenu(menuItems:preview:)` two-builder shape; swipeActions (the
+# leading/trailing swipe action-Button array) mirrors `.swipeActions(edge:allowsFullSwipe:)`;
+# safeAreaInset (a single view placed in the safe area on an edge) mirrors `.safeAreaInset(edge:...)`.
+# All are element subtrees, not properties, so they are validated recursively here.
+_UNIVERSAL_SUBVIEW_KEYS = {"overlay", "sheet", "popover", "fullScreenCover", "background", "backgroundView", "toolbar", "contextMenu", "contextMenuPreview", "swipeActions", "safeAreaInset"}
 
 # Annotation-only keys: intentional JSON "comments"; silently allowed everywhere
 _ANNOTATION_KEYS = {"description", "note", "comment", "info"}

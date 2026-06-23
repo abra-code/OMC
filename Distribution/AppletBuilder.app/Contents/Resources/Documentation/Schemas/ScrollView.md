@@ -13,7 +13,8 @@ JSON schema and usage documentation for `ScrollView`.
    },
    "properties": {
      "axis": "vertical",  // Optional: "vertical", "horizontal", or "both"; defaults to "vertical"
-     "showsIndicators": true // Optional: Boolean for scroll indicators, defaults to true
+     "showsIndicators": true, // Optional: Boolean for scroll indicators, defaults to true
+     "onRefreshActionID": "scroll.refresh" // Optional: String. When set, enables pull-to-refresh; fires this actionID on pull. The spinner stays until the client delivers fresh data to this view or anything inside it (any setElementRows/setElementValue/setElementState call targeting this view or a descendant), or a safety timeout elapses.
    }
    // Note: These properties are specific to ScrollView. Baseline View properties (padding, hidden, foregroundColor, font, background, frame, opacity, cornerRadius, actionID, disabled) and additional View protocol modifiers are inherited and applied via ActionUIRegistry.shared.applyModifiers(to: baseView, properties: element.properties).
  }

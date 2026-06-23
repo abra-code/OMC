@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 __all__ = ["Image", "Figure"]
 
-_num_re = re.compile(r"^\d+(?:\.\d*)?(?:px|ch|em|rem|ex|rex|vw|vh|%)?$")
+_num_re = re.compile(r"^\d+(?:\.\d+)?(?:px|ch|em|rem|ex|rex|vw|vh|%)?$")
 _allowed_aligns = ["top", "middle", "bottom", "left", "center", "right"]
 
 
@@ -29,9 +29,9 @@ def _parse_attrs(options: Dict[str, Any]) -> Dict[str, Any]:
 
     height = options.get("height")
     width = options.get("width")
-    if height and _num_re.match(height):
+    if height and _num_re.fullmatch(height):
         attrs["height"] = height
-    if width and _num_re.match(width):
+    if width and _num_re.fullmatch(width):
         attrs["width"] = width
     if "target" in options:
         attrs["target"] = escape_url(options["target"])
@@ -62,7 +62,7 @@ def render_block_image(
     height: Optional[str] = None,
     **attrs: Any,
 ) -> str:
-    img = '<img src="' + escape_text(src) + '"'
+    img = '<img src="' + self.safe_url(src) + '"'
     style = ""
     if alt:
         img += ' alt="' + escape_text(alt) + '"'
@@ -124,9 +124,11 @@ class Figure(DirectivePlugin):
         fig_attrs = {}
         if align:
             fig_attrs["align"] = align
-        for k in ["figwidth", "figclass"]:
-            if k in options:
-                fig_attrs[k] = options[k]
+        figwidth = options.get("figwidth")
+        if figwidth and _num_re.fullmatch(figwidth):
+            fig_attrs["figwidth"] = figwidth
+        if "figclass" in options:
+            fig_attrs["figclass"] = options["figclass"]
 
         children = [{"type": "block_image", "attrs": image_attrs}]
         content = self.parse_directive_content(block, m, state)

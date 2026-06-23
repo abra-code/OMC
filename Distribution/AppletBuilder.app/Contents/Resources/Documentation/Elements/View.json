@@ -56,5 +56,18 @@
       "key": "v",
       "modifiers": ["command"]
     }
-  }
+  },
+  "contextMenu": [
+    { "type": "Button", "properties": { "title": "Rename", "systemImage": "pencil", "actionID": "view.rename" } },
+    { "type": "Divider" },
+    { "type": "Button", "properties": { "title": "Delete", "systemImage": "trash", "role": "destructive", "actionID": "view.delete" } }
+  ],
+  "contextMenuPreview": {
+    "type": "Image",
+    "properties": { "systemName": "photo", "imageScale": "large" }
+  },
+  "swipeActions": [
+    { "type": "Button", "properties": { "title": "Flag", "systemImage": "flag", "tint": "orange", "edge": "leading", "actionID": "view.flag" } },
+    { "type": "Button", "properties": { "title": "Delete", "systemImage": "trash", "role": "destructive", "edge": "trailing", "actionID": "view.delete" } }
+  ]
 }
