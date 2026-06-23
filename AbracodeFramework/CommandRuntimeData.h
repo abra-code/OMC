@@ -22,6 +22,7 @@ public:
           cachedChooseFolderPaths(commandRuntimeData.cachedChooseFolderPaths), cachedChooseObjectPaths(commandRuntimeData.cachedChooseObjectPaths),
           commandUUID(CommandRuntimeData::GenerateUUID()), dialogUUID(commandRuntimeData.dialogUUID),
           parentCommandUUID(commandRuntimeData.parentCommandUUID), parentDialogUUID(commandRuntimeData.parentDialogUUID),
+          inputText(commandRuntimeData.inputText),
           controlContextViewID(commandRuntimeData.controlContextViewID), controlContextViewPartID(commandRuntimeData.controlContextViewPartID),
           controlContextJSON(commandRuntimeData.controlContextJSON)
     {
