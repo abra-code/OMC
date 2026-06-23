@@ -47,6 +47,8 @@ Special values:
 	omc_set_state <state_key> <value> (ActionUI only; value is a string or JSON fragment)
 	omc_present_modal <resource_name_or_path> [dismiss_action_id] (ActionUI only)
 	omc_dismiss_modal (ActionUI only)
+	omc_present_toast <message> [duration_seconds] [action_title] [action_id] (ActionUI only)
+	omc_dismiss_toast (ActionUI only)
 	omc_present_alert <title> [message] ["button_title:role:action_id" ...] (ActionUI only; role: cancel|destructive|omit for default)
 	omc_present_confirmation_dialog <title> [message] ["button_title:role:action_id" ...] (ActionUI only)
 	omc_dismiss_dialog (ActionUI only)
@@ -91,6 +93,7 @@ omc_dialog_control __ACTIONUI_WINDOW_UUID__ 4 omc_set_state "isLoading" true
 omc_dialog_control __ACTIONUI_WINDOW_UUID__ 4 omc_set_state "label" "Hello"
 omc_dialog_control __ACTIONUI_WINDOW_UUID__ omc_window omc_present_modal "MyModal" "modal.dismissed"
 omc_dialog_control __ACTIONUI_WINDOW_UUID__ omc_window omc_dismiss_modal
+omc_dialog_control __ACTIONUI_WINDOW_UUID__ omc_window omc_present_toast "Extracted 12 items" "6" "Show in Finder" "reveal.action"
 omc_dialog_control __ACTIONUI_WINDOW_UUID__ omc_window omc_present_alert "Confirm Delete" "Are you sure?" "Cancel:cancel:" "Delete:destructive:delete.action"
 omc_dialog_control __ACTIONUI_WINDOW_UUID__ omc_window omc_present_confirmation_dialog "Title" "Message" "OK::ok.action" "Cancel:cancel:"
 omc_dialog_control __ACTIONUI_WINDOW_UUID__ omc_window omc_dismiss_dialog
@@ -117,4 +120,19 @@ omc_dialog_control __ACTIONUI_WINDOW_UUID__ 11 omc_remove_element
 # not just List and Table views.
 omc_dialog_control __ACTIONUI_WINDOW_UUID__ 5 omc_list_set_items "Apple" "Banana" "Cherry"
 omc_dialog_control __ACTIONUI_WINDOW_UUID__ 6 omc_table_set_rows "star.fill	Favorites" "heart.fill	Liked"
+
+
+# Transient toast (ActionUI only) — a top-pinned snackbar that fades in, stays
+# for a few seconds, then auto-dismisses. Always target the window with the
+# omc_window selector. Args: <message> [duration_seconds] [action_title] [action_id]
+#   duration_seconds : seconds the toast stays up; omitted or <= 0 means the
+#                      default (4 seconds).
+#   action_title +   : optional. Together they add a single inline button to the
+#   action_id          toast; tapping it dispatches action_id as a subcommand
+#                      and dismisses the toast. Provide both or neither.
+# Use it for unobtrusive "done" feedback that does not steal focus the way an
+# alert does; reach for omc_present_alert when the user must acknowledge.
+omc_dialog_control __ACTIONUI_WINDOW_UUID__ omc_window omc_present_toast "Saved."
+omc_dialog_control __ACTIONUI_WINDOW_UUID__ omc_window omc_present_toast "Extracted 12 items" "6" "Show in Finder" "reveal.action"
+omc_dialog_control __ACTIONUI_WINDOW_UUID__ omc_window omc_dismiss_toast
 ```

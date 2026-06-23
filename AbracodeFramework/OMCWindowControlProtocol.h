@@ -62,6 +62,10 @@
 // onDismissActionID: actionID dispatched as a subcommand when the modal is dismissed; nil for none
 - (void)presentModalWithResourceNameOrPath:(NSString *)resourceNameOrPath onDismissActionID:(NSString *)onDismissActionID;
 - (void)dismissModal;
+// Transient toast (ActionUI only; auto-dismisses after duration). actionTitle+actionID
+// add one inline button whose actionID is dispatched as a subcommand when tapped.
+- (void)presentToastWithMessage:(NSString *)message duration:(NSTimeInterval)duration actionTitle:(NSString *)actionTitle actionID:(NSString *)actionID;
+- (void)dismissToast;
 // buttonSpecs: NSArray of "title:role:actionID" strings; role is "cancel", "destructive", or "" for default
 - (void)presentAlertWithTitle:(NSString *)title message:(NSString *)message buttonSpecs:(NSArray *)buttonSpecs;
 - (void)presentConfirmationDialogWithTitle:(NSString *)title message:(NSString *)message buttonSpecs:(NSArray *)buttonSpecs;

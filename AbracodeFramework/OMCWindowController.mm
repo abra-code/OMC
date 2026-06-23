@@ -724,6 +724,34 @@ GetAllDialogControllers()
 	}
 	}
 
+	// Toast (ActionUI only)
+	{
+	CFDictionaryRef presentToastDict = NULL;
+	if( controlValues.GetValue(CFSTR("PRESENT_TOAST"), presentToastDict) )
+	{
+		CFArrayRef theArr = (CFArrayRef)::CFDictionaryGetValue(presentToastDict, CFSTR("omc_window"));
+		if( theArr != NULL && ::CFArrayGetCount(theArr) >= 1 )
+		{
+			CFIndex n = ::CFArrayGetCount(theArr);
+			NSString *message = (__bridge NSString *)ACFType<CFStringRef>::DynamicCast( ::CFArrayGetValueAtIndex(theArr, 0) );
+			NSString *durationStr = (n >= 2) ? (__bridge NSString *)ACFType<CFStringRef>::DynamicCast( ::CFArrayGetValueAtIndex(theArr, 1) ) : nil;
+			NSString *actionTitle = (n >= 3) ? (__bridge NSString *)ACFType<CFStringRef>::DynamicCast( ::CFArrayGetValueAtIndex(theArr, 2) ) : nil;
+			NSString *actionID = (n >= 4) ? (__bridge NSString *)ACFType<CFStringRef>::DynamicCast( ::CFArrayGetValueAtIndex(theArr, 3) ) : nil;
+			if( message != nil )
+				[self presentToastWithMessage:message duration:(durationStr != nil ? [durationStr doubleValue] : 0.0) actionTitle:actionTitle actionID:actionID];
+		}
+	}
+	}
+
+	{
+	CFDictionaryRef dismissToastDict = NULL;
+	if( controlValues.GetValue(CFSTR("DISMISS_TOAST"), dismissToastDict) )
+	{
+		if( dismissToastDict != NULL && ::CFDictionaryGetValue(dismissToastDict, CFSTR("omc_window")) != NULL )
+			[self dismissToast];
+	}
+	}
+
 	{
 	CFDictionaryRef presentAlertDict = NULL;
 	if( controlValues.GetValue(CFSTR("PRESENT_ALERT"), presentAlertDict) )
@@ -1719,6 +1747,12 @@ GetAllDialogControllers()
 }
 - (void)dismissModal {
     NSLog(@"[OMCWindowController stub] dismissModal — not supported by this window controller");
+}
+- (void)presentToastWithMessage:(NSString *)message duration:(NSTimeInterval)duration actionTitle:(NSString *)actionTitle actionID:(NSString *)actionID {
+    NSLog(@"[OMCWindowController stub] presentToastWithMessage: %@ — not supported by this window controller", message);
+}
+- (void)dismissToast {
+    NSLog(@"[OMCWindowController stub] dismissToast — not supported by this window controller");
 }
 - (void)presentAlertWithTitle:(NSString *)title message:(NSString *)message buttonSpecs:(NSArray *)buttonSpecs {
     NSLog(@"[OMCWindowController stub] presentAlertWithTitle: %@ — not supported by this window controller", title);

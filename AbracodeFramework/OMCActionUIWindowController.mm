@@ -682,6 +682,29 @@ static NSArray<NSArray<NSString*>*> *OMCParseTabSeparatedRows(CFArrayRef cfRows)
         [ActionUIObjC dismissModalWithWindowUUID:windowUUID];
 }
 
+- (void)presentToastWithMessage:(NSString *)message duration:(NSTimeInterval)duration actionTitle:(NSString *)actionTitle actionID:(NSString *)actionID
+{
+    NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
+    if (windowUUID == nil || message.length == 0)
+        return;
+    if (duration <= 0)
+        duration = 4.0;
+    NSString *aTitle = (actionTitle.length > 0) ? actionTitle : nil;
+    NSString *aID = (actionID.length > 0) ? actionID : nil;
+    [ActionUIObjC presentToastWithWindowUUID:windowUUID
+                                     message:message
+                                    duration:duration
+                                 actionTitle:aTitle
+                                    actionID:aID];
+}
+
+- (void)dismissToast
+{
+    NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
+    if (windowUUID != nil)
+        [ActionUIObjC dismissToastWithWindowUUID:windowUUID];
+}
+
 - (void)presentAlertWithTitle:(NSString *)title message:(NSString *)message buttonSpecs:(NSArray *)buttonSpecs
 {
     NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
