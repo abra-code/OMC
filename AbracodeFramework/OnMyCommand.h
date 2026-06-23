@@ -138,6 +138,7 @@ public:
 
 	SInt32				FindSubcommandIndex(CFArrayRef inName, CFStringRef inCommandID);
 	SInt32				FindCommandIndex(CFArrayRef inName, CFStringRef inCommandID);
+	SInt32				FindMainCommandByImplicitID(CFStringRef inID);
 
 	CFMutableStringRef	CreateCombinedStringWithObjects(CFArrayRef inArray,
                                                         CommandRuntimeData &commandRuntimeData,

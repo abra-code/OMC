@@ -95,9 +95,16 @@ Boolean RunCocoaInputDialog(OnMyCommandCM *inPlugin,
         NSString* inputDialogMessage = LocalizedString(currCommand.inputDialogMessage, localizationBundle, currCommand.localizationTableName);
         [theController setMessageText:inputDialogMessage];
         
-        CFRetain(currCommand.inputDialogMenuItems);
-        NSArray *__strong inputDialogMenuItems = (NSArray *)CFBridgingRelease(currCommand.inputDialogMenuItems);
-        
+        // inputDialogMenuItems is only populated for popup/combo dialogs; it is
+        // NULL for clear/password input. Guard the retain so CFRetain(NULL) does
+        // not crash (it does) when this is a plain text or password prompt.
+        NSArray *__strong inputDialogMenuItems = nil;
+        if(currCommand.inputDialogMenuItems != NULL)
+        {
+            CFRetain(currCommand.inputDialogMenuItems);
+            inputDialogMenuItems = (NSArray *)CFBridgingRelease(currCommand.inputDialogMenuItems);
+        }
+
         if( (dialogType == kInputPopupMenu) || (dialogType == kInputComboBox) )
         {
             if( (inputDialogMenuItems != NULL) && (currCommand.localizationTableName != NULL) )

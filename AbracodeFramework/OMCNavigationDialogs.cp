@@ -158,7 +158,7 @@ PresentChooseFileDialog(OnMyCommandCM *inPlugin,
         }
 
         StSwitchToFront switcher;
-        contextData.chooseFilePaths.Adopt(CreateCFURLsFromOpenDialog(commandName, message, defaultName, defaultLocationStr, identifier, prompt, allowedContentTypes, additionalFlags | kOMCFilePanelCanChooseFiles));
+        contextData.chooseFilePaths.Adopt(CreateCFURLsFromOpenDialog(commandName, message, defaultName, expandedDirStr, identifier, prompt, allowedContentTypes, additionalFlags | kOMCFilePanelCanChooseFiles));
         if(contextData.chooseFilePaths == NULL || CFArrayGetCount(contextData.chooseFilePaths) == 0)
         {
             throw OSStatus(userCanceledErr);
@@ -229,7 +229,7 @@ PresentChooseFolderDialog(OnMyCommandCM *inPlugin,
         }
 
         StSwitchToFront switcher;
-        contextData.chooseFolderPaths.Adopt(CreateCFURLsFromOpenDialog( commandName, message, defaultName, defaultLocationStr, identifier, prompt, allowedContentTypes, additionalFlags | kOMCFilePanelCanChooseDirectories));
+        contextData.chooseFolderPaths.Adopt(CreateCFURLsFromOpenDialog( commandName, message, defaultName, expandedDirStr, identifier, prompt, allowedContentTypes, additionalFlags | kOMCFilePanelCanChooseDirectories));
         if(contextData.chooseFolderPaths == NULL || CFArrayGetCount(contextData.chooseFolderPaths) == 0)
         {
             throw OSStatus(userCanceledErr);
@@ -298,7 +298,7 @@ PresentChooseObjectDialog(OnMyCommandCM *inPlugin,
             message.Adopt( ::CFCopyLocalizedStringFromTableInBundle( message, currCommand.localizationTableName, localizationBundle, "") );
 
         StSwitchToFront switcher;
-        contextData.chooseObjectPaths.Adopt(CreateCFURLsFromOpenDialog( commandName, message, defaultName, defaultLocationStr, identifier, prompt, allowedContentTypes, additionalFlags | kOMCFilePanelCanChooseFiles | kOMCFilePanelCanChooseDirectories));
+        contextData.chooseObjectPaths.Adopt(CreateCFURLsFromOpenDialog( commandName, message, defaultName, expandedDirStr, identifier, prompt, allowedContentTypes, additionalFlags | kOMCFilePanelCanChooseFiles | kOMCFilePanelCanChooseDirectories));
         if(contextData.chooseObjectPaths == NULL || CFArrayGetCount(contextData.chooseObjectPaths) == 0)
         {
             throw OSStatus(userCanceledErr);
