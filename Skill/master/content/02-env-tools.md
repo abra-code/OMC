@@ -112,6 +112,8 @@ Button spec for alerts: `"title:role:actionID"` — role is `cancel`, `destructi
 
 Schedules `MyApp.next.step` to run after the current script exits. The chained script runs in a fresh environment with the same window context.
 
+To chain back to the applet's **main command**, target it by `<NAME>.main` (e.g. `MyApp.main`), bare `main`, or the legacy `top!` — all three resolve to the main command whether it was declared with no `COMMAND_ID` or with an explicit `<NAME>.main` / `main` id. The same aliases work in `NEXT_COMMAND_ID`.
+
 ### Other support tools (full usage in `docs/<tool>--help.md`)
 
 | Tool | Purpose | Typical call |

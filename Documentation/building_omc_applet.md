@@ -115,10 +115,10 @@ MyApp.app/
 </dict>
 ```
 
-**Main Command**: The first command in `COMMAND_LIST` (without `COMMAND_ID`) is the main command. It is executed when files/folders are dropped on the applet. Subcommands have unique `COMMAND_ID` values.
+**Main Command**: The first command in `COMMAND_LIST` is the main command. It either has no `COMMAND_ID` or an explicit `COMMAND_ID` of `<NAME>.main` (or bare `main`) — both forms behave identically. It is executed when files/folders are dropped on the applet (or on launch). Subcommands have unique `COMMAND_ID` values. The main command can be chained to by `<NAME>.main`, `main`, or `top!` (see `NEXT_COMMAND_ID` / `omc_next_command`).
 
 > **For AI Agents**: Understanding command structure is critical:
-> - The **main command** (first in list, no `COMMAND_ID`) handles file/folder drops on the app
+> - The **main command** (first in list, no `COMMAND_ID` or `COMMAND_ID` = `<NAME>.main`) handles file/folder drops on the app
 > - **Subcommands** have `COMMAND_ID` and are triggered by UI events (buttons, table selection)
 > - Multiple commands with same `NAME` but different `COMMAND_ID` form a **command group**
 
@@ -146,7 +146,7 @@ MyApp.app/
 ```xml
 <dict>
     <key>NAME</key>
-    <string>MyApp</string>          <!-- No COMMAND_ID = main command -->
+    <string>MyApp</string>          <!-- No COMMAND_ID (or COMMAND_ID = MyApp.main) = main command -->
     <key>ACTIVATION_MODE</key>
     <string>act_folder</string>
     <key>EXECUTION_MODE</key>
@@ -764,7 +764,7 @@ MyApp.app/
 /usr/bin/stat -x "${OMC_OBJ_PATH}"
 ```
 
-> **Note**: The main command (first in list, no `COMMAND_ID`) is executed when files/folders are dropped on the applet. The script `FileInfo.main.sh` is the handler for this main command.
+> **Note**: The main command (first in list, with no `COMMAND_ID` or an explicit `COMMAND_ID` of `FileInfo.main`) is executed when files/folders are dropped on the applet. The script `FileInfo.main.sh` is the handler for this main command.
 
 Drop a file/folder on the app → output window shows file information.
 

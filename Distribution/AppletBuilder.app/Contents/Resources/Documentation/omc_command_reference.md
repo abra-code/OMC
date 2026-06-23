@@ -59,7 +59,7 @@ The starting point for OMC engine is a `Command.plist` file in applet's bundle i
 | Key | Type | Required | Description & Best Practice | Example |
 |-----|------|----------|-------------------------------|----------|
 | `NAME` | String or Array<String> | Yes | Visible label in menus. Use array for dynamic labels. Shared across a **command group**. | `["Set Xattr: ", "__OBJ_NAME__"]` (only `__FOO__` form works here) |
-| `COMMAND_ID` | String | Recommended | **Unique identifier** for the action handler. **Unique readable strings are recommended**. Used to name script files and for subcommand chaining. If omitted, the engine assigns the internal ID `top!` (valid only for a single top-level command per group). For `exe_script_file` action handlers, a matching script file in `Scripts/` without a plist entry is auto-synthesized — see note below. | `"my.action.handler"` |
+| `COMMAND_ID` | String | Recommended | **Unique identifier** for the action handler. **Unique readable strings are recommended**. Used to name script files and for subcommand chaining. If omitted, the engine assigns the internal ID `top!` (valid only for a single top-level command per group). The **main command** may instead set this explicitly to `<NAME>.main` (or bare `main`); the engine normalizes either form to the same `top!` sentinel, so it behaves identically to omitting `COMMAND_ID`. References to the main command — launch, `NEXT_COMMAND_ID`, `omc_next_command`, subcommand chaining — resolve it by `<NAME>.main`, `main`, or `top!`. For `exe_script_file` action handlers, a matching script file in `Scripts/` without a plist entry is auto-synthesized — see note below. | `"my.action.handler"` |
 | `VERSION` | Integer or String | No | Semantic version for your reference (ignored by OMC). | `"1.0"` |
 | `NOTES` | String | No | Developer comments (ignored by OMC). | `"Removes quarantine bit"` |
 | `DISABLED` | Boolean | No | `<true/>` disables the action handler. | — |
@@ -1403,7 +1403,7 @@ Unconditionally chains to another command on success (no cancel).
 <string>post.process</string>
 ```
 
-**Notes**: Use for fixed sequences; dynamic tool takes precedence. No env var export to next.
+**Notes**: Use for fixed sequences; dynamic tool takes precedence. No env var export to next. To chain to the applet's **main command**, use `<NAME>.main`, bare `main`, or the legacy `top!` — all resolve to the main command whether it was declared with no `COMMAND_ID` or with an explicit `<NAME>.main` / `main` id.
 
 ---
 
