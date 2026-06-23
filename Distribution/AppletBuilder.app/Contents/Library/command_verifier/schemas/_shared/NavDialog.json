@@ -3,11 +3,11 @@
   "description": "Shared options for the file-navigation dialogs (SAVE_AS / CHOOSE_FILE / CHOOSE_FOLDER / CHOOSE_OBJECT / OPEN_OBJECT).",
   "properties": {
     "MESSAGE": { "types": ["string"], "description": "Custom prompt text." },
-    "DEFAULT_LOCATION": { "types": ["array"], "itemTypes": ["string"], "description": "Starting directory candidates (special words / ~ allowed)." },
+    "DEFAULT_LOCATION": { "types": ["array"], "itemTypes": ["string"], "description": "Starting directory candidates (special words / ~ allowed). Forces the panel to open here every time, which overrides macOS's memory of the last-used folder; omit it to let the panel reopen at the last location the user navigated to." },
     "SHOW_INVISIBLE_ITEMS": { "types": ["boolean"] },
-    "USE_PATH_CACHING": { "types": ["boolean"], "description": "Remember last-used path." },
+    "USE_PATH_CACHING": { "types": ["boolean"], "description": "Reuse a path chosen earlier in the same command run so a follow-up subcommand does not re-prompt. In-run reuse only; not cross-launch last-folder memory (that is macOS's, active when DEFAULT_LOCATION is omitted)." },
     "ALLOW_MULTIPLE_ITEMS": { "types": ["boolean"] },
-    "DIALOG_IDENTIFIER": { "types": ["string"], "description": "Panel identifier for state persistence; defaults to COMMAND_ID." },
+    "DIALOG_IDENTIFIER": { "types": ["string"], "description": "Panel identifier for AppKit per-identifier state persistence; defaults to COMMAND_ID. macOS persists both window size/position and the last-used directory (as '<identifier> - NSOSPLastRootDirectory') and restores them on open. Use the same identifier across commands to share that state. The remembered directory is restored unless DEFAULT_LOCATION forces a directory (which overrides it)." },
     "BUTTON_PROMPT": { "types": ["string"], "description": "Custom action-button label." },
     "ALLOWED_CONTENT_TYPES": { "types": ["array"], "itemTypes": ["string"], "description": "UTI strings to filter selectable files." },
     "DEFAULT_FILE_NAME": { "types": ["array"], "itemTypes": ["string"], "appliesWhen": "dialog=SAVE_AS_DIALOG", "description": "Pre-filled filename fragments (array; combined). Read by the shared nav function but only the Save panel uses it. NOTE: engine requires an array — a plain string is silently ignored." }

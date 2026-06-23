@@ -779,11 +779,11 @@ All four dialogs share **most options**. Only `DEFAULT_FILE_NAME` option is excl
 | Key | Type | Default | Applies To | Description & Best Practices | Example |
 |-----|------|---------|-------------|------------------------------|---------|
 | `MESSAGE` | String | `"Save As..."` / `"Choose File..."` / `"Choose Folder..."` / `"Choose..."` | All | Custom prompt text. | `"Select Output Folder:"` |
-| `DEFAULT_LOCATION` | Array<String> | None | All | Starting directory (resolved via special words). Use array for fallbacks. | `["__OBJ_PARENT_PATH__", "~"]` |
+| `DEFAULT_LOCATION` | Array<String> | None | All | Starting directory (resolved via special words). Use array for fallbacks. **Setting this forces the panel to open at this directory every time, which overrides macOS's own memory of the last folder the user navigated to — so the panel will _not_ reopen at the last-used location. Omit `DEFAULT_LOCATION` if you want the panel to reopen wherever the user last went** (see "Remembering the last-used folder" below). | `["__OBJ_PARENT_PATH__", "~"]` |
 | `SHOW_INVISIBLE_ITEMS` | Boolean | `false` | All | Show hidden files/folders. | `<true/>` for system paths |
-| `USE_PATH_CACHING` | Boolean | `false` | All | Remember last-used path (post-v2.5). | `<true/>` for repeat workflows |
+| `USE_PATH_CACHING` | Boolean | `false` | All | Reuse a path already chosen earlier in the **same command run** so a follow-up subcommand does not re-prompt. This is in-run reuse only — it is **not** cross-launch memory of the last-used folder (that is handled by macOS when `DEFAULT_LOCATION` is omitted). | `<true/>` for repeat workflows |
 | `ALLOW_MULTIPLE_ITEMS` | Boolean | `false` | `CHOOSE_FILE_DIALOG`, `CHOOSE_FOLDER_DIALOG`, `CHOOSE_OBJECT_DIALOG` | Allow selecting multiple items. When true, the corresponding context variable (e.g., `OMC_DLG_CHOOSE_FILE_PATH`) will contain all selected paths combined using the multi-object separator, prefix, and suffix from `MULTIPLE_OBJECT_SETTINGS`. | `<true/>` for selecting multiple files/folders |
-| `DIALOG_IDENTIFIER` | String | `COMMAND_ID` (if set) or none | All | Panel identifier for state persistence. If set, the panel remembers last position/size. Defaults to `COMMAND_ID` if not specified. Use the same identifier across multiple commands to share panel state. | `"com.example.sharedPanel"` |
+| `DIALOG_IDENTIFIER` | String | `COMMAND_ID` (if set) or none | All | Panel identifier for AppKit state persistence. Defaults to `COMMAND_ID`, so panels are already persisted per command even without setting this. macOS saves per-identifier state in the app's prefs — both window **size/position** and the **last-used directory** (stored as `<identifier> - NSOSPLastRootDirectory`). Use the **same** identifier across commands to share that state (e.g. one extract location for several extract commands). The remembered directory is restored on open **unless `DEFAULT_LOCATION` forces a directory** (which overrides it — see `DEFAULT_LOCATION`). | `"com.example.sharedPanel"` |
 | `BUTTON_PROMPT` | String | `"Open"` / `"Save"` | All | Custom button text (e.g., "Import", "Select", "Choose"). Improves context for users. | `"Import"` for import dialogs |
 | `ALLOWED_CONTENT_TYPES` | Array<String> | None | All | Array of UTI strings to filter visible files (e.g., `public.image`, `public.audio`, `com.adobe.pdf`). Uses the `allowedContentTypes` property of `NSOpenPanel`/`NSSavePanel`. When set, only files matching the specified Uniform Type Identifiers are selectable. | `["public.image", "public.jpeg"]` for image-only selection |
 
@@ -794,6 +794,17 @@ All four dialogs share **most options**. Only `DEFAULT_FILE_NAME` option is excl
 | Key | Type | Default | Description & Best Practices | Example |
 |-----|------|---------|------------------------------|---------|
 | `DEFAULT_FILE_NAME` | Array<String> | None | Pre-filled filename in the save field (fragments are combined). Must be an array — a plain string is **ignored**. | `["Backup-", __OBJ_NAME__, ".zip"]` |
+
+---
+
+### Remembering the last-used folder
+
+macOS persists each save/open panel's last-used directory (along with its size and position) in the app's preferences, keyed by the panel's identifier — `DIALOG_IDENTIFIER`, or the `COMMAND_ID` when that is not set (so panels are already remembered per command by default). The directory is stored under `<identifier> - NSOSPLastRootDirectory`. The panel restores that directory the next time it opens — **unless OMC forces a starting directory from `DEFAULT_LOCATION`, which overrides it**. So:
+
+- **Want the panel to reopen at the last-used folder?** Omit `DEFAULT_LOCATION`; the panel restores the remembered directory on its own. Give several commands the **same** `DIALOG_IDENTIFIER` to make them remember one shared location.
+- **Want the panel to always start at a fixed folder?** Set `DEFAULT_LOCATION`; the panel opens there every time and the remembered directory is not used.
+
+There is no built-in "use `DEFAULT_LOCATION` only the first time, then remember": setting it overrides the remembered location on every open. It is one or the other.
 
 ---
 
