@@ -98,4 +98,4 @@ OMC resolves the interpreter from the extension: `.sh` / `.bash` / `.zsh` → co
 
 **No shebang line is needed.** OMC supplies the interpreter path automatically.
 
-For Python applets, the embedded Python at `Contents/Library/Python/bin/python3` is used when present — no system Python dependency.
+For Python applets, the embedded Python at `Contents/Library/Python/bin/python3` is used when present — no system Python dependency. When a bundle has embedded Python, OMC exports — for every handler, shell or Python — `PATH` (prepended with the interpreter's `bin/`), `PYTHONPYCACHEPREFIX=/tmp/Pyc`, and `PYTHONPATH` (prepended with `Contents/Library/Packages/` when it exists). Install third-party modules into `Contents/Library/Packages/` (e.g. `python3 -m pip install --target .../Contents/Library/Packages pkg`) rather than the runtime's own `site-packages`: the `Packages/` dir survives a Python runtime upgrade/rebuild, whereas `Contents/Library/Python/` is replaced wholesale. See `docs/omc_python_scripting_guide.md`.

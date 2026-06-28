@@ -102,7 +102,7 @@ OMC resolves the interpreter from the extension: `.sh` / `.bash` / `.zsh` → co
 
 **No shebang line is needed.** OMC supplies the interpreter path automatically.
 
-For Python applets, the embedded Python at `Contents/Library/Python/bin/python3` is used when present — no system Python dependency.
+For Python applets, the embedded Python at `Contents/Library/Python/bin/python3` is used when present — no system Python dependency. When a bundle has embedded Python, OMC exports — for every handler, shell or Python — `PATH` (prepended with the interpreter's `bin/`), `PYTHONPYCACHEPREFIX=/tmp/Pyc`, and `PYTHONPATH` (prepended with `Contents/Library/Packages/` when it exists). Install third-party modules into `Contents/Library/Packages/` (e.g. `python3 -m pip install --target .../Contents/Library/Packages pkg`) rather than the runtime's own `site-packages`: the `Packages/` dir survives a Python runtime upgrade/rebuild, whereas `Contents/Library/Python/` is replaced wholesale. See `docs/omc_python_scripting_guide.md`.
 
 
 
@@ -413,7 +413,7 @@ Exit codes: `0` ok · `2` warnings · `1` errors.
 |---------|------|
 | `create (--template <name|path> \| --clone <App.app>) --name <N> --dest <dir> [--bundle-id <id>] [--python] [--icon <name|path>]` | Copy a template (or clone an applet), rename it, install the framework/executable (and Python if `--python`), set the icon, and codesign. Prints the new `.app` path. |
 | `validate <App.app \| Command.json \| UI.json \| script>` | Auto-detects the target and runs the matching validator(s). For a bundle: `Info.plist` + command manifest (Layer 1/2) + every script + every ActionUI JSON. |
-| `build <App.app> [--identity <id>] [--thin arm64\|x86_64] [--warnings-as-errors] [--force]` | Full validation, then refresh framework/executable/Python, thin, and codesign. Halts before signing on validation errors. |
+| `build <App.app> [--identity <id>] [--thin arm64\|x86_64] [--warnings-as-errors] [--update-python] [--force]` | Full validation, then refresh framework/executable (newer version auto-copies; `--force` re-copies even when unchanged), thin, and codesign. Halts before signing on validation errors. Independently, a working embedded Python is left untouched unless `--update-python` is given; a missing/broken runtime is always installed. Replacing the runtime wipes anything pip-installed into its `site-packages` — install deps into `Contents/Library/Packages` (on `PYTHONPATH`) so they survive. |
 | `prettify <file.json> [--stdout]` | Reformat JSON in place (or to stdout). |
 | `preview <UI.json> [--screenshot <out.png>]` | Render an ActionUI view to a PNG (read it to inspect the layout); a `MainMenu.json` menu-bar doc prints a text summary instead. Needs a GUI session. |
 | `list-templates` / `list-icons` | Names for `--template` / `--icon`. |
@@ -635,7 +635,7 @@ Full OMC reference is in the `docs/` folder (also bundled in `AppletBuilder.app/
 | `docs/omc_command_reference.md` | Complete `Command.plist` key reference — all execution modes, dialog keys, output window settings, progress dialogs, input dialogs, services |
 | `docs/omc_runtime_context_reference.md` | Every `$OMC_*` environment variable and `__SPECIAL_WORD__` substitution |
 | `docs/omc_scripting_guide.md` | Shell script patterns: reading controls, updating UI, tables, state, debugging |
-| `docs/omc_python_scripting_guide.md` | Python equivalents of all shell patterns |
+| `docs/omc_python_scripting_guide.md` | Python handlers: env (`PATH`/`PYTHONPATH`/`Packages`), equivalents of all shell patterns, installing deps into `Contents/Library/Packages`, and thinning the embedded Python (the `thin_applet_python.sh` plan/apply workflow) |
 | `docs/omc_dialog_control--help.md` | Full `omc_dialog_control` command reference with all operations |
 | `docs/omc_next_command--help.md` | `omc_next_command` reference |
 | `docs/alert--help.md` | `alert` tool reference with all flags |

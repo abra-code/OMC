@@ -50,6 +50,15 @@ if [ "$__wae" = "1" ] || [ "$__wae" = "true" ]; then
     AB_WARNINGS_AS_ERRORS=1
 fi
 
+# Replacing a working embedded Python is opt-in (off by default) — it overwrites
+# Contents/Library/Python wholesale, wiping anything pip-installed into its
+# site-packages. A missing/broken runtime is always (re)installed regardless.
+AB_UPDATE_PYTHON=0
+__upd="$OMC_ACTIONUI_VIEW_406_VALUE"
+if [ "$__upd" = "1" ] || [ "$__upd" = "true" ]; then
+    AB_UPDATE_PYTHON=1
+fi
+
 # ── Run ──
 
 project_path=$(load_project_path)

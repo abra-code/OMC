@@ -57,6 +57,14 @@
       },
       {
         "type": "Toggle",
+        "id": 406,
+        "properties": {
+          "title": "Update Embedded Python",
+          "isOn": false
+        }
+      },
+      {
+        "type": "Toggle",
         "id": 405,
         "properties": {
           "title": "Treat Validation Warnings As Errors",

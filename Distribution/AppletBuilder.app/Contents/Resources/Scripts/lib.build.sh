@@ -14,6 +14,12 @@
 #   AB_FORCE_UPDATE        "1" = force Abracode.framework/executable refresh
 #   AB_WARNINGS_AS_ERRORS  "1" = treat validation warnings as build-halting errors
 #   AB_ASSUME_YES          "1" = answer ab_confirm prompts "yes" (e.g. Python upgrade)
+#   AB_UPDATE_PYTHON       "1" = allow replacing an existing, working embedded Python
+#                          with AppletBuilder's runtime (off by default; a missing or
+#                          broken runtime is always (re)installed regardless). Replacing
+#                          overwrites Contents/Library/Python wholesale and wipes any
+#                          packages pip-installed into its site-packages — install
+#                          third-party modules into Contents/Library/Packages instead.
 
 [ -n "$__LIB_BUILD_SH" ] && return 0
 __LIB_BUILD_SH=1
@@ -404,6 +410,18 @@ update_python() {
     if [ "$cmp" = "older" ]; then
         ab_log "Applet has newer Python v${dst_version} than AppletBuilder (v${src_version}) — keeping the applet's runtime."
         ab_log "Update AppletBuilder to manage this applet's Python."
+        return
+    fi
+
+    # Replacing a working runtime is opt-in: it overwrites Contents/Library/Python
+    # wholesale, wiping anything pip-installed into its site-packages. Off by default
+    # so inline-installed modules survive a rebuild. It is independent of the binary
+    # refresh (AB_FORCE_UPDATE / --force): enable the "Update Embedded Python" build
+    # option (CLI: --update-python) to allow it. The rebuild-safe place for
+    # third-party modules is Contents/Library/Packages, which OMC adds to PYTHONPATH
+    # and this build step never touches.
+    if [ "${AB_UPDATE_PYTHON:-0}" != "1" ]; then
+        ab_log "Embedded Python v${dst_version} kept (AppletBuilder has v${src_version}; enable \"Update Embedded Python\" to replace it)."
         return
     fi
 

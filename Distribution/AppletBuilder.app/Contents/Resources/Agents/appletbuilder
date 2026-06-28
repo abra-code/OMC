@@ -55,6 +55,7 @@ AB_FORCE_UPDATE=""
 AB_THIN_ARCH="none"
 AB_WARNINGS_AS_ERRORS=0
 AB_ASSUME_YES=""
+AB_UPDATE_PYTHON=""
 
 usage() {
     cat >&2 <<'EOF'
@@ -67,7 +68,7 @@ Usage:
                          [--identity <id>] [--no-codesign]
   appletbuilder validate <App.app | Command.json | UI.json | script-file>
   appletbuilder build    <App.app> [--identity <id>] [--thin arm64|x86_64|none]
-                         [--warnings-as-errors] [--force]
+                         [--warnings-as-errors] [--update-python] [--force]
   appletbuilder prettify <file.json> [--stdout]
   appletbuilder preview  <UI.json> [--screenshot <out.png>]
   appletbuilder list-templates
@@ -265,6 +266,7 @@ cmd_build() {
             --identity)           AB_IDENTITY="$2"; shift 2 ;;
             --thin)               AB_THIN_ARCH="$2"; shift 2 ;;
             --warnings-as-errors) AB_WARNINGS_AS_ERRORS=1; shift ;;
+            --update-python)      AB_UPDATE_PYTHON=1; shift ;;
             --force)              AB_FORCE_UPDATE=1; AB_ASSUME_YES=1; shift ;;
             -h|--help)            usage; return 2 ;;
             -*) echo "build: unknown option: $1" >&2; return 2 ;;

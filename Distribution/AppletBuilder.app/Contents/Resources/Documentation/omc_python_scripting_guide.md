@@ -4,11 +4,14 @@ Python scripts are a natural alternative to shell scripts for implementing actio
 
 ## Python Environment
 
-OMC Python applets set up the environment automatically:
+When an applet bundles its own Python at `Contents/Library/Python/`, OMC sets up the environment automatically for **every** command it runs — including `.sh` handlers that shell out to `python3`:
 
-- **PATH** includes the embedded Python at `YourApp.app/Contents/Library/Python/bin/`, so `python3` and any installed packages are available without full paths
-- **PYTHONPYCACHEPREFIX** is set to `/tmp/Pyc`, keeping `.pyc` files out of the app bundle
-- No shebang line is needed — OMC determines the interpreter from the file extension
+- **PATH** is prepended with the embedded interpreter's `bin/` directory (`YourApp.app/Contents/Library/Python/bin/`), so `python3` and any console scripts installed next to it resolve without full paths.
+- **PYTHONPATH** is prepended with `Contents/Library/Packages/` whenever that directory exists, so third-party modules installed there are importable. This is the recommended home for dependencies — see [Installing Python Packages](#installing-python-packages).
+- **PYTHONPYCACHEPREFIX** is set to `/tmp/Pyc`, so `.pyc` files are written to a temp location instead of polluting (or being blocked from) the app bundle.
+- No shebang line is needed — OMC determines the interpreter from the file extension.
+
+These variables are exported regardless of the handler's language, so a shell handler that invokes the embedded `python3` gets the same module resolution as a `.py` handler.
 
 ## Typical Script Structure
 
@@ -241,7 +244,32 @@ with open(save_path, "w", encoding="utf-8") as f:
 
 ## Installing Python Packages
 
-The embedded Python distribution includes `pip`, so you can install additional packages. From Terminal:
+Third-party packages can live in one of two places. **Prefer `Contents/Library/Packages/`**: it is on `PYTHONPATH`, it is kept separate from the standard library, and — unlike the runtime itself — AppletBuilder never overwrites it when it refreshes or upgrades the embedded Python. Modules installed *inside* `Contents/Library/Python/` are wiped whenever that runtime is replaced.
+
+### Recommended: install into Contents/Library/Packages
+
+Install with `pip --target`, pointing at the applet's `Packages/` directory:
+
+```bash
+APP="YourApp.app"
+PY="$APP/Contents/Library/Python/bin/python3"
+export PYTHONPYCACHEPREFIX=/tmp/Pyc
+"$PY" -m pip install --target "$APP/Contents/Library/Packages" package_name
+```
+
+On an Apple Silicon Mac, build universal wheels so the applet also runs on Intel:
+
+```bash
+export ARCHFLAGS="-arch x86_64 -arch arm64"
+arch -x86_64 "$PY" -m pip install --target "$APP/Contents/Library/Packages" \
+    --force-reinstall --no-binary :all: package_name
+```
+
+`import package_name` then works directly, because OMC puts `Packages/` on `PYTHONPATH`. A package that ships a command-line entry point (e.g. `watchmedo` from `watchdog`) installs its launcher into `Packages/bin/`, but you can also invoke it as a module — `"$PY" -m watchdog.watchmedo …` — which avoids depending on the launcher's location.
+
+### Legacy: install into the embedded Python
+
+The embedded distribution includes `pip`, so you *can* install straight into its `site-packages`:
 
 ```bash
 cd YourApp.app/Contents/Library/Python/bin
@@ -249,12 +277,35 @@ export PYTHONPYCACHEPREFIX=/tmp/Pyc
 ./python3 -m pip install package_name
 ```
 
-For Universal binary compatibility on Apple Silicon Macs, you may want to build packages for both architectures:
+This works, but anything installed here is **destroyed when the runtime is replaced** — for example when AppletBuilder upgrades the applet's Python (the "Update Embedded Python" build option) or reinstalls a missing/broken runtime. Use `Packages/` for anything you want to survive a rebuild.
+
+## Reducing Bundle Size: Thinning the Embedded Python
+
+The embedded Python is a full, universal (arm64 + x86_64) distribution — roughly 60 MB+ — and a typical applet imports only a small slice of the standard library. You can strip the unused parts with `Distribution/Scripts/thin_applet_python.sh`, a front end over the reusable [Python-Embedding](https://github.com/abra-code/Python-Embedding) toolkit. It needs a sibling Python-Embedding checkout next to the OMC repo.
+
+Thinning is **trace-driven and verified**, not a guess: it runs your real workload, records exactly which modules load (transitively, including C extensions and anything reached across a `subprocess`/bin-script boundary), removes the rest, then re-runs the workload to prove nothing needed was deleted (restoring automatically if it was). It works in two phases with a reviewable, committable **plan** in between:
 
 ```bash
-export ARCHFLAGS="-arch x86_64 -arch arm64"
-arch -x86_64 ./python3 -m pip install --force-reinstall --no-binary :all: package_name
+THIN="OMC/Distribution/Scripts/thin_applet_python.sh"
+
+# 1) PLAN — trace the workload(s) and write a committable plan next to the bundle.
+"$THIN" plan MyApp.app \
+    --trace "MyApp.app/Contents/Resources/Scripts/MyApp.monitor.start.py" \
+    --arch arm64                                  # writes MyApp.thinning-plan.json
+
+# 2) APPLY — perform the removal recorded in the plan, then verify (restores on failure).
+"$THIN" apply MyApp.app                            # add --dry-run to preview
 ```
+
+The wrapper knows the OMC layout, so it automatically thins `Contents/Library/Python`, uses `Contents/Resources/Scripts` as a coverage cross-check, and exports `PYTHONPATH=Contents/Library/Packages` while tracing and verifying — so modules you installed in `Packages/` import the same way they do at runtime. **`Packages/` is never thinned**: only the interpreter's own stdlib/`site-packages` are trimmed.
+
+Key points:
+
+- **Commit the plan.** `MyApp.thinning-plan.json` records module *names* plus options (arch, `include/`, bytecode). Review or hand-tweak `remove.modules`, commit it next to the app, and re-run `apply` any time — for example after AppletBuilder reinstalls a fresh, full Python (which wipes the previous thinning). `apply` resolves names against the *current* interpreter, so it re-thins correctly.
+- **Coverage is the rule.** Pass one `--trace` per distinct Python entry point your applet runs (each handler/command, not just the main one). The `--static` cross-check (automatic on the Scripts directory) warns when a handler imports something no trace exercised — heed it, or that module gets removed.
+- **`--trace` is the command after `python3 -X importtime`** — pass the script/module + args, with no leading `python3`. For a module entry point use `--trace "-m package.module …"`.
+
+See the Python-Embedding README for the underlying `analyze_python_deps.py` / `thin_from_plan.sh` tools and the full methodology.
 
 ## Naming Conventions
 

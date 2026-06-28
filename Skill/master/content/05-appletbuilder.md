@@ -26,7 +26,7 @@ Exit codes: `0` ok · `2` warnings · `1` errors.
 |---------|------|
 | `create (--template <name|path> \| --clone <App.app>) --name <N> --dest <dir> [--bundle-id <id>] [--python] [--icon <name|path>]` | Copy a template (or clone an applet), rename it, install the framework/executable (and Python if `--python`), set the icon, and codesign. Prints the new `.app` path. |
 | `validate <App.app \| Command.json \| UI.json \| script>` | Auto-detects the target and runs the matching validator(s). For a bundle: `Info.plist` + command manifest (Layer 1/2) + every script + every ActionUI JSON. |
-| `build <App.app> [--identity <id>] [--thin arm64\|x86_64] [--warnings-as-errors] [--force]` | Full validation, then refresh framework/executable/Python, thin, and codesign. Halts before signing on validation errors. |
+| `build <App.app> [--identity <id>] [--thin arm64\|x86_64] [--warnings-as-errors] [--update-python] [--force]` | Full validation, then refresh framework/executable (newer version auto-copies; `--force` re-copies even when unchanged), thin, and codesign. Halts before signing on validation errors. Independently, a working embedded Python is left untouched unless `--update-python` is given; a missing/broken runtime is always installed. Replacing the runtime wipes anything pip-installed into its `site-packages` — install deps into `Contents/Library/Packages` (on `PYTHONPATH`) so they survive. |
 | `prettify <file.json> [--stdout]` | Reformat JSON in place (or to stdout). |
 | `preview <UI.json> [--screenshot <out.png>]` | Render an ActionUI view to a PNG (read it to inspect the layout); a `MainMenu.json` menu-bar doc prints a text summary instead. Needs a GUI session. |
 | `list-templates` / `list-icons` | Names for `--template` / `--icon`. |
