@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		1D386DAB23BEED4B00A16967 /* OMCWebKitView.h in Headers */ = {isa = PBXBuildFile; fileRef = 1D386DA923BEED4A00A16967 /* OMCWebKitView.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		1D386DAC23BEED4B00A16967 /* OMCWebKitView.m in Sources */ = {isa = PBXBuildFile; fileRef = 1D386DAA23BEED4A00A16967 /* OMCWebKitView.m */; };
+		1D39A8932FF1E47900909493 /* ActionUIQuickLook in Frameworks */ = {isa = PBXBuildFile; productRef = 1D39A8922FF1E47900909493 /* ActionUIQuickLook */; };
 		1D3EA0602E38A1E00064354E /* OneObjProperties.cp in Sources */ = {isa = PBXBuildFile; fileRef = 1D3EA05F2E38A1E00064354E /* OneObjProperties.cp */; };
 		1D3EA0662E3E10910064354E /* OMCNavigationDialogs.cp in Sources */ = {isa = PBXBuildFile; fileRef = 1D3EA0642E3E10910064354E /* OMCNavigationDialogs.cp */; };
 		1D3EA0682E4095E60064354E /* OMCContextData.cp in Sources */ = {isa = PBXBuildFile; fileRef = 1D3EA0672E4095E60064354E /* OMCContextData.cp */; };
@@ -33,8 +34,7 @@
 		1D9BCB8822CCA65A00F4EAB6 /* ACFURL.m in Sources */ = {isa = PBXBuildFile; fileRef = 1D9BCB8722CCA65A00F4EAB6 /* ACFURL.m */; };
 		1D9BCB8C22CCAB4F00F4EAB6 /* OMCStrings.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1D9BCB8B22CCAB4F00F4EAB6 /* OMCStrings.mm */; };
 		1DA51CB62EACCD1B00BFF670 /* OMCAppLifetimeEvents.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1DA51CB42EACC95B00BFF670 /* OMCAppLifetimeEvents.mm */; };
-		1DA696DF2F7CDACE00935D4B /* ActionUI in Frameworks */ = {isa = PBXBuildFile; productRef = 1DA696DE2F7CDACE00935D4B /* ActionUI */; };
-		1DA696E12F7CDACE00935D4B /* ActionUIObjCAdapter in Frameworks */ = {isa = PBXBuildFile; productRef = 1DA696E02F7CDACE00935D4B /* ActionUIObjCAdapter */; };
+		1DAACE122FDE9A0100C0FFEE /* ActionUIMenuBar in Frameworks */ = {isa = PBXBuildFile; productRef = 1DAACE112FDE9A0100C0FFEE /* ActionUIMenuBar */; };
 		1DADB52F232B5857005AD883 /* loco in Copy Support Executables */ = {isa = PBXBuildFile; fileRef = 1DADB52E232B5847005AD883 /* loco */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		1DB9D8C62324F01E003F6849 /* OMCEnvironmentExportScript.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1DB9D8C42324F01E003F6849 /* OMCEnvironmentExportScript.cpp */; };
 		1DBCC43522CE209300A1DD8F /* OMCHelpers.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1DBCC43222CE209300A1DD8F /* OMCHelpers.mm */; };
@@ -48,9 +48,6 @@
 		1DF2B2082F458F7D0069BD26 /* OMCViewSetupProtocol.h in Headers */ = {isa = PBXBuildFile; fileRef = 1DF2B2072F458F7D0069BD26 /* OMCViewSetupProtocol.h */; };
 		1DF2B4032F45A6CE0069BD26 /* ActionUI in Frameworks */ = {isa = PBXBuildFile; productRef = 1DF2B4022F45A6CE0069BD26 /* ActionUI */; };
 		1DF2B4052F45A6CE0069BD26 /* ActionUIObjCAdapter in Frameworks */ = {isa = PBXBuildFile; productRef = 1DF2B4042F45A6CE0069BD26 /* ActionUIObjCAdapter */; };
-		1DF2B4482F46A88E0069BD26 /* ActionUI in Frameworks */ = {isa = PBXBuildFile; productRef = 1DF2B4472F46A88E0069BD26 /* ActionUI */; };
-		1DF2B44A2F46A88E0069BD26 /* ActionUIObjCAdapter in Frameworks */ = {isa = PBXBuildFile; productRef = 1DF2B4492F46A88E0069BD26 /* ActionUIObjCAdapter */; };
-		1DAACE122FDE9A0100C0FFEE /* ActionUIMenuBar in Frameworks */ = {isa = PBXBuildFile; productRef = 1DAACE112FDE9A0100C0FFEE /* ActionUIMenuBar */; };
 		8DC2EF570486A6940098B216 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7B1FEA5585E11CA2CBB /* Cocoa.framework */; };
 		AAAAAA01D4346BB0065C23A /* OMCWindowController.h in Headers */ = {isa = PBXBuildFile; fileRef = AAAAAAAA1D4346BB0065C23A /* OMCWindowController.h */; };
 		E20026D710B68F3200D5388F /* OMCCustomWindow.mm in Sources */ = {isa = PBXBuildFile; fileRef = E20026D510B68F3200D5388F /* OMCCustomWindow.mm */; };
@@ -607,16 +604,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				1DF2B4032F45A6CE0069BD26 /* ActionUI in Frameworks */,
+				1DF2B4052F45A6CE0069BD26 /* ActionUIObjCAdapter in Frameworks */,
+				1D39A8932FF1E47900909493 /* ActionUIQuickLook in Frameworks */,
 				8DC2EF570486A6940098B216 /* Cocoa.framework in Frameworks */,
 				E29ED0720D094EB000C9D5E8 /* Carbon.framework in Frameworks */,
-				1DF2B4052F45A6CE0069BD26 /* ActionUIObjCAdapter in Frameworks */,
-				1DF2B44A2F46A88E0069BD26 /* ActionUIObjCAdapter in Frameworks */,
-				1DF2B4482F46A88E0069BD26 /* ActionUI in Frameworks */,
-				1DA696DF2F7CDACE00935D4B /* ActionUI in Frameworks */,
 				E2FB14000D19EE9A005EB1E8 /* CoreServices.framework in Frameworks */,
 				E27103CE0D8142DF0097D83E /* Quartz.framework in Frameworks */,
 				E23DC9F60D9A289E009D2AD8 /* WebKit.framework in Frameworks */,
-				1DA696E12F7CDACE00935D4B /* ActionUIObjCAdapter in Frameworks */,
 				1DAACE122FDE9A0100C0FFEE /* ActionUIMenuBar in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1181,7 +1175,8 @@
 			);
 			mainGroup = 0867D691FE84028FC02AAC07 /* Abracode */;
 			packageReferences = (
-				1DA696DD2F7CDACE00935D4B /* XCRemoteSwiftPackageReference "ActionUI" */,
+				1D91BD0B2F98A13A00F59950 /* XCLocalSwiftPackageReference "../../ActionUI" */,
+				1D39A8912FF1E47900909493 /* XCLocalSwiftPackageReference "../../ActionUI/Add-ons/ActionUIQuickLook" */,
 			);
 			productRefGroup = 034768DFFF38A50411DB9C8B /* Products */;
 			projectDirPath = "";
@@ -1653,15 +1648,18 @@
 		};
 /* End XCConfigurationList section */
 
-/* Begin XCRemoteSwiftPackageReference section */
-		1DA696DD2F7CDACE00935D4B /* XCRemoteSwiftPackageReference "ActionUI" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/abra-code/ActionUI";
-			requirement = {
-				branch = main;
-				kind = branch;
-			};
+/* Begin XCLocalSwiftPackageReference section */
+		1D39A8912FF1E47900909493 /* XCLocalSwiftPackageReference "../../ActionUI/Add-ons/ActionUIQuickLook" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "../../ActionUI/Add-ons/ActionUIQuickLook";
 		};
+		1D91BD0B2F98A13A00F59950 /* XCLocalSwiftPackageReference "../../ActionUI" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../../ActionUI;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCRemoteSwiftPackageReference section */
 		1DF2B4012F45A6CE0069BD26 /* XCRemoteSwiftPackageReference "ActionUI" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/abra-code/ActionUI";
@@ -1673,15 +1671,13 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		1DA696DE2F7CDACE00935D4B /* ActionUI */ = {
+		1D39A8922FF1E47900909493 /* ActionUIQuickLook */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 1DA696DD2F7CDACE00935D4B /* XCRemoteSwiftPackageReference "ActionUI" */;
-			productName = ActionUI;
+			productName = ActionUIQuickLook;
 		};
-		1DA696E02F7CDACE00935D4B /* ActionUIObjCAdapter */ = {
+		1DAACE112FDE9A0100C0FFEE /* ActionUIMenuBar */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 1DA696DD2F7CDACE00935D4B /* XCRemoteSwiftPackageReference "ActionUI" */;
-			productName = ActionUIObjCAdapter;
+			productName = ActionUIMenuBar;
 		};
 		1DF2B4022F45A6CE0069BD26 /* ActionUI */ = {
 			isa = XCSwiftPackageProductDependency;
@@ -1692,18 +1688,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 1DF2B4012F45A6CE0069BD26 /* XCRemoteSwiftPackageReference "ActionUI" */;
 			productName = ActionUIObjCAdapter;
-		};
-		1DF2B4472F46A88E0069BD26 /* ActionUI */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = ActionUI;
-		};
-		1DF2B4492F46A88E0069BD26 /* ActionUIObjCAdapter */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = ActionUIObjCAdapter;
-		};
-		1DAACE112FDE9A0100C0FFEE /* ActionUIMenuBar */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = ActionUIMenuBar;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

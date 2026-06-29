@@ -1,0 +1,16 @@
+{
+  "type": "QuickLook",
+  "description": "Embedded in-process Quick Look preview pane (ActionUIQuickLook add-on). macOS QLPreviewView; iOS/visionOS QLPreviewController. Previews a local file, driven by the element value or the filePath property. (Quick Look is local-only, so there is no remote url property.)",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": true,
+  "topLevelKeys": [],
+  "ownProperties": {
+    "filePath":            { "types": ["string"],  "required": false, "description": "Absolute local path to the file to preview (seed for the element value)" },
+    "previewStyle":        { "types": ["string"],  "required": false, "enum": ["normal", "compact"], "description": "macOS only; QLPreviewView style. Default normal. Ignored on iOS" },
+    "showsChrome":         { "types": ["boolean"], "required": false, "description": "Show preview chrome: a nav bar (title + share/actions) on iOS, or a header (file name + share/open) on macOS. Default false" },
+    "valueChangeActionID": { "types": ["string"],  "required": false, "description": "Fired after the previewed item changes (reload dispatched)" }
+  },
+  "observable": {
+    "value": { "types": ["string"], "description": "Current source file path; write a local file path to preview" }
+  }
+}

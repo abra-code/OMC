@@ -8,11 +8,23 @@ Usage:
     validate_actionui.py -r <directory/>        recurse into subdirectories
     validate_actionui.py --strict <path>        treat warnings as errors
     validate_actionui.py --platform <p> <path>  validate as deployed to platform <p>
+    validate_actionui.py --schema-dir <dir> ... add an add-on schema directory (repeatable)
 
 Without --platform, files are validated as cross-platform authoring documents:
 platform-specific keys must carry a `:<platform>` suffix. With --platform, the
 document is validated as if deployed to that one platform (other-platform
 variants are dropped, just as they are at runtime).
+
+--schema-dir extends the built-in element set with schemas shipped by optional
+add-on libraries (e.g. ActionUIQuickLook/Schemas), so documents using an add-on's
+element type validate without that type being baked into the core schemas. The
+built-in schemas take precedence on a name collision. The option is repeatable.
+
+Add-on schemas are also auto-discovered (no --schema-dir needed) from:
+  - schemas/add-ons/<AddOn>/   next to this script (populated when the verifier is
+                               packaged into a Skill dist or AppletBuilder.app), and
+  - ../../Add-ons/<AddOn>/Schemas/   when running in-place inside the ActionUI repo.
+Explicit --schema-dir directories take precedence over auto-discovered ones.
 
 Exit codes:
     0  no issues
@@ -38,6 +50,37 @@ _SCHEMAS_DIR = _SCRIPT_DIR / "schemas"
 
 sys.path.insert(0, str(_SCRIPT_DIR))
 from verifier import SchemaLoader, ElementValidator, ValidationIssue, ALL_PLATFORMS
+
+
+def discover_addon_schema_dirs(script_dir: Path) -> list[Path]:
+    """Auto-discover add-on element-schema directories so an add-on's element types
+    (e.g. ActionUIQuickLook's "QuickLook") validate without an explicit --schema-dir.
+
+    Two optional sources, covering the verifier's two homes:
+      1. <script_dir>/schemas/add-ons/<AddOn>/  - the reserved directory next to the
+         core schemas, populated when the verifier is copied into a Skill dist or
+         AppletBuilder.app (the copy is otherwise self-contained, with no repo around it).
+      2. <repo>/Add-ons/<AddOn>/Schemas/        - the add-on sources, for running the
+         verifier in-place inside the ActionUI repo (script at <repo>/Tools/verifier).
+
+    Core schemas still win on a name collision because SchemaLoader keeps its primary
+    directory first; these are appended after any explicit --schema-dir directories.
+    """
+    dirs: list[Path] = []
+
+    reserved = script_dir / "schemas" / "add-ons"
+    if reserved.is_dir():
+        dirs += [sub for sub in sorted(reserved.iterdir()) if sub.is_dir()]
+        dirs.append(reserved)  # also allow schemas placed directly in add-ons/
+
+    addons_root = script_dir.parent.parent / "Add-ons"
+    if addons_root.is_dir():
+        for sub in sorted(addons_root.iterdir()):
+            schema_dir = sub / "Schemas"
+            if schema_dir.is_dir():
+                dirs.append(schema_dir)
+
+    return dirs
 
 
 # Top-level element types allowed in a menu-bar document (MainMenu.json).
@@ -135,6 +178,7 @@ def main():
     strict = False
     recursive = False
     target_platform = None
+    extra_schema_dirs: list[str] = []
     paths = []
 
     raw = sys.argv[1:]
@@ -153,6 +197,14 @@ def main():
             target_platform = raw[i]
         elif arg.startswith("--platform="):
             target_platform = arg.split("=", 1)[1]
+        elif arg == "--schema-dir":
+            i += 1
+            if i >= len(raw):
+                print("[ERROR] --schema-dir requires a value", file=sys.stderr)
+                sys.exit(2)
+            extra_schema_dirs.append(raw[i])
+        elif arg.startswith("--schema-dir="):
+            extra_schema_dirs.append(arg.split("=", 1)[1])
         elif arg.startswith("-") and arg != "-":
             print(f"[ERROR] unknown option: {arg}", file=sys.stderr)
             print(__doc__, file=sys.stderr)
@@ -181,7 +233,22 @@ def main():
         )
         sys.exit(1)
 
-    loader = SchemaLoader(_SCHEMAS_DIR)
+    resolved_extra_dirs: list[Path] = []
+    for d in extra_schema_dirs:
+        dir_path = Path(d)
+        if not dir_path.is_dir():
+            print(f"[ERROR] --schema-dir not found or not a directory: {d}", file=sys.stderr)
+            sys.exit(2)
+        resolved_extra_dirs.append(dir_path)
+
+    # Append auto-discovered add-on schema dirs (explicit --schema-dir wins; dedupe by real path).
+    seen = {p.resolve() for p in resolved_extra_dirs}
+    for p in discover_addon_schema_dirs(_SCRIPT_DIR):
+        if p.resolve() not in seen:
+            resolved_extra_dirs.append(p)
+            seen.add(p.resolve())
+
+    loader = SchemaLoader(_SCHEMAS_DIR, resolved_extra_dirs)
     validator = ElementValidator(loader, target_platform=target_platform)
 
     total_errors, total_warnings = 0, 0

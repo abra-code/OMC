@@ -1,0 +1,10 @@
+{
+  "type": "QuickLook",
+  "id": 1,
+  "properties": {
+    "filePath": "/path/to/file.pdf",
+    "previewStyle": "normal",
+    "showsChrome": false,
+    "valueChangeActionID": "ql.changed"
+  }
+}

@@ -3,10 +3,13 @@
 #
 # Updates:
 #   0. OMCApplet — builds universal (arm64 + x86_64) Release binary and Abracode.framework
-#   1. ActionUI products (ActionUIViewer, ActionUIVerifier, ActionUIDocumentation) — built from SPM
+#   1. ActionUIViewer — built from the Apps/ActionUIViewer aggregator package (links core + add-ons);
+#      that one SPM build also produces the core and add-on documentation bundles + the Python verifier
+#      schemas are copied from source (core + each Add-ons/*/Schemas)
 #   2. mistune (markdown-to-HTML converter)
 #   3. OMC documentation
-#   4. ActionUI documentation (from built ActionUIDocumentation bundle)
+#   4. ActionUI documentation (from the built ActionUIDocumentation bundle)
+#   4b. ActionUI add-on documentation (from each built add-on documentation bundle)
 #   5. Validates ElementTemplates.json against Elements/
 #   6. Thins Python distribution (strips .pyc files)
 #   7. Codesigns AppletBuilder.app (ad-hoc)
@@ -43,6 +46,9 @@ else
 fi
 
 ACTIONUI_DOCS="$ACTIONUI_ROOT/Documentation"
+# The add-on-aware preview tool is its own aggregator package (links core + add-ons). Building it
+# also builds the core + add-on documentation bundles, so OMC gets the viewer and all docs in one build.
+ACTIONUI_VIEWER_PKG="$ACTIONUI_ROOT/Apps/ActionUIViewer"
 OMC_DOCS="$OMC_ROOT/Documentation"
 OMC_WORKSPACE="$OMC_ROOT/OMC.xcworkspace"
 OMCAPPLET_BUILD="$OMC_ROOT/.build/OMCApplet"
@@ -170,7 +176,7 @@ else
         echo "  Building $product (universal)..."
 
         # Build for arm64
-        /usr/bin/xcrun swift build --package-path "$ACTIONUI_ROOT" --scratch-path "$ACTIONUI_BUILD_ARM64" \
+        /usr/bin/xcrun swift build --package-path "$ACTIONUI_VIEWER_PKG" --scratch-path "$ACTIONUI_BUILD_ARM64" \
             --product "$product" --configuration release --arch arm64 2>/dev/null
         rc=$?
         if [ "$rc" -ne 0 ]; then
@@ -180,7 +186,7 @@ else
         fi
 
         # Build for x86_64
-        /usr/bin/xcrun swift build --package-path "$ACTIONUI_ROOT" --scratch-path "$ACTIONUI_BUILD_X86" \
+        /usr/bin/xcrun swift build --package-path "$ACTIONUI_VIEWER_PKG" --scratch-path "$ACTIONUI_BUILD_X86" \
             --product "$product" --configuration release --arch x86_64 2>/dev/null
         rc=$?
         if [ "$rc" -ne 0 ]; then
@@ -207,23 +213,17 @@ else
         fi
     done
 
-    # Documentation bundle — built with the arm64 build (resources only, no arch dependency)
-    echo "  Building ActionUIDocumentation..."
-    /usr/bin/xcrun swift build --package-path "$ACTIONUI_ROOT" --scratch-path "$ACTIONUI_BUILD_ARM64" \
-        --product ActionUIDocumentation --configuration release --arch arm64 2>/dev/null
-    rc=$?
-    if [ "$rc" -eq 0 ]; then
-        # Find the built bundle
-        ACTIONUI_DOC_BUNDLE=$(/usr/bin/find "$ACTIONUI_BUILD_ARM64" -name "ActionUI_ActionUIDocumentation.bundle" -type d 2>/dev/null | /usr/bin/head -1)
-        if [ -n "$ACTIONUI_DOC_BUNDLE" ] && [ -d "$ACTIONUI_DOC_BUNDLE" ]; then
-            ACTIONUI_DOCS="$ACTIONUI_DOC_BUNDLE"
-            echo -e "  ${GREEN}ActionUIDocumentation built${NC}"
-        else
-            echo -e "  ${RED}ActionUIDocumentation bundle not found after build${NC}"
-            build_failed=1
-        fi
+    # Documentation bundles — no separate build needed. The ActionUIViewer aggregator package depends
+    # on every documentation product (core + each add-on), so the arm64 viewer build above already
+    # produced ActionUI_ActionUIDocumentation.bundle and each ActionUI<AddOn>_..Documentation.bundle in
+    # its products dir (resources only, no arch dependency). Locate them.
+    ACTIONUI_DOC_BUNDLE=$(/usr/bin/find "$ACTIONUI_BUILD_ARM64" -name "ActionUI_ActionUIDocumentation.bundle" -type d 2>/dev/null | /usr/bin/head -1)
+    if [ -n "$ACTIONUI_DOC_BUNDLE" ] && [ -d "$ACTIONUI_DOC_BUNDLE" ]; then
+        ACTIONUI_DOCS="$ACTIONUI_DOC_BUNDLE"
+        ACTIONUI_PRODUCTS_DIR=$(/usr/bin/dirname "$ACTIONUI_DOC_BUNDLE")
+        echo -e "  ${GREEN}ActionUI + add-on documentation built (via ActionUIViewer)${NC}"
     else
-        echo -e "  ${RED}Failed to build ActionUIDocumentation${NC}"
+        echo -e "  ${RED}ActionUIDocumentation bundle not found after building ActionUIViewer${NC}"
         build_failed=1
     fi
 
@@ -240,6 +240,23 @@ else
     else
         echo -e "  ${RED}ActionUI verifier source not found at: $VERIFIER_SRC${NC}"
         build_failed=1
+    fi
+
+    # ActionUI add-on verifier schemas — copy each Add-ons/*/Schemas into the bundled
+    # verifier's reserved schemas/add-ons/<AddOn>/ so it validates add-on element types
+    # (e.g. QuickLook) without a --schema-dir flag. The verifier auto-discovers them there.
+    ADDONS_SRC="$ACTIONUI_ROOT/Add-ons"
+    if [ -d "$ADDONS_SRC" ] && [ -d "$VERIFIER_DST" ]; then
+        for addon_dir in "$ADDONS_SRC"/*/; do
+            [ -d "$addon_dir" ] || continue
+            schema_src="${addon_dir}Schemas"
+            [ -d "$schema_src" ] || continue
+            addon_name=$(/usr/bin/basename "$addon_dir")
+            schema_dst="$VERIFIER_DST/schemas/add-ons/$addon_name"
+            /bin/mkdir -p "$schema_dst"
+            /bin/cp "$schema_src"/*.json "$schema_dst/" 2>/dev/null
+            echo -e "  ${GREEN}Add-on verifier schemas: $addon_name${NC}"
+        done
     fi
 
     if [ "$build_failed" -eq 1 ]; then
@@ -330,6 +347,17 @@ echo ""
 
 echo "── Checking ActionUI documentation ──"
 
+# Returns 0 if <name> is supplied by any add-on's Documentation/<subdir>. Add-on docs are
+# merged into the same Schemas/ and Elements/ dirs as core, so the core prune below must not
+# delete them just because they are absent from the core Documentation source.
+addon_provides_doc() {
+    local subdir="$1" name="$2" d
+    for d in "$ACTIONUI_ROOT/Add-ons"/*/Documentation/"$subdir"/"$name"; do
+        [ -f "$d" ] && return 0
+    done
+    return 1
+}
+
 if [ ! -d "$ACTIONUI_DOCS" ]; then
     echo -e "  ${RED}ActionUI Documentation not found at: $ACTIONUI_DOCS${NC}"
     echo "  Expected ActionUI checkout at: $ACTIONUI_ROOT"
@@ -381,7 +409,7 @@ else
         for dst in "$DEST_DOCS/Schemas"/*; do
             [ ! -f "$dst" ] && continue
             name=$(/usr/bin/basename "$dst")
-            if [ ! -f "$ACTIONUI_DOCS/Schemas/$name" ]; then
+            if [ ! -f "$ACTIONUI_DOCS/Schemas/$name" ] && ! addon_provides_doc Schemas "$name"; then
                 /bin/rm "$dst"
                 schemas_changed=1
             fi
@@ -412,7 +440,7 @@ else
         for dst in "$DEST_DOCS/Elements"/*; do
             [ ! -f "$dst" ] && continue
             name=$(/usr/bin/basename "$dst")
-            if [ ! -f "$ACTIONUI_DOCS/Elements/$name" ]; then
+            if [ ! -f "$ACTIONUI_DOCS/Elements/$name" ] && ! addon_provides_doc Elements "$name"; then
                 /bin/rm "$dst"
                 elements_changed=1
             fi
@@ -426,6 +454,49 @@ else
 
     if [ "$actionui_updated" -eq 0 ]; then
         echo -e "  ${GREEN}All ActionUI docs up to date${NC}"
+    fi
+fi
+
+echo ""
+
+# ════════════════════════════════════════════════════════════
+# 4b. ActionUI Add-on documentation (from each built add-on bundle, merged into Schemas/ + Elements/)
+# ════════════════════════════════════════════════════════════
+
+echo "── Checking ActionUI add-on documentation ──"
+
+if [ -z "$ACTIONUI_PRODUCTS_DIR" ] || [ ! -d "$ACTIONUI_PRODUCTS_DIR" ]; then
+    echo -e "  ${YELLOW}No ActionUI build products dir; skipping add-on docs${NC}"
+else
+    addon_docs_updated=0
+    # Each add-on the viewer links contributes a <Pkg>_<Product>Documentation.bundle next to the core
+    # one. Harvest the add-on bundles (skip the core bundle, handled in section 4) the same way core
+    # docs are harvested - so add-on docs come from a built bundle too, uniform with core.
+    for addon_bundle in "$ACTIONUI_PRODUCTS_DIR"/*Documentation.bundle; do
+        [ -d "$addon_bundle" ] || continue
+        bundle_name=$(/usr/bin/basename "$addon_bundle")
+        [ "$bundle_name" = "ActionUI_ActionUIDocumentation.bundle" ] && continue
+        for subdir in Schemas Elements; do
+            src_dir="$addon_bundle/$subdir"
+            [ -d "$src_dir" ] || continue
+            /bin/mkdir -p "$DEST_DOCS/$subdir"
+            for src in "$src_dir"/*; do
+                [ -f "$src" ] || continue
+                name=$(/usr/bin/basename "$src")
+                dst="$DEST_DOCS/$subdir/$name"
+                if files_match "$src" "$dst"; then
+                    :
+                else
+                    /bin/cp "$src" "$dst"
+                    echo -e "  ${GREEN}Updated: $subdir/$name ($bundle_name)${NC}"
+                    addon_docs_updated=1
+                    updated=1
+                fi
+            done
+        done
+    done
+    if [ "$addon_docs_updated" -eq 0 ]; then
+        echo -e "  ${GREEN}All add-on docs up to date${NC}"
     fi
 fi
 

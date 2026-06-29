@@ -80,5 +80,7 @@
 {"title": "PhaseAnimator", "tag": "PhaseAnimator"},
 {"title": "CommandMenu", "tag": "CommandMenu"},
 {"title": "CommandGroup", "tag": "CommandGroup"},
-{"title": "WindowGroup", "tag": "WindowGroup"}
+{"title": "WindowGroup", "tag": "WindowGroup"},
+{"section": "Add-ons"},
+{"title": "QuickLook", "tag": "QuickLook"}
 ]

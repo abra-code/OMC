@@ -12,6 +12,12 @@
       "enum": ["automatic","compact","graphical","stepperField","field"],
       "description": "'stepperField' and 'field' are macOS only; 'graphical' is iOS/macOS; default 'automatic'"
     },
+    "displayedComponents": {
+      "types": ["string"],
+      "required": false,
+      "enum": ["date","hourAndMinute","dateAndTime"],
+      "description": "Which components to pick: 'date' (default, value 'YYYY-MM-DD'), 'hourAndMinute' (time picker), or 'dateAndTime'. Time-bearing modes emit a full ISO datetime 'YYYY-MM-DDTHH:mm:ss'"
+    },
     "range": {
       "types": ["object"],
       "required": false,

@@ -332,5 +332,108 @@ class MenuBarCliTests(unittest.TestCase):
             self.assertIn("not valid at the top level", (r.stdout + r.stderr))
 
 
+class AddOnSchemaDirTests(unittest.TestCase):
+    """--schema-dir / SchemaLoader extra dirs: add-on element schemas extend the
+    built-in set without being baked into core's schemas/."""
+
+    @staticmethod
+    def _write_addon_schema(dir_path: Path, type_name: str):
+        (dir_path / f"{type_name}.json").write_text(json.dumps({
+            "type": type_name,
+            "inheritsViewProperties": True,
+            "topLevelKeys": [],
+            "ownProperties": {"source": {"types": ["string"], "required": False}},
+        }))
+
+    def test_loader_merges_extra_dirs(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            d = Path(tmp)
+            self._write_addon_schema(d, "MyAddOn")
+            loader = SchemaLoader(_SCHEMAS, [d])
+            self.assertIn("MyAddOn", loader.known_types())   # add-on type added
+            self.assertIn("Button", loader.known_types())    # built-ins still present
+            self.assertIsNotNone(loader.element_schema("MyAddOn"))
+
+    def test_primary_dir_wins_on_collision(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            d = Path(tmp)
+            # An add-on cannot shadow a built-in: the primary schema must win.
+            (d / "Button.json").write_text(json.dumps(
+                {"type": "Button", "ownProperties": {"bogus": {"types": ["string"]}}}))
+            schema = SchemaLoader(_SCHEMAS, [d]).element_schema("Button")
+            self.assertNotIn("bogus", schema.get("ownProperties", {}))
+
+    def test_unknown_addon_type_errors_without_schema_dir(self):
+        doc = {"type": "VStack", "children": [{"type": "MyAddOn", "properties": {"source": "x"}}]}
+        issues = _validate(doc)
+        self.assertTrue(any("unknown element type 'MyAddOn'" in str(i) for i in _errors(issues)))
+
+    def test_addon_type_validates_with_extra_dir(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            d = Path(tmp)
+            self._write_addon_schema(d, "MyAddOn")
+            validator = ElementValidator(SchemaLoader(_SCHEMAS, [d]))
+            doc = {"type": "VStack", "children": [{"type": "MyAddOn", "properties": {"source": "x"}}]}
+            issues = validator.validate(doc, "test", set())
+            self.assertEqual(_errors(issues), [], _msg(issues))
+
+    def test_cli_schema_dir_flag(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            d = Path(tmp)
+            schema_dir = d / "schemas"
+            schema_dir.mkdir()
+            self._write_addon_schema(schema_dir, "MyAddOn")
+            doc = d / "doc.json"
+            doc.write_text(json.dumps(
+                {"type": "VStack", "children": [{"type": "MyAddOn", "properties": {"source": "x"}}]}))
+            without = subprocess.run([sys.executable, str(_VALIDATOR), str(doc)],
+                                     capture_output=True, text=True)
+            self.assertEqual(without.returncode, 1, without.stdout + without.stderr)
+            with_dir = subprocess.run(
+                [sys.executable, str(_VALIDATOR), "--schema-dir", str(schema_dir), str(doc)],
+                capture_output=True, text=True)
+            self.assertEqual(with_dir.returncode, 0, with_dir.stdout + with_dir.stderr)
+
+
+class AddOnAutoDiscoveryTests(unittest.TestCase):
+    """Add-on element schemas are auto-discovered (no --schema-dir needed) from the
+    reserved schemas/add-ons/ directory and from a sibling repo's Add-ons/*/Schemas."""
+
+    def test_discovers_reserved_and_repo_dirs(self):
+        from validate_actionui import discover_addon_schema_dirs
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            script_dir = root / "Tools" / "verifier"
+            # 1. reserved dir next to the script: <script_dir>/schemas/add-ons/Foo/
+            reserved_foo = script_dir / "schemas" / "add-ons" / "Foo"
+            reserved_foo.mkdir(parents=True)
+            (reserved_foo / "Foo.json").write_text("{}")
+            # 2. in-repo sources: <repo>/Add-ons/Bar/Schemas/
+            repo_bar = root / "Add-ons" / "Bar" / "Schemas"
+            repo_bar.mkdir(parents=True)
+            (repo_bar / "Bar.json").write_text("{}")
+            found = {p.resolve() for p in discover_addon_schema_dirs(script_dir)}
+            self.assertIn(reserved_foo.resolve(), found)
+            self.assertIn(repo_bar.resolve(), found)
+
+    def test_no_addon_dirs_returns_empty(self):
+        from validate_actionui import discover_addon_schema_dirs
+        with tempfile.TemporaryDirectory() as tmp:
+            script_dir = Path(tmp) / "Tools" / "verifier"
+            script_dir.mkdir(parents=True)
+            self.assertEqual(discover_addon_schema_dirs(script_dir), [])
+
+    def test_quicklook_addon_validates_in_repo_without_flag(self):
+        # End-to-end: the real in-repo QuickLook add-on validates with no --schema-dir,
+        # because the verifier auto-discovers <repo>/Add-ons/*/Schemas.
+        repo_root = _HERE.parent.parent  # <repo>/Tools/verifier -> <repo>
+        example = repo_root / "Add-ons" / "ActionUIQuickLook" / "Examples" / "QuickLook.json"
+        if not example.exists():
+            self.skipTest("ActionUIQuickLook add-on not present")
+        r = subprocess.run([sys.executable, str(_VALIDATOR), str(example)],
+                           capture_output=True, text=True)
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
