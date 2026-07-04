@@ -183,8 +183,23 @@ static NSArray<ActionUIObjCDialogButton *> *OMCParseButtonSpecs(NSArray *specs)
         return self;
     }
     
+    // Derive the window's size limits from the SwiftUI content: the minimum is
+    // what the content reports for a zero size proposal, the maximum for an
+    // infinite one (measured on the bare root element - the window-level
+    // toast/modal wrapper always expands to fill). A JSON root with a fixed
+    // frame (exact width and height) reports min == max and yields a
+    // fixed-size, non-user-resizable window.
+    NSSize minContentSize = [ActionUIObjC minContentSizeForWindowUUID:windowUUID];
+    NSSize maxContentSize = [ActionUIObjC maxContentSizeForWindowUUID:windowUUID];
+    BOOL hasSizeLimits = (minContentSize.width > 10.0) && (minContentSize.height > 10.0);
+    BOOL isFixedSize = hasSizeLimits &&
+        ((maxContentSize.width - minContentSize.width) < 1.0) &&
+        ((maxContentSize.height - minContentSize.height) < 1.0);
+
     // Determine window style and class based on WINDOW_TYPE
     NSWindowStyleMask styleMask = NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskResizable;
+    if(isFixedSize)
+        styleMask &= ~NSWindowStyleMaskResizable;
     BOOL usePanel = NO;
     NSWindowLevel windowLevel = NSNormalWindowLevel;
 
@@ -231,6 +246,13 @@ static NSArray<ActionUIObjCDialogButton *> *OMCParseButtonSpecs(NSArray *specs)
     [window setReleasedWhenClosed:NO];
     [window setContentView:self.hostingController.view];
 
+    // Constrain user resizing to the content's SwiftUI size limits.
+    if(hasSizeLimits)
+    {
+        window.contentMinSize = minContentSize;
+        window.contentMaxSize = maxContentSize;
+    }
+
     // Autosave name: if a saved frame exists it overrides the fitting size above.
     NSString *autosaveName = [NSString stringWithFormat:@"OMC.%@", dialogJsonName];
     [window setFrameAutosaveName:autosaveName];
@@ -244,6 +266,12 @@ static NSArray<ActionUIObjCDialogButton *> *OMCParseButtonSpecs(NSArray *specs)
         if(fittingSize.width > 10 && fittingSize.height > 10)
             [window setContentSize:fittingSize];
         [window center];
+    }
+    else if(isFixedSize)
+    {
+        // A frame autosaved before the content became fixed-size may carry a
+        // stale size; the content size is authoritative, keep the position.
+        [window setContentSize:minContentSize];
     }
 
     [window setDelegate:self];
