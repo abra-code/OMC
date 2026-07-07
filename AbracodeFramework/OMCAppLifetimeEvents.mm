@@ -9,11 +9,15 @@
 #include "DebugSettings.h"
 #include "OMCPrivateConstants.h"
 
-// Optional ActionUI add-on: registers the "QuickLook" element type so dialogs can use it.
-// Linked via the ActionUIQuickLook Swift package (see project setup). The add-on exposes a plain
+// Optional ActionUI add-ons: register extra element types so dialogs can use them.
+// Each is linked via its own ActionUI Swift package (see project setup) and exposes a plain
 // C entry point (@_cdecl) rather than an Objective-C class, so we forward-declare it here - it is
-// not emitted into a generated -Swift.h. Call once on the main thread before any dialog is built.
+// not emitted into a generated -Swift.h. Call each once on the main thread before any dialog is built.
 extern "C" void ActionUIQuickLook_register(void);
+extern "C" void ActionUICachedImage_register(void);
+extern "C" void ActionUIRichText_register(void);
+extern "C" void ActionUIDiff_register(void);
+extern "C" void ActionUIChat_register(void);
 
 @interface OMCAppLifetimeEvents : NSObject
 @end
@@ -82,6 +86,10 @@ extern "C" void ActionUIQuickLook_register(void);
 
     // Register optional ActionUI add-on element types before any dialog window is built.
     ActionUIQuickLook_register();
+    ActionUICachedImage_register();
+    ActionUIRichText_register();
+    ActionUIDiff_register();
+    ActionUIChat_register();
 
     [OMCAppLifetimeEvents compilePythonScriptsIfEmbedded:[NSBundle mainBundle]];
 

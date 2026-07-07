@@ -1,0 +1,10 @@
+{
+  "type": "Diff",
+  "id": 1,
+  "properties": {
+    "oldText": "func f() {}",
+    "newText": "func f() { g() }",
+    "contextLines": 3,
+    "maxRenderedLines": 300
+  }
+}

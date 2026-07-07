@@ -1,0 +1,15 @@
+{
+  "type": "RichText",
+  "description": "Rich-text DISPLAY element (ActionUIRichText add-on) backed by the RichText package. Renders a whole Markdown document (headings, code blocks, quotes, lists, GFM tables, inline styling, links) into one native text view, selectable and copyable as a single unit. macOS/iOS/visionOS. Driven by the element value or the markdown property.",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": true,
+  "topLevelKeys": [],
+  "ownProperties": {
+    "markdown":           { "types": ["string"],  "required": false, "description": "Markdown source to render (seed for the element value). Empty or nil renders an empty document" },
+    "baseFontSize":       { "types": ["number"],  "required": false, "description": "Base font point size; omit for Dynamic Type body" },
+    "syntaxHighlighting": { "types": ["boolean"], "required": false, "description": "Color fenced code blocks by language. Default from the RichText theme" }
+  },
+  "observable": {
+    "value": { "types": ["string"], "description": "Current Markdown source; write new Markdown to re-render" }
+  }
+}

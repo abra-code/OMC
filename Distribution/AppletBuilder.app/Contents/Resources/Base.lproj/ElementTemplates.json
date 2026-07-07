@@ -82,5 +82,9 @@
 {"title": "CommandGroup", "tag": "CommandGroup"},
 {"title": "WindowGroup", "tag": "WindowGroup"},
 {"section": "Add-ons"},
-{"title": "QuickLook", "tag": "QuickLook"}
+{"title": "QuickLook", "tag": "QuickLook"},
+{"title": "Diff", "tag": "Diff"},
+{"title": "CachedImage", "tag": "CachedImage"},
+{"title": "RichText", "tag": "RichText"},
+{"title": "Chat", "tag": "Chat"}
 ]

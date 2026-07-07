@@ -1,0 +1,66 @@
+{
+  "type": "Chat",
+  "description": "Native chat surface (ActionUIChat add-on). A transcript above a composer, driven by a transport selected in the element's config block (non-visual operational settings: protocol and transport; injectable at runtime via setElementConfig). Transports are separate, statically linked modules behind a registry: local is the only built-in; a host adds a protocol by linking its module (ActionUIChatACP for acp) and registering it, or by linking the umbrella ActionUIChat product that bundles them; an unregistered protocol degrades to local. Landed: the local transport with a single-alignment transcript (M1), streaming Markdown and image items (M2), the agentic surfaces - thoughts, tool-call cards, permission approvals - routed by the surfaces property, the ACP transport that hosts any Agent Client Protocol agent over stdio on macOS (M3), and the openai-sse transport that streams OpenAI-compatible /v1/chat/completions (reasoning folded into thoughts, tool calls rendered but not executed, token usage). Dual alignment and side panels arrive in later milestones. Session transcript: a saved session is DATA restored at runtime into states[content] (setElementState / setElementStateFromString, after construction - not a document property); entryActionID persists each finalized entry incrementally; readOnly is the read-only viewer mode.",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": true,
+  "topLevelKeys": [],
+  "ownConfig": {
+    "protocol": {
+      "types": ["string"],
+      "required": false,
+      "description": "Transport selector. Any string is valid: which names resolve to a transport is a runtime fact (whether the host linked and registered that transport's module), so there is no fixed name list here. Default local (built in). local streams a scripted reply; openai-sse (the ActionUIChatOpenAI module) streams an OpenAI-compatible /v1/chat/completions endpoint (llama-server, mlx_lm.server, ...; transport.baseURL is required); acp (the ActionUIChatACP module, macOS: the ACP agent runs as a subprocess; transport.command is required) hosts an Agent Client Protocol agent over stdio. A protocol whose module the host did not register degrades to local at runtime."
+    },
+    "transport": {
+      "types": ["object"],
+      "required": false,
+      "description": "Protocol-specific transport settings, interpreted by the chosen transport. The local transport honors echo (boolean, default true: stream a demo reply), reply (string: echo default, markdown, or agentic - a scripted agent turn with thoughts, tool calls, and a permission gate), and chunkMs (integer: demo streaming pace, default 45). The openai-sse transport requires baseURL (string: the OpenAI-compatible endpoint, e.g. http://127.0.0.1:8080/v1) and honors model (string, default auto: resolved from GET {baseURL}/models), apiKey (string, default empty: sent as a Bearer token when set), systemPrompt (string, default empty), and params (object: merged into the request body, e.g. temperature and max_tokens; a max_tokens of 0 means unlimited and is omitted). The acp transport requires command (array of strings: the agent argv, e.g. [\"claude-code-acp\"]) and honors cwd (string: the session root; ~ expands, default the host's current directory) and mcpServers (array: MCP server declarations passed to the agent verbatim)."
+    }
+  },
+  "ownProperties": {
+    "appearance": {
+      "types": ["object"],
+      "required": false,
+      "description": "Transcript appearance",
+      "properties": {
+        "alignment":      { "types": ["string"],  "required": false, "enum": ["single", "dual"], "description": "single (default): leading/full-width. dual (later): incoming leading, outgoing trailing" },
+        "showRoleLabels": { "types": ["boolean"], "required": false, "description": "Show a small role label above each message; default true" },
+        "theme":          { "types": ["string"],  "required": false, "enum": ["auto", "light", "dark"], "description": "Color scheme; default auto" }
+      }
+    },
+    "roles": {
+      "types": ["object"],
+      "required": false,
+      "description": "Per-role styling, keyed by role (local, agent, remote, system). Each value is an object with optional label, tint, and side (side is used by dual alignment, a later milestone)."
+    },
+    "input": {
+      "types": ["object"],
+      "required": false,
+      "description": "Composer configuration",
+      "properties": {
+        "enabled":     { "types": ["boolean"], "required": false, "description": "Whether the composer accepts input; default true" },
+        "placeholder": { "types": ["string"],  "required": false, "description": "Composer placeholder; default Message" },
+        "submitOn":    { "types": ["string"],  "required": false, "enum": ["return", "modifier-return", "shift-return-newline"], "description": "Submit policy; default return" }
+      }
+    },
+    "surfaces": {
+      "types": ["object"],
+      "required": false,
+      "description": "Routing for agentic transport items (only transports that emit them are affected)",
+      "properties": {
+        "toolCalls": { "types": ["string"], "required": false, "enum": ["inline", "collapsed", "hidden", "panel"], "description": "Tool-call cards: inline (default: a status card whose detail - file reads, diffs, raw I/O - stays folded until tapped, with long content truncated), collapsed (a compact one-line row), hidden (dropped). panel renders inline for now" },
+        "thoughts":  { "types": ["string"], "required": false, "enum": ["inline", "collapsed", "hidden", "panel"], "description": "Streamed reasoning: collapsed (default: folded behind a disclosure), inline (expanded), hidden (dropped). panel renders inline for now" },
+        "plan":      { "types": ["string"], "required": false, "enum": ["panel", "collapsed", "hidden", "inline"], "description": "The agent's task plan, pinned above the transcript (never interleaved as chat): panel (default: expanded), collapsed (pinned, folded), hidden (dropped). inline is coerced to panel" },
+        "diffs":     { "types": ["string"], "required": false, "enum": ["inline", "collapsed", "hidden", "panel"], "description": "Agent-proposed file diffs, rendered inside the tool card's detail as a line diff: inline (default), hidden (dropped). collapsed / panel are coerced to inline" }
+      }
+    },
+    "sendActionID":    { "types": ["string"], "required": false, "description": "Fired when the user submits a message" },
+    "stopActionID":    { "types": ["string"], "required": false, "description": "Fired when the user cancels an in-flight turn" },
+    "messageActionID": { "types": ["string"], "required": false, "description": "Fired per finalized message (user and agent)" },
+    "errorActionID":   { "types": ["string"], "required": false, "description": "Fired on a transport / parse error" },
+    "approveToolActionID": { "types": ["string"], "required": false, "description": "Fired when an agent requests permission for a tool call (the request queues an approval card in the element)" },
+    "entryActionID": { "types": ["string"], "required": false, "description": "Fired per FINALIZED transcript entry (a message, thought, or tool call once, when it reaches its final state; plus image, system, error, plan, usage) with a JSON envelope { sequence, type, id, data } as the action context, for crash-safe incremental persistence (upsert by type+id). Never fired on streaming deltas. Keep the handler inexpensive - usage / plan updates can fire several times per turn." },
+    "readOnly": { "types": ["boolean"], "required": false, "description": "Read-only viewer mode (default false): hides the composer and menus and starts no transport (protocol may be omitted). Pair with a runtime setElementState(content, ...) to show a saved session." },
+    "content": { "types": ["object"], "required": false, "description": "Pre-populates a transcript { version, items, usage?, plan?, title? } for previews / basic internal testing ONLY - NOT the production restore path. A session is DATA: restore it at runtime by injecting a serialized transcript into states[content], after the interface is built (a static UI document should not carry a chat transcript). For repeated restores (a session switcher reusing one element) use a stable representation - setElementState(content, jsonString) - because setElementStateFromString is a one-time restore per key; the simplest robust pattern is a fresh Chat element per session. Persistence flows the other way, per finalized entry, via entryActionID." }
+  },
+  "observable": {}
+}

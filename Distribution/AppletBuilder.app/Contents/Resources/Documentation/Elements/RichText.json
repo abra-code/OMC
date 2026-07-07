@@ -1,0 +1,7 @@
+{
+  "type": "RichText",
+  "id": 1,
+  "properties": {
+    "markdown": "# Title\n\nA **bold** word, a `code` span, and a [link](https://example.com)."
+  }
+}

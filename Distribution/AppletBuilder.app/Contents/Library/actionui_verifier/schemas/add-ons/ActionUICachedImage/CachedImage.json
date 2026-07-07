@@ -1,0 +1,21 @@
+{
+  "type": "CachedImage",
+  "description": "Cached, off-main image view (ActionUICachedImage add-on) backed by AsyncImageCache's ImageStore. Fetches/decodes/downscales off the main thread and serves from a two-tier memory + on-disk cache; the natural pixel size is known up front so layout reserves the exact box with no reflow on hydration. macOS/iOS/visionOS. Driven by the element value or the url property.",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": true,
+  "topLevelKeys": [],
+  "ownProperties": {
+    "url":           { "types": ["string"], "required": false, "description": "Web, file, or data URL of the image (seed for the element value). Nil or invalid shows the placeholder" },
+    "intrinsicSize": { "types": ["object"], "required": false, "description": "The source's natural size, if known ahead of load; reserves the exact box up front so the image hydrates with zero reflow",
+      "properties": {
+        "width":  { "types": ["number"], "required": true, "description": "Natural width in pixels (positive)" },
+        "height": { "types": ["number"], "required": true, "description": "Natural height in pixels (positive)" }
+      }
+    },
+    "contentMode":   { "types": ["string"], "required": false, "enum": ["fit", "fill"], "description": "How the image fills the reserved box. Default fill" },
+    "maxPixelWidth": { "types": ["number"], "required": false, "description": "Cap the decoded width in pixels (downscaled off-main) to bound memory for large sources; omit for natural resolution" }
+  },
+  "observable": {
+    "value": { "types": ["string"], "description": "Current image URL string; write a new URL to load a different image" }
+  }
+}

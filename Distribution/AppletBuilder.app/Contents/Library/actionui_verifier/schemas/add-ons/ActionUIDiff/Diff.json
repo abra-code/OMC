@@ -1,0 +1,16 @@
+{
+  "type": "Diff",
+  "description": "Embedded unified line-diff viewer (ActionUIDiff add-on): renders the difference between two texts (inline or read from files) as hunks with line-number gutters and +/- markers; display-only, no observable value.",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": true,
+  "topLevelKeys": [],
+  "ownProperties": {
+    "oldText":          { "types": ["string"],  "required": false, "description": "Inline text for the old (left) side to compare" },
+    "newText":          { "types": ["string"],  "required": false, "description": "Inline text for the new (right) side to compare" },
+    "oldFile":          { "types": ["string"],  "required": false, "description": "Absolute local path (tilde-expanded), read as UTF-8; used only when oldText is absent" },
+    "newFile":          { "types": ["string"],  "required": false, "description": "Absolute local path (tilde-expanded), read as UTF-8; used only when newText is absent" },
+    "contextLines":     { "types": ["integer"], "required": false, "description": "Unchanged lines kept around each change; default 3, must be >= 0" },
+    "maxRenderedLines": { "types": ["integer"], "required": false, "description": "Render cap before a truncation note; default 300, must be > 0" }
+  },
+  "observable": {}
+}

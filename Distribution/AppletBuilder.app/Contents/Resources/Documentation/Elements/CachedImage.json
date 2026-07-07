@@ -1,0 +1,10 @@
+{
+  "type": "CachedImage",
+  "id": 1,
+  "properties": {
+    "url": "https://example.com/photo.jpg",
+    "intrinsicSize": { "width": 1024, "height": 768 },
+    "contentMode": "fill",
+    "cornerRadius": 12
+  }
+}
