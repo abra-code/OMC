@@ -25,7 +25,6 @@ Every element has a `type`, an optional integer `id`, and a `properties` object.
 - **`id`** — positive integer for programmatic access (get/set values, enable/disable). Views without an `id` are static.
 - **`properties`** — element-specific and universal modifier properties.
 - **`children`** — ordered list of child elements (for containers only).
-- **`config`** — optional, for the few complex elements that have one: the element's non-visual configuration. Properties model SwiftUI modifiers (what the element shows and how interaction is presented); `config` carries what the element *does* (wire protocol, transports, data sources). Hosts can read/override it at runtime via `getElementConfig`/`setElementConfig` — the canonical use is loading a static document and injecting runtime- or session-specific settings before the view is first shown. An element's schema documents its config keys; most elements have none.
 
 ## Window Content
 

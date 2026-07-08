@@ -1,9 +1,6 @@
 {
   "type": "Chat",
   "id": 1,
-  "config": {
-    "protocol": "local"
-  },
   "properties": {
     "appearance": { "alignment": "single", "showRoleLabels": true },
     "input": { "enabled": true, "placeholder": "Message", "submitOn": "return" },

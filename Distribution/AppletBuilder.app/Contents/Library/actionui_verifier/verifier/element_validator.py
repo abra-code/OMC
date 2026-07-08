@@ -16,11 +16,7 @@ from .platform_filter import (
 
 
 # Top-level keys that are structural (never element-specific properties).
-# "config" is the element's NON-VISUAL configuration block (sibling of properties):
-# properties model SwiftUI modifiers (what the element shows), config carries what a
-# complex element DOES (wire protocol, transports, data sources). Validated against
-# the schema's ownConfig section.
-_STRUCTURAL_KEYS = {"type", "id", "properties", "config"}
+_STRUCTURAL_KEYS = {"type", "id", "properties"}
 
 # Universal subview keys any element may carry (from View schema). contextMenu (the
 # menu's action-item array) and contextMenuPreview (the optional preview view) mirror
@@ -193,23 +189,6 @@ class ElementValidator:
                 props, paired_own_props, paired_type, label_path
             )
 
-        # ── config ────────────────────────────────────────────────────────────
-        # The element's NON-VISUAL configuration block. Validated against the
-        # schema's ownConfig; unlike properties there is no View-base fallback
-        # (config is element-specific by definition).
-        for suffix, cfg in expanded.get("config", []):
-            label_path = f"{path}{sep}{format_suffix_label('config', suffix)}"
-            if not isinstance(cfg, dict):
-                issues.append(ValidationIssue("error", label_path, "must be an object"))
-                continue
-            paired_type = type_by_suffix.get(suffix) or primary_type
-            paired_schema = self._loader.element_schema(paired_type)
-            paired_own_config = paired_schema.get("ownConfig", {}) if paired_schema else {}
-            issues += self._validate_properties(
-                cfg, paired_own_config, paired_type, label_path,
-                base_props={}, kind="config key",
-            )
-
         # ── recursive children / subviews ─────────────────────────────────────
         # Subview keys allowed: union of every type variant's topLevelKeys plus
         # the universal subview set.
@@ -254,10 +233,9 @@ class ElementValidator:
         base_props: dict | None = None,
         kind: str = "property",
     ) -> list[ValidationIssue]:
-        # Validates one key/value block against `own_props` specs with `base_props`
-        # as the shared fallback vocabulary. For the properties block, base_props is
-        # the View base schema; for the config block it is empty (pass {}) and
-        # `kind` names the block in messages.
+        # Validates one key/value block against `own_props` specs, falling back
+        # to `base_props` (the View base schema) for keys not in `own_props`.
+        # `kind` names the block in warning/error messages (e.g. "property").
         issues: list[ValidationIssue] = []
         if base_props is None:
             base_props = self._view_props

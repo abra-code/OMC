@@ -8,34 +8,6 @@ JSON schema and usage documentation for `Chat` (ActionUIChat add-on).
  {
    "type": "Chat",
    "id": 1,                  // Required: Non-zero positive integer for runtime programmatic interaction
-   "config": {               // Optional: NON-VISUAL operational settings (the element-level config block,
-                             //           sibling of properties). Hosts can inject runtime/session-specific
-                             //           values via setElementConfig between loading and showing a document.
-     "protocol": "local",                 // Optional: transport selector. "local" (default) is built in and streams a
-                                          //           scripted reply. Every other protocol is provided by a separate
-                                          //           transport module the host links and registers; the umbrella
-                                          //           ActionUIChat product bundles them and wires them in register().
-                                          //           "openai-sse" (the ActionUIChatOpenAI module) streams an
-                                          //           OpenAI-compatible /v1/chat/completions endpoint (llama-server,
-                                          //           mlx_lm.server, ...). "acp" (the ActionUIChatACP module, macOS
-                                          //           only: the agent is a subprocess) runs an Agent Client Protocol
-                                          //           agent over stdio. A protocol whose module the host did not
-                                          //           register degrades to "local".
-     "transport": { "echo": true }        // Optional: protocol-specific settings (interpreted by the chosen transport).
-                                          //           "local" honors "echo" (default true: stream a demo reply),
-                                          //           "reply" ("echo" default | "markdown" | "agentic": a scripted
-                                          //           agent turn with thoughts, tool calls, and a permission gate),
-                                          //           and "chunkMs" (demo streaming pace, default 45).
-                                          //           "openai-sse" requires "baseURL" (the endpoint, e.g.
-                                          //           "http://127.0.0.1:8080/v1") and honors "model" (default "auto":
-                                          //           resolved from GET {baseURL}/models), "apiKey" (default ""),
-                                          //           "systemPrompt" (default ""), and "params" (merged into the
-                                          //           request body, e.g. { "temperature": 0.8, "max_tokens": 0 };
-                                          //           max_tokens 0 means unlimited and is omitted).
-                                          //           "acp" requires "command" (the agent argv, e.g. ["claude-code-acp"])
-                                          //           and honors "cwd" (the session root; "~" expands, default: the
-                                          //           host's current directory) and "mcpServers" (passed to the agent).
-   },
    "properties": {
      "appearance": {                      // Optional: transcript appearance
        "alignment": "single",             //   "single" (default): leading / full-width, parties by tint + label.
@@ -79,11 +51,44 @@ JSON schema and usage documentation for `Chat` (ActionUIChat add-on).
                                           //           the action context, for crash-safe incremental persistence.
                                           //           Never fired on streaming deltas.
      "readOnly": false                    // Optional (default false): read-only viewer mode - hides the composer and
-                                          //           menus and starts NO transport ("protocol" may be omitted). Pair
-                                          //           with a runtime setElementState("content", ...) to show a saved session.
+                                          //           menus and needs no states["config"] injection (there is no
+                                          //           transport to start). Pair with a runtime
+                                          //           setElementState("content", ...) to show a saved session.
                                           // (Session data is NOT carried in the document - see "Session transcript" below.
                                           //  "properties.content" pre-populates a transcript for previews / testing only.)
    }
+ }
+// The document above declares ONLY properties - it is inert (composer disabled, no transport) until a HOST
+// injects protocol/transport into runtime state, after the element is built:
+//   setElementState(windowUUID, chatID, "config", ["protocol": "openai-sse",
+//                                                   "transport": ["baseURL": "http://127.0.0.1:8080/v1"]])
+// The value under states["config"] is the WHOLE object below (not a document field, not split across keys):
+ {
+   "protocol": "local",                  // Transport selector. "local" (default) is built in and streams a
+                                         //           scripted reply. Every other protocol is provided by a separate
+                                         //           transport module the host links and registers; the umbrella
+                                         //           ActionUIChat product bundles them and wires them in register().
+                                         //           "openai-sse" (the ActionUIChatOpenAI module) streams an
+                                         //           OpenAI-compatible /v1/chat/completions endpoint (llama-server,
+                                         //           mlx_lm.server, ...). "acp" (the ActionUIChatACP module, macOS
+                                         //           only: the agent is a subprocess) runs an Agent Client Protocol
+                                         //           agent over stdio. A protocol whose module the host did not
+                                         //           register degrades to "local".
+   "transport": { "echo": true }         // Protocol-specific settings (interpreted by the chosen transport).
+                                         //           "local" honors "echo" (default true: stream a demo reply),
+                                         //           "reply" ("echo" default | "markdown" | "agentic": a scripted
+                                         //           agent turn with thoughts, tool calls, and a permission gate),
+                                         //           and "chunkMs" (demo streaming pace, default 45).
+                                         //           "openai-sse" requires "baseURL" (the endpoint, e.g.
+                                         //           "http://127.0.0.1:8080/v1") and honors "model" (default "auto":
+                                         //           resolved from GET {baseURL}/models), "apiKey" (default ""),
+                                         //           "systemPrompt" (default ""), and "params" (merged into the
+                                         //           request body, e.g. { "temperature": 0.8, "max_tokens": 0 };
+                                         //           max_tokens 0 means unlimited and is omitted).
+                                         //           "acp" requires "command" (the agent argv, e.g. ["claude-code-acp"])
+                                         //           and honors "cwd" (the session root; "~" expands, default: the
+                                         //           host's current directory) and "mcpServers" (an array of MCP
+                                         //           server declarations passed to the agent verbatim).
  }
 // A native chat surface, implemented as an ActionUI add-on (registered via ActionUIChat.register()).
 // A transcript above a composer; the transport (selected by "protocol") drives the conversation and the
@@ -135,11 +140,13 @@ JSON schema and usage documentation for `Chat` (ActionUIChat add-on).
 // turn). Session identity (ids, titles) stays app-side; the component only passes the optional title through
 // untouched. `properties.content` pre-populates a transcript for previews / basic internal testing only - it
 // is NOT the production restore path.
-// The non-visual settings (protocol, transport) live in the element-level "config" block and are host-
-// injectable via setElementConfig - the canonical embedding loads a static document, injects the
-// runtime/session-specific transport (resolved agent path, working directory), then shows the view
-// (see DemoApp). The transport is consumed when the chat starts; a later config change takes effect
-// on the element's next rebuild.
+// The non-visual settings (protocol, transport) are NOT a document field: the element is built inert
+// (no transport, disabled composer) and a HOST injects them at runtime into states["config"] via
+// setElementState, after the element is built - the canonical embedding loads a static document, then
+// injects the runtime/session-specific config (resolved agent path, working directory), then shows the
+// view (see DemoApp). The transport is built once a viable config arrives and then FROZEN for that
+// element's lifetime; a later states["config"] update does not rebuild it - use a fresh Chat element to
+// switch protocol or transport.
 //
 // Baseline View properties (padding, hidden, foregroundStyle, font, background, frame, opacity,
 // cornerRadius, actionID, disabled, onAppearActionID, onDisappearActionID, etc.) are inherited from base View.
