@@ -180,7 +180,7 @@
               "id": 724,
               "properties": {
                 "text": "",
-                "foregroundColor": "#CC6600",
+                "foregroundStyle": "#CC6600",
                 "font": { "size": 11 }
               }
             },
