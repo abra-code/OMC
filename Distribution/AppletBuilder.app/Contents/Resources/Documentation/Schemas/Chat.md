@@ -11,14 +11,30 @@ JSON schema and usage documentation for `Chat` (ActionUIChat add-on).
    "properties": {
      "appearance": {                      // Optional: transcript appearance
        "alignment": "single",             //   "single" (default): leading / full-width, parties by tint + label.
-                                          //   "dual" (later): incoming leading, outgoing trailing.
+                                          //   "dual": outgoing (self) trailing with the role tint, incoming leading -
+                                          //   the messaging-app layout for person-to-person / group chat.
        "showRoleLabels": true,            //   Show a small role label above each message; default true.
-       "theme": "auto"                    //   "auto" | "light" | "dark"; default "auto".
+       "theme": "auto",                   //   "auto" | "light" | "dark"; default "auto".
+       "showTimestamps": true,            //   Time caption under a run + day separators; default true in "dual",
+                                          //   false in "single". Renders only on items that carry a timestamp.
+       "showAvatars": false,              //   Sender avatar (initials disc when none resolves) beside incoming
+                                          //   messages; default false (opt-in).
+       "showDeliveryStatus": true         //   Delivery caption (Sending / Sent / Delivered / Read, Failed w/ retry)
+                                          //   under the last own message of a run; default true. Renders only on
+                                          //   messages that carry a status (v1 messages never do).
      },
-     "roles": {                           // Optional: per-role label / tint (and side, used by "dual" later)
+     "roles": {                           // Optional: per-role label / tint / side. In "dual", self (role "local"
+                                          //           or a participant marked isSelf) aligns trailing and others
+                                          //           leading; an explicit per-role "side" overrides that.
        "local": { "label": "You",   "tint": "accent" },
        "agent": { "label": "Agent", "tint": "secondary" }
      },
+     "features": {                        // Optional: person-to-person / group affordances the document enables.
+       "reactions": false,                //   All default false (opt-in). An affordance appears only when the
+       "editing": false,                  //   document enables it AND the active transport advertises the matching
+       "deletion": false,                 //   capability. reactions: emoji reactions (quick row + chips). editing:
+       "replies": false                   //   edit own messages ("(edited)" badge). deletion: delete own messages
+     },                                   //   ("Message deleted" tombstone). replies: reply to / quote a message.
      "input": {                           // Optional: composer
        "enabled": true,                   //   Default true.
        "placeholder": "Message",          //   Default "Message".
@@ -45,6 +61,11 @@ JSON schema and usage documentation for `Chat` (ActionUIChat add-on).
      "messageActionID": "chat.message",   // Optional: fired per finalized message (user and agent)
      "errorActionID": "chat.error",       // Optional: fired on a transport / parse error
      "approveToolActionID": "chat.tool.approve", // Optional: fired when an agent requests tool permission
+     "attachActionID": "chat.attach",     // Optional: shows the composer's attach (paperclip) button; fired on tap.
+                                          //           The host mediates the picker and hands the file to its transport
+                                          //           out of band. The ONLY person-to-person host action ID - every
+                                          //           other v2 affordance (reactions, edits, replies, deletes, read
+                                          //           marks, paging, typing) flows to the transport as a command.
      "entryActionID": "chat.entry",       // Optional: fired per FINALIZED transcript entry (message, thought,
                                           //           completed/failed tool call, image, system, error, plan,
                                           //           usage) with a JSON envelope { sequence, type, id, data } as
@@ -116,13 +137,26 @@ JSON schema and usage documentation for `Chat` (ActionUIChat add-on).
 // now render inside the tool card's detail as a real line diff (the DiffView product of the sibling
 // ActionUIDiff add-on, which these tool cards consume: hunks, old / new line-number gutters, +/-
 // markers; routed by surfaces.diffs, "hidden" drops them). Transports are separate, statically linked
-// modules behind a registry: "local" is the only built-in, and a host adds a protocol by linking its
+// modules behind a registry: "local" (a scripted echo / agentic demo) and "local-p2p" (a scripted
+// person-to-person / group demo) are built in, and a host adds another protocol by linking its
 // module (ActionUIChatOpenAI for "openai-sse", ActionUIChatACP for "acp") and calling its register() - or
 // by linking the umbrella ActionUIChat product, whose register() wires every bundled transport at once; a
 // protocol whose module was not registered degrades to "local". The "openai-sse" transport streams an
 // OpenAI-compatible /v1/chat/completions endpoint (llama-server, mlx_lm.server, or any compatible server):
 // plain streaming chat with reasoning folded into thoughts, tool calls rendered as (unexecuted) cards, and
-// token usage in the status bar - no agent process required. Dual alignment and the remaining M5 surfaces
+// token usage in the status bar - no agent process required.
+//
+// And person-to-person / group chat (appearance.alignment "dual"): your messages align trailing with the
+// role tint, everyone else's leading, the messaging-app layout. It adds - all additive, all optional, so a
+// v1 document is unchanged - message timestamps and day separators, per-sender names and avatars (or an
+// initials disc), delivery status (Sending / Sent / Delivered / Read, and Failed with tap-to-retry), emoji
+// reactions, replies (a tappable quoted-excerpt block), message editing and deletion (a tombstone), member
+// and call events (centered captions), file and voice-message items (a transfer progress bar / an audio
+// player), a typing indicator, and paged history (scroll to the top to load earlier). Each interactive
+// affordance appears only when the document enables it (the "features" object) AND the active transport
+// advertises the matching capability; those conversation actions flow to the transport as commands, and the
+// sole new host action ID is "attachActionID" (the composer's attach button). The built-in "local-p2p"
+// transport scripts all of it with no wire (the ChatPeople / ChatGroup examples). The remaining surfaces
 // (terminals, multi-session) arrive in later milestones (see Private/chat-element-design.md).
 //
 // Session transcript (P0-2): the element has no scalar value - its session transcript is CONTENT. A host

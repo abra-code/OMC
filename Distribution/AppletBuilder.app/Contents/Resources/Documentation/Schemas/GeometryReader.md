@@ -18,7 +18,7 @@ JSON schema and usage documentation for `GeometryReader`.
    // Behavior: GeometryReader is a greedy container — it expands to fill all available space offered by its parent.
    // SwiftUI default alignment is .topLeading (not .center like most containers).
    // As a subview of HStack/VStack, it consumes all remaining flexible space, pushing siblings to their minimum size.
-   // Note: These properties are specific to GeometryReader. Baseline View properties (padding, hidden, foregroundColor, font, background, frame, opacity, cornerRadius, actionID, disabled) and additional View protocol modifiers are inherited and applied via ActionUIRegistry.shared.applyViewModifiers(to: baseView, properties: element.properties).
+   // Note: These properties are specific to GeometryReader. Baseline View properties (padding, hidden, foregroundStyle, font, background, frame, opacity, cornerRadius, actionID, disabled) and additional View protocol modifiers are inherited and applied via ActionUIRegistry.shared.applyViewModifiers(to: baseView, properties: element.properties).
  }
 // Observable state:
 //   states["size"]  [Double, Double]   Container width and height as [width, height].

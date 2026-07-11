@@ -13,8 +13,12 @@ JSON schema and usage documentation for `RichText` (ActionUIRichText add-on).
                                              // Optional: Markdown source to render; seeds the element value.
                                              //           "" or nil renders an empty document.
      "baseFontSize": 15,                     // Optional: Number; base font point size. Omit for Dynamic Type body.
-     "syntaxHighlighting": true              // Optional: Bool; color fenced code blocks by language. Default from
+     "syntaxHighlighting": true,             // Optional: Bool; color fenced code blocks by language. Default from
                                              //           the RichText theme.
+     "widthBehavior": "fill"                 // Optional: "fill" (default) fills the proposed width, left-aligned -
+                                             //           block / document layout. "hug" sizes to the content
+                                             //           width, wrapping only when it exceeds the proposal (the
+                                             //           messaging-bubble idiom; pair with frame.maxWidth to cap).
    }
  }
 // A rich-text DISPLAY element backed by the RichText package, implemented as an ActionUI add-on

@@ -143,7 +143,6 @@
         { "types": ["array"], "itemTypes": ["string","object"], "description": "The transitions combined" }
       ]
     },
-    "foregroundColor": { "types": ["string"], "required": false, "description": "Alias for foregroundStyle; SwiftUI color, hex, or semantic style" },
     "imageScale":      { "types": ["string"], "required": false, "enum": ["small","medium","large"], "description": "SF Symbol image scale modifier" },
     "actionID":                       { "types": ["string"], "required": false },
     "valueChangeActionID":             { "types": ["string"], "required": false },

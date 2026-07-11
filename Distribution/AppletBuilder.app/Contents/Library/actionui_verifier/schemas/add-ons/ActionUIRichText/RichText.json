@@ -7,7 +7,8 @@
   "ownProperties": {
     "markdown":           { "types": ["string"],  "required": false, "description": "Markdown source to render (seed for the element value). Empty or nil renders an empty document" },
     "baseFontSize":       { "types": ["number"],  "required": false, "description": "Base font point size; omit for Dynamic Type body" },
-    "syntaxHighlighting": { "types": ["boolean"], "required": false, "description": "Color fenced code blocks by language. Default from the RichText theme" }
+    "syntaxHighlighting": { "types": ["boolean"], "required": false, "description": "Color fenced code blocks by language. Default from the RichText theme" },
+    "widthBehavior":      { "types": ["string"],  "required": false, "enum": ["fill", "hug"], "description": "fill (default): fills the proposed width, left-aligned - block / document layout. hug: sizes to the content width, wrapping only when it exceeds the proposal (the messaging-bubble idiom; pair with frame.maxWidth to cap how wide it grows)" }
   },
   "observable": {
     "value": { "types": ["string"], "description": "Current Markdown source; write new Markdown to re-render" }

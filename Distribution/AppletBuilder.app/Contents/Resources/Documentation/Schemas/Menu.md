@@ -17,7 +17,7 @@ JSON schema and usage documentation for `Menu`.
    "children": [
      { "type": "Button", "properties": { "title": "Option 1" } }
    ] // Required: Array of child views (typically Buttons)
-   // Note: These properties are specific to Menu. Baseline View properties (padding, hidden, foregroundColor, font, background, frame, opacity, cornerRadius, actionID, disabled) and additional View protocol modifiers are inherited and applied via ActionUIRegistry.shared.applyViewModifiers(to: baseView, properties: element.properties).
+   // Note: These properties are specific to Menu. Baseline View properties (padding, hidden, foregroundStyle, font, background, frame, opacity, cornerRadius, actionID, disabled) and additional View protocol modifiers are inherited and applied via ActionUIRegistry.shared.applyViewModifiers(to: baseView, properties: element.properties).
    // Children can include Divider and Section to organize menu items:
    //   { "type": "Divider" }                                                          — visual separator line
    //   { "type": "Section", "properties": { "header": "Group" }, "children": [...] }  — named group with header

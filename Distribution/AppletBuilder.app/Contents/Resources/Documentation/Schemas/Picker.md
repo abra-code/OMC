@@ -22,7 +22,7 @@ JSON schema and usage documentation for `Picker`.
      "horizontalRadioGroupLayout": false, // Optional: Bool, applies .horizontalRadioGroupLayout() when pickerStyle is "radioGroup" (macOS only); defaults to false
      "actionID": "picker.selection", // Optional: String for action triggered on user-initiated selection change (inherited from View)
    }
-   // Note: actionID is triggered via onChange for user-initiated changes. Baseline View properties (padding, hidden, foregroundColor, font, background, frame, opacity, cornerRadius, disabled, etc.) are inherited and applied via ActionUIRegistry.shared.applyModifiers.
+   // Note: actionID is triggered via onChange for user-initiated changes. Baseline View properties (padding, hidden, foregroundStyle, font, background, frame, opacity, cornerRadius, disabled, etc.) are inherited and applied via ActionUIRegistry.shared.applyModifiers.
    // The selected tag is passed as `context` (Any?) to actionID handler.
  }
 // Observable state:

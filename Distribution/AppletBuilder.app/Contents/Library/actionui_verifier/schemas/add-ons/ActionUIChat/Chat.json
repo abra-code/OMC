@@ -10,15 +10,29 @@
       "required": false,
       "description": "Transcript appearance",
       "properties": {
-        "alignment":      { "types": ["string"],  "required": false, "enum": ["single", "dual"], "description": "single (default): leading/full-width. dual (later): incoming leading, outgoing trailing" },
+        "alignment":      { "types": ["string"],  "required": false, "enum": ["single", "dual"], "description": "single (default): every message leading/full-width, parties distinguished by tint + label. dual: outgoing (self) messages trailing with the role tint, incoming leading - the messaging-app layout for person-to-person / group chat" },
         "showRoleLabels": { "types": ["boolean"], "required": false, "description": "Show a small role label above each message; default true" },
-        "theme":          { "types": ["string"],  "required": false, "enum": ["auto", "light", "dark"], "description": "Color scheme; default auto" }
+        "theme":          { "types": ["string"],  "required": false, "enum": ["auto", "light", "dark"], "description": "Color scheme; default auto" },
+        "showTimestamps": { "types": ["boolean"], "required": false, "description": "Show a time caption under the last message of a run and day separators between calendar days; default true in dual alignment, false in single. Renders only on items that carry a timestamp" },
+        "showAvatars":    { "types": ["boolean"], "required": false, "description": "Show a sender avatar (or an initials disc when no avatar resolves) beside incoming messages; default false (opt-in)" },
+        "showDeliveryStatus": { "types": ["boolean"], "required": false, "description": "Show a delivery-state caption (Sending / Sent / Delivered / Read, or Failed with retry) under the last own message of a run; default true. Renders only on messages that carry a status (v1 messages never do)" }
       }
     },
     "roles": {
       "types": ["object"],
       "required": false,
-      "description": "Per-role styling, keyed by role (local, agent, remote, system). Each value is an object with optional label, tint, and side (side is used by dual alignment, a later milestone)."
+      "description": "Per-role styling, keyed by role (local, agent, remote, system). Each value is an object with optional label, tint, and side. In dual alignment, self (local, or a participant marked isSelf) aligns trailing and everyone else leading; an explicit per-role side overrides that derivation."
+    },
+    "features": {
+      "types": ["object"],
+      "required": false,
+      "description": "Person-to-person / group conversation affordances the document enables. All default false (opt-in). An affordance appears only when the document enables it AND the active transport advertises the matching capability.",
+      "properties": {
+        "reactions": { "types": ["boolean"], "required": false, "description": "Emoji reactions: a quick-reaction row in the message context menu and tappable reaction chips under bubbles; default false" },
+        "editing":   { "types": ["boolean"], "required": false, "description": "Edit own messages (an (edited) badge marks edited messages); default false" },
+        "deletion":  { "types": ["boolean"], "required": false, "description": "Delete own messages (renders a Message deleted tombstone); default false" },
+        "replies":   { "types": ["boolean"], "required": false, "description": "Reply to / quote a message (a quoted-excerpt block above the reply, tap to scroll to the original); default false" }
+      }
     },
     "input": {
       "types": ["object"],
@@ -46,6 +60,7 @@
     "messageActionID": { "types": ["string"], "required": false, "description": "Fired per finalized message (user and agent)" },
     "errorActionID":   { "types": ["string"], "required": false, "description": "Fired on a transport / parse error" },
     "approveToolActionID": { "types": ["string"], "required": false, "description": "Fired when an agent requests permission for a tool call (the request queues an approval card in the element)" },
+    "attachActionID": { "types": ["string"], "required": false, "description": "Fired by the composer's attach (paperclip) button, which appears only when this is set. The host mediates the file picker and hands the file to its transport out of band. This is the only person-to-person host action ID; every other v2 affordance (reactions, edits, replies, deletes, read marks, paging, typing) flows to the transport as a command, not a host action." },
     "entryActionID": { "types": ["string"], "required": false, "description": "Fired per FINALIZED transcript entry (a message, thought, or tool call once, when it reaches its final state; plus image, system, error, plan, usage) with a JSON envelope { sequence, type, id, data } as the action context, for crash-safe incremental persistence (upsert by type+id). Never fired on streaming deltas. Keep the handler inexpensive - usage / plan updates can fire several times per turn." },
     "readOnly": { "types": ["boolean"], "required": false, "description": "Read-only viewer mode (default false): hides the composer and menus and never needs a states[\"config\"] injection (there is no transport to start). Pair with a runtime setElementState(content, ...) to show a saved session." },
     "content": { "types": ["object"], "required": false, "description": "Pre-populates a transcript { version, items, usage?, plan?, title? } for previews / basic internal testing ONLY - NOT the production restore path. A session is DATA: restore it at runtime by injecting a serialized transcript into states[content], after the interface is built (a static UI document should not carry a chat transcript). For repeated restores (a session switcher reusing one element) use a stable representation - setElementState(content, jsonString) - because setElementStateFromString is a one-time restore per key; the simplest robust pattern is a fresh Chat element per session. Persistence flows the other way, per finalized entry, via entryActionID." }

@@ -13,7 +13,7 @@ JSON schema and usage documentation for `ColorPicker`.
      "selectedColor": "#FF0000", // Optional: Initial color (hex or named color), defaults to clear in buildView
      "actionID": "colorpicker.action" // Optional: String for action identifier, triggers on color change
    }
-   // Note: These properties are specific to ColorPicker. Baseline View properties (padding, hidden, foregroundColor, font, background, frame, opacity, cornerRadius, actionID, disabled) and additional View protocol modifiers are inherited and applied via ActionUIRegistry.shared.applyModifiers(to: baseView, properties: element.properties).
+   // Note: These properties are specific to ColorPicker. Baseline View properties (padding, hidden, foregroundStyle, font, background, frame, opacity, cornerRadius, actionID, disabled) and additional View protocol modifiers are inherited and applied via ActionUIRegistry.shared.applyModifiers(to: baseView, properties: element.properties).
  }
 // Observable state:
 //   value (String)   Selected color as a hex string (e.g., "#FF0000FF") (via getElementValue / setElementValue).

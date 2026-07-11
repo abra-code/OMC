@@ -28,6 +28,6 @@ JSON schema and usage documentation for `Group`.
    // Data is set at runtime via setElementRows(windowUUID:viewID:rows:).
    // states["content"] ([[String]]) holds the current rows.
    //
-   // Note: Group has no specific properties and does not control layout geometry, relying on the parent container for alignment and spacing. Baseline View properties (padding, hidden, foregroundColor, font, background, frame, opacity, cornerRadius, actionID, disabled) and additional View protocol modifiers are supported and applied via ActionUIRegistry.shared.applyViewModifiers to the group as a whole.
+   // Note: Group has no specific properties and does not control layout geometry, relying on the parent container for alignment and spacing. Baseline View properties (padding, hidden, foregroundStyle, font, background, frame, opacity, cornerRadius, actionID, disabled) and additional View protocol modifiers are supported and applied via ActionUIRegistry.shared.applyViewModifiers to the group as a whole.
  }
 ```

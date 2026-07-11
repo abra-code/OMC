@@ -32,5 +32,5 @@ JSON schema and usage documentation for `NavigationLink`.
  // NavigationLink uses it specifically to create SwiftUI.NavigationLink(title, value: destinationViewId)
  // for push-based navigation inside NavigationStack.
  // The same property is also used by sidebar List children in NavigationSplitView to select a destination view.
- // Note: These properties are specific to NavigationLink. Baseline View properties (padding, hidden, foregroundColor, font, background, frame, opacity, cornerRadius, actionID, disabled) and additional View protocol modifiers are inherited and applied via ActionUIRegistry.shared.applyViewModifiers(to: baseView, properties: element.properties).
+ // Note: These properties are specific to NavigationLink. Baseline View properties (padding, hidden, foregroundStyle, font, background, frame, opacity, cornerRadius, actionID, disabled) and additional View protocol modifiers are inherited and applied via ActionUIRegistry.shared.applyViewModifiers(to: baseView, properties: element.properties).
 ```

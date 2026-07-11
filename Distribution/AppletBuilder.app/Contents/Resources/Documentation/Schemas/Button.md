@@ -15,6 +15,6 @@ JSON schema and usage documentation for `Button`.
     "imageScale": "large",  // Optional: image scale: "small", "medium", "large". Defaults to "medium" if absent
     "role": "destructive"   // Optional: Button role (e.g., "destructive", "cancel")
   }
-  // Note: These properties are specific to Button. Baseline View properties (padding, hidden, foregroundColor, font, background, frame, opacity, cornerRadius, actionID) and additional View protocol modifiers are inherited and applied via ActionUIRegistry.shared.applyViewModifiers(to: baseView, properties: element.properties).
+  // Note: These properties are specific to Button. Baseline View properties (padding, hidden, foregroundStyle, font, background, frame, opacity, cornerRadius, actionID) and additional View protocol modifiers are inherited and applied via ActionUIRegistry.shared.applyViewModifiers(to: baseView, properties: element.properties).
 }
 ```

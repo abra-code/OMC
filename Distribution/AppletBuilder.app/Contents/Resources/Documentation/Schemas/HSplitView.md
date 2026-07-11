@@ -18,6 +18,6 @@ JSON schema and usage documentation for `HSplitView`.
    // On macOS, the first child's idealWidth (from its frame properties) is used to set the
    // initial divider position, working around SwiftUI.HSplitView's default 50/50 split.
    // macOS only — on other platforms, falls back to HStack.
-   // Note: These properties are specific to HSplitView. Baseline View properties (padding, hidden, foregroundColor, font, background, frame, opacity, cornerRadius, actionID, disabled) and additional View protocol modifiers are inherited and applied via ActionUIRegistry.shared.applyViewModifiers(to: baseView, properties: element.properties).
+   // Note: These properties are specific to HSplitView. Baseline View properties (padding, hidden, foregroundStyle, font, background, frame, opacity, cornerRadius, actionID, disabled) and additional View protocol modifiers are inherited and applied via ActionUIRegistry.shared.applyViewModifiers(to: baseView, properties: element.properties).
  }
 ```

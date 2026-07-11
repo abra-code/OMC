@@ -13,6 +13,6 @@ JSON schema and usage documentation for `ShareLink`.
      "subject": "Check this out", // Optional: String for subject, ignored if nil
      "message": "Look at this link!" // Optional: String for message, ignored if nil
    }
-   // Note: These properties are specific to ShareLink. Baseline View properties (padding, hidden, foregroundColor, font, background, frame, opacity, cornerRadius, actionID, disabled) and additional View protocol modifiers are inherited and applied via ActionUIRegistry.shared.applyModifiers(to: baseView, properties: element.properties).
+   // Note: These properties are specific to ShareLink. Baseline View properties (padding, hidden, foregroundStyle, font, background, frame, opacity, cornerRadius, actionID, disabled) and additional View protocol modifiers are inherited and applied via ActionUIRegistry.shared.applyModifiers(to: baseView, properties: element.properties).
  }
 ```

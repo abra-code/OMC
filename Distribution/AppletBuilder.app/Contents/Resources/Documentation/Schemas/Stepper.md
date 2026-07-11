@@ -21,7 +21,7 @@ JSON schema and usage documentation for `Stepper`.
                           // The label is re-evaluated on every value change — no host code needed.
      "actionID": "stepper.changed" // Optional: String for action triggered on user-initiated value change
    }
-   // Note: These properties are specific to Stepper. Baseline View properties (padding, hidden, foregroundColor, font, background, frame, opacity, cornerRadius, actionID, disabled) and additional View protocol modifiers are inherited and applied via ActionUIRegistry.shared.applyModifiers(to: baseView, properties: element.properties).
+   // Note: These properties are specific to Stepper. Baseline View properties (padding, hidden, foregroundStyle, font, background, frame, opacity, cornerRadius, actionID, disabled) and additional View protocol modifiers are inherited and applied via ActionUIRegistry.shared.applyModifiers(to: baseView, properties: element.properties).
  }
 // Observable state:
 //   value (Double)   Current stepper value (via getElementValue / setElementValue).

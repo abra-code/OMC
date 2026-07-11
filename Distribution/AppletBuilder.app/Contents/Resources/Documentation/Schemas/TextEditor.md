@@ -17,7 +17,7 @@ JSON schema and usage documentation for `TextEditor`.
                                               //   "readOnly" allows the user to select, scroll, and copy text but not modify it.
                                               //   Content can still be set programmatically via setElementValue.
    }
-   // Note: These properties are specific to TextEditor. Baseline View properties (padding, hidden, foregroundColor, font, background, frame, opacity, cornerRadius, actionID, disabled) and additional View protocol modifiers are inherited and applied via ActionUIRegistry.shared.applyViewModifiers(to: baseView, properties: element.properties).
+   // Note: These properties are specific to TextEditor. Baseline View properties (padding, hidden, foregroundStyle, font, background, frame, opacity, cornerRadius, actionID, disabled) and additional View protocol modifiers are inherited and applied via ActionUIRegistry.shared.applyViewModifiers(to: baseView, properties: element.properties).
  }
 // Observable state:
 //   value (String)         Current plain-text content (via getElementValue / setElementValue).
