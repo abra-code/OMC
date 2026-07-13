@@ -6,8 +6,26 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/abra-code/AsyncImageCache",
       "state" : {
-        "branch" : "main",
-        "revision" : "6248a2652c8af6f96e6792d990420a31d04b9e20"
+        "revision" : "cb3655e4ef60c7b24a74a95a789d9b79c37e600c",
+        "version" : "0.1.0"
+      }
+    },
+    {
+      "identity" : "chatview",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/abra-code/ChatView",
+      "state" : {
+        "revision" : "5c66ffa7029ca13ad835adfba2c053993d6d18fa",
+        "version" : "0.1.0"
+      }
+    },
+    {
+      "identity" : "diffview",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/abra-code/DiffView",
+      "state" : {
+        "revision" : "8a7a956dd95e83437f656c514b67faec80558111",
+        "version" : "0.1.0"
       }
     },
     {
@@ -15,8 +33,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/abra-code/RichText",
       "state" : {
-        "branch" : "main",
-        "revision" : "e98c55ba57a874f48781fd76b867b455358bc072"
+        "revision" : "0d1bb01bbb39970d6f3897833ef11bd5a6cd98f5",
+        "version" : "0.1.0"
       }
     }
   ],
