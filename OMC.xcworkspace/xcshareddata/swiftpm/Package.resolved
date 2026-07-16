@@ -15,8 +15,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/abra-code/ChatView",
       "state" : {
-        "revision" : "40ea538a64abf4a0ecdd67e847f57411d80a7105",
-        "version" : "0.1.1"
+        "revision" : "924a808f81827ceff0a2c1cce6274090d039681b",
+        "version" : "0.1.2"
       }
     },
     {
@@ -33,8 +33,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/abra-code/RichText",
       "state" : {
-        "revision" : "0d1bb01bbb39970d6f3897833ef11bd5a6cd98f5",
-        "version" : "0.1.0"
+        "revision" : "084c3bf57f9bf57f00fccc12b03b1a40112c2dc8",
+        "version" : "0.1.1"
       }
     }
   ],
