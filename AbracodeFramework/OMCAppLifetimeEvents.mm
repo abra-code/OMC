@@ -58,6 +58,30 @@ extern "C" void ActionUIChat_register(void);
     return self;
 }
 
+// Python writes bytecode caches next to the source by default, which for an embedded interpreter
+// means INSIDE the app bundle - files we did not sign, breaking the code signature seal.
+// OmcExecutor exports PYTHONPYCACHEPREFIX (OmcExecutor.cp) for the script handlers IT spawns, but
+// that only covers its own children. Anything spawned from inside the app process inherits the
+// APP's environment, which never carried the variable - most visibly ActionUIChat's ACP agent,
+// which in turn spawns MCP stdio servers off the bundled python and had them cache into the
+// bundle. Setting it on our own process is what makes the variable actually inheritable, so every
+// descendant gets it without each spawn site having to know about it.
+//
+// Guarded on the embedded interpreter for the same reason OmcExecutor guards its export: with no
+// bundled Python there is nothing of ours to redirect, and we must not silently relocate the
+// caches of a system python a handler happens to call.
+//
+// Not overwritten if already present (setenv overwrite=0), mirroring the add-if-absent semantics
+// of CFDictionaryAddValue in OmcExecutor: a deliberately set external value is honored, and any
+// prefix keeps the caches out of the bundle, which is the point.
+
++ (void)setPythonPycachePrefixIfEmbedded:(NSBundle *)bundle
+{
+    NSString *pythonPath = [[bundle bundlePath] stringByAppendingPathComponent:@"Contents/Library/Python/bin/python3"];
+    if ([[NSFileManager defaultManager] fileExistsAtPath:pythonPath])
+        setenv("PYTHONPYCACHEPREFIX", PYTHONPYCACHEPREFIX, 0);
+}
+
 // On app launch precompile all .py code in Resources/Scripts if
 // the Python distribution is embedded in app bundle at Library/Python/.
 // Python only precompiles imported modules. It does not automatically create cache
@@ -83,6 +107,9 @@ extern "C" void ActionUIChat_register(void);
 - (void)appWillFinishLaunching:(NSNotification *)notification
 {
     TRACE_CSTR("App will finish launching\n");
+
+    // Before anything can spawn a child: this is what every descendant inherits from.
+    [OMCAppLifetimeEvents setPythonPycachePrefixIfEmbedded:[NSBundle mainBundle]];
 
     // Register optional ActionUI add-on element types before any dialog window is built.
     ActionUIQuickLook_register();
