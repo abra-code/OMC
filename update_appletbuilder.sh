@@ -65,6 +65,34 @@ files_match() {
     [ -f "$2" ] && /usr/bin/diff -q "$1" "$2" > /dev/null 2>&1
 }
 
+# Helper: download mistune $1 from PyPI and install it into $DEST_MISTUNE.
+# Returns 0 on success (and sets the global 'updated'), non-zero on failure.
+install_mistune() {
+    local version="$1"
+    local tmp_dir cp_rc
+    tmp_dir=$(/usr/bin/mktemp -d)
+    /usr/bin/pip3 install --target="$tmp_dir" --no-deps mistune=="$version" 2>/dev/null
+    if [ ! -d "$tmp_dir/mistune" ]; then
+        echo -e "  ${RED}Failed to download mistune${NC}"
+        /bin/rm -rf "$tmp_dir"
+        return 1
+    fi
+    /bin/mkdir -p "$(/usr/bin/dirname "$DEST_MISTUNE")"
+    /bin/rm -rf "$DEST_MISTUNE"
+    /bin/cp -R "$tmp_dir/mistune" "$DEST_MISTUNE"
+    cp_rc=$?
+    /bin/rm -rf "$tmp_dir"
+    if [ "$cp_rc" -ne 0 ]; then
+        echo -e "  ${RED}Failed to copy mistune to: $DEST_MISTUNE${NC}"
+        return 1
+    fi
+    # Clean up bytecode
+    /usr/bin/find "$DEST_MISTUNE" -name "__pycache__" -type d -exec /bin/rm -rf {} + 2>/dev/null
+    echo -e "  ${GREEN}Installed mistune $version${NC}"
+    updated=1
+    return 0
+}
+
 updated=0
 
 echo "Updating AppletBuilder resources..."
@@ -120,8 +148,14 @@ if [ ! -d "$src_fw" ]; then
     exit 1
 fi
 
+/bin/mkdir -p "$(/usr/bin/dirname "$dst_fw")"
 /bin/rm -rf "$dst_fw"
 /bin/cp -Rp "$src_fw" "$dst_fw"
+cp_rc=$?
+if [ "$cp_rc" -ne 0 ]; then
+    echo -e "  ${RED}Failed to copy Abracode.framework to: $dst_fw${NC}"
+    exit 1
+fi
 echo -e "  ${GREEN}Updated: Abracode.framework${NC}"
 updated=1
 
@@ -134,7 +168,13 @@ if [ ! -f "$src_bin" ]; then
     exit 1
 fi
 
+/bin/mkdir -p "$(/usr/bin/dirname "$dst_bin")"
 /bin/cp -p "$src_bin" "$dst_bin"
+cp_rc=$?
+if [ "$cp_rc" -ne 0 ]; then
+    echo -e "  ${RED}Failed to copy OMCApplet binary to: $dst_bin${NC}"
+    exit 1
+fi
 echo -e "  ${GREEN}Updated: MacOS/AppletBuilder (from OMCApplet binary)${NC}"
 updated=1
 
@@ -208,6 +248,12 @@ else
         else
             /bin/mkdir -p "$DEST_HELPERS"
             /bin/cp "$universal" "$dst"
+            cp_rc=$?
+            if [ "$cp_rc" -ne 0 ]; then
+                echo -e "  ${RED}Failed to copy $product to: $dst${NC}"
+                build_failed=1
+                continue
+            fi
             echo -e "  ${GREEN}Updated: $product${NC}"
             updated=1
         fi
@@ -232,11 +278,18 @@ else
     VERIFIER_SRC="$ACTIONUI_ROOT/Tools/verifier"
     VERIFIER_DST="$APPLET_BUILDER/Contents/Library/actionui_verifier"
     if [ -d "$VERIFIER_SRC" ]; then
+        /bin/mkdir -p "$(/usr/bin/dirname "$VERIFIER_DST")"
         /bin/rm -rf "$VERIFIER_DST"
         /bin/cp -R "$VERIFIER_SRC" "$VERIFIER_DST"
-        /usr/bin/find "$VERIFIER_DST" -name "__pycache__" -type d -exec /bin/rm -rf {} + 2>/dev/null
-        echo -e "  ${GREEN}Updated: actionui_verifier${NC}"
-        updated=1
+        cp_rc=$?
+        if [ "$cp_rc" -ne 0 ]; then
+            echo -e "  ${RED}Failed to copy actionui_verifier to: $VERIFIER_DST${NC}"
+            build_failed=1
+        else
+            /usr/bin/find "$VERIFIER_DST" -name "__pycache__" -type d -exec /bin/rm -rf {} + 2>/dev/null
+            echo -e "  ${GREEN}Updated: actionui_verifier${NC}"
+            updated=1
+        fi
     else
         echo -e "  ${RED}ActionUI verifier source not found at: $VERIFIER_SRC${NC}"
         build_failed=1
@@ -255,7 +308,13 @@ else
             schema_dst="$VERIFIER_DST/schemas/add-ons/$addon_name"
             /bin/mkdir -p "$schema_dst"
             /bin/cp "$schema_src"/*.json "$schema_dst/" 2>/dev/null
-            echo -e "  ${GREEN}Add-on verifier schemas: $addon_name${NC}"
+            cp_rc=$?
+            if [ "$cp_rc" -ne 0 ]; then
+                echo -e "  ${RED}Failed to copy add-on verifier schemas: $addon_name${NC}"
+                build_failed=1
+            else
+                echo -e "  ${GREEN}Add-on verifier schemas: $addon_name${NC}"
+            fi
         done
     fi
 
@@ -282,33 +341,29 @@ echo "  Bundled version: ${bundled_version:-not installed}"
 # Check latest version from PyPI
 latest_version=$(/usr/bin/curl -s "https://pypi.org/pypi/mistune/json" 2>/dev/null | python3 -c "import sys,json; print(json.load(sys.stdin)['info']['version'])" 2>/dev/null || echo "")
 
-if [ -n "$latest_version" ]; then
+if [ -z "$latest_version" ]; then
+    echo -e "  ${YELLOW}Could not check PyPI (no network?)${NC}"
+    if [ -z "$bundled_version" ]; then
+        echo -e "  ${RED}mistune is not installed and could not be fetched${NC}"
+    fi
+elif [ -z "$bundled_version" ]; then
+    # Not bundled at all: install the latest version without prompting.
     echo "  Latest on PyPI:  $latest_version"
-    if [ "$bundled_version" != "$latest_version" ]; then
-        echo -e "  ${YELLOW}Update available: $bundled_version → $latest_version${NC}"
-        read -p "  Install mistune $latest_version? [y/N] " answer
-        if [ "$answer" = "y" ] || [ "$answer" = "Y" ]; then
-            tmp_dir=$(/usr/bin/mktemp -d)
-            /usr/bin/pip3 install --target="$tmp_dir" --no-deps mistune=="$latest_version" 2>/dev/null
-            if [ -d "$tmp_dir/mistune" ]; then
-                /bin/rm -rf "$DEST_MISTUNE"
-                /bin/cp -R "$tmp_dir/mistune" "$DEST_MISTUNE"
-                # Clean up bytecode
-                /usr/bin/find "$DEST_MISTUNE" -name "__pycache__" -type d -exec /bin/rm -rf {} + 2>/dev/null
-                echo -e "  ${GREEN}Updated mistune to $latest_version${NC}"
-                updated=1
-            else
-                echo -e "  ${RED}Failed to download mistune${NC}"
-            fi
-            /bin/rm -rf "$tmp_dir"
-        else
-            echo "  Skipped"
-        fi
+    echo "  mistune not installed; installing $latest_version..."
+    install_mistune "$latest_version"
+elif [ "$bundled_version" != "$latest_version" ]; then
+    # Already installed but out of date: prompt before upgrading.
+    echo "  Latest on PyPI:  $latest_version"
+    echo -e "  ${YELLOW}Update available: $bundled_version → $latest_version${NC}"
+    read -p "  Upgrade mistune to $latest_version? [y/N] " answer
+    if [ "$answer" = "y" ] || [ "$answer" = "Y" ]; then
+        install_mistune "$latest_version"
     else
-        echo -e "  ${GREEN}Up to date${NC}"
+        echo "  Skipped"
     fi
 else
-    echo -e "  ${YELLOW}Could not check PyPI (no network?)${NC}"
+    echo "  Latest on PyPI:  $latest_version"
+    echo -e "  ${GREEN}Up to date${NC}"
 fi
 
 echo ""
@@ -318,6 +373,8 @@ echo ""
 # ════════════════════════════════════════════════════════════
 
 echo "── Checking OMC documentation ──"
+
+/bin/mkdir -p "$DEST_DOCS"
 
 # Copy all files from OMC/Documentation to AppletBuilder
 omc_updated=0
@@ -329,6 +386,11 @@ for src in "$OMC_DOCS"/*; do
         :
     else
         /bin/cp "$src" "$dst"
+        cp_rc=$?
+        if [ "$cp_rc" -ne 0 ]; then
+            echo -e "  ${RED}Failed to copy OMC doc to: $dst${NC}"
+            exit 1
+        fi
         echo -e "  ${GREEN}Updated: $name${NC}"
         omc_updated=1
         updated=1
@@ -384,6 +446,11 @@ else
             :
         else
             /bin/cp "$src" "$dst"
+            cp_rc=$?
+            if [ "$cp_rc" -ne 0 ]; then
+                echo -e "  ${RED}Failed to copy ActionUI doc to: $dst${NC}"
+                exit 1
+            fi
             echo -e "  ${GREEN}Updated: $doc${NC}"
             actionui_updated=1
             updated=1
@@ -402,6 +469,11 @@ else
                 :
             else
                 /bin/cp "$src" "$dst"
+                cp_rc=$?
+                if [ "$cp_rc" -ne 0 ]; then
+                    echo -e "  ${RED}Failed to copy ActionUI schema to: $dst${NC}"
+                    exit 1
+                fi
                 schemas_changed=1
             fi
         done
@@ -433,6 +505,11 @@ else
                 :
             else
                 /bin/cp "$src" "$dst"
+                cp_rc=$?
+                if [ "$cp_rc" -ne 0 ]; then
+                    echo -e "  ${RED}Failed to copy ActionUI element to: $dst${NC}"
+                    exit 1
+                fi
                 elements_changed=1
             fi
         done
@@ -488,6 +565,11 @@ else
                     :
                 else
                     /bin/cp "$src" "$dst"
+                    cp_rc=$?
+                    if [ "$cp_rc" -ne 0 ]; then
+                        echo -e "  ${RED}Failed to copy add-on doc to: $dst${NC}"
+                        exit 1
+                    fi
                     echo -e "  ${GREEN}Updated: $subdir/$name ($bundle_name)${NC}"
                     addon_docs_updated=1
                     updated=1
