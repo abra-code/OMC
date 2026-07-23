@@ -616,6 +616,21 @@ ${ACTIONUI_VALIDATE_OUTPUT}
         ab_log "  ActionUI JSON: ${ui_ok} validated"
     fi
 
+    # Build/profiling droppings — an LLVM coverage-instrumented binary dumps default.profraw
+    # into its CWD at exit, so running one with CWD inside the bundle (a build script's verify
+    # step, say) plants the file IN the bundle; ship nothing of the kind. Warned, not errored:
+    # the applet still runs, it is just carrying dead weight.
+    local droppings
+    droppings=$(/usr/bin/find "$target_path" \( -name "*.profraw" -o -name "*.profdata" \) 2>/dev/null)
+    if [ -n "$droppings" ]; then
+        ab_log "  Profiling droppings: warning"
+        warning_count=$((warning_count + 1))
+        report="${report}Profiling droppings (delete before shipping; if they reappear, an instrumented binary is being run with CWD inside the bundle):
+${droppings}
+
+"
+    fi
+
     finish_validation "Validation" "$error_count" "$warning_count" "$report"
 }
 
