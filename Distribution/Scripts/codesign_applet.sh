@@ -146,14 +146,101 @@ refresh_app() {
 # ---------------------------------------------------------------------------
 # Generic deep signing (layout-independent replacement for `codesign --deep`).
 #
-# Two passes, bottom-up:
-#   Phase 1: sign every loose Mach-O file anywhere in the bundle, individually.
-#   Phase 2: sign every nested code bundle as a bundle, deepest-first, so a
+# Passes, bottom-up (a nested item is always signed before whatever seals it):
+#   Phase 1: sign loose NON-Mach-O files in nested-code locations (e.g. license
+#            or data files placed beside helper tools in Contents/Helpers).
+#   Phase 2: sign every loose Mach-O file anywhere in the bundle, individually.
+#   Phase 3: sign every nested code bundle as a bundle, deepest-first, so a
 #            child is always sealed before the parent that contains it.
-#   Phase 3: sign the outer app bundle itself.
+#   Phase 4: sign the outer app bundle itself.
 # ---------------------------------------------------------------------------
 
-# ---- Phase 1: sign all loose Mach-O files --------------------------------
+# ---- Phase 1: sign loose non-Mach-O files in nested (code) locations ------
+#
+# codesign's default resource rules seal a fixed set of locations as NESTED CODE
+# rather than as plain resources: Contents/{Frameworks,SharedFrameworks,PlugIns,
+# Plug-ins,XPCServices,Helpers,MacOS,Library/{Automator,Spotlight,LoginItems}}.
+# Every item in one of those locations must carry its own signature before the
+# enclosing bundle can be sealed - and that includes NON-code data files (license
+# and notice text, data blobs) placed beside helper tools, e.g. in Contents/Helpers.
+# `codesign --deep` does not sign such files, so a bundle that ships them fails to
+# seal with "code object is not signed at all / In subcomponent: <file>".
+#
+# Mach-O files are handled in phase 2 and nested code bundles in phase 3; here we
+# sign only the LOOSE non-Mach-O files that live in a nested location and are not
+# themselves inside a nested bundle (that bundle's own seal covers those). Files in
+# resource locations - Contents/Resources, and any non-standard directory such as
+# Contents/Support - are sealed by content hash and need no signature, so they are
+# left alone. This pass runs BEFORE the Mach-O pass on purpose: signing the app's
+# main executable seals the whole bundle, which fails if a nested loose file is
+# still unsigned.
+# Whether $1 is a loose non-Mach-O file in a nested-code location that must be
+# individually signed. Factored into a function on purpose: bash 3.2 (macOS
+# /bin/sh) mishandles a literal `case` inside $(...) command substitution, so the
+# classification cannot live inline in the candidate-building substitution below.
+_is_nested_loose_file() {
+    local _f="$1" _rel
+    _rel="${_f#"$app_to_sign"/}"
+    # Only files under the bundle's Contents/ resource root are classified here.
+    case "$_rel" in
+        Contents/*) _rel="${_rel#Contents/}" ;;
+        *) return 1 ;;
+    esac
+    # Restrict to codesign's nested-code directories. Everything else (Resources/,
+    # and non-standard dirs such as Support/) is a plain resource sealed by hash.
+    case "$_rel" in
+        Frameworks/*|SharedFrameworks/*|PlugIns/*|Plug-ins/*|XPCServices/*|Helpers/*|MacOS/*|Library/Automator/*|Library/Spotlight/*|Library/LoginItems/*) ;;
+        *) return 1 ;;
+    esac
+    # Skip anything inside a nested bundle - its own bundle seal (phase 3) covers it.
+    case "/$_rel" in
+        */*.app/*|*/*.framework/*|*/*.bundle/*|*/*.xpc/*|*/*.appex/*|*/*.plugin/*|*/*.kext/*|*/*.qlgenerator/*|*/*.mdimporter/*) return 1 ;;
+    esac
+    # Skip Finder droppings; skip Mach-O (phase 2 signs those).
+    case "$(/usr/bin/basename "$_f")" in
+        .DS_Store) return 1 ;;
+    esac
+    if /usr/bin/file -b "$_f" | /usr/bin/grep -q "Mach-O"; then
+        return 1
+    fi
+    return 0
+}
+
+verbose_echo ""
+verbose_echo "Signing loose non-code files in nested locations"
+verbose_echo "-----------------------------------"
+
+# Build the candidate list first (mirrors the Mach-O pass) so brief mode can report
+# an accurate count.
+nested_loose_files=$(/usr/bin/find "$app_to_sign" -type f ! -path "*/_CodeSignature/*" -print | /usr/bin/sort | while IFS= read -r f; do
+    if _is_nested_loose_file "$f"; then
+        printf '%s\n' "$f"
+    fi
+done)
+
+if [ -z "$nested_loose_files" ]; then
+    nested_loose_count=0
+else
+    nested_loose_count=$(printf '%s\n' "$nested_loose_files" | /usr/bin/wc -l | /usr/bin/tr -d ' ')
+fi
+
+if [ "$brief" = "yes" ]; then
+    echo "Signing $nested_loose_count loose non-code files in nested locations"
+fi
+
+if [ -n "$nested_loose_files" ]; then
+    printf '%s\n' "$nested_loose_files" | while IFS= read -r f; do
+        verbose_echo "Signing: $f"
+        run_codesign $cs_verbose --force $sign_options $timestamp --sign "$identity" "$f"
+        if test "$?" != "0"; then
+            echo "warning: failed to sign $f"
+        fi
+    done
+fi
+
+verbose_echo "-----------------------------------"
+
+# ---- Phase 2: sign all loose Mach-O files --------------------------------
 #
 # Candidate files: regular files (never symlinks) anywhere under the app,
 # excluding anything already inside a _CodeSignature seal directory. The
@@ -189,7 +276,7 @@ if [ "$brief" = "yes" ]; then
 fi
 
 # This pass may include each nested bundle's main executable; that is harmless
-# by design - phase 2 re-signs those bundles and rewrites the seal, and an
+# by design - phase 3 re-signs those bundles and rewrites the seal, and an
 # executable being signed twice costs nothing but a moment.
 if [ -n "$macho_files" ]; then
     printf '%s\n' "$macho_files" | while IFS= read -r f; do
@@ -203,7 +290,7 @@ fi
 
 verbose_echo "-----------------------------------"
 
-# ---- Phase 2: sign nested code bundles, deepest-first --------------------
+# ---- Phase 3: sign nested code bundles, deepest-first --------------------
 #
 # Discover every candidate bundle directory by recognised extension, then order
 # them deepest-first (most path components first) so children are sealed before
@@ -252,7 +339,7 @@ if [ -n "$nested_bundles" ]; then
                     fi
                 else
                     # Not a valid framework; its Mach-O contents were already
-                    # signed in phase 1, so it is safe to leave the seal alone.
+                    # signed in phase 2, so it is safe to leave the seal alone.
                     verbose_echo "Skipping invalid framework (no Info.plist): $bundle"
                 fi
                 ;;
@@ -265,7 +352,7 @@ if [ -n "$nested_bundles" ]; then
                     fi
                 else
                     # Missing Contents/Info.plist: not a real code bundle. Its
-                    # Mach-O contents were already signed in phase 1.
+                    # Mach-O contents were already signed in phase 2.
                     verbose_echo "Skipping invalid bundle (no Contents/Info.plist): $bundle"
                 fi
                 ;;
@@ -277,7 +364,7 @@ verbose_echo "-----------------------------------"
 
 verbose_echo ""
 
-# ---- Phase 3: sign the outer app bundle ----------------------------------
+# ---- Phase 4: sign the outer app bundle ----------------------------------
 # The generic phases above have already sealed all nested code, so the outer
 # bundle no longer needs (or should use) `codesign --deep`.
 echo "Signing app bundle: $app_to_sign"
