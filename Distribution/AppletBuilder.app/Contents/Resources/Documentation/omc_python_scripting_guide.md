@@ -305,7 +305,7 @@ Key points:
 - **Coverage is the rule.** Pass one `--trace` per distinct Python entry point your applet runs (each handler/command, not just the main one). The `--static` cross-check (automatic on the Scripts directory) warns when a handler imports something no trace exercised — heed it, or that module gets removed.
 - **`--trace` is the command after `python3 -X importtime`** — pass the script/module + args, with no leading `python3`. For a module entry point use `--trace "-m package.module …"`.
 
-See the Python-Embedding README for the underlying `analyze_python_deps.py` / `thin_from_plan.sh` tools and the full methodology.
+See the Python-Embedding README for the underlying `analyze_python_deps.py` / `thin_with_plan.sh` tools and the full methodology.
 
 ## Naming Conventions
 
