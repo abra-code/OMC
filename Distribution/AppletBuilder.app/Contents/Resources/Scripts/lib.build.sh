@@ -124,6 +124,11 @@ applet_rename_scripts() {
     local old_lower=$(echo "$old_name" | /usr/bin/tr '[:upper:]' '[:lower:]')
     local new_lower=$(echo "$new_name" | /usr/bin/tr '[:upper:]' '[:lower:]')
 
+    # A loop variable needs declaring as much as any other: `for` assigns at
+    # global scope otherwise, leaving a stale path behind for any function that
+    # reads a variable of the same name without declaring its own.
+    local script
+
     # Rename script files
     for script in "$scripts_dir"/*; do
         [ ! -f "$script" ] && continue
@@ -154,6 +159,11 @@ applet_recompile_other_nibs() {
     local new_name="$3"
 
     local lproj_dir="$app_path/Contents/Resources/Base.lproj"
+    # Declared, so it cannot leak into applet_recompile_nib, which reads a
+    # variable of this name and does "rm -rf" on it. That function declares its
+    # own, but a leaked path aimed at a recursive delete is not a risk to leave
+    # standing on the assumption every future reader will remember to.
+    local nib_dir
     for nib_dir in "$lproj_dir"/*.nib; do
         [ ! -d "$nib_dir" ] && continue
         local nib_base=$(/usr/bin/basename "${nib_dir%.nib}")
@@ -836,7 +846,14 @@ do_codesign() {
         ab_log "Codesigning with \"${identity}\"..."
     fi
 
-    local log_output=$(applet_codesign "$target_path" "$identity" 2>&1)
+    # log_output is declared apart from its assignment on purpose: `local x=$(cmd)`
+    # runs the substitution as part of `local`, so the next $? reads local's own
+    # status - always 0 - which reported every codesigning failure as "Build
+    # succeeded" and returned 0 to applet_build, whose contract is to return 1
+    # when signing fails. Nothing may run between the assignment and the $? read,
+    # so the timestamp below is deliberately taken after it.
+    local log_output
+    log_output=$(applet_codesign "$target_path" "$identity" 2>&1)
     local status=$?
     local timestamp=$(/bin/date "+%Y-%m-%d %H:%M:%S")
 

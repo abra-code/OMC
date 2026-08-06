@@ -84,6 +84,7 @@ applet_install_python() {
 applet_cleanup_icons() {
     local app_path="$1"
     local keep_name="$2"
+    local old_icns
 
     for old_icns in "$app_path/Contents/Resources/"*.icns; do
         [ ! -f "$old_icns" ] && continue

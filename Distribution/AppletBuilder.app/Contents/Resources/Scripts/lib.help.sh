@@ -14,6 +14,7 @@ ensure_help_docs_converted() {
     local docs_dir="${OMC_APP_BUNDLE_PATH}/Contents/Resources/Documentation"
     local html_dir="$HELP_HTML_DIR"
     local needs_convert=0
+    local src
 
     if [ ! -d "$html_dir" ]; then
         needs_convert=1

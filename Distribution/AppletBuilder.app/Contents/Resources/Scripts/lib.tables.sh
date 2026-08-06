@@ -44,6 +44,7 @@ refresh_scripts_table() {
     local scripts_dir="$1"
     local target="${2:-$window_uuid}"
     local buffer=""
+    local sf
     for sf in "$scripts_dir"/*; do
         [ ! -f "$sf" ] && continue
         local sname=$(/usr/bin/basename "$sf")
@@ -61,6 +62,7 @@ refresh_uifiles_table() {
     local resources_dir="$project_path/Contents/Resources"
     local lproj_dir="$resources_dir/Base.lproj"
     local buffer=""
+    local nib json
     if [ -d "$lproj_dir" ]; then
         for nib in "$lproj_dir"/*.nib; do
             [ ! -d "$nib" ] && continue
