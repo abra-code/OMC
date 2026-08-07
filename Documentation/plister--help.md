@@ -3,7 +3,10 @@
 ```
 Usage: plister command command_params path/to/plist/file plist/property/pseudopath
 File format is auto-detected by extension: use .json for JSON, .plist for XML/binary plist
-All commands work identically for both JSON and plist formats. Output format matches input format.
+For any other extension the file's own content decides, so a JSON document may be named anything
+All commands work identically for both JSON and plist formats. Output format matches input format:
+a binary plist stays binary, a JSON file stays JSON. A file being created has no content to go on,
+so an extension other than .json means XML.
 
 Available commands: get, set, remove|delete, add|append, insert, find, findall, iterate
 "insert" command is for dict or array and must be followed by a key or index respectively
@@ -17,7 +20,8 @@ Available parameter types for "find" and "findall": string, integer, real, bool
 Available parameter types for "set", "add", "insert": string, integer, real, bool, date, data, dict, array, copy
 Parameter types: string, integer, real, bool, date, data must be followed by an appropriate value
 "data" must be followed by Base64 encoded string
-"dict" and "array" are used for creating new empty containers and must not be followed any value
+"dict" and "array" are used for creating new empty containers and must not be followed by any value
+(they therefore take one argument less than every other type - see the "append dict" example below)
 "copy" is a special directive which must be followed by source/file/path source/property/pseudopath
 
 "find" and "findall" commands may use a sub-item pseudopath as the last parameter
@@ -43,6 +47,11 @@ plister remove example.plist /NewArray/1
 plister insert "NewDict" dict example.plist /
 plister insert "New Key" string "New Value" example.plist /NewDict
 plister get keys example.plist /NewDict
+
+Append a whole dictionary to an array and then fill it in ("dict" takes no value argument):
+plister append dict example.plist /NewArray
+plister insert "Name" string "Widget" example.plist /NewArray/2
+
 Now create new.plist and copy "NewArray" from example.plist:
 plister set dict new.plist /
 plister insert "DuplicateArray" copy example.plist /NewArray new.plist /

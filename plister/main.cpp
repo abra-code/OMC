@@ -119,7 +119,7 @@ OSStatus ProcessGetItem(CFObjSpec *inSpec, CFTypeRef inCurrLevelRef, CFTypeRef *
 OSStatus ProcessGetLastItemContainerAndSpec(CFObjSpec *inSpec, CFTypeRef inCurrLevelRef, CFTypeRef *outContainer, CFObjSpec **outLastSpec);
 
 OSStatus ReadPlistFile(const char *srcPlistPath, CFObj<CFPropertyListRef> &outProperties,
-						bool mutableContainers, CFURLRef *outPlistURL );
+						bool mutableContainers, CFURLRef *outPlistURL, ACFPropertyListFormat *outFormat );
 bool SavePropertiesToPlistFile(CFURLRef inPlistFileURL, CFPropertyListRef inProperties);
 
 CFObjSpec *CreatePropertySpecifier(const char *inPropertySpecifier);
@@ -132,7 +132,8 @@ void DisplayHelp();
 typedef struct OnePlisterCommand
 {
 	OnePlisterCommand()
-		: commandID(kPCmd_none), cfObjType(kCFType_invalid), insertIndex(-1), modifyAndSave(true)
+		: commandID(kPCmd_none), cfObjType(kCFType_invalid), insertIndex(-1),
+			plistFormat(kACFPropertyListFormat_unknown), modifyAndSave(true)
 	{
 	}
 
@@ -148,6 +149,7 @@ typedef struct OnePlisterCommand
 	CFIndex						insertIndex;
 	CFObj<CFURLRef>				destPlistURL;//only for top level command
 	CFObj<CFPropertyListRef>	propertyList;//only for top level command
+	ACFPropertyListFormat		plistFormat;//format the file was read in, so we write it back the same way
 	AUniquePtr<CFObjSpec>	specChain; //either absolute specifier for top level command or relative for child commands
 	AUniquePtr<CFObjSpec>	subSpecChain; //some commands may take item-relative spec in addition to main spec. currently "find" only
 	AUniquePtr<OnePlisterCommand> nextCommand;//nextCommand may be one subcommand (iterate command has one child) or it can be a chain like batch command
@@ -231,7 +233,8 @@ int main (int argc, char * const argv[])
 
 	if(topCommand.IsPlistModified() && (result == 0) )//save only on success
 	{
-        bool success = WritePropertyList(topCommand.propertyList, topCommand.destPlistURL, kCFPropertyListXMLFormat_v1_0);
+        //write the file back in the format it was read in - see ReadPlistFile
+        bool success = WritePropertyList(topCommand.propertyList, topCommand.destPlistURL, topCommand.plistFormat);
 		if(!success)
 		{
 			std::cerr << "Plister error: could not save the result plist file." << std::endl;
@@ -327,7 +330,7 @@ ReadCommandAndParameters(int argumentCount, char * const argv[], int &paramIndex
 			AUniquePtr<CFObjSpec> specChain( CreatePropertySpecifier(propSpecStr) );
 
 			CFObj<CFPropertyListRef> properties;
-			result = ReadPlistFile(plistPath, properties, false, NULL);
+			result = ReadPlistFile(plistPath, properties, false, NULL, NULL);
 			if(result == 0)
 			{
 				CFTypeRef itemRef = NULL;
@@ -362,16 +365,18 @@ ReadCommandAndParameters(int argumentCount, char * const argv[], int &paramIndex
 	}
 	else if( ((commandStrLen == 6) && (strcmp(commandStr, "append") == 0)) || ((commandStrLen == 3) && (strcmp(commandStr, "add") == 0)) )
 	{//plister append string "My New Array Value" [path/to/file.plist] /path/to/array (5 args)
-	//plister append "Duplicate" copy source/path /source/pseudpath [dest/path] dest/pseudopath (6 args)
-	//plister append "NewDict" dict [path/to/file.plist] /path/to/array (5 args)
+	//plister append copy source/path /source/pseudpath [dest/path] dest/pseudopath (6 args)
+	//plister append dict [path/to/file.plist] /path/to/array (4 args)
 		ioOneCommand.commandID = kPCmd_append;
 
-		if( (effectiveArgCount != (5-argAdj)) && (effectiveArgCount != (6-argAdj)) )
+		//the expected argument count depends on the value type, so read the type first.
+		//"dict" and "array" create an empty container and take no value argument at all.
+		if(paramIndex >= argumentCount)
 		{
-			std::cerr << "Plister error: invalid number of arguments" << std::endl;
+			std::cerr << "Plister error: value type not specified" << std::endl;
 			return -1;
 		}
-		
+
 		const char *typeStr = argv[paramIndex++];
 		ioOneCommand.cfObjType = GetPropertyType(typeStr);
 
@@ -389,7 +394,7 @@ ReadCommandAndParameters(int argumentCount, char * const argv[], int &paramIndex
 			AUniquePtr<CFObjSpec> specChain = CreatePropertySpecifier(propSpecStr);
 
 			CFObj<CFPropertyListRef> properties;
-			result = ReadPlistFile(plistPath, properties, false, NULL);
+			result = ReadPlistFile(plistPath, properties, false, NULL, NULL);
 			if(result == 0)
 			{	
 				CFTypeRef itemRef = NULL;
@@ -399,10 +404,20 @@ ReadCommandAndParameters(int argumentCount, char * const argv[], int &paramIndex
 		}
 		else if( (ioOneCommand.cfObjType == kCFType_dict) || (ioOneCommand.cfObjType == kCFType_array) )
 		{
+			if(effectiveArgCount != (4-argAdj))
+			{
+				std::cerr << "Plister error: invalid number of arguments" << std::endl;
+				return -1;
+			}
 			ioOneCommand.newValue.Adopt( CreateCFItemFromArgumentString(ioOneCommand.cfObjType, NULL) );
 		}
 		else
 		{
+			if(effectiveArgCount != (5-argAdj))
+			{
+				std::cerr << "Plister error: invalid number of arguments" << std::endl;
+				return -1;
+			}
 			const char *valueStr = argv[paramIndex++];
 			ioOneCommand.newValue.Adopt( CreateCFItemFromArgumentString(ioOneCommand.cfObjType, valueStr) );
 		}
@@ -414,12 +429,14 @@ ReadCommandAndParameters(int argumentCount, char * const argv[], int &paramIndex
 	//plister insert "NewArray" array [path/to/file.plist] /pseudopath (5 args)
 		ioOneCommand.commandID = kPCmd_insert;
 
-		if( (effectiveArgCount < (5-argAdj)) || (effectiveArgCount > (7-argAdj)) )
+		//the key or index and the value type both come before the value, and the expected
+		//argument count depends on that type, so validate it per type below rather than here
+		if(paramIndex >= (argumentCount-1))
 		{
-			std::cerr << "Plister error: invalid number of arguments" << std::endl;
+			std::cerr << "Plister error: key or index and value type must both be specified" << std::endl;
 			return -1;
 		}
-		
+
 		const char *keyOrIndexStr = argv[paramIndex++];
 		ioOneCommand.newKey.Adopt( ::CFStringCreateWithCString(kCFAllocatorDefault, keyOrIndexStr, kCFStringEncodingUTF8) );
 		CFObj<CFStringRef> indexStrRef( ::CFStringCreateWithCString(kCFAllocatorDefault, keyOrIndexStr, kCFStringEncodingUTF8) );
@@ -444,7 +461,7 @@ ReadCommandAndParameters(int argumentCount, char * const argv[], int &paramIndex
 			AUniquePtr<CFObjSpec> specChain = CreatePropertySpecifier(propSpecStr);
 
 			CFObj<CFPropertyListRef> properties;
-			result = ReadPlistFile(plistPath, properties, false, NULL);
+			result = ReadPlistFile(plistPath, properties, false, NULL, NULL);
 			if(result == 0)
 			{	
 				CFTypeRef itemRef = NULL;
@@ -454,10 +471,20 @@ ReadCommandAndParameters(int argumentCount, char * const argv[], int &paramIndex
 		}
 		else if( (ioOneCommand.cfObjType == kCFType_dict) || (ioOneCommand.cfObjType == kCFType_array) )
 		{
+			if(effectiveArgCount != (5-argAdj))
+			{
+				std::cerr << "Plister error: invalid number of arguments" << std::endl;
+				return -1;
+			}
 			ioOneCommand.newValue.Adopt( CreateCFItemFromArgumentString(ioOneCommand.cfObjType, NULL) );
 		}
 		else
 		{
+			if(effectiveArgCount != (6-argAdj))
+			{
+				std::cerr << "Plister error: invalid number of arguments" << std::endl;
+				return -1;
+			}
 			const char *valueStr = argv[paramIndex++];
 			ioOneCommand.newValue.Adopt( CreateCFItemFromArgumentString(ioOneCommand.cfObjType, valueStr) );
 		}
@@ -524,7 +551,8 @@ ReadCommandAndParameters(int argumentCount, char * const argv[], int &paramIndex
 			return -1;//invalid input path
 		}
 
-		result = ReadPlistFile(plistPath, ioOneCommand.propertyList, ioOneCommand.modifyAndSave, &(ioOneCommand.destPlistURL) );
+		result = ReadPlistFile(plistPath, ioOneCommand.propertyList, ioOneCommand.modifyAndSave, &(ioOneCommand.destPlistURL),
+								&(ioOneCommand.plistFormat) );
 		//ignore the result here
 		result = noErr;
 	}
@@ -1015,7 +1043,8 @@ RunIterateCommand(PlisterCommandContext &inContext, OnePlisterCommand &inCommand
 
 //caller responsible for releasing *outPlistURL
 OSStatus
-ReadPlistFile(const char *plistPath, CFObj<CFPropertyListRef> &outProperties, bool mutableContainers, CFURLRef *outPlistURL )
+ReadPlistFile(const char *plistPath, CFObj<CFPropertyListRef> &outProperties, bool mutableContainers, CFURLRef *outPlistURL,
+				ACFPropertyListFormat *outFormat )
 {
 	if(plistPath == NULL)
 	{
@@ -1033,7 +1062,7 @@ ReadPlistFile(const char *plistPath, CFObj<CFPropertyListRef> &outProperties, bo
 	CFObj<CFStringRef> pathStr( ::CFStringCreateWithCString(kCFAllocatorDefault, plistPath, kCFStringEncodingUTF8) );
 	CFObj<CFURLRef> plistURL( ::CFURLCreateWithFileSystemPath(kCFAllocatorDefault, pathStr, kCFURLPOSIXPathStyle, false) );
 
-    outProperties.Adopt( CreatePropertyList(plistURL, mutableContainers ? kCFPropertyListMutableContainers : kCFPropertyListImmutable) );
+    outProperties.Adopt( CreatePropertyListAndFormat(plistURL, mutableContainers ? kCFPropertyListMutableContainers : kCFPropertyListImmutable, outFormat) );
 
 //signal error ourside if you wish
 //	if(outProperties == NULL)
@@ -1883,7 +1912,10 @@ DisplayHelp()
 {
 	std::cerr << "Usage: plister command command_params path/to/plist/file plist/property/pseudopath" << std::endl;
 	std::cerr << "File format is auto-detected by extension: use .json for JSON, .plist for XML/binary plist" << std::endl;
-	std::cerr << "All commands work identically for both JSON and plist formats. Output format matches input format." << std::endl << std::endl;
+	std::cerr << "For any other extension the file's own content decides, so a JSON document may be named anything" << std::endl;
+	std::cerr << "All commands work identically for both JSON and plist formats. Output format matches input format:" << std::endl;
+	std::cerr << "a binary plist stays binary, a JSON file stays JSON. A file being created has no content to go on," << std::endl;
+	std::cerr << "so an extension other than .json means XML." << std::endl << std::endl;
 	std::cerr << "Available commands: get, set, remove|delete, add|append, insert, find, findall, iterate" << std::endl;
 	std::cerr << "\"insert\" command is for dict or array and must be followed by a key or index respectively" << std::endl;
 	std::cerr << "\"set\" command is for replacing existing value with new value" << std::endl;
@@ -1895,7 +1927,8 @@ DisplayHelp()
 	std::cerr << "Available parameter types for \"set\", \"add\", \"insert\": string, integer, real, bool, date, data, dict, array, copy" << std::endl;
 	std::cerr << "Parameter types: string, integer, real, bool, date, data must be followed by an appropriate value" << std::endl;
 	std::cerr << "\"data\" must be followed by Base64 encoded string" << std::endl;
-	std::cerr << "\"dict\" and \"array\" are used for creating new empty containers and must not be followed any value" << std::endl;
+	std::cerr << "\"dict\" and \"array\" are used for creating new empty containers and must not be followed by any value" << std::endl;
+	std::cerr << "(they therefore take one argument less than every other type - see the \"append dict\" example below)" << std::endl;
 	std::cerr << "\"copy\" is a special directive which must be followed by source/file/path source/property/pseudopath" << std::endl << std::endl;
 	std::cerr << "\"find\" and \"findall\" commands may use a sub-item pseudopath as the last parameter"  << std::endl;
 	std::cerr << "to specify a container item-relative path which points to something inside that item for matching:"  << std::endl;
@@ -1918,8 +1951,12 @@ DisplayHelp()
 	std::cerr << "plister remove example.plist /NewArray/1" << std::endl;
 	std::cerr << "plister insert \"NewDict\" dict example.plist /" << std::endl;
 	std::cerr << "plister insert \"New Key\" string \"New Value\" example.plist /NewDict" << std::endl;
-	std::cerr << "plister get keys example.plist /NewDict" << std::endl;
-	
+	std::cerr << "plister get keys example.plist /NewDict" << std::endl << std::endl;
+
+	std::cerr << "Append a whole dictionary to an array and then fill it in (\"dict\" takes no value argument):" << std::endl;
+	std::cerr << "plister append dict example.plist /NewArray" << std::endl;
+	std::cerr << "plister insert \"Name\" string \"Widget\" example.plist /NewArray/2" << std::endl << std::endl;
+
 	std::cerr << "Now create new.plist and copy \"NewArray\" from example.plist:" << std::endl;
 	std::cerr << "plister set dict new.plist /" << std::endl;
 	std::cerr << "plister insert \"DuplicateArray\" copy example.plist /NewArray new.plist /" << std::endl << std::endl;

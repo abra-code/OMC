@@ -2,49 +2,171 @@
 #include "CFObj.h"
 #import <Foundation/Foundation.h>
 
-static BOOL IsJSONURL(CFURLRef url)
+// What the file name extension says about the format. Only ".json" and ".plist" are
+// meaningful; everything else is unknown and leaves the decision to the content.
+static ACFPropertyListFormat FormatFromExtension(CFURLRef url)
 {
     if (url == NULL)
-        return NO;
-    BOOL isJSON = NO;
+        return kACFPropertyListFormat_unknown;
+
     CFObj<CFStringRef> ext(::CFURLCopyPathExtension(url));
-    if (ext != NULL)
+    if (ext == NULL)
+        return kACFPropertyListFormat_unknown;
+
+    if (::CFStringCompare(ext, CFSTR("json"), kCFCompareCaseInsensitive) == kCFCompareEqualTo)
+        return kACFPropertyListFormat_json;
+
+    if (::CFStringCompare(ext, CFSTR("plist"), kCFCompareCaseInsensitive) == kCFCompareEqualTo)
+        return kACFPropertyListFormat_xml;
+
+    return kACFPropertyListFormat_unknown;
+}
+
+// What the first few bytes say about the format. Returns unknown rather than guessing when
+// nothing recognizable is there; the caller falls back to trying both parsers.
+static ACFPropertyListFormat FormatFromContent(NSData *data)
+{
+    if (data == nil)
+        return kACFPropertyListFormat_unknown;
+
+    const unsigned char *bytes = (const unsigned char *)data.bytes;
+    NSUInteger length = data.length;
+    if ((bytes == NULL) || (length == 0))
+        return kACFPropertyListFormat_unknown;
+
+    if ((length >= 8) && (memcmp(bytes, "bplist00", 8) == 0))
+        return kACFPropertyListFormat_binary;
+
+    NSUInteger i = 0;
+    if ((length >= 3) && (bytes[0] == 0xEF) && (bytes[1] == 0xBB) && (bytes[2] == 0xBF))
+        i = 3;//UTF-8 BOM
+
+    while ((i < length) && ((bytes[i] == ' ') || (bytes[i] == '\t') || (bytes[i] == '\n') || (bytes[i] == '\r')))
+        i++;
+
+    if (i >= length)
+        return kACFPropertyListFormat_unknown;
+
+    switch (bytes[i])
     {
-        isJSON = (CFStringCompare(ext, CFSTR("json"), kCFCompareCaseInsensitive) == kCFCompareEqualTo);
+        case '<': // an XML declaration or a <plist> element
+            return kACFPropertyListFormat_xml;
+
+        //a JSON array, string, number, true, false or null at the root. None of these can
+        //begin an old-style plist, so the answer is unambiguous.
+        case '[': case '"': case '-':
+        case 't': case 'f': case 'n':
+        case '0': case '1': case '2': case '3': case '4':
+        case '5': case '6': case '7': case '8': case '9':
+            return kACFPropertyListFormat_json;
+
+        //A JSON object - but an old-style OpenStep dictionary opens with '{' too, so this
+        //answer is a preference, not a certainty. The reader falls back when it is wrong.
+        case '{':
+            return kACFPropertyListFormat_json;
     }
-    return isJSON;
+
+    return kACFPropertyListFormat_unknown;
+}
+
+static CFPropertyListRef CreateFromJSONData(NSData *data, CFPropertyListMutabilityOptions mutabilityOptions, NSError **outError)
+{
+    NSJSONReadingOptions options = NSJSONReadingAllowFragments;
+    if (mutabilityOptions != kCFPropertyListImmutable)
+        options |= NSJSONReadingMutableContainers;
+
+    id jsonObject = [NSJSONSerialization JSONObjectWithData:data options:options error:outError];
+    if (jsonObject == nil)
+        return NULL;
+
+    return (__bridge_retained CFTypeRef)jsonObject;
+}
+
+static CFPropertyListRef CreateFromPlistData(NSData *data, CFPropertyListMutabilityOptions mutabilityOptions)
+{
+    return ::CFPropertyListCreateWithData(kCFAllocatorDefault, (__bridge CFDataRef)data, mutabilityOptions, NULL, NULL);
+}
+
+CFPropertyListRef CreatePropertyListAndFormat(CFURLRef plistURL, CFPropertyListMutabilityOptions mutabilityOptions,
+												ACFPropertyListFormat *outFormat)
+{
+    ACFPropertyListFormat extFormat = FormatFromExtension(plistURL);
+
+    //The fallback answer, used for a file that does not exist or does not parse: whatever the
+    //extension implies, and XML when it implies nothing. Never "unknown", so a caller can hand
+    //it straight to WritePropertyList when creating the file.
+    ACFPropertyListFormat fallbackFormat = (extFormat != kACFPropertyListFormat_unknown) ? extFormat : kACFPropertyListFormat_xml;
+    if (outFormat != NULL)
+        *outFormat = fallbackFormat;
+
+    if (plistURL == NULL)
+        return NULL;
+
+    NSData *data = [NSData dataWithContentsOfURL:(__bridge NSURL *)plistURL];
+    if (data == nil)
+        return NULL;//nothing to sniff; the caller keeps the extension-derived format
+
+    ACFPropertyListFormat contentFormat = FormatFromContent(data);
+
+    //The extension decides the family whenever it says anything, so no existing .json or
+    //.plist behavior changes. Content decides only for an extension we do not know - and,
+    //within the plist family, refines XML to binary so a write-back preserves what was read.
+    ACFPropertyListFormat format = extFormat;
+    if (extFormat == kACFPropertyListFormat_unknown)
+        format = contentFormat;
+    else if ((extFormat == kACFPropertyListFormat_xml) && (contentFormat == kACFPropertyListFormat_binary))
+        format = kACFPropertyListFormat_binary;
+
+    CFPropertyListRef result = NULL;
+    if (format == kACFPropertyListFormat_json)
+    {
+        NSError *jsonError = nil;
+        result = CreateFromJSONData(data, mutabilityOptions, &jsonError);
+        if (result == NULL)
+        {
+            if (extFormat == kACFPropertyListFormat_json)
+            {//the name promised JSON, so a parse failure is the whole answer
+                fprintf(stderr, "Error: failed to parse JSON: %s\n", jsonError.localizedDescription.UTF8String);
+            }
+            else
+            {//it only looked like JSON - an old-style plist dictionary opens with '{' as well
+                result = CreateFromPlistData(data, mutabilityOptions);
+                if (result != NULL)
+                    format = kACFPropertyListFormat_xml;
+                else
+                    fprintf(stderr, "Error: failed to parse JSON: %s\n", jsonError.localizedDescription.UTF8String);
+            }
+        }
+    }
+    else
+    {
+        result = CreateFromPlistData(data, mutabilityOptions);
+        if (result != NULL)
+        {
+            if (format != kACFPropertyListFormat_binary)
+                format = kACFPropertyListFormat_xml;//XML, old-style, or anything else CF understood
+        }
+        else if (extFormat == kACFPropertyListFormat_unknown)
+        {//unknown extension and unrecognizable content: JSON is the remaining candidate
+            NSError *jsonError = nil;
+            result = CreateFromJSONData(data, mutabilityOptions, &jsonError);
+            if (result != NULL)
+                format = kACFPropertyListFormat_json;
+        }
+    }
+
+    if (result == NULL)
+        format = fallbackFormat;
+
+    if (outFormat != NULL)
+        *outFormat = format;
+
+    return result;
 }
 
 CFPropertyListRef CreatePropertyList(CFURLRef plistURL, CFPropertyListMutabilityOptions mutabilityOptions)
 {
-    if (IsJSONURL(plistURL))
-    {
-        NSData* data = [NSData dataWithContentsOfURL:(__bridge NSURL *)plistURL];
-        if (data == nil)
-            return NULL;
-
-        NSJSONReadingOptions options = NSJSONReadingAllowFragments;
-        if (mutabilityOptions != kCFPropertyListImmutable)
-            options |= NSJSONReadingMutableContainers;
-
-        NSError* error = nil;
-        id jsonObject = [NSJSONSerialization JSONObjectWithData:data options:options error:&error];
-        if (jsonObject == nil)
-        {
-            fprintf(stderr, "Error: failed to parse JSON: %s\n", error.localizedDescription.UTF8String);
-            return NULL;
-        }
-        return (__bridge_retained CFTypeRef)jsonObject;
-    }
-
-	CFPropertyListRef thePlist = NULL;
-    NSData* plistData = [NSData dataWithContentsOfURL:(__bridge NSURL *)plistURL];
-    if(plistData != nil)
-    {
-        thePlist = CFPropertyListCreateWithData(kCFAllocatorDefault, (__bridge CFDataRef)plistData, mutabilityOptions, NULL, NULL);
-    }
-
-	return thePlist;
+    return CreatePropertyListAndFormat(plistURL, mutabilityOptions, NULL);
 }
 
 CFURLRef CopyCommandFileURLInBundle(CFBundleRef inBundle, CFStringRef inFileName)
@@ -69,13 +191,22 @@ CFURLRef CopyCommandFileURLInBundle(CFBundleRef inBundle, CFStringRef inFileName
 }
 
 bool
-WritePropertyList(CFPropertyListRef propertyList, CFURLRef plistURL, CFPropertyListFormat plistFormat)
+WritePropertyList(CFPropertyListRef propertyList, CFURLRef plistURL, ACFPropertyListFormat plistFormat)
 {
-	bool isOK = false;
-    if (IsJSONURL(plistURL))
-    {
-        if (propertyList == NULL || plistURL == NULL) return false;
+    if ((propertyList == NULL) || (plistURL == NULL))
+        return false;
 
+    ACFPropertyListFormat format = plistFormat;
+    if (format == kACFPropertyListFormat_unknown)
+    {
+        format = FormatFromExtension(plistURL);
+        if (format == kACFPropertyListFormat_unknown)
+            format = kACFPropertyListFormat_xml;//a new file with an extension we do not know
+    }
+
+	bool isOK = false;
+    if (format == kACFPropertyListFormat_json)
+    {
         id jsonObject = (__bridge id)propertyList;
         NSError* error = nil;
         NSData* jsonData = nil;
@@ -106,12 +237,9 @@ WritePropertyList(CFPropertyListRef propertyList, CFURLRef plistURL, CFPropertyL
         return isOK;
     }
 
-    CFDataRef plistData = NULL;
-    if(propertyList != NULL)
-    {
-        plistData = CFPropertyListCreateData(kCFAllocatorDefault, propertyList, plistFormat, 0, NULL);
-    }
-
+    CFPropertyListFormat cfFormat = (format == kACFPropertyListFormat_binary) ? kCFPropertyListBinaryFormat_v1_0
+                                                                             : kCFPropertyListXMLFormat_v1_0;
+    CFDataRef plistData = ::CFPropertyListCreateData(kCFAllocatorDefault, propertyList, cfFormat, 0, NULL);
     if(plistData != NULL)
 	{
         NSData *__strong nsData = (NSData *)CFBridgingRelease(plistData);

@@ -386,6 +386,126 @@ else
     FAIL=$((FAIL + 1))
 fi
 
+# === Containers as appended/inserted values ==================================
+#
+# "dict" and "array" create an empty container and take no value argument, so they
+# need one fewer argument than every other type. Requiring the value-carrying count
+# made "append dict" and "append array" impossible to call at all.
+
+echo
+echo "=== Containers as appended/inserted values ==="
+
+CONT="$TMP/containers.json"
+ok    "container root"                       set dict "$CONT" /
+ok    "container list"                       insert LIST array "$CONT" /
+
+ok    "append dict onto array"               append dict  "$CONT" /LIST
+ok    "append array onto array"              append array "$CONT" /LIST
+ok    "add alias appends a dict"             add    dict  "$CONT" /LIST
+
+check "array holds the three containers"     "3"     get count "$CONT" /LIST
+check "appended item 0 is a dict"            "dict"  get type  "$CONT" /LIST/0
+check "appended item 1 is an array"          "array" get type  "$CONT" /LIST/1
+check "appended item 2 is a dict"            "dict"  get type  "$CONT" /LIST/2
+
+ok    "insert into the appended dict"        insert Key string "Value" "$CONT" /LIST/0
+check "read it back"                         "Value" get string "$CONT" /LIST/0/Key
+ok    "append into the appended array"       append integer 7 "$CONT" /LIST/1
+check "read that back"                       "7"     get value  "$CONT" /LIST/1/0
+check_json "file is valid JSON after container appends" "$CONT"
+
+# The per-type counts must still reject what they always rejected.
+nok   "append rejects a missing value"       append string "$CONT" /LIST
+nok   "append dict rejects a stray value"    append dict "extra" "$CONT" /LIST
+nok   "append rejects a missing type"        append
+nok   "insert rejects a missing value"       insert Key string "$CONT" /
+nok   "insert dict rejects a stray value"    insert Key dict "extra" "$CONT" /
+nok   "insert rejects a missing type"        insert Key "$CONT" /
+
+# === Format detection by content =============================================
+#
+# The extension decides the format when it is one we know; for any other extension
+# the content decides, so a JSON document does not have to be named ".json".
+
+echo
+echo "=== Format detection by content ==="
+
+# Assert a file's leading bytes, which is how we tell the written format apart.
+check_head() {
+    local desc="$1" expected="$2" file="$3"
+    local actual
+    actual=$(head -c ${#expected} "$file")
+    if [ "$actual" = "$expected" ]; then
+        echo "PASS: $desc"
+        PASS=$((PASS + 1))
+    else
+        echo "FAIL: $desc"
+        printf '      expected leading bytes: %s\n' "$expected"
+        printf '      actual:                 %s\n' "$actual"
+        FAIL=$((FAIL + 1))
+    fi
+}
+
+SNIFF="$TMP/project.pkgbuilderproj"
+printf '{\n  "NAME" : "widget",\n  "LIST" : [ 1, 2 ]\n}\n' > "$SNIFF"
+
+check "json content read through an unknown extension" "widget" get string "$SNIFF" /NAME
+check "and its container types"                        "array"  get type   "$SNIFF" /LIST
+ok    "written through an unknown extension"           set string "gadget" "$SNIFF" /NAME
+check "the write landed"                               "gadget" get string "$SNIFF" /NAME
+check_json "and the file is still JSON, not plist XML" "$SNIFF"
+
+# A JSON array at the root - unambiguous, no old-style plist opens with '['.
+ARRDOC="$TMP/menu.uidoc"
+printf '[ "a", "b" ]\n' > "$ARRDOC"
+check "json array root through an unknown extension"   "2"  get count "$ARRDOC" /
+ok    "append to it"                                   append string "c" "$ARRDOC" /
+check "the append landed"                              "3"  get count "$ARRDOC" /
+check_head "and it stayed JSON"                        "[" "$ARRDOC"
+
+# Leading BOM and whitespace must not defeat the sniff.
+BOMDOC="$TMP/bom.uidoc"
+printf '\xef\xbb\xbf\n\n   {"A":"B"}\n' > "$BOMDOC"
+check "json behind a BOM and blank lines"              "B" get string "$BOMDOC" /A
+
+# XML plist through an unknown extension: worked before by CF autodetection, and
+# must keep working and keep writing XML.
+XMLDOC="$TMP/settings.pbproj"
+printf '<?xml version="1.0" encoding="UTF-8"?>\n<plist version="1.0"><dict><key>A</key><string>B</string></dict></plist>\n' > "$XMLDOC"
+check "xml plist through an unknown extension"         "B" get string "$XMLDOC" /A
+ok    "write to it"                                    set string "C" "$XMLDOC" /A
+check "the write landed"                               "C" get string "$XMLDOC" /A
+check_head "and it stayed XML"                         "<?xml" "$XMLDOC"
+
+# An old-style OpenStep plist opens with '{' just as a JSON object does, so the
+# reader has to fall back to the plist parser when the JSON parse fails.
+OLDDOC="$TMP/legacy.conf"
+printf '{\n  A = B;\n  C = ( 1, 2 );\n}\n' > "$OLDDOC"
+check "old-style plist behind a JSON-looking brace"    "B" get string "$OLDDOC" /A
+ok    "write to it"                                    set string "Z" "$OLDDOC" /A
+check_head "written back as XML, the only plist form CF emits" "<?xml" "$OLDDOC"
+
+# A binary plist stays binary: "output format matches input format".
+BINDOC="$TMP/binary.plist"
+ok    "create a plist"                                 set dict "$BINDOC" /
+ok    "put a key in it"                                insert K string "V" "$BINDOC" /
+if plutil -convert binary1 "$BINDOC" >/dev/null 2>&1; then
+    ok    "modify the binary plist"                    insert K2 string "V2" "$BINDOC" /
+    check "the modification landed"                    "V2" get string "$BINDOC" /K2
+    check_head "and the file is still binary"          "bplist00" "$BINDOC"
+else
+    echo "SKIP: binary plist round trip (plutil -convert binary1 failed)"
+fi
+
+# Nothing to sniff: a file that does not exist yet falls back to the extension,
+# and an extension we do not know still means XML.
+NEWDOC="$TMP/fresh.weird"
+ok    "create through an unknown extension"            set dict "$NEWDOC" /
+ok    "put a key in it"                                insert A string "B" "$NEWDOC" /
+check_head "a new file with an unknown extension is XML" "<?xml" "$NEWDOC"
+
+nok   "an empty file is still an error"                get value "$TMP/nonexistent.weird" /A
+
 # ─── Summary ─────────────────────────────────────────────────────────────────
 
 echo
