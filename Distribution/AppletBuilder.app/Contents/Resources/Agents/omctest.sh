@@ -290,6 +290,11 @@ omctest_prepare_env() { # <app> <label>
     OMCTEST_WORK="$OMCTEST_SCRATCH/$label/work"
     OMCTEST_UI="$OMCTEST_SCRATCH/$label/ui"
     OMCTEST_SUPPORT="$OMCTEST_SCRATCH/$label/support"
+    # Removed, not just re-created: the label is slugged, so two files whose
+    # names differ only in a folded character share one directory AND one window
+    # uuid. Leaving win-* behind let a file that dispatched no handler at all
+    # read another file's virtual window and pass.
+    /bin/rm -rf "$OMCTEST_UI"
     /bin/mkdir -p "$OMCTEST_SCRATCH/tmp" "$OMCTEST_WORK" "$OMCTEST_UI" "$OMCTEST_SUPPORT" || return 1
 
     if [ "$own_scratch" = "1" ]; then
@@ -352,6 +357,7 @@ omctest_prepare_env() { # <app> <label>
     : > "$OMCTEST_UI/notifications.log"
     : > "$OMCTEST_UI/alert_answers"
     : > "$OMCTEST_UI/chain.queue"
+    : > "$OMCTEST_UI/chain.log"
 
     omctest_reset_counts
 }
@@ -443,7 +449,17 @@ omctest_emit_stub_omc_next_command() {
 # omc_next_command (omctest stub). The real tool asks the app to dispatch
 # another command after the current handler exits; queue it instead, so a test
 # can assert the request was made and drain it synchronously.
-printf '%s\n' "$2" >> "$OMCTEST_UI/chain.queue"
+# The real tool writes ONE file named for the GUID with fopen(...,"w"), so two
+# calls inside one handler leave only the LAST id for the engine to dispatch.
+# Appending here made the harness run both and report a request the engine had
+# already discarded. The full history is kept separately, for a test that wants
+# to assert the handler asked twice.
+if [ $# -ne 2 ] || [ -z "$2" ]; then
+    printf 'omc_next_command usage [%s]\n' "$*" >> "$OMCTEST_UI/errors.log"
+    exit 255
+fi
+printf '%s\n' "$2" >> "$OMCTEST_UI/chain.log"
+printf '%s\n' "$2" > "$OMCTEST_UI/chain.queue"
 exit 0
 STUB
 }
@@ -457,6 +473,16 @@ omctest_emit_stub_omc_dialog_control() {
 # handlers have. This one remembers, in two artifacts: a journal of every call
 # in order, and a last-write-wins virtual window.
 uuid="$1"; target="$2"
+# A window uuid is an opaque token, never a path. Unvalidated it was interpolated
+# straight into "$OMCTEST_UI/win-$uuid", so a handler passing a path in that slot
+# - exactly the kind of bug this harness exists to catch - made the stub write
+# outside the scratch and survive the cleanup trap.
+case "$uuid" in
+    ''|*/*|*..*)
+        printf 'bad window uuid [%s]\n' "$uuid" >> "$OMCTEST_UI/errors.log"
+        exit 0
+        ;;
+esac
 # The real tool rejects argc < 4 with a usage dump and exit -1 (255), writing
 # nothing. "shift 2" alone does not cover this: with exactly two arguments the
 # shift SUCCEEDS, the verb becomes the empty string, and the bare-value arm below
@@ -482,7 +508,11 @@ case "$target" in
     omc_window|omc_application|omc_workspace) v="$win/$target" ;;
     *[!0-9]*|'') printf 'bad target [%s]\n' "$target" >> "$OMCTEST_UI/errors.log"; exit 0 ;;
     *)  v="$win/v$target"
-        if [ -f "$OMCTEST_UI/known_ids.txt" ] \
+        # -s, not -f: a file that exists but is empty means "no ids were
+        # extracted", and treating that as "no id is known" flagged every
+        # legitimate write. Either way the runner has already said out loud that
+        # the check is off, so the stub simply does not run it.
+        if [ -s "$OMCTEST_UI/known_ids.txt" ] \
            && ! /usr/bin/grep -q -x -- "$target" "$OMCTEST_UI/known_ids.txt"; then
             printf '%s %s\n' "$target" "$*" >> "$OMCTEST_UI/unknown_ids.log"
         fi ;;
@@ -493,7 +523,11 @@ if [ -f "$win/fail_ids" ] && /usr/bin/grep -q -x -- "$target" "$win/fail_ids"; t
     exit 1
 fi
 
-row_count() { /usr/bin/awk 'END { print NR }' "$v.rows" 2>/dev/null; }
+# Prints 0, never empty: "[ "$2" -lt "" ]" is a shell error, and it was landing
+# in the handler log for any selection on a view with no rows yet.
+row_count() {
+    if [ -f "$v.rows" ]; then /usr/bin/awk 'END { print NR }' "$v.rows"; else printf '0'; fi
+}
 
 # 4. Replay the verb onto the virtual window.
 verb="$1"
@@ -510,12 +544,24 @@ case "$verb" in
         shift; : > "$v.columns"
         for col; do printf '%s\n' "$col" >> "$v.columns"; done ;;
     omc_table_remove_all_rows|omc_table_prepare_empty|omc_list_remove_all) : > "$v.rows" ;;
-    omc_table_set_rows_from_stdin|omc_list_set_items_from_stdin) /bin/cat > "$v.rows" ;;
-    omc_table_add_rows_from_stdin|omc_list_append_items_from_stdin) /bin/cat >> "$v.rows" ;;
+    # The tool's fgets loop drops empty lines ("if there is an empty line, we eat
+    # it and not add to the list"), so a trailing newline or a blank line in the
+    # middle does NOT become a row. Feeding rows from a find or grep pipeline
+    # with a trailing blank is ordinary, and ui_row_count is a headline
+    # assertion, so keeping them would over-report on the most common shape.
+    # The argv forms below deliberately do NOT filter: the tool keeps an empty
+    # ARGUMENT as an empty row.
+    omc_table_set_rows_from_stdin|omc_list_set_items_from_stdin)
+        /usr/bin/grep -v '^$' > "$v.rows" ;;
+    omc_table_add_rows_from_stdin|omc_list_append_items_from_stdin)
+        /usr/bin/grep -v '^$' >> "$v.rows" ;;
+    # -r, not -f: a file that exists but cannot be opened leaves the rows alone
+    # in the tool, because its fopen returns NULL - truncating here would be a
+    # divergence in the direction that hides a handler bug.
     omc_table_set_rows_from_file|omc_list_set_items_from_file)
-        [ -f "$2" ] && /bin/cat "$2" > "$v.rows" ;;   # a missing file must not truncate
+        [ -r "$2" ] && /usr/bin/grep -v '^$' "$2" > "$v.rows" ;;
     omc_table_add_rows_from_file|omc_list_append_items_from_file)
-        [ -f "$2" ] && /bin/cat "$2" >> "$v.rows" ;;
+        [ -r "$2" ] && /usr/bin/grep -v '^$' "$2" >> "$v.rows" ;;
     omc_table_set_rows|omc_list_set_items)
         shift; : > "$v.rows"
         for row; do printf '%s\n' "$row" >> "$v.rows"; done ;;
@@ -523,8 +569,15 @@ case "$verb" in
         shift
         for row; do printf '%s\n' "$row" >> "$v.rows"; done ;;
     omc_select_row)
+        # No index, or a non-numeric one, is a SILENT NO-OP: the tool's
+        # one-argument branch is gated on itemCount == 5, so with anything else
+        # nothing is stored and the previous selection survives. Clearing here
+        # instead would test the classic handler bug - omc_select_row "$idx"
+        # with $idx empty - as "the selection was cleared" while the live app
+        # keeps the old row selected. Phase 0 records this no-op as worth
+        # reproducing exactly rather than papering over.
         case "$2" in
-            ''|*[!0-9]*) : > "$v.selection" ;;
+            ''|*[!0-9]*) : ;;
             *) if [ "$2" -lt "$(row_count)" ]; then printf '%s' "$2" > "$v.selection"
                else : > "$v.selection"; fi ;;   # out of range clears, like the real tool
         esac ;;
@@ -761,13 +814,30 @@ omc_reset_controls() {
 # When several extensions share a stem the engine's answer is undefined (see the
 # contract block); the harness commits to .sh, .py, .zsh, .bash.
 omctest_resolve_script() { # <command-id>
-    local command_id="$1" scripts_dir wanted ext candidate stem
+    local command_id="$1" scripts_dir wanted ext candidate stem base
     scripts_dir="$OMC_APP_BUNDLE_PATH/Contents/Resources/Scripts"
     wanted=$(printf '%s' "$command_id" | LC_ALL=C /usr/bin/tr 'A-Z' 'a-z')
-    for ext in sh py zsh bash; do
-        for candidate in "$scripts_dir"/*."$ext"; do
+    # The documented precedence first, then everything else. The engine keys on
+    # the lowercased stem with ANY extension stripped and leaves duplicate-stem
+    # precedence undefined, so the four below are this harness's deterministic
+    # choice - but a .pl, .rb, .applescript or extensionless handler must still
+    # resolve, and used to read as "no script for command id".
+    for ext in sh py zsh bash ''; do
+        for candidate in "$scripts_dir"/*; do
             [ -f "$candidate" ] || continue
-            stem=$(/usr/bin/basename "$candidate" ".$ext" | LC_ALL=C /usr/bin/tr 'A-Z' 'a-z')
+            base=$(/usr/bin/basename "$candidate")
+            case "$ext" in
+                '')
+                    # The catch-all pass: skip the four already tried.
+                    case "$base" in *.sh|*.py|*.zsh|*.bash) continue ;; esac
+                    ;;
+                *)
+                    case "$base" in *."$ext") ;; *) continue ;; esac
+                    ;;
+            esac
+            # omctest_stem_of, not basename -s: it implements the macOS dotfile
+            # rule, so ".zshrc" keeps its whole name as the stem.
+            stem=$(omctest_stem_of "$base" | LC_ALL=C /usr/bin/tr 'A-Z' 'a-z')
             if [ "$stem" = "$wanted" ]; then
                 printf '%s' "$candidate"
                 return 0
@@ -890,7 +960,9 @@ alert_answer() { # <rc> [rc ...]
 }
 
 alerts_reset() { : > "$OMCTEST_UI/alerts.log"; }
-alerts_count() { /usr/bin/grep -c . "$OMCTEST_UI/alerts.log" 2>/dev/null | /usr/bin/tr -d ' '; }
+# Counts LINES, not non-empty lines: one alert is one line, and an alert raised
+# with empty text is still an alert the user was shown.
+alerts_count() { /usr/bin/awk 'END { print NR }' "$OMCTEST_UI/alerts.log" 2>/dev/null; }
 alerts_mention() { /usr/bin/grep -c -- "$1" "$OMCTEST_UI/alerts.log" 2>/dev/null | /usr/bin/tr -d ' '; }
 
 notify_count() { /usr/bin/grep -c . "$OMCTEST_UI/notifications.log" 2>/dev/null | /usr/bin/tr -d ' '; }
@@ -900,8 +972,16 @@ notify_mention() { /usr/bin/grep -c -- "$1" "$OMCTEST_UI/notifications.log" 2>/d
 # -F, because a command id is a literal, not a pattern: every OMC command id
 # contains dots, and as a regex "MyApp.close" also matches "MyAppXclose".
 # check_grep and ui_calls are documented pattern helpers and stay regexes.
+# What the engine would dispatch NEXT - the one pending slot, not a history.
 chain_requested() { # <command-id>
     /usr/bin/grep -c -F -x -- "$1" "$OMCTEST_UI/chain.queue" 2>/dev/null | /usr/bin/tr -d ' '
+}
+
+# How many times a chain to this id was ASKED for, across the whole file. Two
+# requests in one handler leave one pending slot but two history lines, which is
+# the only way to tell that a handler overwrote its own request.
+chain_asked() { # <command-id>
+    /usr/bin/grep -c -F -x -- "$1" "$OMCTEST_UI/chain.log" 2>/dev/null | /usr/bin/tr -d ' '
 }
 
 # Run what omc_next_command queued, in order. Queue-then-drain reproduces the
@@ -909,7 +989,7 @@ chain_requested() { # <command-id>
 # exits - rather than the tempting-but-wrong recursive dispatch. The depth limit
 # turns a circular chain into a named failure instead of a hung run.
 omc_drain_chain() { # [max-depth, default 25]
-    local max_depth="${1:-25}" depth=0 next_id
+    local max_depth="${1:-25}" depth=0 next_id chain_rc worst_rc=0
     while [ -s "$OMCTEST_UI/chain.queue" ]; do
         if [ "$depth" -ge "$max_depth" ]; then
             printf 'omctest: chain depth %s exceeded (circular chain?)\n' "$max_depth" >&2
@@ -919,9 +999,14 @@ omc_drain_chain() { # [max-depth, default 25]
         /usr/bin/tail -n +2 "$OMCTEST_UI/chain.queue" > "$OMCTEST_UI/chain.tmp"
         /bin/mv "$OMCTEST_UI/chain.tmp" "$OMCTEST_UI/chain.queue"
         omc_run "$next_id"
+        chain_rc=$?
+        # The worst status across the whole chain, not just the last link's: a
+        # handler that failed in the middle was invisible, because only the final
+        # omc_run's status survived in OMCTEST_STATUS.
+        [ "$chain_rc" -eq 0 ] || worst_rc="$chain_rc"
         depth=$((depth + 1))
     done
-    return 0
+    return "$worst_rc"
 }
 
 # =============================================================================
@@ -1385,10 +1470,20 @@ omctest_run_suite() { # <app> <tests-dir> [filter-glob]
                 *) continue ;;
             esac
         fi
+        label=$(omctest_label_for "$test_file")
+        if [ -d "$OMCTEST_SCRATCH/$label" ]; then
+            # Two matched files slug to one label, so they would share a scratch
+            # subtree and a window uuid. Refused rather than run: the second one
+            # would read the first one's virtual window and could pass having
+            # dispatched nothing.
+            printf 'omctest: two test files use the label "%s" - rename one (%s)\n' \
+                "$label" "$base" >&2
+            total_fail=$((total_fail + 1))
+            continue
+        fi
         file_count=$((file_count + 1))
         printf '\n### %s\n' "$base" >&2
 
-        label=$(omctest_label_for "$test_file")
         if ! omctest_run_file "$app_path" "$test_file"; then
             # A file that exits without writing its counts crashed. Never
             # silently dropped: it counts as a failure and is named.
@@ -1461,7 +1556,12 @@ omctest_standalone_init() {
     OMCTEST_TESTS="$test_dir"
     export OMCTEST_TESTS
     omctest_prepare_env "$app_path" "$(omctest_label_for "$test_file")" || return 1
-    omctest_extract_known_ids "$OMCTEST_APP" "$OMCTEST_UI/known_ids.txt"
+    # Same loud failure the runner path has: silence here would leave the
+    # undeclared-id check off and the recommended assertion passing vacuously.
+    if ! omctest_extract_known_ids "$OMCTEST_APP" "$OMCTEST_UI/known_ids.txt" \
+       || [ ! -s "$OMCTEST_UI/known_ids.txt" ]; then
+        printf 'omctest: no view ids extracted - the undeclared-id check is OFF\n' >&2
+    fi
 }
 
 if [ -n "$OMCTEST_PREPARED" ]; then

@@ -211,6 +211,25 @@ printf 'b\n' >> "${TMPDIR}chain.log"
 "$OMC_OMC_SUPPORT_PATH/omc_next_command" "$OMC_CURRENT_COMMAND_GUID" "Fixture.chain.c"
 exit 0
 ''',
+    # Two requests in ONE handler: the real tool truncates its single slot, so
+    # only the last survives for the engine to dispatch.
+    "Fixture.chain.twice.sh": r'''
+"$OMC_OMC_SUPPORT_PATH/omc_next_command" "$OMC_CURRENT_COMMAND_GUID" "Fixture.chain.b"
+"$OMC_OMC_SUPPORT_PATH/omc_next_command" "$OMC_CURRENT_COMMAND_GUID" "Fixture.chain.c"
+exit 0
+''',
+    # Rows with blank lines, which the tool eats, and an empty ARGUMENT, which it
+    # keeps - two different rules the stub has to tell apart.
+    "Fixture.blankrows.sh": r'''
+d="$OMC_OMC_SUPPORT_PATH/omc_dialog_control"; u="$OMC_ACTIONUI_WINDOW_UUID"
+printf 'r1\n\nr3\n\n' | "$d" "$u" 100 omc_table_set_rows_from_stdin
+"$d" "$u" 101 omc_table_set_rows a "" b
+exit 0
+''',
+    # A chained handler that fails, so the drain's status is observable.
+    "Fixture.chain.fails.sh": r'''
+exit 3
+''',
     # A deliberately circular chain, to trip the depth limit.
     "Fixture.loop.sh": r'''
 "$OMC_OMC_SUPPORT_PATH/omc_next_command" "$OMC_CURRENT_COMMAND_GUID" "Fixture.loop"
@@ -611,6 +630,27 @@ omc_drain_chain
 check "the whole chain ran, in order" "abc" "$(/usr/bin/tr -d '\n' < "${TMPDIR}chain.log")"
 check "and the queue is empty" "0" "$(chain_requested Fixture.chain.c)"
 
+section "omc_next_command is one slot, not a queue"
+# The real tool does fopen(path, "w") - it truncates. Two requests in one handler
+# therefore leave only the LAST for the engine, and a harness that queued both
+# would run a command the engine had already discarded.
+: > "${TMPDIR}chain.log"
+asked_b_before="$(chain_asked Fixture.chain.b)"
+omc_run Fixture.chain.twice
+asked_b_after="$(chain_asked Fixture.chain.b)"
+check "only the last request is pending" "0" "$(chain_requested Fixture.chain.b)"
+check "and it is the one that survives"  "1" "$(chain_requested Fixture.chain.c)"
+check "but the history recorded the overwritten ask" "1" "$((asked_b_after - asked_b_before))"
+omc_drain_chain
+check "so only c ran"                    "c" "$(/usr/bin/tr -d '\n' < "${TMPDIR}chain.log")"
+
+section "a failing link is not swallowed"
+omc_run Fixture.chain.a
+# Redirect the queue at the failing handler by asking for it directly.
+"$OMC_OMC_SUPPORT_PATH/omc_next_command" "$OMC_CURRENT_COMMAND_GUID" "Fixture.chain.fails"
+omc_drain_chain
+check "the drain reports the failure" "3" "$?"
+
 section "a circular chain is a named failure, not a hung run"
 omc_run Fixture.loop
 omc_drain_chain 5 2>/dev/null
@@ -651,7 +691,11 @@ check "the 2-arg form records no content type" "" "$(ui_content_type 11)"
 check "and still sets the value" "plain body" "$(ui_value 11)"
 check "view 100 keeps its valid selection"      "2" "$(ui_selection 100)"
 check "an out-of-range row clears the selection" "" "$(ui_selection 101)"
-check "and so does a non-numeric one"           "" "$(ui_selection 11)"
+# A non-numeric index is a SILENT NO-OP in the tool, not a clear: its
+# one-argument branch is gated on the argument count, so the previous selection
+# survives. Reproducing that is the point - the classic handler bug
+# "omc_select_row $idx" with $idx empty must test the way it behaves live.
+check "a non-numeric index changes nothing" "0" "$(ui_selection 11)"
 check "shown"          "1"         "$(ui_visible 10)"
 check "hidden"         "0"         "$(ui_visible 11)"
 check "the alert title" "Title"    "$(ui_alert_title)"
@@ -676,6 +720,20 @@ check "a typo'd verb destroys rows, as the engine does" "1" "$(ui_row_count 101)
 # type and its argument as the value - which is what lands in the rows.
 check "the value is what was written" "oops" "$(ui_value 101)"
 check "and the destruction is flagged" "1"  "$(printf '%s' "$(ui_suspect_writes)" | /usr/bin/grep -c 'bare value onto rows')"
+
+section "blank lines follow the tool's two different rules"
+ui_reset
+omc_run Fixture.blankrows
+check "blank lines from stdin are eaten" "2" "$(ui_row_count 100)"
+check "and the real rows survive"        "r1" "$(ui_rows 100 | /usr/bin/head -n 1)"
+# The argv form keeps an empty argument as an empty row - a different rule, and
+# filtering both the same way would be wrong in one direction or the other.
+check "an empty ARGUMENT is still a row"  "3" "$(ui_row_count 101)"
+
+section "a window uuid is a token, not a path"
+"$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "../../../OMCTEST_ESCAPED" 100 "outside" 2>/dev/null
+check "a traversal uuid is refused"      "1" "$(printf '%s' "$(ui_errors)" | /usr/bin/grep -c 'bad window uuid')"
+check "and nothing was written outside"  "no" "$([ -e "$OMCTEST_SCRATCH/../OMCTEST_ESCAPED" ] && echo yes || echo no)"
 
 section "writes to an undeclared id are flagged"
 ui_reset
@@ -825,8 +883,8 @@ EXPECTED_COUNTS = {
     "20-lifetime.test.sh": (36, 0),
     "30-omcrun.test.sh": (13, 0),
     "40-alerts.test.sh": (13, 0),
-    "50-chain.test.sh": (6, 0),
-    "60-window.test.sh": (49, 0),
+    "50-chain.test.sh": (11, 0),
+    "60-window.test.sh": (54, 0),
     "70-tools.test.sh": (25, 0),
     "85-noise.test.sh": (1, 0),
 }
@@ -1049,7 +1107,7 @@ def test_standalone(project: Path, app: Path) -> None:
     env["OMCTEST_LIB"] = str(OMCTEST)
     p = _run_standalone(project, env)
     check("one file runs with no runner", p.returncode == 0, p.stderr.strip()[-300:])
-    check("and reports its own summary", "6 passed, 0 failed" in p.stderr,
+    check("and reports its own summary", "11 passed, 0 failed" in p.stderr,
           p.stderr.strip()[-200:])
     # Without OMCTEST_APP it must find the single .app beside Tests/.
     env.pop("OMCTEST_APP")
