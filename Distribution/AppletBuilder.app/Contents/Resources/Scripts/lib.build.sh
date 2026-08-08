@@ -641,6 +641,18 @@ ${droppings}
 "
     fi
 
+    # A nudge, never an error: it does not touch either counter, so it cannot
+    # change the exit status here or halt a build. This runs inside
+    # validate_project, which applet_build also calls, so the line appears
+    # during a plain build of a test-less applet too - accepted, because one
+    # advisory line is cheap and keeping the check in the shared path is what
+    # makes the CLI and the GUI say the same thing.
+    local tests_dir
+    tests_dir="$(cd "$(/usr/bin/dirname "$target_path")" >/dev/null 2>&1 && pwd)/Tests"
+    if [ ! -d "$tests_dir" ]; then
+        ab_log "  [INFO] no Tests/ directory - consider 'appletbuilder test' (see omctest_guide.md)"
+    fi
+
     finish_validation "Validation" "$error_count" "$warning_count" "$report"
 }
 
@@ -904,5 +916,51 @@ applet_build() {
         return 1
     fi
 
+    # --test, and only --test: tests are applet-authored code with arbitrary
+    # runtime, and a developer mid-refactor must be able to rebuild an app whose
+    # tests are momentarily red.
+    #
+    # Placed here on purpose - after the framework, executable and Python have
+    # been refreshed, and before signing. That order is the point of running
+    # them at all in a build: it tests the tool versions that will actually
+    # ship, and it halts in the same place a validation error halts, so nothing
+    # unsigned-but-broken ever reaches the signing step.
+    if [ "$AB_RUN_TESTS" = "1" ]; then
+        if ! applet_run_tests "$project_path"; then
+            local ts=$(/bin/date "+%Y-%m-%d %H:%M:%S")
+            ab_log ""
+            ab_log "Build halted - tests failed. (${ts})"
+            return 1
+        fi
+    fi
+
     do_codesign "$project_path"
+}
+
+# Run the applet's omctest suite. Returns non-zero when the suite fails or when
+# --test was asked for and there is nothing to run.
+applet_run_tests() {
+    local project_path="$1"
+    local tests_dir omctest_lib
+
+    tests_dir="$(cd "$(/usr/bin/dirname "$project_path")" >/dev/null 2>&1 && pwd)/Tests"
+    if [ ! -d "$tests_dir" ]; then
+        # The flag is an explicit request. Failing loudly beats a silent skip,
+        # which would let a release flow believe tests had run.
+        ab_report "Build halted - --test given but no Tests/ directory beside the applet."
+        return 1
+    fi
+
+    omctest_lib="${OMC_APP_BUNDLE_PATH}/Contents/Resources/Agents/omctest.sh"
+    if [ ! -f "$omctest_lib" ]; then
+        ab_report "Build halted - the omctest harness is missing at $omctest_lib"
+        return 1
+    fi
+
+    ab_log "Running tests..."
+    export OMCTEST_RUNNER=1
+    export OMCTEST_LIB="$omctest_lib"
+    # shellcheck source=../Agents/omctest.sh
+    source "$omctest_lib"
+    omctest_run_suite "$project_path" "$tests_dir"
 }

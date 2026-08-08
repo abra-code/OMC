@@ -335,7 +335,9 @@ omctest_prepare_env() { # <app> <label>
     export TMPDIR
 
     # --- harness variables ---------------------------------------------------
-    OMCTEST_STATUS=0
+    # Deliberately NOT 0. "check_status \"it worked\" 0" would otherwise pass
+    # before anything had been dispatched, which is a check that cannot fail.
+    OMCTEST_STATUS="-"
     [ -n "$OMCTEST_ALERT_RC" ] || OMCTEST_ALERT_RC=0
     export OMCTEST_APP OMCTEST_LIB OMCTEST_TESTS OMCTEST_FIXTURES
     export OMCTEST_SCRATCH OMCTEST_WORK OMCTEST_UI OMCTEST_SUPPORT
@@ -351,8 +353,7 @@ omctest_prepare_env() { # <app> <label>
     : > "$OMCTEST_UI/alert_answers"
     : > "$OMCTEST_UI/chain.queue"
 
-    OMCTEST_PASS=0
-    OMCTEST_FAIL=0
+    omctest_reset_counts
 }
 
 # The interposition directory: symlink the applet's own tools, then replace the
@@ -826,6 +827,10 @@ omc_run() { # <command-id>
             "$command_id" "$OMC_APP_BUNDLE_PATH/Contents/Resources/Scripts" >&2
         OMCTEST_STATUS=127
         export OMCTEST_STATUS
+        # Recorded in the same file every other dispatch writes: check_status
+        # reads that file, so skipping it here left the PREVIOUS run's status in
+        # place and "check_status ... 127" compared against a stale 0.
+        printf '127\n' > "$OMCTEST_UI/.last_status"
         # Cleared here too. A typo'd or renamed COMMAND_ID is exactly how a test
         # file reaches this branch, and leaving the one-shot variables armed
         # would hand them to the NEXT dispatch - "a leftover
@@ -971,14 +976,50 @@ omc_wait_for() { # '<predicate command>' [timeout-seconds, default 5]
 # Deliberately tiny. Anything else is plain shell against the file system, which
 # is the point of choosing shell-native test files.
 
+# The counters are FILES, not shell variables, and that is the whole point.
+#
+# A shell variable incremented inside a pipeline, a command substitution or a
+# "( )" group is incremented in a subshell and the value is lost when it exits.
+# So with variable counters, this:
+#
+#     ui_rows 100 | while read -r row; do check "row $row" ... ; done
+#
+# - the natural way to assert over rows - printed its FAIL lines to stderr and
+# then reported "1 passed, 0 failed" and exited 0. A harness that prints a
+# failure and calls the run green is worse than no harness at all, and this was
+# the one shape that could do it. Only a file survives a subshell.
+#
+# One byte appended per check, counted with "wc -c": no read-modify-write, so
+# concurrent handlers cannot lose each other's counts either.
 check() { # <description> <expected> <actual>
     if [ "$2" = "$3" ]; then
-        OMCTEST_PASS=$((OMCTEST_PASS + 1))
+        printf 'p' >> "$OMCTEST_UI/counts.pass"
         printf 'ok   %s\n' "$1" >&2
     else
-        OMCTEST_FAIL=$((OMCTEST_FAIL + 1))
+        printf 'f' >> "$OMCTEST_UI/counts.fail"
         printf 'FAIL %s\n       expected [%s]\n       actual   [%s]\n' "$1" "$2" "$3" >&2
     fi
+}
+
+# How many checks of one kind have been counted. Prints 0 rather than nothing
+# when none have, so a caller can do arithmetic on it.
+omctest_count() { # <pass|fail>
+    local kind="$1" counted
+    if [ ! -f "$OMCTEST_UI/counts.$kind" ]; then
+        printf '0'
+        return 0
+    fi
+    counted=$(/usr/bin/wc -c < "$OMCTEST_UI/counts.$kind" | /usr/bin/tr -d ' ')
+    printf '%s' "${counted:-0}"
+}
+
+# Reset the counters for one test file's run.
+omctest_reset_counts() {
+    : > "$OMCTEST_UI/counts.pass"
+    : > "$OMCTEST_UI/counts.fail"
+    # No dispatch has happened yet in this file, so there must be no status for
+    # check_status to find.
+    /bin/rm -f "$OMCTEST_UI/.last_status" "$OMCTEST_UI/plan"
 }
 
 section() { # <header>
@@ -997,20 +1038,56 @@ check_grep() { # <description> <pattern> <file>
     check "$1" "yes" "$(/usr/bin/grep -q -- "$2" "$3" 2>/dev/null && printf 'yes' || printf 'no')"
 }
 
+# Reads the status FILE rather than the variable, so this is still correct when
+# omc_run was called inside a subshell (where the variable assignment is lost).
+# Before any dispatch the file does not exist and the variable is "-", so
+# check_status can never pass without a handler having run.
 check_status() { # <description> <expected-rc>
-    check "$1" "$2" "$OMCTEST_STATUS"
+    local recorded
+    if [ -f "$OMCTEST_UI/.last_status" ]; then
+        recorded=$(/bin/cat "$OMCTEST_UI/.last_status" 2>/dev/null)
+    else
+        recorded="$OMCTEST_STATUS"
+    fi
+    check "$1" "$2" "$recorded"
 }
 
 # Summary, machine-readable counts for the runner, and the file's exit status.
 omctest_end() {
-    printf -- '\n-- %s passed, %s failed --\n' "$OMCTEST_PASS" "$OMCTEST_FAIL" >&2
-    if [ -n "$OMCTEST_COUNTS" ]; then
-        printf '%s\t%s\n' "$OMCTEST_PASS" "$OMCTEST_FAIL" > "$OMCTEST_COUNTS"
+    local passed failed planned total
+    passed=$(omctest_count pass)
+    failed=$(omctest_count fail)
+    if [ -f "$OMCTEST_UI/plan" ]; then
+        planned=$(/bin/cat "$OMCTEST_UI/plan")
+        total=$((passed + failed))
+        if [ "$total" -ne "$planned" ]; then
+            printf 'FAIL planned %s checks but ran %s\n' "$planned" "$total" >&2
+            printf 'f' >> "$OMCTEST_UI/counts.fail"
+            failed=$((failed + 1))
+        fi
     fi
-    if [ "$OMCTEST_FAIL" -gt 0 ]; then
+    printf -- '\n-- %s passed, %s failed --\n' "$passed" "$failed" >&2
+    if [ -n "$OMCTEST_COUNTS" ]; then
+        printf '%s\t%s\n' "$passed" "$failed" > "$OMCTEST_COUNTS"
+    fi
+    if [ "$failed" -gt 0 ]; then
         exit 1
     fi
     exit 0
+}
+
+# Declare how many checks this file intends to run. omctest_end then refuses a
+# run whose count does not match, which is the only thing that catches a file
+# that aborted quietly partway through: without it, a file that stops on line 5
+# of 50 still reports "4 passed, 0 failed" and the suite is green.
+omctest_plan() { # <count>
+    case "$1" in
+        ''|*[!0-9]*)
+            printf 'omctest: omctest_plan needs a count\n' >&2
+            return 1
+            ;;
+    esac
+    printf '%s' "$1" > "$OMCTEST_UI/plan"
 }
 
 # =============================================================================
@@ -1388,9 +1465,8 @@ omctest_standalone_init() {
 }
 
 if [ -n "$OMCTEST_PREPARED" ]; then
-    # The runner already built everything. Attach: counters only.
-    OMCTEST_PASS=0
-    OMCTEST_FAIL=0
+    # The runner already built everything. Attach: reset this file's counters.
+    omctest_reset_counts
 elif [ -n "$OMCTEST_RUNNER" ]; then
     # Sourced for the runner functions. Define and do nothing.
     :

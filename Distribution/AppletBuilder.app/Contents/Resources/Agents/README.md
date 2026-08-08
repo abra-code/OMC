@@ -91,6 +91,16 @@ embedded Python runtime for Python applets) from this AppletBuilder, removes
 - `--warnings-as-errors` — treat validation warnings as build-halting errors.
 - `--force` — force the framework/executable refresh even if versions match, and
   answer the Python major-version-upgrade prompt with "yes" (non-interactive).
+- `--test` - run the applet's `Tests/` suite after the runtime refresh and before
+  signing, and halt the build if it fails. Running it there is the point: it
+  tests the tool versions that will actually ship. Tests are not run by default,
+  because they are applet-authored code with arbitrary runtime and a developer
+  mid-refactor must be able to rebuild an app whose tests are momentarily red.
+  Gating belongs at release, by convention. `--test` with no `Tests/` directory
+  beside the applet is an error, not a silent skip.
+
+`validate` (and therefore every `build`) emits one `[INFO]` line when an applet
+has no `Tests/` directory. It is advisory and never affects the exit status.
 
 ### test - run an applet's test suite
 
