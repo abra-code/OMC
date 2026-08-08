@@ -92,6 +92,45 @@ embedded Python runtime for Python applets) from this AppletBuilder, removes
 - `--force` — force the framework/executable refresh even if versions match, and
   answer the Python major-version-upgrade prompt with "yes" (non-interactive).
 
+### test - run an applet's test suite
+
+```
+appletbuilder test <App.app> [--tests <dir>] [--filter <glob>] [--verbose] \
+                   [--keep-scratch] [--list]
+```
+
+Runs the applet's `Tests/*.test.sh` files against its real handler scripts inside a
+simulated OMC environment: a scratch mock of the engine's variable surface, an
+interposition directory holding the applet's own runtime tools with `alert`,
+`notify`, `omc_dialog_control` and `omc_next_command` replaced by recording stubs,
+and a per-file `TMPDIR` so state directories are isolated and cleanup is total.
+Tests live *next to* the bundle, never inside it. Full bundle validation runs first
+and validation errors abort the run before any test executes; warnings do not.
+
+- `--tests <dir>` - where the test files are (default `Tests/` beside the `.app`).
+- `--filter <glob>` - run only the files whose name matches, e.g. `20-*`.
+- `--verbose` - also stream each handler's stdout and stderr as it is produced.
+- `--keep-scratch` - skip the cleanup trap and print the scratch path, so the
+  virtual window's recorded state can be inspected after the run.
+- `--list` - print the test files that would run, one per line, and stop.
+
+Per-check `ok`/`FAIL` lines and section headers go to stderr as the run proceeds;
+the one machine-readable line on stdout is `omctest: <N> passed, <M> failed, <K>
+files`. A test file that exits before calling `omctest_end` is reported as
+`CRASH <file> (exit <rc>)` and counted as a failure, never silently dropped.
+Exit: `0` all passed, `1` any failure or crash, `2` usage errors or no tests found.
+
+A single file can also be run by hand, without the CLI, which is the debug loop
+for one failing test:
+
+```
+OMCTEST_APP=./MyApp.app \
+OMCTEST_LIB=<AppletBuilder.app>/Contents/Resources/Agents/omctest.sh \
+    sh Tests/10-lifecycle.test.sh
+```
+
+See `omctest_guide.md` in the Documentation folder for the test-author API.
+
 ### prettify — reformat ActionUI / JSON
 
 ```

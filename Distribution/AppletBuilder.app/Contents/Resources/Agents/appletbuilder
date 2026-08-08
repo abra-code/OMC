@@ -69,6 +69,8 @@ Usage:
   appletbuilder validate <App.app | Command.json | UI.json | script-file>
   appletbuilder build    <App.app> [--identity <id>] [--thin arm64|x86_64|none]
                          [--warnings-as-errors] [--update-python] [--force]
+  appletbuilder test     <App.app> [--tests <dir>] [--filter <glob>] [--verbose]
+                         [--keep-scratch] [--list]
   appletbuilder prettify <file.json> [--stdout]
   appletbuilder preview  <UI.json> [--screenshot <out.png>]
   appletbuilder list-templates
@@ -278,6 +280,93 @@ cmd_build() {
     applet_build "$target"
 }
 
+# ── Test ──────────────────────────────────────────────────────────────────────
+
+# Guard for every option that takes a value. Under both /bin/sh and bash,
+# "shift 2" with only one argument left shifts NOTHING and returns non-zero - it
+# is not a partial shift and it does not abort - so an option arriving as the
+# final argv token would spin the arg loop forever at 100% CPU. A truncated argv
+# is an ordinary thing for an agent to produce.
+_need_value() { # <option> <remaining-arg-count> <candidate-value>
+    if [ "$2" -lt 2 ]; then
+        echo "test: $1 requires a value" >&2
+        return 1
+    fi
+    case "$3" in
+        -*) echo "test: $1 requires a value (got the option $3)" >&2; return 1 ;;
+    esac
+    return 0
+}
+
+cmd_test() {
+    local target="" tests_dir="" filter="" list_only=0
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --tests)        _need_value "$1" $# "$2" || return 2; tests_dir="$2"; shift 2 ;;
+            --filter)       _need_value "$1" $# "$2" || return 2; filter="$2"; shift 2 ;;
+            --verbose)      export OMCTEST_VERBOSE=1; shift ;;
+            --keep-scratch) export OMCTEST_KEEP_SCRATCH=1; shift ;;
+            --list)         list_only=1; shift ;;
+            -h|--help)      usage; return 2 ;;
+            -*) echo "test: unknown option: $1" >&2; return 2 ;;
+            *)  if [ -z "$target" ]; then target="$1"; else echo "test: unexpected argument: $1" >&2; return 2; fi; shift ;;
+        esac
+    done
+
+    if [ -z "$target" ]; then echo "test: an applet bundle path is required" >&2; return 2; fi
+    if [ ! -d "$target/Contents" ]; then echo "test: not an applet bundle: $target" >&2; return 2; fi
+
+    # Tests live NEXT TO the bundle, never inside it: shipping them would bloat
+    # the app, and editing one would dirty a signed release's code signature.
+    if [ -z "$tests_dir" ]; then
+        tests_dir="$(cd "$(/usr/bin/dirname "$target")" >/dev/null 2>&1 && pwd)/Tests"
+    fi
+    if [ ! -d "$tests_dir" ]; then
+        echo "test: no tests directory at $tests_dir (use --tests <dir>)" >&2
+        return 2
+    fi
+
+    # Which files would run. This check precedes --list, so "--list" against a
+    # directory with nothing matching is the same usage error as a plain run.
+    local matched=0 test_file base
+    for test_file in "$tests_dir"/*.test.sh; do
+        [ -f "$test_file" ] || continue
+        base=$(/usr/bin/basename "$test_file")
+        if [ -n "$filter" ]; then
+            case "$base" in
+                $filter) ;;
+                *) continue ;;
+            esac
+        fi
+        matched=$((matched + 1))
+        if [ "$list_only" -eq 1 ]; then printf '%s\n' "$test_file"; fi
+    done
+    if [ "$matched" -eq 0 ]; then
+        echo "test: no test files matched in $tests_dir" >&2
+        return 2
+    fi
+    if [ "$list_only" -eq 1 ]; then return 0; fi
+
+    # Validate the bundle first. A bash-4 syntax error or a dangling COMMAND_ID
+    # would otherwise surface as baffling mid-test handler failures; validation
+    # names it in one line. Errors abort before any test executes; warnings do
+    # not.
+    if ! _validate_bundle "$target"; then
+        echo "test: bundle validation failed - no tests were run" >&2
+        return 1
+    fi
+
+    export OMCTEST_RUNNER=1
+    export OMCTEST_LIB="$AGENTS_DIR/omctest.sh"
+    if [ ! -f "$OMCTEST_LIB" ]; then
+        echo "test: cannot find the harness library at $OMCTEST_LIB" >&2
+        return 1
+    fi
+    # shellcheck source=omctest.sh
+    source "$OMCTEST_LIB"
+    omctest_run_suite "$target" "$tests_dir" "$filter"
+}
+
 # ── Prettify ──────────────────────────────────────────────────────────────────
 
 cmd_prettify() {
@@ -368,6 +457,7 @@ case "$sub" in
     create)         cmd_create "$@" ;;
     validate)       cmd_validate "$@" ;;
     build)          cmd_build "$@" ;;
+    test)           cmd_test "$@" ;;
     prettify)       cmd_prettify "$@" ;;
     preview)        cmd_preview "$@" ;;
     list-templates) cmd_list_templates ;;
