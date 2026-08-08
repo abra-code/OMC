@@ -866,6 +866,30 @@ check "one real check ran" "a" "a"
 exit 7
 '''
 
+# A file that stops partway through with a SUCCESS status. This is the quiet
+# truncation - an "exit" in a helper, a handler that takes the shell with it -
+# and it is the case a hand-declared check count used to claim to be the only
+# guard against. It is not: omctest_end is the only writer of the counts file,
+# so the runner sees the file never finished whatever the exit status was.
+TEST_FILES["81-truncated.test.sh"] = r'''
+#!/bin/sh
+. "${OMCTEST_LIB:?}"
+section "this file stops early, successfully"
+check "one real check ran" "a" "a"
+exit 0
+check "this one never runs" "a" "a"
+omctest_end
+'''
+
+# A file that reaches the end having asserted nothing. Green by arithmetic and
+# broken in fact.
+TEST_FILES["82-empty.test.sh"] = r'''
+#!/bin/sh
+. "${OMCTEST_LIB:?}"
+section "a file with no assertions in it"
+omctest_end
+'''
+
 # A file that prints to stdout. The counts must not absorb it.
 TEST_FILES["85-noise.test.sh"] = r'''
 #!/bin/sh
@@ -992,15 +1016,34 @@ def test_suite(app: Path) -> None:
     expected_pass = sum(p for p, _ in EXPECTED_COUNTS.values())
     check("a crashed file is reported", "CRASH 80-crash.test.sh (exit 7)" in err,
           [l for l in err.splitlines() if "CRASH" in l])
-    check("and counted as a failure", total_fail == 1, f"failed={total_fail}")
+    # A file that stopped early with a SUCCESS status is the one worth naming
+    # apart: "CRASH (exit 0)" reads like a contradiction, and this is the shape
+    # that used to be argued for a hand-declared check count. No count is
+    # declared anywhere in this suite and it is caught anyway.
+    check("a file that stopped early with exit 0 is named for it",
+          "INCOMPLETE 81-truncated.test.sh" in err,
+          [l for l in err.splitlines() if "INCOMPLETE" in l or "81-truncated" in l])
+    check("and it is not called a crash",
+          "CRASH 81-truncated" not in err,
+          [l for l in err.splitlines() if "81-truncated" in l])
+    check("the check it did run is not reported as the file's result",
+          "-- 1 passed, 0 failed --" not in _stderr_block(err, "81-truncated.test.sh"),
+          _stderr_block(err, "81-truncated.test.sh").strip()[-200:])
+    # A file that asserts nothing is broken, not passing.
+    check("a file that ran no checks fails",
+          "FAIL this file ran no checks at all" in _stderr_block(err, "82-empty.test.sh"),
+          _stderr_block(err, "82-empty.test.sh").strip()[-200:])
+    check("and counted as a failure", total_fail == 3, f"failed={total_fail}")
     check("the run exits 1 because of it", rc == 1, f"got {rc}")
     check("every file was run", files == len(TEST_FILES), f"files={files}")
     # The exact total is the point: a check that silently stops running shows up
     # here and nowhere else.
     check(f"the pass total is exactly {expected_pass}", total_pass == expected_pass,
           f"got {total_pass}")
-    check("no file reported a failing check", "FAIL " not in err,
-          [l for l in err.splitlines() if l.startswith("FAIL ")][:6])
+    # 82-empty is the one file expected to produce a FAIL line.
+    unexpected = [l for l in err.splitlines()
+                  if l.startswith("FAIL ") and "ran no checks at all" not in l]
+    check("no file reported an unexpected failing check", not unexpected, unexpected[:6])
     # Per-file, so a shortfall names the file.
     for name, (want_pass, _) in EXPECTED_COUNTS.items():
         block = _stderr_block(err, name)
@@ -1148,12 +1191,16 @@ def test_build_integration(project: Path, app: Path) -> None:
     print("build --test:")
     tests = project / "Tests"
     stash = project / "Tests-stashed"
-    # The suite the rest of this script uses deliberately contains a file that
-    # crashes, to prove the runner reports it. A build cannot be green with that
-    # present, so it steps aside for this section only.
-    crash = tests / "80-crash.test.sh"
-    crash_body = crash.read_text()
-    crash.unlink()
+    # The suite the rest of this script uses deliberately contains files that
+    # fail on purpose - one that crashes, one that stops early with exit 0, and
+    # one that asserts nothing - to prove the runner reports each. A build
+    # cannot be green with those present, so they step aside for this section.
+    deliberately_bad = ["80-crash.test.sh", "81-truncated.test.sh", "82-empty.test.sh"]
+    bad_bodies = {}
+    for name in deliberately_bad:
+        path = tests / name
+        bad_bodies[name] = path.read_text()
+        path.unlink()
     red = tests / "99-red.test.sh"
     red_body = ('#!/bin/sh\n. "${OMCTEST_LIB:?}"\n'
                 'check "deliberately red" "a" "b"\nomctest_end\n')
@@ -1207,7 +1254,8 @@ def test_build_integration(project: Path, app: Path) -> None:
             stash.rename(tests)
         if red.exists():
             red.unlink()
-        _write(crash, crash_body)
+        for name, body in bad_bodies.items():
+            _write(tests / name, body)
 
 def main() -> int:
     for required in (CLI, OMCTEST, AB_SUPPORT):

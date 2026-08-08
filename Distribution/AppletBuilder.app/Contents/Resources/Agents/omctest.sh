@@ -1104,7 +1104,7 @@ omctest_reset_counts() {
     : > "$OMCTEST_UI/counts.fail"
     # No dispatch has happened yet in this file, so there must be no status for
     # check_status to find.
-    /bin/rm -f "$OMCTEST_UI/.last_status" "$OMCTEST_UI/plan"
+    /bin/rm -f "$OMCTEST_UI/.last_status"
 }
 
 section() { # <header>
@@ -1138,18 +1138,32 @@ check_status() { # <description> <expected-rc>
 }
 
 # Summary, machine-readable counts for the runner, and the file's exit status.
+#
+# This is also the completion marker, and the only writer of the counts file.
+# That is deliberate and it is what makes a truncated run impossible to miss: a
+# file that stops on line 5 of 50 - an "exit" in a helper, a handler that takes
+# the shell with it, a syntax error past the point the parser reached - never
+# gets here, so no counts file appears and omctest_run_file fails the file. The
+# runner then names it rather than reporting the checks that did run.
+#
+# So a test file does not declare how many checks it intends to run. It used to
+# be able to, and the number bought nothing: it was a hand-maintained constant
+# that had to be edited on every added assertion, it was wrong for any file with
+# a legitimately conditional section (a signing test that skips without a
+# keychain identity), and the truncation it claimed to catch was already caught
+# by the marker. Measured, not assumed - an "exit 0" planted partway through a
+# 159-line file is reported identically with and without a declared count.
 omctest_end() {
-    local passed failed planned total
+    local passed failed
     passed=$(omctest_count pass)
     failed=$(omctest_count fail)
-    if [ -f "$OMCTEST_UI/plan" ]; then
-        planned=$(/bin/cat "$OMCTEST_UI/plan")
-        total=$((passed + failed))
-        if [ "$total" -ne "$planned" ]; then
-            printf 'FAIL planned %s checks but ran %s\n' "$planned" "$total" >&2
-            printf 'f' >> "$OMCTEST_UI/counts.fail"
-            failed=$((failed + 1))
-        fi
+    # A file that reached the end having asserted nothing is a broken file, not
+    # a passing one - a mis-set filter, a fixture that vanished, a whole suite
+    # commented out. Left alone it reports "0 passed, 0 failed" and is green.
+    if [ "$passed" -eq 0 ] && [ "$failed" -eq 0 ]; then
+        printf 'FAIL this file ran no checks at all\n' >&2
+        printf 'f' >> "$OMCTEST_UI/counts.fail"
+        failed=1
     fi
     printf -- '\n-- %s passed, %s failed --\n' "$passed" "$failed" >&2
     if [ -n "$OMCTEST_COUNTS" ]; then
@@ -1159,20 +1173,6 @@ omctest_end() {
         exit 1
     fi
     exit 0
-}
-
-# Declare how many checks this file intends to run. omctest_end then refuses a
-# run whose count does not match, which is the only thing that catches a file
-# that aborted quietly partway through: without it, a file that stops on line 5
-# of 50 still reports "4 passed, 0 failed" and the suite is green.
-omctest_plan() { # <count>
-    case "$1" in
-        ''|*[!0-9]*)
-            printf 'omctest: omctest_plan needs a count\n' >&2
-            return 1
-            ;;
-    esac
-    printf '%s' "$1" > "$OMCTEST_UI/plan"
 }
 
 # =============================================================================
@@ -1485,10 +1485,18 @@ omctest_run_suite() { # <app> <tests-dir> [filter-glob]
         printf '\n### %s\n' "$base" >&2
 
         if ! omctest_run_file "$app_path" "$test_file"; then
-            # A file that exits without writing its counts crashed. Never
-            # silently dropped: it counts as a failure and is named.
+            # No counts file means the file never reached omctest_end. Never
+            # silently dropped: it counts as a failure and is named. The two
+            # cases are named apart because they are diagnosed differently, and
+            # because "CRASH (exit 0)" reads like a contradiction - a file that
+            # stopped early with a success status is the quiet one, and the one
+            # worth spelling out.
             crash_rc=$(/bin/cat "$OMCTEST_SCRATCH/$label/rc" 2>/dev/null)
-            printf 'CRASH %s (exit %s)\n' "$base" "${crash_rc:-?}" >&2
+            if [ "${crash_rc:-1}" = "0" ]; then
+                printf 'INCOMPLETE %s (exited 0 before reaching omctest_end - whatever ran after that point did not run)\n' "$base" >&2
+            else
+                printf 'CRASH %s (exit %s)\n' "$base" "${crash_rc:-?}" >&2
+            fi
             total_fail=$((total_fail + 1))
             continue
         fi
