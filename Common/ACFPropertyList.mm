@@ -52,18 +52,23 @@ static ACFPropertyListFormat FormatFromContent(NSData *data)
         case '<': // an XML declaration or a <plist> element
             return kACFPropertyListFormat_xml;
 
-        //a JSON array, string, number, true, false or null at the root. None of these can
-        //begin an old-style plist, so the answer is unambiguous.
-        case '[': case '"': case '-':
-        case 't': case 'f': case 'n':
-        case '0': case '1': case '2': case '3': case '4':
-        case '5': case '6': case '7': case '8': case '9':
+        //A JSON array or a quoted string. Neither can open an old-style plist, so these
+        //two are unambiguous.
+        case '[': case '"':
             return kACFPropertyListFormat_json;
 
         //A JSON object - but an old-style OpenStep dictionary opens with '{' too, so this
         //answer is a preference, not a certainty. The reader falls back when it is wrong.
         case '{':
             return kACFPropertyListFormat_json;
+
+        //Deliberately NOT sniffed: a bare true/false/null/number at the root. Each is a
+        //legal JSON fragment and equally a legal unquoted old-style plist string, and the
+        //old-style reading is what this file has always returned for them. Calling them
+        //JSON would silently change the type "get type" reports for a one-word file -
+        //"true" becoming a bool, "42" an integer - which is a behavior change nobody asked
+        //for, on the one input where the format genuinely cannot be told. They still parse:
+        //the plist reader takes them, as it always did.
     }
 
     return kACFPropertyListFormat_unknown;
@@ -217,13 +222,28 @@ WritePropertyList(CFPropertyListRef propertyList, CFURLRef plistURL, ACFProperty
                                                        options:NSJSONWritingPrettyPrinted
                                                          error:&error];
         }
-        else
+        else if ([jsonObject isKindOfClass:[NSString class]] ||
+                 [jsonObject isKindOfClass:[NSNumber class]] ||
+                 [jsonObject isKindOfClass:[NSNull class]])
         {
             // Scalar fragment root: NSJSONWritingFragmentsAllowed = (1UL << 2), available macOS 13+
             NSJSONWritingOptions fragOpts = NSJSONWritingPrettyPrinted | (NSJSONWritingOptions)(1UL << 2);
             jsonData = [NSJSONSerialization dataWithJSONObject:jsonObject
                                                        options:fragOpts
                                                          error:&error];
+        }
+        else
+        {
+            // isValidJSONObject is false for a scalar root, which the branch above
+            // handles - and also, at any depth, for a type JSON has no spelling
+            // for: CFData, CFDate, a non-finite number, or a dictionary keyed by
+            // anything but a string. Those must be reported here, because
+            // dataWithJSONObject THROWS on them rather than returning nil, so the
+            // nil check below never runs and an uncaught NSInvalidArgumentException
+            // takes the process down. Reachable through
+            // "plister insert X copy src.plist /Data dest.json /".
+            fprintf(stderr, "Error: this value has no JSON representation (data, a date, a non-finite number, or a non-string dictionary key)\n");
+            return false;
         }
 
         if (jsonData == nil)

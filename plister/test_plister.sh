@@ -63,6 +63,27 @@ nok() {
     fi
 }
 
+# Run a plister command that must FAIL IN WORDS: non-zero, but not a signal
+# death. Plain "nok" cannot tell the two apart, and every defect in this area
+# was a crash, so "nok" passed against the broken binary for the wrong reason.
+# 133/134/139 are SIGTRAP, SIGABRT and SIGSEGV as a shell reports them.
+nok_clean() {
+    local desc="$1"
+    shift
+    "$PLISTER" "$@" >/dev/null 2>&1
+    local rc=$?
+    if [ "$rc" = "0" ]; then
+        echo "FAIL: $desc (expected non-zero exit, got success)"
+        FAIL=$((FAIL + 1))
+    elif [ "$rc" = "133" ] || [ "$rc" = "134" ] || [ "$rc" = "139" ]; then
+        echo "FAIL: $desc (died on a signal, rc $rc)"
+        FAIL=$((FAIL + 1))
+    else
+        echo "PASS: $desc"
+        PASS=$((PASS + 1))
+    fi
+}
+
 # Check that a file is valid JSON
 check_json() {
     local desc="$1" file="$2"
@@ -417,10 +438,23 @@ check_json "file is valid JSON after container appends" "$CONT"
 # The per-type counts must still reject what they always rejected.
 nok   "append rejects a missing value"       append string "$CONT" /LIST
 nok   "append dict rejects a stray value"    append dict "extra" "$CONT" /LIST
-nok   "append rejects a missing type"        append
 nok   "insert rejects a missing value"       insert Key string "$CONT" /
 nok   "insert dict rejects a stray value"    insert Key dict "extra" "$CONT" /
-nok   "insert rejects a missing type"        insert Key "$CONT" /
+# The type argument itself missing. "plister insert Key" is argc 3, which is the
+# smallest argv that reaches the command parser at all - one argument shorter and
+# main's own argc check prints the help instead, so the guard would never be
+# reached and the case would pass for the wrong reason.
+nok   "insert rejects a missing type"        insert Key
+# check compares stdout; this message goes to stderr, so it is compared here.
+missing_type_msg=$("$PLISTER" insert Key 2>&1 >/dev/null | head -n 1)
+if [ "$missing_type_msg" = "Plister error: key or index and value type must both be specified" ]; then
+    echo "PASS: and says which two are needed"
+    PASS=$((PASS + 1))
+else
+    echo "FAIL: and says which two are needed"
+    printf '      actual: %s\n' "$missing_type_msg"
+    FAIL=$((FAIL + 1))
+fi
 
 # === Format detection by content =============================================
 #
@@ -504,7 +538,66 @@ ok    "create through an unknown extension"            set dict "$NEWDOC" /
 ok    "put a key in it"                                insert A string "B" "$NEWDOC" /
 check_head "a new file with an unknown extension is XML" "<?xml" "$NEWDOC"
 
-nok   "an empty file is still an error"                get value "$TMP/nonexistent.weird" /A
+nok   "a file that is not there is an error"           get value "$TMP/nonexistent.weird" /A
+: > "$TMP/zero.weird"
+nok   "and so is a zero-byte one"                      get value "$TMP/zero.weird" /A
+
+# A bare scalar at the root is deliberately left to the plist reader: "true" is
+# equally a JSON boolean and an unquoted old-style plist string, and reading it
+# as JSON would silently change the type a one-word file reports.
+printf 'true' > "$TMP/word.weird"
+check "a bare word keeps its old reading"        "string" get type "$TMP/word.weird" /
+printf '42' > "$TMP/number.weird"
+check "and so does a bare number"                "string" get type "$TMP/number.weird" /
+
+# A value with no JSON spelling must be refused, not thrown: dataWithJSONObject
+# raises on CFData rather than returning nil, which took the process down.
+ok    "a plist holding data"                           set dict "$TMP/withdata.plist" /
+ok    "with a data value in it"                        insert Blob data "aGVsbG8=" "$TMP/withdata.plist" /
+ok    "and a JSON file to copy it into"                set dict "$TMP/target.json" /
+nok_clean "data into a JSON file is refused, not thrown" insert Blob copy "$TMP/withdata.plist" /Blob "$TMP/target.json" /
+check "the JSON file was left alone"             "0"   get count "$TMP/target.json" /
+
+# A write that could not happen is not a success. This is the one fix with no
+# check of its own until now: it was covered only transitively, through the case
+# above needing it once the crash was stopped.
+/bin/mkdir -p "$TMP/ro" && printf '{"k":1}' > "$TMP/ro/f.json" && chmod 555 "$TMP/ro"
+nok   "a save that cannot be written is not a success" set string x "$TMP/ro/f.json" /k
+chmod 755 "$TMP/ro"
+
+# A value that cannot be read as the type asked for is a diagnostic, not a
+# signal. An unset shell variable is the ordinary way to arrive here:
+# "plister set integer "$count" f.json /N" with $count unset used to SIGABRT out
+# of CFDictionarySetValue, and the "find" forms died in CFEqual printing nothing.
+ok       "a document to try it on"                     set dict "$TMP/badvalue.json" /
+nok_clean "an empty integer is refused"                set integer "" "$TMP/badvalue.json" /N
+nok_clean "a non-numeric integer is refused"           insert N integer "abc" "$TMP/badvalue.json" /
+nok_clean "an empty real is refused"                   insert R real "" "$TMP/badvalue.json" /
+nok_clean "a bool that is not one is refused"          insert B bool "maybe" "$TMP/badvalue.json" /
+nok_clean "non-base64 data is refused"                 insert D data "not!base64" "$TMP/badvalue.json" /
+ok       "an array to append into"                     insert L array "$TMP/badvalue.json" /
+nok_clean "append refuses one too"                     append integer "" "$TMP/badvalue.json" /L
+nok_clean "and so does find, which died silently"      find integer "abc" "$TMP/badvalue.json" /
+nok_clean "and findall"                                findall bool "maybe" "$TMP/badvalue.json" /
+# Only the array added above is there: none of N, R, B or D landed.
+check "and none of the bad values landed"        "1"   get count "$TMP/badvalue.json" /
+check "the array is still empty too"             "0"   get count "$TMP/badvalue.json" /L
+
+# An iterate whose modifying subcommand fails must not report success: the
+# partial modification would be saved and the caller told it worked.
+ok    "a list to iterate"                              set dict "$TMP/iter.json" /
+ok    "with an array in it"                            insert L array "$TMP/iter.json" /
+ok    "holding a string"                               append string "one" "$TMP/iter.json" /L
+nok_clean "a bad get parameter is caught at parse time" iterate "$TMP/iter.json" /L get vlaue /
+nok_clean "and a modifying subcommand's failure is kept" iterate "$TMP/iter.json" /L set integer "" /
+# A read-only iteration over items that lack the subpath is an ordinary miss.
+ok    "but a plain iteration still succeeds"           iterate "$TMP/iter.json" /L get value /
+
+# A missing pseudopath is a typo, not a crash. "set dict <file>" dereferenced a
+# NULL spec chain; "get <bogus-type>" hit an assert. Both aborted the process.
+nok_clean "set with no pseudopath is refused"          set dict "$TMP/nopath.plist"
+nok_clean "an unknown get parameter is refused"        get vlaue "$TMP/target.json" /
+nok_clean "and a misspelled one under iterate"         iterate "$TMP/target.json" / get vlaue /
 
 # ─── Summary ─────────────────────────────────────────────────────────────────
 

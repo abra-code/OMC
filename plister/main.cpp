@@ -238,6 +238,10 @@ int main (int argc, char * const argv[])
 		if(!success)
 		{
 			std::cerr << "Plister error: could not save the result plist file." << std::endl;
+			//A write that did not happen is not a success. Exiting 0 here told
+			//every shell caller the value was stored when it was not, which for
+			//an OMC handler means the window says saved and the disk disagrees.
+			result = -1;
 		}
 	}
 	
@@ -293,6 +297,26 @@ ReadCommandAndParameters(int argumentCount, char * const argv[], int &paramIndex
 
 		const char *typeStr = argv[paramIndex++];
 		ioOneCommand.cfObjType = GetPropertyType(typeStr);
+
+		//Checked here rather than in RunGetCommand, which is reached once per item
+		//under "iterate" and whose status that loop discards - so "iterate f.json
+		///L get vlaue /" printed an error per item and still exited 0. A parameter
+		//this command cannot act on is a usage mistake, and usage mistakes belong
+		//to the parse.
+		switch(ioOneCommand.cfObjType)
+		{
+			case kCFType_type:
+			case kCFType_count:
+			case kCFType_value:
+			case kCFType_string:
+			case kCFType_key:
+			case kCFType_keys:
+			break;
+
+			default:
+				std::cerr << "Plister error: unsupported parameter for \"get\" - use one of: type, key, keys, value, string, count" << std::endl;
+				return -1;
+		}
 	}
 	else if( (commandStrLen == 3) && (strcmp(commandStr, "set") == 0) )
 	{//plister set string "My New Value" [path/to/file.plist] /path/to/item
@@ -539,6 +563,34 @@ ReadCommandAndParameters(int argumentCount, char * const argv[], int &paramIndex
 	if(result != 0)
 		return result;
 
+	//CreateCFItemFromArgumentString returns NULL for any value it cannot read as
+	//the requested type - an empty or non-numeric "integer", a "bool" that is not
+	//one of the six accepted words, a "data" that is not base64 - and every
+	//consumer below hands that NULL straight to CoreFoundation. The result is a
+	//signal death: SIGABRT out of CFDictionarySetValue ("object cannot be nil"),
+	//or SIGSEGV out of CFEqual for find, which prints nothing at all.
+	//
+	//The reachable case is not a typo. "plister set integer "$count" f.json /N"
+	//with $count unset is an ordinary shell slip, and it killed the process
+	//instead of saying so.
+	switch(ioOneCommand.commandID)
+	{
+		case kPCmd_set:
+		case kPCmd_append:
+		case kPCmd_insert:
+		case kPCmd_find:
+		case kPCmd_findall:
+			if(ioOneCommand.newValue == NULL)
+			{
+				std::cerr << "Plister error: the value could not be read as the specified type" << std::endl;
+				return -1;
+			}
+		break;
+
+		default:
+		break;
+	}
+
 	if(expectingPlistPath)
 	{
 		const char *plistPath = NULL;
@@ -562,6 +614,13 @@ ReadCommandAndParameters(int argumentCount, char * const argv[], int &paramIndex
 		propSpecStr = argv[paramIndex++];
 
 	ioOneCommand.specChain.reset( CreatePropertySpecifier(propSpecStr) );
+	//Every command needs a property path, and CreatePropertySpecifier returns NULL
+	//(having said so) when there is none. Returning here rather than carrying the
+	//NULL forward: main() dereferences specChain for the new-root special case and
+	//segfaulted on "plister set dict file.plist" - a pseudopath away from correct,
+	//which is an ordinary typo for a shell handler to make.
+	if(ioOneCommand.specChain == nullptr)
+		return -1;
 
 	if( (ioOneCommand.commandID == kPCmd_find) ||
 		(ioOneCommand.commandID == kPCmd_findall) )
@@ -705,8 +764,11 @@ RunGetCommand( PlisterCommandContext &inContext, OnePlisterCommand &inCommand )
 		break;
 
 		default:
-			assert(false);
-		break;
+			//An unrecognized "get" parameter: "plister get vlaue file.plist /K".
+			//This was an assert, which aborts the process in a build with them
+			//enabled - a diagnostic for a typo should not be a signal death.
+			std::cerr << "Plister error: unsupported parameter for \"get\" - use one of: type, key, keys, value, string, count" << std::endl;
+			return -1;
 	}
 	
 	CFObj<CFStringRef> resultStr;
@@ -948,6 +1010,15 @@ RunIterateCommand(PlisterCommandContext &inContext, OnePlisterCommand &inCommand
 	//if subcommand spec does not point any deeper than just item in iteration we need to take care with delete and insert comamnds
 	bool subcommandSpecIsRoot = (specChain == NULL);
 
+	//A failing subcommand used to be forgotten: both loops below ended with an
+	//unconditional "result = 0". For a read-only subcommand that is right - an
+	//item that does not carry the subpath is an ordinary miss, not an error - but
+	//for a modifying one it meant a half-applied iteration was saved and reported
+	//as success, which is the same "the window says saved, the disk disagrees"
+	//shape the save-failure fix exists to prevent, one level down. So a failure is
+	//latched only when the subcommand modifies.
+	OSStatus modifyingFailure = noErr;
+
 	CFTypeRef containerRef = NULL;
 	OSStatus result = ProcessGetItem(inCommand.specChain, inContext.currItemRef, &containerRef);
 	if(containerRef != NULL)
@@ -975,11 +1046,13 @@ RunIterateCommand(PlisterCommandContext &inContext, OnePlisterCommand &inCommand
 					subCommand->specChain.reset( itemSubSpec );//temporarily stick the new subChain
 					PlisterCommandContext context(containerRef);
 					result = RunCommand(context, *subCommand);
+					if( (result != noErr) && subCommand->modifyAndSave )
+						modifyingFailure = result;
 					subCommand->specChain.detach();//detach temp chain from subCommand
 					itemSubSpec->nextSpec.detach();//detach original subchain from temp chain
 				}
 			}
-			result = 0;
+			result = modifyingFailure;
 		}
 		else if( ::CFGetTypeID(containerRef) ==  kCFTypeIDs[kCFType_array] )
 		{
@@ -998,6 +1071,8 @@ RunIterateCommand(PlisterCommandContext &inContext, OnePlisterCommand &inCommand
 					subCommand->specChain.reset( itemSubSpec );//temporarily stick the new subChain
 					PlisterCommandContext context(containerRef);
 					result = RunCommand(context, *subCommand);
+					if( (result != noErr) && subCommand->modifyAndSave )
+						modifyingFailure = result;
 					subCommand->specChain.detach();//detach temp chain from subCommand
 					itemSubSpec->nextSpec.detach();//detach original subchain from temp chain
 
@@ -1020,11 +1095,13 @@ RunIterateCommand(PlisterCommandContext &inContext, OnePlisterCommand &inCommand
 					subCommand->specChain.reset( itemSubSpec );//temporarily stick the new subChain
 					PlisterCommandContext context(containerRef);
 					result = RunCommand(context, *subCommand);
+					if( (result != noErr) && subCommand->modifyAndSave )
+						modifyingFailure = result;
 					subCommand->specChain.detach();//detach temp chain from subCommand
 					itemSubSpec->nextSpec.detach();//detach original subchain from temp chain					
 				}
 			}
-			result = 0;
+			result = modifyingFailure;
 		}
 		else
 		{
