@@ -599,6 +599,182 @@ nok_clean "set with no pseudopath is refused"          set dict "$TMP/nopath.pli
 nok_clean "an unknown get parameter is refused"        get vlaue "$TMP/target.json" /
 nok_clean "and a misspelled one under iterate"         iterate "$TMP/target.json" / get vlaue /
 
+# --- Arguments that are not valid UTF-8 --------------------------------------
+#
+# CFStringCreateWithCString returns NULL for any byte sequence that is not valid
+# UTF-8, and every one of these sites handed that NULL straight to CoreFoundation.
+# The guard added for unparsable values could not help: it tests the return value
+# of CreateCFItemFromArgumentString, and for four of the six types the process
+# died inside that function before it could return. A file name or an $OMC_* path
+# carrying Latin-1 bytes is an ordinary thing for a shell handler to pass along,
+# so all of these are reachable without doing anything exotic.
+#
+# nok_clean, not nok: every one of these WAS a signal death, so a plain nok would
+# pass against the broken binary for exactly the wrong reason.
+
+echo
+echo "-- Arguments that are not valid UTF-8 --"
+
+BADBYTES=$(printf '\377\376')
+printf '{"D":{"k":"v"},"L":[1,2]}' > "$TMP/utf8.json"
+
+# "data" is deliberately not in this list: its branch returns on a base64 decode
+# failure BEFORE the string is ever built, so a check named for UTF-8 there would
+# be passing for a different reason - and since the base64 alphabet is ASCII, no
+# input can make it exercise the UTF-8 path at all.
+for badtype in integer real bool date string; do
+    nok_clean "a bad-UTF-8 value of type $badtype is refused" \
+        set "$badtype" "$BADBYTES" "$TMP/utf8.json" /X
+done
+nok_clean "a bad-UTF-8 data value is refused as bad base64" \
+    set data "$BADBYTES" "$TMP/utf8.json" /X
+nok_clean "a bad-UTF-8 file path is refused" get value "$BADBYTES" /D
+nok_clean "a bad-UTF-8 pseudopath is refused" get value "$TMP/utf8.json" "/$BADBYTES"
+# The RELATIVE pseudopath branch builds its string in a different place from the
+# absolute one, and only the absolute one was covered.
+nok_clean "and so is a relative one" get value "$TMP/utf8.json" "$BADBYTES"
+nok_clean "a bad-UTF-8 find subpath is refused" find string v "$TMP/utf8.json" /D "/$BADBYTES"
+nok_clean "and a relative find subpath" find string v "$TMP/utf8.json" /D "$BADBYTES"
+nok_clean "a bad-UTF-8 copy source path is refused" set copy "$TMP/utf8.json" "/$BADBYTES" "$TMP/utf8.json" /X
+# The copy source FILE is a second ReadPlistFile call, separate from the first.
+nok_clean "a bad-UTF-8 copy source file is refused" set copy "$BADBYTES" /D "$TMP/utf8.json" /X
+nok_clean "a bad-UTF-8 insert key is refused" insert "$BADBYTES" string v "$TMP/utf8.json" /D
+# A lone surrogate is well-formed CESU-8 and invalid UTF-8 - a different shape of
+# bad from a stray high byte, and it crashed just the same.
+SURROGATE=$(printf '\355\240\200')
+nok_clean "a lone surrogate is refused too" set integer "$SURROGATE" "$TMP/utf8.json" /X
+# Compared on disk, not through "get value": a dict root prints a type summary
+# rather than its JSON, so reading it back would compare the wrong thing.
+if [ "$(/bin/cat "$TMP/utf8.json")" = '{"D":{"k":"v"},"L":[1,2]}' ]; then
+    echo "PASS: and the document was left alone"; PASS=$((PASS + 1))
+else
+    echo "FAIL: and the document was left alone"; FAIL=$((FAIL + 1))
+fi
+# The key case used to complain that a perfectly good dictionary "is not a
+# container", which sends the reader looking in entirely the wrong place.
+"$PLISTER" insert "$BADBYTES" string v "$TMP/utf8.json" /D 2>"$TMP/utf8.err" >/dev/null
+if /usr/bin/grep -q 'not valid UTF-8' "$TMP/utf8.err"; then
+    echo "PASS: and the key is named as the problem"; PASS=$((PASS + 1))
+else
+    echo "FAIL: and the key is named as the problem"; FAIL=$((FAIL + 1))
+fi
+
+# --- An unparsable file is not an absent file --------------------------------
+#
+# "set dict doc.json /" is the documented create-if-missing idiom, and main()'s
+# new-root special case keys off a NULL property list. A file that exists but did
+# not parse also produces NULL, so the idiom silently replaced the user's data
+# with an empty container, printed the parser's complaint, and exited 0.
+
+echo
+echo "-- An unparsable file is not an absent file --"
+
+printf 'not json at all' > "$TMP/garbage.json"
+nok_clean "an unparsable file is not overwritten" set dict "$TMP/garbage.json" /
+# On disk. There is nothing to read back through plister - the file does not
+# parse, which is the whole premise - so the bytes are the only witness.
+if [ "$(/bin/cat "$TMP/garbage.json")" = "not json at all" ]; then
+    echo "PASS: and its content survives untouched"; PASS=$((PASS + 1))
+else
+    echo "FAIL: and its content survives untouched"; FAIL=$((FAIL + 1))
+fi
+/bin/rm -f "$TMP/created.json"
+ok "but a file that is simply missing is still created" set dict "$TMP/created.json" /
+check "and it holds an empty dict" "0" get count "$TMP/created.json" /
+
+# The state between "missing" and "garbage", and the one the create idiom
+# actually meets: "touch", ": >", mktemp and an interrupted write all leave a
+# file with a directory entry and no bytes. Testing existence rather than size
+# refused exactly this.
+: > "$TMP/empty.json"
+ok "an existing but EMPTY file is still creatable" set dict "$TMP/empty.json" /
+check "and it holds an empty dict" "0" get count "$TMP/empty.json" /
+: > "$TMP/empty2.json"
+ok "an empty file takes an array root too" set array "$TMP/empty2.json" /
+: > "$TMP/empty3.plist"
+ok "and an empty .plist as well" set dict "$TMP/empty3.plist" /
+# Whitespace-only is NOT empty: it has bytes, so it stays refused.
+printf '   \n' > "$TMP/blank.json"
+nok_clean "but a whitespace-only file is refused" set dict "$TMP/blank.json" /
+
+# A command that does not write must not be told that a write was refused.
+/bin/mkdir -p "$TMP/adir.json"
+"$PLISTER" get value "$TMP/adir.json" /D 2>"$TMP/readonly.err" >/dev/null
+if /usr/bin/grep -q 'refusing to overwrite' "$TMP/readonly.err"; then
+    echo "FAIL: a read-only command does not mention overwriting"; FAIL=$((FAIL + 1))
+else
+    echo "PASS: a read-only command does not mention overwriting"; PASS=$((PASS + 1))
+fi
+
+# --- iterate: the third exit -------------------------------------------------
+#
+# The latching added for the two loops missed the branch that refuses to insert
+# into the array being iterated: it printed and left result alone, so the
+# unconditional "result = modifyingFailure" below it reset the status to success
+# and the file was re-written anyway.
+
+echo
+echo "-- iterate: the third exit --"
+
+printf '{"L":[{"a":1},{"b":2}]}' > "$TMP/iter3.json"
+/bin/cp "$TMP/iter3.json" "$TMP/iter3.orig"
+nok_clean "inserting into the iterated array fails" \
+    iterate "$TMP/iter3.json" /L insert K string v /
+if /usr/bin/cmp -s "$TMP/iter3.json" "$TMP/iter3.orig"; then
+    echo "PASS: and the file was not re-written"; PASS=$((PASS + 1))
+else
+    echo "FAIL: and the file was not re-written"; FAIL=$((FAIL + 1))
+fi
+
+# --- A dot component in a pseudopath must not run forever --------------------
+#
+# CFURLCreateCopyDeletingLastPathComponent APPENDS for "." and "..": the parent
+# of "/.." is "/../..". The spec walk's only terminator is a last component of
+# "/" or "", which then never arrives, and every level allocates - so this did
+# not crash, it grew. 2.1 GB in four seconds, no output, no exit. A hang is
+# worse than a crash for an applet handler, because nothing reports it at all.
+#
+# Timed, not just status-checked: a plain nok_clean here would hang the suite
+# rather than fail it.
+
+echo
+echo "-- A dot component in a pseudopath must not run forever --"
+
+# A correct answer here is a clean non-zero exit. 142 is the alarm, meaning it
+# is still growing; 133/134/139 mean it died - and an AddressSanitizer build
+# reports the very same runaway allocation as 134 rather than as a hang, so a
+# helper that only rejected 142 would pass against a broken binary for exactly
+# the wrong reason. That is the trap nok_clean exists for, one shape along.
+dot_path_terminates() { # <description> <pseudopath>
+    local desc="$1" spec="$2"
+    /usr/bin/perl -e 'alarm 10; exec @ARGV; exit 127;' \
+        "$PLISTER" get value "$TMP/utf8.json" "$spec" >/dev/null 2>&1
+    local rc=$?
+    if [ "$rc" = "142" ]; then
+        echo "FAIL: $desc (still running after 10s)"
+        FAIL=$((FAIL + 1))
+    elif [ "$rc" = "133" ] || [ "$rc" = "134" ] || [ "$rc" = "139" ]; then
+        echo "FAIL: $desc (died on a signal, rc $rc)"
+        FAIL=$((FAIL + 1))
+    else
+        echo "PASS: $desc"
+        PASS=$((PASS + 1))
+    fi
+}
+
+dot_path_terminates "a bare \".\" terminates"        "."
+dot_path_terminates "a bare \"..\" terminates"       ".."
+dot_path_terminates "a leading \"/..\" terminates"   "/.."
+dot_path_terminates "\"/D/..\" terminates"           "/D/.."
+check "and an ordinary path still resolves" "v" get value "$TMP/utf8.json" /D/k
+
+# --- batch says only that it is unimplemented --------------------------------
+#
+# It returns before anything is read, but modifyAndSave was still true, so the
+# save-failure fix turned the note into "could not save the result plist file"
+# and an exit of 255 - a misleading way to say "not implemented".
+ok "batch reports unimplemented without a save error" batch "$TMP/utf8.json"
+
 # ─── Summary ─────────────────────────────────────────────────────────────────
 
 echo

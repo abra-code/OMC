@@ -1,6 +1,8 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <unistd.h>
+#include <sys/stat.h>//stat(), to tell a missing or empty file from an unreadable one
 #include "CFObj.h"
 #include "AUniquePtr.h"
 #include "ABase64.h"
@@ -353,6 +355,13 @@ ReadCommandAndParameters(int argumentCount, char * const argv[], int &paramIndex
 
 			AUniquePtr<CFObjSpec> specChain( CreatePropertySpecifier(propSpecStr) );
 
+			//Symmetry with the two sites below, which the round already guarded.
+			//This one only fails safely because ProcessGetItem happens to
+			//NULL-check its spec argument; safety that lives in a callee is
+			//one refactor away from not existing.
+			if(specChain == nullptr)
+				return -1;
+
 			CFObj<CFPropertyListRef> properties;
 			result = ReadPlistFile(plistPath, properties, false, NULL, NULL);
 			if(result == 0)
@@ -417,6 +426,13 @@ ReadCommandAndParameters(int argumentCount, char * const argv[], int &paramIndex
 
 			AUniquePtr<CFObjSpec> specChain = CreatePropertySpecifier(propSpecStr);
 
+			//Symmetry with the two sites below, which the round already guarded.
+			//This one only fails safely because ProcessGetItem happens to
+			//NULL-check its spec argument; safety that lives in a callee is
+			//one refactor away from not existing.
+			if(specChain == nullptr)
+				return -1;
+
 			CFObj<CFPropertyListRef> properties;
 			result = ReadPlistFile(plistPath, properties, false, NULL, NULL);
 			if(result == 0)
@@ -463,6 +479,15 @@ ReadCommandAndParameters(int argumentCount, char * const argv[], int &paramIndex
 
 		const char *keyOrIndexStr = argv[paramIndex++];
 		ioOneCommand.newKey.Adopt( ::CFStringCreateWithCString(kCFAllocatorDefault, keyOrIndexStr, kCFStringEncodingUTF8) );
+		if(ioOneCommand.newKey == NULL)
+		{
+			//Not valid UTF-8. The dict branch downstream does NULL-check the key,
+			//so this never crashed - it fell through and complained that a
+			//perfectly good dictionary "is not a container", which sends the
+			//reader looking in the wrong place entirely.
+			std::cerr << "Plister error: the key is not valid UTF-8" << std::endl;
+			return -1;
+		}
 		CFObj<CFStringRef> indexStrRef( ::CFStringCreateWithCString(kCFAllocatorDefault, keyOrIndexStr, kCFStringEncodingUTF8) );
 		ioOneCommand.insertIndex = GetPositiveInteger(indexStrRef);
 
@@ -483,6 +508,13 @@ ReadCommandAndParameters(int argumentCount, char * const argv[], int &paramIndex
 			propSpecStr = argv[paramIndex++];
 			
 			AUniquePtr<CFObjSpec> specChain = CreatePropertySpecifier(propSpecStr);
+
+			//Symmetry with the two sites below, which the round already guarded.
+			//This one only fails safely because ProcessGetItem happens to
+			//NULL-check its spec argument; safety that lives in a callee is
+			//one refactor away from not existing.
+			if(specChain == nullptr)
+				return -1;
 
 			CFObj<CFPropertyListRef> properties;
 			result = ReadPlistFile(plistPath, properties, false, NULL, NULL);
@@ -551,6 +583,11 @@ ReadCommandAndParameters(int argumentCount, char * const argv[], int &paramIndex
 	{//plister batch path/to/file.plist
 		ioOneCommand.commandID = kPCmd_batch;
 
+		//Nothing was parsed and nothing will be read, so there is nothing to write
+		//back. Left at the default true, the save-failure fix elsewhere in this
+		//commit turned this note into "could not save the result plist file" and
+		//an exit of 255, which is a misleading way to say "unimplemented".
+		ioOneCommand.modifyAndSave = false;
 		std::cerr << "Plister note: not implemented yet" << std::endl;
 		return 0;
 	}
@@ -605,7 +642,43 @@ ReadCommandAndParameters(int argumentCount, char * const argv[], int &paramIndex
 
 		result = ReadPlistFile(plistPath, ioOneCommand.propertyList, ioOneCommand.modifyAndSave, &(ioOneCommand.destPlistURL),
 								&(ioOneCommand.plistFormat) );
-		//ignore the result here
+		if(result != noErr)
+			return result;//a path this tool cannot use at all; ReadPlistFile said why
+
+		//A file that is not there yet is deliberately not an error: creating one
+		//with "plister set dict doc.json /" is a documented idiom, and every
+		//other command reports the miss in its own words further down. A file
+		//that IS on disk and did not parse is a different thing entirely. The
+		//new-root special case in main() keys off a NULL property list, so
+		//without this it replaced an unparsable file with an empty container,
+		//printed the parser's complaint, and exited 0 - destroying the data and
+		//calling it success.
+		//The size test is the point, not the existence test. access(F_OK) answers
+		//"is there a directory entry", and a zero-byte file has one - so testing
+		//existence alone refused exactly the placeholder state the create idiom
+		//exists to fill. "touch doc.json", ": > doc.json", mktemp and an
+		//interrupted write all leave a file with no bytes in it, and a file with
+		//no bytes has nothing to destroy. A whitespace-only file does have bytes
+		//and stays refused.
+		struct stat plistStat;
+		if( (ioOneCommand.propertyList == NULL)
+			&& (::stat(plistPath, &plistStat) == 0) && (plistStat.st_size > 0) )
+		{
+			//Only a command that would write is refusing to overwrite anything;
+			//get and find reach here too, and telling their caller about a write
+			//nobody attempted sends them looking in the wrong place.
+			if(ioOneCommand.modifyAndSave)
+			{
+				std::cerr << "Plister error: " << plistPath
+						  << " exists but could not be read - refusing to overwrite it" << std::endl;
+			}
+			else
+			{
+				std::cerr << "Plister error: " << plistPath
+						  << " exists but could not be read" << std::endl;
+			}
+			return -1;
+		}
 		result = noErr;
 	}
 
@@ -630,6 +703,12 @@ ReadCommandAndParameters(int argumentCount, char * const argv[], int &paramIndex
 		{
 			const char *subPropSpec = argv[paramIndex++];
 			ioOneCommand.subSpecChain.reset( CreatePropertySpecifier(subPropSpec) );
+			//Same reasoning as the main spec chain above: CreatePropertySpecifier
+			//has already said what is wrong, and carrying the NULL forward made
+			//"find" print the complaint and then exit 0, which is the one thing a
+			//shell caller cannot see.
+			if(ioOneCommand.subSpecChain == nullptr)
+				return -1;
 		}
 		else
 		{
@@ -1081,6 +1160,14 @@ RunIterateCommand(PlisterCommandContext &inContext, OnePlisterCommand &inCommand
 			else if( (subCommand->commandID == kPCmd_insert) && subcommandSpecIsRoot )
 			{
 				std::cerr << "Plister error: you cannot insert items into array while iterating this array" << std::endl;
+				//The refusal has to be latched like any other. Without it the
+				//"result = modifyingFailure" below overwrote the status with
+				//noErr, and because the subcommand is a modifying one the file
+				//was then re-written and the run reported success - the same
+				//"the window says saved, the disk disagrees" shape the rest of
+				//this commit exists to remove, in the one branch the latching
+				//did not reach.
+				modifyingFailure = -1;
 			}
 			else
 			{
@@ -1137,6 +1224,14 @@ ReadPlistFile(const char *plistPath, CFObj<CFPropertyListRef> &outProperties, bo
 	}
 
 	CFObj<CFStringRef> pathStr( ::CFStringCreateWithCString(kCFAllocatorDefault, plistPath, kCFStringEncodingUTF8) );
+	if(pathStr == NULL)
+	{
+		//Not valid UTF-8. A file name carrying Latin-1 bytes is an ordinary thing
+		//for a shell handler to hand over, and unchecked this NULL reached
+		//CFURLCreateWithFileSystemPath and killed the process without a word.
+		std::cerr << "Plister error: the plist path is not valid UTF-8" << std::endl;
+		return -1;
+	}
 	CFObj<CFURLRef> plistURL( ::CFURLCreateWithFileSystemPath(kCFAllocatorDefault, pathStr, kCFURLPOSIXPathStyle, false) );
 
     outProperties.Adopt( CreatePropertyListAndFormat(plistURL, mutableContainers ? kCFPropertyListMutableContainers : kCFPropertyListImmutable, outFormat) );
@@ -1209,6 +1304,11 @@ CreatePropertySpecifier(const char *inPropertySpecifier)
 			::CFStringAppend( newPath, CFSTR("/") );
 
 			CFObj<CFStringRef> mainStr(::CFStringCreateWithCString(kCFAllocatorDefault, inPropertySpecifier, kCFStringEncodingUTF8) );
+			if(mainStr == NULL)
+			{
+				std::cerr << "Plister error: the property path is not valid UTF-8" << std::endl;
+				return NULL;
+			}
 			::CFStringAppend( newPath, mainStr );
 		}
 		else
@@ -1220,6 +1320,16 @@ CreatePropertySpecifier(const char *inPropertySpecifier)
 	else
 	{
 		specStr.Adopt( ::CFStringCreateWithCString(kCFAllocatorDefault, inPropertySpecifier, kCFStringEncodingUTF8) );
+	}
+
+	//Same trap as the value and the file path: not valid UTF-8 means NULL, and
+	//unchecked it reached CFStringAppend or CFURLCreateWithFileSystemPath and
+	//killed the process silently. Four call sites reach here - the main
+	//pseudopath, a find subpath, and the copy source path.
+	if(specStr == NULL)
+	{
+		std::cerr << "Plister error: the property path is not valid UTF-8" << std::endl;
+		return NULL;
 	}
 
 	CFObj<CFURLRef> propPath( ::CFURLCreateWithFileSystemPath(kCFAllocatorDefault, specStr, kCFURLPOSIXPathStyle, false) );
@@ -1243,8 +1353,28 @@ AddObjSpec(CFURLRef propPath, CFObjSpec *oldHead)
 	newHead->index = GetPositiveInteger(newHead->key);
 
 	CFObj<CFURLRef> parentPath( ::CFURLCreateCopyDeletingLastPathComponent( kCFAllocatorDefault, propPath ) );
+	//A "." or ".." component makes this walk grow instead of shrink:
+	//CFURLCreateCopyDeletingLastPathComponent APPENDS for those, so the parent of
+	//"/.." is "/../.." and the parent of "/." is "/./..". The only terminator
+	//below is a last component of "/" or "", which then never arrives, and every
+	//level allocates another CFObjSpec - "plister get value doc.json ." never
+	//returned and reached 2.1 GB in four seconds. A hang is worse than a crash
+	//for a handler, because nothing reports it at all. Stopping when the parent
+	//is no shorter than the child ends it without changing any path that
+	//genuinely shrinks.
 	if(parentPath != NULL)
-		newHead = AddObjSpec(parentPath, newHead);
+	{
+		CFObj<CFStringRef> childStr( ::CFURLCopyFileSystemPath(propPath, kCFURLPOSIXPathStyle) );
+		CFObj<CFStringRef> parentStr( ::CFURLCopyFileSystemPath(parentPath, kCFURLPOSIXPathStyle) );
+		bool makesProgress = true;
+		if( (childStr != NULL) && (parentStr != NULL) )
+		{
+			if( ::CFStringGetLength(parentStr) >= ::CFStringGetLength(childStr) )
+				makesProgress = false;
+		}
+		if(makesProgress)
+			newHead = AddObjSpec(parentPath, newHead);
+	}
 	return newHead;
 }
 
@@ -1928,7 +2058,18 @@ CreateCFItemFromArgumentString(PropertyType inCFObjType, const char *valueStr)
 		return NULL;
 
 	CFObj<CFStringRef> valueStrRef( ::CFStringCreateWithCString(kCFAllocatorDefault, valueStr, kCFStringEncodingUTF8) );
-	
+	if(valueStrRef == NULL)
+	{
+		//CFStringCreateWithCString returns NULL for any byte sequence that is not
+		//valid UTF-8. Unchecked, that NULL went straight into
+		//CFNumberFormatterCreateNumberFromString, CFStringCompare and
+		//CFDateFormatterCreateDateFromString below - a SIGSEGV for every type but
+		//string and data. Returning NULL here is what lets the caller's
+		//"could not be read as the specified type" guard do its job: the guard
+		//tests the return value, so it never ran for the types that died inside.
+		return NULL;
+	}
+
 	switch(inCFObjType)
 	{
 		case kCFType_string:

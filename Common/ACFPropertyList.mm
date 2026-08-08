@@ -1,6 +1,7 @@
 #include "ACFPropertyList.h"
 #include "CFObj.h"
 #import <Foundation/Foundation.h>
+#include <math.h>//isfinite, for the non-finite number check below
 
 // What the file name extension says about the format. Only ".json" and ".plist" are
 // meaningful; everything else is unknown and leaves the decision to the content.
@@ -195,6 +196,27 @@ CFURLRef CopyCommandFileURLInBundle(CFBundleRef inBundle, CFStringRef inFileName
     return NULL;
 }
 
+//A CFBoolean and a non-finite CFNumber both bridge to NSNumber, so an
+//isKindOfClass check alone lets NaN and +/-infinity into the scalar-fragment
+//path - where dataWithJSONObject THROWS exactly as it does for a container
+//holding one, and the branch that reports "a non-finite number" by name can
+//never see it. JSON has no spelling for either value, so they belong with the
+//other unrepresentable types.
+static bool
+ACFIsJSONWritableNumber(id numberObject)
+{
+    CFNumberRef numberRef = (__bridge CFNumberRef)numberObject;
+    if (CFGetTypeID(numberRef) == CFBooleanGetTypeID())
+        return true;//true and false are perfectly good JSON
+    if (!CFNumberIsFloatType(numberRef))
+        return true;//an integer cannot be non-finite
+
+    double value = 0.0;
+    if (!CFNumberGetValue(numberRef, kCFNumberDoubleType, &value))
+        return false;
+    return isfinite(value);
+}
+
 bool
 WritePropertyList(CFPropertyListRef propertyList, CFURLRef plistURL, ACFPropertyListFormat plistFormat)
 {
@@ -223,8 +245,8 @@ WritePropertyList(CFPropertyListRef propertyList, CFURLRef plistURL, ACFProperty
                                                          error:&error];
         }
         else if ([jsonObject isKindOfClass:[NSString class]] ||
-                 [jsonObject isKindOfClass:[NSNumber class]] ||
-                 [jsonObject isKindOfClass:[NSNull class]])
+                 [jsonObject isKindOfClass:[NSNull class]] ||
+                 ([jsonObject isKindOfClass:[NSNumber class]] && ACFIsJSONWritableNumber(jsonObject)))
         {
             // Scalar fragment root: NSJSONWritingFragmentsAllowed = (1UL << 2), available macOS 13+
             NSJSONWritingOptions fragOpts = NSJSONWritingPrettyPrinted | (NSJSONWritingOptions)(1UL << 2);
