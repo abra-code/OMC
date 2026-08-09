@@ -105,6 +105,15 @@
                   {
                     "type": "Button",
                     "properties": {
+                      "title": "Test",
+                      "systemImage": "checkmark.diamond",
+                      "buttonStyle": "bordered",
+                      "actionID": "AppletBuilder.test"
+                    }
+                  },
+                  {
+                    "type": "Button",
+                    "properties": {
                       "title": "Run",
                       "systemImage": "play.fill",
                       "buttonStyle": "bordered",

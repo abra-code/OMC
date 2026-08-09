@@ -13,18 +13,14 @@ alert_tool="$OMC_OMC_SUPPORT_PATH/alert"
 
 # ── UI reporters (override the stderr defaults from lib.common.sh) ──
 
-# Accumulate into the Build & Run log control. omc_dialog_control replaces the
-# whole text each call, so we keep the running log in build_log.
-build_log=""
-ab_log() {
-    if [ -z "$build_log" ]; then
-        build_log="$1"
-    else
-        build_log="${build_log}
-$1"
-    fi
-    set_value "$BUILD_LOG_ID" "$build_log"
-}
+# Accumulate into the Build & Run log control (see ab_log_to_control). Refusing
+# to build without it is deliberate: ab_log would fall back to stderr, which no
+# one sees here, leaving the pane showing the PREVIOUS run's log while a build
+# silently ran.
+if ! ab_log_to_control "$BUILD_LOG_ID"; then
+    set_value "$BUILD_LOG_ID" "Error: could not create a log file in ${TMPDIR:-/tmp}"
+    exit 1
+fi
 
 ab_report() {
     show_errors "$1"

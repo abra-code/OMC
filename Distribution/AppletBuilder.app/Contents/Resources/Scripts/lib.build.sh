@@ -636,9 +636,9 @@ ${droppings}
     # advisory line is cheap and keeping the check in the shared path is what
     # makes the CLI and the GUI say the same thing.
     local tests_dir
-    tests_dir="$(cd "$(/usr/bin/dirname "$target_path")" >/dev/null 2>&1 && pwd)/Tests"
-    if [ ! -d "$tests_dir" ]; then
-        ab_log "  [INFO] no Tests/ directory - consider 'appletbuilder test' (see omctest_guide.md)"
+    tests_dir=$(applet_tests_dir "$target_path")
+    if [ -z "$tests_dir" ] || [ ! -d "$tests_dir" ]; then
+        ab_log "  [INFO] no Tests/ directory - consider the Test button or 'appletbuilder test' (see omctest_guide.md)"
     fi
 
     finish_validation "Validation" "$error_count" "$warning_count" "$report"
@@ -925,23 +925,35 @@ applet_build() {
     do_codesign "$project_path"
 }
 
+# Where an applet's omctest suite lives: a Tests/ directory NEXT TO the bundle,
+# never inside it (tests in the bundle would bloat the shipped app and dirty its
+# code signature). Prints the path; returns non-zero if the parent directory
+# cannot be resolved, in which case nothing is printed.
+applet_tests_dir() { # <project-path>
+    local parent
+    parent=$(cd "$(/usr/bin/dirname "$1")" >/dev/null 2>&1 && pwd) || return 1
+    [ -n "$parent" ] || return 1
+    printf '%s/Tests\n' "$parent"
+}
+
 # Run the applet's omctest suite. Returns non-zero when the suite fails or when
-# --test was asked for and there is nothing to run.
+# it was asked for and there is nothing to run.
 applet_run_tests() {
     local project_path="$1"
-    local tests_dir omctest_lib
+    local tests_dir omctest_lib rc
 
-    tests_dir="$(cd "$(/usr/bin/dirname "$project_path")" >/dev/null 2>&1 && pwd)/Tests"
-    if [ ! -d "$tests_dir" ]; then
-        # The flag is an explicit request. Failing loudly beats a silent skip,
-        # which would let a release flow believe tests had run.
-        ab_report "Build halted - --test given but no Tests/ directory beside the applet."
+    tests_dir=$(applet_tests_dir "$project_path")
+    if [ -z "$tests_dir" ] || [ ! -d "$tests_dir" ]; then
+        # Running tests is always an explicit request - the --test flag or the
+        # Test button. Failing loudly beats a silent skip, which would let a
+        # release flow believe tests had run.
+        ab_report "No Tests/ directory beside the applet: ${tests_dir:-$project_path}"
         return 1
     fi
 
     omctest_lib="${OMC_APP_BUNDLE_PATH}/Contents/Resources/Agents/omctest.sh"
     if [ ! -f "$omctest_lib" ]; then
-        ab_report "Build halted - the omctest harness is missing at $omctest_lib"
+        ab_report "The omctest harness is missing at $omctest_lib"
         return 1
     fi
 
@@ -950,5 +962,28 @@ applet_run_tests() {
     export OMCTEST_LIB="$omctest_lib"
     # shellcheck source=../Agents/omctest.sh
     source "$omctest_lib"
-    omctest_run_suite "$project_path" "$tests_dir"
+
+    # The suite reports for itself: per-check detail on stderr, one
+    # machine-readable summary line on stdout. Merge both and hand the stream to
+    # ab_log_stream, which is what puts the whole transcript in the GUI's log
+    # pane while leaving the CLI's live stderr streaming exactly as it was.
+    #
+    # A ( ) SUBSHELL, not a { } group. On bash 3.2 - which is what /bin/sh is,
+    # and what the engine runs handlers under - an EXIT trap set inside a brace
+    # group used as a pipeline element never runs. omctest_run_suite's only
+    # cleanup for the scratch tree it creates is exactly such a trap, so with a
+    # brace group here every test run leaked a whole scratch tree (a stub
+    # support/ directory and a copy of every fixture, per test file). zsh runs
+    # the trap in both shapes, so this does not reproduce in an interactive
+    # shell.
+    ( omctest_run_suite "$project_path" "$tests_dir" 2>&1 ) | ab_log_stream
+    # Read on the very next line: any command in between overwrites PIPESTATUS,
+    # and plain $? here is the reader's status, not the suite's.
+    rc=${PIPESTATUS[0]}
+    # A missing or garbled status is a failure, not a pass: the alternative is
+    # reporting green for a suite whose result was never read.
+    case "$rc" in
+        ''|*[!0-9]*) rc=1 ;;
+    esac
+    return "$rc"
 }

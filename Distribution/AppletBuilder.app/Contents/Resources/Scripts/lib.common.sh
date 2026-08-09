@@ -337,10 +337,13 @@ set_visible() {
 #   ab_report()  { show_errors "$1"; }
 #   ab_confirm() { "$alert_tool" --ok Yes --cancel No "$1"; }   # rc 0 = yes
 #
-# ab_log     — a progress / status line.
-# ab_report  — a detailed (often multi-line) error or warning block.
-# ab_confirm — a yes/no question; return 0 for "yes", non-zero for "no".
-#              The agent default answers from $AB_ASSUME_YES (set by --force).
+# ab_log        — a progress / status line.
+# ab_report     — a detailed (often multi-line) error or warning block.
+# ab_confirm    — a yes/no question; return 0 for "yes", non-zero for "no".
+#                 The agent default answers from $AB_ASSUME_YES (set by --force).
+# ab_log_stream — a whole subprocess's line stream, read from stdin. Used for
+#                 tools that report for themselves (the omctest runner) instead
+#                 of calling ab_log per line.
 
 ab_log() {
     printf '%s\n' "$1" >&2
@@ -352,4 +355,93 @@ ab_report() {
 
 ab_confirm() {
     [ "$AB_ASSUME_YES" = "1" ]
+}
+
+ab_log_stream() {
+    local line
+    while IFS= read -r line || [ -n "$line" ]; do
+        printf '%s\n' "$line" >&2
+    done
+}
+
+# ──────────────────────────────────────────────────────────────
+# Appending log control (GUI reporters)
+# ──────────────────────────────────────────────────────────────
+#
+# Point ab_log / ab_log_stream at a read-only TextEditor used as a running log
+# (the Build & Run pane's). omc_dialog_control replaces a control's whole text on
+# every call, so the transcript has to be kept somewhere and re-sent in full.
+#
+# It is kept in a FILE, not a shell variable, on purpose: ab_log_stream is fed by
+# a pipeline and therefore runs in a subshell, so a variable appended to there
+# would be lost the moment the pipeline ended - and the next ab_log in the parent
+# would blank the control back to its pre-pipeline text.
+#
+# Usage, in a GUI handler after sourcing the libs:  ab_log_to_control "$BUILD_LOG_ID"
+# It returns non-zero if it cannot create the file, and installs EXIT/INT/TERM
+# traps to delete it - so a handler that wants its own traps must set them
+# afterwards and call ab_log_control_cleanup itself.
+
+# How many streamed lines to buffer before refreshing the control. One update per
+# line would cost a fork and a full-text replace per line, and a test suite emits
+# one line per check - hundreds - so the pane would crawl.
+AB_LOG_FLUSH_LINES=20
+
+ab_log_control_cleanup() {
+    if [ -n "$AB_LOG_FILE" ]; then
+        /bin/rm -f "$AB_LOG_FILE"
+    fi
+}
+
+# Append one line to the transcript, newline-SEPARATED rather than
+# newline-terminated: the file then holds exactly the text the control should
+# show, with no trailing blank line - byte for byte what the older in-variable
+# accumulator produced, including its "an empty first line stays empty" case.
+ab_log_append() {
+    if [ -s "$AB_LOG_FILE" ]; then
+        printf '\n%s' "$1" >> "$AB_LOG_FILE"
+    else
+        printf '%s' "$1" >> "$AB_LOG_FILE"
+    fi
+}
+
+# Push the transcript to the control through STDIN rather than argv. A whole test
+# transcript as a command-line argument would eventually cross ARG_MAX, and the
+# failure mode is silent: omc_dialog_control fails with E2BIG, every later flush
+# fails identically, and the log just stops updating mid-run.
+ab_log_flush() {
+    "$dialog_tool" "$window_uuid" "$AB_LOG_VIEW_ID" omc_set_value_from_stdin < "$AB_LOG_FILE"
+}
+
+ab_log_to_control() {
+    AB_LOG_VIEW_ID="$1"
+    AB_LOG_FILE=$(/usr/bin/mktemp "${TMPDIR:-/tmp}/appletbuilder.log.XXXXXX") || return 1
+    # INT/TERM as well as EXIT: a test run lasts minutes, and a handler that is
+    # signaled away (the window closed, the app quit) would otherwise leave the
+    # file behind.
+    trap 'ab_log_control_cleanup' EXIT
+    trap 'ab_log_control_cleanup; exit 130' INT
+    trap 'ab_log_control_cleanup; exit 143' TERM
+
+    ab_log() {
+        ab_log_append "$1"
+        ab_log_flush
+    }
+
+    ab_log_stream() {
+        local line
+        local pending=0
+        while IFS= read -r line || [ -n "$line" ]; do
+            ab_log_append "$line"
+            pending=$((pending + 1))
+            if [ "$pending" -ge "$AB_LOG_FLUSH_LINES" ]; then
+                ab_log_flush
+                pending=0
+            fi
+        done
+        if [ "$pending" -gt 0 ]; then
+            ab_log_flush
+        fi
+        return 0
+    }
 }

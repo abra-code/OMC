@@ -47,9 +47,12 @@ of these bites or when behavior can't be explained from the code.
    app-modal `alert` with scripted answers, and a recording
    `omc_dialog_control` so you can assert on what a handler pushed toward the
    window (`ui_value`, `ui_rows`, `ui_title`). Shell and Python applets both.
-   Read `docs/omctest_guide.md` before writing tests, and copy the shape from
-   `PackageBuilderApp/Tests/` if you have it. What it does NOT cover: rendering
+   See the **Testing an Applet** section for the shape and the traps, then read
+   `docs/omctest_guide.md` for the full API; copy from `PackageBuilderApp/Tests/`
+   or `NotarizeApp/Tests/` if you have them. What it does NOT cover: rendering
    and layout, the `actionID`-to-COMMAND_ID wiring (`validate` cross-checks
-   that one statically, so read its warnings), and anything calling a
-   system binary by absolute path (`/usr/bin/codesign`, `security`) — those need
+   that one statically, so read its warnings), and anything the harness cannot
+   intercept — a system binary called by absolute path (`/usr/bin/codesign`,
+   `security`), state under `$HOME`, a background worker the handler spawns, or
+   a global pasteboard key shared with every other test run. Each of those needs
    an overridable-variable seam in the applet's own lib.

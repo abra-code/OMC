@@ -97,7 +97,10 @@ embedded Python runtime for Python applets) from this AppletBuilder, removes
   because they are applet-authored code with arbitrary runtime and a developer
   mid-refactor must be able to rebuild an app whose tests are momentarily red.
   Gating belongs at release, by convention. `--test` with no `Tests/` directory
-  beside the applet is an error, not a silent skip.
+  beside the applet is an error, not a silent skip. The suite's whole transcript,
+  including its `omctest: <N> passed, ...` summary, goes to stderr on this path
+  along with the rest of the build's progress output; the summary reaches stdout
+  only under `appletbuilder test`. Consume `build --test` by its exit status.
 
 `validate` (and therefore every `build`) emits one `[INFO]` line when an applet
 has no `Tests/` directory. It is advisory and never affects the exit status.
@@ -116,6 +119,10 @@ interposition directory holding the applet's own runtime tools with `alert`,
 and a per-file `TMPDIR` so state directories are isolated and cleanup is total.
 Tests live *next to* the bundle, never inside it. Full bundle validation runs first
 and validation errors abort the run before any test executes; warnings do not.
+
+The GUI equivalent, for a human with the applet open, is the **Test** button in
+AppletBuilder's Build & Run pane - same validation, same runner, transcript in the
+pane's log. It takes no flags; `--filter` and `--keep-scratch` are the CLI's.
 
 - `--tests <dir>` - where the test files are (default `Tests/` beside the `.app`).
 - `--filter <glob>` - run only the files whose name matches, e.g. `20-*`.

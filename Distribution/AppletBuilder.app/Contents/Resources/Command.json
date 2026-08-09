@@ -559,6 +559,12 @@
       "NAME": "AppletBuilder"
     },
     {
+      "NOTES": "Runs the omctest suite in Tests/ beside the applet, logging into the Build & Run log",
+      "COMMAND_ID": "AppletBuilder.test",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
       "COMMAND_ID": "AppletBuilder.run",
       "EXECUTION_MODE": "exe_script_file",
       "NAME": "AppletBuilder"

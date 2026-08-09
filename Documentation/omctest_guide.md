@@ -98,6 +98,8 @@ Then:
 appletbuilder test MyApp.app
 ```
 
+or, with the applet open in AppletBuilder, the **Test** button in the Build & Run pane - same run, transcript in the pane's log.
+
 Three things in that file are the whole idiom, and each is explained below: **you set the environment the engine would have set** (`omc_object`, `omc_fire`), **you dispatch a handler by its script name** (`omc_run` - see 4.3, this is not always the `COMMAND_ID`), and **you assert with `check`** against files, exit codes, and the virtual window.
 
 Note the last assertion uses `check_absent` rather than `check ... "no"`. Both work; the named helper says what it means. A bare `check "state dir gone" "no" "$([ -d "$d" ] && echo yes || echo no)"` reads as though "no" were the thing being asserted, which is a small readability trap worth avoiding.
@@ -559,6 +561,8 @@ The subshell keeps the library's own state out of the test file and stops a func
 ```
 appletbuilder test MyApp.app [--tests <dir>] [--filter <glob>] [--verbose] [--keep-scratch] [--list]
 ```
+
+Or, with the applet open in AppletBuilder: the **Test** button in the Build & Run pane, next to Build and Run. It runs the same thing with the same validation first, and streams the transcript into the pane's log. No flags there - `--filter` and `--keep-scratch` are the CLI's.
 
 Bundle validation runs first, and validation errors abort before any test executes - a bash-4 syntax error would otherwise surface as a baffling mid-test handler failure. Files run in lexical order, each in its own environment. Detail goes to stderr; the last line on stdout is machine-readable: `omctest: 624 passed, 0 failed, 8 files`.
 

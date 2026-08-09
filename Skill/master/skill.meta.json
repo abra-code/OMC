@@ -125,6 +125,16 @@
       "description": "Shared lib pattern, state management, table feeding, command chaining"
     },
     {
+      "id": "testing",
+      "file": "content/11-testing.md",
+      "level": 2,
+      "flavors": [
+        "claude",
+        "capable"
+      ],
+      "description": "omctest: Tests/ layout, the run command, the seam contract for un-interceptable binaries and $HOME state, and the traps that produce green tests proving nothing"
+    },
+    {
       "id": "examples",
       "file": "content/07-examples.md",
       "level": 1,

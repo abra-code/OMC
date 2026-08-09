@@ -337,10 +337,10 @@ cmd_test() {
     # Tests live NEXT TO the bundle, never inside it: shipping them would bloat
     # the app, and editing one would dirty a signed release's code signature.
     if [ -z "$tests_dir" ]; then
-        tests_dir="$(cd "$(/usr/bin/dirname "$target")" >/dev/null 2>&1 && pwd)/Tests"
+        tests_dir=$(applet_tests_dir "$target")
     fi
-    if [ ! -d "$tests_dir" ]; then
-        echo "test: no tests directory at $tests_dir (use --tests <dir>)" >&2
+    if [ -z "$tests_dir" ] || [ ! -d "$tests_dir" ]; then
+        echo "test: no tests directory at ${tests_dir:-<beside $target>} (use --tests <dir>)" >&2
         return 2
     fi
 
