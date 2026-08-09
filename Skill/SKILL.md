@@ -230,8 +230,8 @@ To chain back to the applet's **main command**, target it by `<NAME>.main` (e.g.
 ## Hard Rules for Agents — read before writing scripts
 
 Each of these caused a real applet failure for an AI agent. The full
-explanations, workaround tables, a script test harness, and a debug-logging
-recipe are in `docs/omc_agent_tips_and_troubleshooting.md` — read it when any
+explanations, workaround tables, and a debug-logging recipe are in
+`docs/omc_agent_tips_and_troubleshooting.md` — read it when any
 of these bites or when behavior can't be explained from the code.
 
 1. **`.sh` scripts run under `/bin/sh` = macOS bash 3.2 in POSIX mode.** There
@@ -264,6 +264,17 @@ of these bites or when behavior can't be explained from the code.
    add a `dbg()` logger to `/tmp` (gated on a flag file), log
    `$OMC_ACTIONUI_TRIGGER_VIEW_ID/_PART_ID/_CONTEXT` in every handler, ask
    the user to perform the UI operation once, read the log back. Don't guess.
+7. **Handlers are testable headlessly — do not hand-roll a stub directory.**
+   `appletbuilder test <App.app>` runs `Tests/*.test.sh` against a mock OMC
+   environment: real handlers, real `plister` and `pasteboard`, a stubbed
+   app-modal `alert` with scripted answers, and a recording
+   `omc_dialog_control` so you can assert on what a handler pushed toward the
+   window (`ui_value`, `ui_rows`, `ui_title`). Shell and Python applets both.
+   Read `docs/omctest_guide.md` before writing tests, and copy the shape from
+   `PackageBuilderApp/Tests/` if you have it. What it does NOT cover: rendering
+   and layout, the `actionID`-to-COMMAND_ID wiring, and anything calling a
+   system binary by absolute path (`/usr/bin/codesign`, `security`) — those need
+   an overridable-variable seam in the applet's own lib.
 
 
 
@@ -413,7 +424,8 @@ Exit codes: `0` ok · `2` warnings · `1` errors.
 |---------|------|
 | `create (--template <name|path> \| --clone <App.app>) --name <N> --dest <dir> [--bundle-id <id>] [--python] [--icon <name|path>]` | Copy a template (or clone an applet), rename it, install the framework/executable (and Python if `--python`), set the icon, and codesign. Prints the new `.app` path. |
 | `validate <App.app \| Command.json \| UI.json \| script>` | Auto-detects the target and runs the matching validator(s). For a bundle: `Info.plist` + command manifest (Layer 1/2) + every script + every ActionUI JSON. |
-| `build <App.app> [--identity <id>] [--thin arm64\|x86_64] [--warnings-as-errors] [--update-python] [--force]` | Full validation, then refresh framework/executable (newer version auto-copies; `--force` re-copies even when unchanged), thin, and codesign. Halts before signing on validation errors. Independently, a working embedded Python is left untouched unless `--update-python` is given; a missing/broken runtime is always installed. Replacing the runtime wipes anything pip-installed into its `site-packages` — install deps into `Contents/Library/Packages` (on `PYTHONPATH`) so they survive. |
+| `build <App.app> [--identity <id>] [--thin arm64\|x86_64] [--test] [--warnings-as-errors] [--update-python] [--force]` | Full validation, then refresh framework/executable (newer version auto-copies; `--force` re-copies even when unchanged), thin, and codesign. Halts before signing on validation errors. Independently, a working embedded Python is left untouched unless `--update-python` is given; a missing/broken runtime is always installed. Replacing the runtime wipes anything pip-installed into its `site-packages` — install deps into `Contents/Library/Packages` (on `PYTHONPATH`) so they survive. `--test` runs the applet's test suite after the refresh and before signing, halting on failure. |
+| `test <App.app> [--tests <dir>] [--filter <glob>] [--verbose] [--keep-scratch] [--list]` | Run the applet's `Tests/*.test.sh` against a mock OMC environment: real handlers, stubbed `alert`, a recording `omc_dialog_control` you can assert against. Validates the bundle first. Detail to stderr, `omctest: N passed, M failed, K files` to stdout. See `docs/omctest_guide.md`. |
 | `prettify <file.json> [--stdout]` | Reformat JSON in place (or to stdout). |
 | `preview <UI.json> [--screenshot <out.png>]` | Render an ActionUI view to a PNG (read it to inspect the layout); a `MainMenu.json` menu-bar doc prints a text summary instead. Needs a GUI session. |
 | `list-templates` / `list-icons` | Names for `--template` / `--icon`. |

@@ -960,12 +960,24 @@ alert_answer() { # <rc> [rc ...]
 }
 
 alerts_reset() { : > "$OMCTEST_UI/alerts.log"; }
+
+# Discard answers nobody consumed. alerts_reset truncates the LOG, which is what
+# a section that counts alerts needs; this truncates the QUEUE, which is what a
+# section that scripted an answer the handler never reached needs. Without it a
+# leftover answer silently answers the next section's alert - reported from the
+# first port to a second applet, where it made a mutation run cascade into
+# failures several sections away from the mutation.
+alert_answers_reset() { : > "$OMCTEST_UI/alert_answers"; }
 # Counts LINES, not non-empty lines: one alert is one line, and an alert raised
 # with empty text is still an alert the user was shown.
 alerts_count() { /usr/bin/awk 'END { print NR }' "$OMCTEST_UI/alerts.log" 2>/dev/null; }
 alerts_mention() { /usr/bin/grep -c -- "$1" "$OMCTEST_UI/alerts.log" 2>/dev/null | /usr/bin/tr -d ' '; }
 
-notify_count() { /usr/bin/grep -c . "$OMCTEST_UI/notifications.log" 2>/dev/null | /usr/bin/tr -d ' '; }
+# Counted the same way as alerts_count, and for the same reason: a notification
+# posted with empty text is still a notification the user was shown, and
+# "grep -c ." would drop it. The two are the same helper for two tools and had
+# drifted apart - alerts_count was fixed in review and this was missed.
+notify_count() { /usr/bin/awk 'END { print NR }' "$OMCTEST_UI/notifications.log" 2>/dev/null; }
 notify_mention() { /usr/bin/grep -c -- "$1" "$OMCTEST_UI/notifications.log" 2>/dev/null | /usr/bin/tr -d ' '; }
 
 # Was a chained command requested? Asserts on the queue without draining it.

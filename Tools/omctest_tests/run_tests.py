@@ -195,6 +195,18 @@ exit 0
 The disk is full."
 exit 0
 ''',
+    # Empty bodies. The stubs log "$*", so flags would keep the line non-empty -
+    # a bare empty message is what actually produces an empty log line.
+    "Fixture.emptyalert.sh": r'''
+"$OMC_OMC_SUPPORT_PATH/alert" ""
+printf '%s\n' "$?" > "${TMPDIR}rc-empty.txt"
+exit 0
+''',
+    "Fixture.emptynotify.sh": r'''
+"$OMC_OMC_SUPPORT_PATH/notify" ""
+"$OMC_OMC_SUPPORT_PATH/notify" "with text"
+exit 0
+''',
     "Fixture.chain.a.sh": r'''
 printf 'a\n' >> "${TMPDIR}chain.log"
 "$OMC_OMC_SUPPORT_PATH/omc_next_command" "$OMC_CURRENT_COMMAND_GUID" "Fixture.chain.b"
@@ -606,10 +618,29 @@ omc_run Fixture.longalert
 check "counted once"            "1" "$(alerts_count)"
 check "and matched across the break" "1" "$(alerts_mention 'Could not save. The disk is full')"
 
+section "an unconsumed answer does not leak into the next section"
+# alerts_reset truncates the LOG, not the QUEUE. A scripted answer the handler
+# never reached would otherwise answer the next alert.
+alert_answer 2
+alerts_reset
+alert_answers_reset
+omc_run Fixture.emptyalert
+check "the leftover 2 was discarded" "0" "$(/bin/cat "${TMPDIR}rc-empty.txt" 2>/dev/null)"
+
+section "an alert with no text is still an alert"
+check "counted" "1" "$(alerts_count)"
+
+section "and so is a notification with no text"
+# notify_count and alerts_count are the same helper for two tools. This one used
+# to count non-empty lines only, so an empty-bodied notification vanished - the
+# defect alerts_count was fixed for, missed here.
+omc_run Fixture.emptynotify
+check "both counted"              "2" "$(notify_count)"
+check "the one with text matches" "1" "$(notify_mention 'with text')"
+
 section "alerts_reset clears"
 alerts_reset
 check "back to zero" "0" "$(alerts_count)"
-check "notify starts at zero too, not empty" "0" "$(notify_count)"
 
 omctest_end
 '''
@@ -906,7 +937,7 @@ EXPECTED_COUNTS = {
     "10-environment.test.sh": (13, 0),
     "20-lifetime.test.sh": (36, 0),
     "30-omcrun.test.sh": (13, 0),
-    "40-alerts.test.sh": (13, 0),
+    "40-alerts.test.sh": (16, 0),
     "50-chain.test.sh": (11, 0),
     "60-window.test.sh": (54, 0),
     "70-tools.test.sh": (25, 0),

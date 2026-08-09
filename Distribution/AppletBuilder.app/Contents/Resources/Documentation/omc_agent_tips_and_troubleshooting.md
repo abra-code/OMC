@@ -56,30 +56,28 @@ Syntax you must never use in `.sh` scripts (these are **parse errors** under
 
 ## 2. Test scripts the way OMC runs them
 
-You can exercise nearly all handler logic without launching the applet: stub
-the OMC support tools, export the context variables, run with `sh`.
+**Use `appletbuilder test`.** Hand-rolling a stub directory is what `omctest`
+institutionalizes: it builds the mock environment, stubs the app-modal `alert`
+so confirmation paths cannot hang, records what handlers push toward the window,
+and gives you an assertion vocabulary. Write `Tests/*.test.sh` next to the
+bundle and see `omctest_guide.md`.
+
+For a quick one-off probe of a single handler - no assertions, just "what does
+this print" - the inline pattern still works:
 
 ```bash
-mkdir -p /tmp/stub
-cat > /tmp/stub/omc_dialog_control <<'EOF'
-#!/bin/bash
-if [ "$3" = "omc_table_set_rows_from_stdin" ]; then
-    echo "== table view=$2 rows:"; head -5
-else
-    echo "== dlg: $*"
-fi
-EOF
-printf '#!/bin/bash\necho "== next: $*"\n' > /tmp/stub/omc_next_command
-printf '#!/bin/bash\necho "== notify: $*"\n' > /tmp/stub/notify
-chmod +x /tmp/stub/*
-
 export OMC_APP_BUNDLE_PATH=/path/to/MyApp.app
-export OMC_OMC_SUPPORT_PATH=/tmp/stub
+export OMC_OMC_SUPPORT_PATH="$OMC_APP_BUNDLE_PATH/Contents/Frameworks/Abracode.framework/Versions/A/Support"
 export OMC_ACTIONUI_WINDOW_UUID=TESTWIN
 export OMC_CURRENT_COMMAND_GUID=TESTGUID
 export OMC_OBJ_PATH=/path/to/test/input
 sh "$OMC_APP_BUNDLE_PATH/Contents/Resources/Scripts/MyApp.some.handler.sh"
 ```
+
+With the real Support directory, `omc_dialog_control` is a harmless no-op
+(there is no window), which is why a handler runs at all headless - but it also
+means the handler's window writes are simply lost. Do not probe a path that
+calls `alert` this way: it is app-modal and will hang with no one to click it.
 
 Simulate control events by exporting the env vars a handler reads
 (`OMC_ACTIONUI_VIEW_<N>_VALUE`, `OMC_ACTIONUI_TABLE_<ID>_COLUMN_<N>_VALUE`,

@@ -7,8 +7,8 @@ flavors: [claude, capable, lite]
 ## Hard Rules for Agents — read before writing scripts
 
 Each of these caused a real applet failure for an AI agent. The full
-explanations, workaround tables, a script test harness, and a debug-logging
-recipe are in `docs/omc_agent_tips_and_troubleshooting.md` — read it when any
+explanations, workaround tables, and a debug-logging recipe are in
+`docs/omc_agent_tips_and_troubleshooting.md` — read it when any
 of these bites or when behavior can't be explained from the code.
 
 1. **`.sh` scripts run under `/bin/sh` = macOS bash 3.2 in POSIX mode.** There
@@ -41,3 +41,14 @@ of these bites or when behavior can't be explained from the code.
    add a `dbg()` logger to `/tmp` (gated on a flag file), log
    `$OMC_ACTIONUI_TRIGGER_VIEW_ID/_PART_ID/_CONTEXT` in every handler, ask
    the user to perform the UI operation once, read the log back. Don't guess.
+7. **Handlers are testable headlessly — do not hand-roll a stub directory.**
+   `appletbuilder test <App.app>` runs `Tests/*.test.sh` against a mock OMC
+   environment: real handlers, real `plister` and `pasteboard`, a stubbed
+   app-modal `alert` with scripted answers, and a recording
+   `omc_dialog_control` so you can assert on what a handler pushed toward the
+   window (`ui_value`, `ui_rows`, `ui_title`). Shell and Python applets both.
+   Read `docs/omctest_guide.md` before writing tests, and copy the shape from
+   `PackageBuilderApp/Tests/` if you have it. What it does NOT cover: rendering
+   and layout, the `actionID`-to-COMMAND_ID wiring, and anything calling a
+   system binary by absolute path (`/usr/bin/codesign`, `security`) — those need
+   an overridable-variable seam in the applet's own lib.
