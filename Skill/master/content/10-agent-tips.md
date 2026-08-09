@@ -49,6 +49,7 @@ of these bites or when behavior can't be explained from the code.
    window (`ui_value`, `ui_rows`, `ui_title`). Shell and Python applets both.
    Read `docs/omctest_guide.md` before writing tests, and copy the shape from
    `PackageBuilderApp/Tests/` if you have it. What it does NOT cover: rendering
-   and layout, the `actionID`-to-COMMAND_ID wiring, and anything calling a
+   and layout, the `actionID`-to-COMMAND_ID wiring (`validate` cross-checks
+   that one statically, so read its warnings), and anything calling a
    system binary by absolute path (`/usr/bin/codesign`, `security`) — those need
    an overridable-variable seam in the applet's own lib.

@@ -224,11 +224,14 @@ Other live-debugging tools:
 1. `sh -n` passes for every `.sh` script (see §1).
 2. Command verifier passes against the **bundle** (`validate_command_plist.py
    MyApp.app`) — catches dangling COMMAND_IDs, missing scripts, missing
-   dialog resources.
+   dialog resources, and unresolvable `actionID`s in the JSON UI documents.
 3. ActionUI verifier passes for every JSON in `Base.lproj/`.
-4. Every `actionID` / `valueChangeActionID` / `viewDidLoadActionID` in the
-   JSON has a matching `COMMAND_ID` in the command file, and each COMMAND_ID's
-   script filename matches it exactly (`MyApp.foo.bar` ↔ `MyApp.foo.bar.sh`).
+4. Read the `[WARNING]` lines from step 2, especially the actionID ones: an
+   `actionID` / `valueChangeActionID` / `viewDidLoadActionID` that matches no
+   `COMMAND_ID` - or matches one only case-insensitively, which the engine
+   treats as no match at all - is a control that silently does nothing. Still
+   yours to check by eye: each COMMAND_ID's script filename matches it exactly
+   (`MyApp.foo.bar` ↔ `MyApp.foo.bar.sh`).
 5. Resource edits (scripts, JSONs) don't block launch during development —
    applets are signed for local execution and macOS (as of 26) tolerates
    modified resources. Re-sign (**Build** in AppletBuilder, or

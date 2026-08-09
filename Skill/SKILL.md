@@ -272,7 +272,8 @@ of these bites or when behavior can't be explained from the code.
    window (`ui_value`, `ui_rows`, `ui_title`). Shell and Python applets both.
    Read `docs/omctest_guide.md` before writing tests, and copy the shape from
    `PackageBuilderApp/Tests/` if you have it. What it does NOT cover: rendering
-   and layout, the `actionID`-to-COMMAND_ID wiring, and anything calling a
+   and layout, the `actionID`-to-COMMAND_ID wiring (`validate` cross-checks
+   that one statically, so read its warnings), and anything calling a
    system binary by absolute path (`/usr/bin/codesign`, `security`) — those need
    an overridable-variable seam in the applet's own lib.
 
@@ -618,7 +619,7 @@ After creating or editing a command manifest, validate it before building. The v
 python3 Skill/scripts/validate_command_plist.py <App.app | Command.plist | Command.json>
 ```
 
-Pass the **applet bundle** (`.app` / `.omc`) rather than the bare file to also run bundle cross-checks (Layer 2); for a bundle the verifier resolves the command file itself, preferring `Command.json` when both exist (as OMC does): every `exe_script_file` command has a matching `Scripts/<COMMAND_ID>.*`, the `ACTIONUI_WINDOW` JSON / `NIB_DIALOG` nib resources exist, and subcommand IDs (`INIT_SUBCOMMAND_ID`, `END_OK_SUBCOMMAND_ID`, `NEXT_COMMAND_ID`, …) resolve.
+Pass the **applet bundle** (`.app` / `.omc`) rather than the bare file to also run bundle cross-checks (Layer 2); for a bundle the verifier resolves the command file itself, preferring `Command.json` when both exist (as OMC does): every `exe_script_file` command has a matching `Scripts/<COMMAND_ID>.*`, the `ACTIONUI_WINDOW` JSON / `NIB_DIALOG` nib resources exist, subcommand IDs (`INIT_SUBCOMMAND_ID`, `END_OK_SUBCOMMAND_ID`, `NEXT_COMMAND_ID`, …) resolve, and every `actionID` in the bundle's JSON UI documents points at a command that exists.
 
 Exit codes: `0` clean · `2` warnings only · `1` errors (`[INFO]` lines are advisory and never affect the exit code). Fix every `[ERROR]` before building; investigate each `[WARNING]` (usually a typo, a wrong value type, or a key with no effect in its context); `[INFO]` lines are just FYI.
 
@@ -629,6 +630,8 @@ Common findings:
 - **`VERSION` not `2`** — the engine loads nothing unless the root `VERSION` is `2`.
 - **"has no effect unless …"** — the key is ignored in this context (e.g. `CUSTOM_*` without `WINDOW_TYPE=custom`; `OUTPUT_WINDOW_SETTINGS` / `PROGRESS` without a popen / `*_with_output_window` mode; `INPUT_MENU` without a popup/combo `INPUT_TYPE`).
 - **Dangling subcommand ID / missing dialog resource** — a referenced `COMMAND_ID` (`INIT_SUBCOMMAND_ID`, `NEXT_COMMAND_ID`, …) or a `JSON_NAME` / `NIB_NAME` resource doesn't exist in the bundle. These are errors.
+- **Unresolvable `actionID` (warning)** - a control in a JSON UI document names a command that no `COMMAND_ID`, synthesized script, or engine-reserved id (`omc.dialog.ok`, `omc.dialog.cancel`, ...) provides, so clicking it does nothing. Scanned documents are `Resources/*.json` and `Resources/*.lproj/*.json` (where the engine looks one up by `JSON_NAME`), including `MainMenu.json`; every key that is exactly `actionID` or ends in `ActionID` (`onDropActionID`, `valueChangeActionID`, `viewDidLoadActionID`, ...) is checked. Nothing else statically checks this hop, so read these warnings.
+- **`actionID` matching "only case-insensitively" (warning)** - the command exists but is spelled with different case. The engine dispatches case-sensitively, so this control is just as dead as a typo. Match the `COMMAND_ID` exactly, and remember a script-only command's id is its filename's case (`MyApp.Save.sh` -> `MyApp.Save`).
 - **"no executable body" (info)** — a command has no inline `COMMAND` and no matching script file. This is a *valid, common* pattern when the command presents a dialog (its subcommands do the work) or chains via `NEXT_COMMAND_ID`, so it is only flagged at `[INFO]` level — and not at all when a dialog/chain is present. If the command was meant to run a script, the info note also catches a typo'd `COMMAND_ID`.
 
 The verifier's key knowledge lives in `Skill/scripts/schemas/` (`Command.json` plus one file per sub-dictionary). Read the relevant schema when unsure about a key name, type, or allowed values. This is the same verifier AppletBuilder runs on **Build** and on the Commands tab **Validate** button.
