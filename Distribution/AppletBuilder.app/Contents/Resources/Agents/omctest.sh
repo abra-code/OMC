@@ -28,7 +28,7 @@
 # no bash 4 parameter expansions. Validate with "/bin/sh -n" (never "bash -n")
 # and with scan_bash4_isms from lib.validate.sh.
 
-OMCTEST_API_VERSION=1
+OMCTEST_API_VERSION=2
 export OMCTEST_API_VERSION
 
 # The four tools this harness always replaces with recording stubs.
@@ -207,6 +207,36 @@ omctest_real_support_dir() { # <app>
     else
         return 1
     fi
+}
+
+# AppletBuilder's OWN interpreter and helper scripts, for the harness's internal
+# work - reading a document's declared control defaults, collecting known ids.
+#
+# Deliberately NOT OMCTEST_PYTHON. That one mirrors the engine's resolution for
+# the APPLET UNDER TEST, so it is whatever that applet's handlers would get -
+# possibly a Homebrew python, possibly none at all. The harness's own tooling
+# must not depend on the machine's Python layout, so it uses the interpreter
+# AppletBuilder ships and fails loudly if that is missing rather than reaching
+# for /usr/bin/python3, which is not guaranteed to exist on a user's Mac.
+#
+# Located relative to omctest.sh itself: OMC_APP_BUNDLE_PATH is the applet being
+# tested, not AppletBuilder, so it is no help here.
+omctest_helper_python() { # -> prints the interpreter path, or fails
+    local agents_dir contents python_bin
+    agents_dir="$(/usr/bin/dirname "$OMCTEST_LIB")"
+    contents="$agents_dir/../.."
+    python_bin="$contents/Library/Python/bin/python3"
+    if [ ! -x "$python_bin" ] || [ ! -f "$python_bin" ]; then
+        printf 'omctest: AppletBuilder has no embedded python3 at %s - the harness needs it for its own helpers\n' \
+            "$python_bin" >&2
+        return 1
+    fi
+    printf '%s' "$python_bin"
+}
+
+# The directory holding AppletBuilder's helper scripts, beside its Python.
+omctest_helper_script() { # <name> -> prints the path
+    printf '%s/../../Resources/Scripts/%s' "$(/usr/bin/dirname "$OMCTEST_LIB")" "$1"
 }
 
 # Mirror the engine's Python resolution (see the contract block above) and apply
@@ -724,8 +754,9 @@ omc_trigger() { # <view-id> [part-id] [context]
 # {"items":[String],"location":{"x":Double,"y":Double}}. python3 is used only to
 # quote the paths correctly.
 omc_drop() { # <path> [path ...]
-    local context
-    context=$(/usr/bin/python3 -c 'import json,sys; print(json.dumps({"items": sys.argv[1:], "location": {"x": 0.0, "y": 0.0}}))' "$@") || return 1
+    local context helper_python
+    helper_python="$(omctest_helper_python)" || return 1
+    context=$("$helper_python" -c 'import json,sys; print(json.dumps({"items": sys.argv[1:], "location": {"x": 0.0, "y": 0.0}}))' "$@") || return 1
     omctest_setvar "OMC_ACTIONUI_TRIGGER_CONTEXT" "$context" || return 1
     # A drop without a preceding omc_trigger still needs a view id.
     [ -n "$OMC_ACTIONUI_TRIGGER_VIEW_ID" ] || OMC_ACTIONUI_TRIGGER_VIEW_ID=""
@@ -804,6 +835,136 @@ omc_clear_event() {
 
 omc_reset_controls() {
     omctest_unset_matching 'OMC_ACTIONUI_(VIEW|TABLE)_[A-Za-z0-9_]*'
+}
+
+# Put every control back to the value its ActionUI document DECLARES, which is
+# what the user sees before touching anything.
+#
+# omc_reset_controls alone is not that state. It unsets everything, and a window
+# where every toggle is off and every picker is empty is a window that cannot
+# exist: QuickPDF ships eleven toggles isOn, so a blanked Optimize run emits
+# different qpdf flags than a real one. Tests written against the blank state
+# pass while describing something no user ever sees - which is the failure mode
+# this whole harness exists to prevent.
+#
+# Takes ONE document NAME, not a path: "QuickPDF" means Base.lproj/QuickPDF.json.
+# Exactly one, and never a list, because ids are only unique WITHIN a document -
+# QuickPDF's main window and its Quick Look window both declare an id 200, so
+# applying two documents in one call would silently let one window's default
+# answer for the other window's control. A test that drives two windows calls
+# this once per window, which is what switching windows means anyway.
+#
+# Resets first, so one call is the whole "freshly opened window" state.
+#
+# Sets OMCTEST_DEFAULTS_APPLIED to the number of controls it wrote, so a test can
+# assert the extraction did something rather than trusting a mechanism that is
+# silently inert when it matches nothing. It is 0 whenever this returns nonzero,
+# so the count is only ever trustworthy after a zero return.
+omc_control_defaults() { # <actionui-document-name>
+    local document_name="$1" doc_path assignments
+
+    # Zeroed before anything can fail, including the argument check, so the
+    # documented invariant - the count is 0 whenever this returns nonzero -
+    # holds on every path rather than most of them.
+    OMCTEST_DEFAULTS_APPLIED=0
+    export OMCTEST_DEFAULTS_APPLIED
+
+    if [ "$#" -ne 1 ]; then
+        printf 'omctest: omc_control_defaults takes exactly one document name (got %s)\n' "$#" >&2
+        return 1
+    fi
+
+    omc_reset_controls
+
+    doc_path=$(omctest_find_actionui_document "$document_name") || {
+        printf 'omctest: no ActionUI document named [%s] in %s\n' \
+            "$document_name" "$OMC_APP_BUNDLE_PATH/Contents/Resources" >&2
+        return 1
+    }
+
+    # The extractor prints ready-to-eval assignments. It cannot merely print
+    # "id value" pairs: a declared default may contain a space, a quote or a
+    # newline, and this is the code path whose whole job is fidelity to what
+    # the document says.
+    assignments=$(omctest_extract_control_defaults "$doc_path") || {
+        printf 'omctest: reading control defaults from %s failed\n' "$doc_path" >&2
+        return 1
+    }
+
+    # Checked like every other step, though it catches less than it looks:
+    # eval reports the status of the LAST statement, and the extractor always
+    # ends with the counter assignment, which always succeeds. So this arm fires
+    # only for a genuine PARSE error, which aborts the whole string. Individual
+    # bad assignments are prevented at the source instead - see the negative-id
+    # guard in the extractor - because they would otherwise pass through here in
+    # silence.
+    if [ -n "$assignments" ]; then
+        eval "$assignments" || {
+            printf 'omctest: applying control defaults from %s failed\n' "$doc_path" >&2
+            OMCTEST_DEFAULTS_APPLIED=0
+            return 1
+        }
+    fi
+    export OMCTEST_DEFAULTS_APPLIED
+    return 0
+}
+
+# Base.lproj, then any other .lproj, then the Resources root.
+#
+# The root arm is not a nicety: the engine resolves JSON_NAME through
+# -[NSBundle pathForResource:ofType:] (OMCActionUIWindowController.mm), which
+# finds a document sitting directly in Resources with no .lproj at all. An
+# applet that ships its windows unlocalized loads fine in the engine, and
+# without this arm the harness would report it missing.
+#
+# The ORDER is this harness's own choice and deliberately not the engine's.
+# NSBundle prefers the user's current localization over Base.lproj; a test that
+# resolved that way would assert against a different document depending on who
+# ran it. Base.lproj first is deterministic, which is what a test needs. For a
+# single-localization applet - both PDF applets today - the two agree anyway.
+omctest_find_actionui_document() { # <name> -> prints the path
+    local document_name="$1" resources candidate lproj
+    resources="$OMC_APP_BUNDLE_PATH/Contents/Resources"
+    candidate="$resources/Base.lproj/$document_name.json"
+    if [ -f "$candidate" ]; then
+        printf '%s' "$candidate"
+        return 0
+    fi
+    for lproj in "$resources"/*.lproj; do
+        candidate="$lproj/$document_name.json"
+        if [ -f "$candidate" ]; then
+            printf '%s' "$candidate"
+            return 0
+        fi
+    done
+    candidate="$resources/$document_name.json"
+    if [ -f "$candidate" ]; then
+        printf '%s' "$candidate"
+        return 0
+    fi
+    return 1
+}
+
+# Which element types carry a value, and which of their properties declares its
+# initial state, are both read from the ActionUI element schemas that ship beside
+# this harness rather than restated here - the same reason a test lib imports an
+# applet's view ids instead of retyping them. A new value-bearing element type
+# starts working the day its schema lands.
+#
+# The dispatch is by PROPERTY name, not by element type: a schema says an element
+# is observable as a value, and the property it holds that value in is one of a
+# small stable set whose conversion rules are the only thing hardcoded below.
+omctest_extract_control_defaults() { # <document-path> -> prints shell assignments
+    local doc_path="$1" schemas_dir helper_python
+    schemas_dir="$(/usr/bin/dirname "$OMCTEST_LIB")/../../Library/actionui_verifier/schemas"
+    if [ ! -d "$schemas_dir" ]; then
+        printf 'omctest: no ActionUI element schemas at %s - omc_control_defaults needs them to know which elements carry a value\n' \
+            "$schemas_dir" >&2
+        return 1
+    fi
+    helper_python="$(omctest_helper_python)" || return 1
+    "$helper_python" "$(omctest_helper_script omctest_control_defaults.py)" \
+        "$doc_path" "$schemas_dir"
 }
 
 # =============================================================================
@@ -994,6 +1155,19 @@ chain_requested() { # <command-id>
 # the only way to tell that a handler overwrote its own request.
 chain_asked() { # <command-id>
     /usr/bin/grep -c -F -x -- "$1" "$OMCTEST_UI/chain.log" 2>/dev/null | /usr/bin/tr -d ' '
+}
+
+# Forget every chain request so far, pending and historical.
+#
+# The counterpart of alerts_reset, and needed for the same reason. "The run did
+# not start" is the commonest negative assertion in a router test and it is
+# written as chain_asked <runner> being 0 - which, because the history is
+# cumulative across the whole file, silently becomes untrue the moment an
+# earlier section legitimately started a run. Call this at the top of any
+# section that asserts a chain did NOT happen.
+chains_reset() {
+    : > "$OMCTEST_UI/chain.queue"
+    : > "$OMCTEST_UI/chain.log"
 }
 
 # Run what omc_next_command queued, in order. Queue-then-drain reproduces the
@@ -1362,44 +1536,10 @@ fixture_copy() { # <name> [dest-dir, default $OMCTEST_WORK]
 # Every "id" in every ActionUI document in the bundle, deduped, one per line.
 # The union is v1's admitted masking limitation (see ui_unknown_writes).
 omctest_extract_known_ids() { # <app> <out-file>
-    local app_path="$1" out_file="$2"
-    /usr/bin/python3 - "$app_path" "$out_file" <<'PYEOF'
-import json, os, sys
-
-app_path, out_path = sys.argv[1], sys.argv[2]
-found = []
-seen = set()
-
-def walk(node):
-    if isinstance(node, dict):
-        for key, value in node.items():
-            if key == "id" and isinstance(value, (str, int)) and not isinstance(value, bool):
-                text = str(value)
-                if text not in seen:
-                    seen.add(text)
-                    found.append(text)
-            walk(value)
-    elif isinstance(node, list):
-        for value in node:
-            walk(value)
-
-resources = os.path.join(app_path, "Contents", "Resources")
-for dirpath, dirnames, filenames in os.walk(resources):
-    if not dirpath.endswith(".lproj"):
-        continue
-    for name in sorted(filenames):
-        if not name.endswith(".json"):
-            continue
-        try:
-            with open(os.path.join(dirpath, name)) as handle:
-                walk(json.load(handle))
-        except Exception:
-            continue
-
-with open(out_path, "w") as handle:
-    for text in found:
-        handle.write(text + "\n")
-PYEOF
+    local app_path="$1" out_file="$2" helper_python
+    helper_python="$(omctest_helper_python)" || return 1
+    "$helper_python" "$(omctest_helper_script omctest_known_ids.py)" \
+        "$app_path" "$out_file"
 }
 
 # Run one test file in its own subshell with its own mock environment. Returns 0

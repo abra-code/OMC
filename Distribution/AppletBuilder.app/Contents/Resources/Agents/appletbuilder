@@ -44,9 +44,20 @@ fi
 # reporters (ab_log / ab_report / ab_confirm) from lib.common.sh are left in place.
 source "$LIB/lib.create.sh"
 
-# Ensure $python3 (set by lib.common.sh to AppletBuilder's embedded interpreter) is
-# usable; fall back to the system one so prettify/preview/verifiers always work.
-[ -x "$python3" ] || python3="/usr/bin/python3"
+# $python3 is set by lib.common.sh to AppletBuilder's embedded interpreter. It has
+# to be there: prettify, preview and both verifiers are Python, so without it
+# this CLI cannot do its job.
+#
+# Deliberately NOT falling back to /usr/bin/python3. macOS does not guarantee a
+# system python3 - it ships only with the Xcode command line tools, and Apple has
+# been removing it - so the fallback would turn "this bundle is broken" into a
+# confusing failure on the first machine without them, and would silently run the
+# verifiers under an interpreter AppletBuilder never tested against.
+if [ ! -x "$python3" ]; then
+    echo "appletbuilder: no embedded python3 at $python3" >&2
+    echo "  AppletBuilder ships its own interpreter; this bundle is incomplete." >&2
+    exit 1
+fi
 
 # Build/create options the shared pipeline reads (overridable per subcommand flags).
 AB_IDENTITY=""

@@ -80,17 +80,20 @@ POSIX-compatible, or rename the script to .zsh to get a modern shell."
             rc=$?
             ;;
         py)
-            local py="$python3"
-            [ -x "$py" ] || py="/usr/bin/python3"
-            SCRIPT_VALIDATE_OUTPUT=$("$py" -c '
-import ast, sys
-try:
-    ast.parse(open(sys.argv[1]).read(), filename=sys.argv[1])
-except SyntaxError as e:
-    print("%s (line %s, column %s)" % (e.msg, e.lineno, e.offset), file=sys.stderr)
-    sys.exit(1)
-' "$path" 2>&1)
-            rc=$?
+            # AppletBuilder's own embedded interpreter, with no fallback to
+            # /usr/bin/python3: macOS does not guarantee a system python3, so a
+            # fallback would silently validate against an interpreter this
+            # bundle never tested with, or fail confusingly on a machine that
+            # has no Xcode command line tools.
+            if [ ! -x "$python3" ]; then
+                SCRIPT_VALIDATE_OUTPUT="no embedded python3 at $python3 - cannot validate Python scripts"
+                rc=1
+            else
+                SCRIPT_VALIDATE_OUTPUT=$("$python3" \
+                    "$OMC_APP_BUNDLE_PATH/Contents/Resources/Scripts/py_syntax_check.py" \
+                    "$path" 2>&1)
+                rc=$?
+            fi
             ;;
         applescript|scpt)
             local tmp

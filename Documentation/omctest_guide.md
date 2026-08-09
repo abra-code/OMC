@@ -150,7 +150,7 @@ Variables a test file can read:
 | `OMCTEST_STATUS` | exit code of the last `omc_run`; the string `-` before any dispatch, so `check_status "..." 0` cannot pass vacuously |
 | `OMCTEST_ALERT_RC` | the alert stub's answer when the scripted queue is empty (default `0`) |
 | `OMCTEST_PYTHON`, `OMCTEST_PYTHON_EMBEDDED` | the resolved interpreter, and whether it is the bundle's own |
-| `OMCTEST_API_VERSION` | `1` - assert a minimum if you use something new |
+| `OMCTEST_API_VERSION` | `2` - assert a minimum if you use something new. `2` added `omc_control_defaults`. |
 
 What the harness exports into every handler:
 
@@ -207,6 +207,30 @@ Everything below is a shell function available after sourcing `$OMCTEST_LIB`.
 | `omc_trigger` | `<view-id> [part-id] [context]` | sets the trigger family. An empty `part-id` or `context` **unsets** the variable rather than exporting it empty, matching the engine. One-shot. |
 | `omc_drop` | `<path> [path ...]` | builds the ActionUI DropHelper context `{"items":[...],"location":{"x":0,"y":0}}` into `OMC_ACTIONUI_TRIGGER_CONTEXT`. One-shot. Needs a view id too - set one with `omc_trigger` first if the handler reads it. |
 | `omc_reset_controls` | none | unsets **every** `OMC_ACTIONUI_VIEW_*` and `_TABLE_*`. There is no per-id reset. |
+| `omc_control_defaults` | `<document-name>` | resets, then sets every control to the value its ActionUI document **declares**. This is the freshly-opened window. Sets `OMCTEST_DEFAULTS_APPLIED` to the number of controls written. |
+
+**`omc_reset_controls` is not the state a user ever sees, and for most applets it is the wrong place to start.** It unsets everything, and a window where every toggle is off and every picker is empty is a window that cannot exist. QuickPDF ships eleven toggles `isOn`; a blanked Optimize run emits different qpdf flags than a real one, so a test written against the blank state passes while describing something no user has ever seen. Start sections from the declared state instead:
+
+```sh
+omc_control_defaults QuickPDF      # the window as it opens
+omc_control 60 encrypt             # then the one thing this section is about
+```
+
+Four details worth knowing:
+
+- **It takes a document name, not a path.** `QuickPDF` means `Base.lproj/QuickPDF.json`, resolved through any `.lproj`. An unknown name fails loudly rather than silently applying nothing.
+- **Naming the document is required, and there is deliberately no "all windows" form.** Ids are unique only *within* a document: QuickPDF's main window and its Quick Look window both declare an id 200, so a union would let one window's default answer for the other's control.
+- **An omitted property is still a declared default.** A `Toggle` with no `isOn` ships off and a `TextField` with no `text` ships empty - six of QuickPDF's toggles are off by saying nothing at all. Where omission has no defined meaning, such as a `Slider` with no `value`, nothing is invented.
+- **A `prompt` is placeholder wording, not a value.** Only `text` is read, so a field showing gray hint text correctly reads back as empty.
+
+Which element types carry a value, and which property declares it, are read from the ActionUI element schemas shipped alongside the harness rather than restated in it - the same reason a test lib imports an applet's view ids instead of retyping them. A `Picker` resolves to the first option that can actually be delivered: the first `{"title","tag"}` entry's tag, skipping `{"section": ...}` headers, or the 1-based index when options are plain strings.
+
+`OMCTEST_DEFAULTS_APPLIED` exists so a test can assert the extraction did something, rather than trusting a mechanism that is silently inert when it matches nothing:
+
+```sh
+check "the window's defaults loaded" "yes" \
+    "$([ "$OMCTEST_DEFAULTS_APPLIED" -gt 25 ] && echo yes || echo no)"
+```
 
 **Not every control has a view id.** A window-level `searchable` modifier, for instance, has no `id` of its own: its query reaches the handler only as the trigger context. Pass an empty view id and put the payload in the context:
 
@@ -257,7 +281,10 @@ If the applet declares an `INIT_SUBCOMMAND_ID` on its window, that is the handle
 | `notify_count` / `notify_mention` | as above | the same, for `notify`. |
 | `chain_requested` | `<command-id>` | `1` when that id is the **currently pending** chain request. The real `omc_next_command` truncates its file, so two requests in one handler leave only the last - this can read `0` for an id that was genuinely requested and then overwritten. |
 | `chain_asked` | `<command-id>` | how many times the id was requested across the whole history. This is the one that answers "did the handler ask". |
+| `chains_reset` | none | forgets every chain request, pending and historical. The counterpart of `alerts_reset`. |
 | `omc_drain_chain` | `[max-depth, default 25]` | runs queued chain requests synchronously, in order. Returns the **worst** status across the chain, so a mid-chain failure is not masked by a later success. |
+
+**`chain_asked` is cumulative across the file, which makes it treacherous in a negative assertion.** "The run did not start" is the commonest thing a router test wants to say, and the natural way to say it is `check "the run did not start" "0" "$(chain_asked MyApp.run)"`. That check is correct in the first section that uses it and quietly wrong in every later one, because an earlier section that legitimately started a run has already put a line in the history. Call `chains_reset` at the top of any section asserting a chain did *not* happen. Reaching for `chain_requested` instead is not a fix: it reads the pending slot, which still holds whatever the previous section left there.
 
 `alerts_reset` and `alert_answers_reset` are two different resets and you usually want both. An answer the handler never consumed stays queued and silently answers the *next* section's alert - which is confusing at the best of times and actively misleading while mutation-testing, where a mutation that removes an alert makes failures appear several sections away from the change.
 

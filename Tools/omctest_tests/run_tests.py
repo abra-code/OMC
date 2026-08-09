@@ -135,6 +135,28 @@ _MAIN_JSON = {
         {"type": "List", "id": 101},
         {"type": "Button", "id": 10},
         {"type": "Button", "id": 11},
+        # Declared control defaults, for omc_control_defaults. Each one is a
+        # case the extractor has to get right:
+        {"type": "Toggle", "id": 140, "properties": {"isOn": True}},
+        # isOn OMITTED - the schema says that means off, and treating it as
+        # "no declared value" is the bug this pins down.
+        {"type": "Toggle", "id": 141, "properties": {"title": "off by omission"}},
+        # A leading section header carries no tag and is never delivered, so
+        # the default is the first option that can be.
+        {"type": "Picker", "id": 142, "properties": {"options": [
+            {"section": "Group"},
+            {"title": "First", "tag": "alpha"},
+            {"title": "Second", "tag": "beta"},
+        ]}},
+        # Plain-string options deliver a 1-based index instead of a tag.
+        {"type": "Picker", "id": 143, "properties": {"options": ["one", "two"]}},
+        {"type": "TextField", "id": 144, "properties": {"text": "typed"}},
+        # A prompt is placeholder wording, not a value.
+        {"type": "TextField", "id": 145, "properties": {"prompt": "hint only"}},
+        # Awkward on purpose: the assignments are eval'd, so a value carrying
+        # quotes and a backslash has to survive the round trip intact.
+        {"type": "TextField", "id": 146,
+         "properties": {"text": "a 'b' \"c\" \\d"}},
     ],
 }
 
@@ -143,7 +165,21 @@ _MAIN_JSON = {
 _SHEET_JSON = {
     "type": "VStack",
     "id": 70,
-    "children": [{"type": "TextField", "id": 71}],
+    "children": [
+        {"type": "TextField", "id": 71},
+        # Deliberately reuses id 140 with the OPPOSITE default. Ids are unique
+        # only within a document, so this is what makes "omc_control_defaults
+        # takes one document, never a union" a testable rule rather than a
+        # style preference.
+        {"type": "Toggle", "id": 140, "properties": {"isOn": False}},
+    ],
+}
+
+# A third document, shipped unlocalized at the Resources root.
+_ROOT_JSON = {
+    "type": "VStack",
+    "id": 149,
+    "children": [{"type": "TextField", "id": 150, "properties": {"text": "rooted"}}],
 }
 
 _HANDLERS = {
@@ -415,6 +451,9 @@ def make_applet(root: Path, *, name: str = "Fixture", broken_manifest: bool = Fa
 
     _write(res / "Base.lproj" / "Main.json", json.dumps(_MAIN_JSON, indent=2))
     _write(res / "Base.lproj" / "Sheet.json", json.dumps(_SHEET_JSON, indent=2))
+    # No .lproj at all: the engine resolves JSON_NAME through pathForResource,
+    # which finds this, so the harness has to as well.
+    _write(res / "RootLevel.json", json.dumps(_ROOT_JSON, indent=2))
 
     for filename, body in _HANDLERS.items():
         _write(res / "Scripts" / filename, body.lstrip("\n"))
@@ -690,6 +729,84 @@ check "drain refused" "1" "$?"
 omctest_end
 '''
 
+TEST_FILES["55-defaults.test.sh"] = r'''
+#!/bin/sh
+# omc_control_defaults, and chains_reset.
+. "$OMCTEST_LIB"
+
+section "the API version says the feature is here"
+check "api is at least 2" "yes" \
+    "$([ "${OMCTEST_API_VERSION:-0}" -ge 2 ] && echo yes || echo no)"
+
+section "declared defaults are applied"
+omc_control_defaults Main
+check "a toggle that ships on"                    "true"  "$OMC_ACTIONUI_VIEW_140_VALUE"
+check "a toggle that ships off by omission"       "false" "$OMC_ACTIONUI_VIEW_141_VALUE"
+check "a picker skips the section header"         "alpha" "$OMC_ACTIONUI_VIEW_142_VALUE"
+check "plain-string options give a 1-based index" "1"     "$OMC_ACTIONUI_VIEW_143_VALUE"
+check "a text field takes its text"               "typed" "$OMC_ACTIONUI_VIEW_144_VALUE"
+check "a prompt is not a value"                   ""      "$OMC_ACTIONUI_VIEW_145_VALUE"
+check "quotes and a backslash survive the eval"   "a 'b' \"c\" \\d" \
+    "$OMC_ACTIONUI_VIEW_146_VALUE"
+check "an element with no declared value is left alone" "" "${OMC_ACTIONUI_VIEW_100_VALUE-}"
+check "the count is reported" "yes" \
+    "$([ "${OMCTEST_DEFAULTS_APPLIED:-0}" -ge 7 ] && echo yes || echo no)"
+
+section "it resets first, so one call is the whole freshly-opened window"
+omc_control 140 "meddled"
+omc_control 130 "left over from the last section"
+omc_control_defaults Main
+check "a meddled control went back to its default" "true" "$OMC_ACTIONUI_VIEW_140_VALUE"
+check "and one with no default was cleared"        ""     "${OMC_ACTIONUI_VIEW_130_VALUE-}"
+
+section "each document answers only for itself"
+# Sheet.json declares id 140 too, with the opposite default. A union across the
+# bundle would let one document answer for the other document's control.
+omc_control_defaults Sheet
+check "the sheet's own 140 wins"          "false" "$OMC_ACTIONUI_VIEW_140_VALUE"
+check "and the main window's 144 is gone" ""      "${OMC_ACTIONUI_VIEW_144_VALUE-}"
+omc_control_defaults Main
+check "and back again"                    "true"  "$OMC_ACTIONUI_VIEW_140_VALUE"
+
+section "it takes exactly one document, never a list"
+# Two documents in one call would let the second one's id 140 overwrite the
+# first one's - the same collision the single-document rule exists to prevent,
+# just moved up into the API. So the list form is refused outright.
+check "two documents are refused"      "1" \
+    "$(omc_control_defaults Main Sheet 2>/dev/null; echo $?)"
+
+section "a name that does not exist fails loudly"
+check "an unknown document is refused" "1" \
+    "$(omc_control_defaults NoSuchDocument 2>/dev/null; echo $?)"
+# Outside a substitution again: the point is the variable it leaves behind, and
+# a subshell would take that with it.
+omc_control_defaults NoSuchDocument 2>/dev/null
+check "and so is no argument at all"   "1" \
+    "$(omc_control_defaults 2>/dev/null; echo $?)"
+# The count must not survive a failed call, or a test asserting only on the
+# count would pass for a call that applied nothing.
+check "a failed call leaves the count at zero" "0" "${OMCTEST_DEFAULTS_APPLIED:-unset}"
+
+section "the document is found at the Resources root too"
+# The engine resolves JSON_NAME through pathForResource, which finds a document
+# with no .lproj at all. An unlocalized applet has to work.
+# Called OUTSIDE a command substitution on purpose: it exports, and an export
+# from inside $( ) dies with the subshell.
+omc_control_defaults RootLevel
+check "a root-level document is found" "0"       "$?"
+check "and its default was applied"    "rooted"  "$OMC_ACTIONUI_VIEW_150_VALUE"
+
+section "chains_reset forgets both the pending slot and the history"
+"$OMC_OMC_SUPPORT_PATH/omc_next_command" "$OMC_CURRENT_COMMAND_GUID" Fixture.probe
+check "the request was recorded" "1" "$(chain_asked Fixture.probe)"
+check "and is pending"           "1" "$(chain_requested Fixture.probe)"
+chains_reset
+check "the history was cleared"  "0" "$(chain_asked Fixture.probe)"
+check "and the pending slot too" "0" "$(chain_requested Fixture.probe)"
+
+omctest_end
+'''
+
 TEST_FILES["60-window.test.sh"] = r'''
 #!/bin/sh
 . "${OMCTEST_LIB:?}"
@@ -939,6 +1056,7 @@ EXPECTED_COUNTS = {
     "30-omcrun.test.sh": (13, 0),
     "40-alerts.test.sh": (16, 0),
     "50-chain.test.sh": (11, 0),
+    "55-defaults.test.sh": (25, 0),
     "60-window.test.sh": (54, 0),
     "70-tools.test.sh": (25, 0),
     "85-noise.test.sh": (1, 0),
