@@ -19,8 +19,14 @@ alert_tool="$OMC_OMC_SUPPORT_PATH/alert"
 # silently ran.
 if ! ab_log_to_control "$BUILD_LOG_ID"; then
     set_value "$BUILD_LOG_ID" "Error: could not create a log file in ${TMPDIR:-/tmp}"
+    # The status row too, or the previous run's verdict would sit next to this
+    # error describing a build that never happened.
+    ab_status_result "exclamationmark.triangle.fill" "orange" "Could not start - no writable ${TMPDIR:-/tmp}"
     exit 1
 fi
+# Replaces the traps ab_log_to_control just installed: this handler also drives
+# the spinner, which must stop however the build ends.
+ab_buildrun_traps
 
 ab_report() {
     show_errors "$1"
@@ -60,7 +66,19 @@ fi
 project_path=$(load_project_path)
 if [ -z "$project_path" ] || [ ! -d "$project_path" ]; then
     set_value "$BUILD_LOG_ID" "Error: No project loaded"
+    ab_status_result "exclamationmark.triangle.fill" "orange" "No project loaded"
     exit 1
 fi
 
+ab_status_busy "hammer" "Building $(/usr/bin/basename "$project_path")..."
+
 applet_build "$project_path"
+status=$?
+
+if [ "$status" -eq 0 ]; then
+    ab_status_result "checkmark.circle.fill" "green" "Build succeeded"
+else
+    ab_status_result "xmark.octagon.fill" "red" "Build failed"
+fi
+
+exit $status

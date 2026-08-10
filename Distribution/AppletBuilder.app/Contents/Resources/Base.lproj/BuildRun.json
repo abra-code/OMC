@@ -95,6 +95,7 @@
                 "children": [
                   {
                     "type": "Button",
+                    "id": 409,
                     "properties": {
                       "title": "Build",
                       "systemImage": "hammer",
@@ -104,6 +105,7 @@
                   },
                   {
                     "type": "Button",
+                    "id": 410,
                     "properties": {
                       "title": "Test",
                       "systemImage": "checkmark.diamond",
@@ -113,6 +115,7 @@
                   },
                   {
                     "type": "Button",
+                    "id": 411,
                     "properties": {
                       "title": "Run",
                       "systemImage": "play.fill",
@@ -131,6 +134,36 @@
                       "buttonStyle": "bordered",
                       "actionID": "AppletBuilder.reveal"
                     }
+                  }
+                ]
+              },
+              {
+                "type": "HStack",
+                "properties": {
+                  "spacing": 6
+                },
+                "children": [
+                  {
+                    "type": "ProgressView",
+                    "id": 407,
+                    "properties": {
+                      "controlSize": "small",
+                      "hidden": true
+                    }
+                  },
+                  {
+                    "type": "Label",
+                    "id": 408,
+                    "properties": {
+                      "title": "",
+                      "systemImage": "checkmark.diamond",
+                      "font": "caption",
+                      "foregroundStyle": "secondary",
+                      "hidden": true
+                    }
+                  },
+                  {
+                    "type": "Spacer"
                   }
                 ]
               }

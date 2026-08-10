@@ -150,6 +150,11 @@ BUILD_IDENTITY_PICKER_ID=402
 BUILD_THIN_PICKER_ID=404
 BUILD_WARNINGS_AS_ERRORS_ID=405
 BUILD_LOG_ID=401
+BUILD_SPINNER_ID=407
+BUILD_STATUS_ID=408
+BUILD_BUILD_BTN_ID=409
+BUILD_TEST_BTN_ID=410
+BUILD_RUN_BTN_ID=411
 
 # ──────────────────────────────────────────────────────────────
 # State management (private pasteboards keyed by window UUID)
@@ -444,4 +449,111 @@ ab_log_to_control() {
         fi
         return 0
     }
+}
+
+# ──────────────────────────────────────────────────────────────
+# Build & Run status row (spinner + verdict)
+# ──────────────────────────────────────────────────────────────
+#
+# A build and especially a test suite run for minutes, and the log control alone
+# is a poor progress indicator: text arrives in 20-line batches, a slow phase
+# looks identical to a finished one, and the verdict ends up scrolled out of
+# sight at the bottom. The row under the buttons answers both questions at a
+# glance - the spinner says "still working", the label says how it ended, in
+# green or red, and stays there after the log has moved on.
+#
+# The label's icon and color are properties, not text, so they are set through
+# omc_set_property; its title is the element's runtime value, so plain set_value
+# updates it (see ActionUI's Label: valueType is String).
+#
+# Starting a run also disables the three action buttons, because the row is the
+# PANE's status and there is only one of it. Clicking Build during a long test
+# run would otherwise finish in seconds and paint a green "Build succeeded" over
+# a suite still minutes from done - precisely the "looks finished when it isn't"
+# state this row exists to remove. The buttons come back in ab_status_result, and
+# again in the cleanup trap for the paths that never reach it.
+
+AB_BUILDRUN_ACTIVE=0
+
+ab_actions_enabled() { # <true|false>
+    set_enabled "$BUILD_BUILD_BTN_ID" "$1"
+    set_enabled "$BUILD_TEST_BTN_ID" "$1"
+    set_enabled "$BUILD_RUN_BTN_ID" "$1"
+}
+
+# Enable first, clear the flag last. The other order has a hole: a signal landing
+# between the clear and the third set_enabled would run the trap, which would see
+# a cleared flag, skip the enables, and leave a subset of the buttons dead. This
+# way the trap's worst case is enabling three already-enabled buttons.
+ab_actions_release() {
+    if [ "$AB_BUILDRUN_ACTIVE" = "1" ]; then
+        ab_actions_enabled true
+        AB_BUILDRUN_ACTIVE=0
+    fi
+}
+
+ab_spinner_on() {
+    set_visible "$BUILD_SPINNER_ID" true
+}
+
+ab_spinner_off() {
+    set_visible "$BUILD_SPINNER_ID" false
+}
+
+# <systemImage> <foregroundStyle> <message>
+# Icon and color are set before the row is shown so a new run never flashes the
+# previous run's verdict under the new text.
+ab_status_set() {
+    "$dialog_tool" "$window_uuid" "$BUILD_STATUS_ID" omc_set_property "systemImage" "$1"
+    "$dialog_tool" "$window_uuid" "$BUILD_STATUS_ID" omc_set_property "foregroundStyle" "$2"
+    set_value "$BUILD_STATUS_ID" "$3"
+    set_visible "$BUILD_STATUS_ID" true
+}
+
+# <systemImage> <message> - work has started; spin, and disable the buttons.
+#
+# The disable is a mitigation, not a lock: it lands a fraction of a second into
+# the handler, so two runs started inside that window both proceed, and nothing
+# here serializes handlers. Real mutual exclusion would need a window-keyed
+# on-disk lock. Do not build on an assumption that only one can be running.
+ab_status_busy() {
+    AB_BUILDRUN_ACTIVE=1
+    ab_actions_enabled false
+    ab_status_set "$1" "secondary" "$2"
+    ab_spinner_on
+}
+
+# <systemImage> <foregroundStyle> <message> - work has ended; stop spinning.
+# The spinner goes off first so the two are never on screen together, and the
+# buttons come back last so the row is final before anything can be clicked.
+ab_status_result() {
+    ab_spinner_off
+    ab_status_set "$1" "$2" "$3"
+    ab_actions_release
+}
+
+# Everything a Build & Run handler must undo however it exits. Only reached with
+# AB_BUILDRUN_ACTIVE still set when the handler died between ab_status_busy and
+# ab_status_result - a signal, or an exit path that forgot the verdict - which is
+# exactly when the pane would otherwise be left spinning, with its buttons
+# disabled, over a process that no longer exists.
+#
+# The file goes first: /bin/rm cannot block, while a UI write to a window that is
+# already going away conceivably could, and a leaked transcript is the worse of
+# the two things to strand.
+ab_buildrun_cleanup() {
+    ab_log_control_cleanup
+    if [ "$AB_BUILDRUN_ACTIVE" = "1" ]; then
+        ab_spinner_off
+        ab_actions_enabled true
+        AB_BUILDRUN_ACTIVE=0
+    fi
+}
+
+# Install the cleanup above. Call AFTER ab_log_to_control, whose own traps this
+# deliberately replaces (they cover the temp file only).
+ab_buildrun_traps() {
+    trap 'ab_buildrun_cleanup' EXIT
+    trap 'ab_buildrun_cleanup; exit 130' INT
+    trap 'ab_buildrun_cleanup; exit 143' TERM
 }
