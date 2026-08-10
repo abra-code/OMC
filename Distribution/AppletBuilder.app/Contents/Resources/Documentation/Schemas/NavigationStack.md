@@ -40,6 +40,33 @@ JSON schema and usage documentation for `NavigationStack`.
    ]
  }
 
+// Persistent toolbar: items that stay in the bar on every screen inside the stack
+// (the root and every pushed destination), rather than only on the screen that declares them.
+// Same ToolbarItem / ToolbarItemGroup shapes as the per-screen "toolbar" key, and they
+// compose with it - a destination's own items and the persistent ones share one bar.
+ {
+   "type": "NavigationStack",
+   "id": 1,
+   "persistentToolbar": [
+     { "type": "ToolbarItem", "id": 16, "properties": { "placement": "topBarTrailing" },
+       "content": { "type": "Image", "id": 17, "properties": { "systemName": "arrow.clockwise" } } }
+   ],
+   "content": { ... },
+   "destinations": [ ... ]
+ }
+ // A "toolbar" declared on the NavigationStack itself is a DEPRECATED ALIAS for
+ // "persistentToolbar"; it still works and logs a one-time warning. It was never a SCREEN
+ // toolbar: macOS put it in the shared window toolbar, where it already persisted, and iOS
+ // rendered it nowhere unless the stack was nested inside another navigation container, in
+ // which case it surfaced in the OUTER bar. That last case is the one this changes - those
+ // items now appear on every screen inside this stack instead of on the screen outside it.
+ // To give only the root screen a toolbar, declare it on "content". There is no
+ // per-destination opt-out: set "hidden" on the item's CONTENT to blank it - note that hides the
+ // content without reclaiming the slot, so it still counts against the bar's space.
+ // Implemented on all four hosts. On the web, persistent items authored "secondaryAction" get their
+ // own overflow menu rather than joining the screen's, so a document using that placement on BOTH
+ // a screen and its container shows two "..." menus there where Apple shows one.
+
  // Observable state (via getElementState / setElementState):
  //   states["navigationPath"]  [Int]   Current navigation path as array of destination IDs.
  //                                     Empty when at root. Write to push/pop programmatically:

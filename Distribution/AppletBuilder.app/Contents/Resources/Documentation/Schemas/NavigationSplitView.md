@@ -52,6 +52,30 @@ JSON schema and usage documentation for `NavigationSplitView`.
  // NavigationLink is NOT needed in the sidebar for NavigationSplitView.
  // Use NavigationLink only inside NavigationStack for push-based navigation.
 
+// Persistent toolbar: items that stay in the bar wherever the user navigates inside the split
+// view, rather than only on the column that declares them. Same ToolbarItem / ToolbarItemGroup
+// shapes as the per-screen "toolbar" key, and they compose with it.
+ {
+   "type": "NavigationSplitView",
+   "id": 1,
+   "persistentToolbar": [
+     { "type": "ToolbarItem", "id": 16, "properties": { "placement": "primaryAction" },
+       "content": { "type": "Image", "id": 17, "properties": { "systemName": "arrow.clockwise" } } }
+   ],
+   "sidebar": { ... },
+   "detail": { ... }
+ }
+ // A "toolbar" declared on the NavigationSplitView itself is a DEPRECATED ALIAS for
+ // "persistentToolbar"; it still works and logs a one-time warning.
+ // Where the items land is per platform: macOS puts them in the shared window toolbar; platforms
+ // whose columns each own a bar put them on the detail column, and on the leading columns only in
+ // compact width, where the split view collapses into one stack rooted at the sidebar. A column
+ // that is ITSELF a NavigationStack is the exception - there the items go onto that stack's own
+ // screens, since a toolbar applied around a stack does not reach the bars inside it.
+ // Implemented on all four hosts. On the web, persistent items authored "secondaryAction" get their
+ // own overflow menu rather than joining the screen's, so a document using that placement on BOTH
+ // a screen and its container shows two "..." menus there where Apple shows one.
+
  // Note: These properties are specific to NavigationSplitView. Baseline View properties (padding, hidden, foregroundStyle, font, background, frame, opacity, cornerRadius, actionID, disabled) and additional View protocol modifiers are inherited and applied via ActionUIRegistry.shared.applyViewModifiers(to: baseView, properties: element.properties).
 
 // Observable state (via getElementState / setElementState):

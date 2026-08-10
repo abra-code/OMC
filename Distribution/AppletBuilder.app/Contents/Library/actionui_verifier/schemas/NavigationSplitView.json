@@ -3,11 +3,12 @@
   "description": "Two- or three-pane split navigation. Sidebar selection can drive destination switching via destinationViewId on children.",
   "id": { "policy": "optional" },
   "inheritsViewProperties": true,
-  "topLevelKeys": ["sidebar", "content", "detail", "destinations"],
+  "topLevelKeys": ["sidebar", "content", "detail", "destinations", "persistentToolbar"],
   "sidebar":      { "required": true,  "description": "Sidebar column view; must be a List when using destinations" },
   "content":      { "required": false, "description": "Middle content column (3-pane only)" },
   "detail":       { "required": true,  "description": "Detail column view" },
   "destinations": { "required": false, "description": "Array of destination views; sidebar List children link via destinationViewId" },
+  "persistentToolbar": { "required": false, "description": "Array of ToolbarItem / ToolbarItemGroup elements that stay in the bar wherever the user navigates inside the split view, composing with each screen's own 'toolbar'. A 'toolbar' declared on the NavigationSplitView itself is a deprecated alias for this key. Implemented on all four hosts" },
   "ownProperties": {
     "columnVisibility": { "types": ["string"], "required": false, "enum": ["automatic","all","doubleColumn","detail"], "description": "Defaults to 'all'" },
     "style":            { "types": ["string"], "required": false, "enum": ["automatic","balanced","prominentDetail"], "description": "Defaults to 'automatic'" }
