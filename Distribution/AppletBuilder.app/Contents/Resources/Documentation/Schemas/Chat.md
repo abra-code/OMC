@@ -71,6 +71,17 @@ JSON schema and usage documentation for `Chat` (ActionUIChat add-on).
                                           //           usage) with a JSON envelope { sequence, type, id, data } as
                                           //           the action context, for crash-safe incremental persistence.
                                           //           Never fired on streaming deltas.
+     "resumeCheckpointActionID": "chat.checkpoint",
+                                          // Optional: the resume cursor that pairs with entryActionID, as
+                                          //           { afterSeq, sessionId } JSON in the action context. Fired only
+                                          //           while the transcript is QUIESCENT (a turn boundary, or catching
+                                          //           up after an attach), never mid-stream, and only when
+                                          //           entryActionID is ALSO set - a host that is not storing entries
+                                          //           is not offered a cursor. Persist it atomically with the
+                                          //           entries: a newer cursor loses what is in between, an older one
+                                          //           duplicates it, and storing neither half is always safe. Feed it
+                                          //           back as the transport's "resumeAfterSeq" (with "session").
+                                          //           Only the "acp-remote" protocol produces one.
      "readOnly": false                    // Optional (default false): read-only viewer mode - hides the composer and
                                           //           menus and needs no states["config"] injection (there is no
                                           //           transport to start). Pair with a runtime
@@ -93,8 +104,10 @@ JSON schema and usage documentation for `Chat` (ActionUIChat add-on).
                                          //           OpenAI-compatible /v1/chat/completions endpoint (llama-server,
                                          //           mlx_lm.server, ...). "acp" (the ActionUIChatACP module, macOS
                                          //           only: the agent is a subprocess) runs an Agent Client Protocol
-                                         //           agent over stdio. A protocol whose module the host did not
-                                         //           register degrades to "local".
+                                         //           agent over stdio. "acp-remote" (same module) drives an ACP agent
+                                         //           on ANOTHER machine over a WebSocket to a chatview-acp-bridge;
+                                         //           it owns no subprocess, so it is not macOS-only. A protocol whose
+                                         //           module the host did not register degrades to "local".
    "transport": { "echo": true }         // Protocol-specific settings (interpreted by the chosen transport).
                                          //           "local" honors "echo" (default true: stream a demo reply),
                                          //           "reply" ("echo" default | "markdown" | "agentic": a scripted
@@ -110,6 +123,13 @@ JSON schema and usage documentation for `Chat` (ActionUIChat add-on).
                                          //           and honors "cwd" (the session root; "~" expands, default: the
                                          //           host's current directory) and "mcpServers" (an array of MCP
                                          //           server declarations passed to the agent verbatim).
+                                         //           "acp-remote" honors "session" ("new" by default, or a bridge
+                                         //           session id to rejoin) and "resumeAfterSeq" (the afterSeq from
+                                         //           the last resumeCheckpointActionID cursor - ignored unless
+                                         //           "session" names a session). This is the return half of the
+                                         //           persistence round trip: store the cursor with the transcript,
+                                         //           then inject the transcript into states["content"] and the
+                                         //           cursor here, and the bridge replays only what came after it.
  }
 // A native chat surface, implemented as an ActionUI add-on (registered via ActionUIChat.register()).
 // A transcript above a composer; the transport (selected by "protocol") drives the conversation and the

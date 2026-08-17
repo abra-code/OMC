@@ -144,7 +144,7 @@
       ]
     },
     "imageScale":      { "types": ["string"], "required": false, "enum": ["small","medium","large"], "description": "SF Symbol image scale modifier" },
-    "actionID":                       { "types": ["string"], "required": false },
+    "actionID":                       { "types": ["string"], "required": false, "description": "Tap/click action id. On VStack/HStack/ZStack it makes the whole container tappable; inside a template row it dispatches with the owning container's id as viewID and the row index as viewPartID" },
     "valueChangeActionID":             { "types": ["string"], "required": false },
     "openURLActionID":                 { "types": ["string"], "required": false },
     "onAppearActionID":                { "types": ["string"], "required": false },

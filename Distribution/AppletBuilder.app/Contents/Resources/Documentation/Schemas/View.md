@@ -90,7 +90,19 @@ JSON schema and usage documentation for `View`.
                               //   own row animation - on iOS only the opacity (fade) survives, custom geometry
                               //   (move/slide/scale) is not honored, and macOS List does not animate row
                               //   insert/remove at all - so use a stack container when you need the motion.
-     "actionID": "view.action", // Optional: String for action identifier
+     "actionID": "view.action", // Optional: String for action identifier. On VStack / HStack / ZStack it makes the
+                              //   container tappable as a WHOLE - the rich-cell idiom: one tap target and one
+                              //   accessibility element for an avatar + name + status line, instead of a small
+                              //   Button inside the cell. The target covers the container's final box, padding and
+                              //   frame included, and the cell is announced as a single button and reachable by
+                              //   keyboard. Inside a template row it dispatches with the owning container's id as
+                              //   viewID and the row index as viewPartID, exactly as a Button in that row does;
+                              //   outside one, with the element's own id and viewPartID 0. The innermost action
+                              //   wins: a nested Button, a nested tappable container, or an enclosing List row's
+                              //   selection never fire alongside it. A blank actionID is ignored, and a disabled
+                              //   container (or one inside a disabled ancestor) is inert. On other element types
+                              //   the property is read by the element itself (Button, Toggle, ...) - except on the
+                              //   web, where any element carrying an actionID has always been clickable.
      "valueChangeActionID": "view.valueChanged", // Optional: String for action triggered on any value change initiated by user
      "openURLActionID": "view.openURL", // Optional: String for action identifier triggered on open URL (via .onOpenURL modifier)
      "onAppearActionID": "view.onAppear", // Optional: String for action identifier triggered on view appear (via .onAppear modifier)

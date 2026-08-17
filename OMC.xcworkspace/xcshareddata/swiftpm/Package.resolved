@@ -1,5 +1,5 @@
 {
-  "originHash" : "bacea27ee87ec0f18f0146b9c57c56e8db8485cbd72af48408d97ee144a07cb0",
+  "originHash" : "feb91fb2283ad7bd5495a3865b68a687a90103cb35e73ff3929e8488f4cb8d81",
   "pins" : [
     {
       "identity" : "asyncimagecache",
@@ -15,8 +15,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/abra-code/ChatView",
       "state" : {
-        "revision" : "0bb74bc3ab50c9f1c8dfd5b8d5dc731ff104fc6d",
-        "version" : "0.3.0"
+        "revision" : "29e913b6a91e1a8a10014d890c8626c318c484a8",
+        "version" : "0.4.5"
       }
     },
     {
