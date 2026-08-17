@@ -655,8 +655,10 @@ Build & Run pane (next to Build and Run), which logs into the build log. Plain
 Each file gets its own scratch tree, its own window UUID, and its own
 interposition directory. `alert`, `notify`, `omc_dialog_control` and
 `omc_next_command` are stubbed (the first would hang forever with no user, the
-third becomes the virtual window you assert against); `plister`, `pasteboard`,
-`b64`, `filt` and `loco` are real.
+third becomes the virtual window you assert against); `plister`, `b64`, `filt`
+and `loco` are real. `pasteboard` is the real tool behind a wrapper that
+namespaces the board NAME per file per run - a named pasteboard lives in the
+login pasteboard server, which no amount of `$HOME` isolation can reach.
 
 ### The idiom
 
@@ -671,7 +673,7 @@ check "the field was populated" "com.example.thing" "$(ui_value "$NAME_ID")"
 check "the table was fed"       "2"               "$(ui_row_count "$TABLE_ID")"
 check_status "it exited cleanly" 0
 
-# ui_reset DELETES this log, so check before every reset, not once at the end.
+# Cumulative across the file (API 4+): one check at the end covers everything.
 section "no writes to undeclared view ids"
 check "no undeclared ids" "" "$(ui_unknown_writes)"
 
@@ -706,11 +708,12 @@ and each is easy to forget until a test edits the machine it runs on:
   assertion in the file. Name the script through a variable, point it at a
   recorder, and assert that the right worker was launched with the right
   arguments — which is all a handler is responsible for.
-- **Global pasteboard keys**, the kind an applet uses to hand a value from one
-  window to another. They live in the login pasteboard server and are shared with
-  every other omctest run on the machine. Give the applet a prefix
-  (`PB_PREFIX="${MYAPP_PB_PREFIX:-}"`, empty in production) and let the test set
-  a per-run value. See trap 6.
+- **Anything the applet reaches through `defaults` on a DOMAIN, or through a path
+  built from `/Users/$USER` rather than `"$HOME"`.** Neither can be intercepted -
+  cfprefsd keys the user domain by uid, and redirecting an absolute path would
+  need a mount namespace - so a test that reaches them touches the real home of
+  whoever runs the suite. The suite names every such line at startup. Fix them in
+  the applet: `"$HOME"` is the same path in production and under test.
 
 Where a tool is deterministic and safe, **run it for real** (`ditto`, `plutil`,
 `xar`, `textutil`, `pkgbuild`): that is what makes the assertions about its
@@ -741,21 +744,30 @@ covered.
 5. **`omc_control_defaults <DocName>`, not `omc_reset_controls`.** A window where
    every toggle is off cannot exist; a test written against it describes
    something no user has ever seen.
-6. **The pasteboard outlives the process, and it is not coherent across them.**
-   `omc_child_sheet`/`omc_window_switch` derive their UUID from the name you
-   pass, so two sections using the same name share keys - clear every key your
-   applet uses in your reset helper. Worse, a GLOBAL key (one an applet uses to
-   hand a value from one window to another) is shared with every *other* omctest
-   run on the machine, and a value from an earlier run has been measured arriving
-   in a later run's handler. Waiting for the value does not fix it - the stale
-   reading is non-empty and wrong. Give the applet a key **prefix** seam and let
-   the test set a per-run value; that is a seam of the same kind as a binary.
-7. **`ui_reset` deletes `unknown_ids.log`, `suspect_writes.log` and
-   `errors.log`.** A single `ui_unknown_writes` check at the end of a file
-   therefore only ever sees the last section — it reads as a standing check and
-   is inert. Call it inside your reset helper, before the wipe.
+6. **The pasteboard outlives the process.** `omc_child_sheet`/`omc_window_switch`
+   derive their UUID from the name you pass, so two sections using the same name
+   share keys - clear every key your applet uses in your reset helper. What you
+   no longer have to handle (API 4+) is the *cross-run* half: every board name is
+   namespaced per file per run, so a stale value from another run, or from the
+   copy of the applet you have running, can no longer arrive in a handler. Both
+   had been measured. A test lib that snapshots and restores global keys itself
+   can drop that machinery; an applet that grew a `PB_PREFIX` seam only for
+   testing no longer needs it.
+7. **`ui_enabled` / `ui_visible` return empty for NEVER TOUCHED**, not just for
+   off. `check "the button is off" "" "$(ui_enabled "$ID")"` therefore passes
+   when the handler never ran at all, and worse: it pins the omission, so the
+   obvious fix — adding the missing `omc_disable` — turns the test red. Assert
+   the state the *user* meets (`"$(ui_enabled "$ID")" = 1` or not), so both
+   routes to a disabled button satisfy it and a handler that skipped the element
+   entirely does not.
 8. **Chain history is cumulative.** `chains_reset` before any section that
-   asserts a chain did *not* happen.
+   asserts a chain did *not* happen. So are the three diagnostic logs, as of API
+   4 — if your lib checks them per section and then resets, call
+   `ui_reset_diagnostics` after the check or one real hit is reported once per
+   remaining section, naming the wrong one each time. Ids the applet mints at
+   runtime (`omc_insert_element`) are not in the statically-extracted
+   `known_ids.txt`: declare them with `ui_declare_ids 2000 2010`, one id at a
+   time rather than a range, so the check stays live for everything else.
 9. **Import view ids from the applet, never restate them** — and guard the
    import, or a renamed constant expands to empty and every check fails with no
    hint why. Match the applet's own spelling: `NAME_ID=129`, `ID_TABLE = 10`

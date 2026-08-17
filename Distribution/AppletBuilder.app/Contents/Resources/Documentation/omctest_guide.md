@@ -121,6 +121,9 @@ $OMCTEST_SCRATCH/                mktemp -d, removed on exit
     tmp/                         exported as TMPDIR for everything the tests run
     <testfile-label>/
         support/                 the interposition directory (3.2)
+        home/                    $OMCTEST_HOME - exported as HOME for everything the
+                                 tests run, with Library/Application Support and
+                                 Library/Preferences pre-created
         work/                    $OMCTEST_WORK - your writable area, the default
                                  destination of fixture_copy, and the cwd handlers run in
         ui/                      $OMCTEST_UI - the recording area
@@ -147,12 +150,13 @@ Variables a test file can read:
 | `OMCTEST_TESTS` | the `Tests/` directory - source your app lib from here |
 | `OMCTEST_FIXTURES` | `$OMCTEST_TESTS/fixtures` |
 | `OMCTEST_WORK` | this file's writable scratch, and the handlers' cwd |
+| `OMCTEST_HOME` | this file's fake home directory, exported as `HOME` |
 | `OMCTEST_UI` | the recording area above |
 | `OMCTEST_SUPPORT` | the interposition directory |
 | `OMCTEST_STATUS` | exit code of the last `omc_run`; the string `-` before any dispatch, so `check_status "..." 0` cannot pass vacuously |
 | `OMCTEST_ALERT_RC` | the alert stub's answer when the scripted queue is empty (default `0`) |
 | `OMCTEST_PYTHON`, `OMCTEST_PYTHON_EMBEDDED` | the resolved interpreter, and whether it is the bundle's own |
-| `OMCTEST_API_VERSION` | `2` - assert a minimum if you use something new. `2` added `omc_control_defaults`. |
+| `OMCTEST_API_VERSION` | `4` - assert a minimum if you use something new. `2` added `omc_control_defaults`; `3` isolates `$HOME`; `4` namespaces named pasteboards and stops `ui_reset` dropping the diagnostic logs. |
 
 What the harness exports into every handler:
 
@@ -165,6 +169,23 @@ What the harness exports into every handler:
 | `OMC_PARENT_DIALOG_GUID` | empty until `omc_child_sheet` | the child-sheet convention |
 | `OMC_CURRENT_COMMAND_GUID` | `OMCTEST-CMD` | consumed by `omc_next_command`, which is stubbed |
 | `TMPDIR` | `$OMCTEST_SCRATCH/tmp/` | applets derive state and scratch paths from `$TMPDIR`, so redirecting it isolates all of that and makes cleanup total |
+| `HOME` | `$OMCTEST_SCRATCH/<label>/home/` | applets keep their USER state under it - `$HOME/Library/Application Support/<App>` is the house convention - and `plister` is real, so without this a test that saves a setting rewrites the developer's own configuration |
+| `OMCTEST_PB_PREFIX` | `omctest.<scratch>.<label>.` | prepended to every pasteboard NAME by the `pasteboard` wrapper: a named pasteboard is not under `$HOME` and cannot be isolated any other way |
+
+**`$HOME` is isolated too, and it is the one that would have cost real data.** An applet's user state lives under it, `plister` is deliberately not stubbed, and the settings file of whoever runs the suite is therefore one unredirected write away. So each test file gets its own home, pre-populated with `Library/Application Support` and `Library/Preferences` because every real home has them. The applet's OWN directory is deliberately not created, so "did opening the window create a settings file" stays a real question.
+
+It is per FILE rather than per run, matching `OMCTEST_WORK`: a file that leaves an applet configured must not be able to answer the next file's question about what a fresh profile does.
+
+**Named pasteboards are isolated too, by rewriting the name.** A named pasteboard belongs to the pasteboard server, not to `$HOME` and not to the process, so the scratch tree cannot contain it: `myapp_handoff` under test *is* the board a copy of the applet running on the same Mac is reading, and is also the board a second, concurrent run of the same suite is writing. Both were observed in practice. So the `pasteboard` tool in the interposition directory is a wrapper that prepends `$OMCTEST_PB_PREFIX` to the name and execs the real tool. Handlers and tests both go through it, so nothing in a test file changes; the boards are emptied when the file ends.
+
+`general` and `find` are namespaced as well, rather than exempted. They are the real clipboard: a handler with a Copy path would otherwise take the clipboard of whoever is running the suite, and a test asserting what was copied reads it back through the same wrapper either way.
+
+What this does NOT cover, and cannot:
+
+- **`defaults` and anything else backed by `cfprefsd`.** That daemon keys the user domain by uid, not by `$HOME`, so a handler writing `com.example.App` through `defaults` still writes the real one. Applets that keep settings in a file they own - the house convention, and the reason it is the convention - are fully covered. The path form, `defaults read "$HOME/Library/Preferences/com.example.App.plist"`, is also covered, but a handler that READS through the domain and WRITES through a path can never round-trip under test - and in production it is writing behind cfprefsd's back, where the write is lost or clobbers.
+- **Paths built from `/Users/$USER` instead of `$HOME`.** Redirecting an absolute path would need a mount namespace, which an unprivileged test run on macOS does not have. Remapping `$USER` is not an alternative: `$USER` is an identity, not a path fragment - `pgrep -u "$USER"`, an owner in a log line - and a value chosen to bend one of those uses breaks the others. `"$HOME"` is the same path in production and the isolated one under test, so the applet is where this is fixed.
+
+Because neither can be intercepted, the suite **reports** them instead: at the start of a run, `omctest` names every file and line in the applet's `Scripts/` that uses either construct. It is a warning channel, never a failure - set `OMCTEST_NO_LINT=1` to silence it.
 
 **The window UUID is why per-window state is inspectable.** Handlers key their state directory and pasteboard keys off `$OMC_ACTIONUI_WINDOW_UUID` (or `$OMC_PARENT_DIALOG_GUID` inside a child sheet). Your test lib should recompute that path the same way the applet does - interpolating the variable, never hardcoding - so that a change to the applet's naming shows up as a missing file rather than as a test quietly asserting about a directory nobody writes.
 
@@ -189,7 +210,7 @@ The tools come from the applet's *own* embedded framework, not AppletBuilder's -
 | `omc_dialog_control` | **recording stub** - the virtual window | the real tool is a harmless no-op with no window, which is why handlers can run at all; recording it turns the largest observable output of most handlers into something assertable. |
 | `omc_next_command` | recording stub - chain queue | headless there is no app to ask; recording lets you assert on chaining and drain it synchronously. |
 | `plister` | real | handlers depend on its exact read/write semantics; faking it would test the fake. |
-| `pasteboard` | real | handlers must read back what they wrote. |
+| `pasteboard` | **real, under a rewritten name** | handlers must read back what they wrote, so the tool is real; but the board itself lives in the pasteboard server, outside anything `$HOME` can isolate, so the wrapper prepends `$OMCTEST_PB_PREFIX` to the name. |
 | `b64`, `filt`, `loco` | real | pure text and data filters, safe headless. |
 
 Every stub records before it responds. A stub that only returns an exit code answers "did the handler survive"; a spy answers "did the handler do the right thing".
@@ -331,16 +352,42 @@ All of these take an optional trailing window UUID, defaulting to the current wi
 | `ui_alert_action` | `<button-title> [uuid]` | the actionID wired to that button of the pending alert. Button specs are `title:role:actionID`, so **a title containing a colon misparses**. |
 | `ui_alert_title` / `ui_alert_message` | `[uuid]` | the pending alert's text |
 | `ui_fail` | `<view-id> ...` | make `omc_dialog_control` return failure for those ids, to test a handler's error path |
-| `ui_reset` | none | wipes the virtual windows and the journal. Does **not** touch alerts, notifications, chains or the check counters. |
+| `ui_reset` | none | wipes the virtual windows and the journal. Does **not** touch alerts, notifications, chains, the check counters, or the three diagnostic logs above - those are carried forward, so they still answer for the whole file. |
+| `ui_reset_diagnostics` | none | forgets the three diagnostic logs, carried entries included. For a test that provoked a failure on purpose and does not want it counted against the rest of the file. |
 
-`ui_unknown_writes` deserves a standing check at the end of every file. `unknown_ids.log` is cumulative across the file, so one assertion covers everything above it:
+`ui_unknown_writes` deserves a standing check at the end of every file. It is cumulative across the file, so one assertion covers everything above it:
 
 ```sh
 section "cumulative: no handler wrote to a view id the window does not declare"
 check "no undeclared ids" "" "$(ui_unknown_writes)"
 ```
 
-Two caveats. It is silently inert if the bundle's known-id extraction produced nothing - the runner says so loudly on stderr when that happens, so read that line. And the id set is a **union across every ActionUI document in the bundle**, so a typo'd id can be masked by a legitimate id of the same number in an unrelated sheet.
+**This is true again as of API 4, and was not before.** `ui_reset` used to DELETE the three diagnostic logs, so in a file that resets between sections this check answered only for the last section - and in a file that resets at the *end* of each section, for nothing at all. It was an assertion that could not fail, in the place a suite most wants one that can. If you support older harnesses, assert `OMCTEST_API_VERSION` at least 4 rather than assuming.
+
+**Migrating a suite that worked around the old behavior.** Several suites independently discovered the deletion and compensated by checking *immediately before* each reset, usually inside their own `reset_state` / `ui_hygiene_check` helper. Those keep passing, but the first time a real diagnostic fires it is now reported once per remaining section instead of once, and every report after the first names the wrong section. If your helper checks and then resets, add `ui_reset_diagnostics` right after the check - it restores exactly what the helper already claims, one check per section:
+
+```sh
+ui_hygiene_check() {
+    check "no undeclared ids" "" "$(ui_unknown_writes)"
+    check "no table clobbered" "" "$(ui_suspect_writes)"
+    check "no harness misuse"  "" "$(ui_errors)"
+    ui_reset_diagnostics          # this section has been judged; do not judge it twice
+}
+```
+
+The alternative - dropping the per-section checks and keeping one at the end of the file - is usually better, and is what the plain form above is for.
+
+### Ids the applet mints at run time
+
+`known_ids.txt` is extracted **statically** from the bundle's ActionUI documents, so an applet that builds part of its window with `omc_insert_element` - one card per row, ids computed from the row index - writes to ids no document declares. Every such write lands in `unknown_ids.log`, and under API 4 it stays there. Declare them:
+
+```sh
+ui_declare_ids 2000 2010 2020        # this window's three card bases
+```
+
+Spell out the ids rather than a range. A test that declares all of `2000-2999` has switched the check off for a thousand ids, and the point is to keep it meaningful for every id you did *not* name. `ui_declare_ids` refuses when nothing was extracted at all: appending to an empty `known_ids.txt` would switch the check back **on** with a known set of exactly the ids you declared, reporting every real id in the applet as undeclared.
+
+Two further caveats. It is silently inert if the bundle's known-id extraction produced nothing - the runner says so loudly on stderr when that happens, so read that line. And the id set is a **union across every ActionUI document in the bundle**, so a typo'd id can be masked by a legitimate id of the same number in an unrelated sheet.
 
 ### 4.7 Fixtures and scratch
 
@@ -550,7 +597,9 @@ check "a slash is refused" "no" "$(pb_call valid_name 'a/b' && echo yes || echo 
 
 The subshell keeps the library's own state out of the test file and stops a function that `exit`s from taking the suite with it. Note that arguments are expanded by the *calling* shell, so a call that must name one of the library's own constants needs an `eval` variant that defers expansion into the subshell. For a Python applet the equivalent bridge is in section 7.
 
-**A "reset" helper has to reset everything the applet keeps, not just its directory.** The obvious one-liner is `reset_state() { /bin/rm -rf "$(state_dir)"; }`, and it is complete only for an applet that keeps all its state in that directory. An applet that also keeps per-window pasteboard keys needs those cleared too - the pasteboard lives in the per-login server and outlives the process, so a leftover key silently answers a question about a document that no longer exists. Enumerate the keys your applet uses and clear them alongside the directory.
+**A "reset" helper has to reset everything the applet keeps, not just its directory.** The obvious one-liner is `reset_state() { /bin/rm -rf "$(state_dir)"; }`, and it is complete only for an applet that keeps all its state in that directory. An applet that also keeps pasteboard keys needs those cleared too: the pasteboard lives in the per-login server and outlives the process, so a leftover key silently answers a question about a document that no longer exists. Enumerate the keys your applet uses and clear them alongside the directory.
+
+Since API 4 that is all a reset helper has to do. Clearing them is still *your* job - the harness does not know which keys mean "no document is open" to your applet - but **protecting the developer's own boards is not**: every name goes through the namespacing wrapper, so a key you forget to clear can no longer reach a running copy of the applet or a concurrent run of the suite. A test lib written against API 3 that snapshots and restores the global keys itself can drop that machinery.
 
 ---
 

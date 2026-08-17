@@ -888,6 +888,18 @@ ui_reset
 omc_run Fixture.unknownid
 check "the id is named" "1" "$(printf '%s' "$(ui_unknown_writes)" | /usr/bin/grep -c '^4242 ')"
 
+# ui_reset used to DELETE the three diagnostic logs, so the closing
+# "no undeclared ids" check every guide recommends answered only for whatever
+# happened after the last reset - in a file that resets at the end of each
+# section, for nothing at all. Carried forward now; forgetting them is a
+# separate verb, for a test that provoked a failure on purpose.
+section "diagnostics survive a mid-file reset"
+ui_reset
+check "the earlier unknown id is still named" "1" \
+    "$(printf '%s' "$(ui_unknown_writes)" | /usr/bin/grep -c '^4242 ')"
+ui_reset_diagnostics
+check "and ui_reset_diagnostics forgets it"   ""  "$(ui_unknown_writes)"
+
 section "a scripted write failure reaches the handler"
 ui_reset
 ui_fail 130
@@ -928,10 +940,86 @@ check "notify too"                    "no"  "$([ -L "$OMC_OMC_SUPPORT_PATH/notif
 check "omc_dialog_control too"        "no"  "$([ -L "$OMC_OMC_SUPPORT_PATH/omc_dialog_control" ] && echo yes || echo no)"
 check "omc_next_command too"          "no"  "$([ -L "$OMC_OMC_SUPPORT_PATH/omc_next_command" ] && echo yes || echo no)"
 check "plister is the real tool"      "yes" "$([ -L "$OMC_OMC_SUPPORT_PATH/plister" ] && echo yes || echo no)"
-check "pasteboard too"                "yes" "$([ -L "$OMC_OMC_SUPPORT_PATH/pasteboard" ] && echo yes || echo no)"
+# pasteboard is the odd one out: neither a stub nor a plain link, but a wrapper
+# that rewrites the board NAME and then execs the real tool. See below.
+check "pasteboard is wrapped"         "no"  "$([ -L "$OMC_OMC_SUPPORT_PATH/pasteboard" ] && echo yes || echo no)"
 # The tools come from the APPLET's own framework, not AppletBuilder's.
 check "the real tools are the applet's own" "yes" \
     "$(case "$OMCTEST_REAL_SUPPORT" in ("$OMC_APP_BUNDLE_PATH"/*) echo yes ;; (*) echo no ;; esac)"
+
+# A named pasteboard is the one piece of applet state that does NOT live under
+# $HOME - it belongs to the pasteboard server - so the scratch tree cannot
+# contain it and the NAME has to be isolated instead. Asserted from both sides:
+# the value must come back through the wrapper, and it must NOT be on the board
+# the applet actually named, because that board is the one a running copy of the
+# applet, or a second concurrent run of this suite, is reading.
+section "named pasteboards are namespaced"
+pb="$OMC_OMC_SUPPORT_PATH/pasteboard"
+real_pb="$OMCTEST_REAL_SUPPORT/pasteboard"
+check "a prefix was published"        "yes" "$([ -n "$OMCTEST_PB_PREFIX" ] && echo yes || echo no)"
+"$real_pb" omctest_probe_board put "" >/dev/null 2>&1
+"$pb" omctest_probe_board put "hello" >/dev/null 2>&1
+check "the wrapper round-trips"       "hello" "$("$pb" omctest_probe_board get 2>/dev/null)"
+check "the board the applet named is untouched" "" "$("$real_pb" omctest_probe_board get 2>/dev/null)"
+check "the namespaced board holds it" "hello" \
+    "$("$real_pb" "${OMCTEST_PB_PREFIX}omctest_probe_board" get 2>/dev/null)"
+check "the write was recorded for release" "1" \
+    "$(/usr/bin/grep -c 'omctest_probe_board' "$OMCTEST_UI/pasteboard.names" 2>/dev/null | /usr/bin/tr -d ' ')"
+# general and find are the real clipboard and are namespaced for the same
+# reason: a handler with a Copy path must not take the clipboard of whoever is
+# running the suite.
+"$pb" general put "not-your-clipboard" >/dev/null 2>&1
+check "even general is namespaced"    "not-your-clipboard" \
+    "$("$real_pb" "${OMCTEST_PB_PREFIX}general" get 2>/dev/null)"
+
+# THE FAIL-CLOSED GUARD, which is the whole safety story. With no prefix the wrapper would
+# address the RAW board - the developer's own - and, because the raw name would then be
+# recorded, the release sweep would EMPTY it. For "general" that is the user's clipboard.
+# Reachable from any handler that runs without inheriting the environment: env -i, sudo's
+# env_reset, launchctl submit, osascript, a Python handler passing a curated env=.
+section "the wrapper refuses to run without its namespace"
+"$real_pb" omctest_guard_board put "developer's own data" >/dev/null 2>&1
+/usr/bin/env -i OMCTEST_REAL_SUPPORT="$OMCTEST_REAL_SUPPORT" OMCTEST_UI="$OMCTEST_UI" \
+    "$pb" omctest_guard_board put "clobbered" >/dev/null 2>&1
+check "a put with no prefix is refused" "1" \
+    "$([ "$?" -ne 0 ] && echo 1 || echo 0)"
+check "  and the real board is untouched" "developer's own data" \
+    "$("$real_pb" omctest_guard_board get 2>/dev/null)"
+# The second lock on the same door: whatever ends up in the release list, only a board this
+# harness could have minted is ever cleared.
+printf 'omctest_guard_board\n' >> "$OMCTEST_UI/pasteboard.names"
+omctest_release_pasteboards "$OMCTEST_UI"
+check "release will not clear an unprefixed board" "developer's own data" \
+    "$("$real_pb" omctest_guard_board get 2>/dev/null)"
+"$real_pb" omctest_guard_board put "" >/dev/null 2>&1
+
+section "ui_declare_ids covers runtime-minted ids without disabling the check"
+# An applet that builds its window with omc_insert_element writes to ids no document declares.
+# Declaring them keeps the check meaningful for every id NOT named.
+"$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$OMC_ACTIONUI_WINDOW_UUID" 7777 "minted" 2>/dev/null
+check "an undeclared id is flagged" "1" \
+    "$(printf '%s' "$(ui_unknown_writes)" | /usr/bin/grep -c '^7777 ')"
+ui_reset_diagnostics
+ui_declare_ids 7777
+"$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$OMC_ACTIONUI_WINDOW_UUID" 7777 "minted" 2>/dev/null
+"$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$OMC_ACTIONUI_WINDOW_UUID" 7778 "not declared" 2>/dev/null
+check "  once declared it is not"   "0" \
+    "$(printf '%s' "$(ui_unknown_writes)" | /usr/bin/grep -c '^7777 ')"
+check "  and its neighbor still is" "1" \
+    "$(printf '%s' "$(ui_unknown_writes)" | /usr/bin/grep -c '^7778 ')"
+check "a non-numeric id is refused" "1" \
+    "$(ui_declare_ids 12x 2>/dev/null; [ "$?" -ne 0 ] && echo 1 || echo 0)"
+ui_reset_diagnostics
+# The gate the stub uses is -s, not -f: an EMPTY known_ids.txt means "nothing was extracted",
+# which switches the check off. Appending to it would switch the check back on with a known
+# set of exactly the declared ids - reporting every real id in the applet as undeclared.
+/bin/mv "$OMCTEST_UI/known_ids.txt" "$OMCTEST_UI/known_ids.saved"
+: > "$OMCTEST_UI/known_ids.txt"
+check "declaring against an empty id set is refused" "1" \
+    "$(ui_declare_ids 7777 2>/dev/null; [ "$?" -ne 0 ] && echo 1 || echo 0)"
+check "  and the check stays off rather than inverting" "0" \
+    "$(/usr/bin/grep -c . "$OMCTEST_UI/known_ids.txt" 2>/dev/null | /usr/bin/tr -d ' ')"
+/bin/mv "$OMCTEST_UI/known_ids.saved" "$OMCTEST_UI/known_ids.txt"
 
 section "the real plister works"
 printf '{}' > "$OMCTEST_WORK/m.json"
@@ -1057,8 +1145,8 @@ EXPECTED_COUNTS = {
     "40-alerts.test.sh": (16, 0),
     "50-chain.test.sh": (11, 0),
     "55-defaults.test.sh": (25, 0),
-    "60-window.test.sh": (54, 0),
-    "70-tools.test.sh": (25, 0),
+    "60-window.test.sh": (56, 0),
+    "70-tools.test.sh": (40, 0),
     "85-noise.test.sh": (1, 0),
 }
 
@@ -1359,14 +1447,23 @@ def test_build_integration(project: Path, app: Path) -> None:
         tests.rename(stash)
         rc, out, err = run_cli("build", str(app), "--test")
         check("--test with no Tests/ -> exit 1", rc == 1, f"got {rc}")
-        check("and it names the reason", "no Tests/ directory beside" in err, err.strip()[-200:])
+        # Matched case-insensitively: this pins that the reason is NAMED, which is
+        # the contract, and not how ab_report happens to capitalize it - the check
+        # spent a while red because the message gained a capital N.
+        check("and it names the reason", "no tests/ directory beside" in err.lower(),
+              err.strip()[-200:])
         check("and never reached signing", "Codesigning" not in err)
         stash.rename(tests)
 
         # Green: the suite runs, then the app is signed.
         rc, out, err = run_cli("build", str(app), "--test")
         check("a green suite builds -> exit 0", rc == 0, err.strip()[-300:])
-        check("the suite reported on stdout", "omctest:" in out, out.strip())
+        # In the build's transcript, not specifically on its stdout: applet_run_tests
+        # merges the suite's stdout into stderr on purpose (2>&1 | ab_log_stream) so
+        # the whole run reaches the GUI's log pane. What matters here is that the
+        # build surfaces the suite's summary rather than swallowing it.
+        check("the suite summary reached the build log", "omctest:" in (out + err),
+              (out + err).strip()[-200:])
         check("and the app was signed", "Build succeeded" in err)
         # Order is the whole point: after the runtime refresh, before signing.
         pos_info = err.find("Info.plist content passed")

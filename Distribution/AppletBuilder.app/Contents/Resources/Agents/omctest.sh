@@ -34,7 +34,21 @@
 # be tested safely on a harness that provides it, and "safely" here means "does
 # not silently rewrite the developer's own configuration". A test file that
 # depends on that isolation should assert this minimum rather than assume it.
-OMCTEST_API_VERSION=3
+#
+# 4 extends that same guarantee to the two places $HOME could not reach, and is
+# likewise a GUARANTEE a test file may assert:
+#   - NAMED PASTEBOARDS are namespaced per file per run (OMCTEST_PB_PREFIX).
+#     They live in the pasteboard server, not under $HOME, so before this a
+#     handler's handoff key was the very same board the developer's running copy
+#     of the applet was reading, and two concurrent runs of one suite overwrote
+#     each other's. "general" and "find" are namespaced too, so a handler that
+#     copies for the user cannot take the clipboard of whoever runs the suite.
+#   - ui_reset no longer DROPS the three diagnostic logs. It carries them
+#     forward, so ui_unknown_writes / ui_suspect_writes / ui_errors answer for
+#     the whole file rather than for whatever happened since the last reset -
+#     which, in a file that resets between sections, was frequently nothing at
+#     all, and the closing "no undeclared ids" check passed vacuously.
+OMCTEST_API_VERSION=4
 export OMCTEST_API_VERSION
 
 # The four tools this harness always replaces with recording stubs.
@@ -191,6 +205,10 @@ omctest_extension_of() { # <basename>
 # =============================================================================
 
 omctest_cleanup_scratch() {
+    # Before the tree goes: the pasteboards do not live in it. Emptied even when
+    # the scratch is kept, because a kept scratch is for reading and a left-over
+    # board is not inert - it is data a LATER run could read back.
+    omctest_release_pasteboards
     if [ "$OMCTEST_KEEP_SCRATCH" = "1" ]; then
         printf 'omctest: scratch kept at %s\n' "$OMCTEST_SCRATCH" >&2
         return 0
@@ -198,6 +216,144 @@ omctest_cleanup_scratch() {
     case "$OMCTEST_SCRATCH" in
         /*/*) /bin/rm -rf "$OMCTEST_SCRATCH" ;;
     esac
+}
+
+# Empty every namespaced pasteboard this run wrote to.
+#
+# Named pasteboards outlive the process that created them - they belong to the
+# pasteboard server, which is exactly why namespacing alone is not enough. The
+# wrapper records each name it PUTS to; this empties them. Without it a suite
+# would leave one board per handoff key per run behind forever, and a name
+# collision with a later run (the prefix is random, so: never in practice) would
+# hand it stale data rather than nothing.
+#
+# <ui-dir> to release one file's boards; no argument sweeps the whole scratch.
+omctest_release_pasteboards() { # [ui-dir]
+    local names_file board real_pb
+    real_pb="$OMCTEST_REAL_SUPPORT/pasteboard"
+    [ -x "$real_pb" ] || return 0
+    if [ -n "$1" ]; then
+        set -- "$1/pasteboard.names"
+    else
+        case "$OMCTEST_SCRATCH" in
+            /*/*) ;;
+            *) return 0 ;;
+        esac
+        set -- "$OMCTEST_SCRATCH"/*/ui/pasteboard.names
+    fi
+    for names_file; do
+        [ -s "$names_file" ] || continue
+        # sort -u: one line per put, and a handler that writes a key in a loop
+        # would otherwise have us clear the same board hundreds of times.
+        /usr/bin/sort -u "$names_file" 2>/dev/null | while IFS= read -r board; do
+            [ -n "$board" ] || continue
+            # SECOND LOCK ON THE SAME DOOR. Only a board this harness could have created is
+            # ever emptied, whatever ended up in the list. The wrapper already refuses to
+            # record an unprefixed name, and this is what makes a bug in that refusal cost
+            # nothing: the one operation here is destructive and it must never be reachable
+            # for a name the harness did not mint.
+            case "$board" in
+                omctest.*) ;;
+                *) printf 'omctest: refusing to clear a board this run did not create: [%s]\n' \
+                       "$board" >&2
+                   continue ;;
+            esac
+            "$real_pb" "$board" put "" >/dev/null 2>&1
+        done
+        # RENAMED, not truncated. Emptying it would destroy the record of which boards the run
+        # created in exactly the mode that exists for reading the scratch afterwards
+        # (OMCTEST_KEEP_SCRATCH=1). The rename still makes the sweep idempotent, which is the
+        # only reason it was being cleared.
+        /bin/mv -f "$names_file" "$names_file.released" 2>/dev/null
+    done
+}
+
+# Two constructs defeat this harness's isolation, and neither can be intercepted
+# the way a tool path or an environment variable can - so they are REPORTED
+# instead, once per suite, naming every offender.
+#
+# Why not intercept:
+#   /Users/$USER  - an absolute path. Redirecting it would need a mount namespace;
+#                   macOS has none to offer an unprivileged test run. Remapping
+#                   $USER itself is not an option either: $USER is an identity,
+#                   not a path fragment - `pgrep -u "$USER"`, an owner in a log
+#                   line - and a value chosen to bend one of those uses breaks
+#                   the others. The applet is where this gets fixed: "$HOME" is
+#                   the same path in production and the isolated one under test.
+#   defaults <domain>
+#                 - CFPreferences keys the user domain by UID, not by $HOME, so
+#                   cfprefsd answers with the real user's preferences however $HOME
+#                   is set. Worse in pairs: a handler that READS with `defaults`
+#                   and WRITES with PlistBuddy under "$HOME/Library/Preferences"
+#                   can never round-trip under test, and in production writes
+#                   behind cfprefsd's back where its write is lost or clobbers.
+#                   The path form - `defaults read "$HOME/..."` - is exempt, and
+#                   is the mechanical fix when a real macOS preference is meant.
+#
+# A warning channel, never a failure: an applet may have a considered reason, and
+# a harness that refuses to run a suite over a style opinion is a harness people
+# stop running. OMCTEST_NO_LINT=1 silences it.
+# One reported line, with the bundle prefix trimmed. A plain "${line#$prefix}" would treat the
+# app path as a GLOB, so an app whose name contains [ ] ? or * fails to trim and prints the
+# whole absolute path.
+omctest_lint_report() { # <line> <prefix>
+    case "$1" in
+        "$2"*) printf 'omctest:     %s\n' "$(printf '%s' "$1" | /usr/bin/cut -c $(( ${#2} + 1 ))-)" >&2 ;;
+        *)     printf 'omctest:     %s\n' "$1" >&2 ;;
+    esac
+}
+
+omctest_isolation_lint() { # <app>
+    local app_path="$1" scripts_dir hits prefix line
+    [ "$OMCTEST_NO_LINT" = "1" ] && return 0
+    scripts_dir="$app_path/Contents/Resources/Scripts"
+    [ -d "$scripts_dir" ] || return 0
+    prefix="$app_path/Contents/Resources/"
+
+    # -F, because "$USER" is a literal here and every regex dialect disagrees
+    # about "$". The second grep drops whole-line comments - this file's own
+    # documentation of the hazard should not be reported as the hazard.
+    hits=$(/usr/bin/grep -rnF -e '/Users/$USER' -e '/Users/${USER}' "$scripts_dir" 2>/dev/null \
+           | /usr/bin/grep -vE ':[0-9]+:[[:space:]]*#[^#]*$')
+    if [ -n "$hits" ]; then
+        printf 'omctest: ISOLATION - these build a path from /Users/$USER, which $HOME isolation cannot reach.\n' >&2
+        printf 'omctest:   A test that reaches them reads and writes the REAL home of whoever runs the suite.\n' >&2
+        printf '%s\n' "$hits" | while IFS= read -r line; do
+            omctest_lint_report "$line" "$prefix"
+        done
+    fi
+
+    # EXEMPT THE PATH FORM, rather than trying to describe a domain.
+    #
+    # The first version of this got it backwards - it looked for a domain, spelled
+    # as a bare word after the verb - and reported ZERO hazards across every
+    # shipped applet while thirteen real ones existed. A domain is almost never a
+    # bare word in this codebase: the house style is `"$PREFS_DOMAIN"` or
+    # `"$BUNDLE_ID"`, and the tool itself is often `"$defaults_tool"`. Both slipped
+    # straight through.
+    #
+    # A path, by contrast, has exactly four spellings, all of them recognizable at
+    # the first character: / ~ $HOME ${HOME. So: flag every `defaults <verb>` and
+    # then subtract those. Anything the pattern cannot classify is REPORTED, which
+    # is the right way round for a warning channel - a false positive costs one
+    # line of output, a false negative costs the developer's real preferences.
+    #
+    # Options between the tool and the verb (-currentHost, -g) are allowed for, and
+    # the verb list covers every mutating and reading verb `defaults` has.
+    hits=$(/usr/bin/grep -rnE '(^|[^[:alnum:]_.-])(defaults|\$[A-Za-z_][A-Za-z0-9_]*|"\$[A-Za-z_][A-Za-z0-9_]*"|\$\{[A-Za-z_][A-Za-z0-9_]*\})[[:space:]]+(-[A-Za-z]+[[:space:]]+)*(read|read-type|write|delete|rename|export|import|find|domains)([[:space:]]|$)' \
+               "$scripts_dir" 2>/dev/null \
+           | /usr/bin/grep -vE ':[0-9]+:[[:space:]]*#[^#]*$' \
+           | /usr/bin/grep -E 'defaults' \
+           | /usr/bin/grep -vE '(read|read-type|write|delete|rename|export|import|find)[[:space:]]+("?(/|~|\$HOME|\$\{HOME))')
+    if [ -n "$hits" ]; then
+        printf 'omctest: ISOLATION - these look like `defaults` on a DOMAIN. cfprefsd keys the user domain by UID,\n' >&2
+        printf 'omctest:   not by $HOME, so under test they read and write the real preferences anyway.\n' >&2
+        printf 'omctest:   (A path - "$HOME/...", ~/..., /... - is exempt and not listed.)\n' >&2
+        printf '%s\n' "$hits" | while IFS= read -r line; do
+            omctest_lint_report "$line" "$prefix"
+        done
+    fi
+    return 0
 }
 
 # Resolve the applet's own embedded Support directory - the tools that ship with
@@ -333,10 +489,19 @@ omctest_prepare_env() { # <app> <label>
     /bin/rm -rf "$OMCTEST_UI"
     /bin/mkdir -p "$OMCTEST_SCRATCH/tmp" "$OMCTEST_WORK" "$OMCTEST_UI" "$OMCTEST_SUPPORT" || return 1
 
+    # The traps run in BOTH modes now, and only their body differs. A pasteboard lives outside
+    # the scratch tree, so "we did not create the scratch, therefore we clean up nothing" - which
+    # is right for a directory somebody else owns - left every board this file created sitting in
+    # the pasteboard server forever. That is the standalone-with-a-supplied-OMCTEST_SCRATCH case,
+    # and it is the mode a developer iterating on one file is most likely to be in.
     if [ "$own_scratch" = "1" ]; then
         trap 'omctest_cleanup_scratch' EXIT
         trap 'omctest_cleanup_scratch; exit 130' INT
         trap 'omctest_cleanup_scratch; exit 143' TERM
+    else
+        trap 'omctest_release_pasteboards "$OMCTEST_UI"' EXIT
+        trap 'omctest_release_pasteboards "$OMCTEST_UI"; exit 130' INT
+        trap 'omctest_release_pasteboards "$OMCTEST_UI"; exit 143' TERM
     fi
 
     # Where the tests live. The runner passes it down; standalone mode guesses
@@ -355,6 +520,12 @@ omctest_prepare_env() { # <app> <label>
     # Unique per file AND per run: handlers key their state directory and their
     # pasteboard keys off this, and pasteboard keys outlive the process.
     OMC_ACTIONUI_WINDOW_UUID="OMCTEST-$label-$$"
+    # The pasteboard namespace, on the same terms and for a stronger reason: a
+    # window uuid at least CAN appear in a handoff key, but the interesting keys
+    # are the window-less ones - a launch queue, a model switch - and those carry
+    # nothing unique at all. The scratch's own basename comes from mktemp, so
+    # this is unique per run without depending on a pid not being recycled.
+    OMCTEST_PB_PREFIX="omctest.$(/usr/bin/basename "$OMCTEST_SCRATCH").$label."
     OMC_PARENT_DIALOG_GUID=""
     OMC_CURRENT_COMMAND_GUID="OMCTEST-CMD"
     # In the engine's always-exported set. NIB dialogs are out of scope for v1,
@@ -364,7 +535,7 @@ omctest_prepare_env() { # <app> <label>
     OMC_OBJ_TEXT=""
     export OMC_APP_BUNDLE_PATH OMC_OMC_SUPPORT_PATH OMC_OMC_RESOURCES_PATH
     export OMC_ACTIONUI_WINDOW_UUID OMC_PARENT_DIALOG_GUID OMC_CURRENT_COMMAND_GUID
-    export OMC_NIB_DLG_GUID OMC_OBJ_PATH OMC_OBJ_TEXT
+    export OMC_NIB_DLG_GUID OMC_OBJ_PATH OMC_OBJ_TEXT OMCTEST_PB_PREFIX
 
     # Applets derive their scratch and state paths from TMPDIR (ICEdit's
     # SCRATCH_DIR, PackageBuilder's state dir), so redirecting it isolates all
@@ -424,6 +595,7 @@ omctest_prepare_env() { # <app> <label>
     : > "$OMCTEST_UI/alert_answers"
     : > "$OMCTEST_UI/chain.queue"
     : > "$OMCTEST_UI/chain.log"
+    : > "$OMCTEST_UI/pasteboard.names"
 
     omctest_reset_counts
 }
@@ -451,6 +623,16 @@ omctest_build_support() { # <app> <dest>
     for stub_name in $OMCTEST_DEFAULT_STUBS; do
         omctest_install_default_stub "$stub_name" "$dest_dir" || return 1
     done
+
+    # pasteboard is WRAPPED, not stubbed: handlers depend on its real round-trip
+    # semantics exactly as they do plister's, and a recording stub would have to
+    # reimplement them. Only the NAME is rewritten. See the wrapper for why the
+    # name is the thing that needs isolating.
+    if [ -x "$real_dir/pasteboard" ]; then
+        /bin/rm -f "$dest_dir/pasteboard"
+        omctest_emit_wrapper_pasteboard > "$dest_dir/pasteboard" || return 1
+        /bin/chmod +x "$dest_dir/pasteboard"
+    fi
 }
 
 omctest_install_default_stub() { # <tool> <support-dir>
@@ -496,6 +678,62 @@ case "$rc" in
     ''|*[!0-9]*) rc=0 ;;
 esac
 exit "$rc"
+STUB
+}
+
+omctest_emit_wrapper_pasteboard() {
+    /bin/cat <<'STUB'
+#!/bin/sh
+# pasteboard (omctest namespacing wrapper).
+#
+# The real tool, under a rewritten name. A named pasteboard belongs to the
+# pasteboard server, not to $HOME and not to this process, so it is the one piece
+# of applet state the scratch tree cannot contain: "myapp_handoff" under test IS
+# "myapp_handoff" in the copy of the applet the developer has running, and is
+# also the same board a second, concurrent run of this suite is writing. Both
+# were observed - a suite left a well-formed, in-TTL handoff entry behind that a
+# live app would have acted on, and two runs of one file crossed each other's
+# writes about one time in six.
+#
+# "general" and "find" are rewritten too, not exempted. They are the real
+# clipboard: a handler with a Copy path would otherwise take the clipboard of
+# whoever is running the suite, and a test asserting what was copied still reads
+# it back through this same wrapper, so nothing is lost by isolating it.
+#
+# Recorded on put/set only. The recorded names are what omctest empties at the
+# end of the file - a board it never wrote to has nothing of ours in it.
+# FAILS CLOSED on a missing prefix, which is the whole safety story here. With an empty
+# $OMCTEST_PB_PREFIX the name below is the RAW name, so the write lands on the developer's
+# real board - and because the raw name is then recorded, the release sweep at the end of the
+# file empties it. The isolation would not merely evaporate, it would destroy the very board
+# it exists to protect; with a name of "general" that is the user's clipboard. Reachable
+# whenever a handler runs without inheriting the environment: env -i, sudo's env_reset,
+# launchctl submit, osascript "do shell script", or a Python handler passing a curated env=.
+if [ -z "${OMCTEST_PB_PREFIX:-}" ] || [ -z "${OMCTEST_UI:-}" ]; then
+    printf 'pasteboard: omctest wrapper reached with no OMCTEST_PB_PREFIX/OMCTEST_UI - refusing\n' >&2
+    exit 70
+fi
+if [ $# -lt 1 ]; then
+    exec "$OMCTEST_REAL_SUPPORT/pasteboard"
+fi
+# A newline in the name would put a second, UNPREFIXED line into the release list, and the
+# sweep would then empty whatever that line happens to name. A board name is a token.
+#
+# The pattern holds a LITERAL newline. "$(printf '\n')" is the obvious spelling and is the
+# empty string - command substitution strips trailing newlines - which makes the pattern
+# *""* and refuses every name there is.
+case "$1" in
+    *'
+'*)
+        printf 'pasteboard: omctest wrapper refuses a board name containing a newline\n' >&2
+        exit 70 ;;
+esac
+omctest_pb_name="$OMCTEST_PB_PREFIX$1"
+shift
+case "${1:-}" in
+    put|set) printf '%s\n' "$omctest_pb_name" >> "$OMCTEST_UI/pasteboard.names" ;;
+esac
+exec "$OMCTEST_REAL_SUPPORT/pasteboard" "$omctest_pb_name" "$@"
 STUB
 }
 
@@ -748,6 +986,15 @@ omc_unstub() { # <tool>
             return $?
         fi
     done
+    # pasteboard is not in the default-stub list - it is WRAPPED, not stubbed - so without
+    # this it would fall to the plain symlink below and "un-stubbing" it would quietly
+    # restore direct access to the developer's real boards, un-namespaced and unrecorded.
+    if [ "$tool_name" = "pasteboard" ] && [ -x "$OMCTEST_REAL_SUPPORT/pasteboard" ]; then
+        /bin/rm -f "$OMC_OMC_SUPPORT_PATH/pasteboard"
+        omctest_emit_wrapper_pasteboard > "$OMC_OMC_SUPPORT_PATH/pasteboard" || return 1
+        /bin/chmod +x "$OMC_OMC_SUPPORT_PATH/pasteboard"
+        return 0
+    fi
     /bin/rm -f "$OMC_OMC_SUPPORT_PATH/$tool_name"
     /bin/ln -sf "$OMCTEST_REAL_SUPPORT/$tool_name" "$OMC_OMC_SUPPORT_PATH/$tool_name"
 }
@@ -1478,16 +1725,66 @@ ui_calls() { # <grep-pattern>
 # Honesty note for v1: known_ids.txt is a UNION across every ActionUI document
 # in the bundle, so a typo'd write of id 1 to the main window is masked by a
 # legitimate id 1 in an unrelated sheet's JSON.
+#
+# All three answer for the WHOLE FILE: what ui_reset carried forward, then what
+# has happened since. See ui_reset.
 ui_unknown_writes() {
-    omctest_read_file "$OMCTEST_UI/unknown_ids.log"
+    omctest_read_diagnostic unknown_ids
 }
 
 ui_suspect_writes() {
-    omctest_read_file "$OMCTEST_UI/suspect_writes.log"
+    omctest_read_diagnostic suspect_writes
 }
 
 ui_errors() {
-    omctest_read_file "$OMCTEST_UI/errors.log"
+    omctest_read_diagnostic errors
+}
+
+omctest_read_diagnostic() { # <log-stem>
+    omctest_read_file "$OMCTEST_UI/$1.carried"
+    omctest_read_file "$OMCTEST_UI/$1.log"
+}
+
+# Declare ids the applet mints at RUN TIME, so writing to them is not "undeclared".
+#
+# known_ids.txt is extracted STATICALLY from the bundle's ActionUI documents, so an applet that
+# builds its window with omc_insert_element - one card per row, ids computed from the row index
+# - writes to ids no document could have declared. Every such write lands in unknown_ids.log
+# and the standing "no undeclared ids" check reads as a wall of failures for correct code.
+#
+# That is not new; what is new (API 4) is that it is VISIBLE, because ui_reset no longer throws
+# the log away before the check runs. The honest fix is for the test to say which ids the applet
+# mints, which keeps the check meaningful for every id it did not name - a typo is still caught.
+#
+# Ranges are spelled out rather than given as bounds on purpose: an applet that mints
+# 2000,2010,2020 should say so, and a test that declares 2000-2999 wholesale has turned the
+# check off for a thousand ids.
+# REFUSES on an empty known_ids.txt, and that guard is the whole reason this is not a one-line
+# append. The stub gates the check on `-s`, not `-f`: an empty file means "nothing was
+# extracted", which switches the check OFF rather than declaring that no id is known. Appending
+# to it would make it non-empty with a known set of exactly the ids named here - so on a bundle
+# whose extraction failed, declaring one runtime id reports EVERY real id in the applet as
+# undeclared. The check would not just stay broken, it would invert.
+#
+# The whole argument list is validated before anything is written, so a bad id in the middle
+# cannot leave the earlier ones declared and the later ones not.
+ui_declare_ids() { # <view-id> [view-id ...]
+    local view_id
+    if [ ! -s "$OMCTEST_UI/known_ids.txt" ]; then
+        printf 'omctest: ui_declare_ids ignored - no ids were extracted, so the check is already off\n' >&2
+        return 1
+    fi
+    for view_id; do
+        case "$view_id" in
+            ''|*[!0-9]*)
+                printf 'omctest: ui_declare_ids: not a view id: [%s]\n' "$view_id" >&2
+                return 1 ;;
+        esac
+    done
+    for view_id; do
+        /usr/bin/grep -q -x -- "$view_id" "$OMCTEST_UI/known_ids.txt" 2>/dev/null && continue
+        printf '%s\n' "$view_id" >> "$OMCTEST_UI/known_ids.txt"
+    done
 }
 
 # Make subsequent writes to these ids fail, so a handler's error path runs.
@@ -1523,15 +1820,40 @@ ui_alert_message() { # [window-uuid]
 }
 
 # Wipe every virtual window and the journal - a mid-file reset.
+#
+# The three DIAGNOSTIC logs are carried forward rather than dropped, which is a
+# change of meaning in API 4 and the point of the version bump. They used to be
+# deleted here, and the cost was invisible: the closing
+# `check "no undeclared ids" "" "$(ui_unknown_writes)"` that every guide
+# recommends answers only for what happened since the last reset, so in a file
+# that resets between sections it covered the last section, and in a file that
+# resets at the END of each section it covered NOTHING AT ALL - a check that
+# could not fail, in the one place a suite most wants one that can.
+#
+# A test that has just PROVOKED an error on purpose and wants a clean slate says
+# so with ui_reset_diagnostics.
 ui_reset() {
-    local win_dir
+    local win_dir log
     for win_dir in "$OMCTEST_UI"/win-*; do
         [ -d "$win_dir" ] || continue
         /bin/rm -rf "$win_dir"
     done
     : > "$OMCTEST_UI/journal.tsv"
+    for log in unknown_ids suspect_writes errors; do
+        if [ -s "$OMCTEST_UI/$log.log" ]; then
+            /bin/cat "$OMCTEST_UI/$log.log" >> "$OMCTEST_UI/$log.carried" 2>/dev/null
+        fi
+        /bin/rm -f "$OMCTEST_UI/$log.log"
+    done
+}
+
+# Forget the diagnostics too, carried ones included: for a test that provoked a
+# failure deliberately and does not want it counted against the rest of the file.
+ui_reset_diagnostics() {
     /bin/rm -f "$OMCTEST_UI/unknown_ids.log" "$OMCTEST_UI/suspect_writes.log" \
-               "$OMCTEST_UI/errors.log"
+               "$OMCTEST_UI/errors.log" \
+               "$OMCTEST_UI/unknown_ids.carried" "$OMCTEST_UI/suspect_writes.carried" \
+               "$OMCTEST_UI/errors.carried"
 }
 
 # =============================================================================
@@ -1614,6 +1936,13 @@ omctest_run_file() { # <app> <testfile>
         export OMCTEST_PREPARED
         # stdout only - stderr carries the ok/FAIL lines and must keep streaming.
         /bin/sh "$test_file" >> "$OMCTEST_UI/handlers.log"
+        file_rc=$?
+        # Here rather than in the suite's cleanup, and inside the subshell where
+        # the environment that names the boards still exists: a file's boards
+        # have no reader once the file is over, and releasing them now bounds
+        # their life to the file that made them even on a long suite.
+        omctest_release_pasteboards "$OMCTEST_UI"
+        exit "$file_rc"
     )
     rc=$?
     # The caller reads this function through a command substitution, which is
@@ -1636,6 +1965,14 @@ omctest_run_suite() { # <app> <tests-dir> [filter-glob]
         printf 'omctest: no tests directory at %s\n' "$tests_dir" >&2
         return 2
     fi
+
+    # Set here as well as in prepare_env: prepare_env runs inside a per-file
+    # subshell, so the suite-level cleanup would otherwise have no idea where the
+    # real pasteboard tool is and would sweep nothing after a crashed file.
+    OMCTEST_REAL_SUPPORT=$(omctest_real_support_dir "$app_path")
+    export OMCTEST_REAL_SUPPORT
+
+    omctest_isolation_lint "$app_path"
 
     if [ -z "$OMCTEST_SCRATCH" ] || [ ! -d "$OMCTEST_SCRATCH" ]; then
         OMCTEST_SCRATCH=$(/usr/bin/mktemp -d "${TMPDIR:-/tmp}/omctest.XXXXXX") || return 1
