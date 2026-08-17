@@ -121,6 +121,9 @@ $OMCTEST_SCRATCH/                mktemp -d, removed on exit
     tmp/                         exported as TMPDIR for everything the tests run
     <testfile-label>/
         support/                 the interposition directory (3.2)
+        home/                    $OMCTEST_HOME - exported as HOME for everything the
+                                 tests run, with Library/Application Support and
+                                 Library/Preferences pre-created
         work/                    $OMCTEST_WORK - your writable area, the default
                                  destination of fixture_copy, and the cwd handlers run in
         ui/                      $OMCTEST_UI - the recording area
@@ -147,12 +150,13 @@ Variables a test file can read:
 | `OMCTEST_TESTS` | the `Tests/` directory - source your app lib from here |
 | `OMCTEST_FIXTURES` | `$OMCTEST_TESTS/fixtures` |
 | `OMCTEST_WORK` | this file's writable scratch, and the handlers' cwd |
+| `OMCTEST_HOME` | this file's fake home directory, exported as `HOME` |
 | `OMCTEST_UI` | the recording area above |
 | `OMCTEST_SUPPORT` | the interposition directory |
 | `OMCTEST_STATUS` | exit code of the last `omc_run`; the string `-` before any dispatch, so `check_status "..." 0` cannot pass vacuously |
 | `OMCTEST_ALERT_RC` | the alert stub's answer when the scripted queue is empty (default `0`) |
 | `OMCTEST_PYTHON`, `OMCTEST_PYTHON_EMBEDDED` | the resolved interpreter, and whether it is the bundle's own |
-| `OMCTEST_API_VERSION` | `2` - assert a minimum if you use something new. `2` added `omc_control_defaults`. |
+| `OMCTEST_API_VERSION` | `3` - assert a minimum if you use something new. `2` added `omc_control_defaults`; `3` isolates `$HOME`. |
 
 What the harness exports into every handler:
 
@@ -165,6 +169,13 @@ What the harness exports into every handler:
 | `OMC_PARENT_DIALOG_GUID` | empty until `omc_child_sheet` | the child-sheet convention |
 | `OMC_CURRENT_COMMAND_GUID` | `OMCTEST-CMD` | consumed by `omc_next_command`, which is stubbed |
 | `TMPDIR` | `$OMCTEST_SCRATCH/tmp/` | applets derive state and scratch paths from `$TMPDIR`, so redirecting it isolates all of that and makes cleanup total |
+| `HOME` | `$OMCTEST_SCRATCH/<label>/home/` | applets keep their USER state under it - `$HOME/Library/Application Support/<App>` is the house convention - and `plister` is real, so without this a test that saves a setting rewrites the developer's own configuration |
+
+**`$HOME` is isolated too, and it is the one that would have cost real data.** An applet's user state lives under it, `plister` is deliberately not stubbed, and the settings file of whoever runs the suite is therefore one unredirected write away. So each test file gets its own home, pre-populated with `Library/Application Support` and `Library/Preferences` because every real home has them. The applet's OWN directory is deliberately not created, so "did opening the window create a settings file" stays a real question.
+
+It is per FILE rather than per run, matching `OMCTEST_WORK`: a file that leaves an applet configured must not be able to answer the next file's question about what a fresh profile does.
+
+What this does NOT cover: `defaults` and anything else backed by `cfprefsd`. That daemon keys the user domain by uid, not by `$HOME`, so a handler writing `com.example.App` through `defaults` still writes the real one. Applets that keep settings in a file they own - the house convention, and the reason it is the convention - are fully covered.
 
 **The window UUID is why per-window state is inspectable.** Handlers key their state directory and pasteboard keys off `$OMC_ACTIONUI_WINDOW_UUID` (or `$OMC_PARENT_DIALOG_GUID` inside a child sheet). Your test lib should recompute that path the same way the applet does - interpolating the variable, never hardcoding - so that a change to the applet's naming shows up as a missing file rather than as a test quietly asserting about a directory nobody writes.
 

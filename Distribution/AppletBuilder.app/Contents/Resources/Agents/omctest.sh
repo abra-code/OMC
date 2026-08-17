@@ -28,7 +28,13 @@
 # no bash 4 parameter expansions. Validate with "/bin/sh -n" (never "bash -n")
 # and with scan_bash4_isms from lib.validate.sh.
 
-OMCTEST_API_VERSION=2
+# 2 added omc_control_defaults. 3 isolates $HOME into the per-file scratch and
+# exports OMCTEST_HOME - a GUARANTEE rather than a helper, and the reason it
+# gets a version of its own: an applet whose state lives under $HOME can only
+# be tested safely on a harness that provides it, and "safely" here means "does
+# not silently rewrite the developer's own configuration". A test file that
+# depends on that isolation should assert this minimum rather than assume it.
+OMCTEST_API_VERSION=3
 export OMCTEST_API_VERSION
 
 # The four tools this harness always replaces with recording stubs.
@@ -369,13 +375,43 @@ omctest_prepare_env() { # <app> <label>
     TMPDIR="$OMCTEST_SCRATCH/tmp/"
     export TMPDIR
 
+    # HOME, for the same reason as TMPDIR and with more at stake. An applet's
+    # USER state lives under it - "$HOME/Library/Application Support/<App>" is
+    # the house convention, and Interpreter, Notarize, PackageBuilder and
+    # Cadabra all build a prefs path exactly that way - while plister is
+    # deliberately NOT stubbed, because handlers depend on its real read/write
+    # semantics. Leave HOME alone and a test that saves a setting writes the
+    # configuration of whoever is running the suite, and a test that starts
+    # from a clean profile deletes it. Nothing would warn: the suite passes,
+    # having quietly edited the developer's own machine.
+    #
+    # Two applets had already worked around this privately, with
+    # INTERP_APP_SUPPORT and NOTARIZE_PREFS_DIR escape hatches in their libs.
+    # That is a fix each applet has to remember, in an applet-specific variable
+    # name, for a hazard none of them created - so it belongs here instead.
+    #
+    # Per FILE rather than per run, matching OMCTEST_WORK: a file that leaves an
+    # applet configured must not be able to answer the next file's question
+    # about what a fresh profile does.
+    #
+    # ~/Library and its two usual children are pre-created because every real
+    # home has them, and an applet is not wrong to expect them. The applet's OWN
+    # directory is deliberately NOT created - "did opening the window create a
+    # settings file" is a real assertion, and pre-creating its parent keeps that
+    # honest while pre-creating the directory itself would defeat it.
+    OMCTEST_HOME="$OMCTEST_SCRATCH/$label/home"
+    /bin/mkdir -p "$OMCTEST_HOME/Library/Application Support" \
+                  "$OMCTEST_HOME/Library/Preferences" || return 1
+    HOME="$OMCTEST_HOME"
+    export HOME OMCTEST_HOME
+
     # --- harness variables ---------------------------------------------------
     # Deliberately NOT 0. "check_status \"it worked\" 0" would otherwise pass
     # before anything had been dispatched, which is a check that cannot fail.
     OMCTEST_STATUS="-"
     [ -n "$OMCTEST_ALERT_RC" ] || OMCTEST_ALERT_RC=0
     export OMCTEST_APP OMCTEST_LIB OMCTEST_TESTS OMCTEST_FIXTURES
-    export OMCTEST_SCRATCH OMCTEST_WORK OMCTEST_UI OMCTEST_SUPPORT
+    export OMCTEST_SCRATCH OMCTEST_WORK OMCTEST_UI OMCTEST_SUPPORT OMCTEST_HOME
     export OMCTEST_STATUS OMCTEST_ALERT_RC
 
     omctest_setup_python "$OMCTEST_APP"
