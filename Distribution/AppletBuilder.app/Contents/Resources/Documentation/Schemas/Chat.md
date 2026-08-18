@@ -198,6 +198,29 @@ JSON schema and usage documentation for `Chat` (ActionUIChat add-on).
 // turn). Session identity (ids, titles) stays app-side; the component only passes the optional title through
 // untouched. `properties.content` pre-populates a transcript for previews / basic internal testing only - it
 // is NOT the production restore path.
+//
+// Two TRANSIENT keys ride on that injected object alongside version / items, and neither is ever
+// persisted - the transcript codec drops both, so they cannot reach storage or a later restore:
+//   "prime": how the restored transcript relates to the agent's CONTEXT, which is a separate thing from
+//            what is displayed. true / absent - replay it into the agent now (the default). false -
+//            display it against a FRESH, empty context, so continuing types against nothing rather than
+//            against a conversation the agent never received. "defer" - display only and sync lazily on
+//            the next send, which is what makes browsing a session list free: switching costs nothing
+//            until the user actually says something.
+//   "condense": { "keepRecentTurns": 6, "maxDigestTokens": 700 } - ask the agent to SUMMARIZE the older
+//            part of the restore instead of replaying all of it, keeping the trailing messages verbatim.
+//            Both bounds are optional and the agent clamps them; PRESENCE OF THE KEY IS THE REQUEST, so
+//            an empty object means "summarize, your defaults" rather than "do nothing". Needs a transport
+//            whose agent supports it (the ACP `session/prime` condense extension); anything else ignores
+//            it. THE FALLBACK IS FULL FIDELITY, NEVER TRUNCATION - an agent that cannot summarize, or
+//            declines to, primes the COMPLETE history, so a caller that ignores the outcome still gets a
+//            correct session and merely pays for a slower first turn.
+// When a restore IS condensed the element appends a sessionEvent item carrying the digest - which model
+// wrote the summary, how many messages it replaced, and the summary itself in sections. That item is a
+// normal transcript entry (entryActionID fires for it, and it persists with the conversation), because a
+// summary the model holds and the reader cannot see is a context loss they can only infer from the answers
+// getting worse; shown it, they can restate whatever it missed.
+//
 // The non-visual settings (protocol, transport) are NOT a document field: the element is built inert
 // (no transport, disabled composer) and a HOST injects them at runtime into states["config"] via
 // setElementState, after the element is built - the canonical embedding loads a static document, then
