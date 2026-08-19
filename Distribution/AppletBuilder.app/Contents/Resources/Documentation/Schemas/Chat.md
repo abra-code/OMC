@@ -199,6 +199,23 @@ JSON schema and usage documentation for `Chat` (ActionUIChat add-on).
 // untouched. `properties.content` pre-populates a transcript for previews / basic internal testing only - it
 // is NOT the production restore path.
 //
+// APPENDING ONE ITEM: states["append"] takes a single serialized ChatItem and adds it to the END of the
+// conversation already on screen. states["content"] cannot serve this - it REPLACES the transcript and
+// re-primes the agent - so a host with one line to add had to choose between re-priming the whole
+// conversation to show it and not showing it until the next load. The case this exists for is a session
+// marker: which model is about to answer, or that the conversation was resumed against a summary of its
+// older half. Setting this state appends and nothing else - no transport traffic, no re-prime.
+//   setElementState(window, chatID, "append",
+//                   {"type":"sessionEvent","sessionEvent":{"id":"se-1","kind":"resumed","model":"Qwen3 4B"}})
+// LIKE states["content"], IT DOES NOT COME BACK THROUGH entryActionID. Both are the host saying "here is
+// something you already have"; persistence flows the other way, per finalized entry, and a host that
+// appends an item it just wrote to its own store would otherwise receive it back and write it twice.
+// The id is the dedup key: the state re-delivers on every state change, so re-setting the same item is a
+// no-op rather than a second line, and an id already in the transcript is ignored.
+// Appending a MESSAGE rather than a marker puts a line on screen the agent was never given - the element
+// reports its context as pending and the next send re-primes, so the status indicator does not claim the
+// model holds something it does not.
+//
 // Two TRANSIENT keys ride on that injected object alongside version / items, and neither is ever
 // persisted - the transcript codec drops both, so they cannot reach storage or a later restore:
 //   "prime": how the restored transcript relates to the agent's CONTEXT, which is a separate thing from
