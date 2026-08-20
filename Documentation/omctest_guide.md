@@ -156,13 +156,14 @@ Variables a test file can read:
 | `OMCTEST_STATUS` | exit code of the last `omc_run`; the string `-` before any dispatch, so `check_status "..." 0` cannot pass vacuously |
 | `OMCTEST_ALERT_RC` | the alert stub's answer when the scripted queue is empty (default `0`) |
 | `OMCTEST_PYTHON`, `OMCTEST_PYTHON_EMBEDDED` | the resolved interpreter, and whether it is the bundle's own |
-| `OMCTEST_API_VERSION` | `4` - assert a minimum if you use something new. `2` added `omc_control_defaults`; `3` isolates `$HOME`; `4` namespaces named pasteboards and stops `ui_reset` dropping the diagnostic logs. |
+| `OMCTEST_API_VERSION` | `5` - assert a minimum if you use something new. `2` added `omc_control_defaults`; `3` isolates `$HOME`; `4` namespaces named pasteboards and stops `ui_reset` dropping the diagnostic logs; `5` exports `OMC_APP_PROCESS_ID`. |
 
 What the harness exports into every handler:
 
 | Variable | Value | Why |
 |---|---|---|
 | `OMC_APP_BUNDLE_PATH` | the `.app` under test | handlers locate their own Scripts/ and libs through it |
+| `OMC_APP_PROCESS_ID` | the suite runner's pid - POSIX `$$` is the original shell, not the per-file subshell, so every file in a run sees the same one | the engine exports the host app's own pid. It is alive for the whole run, so `kill -0` answers truthfully - but the harness cannot stage the case the variable exists for, an owner that has DIED, so a cleanup-after-death test must mint and kill its own process and record that pid |
 | `OMC_OMC_SUPPORT_PATH` | the interposition directory | the single interception point for every runtime tool |
 | `OMC_OMC_RESOURCES_PATH` | the real framework Resources | some handlers read framework resources; kept real |
 | `OMC_ACTIONUI_WINDOW_UUID` | `OMCTEST-<label>-<pid>` | unique per file and per run: isolates state directories and pasteboard keys |

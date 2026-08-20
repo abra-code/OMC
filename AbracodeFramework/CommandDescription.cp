@@ -61,6 +61,7 @@ static const SpecialWordAndID sSpecialWordAndIDList[] =
     { sizeof("__OMC_RESOURCES_PATH__")-1,                    CFSTR("__OMC_RESOURCES_PATH__"), CFSTR("OMC_OMC_RESOURCES_PATH"),  OMC_RESOURCES_PATH, true },//framework path
     { sizeof("__OMC_SUPPORT_PATH__")-1,                        CFSTR("__OMC_SUPPORT_PATH__"), CFSTR("OMC_OMC_SUPPORT_PATH"),  OMC_SUPPORT_PATH, true },//framework path
     { sizeof("__APP_BUNDLE_PATH__")-1,                        CFSTR("__APP_BUNDLE_PATH__"), CFSTR("OMC_APP_BUNDLE_PATH"),  APP_BUNDLE_PATH, true },//preferred for applets
+    { sizeof("__APP_PROCESS_ID__")-1,                         CFSTR("__APP_PROCESS_ID__"), CFSTR("OMC_APP_PROCESS_ID"),  APP_PROCESS_ID, true },//pid of the applet/host app itself
     { sizeof("__MY_EXTERNAL_BUNDLE_PATH__")-1,                CFSTR("__MY_EXTERNAL_BUNDLE_PATH__"), CFSTR("OMC_MY_EXTERNAL_BUNDLE_PATH"),  MY_EXTERNAL_BUNDLE_PATH, false },//external bundle location
     { sizeof("__NIB_DLG_GUID__")-1,                            CFSTR("__NIB_DLG_GUID__"), CFSTR("OMC_NIB_DLG_GUID"),  NIB_DLG_GUID, true },
     { sizeof("__ACTIONUI_WINDOW_UUID__")-1,                    CFSTR("__ACTIONUI_WINDOW_UUID__"), CFSTR("OMC_ACTIONUI_WINDOW_UUID"),  ACTIONUI_WINDOW_UUID, true },

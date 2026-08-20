@@ -51,6 +51,8 @@ typedef enum SpecialWordID
     OMC_RESOURCES_PATH,
     OMC_SUPPORT_PATH,
     APP_BUNDLE_PATH, //as of OMC 4.0 the preferred way to access applet bundle path - exported byy default
+    APP_PROCESS_ID, //pid of the applet/host application itself, not the front process - always exported
+                    //unlike FRONT_PROCESS_ID / FRONT_APPLICATION_NAME it deliberately does not consult mHostApp: getpid() is the right answer in every host
     MY_HOST_BUNDLE_PATH, //deprecated but supported as of OMC 4.0 - not exported by default though
     MY_EXTERNAL_BUNDLE_PATH, //points to EXTERNAL_BUNDLE_PATH defined in description. redundant but needed for portability
     NIB_DLG_GUID,

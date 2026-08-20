@@ -34,7 +34,7 @@
 - (void)testAlwaysExportedVariables {
     // These are always exported according to CommandDescription.cp:
     // OMC_OBJ_TEXT, OMC_OBJ_PATH, OMC_OMC_RESOURCES_PATH, OMC_OMC_SUPPORT_PATH,
-    // OMC_APP_BUNDLE_PATH, OMC_NIB_DLG_GUID, OMC_CURRENT_COMMAND_GUID
+    // OMC_APP_BUNDLE_PATH, OMC_APP_PROCESS_ID, OMC_NIB_DLG_GUID, OMC_CURRENT_COMMAND_GUID
     
     NSDictionary *command = @{
         @"NAME": @"Always Exported Test",
@@ -44,7 +44,7 @@
     
     // Script checks for always-exported non-dialog variables
     NSString *script = @"#!/bin/bash\n"
-                       @"env | sort | grep '^OMC_' | grep -E '(APP_BUNDLE_PATH|CURRENT_COMMAND_GUID)'\n";
+                       @"env | sort | grep '^OMC_' | grep -E '(APP_BUNDLE_PATH|APP_PROCESS_ID|CURRENT_COMMAND_GUID)'\n";
     
     NSURL *bundleURL = [OMCBundleTestHelper createTestBundle:@"AlwaysExportedTest"
                                                  withCommands:@[command]
@@ -71,6 +71,141 @@
                   @"Should export OMC_APP_BUNDLE_PATH. Output: %@", output);
     XCTAssertTrue([output containsString:@"OMC_CURRENT_COMMAND_GUID"],
                   @"Should export OMC_CURRENT_COMMAND_GUID. Output: %@", output);
+
+    // OMC_APP_PROCESS_ID is the host process running the framework, which here is the test runner itself
+    NSString *expectedProcessID = [NSString stringWithFormat:@"OMC_APP_PROCESS_ID=%d",
+                                   (int)[[NSProcessInfo processInfo] processIdentifier]];
+    XCTAssertTrue([output containsString:expectedProcessID],
+                  @"Should export %@. Output: %@", expectedProcessID, output);
+}
+
+- (void)testAppProcessIDSpecialWord {
+    // __APP_PROCESS_ID__ is substituted into the command text as well, not just exported.
+    // Both resolve to getpid(), which under XCTest is the test runner hosting the framework.
+    NSDictionary *command = @{
+        @"NAME": @"App Process ID Test",
+        @"COMMAND_ID": @"app_process_id_test",
+        @"EXECUTION_MODE": @"exe_shell_script",
+        @"COMMAND": @[@"echo pid=", @"__APP_PROCESS_ID__"]
+    };
+    
+    NSURL *bundleURL = [OMCBundleTestHelper createTestBundle:@"AppProcessIDTest"
+                                                withCommands:@[command]
+                                                     scripts:@{}];
+    XCTAssertNotNil(bundleURL);
+    [self.bundlesToCleanup addObject:bundleURL];
+    
+    OMCTestExecutionObserver *executionObserver = OMCTestExecutionObserver.new;
+    
+    OSStatus err = [OMCCommandExecutor runCommand:@"app_process_id_test"
+                                   forCommandFile:[bundleURL path]
+                                      withContext:nil
+                                     useNavDialog:NO
+                                         allowKeyWindowSubcommand:NO
+                                         delegate:executionObserver];
+    
+    XCTAssertEqual(err, noErr, @"Should execute command");
+    
+    BOOL completed = [executionObserver waitForCompletionWithTimeout:kDefaultExecutionTimeout];
+    XCTAssertTrue(completed, @"Task should complete");
+    
+    NSString *expectedProcessID = [NSString stringWithFormat:@"pid=%d",
+                                   (int)[[NSProcessInfo processInfo] processIdentifier]];
+    NSString *output = executionObserver.capturedOutput;
+    XCTAssertTrue([output containsString:expectedProcessID],
+                  @"Should substitute __APP_PROCESS_ID__ with %@. Output: %@", expectedProcessID, output);
+}
+
+#pragma mark - Execution Modes That Get No Environment Dictionary
+
+// kExecSilentSystem runs a bare system() and the AppleScript modes hand their text to OSA.
+// Neither takes an environ, so neither ever sees the dictionary PopulateEnvironList builds.
+// OMC_APP_PROCESS_ID reaches them only because OnMyCommandCM::Init() setenv()s it into the
+// framework's own process environment, which a child inherits. These two tests are what keep
+// the "Always" in the documentation honest for those modes.
+
+- (NSString *)pathForProcessIDProbe {
+    return [NSTemporaryDirectory() stringByAppendingPathComponent:
+            [NSString stringWithFormat:@"omc_app_pid_%@.txt", [[NSUUID UUID] UUIDString]]];
+}
+
+- (NSString *)waitForContentsOfFile:(NSString *)path timeout:(NSTimeInterval)timeout {
+    NSDate *deadline = [NSDate dateWithTimeIntervalSinceNow:timeout];
+    NSFileManager *fm = [NSFileManager defaultManager];
+    while ([deadline timeIntervalSinceNow] > 0) {
+        if ([fm fileExistsAtPath:path]) {
+            NSString *contents = [NSString stringWithContentsOfFile:path encoding:NSUTF8StringEncoding error:nil];
+            if ([contents length] > 0)
+                return contents;
+        }
+        [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode
+                                 beforeDate:[NSDate dateWithTimeIntervalSinceNow:0.05]];
+    }
+    return [NSString stringWithContentsOfFile:path encoding:NSUTF8StringEncoding error:nil];
+}
+
+- (void)runProcessIDProbeCommand:(NSDictionary *)command
+                      bundleName:(NSString *)bundleName
+                       commandID:(NSString *)commandID
+                        outPath:(NSString *)outPath {
+    NSURL *bundleURL = [OMCBundleTestHelper createTestBundle:bundleName
+                                                withCommands:@[command]
+                                                     scripts:@{}];
+    XCTAssertNotNil(bundleURL);
+    if (bundleURL == nil)
+        return;
+    [self.bundlesToCleanup addObject:bundleURL];
+
+    OMCTestExecutionObserver *executionObserver = OMCTestExecutionObserver.new;
+
+    OSStatus err = [OMCCommandExecutor runCommand:commandID
+                                   forCommandFile:[bundleURL path]
+                                      withContext:nil
+                                     useNavDialog:NO
+                                         allowKeyWindowSubcommand:NO
+                                         delegate:executionObserver];
+
+    XCTAssertEqual(err, noErr, @"Should execute command");
+    [executionObserver waitForCompletionWithTimeout:kDefaultExecutionTimeout];
+
+    NSString *expectedProcessID = [NSString stringWithFormat:@"%d",
+                                   (int)[[NSProcessInfo processInfo] processIdentifier]];
+    NSString *written = [self waitForContentsOfFile:outPath timeout:kDefaultExecutionTimeout];
+    XCTAssertEqualObjects(written, expectedProcessID,
+                          @"%@ should see OMC_APP_PROCESS_ID = %@", commandID, expectedProcessID);
+
+    [[NSFileManager defaultManager] removeItemAtPath:outPath error:nil];
+}
+
+- (void)testAppProcessIDReachesSystemExecutionMode {
+    NSString *outPath = [self pathForProcessIDProbe];
+    NSDictionary *command = @{
+        @"NAME": @"System Mode Process ID Test",
+        @"COMMAND_ID": @"system_pid_test",
+        @"EXECUTION_MODE": @"exe_system",
+        @"COMMAND": @[[NSString stringWithFormat:@"printf '%%s' \"$OMC_APP_PROCESS_ID\" > '%@'", outPath]]
+    };
+
+    [self runProcessIDProbeCommand:command
+                        bundleName:@"SystemModeProcessIDTest"
+                         commandID:@"system_pid_test"
+                           outPath:outPath];
+}
+
+- (void)testAppProcessIDReachesAppleScriptExecutionMode {
+    NSString *outPath = [self pathForProcessIDProbe];
+    NSDictionary *command = @{
+        @"NAME": @"AppleScript Mode Process ID Test",
+        @"COMMAND_ID": @"applescript_pid_test",
+        @"EXECUTION_MODE": @"exe_applescript",
+        @"COMMAND": @[[NSString stringWithFormat:
+                       @"do shell script \"printf '%%s' \\\"$OMC_APP_PROCESS_ID\\\" > '%@'\"", outPath]]
+    };
+
+    [self runProcessIDProbeCommand:command
+                        bundleName:@"AppleScriptModeProcessIDTest"
+                         commandID:@"applescript_pid_test"
+                           outPath:outPath];
 }
 
 #pragma mark - Explicit Environment Variables

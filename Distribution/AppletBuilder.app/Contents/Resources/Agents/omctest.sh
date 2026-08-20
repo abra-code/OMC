@@ -48,7 +48,13 @@
 #     the whole file rather than for whatever happened since the last reset -
 #     which, in a file that resets between sections, was frequently nothing at
 #     all, and the closing "no undeclared ids" check passed vacuously.
-OMCTEST_API_VERSION=4
+#
+# 5 exports OMC_APP_PROCESS_ID, which the engine added to its always-exported set:
+# the pid of the applet process itself, as opposed to the frontmost app's
+# OMC_FRONT_PROCESS_ID. Handlers use it to ask whether the instance that owns a
+# piece of state is still running, so the harness stands its own per-file process
+# in for the applet - alive for exactly as long as the file runs.
+OMCTEST_API_VERSION=5
 export OMCTEST_API_VERSION
 
 # The four tools this harness always replaces with recording stubs.
@@ -517,6 +523,19 @@ omctest_prepare_env() { # <app> <label>
     OMC_OMC_RESOURCES_PATH="$OMCTEST_APP/Contents/Frameworks/Abracode.framework/Versions/A/Resources"
     [ -d "$OMC_OMC_RESOURCES_PATH" ] || \
         OMC_OMC_RESOURCES_PATH="$OMCTEST_APP/Contents/Frameworks/Abracode.framework/Resources"
+    # The engine always exports the host application's own pid. Nothing here is an app,
+    # so the harness stands in for it. Be precise about what $$ is: POSIX expands it to
+    # the pid of the ORIGINAL shell, never of a subshell, and omctest_run_file wraps each
+    # file in one - so in runner mode this is the SUITE runner, one value shared by every
+    # file and alive for the whole run, not a per-file process. Standalone mode runs a
+    # single file in the main shell, so there it is that file's process. Either way kill -0
+    # on it succeeds while a handler runs, which is the question a handler is asking.
+    #
+    # What the harness therefore CANNOT stage is the case the variable exists for: an owner
+    # that has DIED. Nothing here exits mid-run, so a test for cleanup-after-death has to
+    # mint and kill a process of its own and record THAT pid, rather than expect this value
+    # to ever go stale.
+    OMC_APP_PROCESS_ID=$$
     # Unique per file AND per run: handlers key their state directory and their
     # pasteboard keys off this, and pasteboard keys outlive the process.
     OMC_ACTIONUI_WINDOW_UUID="OMCTEST-$label-$$"
@@ -535,7 +554,7 @@ omctest_prepare_env() { # <app> <label>
     OMC_OBJ_TEXT=""
     export OMC_APP_BUNDLE_PATH OMC_OMC_SUPPORT_PATH OMC_OMC_RESOURCES_PATH
     export OMC_ACTIONUI_WINDOW_UUID OMC_PARENT_DIALOG_GUID OMC_CURRENT_COMMAND_GUID
-    export OMC_NIB_DLG_GUID OMC_OBJ_PATH OMC_OBJ_TEXT OMCTEST_PB_PREFIX
+    export OMC_NIB_DLG_GUID OMC_OBJ_PATH OMC_OBJ_TEXT OMC_APP_PROCESS_ID OMCTEST_PB_PREFIX
 
     # Applets derive their scratch and state paths from TMPDIR (ICEdit's
     # SCRATCH_DIR, PackageBuilder's state dir), so redirecting it isolates all

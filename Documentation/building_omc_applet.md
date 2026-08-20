@@ -188,6 +188,7 @@ Scripts for `exe_script_file` execution mode live in `MyApp.app/Contents/Resourc
 | `$OMC_OBJ_PATH` | Selected file/folder path |
 | `$OMC_OBJ_NAME` | Base name |
 | `$OMC_APP_BUNDLE_PATH` | Applet bundle path |
+| `$OMC_APP_PROCESS_ID` | PID of the OMC host process (the applet itself here, not the frontmost app) |
 | `$OMC_OMC_SUPPORT_PATH` | OMC support tools |
 | `$OMC_NIB_DLG_GUID` | Dialog instance ID |
 | `$OMC_CURRENT_COMMAND_GUID` | Command execution ID |

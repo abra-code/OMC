@@ -115,6 +115,7 @@ OMC exports these variables into every script's environment:
 | Variable | Description |
 |----------|-------------|
 | `$OMC_APP_BUNDLE_PATH` | Full path to the running applet's `.app` bundle |
+| `$OMC_APP_PROCESS_ID` | PID of the host process running OMC, which for an applet is the applet itself - use it to tell whether the instance that owns some state is still alive (not the frontmost app, that is `$OMC_FRONT_PROCESS_ID`) |
 | `$OMC_OMC_SUPPORT_PATH` | Path to OMC's support directory — all runtime tools live here |
 | `$OMC_CURRENT_COMMAND_GUID` | GUID of the current command invocation (pass to `omc_next_command`) |
 | `$OMC_OBJ_PATH` | Path of the file/folder that triggered the command (drag & drop / open panel / service) |

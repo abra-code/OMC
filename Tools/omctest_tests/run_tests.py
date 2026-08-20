@@ -197,7 +197,7 @@ exit 0
     "Fixture.env.sh": r'''
 out="${TMPDIR}env.txt"
 : > "$out"
-for name in OMC_APP_BUNDLE_PATH OMC_OMC_SUPPORT_PATH OMC_OMC_RESOURCES_PATH \
+for name in OMC_APP_BUNDLE_PATH OMC_APP_PROCESS_ID OMC_OMC_SUPPORT_PATH OMC_OMC_RESOURCES_PATH \
             OMC_ACTIONUI_WINDOW_UUID OMC_PARENT_DIALOG_GUID OMC_CURRENT_COMMAND_GUID \
             OMC_NIB_DLG_GUID TMPDIR OMCTEST_WORK OMCTEST_UI OMCTEST_FIXTURES; do
     eval "value=\${$name-<<UNSET>>}"
@@ -485,6 +485,7 @@ omc_run Fixture.env
 env_file="${TMPDIR}env.txt"
 field() { /usr/bin/awk -F= -v k="$1" '$1 == k { sub(/^[^=]*=/, ""); print; exit }' "$env_file"; }
 check "app bundle"        "$OMC_APP_BUNDLE_PATH"    "$(field OMC_APP_BUNDLE_PATH)"
+check "app process id"    "$OMC_APP_PROCESS_ID"     "$(field OMC_APP_PROCESS_ID)"
 check "support dir"       "$OMC_OMC_SUPPORT_PATH"   "$(field OMC_OMC_SUPPORT_PATH)"
 check "resources dir is a real directory" "yes"     "$([ -d "$(field OMC_OMC_RESOURCES_PATH)" ] && echo yes || echo no)"
 check "window uuid"       "$OMC_ACTIONUI_WINDOW_UUID" "$(field OMC_ACTIONUI_WINDOW_UUID)"
@@ -498,6 +499,13 @@ check "TMPDIR keeps its trailing slash" "yes"       "$(case "$TMPDIR" in (*/) ec
 check "TMPDIR is in the scratch" "yes"              "$(case "$TMPDIR" in ("$OMCTEST_SCRATCH"/*) echo yes ;; (*) echo no ;; esac)"
 check "handlers run from the work dir" "$(cd "$OMCTEST_WORK" && /bin/pwd -P)" "$(cd "$(field CWD)" && /bin/pwd -P)"
 check "fixtures dir exported" "$OMCTEST_FIXTURES"   "$(field OMCTEST_FIXTURES)"
+
+section "the app process id names a process that is actually alive"
+# The whole point of the variable: a handler asks whether the instance that owns a
+# piece of state still exists. A pid that does not answer kill -0 is worse than none.
+check "api is at least 5" "yes" \
+    "$([ "${OMCTEST_API_VERSION:-0}" -ge 5 ] && echo yes || echo no)"
+check "it is alive"       "yes" "$(kill -0 "$OMC_APP_PROCESS_ID" 2>/dev/null && echo yes || echo no)"
 
 section "the window uuid is unique per run"
 check "it embeds a pid" "yes" "$(case "$OMC_ACTIONUI_WINDOW_UUID" in (OMCTEST-10-environment-*[0-9]) echo yes ;; (*) echo no ;; esac)"
@@ -1139,7 +1147,7 @@ omctest_end
 
 # Expected pass/fail per file, asserted exactly.
 EXPECTED_COUNTS = {
-    "10-environment.test.sh": (13, 0),
+    "10-environment.test.sh": (16, 0),
     "20-lifetime.test.sh": (36, 0),
     "30-omcrun.test.sh": (13, 0),
     "40-alerts.test.sh": (16, 0),

@@ -121,6 +121,25 @@ OnMyCommandCM::Init()
 		
 		//eg. 101405 max 999999
 		sMacOSVersion = 10000 * (SInt32)sysVerMajor + 100 * (SInt32)sysVerMinor + (SInt32)sysVerBugFix;
+
+		// OMC_APP_PROCESS_ID is published into our OWN environment as well, not only into the
+		// per-command dictionary PopulateEnvironList builds. Two execution modes never see that
+		// dictionary: kExecSilentSystem runs a bare system() and the kExecAppleScript modes hand
+		// the text to OSA - neither takes an environ - so without this they would be the only modes
+		// where an "always exported" variable is in fact missing. A child inherits our environment,
+		// so one setenv covers both. The dictionary path stays as well: it is what the Terminal and
+		// iTerm setup script and the WebKit window.omc_env serialize, and it is what lets a command
+		// override the value for one child.
+		//
+		// Overwrite is ON, unlike setPythonPycachePrefixIfEmbedded's add-if-absent: an OMC applet
+		// launched from another OMC applet inherits the parent's value, and honoring an inherited
+		// one would leave every descendant reporting a process that is not its host - exactly the
+		// confusion this variable exists to remove.
+		//
+		// getpid() cannot change for the life of the process, so doing this once is enough.
+		char appProcessIDStr[16];
+		snprintf(appProcessIDStr, sizeof(appProcessIDStr), "%d", (int)getpid());
+		setenv("OMC_APP_PROCESS_ID", appProcessIDStr, 1 /*overwrite*/);
 	});
 
 //#if _DEBUG_
@@ -2849,6 +2868,10 @@ OnMyCommandCM::AppendTextToCommand(CFMutableStringRef inCommandRef, CFStringRef 
 		break;
 
 //no need to escape process id
+		case APP_PROCESS_ID:
+			newStrRef = CFStringCreateWithFormat( kCFAllocatorDefault, nullptr, CFSTR("%d"), getpid() );
+		break;
+
 		case FRONT_PROCESS_ID:
 		{
 			pid_t frontPID = 0;
@@ -3207,6 +3230,10 @@ OnMyCommandCM::PopulateEnvironList(CFMutableDictionaryRef ioEnvironList, Command
 			}
 			break;
 
+			case APP_PROCESS_ID: //always exported
+				newStrRef = CFStringCreateWithFormat( kCFAllocatorDefault, nullptr, CFSTR("%d"), getpid() );
+			break;
+
 			case FRONT_PROCESS_ID:
 			{
 				pid_t frontPID = 0;
@@ -3303,6 +3330,24 @@ OnMyCommandCM::PopulateEnvironList(CFMutableDictionaryRef ioEnvironList, Command
 			}
 			break;
 
+			// WARNING for whoever adds the next alwaysExport=true row to sSpecialWordAndIDList:
+			// this default is what makes -Wswitch silent HERE, so the compiler will NOT tell you
+			// that you forgot a case, and the failure is silent AND destructive rather than merely
+			// an empty value: newStrRef stays NULL with keepExistingKeyValue false, so the loop
+			// below REMOVES the key from the dictionary and the variable does not exist at all for
+			// the command. The sibling switch in AppendTextToCommand has no default and DOES catch
+			// a missing case as a build warning - do not "fix" that one by adding a default to it.
+			//
+			// Only three IDs legitimately land here, all of them dynamic control words that
+			// AddEnvironmentVariablesForAllControls supplies below instead of this switch:
+			// NIB_WEB_VIEW_VALUE, ACTIONUI_VIEW_VALUE, ACTIONUI_TABLE_VALUE. Spelling those out
+			// as explicit cases would restore -Wswitch here with no behavior change at all -
+			// see the commit note for the proposal.
+			//
+			// COUNT THEM, do not guess: an earlier draft of this comment said five and named
+			// NIB_DLG_CONTROL_VALUE and NIB_TABLE_VALUE, both of which are handled above. The
+			// set is (enumerators in SpecialWordID) minus (cases in THIS switch), and the two
+			// switches over this enum do not handle the same set.
 			default:
 			break;
 		}
