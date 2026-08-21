@@ -269,9 +269,15 @@ JSON schema and usage documentation for `Chat` (ActionUIChat add-on).
 // (no transport, disabled composer) and a HOST injects them at runtime into states["config"] via
 // setElementState, after the element is built - the canonical embedding loads a static document, then
 // injects the runtime/session-specific config (resolved agent path, working directory), then shows the
-// view (see DemoApp). The transport is built once a viable config arrives and then FROZEN for that
-// element's lifetime; a later states["config"] update does not rebuild it - use a fresh Chat element to
-// switch protocol or transport.
+// view (see DemoApp). The transport is built when the first VIABLE config arrives. Re-injecting an
+// IDENTICAL config afterwards is a no-op - the channel re-delivers its current value on every states
+// change - while a DIFFERENT viable config RE-CONFIGURES the element in place: a turn in flight is
+// closed first (its partial answer kept, its entries fired), the old transport is stopped (an ACP agent
+// gets SIGTERM, then SIGKILL after a grace), and the new one is attached and primed from the transcript
+// on screen. That is how a host changes the model or the agent behind a LIVE conversation - inject the
+// new {protocol, transport} and the conversation carries over, no new element needed. A config that
+// differs only in a key the transport ignores counts as different, which is the way to force a fresh
+// process from otherwise identical settings (add e.g. "sessionEpoch").
 //
 // Baseline View properties (padding, hidden, foregroundStyle, font, background, frame, opacity,
 // cornerRadius, actionID, disabled, onAppearActionID, onDisappearActionID, etc.) are inherited from base View.
