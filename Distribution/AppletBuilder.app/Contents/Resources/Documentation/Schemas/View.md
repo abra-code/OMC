@@ -10,7 +10,10 @@ JSON schema and usage documentation for `View`.
    "id": 1,              // Optional: Non-zero positive integer for runtime programmatic interaction
    "properties": {
      "padding": 10.0,      // Optional: Double for padding around the view, string "default" or EdgeInsets dictionary {"top": 10, "bottom": 10, "leading": 5, "trailing": 5}
-     "hidden": false,      // Optional: Boolean to hide the view
+     "hidden": false,      // Optional: Boolean to hide the view - SwiftUI's .hidden(): invisible and non-interactive,
+                           //   but STILL LAID OUT, so its space is reserved. Same on all four hosts; there is no
+                           //   collapse semantic (overlay panels in a ZStack and hide all but one to swap views).
+                           //   Inside a toolbar it instead removes the item entirely on Android and Web.
      "foregroundStyle": "blue", // Optional: SwiftUI color (e.g., "red", "blue") or semantic style for text/content tint, resolved via foregroundStyle
      "tint": "red",        // Optional: SwiftUI color for tinting interactive controls (buttons, toggles, sliders, etc.), resolved via tint
      "font": "body",       // Optional: String for named text style (e.g., "title", "body") or font name (e.g., "Menlo"),

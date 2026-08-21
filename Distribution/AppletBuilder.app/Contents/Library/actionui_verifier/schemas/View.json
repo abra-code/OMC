@@ -23,7 +23,7 @@
         }
       ]
     },
-    "hidden": { "types": ["boolean"], "required": false },
+    "hidden": { "types": ["boolean"], "required": false, "description": "Hide the view (SwiftUI .hidden()): invisible and non-interactive, but still laid out - its space is reserved" },
     "foregroundStyle": { "types": ["string"], "required": false, "description": "SwiftUI color, hex, or semantic style" },
     "tint": { "types": ["string"], "required": false, "description": "Color tint for interactive controls" },
     "font": {

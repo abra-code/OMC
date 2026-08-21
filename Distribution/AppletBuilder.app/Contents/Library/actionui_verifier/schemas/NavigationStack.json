@@ -7,7 +7,9 @@
   "content":      { "required": true,  "description": "Root view element" },
   "destinations": { "required": false, "description": "Array of destination view elements; each must have a unique id" },
   "persistentToolbar": { "required": false, "description": "Array of ToolbarItem / ToolbarItemGroup elements that stay in the bar on every screen inside the stack (the root and every pushed destination), composing with each screen's own 'toolbar'. A 'toolbar' declared on the NavigationStack itself is a deprecated alias for this key. Implemented on all four hosts" },
-  "ownProperties": {},
+  "ownProperties": {
+    "browserHistory": { "types": ["boolean"], "required": false, "platforms": ["web"], "description": "ActionUIWeb-only opt-in: a user push adds a browser-history entry, the in-app Back routes through history.back(), and the path is restored on popstate. Off by default, so the browser Back button keeps its page behavior unless the author opts in. Programmatic navigation syncs the current entry rather than adding a Back target. Suffix as 'browserHistory:web'." }
+  },
   "observable": {
     "states.navigationPath": { "types": ["array"], "description": "Current push stack as [Int] destination IDs; empty at root" }
   }

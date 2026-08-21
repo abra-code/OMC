@@ -7,7 +7,9 @@
   "children": { "required": false, "description": "Array of Button or Divider child elements" },
   "ownProperties": {
     "name": { "types": ["string"], "required": true, "description": "Non-empty menu title displayed in the menu bar" },
-    "autoPopulate": { "types": ["boolean"], "required": false, "description": "Host extension: when true, the host fills this menu's items dynamically at launch instead of from 'children'. Hosts that don't support it ignore it." }
+    "autoPopulate": { "types": ["boolean"], "required": false, "description": "Host extension: when true, the host fills this menu's items dynamically at launch instead of from 'children'. Hosts that don't support it ignore it." },
+    "role": { "types": ["string"], "required": false, "platforms": ["web"], "enum": ["account"], "description": "ActionUIWeb-only: 'account' renders this menu as the shell's account button (top-right avatar) instead of a menu-bar entry. Only the first account menu is used; later ones warn and are ignored. Suffix as 'role:web'." },
+    "systemImage": { "types": ["string"], "required": false, "platforms": ["web"], "description": "ActionUIWeb-only: SF Symbol name for the account button's glyph, resolved through the SF-to-Material map. Read only when role:web is 'account'; defaults to a person glyph. Suffix as 'systemImage:web'." }
   },
   "observable": {}
 }

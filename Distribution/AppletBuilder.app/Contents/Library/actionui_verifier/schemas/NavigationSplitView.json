@@ -11,7 +11,8 @@
   "persistentToolbar": { "required": false, "description": "Array of ToolbarItem / ToolbarItemGroup elements that stay in the bar wherever the user navigates inside the split view, composing with each screen's own 'toolbar'. A 'toolbar' declared on the NavigationSplitView itself is a deprecated alias for this key. Implemented on all four hosts" },
   "ownProperties": {
     "columnVisibility": { "types": ["string"], "required": false, "enum": ["automatic","all","doubleColumn","detail"], "description": "Defaults to 'all'" },
-    "style":            { "types": ["string"], "required": false, "enum": ["automatic","balanced","prominentDetail"], "description": "Defaults to 'automatic'" }
+    "style":            { "types": ["string"], "required": false, "enum": ["automatic","balanced","prominentDetail"], "description": "Defaults to 'automatic'" },
+    "browserHistory": { "types": ["boolean"], "required": false, "platforms": ["web"], "description": "ActionUIWeb-only opt-in: a user push adds a browser-history entry, the in-app Back routes through history.back(), and the path is restored on popstate. Off by default, so the browser Back button keeps its page behavior unless the author opts in. Programmatic navigation syncs the current entry rather than adding a Back target. Suffix as 'browserHistory:web'." }
   },
   "observable": {
     "states.columnVisibility":    { "types": ["string"], "description": "Current column visibility state" },

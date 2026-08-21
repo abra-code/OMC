@@ -11,7 +11,12 @@ JSON schema and usage documentation for `CommandMenu`.
    "type": "CommandMenu",
    "id": 8,              // Required: Unique integer identifier
    "properties": {
-     "name": "Test"      // Required: Non-empty string for the menu title
+     "name": "Test",     // Required: Non-empty string for the menu title
+     "role:web": "account",                   // Optional, WEB ONLY: renders this menu as the shell's account button (top-right)
+                                              //   instead of a menu-bar entry. "account" is the only recognized value; only the
+                                              //   FIRST account menu is used, later ones warn and are ignored. Apple/Android ignore it.
+     "systemImage:web": "person.crop.circle"  // Optional, WEB ONLY: SF Symbol for the account button's glyph, resolved through the
+                                              //   SF-to-Material map. Read only when "role:web" is "account"; defaults to a person glyph.
    },
    "children": [
      // Array of child elements (Button, Divider)
