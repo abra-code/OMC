@@ -70,6 +70,8 @@ JSON schema and usage documentation for `Chat` (ActionUIChat add-on).
                                           //           completed/failed tool call, image, system, error, plan,
                                           //           usage) with a JSON envelope { sequence, type, id, data } as
                                           //           the action context, for crash-safe incremental persistence.
+                                          //           A message that states["lead"] lines were placed in front of
+                                          //           also carries them, as placed, under "lead".
                                           //           Never fired on streaming deltas.
      "resumeCheckpointActionID": "chat.checkpoint",
                                           // Optional: the resume cursor that pairs with entryActionID, as
@@ -215,6 +217,31 @@ JSON schema and usage documentation for `Chat` (ActionUIChat add-on).
 // Appending a MESSAGE rather than a marker puts a line on screen the agent was never given - the element
 // reports its context as pending and the next send re-primes, so the status indicator does not claim the
 // model holds something it does not.
+//
+// LEADING THE NEXT MESSAGE: states["lead"] takes serialized ChatItems - ONE PER LINE - and HOLDS them
+// until the user sends, then places them in front of that message. states["append"] cannot serve this,
+// and the reason is a matter of timing rather than taste: a host learns a message exists when its entry
+// finalizes, by which time it has been on screen since the user pressed Return, so the marker naming the
+// model it was sent INTO lands underneath it. There is no "insert before"; what was missing was a way to
+// say "when there is a next message, this goes in front of it".
+//   setElementState(window, chatID, "lead",
+//                   "{\"type\":\"sessionEvent\",\"sessionEvent\":{\"id\":\"se-1\",\"kind\":\"resumed\"}}")
+// THE WAITING IS THE OTHER HALF OF THE POINT. A conversation the user opened and read is not a
+// conversation resumed, so a marker shown when the transcript was displayed announces a handover that
+// never happened - once per row the user clicks through. Held here, the line exists only if a message
+// follows it, which is also the moment a host records one.
+// THE VALUE IS THE WHOLE WAITING LIST: set it again, with every line, to add one; set it to "" to take the
+// lines back when the conversation they belong to is replaced (an empty array, or text with no lines in
+// it, withdraws the same way, while a value NONE of whose lines decode is not obeyed as a withdrawal and
+// leaves the list as it was). A line already placed is never placed again, whatever the channel goes on
+// resting on, and a line whose id is already in the transcript is not placed. One line that will not
+// decode costs that line, not the list.
+// THE LINES FIRE NO ENTRY OF THEIR OWN, BUT THE MESSAGE THEY LEAD REPORTS THEM: its entryActionID envelope
+// carries them under "lead", as placed, and that is where a host records them from. As placed, because the
+// element changes one thing: a line handed over without a timestamp is stamped with the moment it is
+// placed. The host hands the line over when it learns it will be needed - the conversation displayed, the
+// engine loaded - and the user may not type for an hour; the line says what happened when the message was
+// sent, and only the send knows that moment. A host that stamps its lines keeps its stamps.
 //
 // Two TRANSIENT keys ride on that injected object alongside version / items, and neither is ever
 // persisted - the transcript codec drops both, so they cannot reach storage or a later restore:
