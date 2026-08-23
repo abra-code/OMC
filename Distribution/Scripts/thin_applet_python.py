@@ -41,6 +41,14 @@ Shell scripts, generated configs and plists are SCANNED (never run) for `python 
 launches into Packages and for uses of Packages names, comments stripped first. That is
 what discovers an out-of-process entry point - a watcher CLI, an MCP server - without
 anyone having to declare it.
+
+The same sweep finds extension-less files with a python shebang - a CLI helper under
+Contents/Helpers that a handler launches BY PATH, which no `-m` and no import statement
+names. Each such tool's directory is analysed exactly as Resources/Scripts is, so the
+package beside the tool is read. Note what this means under --execute-entry-points:
+those tools are then RUN, with no arguments, at plan time and again at verification -
+so an applet whose helper does something destructive when called bare wants the default
+imports-only mode, which is why it is the default.
 """
 
 import argparse
@@ -63,6 +71,19 @@ REL_PYTHON = os.path.join("Contents", "Library", "Python")
 REL_SCRIPTS = os.path.join("Contents", "Resources", "Scripts")
 REL_PACKAGES = os.path.join("Contents", "Library", "Packages")
 REL_SCAN = "Contents"          # app-authored text to scan for entry points
+
+# RUNTIME_KEEP once held "compileall", because the OMC runtime ran
+# `python3 -m compileall Contents/Resources/Scripts` on every applet launch from compiled framework
+# code, where no scan of the app's own text can see it. That call is disabled as of 2026-08-23
+# (AbracodeFramework/OMCAppLifetimeEvents.mm documents why and how it was measured: it cost 23.7 ms
+# of synchronous launch time per start to save 2.1 ms once, and the top-level .pyc it wrote were
+# never read, because CPython does not consult a bytecode cache for __main__). With no caller left,
+# compileall is an ordinary removal candidate again and the set is empty.
+#
+# Keep the mechanism. Anything the OMC RUNTIME itself invokes on the embedded interpreter is
+# invisible to the analysis by construction, so this is where such a name belongs - not in an
+# individual applet's keep file, which would spread one runtime fact across seven repos.
+RUNTIME_KEEP = ()
 
 
 class Layout:
@@ -235,8 +256,9 @@ def cmd_plan(args):
             print("  Lazy imps: conditional imports in loaded modules count as dependencies")
         for t in args.trace or []:
             aargs += ["--trace", t]
-        if args.keep:
-            aargs += ["--keep", args.keep]
+        keep = RUNTIME_KEEP + tuple(n.strip() for n in args.keep.split(",") if n.strip())
+        if keep:
+            aargs += ["--keep", ",".join(keep)]
 
         print("Analysing...")
         driver = analyzer_driver(lay.pybin)

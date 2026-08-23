@@ -82,13 +82,55 @@ extern "C" void ActionUIChat_register(void);
         setenv("PYTHONPYCACHEPREFIX", PYTHONPYCACHEPREFIX, 0);
 }
 
-// On app launch precompile all .py code in Resources/Scripts if
-// the Python distribution is embedded in app bundle at Library/Python/.
-// Python only precompiles imported modules. It does not automatically create cache
-// for the main execution scripts. This function also precompiles the top level .py files.
-// Compiling .py code more than one time is a no-op: Python is smart enough not to re-compile .pyc files
-// if the source code has not changed.
-
+// DISABLED 2026-08-23. Kept, with the measurements, so the investigation is not repeated.
+//
+// The original intent is the comment that used to head this function:
+//
+//     "Python only precompiles imported modules. It does not automatically create cache
+//      for the main execution scripts. This function also precompiles the top level .py files."
+//
+// The first two sentences are true. The third - the reason the function existed - cannot work.
+// CPython never CONSULTS a bytecode cache for __main__; it compiles the main script from source
+// on every run. So the .pyc files this produced for the top-level handlers were dead the moment
+// they were written.
+//
+// How that was established, because the two obvious tests are not tests:
+//   - Corrupting the .pyc proves nothing. A bad magic number makes CPython fall back to source
+//     silently, so a consulted cache and an ignored one behave identically.
+//   - Running with an empty cache and seeing no __main__ .pyc appear shows only that it is never
+//     WRITTEN, not that a pre-existing one would be ignored.
+// The decisive test is a .pyc that is valid and FRESH but holds different bytecode: correct
+// MAGIC_NUMBER, flags 0, mtime and size fields copied from the source, wrapping a code object
+// compiled from other text. Whichever text runs tells you which one was used. It needs a positive
+// control in the same run - an imported module forged the same way - or "ran from source" is
+// indistinguishable from a botched forgery. Result:
+//     imported module, forged .pyc  ->  ran the FORGED bytecode   (cache is consulted)
+//     __main__ script, forged .pyc  ->  ran the SOURCE            (cache is ignored)
+// Corroborated by `python -v`, which prints "# code object from '...pyc'" for the imported module
+// and nothing for __main__, and by access times: the run never opens the __main__ .pyc at all.
+//
+// What the call really did was precompile the modules the handlers IMPORT - which, as its own
+// comment said, Python already does by itself. It also lands in the right place without help:
+// setPythonPycachePrefixIfEmbedded above and OmcExecutor.cp both export PYTHONPYCACHEPREFIX, so a
+// lazily written .pyc goes to the cache prefix and never into the signed bundle.
+//
+// Measured on ICEdit.app (median of 10-15 runs; bare interpreter startup is 8.1 ms of each):
+//     this call at launch, warm cache   23.7 ms  EVERY launch, synchronous on the launch path
+//     this call at launch, cold cache  123.0 ms
+//     compile time it saved, once        2.1 ms  (Zip 2.9 ms; four of seven applets: 0 ms,
+//                                                 their scripts import no sibling module at all)
+// It never breaks even: the cost recurs on every launch and one launch already costs an order of
+// magnitude more than the one-off saving. Deferred compilation does the useful half by itself.
+//
+// Consequence for tooling: the embedded-Python thinner may now remove compileall. Applets thinned
+// while this call was live logged "No module named compileall" to stderr per launch and nothing
+// else, because system()'s status is discarded - which is how it went unnoticed in shipped builds.
+//
+// If this is ever revived, note that Contents/Library/Packages is where a sizable embedded module
+// actually lives (about 14 MB of .py on the MCP applets, ~0.95 s to compile) and it was never
+// covered here. Eagerly compiling that would block launch for a second to precompile a tree of
+// which only a fraction is ever imported, so it wants -j0 and an asynchronous launch, not system().
+#if 0
 + (void)compilePythonScriptsIfEmbedded:(NSBundle *)bundle
 {
     NSString *bundlePath = [bundle bundlePath];
@@ -103,6 +145,7 @@ extern "C" void ActionUIChat_register(void);
         system([command UTF8String]);
     }
 }
+#endif
 
 - (void)appWillFinishLaunching:(NSNotification *)notification
 {
@@ -118,7 +161,11 @@ extern "C" void ActionUIChat_register(void);
     ActionUIDiff_register();
     ActionUIChat_register();
 
-    [OMCAppLifetimeEvents compilePythonScriptsIfEmbedded:[NSBundle mainBundle]];
+    // Disabled: eager compileall cost 23.7 ms of synchronous launch time on every start to save
+    // 2.1 ms once, and the part it was written for - precompiling the top-level handler scripts -
+    // cannot work, because CPython never reads a bytecode cache for __main__. Deferred compilation
+    // covers the rest. See compilePythonScriptsIfEmbedded above for the measurements and the test.
+    // [OMCAppLifetimeEvents compilePythonScriptsIfEmbedded:[NSBundle mainBundle]];
 
     __unused OSStatus err = [OMCCommandExecutor runCommand:@"app.will.launch"
                                             forCommandFile:@"Command.plist"
