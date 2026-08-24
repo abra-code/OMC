@@ -568,7 +568,7 @@ nested_bundles=$(list_nested_bundles)
 # nested bundles' main executables before phase 3 reaches the bundles
 # themselves, so reading entitlements lazily would read back the stripped ones.
 # The outer bundle is not cached here - phase 4 applies the caller's choice.
-ent_cache_dir=$(/usr/bin/mktemp -d /tmp/codesign_applet_ent.XXXXXX) || exit 1
+ent_cache_dir=$(/usr/bin/mktemp -d "${TMPDIR:-/tmp}/codesign_applet_ent.XXXXXX") || exit 1
 # A signal handler that only cleans up and returns would resume signing with the
 # cache gone, quietly stripping the entitlements from everything left to sign -
 # and would make this script uninterruptible. Each signal cleans up and exits
