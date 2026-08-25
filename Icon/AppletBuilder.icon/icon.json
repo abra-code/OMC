@@ -22,75 +22,64 @@
           "fill-specializations" : [
             {
               "value" : {
-                "linear-gradient" : [
-                  "display-p3:0.20000,0.20000,0.20000,1.00000",
-                  "extended-gray:0.00000,1.00000"
-                ],
-                "orientation" : {
-                  "start" : {
-                    "x" : 0.49999999999999994,
-                    "y" : 0.7806063145915353
-                  },
-                  "stop" : {
-                    "x" : 0.5228655573326771,
-                    "y" : 1
-                  }
-                }
+                "automatic-gradient" : "extended-srgb:0.00000,0.58824,1.00000,1.00000"
+              }
+            },
+            {
+              "appearance" : "dark",
+              "value" : {
+                "automatic-gradient" : "extended-gray:0.75000,1.00000"
+              }
+            }
+          ],
+          "glass" : true,
+          "image-name" : "hammer-filled.svg",
+          "name" : "hammer-filled",
+          "position" : {
+            "scale" : 0.9,
+            "translation-in-points" : [
+              -20,
+              -20
+            ]
+          }
+        },
+        {
+          "fill-specializations" : [
+            {
+              "value" : {
+                "automatic-gradient" : "srgb:0.12984,0.12985,0.12984,1.00000"
               }
             },
             {
               "appearance" : "dark",
               "value" : {
                 "linear-gradient" : [
-                  "display-p3:0.82500,0.82500,0.82500,1.00000",
-                  "extended-gray:0.50000,1.00000"
+                  "srgb:0.47563,0.47565,0.47564,1.00000",
+                  "extended-srgb:0.12549,0.12549,0.12549,1.00000"
                 ],
                 "orientation" : {
                   "start" : {
-                    "x" : 0.49999999999999994,
+                    "x" : 0.5,
                     "y" : 0
                   },
                   "stop" : {
-                    "x" : 0.49999999999999994,
-                    "y" : 0.5318423966535433
-                  }
-                }
-              }
-            },
-            {
-              "appearance" : "tinted",
-              "value" : {
-                "linear-gradient" : [
-                  "extended-gray:1.00000,1.00000",
-                  "extended-gray:0.25000,1.00000"
-                ],
-                "orientation" : {
-                  "start" : {
-                    "x" : 0.49999999999999994,
-                    "y" : 0
-                  },
-                  "stop" : {
-                    "x" : 0.49999999999999994,
-                    "y" : 0.7310957492618109
+                    "x" : 0.5,
+                    "y" : 0.7
                   }
                 }
               }
             }
           ],
-          "image-name" : "hammer.circle.fill.svg",
-          "name" : "hammer.circle.fill",
-          "position-specializations" : [
-            {
-              "idiom" : "macOS",
-              "value" : {
-                "scale" : 3.2,
-                "translation-in-points" : [
-                  0,
-                  0
-                ]
-              }
-            }
-          ]
+          "glass" : true,
+          "image-name" : "circle.svg",
+          "name" : "circle",
+          "position" : {
+            "scale" : 1.2,
+            "translation-in-points" : [
+              0,
+              0
+            ]
+          }
         }
       ],
       "shadow" : {
