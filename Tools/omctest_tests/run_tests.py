@@ -460,8 +460,10 @@ def make_applet(root: Path, *, name: str = "Fixture", broken_manifest: bool = Fa
     _write(res / "Scripts" / "Fixture.probe.py", _PY_HANDLER.lstrip("\n"))
     _write(res / "Scripts" / "fixture_helper.py", _PY_MODULE)
 
-    # The applet's OWN tools, copied from AppletBuilder's framework. The four the
-    # harness stubs get replaced anyway; plister and pasteboard stay real.
+    # The applet's OWN tools, copied from AppletBuilder's framework. The five the
+    # harness stubs get replaced anyway; plister stays real. pasteboard is still
+    # copied because the meta-tests reach for the real one to prove the stub
+    # never touches it.
     support = contents / "Frameworks" / "Abracode.framework" / "Versions" / "A" / "Support"
     support.mkdir(parents=True, exist_ok=True)
     for tool in AB_SUPPORT.iterdir():
@@ -948,56 +950,85 @@ check "notify too"                    "no"  "$([ -L "$OMC_OMC_SUPPORT_PATH/notif
 check "omc_dialog_control too"        "no"  "$([ -L "$OMC_OMC_SUPPORT_PATH/omc_dialog_control" ] && echo yes || echo no)"
 check "omc_next_command too"          "no"  "$([ -L "$OMC_OMC_SUPPORT_PATH/omc_next_command" ] && echo yes || echo no)"
 check "plister is the real tool"      "yes" "$([ -L "$OMC_OMC_SUPPORT_PATH/plister" ] && echo yes || echo no)"
-# pasteboard is the odd one out: neither a stub nor a plain link, but a wrapper
-# that rewrites the board NAME and then execs the real tool. See below.
-check "pasteboard is wrapped"         "no"  "$([ -L "$OMC_OMC_SUPPORT_PATH/pasteboard" ] && echo yes || echo no)"
+check "pasteboard is a stub too"       "no"  "$([ -L "$OMC_OMC_SUPPORT_PATH/pasteboard" ] && echo yes || echo no)"
 # The tools come from the APPLET's own framework, not AppletBuilder's.
 check "the real tools are the applet's own" "yes" \
     "$(case "$OMCTEST_REAL_SUPPORT" in ("$OMC_APP_BUNDLE_PATH"/*) echo yes ;; (*) echo no ;; esac)"
 
-# A named pasteboard is the one piece of applet state that does NOT live under
-# $HOME - it belongs to the pasteboard server - so the scratch tree cannot
-# contain it and the NAME has to be isolated instead. Asserted from both sides:
-# the value must come back through the wrapper, and it must NOT be on the board
-# the applet actually named, because that board is the one a running copy of the
-# applet, or a second concurrent run of this suite, is reading.
-section "named pasteboards are namespaced"
+# A named pasteboard belonged to the pasteboard server, which is global to the
+# machine: the board an applet names under test was the very board a running copy
+# of that applet reads. API 4 isolated the NAME; API 6 moved the data instead, so
+# a board is now a file in the scratch and the server is never opened at all.
+# Asserted from both sides - the value round-trips through the stub, and the
+# board the applet named is NOT on the real pasteboard.
+section "named pasteboards are files in the scratch"
 pb="$OMC_OMC_SUPPORT_PATH/pasteboard"
 real_pb="$OMCTEST_REAL_SUPPORT/pasteboard"
-check "a prefix was published"        "yes" "$([ -n "$OMCTEST_PB_PREFIX" ] && echo yes || echo no)"
 "$real_pb" omctest_probe_board put "" >/dev/null 2>&1
 "$pb" omctest_probe_board put "hello" >/dev/null 2>&1
-check "the wrapper round-trips"       "hello" "$("$pb" omctest_probe_board get 2>/dev/null)"
-check "the board the applet named is untouched" "" "$("$real_pb" omctest_probe_board get 2>/dev/null)"
-check "the namespaced board holds it" "hello" \
-    "$("$real_pb" "${OMCTEST_PB_PREFIX}omctest_probe_board" get 2>/dev/null)"
-check "the write was recorded for release" "1" \
-    "$(/usr/bin/grep -c 'omctest_probe_board' "$OMCTEST_UI/pasteboard.names" 2>/dev/null | /usr/bin/tr -d ' ')"
-# general and find are the real clipboard and are namespaced for the same
+check "the stub round-trips"          "hello" "$("$pb" omctest_probe_board get 2>/dev/null)"
+check "the real board is untouched"   ""      "$("$real_pb" omctest_probe_board get 2>/dev/null)"
+check "and it is backed by a file"    "1" \
+    "$(/usr/bin/find "$OMCTEST_UI/pb" -name 'omctest_probe_board.*' 2>/dev/null | /usr/bin/wc -l | /usr/bin/tr -d ' ')"
+# No prefix left to publish: there is no shared namespace to carve any more.
+check "no namespace prefix is published" "yes" \
+    "$([ -z "${OMCTEST_PB_PREFIX:-}" ] && echo yes || echo no)"
+
+# general and find are the real clipboard and are boards here for the same
 # reason: a handler with a Copy path must not take the clipboard of whoever is
 # running the suite.
+# Asserted from both sides, and the second side is the one that matters: the
+# stub is pure file I/O today and cannot reach the server, so this exists to fail
+# loudly if any future change reintroduces a call to the real tool.
+general_before="$("$real_pb" general get 2>/dev/null)"
 "$pb" general put "not-your-clipboard" >/dev/null 2>&1
-check "even general is namespaced"    "not-your-clipboard" \
-    "$("$real_pb" "${OMCTEST_PB_PREFIX}general" get 2>/dev/null)"
+check "even general stays local"      "not-your-clipboard" "$("$pb" general get 2>/dev/null)"
+check "  and the real clipboard is untouched" "$general_before" \
+    "$("$real_pb" general get 2>/dev/null)"
 
-# THE FAIL-CLOSED GUARD, which is the whole safety story. With no prefix the wrapper would
-# address the RAW board - the developer's own - and, because the raw name would then be
-# recorded, the release sweep would EMPTY it. For "general" that is the user's clipboard.
-# Reachable from any handler that runs without inheriting the environment: env -i, sudo's
+# Semantics are the real tool's, and they are what handlers depend on. Pinned by
+# probing the real tool: an argument is stored with no trailing newline added,
+# stdin is stored verbatim including its newline, an unwritten board reads back
+# empty, and "set" is an alias for "put".
+section "the pasteboard stub matches the real tool's semantics"
+check "an unwritten board is empty"   ""      "$("$pb" omctest_never_written get 2>/dev/null)"
+"$pb" omctest_sem put "plain"
+check "an argument gains no newline"  "5"     "$("$pb" omctest_sem get | /usr/bin/wc -c | /usr/bin/tr -d ' ')"
+printf 'line1\n' | "$pb" omctest_sem put
+check "stdin keeps its newline"       "6"     "$("$pb" omctest_sem get | /usr/bin/wc -c | /usr/bin/tr -d ' ')"
+"$pb" omctest_sem set "viaset"
+check "set is an alias for put"       "viaset" "$("$pb" omctest_sem get)"
+"$pb" omctest_sem put ""
+check "put empty clears it"           ""      "$("$pb" omctest_sem get)"
+# 255, which is the real tool's answer - re-probed without a pipeline, since $?
+# after one reports the LAST command's status and reading it that way is how this
+# was first written down as 0.
+"$pb" omctest_sem frobnicate >/dev/null 2>&1
+check "an unknown operation exits 255" "255" "$?"
+"$pb" omctest_sem >/dev/null 2>&1
+check "and so does a name with no operation" "255" "$?"
+"$pb" omctest_never_written get >/dev/null 2>&1
+check "but an empty read is not an error" "0" "$?"
+# A name is an arbitrary string to a caller and a filename here, so it is mapped
+# rather than trusted. The old wrapper had to REFUSE a name with a newline in it;
+# mapping makes both harmless, and two names that flatten alike must still not
+# collide.
+"$pb" "weird/name with spaces" put "mapped"
+check "an awkward name round-trips"   "mapped" "$("$pb" "weird/name with spaces" get)"
+"$pb" "weird_name_with_spaces" put "other"
+check "and does not collide with its flattened twin" "mapped" \
+    "$("$pb" "weird/name with spaces" get)"
+
+# THE FAIL-CLOSED GUARD. The stub addresses a file under $OMCTEST_UI, so reaching
+# it without that variable must refuse rather than guess a location. Reachable
+# from any handler that runs without inheriting the environment: env -i, sudo's
 # env_reset, launchctl submit, osascript, a Python handler passing a curated env=.
-section "the wrapper refuses to run without its namespace"
+section "the pasteboard stub refuses to run without its scratch"
 "$real_pb" omctest_guard_board put "developer's own data" >/dev/null 2>&1
-/usr/bin/env -i OMCTEST_REAL_SUPPORT="$OMCTEST_REAL_SUPPORT" OMCTEST_UI="$OMCTEST_UI" \
-    "$pb" omctest_guard_board put "clobbered" >/dev/null 2>&1
-check "a put with no prefix is refused" "1" \
+/usr/bin/env -i "$pb" omctest_guard_board put "clobbered" >/dev/null 2>&1
+check "a put with no OMCTEST_UI is refused" "1" \
     "$([ "$?" -ne 0 ] && echo 1 || echo 0)"
 check "  and the real board is untouched" "developer's own data" \
-    "$("$real_pb" omctest_guard_board get 2>/dev/null)"
-# The second lock on the same door: whatever ends up in the release list, only a board this
-# harness could have minted is ever cleared.
-printf 'omctest_guard_board\n' >> "$OMCTEST_UI/pasteboard.names"
-omctest_release_pasteboards "$OMCTEST_UI"
-check "release will not clear an unprefixed board" "developer's own data" \
     "$("$real_pb" omctest_guard_board get 2>/dev/null)"
 "$real_pb" omctest_guard_board put "" >/dev/null 2>&1
 
@@ -1154,7 +1185,7 @@ EXPECTED_COUNTS = {
     "50-chain.test.sh": (11, 0),
     "55-defaults.test.sh": (25, 0),
     "60-window.test.sh": (56, 0),
-    "70-tools.test.sh": (40, 0),
+    "70-tools.test.sh": (49, 0),
     "85-noise.test.sh": (1, 0),
 }
 

@@ -156,7 +156,7 @@ Variables a test file can read:
 | `OMCTEST_STATUS` | exit code of the last `omc_run`; the string `-` before any dispatch, so `check_status "..." 0` cannot pass vacuously |
 | `OMCTEST_ALERT_RC` | the alert stub's answer when the scripted queue is empty (default `0`) |
 | `OMCTEST_PYTHON`, `OMCTEST_PYTHON_EMBEDDED` | the resolved interpreter, and whether it is the bundle's own |
-| `OMCTEST_API_VERSION` | `5` - assert a minimum if you use something new. `2` added `omc_control_defaults`; `3` isolates `$HOME`; `4` namespaces named pasteboards and stops `ui_reset` dropping the diagnostic logs; `5` exports `OMC_APP_PROCESS_ID`. |
+| `OMCTEST_API_VERSION` | `6` - assert a minimum if you use something new. `2` added `omc_control_defaults`; `3` isolates `$HOME`; `4` isolates named pasteboards and stops `ui_reset` dropping the diagnostic logs; `5` exports `OMC_APP_PROCESS_ID`; `6` makes named pasteboards files in the scratch instead of boards in the pasteboard server, and drops `OMCTEST_PB_PREFIX`. |
 
 What the harness exports into every handler:
 
@@ -171,13 +171,16 @@ What the harness exports into every handler:
 | `OMC_CURRENT_COMMAND_GUID` | `OMCTEST-CMD` | consumed by `omc_next_command`, which is stubbed |
 | `TMPDIR` | `$OMCTEST_SCRATCH/tmp/` | applets derive state and scratch paths from `$TMPDIR`, so redirecting it isolates all of that and makes cleanup total |
 | `HOME` | `$OMCTEST_SCRATCH/<label>/home/` | applets keep their USER state under it - `$HOME/Library/Application Support/<App>` is the house convention - and `plister` is real, so without this a test that saves a setting rewrites the developer's own configuration |
-| `OMCTEST_PB_PREFIX` | `omctest.<scratch>.<label>.` | prepended to every pasteboard NAME by the `pasteboard` wrapper: a named pasteboard is not under `$HOME` and cannot be isolated any other way |
 
 **`$HOME` is isolated too, and it is the one that would have cost real data.** An applet's user state lives under it, `plister` is deliberately not stubbed, and the settings file of whoever runs the suite is therefore one unredirected write away. So each test file gets its own home, pre-populated with `Library/Application Support` and `Library/Preferences` because every real home has them. The applet's OWN directory is deliberately not created, so "did opening the window create a settings file" stays a real question.
 
 It is per FILE rather than per run, matching `OMCTEST_WORK`: a file that leaves an applet configured must not be able to answer the next file's question about what a fresh profile does.
 
-**Named pasteboards are isolated too, by rewriting the name.** A named pasteboard belongs to the pasteboard server, not to `$HOME` and not to the process, so the scratch tree cannot contain it: `myapp_handoff` under test *is* the board a copy of the applet running on the same Mac is reading, and is also the board a second, concurrent run of the same suite is writing. Both were observed in practice. So the `pasteboard` tool in the interposition directory is a wrapper that prepends `$OMCTEST_PB_PREFIX` to the name and execs the real tool. Handlers and tests both go through it, so nothing in a test file changes; the boards are emptied when the file ends.
+**Named pasteboards are isolated too, by keeping them in the scratch.** A named pasteboard belongs to the pasteboard server, which is global to the machine: `myapp_handoff` under test *is* the board a copy of the applet running on the same Mac is reading, and is also the board a second, concurrent run of the same suite is writing. Both were observed in practice. So the `pasteboard` tool in the interposition directory is a stub that keeps each board as a file under `$OMCTEST_UI/pb/`, matching the real tool's observable behavior - values, exit codes and all. Handlers and tests both go through it, so nothing in a test file changes; the boards die with the scratch and there is nothing to sweep.
+
+API 4 isolated the *name* instead, prefixing it and then calling the real tool. That stopped the collisions but left the data in the server, where it outlived the run - so it needed a release sweep on three traps, a guard against emptying a board the harness had not minted, and a sweep that ran even when the scratch was deliberately kept. `OMCTEST_PB_PREFIX` is gone with that design.
+
+**One consequence worth knowing: a suite whose applet keeps state in pasteboards can now run inside a sandbox.** The pasteboard server is reachable only through a Mach service, so a sandboxed run could not use it - and it failed *silently*, `put` returning 0 while the matching `get` returned empty. Every handler then started with no state, which surfaces as dozens of unrelated assertion failures rather than as one error.
 
 `general` and `find` are namespaced as well, rather than exempted. They are the real clipboard: a handler with a Copy path would otherwise take the clipboard of whoever is running the suite, and a test asserting what was copied reads it back through the same wrapper either way.
 
@@ -211,7 +214,7 @@ The tools come from the applet's *own* embedded framework, not AppletBuilder's -
 | `omc_dialog_control` | **recording stub** - the virtual window | the real tool is a harmless no-op with no window, which is why handlers can run at all; recording it turns the largest observable output of most handlers into something assertable. |
 | `omc_next_command` | recording stub - chain queue | headless there is no app to ask; recording lets you assert on chaining and drain it synchronously. |
 | `plister` | real | handlers depend on its exact read/write semantics; faking it would test the fake. |
-| `pasteboard` | **real, under a rewritten name** | handlers must read back what they wrote, so the tool is real; but the board itself lives in the pasteboard server, outside anything `$HOME` can isolate, so the wrapper prepends `$OMCTEST_PB_PREFIX` to the name. |
+| `pasteboard` | **stub, file-backed** | handlers must read back what they wrote, so the stub reproduces the real tool's behavior - an argument stored with no trailing newline, stdin stored verbatim, an unwritten board reading back empty and still exiting 0, and exit 255 for a bad invocation - over files in `$OMCTEST_UI/pb/` rather than the machine-global pasteboard server. |
 | `b64`, `filt`, `loco` | real | pure text and data filters, safe headless. |
 
 Every stub records before it responds. A stub that only returns an exit code answers "did the handler survive"; a spy answers "did the handler do the right thing".
@@ -598,9 +601,9 @@ check "a slash is refused" "no" "$(pb_call valid_name 'a/b' && echo yes || echo 
 
 The subshell keeps the library's own state out of the test file and stops a function that `exit`s from taking the suite with it. Note that arguments are expanded by the *calling* shell, so a call that must name one of the library's own constants needs an `eval` variant that defers expansion into the subshell. For a Python applet the equivalent bridge is in section 7.
 
-**A "reset" helper has to reset everything the applet keeps, not just its directory.** The obvious one-liner is `reset_state() { /bin/rm -rf "$(state_dir)"; }`, and it is complete only for an applet that keeps all its state in that directory. An applet that also keeps pasteboard keys needs those cleared too: the pasteboard lives in the per-login server and outlives the process, so a leftover key silently answers a question about a document that no longer exists. Enumerate the keys your applet uses and clear them alongside the directory.
+**A "reset" helper has to reset everything the applet keeps, not just its directory.** The obvious one-liner is `reset_state() { /bin/rm -rf "$(state_dir)"; }`, and it is complete only for an applet that keeps all its state in that directory. An applet that also keeps pasteboard keys needs those cleared too: a leftover key silently answers a question about a document that no longer exists. Enumerate the keys your applet uses and clear them alongside the directory.
 
-Since API 4 that is all a reset helper has to do. Clearing them is still *your* job - the harness does not know which keys mean "no document is open" to your applet - but **protecting the developer's own boards is not**: every name goes through the namespacing wrapper, so a key you forget to clear can no longer reach a running copy of the applet or a concurrent run of the suite. A test lib written against API 3 that snapshots and restores the global keys itself can drop that machinery.
+Since API 4 that is all a reset helper has to do, and since API 6 the boards are not global at all. Clearing them within a file is still *your* job - the harness does not know which keys mean "no document is open" to your applet - but **protecting the developer's own boards is not**: a board is a file in this run's scratch, so a key you forget to clear cannot reach a running copy of the applet or a concurrent run of the suite, and it is gone when the file ends. A test lib written against API 3 that snapshots and restores the global keys itself can drop that machinery.
 
 ---
 

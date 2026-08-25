@@ -37,12 +37,9 @@
 #
 # 4 extends that same guarantee to the two places $HOME could not reach, and is
 # likewise a GUARANTEE a test file may assert:
-#   - NAMED PASTEBOARDS are namespaced per file per run (OMCTEST_PB_PREFIX).
-#     They live in the pasteboard server, not under $HOME, so before this a
-#     handler's handoff key was the very same board the developer's running copy
-#     of the applet was reading, and two concurrent runs of one suite overwrote
-#     each other's. "general" and "find" are namespaced too, so a handler that
-#     copies for the user cannot take the clipboard of whoever runs the suite.
+#   - NAMED PASTEBOARDS are isolated per file per run. Superseded by 6, which
+#     keeps them in the scratch instead of namespacing them in the pasteboard
+#     server; a file asserting >= 4 for this reason still gets what it asked for.
 #   - ui_reset no longer DROPS the three diagnostic logs. It carries them
 #     forward, so ui_unknown_writes / ui_suspect_writes / ui_errors answer for
 #     the whole file rather than for whatever happened since the last reset -
@@ -54,11 +51,27 @@
 # OMC_FRONT_PROCESS_ID. Handlers use it to ask whether the instance that owns a
 # piece of state is still running, so the harness stands its own per-file process
 # in for the applet - alive for exactly as long as the file runs.
-OMCTEST_API_VERSION=5
+# 6 makes NAMED PASTEBOARDS files in the scratch rather than boards in the
+# pasteboard server, and is a GUARANTEE a test file may assert. 4 namespaced the
+# NAME, which stopped the collisions but left the data in a machine-global
+# service: it outlived the run, so it needed a release sweep on three traps, a
+# guard against emptying a board the harness had not minted, and a sweep that ran
+# even when the scratch was deliberately kept. As files they die with the tree, a
+# kept scratch keeps them readably inert, and a killed run leaves nothing behind.
+#
+# It also lifts a restriction that was never about naming: the pasteboard server
+# is reachable only through a Mach service, so a SANDBOXED run cannot use it -
+# and it fails silently, `put` returning 0 while the matching `get` returns
+# empty. An applet holding per-window state in a board saw every handler start
+# blank, which reads as dozens of unrelated assertion failures. Suites that had
+# to run unsandboxed for that reason no longer do.
+#
+# OMCTEST_PB_PREFIX is gone with it: there is no shared namespace left to carve.
+OMCTEST_API_VERSION=6
 export OMCTEST_API_VERSION
 
 # The four tools this harness always replaces with recording stubs.
-OMCTEST_DEFAULT_STUBS="alert notify omc_dialog_control omc_next_command"
+OMCTEST_DEFAULT_STUBS="alert notify omc_dialog_control omc_next_command pasteboard"
 
 # =============================================================================
 # The engine contract, pinned
@@ -211,10 +224,11 @@ omctest_extension_of() { # <basename>
 # =============================================================================
 
 omctest_cleanup_scratch() {
-    # Before the tree goes: the pasteboards do not live in it. Emptied even when
-    # the scratch is kept, because a kept scratch is for reading and a left-over
-    # board is not inert - it is data a LATER run could read back.
-    omctest_release_pasteboards
+    # Everything this run created is under the tree, pasteboards included since
+    # they became files, so removing it is the whole of cleanup. A kept scratch
+    # keeps the boards too, which is now safe: they are inert files nothing else
+    # reads, where a left-over SERVER board was live data a later run could pick
+    # up - which is why this used to have to sweep even in the keep case.
     if [ "$OMCTEST_KEEP_SCRATCH" = "1" ]; then
         printf 'omctest: scratch kept at %s\n' "$OMCTEST_SCRATCH" >&2
         return 0
@@ -224,55 +238,6 @@ omctest_cleanup_scratch() {
     esac
 }
 
-# Empty every namespaced pasteboard this run wrote to.
-#
-# Named pasteboards outlive the process that created them - they belong to the
-# pasteboard server, which is exactly why namespacing alone is not enough. The
-# wrapper records each name it PUTS to; this empties them. Without it a suite
-# would leave one board per handoff key per run behind forever, and a name
-# collision with a later run (the prefix is random, so: never in practice) would
-# hand it stale data rather than nothing.
-#
-# <ui-dir> to release one file's boards; no argument sweeps the whole scratch.
-omctest_release_pasteboards() { # [ui-dir]
-    local names_file board real_pb
-    real_pb="$OMCTEST_REAL_SUPPORT/pasteboard"
-    [ -x "$real_pb" ] || return 0
-    if [ -n "$1" ]; then
-        set -- "$1/pasteboard.names"
-    else
-        case "$OMCTEST_SCRATCH" in
-            /*/*) ;;
-            *) return 0 ;;
-        esac
-        set -- "$OMCTEST_SCRATCH"/*/ui/pasteboard.names
-    fi
-    for names_file; do
-        [ -s "$names_file" ] || continue
-        # sort -u: one line per put, and a handler that writes a key in a loop
-        # would otherwise have us clear the same board hundreds of times.
-        /usr/bin/sort -u "$names_file" 2>/dev/null | while IFS= read -r board; do
-            [ -n "$board" ] || continue
-            # SECOND LOCK ON THE SAME DOOR. Only a board this harness could have created is
-            # ever emptied, whatever ended up in the list. The wrapper already refuses to
-            # record an unprefixed name, and this is what makes a bug in that refusal cost
-            # nothing: the one operation here is destructive and it must never be reachable
-            # for a name the harness did not mint.
-            case "$board" in
-                omctest.*) ;;
-                *) printf 'omctest: refusing to clear a board this run did not create: [%s]\n' \
-                       "$board" >&2
-                   continue ;;
-            esac
-            "$real_pb" "$board" put "" >/dev/null 2>&1
-        done
-        # RENAMED, not truncated. Emptying it would destroy the record of which boards the run
-        # created in exactly the mode that exists for reading the scratch afterwards
-        # (OMCTEST_KEEP_SCRATCH=1). The rename still makes the sweep idempotent, which is the
-        # only reason it was being cleared.
-        /bin/mv -f "$names_file" "$names_file.released" 2>/dev/null
-    done
-}
 
 # Two constructs defeat this harness's isolation, and neither can be intercepted
 # the way a tool path or an environment variable can - so they are REPORTED
@@ -495,19 +460,15 @@ omctest_prepare_env() { # <app> <label>
     /bin/rm -rf "$OMCTEST_UI"
     /bin/mkdir -p "$OMCTEST_SCRATCH/tmp" "$OMCTEST_WORK" "$OMCTEST_UI" "$OMCTEST_SUPPORT" || return 1
 
-    # The traps run in BOTH modes now, and only their body differs. A pasteboard lives outside
-    # the scratch tree, so "we did not create the scratch, therefore we clean up nothing" - which
-    # is right for a directory somebody else owns - left every board this file created sitting in
-    # the pasteboard server forever. That is the standalone-with-a-supplied-OMCTEST_SCRATCH case,
-    # and it is the mode a developer iterating on one file is most likely to be in.
+    # Only the owner of the scratch removes it. Everything this file creates now
+    # lives inside that tree, boards included, so a run that was handed someone
+    # else's scratch has nothing of its own to clean up and correctly does
+    # nothing - where before, boards lived in the pasteboard server and that same
+    # "not mine, clean nothing" rule left every one of them behind.
     if [ "$own_scratch" = "1" ]; then
         trap 'omctest_cleanup_scratch' EXIT
         trap 'omctest_cleanup_scratch; exit 130' INT
         trap 'omctest_cleanup_scratch; exit 143' TERM
-    else
-        trap 'omctest_release_pasteboards "$OMCTEST_UI"' EXIT
-        trap 'omctest_release_pasteboards "$OMCTEST_UI"; exit 130' INT
-        trap 'omctest_release_pasteboards "$OMCTEST_UI"; exit 143' TERM
     fi
 
     # Where the tests live. The runner passes it down; standalone mode guesses
@@ -537,14 +498,8 @@ omctest_prepare_env() { # <app> <label>
     # to ever go stale.
     OMC_APP_PROCESS_ID=$$
     # Unique per file AND per run: handlers key their state directory and their
-    # pasteboard keys off this, and pasteboard keys outlive the process.
+    # pasteboard keys off this.
     OMC_ACTIONUI_WINDOW_UUID="OMCTEST-$label-$$"
-    # The pasteboard namespace, on the same terms and for a stronger reason: a
-    # window uuid at least CAN appear in a handoff key, but the interesting keys
-    # are the window-less ones - a launch queue, a model switch - and those carry
-    # nothing unique at all. The scratch's own basename comes from mktemp, so
-    # this is unique per run without depending on a pid not being recycled.
-    OMCTEST_PB_PREFIX="omctest.$(/usr/bin/basename "$OMCTEST_SCRATCH").$label."
     OMC_PARENT_DIALOG_GUID=""
     OMC_CURRENT_COMMAND_GUID="OMCTEST-CMD"
     # In the engine's always-exported set. NIB dialogs are out of scope for v1,
@@ -554,7 +509,7 @@ omctest_prepare_env() { # <app> <label>
     OMC_OBJ_TEXT=""
     export OMC_APP_BUNDLE_PATH OMC_OMC_SUPPORT_PATH OMC_OMC_RESOURCES_PATH
     export OMC_ACTIONUI_WINDOW_UUID OMC_PARENT_DIALOG_GUID OMC_CURRENT_COMMAND_GUID
-    export OMC_NIB_DLG_GUID OMC_OBJ_PATH OMC_OBJ_TEXT OMC_APP_PROCESS_ID OMCTEST_PB_PREFIX
+    export OMC_NIB_DLG_GUID OMC_OBJ_PATH OMC_OBJ_TEXT OMC_APP_PROCESS_ID
 
     # Applets derive their scratch and state paths from TMPDIR (ICEdit's
     # SCRATCH_DIR, PackageBuilder's state dir), so redirecting it isolates all
@@ -614,7 +569,6 @@ omctest_prepare_env() { # <app> <label>
     : > "$OMCTEST_UI/alert_answers"
     : > "$OMCTEST_UI/chain.queue"
     : > "$OMCTEST_UI/chain.log"
-    : > "$OMCTEST_UI/pasteboard.names"
 
     omctest_reset_counts
 }
@@ -642,16 +596,6 @@ omctest_build_support() { # <app> <dest>
     for stub_name in $OMCTEST_DEFAULT_STUBS; do
         omctest_install_default_stub "$stub_name" "$dest_dir" || return 1
     done
-
-    # pasteboard is WRAPPED, not stubbed: handlers depend on its real round-trip
-    # semantics exactly as they do plister's, and a recording stub would have to
-    # reimplement them. Only the NAME is rewritten. See the wrapper for why the
-    # name is the thing that needs isolating.
-    if [ -x "$real_dir/pasteboard" ]; then
-        /bin/rm -f "$dest_dir/pasteboard"
-        omctest_emit_wrapper_pasteboard > "$dest_dir/pasteboard" || return 1
-        /bin/chmod +x "$dest_dir/pasteboard"
-    fi
 }
 
 omctest_install_default_stub() { # <tool> <support-dir>
@@ -662,6 +606,7 @@ omctest_install_default_stub() { # <tool> <support-dir>
         notify) omctest_emit_stub_notify > "$dest_dir/$tool_name" ;;
         omc_dialog_control) omctest_emit_stub_omc_dialog_control > "$dest_dir/$tool_name" ;;
         omc_next_command) omctest_emit_stub_omc_next_command > "$dest_dir/$tool_name" ;;
+        pasteboard) omctest_emit_stub_pasteboard > "$dest_dir/$tool_name" ;;
         *) printf 'omctest: no default stub for %s\n' "$tool_name" >&2; return 1 ;;
     esac
     /bin/chmod +x "$dest_dir/$tool_name"
@@ -700,59 +645,89 @@ exit "$rc"
 STUB
 }
 
-omctest_emit_wrapper_pasteboard() {
+omctest_emit_stub_pasteboard() {
     /bin/cat <<'STUB'
 #!/bin/sh
-# pasteboard (omctest namespacing wrapper).
+# pasteboard (omctest stub, file-backed).
 #
-# The real tool, under a rewritten name. A named pasteboard belongs to the
-# pasteboard server, not to $HOME and not to this process, so it is the one piece
-# of applet state the scratch tree cannot contain: "myapp_handoff" under test IS
-# "myapp_handoff" in the copy of the applet the developer has running, and is
-# also the same board a second, concurrent run of this suite is writing. Both
-# were observed - a suite left a well-formed, in-TTL handoff entry behind that a
-# live app would have acted on, and two runs of one file crossed each other's
-# writes about one time in six.
+# The real tool talks to the pasteboard SERVER, which is global to the machine:
+# a board named "myapp_handoff" under test IS the board the developer's running
+# copy of the applet reads, and two concurrent runs of one file write the same
+# board. Both were observed - a suite left a well-formed, in-TTL handoff entry
+# behind that a live app would have acted on, and two runs of one file crossed
+# each other's writes about one time in six.
 #
-# "general" and "find" are rewritten too, not exempted. They are the real
+# Namespacing the NAME fixed the collisions but not the location. The data still
+# lived in the server and outlived the run, so it needed an explicit release
+# sweep on three traps, a guard against emptying a board the harness had not
+# minted, and a sweep that ran even when the scratch was deliberately kept.
+# Keeping boards as FILES in the scratch removes all of that: they die with the
+# tree, a kept scratch keeps them readably inert, and a killed run leaves
+# nothing behind anywhere.
+#
+# It also lifts a restriction that had nothing to do with naming. The server is
+# reachable only through a Mach service, which a sandboxed run cannot open -
+# and it fails SILENTLY: `put` exits 0 and the matching `get` returns empty, so
+# an applet keeping per-window state in a board sees every handler start blank.
+#
+# "general" and "find" are boards here too, not exemptions. They are the real
 # clipboard: a handler with a Copy path would otherwise take the clipboard of
-# whoever is running the suite, and a test asserting what was copied still reads
-# it back through this same wrapper, so nothing is lost by isolating it.
+# whoever runs the suite, and a test asserting what was copied reads it back
+# through this same stub, so nothing is lost by keeping them local.
 #
-# Recorded on put/set only. The recorded names are what omctest empties at the
-# end of the file - a board it never wrote to has nothing of ours in it.
-# FAILS CLOSED on a missing prefix, which is the whole safety story here. With an empty
-# $OMCTEST_PB_PREFIX the name below is the RAW name, so the write lands on the developer's
-# real board - and because the raw name is then recorded, the release sweep at the end of the
-# file empties it. The isolation would not merely evaporate, it would destroy the very board
-# it exists to protect; with a name of "general" that is the user's clipboard. Reachable
-# whenever a handler runs without inheriting the environment: env -i, sudo's env_reset,
-# launchctl submit, osascript "do shell script", or a Python handler passing a curated env=.
-if [ -z "${OMCTEST_PB_PREFIX:-}" ] || [ -z "${OMCTEST_UI:-}" ]; then
-    printf 'pasteboard: omctest wrapper reached with no OMCTEST_PB_PREFIX/OMCTEST_UI - refusing\n' >&2
+# Semantics match the real tool, pinned by probing it rather than assumed:
+#   put|set <string>  store the argument, with no trailing newline added; exit 0
+#   put|set           store stdin verbatim, trailing newline and all; exit 0
+#   get               print the value raw; an unwritten board prints nothing,
+#                     and still exits 0 - "empty" is not an error there
+#   anything else     the tool's own message on stderr, exit 255. That covers an
+#                     unknown operation, a name with no operation, and no
+#                     arguments at all; the usage text goes to stderr with them.
+# Arguments past the value are ignored.
+if [ -z "${OMCTEST_UI:-}" ]; then
+    printf 'pasteboard: omctest stub reached with no OMCTEST_UI - refusing\n' >&2
     exit 70
 fi
+omctest_pb_usage() {
+    printf 'USAGE\n\tpasteboard "Pasteboard Name" put[set]|get "String To Set"\n' >&2
+}
 if [ $# -lt 1 ]; then
-    exec "$OMCTEST_REAL_SUPPORT/pasteboard"
+    omctest_pb_usage
+    exit 255
 fi
-# A newline in the name would put a second, UNPREFIXED line into the release list, and the
-# sweep would then empty whatever that line happens to name. A board name is a token.
-#
-# The pattern holds a LITERAL newline. "$(printf '\n')" is the obvious spelling and is the
-# empty string - command substitution strips trailing newlines - which makes the pattern
-# *""* and refuses every name there is.
-case "$1" in
-    *'
-'*)
-        printf 'pasteboard: omctest wrapper refuses a board name containing a newline\n' >&2
-        exit 70 ;;
-esac
-omctest_pb_name="$OMCTEST_PB_PREFIX$1"
+omctest_pb_dir="$OMCTEST_UI/pb"
+/bin/mkdir -p "$omctest_pb_dir" || exit 70
+# A board name is a token to the real tool and an arbitrary string here, so it is
+# MAPPED rather than trusted as a filename: everything outside [A-Za-z0-9._-]
+# becomes "_", which keeps the name readable in a kept scratch, and a checksum of
+# the ORIGINAL name is appended so two names that flatten alike still get two
+# files. This is also what makes a name containing "/" or a newline harmless,
+# where the old wrapper had to refuse one outright.
+omctest_pb_safe=$(printf '%s' "$1" | LC_ALL=C /usr/bin/tr -c 'A-Za-z0-9._-' '_' | /usr/bin/cut -c1-96)
+omctest_pb_sum=$(printf '%s' "$1" | /usr/bin/cksum | /usr/bin/awk '{print $1}')
+omctest_pb_file="$omctest_pb_dir/$omctest_pb_safe.$omctest_pb_sum"
 shift
 case "${1:-}" in
-    put|set) printf '%s\n' "$omctest_pb_name" >> "$OMCTEST_UI/pasteboard.names" ;;
+    put|set)
+        if [ $# -ge 2 ]; then
+            printf '%s' "$2" > "$omctest_pb_file"
+        else
+            /bin/cat > "$omctest_pb_file"
+        fi
+        ;;
+    get)
+        [ -f "$omctest_pb_file" ] && /bin/cat "$omctest_pb_file"
+        ;;
+    '')
+        omctest_pb_usage
+        exit 255
+        ;;
+    *)
+        printf "Unknown pasteboard operation. Allowed operations are 'put' and 'get'\n" >&2
+        exit 255
+        ;;
 esac
-exec "$OMCTEST_REAL_SUPPORT/pasteboard" "$omctest_pb_name" "$@"
+exit 0
 STUB
 }
 
@@ -1005,15 +980,6 @@ omc_unstub() { # <tool>
             return $?
         fi
     done
-    # pasteboard is not in the default-stub list - it is WRAPPED, not stubbed - so without
-    # this it would fall to the plain symlink below and "un-stubbing" it would quietly
-    # restore direct access to the developer's real boards, un-namespaced and unrecorded.
-    if [ "$tool_name" = "pasteboard" ] && [ -x "$OMCTEST_REAL_SUPPORT/pasteboard" ]; then
-        /bin/rm -f "$OMC_OMC_SUPPORT_PATH/pasteboard"
-        omctest_emit_wrapper_pasteboard > "$OMC_OMC_SUPPORT_PATH/pasteboard" || return 1
-        /bin/chmod +x "$OMC_OMC_SUPPORT_PATH/pasteboard"
-        return 0
-    fi
     /bin/rm -f "$OMC_OMC_SUPPORT_PATH/$tool_name"
     /bin/ln -sf "$OMCTEST_REAL_SUPPORT/$tool_name" "$OMC_OMC_SUPPORT_PATH/$tool_name"
 }
@@ -1956,11 +1922,6 @@ omctest_run_file() { # <app> <testfile>
         # stdout only - stderr carries the ok/FAIL lines and must keep streaming.
         /bin/sh "$test_file" >> "$OMCTEST_UI/handlers.log"
         file_rc=$?
-        # Here rather than in the suite's cleanup, and inside the subshell where
-        # the environment that names the boards still exists: a file's boards
-        # have no reader once the file is over, and releasing them now bounds
-        # their life to the file that made them even on a long suite.
-        omctest_release_pasteboards "$OMCTEST_UI"
         exit "$file_rc"
     )
     rc=$?
