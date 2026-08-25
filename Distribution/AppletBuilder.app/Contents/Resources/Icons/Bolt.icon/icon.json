@@ -1,78 +1,38 @@
 {
-  "fill" : {
-    "automatic-gradient" : "extended-srgb:1.00000,0.21961,0.23529,1.00000"
+  "fill": {
+    "automatic-gradient": "extended-srgb:1.00000,0.21961,0.23529,1.00000"
   },
-  "groups" : [
+  "groups": [
     {
-      "layers" : [
+      "layers": [
         {
-          "fill-specializations" : [
-            {
-              "value" : {
-                "linear-gradient" : [
-                  "display-p3:0.90000,0.90000,0.90000,1.00000",
-                  "extended-gray:1.00000,1.00000"
-                ],
-                "orientation" : {
-                  "start" : {
-                    "x" : 0.5,
-                    "y" : 1
-                  },
-                  "stop" : {
-                    "x" : 0.4999999999999998,
-                    "y" : 0.9357956707610791
-                  }
-                }
-              }
-            },
-            {
-              "appearance" : "dark",
-              "value" : {
-                "linear-gradient" : [
-                  "display-p3:0.82500,0.82500,0.82500,1.00000",
-                  "extended-gray:0.75000,1.00000"
-                ],
-                "orientation" : {
-                  "start" : {
-                    "x" : 0.4999999999999998,
-                    "y" : 0.9377713752408479
-                  },
-                  "stop" : {
-                    "x" : 0.4999999999999998,
-                    "y" : 1
-                  }
-                }
-              }
-            }
-          ],
-          "image-name" : "bolt.fill.svg",
-          "name" : "bolt.fill",
-          "position-specializations" : [
-            {
-              "idiom" : "macOS",
-              "value" : {
-                "scale" : 1.2,
-                "translation-in-points" : [
-                  0,
-                  0
-                ]
-              }
-            }
-          ]
+          "name": "lightning",
+          "image-name": "lightning.svg",
+          "position": {
+            "scale": 1.1,
+            "translation-in-points": [
+              0,
+              0
+            ]
+          },
+          "glass": true,
+          "fill": {
+            "automatic-gradient": "extended-srgb:1.00000,1.00000,1.00000,1.00000"
+          }
         }
       ],
-      "shadow" : {
-        "kind" : "neutral",
-        "opacity" : 0.5
+      "shadow": {
+        "kind": "neutral",
+        "opacity": 0.5
       },
-      "translucency" : {
-        "enabled" : true,
-        "value" : 0.5
+      "translucency": {
+        "enabled": true,
+        "value": 0.5
       }
     }
   ],
-  "supported-platforms" : {
-    "squares" : [
+  "supported-platforms": {
+    "squares": [
       "macOS"
     ]
   }

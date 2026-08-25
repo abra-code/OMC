@@ -6,8 +6,8 @@
     {
       "layers": [
         {
-          "name": "terminal",
-          "image-name": "terminal.svg",
+          "name": "console",
+          "image-name": "console.svg",
           "position": {
             "scale": 1.0,
             "translation-in-points": [
