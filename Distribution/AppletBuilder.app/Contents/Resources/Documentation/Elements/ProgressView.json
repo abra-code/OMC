@@ -5,6 +5,7 @@
     "value": 0.5,
     "total": 1.0,
     "title": "Loading",
+    "progressViewStyle": "automatic",
     "actionID": "progress.tapped"
   }
 }
