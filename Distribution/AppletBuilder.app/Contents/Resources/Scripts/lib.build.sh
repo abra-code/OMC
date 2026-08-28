@@ -445,14 +445,139 @@ update_python() {
     /bin/cp -Rp "$src_python" "$dst_python"
 }
 
-# Remove any __pycache__ directories left behind during development
-clean_pycache() {
+# Remove development junk from the applet.
+#
+# Must run immediately before codesigning: almost anything still present is
+# sealed into CodeResources, and deleting it afterward invalidates the
+# signature. (.DS_Store is the lone exception - codesign carries an omit rule
+# for it - but nothing else on these lists is forgiven.)
+#
+# An OMC applet is edited in place - the .app bundle IS the project - and the
+# copy that gets signed and notarized is made from it. So junk left here does
+# not just clutter a working directory, it ships. Editor and agent config
+# (.claude, .idea, .vscode), tool caches and Finder droppings are all removed
+# outright; anything worth keeping belongs outside the bundle.
+#
+# .git is deliberately NOT swept: deleting a versioned applet's history during
+# a routine build would be unrecoverable, which is a different order of harm
+# than losing a settings file. It is reported instead, because a versioned
+# applet still carries its whole repository into the signed copy.
+#
+# Returns 1 only when junk survived the sweep and AB_WARNINGS_AS_ERRORS is set;
+# a surviving item is a permanent defect in the signed artifact, so that case
+# halts the build rather than signing over it.
+clean_build_junk() {
     local target_path="$1"
-    local count=$(/usr/bin/find "$target_path" -type d -name "__pycache__" 2>/dev/null | /usr/bin/wc -l | /usr/bin/tr -d ' ')
-    if [ "$count" -gt 0 ]; then
-        /usr/bin/find "$target_path" -type d -name "__pycache__" -exec /bin/rm -rf {} + 2>/dev/null
-        ab_log "Removed ${count} __pycache__ director$([ "$count" -eq 1 ] && echo "y" || echo "ies")"
+
+    # find descends nothing when handed a symlink as its start path, so a
+    # symlinked project would sweep zero files and still report success - the
+    # one false green this function's before/after accounting cannot catch.
+    # Resolve to the physical path first. (The CLI's own `[ ! -d ]` guard
+    # follows symlinks, so `appletbuilder build ~/link-to-MyApp.app` reaches
+    # here.)
+    target_path=$(cd "$target_path" >/dev/null 2>&1 && /bin/pwd -P)
+    if [ -z "$target_path" ]; then
+        ab_report "Error: could not resolve the project path to sweep for junk"
+        return 1
     fi
+
+    # Every pattern is quoted individually, and that - not the array - is what
+    # keeps it literal: array construction globs like any other word expansion,
+    # so a bare *.pyc here would expand against the current directory before
+    # find saw it. Containers are listed before __pycache__ so nested junk
+    # inside a swept container is not counted twice.
+    local junk_dirs=( ".claude" ".idea" ".vscode" ".pytest_cache" ".mypy_cache" ".ruff_cache" "__pycache__" )
+    # *.thin.tmp is thin_distribution.sh's scratch file, left beside a real
+    # Mach-O if lipo is interrupted rather than merely failing.
+    local junk_files=( ".DS_Store" "._*" "*.pyc" "*.pyo" "*.thin.tmp" "Thumbs.db" )
+    # Losing one of these costs developer config rather than a regenerable
+    # cache, and rm does not use the Trash, so name each path instead of
+    # folding it into a count.
+    local loud_dirs=" .claude .idea .vscode "
+
+    local junk before after removed path
+    local stuck=0
+    local header=0
+
+    # Counts are the difference between a scan before and a scan after the
+    # delete, never the pre-scan alone: rm and -delete have their errors
+    # discarded here, so a sweep that fails on a locked or root-owned path
+    # would otherwise report success and let the junk be signed in anyway.
+    for junk in "${junk_dirs[@]}"; do
+        # -prune keeps find from descending into a directory it is about to
+        # delete and then complaining about the paths that just vanished.
+        # -type l alongside -type d for the same reason the file sweep needs it:
+        # a symlink named __pycache__ or .claude is sealed just like a real
+        # directory, and -type d walks straight past it. rm -rf on a symlink
+        # removes the link, never the target.
+        before=$(/usr/bin/find "$target_path" \( -type d -o -type l \) -name "$junk" -prune 2>/dev/null | /usr/bin/wc -l | /usr/bin/tr -d ' ')
+        [ "$before" -eq 0 ] && continue
+        if [ "$header" -eq 0 ]; then
+            ab_log ""
+            ab_log "Removing development junk..."
+            header=1
+        fi
+        case "$loud_dirs" in
+            *" $junk "*)
+                /usr/bin/find "$target_path" \( -type d -o -type l \) -name "$junk" -prune 2>/dev/null | while read -r path; do
+                    ab_log "  removing ${path#"$target_path"/}"
+                done
+                ;;
+        esac
+        /usr/bin/find "$target_path" \( -type d -o -type l \) -name "$junk" -prune -exec /bin/rm -rf {} + 2>/dev/null
+        after=$(/usr/bin/find "$target_path" \( -type d -o -type l \) -name "$junk" -prune 2>/dev/null | /usr/bin/wc -l | /usr/bin/tr -d ' ')
+        removed=$((before - after))
+        if [ "$removed" -gt 0 ]; then
+            ab_log "Removed ${removed} ${junk} director$([ "$removed" -eq 1 ] && echo "y" || echo "ies")"
+        fi
+        if [ "$after" -gt 0 ]; then
+            ab_log "WARNING: ${junk}: ${after} of ${before} could not be removed"
+            stuck=$((stuck + after))
+        fi
+    done
+
+    # -type l as well as -type f: a symlink named ._x or stale.pyc is junk that
+    # gets sealed just the same, and -type f alone walks straight past it.
+    # -iname because a Windows SMB client writes thumbs.db onto a
+    # case-insensitive volume and -name "Thumbs.db" would miss it.
+    for junk in "${junk_files[@]}"; do
+        before=$(/usr/bin/find "$target_path" \( -type f -o -type l \) -iname "$junk" 2>/dev/null | /usr/bin/wc -l | /usr/bin/tr -d ' ')
+        [ "$before" -eq 0 ] && continue
+        if [ "$header" -eq 0 ]; then
+            ab_log ""
+            ab_log "Removing development junk..."
+            header=1
+        fi
+        /usr/bin/find "$target_path" \( -type f -o -type l \) -iname "$junk" -delete 2>/dev/null
+        after=$(/usr/bin/find "$target_path" \( -type f -o -type l \) -iname "$junk" 2>/dev/null | /usr/bin/wc -l | /usr/bin/tr -d ' ')
+        removed=$((before - after))
+        if [ "$removed" -gt 0 ]; then
+            ab_log "Removed ${removed} ${junk} file$([ "$removed" -eq 1 ] && echo "" || echo "s")"
+        fi
+        if [ "$after" -gt 0 ]; then
+            ab_log "WARNING: ${junk}: ${after} of ${before} could not be removed"
+            stuck=$((stuck + after))
+        fi
+    done
+
+    # Never deleted, only reported - losing a versioned applet's history to a
+    # routine build is not a tradeoff this function gets to make for anyone.
+    local vcs
+    for vcs in ".git" ".svn"; do
+        before=$(/usr/bin/find "$target_path" -type d -name "$vcs" -prune 2>/dev/null | /usr/bin/wc -l | /usr/bin/tr -d ' ')
+        [ "$before" -eq 0 ] && continue
+        # ab_log, not ab_report: this fires on every build of a versioned
+        # applet, and in the GUI ab_report is an error window. A recurring
+        # popup the developer learns to dismiss would devalue the one report
+        # below that actually means the artifact is broken.
+        ab_log "WARNING: ${vcs} left in place (not removed); it will be sealed into the signed copy"
+    done
+
+    if [ "$stuck" -gt 0 ]; then
+        ab_report "WARNING: ${stuck} junk item(s) survived and will be signed into the applet"
+        [ "$AB_WARNINGS_AS_ERRORS" = "1" ] && return 1
+    fi
+    return 0
 }
 
 # Thin universal binaries to a single architecture (AB_THIN_ARCH).
@@ -868,7 +993,8 @@ do_codesign() {
     return $status
 }
 
-# Top-level build orchestrator. Validates, refreshes runtime, thins, codesigns.
+# Top-level build orchestrator. Validates, refreshes runtime, cleans junk, thins,
+# codesigns.
 # Reads the AB_* options documented at the top of this file. Returns 0 on success,
 # 1 if the build is halted by validation or fails to codesign.
 applet_build() {
@@ -894,7 +1020,6 @@ applet_build() {
 
     update_framework "$project_path"
     update_python "$project_path"
-    clean_pycache "$project_path"
     thin_binaries "$project_path"
 
     if ! validate_info_content "$project_path"; then
@@ -920,6 +1045,18 @@ applet_build() {
             ab_log "Build halted - tests failed. (${ts})"
             return 1
         fi
+    fi
+
+    # Last thing before signing, deliberately. thin_binaries leaves a
+    # *.thin.tmp beside a binary if lipo is interrupted, and applet-authored
+    # tests are arbitrary code with write access to their own bundle - both
+    # happen after the old call site, so sweeping earlier let their leavings
+    # get sealed.
+    if ! clean_build_junk "$project_path"; then
+        local ts=$(/bin/date "+%Y-%m-%d %H:%M:%S")
+        ab_log ""
+        ab_log "Build halted - junk could not be removed and would be signed in. (${ts})"
+        return 1
     fi
 
     do_codesign "$project_path"

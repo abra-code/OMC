@@ -12,7 +12,8 @@
 #   4b. ActionUI add-on documentation (from each built add-on documentation bundle)
 #   5. Validates ElementTemplates.json against Elements/
 #   6. Thins Python distribution (strips .pyc files)
-#   7. Codesigns AppletBuilder.app (ad-hoc)
+#   7. Removes build junk (.DS_Store, __pycache__, tool caches) before signing
+#   8. Codesigns AppletBuilder.app (ad-hoc)
 #
 # Usage:
 #   ./update_appletbuilder.sh [OMC_ROOT]
@@ -287,6 +288,23 @@ else
             build_failed=1
         else
             /usr/bin/find "$VERIFIER_DST" -name "__pycache__" -type d -exec /bin/rm -rf {} + 2>/dev/null
+
+            # Tools/verifier is copied wholesale, so its pytest suite rides along.
+            # It is inert at runtime, but it still ships and gets signed into the
+            # bundle. Matched by pattern rather than by the one filename that
+            # happens to exist today, so an upstream conftest.py or tests/ dir is
+            # caught the day it appears instead of silently shipping.
+            /usr/bin/find "$VERIFIER_DST" -type d \( -name "tests" -o -name ".pytest_cache" \) -prune -exec /bin/rm -rf {} + 2>/dev/null
+            /usr/bin/find "$VERIFIER_DST" -type f \( -name "test_*.py" -o -name "*_test.py" -o -name "conftest.py" -o -name "pytest.ini" \) -delete 2>/dev/null
+
+            # Deletion errors above are discarded, so confirm the payload is
+            # actually clean rather than trusting the sweep ran.
+            test_left=$(/usr/bin/find "$VERIFIER_DST" \( -type d \( -name "tests" -o -name ".pytest_cache" \) \) -o \( -type f \( -name "test_*.py" -o -name "*_test.py" -o -name "conftest.py" -o -name "pytest.ini" \) \) 2>/dev/null | /usr/bin/wc -l | /usr/bin/tr -d ' ')
+            if [ "$test_left" -ne 0 ]; then
+                echo -e "  ${RED}${test_left} test artifact(s) remain in actionui_verifier and will be signed${NC}"
+                build_failed=1
+            fi
+
             echo -e "  ${GREEN}Updated: actionui_verifier${NC}"
             updated=1
         fi
@@ -669,7 +687,91 @@ fi
 echo ""
 
 # ════════════════════════════════════════════════════════════
-# 7. Codesign AppletBuilder.app (ad-hoc, for local execution)
+# 7. Remove build junk
+# ════════════════════════════════════════════════════════════
+#
+# Must run before codesigning: almost anything still here gets sealed into
+# CodeResources, and deleting it afterward invalidates the signature.
+# (.DS_Store is the lone exception - codesign carries an omit rule for it -
+# but nothing else on these lists is forgiven.)
+# Where the junk comes from: Finder (.DS_Store), the embedded Python
+# interpreter byte-compiling the bundled verifier (__pycache__), tool caches
+# that ride along when a repo tree is copied wholesale into the bundle
+# (Tools/verifier brings .pytest_cache and .gitignore), and agent scratch
+# directories (.claude/.cc-writes).
+
+echo "── Removing build junk ──"
+
+# Every pattern is quoted individually, and that - not the array - is what keeps
+# it literal: array construction globs like any other word expansion, so a bare
+# *.pyc here would expand against the current directory before find saw it.
+# Container directories are listed before __pycache__ so nested junk inside a
+# swept container is not counted a second time.
+JUNK_DIRS=( ".claude" ".idea" ".vscode" ".git" ".svn" ".pytest_cache" ".mypy_cache" ".ruff_cache" "__pycache__" )
+JUNK_FILES=( ".DS_Store" "._*" "*.pyc" "*.pyo" "*.thin.tmp" ".gitignore" ".gitattributes" "Thumbs.db" )
+
+junk_count=0
+junk_stuck=0
+
+# Counts are the difference between a scan before and a scan after the delete,
+# never the pre-scan alone: rm and -delete have their errors discarded here, so
+# a sweep that fails on a locked or root-owned path would otherwise report green
+# and let step 8 seal into CodeResources exactly what this step exists to remove.
+for junk in "${JUNK_DIRS[@]}"; do
+    # -prune keeps find from descending into a directory it is about to delete,
+    # which otherwise makes it complain about paths that just vanished. -type l
+    # alongside -type d because a symlink named __pycache__ or .claude is sealed
+    # just like a real directory; rm -rf on it removes the link, not the target.
+    before=$(/usr/bin/find "$APPLET_BUILDER" \( -type d -o -type l \) -name "$junk" -prune 2>/dev/null | /usr/bin/wc -l | /usr/bin/tr -d ' ')
+    [ "$before" -eq 0 ] && continue
+    /usr/bin/find "$APPLET_BUILDER" \( -type d -o -type l \) -name "$junk" -prune -exec /bin/rm -rf {} + 2>/dev/null
+    after=$(/usr/bin/find "$APPLET_BUILDER" \( -type d -o -type l \) -name "$junk" -prune 2>/dev/null | /usr/bin/wc -l | /usr/bin/tr -d ' ')
+    [ "$((before - after))" -gt 0 ] && echo "  removed $((before - after))  $junk"
+    if [ "$after" -gt 0 ]; then
+        echo -e "  ${RED}$junk: $after of $before could not be removed${NC}"
+        junk_stuck=$((junk_stuck + after))
+    fi
+    junk_count=$((junk_count + before - after))
+done
+
+# -type l as well as -type f: a symlink named ._x or stale.pyc is junk that gets
+# sealed just the same, and -type f alone walks straight past it. -iname because
+# a Windows SMB client writes thumbs.db onto a case-insensitive volume.
+for junk in "${JUNK_FILES[@]}"; do
+    before=$(/usr/bin/find "$APPLET_BUILDER" \( -type f -o -type l \) -iname "$junk" 2>/dev/null | /usr/bin/wc -l | /usr/bin/tr -d ' ')
+    [ "$before" -eq 0 ] && continue
+    /usr/bin/find "$APPLET_BUILDER" \( -type f -o -type l \) -iname "$junk" -delete 2>/dev/null
+    after=$(/usr/bin/find "$APPLET_BUILDER" \( -type f -o -type l \) -iname "$junk" 2>/dev/null | /usr/bin/wc -l | /usr/bin/tr -d ' ')
+    [ "$((before - after))" -gt 0 ] && echo "  removed $((before - after))  $junk"
+    if [ "$after" -gt 0 ]; then
+        echo -e "  ${RED}$junk: $after of $before could not be removed${NC}"
+        junk_stuck=$((junk_stuck + after))
+    fi
+    junk_count=$((junk_count + before - after))
+done
+
+# Deliberately does not set 'updated': that flag means a bundled resource was
+# refreshed, which is what decides whether the generated help cache is stale.
+# Sweeping junk changes nothing a user would see in the app.
+# Halting matches clean_build_junk in lib.build.sh, and for the same reason:
+# junk present at signing is sealed into CodeResources and cannot be removed
+# afterward without invalidating the signature, so it is a permanent defect in
+# the bundle rather than a warning worth carrying forward. Only reachable when
+# a delete actually failed - a locked or root-owned path - never on a clean run.
+if [ "$junk_stuck" -gt 0 ]; then
+    echo -e "  ${RED}${junk_stuck} junk item(s) survived and would be signed into the bundle${NC}"
+    echo -e "  ${RED}Fix the permissions on the paths above and re-run.${NC}"
+    exit 1
+elif [ "$junk_count" -eq 0 ]; then
+    echo -e "  ${GREEN}Bundle already clean${NC}"
+else
+    echo -e "  ${GREEN}Removed $junk_count junk item(s)${NC}"
+fi
+
+echo ""
+
+# ════════════════════════════════════════════════════════════
+# 8. Codesign AppletBuilder.app (ad-hoc, for local execution)
 # ════════════════════════════════════════════════════════════
 
 echo "── Codesigning AppletBuilder.app ──"
