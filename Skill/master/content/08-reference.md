@@ -12,6 +12,7 @@ Full OMC reference is in the `docs/` folder (also bundled in `AppletBuilder.app/
 |------|----------|
 | `docs/omc_agent_tips_and_troubleshooting.md` | **For AI agents**: sh-vs-bash fatal syntax, script test harness, init/LoadableView lifecycle, table & picker runtime semantics, debug-logging workflow, pre-flight checklist — with real failure case studies |
 | `docs/building_omc_applet.md` | Step-by-step applet creation guide with all details |
+| `docs/omc_applet_catalog.md` | **Before building a new applet**: a classified inventory of every working applet in the collection - which one to clone for a batch converter, document editor, inspector, pipeline, or local-AI app, which are NIB-based (not agent-editable), and where to find each UI technique |
 | `docs/appletbuilder_user_guide.md` | UI navigation reference for the AppletBuilder GUI app (for human users) |
 | `docs/omc_command_reference.md` | Complete `Command.plist` key reference — all execution modes, dialog keys, output window settings, progress dialogs, input dialogs, services |
 | `docs/omc_runtime_context_reference.md` | Every `$OMC_*` environment variable and `__SPECIAL_WORD__` substitution |
