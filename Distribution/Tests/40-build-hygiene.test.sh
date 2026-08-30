@@ -161,4 +161,143 @@ check_exists "and the file was NOT deleted behind the developer's back" \
 check "but warnings-as-errors makes it stop the build" "1" \
     "$(AB_WARNINGS_AS_ERRORS=1 ab_call_rc $BUILD validate_project "$prof")"
 
+section "9. running a bundled verifier does not scribble __pycache__ into the app"
+# clean_build_junk above is the last line of defense; this is the first. Python
+# writes bytecode next to every module it imports, so a single `appletbuilder
+# validate` from a terminal used to leave 14 __pycache__ directories inside
+# AppletBuilder.app: two in the bundled verifiers and twelve in the embedded
+# interpreter's own stdlib. Opening Help adds four more, in mistune. Each one
+# breaks a signed bundle's seal, and only the two verifier directories are even
+# visible to git - everything under Contents/Library/Python is ignored wholesale
+# as a vendored tree, as is Contents/Library/mistune. The GUI was never exposed:
+# the engine sets a prefix for any applet that bundles its own Python. The agent
+# CLI, which runs with no engine under it, was.
+#
+# Two premises hold this section up, and both are asserted rather than assumed.
+# The harness exports its own PYTHONPYCACHEPREFIX - into the scratch,
+# deliberately, so no test can dirty the bundle under test - so every check
+# strips it from the child, or the applet is never the thing being asked. And
+# the interpreter has to be willing to write bytecode at all: under
+# PYTHONDONTWRITEBYTECODE every "nothing landed in the bundle" below is true
+# for the wrong reason, and the section reports a clean 12 for a fix that has
+# been deleted.
+
+ab_pyc_dirs() {
+    /usr/bin/find "$OMC_APP_BUNDLE_PATH/Contents/Library" -type d -name __pycache__ 2>/dev/null \
+        | /usr/bin/wc -l | /usr/bin/tr -d ' '
+}
+
+# First, before anything in this section has run an interpreter, and
+# deliberately loud. Python skips writing a .pyc that is already there and
+# current, so pre-existing junk would make every check below pass without
+# anything being redirected. Red here means the bundle you are testing is
+# already dirty - sweep it, and find out what put it there.
+check "the bundle holds no cached bytecode before we start" "0" "$(ab_pyc_dirs)"
+
+# ...and the bundle has to be somewhere bytecode COULD land. "Nothing appeared"
+# is free against a root-owned copy in /Applications or a read-only volume.
+pyc_probe_file="$OMC_APP_BUNDLE_PATH/Contents/Library/.omctest_write_probe"
+: > "$pyc_probe_file" 2>/dev/null
+check "and Contents/Library is writable, so an absence means something" "yes" \
+    "$([ -f "$pyc_probe_file" ] && echo yes || echo no)"
+/bin/rm -f "$pyc_probe_file"
+
+# Inherited from the harness, so it is the environment every check below runs
+# in. Asserted rather than stripped: if bytecode writing were disabled globally
+# the right answer is to say so, not to paper over it in one subshell and leave
+# the rest of the section reporting green.
+check "bytecode writing is not disabled in this environment" "" \
+    "$PYTHONDONTWRITEBYTECODE"
+
+# The positive control, in two halves, because both are premises: this
+# interpreter does write bytecode, and PYTHONPYCACHEPREFIX is what moves it.
+# Note the control SETS a prefix rather than clearing one - running the bundled
+# interpreter unredirected is the very thing this section exists to prevent, and
+# it caches its own stdlib on startup, so a control that cleared the prefix
+# would dirty the bundle it is about to measure.
+ab_python="$OMC_APP_BUNDLE_PATH/Contents/Library/Python/bin/python3"
+probe_pkg="$OMCTEST_WORK/pycprobe"
+probe_cache="$OMCTEST_WORK/pycprobe_cache"
+/bin/mkdir -p "$probe_pkg"
+: > "$probe_pkg/__init__.py"
+printf 'VALUE = 1\n' > "$probe_pkg/probe.py"
+( PYTHONPYCACHEPREFIX="$probe_cache"
+  export PYTHONPYCACHEPREFIX
+  "$ab_python" -c 'import sys; sys.path.insert(0, sys.argv[1]); import pycprobe.probe' \
+      "$OMCTEST_WORK" ) >/dev/null 2>&1
+# probe.*.pyc, not *.pyc: `python -c` caches ~38 stdlib modules into the same
+# prefix on startup, so a bare *.pyc would report success for an import that
+# never happened.
+check "this interpreter does cache bytecode" "1" \
+    "$([ -n "$(/usr/bin/find "$probe_cache" -name 'probe.*.pyc' 2>/dev/null | /usr/bin/head -1)" ] && echo 1 || echo 0)"
+check "and a prefix is what moves it off the module" "0" \
+    "$(/usr/bin/find "$probe_pkg" -type d -name __pycache__ | /usr/bin/wc -l | /usr/bin/tr -d ' ')"
+
+pyc_proj="$(ab_make_project Pyc)"
+cmd_out="$( unset PYTHONPYCACHEPREFIX
+            ab_call_out lib.validate.sh COMMAND_VALIDATE_OUTPUT validate_command_file "$pyc_proj" )"
+check "the command verifier really ran" "1" \
+    "$(printf '%s\n' "$cmd_out" | /usr/bin/grep -c 'All files valid')"
+check "and importing it left nothing in the bundle" "0" "$(ab_pyc_dirs)"
+
+ui_out="$( unset PYTHONPYCACHEPREFIX
+           ab_call_out lib.validate.sh ACTIONUI_VALIDATE_OUTPUT validate_actionui_file \
+               "$OMC_APP_BUNDLE_PATH/Contents/Resources/Base.lproj/Settings.json" )"
+check "the ActionUI verifier really ran" "1" \
+    "$(printf '%s\n' "$ui_out" | /usr/bin/grep -c '\[OK\].*Settings\.json')"
+check "and it left nothing either" "0" "$(ab_pyc_dirs)"
+
+# The third importer, and the only one reaching a package with subpackages:
+# mistune contributes four directories of its own, none of them tracked.
+#
+# TMPDIR is redirected into the scratch for this one, which moves HELP_HTML_DIR
+# with it. ensure_help_docs_converted is a staleness gate over that directory,
+# and the real one at $TMPDIR/appletbuilder_help outlives a suite run - against
+# it the function would find the HTML current, start no interpreter at all, and
+# the check below would still see the file and report a conversion that never
+# happened. A fresh directory forces the conversion every run.
+pyc_help_tmp="$OMCTEST_WORK/help_tmp"
+/bin/mkdir -p "$pyc_help_tmp"
+( unset PYTHONPYCACHEPREFIX
+  TMPDIR="$pyc_help_tmp"
+  export TMPDIR
+  ab_call lib.help.sh ensure_help_docs_converted ) >/dev/null 2>&1
+check "the help converter really ran" "1" \
+    "$([ -f "$pyc_help_tmp/appletbuilder_help/appletbuilder_user_guide.html" ] && echo 1 || echo 0)"
+check "and mistune cached itself elsewhere" "0" "$(ab_pyc_dirs)"
+
+# The seam itself, so a future edit cannot quietly move the cache back inside
+# the bundle or stomp the prefix its caller chose.
+#
+# The expected value is spelled out rather than tested for a property. The
+# harness prefix is non-empty and outside the bundle too, so "is set" and
+# "points outside the bundle" would both stay green the day the unset below
+# stops reaching the child - which is the one failure that would silently
+# hollow out every check above.
+pyc_default="$( unset PYTHONPYCACHEPREFIX; ab_call_out lib.common.sh PYTHONPYCACHEPREFIX : )"
+check "lib.common.sh sets its own prefix when none is inherited" \
+    "${TMPDIR:-/tmp}/appletbuilder_pyc" "$pyc_default"
+
+# With no $TMPDIR either - cron, `env -i`, `sudo` without -E. What lands in this
+# directory is executable bytecode that CPython will load back after validating
+# nothing but the source's mtime and size, so the fallback must not be a
+# predictable path under a world-writable parent.
+pyc_no_tmp="$( unset PYTHONPYCACHEPREFIX TMPDIR; ab_call_out lib.common.sh PYTHONPYCACHEPREFIX : )"
+check "and falls back into the user's own home, never /tmp" \
+    "$OMCTEST_HOME/Library/Caches/com.abracode.applet-builder/appletbuilder_pyc" \
+    "$pyc_no_tmp"
+
+# omctest's own isolation rests on this: the harness sets the prefix before it
+# runs a handler, and lib.common.sh must not overrule it.
+check "an inherited prefix is left exactly alone" "/harness/scratch/pyc" \
+    "$( PYTHONPYCACHEPREFIX=/harness/scratch/pyc; export PYTHONPYCACHEPREFIX
+        ab_call_out lib.common.sh PYTHONPYCACHEPREFIX : )"
+
+# If a check above went red the bundle now holds real junk. Removing it is not
+# suppression - the red check is the loud part - but leaving it would poison
+# the precondition of every later run, and a stale cache Python then declines
+# to rewrite would turn this whole section permanently, silently green.
+/usr/bin/find "$OMC_APP_BUNDLE_PATH/Contents/Library" -type d -name __pycache__ -prune \
+    -exec /bin/rm -rf {} + 2>/dev/null
+
 omctest_end

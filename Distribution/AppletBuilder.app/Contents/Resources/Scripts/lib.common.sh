@@ -30,6 +30,30 @@ python3="${OMC_APP_BUNDLE_PATH}/Contents/Library/Python/bin/python3"
 window_uuid="${OMC_ACTIONUI_WINDOW_UUID:-$OMC_NIB_DLG_GUID}"
 cmd_guid="$OMC_CURRENT_COMMAND_GUID"
 
+# Python writes __pycache__ next to every module it imports. Left alone that
+# means AppletBuilder scribbles into its own bundle whenever it runs the
+# bundled verifiers, mistune, or even a stdlib module: Contents/Library gains
+# directories the code-signature seal does not cover, and the app stays dirty
+# until the next build sweeps them. Point the cache outside the bundle.
+#
+# An inherited value always wins, and that is a requirement rather than
+# politeness. The engine sets a per-user prefix for any applet that bundles its
+# own Python, and omctest points this into its per-run scratch precisely so a test
+# can never dirty the bundle under test - overruling either would defeat an
+# isolation guarantee that is not ours to break. What is left is the gap
+# nothing else covers: the agent CLI, which runs with no engine under it.
+#
+# The fallback is deliberately not /tmp. $TMPDIR is per-user and set under
+# launchd and in any login shell, so this branch is reached only from a
+# stripped environment (cron, `env -i`, `sudo` without -E) - but what lands
+# here is executable bytecode, not the help viewer's HTML, and CPython
+# validates a .pyc only against its source's mtime and size. Both are trivial
+# to reproduce for anyone who can read the bundle, so a predictable path under
+# a world-writable parent that someone else can create first is code execution
+# in the user's account.
+PYTHONPYCACHEPREFIX="${PYTHONPYCACHEPREFIX:-${TMPDIR:-$HOME/Library/Caches/com.abracode.applet-builder}/appletbuilder_pyc}"
+export PYTHONPYCACHEPREFIX
+
 # ──────────────────────────────────────────────────────────────
 # Control IDs
 # ──────────────────────────────────────────────────────────────

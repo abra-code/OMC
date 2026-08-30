@@ -100,7 +100,7 @@ of its rules provably cannot fire and the file pins down why. Also: manifest and
 ActionUI validation, `Command.json`-over-`Command.plist` resolution, framework
 version comparison (including `5.10` above `5.9`), and unique command id generation.
 
-**`40-build-hygiene.test.sh`** (36 checks) - what the build refuses to ship.
+**`40-build-hygiene.test.sh`** (50 checks) - what the build refuses to ship.
 `clean_build_junk` is the last thing between a working tree and a signed artifact,
 and the property under test is that it is **loud**: it names what it removed, names
 config directories individually rather than folding them into a count, reports a
@@ -108,6 +108,17 @@ repository inside the bundle and never deletes it, sweeps a symlink wearing a ju
 name without touching its target, and escalates junk that survived. Profiling
 droppings are a validation warning that names the file rather than a silent delete,
 because the file is evidence of its own cause.
+
+Section 9 covers the other end of the same problem: keeping junk from being
+created at all. Running a bundled verifier, or opening Help, imports a Python
+package that lives inside the app, and Python caches bytecode next to whatever it
+imports - so a single `validate` once left 14 `__pycache__` directories inside
+`AppletBuilder.app`, only two of them visible to `git status`. `lib.common.sh`
+now exports `PYTHONPYCACHEPREFIX` outside the bundle, and the section checks the
+outcome (all three importers leave nothing behind) as well as the seam (an
+inherited prefix is never overruled, which is what omctest's own isolation rests
+on). Every check strips `PYTHONPYCACHEPREFIX` from the child first: the harness
+exports its own, and would otherwise answer for the applet.
 
 ---
 
@@ -129,16 +140,6 @@ already covered through `40-build-hygiene`.
 **The help viewer (area J)** renders Markdown into a WebView. The conversion is
 testable (`ensure_help_docs_converted` is a staleness check over mtimes); the
 viewer is not.
-
-**Known defect, fix pending: validation writes `__pycache__` into the bundle.**
-Each bundled verifier imports a package that lives inside the app, with no
-`PYTHONPYCACHEPREFIX` set, so `Contents/Library/{command,actionui}_verifier/verifier/__pycache__`
-appear on every `appletbuilder validate` - and therefore on every `test` and every
-Build, since validation runs first. `md2html.py` does the same to
-`Contents/Library/mistune` when Help is opened. `clean_build_junk` sweeps them
-before codesigning, so nothing ships broken, but the bundle is written into during
-ordinary use. Once fixed, this file should gain a check that a validation run
-leaves no `__pycache__` under `Contents/Library` - it would pass vacuously today.
 
 **Nothing here tests the engine.** The harness simulates the documented contract in
 `omc_runtime_context_reference.md`. It also never synthesizes UI events, so a
