@@ -8,7 +8,7 @@ When an applet bundles its own Python at `Contents/Library/Python/`, OMC sets up
 
 - **PATH** is prepended with the embedded interpreter's `bin/` directory (`YourApp.app/Contents/Library/Python/bin/`), so `python3` and any console scripts installed next to it resolve without full paths.
 - **PYTHONPATH** is prepended with `Contents/Library/Packages/` whenever that directory exists, so third-party modules installed there are importable. This is the recommended home for dependencies — see [Installing Python Packages](#installing-python-packages).
-- **PYTHONPYCACHEPREFIX** is set to `/tmp/Pyc`, so `.pyc` files are written to a temp location instead of polluting (or being blocked from) the app bundle.
+- **PYTHONPYCACHEPREFIX** is set to `Pyc` inside the per-user temporary directory macOS creates for your uid (`/var/folders/.../T/Pyc`), so `.pyc` files are written there instead of polluting (or being blocked from) the app bundle. Note this is the directory `NSTemporaryDirectory()` returns, which on macOS is not `$TMPDIR` - redirecting `TMPDIR` does not move the engine's cache.
 - No shebang line is needed — OMC determines the interpreter from the file extension.
 
 These variables are exported regardless of the handler's language, so a shell handler that invokes the embedded `python3` gets the same module resolution as a `.py` handler.
@@ -253,7 +253,7 @@ Install with `pip --target`, pointing at the applet's `Packages/` directory:
 ```bash
 APP="YourApp.app"
 PY="$APP/Contents/Library/Python/bin/python3"
-export PYTHONPYCACHEPREFIX=/tmp/Pyc
+export PYTHONPYCACHEPREFIX="$TMPDIR/Pyc"
 "$PY" -m pip install --target "$APP/Contents/Library/Packages" package_name
 ```
 
@@ -273,7 +273,7 @@ The embedded distribution includes `pip`, so you *can* install straight into its
 
 ```bash
 cd YourApp.app/Contents/Library/Python/bin
-export PYTHONPYCACHEPREFIX=/tmp/Pyc
+export PYTHONPYCACHEPREFIX="$TMPDIR/Pyc"
 ./python3 -m pip install package_name
 ```
 

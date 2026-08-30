@@ -135,8 +135,10 @@ OMCTEST_DEFAULT_STUBS="alert notify omc_dialog_control omc_next_command pasteboa
 #
 # Two deliberate deviations from the engine, both documented in the guide:
 #
-#   PYTHONPYCACHEPREFIX      the engine uses /tmp/Pyc and sets it only in the
-#                            embedded branch. The harness points it into the
+#   PYTHONPYCACHEPREFIX      the engine uses Pyc inside the per-user temporary
+#                            directory (/var/folders/<...>/T, NOT $TMPDIR) and
+#                            sets it only in the embedded branch. The harness
+#                            points it into the
 #                            scratch in BOTH branches, so a test run can never
 #                            write __pycache__ into the bundle under test and
 #                            break its signature seal. Invisible to handler

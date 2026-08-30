@@ -8,6 +8,7 @@
 #import "OMCCommandExecutor.h"
 #include "DebugSettings.h"
 #include "OMCPrivateConstants.h"
+#include <string.h>
 
 // Optional ActionUI add-ons: register extra element types so dialogs can use them.
 // Each is linked via its own ActionUI Swift package (see project setup) and exposes a plain
@@ -18,6 +19,55 @@ extern "C" void ActionUICachedImage_register(void);
 extern "C" void ActionUIRichText_register(void);
 extern "C" void ActionUIDiff_register(void);
 extern "C" void ActionUIChat_register(void);
+
+// NSTemporaryDirectory() on macOS is confstr(_CS_DARWIN_USER_TEMP_DIR): the /var/folders/<...>/T
+// directory launchd creates per uid, mode 0700. It does NOT consult $TMPDIR - checking the
+// variable first is swift-corelibs-foundation's behavior, not Apple's - and the difference is in
+// our favor. Every process of this uid computes the same path whatever the environment says, so
+// the app, OMCService and the contextual menu plugin share one cache, and no environment variable
+// can redirect where an applet loads bytecode from.
+//
+// For a sandboxed host it resolves to that container's own tmp, writable where the old fixed
+// /tmp/Pyc was not. No OMC host is sandboxed today, so treat that as a property worth having
+// rather than a problem being solved.
+//
+// Deliberately no /tmp fallback. See the header for what is stored here and why a world-writable
+// parent is the wrong place for it. NSTemporaryDirectory() effectively never comes back empty; if
+// it does, a directory under the user's own home is the next safest thing, and failing that we
+// report NULL and let the caller leave the variable alone.
+//
+// Computed once, because the answer cannot change for the life of the process. dispatch_once
+// rather than a plain static because the OMCExecuteCommand entry points are public C API a client
+// may call from any thread; the framework's own code is runloop-driven and single-threaded.
+const char *OMCGetPythonPycachePrefix(void)
+{
+    static const char *sPycachePrefix = NULL;
+    static dispatch_once_t sOnceToken;
+    dispatch_once(&sOnceToken, ^{
+        // Own pool: a client may make the first call from a thread that has none, and
+        // fileSystemRepresentation hands back a buffer the pool owns rather than the string.
+        @autoreleasepool
+        {
+            NSString *baseDir = NSTemporaryDirectory();
+            if ([baseDir length] == 0)
+            {
+                // Unlike $TMPDIR's directory this one is never swept, so it takes the
+                // bundle-identifier subdirectory ~/Library/Caches expects.
+                NSString *homeDir = NSHomeDirectory();
+                if ([homeDir length] > 0)
+                    baseDir = [homeDir stringByAppendingPathComponent:@"Library/Caches/com.abracode.OMC"];
+            }
+            if ([baseDir length] > 0)
+            {
+                // strdup while the pool is still open: the buffer dies with it, the copy does not.
+                const char *fsPath = [[baseDir stringByAppendingPathComponent:@"Pyc"] fileSystemRepresentation];
+                if (fsPath != NULL)
+                    sPycachePrefix = strdup(fsPath); // never freed on purpose: it lives as long as the process
+            }
+        }
+    });
+    return sPycachePrefix;
+}
 
 @interface OMCAppLifetimeEvents : NSObject
 @end
@@ -73,13 +123,19 @@ extern "C" void ActionUIChat_register(void);
 //
 // Not overwritten if already present (setenv overwrite=0), mirroring the add-if-absent semantics
 // of CFDictionaryAddValue in OmcExecutor: a deliberately set external value is honored, and any
-// prefix keeps the caches out of the bundle, which is the point.
+// prefix keeps the caches out of the bundle, which is the point. The honoring reaches this process
+// only - CreateEnviron (omc_popen.c) merges the per-command dictionary OVER the real environ key
+// by key, so a spawned handler sees OmcExecutor's value rather than an inherited one.
 
 + (void)setPythonPycachePrefixIfEmbedded:(NSBundle *)bundle
 {
     NSString *pythonPath = [[bundle bundlePath] stringByAppendingPathComponent:@"Contents/Library/Python/bin/python3"];
     if ([[NSFileManager defaultManager] fileExistsAtPath:pythonPath])
-        setenv("PYTHONPYCACHEPREFIX", PYTHONPYCACHEPREFIX, 0);
+    {
+        const char *pycachePrefix = OMCGetPythonPycachePrefix();
+        if (pycachePrefix != NULL)
+            setenv("PYTHONPYCACHEPREFIX", pycachePrefix, 0);
+    }
 }
 
 // DISABLED 2026-08-23. Kept, with the measurements, so the investigation is not repeated.
@@ -140,7 +196,10 @@ extern "C" void ActionUIChat_register(void);
     if ([fileManager fileExistsAtPath:pythonPath])
     {
         NSString *scriptsPath = [bundlePath stringByAppendingPathComponent:@"Contents/Resources/Scripts"];
-        NSString *command = [NSString stringWithFormat:@"export PYTHONPYCACHEPREFIX=\"%@\"; \"%@\" -m compileall \"%@\"", @(PYTHONPYCACHEPREFIX), pythonPath, scriptsPath];
+        const char *pycachePrefix = OMCGetPythonPycachePrefix();
+        if (pycachePrefix == NULL)
+            return;
+        NSString *command = [NSString stringWithFormat:@"export PYTHONPYCACHEPREFIX=\"%@\"; \"%@\" -m compileall \"%@\"", @(pycachePrefix), pythonPath, scriptsPath];
         // simple system() call is synchronous and does not enter a runloop to wait for the execution to end
         system([command UTF8String]);
     }

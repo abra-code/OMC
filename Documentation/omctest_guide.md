@@ -516,7 +516,7 @@ What the harness does for you:
 - **Interception needs nothing extra.** A Python lib that builds tool paths from `os.environ["OMC_OMC_SUPPORT_PATH"]` hits the stubs exactly as a shell handler does.
 - **`$TMPDIR` is redirected**, so a Python applet deriving a scratch directory from it lands inside the harness scratch and gets cleaned up.
 
-One deliberate deviation: the harness sets `PYTHONPYCACHEPREFIX` into the scratch for **both** the embedded and the system-Python branch, where the engine sets it only for the embedded branch. This keeps test runs from writing `__pycache__` into the bundle, which would dirty its signature seal. It is invisible to handler logic.
+One deliberate deviation: the harness sets `PYTHONPYCACHEPREFIX` into the scratch for **both** the embedded and the system-Python branch, where the engine sets it only for the embedded branch (and to `Pyc` inside the per-user `/var/folders/.../T` directory, shared by every applet the user runs - note that is what `NSTemporaryDirectory()` returns, not `$TMPDIR`, so the harness redirecting `TMPDIR` above does not move the engine's cache). This keeps test runs from writing `__pycache__` into the bundle, which would dirty its signature seal. It is invisible to handler logic.
 
 A Python applet also gains something free: your assertions can shell out to the applet's own interpreter to call its lib functions directly, unit-testing them rather than only whole handlers. This is the Python counterpart of the shell `pb_call` pattern in section 9, and it is worth writing once into your app lib:
 

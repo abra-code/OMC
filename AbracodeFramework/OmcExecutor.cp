@@ -791,9 +791,18 @@ CFStringRef GetShellFromScriptExtension(CFStringRef inExt, CFMutableDictionaryRe
     CFStringRef embeddedPythonPath = GetEmbeddedPythonPath();
     if(embeddedPythonPath != nullptr)
     {
-        // add pyc cache location to env vars
-        // this is not a writable location for sandboxed apps but OMC applets are hard or impossible to sandbox
-        ::CFDictionaryAddValue(envVariables, CFSTR("PYTHONPYCACHEPREFIX"), CFSTR(PYTHONPYCACHEPREFIX));
+        // add pyc cache location to env vars.
+        // Per-user (/var/folders/<...>/T/Pyc, mode 0700) rather than the fixed /tmp/Pyc this used
+        // to be, so one account's bytecode cache is no longer a directory another account can
+        // create first. For a sandboxed host it lands in that container's tmp, writable where
+        // /tmp was not.
+        const char *pycachePrefix = OMCGetPythonPycachePrefix();
+        if(pycachePrefix != nullptr)
+        {
+            CFObj<CFStringRef> pycachePrefixStr( ::CFStringCreateWithCString(kCFAllocatorDefault, pycachePrefix, kCFStringEncodingUTF8) );
+            if(pycachePrefixStr != nullptr)
+                ::CFDictionaryAddValue(envVariables, CFSTR("PYTHONPYCACHEPREFIX"), pycachePrefixStr);
+        }
         CFObj<CFStringRef> newPaths = PrependPythonBinDirToEnvironmentPATH(embeddedPythonPath);
         if (newPaths != NULL)
             ::CFDictionaryAddValue(envVariables, CFSTR("PATH"), newPaths);
