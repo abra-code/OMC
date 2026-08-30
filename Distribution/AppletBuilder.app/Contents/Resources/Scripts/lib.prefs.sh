@@ -8,7 +8,17 @@ __LIB_PREFS_SH=1
 
 source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.common.sh"
 
-prefs_domain="com.abracode.applet-builder"
+# The defaults domain holding AppletBuilder's own settings.
+#
+# Overridable because `defaults` on a DOMAIN cannot be isolated by a test run:
+# cfprefsd keys the user domain by uid, not by $HOME, so a handler that saves a
+# setting under test rewrites the real preferences of whoever ran the suite.
+# omctest reports the construct for exactly this reason. `defaults` also accepts
+# a PATH in place of a domain, so the suite points AB_PREFS_DOMAIN at a plist
+# inside its per-file fake home: the same code runs, against a file that dies
+# with the test scratch. Nothing in production sets it, so shipped behavior is
+# unchanged.
+prefs_domain="${AB_PREFS_DOMAIN:-com.abracode.applet-builder}"
 
 get_bundle_id_prefix() {
     local prefix=$(/usr/bin/defaults read "$prefs_domain" BundleIDPrefix 2>/dev/null)

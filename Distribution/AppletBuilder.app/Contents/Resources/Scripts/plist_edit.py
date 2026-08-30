@@ -139,7 +139,7 @@ def op_append_command_full(data, args):
             ]
         elif exe_mode == 'exe_system':
             entry['COMMAND'] = [
-                'echo "Hello from ' + name + '" > /tmp/hello.txt',
+                'echo "Hello from ' + name + '" > "${TMPDIR:-/tmp}/hello.txt"',
             ]
     data.setdefault('COMMAND_LIST', []).append(entry)
 

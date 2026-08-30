@@ -8,7 +8,10 @@ __LIB_HELP_SH=1
 
 source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.common.sh"
 
-HELP_HTML_DIR="/tmp/appletbuilder_help"
+# Under $TMPDIR, not /tmp: the converted help is a per-user cache, and a
+# world-writable fixed path is both a collision between accounts and
+# somewhere another user can plant HTML the viewer will load.
+HELP_HTML_DIR="${TMPDIR:-/tmp}/appletbuilder_help"
 
 ensure_help_docs_converted() {
     local docs_dir="${OMC_APP_BUNDLE_PATH}/Contents/Resources/Documentation"

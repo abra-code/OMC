@@ -47,7 +47,13 @@ esac
 # Build a JSON file holding the edited command dict (plist_edit's replace_command
 # takes a JSON file). For a JSON command file the edited text is already JSON; for
 # a plist it is an XML dict fragment that we wrap, lint, and convert.
-temp_json=$(/usr/bin/mktemp /tmp/appletbuilder_cmd.XXXXXX.json)
+# Trailing X's, or mktemp returns the literal name rather than a unique one and
+# the second call of the day fails with "File exists" (see lib.plist.sh).
+temp_json=$(/usr/bin/mktemp "${TMPDIR:-/tmp}/appletbuilder_cmd_json_XXXXXX")
+if [ $? -ne 0 ] || [ -z "$temp_json" ]; then
+    set_value "$CMD_EDITED_LABEL_ID" "Error: no writable ${TMPDIR:-/tmp}"
+    exit 1
+fi
 
 if is_json_command_file "$cmd_plist"; then
     printf '%s' "$edited_text" > "$temp_json"
@@ -58,7 +64,12 @@ if is_json_command_file "$cmd_plist"; then
     fi
 else
     # Wrap the dict fragment in a plist envelope for validation and JSON conversion
-    temp_plist=$(/usr/bin/mktemp /tmp/appletbuilder_cmd.XXXXXX.plist)
+    temp_plist=$(/usr/bin/mktemp "${TMPDIR:-/tmp}/appletbuilder_cmd_plist_XXXXXX")
+    if [ $? -ne 0 ] || [ -z "$temp_plist" ]; then
+        set_value "$CMD_EDITED_LABEL_ID" "Error: no writable ${TMPDIR:-/tmp}"
+        /bin/rm -f "$temp_json"
+        exit 1
+    fi
     cat > "$temp_plist" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">

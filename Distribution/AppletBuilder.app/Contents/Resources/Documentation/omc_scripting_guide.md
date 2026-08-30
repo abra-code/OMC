@@ -286,7 +286,12 @@ cmd_id=$("$plister" get value "$plist_file" "/COMMAND_LIST/0/COMMAND_ID" 2>/dev/
 For complex edits, converting to JSON and back can be easier than editing XML directly:
 
 ```bash
-temp=$(/usr/bin/mktemp /tmp/edit_XXXXXX.json)
+# Two details worth copying exactly. The X's must be TRAILING - mktemp only
+# substitutes a trailing run of them, so "edit_XXXXXX.json" is not a template at
+# all: it creates that literal name, and the next call exits 1 printing nothing,
+# so one interrupted edit wedges every later one. And $TMPDIR, not /tmp, because
+# a fixed name in a world-writable directory is another user's to plant.
+temp=$(/usr/bin/mktemp "${TMPDIR:-/tmp}/edit_XXXXXX")
 /usr/bin/plutil -convert json -o "$temp" "$plist_file"
 # ... edit $temp ...
 /usr/bin/plutil -convert xml1 -o "$plist_file" "$temp"

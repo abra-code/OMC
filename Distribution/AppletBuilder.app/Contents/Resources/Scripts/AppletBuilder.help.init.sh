@@ -1,7 +1,7 @@
 #!/bin/bash
 # AppletBuilder.help.init - Load initial page into help viewer WebView
 
-source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.common.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.help.sh"
 
 # Reset navigation tracking state
 pb_set "$PB_HELP_NAV_COUNT" ""
@@ -15,7 +15,9 @@ if [ -n "$OMC_PARENT_DIALOG_GUID" ]; then
 fi
 
 if [ -z "$start_page" ]; then
-    start_page="file:///tmp/appletbuilder_help/appletbuilder_user_guide.html"
+    # Built from HELP_HTML_DIR rather than restated: the two paths must agree,
+    # and a second spelling of it is a blank help window the day either moves.
+    start_page="file://${HELP_HTML_DIR}/appletbuilder_user_guide.html"
 fi
 
 set_value "$HELP_WEBVIEW_ID" "$start_page"

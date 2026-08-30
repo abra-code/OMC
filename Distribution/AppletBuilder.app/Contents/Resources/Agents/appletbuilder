@@ -453,8 +453,19 @@ cmd_preview() {
     fi
 
     local out="$screenshot"
+    local outdir=""
     if [ -z "$out" ]; then
-        out=$(/usr/bin/mktemp "${TMPDIR:-/tmp}/actionui_preview_XXXXXX.png")
+        # A unique DIRECTORY holding a fixed name, rather than a unique file
+        # name: the caller opens the result, so the .png extension has to stay,
+        # and BSD mktemp only substitutes a TRAILING run of X's - the template
+        # "..._XXXXXX.png" creates that literal name, so the second preview of
+        # the session would fail with "File exists" and print nothing.
+        outdir=$(/usr/bin/mktemp -d "${TMPDIR:-/tmp}/actionui_preview_XXXXXX")
+        if [ $? -ne 0 ] || [ -z "$outdir" ]; then
+            echo "preview: could not create a temporary directory in ${TMPDIR:-/tmp}" >&2
+            return 1
+        fi
+        out="$outdir/preview.png"
     fi
 
     # ActionUIViewer needs a window-server session; its own logs go to stderr.
@@ -462,6 +473,12 @@ cmd_preview() {
     local rc=$?
     if [ $rc -ne 0 ] || [ ! -s "$out" ]; then
         echo "preview: failed to capture screenshot (a logged-in GUI / window-server session is required)" >&2
+        # Only a directory this function minted is swept - never one the caller
+        # named with --screenshot. Headless is exactly where this path is taken,
+        # so without it every attempt leaves an empty directory behind.
+        if [ -n "$outdir" ]; then
+            /bin/rm -rf "$outdir"
+        fi
         return 1
     fi
     echo "$out"

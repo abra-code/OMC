@@ -97,7 +97,7 @@ POSIX-compatible, or rename the script to .zsh to get a modern shell."
             ;;
         applescript|scpt)
             local tmp
-            tmp=$(/usr/bin/mktemp -d /tmp/ab_validate_XXXXXX)
+            tmp=$(/usr/bin/mktemp -d "${TMPDIR:-/tmp}/ab_validate_XXXXXX")
             SCRIPT_VALIDATE_OUTPUT=$(/usr/bin/osacompile -o "$tmp/out.scpt" "$path" 2>&1)
             rc=$?
             /bin/rm -rf "$tmp"

@@ -68,11 +68,34 @@ plist_edit() {
     local operation="$2"
     shift 2
     local editor="${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/plist_edit.py"
-    local tmp=$(/usr/bin/mktemp /tmp/plist_edit_XXXXXX.json)
+    # The X's must be TRAILING. BSD mktemp only substitutes a trailing run of
+    # them, so "..._XXXXXX.json" is not a template at all - it creates that exact
+    # name, and the next call fails with "File exists" and prints nothing. A temp
+    # file left behind by an interrupted save would then wedge every later save
+    # permanently. No extension is needed: nothing downstream reads one.
+    #
+    # Split from the declaration because `local` is itself a command and would
+    # set $? to its own success, hiding a failed mktemp.
+    local tmp
+    tmp=$(/usr/bin/mktemp "${TMPDIR:-/tmp}/plist_edit_XXXXXX")
+    if [ $? -ne 0 ] || [ -z "$tmp" ]; then
+        return 1
+    fi
 
     if is_json_command_file "$plist"; then
         /bin/cp "$plist" "$tmp" || { /bin/rm -f "$tmp"; return 1; }
         "$python3" "$editor" "$tmp" "$operation" "$@" || { /bin/rm -f "$tmp"; return 1; }
+        # Carry the original's permissions onto the replacement. mktemp creates
+        # 0600 and `cp` into an existing file keeps the destination's mode, so
+        # without this the mv silently turns a 0644 Command.json owner-only on
+        # every save - and nothing later in the build or codesign path puts it
+        # back, so the applet stops being readable for anyone it is distributed
+        # to. chmod-then-mv rather than `cat >` keeps the replace atomic.
+        local mode
+        mode=$(/usr/bin/stat -f '%Lp' "$plist" 2>/dev/null)
+        if [ -n "$mode" ]; then
+            /bin/chmod "$mode" "$tmp"
+        fi
         /bin/mv "$tmp" "$plist"
         return $?
     fi
