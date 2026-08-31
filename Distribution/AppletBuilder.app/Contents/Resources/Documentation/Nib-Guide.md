@@ -1,6 +1,7 @@
 # Nib UI Files in OMC Applets
 
-Nib files (`.nib`) are Interface Builder documents used to define UI with AppKit controls. They are the traditional way to build OMC applet dialogs before ActionUI JSON was introduced.
+Nib files (`.nib`) are Interface Builder documents used to define UI with AppKit controls. They are the traditional way to build OMC applet dialogs before ActionUI JSON was introduced. New applets based on OMC 5+ should be designed with ActionUI.  
+To convert old OMC Nib applets to ActionUI use this [migration guide](nib_to_actionui_migration.md).
 
 ## Editing
 
