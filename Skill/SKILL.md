@@ -403,7 +403,7 @@ source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.myapp.sh"
 
 ### NIB Dialogs (legacy — do not use for new applets)
 
-Nib (Interface Builder) dialogs predate ActionUI. `.nib` files can only be edited in Xcode, so agents cannot work on them directly. When maintaining an *existing* NIB applet: the window UUID is `$OMC_NIB_DLG_GUID`, control values arrive as `$OMC_NIB_DIALOG_CONTROL_<tag>_VALUE`, and the dialog attaches via a `NIB_DIALOG` dict in the command manifest. Full reference: `docs/Nib-Guide.md` and `docs/omc_controls_user_defined_runtime_attributes.md`.
+Nib (Interface Builder) dialogs predate ActionUI. `.nib` files can only be edited in Xcode, so agents cannot work on them directly. When maintaining an *existing* NIB applet: the window UUID is `$OMC_NIB_DLG_GUID`, control values arrive as `$OMC_NIB_DIALOG_CONTROL_<tag>_VALUE`, and the dialog attaches via a `NIB_DIALOG` dict in the command manifest. Full reference: `docs/Nib-Guide.md` and `docs/omc_controls_user_defined_runtime_attributes.md`. If the ask is to *replace* the nib rather than maintain it, that port is an agent-doable job with its own guide: `docs/nib_to_actionui_migration.md`.
 
 
 
@@ -827,7 +827,7 @@ Full OMC reference is in the `docs/` folder (also bundled in `AppletBuilder.app/
 |------|----------|
 | `docs/omc_agent_tips_and_troubleshooting.md` | **For AI agents**: sh-vs-bash fatal syntax, script test harness, init/LoadableView lifecycle, table & picker runtime semantics, debug-logging workflow, pre-flight checklist — with real failure case studies |
 | `docs/building_omc_applet.md` | Step-by-step applet creation guide with all details |
-| `docs/omc_applet_catalog.md` | **Before building a new applet**: a classified inventory of every working applet in the collection - which one to clone for a batch converter, document editor, inspector, pipeline, or local-AI app, which are NIB-based (not agent-editable), and where to find each UI technique |
+| `docs/omc_applet_catalog.md` | **Before building a new applet**: a classified inventory of every working applet in the collection - which one to clone for a batch converter, document editor, inspector, query builder, pipeline, or local-AI app, which are NIB-based (not agent-editable), and where to find each UI technique |
 | `docs/appletbuilder_user_guide.md` | UI navigation reference for the AppletBuilder GUI app (for human users) |
 | `docs/omc_command_reference.md` | Complete `Command.plist` key reference — all execution modes, dialog keys, output window settings, progress dialogs, input dialogs, services |
 | `docs/omc_runtime_context_reference.md` | Every `$OMC_*` environment variable and `__SPECIAL_WORD__` substitution |
@@ -842,6 +842,7 @@ Full OMC reference is in the `docs/` folder (also bundled in `AppletBuilder.app/
 | `docs/plister--help.md` | `plister` plist tool reference |
 | `docs/omc_services_reference.md` | macOS Services integration via `NSServices` in `Info.plist` |
 | `docs/Nib-Guide.md` | Nib dialog creation: editing in Xcode, control classes, connecting to OMC |
+| `docs/nib_to_actionui_migration.md` | **Porting a NIB applet off Interface Builder**: eleven ordered steps, each with a check to verify before moving on - assessing whether the nib can be transcribed or must be reconstructed, reusing nib tags as ActionUI ids, the value-representation traps (empty `Picker` tags, Bool toggles, no initial selection, migrating old config files), layout, replacing an editable combo box, drop targets, manifest rewiring, the `eval`-quoting bug the port exposes, tests, and what only a human can confirm. Ends in a symptom index |
 | `docs/omc_controls_user_defined_runtime_attributes.md` | All OMC control classes in Nibs and their settable properties |
 | `docs/MenuBar-Guide.md` | Menu bar JSON (`MainMenu.json`) in 5.1 applets: `actionID` command wiring, the `autoPopulate` Commands menu, deletion via `replacing`, Open Recent — the base array-root format is in the ActionUI skill (`ActionUI-MenuBar-JSON-Guide.md`) |
 

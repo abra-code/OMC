@@ -117,16 +117,16 @@ A `.nib` in these applets is not a single opaque file. It is a bundle directory 
 source and a build product:
 
 ```
-Base.lproj/Find.nib/
+Base.lproj/WatchdogMonitor.nib/
     designable.nib          <- Interface Builder XIB, XML, human-readable
     keyedobjects.nib        <- compiled binary, this is what loads at runtime
 ```
 
-Every app-owned nib across the six NIB applets has this shape, and every one carries a
+Every app-owned nib across the five NIB applets has this shape, and every one carries a
 `designable.nib`. No `.xib` file exists anywhere in these projects, so the in-bundle
 `designable.nib` is the source of record. The compiled member is `NIBArchive` in most cases
-(Xattr, Watchdog, Enoch, AIChat) and an Apple binary plist in the rest (Find, Delta) - do not
-assume either. `Xattr.nib` is the only one shipping per-deployment-target variants
+(Xattr, Watchdog, Enoch, AIChat) and an Apple binary plist in Delta - do not assume either.
+`Xattr.nib` is the only one shipping per-deployment-target variants
 (`keyedobjects-101300.nib` and `keyedobjects-110000.nib`); every other nib ships a single
 `keyedobjects.nib`.
 
@@ -134,14 +134,18 @@ So the XML *is* editable text and `ibtool` *can* regenerate the binary. The cons
 the file format - it is that **an agent cannot author or substantially restructure an XIB with
 any confidence.** Three specific traps, none of them visible to a schema check:
 
-1. **Controls must be OMC subclasses.** Find.nib is built almost entirely from `OMCButton`,
-   `OMCPopUpButton`, `OMCComboBox`, `OMCTextField`, `OMCMenuItem`, `OMCBox`, and `OMCGridView`.
-   Per `Nib-Guide.md`, a control has to be reclassed to its OMC subclass to talk to OMC at all.
-   Add a stock `NSButton` and it compiles cleanly and is completely inert.
+1. **Controls must be OMC subclasses.** A control has to be reclassed to its OMC subclass to
+   talk to OMC at all - add a stock `NSButton` and it compiles cleanly and is completely inert.
+   `Nib-Guide.md` carries the mapping table (`OMCButton`, `OMCTextField`, `OMCComboBox`,
+   `OMCPopUpButton`, `OMCTableView`, `OMCBox`, and the rest); menu items are `OMCMenuItem`,
+   documented in `MenuBar-Guide.md` rather than in `Nib-Guide.md`. `WatchdogMonitor.nib`, for
+   instance, is `OMCButton`s, `OMCTextField`s and one `OMCTableView`; the only stock AppKit views
+   left in it are the static labels and the table's scroll view, which is exactly what
+   `Nib-Guide.md` permits - "purely decorational controls do not need to be renamed".
 2. **Two independent couplings, both by hand-maintained identifier.** A `commandID` user-defined
-   runtime attribute binds the control to a `COMMAND_ID` in the manifest (Find.nib has dozens;
-   tables use `selectionCommandID` / `doubleClickCommandID`). Separately, the integer
-   NSView `tag` binds it to the scripts: the script reads
+   runtime attribute binds the control to a `COMMAND_ID` in the manifest, one per actionable
+   control; tables use `selectionCommandID` / `doubleClickCommandID` instead. Separately, the
+   integer NSView `tag` binds it to the scripts: the script reads
    `$OMC_NIB_DIALOG_CONTROL_<tag>_VALUE` and writes back with `omc_dialog_control ... <tag>`.
    Note the manifest itself contains no control identifiers - grep `Command.plist` for
    `CONTROL_ID` and you get zero hits. Get either identifier wrong and the window still builds.
@@ -186,10 +190,22 @@ the rest) really *are* flat, sourceless compiled files - the "opaque binary" des
 accurate for those, and they are framework internals you should not touch regardless. And the
 `AIChat.nib` in AIChat and Enoch is a thin shell around a single `OMCWebKitView` with zero
 tags and zero commandIDs; the UI lives in the JavaScript, not the nib, which makes those two far
-less constrained than Find or Watchdog.
+less constrained than Watchdog.
 
 NIB applets in this collection (reference only, not clone sources): Xattr, Watchdog,
-Delta, Find, Enoch, and AIChat (hybrid: NIB main window + ActionUI dialogs).
+Delta, Enoch, and AIChat (hybrid: NIB main window + ActionUI dialogs).
+
+**Find.app is the worked example of the migration out**, and the reason this list is shorter
+than it used to be. Through 1.x it was the richest NIB applet here - 2.0 is nibless -
+`Find.nib` became `Base.lproj/Find.json`, `MainMenu.nib` collapsed into a `MainMenu.json`
+that overrides nothing but the Open item, and `Command.plist` became `Command.json`.
+`nib_to_actionui_migration.md` is the step-by-step guide, written from this port.
+If you need to know what such a port actually costs, read `FindApp`'s history
+from `38faa01` ("Port Find from a nib dialog to an ActionUI window") through `61b837f`
+("Convert Command.plist to Command.json and MainMenu.nib to MainMenu.json"). Three things did
+not survive the move: the editable `OMCComboBox`, which ActionUI has no equivalent for and which
+Find now emulates (section 5.6); the "Commands" menu, dropped deliberately; and the Page Setup /
+Print / Preferences items, which had nothing wired to them.
 
 ---
 
@@ -201,7 +217,7 @@ Match a new applet against these six axes, then read the quick-pick table in sec
 |---|---|
 | **A. UI generation** | ActionUI JSON (current, most apps) / Cocoa NIB (legacy) / hybrid |
 | **B. Script language** | pure shell / pure embedded Python / shell + Python helpers / shell + JS (WebKit bridge) |
-| **C. Interaction model** | batch converter queue / document editor (open-save-dirty) / inspector-viewer / linear pipeline-wizard / chat / live monitor / meta dev tool |
+| **C. Interaction model** | batch converter queue / document editor (open-save-dirty) / inspector-viewer / query builder (compose a command, run it) / linear pipeline-wizard / chat / live monitor / meta dev tool |
 | **D. Input routing** | `act_always` (launch into a window) / `act_file_or_folder`, `act_file`, `act_folder` (drop and open-with) / in-window drop targets / macOS Services / declared document types + UTI |
 | **E. Bundled payload** | nothing (system tools only) / helper CLI in `Contents/Helpers` / embedded Python + `Contents/Library/Packages` / AI inference stack in `Contents/Support` / model weights in-bundle |
 | **F. Test coverage** | omctest `Tests/` suite / none |
@@ -257,6 +273,7 @@ Two payload notes that decide bundle size and signing work:
 | A local-LLM chat app | **[AIChatApp/Cadabra.app](https://github.com/abra-code/Cadabra)** | Current generation: native ActionUI `Chat` streaming, dual MLX + llama.cpp engines, MCP tools |
 | A single-model AI utility (not a chat) | **[InterpreterApp/Interpreter.app](https://github.com/abra-code/InterpreterApp)** | On-device inference behind a task UI, background poller, no chat metaphor |
 | An app-development / meta tool | **[OMC/Distribution/AppletBuilder.app](https://github.com/abra-code/omc)** | The most complex applet: a tabbed editor over many commands and JSON files, embedded verifiers, companion CLI |
+| A form of options that composes a CLI invocation and runs it | **[FindApp/Find.app](https://github.com/abra-code/FindApp)** | Tabbed option form, live command preview, run into an output window. Also the reference for an editable combo box, declarative control defaults, and named configs |
 | A one-shot Services menu action, no window | Templates `Empty.applet` | Plus read the `NSServices` block in [FindApp](https://github.com/abra-code/FindApp) or [InterpreterApp](https://github.com/abra-code/InterpreterApp) |
 
 ---
@@ -322,15 +339,56 @@ Two AI-specific structures worth lifting verbatim: the Hugging Face browser
 (`aichat.hf.browse.*`, search + sort + quantization filter + download with progress) and the
 MCP server manager (`aichat.mcp.servers.*` and `aichat.mcp.inspect.*`).
 
-### 5.6 Monitors and one-shot utilities (NIB - reference only)
+### 5.6 Query builders (compose a command, then run it)
+
+One window of options that assembles a command line, shows it live, and runs it into an output
+window. No queue, no document, no destination folder - the product is the command itself.
+
+| Applet | Wraps | Manifest / UI | Complexity | Size | Tests | Notes |
+|---|---|---|---|---|---|---|
+| **[FindApp/Find.app](https://github.com/abra-code/FindApp)** | system `find`, plus `grep` for content matching | Command.json / ActionUI | small | compact | yes | **The query-builder reference, and the best small nibless applet to read end to end.** 2.0 is a complete port off NIB (section 2). A seven-tab option form (Name, Content, Attributes, Size, Permissions, Time, Advanced) feeds a read-only `TextEditor` showing the live `find` command, which `exe_script_file_with_output_window` then runs. `act_always`; a drop target on the location field retargets the search; ships a **Services** item ("Search Here with Find.app") - read its `NSServices` block. Uniquely among these applets it also demonstrates an emulated combo box, table-driven control defaults, and named configs with no document type. |
+
+Read it in this order: `Scripts/find.library.sh` is effectively the whole app.
+`get_command_from_dialog_controls()` assembles the command;
+`normalize_actionui_controls()` folds ActionUI's `"none"` sentinel and Bool toggle values into
+plain shell values once, at load, so the rest of the file reads like ordinary shell instead of
+repeating ActionUI comparisons; `shell_quote()` guards the values that carry a path or a
+pattern before they land in the `eval`'d command line. Then read `defaults.tsv` with
+`apply_control_defaults()`, then the combo-box block (`set_combo_picker_options()`,
+`combo_state_dir()`, `combo_lock_acquire()`) together with `Scripts/find.combo.pick.sh`.
+
+Three techniques worth lifting whole:
+
+- **The emulated combo box.** ActionUI has no editable combo box. Find builds one from a
+  `TextField` at id N plus a companion `Menu` at id N+1000, and repopulates that menu at runtime
+  with `omc_dialog_control`'s `omc_insert_element` / `omc_remove_element`. It diffs the new item
+  list against a per-window snapshot under `$TMPDIR/com.abracode.Find.$OMC_ACTIONUI_WINDOW_UUID`
+  so an unchanged list costs nothing, and serializes rebuilds behind an `mkdir` lock that breaks
+  a dead owner with `kill -0`.
+- **`defaults.tsv`.** ActionUI `Picker`s have no initial-selection property - they open on their
+  first option. A `control_id <tab> OMC_ACTIONUI_VIEW_<id>_VALUE <tab> default` table seeds the
+  intended values at window open and is replayed first on config load, so a config that omits a
+  control resets it instead of inheriting whatever was on screen.
+- **Named configs without a document type.** `find.save.config.sh` writes one file per config
+  under `~/Library/Application Support/com.abracode.Find/Configs/`, atomically via a `.saving.$$`
+  temp file and `mv`. It deliberately does *not* source `find.library.sh`, so configs store
+  ActionUI's own spellings (`true` / `false` / `none`) rather than normalized shell values;
+  `find.load.config.sh` converts pre-2.0 configs on read.
+
+Its `Tests/` suite is a good model for a small applet: `05-manifest` checks that the manifest
+and menu wiring resolve, `30-controls` asserts the exact `omc_enable` / `omc_disable` call was
+made - three states, enabled / disabled / untouched, not merely "not enabled" - and
+`50-library` calls `get_command_from_dialog_controls()` directly and feeds its output to
+`/usr/bin/find` to prove the generated text is accepted.
+
+### 5.7 Monitors and one-shot utilities (NIB - reference only)
 
 | Applet | Purpose | Manifest / UI | Notes |
 |---|---|---|---|
 | **[WatchdogApp/Watchdog.app](https://github.com/abra-code/WatchdogApp)** | live FSEvents folder monitor | Command.plist / **NIB** | `act_folder`. Pushes rows into a NIB table in real time via `omc_dialog_control` as events arrive - **event-driven, not polled**. Embeds the `watchdog` Python package with a compiled `_watchdog_fsevents` extension in `Contents/Library/Packages`. Read the Python handlers; any structural UI change needs Xcode (section 2). |
 | **[DeltaApp/Delta.app](https://github.com/abra-code/DeltaApp)** | TSV diff report between two directory trees | Command.plist / **NIB** | Bundles the `replay` parallel-execution tool in `Contents/MacOS`. Read for the `replay` fan-out pattern. |
-| **[FindApp/Find.app](https://github.com/abra-code/FindApp)** | GUI over `find` | Command.plist / **NIB** | `act_always`, dropping a folder retargets the search. Ships a **Services** item ("Search Here with Find.app"). Read its `NSServices` block. |
 
-### 5.7 The meta tool
+### 5.8 The meta tool
 
 **[OMC/Distribution/AppletBuilder.app](https://github.com/abra-code/omc)** - the applet that builds applets, and the most complex
 one in the collection: on the order of ninety commands across a dozen-plus ActionUI JSON files
@@ -372,6 +430,11 @@ that shares the GUI's shell libraries so both paths behave identically.
 | Sidebar + content split | OTool, Cadabra, Sips | `NavigationSplitView` |
 | One window per dropped input | OTool | `act_file_or_folder` + `OPEN_OBJECT_DIALOG` / `ALLOW_MULTIPLE_ITEMS`. Note: `MULTIPLE_OBJECT_SETTINGS` = `proc_separately` appears in **no** shipping applet. The batch converters all use `proc_together`. |
 | Document dirty tracking, save / save-as | PackageBuilder, Zip, ICEdit | `SAVE_AS_DIALOG`, window-close subcommand |
+| Named settings profiles, no document type | Find | `find.save.config.sh` / `find.load.config.sh`, one file per config in Application Support |
+| Editable combo box (there is no ActionUI element) | Find | `TextField` + `Menu` at id+1000, rebuilt with `omc_insert_element` / `omc_remove_element` in `set_combo_picker_options()` |
+| Seeding non-default `Picker` selections | Find | `defaults.tsv` + `apply_control_defaults()` |
+| Drop target on an individual control | Find | `onDropTypes` / `onDropActionID` on a `TextField`, then parse `$OMC_ACTIONUI_TRIGGER_CONTEXT` in `find.location.dropped.sh` |
+| Quoting user input into an `eval`'d command | Find | `shell_quote()` in `find.library.sh`. Read it for the single-quote escaping idiom, not as blanket coverage: it guards the start directory, name pattern, xattr name, `-perm` argument, content pattern and `>` target, while the numeric fields and the exec-tool / pipe text are interpolated raw |
 | Own document type + UTI | PackageBuilder | `UTExportedTypeDeclarations` in `Info.plist` |
 | macOS Services menu item | Find, Xattr, Interpreter | `NSServices` with `NSMessage = runOMCService` |
 | Command chaining | almost all | `omc_next_command`, `NEXT_COMMAND_ID` |
@@ -415,7 +478,7 @@ that shares the GUI's shell libraries so both paths behave identically.
 | Xattr | yes | plist | **NIB** | small | compact | `act_file_or_folder`, Services | getxattr | none |
 | Watchdog | yes | plist | **NIB** | small | large | `act_folder` | Python, watchdog | none |
 | Delta | yes | plist | **NIB** | small | compact | launch | replay | none |
-| Find | yes | plist | **NIB** | small | compact | `act_always`, Services | - | none |
+| Find | yes | JSON | ActionUI | small | compact | `act_always`, Services | - | yes |
 
 `Complexity` and `Size` are deliberately coarse buckets, not measurements - see the legend in
 section 3. When you need a real number, count it in the repo: commands are `len(COMMAND_LIST)`

@@ -482,7 +482,7 @@ failures in this port are **silent**: the JSON validates, the scripts pass
 | A whole dropdown is empty | invalid JSON in `options` - often a raw tab | 9.1 |
 | Every checkbox behaves as unchecked | `[ "$x" = "1" ]` vs ActionUI's `true` | 3.2 |
 | A control opens on the wrong value | Pickers open on option 0; no init seeding | 3.3 |
-| A saved config does not restore some controls | config holds normalized values, or legacy `1`/`0`/`""` | 3.5, 3.6 |
+| A saved config does not restore some controls | config holds normalized values, or legacy `1`/`0`/`""` | 3.4 |
 | A group of controls can never be disabled | a tag hid in a `userDefinedRuntimeAttribute` | 1.2 |
 | Tabs appear in the window title bar | `TabView` default style on macOS 26 | 4.1 |
 | Content is flush with a box's edges | `GroupBox` insets nothing | 4.2 |
