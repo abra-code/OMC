@@ -8,9 +8,11 @@
     "markdown":           { "types": ["string"],  "required": false, "description": "Markdown source to render (seed for the element value). Empty or nil renders an empty document" },
     "baseFontSize":       { "types": ["number"],  "required": false, "description": "Base font point size; omit for Dynamic Type body" },
     "syntaxHighlighting": { "types": ["boolean"], "required": false, "description": "Color fenced code blocks by language. Default from the RichText theme" },
-    "widthBehavior":      { "types": ["string"],  "required": false, "enum": ["fill", "hug"], "description": "fill (default): fills the proposed width, left-aligned - block / document layout. hug: sizes to the content width, wrapping only when it exceeds the proposal (the messaging-bubble idiom; pair with frame.maxWidth to cap how wide it grows)" }
+    "widthBehavior":      { "types": ["string"],  "required": false, "enum": ["fill", "hug"], "description": "fill (default): fills the proposed width, left-aligned - block / document layout. hug: sizes to the content width, wrapping only when it exceeds the proposal (the messaging-bubble idiom; pair with frame.maxWidth to cap how wide it grows)" },
+    "showFindBar":        { "types": ["boolean"], "required": false, "description": "A find bar over this document (default false): Cmd-F opens it, Cmd-G / Shift-Cmd-G step through the matches, Escape closes; its menu toggles case, whole-word and diacritic matching. Matches are painted behind the text without re-laying it out. With showFindBar off, states[search] still highlights" }
   },
   "observable": {
-    "value": { "types": ["string"], "description": "Current Markdown source; write new Markdown to re-render" }
+    "value": { "types": ["string"], "description": "Current Markdown source; write new Markdown to re-render" },
+    "states.search": { "types": ["string"], "description": "Runtime query (setElementState key search): a non-empty String highlights every match and, when showFindBar is on, presents the bar with the term without taking the keyboard focus; an empty string clears. The element seeds the key as a String so any text is accepted (core fixes a state key's type on its first write). Re-delivered on every states change, so a value equal to the last applied one is ignored (the reader can close the bar without it springing back); to re-open with the same term set an empty string and then the term again. The element highlights but does not scroll to the match: that needs a scroller reading RichText's current-match anchor, which ActionUI's ScrollView does not yet" }
   }
 }
