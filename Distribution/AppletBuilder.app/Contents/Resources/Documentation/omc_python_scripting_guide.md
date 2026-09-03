@@ -37,6 +37,79 @@ cmd_guid = os.environ.get("OMC_CURRENT_COMMAND_GUID", "")
 # Chain to next command or exit
 ```
 
+## The `omc` Module
+
+OMC ships two Python modules into every applet that embeds Python and has Python handlers:
+`omc` and `actionui_remote`. They land in `Contents/Library/Packages/`, which is already on
+`PYTHONPATH`, so a handler just imports them - there is nothing to install.
+
+`omc` replaces most of the boilerplate above:
+
+```python
+import omc
+
+win = omc.window()                  # the ActionUI window that dispatched this handler
+ctx = omc.context()                 # the runtime environment, parsed and named
+
+name = win.get_string(101)          # READ what is on screen, right now
+win.set_rows(5, [[name, "ready"]])  # write
+if not name:
+    win.terminate_cancel()
+```
+
+**Reading is the part that is new.** `omc_dialog_control` has only ever been able to write; the
+values a handler could read were the snapshot the engine took when the command was dispatched
+(`$OMC_ACTIONUI_VIEW_101_VALUE` and friends, still available as `ctx.view_value(101)`). Anything
+the user changed afterwards was invisible. `win.get_value()`, `win.get_rows()`,
+`win.get_property()` and the rest ask the live window.
+
+The module uses two mechanisms behind one surface. Everything ActionUI defines - values, rows,
+properties, state, element insertion, modals, toasts - travels over the remote bridge, because
+that is the only way to read. Everything OMC defines on top of a window - `terminate_ok()`,
+`terminate_cancel()`, `set_command_id()`, `bring_to_front()`, `set_title()`, `resize()`,
+`move()`, and `omc.next_command()` - runs the same helper tool a shell handler would, so there is
+one implementation of each verb rather than two.
+
+`omc.context()` gives you the environment without `os.environ.get` calls:
+
+| Field | Variable |
+| --- | --- |
+| `ctx.window_uuid` | `$ACTIONUI_WINDOW_UUID` |
+| `ctx.endpoint` | `$ACTIONUI_REMOTE_ENDPOINT` |
+| `ctx.command_guid` | `$OMC_CURRENT_COMMAND_GUID` |
+| `ctx.app_bundle_path`, `ctx.support_path`, `ctx.resources_path` | the `OMC_*_PATH` trio |
+| `ctx.obj_path`, `ctx.obj_text` | `$OMC_OBJ_PATH`, `$OMC_OBJ_TEXT` |
+| `ctx.trigger` | `.view_id`, `.view_part_id`, `.context` (JSON-decoded when it parses) |
+| `ctx.view_value(101)`, `ctx.table_value(5, 1)` | the dispatch-time snapshots |
+
+Errors come in three kinds:
+
+- `omc.OMCError` when a runtime variable is missing or a helper tool fails. `omc.window()` raises
+  it with a specific message when the applet is not serving a bridge, which is the case for any
+  command file with no `ACTIONUI_WINDOW`.
+- `omc.RemoteError` when the bridge refuses a call. Its `.code` follows `PROTOCOL.md` - 1001
+  unknown window, 1002 unknown view.
+- `omc.EndpointError` when the socket cannot be reached at all. Worth catching separately and
+  easy to miss: `omc.window()` only checks that the variables are set, and the connection is
+  opened lazily on the first verb, so a host that stopped its server after this handler was
+  launched fails at the first `get_value()` rather than at `omc.window()`.
+
+```python
+try:
+    win = omc.window()
+    value = win.get_string(101)
+except omc.EndpointError:
+    ...          # the window's host is gone
+except omc.RemoteError as err:
+    ...          # err.code says what the host refused
+except omc.OMCError:
+    ...          # not running under OMC, or a helper tool failed
+```
+
+`actionui_remote` can also be used directly, and is the same module any non-OMC ActionUI
+application ships; `omc.window()` returns a subclass of its `Window`. Shell handlers continue to
+use `omc_dialog_control`, which is unchanged and fully supported.
+
 ## Shared Setup
 
 If you have multiple Python scripts, you may want to create a shared module (e.g. `lib_myapp.py`) in the Scripts directory. Import it at the top of your handler scripts:

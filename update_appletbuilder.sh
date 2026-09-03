@@ -36,6 +36,7 @@ OMC_ROOT="${1:-$(cd "$(/usr/bin/dirname "$0")" && pwd)}"
 APPLET_BUILDER="$OMC_ROOT/Distribution/AppletBuilder.app"
 DEST_DOCS="$APPLET_BUILDER/Contents/Resources/Documentation"
 DEST_MISTUNE="$APPLET_BUILDER/Contents/Library/mistune"
+DEST_PACKAGES="$APPLET_BUILDER/Contents/Library/Packages"
 DEST_HELPERS="$APPLET_BUILDER/Contents/Helpers"
 ACTIONUI_BUILD="$OMC_ROOT/.build/ActionUI"
 
@@ -271,6 +272,33 @@ else
         echo -e "  ${GREEN}ActionUI + add-on documentation built (via ActionUIViewer)${NC}"
     else
         echo -e "  ${RED}ActionUIDocumentation bundle not found after building ActionUIViewer${NC}"
+        build_failed=1
+    fi
+
+    # actionui_remote.py - the ActionUI remote bridge's client, vendored into the Packages folder
+    # AppletBuilder copies into applets. Never edited here: ActionUI owns it, and PROTOCOL.md is
+    # the contract it implements. omc.py sits beside it and IS ours, so it is not touched.
+    echo "  Copying actionui_remote.py..."
+    REMOTE_CLIENT_SRC="$ACTIONUI_ROOT/ActionUIRemote/Python/actionui_remote.py"
+    REMOTE_CLIENT_DST="$DEST_PACKAGES/actionui_remote.py"
+    if [ -f "$REMOTE_CLIENT_SRC" ]; then
+        /bin/mkdir -p "$DEST_PACKAGES"
+        /bin/cp "$REMOTE_CLIENT_SRC" "$REMOTE_CLIENT_DST"
+        cp_rc=$?
+        if [ "$cp_rc" -ne 0 ]; then
+            echo -e "  ${RED}Failed to copy actionui_remote.py to: $REMOTE_CLIENT_DST${NC}"
+            build_failed=1
+        else
+            echo -e "  ${GREEN}actionui_remote.py vendored${NC}"
+        fi
+    else
+        echo -e "  ${RED}actionui_remote.py not found at: $REMOTE_CLIENT_SRC${NC}"
+        build_failed=1
+    fi
+
+    # omc.py is authored in this repo and must be present for applets to get it.
+    if [ ! -f "$DEST_PACKAGES/omc.py" ]; then
+        echo -e "  ${RED}omc.py missing from: $DEST_PACKAGES${NC}"
         build_failed=1
     fi
 

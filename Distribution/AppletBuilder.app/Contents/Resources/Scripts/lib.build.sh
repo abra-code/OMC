@@ -445,6 +445,82 @@ update_python() {
     /bin/cp -Rp "$src_python" "$dst_python"
 }
 
+# Install the OMC-supplied Python modules into an applet that has Python handlers.
+#
+# Contents/Library/Packages is the applet's own module directory: the engine prepends it to
+# PYTHONPATH whenever the applet embeds Python, and update_python never touches it, so these
+# survive a runtime upgrade that wipes Contents/Library/Python wholesale. A developer's own
+# pip --target installs sit alongside them.
+#
+# Requires BOTH a Python handler and an embedded runtime. Without the runtime the engine does not
+# put Packages on PYTHONPATH at all, so copying there would ship modules the applet cannot import.
+# Overwrites unconditionally: these ship with OMC and are versioned with it, like the framework.
+#
+# Returns 1 when an applet that SHOULD have the modules could not get them, and applet_build halts
+# on that. Signing an applet whose handlers will fail with ModuleNotFoundError on first run, after
+# reporting "Build succeeded", is worse than refusing to sign it.
+update_python_packages() {
+    local target_path="$1"
+    local src_packages="${OMC_APP_BUNDLE_PATH}/Contents/Library/Packages"
+    local dst_packages="$target_path/Contents/Library/Packages"
+
+    local _py_handlers
+    _py_handlers=$(/usr/bin/find "$target_path/Contents/Resources/Scripts" -name "*.py" -print -quit 2>/dev/null)
+    if [ -z "$_py_handlers" ]; then
+        return
+    fi
+
+    if [ ! -d "$target_path/Contents/Library/Python" ]; then
+        # External-interpreter applet. The engine only puts Packages on PYTHONPATH for an embedded
+        # runtime, so the modules would be unimportable; say so rather than skipping in silence.
+        ab_log "Python handlers but no embedded runtime - skipping OMC Python modules (they would not be importable)"
+        return 0
+    fi
+
+    if [ ! -d "$src_packages" ]; then
+        ab_report "Error: OMC Python modules not found at $src_packages"
+        ab_report "       This AppletBuilder predates them; rerun update_appletbuilder.sh."
+        return 1
+    fi
+
+    /bin/mkdir -p "$dst_packages"
+    local _mkdir_rc=$?
+    if [ "$_mkdir_rc" -ne 0 ]; then
+        ab_report "Error: could not create $dst_packages"
+        return 1
+    fi
+
+    local module
+    local copied=0
+    local failed=0
+    local _cp_rc
+    for module in actionui_remote.py omc.py; do
+        if [ ! -f "$src_packages/$module" ]; then
+            ab_report "Error: $module is missing from AppletBuilder; rerun update_appletbuilder.sh"
+            failed=$((failed + 1))
+            continue
+        fi
+
+        /bin/cp "$src_packages/$module" "$dst_packages/$module"
+        _cp_rc=$?
+        if [ "$_cp_rc" -ne 0 ]; then
+            ab_report "Error: could not copy $module to $dst_packages"
+            failed=$((failed + 1))
+            continue
+        fi
+        copied=$((copied + 1))
+    done
+
+    if [ "$copied" -gt 0 ]; then
+        ab_log "Installed $copied OMC Python module(s) into Contents/Library/Packages"
+    fi
+
+    if [ "$failed" -gt 0 ]; then
+        return 1
+    fi
+    return 0
+}
+
 # Remove development junk from the applet.
 #
 # Must run immediately before codesigning: almost anything still present is
@@ -1020,6 +1096,16 @@ applet_build() {
 
     update_framework "$project_path"
     update_python "$project_path"
+
+    update_python_packages "$project_path"
+    local packages_rc=$?
+    if [ "$packages_rc" -ne 0 ]; then
+        local ts=$(/bin/date "+%Y-%m-%d %H:%M:%S")
+        ab_log ""
+        ab_log "Build halted - the OMC Python modules could not be installed. (${ts})"
+        return 1
+    fi
+
     thin_binaries "$project_path"
 
     if ! validate_info_content "$project_path"; then

@@ -215,6 +215,11 @@ PYEOF
 
     if [ "$needs_python" -eq 1 ]; then
         applet_install_python "$new_app_path"
+        # A new applet is signed here and may never be Built before it is first run, so the
+        # OMC modules have to land now rather than on the first applet_build. A failure is
+        # reported by the function itself and left non-fatal here: the applet is otherwise
+        # complete, and the first Build halts on it with the same message.
+        update_python_packages "$new_app_path"
     fi
 
     # Finalize and codesign
