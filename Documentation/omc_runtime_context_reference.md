@@ -64,6 +64,7 @@ The list is derived **directly** from the source files:
 | **ActionUI Trigger** | `__ACTIONUI_TRIGGER_VIEW_ID__` | `$OMC_ACTIONUI_TRIGGER_VIEW_ID` | ViewID of the ActionUI control that fired an action. Available only when subcommand is dispatched from a control action. | **Always (when set)** |
 | **ActionUI Trigger** | `__ACTIONUI_TRIGGER_VIEW_PART_ID__` | `$OMC_ACTIONUI_TRIGGER_VIEW_PART_ID` | ViewPartID of the control event (e.g. row index for table row tap). Available only when subcommand is dispatched from a control action. | **Always (when set)** |
 | **ActionUI Trigger** | `__ACTIONUI_TRIGGER_CONTEXT__` | `$OMC_ACTIONUI_TRIGGER_CONTEXT` | Opaque context payload from the ActionUI control event (string, JSON, or number). Available only when subcommand is dispatched from a control action AND the control provided context data. | **Always (when set)** |
+| **ActionUI Bridge** | `__ACTIONUI_REMOTE_ENDPOINT__` | `$OMC_ACTIONUI_REMOTE_ENDPOINT` | Unix socket path of this host's ActionUI remote bridge, for reading and driving its windows out of process. Set once the first ActionUI window opens, and for the rest of the process. Also exported unprefixed as `$ACTIONUI_REMOTE_ENDPOINT`, which is the name the protocol itself uses. OMC 5.3 | **Always (when set)** |
 | **System** | `__CURRENT_COMMAND_GUID__` | `$OMC_CURRENT_COMMAND_GUID` | Unique command execution GUID. | **Always** |
 | **Frontmost** | `__FRONT_PROCESS_ID__` | `$OMC_FRONT_PROCESS_ID` | PID of frontmost app. | Scanned |
 | **Frontmost** | `__FRONT_APPLICATION_NAME__` | `$OMC_FRONT_APPLICATION_NAME` | Name of frontmost app. | Scanned |
@@ -207,6 +208,26 @@ The context is an opaque value provided by the ActionUI control and is serialize
 - **nil / absent** → env var is not exported (variable is absent from environment)
 
 **Important:** `$OMC_ACTIONUI_TRIGGER_VIEW_ID` and `$OMC_ACTIONUI_TRIGGER_VIEW_PART_ID` are always available when any control action fires, but `$OMC_ACTIONUI_TRIGGER_CONTEXT` may or may not be present depending on whether the control provided data.
+
+## ActionUI remote bridge
+
+An applet with an ActionUI window also serves a small JSON-RPC bridge over a Unix socket, so a command handler can **read** window state, not just write it. Two variables address it, and both are set for every handler once the first ActionUI window has opened:
+
+| Variable | Set from | Notes |
+| --- | --- | --- |
+| `$OMC_ACTIONUI_REMOTE_ENDPOINT` | special word `__ACTIONUI_REMOTE_ENDPOINT__` | OMC's own spelling, consistent with every other engine variable. |
+| `$ACTIONUI_REMOTE_ENDPOINT` | the process environment, and the environment dictionary | The name the ActionUI protocol defines. Descendant processes inherit it directly; it is also placed in the command's environment dictionary so the Terminal and iTerm modes, which hand an export script to an app that is not a descendant, carry it too. |
+| `$ACTIONUI_WINDOW_UUID` | the environment dictionary | The unprefixed alias of `$OMC_ACTIONUI_WINDOW_UUID`, so a client need not know it is talking to OMC. |
+
+Both endpoint names carry the same value; the unprefixed pair is what a plain ActionUI client expects, so a script written against the protocol runs unchanged whether its host is an OMC applet or any other ActionUI application:
+
+```python
+import actionui_remote
+win = actionui_remote.Window.from_environment()   # reads ACTIONUI_REMOTE_ENDPOINT and ACTIONUI_WINDOW_UUID
+print(win.get_value(101))
+```
+
+Writing to a window continues to go through `omc_dialog_control`, which covers every mutation verb; the bridge adds the reads that were not possible before. The variables are absent in an applet with no ActionUI window, since nothing starts the bridge.
 
 ---
 

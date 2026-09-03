@@ -19,6 +19,12 @@
 //#include "NavDialogs.h"
 #include "OMCFilePanels.h"
 #include "OmcExecutor.h"
+
+// The ActionUI remote bridge's socket path, or NULL when this process serves no bridge. Defined
+// in OMCActionUIRemoteHost.mm; declared rather than included because that header is Objective-C
+// and this file is compiled as C++. Same arrangement as the ActionUI add-on registrations in
+// OMCAppLifetimeEvents.mm.
+extern "C" const char *OMCGetActionUIRemoteEndpoint(void);
 //#include <sys/stat.h>
 #include <unistd.h>
 #include <regex.h>
@@ -140,6 +146,20 @@ OnMyCommandCM::Init()
 		char appProcessIDStr[16];
 		snprintf(appProcessIDStr, sizeof(appProcessIDStr), "%d", (int)getpid());
 		setenv("OMC_APP_PROCESS_ID", appProcessIDStr, 1 /*overwrite*/);
+
+		// The bridge's endpoint is the opposite case: it must be CLEARED here, not published.
+		// An OMC applet launched by another OMC applet inherits the parent's environment, so
+		// without this a host that serves no bridge of its own - one whose command file has no
+		// ACTIONUI_WINDOW, which never starts a server - would hand every one of its scripts the
+		// PARENT's socket path. A script calling Window.from_environment() would then drive the
+		// parent's windows, or get 1001 for a UUID that means nothing there.
+		//
+		// Clearing both names at Init() is safe for a host that does serve one: this runs long
+		// before any window exists, and OMCActionUIRemoteHost sets them again when it binds.
+		// This is the "unsetenv on failure" case of Private/AlwaysExportedVars-Setenv-Findings.md:
+		// an empty value would be wrong and an inherited value would be worse.
+		unsetenv("ACTIONUI_REMOTE_ENDPOINT");
+		unsetenv("OMC_ACTIONUI_REMOTE_ENDPOINT");
 	});
 
 //#if _DEBUG_
@@ -2564,6 +2584,35 @@ OnMyCommandCM::CreateEnvironmentVariablesDict(CFStringRef inObjTextRef, CommandR
 					nullptr, nullptr, nullptr);
 	}
 
+	// The generic spelling of the window UUID, alongside OMC's own OMC_-prefixed one. The remote
+	// bridge's protocol names ACTIONUI_WINDOW_UUID (see ActionUIRemote/PROTOCOL.md section 9), and
+	// a client is not an OMC client - actionui_remote.Window.from_environment() is the same call
+	// whether the host is an OMC applet or any other ActionUI application.
+	//
+	// The UUID cannot ride the process environment the way the endpoint does, being per dialog
+	// rather than per process, so the dictionary is the only route it has.
+	//
+	// Copied rather than recomputed so the two spellings cannot disagree. PopulateEnvironList
+	// REMOVES the key when there is no associated dialog, so absence here is the correct signal.
+	// A NIB dialog also populates it, both names being backed by the same runtime value; a client
+	// that then asks the bridge about that UUID gets error 1001, which is the honest answer.
+	CFStringRef windowUUID = (CFStringRef)::CFDictionaryGetValue(outEnviron, CFSTR("OMC_ACTIONUI_WINDOW_UUID"));
+	if((windowUUID != nullptr) && (ACFType<CFStringRef>::DynamicCast(windowUUID) != nullptr))
+	{
+		::CFDictionarySetValue(outEnviron, CFSTR("ACTIONUI_WINDOW_UUID"), windowUUID);
+	}
+
+	// And the endpoint's unprefixed spelling, for the same reason. The process environment covers
+	// it for anything we spawn, but two modes spawn nothing: kExecTerminal and kExecITerm
+	// serialize this dictionary into an export script (OMCEnvironmentExportScript.cpp) that
+	// Terminal or iTerm runs, and Terminal is not our descendant - it inherits nothing from us.
+	// The NIB WebKit window's window.omc_env is built from this dictionary too.
+	CFStringRef endpoint = (CFStringRef)::CFDictionaryGetValue(outEnviron, CFSTR("OMC_ACTIONUI_REMOTE_ENDPOINT"));
+	if((endpoint != nullptr) && (ACFType<CFStringRef>::DynamicCast(endpoint) != nullptr))
+	{
+		::CFDictionarySetValue(outEnviron, CFSTR("ACTIONUI_REMOTE_ENDPOINT"), endpoint);
+	}
+
 	return outEnviron.Detach();
 }
 
@@ -2953,6 +3002,17 @@ OnMyCommandCM::AppendTextToCommand(CFMutableStringRef inCommandRef, CFStringRef 
 			// inline command-text substitutions, so nothing is appended here. Listed explicitly to
 			// keep the SpecialWordID switch exhaustive (-Wswitch).
 			break;
+
+		case ACTIONUI_REMOTE_ENDPOINT:
+		{
+			// Unlike the trigger tokens this one IS resolvable here: it is a property of the
+			// process, not of an event. NULL until an ActionUI window has started the bridge,
+			// which substitutes as empty - the same as any other unset special word.
+			const char *endpoint = OMCGetActionUIRemoteEndpoint();
+			if(endpoint != NULL)
+				newStrRef = ::CFStringCreateWithFileSystemRepresentation(kCFAllocatorDefault, endpoint);
+		}
+		break;
 	}
 
 	if(newStrRef != NULL)
@@ -3306,6 +3366,14 @@ OnMyCommandCM::PopulateEnvironList(CFMutableDictionaryRef ioEnvironList, Command
 			{
                 newStrRef = commandRuntimeData.GetAssociatedDialogUUID();
                 releaseNewString = false;
+			}
+			break;
+
+			case ACTIONUI_REMOTE_ENDPOINT: //always exported, but only while a bridge is running
+			{
+                const char *endpoint = OMCGetActionUIRemoteEndpoint();
+                if(endpoint != NULL)
+                    newStrRef = ::CFStringCreateWithFileSystemRepresentation(kCFAllocatorDefault, endpoint);
 			}
 			break;
 			

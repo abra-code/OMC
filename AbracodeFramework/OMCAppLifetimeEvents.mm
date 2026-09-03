@@ -6,6 +6,7 @@
 //
 
 #import "OMCCommandExecutor.h"
+#import "OMCActionUIRemoteHost.h"
 #include "DebugSettings.h"
 #include "OMCPrivateConstants.h"
 #include <string.h>
@@ -276,6 +277,11 @@ const char *OMCGetPythonPycachePrefix(void)
                                               useNavDialog:NO
                                       allowKeyWindowSubcommand:NO
                                                   delegate:self];
+
+    // Last chance to unlink the socket: NSApplication's terminate ends in libc exit(), so nothing
+    // that runs after the run loop would ever fire. ActionUIRemote keeps an atexit backstop for
+    // hosts that skip this notification entirely, but doing it here is the orderly path.
+    [[OMCActionUIRemoteHost shared] stop];
 
     [[NSNotificationCenter defaultCenter] removeObserver:self];
 }

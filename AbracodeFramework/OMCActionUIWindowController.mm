@@ -18,6 +18,8 @@
 #if CURRENT_OMC_VERSION >= 50000
 @import ActionUIObjCAdapter;
 
+#import "OMCActionUIRemoteHost.h"
+
 /// Returns YES if the string's first character suggests it could be a JSON fragment.
 /// Mirrors JSONHelper.looksLikeJSONFragment in Swift — avoids NSJSONSerialization overhead
 /// for plain strings, which are the most common case.
@@ -118,6 +120,12 @@ static NSArray<ActionUIObjCDialogButton *> *OMCParseButtonSpecs(NSArray *specs)
     mOMCDialogProxy.Adopt( new OMCActionUIDialog() );
     mOMCDialogProxy->SetControlAccessor((__bridge void *)self);
     self->mCommandRuntimeData->SetAssociatedDialogUUID(mOMCDialogProxy->GetDialogUUID());
+
+    // The window now has a UUID, which is the only thing a remote client needs to address it, so
+    // this is the earliest point at which serving is meaningful - and it is before the init
+    // subcommand runs, so that subcommand's own handler can already reach back in. Idempotent:
+    // every later window finds the server already up.
+    [[OMCActionUIRemoteHost shared] ensureStarted];
 
 	CommandDescription &currCommand = self->mPlugin->GetCurrentCommand();
 

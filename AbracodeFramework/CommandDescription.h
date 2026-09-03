@@ -67,6 +67,7 @@ typedef enum SpecialWordID
     ACTIONUI_TRIGGER_VIEW_ID,
     ACTIONUI_TRIGGER_VIEW_PART_ID,
     ACTIONUI_TRIGGER_CONTEXT,
+    ACTIONUI_REMOTE_ENDPOINT, //socket path of this process's ActionUI remote bridge - always exported when a bridge is running
     CURRENT_COMMAND_GUID,
     PARENT_COMMAND_GUID,
     PARENT_DIALOG_GUID,
