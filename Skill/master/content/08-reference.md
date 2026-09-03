@@ -19,6 +19,7 @@ Full OMC reference is in the `docs/` folder (also bundled in `AppletBuilder.app/
 | `docs/omctest_guide.md` | **Writing tests**: the `Tests/` layout, the full helper API (driving the window, dispatching handlers, asserting on the virtual window), which `omc_dialog_control` verbs replay, the seam contract for binaries the harness cannot intercept, and how to write checks that can actually fail |
 | `docs/omc_scripting_guide.md` | Shell script patterns: reading controls, updating UI, tables, state, debugging |
 | `docs/omc_python_scripting_guide.md` | Python handlers: env (`PATH`/`PYTHONPATH`/`Packages`), equivalents of all shell patterns, installing deps into `Contents/Library/Packages`, and thinning the embedded Python (the `thin_applet_python.sh` plan/apply workflow) |
+| `docs/omc_python_bridge_guide.md` | The `omc` module: reading an ActionUI window from a Python handler, the full method reference, batching, error handling, and when to keep using `omc_dialog_control` |
 | `docs/omc_dialog_control--help.md` | Full `omc_dialog_control` command reference with all operations |
 | `docs/omc_next_command--help.md` | `omc_next_command` reference |
 | `docs/alert--help.md` | `alert` tool reference with all flags |

@@ -465,6 +465,135 @@
     [self closeFormDialogWithUUID:uuid bundlePath:omcBundlePath];
 }
 
+#pragma mark - The shipped omc module, against the real engine
+
+/// Where AppletBuilder keeps the modules it installs into Python applets.
+///
+/// Derived from this file's own source path, which is the only way a test running out of a
+/// built .xctest can find the repository. The point of the test below is the SHIPPED copies -
+/// the ones an applet actually receives - so pointing at anything else would prove less.
+- (NSString *)shippedPackagesDirectory {
+    NSString *thisFile = [NSString stringWithUTF8String:__FILE__];
+    NSString *repo = [[[thisFile stringByDeletingLastPathComponent]     // AbracodeTests
+                       stringByDeletingLastPathComponent]               // AbracodeFramework
+                      stringByDeletingLastPathComponent];               // repo root
+    return [repo stringByAppendingPathComponent:
+            @"Distribution/AppletBuilder.app/Contents/Library/Packages"];
+}
+
+/// The whole stack, in one test: a Python handler the engine dispatches, importing the module
+/// AppletBuilder ships, talking over the real bridge to a real ActionUI window.
+///
+/// Everything else in this file drives the socket with raw JSON built by hand, and the omc
+/// module's own tests drive it against a fake host. Neither one would notice if the shipped
+/// module and the shipped engine disagreed.
+- (void)testTheShippedOmcModuleDrivesARealWindow {
+    NSURL *formURL = [OMCBundleTestHelper testBundleURL:@"ActionUI-Form"];
+    if (formURL == nil) {
+        NSLog(@"Skipping - ActionUI-Form.omc not found in test resources");
+        return;
+    }
+    NSString *packages = [self shippedPackagesDirectory];
+    if (![[NSFileManager defaultManager] fileExistsAtPath:
+          [packages stringByAppendingPathComponent:@"omc.py"]]) {
+        NSLog(@"Skipping - omc.py not found at %@", packages);
+        return;
+    }
+
+    NSString *formPath = [formURL path];
+    NSString *uuid = [self openFormDialogWithBundlePath:formPath];
+    XCTAssertNotNil([self runningEndpoint]);
+    XCTAssertTrue([self waitForFileAtPath:[self reportPathForInitHandlerOfUUID:uuid] timeout:5.0],
+                  @"the init handler must have run before its write can be read back");
+
+    // Stand in for what the engine does for an applet with an embedded runtime: put the
+    // modules on PYTHONPATH, and name the window. Both reach the child through CreateEnviron,
+    // exactly as they would in production - this is not a back door into the handler.
+    NSString *savedPythonPath = [[[NSProcessInfo processInfo] environment] objectForKey:@"PYTHONPATH"];
+    setenv("PYTHONPATH", [packages fileSystemRepresentation], 1);
+    setenv("ACTIONUI_WINDOW_UUID", [uuid UTF8String], 1);
+    // The handler imports from inside AppletBuilder.app, and this test host has no embedded
+    // Python - so the engine sets no PYTHONPYCACHEPREFIX and CPython would write __pycache__
+    // into a bundle that gets codesigned. A real applet has both and never hits this; the test
+    // has to say so itself rather than leave bytecode behind in the tree.
+    setenv("PYTHONDONTWRITEBYTECODE", "1", 1);
+
+    NSString *reportPath = [NSString stringWithFormat:@"/tmp/OMC_test_omc_module_%@", uuid];
+    [[NSFileManager defaultManager] removeItemAtPath:reportPath error:nil];
+
+    NSString *handler = [NSString stringWithFormat:
+        @"import omc\n"
+        @"win = omc.window()\n"
+        @"before = win.get_string(2)\n"                       // what omc_dialog_control wrote
+        @"win.set_string(2, 'set by the omc module')\n"
+        @"after = win.get_string(2)\n"                        // read our own write back
+        @"win.set_rows(5, [['one', 'two']])\n"
+        @"rows = win.get_rows(5)\n"
+        @"ctx = omc.context()\n"
+        @"with open('%@', 'w') as fh:\n"
+        @"    fh.write(before + chr(10))\n"
+        @"    fh.write(after + chr(10))\n"
+        @"    fh.write(repr(rows) + chr(10))\n"
+        @"    fh.write(ctx.window_uuid + chr(10))\n", reportPath];
+
+    NSDictionary *command = @{
+        @"NAME": @"omc module probe",
+        @"COMMAND_ID": @"omc_module_probe",
+        @"EXECUTION_MODE": @"exe_script_file"
+    };
+    NSURL *bundleURL = [OMCBundleTestHelper createTestBundle:@"OMCModuleProbe"
+                                                withCommands:@[command]
+                                                     scripts:@{@"omc_module_probe.py": handler}];
+    XCTAssertNotNil(bundleURL);
+    [self.bundlesToCleanup addObject:bundleURL];
+
+    OMCTestExecutionObserver *observer = OMCTestExecutionObserver.new;
+    OSStatus err = [OMCCommandExecutor runCommand:@"omc_module_probe"
+                                   forCommandFile:[bundleURL path]
+                                      withContext:nil
+                                     useNavDialog:NO
+                             allowKeyWindowSubcommand:NO
+                                         delegate:observer];
+    XCTAssertEqual(err, noErr);
+    XCTAssertTrue([observer waitForCompletionWithTimeout:kDefaultExecutionTimeout]);
+
+    if (savedPythonPath != nil) {
+        setenv("PYTHONPATH", [savedPythonPath UTF8String], 1);
+    } else {
+        unsetenv("PYTHONPATH");
+    }
+    unsetenv("ACTIONUI_WINDOW_UUID");
+    unsetenv("PYTHONDONTWRITEBYTECODE");
+
+    XCTAssertTrue([self waitForFileAtPath:reportPath timeout:5.0],
+                  @"the Python handler should have written its report; output was: %@",
+                  observer.capturedOutput);
+    NSArray<NSString *> *lines = [[NSString stringWithContentsOfFile:reportPath
+                                                           encoding:NSUTF8StringEncoding error:nil]
+                                  componentsSeparatedByString:@"\n"];
+    XCTAssertGreaterThanOrEqual(lines.count, (NSUInteger)4, @"report was %@", lines);
+
+    // It read what OMC's own tool had written - the read path, which is the point.
+    XCTAssertEqualObjects(lines[0], @"Papa Smurf");
+    // It wrote, and read its own write back.
+    XCTAssertEqualObjects(lines[1], @"set by the omc module");
+    XCTAssertEqualObjects(lines[2], @"[['one', 'two']]");
+    // And resolved the window from the environment rather than being handed one.
+    XCTAssertEqualObjects(lines[3], uuid);
+
+    // Independently: the engine really holds what the module wrote.
+    NSString *request = [NSString stringWithFormat:
+        @"{\"jsonrpc\":\"2.0\",\"id\":7,\"method\":\"actionui.getValue\",\"params\":{\"window\":\"%@\",\"viewID\":2}}",
+        uuid];
+    NSDictionary *reply = [self sendJSONRPC:request toEndpoint:[self runningEndpoint]];
+    XCTAssertEqualObjects(reply[@"result"], @"set by the omc module",
+                          @"the engine should hold what the module set");
+
+    [[NSFileManager defaultManager] removeItemAtPath:reportPath error:nil];
+    [self closeFormDialogWithUUID:uuid bundlePath:formPath];
+    [self removeDiagnosticFilesForUUID:uuid];
+}
+
 #pragma mark - Stopping
 
 - (void)testStopUnbindsAndALaterWindowStartsItAgain {

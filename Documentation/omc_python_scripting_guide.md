@@ -110,6 +110,9 @@ except omc.OMCError:
 application ships; `omc.window()` returns a subclass of its `Window`. Shell handlers continue to
 use `omc_dialog_control`, which is unchanged and fully supported.
 
+The full reference - every method, batching, error handling, and when to reach for
+`omc_dialog_control` instead - is in the [Python Bridge Guide](omc_python_bridge_guide.md).
+
 ## Shared Setup
 
 If you have multiple Python scripts, you may want to create a shared module (e.g. `lib_myapp.py`) in the Scripts directory. Import it at the top of your handler scripts:
@@ -403,6 +406,7 @@ OMC determines the interpreter from the file extension, so a command can be impl
 
 - [Shell Scripting Guide](omc_scripting_guide.md) — Shell-specific patterns for OMC applets
 - [OMC Command Reference](omc_command_reference.md) — Command.plist format and all configuration keys
+- [Python Bridge Guide](omc_python_bridge_guide.md) — Reading an ActionUI window from a Python handler: the full `omc` module reference
 - [OMC Runtime Context Reference](omc_runtime_context_reference.md) — All environment variables and special words
 - [omc_dialog_control](omc_dialog_control--help.md) — Full command reference for UI manipulation
 - [omc_next_command](omc_next_command--help.md) — Command chaining

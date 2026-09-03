@@ -70,6 +70,14 @@ check "no undeclared ids" "" "$(ui_unknown_writes)"
 omctest_end                                    # summary + counts; this EXITS
 ```
 
+**A Python handler that reads its window** (API 7+) talks to a real ActionUI host the harness stands up, and two more assertions read what it did:
+
+```sh
+omc_run MyApp.refresh
+check "the table was filled" "1"     "$(bridge_called actionui.setRows)"
+check "the field says ready" "ready" "$(bridge_value 101)"
+```
+
 `omc_run` takes the script's **file stem**, not the `COMMAND_ID`. They are
 usually the same string — except for the primary command, which typically has no
 `COMMAND_ID` at all and is dispatched as `<NAME>.main`.

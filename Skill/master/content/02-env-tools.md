@@ -43,6 +43,22 @@ Set when a script runs as the handler for an `actionID` or `valueChangeActionID`
 | `$OMC_ACTIONUI_TRIGGER_VIEW_PART_ID` | Part ID (e.g. column index for Table) |
 | `$OMC_ACTIONUI_TRIGGER_CONTEXT` | JSON string with full trigger context |
 
+**ActionUI remote bridge (OMC 5.3).** An applet with an ActionUI window also serves a JSON-RPC bridge on a Unix socket, so a **Python** handler can READ window state - which `omc_dialog_control` has never been able to do.
+
+| Variable | Description |
+|----------|-------------|
+| `$ACTIONUI_REMOTE_ENDPOINT` | Socket path. `$OMC_ACTIONUI_REMOTE_ENDPOINT` is the same value. |
+| `$ACTIONUI_WINDOW_UUID` | The window. Unprefixed alias of `$OMC_ACTIONUI_WINDOW_UUID`. |
+
+```python
+import omc                      # in Contents/Library/Packages, already on PYTHONPATH
+win = omc.window()
+name = win.get_string(101)      # live, not the dispatch-time snapshot
+rows = win.get_rows(5)
+```
+
+Writing still works either way. Shell handlers keep using `omc_dialog_control`; there is no shell client. See `docs/omc_python_bridge_guide.md`.
+
 ## Runtime Tools
 
 All tools are at `$OMC_OMC_SUPPORT_PATH/`. Source a shared library at the top of every script:

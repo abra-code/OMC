@@ -145,6 +145,22 @@ Set when a script runs as the handler for an `actionID` or `valueChangeActionID`
 | `$OMC_ACTIONUI_TRIGGER_VIEW_PART_ID` | Part ID (e.g. column index for Table) |
 | `$OMC_ACTIONUI_TRIGGER_CONTEXT` | JSON string with full trigger context |
 
+**ActionUI remote bridge (OMC 5.3).** An applet with an ActionUI window also serves a JSON-RPC bridge on a Unix socket, so a **Python** handler can READ window state - which `omc_dialog_control` has never been able to do.
+
+| Variable | Description |
+|----------|-------------|
+| `$ACTIONUI_REMOTE_ENDPOINT` | Socket path. `$OMC_ACTIONUI_REMOTE_ENDPOINT` is the same value. |
+| `$ACTIONUI_WINDOW_UUID` | The window. Unprefixed alias of `$OMC_ACTIONUI_WINDOW_UUID`. |
+
+```python
+import omc                      # in Contents/Library/Packages, already on PYTHONPATH
+win = omc.window()
+name = win.get_string(101)      # live, not the dispatch-time snapshot
+rows = win.get_rows(5)
+```
+
+Writing still works either way. Shell handlers keep using `omc_dialog_control`; there is no shell client. See `docs/omc_python_bridge_guide.md`.
+
 ## Runtime Tools
 
 All tools are at `$OMC_OMC_SUPPORT_PATH/`. Source a shared library at the top of every script:
@@ -681,6 +697,14 @@ check "no undeclared ids" "" "$(ui_unknown_writes)"
 omctest_end                                    # summary + counts; this EXITS
 ```
 
+**A Python handler that reads its window** (API 7+) talks to a real ActionUI host the harness stands up, and two more assertions read what it did:
+
+```sh
+omc_run MyApp.refresh
+check "the table was filled" "1"     "$(bridge_called actionui.setRows)"
+check "the field says ready" "ready" "$(bridge_value 101)"
+```
+
 `omc_run` takes the script's **file stem**, not the `COMMAND_ID`. They are
 usually the same string — except for the primary command, which typically has no
 `COMMAND_ID` at all and is dispatched as `<NAME>.main`.
@@ -834,6 +858,7 @@ Full OMC reference is in the `docs/` folder (also bundled in `AppletBuilder.app/
 | `docs/omctest_guide.md` | **Writing tests**: the `Tests/` layout, the full helper API (driving the window, dispatching handlers, asserting on the virtual window), which `omc_dialog_control` verbs replay, the seam contract for binaries the harness cannot intercept, and how to write checks that can actually fail |
 | `docs/omc_scripting_guide.md` | Shell script patterns: reading controls, updating UI, tables, state, debugging |
 | `docs/omc_python_scripting_guide.md` | Python handlers: env (`PATH`/`PYTHONPATH`/`Packages`), equivalents of all shell patterns, installing deps into `Contents/Library/Packages`, and thinning the embedded Python (the `thin_applet_python.sh` plan/apply workflow) |
+| `docs/omc_python_bridge_guide.md` | The `omc` module: reading an ActionUI window from a Python handler, the full method reference, batching, error handling, and when to keep using `omc_dialog_control` |
 | `docs/omc_dialog_control--help.md` | Full `omc_dialog_control` command reference with all operations |
 | `docs/omc_next_command--help.md` | `omc_next_command` reference |
 | `docs/alert--help.md` | `alert` tool reference with all flags |
