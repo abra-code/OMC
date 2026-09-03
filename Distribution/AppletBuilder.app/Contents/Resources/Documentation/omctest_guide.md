@@ -156,7 +156,8 @@ Variables a test file can read:
 | `OMCTEST_STATUS` | exit code of the last `omc_run`; the string `-` before any dispatch, so `check_status "..." 0` cannot pass vacuously |
 | `OMCTEST_ALERT_RC` | the alert stub's answer when the scripted queue is empty (default `0`) |
 | `OMCTEST_PYTHON`, `OMCTEST_PYTHON_EMBEDDED` | the resolved interpreter, and whether it is the bundle's own |
-| `OMCTEST_API_VERSION` | `6` - assert a minimum if you use something new. `2` added `omc_control_defaults`; `3` isolates `$HOME`; `4` isolates named pasteboards and stops `ui_reset` dropping the diagnostic logs; `5` exports `OMC_APP_PROCESS_ID`; `6` makes named pasteboards files in the scratch instead of boards in the pasteboard server, and drops `OMCTEST_PB_PREFIX`. |
+| `OMCTEST_API_VERSION` | `7` - assert a minimum if you use something new. `2` added `omc_control_defaults`; `3` isolates `$HOME`; `4` isolates named pasteboards and stops `ui_reset` dropping the diagnostic logs; `5` exports `OMC_APP_PROCESS_ID`; `6` makes named pasteboards files in the scratch instead of boards in the pasteboard server, and drops `OMCTEST_PB_PREFIX`; `7` stands up the ActionUI remote bridge for a Python applet and adds `bridge_called` / `bridge_value`. |
+| `ACTIONUI_REMOTE_ENDPOINT`, `OMC_ACTIONUI_REMOTE_ENDPOINT`, `ACTIONUI_WINDOW_UUID` | the bridge's socket and window, when one is running - see 4.11 |
 
 What the harness exports into every handler:
 
@@ -218,6 +219,8 @@ The tools come from the applet's *own* embedded framework, not AppletBuilder's -
 | `b64`, `filt`, `loco` | real | pure text and data filters, safe headless. |
 
 Every stub records before it responds. A stub that only returns an exit code answers "did the handler survive"; a spy answers "did the handler do the right thing".
+
+One thing is not a stub at all. A Python applet that reads its window through the `omc` module talks to a **real ActionUI host over a real socket** - ActionUI's own fake host, which the harness runs for the length of the test file. It is not an interception: the client is the shipped one and the protocol is the shipped one, so what is being tested is the applet against a genuine implementation rather than against a hand-written imitation of one. See 4.11.
 
 ---
 
@@ -410,6 +413,8 @@ Two further caveats. It is silently inert if the bundle's known-id extraction pr
 
 Inside a sheet, assert parent-window effects by passing the parent's uuid explicitly: `ui_value 62 "$OMC_PARENT_DIALOG_GUID"`.
 
+Both helpers move the unprefixed `ACTIONUI_WINDOW_UUID` with the prefixed one, so a handler's `omc.window()` follows the switch too - the bridge client prefers the unprefixed name, and the engine keeps the two in step on every dispatch for the same reason. The harness seeds the fake host with a window per ActionUI document, using the same uuid rule these helpers use, so switching to a window named after a document works. Switch to a name that is not a document and the bridge answers `1001` for it, which is the honest answer rather than a silent write to the wrong window.
+
 **This is one of two sheet conventions, so check which one your applet uses.** `omc_child_sheet` models a sheet that gets its *own* window uuid with the parent's guid alongside - the `document_uuid="${parent_uuid:-$window_uuid}"` shape. An applet that raises its sheets through `omc_present_modal` instead keeps them in the **parent window's** control pool: there is no second uuid, the sheet's controls are read with plain `ui_value` against the current window, and `omc_child_sheet` is the wrong tool. Read the applet's own sheet-raising code before reaching for either.
 
 ### 4.9 Waiting
@@ -441,6 +446,36 @@ omc_unstub plister
 **`omc_unstub` on `alert`, `notify`, `omc_dialog_control` or `omc_next_command` restores the recording stub, not the real tool.** Restoring the real `alert` would hang the suite.
 
 ---
+
+### 4.11 The remote bridge
+
+For an applet that ships the ActionUI client - a `.py` handler under `Scripts/` **and** `actionui_remote.py` in `Contents/Library/Packages/`, which is what AppletBuilder installs - the harness starts ActionUI's fake host for the length of the test file, seeds it with the window the rest of the harness is already using, and exports the endpoint under both spellings plus the unprefixed `ACTIONUI_WINDOW_UUID`. A handler's `omc.window()` then works with no test-only special case.
+
+An applet without both is left alone. Nothing starts, and `bridge_called` answers `0` rather than failing - so an assertion that a shell applet never touched the bridge is meaningful.
+
+| Helper | Signature | Returns |
+|---|---|---|
+| `bridge_called` | `<method> [json-params-subset]` | how many times the applet called that bridge method. With a JSON object, only calls whose params contain every one of its pairs. |
+| `bridge_value` | `<view-id> [uuid]` | the value the applet last wrote to that element over the bridge; empty when it never did |
+
+```sh
+omc_run MyApp.refresh
+check "the table was filled"  "1" "$(bridge_called actionui.setRows)"
+filter='{"viewID":101}'
+check "and the field was set" "1" "$(bridge_called actionui.setValue "$filter")"
+check "with the right text"   "ready" "$(bridge_value 101)"
+```
+
+**There are two virtual windows, and this is the one that matters most often.** A Python handler using `omc` writes through two channels: everything ActionUI defines - values, rows, properties, elements - goes over the bridge, because that is the only channel that can *read*; OMC's own window verbs - `terminate_ok`, `set_title`, `resize`, `set_command_id` - shell out to `omc_dialog_control` and land in the stub's files. So `bridge_value` reads back a `win.set_value()`, and `ui_value` reads back a `win.set_title()`. They were deliberately not merged: `ui_value` would have to make a socket round trip on every call, and "empty means never touched" would stop being true.
+
+`bridge_value` is derived from the request log, not asked of the running host. A query would itself be a request, and then `bridge_called actionui.getValue` would count the harness's own reads alongside the applet's.
+
+Two things follow from reading a log of *requests*:
+
+- **A write to a part of an element is not a write to the element.** `bridge_value 100` reports what the applet wrote to element 100 itself, ignoring writes carrying a `viewPartID` - a table cell is not the table's value. The fake host happens to conflate them; a real one does not, and the assertion follows the real one.
+- **A request the host refused is still a request.** `bridge_called` counts it, which is what its name says. `bridge_value` skips writes to elements the host was never seeded with - the refusal that actually happens in practice - but a write refused for some other reason would still be reported, so pair it with a `check_status` on the dispatch if the handler is expected to fail.
+
+Note `bridge_value` cannot distinguish "never written" from "last written as the empty string": both read as empty, exactly as `ui_value` does next door.
 
 ## 5. Which omc_dialog_control verbs replay
 
@@ -515,6 +550,7 @@ What the harness does for you:
 - **The Python environment mirrors the engine.** With an embedded runtime the harness prepends its `bin/` to `PATH` and prepends `Contents/Library/Packages` to `PYTHONPATH` when that directory exists.
 - **Interception needs nothing extra.** A Python lib that builds tool paths from `os.environ["OMC_OMC_SUPPORT_PATH"]` hits the stubs exactly as a shell handler does.
 - **`$TMPDIR` is redirected**, so a Python applet deriving a scratch directory from it lands inside the harness scratch and gets cleaned up.
+- **The ActionUI bridge is stood up** when the applet ships the client, so `import omc; omc.window()` works and the applet's reads and writes are assertable with `bridge_called` and `bridge_value`. See 4.11.
 
 One deliberate deviation: the harness sets `PYTHONPYCACHEPREFIX` into the scratch for **both** the embedded and the system-Python branch, where the engine sets it only for the embedded branch (and to `Pyc` inside the per-user `/var/folders/.../T` directory, shared by every applet the user runs - note that is what `NSTemporaryDirectory()` returns, not `$TMPDIR`, so the harness redirecting `TMPDIR` above does not move the engine's cache). This keeps test runs from writing `__pycache__` into the bundle, which would dirty its signature seal. It is invisible to handler logic.
 

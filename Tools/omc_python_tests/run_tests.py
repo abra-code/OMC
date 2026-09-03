@@ -58,8 +58,16 @@ def main() -> int:
         return 2
 
     # -v so the count below is parsed from unittest's own report rather than assumed.
+    #
+    # PYTHONDONTWRITEBYTECODE because the suite imports the shipped omc.py from inside
+    # AppletBuilder.app: without it CPython leaves __pycache__ in a bundle directory that later
+    # gets codesigned. Bytecode in a bundle is a defect that must stay visible in git, so it is
+    # prevented here rather than ignored there.
+    environment = dict(os.environ)
+    environment["PYTHONDONTWRITEBYTECODE"] = "1"
     completed = subprocess.run([sys.executable, "-m", "unittest", "-v", "test_omc"],
-                               cwd=HERE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                               cwd=HERE, env=environment,
+                               stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     output = completed.stdout.decode("utf-8", "replace")
     sys.stdout.write(output)
 

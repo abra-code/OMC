@@ -38,6 +38,7 @@ AB = REPO / "Distribution" / "AppletBuilder.app"
 CLI = AB / "Contents" / "Resources" / "Agents" / "appletbuilder"
 OMCTEST = AB / "Contents" / "Resources" / "Agents" / "omctest.sh"
 AB_SUPPORT = AB / "Contents" / "Frameworks" / "Abracode.framework" / "Versions" / "A" / "Support"
+AB_PACKAGES = AB / "Contents" / "Library" / "Packages"
 
 # The engine's installed-python candidate chain, in order (OmcExecutor.cp:55-78).
 # Used to compute what omc_run SHOULD resolve to on this machine rather than
@@ -389,6 +390,42 @@ exit 0
 # clean" assertion could not fail however wrong PYTHONPYCACHEPREFIX was.
 _PY_MODULE = "MARKER = 'imported'\n"
 
+# Drives the ActionUI remote bridge through the shipped omc module, the way a real
+# Python handler does. The sys.path line stands in for what the engine does with
+# PYTHONPATH for an applet with an embedded runtime: this fixture has no embedded
+# Python, so the harness correctly does not set it, and the handler has to find its
+# own bundle's Packages the same way the engine would have pointed it there.
+_PY_BRIDGE_HANDLER = r'''
+import os, sys
+sys.path.insert(0, os.path.join(os.environ["OMC_APP_BUNDLE_PATH"], "Contents", "Library", "Packages"))
+import omc
+
+win = omc.window()
+# Twice, so "the last write wins" is a claim the suite can actually break.
+win.set_value(131, 0, "first pass")
+win.set_value(131, 0, "written over the bridge")
+win.set_rows(140, [["a", "b"], ["c", "d"]])
+# A write the host refuses. The log records a request before dispatch, so this is in
+# there exactly like an accepted one; bridge_value must not report it.
+try:
+    win.set_value(999, 0, "refused - no such element")
+except omc.RemoteError:
+    pass
+# A read, which is the whole reason the bridge exists - no tool can do this. Taken
+# before the part write below: the fake host ignores viewPartID on a write where a real
+# one would not, so reading after it would be asserting the fake's quirk.
+back = win.get_value(131)
+# A write to a PART of the element - a cell - which bridge_value must not report as the
+# element's own value.
+win.set_value(131, 3, "a cell, not the element")
+with open(os.environ["TMPDIR"] + "bridge.txt", "w") as fh:
+    fh.write(back + "\n")
+    fh.write(omc.context().window_uuid + "\n")
+# And one verb that must NOT go over the bridge: it shells out to omc_dialog_control,
+# so it lands in the stub's virtual window where ui_value can see it.
+win.set_title("titled by the tool")
+'''
+
 _PY_HANDLER = r'''
 import os, sys, subprocess
 sys.path.insert(0, os.path.join(os.environ["OMC_APP_BUNDLE_PATH"], "Contents", "Resources", "Scripts"))
@@ -430,7 +467,7 @@ def make_applet(root: Path, *, name: str = "Fixture", broken_manifest: bool = Fa
         plistlib.dump(info, f)
     _write(contents / "MacOS" / name, "#!/bin/sh\n:\n", executable=True)
 
-    command_ids = sorted({h[:-3] for h in _HANDLERS} | {"Fixture.probe"})
+    command_ids = sorted({h[:-3] for h in _HANDLERS} | {"Fixture.probe", "Fixture.bridge"})
     commands = [{
         "NAME": name,
         "COMMAND_ID": "Fixture.main",
@@ -459,6 +496,16 @@ def make_applet(root: Path, *, name: str = "Fixture", broken_manifest: bool = Fa
         _write(res / "Scripts" / filename, body.lstrip("\n"))
     _write(res / "Scripts" / "Fixture.probe.py", _PY_HANDLER.lstrip("\n"))
     _write(res / "Scripts" / "fixture_helper.py", _PY_MODULE)
+    _write(res / "Scripts" / "Fixture.bridge.py", _PY_BRIDGE_HANDLER.lstrip("\n"))
+
+    # The modules AppletBuilder installs into a Python applet. Their presence is also
+    # what tells the harness this applet can use the bridge, so copying them is not
+    # decoration - without them omctest_applet_uses_bridge is false and no fake host
+    # starts. Copied from the shipped originals so the fixture cannot drift from them.
+    packages = contents / "Library" / "Packages"
+    packages.mkdir(parents=True, exist_ok=True)
+    for module in ("actionui_remote.py", "omc.py"):
+        shutil.copy2(AB_PACKAGES / module, packages / module)
 
     # The applet's OWN tools, copied from AppletBuilder's framework. The five the
     # harness stubs get replaced anyway; plister stays real. pasteboard is still
@@ -1177,6 +1224,54 @@ omctest_end
 '''
 
 # Expected pass/fail per file, asserted exactly.
+TEST_FILES["75-bridge.test.sh"] = r'''#!/bin/sh
+# The ActionUI remote bridge: a Python handler reading and writing its own window
+# out of process, which is the one thing omc_dialog_control has never been able to do.
+. "${OMCTEST_LIB:?}"
+
+section "the harness stands one up"
+check "api version says the bridge is available" "yes" \
+    "$([ "${OMCTEST_API_VERSION:-0}" -ge 7 ] && echo yes || echo no)"
+check_exists "the endpoint is published" "$ACTIONUI_REMOTE_ENDPOINT"
+check "both spellings agree" "$ACTIONUI_REMOTE_ENDPOINT" "$OMC_ACTIONUI_REMOTE_ENDPOINT"
+check "the unprefixed window uuid is exported" "$OMC_ACTIONUI_WINDOW_UUID" "$ACTIONUI_WINDOW_UUID"
+check "nothing has called the bridge yet" "0" "$(bridge_called actionui.setValue)"
+check "and an unwritten element reads empty" "" "$(bridge_value 131)"
+
+section "a handler drives it"
+omc_run Fixture.bridge
+check_status "the handler succeeded" 0
+
+check "every write reached the bridge" "4" "$(bridge_called actionui.setValue)"
+named_131='{"viewID":131}'
+named_999='{"viewID":999}'
+check "narrowed to the element it named" "3" "$(bridge_called actionui.setValue "$named_131")"
+check "including the one the host refused" "1" "$(bridge_called actionui.setValue "$named_999")"
+check "the rows reached it too" "1" "$(bridge_called actionui.setRows)"
+
+section "bridge_value reports what actually took effect"
+check "the LAST write wins" "written over the bridge" "$(bridge_value 131)"
+check "a write to a part is not the element's value" "written over the bridge" "$(bridge_value 131)"
+check "a refused write is not reported" "" "$(bridge_value 999)"
+check "an element never written reads empty" "" "$(bridge_value 140)"
+
+section "the handler could read, which is the point"
+check_exists "the handler wrote what it read" "${TMPDIR}bridge.txt"
+check "it read its own write back" "written over the bridge" \
+    "$(/usr/bin/sed -n 1p "${TMPDIR}bridge.txt")"
+check "omc.context saw the window" "$OMC_ACTIONUI_WINDOW_UUID" \
+    "$(/usr/bin/sed -n 2p "${TMPDIR}bridge.txt")"
+
+section "the two channels stay separate"
+check "a read reached the bridge" "1" "$(bridge_called actionui.getValue)"
+check "set_title did NOT" "0" "$(bridge_called omc.setTitle)"
+check "it went through the tool instead" "titled by the tool" "$(ui_title)"
+check "so the stub never saw the bridge write" "" "$(ui_value 131)"
+
+omctest_end
+'''
+
+
 EXPECTED_COUNTS = {
     "10-environment.test.sh": (16, 0),
     "20-lifetime.test.sh": (36, 0),
@@ -1186,6 +1281,7 @@ EXPECTED_COUNTS = {
     "55-defaults.test.sh": (25, 0),
     "60-window.test.sh": (56, 0),
     "70-tools.test.sh": (49, 0),
+    "75-bridge.test.sh": (22, 0),
     "85-noise.test.sh": (1, 0),
 }
 
@@ -1436,6 +1532,79 @@ def test_standalone(project: Path, app: Path) -> None:
           str([p.name for p in _scratch_dirs()]))
 
 
+def _bridge_sockets() -> list:
+    tmp = subprocess.run(["/usr/bin/getconf", "DARWIN_USER_TEMP_DIR"],
+                         stdout=subprocess.PIPE).stdout.decode().strip() or "/tmp"
+    return sorted(Path(tmp).glob("omcb-*.sock"))
+
+
+def _fake_hosts() -> int:
+    p = subprocess.run(["/usr/bin/pgrep", "-f", "actionui_remote_testing"],
+                       stdout=subprocess.PIPE)
+    return len([l for l in p.stdout.decode().split() if l.strip()])
+
+
+def test_bridge_cleanup(app: Path) -> None:
+    """A run must leave no fake host behind.
+
+    The harness starts one per test file. Nothing else in the suite would notice if
+    they were never stopped - a leaked process holds its socket for the life of the
+    machine, and the suite itself stays green. Removing the EXIT trap that stops them
+    orphans one per file, which this catches and nothing else did.
+    """
+    print("Bridge cleanup:")
+    # Deltas, not absolutes. The socket directory is shared with every other run on this
+    # machine, so asserting it is empty makes this fail for reasons that have nothing to
+    # do with the change under test.
+    hosts_before = _fake_hosts()
+    sockets_before = set(_bridge_sockets())
+
+    # 75, not 80+: that range is the harness's own meta-tests, several of which fail
+    # deliberately, and a filter matching one of those would make this check nonsense.
+    rc, out, err = run_cli("test", str(app), "--filter", "75-*")
+    check("the bridge suite passes", rc == 0, err.strip()[-300:])
+    check("no fake host outlived the run", _fake_hosts() <= hosts_before,
+          "%d before, %d after" % (hosts_before, _fake_hosts()))
+    leaked = sorted(set(_bridge_sockets()) - sockets_before)
+    check("and no socket was left behind", not leaked, str([p.name for p in leaked]))
+
+
+def test_bridge_gate(root: Path) -> None:
+    """An applet that does not ship the client must get no fake host.
+
+    The bridge is gated on the applet actually being able to reach it. Getting this
+    wrong in the permissive direction is the dangerous one: a test would pass against
+    a host that production never provides, because production only puts the client in
+    applets with an embedded runtime.
+    """
+    print("Bridge gate:")
+    project = root / "nobridge"
+    project.mkdir(parents=True, exist_ok=True)
+    app = make_applet(project, name="NoBridge")
+    # Same applet, minus the client. Everything else - the .py handlers included -
+    # stays, so this isolates the one condition.
+    for module in ("actionui_remote.py", "omc.py"):
+        (app / "Contents" / "Library" / "Packages" / module).unlink()
+
+    tests = project / "Tests"
+    tests.mkdir(parents=True, exist_ok=True)
+    _write(tests / "10-nobridge.test.sh", r'''#!/bin/sh
+. "${OMCTEST_LIB:?}"
+check "no endpoint is published" "" "$ACTIONUI_REMOTE_ENDPOINT"
+check "nor the OMC-prefixed one" "" "$OMC_ACTIONUI_REMOTE_ENDPOINT"
+check "bridge_called still answers 0" "0" "$(bridge_called actionui.setValue)"
+# From inside the run, while a host would still be alive. Checking after the CLI returns
+# proves nothing: stop unlinks the socket on every tidy path either way.
+sockets=$(/usr/bin/find "$(/usr/bin/getconf DARWIN_USER_TEMP_DIR)" -maxdepth 1 -name 'omcb-*.sock' 2>/dev/null)
+check "no fake host is listening" "" "$sockets"
+omctest_end
+''')
+
+    rc, out, err = run_cli("test", str(app))
+    check("a suite without the client passes", rc == 0, err.strip()[-300:])
+    check("and all four checks ran", "4 passed, 0 failed" in err, err.strip()[-200:])
+
+
 def test_regressions(app: Path) -> None:
     print("Regression pins:")
     # The python interpreter must be the one the engine's chain would pick.
@@ -1569,6 +1738,8 @@ def main() -> int:
         test_scratch_and_flags(app)
         test_uuid_uniqueness(app)
         test_standalone(project, app)
+        test_bridge_cleanup(app)
+        test_bridge_gate(Path(td))
         test_regressions(app)
         test_build_integration(project, app)
 

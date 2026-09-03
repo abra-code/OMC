@@ -67,7 +67,19 @@
 # to run unsandboxed for that reason no longer do.
 #
 # OMCTEST_PB_PREFIX is gone with it: there is no shared namespace left to carve.
-OMCTEST_API_VERSION=6
+# 7 stands up the ActionUI remote bridge for an applet with Python handlers. A
+# handler that calls omc.window() needs a host on the other end of a socket, and
+# under test there is no engine to be one - so the harness runs ActionUI's fake
+# host, seeds it with the window uuid it already exports, and publishes the two
+# endpoint variables plus the unprefixed ACTIONUI_WINDOW_UUID. Without it such a
+# handler does not fail an assertion, it raises at the import-adjacent
+# omc.window() call and the whole test file reads as a crash.
+#
+# A test file may assert 7 before using bridge_called or bridge_value. Note the
+# bridge is a SECOND virtual window, deliberately separate from the one ui_value
+# reads: writes through omc_dialog_control land in the stub's files, writes
+# through the bridge land in the fake host. bridge_value reads the latter.
+OMCTEST_API_VERSION=7
 export OMCTEST_API_VERSION
 
 # The four tools this harness always replaces with recording stubs.
@@ -226,6 +238,11 @@ omctest_extension_of() { # <basename>
 # =============================================================================
 
 omctest_cleanup_scratch() {
+    # Before the keep-scratch return below: a kept scratch is for reading afterwards,
+    # and a fake host still holding its socket is not part of that. Standalone mode has
+    # no per-file subshell, so this trap is the only place its bridge gets stopped.
+    omctest_stop_bridge
+
     # Everything this run created is under the tree, pasteboards included since
     # they became files, so removing it is the whole of cleanup. A kept scratch
     # keeps the boards too, which is now safe: they are inert files nothing else
@@ -372,6 +389,161 @@ omctest_helper_python() { # -> prints the interpreter path, or fails
 # The directory holding AppletBuilder's helper scripts, beside its Python.
 omctest_helper_script() { # <name> -> prints the path
     printf '%s/../../Resources/Scripts/%s' "$(/usr/bin/dirname "$OMCTEST_LIB")" "$1"
+}
+
+# Could a handler in this applet actually use the remote bridge?
+#
+# Two conditions, and both matter. A .py under Scripts is how the engine decides to
+# run something as Python, the same test AppletBuilder's update_python makes. And
+# actionui_remote.py in the applet's own Packages is the client: AppletBuilder puts
+# it there for exactly the applets that can import it, so its presence is the
+# applet's own statement that it ships the bridge. Standing up a fake host for an
+# applet that cannot reach it would be a background process serving nobody - and
+# worse, it would let a test pass where production has no client to import.
+omctest_applet_uses_bridge() { # <app> -> 0 if it does
+    local app_path="$1" found
+    [ -f "$app_path/Contents/Library/Packages/actionui_remote.py" ] || return 1
+    found=$(/usr/bin/find "$app_path/Contents/Resources/Scripts" -name '*.py' -print -quit 2>/dev/null)
+    [ -n "$found" ]
+}
+
+# Start ActionUI's fake remote host for this test file and publish its endpoint.
+#
+# Only for an applet with Python handlers: nothing else can reach a bridge today,
+# and a background process per test file is not free. A failure here is loud but
+# not fatal - a Python applet that never calls omc.window() still runs fine, and
+# one that does will fail its own assertions with the fake's absence named in the
+# log rather than being silently skipped.
+omctest_start_bridge() { # <app> <label>
+    local app_path="$1" label="$2" fake helper socket_path
+    omctest_applet_uses_bridge "$app_path" || return 0
+
+    fake="$(/usr/bin/dirname "$OMCTEST_LIB")/../../Library/actionui_remote_testing.py"
+    if [ ! -f "$fake" ]; then
+        printf 'omctest: no fake ActionUI host at %s - omc.window() will fail in this file\n' \
+            "$fake" >&2
+        return 1
+    fi
+
+    helper="$(omctest_helper_python)" || return 1
+
+    # NOT under the scratch. sun_path holds 103 bytes, and the scratch root is already
+    # about 64 of them before a label is appended - and it is deeper still whenever a
+    # harness runs inside another one, which is exactly what these self-tests do. The
+    # per-user temp directory is the same place the engine binds its own socket, it is
+    # mode 0700, and it is short. The log and the state stay under the scratch, where
+    # they belong; only the socket moves, and it is unlinked on stop.
+    local socket_dir
+    socket_dir=$(/usr/bin/getconf DARWIN_USER_TEMP_DIR 2>/dev/null)
+    [ -d "$socket_dir" ] || socket_dir="/tmp"
+    socket_path="${socket_dir%/}/omcb-$$-$label.sock"
+    if [ "${#socket_path}" -gt 103 ]; then
+        printf 'omctest: bridge socket path is %d bytes, over the 103 a unix socket allows: %s\n' \
+            "${#socket_path}" "$socket_path" >&2
+        return 1
+    fi
+    /bin/rm -f "$socket_path"
+
+    OMCTEST_BRIDGE_LOG="$OMCTEST_UI/bridge.jsonl"
+    OMCTEST_BRIDGE_ENDPOINT="$socket_path"
+
+    # Seed the window with the applet's own elements. The fake models a real window,
+    # and a real window's elements come from its ActionUI JSON - without them every
+    # write answers 1002 (unknown view) and no handler can do anything. Same set of
+    # documents omctest_extract_known_ids reads, so the two cannot disagree.
+    local _elements _windows
+    _elements=$("$helper" "$(omctest_helper_script omctest_bridge.py)" elements "$app_path")
+    if [ $? -ne 0 ]; then
+        printf 'omctest: could not read the elements of %s - every bridge write would answer 1002\n' \
+            "$app_path" >&2
+        omctest_stop_bridge
+        return 1
+    fi
+    _windows=$("$helper" "$(omctest_helper_script omctest_bridge.py)" windows "$app_path")
+
+    # The default window, plus one per ActionUI document. omc_window_switch mints
+    # "OMCTEST-<slug of name>-$$" and the documented convention is to name the document,
+    # so seeding those makes a switched-to window reachable instead of answering 1001.
+    # Every window gets the same element set: a test asserts what the applet wrote, and
+    # per-document fidelity would only add false unknown-view errors.
+    OMCTEST_BRIDGE_ELEMENTS="$OMCTEST_UI/bridge.elements"
+    printf '%s\n' $_elements > "$OMCTEST_BRIDGE_ELEMENTS"
+
+    local element_args="" pair window uuid
+    for pair in $_elements; do
+        element_args="$element_args --element $OMC_ACTIONUI_WINDOW_UUID:$pair"
+    done
+    for window in $_windows; do
+        uuid="OMCTEST-$(omctest_slug "$window")-$$"
+        [ "$uuid" = "$OMC_ACTIONUI_WINDOW_UUID" ] && continue
+        for pair in $_elements; do
+            element_args="$element_args --element $uuid:$pair"
+        done
+    done
+
+    # Unquoted on purpose: element_args is a built-up argument list, and every piece of
+    # it is an integer, a type name from a JSON document, or the harness's own uuid.
+    "$helper" "$fake" \
+        --socket "$socket_path" \
+        --log "$OMCTEST_BRIDGE_LOG" \
+        --window "$OMC_ACTIONUI_WINDOW_UUID" \
+        --host-name omctest \
+        --host-version "$OMCTEST_API_VERSION" \
+        $element_args \
+        >> "$OMCTEST_UI/handlers.log" 2>&1 &
+    OMCTEST_BRIDGE_PID=$!
+
+    # Wait for the bind rather than guess at it: a handler dispatched immediately
+    # after this would otherwise race the fake and get ECONNREFUSED.
+    local waited=0
+    while [ ! -S "$socket_path" ] && [ "$waited" -lt 50 ]; do
+        # Give up the moment the process is gone rather than waiting out the timeout:
+        # a fake that died on a bad argument or an unreadable module is the likely
+        # failure, and five seconds of silence is a poor way to report it.
+        /bin/kill -0 "$OMCTEST_BRIDGE_PID" 2>/dev/null
+        if [ $? -ne 0 ]; then
+            printf 'omctest: the fake ActionUI host exited before binding %s - see handlers.log\n' \
+                "$socket_path" >&2
+            wait "$OMCTEST_BRIDGE_PID" 2>/dev/null
+            OMCTEST_BRIDGE_PID=""
+            # Clear the rest too. Leaving them set makes a FAILED start read exactly like
+            # a bridge that was never started, which is the one thing a test must be able
+            # to tell apart.
+            OMCTEST_BRIDGE_ENDPOINT=""
+            OMCTEST_BRIDGE_LOG=""
+            OMCTEST_BRIDGE_ELEMENTS=""
+            return 1
+        fi
+        /bin/sleep 0.1
+        waited=$((waited + 1))
+    done
+    if [ ! -S "$socket_path" ]; then
+        printf 'omctest: the fake ActionUI host did not bind %s within 5s\n' "$socket_path" >&2
+        omctest_stop_bridge
+        return 1
+    fi
+
+    # Both spellings, exactly as the engine publishes them, plus the unprefixed
+    # window uuid the protocol names - so a handler using omc.window() or
+    # actionui_remote.Window.from_environment() needs no test-only special case.
+    ACTIONUI_REMOTE_ENDPOINT="$socket_path"
+    OMC_ACTIONUI_REMOTE_ENDPOINT="$socket_path"
+    ACTIONUI_WINDOW_UUID="$OMC_ACTIONUI_WINDOW_UUID"
+    export ACTIONUI_REMOTE_ENDPOINT OMC_ACTIONUI_REMOTE_ENDPOINT ACTIONUI_WINDOW_UUID
+    export OMCTEST_BRIDGE_LOG OMCTEST_BRIDGE_ENDPOINT OMCTEST_BRIDGE_PID OMCTEST_BRIDGE_ELEMENTS
+}
+
+# Stop the fake host. Safe when none was started.
+omctest_stop_bridge() {
+    [ -n "$OMCTEST_BRIDGE_PID" ] || return 0
+    # SIGTERM: the fake closes its socket and unlinks it on the way out.
+    /bin/kill "$OMCTEST_BRIDGE_PID" 2>/dev/null
+    wait "$OMCTEST_BRIDGE_PID" 2>/dev/null
+    OMCTEST_BRIDGE_PID=""
+    # The socket lives outside the scratch, so removing the tree does not take it.
+    [ -n "$OMCTEST_BRIDGE_ENDPOINT" ] && /bin/rm -f "$OMCTEST_BRIDGE_ENDPOINT"
+    OMCTEST_BRIDGE_ENDPOINT=""
+    return 0
 }
 
 # Mirror the engine's Python resolution (see the contract block above) and apply
@@ -571,6 +743,10 @@ omctest_prepare_env() { # <app> <label>
     : > "$OMCTEST_UI/alert_answers"
     : > "$OMCTEST_UI/chain.queue"
     : > "$OMCTEST_UI/chain.log"
+
+    # After the environment above: the fake host is seeded with OMC_ACTIONUI_WINDOW_UUID,
+    # so a handler's omc.window() addresses the same window the rest of the harness does.
+    omctest_start_bridge "$app_path" "$label"
 
     omctest_reset_counts
 }
@@ -1471,7 +1647,12 @@ omc_drain_chain() { # [max-depth, default 25]
 
 omc_window_switch() { # <name>
     OMC_ACTIONUI_WINDOW_UUID="OMCTEST-$(omctest_slug "$1")-$$"
-    export OMC_ACTIONUI_WINDOW_UUID
+    # The unprefixed alias moves with it. The engine copies one from the other on every
+    # dispatch (OnMyCommand.cp, CreateEnvironmentVariablesDict) precisely so the two
+    # cannot disagree, and the bridge client prefers the unprefixed name - so leaving it
+    # behind pointed omc.window() at the window the test had just switched away from.
+    ACTIONUI_WINDOW_UUID="$OMC_ACTIONUI_WINDOW_UUID"
+    export OMC_ACTIONUI_WINDOW_UUID ACTIONUI_WINDOW_UUID
 }
 
 # The child-sheet convention both Notarize and ICEdit implement:
@@ -1482,14 +1663,16 @@ omc_child_sheet() { # <name>
     OMCTEST_SAVED_PARENT_GUID="$OMC_PARENT_DIALOG_GUID"
     OMC_PARENT_DIALOG_GUID="$OMC_ACTIONUI_WINDOW_UUID"
     OMC_ACTIONUI_WINDOW_UUID="OMCTEST-$(omctest_slug "$1")-$$"
-    export OMC_ACTIONUI_WINDOW_UUID OMC_PARENT_DIALOG_GUID
+    ACTIONUI_WINDOW_UUID="$OMC_ACTIONUI_WINDOW_UUID"   # see omc_window_switch
+    export OMC_ACTIONUI_WINDOW_UUID OMC_PARENT_DIALOG_GUID ACTIONUI_WINDOW_UUID
 }
 
 omc_leave_sheet() {
     [ -n "$OMCTEST_SAVED_WINDOW_UUID" ] || return 1
     OMC_ACTIONUI_WINDOW_UUID="$OMCTEST_SAVED_WINDOW_UUID"
     OMC_PARENT_DIALOG_GUID="$OMCTEST_SAVED_PARENT_GUID"
-    export OMC_ACTIONUI_WINDOW_UUID OMC_PARENT_DIALOG_GUID
+    ACTIONUI_WINDOW_UUID="$OMC_ACTIONUI_WINDOW_UUID"   # see omc_window_switch
+    export OMC_ACTIONUI_WINDOW_UUID OMC_PARENT_DIALOG_GUID ACTIONUI_WINDOW_UUID
     OMCTEST_SAVED_WINDOW_UUID=""
     OMCTEST_SAVED_PARENT_GUID=""
 }
@@ -1755,6 +1938,68 @@ omctest_read_diagnostic() { # <log-stem>
 #
 # The whole argument list is validated before anything is written, so a bad id in the middle
 # cannot leave the earlier ones declared and the later ones not.
+# -----------------------------------------------------------------------------
+# The remote bridge: a SECOND virtual window, and deliberately not merged with the
+# one above.
+#
+# A Python handler using the omc module writes through two channels. ActionUI verbs
+# - values, rows, properties, elements - go over the socket to the fake host, because
+# that is the only channel that can READ. OMC's own window verbs - terminate, select,
+# resize, set command id - shell out to omc_dialog_control and land in the stub's
+# files, which is what ui_value reads.
+#
+# Merging them was considered and rejected: ui_value would have to make a socket
+# round trip on every call, and "empty means never touched" - the property that makes
+# ui_enabled honest - would stop being true. Two vocabularies, named for their
+# channel, is the smaller surprise. Reach for bridge_value after a handler's
+# win.set_value(), and ui_value after its win.set_title().
+# -----------------------------------------------------------------------------
+
+# How many times the applet called a bridge method, optionally narrowed to calls whose
+# params contain the given pairs.
+#
+#   check "the table was filled" 1 "$(bridge_called actionui.setRows)"
+#   check "view 101 was written" 1 "$(bridge_called actionui.setValue '{"viewID":101}')"
+#
+# Prints 0 rather than failing when no bridge ran, so an assertion of 0 is meaningful
+# in an applet that does not ship the bridge at all.
+bridge_called() { # <method> [json-params-subset]
+    local method="$1" subset="$2" helper
+    if [ -z "$method" ]; then
+        printf 'omctest: bridge_called needs a method name\n' >&2
+        return 1
+    fi
+    if [ -z "$OMCTEST_BRIDGE_LOG" ]; then
+        printf '0\n'
+        return 0
+    fi
+    helper="$(omctest_helper_python)" || return 1
+    "$helper" "$(omctest_helper_script omctest_bridge.py)" \
+        called "$OMCTEST_BRIDGE_LOG" "$method" ${subset:+"$subset"}
+}
+
+# The value the applet last wrote to an element over the bridge.
+#
+# Empty when it never wrote one, matching ui_value's "a missing file reads as empty"
+# rule. Read from the request log, not asked of the running host: a query would itself
+# be a request, and then bridge_called actionui.getValue would count the harness's own
+# reads alongside the applet's. It also means this keeps working after the host stops.
+bridge_value() { # <view-id> [window-uuid]
+    local view_id="$1" window="${2:-$OMC_ACTIONUI_WINDOW_UUID}" helper
+    case "$view_id" in
+        ''|*[!0-9]*)
+            printf 'omctest: bridge_value: not a view id: [%s]\n' "$view_id" >&2
+            return 1 ;;
+    esac
+    if [ -z "$OMCTEST_BRIDGE_LOG" ]; then
+        printf 'omctest: bridge_value: no bridge ran - this applet has no Python handlers, or no actionui_remote.py in Contents/Library/Packages\n' >&2
+        return 1
+    fi
+    helper="$(omctest_helper_python)" || return 1
+    "$helper" "$(omctest_helper_script omctest_bridge.py)" \
+        value "$OMCTEST_BRIDGE_LOG" "$window" "$view_id" "$OMCTEST_BRIDGE_ELEMENTS"
+}
+
 ui_declare_ids() { # <view-id> [view-id ...]
     local view_id
     if [ ! -s "$OMCTEST_UI/known_ids.txt" ]; then
@@ -1911,6 +2156,12 @@ omctest_run_file() { # <app> <testfile>
     (
         OMCTEST_COUNTS="$counts_file"
         export OMCTEST_COUNTS
+        # Every exit from this subshell, not just the tidy one at the bottom: a
+        # prepare_env failure after the host started, or anything else that leaves
+        # early, would otherwise orphan a process holding a socket for the rest of
+        # the run. The suite-level scratch trap cannot help - it runs in the parent,
+        # where OMCTEST_BRIDGE_PID was never set.
+        trap omctest_stop_bridge EXIT
         omctest_prepare_env "$app_path" "$label" || exit 70
         # Loud on failure. The stub skips the undeclared-id check entirely when
         # known_ids.txt is absent, so a silent failure here turns the
@@ -1924,7 +2175,7 @@ omctest_run_file() { # <app> <testfile>
         # stdout only - stderr carries the ok/FAIL lines and must keep streaming.
         /bin/sh "$test_file" >> "$OMCTEST_UI/handlers.log"
         file_rc=$?
-        exit "$file_rc"
+        exit "$file_rc"   # the EXIT trap above stops the bridge, on this path and every other
     )
     rc=$?
     # The caller reads this function through a command substitution, which is

@@ -21,6 +21,12 @@ import tempfile
 import unittest
 import uuid as uuidlib
 
+# Set before the shipped modules are imported below. Importing omc.py from inside
+# AppletBuilder.app would otherwise leave __pycache__ in a bundle directory that gets codesigned,
+# and .pyc in a bundle must stay loudly visible in git rather than be ignored - so the fix is to
+# not write it, the same choice the engine makes with PYTHONPYCACHEPREFIX at runtime.
+sys.dont_write_bytecode = True
+
 _REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 _PACKAGES = os.path.join(_REPO_ROOT, "Distribution", "AppletBuilder.app",
                          "Contents", "Library", "Packages")

@@ -296,6 +296,26 @@ else
         build_failed=1
     fi
 
+    # actionui_remote_testing.py - the fake host omctest stands up for a Python applet's bridge.
+    # It sits in Contents/Library, NOT in Packages: Packages is what AppletBuilder copies into
+    # every applet, and test scaffolding has no business shipping inside a product.
+    echo "  Copying actionui_remote_testing.py..."
+    REMOTE_FAKE_SRC="$ACTIONUI_ROOT/ActionUIRemote/Python/actionui_remote_testing.py"
+    REMOTE_FAKE_DST="$APPLET_BUILDER/Contents/Library/actionui_remote_testing.py"
+    if [ -f "$REMOTE_FAKE_SRC" ]; then
+        /bin/cp "$REMOTE_FAKE_SRC" "$REMOTE_FAKE_DST"
+        cp_rc=$?
+        if [ "$cp_rc" -ne 0 ]; then
+            echo -e "  ${RED}Failed to copy actionui_remote_testing.py to: $REMOTE_FAKE_DST${NC}"
+            build_failed=1
+        else
+            echo -e "  ${GREEN}actionui_remote_testing.py vendored${NC}"
+        fi
+    else
+        echo -e "  ${RED}actionui_remote_testing.py not found at: $REMOTE_FAKE_SRC${NC}"
+        build_failed=1
+    fi
+
     # omc.py is authored in this repo and must be present for applets to get it.
     if [ ! -f "$DEST_PACKAGES/omc.py" ]; then
         echo -e "  ${RED}omc.py missing from: $DEST_PACKAGES${NC}"
