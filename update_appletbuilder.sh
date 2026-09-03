@@ -796,7 +796,11 @@ echo ""
 
 if [ "$updated" -eq 1 ]; then
     echo -e "${GREEN}AppletBuilder resources updated.${NC}"
-    echo "Clearing /tmp/appletbuilder_help/ to regenerate HTML help files."
+    # lib.help.sh moved this cache to "${TMPDIR:-/tmp}/appletbuilder_help" when the app's hardcoded
+    # /tmp paths were fixed, so clearing only /tmp would leave the live cache stale. Clear both: the
+    # current location, and the old one in case an earlier build left something behind.
+    echo "Clearing appletbuilder_help/ to regenerate HTML help files."
+    /bin/rm -rf "${TMPDIR:-/tmp}/appletbuilder_help" 2>/dev/null
     /bin/rm -rf /tmp/appletbuilder_help 2>/dev/null
 else
     echo "Everything is up to date."
