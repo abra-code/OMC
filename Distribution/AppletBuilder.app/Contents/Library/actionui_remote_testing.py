@@ -54,6 +54,7 @@ PARSE_ERROR = -32700
 INVALID_REQUEST = -32600
 METHOD_NOT_FOUND = -32601
 INVALID_PARAMS = -32602
+UNAUTHENTICATED = 1006
 INTERNAL_ERROR = -32603
 UNKNOWN_WINDOW = 1001
 UNKNOWN_VIEW = 1002
@@ -80,12 +81,16 @@ def _new_window():
 class FakeServer:
     """See the module docstring."""
 
-    def __init__(self, socket_path, log_path=None, host_name="FakeHost", host_version="0"):
+    def __init__(self, socket_path, log_path=None, host_name="FakeHost", host_version="0",
+                 tokens=None):
         self.socket_path = socket_path
         self.log_path = log_path
         self.host_name = host_name
         self.host_version = host_version
         self.model = {}
+        # Tokens this host accepts. Empty means it requires none, which is the default and what
+        # every existing test expects.
+        self.tokens = set(tokens or ())
         self.requests = []
         self._handlers = {}
         self._lock = threading.RLock()
@@ -258,10 +263,25 @@ class FakeServer:
             return _error_object(request_id, INVALID_PARAMS, 'Invalid params: "params" must be an object with named keys')
 
         with self._lock:
-            self.requests.append({"method": method, "params": params, "id": request_id})
+            # Redact before recording, both in memory and on disk. A token is a credential; a
+            # test log is read, copied into bug reports and kept in a scratch directory, and
+            # nothing downstream needs its value - bridge_called filters on the other params.
+            logged = params
+            if isinstance(params, dict) and "token" in params:
+                logged = dict(params)
+                logged["token"] = "<redacted>"
+            self.requests.append({"method": method, "params": logged, "id": request_id})
             if self._log_file is not None:
-                self._log_file.write(json.dumps({"method": method, "params": params, "id": request_id}, sort_keys=True) + "\n")
+                self._log_file.write(json.dumps({"method": method, "params": logged, "id": request_id}, sort_keys=True) + "\n")
                 self._log_file.flush()
+            if self.tokens and params.get("token") not in self.tokens:
+                if is_notification:
+                    return None
+                return _error_object(request_id, UNAUTHENTICATED,
+                                     "This host requires a token. Pass it as the \"token\" "
+                                     "parameter; processes the host spawned receive it in "
+                                     "ACTIONUI_REMOTE_TOKEN, or on the descriptor named by "
+                                     "ACTIONUI_REMOTE_TOKEN_FD.")
             try:
                 result = self._dispatch(method, params)
             except Failure as failure:
@@ -699,9 +719,12 @@ def main(argv=None):
     parser.add_argument("--element", action="append", default=[], help="WINDOW:ID:TYPE, pre-create an element (repeatable)")
     parser.add_argument("--host-name", default="FakeHost")
     parser.add_argument("--host-version", default="0")
+    parser.add_argument("--token", action="append", default=[],
+                        help="require this token (repeatable); omit to require none")
     args = parser.parse_args(argv)
 
-    fake = FakeServer(args.socket, log_path=args.log, host_name=args.host_name, host_version=args.host_version)
+    fake = FakeServer(args.socket, log_path=args.log, host_name=args.host_name,
+                      host_version=args.host_version, tokens=args.token)
     for uuid in args.window:
         fake.add_window(uuid)
     for spec in args.element:

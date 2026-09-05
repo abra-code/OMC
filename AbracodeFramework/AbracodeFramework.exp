@@ -54,7 +54,11 @@ _ReplaceWhitespaceCharactersWithEscapes
 
 _CreateEnviron
 _ReleaseEnviron
+_OMCSecureClear
 _omc_popen
+_omc_popen_with_token
+_OMCMintActionUIRemoteToken
+_OMCRevokeActionUIRemoteTokens
 _omc_pclose
 _omc_pclose_write
 

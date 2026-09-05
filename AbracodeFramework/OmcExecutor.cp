@@ -20,6 +20,7 @@
 #include "OnMyCommand.h"
 #include "OMCScriptsManager.h"
 #include "OMCPrivateConstants.h"
+#include "OMCActionUIRemoteHost.h"    // the per-command token: its C half is visible to C++
 
 static char oneLine[512];
 
@@ -314,9 +315,49 @@ POpenExecutor::Execute( const char *inCommand, OSStatus &outError )
 	
 	ProcessOutputString(nullptr); //send one progress notification before we start the execution
 
-	outError = omc_popen(	inCommand, shellArgs.data(), envList,
+	// The handler's ActionUI remote token, when this process serves a bridge. One per spawn,
+	// labeled with the command's GUID so that a command's grants can be withdrawn together, and
+	// delivered on a descriptor rather than in the environment: a child's environment at exec
+	// time is what `ps` reports to any process of the same user (see omc_popen.h). A command
+	// that spawns several processes therefore gives each its own token, which is the "this
+	// handler, not everything it spawns" rule the bridge's design wanted anyway.
+	//
+	// This is the place for it because it is the place that has both the environment and the
+	// spawn. Nothing is minted when no bridge is running, and a handler then runs exactly as it
+	// did before.
+	std::string tokenLabel;
+	if(mEnvironmentVariables != nullptr)
+	{
+		CFStringRef commandGUID = ACFType<CFStringRef>::DynamicCast(
+								::CFDictionaryGetValue(mEnvironmentVariables, CFSTR("OMC_CURRENT_COMMAND_GUID")) );
+		if(commandGUID != nullptr)
+			tokenLabel = CMUtils::CreateUTF8StringFromCFString(commandGUID);
+	}
+
+	char tokenBuffer[kOMCActionUIRemoteTokenBufferSize];
+	const char *token = nullptr;
+	if( (tokenLabel.length() > 0) && OMCMintActionUIRemoteToken(tokenLabel.c_str(), tokenBuffer, sizeof(tokenBuffer)) )
+	{
+		token = tokenBuffer;
+	}
+	else if( OMCGetActionUIRemoteEndpoint() != nullptr )
+	{
+		// A bridge is running and this handler is going to be refused with 1006. Silence here
+		// would be indistinguishable from "no bridge", which is the ordinary case, and the
+		// handler's own error says only that the host refused it.
+		LOG_CSTR( "OMC->POpenExecutor::Execute. the ActionUI bridge is running but no token could be minted%s; this handler cannot use it\n",
+					(tokenLabel.length() > 0) ? "" : " (the command has no GUID)" );
+	}
+
+	outError = omc_popen_with_token(	inCommand, shellArgs.data(), envList,
 							wantsToWriteToStdin ? (kOMCPopenRead | kOMCPopenWrite) : kOMCPopenRead,
+							token, kOMCActionUIRemoteTokenFD,
 							&mChildProcessInfo );
+
+	// The child has it, or the spawn failed and nobody does. Either way this copy has no further
+	// use, and a secret with no further use should not sit in a stack frame. Not memset: nothing
+	// reads the buffer afterwards, so that would be a dead store the optimizer may delete.
+	OMCSecureClear(tokenBuffer, sizeof(tokenBuffer));
 
 	ReleaseEnviron( envList );
 	

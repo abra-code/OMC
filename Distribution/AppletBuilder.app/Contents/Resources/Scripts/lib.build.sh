@@ -521,6 +521,74 @@ update_python_packages() {
     return 0
 }
 
+# The ActionUI remote bridge's shell clients, into Contents/Library/Packages beside the Python
+# one. Gated on a shell handler rather than on a Python runtime, because a shell handler needs no
+# runtime - and it is the one kind of handler that can hold the bridge's token without showing it
+# to `ps`, every Apple shell carrying CS_RESTRICT where python3 and node do not.
+#
+# Both files or neither: actionui_remote.zsh sources actionui_remote.sh from its own directory.
+# Overwritten unconditionally, like the Python modules: these ship with OMC and version with it.
+#
+# Not fatal to a build. A shell handler that never touches the bridge - which is most of them -
+# is not broken by their absence, so a missing client is reported and the build goes on. That is
+# the opposite of update_python_packages, where the modules ARE the handler's imports.
+update_shell_clients() {
+    local target_path="$1"
+    local src_packages="${OMC_APP_BUNDLE_PATH}/Contents/Library/Packages"
+    local dst_packages="$target_path/Contents/Library/Packages"
+
+    local _sh_handlers
+    _sh_handlers=$(/usr/bin/find "$target_path/Contents/Resources/Scripts" \
+                   \( -name "*.sh" -o -name "*.zsh" \) -print -quit 2>/dev/null)
+    if [ -z "$_sh_handlers" ]; then
+        return 0
+    fi
+
+    local client
+    local missing=0
+    for client in actionui_remote.sh actionui_remote.zsh; do
+        if [ ! -f "$src_packages/$client" ]; then
+            missing=$((missing + 1))
+        fi
+    done
+    if [ "$missing" -gt 0 ]; then
+        ab_log "ActionUI shell client(s) missing from AppletBuilder - skipping (rerun update_appletbuilder.sh)"
+        return 0
+    fi
+
+    /bin/mkdir -p "$dst_packages"
+    local _mkdir_rc=$?
+    if [ "$_mkdir_rc" -ne 0 ]; then
+        ab_log "Could not create $dst_packages - skipping the ActionUI shell clients"
+        return 0
+    fi
+
+    local copied=0
+    local _cp_rc
+    local _chmod_rc
+    for client in actionui_remote.sh actionui_remote.zsh; do
+        /bin/cp "$src_packages/$client" "$dst_packages/$client"
+        _cp_rc=$?
+        if [ "$_cp_rc" -ne 0 ]; then
+            ab_log "Could not copy $client to $dst_packages"
+            continue
+        fi
+
+        /bin/chmod 755 "$dst_packages/$client"
+        _chmod_rc=$?
+        if [ "$_chmod_rc" -ne 0 ]; then
+            ab_log "Could not make $client executable in $dst_packages"
+            continue
+        fi
+        copied=$((copied + 1))
+    done
+
+    if [ "$copied" -gt 0 ]; then
+        ab_log "Installed $copied ActionUI shell client(s) into Contents/Library/Packages"
+    fi
+    return 0
+}
+
 # Remove development junk from the applet.
 #
 # Must run immediately before codesigning: almost anything still present is
@@ -1105,6 +1173,8 @@ applet_build() {
         ab_log "Build halted - the OMC Python modules could not be installed. (${ts})"
         return 1
     fi
+
+    update_shell_clients "$project_path"
 
     thin_binaries "$project_path"
 

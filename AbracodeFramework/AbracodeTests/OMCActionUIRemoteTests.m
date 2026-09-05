@@ -16,6 +16,7 @@
 #import "OMCBundleTestHelper.h"
 #import "OMCTestExecutionObserver.h"
 #include "OMCEngineTempDir.h"
+#include "OMCActionUIRemoteHost.h"
 
 #include <sys/socket.h>
 #include <sys/un.h>
@@ -26,6 +27,7 @@
 
 @interface OMCActionUIRemoteTests : XCTestCase
 @property (nonatomic, strong) NSMutableArray<NSURL *> *bundlesToCleanup;
+@property (nonatomic, copy) NSString *cachedTestToken;
 @end
 
 @implementation OMCActionUIRemoteTests
@@ -36,6 +38,10 @@
 }
 
 - (void)tearDown {
+    if (self.cachedTestToken != nil) {
+        OMCRevokeActionUIRemoteTokens(kTestTokenLabel);
+        self.cachedTestToken = nil;
+    }
     for (NSURL *url in self.bundlesToCleanup) {
         [[NSFileManager defaultManager] removeItemAtURL:url error:nil];
     }
@@ -43,6 +49,68 @@
 }
 
 #pragma mark - Helpers
+
+/// TEXT wrapped in single quotes for a /bin/sh command line, with embedded single quotes escaped
+/// the only way sh allows: close, escape, reopen.
+- (NSString *)shellQuoted:(NSString *)text {
+    NSString *escaped = [text stringByReplacingOccurrencesOfString:@"'" withString:@"'\\''"];
+    return [NSString stringWithFormat:@"'%@'", escaped];
+}
+
+/// The label this test case's own grant is registered under, so tearDown can withdraw exactly it.
+static const char * const kTestTokenLabel = "AbracodeTests";
+
+/// A token this test process may present. The host requires one - that is the whole point of the
+/// bridge's access control - and the test process is NOT a process the host spawned, so it has no
+/// token in its environment and no descriptor to read one from. It mints its own instead, which
+/// is the same entry point the engine uses per command.
+///
+/// nil when no bridge is running; the caller then sends an unauthenticated request, which is the
+/// right behavior for a test that has not opened a window yet.
+- (NSString *)testToken {
+    if (self.cachedTestToken != nil) {
+        return self.cachedTestToken;
+    }
+    char token[kOMCActionUIRemoteTokenBufferSize];
+    if (!OMCMintActionUIRemoteToken(kTestTokenLabel, token, sizeof(token))) {
+        return nil;
+    }
+    self.cachedTestToken = [NSString stringWithUTF8String:token];
+    memset(token, 0, sizeof(token));
+    return self.cachedTestToken;
+}
+
+/// Add this test case's token to a request, unless the request already carries one of its own -
+/// which is how the refusal tests present a wrong token deliberately.
+///
+/// Done by decoding and re-encoding rather than by splicing text, so that a request whose params
+/// contain a brace or a quote cannot produce a line that happens to parse into something else.
+- (NSString *)requestLineWithToken:(NSString *)requestLine {
+    NSString *token = [self testToken];
+    if (token.length == 0) {
+        return requestLine;
+    }
+
+    NSData *data = [requestLine dataUsingEncoding:NSUTF8StringEncoding];
+    id parsed = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableContainers error:nil];
+    if (![parsed isKindOfClass:[NSDictionary class]]) {
+        return requestLine;       // a batch or a deliberately malformed line: left exactly as written
+    }
+
+    NSMutableDictionary *request = parsed;
+    NSMutableDictionary *params = [request[@"params"] isKindOfClass:[NSDictionary class]]
+                                ? [request[@"params"] mutableCopy] : [NSMutableDictionary dictionary];
+    if (params[@"token"] == nil) {
+        params[@"token"] = token;
+    }
+    request[@"params"] = params;
+
+    NSData *encoded = [NSJSONSerialization dataWithJSONObject:request options:0 error:nil];
+    if (encoded == nil) {
+        return requestLine;
+    }
+    return [[NSString alloc] initWithData:encoded encoding:NSUTF8StringEncoding];
+}
 
 /// The socket path this host must be serving on, built from the documented rule rather than read
 /// back out of the engine: OMCGetEngineTempFilePath (a static inline, so no framework symbol is
@@ -131,6 +199,7 @@
 /// XCTest) pumps its run loop until the reply lands, which is what lets the server's main-queue
 /// hop actually run.
 - (NSDictionary *)sendJSONRPC:(NSString *)requestLine toEndpoint:(NSString *)endpoint {
+    requestLine = [self requestLineWithToken:requestLine];
     __block NSData *replyData = nil;
     __block NSString *failure = nil;
     XCTestExpectation *done = [self expectationWithDescription:@"jsonrpc reply"];
@@ -209,6 +278,310 @@
     id parsed = [NSJSONSerialization JSONObjectWithData:replyData options:0 error:&error];
     XCTAssertNil(error, @"reply should be JSON: %@", error);
     return [parsed isKindOfClass:[NSDictionary class]] ? parsed : nil;
+}
+
+#pragma mark - The token on a descriptor
+
+/// The engine hands every handler its own token on descriptor 3 and keeps it out of the
+/// environment. These tests cover both halves independently, because either one alone would let
+/// a naive test pass while the other is broken: the descriptor could be delivered while the
+/// variable is still exported, or the variable could be gone with no descriptor to replace it.
+
+- (void)testTheHostProcessHasNoTokenInItsEnvironmentOnceTheBridgeStarts {
+    NSURL *bundleURL = [OMCBundleTestHelper testBundleURL:@"ActionUI-Form"];
+    if (bundleURL == nil) {
+        NSLog(@"Skipping - ActionUI-Form.omc not found in test resources");
+        return;
+    }
+    NSString *omcBundlePath = [bundleURL path];
+    NSString *uuid = [self openFormDialogWithBundlePath:omcBundlePath];
+    XCTAssertNotNil([self runningEndpoint], @"the bridge must be up, or this proves nothing");
+
+    // CreateEnviron copies this process's environment into every handler, so a token here is a
+    // token in every child - and a python3 child shows its environment to any same-uid `ps`.
+    // getenv, not NSProcessInfo, whose environment dictionary is a snapshot taken at first use.
+    XCTAssertEqual(getenv("ACTIONUI_REMOTE_TOKEN"), NULL,
+                   @"starting the bridge must leave no token in the host's own environment");
+
+    [self closeFormDialogWithUUID:uuid bundlePath:omcBundlePath];
+    [self removeDiagnosticFilesForUUID:uuid];
+}
+
+- (void)testASpawnedHandlerSeesTheDescriptorAndNotTheToken {
+    NSURL *bundleURL = [OMCBundleTestHelper testBundleURL:@"ActionUI-Form"];
+    if (bundleURL == nil) {
+        NSLog(@"Skipping - ActionUI-Form.omc not found in test resources");
+        return;
+    }
+    NSString *omcBundlePath = [bundleURL path];
+    NSString *uuid = [self openFormDialogWithBundlePath:omcBundlePath];
+    XCTAssertNotNil([self runningEndpoint]);
+
+    // `env` rather than a shell expansion of each name, so that an unexpected THIRD spelling
+    // would show up too.
+    NSString *output = [self runProbeNamed:@"token_env_probe"
+                             executionMode:@"exe_shell_script"
+                                   command:@[@"env | grep '^ACTIONUI_REMOTE_TOKEN' | sort"]];
+
+    XCTAssertEqualObjects(output, @"ACTIONUI_REMOTE_TOKEN_FD=3",
+                          @"a handler gets the descriptor's number and nothing else; got: %@", output);
+
+    [self closeFormDialogWithUUID:uuid bundlePath:omcBundlePath];
+    [self removeDiagnosticFilesForUUID:uuid];
+}
+
+- (void)testTheModesThatCannotCarryADescriptorGetNoToken {
+    NSURL *bundleURL = [OMCBundleTestHelper testBundleURL:@"ActionUI-Form"];
+    if (bundleURL == nil) {
+        NSLog(@"Skipping - ActionUI-Form.omc not found in test resources");
+        return;
+    }
+    NSString *omcBundlePath = [bundleURL path];
+    NSString *uuid = [self openFormDialogWithBundlePath:omcBundlePath];
+    XCTAssertNotNil([self runningEndpoint]);
+
+    // exe_silent_system runs a bare system(), which takes neither an environment nor a descriptor
+    // from the engine - so there is nowhere to put the token, and a handler in that mode is
+    // refused with 1006. That is the bridge's reach and not a loss: reading window state out of
+    // process is what the bridge newly adds, and no released build ever offered it from this
+    // mode. Mutation from here still goes through omc_dialog_control, which needs no token.
+    // Pinned so the boundary stays where it is by test, and in step with the bridge guide,
+    // which names all four affected modes.
+    //
+    // COVERAGE, stated plainly because the guide names four modes and this exercises one.
+    // exe_silent_system is the one that both spawns a process and can be driven from a test.
+    // exe_applescript runs OSADoScript in-process and spawns nothing the engine configures, so
+    // there is no environment to assert on - a `do shell script` probe would be measuring
+    // AppleScript's own inheritance rules, not the engine's behavior. exe_terminal and
+    // exe_iterm would launch Terminal or iTerm on the machine running the suite, which is not
+    // something a test may do; their case rests on the token never entering the environment
+    // DICTIONARY those modes serialize, which testASpawnedHandlerSeesTheDescriptorAndNotTheToken
+    // asserts from the other side.
+    //
+    // Its output is discarded by the mode, so the handler reports through a file.
+    NSString *reportPath = [NSString stringWithFormat:@"%@/omc_silent_token_%@",
+                            NSTemporaryDirectory(), uuid];
+    [[NSFileManager defaultManager] removeItemAtPath:reportPath error:nil];
+    NSString *command = [NSString stringWithFormat:
+                         @"env | grep -c '^ACTIONUI_REMOTE_TOKEN' > '%@' 2>&1 || true", reportPath];
+    [self runProbeNamed:@"silent_token_probe" executionMode:@"exe_silent_system" command:@[command]];
+    XCTAssertTrue([self waitForFileAtPath:reportPath timeout:5.0], @"the handler must have run");
+
+    NSString *seen = [[NSString stringWithContentsOfFile:reportPath encoding:NSUTF8StringEncoding error:nil]
+                      stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+    XCTAssertEqualObjects(seen, @"0",
+                          @"exe_silent_system gets neither the token nor a descriptor; got '%@'", seen);
+    [[NSFileManager defaultManager] removeItemAtPath:reportPath error:nil];
+
+    // And the contrast, so this is not just an assertion that the probe produced nothing:
+    // a mode that DOES spawn gets the descriptor.
+    NSString *spawned = [self runProbeNamed:@"silent_token_contrast"
+                              executionMode:@"exe_shell_script"
+                                    command:@[@"env | grep -c '^ACTIONUI_REMOTE_TOKEN_FD='"]];
+    XCTAssertEqualObjects(spawned, @"1", @"exe_shell_script does get one");
+
+    [self closeFormDialogWithUUID:uuid bundlePath:omcBundlePath];
+    [self removeDiagnosticFilesForUUID:uuid];
+}
+
+- (void)testTheTokenOnDescriptorThreeIsOneTheServerAccepts {
+    NSURL *bundleURL = [OMCBundleTestHelper testBundleURL:@"ActionUI-Form"];
+    if (bundleURL == nil) {
+        NSLog(@"Skipping - ActionUI-Form.omc not found in test resources");
+        return;
+    }
+    NSString *omcBundlePath = [bundleURL path];
+    NSString *uuid = [self openFormDialogWithBundlePath:omcBundlePath];
+    NSString *endpoint = [self runningEndpoint];
+    XCTAssertNotNil(endpoint);
+
+    // The handler reads its own token off the descriptor and reports it, so that this test can
+    // present exactly what the engine handed it. That the value leaves the handler at all is a
+    // property of this test, not of the design: in production nothing prints it.
+    NSString *handlerToken = [self runProbeNamed:@"token_fd_probe"
+                                   executionMode:@"exe_shell_script"
+                                         command:@[@"IFS= read -r t <&3; printf '%s' \"$t\""]];
+    XCTAssertEqual(handlerToken.length, (NSUInteger)64,
+                   @"32 bytes hex; got %lu characters: %@", (unsigned long)handlerToken.length, handlerToken);
+
+    // The positive half first: a test that only checked the refusal would pass against a server
+    // that refused everything.
+    NSDictionary *accepted = [self sendJSONRPC:
+        [NSString stringWithFormat:@"{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"actionui.hello\","
+                                    "\"params\":{\"token\":\"%@\"}}", handlerToken]
+                                    toEndpoint:endpoint];
+    XCTAssertNil(accepted[@"error"], @"the handler's own token must authenticate: %@", accepted[@"error"]);
+    XCTAssertNotNil(accepted[@"result"]);
+
+    NSDictionary *refused = [self sendJSONRPC:
+        @"{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"actionui.hello\",\"params\":{\"token\":\"\"}}"
+                                   toEndpoint:endpoint];
+    XCTAssertEqualObjects(refused[@"error"][@"code"], @1006,
+                          @"and a blanked token must not: %@", refused);
+
+    // Each handler gets its OWN grant, not a shared one: a second probe reports a different value.
+    NSString *secondToken = [self runProbeNamed:@"token_fd_probe2"
+                                  executionMode:@"exe_shell_script"
+                                        command:@[@"IFS= read -r t <&3; printf '%s' \"$t\""]];
+    XCTAssertEqual(secondToken.length, (NSUInteger)64);
+    XCTAssertNotEqualObjects(secondToken, handlerToken,
+                             @"one token per spawn, so a leaked one cannot outlive its command");
+
+    [self closeFormDialogWithUUID:uuid bundlePath:omcBundlePath];
+    [self removeDiagnosticFilesForUUID:uuid];
+}
+
+- (void)testARevokedCommandsTokenIsRefused {
+    NSURL *bundleURL = [OMCBundleTestHelper testBundleURL:@"ActionUI-Form"];
+    if (bundleURL == nil) {
+        NSLog(@"Skipping - ActionUI-Form.omc not found in test resources");
+        return;
+    }
+    NSString *omcBundlePath = [bundleURL path];
+    NSString *uuid = [self openFormDialogWithBundlePath:omcBundlePath];
+    NSString *endpoint = [self runningEndpoint];
+    XCTAssertNotNil(endpoint);
+
+    // The engine labels a command's grants with the command's GUID and does not revoke them per
+    // command today (see the commit note on the revocation policy). This test drives the route a
+    // tighter policy would use, so that the label is known to be the GUID and known to work.
+    NSString *guid = [self runProbeNamed:@"token_revoke_probe"
+                           executionMode:@"exe_shell_script"
+                                 command:@[@"IFS= read -r t <&3; printf '%s %s' \"$OMC_CURRENT_COMMAND_GUID\" \"$t\""]];
+    NSArray<NSString *> *parts = [guid componentsSeparatedByString:@" "];
+    XCTAssertEqual(parts.count, (NSUInteger)2, @"expected '<guid> <token>', got: %@", guid);
+    NSString *commandGUID = parts.firstObject;
+    NSString *token = parts.lastObject;
+    XCTAssertGreaterThan(commandGUID.length, (NSUInteger)0);
+
+    NSString *request = [NSString stringWithFormat:
+        @"{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"actionui.hello\",\"params\":{\"token\":\"%@\"}}", token];
+    XCTAssertNil([self sendJSONRPC:request toEndpoint:endpoint][@"error"],
+                 @"the grant is live before it is withdrawn");
+
+    OMCRevokeActionUIRemoteTokens([commandGUID UTF8String]);
+
+    XCTAssertEqualObjects([self sendJSONRPC:request toEndpoint:endpoint][@"error"][@"code"], @1006,
+                          @"withdrawing the command's label withdraws its token");
+
+    [self closeFormDialogWithUUID:uuid bundlePath:omcBundlePath];
+    [self removeDiagnosticFilesForUUID:uuid];
+}
+
+- (void)testTheGrantCapNeverWithdrawsTheTokenItJustIssued {
+    NSURL *bundleURL = [OMCBundleTestHelper testBundleURL:@"ActionUI-Form"];
+    if (bundleURL == nil) {
+        NSLog(@"Skipping - ActionUI-Form.omc not found in test resources");
+        return;
+    }
+    NSString *omcBundlePath = [bundleURL path];
+    NSString *uuid = [self openFormDialogWithBundlePath:omcBundlePath];
+    NSString *endpoint = [self runningEndpoint];
+    XCTAssertNotNil(endpoint);
+
+    // Grants are bounded, and the bound is enforced by withdrawing the oldest. But revocation is
+    // BY LABEL and takes every grant carrying it, so an eviction must not fire while newer
+    // siblings share that label - in the extreme, minting past the cap under one label would
+    // withdraw the token being handed back. The engine's own labels are per-command GUIDs, so
+    // this drives the public entry point directly, which is where a caller could reuse one.
+    const char *sharedLabel = "AbracodeTests.sharedLabel";
+    char firstToken[kOMCActionUIRemoteTokenBufferSize] = {0};
+    XCTAssertTrue(OMCMintActionUIRemoteToken(sharedLabel, firstToken, sizeof(firstToken)));
+
+    char latestToken[kOMCActionUIRemoteTokenBufferSize] = {0};
+    for (int index = 0; index < 300; index++) {          // comfortably past the 256 cap
+        memset(latestToken, 0, sizeof(latestToken));
+        XCTAssertTrue(OMCMintActionUIRemoteToken(sharedLabel, latestToken, sizeof(latestToken)),
+                      @"minting must keep working past the cap");
+    }
+    XCTAssertNotEqualObjects(@(latestToken), @(firstToken), @"each mint is its own grant");
+
+    NSString *request = [NSString stringWithFormat:
+        @"{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"actionui.hello\",\"params\":{\"token\":\"%s\"}}",
+        latestToken];
+    XCTAssertNil([self sendJSONRPC:request toEndpoint:endpoint][@"error"],
+                 @"the token the cap just handed back must still be live");
+
+    // And the cap really does withdraw: everything under that label goes when it is revoked.
+    OMCRevokeActionUIRemoteTokens(sharedLabel);
+    XCTAssertEqualObjects([self sendJSONRPC:request toEndpoint:endpoint][@"error"][@"code"], @1006,
+                          @"and revoking the label withdraws it");
+
+    [self closeFormDialogWithUUID:uuid bundlePath:omcBundlePath];
+    [self removeDiagnosticFilesForUUID:uuid];
+}
+
+- (void)testPsCannotSeeTheTokenOfALivePythonHandler {
+    NSURL *formURL = [OMCBundleTestHelper testBundleURL:@"ActionUI-Form"];
+    if (formURL == nil) {
+        NSLog(@"Skipping - ActionUI-Form.omc not found in test resources");
+        return;
+    }
+    NSString *packages = [self shippedPackagesDirectory];
+    if (![[NSFileManager defaultManager] fileExistsAtPath:
+          [packages stringByAppendingPathComponent:@"actionui_remote.py"]]) {
+        NSLog(@"Skipping - actionui_remote.py not found at %@", packages);
+        return;
+    }
+
+    NSString *formPath = [formURL path];
+    NSString *uuid = [self openFormDialogWithBundlePath:formPath];
+    XCTAssertNotNil([self runningEndpoint]);
+
+    NSDictionary *savedEnvironment = [[NSProcessInfo processInfo] environment];
+    NSString *savedPythonPath = savedEnvironment[@"PYTHONPATH"];
+    NSString *savedWindowUUID = savedEnvironment[@"ACTIONUI_WINDOW_UUID"];
+    setenv("PYTHONPATH", [packages fileSystemRepresentation], 1);
+    setenv("ACTIONUI_WINDOW_UUID", [uuid UTF8String], 1);
+    setenv("PYTHONDONTWRITEBYTECODE", "1", 1);
+
+    // The sweep runs INSIDE the handler, while it is alive and holding a bridge connection.
+    // Doing it from the test afterwards would prove nothing: `ps` reads the exec-time snapshot
+    // of a process, and by then there is no process. The marker is in the handler's own argv,
+    // which every process can read whatever its code-signing flags - that is the positive
+    // control, without which "the token was not found" would also be true of an empty sweep.
+    NSString *marker = @"OMC_TOKEN_PS_PROBE_MARKER";
+    NSString *handler = [NSString stringWithFormat:
+        @"import os, subprocess, sys, actionui_remote as aui\n"
+        @"win = aui.Window(os.environ['ACTIONUI_WINDOW_UUID'])\n"
+        @"win.set_string(2, 'alive')\n"                      // a real request: the token was accepted
+        @"token = win.connection.token\n"
+        @"sweep = subprocess.run(['/bin/ps', '-A', '-E', '-o', 'command='],\n"
+        @"                       capture_output=True, text=True).stdout\n"
+        @"print('len', len(token))\n"
+        @"print('sawself', '%@' in sweep)\n"
+        @"print('leaked', token in sweep)\n"
+        @"print('envtoken', 'ACTIONUI_REMOTE_TOKEN' in os.environ)\n"
+        @"print('envfd', 'ACTIONUI_REMOTE_TOKEN_FD' in os.environ)\n", marker];
+
+    // python3 inherits descriptor 3 and ACTIONUI_REMOTE_TOKEN_FD from the shell the engine
+    // spawned, which is the grandchild case the design allows for: the shell did not read the
+    // pipe, so the first reader is python3. The marker rides in argv on purpose.
+    NSString *command = [NSString stringWithFormat:@"/usr/bin/python3 -c %@ %@",
+                         [self shellQuoted:handler], marker];
+    NSString *output = [self runProbeNamed:@"token_ps_probe"
+                             executionMode:@"exe_shell_script"
+                                   command:@[command]];
+
+    XCTAssertTrue([output containsString:@"len 64"],
+                  @"the handler must have read a real token off the descriptor; got:\n%@", output);
+    XCTAssertTrue([output containsString:@"sawself True"],
+                  @"the sweep must see the handler itself, or it saw nothing at all; got:\n%@", output);
+    XCTAssertTrue([output containsString:@"leaked False"],
+                  @"`ps -A -E` must not show the token of a live python3 handler; got:\n%@", output);
+    XCTAssertTrue([output containsString:@"envtoken False"],
+                  @"and the handler's environment must not carry it either; got:\n%@", output);
+    XCTAssertTrue([output containsString:@"envfd False"],
+                  @"the client removes the descriptor variable once it has read it; got:\n%@", output);
+
+    // Restored, or a later test's handler inherits a window UUID naming a window that is closed.
+    if (savedPythonPath != nil) { setenv("PYTHONPATH", [savedPythonPath UTF8String], 1); }
+    else { unsetenv("PYTHONPATH"); }
+    if (savedWindowUUID != nil) { setenv("ACTIONUI_WINDOW_UUID", [savedWindowUUID UTF8String], 1); }
+    else { unsetenv("ACTIONUI_WINDOW_UUID"); }
+
+    [self closeFormDialogWithUUID:uuid bundlePath:formPath];
+    [self removeDiagnosticFilesForUUID:uuid];
 }
 
 #pragma mark - Lifecycle

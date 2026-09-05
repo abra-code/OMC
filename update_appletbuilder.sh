@@ -296,6 +296,43 @@ else
         build_failed=1
     fi
 
+    # actionui_remote.sh / .zsh - the same client for a handler written in sh or zsh. They are
+    # vendored beside actionui_remote.py, and both files go together: the .zsh sources the .sh
+    # from its own directory. A shell handler is the one kind that can hold the ActionUI remote
+    # token without showing it to `ps`, so these are not a convenience - see Shell/README.md in
+    # the ActionUI repository. Owned by ActionUI, never edited here.
+    echo "  Copying the shell clients..."
+    for shell_client in actionui_remote.sh actionui_remote.zsh; do
+        SHELL_CLIENT_SRC="$ACTIONUI_ROOT/ActionUIRemote/Shell/$shell_client"
+        SHELL_CLIENT_DST="$DEST_PACKAGES/$shell_client"
+        if [ ! -f "$SHELL_CLIENT_SRC" ]; then
+            echo -e "  ${RED}$shell_client not found at: $SHELL_CLIENT_SRC${NC}"
+            build_failed=1
+            continue
+        fi
+
+        /bin/mkdir -p "$DEST_PACKAGES"
+        /bin/cp "$SHELL_CLIENT_SRC" "$SHELL_CLIENT_DST"
+        cp_rc=$?
+        if [ "$cp_rc" -ne 0 ]; then
+            echo -e "  ${RED}Failed to copy $shell_client to: $SHELL_CLIENT_DST${NC}"
+            build_failed=1
+            continue
+        fi
+
+        # Sourced rather than executed, but a handler may well run one as a command; either way a
+        # non-executable copy is a trap, and cp does not carry the mode across a plain overwrite.
+        /bin/chmod 755 "$SHELL_CLIENT_DST"
+        chmod_rc=$?
+        if [ "$chmod_rc" -ne 0 ]; then
+            echo -e "  ${RED}Failed to make $shell_client executable at: $SHELL_CLIENT_DST${NC}"
+            build_failed=1
+            continue
+        fi
+
+        echo -e "  ${GREEN}$shell_client vendored${NC}"
+    done
+
     # actionui_remote_testing.py - the fake host omctest stands up for a Python applet's bridge.
     # It sits in Contents/Library, NOT in Packages: Packages is what AppletBuilder copies into
     # every applet, and test scaffolding has no business shipping inside a product.

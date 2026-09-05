@@ -328,6 +328,29 @@ def test_create_build() -> None:
             rc, out, err = run("build", str(app))
             check("build created bundle → exit 0", rc == 0, f"got {rc}: {err.strip()[-300:]}")
             check("build → 'Build succeeded'", "Build succeeded" in err, err.strip()[-300:])
+
+            packages = app / "Contents" / "Library" / "Packages"
+            check("build -> the Python client is installed",
+                  (packages / "actionui_remote.py").is_file())
+            # An applet with only a Python handler must NOT be given the shell clients: they are
+            # gated on a shell handler, and a gate that lets everything through is not a gate.
+            check("build -> no shell client without a shell handler",
+                  not (packages / "actionui_remote.sh").exists(),
+                  sorted(q.name for q in packages.iterdir()))
+
+            # Now give it a shell handler and rebuild. Both files must arrive together -
+            # actionui_remote.zsh sources actionui_remote.sh from its own directory - and both
+            # must be executable, because cp does not carry the mode across a plain overwrite.
+            handler = app / "Contents" / "Resources" / "Scripts" / f"{name}.shell.sh"
+            handler.write_text("#!/bin/sh\necho hello\n")
+            handler.chmod(0o755)
+            rc, out, err = run("build", str(app))
+            check("rebuild with a shell handler -> exit 0", rc == 0, f"got {rc}: {err.strip()[-300:]}")
+            for client in ("actionui_remote.sh", "actionui_remote.zsh"):
+                check(f"build -> {client} is installed", (packages / client).is_file())
+                check(f"build -> {client} is executable",
+                      (packages / client).exists() and os.access(packages / client, os.X_OK))
+            check("build -> the install is reported", "shell client" in err, err.strip()[-300:])
     finally:
         if saved_prefix is None:
             subprocess.run(["/usr/bin/defaults", "delete", _DEFAULTS_DOMAIN, _DEFAULTS_KEY],

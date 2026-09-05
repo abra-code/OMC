@@ -226,7 +226,7 @@ Error codes are normative in `ActionUIRemote/PROTOCOL.md`.
 
 It is unchanged and fully supported.
 
-- **Shell handlers.** The bridge has no shell client; a `.sh` handler keeps using the tool.
+- **A shell handler that only writes.** There is a shell client now (section 13), but `omc_dialog_control "$UUID" 101 "done"` is still the shorter way to write one value.
 - **Applets without an embedded Python runtime.** They do not get the modules.
 - **A one-line write.** `omc_dialog_control "$UUID" 101 "done"` from a shell handler is not worse for being old.
 
@@ -256,6 +256,37 @@ The applet serves newline-delimited JSON-RPC 2.0 on a Unix domain socket, privat
 The unprefixed pair is what the protocol itself names, so a script written against it runs unchanged whether its host is an OMC applet or any other ActionUI application. `actionui_remote` can be used directly for that reason; `omc.window()` simply returns a subclass with OMC's own verbs added.
 
 The wire format is normative in `ActionUIRemote/PROTOCOL.md` in the ActionUI repository. Nothing about it is OMC-specific.
+
+### The token, and why you never see it
+
+The host refuses a request that does not present a token, so that a script the applet did not spawn cannot drive its windows merely by finding the socket - the path is no secret. The engine mints one token per spawned handler and hands it over **on inherited descriptor 3**, naming it with a third variable:
+
+| Variable | |
+| --- | --- |
+| `$ACTIONUI_REMOTE_TOKEN_FD` | the descriptor the token can be read from, always `3` |
+
+`actionui_remote` reads it, closes the descriptor and removes the variable, all on the first request. A handler writes nothing for this, and there is deliberately no `$ACTIONUI_REMOTE_TOKEN`: a handler's environment at exec time is what `ps` reports, and it reports it to **any process of the same user** unless the process carries the `CS_RESTRICT` code-signing flag, which `python3` and `node` do not. Keeping the token out of the environment is the only thing that helps; clearing it inside the handler does not, because `ps` reads a snapshot frozen at exec.
+
+Three consequences worth knowing:
+
+- **The pipe is drained by its first reader.** A handler that spawns a helper which also needs the bridge must hand that helper its own token - `actionui_handoff` in the shell client does exactly that. It cannot simply pass the variable along.
+- **Nothing may put the token in a command line.** `argv` is readable for every process whatever its code-signing flags, so there is no special word for the token and no `--token` flag in a handler.
+- **Four execution modes get no token, and cannot drive the bridge.** `exe_terminal` and `exe_iterm` hand the environment to Terminal, which is not the applet's child and inherits no descriptor from it - and writing the token into the export script would put it in a file in the clear. `exe_silent_system` runs a bare `system()`, and the `exe_applescript` modes hand text to OSA; neither takes an environment or a descriptor from the engine, so there is nowhere to put the token. A handler in any of those four gets `1006` from the bridge. Use `omc_dialog_control`, or one of the `exe_shell_script` / `exe_popen` modes, which do get a token.
+
+  This is the bridge's reach, not a change in what those modes can do: reading window state out of process is what the bridge newly adds, and none of the four could ever do it. Mutation from any of them is unaffected, because `omc_dialog_control` needs no token.
+
+### From a shell handler
+
+`actionui_remote.sh` (sh and zsh) and `actionui_remote.zsh` (zsh, persistent connection) ship in the same `Contents/Library/Packages` directory as `actionui_remote.py`, and read descriptor 3 the same way:
+
+```sh
+. "$OMC_APP_BUNDLE_PATH/Contents/Library/Packages/actionui_remote.sh"
+actionui_use_window "$OMC_ACTIONUI_WINDOW_UUID"
+name=$(actionui_get_string 2)
+actionui_set_string 3 "hello, $name"
+```
+
+A shell handler is also the one kind that can hold the token without ever showing it to `ps`, because every Apple shell carries `CS_RESTRICT`. `ActionUIRemote/Shell/README.md` in the ActionUI repository has the measurements and the rules that keep that true.
 
 ## Related Documentation
 

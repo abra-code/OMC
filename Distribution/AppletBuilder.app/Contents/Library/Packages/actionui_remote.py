@@ -43,6 +43,7 @@ import atexit
 import errno
 import json
 import os
+import select
 import socket
 import sys
 import weakref
@@ -51,7 +52,7 @@ if sys.version_info < (3, 9):
     raise ImportError("actionui_remote requires Python 3.9 or newer; this is %s" % sys.version.split()[0])
 
 __all__ = [
-    "PROTOCOL_VERSION", "ENDPOINT_ENV", "WINDOW_ENV",
+    "PROTOCOL_VERSION", "ENDPOINT_ENV", "WINDOW_ENV", "TOKEN_ENV", "TOKEN_FD_ENV",
     "RemoteError", "EndpointError", "ProtocolError",
     "InsertPosition", "DialogButton", "ButtonRole", "ModalStyle",
     "Connection", "Window", "Batch", "hello", "connect", "main",
@@ -61,6 +62,13 @@ __all__ = [
 PROTOCOL_VERSION = 1
 ENDPOINT_ENV = "ACTIONUI_REMOTE_ENDPOINT"
 WINDOW_ENV = "ACTIONUI_WINDOW_UUID"
+# A host may require a token; the ones it spawned inherit it here. Read automatically, so a
+# script that never heard of it keeps working against a host that turns the requirement on.
+TOKEN_ENV = "ACTIONUI_REMOTE_TOKEN"
+# Or the host hands it over on an inherited pipe and names the descriptor here, so that the token
+# is never in this process's environment - where `ps` would show it to any process of the same
+# user. The number is no secret; the pipe is. See _read_token_descriptor.
+TOKEN_FD_ENV = "ACTIONUI_REMOTE_TOKEN_FD"
 
 DEFAULT_TIMEOUT = 15.0      # seconds; covers the host's 10 s main-thread wait
 MAX_LINE_LENGTH = 64 * 1024 * 1024
@@ -184,6 +192,149 @@ class InsertPosition:
         raise TypeError("position must be an InsertPosition, a dict, or 'append'/'prepend'")
 
 
+# --- The token on a descriptor --------------------------------------------------------------
+
+# Read once and held for the life of the process: the pipe is drained by its first reader, so
+# there is nothing to read a second time. None means "not read yet", not "no token".
+_token_from_descriptor = None
+# And the failure, if it failed, so that every later attempt reports the same thing.
+_token_descriptor_error = None
+
+# A token is 64 characters. The cap is not about tokens, it is about a descriptor that is not the
+# pipe the contract describes - a tty, or a socket nobody closed - which would otherwise be read
+# until it blocked forever or exhausted memory.
+MAX_TOKEN_LENGTH = 4096
+# How long to wait for bytes that should already be there. The creator writes the token and
+# closes its write end before the child can run, so a correct handoff never waits at all; this
+# only bounds a misconfigured descriptor whose write end someone holds open and never writes -
+# which the size cap above cannot catch, there being nothing to count. Unbounded would mean
+# hanging at import, since that is when the descriptor is read.
+TOKEN_DESCRIPTOR_TIMEOUT = 10.0
+# os.read raises OverflowError, not OSError, for a number too large for a C int, and that is not
+# the failure shape this contract promises.
+_MAX_DESCRIPTOR = 2 ** 31 - 1
+
+
+def _token_descriptor_failure(message, fd=None):
+    """Record the failure, close the descriptor, and raise.
+
+    Recorded because the answer must not change between calls. Closed because the reader's half
+    of the contract is to leave nothing for its children to inherit, and that is no less true of
+    a descriptor that turned out to be unusable - a child inheriting an open one would read from
+    whatever it is. The variable is deliberately NOT removed: it is the only remaining trace of
+    how this process was configured, and the recorded message, not a re-read, is what later
+    attempts report.
+    """
+    global _token_descriptor_error
+    _token_descriptor_error = message
+    if fd is not None:
+        try:
+            os.close(fd)
+        except OSError:
+            pass
+    raise EndpointError(message)
+
+
+def _read_token_descriptor():
+    """The token from $ACTIONUI_REMOTE_TOKEN_FD, or None when no descriptor is configured.
+
+    The lifecycle has two owners (PROTOCOL.md section 10). The process that creates the pipe
+    writes the token and a newline and closes its write end at once. This side reads once, then
+    closes the descriptor and removes the variable, so that nothing this script spawns inherits
+    an open descriptor to a drained pipe, or a variable naming one. A child that needs the bridge
+    must be handed its own token.
+
+    A descriptor that is configured but cannot be read is a failure, never a fallback to the
+    environment: falling back would silently undo the point of the descriptor, which is that the
+    token is not in the environment at all. The failure is recorded, so every later attempt
+    reports the same thing rather than a different one.
+
+    Descriptors 0, 1 and 2 are accepted. The number is the creator's to choose, and a creator
+    that can only hand over stdin - Foundation's Process, for one - is still a valid creator.
+    """
+    global _token_from_descriptor
+    if _token_from_descriptor is not None:
+        return _token_from_descriptor
+    if _token_descriptor_error is not None:
+        raise EndpointError(_token_descriptor_error)
+
+    raw = os.environ.get(TOKEN_FD_ENV)
+    if not raw:
+        return None
+    # isdigit() alone accepts superscripts and other unicode digits that int() then rejects.
+    if not (raw.isascii() and raw.isdigit()):
+        _token_descriptor_failure("%s must be a descriptor number, not %r" % (TOKEN_FD_ENV, raw))
+    fd = int(raw)
+    if fd > _MAX_DESCRIPTOR:
+        _token_descriptor_failure("%s is not a descriptor number: %r" % (TOKEN_FD_ENV, raw))
+
+    chunks = []
+    total = 0
+    try:
+        # poll, not select: select raises ValueError - not OSError, so neither handler below
+        # would catch it, and the import would die - for any descriptor at or above FD_SETSIZE,
+        # which is 1024 on Darwin. poll has no such ceiling, and the C side accepts any number
+        # above stderr.
+        waiter = select.poll()
+        waiter.register(fd, select.POLLIN)
+        while True:
+            if not waiter.poll(TOKEN_DESCRIPTOR_TIMEOUT * 1000.0):
+                _token_descriptor_failure(
+                    "descriptor %d (%s) produced nothing in %g seconds; the token should already "
+                    "be there" % (fd, TOKEN_FD_ENV, TOKEN_DESCRIPTOR_TIMEOUT), fd)
+            chunk = os.read(fd, 4096)
+            if not chunk:                       # EOF: the creator closed its write end
+                break
+            total += len(chunk)                 # everything read, so the cap means what it says
+            if total > MAX_TOKEN_LENGTH:
+                _token_descriptor_failure(
+                    "descriptor %d (%s) gave more than %d bytes with no newline; it is not the "
+                    "token pipe" % (fd, TOKEN_FD_ENV, MAX_TOKEN_LENGTH), fd)
+            newline = chunk.find(b"\n")
+            if newline >= 0:
+                chunks.append(chunk[:newline])
+                break
+            chunks.append(chunk)
+    except EndpointError:
+        raise                                   # already recorded; not an I/O failure to re-wrap
+    except OSError as error:
+        # EndpointError subclasses the builtin ConnectionError, and so is an OSError - hence the
+        # re-raise above, without which the failures recorded in this loop would be caught here
+        # and reported nested inside a "could not be read" message.
+        #
+        # poll.register rejects a descriptor that is not open at all, with the same shape as a
+        # failed read, so both arrive here.
+        _token_descriptor_failure("descriptor %d (%s) could not be read: %s"
+                                  % (fd, TOKEN_FD_ENV, error), fd)
+
+    token = b"".join(chunks).decode("utf-8", "replace").strip()
+    if not token:
+        _token_descriptor_failure("nothing could be read from descriptor %d (%s)"
+                                  % (fd, TOKEN_FD_ENV), fd)
+
+    try:
+        os.close(fd)
+    except OSError:
+        pass                                    # the token is in hand; a failed close changes nothing
+    os.environ.pop(TOKEN_FD_ENV, None)
+    _token_from_descriptor = token
+    return token
+
+
+# Drained at import, not at first use. Until it is read, this process holds an open descriptor to
+# a live token and exports the variable naming it, so everything it spawns inherits both - and a
+# handler that runs a subprocess before its first bridge call would hand that child its token, or
+# have the token read out from under it. PROTOCOL.md section 10 wants the descriptor closed out
+# and the variable gone; the earliest this module can do that is now.
+#
+# A failure here is recorded, not raised: an import must not fail over a token nothing has asked
+# for yet, and the caller sees the same error at the point it does ask.
+try:
+    _read_token_descriptor()
+except EndpointError:
+    pass
+
+
 # --- Connection -----------------------------------------------------------------------------
 
 _live_connections = weakref.WeakSet()
@@ -202,15 +353,38 @@ class Connection:
     interpreter exit. Not thread-safe: a thread that needs its own should construct one directly
     rather than use the process-wide one from connect()."""
 
-    def __init__(self, endpoint, timeout=DEFAULT_TIMEOUT):
+    def __init__(self, endpoint, timeout=DEFAULT_TIMEOUT, token=None):
         if not endpoint:
             raise EndpointError("no ActionUI remote endpoint given")
         self.endpoint = endpoint
         self.timeout = timeout
+        # An explicit token wins; otherwise the descriptor, then the environment, consulted per
+        # request rather than captured here. connect() caches one Connection per endpoint, so
+        # capturing would pin whatever the environment held the first time anything connected -
+        # and a host that starts serving later, or a test that sets the variable afterwards,
+        # would never be seen. The descriptor is the exception, and is cached module-wide: a pipe
+        # can only be read once, so re-reading it per request would find nothing.
+        self._explicit_token = token
         self._sock = None
         self._buffer = b""
         self._next_id = 1
         _live_connections.add(self)
+
+    @property
+    def token(self):
+        """The token this connection sends: the explicit one, else the one on
+        $ACTIONUI_REMOTE_TOKEN_FD, else $ACTIONUI_REMOTE_TOKEN now.
+
+        Raises EndpointError when a descriptor is configured but unreadable - a host that went to
+        the trouble of keeping the token out of the environment must not be answered with an
+        environment token that a `ps` sweep could have supplied.
+        """
+        if self._explicit_token is not None:
+            return self._explicit_token
+        from_descriptor = _read_token_descriptor()
+        if from_descriptor is not None:
+            return from_descriptor
+        return os.environ.get(TOKEN_ENV, "")
 
     # -- lifecycle
 
@@ -303,6 +477,13 @@ class Connection:
         if not notification:
             envelope["id"] = self._next_id
             self._next_id += 1
+        if self.token:
+            # On every request, not once per connection. The host remembers a connection that
+            # has authenticated, so this costs nothing after the first; sending it every time is
+            # what lets the one-connection-per-request pattern (PROTOCOL.md section 1) keep
+            # working without an extra round trip, and what makes a reconnect transparent.
+            params = dict(params or {})
+            params["token"] = self.token
         if params:
             envelope["params"] = params
         return envelope
@@ -390,7 +571,7 @@ class Connection:
 _connections = {}
 
 
-def connect(endpoint=None, timeout=DEFAULT_TIMEOUT):
+def connect(endpoint=None, timeout=DEFAULT_TIMEOUT, token=None):
     """The process-wide Connection for an endpoint (default: $ACTIONUI_REMOTE_ENDPOINT).
 
     One connection per endpoint is shared by every Window in the process; it is not
@@ -400,7 +581,7 @@ def connect(endpoint=None, timeout=DEFAULT_TIMEOUT):
         raise EndpointError("%s is not set; this host did not start the ActionUI remote server" % ENDPOINT_ENV)
     connection = _connections.get(endpoint)
     if connection is None:
-        connection = Connection(endpoint, timeout=timeout)
+        connection = Connection(endpoint, timeout=timeout, token=token)
         _connections[endpoint] = connection
     elif connection.timeout != timeout:
         connection.timeout = timeout
@@ -862,6 +1043,10 @@ def _build_parser(argparse):
                         help="socket path (default: $%s)" % ENDPOINT_ENV)
     parser.add_argument("--window", default=os.environ.get(WINDOW_ENV),
                         help="window UUID (default: $%s)" % WINDOW_ENV)
+    # Normally inherited, so this is for driving a host by hand from a shell that is not its
+    # child - which necessarily means getting the token out of the host deliberately.
+    parser.add_argument("--token", default=None,
+                        help="token, if the host requires one (default: $%s)" % TOKEN_ENV)
     parser.add_argument("--timeout", type=timeout_argument, default=DEFAULT_TIMEOUT,
                         help="seconds to wait for a reply (default: %g)" % DEFAULT_TIMEOUT)
     commands = parser.add_subparsers(dest="command", required=True, metavar="COMMAND")
@@ -930,7 +1115,7 @@ def main(argv=None):
     try:
         # Before the window check, so a handler running outside an ActionUI window is told there
         # is no host (3) whatever the command, rather than that its command line is wrong.
-        connection = connect(args.endpoint, timeout=args.timeout)
+        connection = connect(args.endpoint, timeout=args.timeout, token=args.token)
     except EndpointError as error:
         sys.stderr.write("%s\n" % error)
         return EXIT_NO_HOST

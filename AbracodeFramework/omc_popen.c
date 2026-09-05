@@ -1,5 +1,6 @@
 #include <sys/cdefs.h>
 #include <sys/param.h>
+#include <limits.h>       // PIPE_BUF, for the token write
 #include <sys/wait.h>
 #include <signal.h>
 #include <errno.h>
@@ -182,6 +183,17 @@ ReleaseEnviron(char **inEnviron)
 }
 
 
+void
+OMCSecureClear(void *inBuffer, size_t inSize)
+{
+    if(inBuffer == NULL)
+        return;
+
+    volatile unsigned char *cursor = (volatile unsigned char *)inBuffer;
+    while(inSize-- > 0)
+        *cursor++ = 0;
+}
+
 // Mark a pipe fd close-on-exec so it cannot leak into an unrelated child that happens to
 // be spawned concurrently. The explicit close loop below only covers children already
 // registered in sChildProcessInfoList; a pipe still being set up here is not yet in that
@@ -200,8 +212,85 @@ static inline void SetCloseOnExec(int fd)
     }
 }
 
+// The two names of the ActionUI remote token contract. The token itself must never be in a
+// child's environment - see omc_popen.h - so this file only ever removes that name, and only
+// ever adds the one that carries the descriptor number, which is no secret.
+static const char kActionUITokenVariable[] = "ACTIONUI_REMOTE_TOKEN";
+static const char kActionUITokenFDVariable[] = "ACTIONUI_REMOTE_TOKEN_FD";
+
+// True when "key=..." names exactly inKey. The '=' test is what keeps ACTIONUI_REMOTE_TOKEN_FD
+// from matching the prefix ACTIONUI_REMOTE_TOKEN.
+static bool EnvironEntryHasKey(const char *inEntry, const char *inKey, size_t inKeyLength)
+{
+    return (strncmp(inEntry, inKey, inKeyLength) == 0) && (inEntry[inKeyLength] == '=');
+}
+
+// The child's environment for a token handoff: every entry the caller built, minus any spelling
+// of the two token variables, plus ACTIONUI_REMOTE_TOKEN_FD naming the descriptor this call
+// created. Building it here rather than in the caller is what makes the number and the
+// descriptor impossible to disagree about, and it is the only place that can strip a token the
+// caller left in the list. Free with ReleaseEnviron. NULL on allocation failure.
+static char **
+CreateEnvironForTokenDescriptor(char * const *inEnvironList, int inTokenFD)
+{
+    size_t oldCount = 0;
+    if(inEnvironList != NULL)
+    {
+        while(inEnvironList[oldCount] != NULL)
+            oldCount++;
+    }
+
+    char **newEnviron = (char **)calloc( oldCount + 2, sizeof(char *) ); // +1 new entry, +1 terminator
+    if(newEnviron == NULL)
+        return NULL;
+
+    size_t newIndex = 0;
+    for(size_t i = 0; i < oldCount; i++)
+    {
+        const char *oneEntry = inEnvironList[i];
+        if( EnvironEntryHasKey(oneEntry, kActionUITokenVariable, sizeof(kActionUITokenVariable) - 1) ||
+            EnvironEntryHasKey(oneEntry, kActionUITokenFDVariable, sizeof(kActionUITokenFDVariable) - 1) )
+        {
+            continue;
+        }
+
+        newEnviron[newIndex] = strdup(oneEntry);
+        if(newEnviron[newIndex] == NULL)
+        {
+            ReleaseEnviron(newEnviron);
+            return NULL;
+        }
+        newIndex++;
+    }
+
+    char descriptorEntry[64];
+    int written = snprintf(descriptorEntry, sizeof(descriptorEntry), "%s=%d", kActionUITokenFDVariable, inTokenFD);
+    if( (written <= 0) || ((size_t)written >= sizeof(descriptorEntry)) )
+    {
+        ReleaseEnviron(newEnviron);
+        return NULL;
+    }
+
+    newEnviron[newIndex] = strdup(descriptorEntry);
+    if(newEnviron[newIndex] == NULL)
+    {
+        ReleaseEnviron(newEnviron);
+        return NULL;
+    }
+    newIndex++;
+    newEnviron[newIndex] = NULL;
+    return newEnviron;
+}
+
 int
 omc_popen(const char *command, char * const *inShell, char * const *inEnvironList, unsigned int inMode, ChildProcessInfo *outChildProcessInfo)
+{
+    return omc_popen_with_token( command, inShell, inEnvironList, inMode, NULL, -1, outChildProcessInfo );
+}
+
+int
+omc_popen_with_token(const char *command, char * const *inShell, char * const *inEnvironList, unsigned int inMode,
+                     const char *inToken, int inTokenFD, ChildProcessInfo *outChildProcessInfo)
 {
     //	PrintEnv();
     
@@ -211,9 +300,24 @@ omc_popen(const char *command, char * const *inShell, char * const *inEnvironLis
     outChildProcessInfo->inputFD = -1;
     outChildProcessInfo->outputFD = -1;
     outChildProcessInfo->pid = 0;
+
+    size_t tokenLength = 0;
+    if(inToken != NULL)
+    {
+        // Above stderr, because the three standard descriptors are dup2 targets below and the
+        // child needs all of them. Shorter than PIPE_BUF so the single write below cannot tear
+        // or block: a token is 64 hex characters, and one that does not fit is a bug worth
+        // failing on rather than a case worth looping over.
+        if(inTokenFD <= STDERR_FILENO)
+            return -1;
+        tokenLength = strlen(inToken);
+        if( (tokenLength == 0) || ((tokenLength + 1) >= PIPE_BUF) )
+            return -1;
+    }
     
     int inputFDs[2] = {-1, -1}; // file descriptors are valid in range <0, OPEN_MAX)
     int outputFDs[2] = {-1, -1};
+    int tokenFDs[2] = {-1, -1};
 
     if( (inMode & kOMCPopenRead) != 0 )
     {
@@ -234,6 +338,47 @@ omc_popen(const char *command, char * const *inShell, char * const *inEnvironLis
         SetCloseOnExec( inputFDs[kPipeReadEnd] );
         SetCloseOnExec( inputFDs[kPipeWriteEnd] );
     }
+
+    if(inToken != NULL)
+    {
+        if( pipe(tokenFDs) < 0 )
+        {
+            CLOSE_FILE_DESCRIPTOR( inputFDs[kPipeReadEnd] );
+            CLOSE_FILE_DESCRIPTOR( inputFDs[kPipeWriteEnd]);
+            CLOSE_FILE_DESCRIPTOR( outputFDs[kPipeReadEnd] );
+            CLOSE_FILE_DESCRIPTOR( outputFDs[kPipeWriteEnd]);
+            return -1;
+        }
+        // pipe() hands back the two lowest free descriptors, so the read end can land exactly on
+        // the number the caller asked for. Move it off, because a same-descriptor dup2 would not
+        // deliver it: POSIX.1-2008 TC2 says posix_spawn_file_actions_adddup2(fa, fd, fd) clears
+        // FD_CLOEXEC, and **Darwin does not** - measured, and the child then finds the descriptor
+        // closed while this function reports success. dup() cannot hand back inTokenFD here,
+        // because inTokenFD is still occupied by the descriptor being duplicated.
+        if(tokenFDs[kPipeReadEnd] == inTokenFD)
+        {
+            int movedReadEnd = dup(tokenFDs[kPipeReadEnd]);
+            if(movedReadEnd < 0)
+            {
+                CLOSE_FILE_DESCRIPTOR( inputFDs[kPipeReadEnd] );
+                CLOSE_FILE_DESCRIPTOR( inputFDs[kPipeWriteEnd]);
+                CLOSE_FILE_DESCRIPTOR( outputFDs[kPipeReadEnd] );
+                CLOSE_FILE_DESCRIPTOR( outputFDs[kPipeWriteEnd]);
+                CLOSE_FILE_DESCRIPTOR( tokenFDs[kPipeReadEnd] );
+                CLOSE_FILE_DESCRIPTOR( tokenFDs[kPipeWriteEnd]);
+                return -1;
+            }
+            (void)close( tokenFDs[kPipeReadEnd] );
+            tokenFDs[kPipeReadEnd] = movedReadEnd;
+        }
+
+        // Both ends, for the same reason the pipes above are marked: a spawn running
+        // concurrently must not inherit either. The read end still survives into the child,
+        // because it now always arrives there as a dup2 onto a DIFFERENT descriptor, and that
+        // is the case where dup2 does clear FD_CLOEXEC.
+        SetCloseOnExec( tokenFDs[kPipeReadEnd] );
+        SetCloseOnExec( tokenFDs[kPipeWriteEnd] );
+    }
     
     ChildProcessInfoLink *thisLink = malloc(sizeof(ChildProcessInfoLink));
     if(thisLink == NULL)
@@ -242,6 +387,8 @@ omc_popen(const char *command, char * const *inShell, char * const *inEnvironLis
         CLOSE_FILE_DESCRIPTOR( inputFDs[kPipeWriteEnd]);
         CLOSE_FILE_DESCRIPTOR( outputFDs[kPipeReadEnd] );
         CLOSE_FILE_DESCRIPTOR( outputFDs[kPipeWriteEnd]);
+        CLOSE_FILE_DESCRIPTOR( tokenFDs[kPipeReadEnd] );
+        CLOSE_FILE_DESCRIPTOR( tokenFDs[kPipeWriteEnd]);
         return -1;
     }
 
@@ -297,6 +444,7 @@ omc_popen(const char *command, char * const *inShell, char * const *inEnvironLis
     posix_spawn_file_actions_t file_actions = NULL;
     bool attributes_initialized = false;
     bool file_actions_initialized = false;
+    char **tokenEnviron = NULL;
     
     THREAD_LOCK();
     
@@ -350,11 +498,54 @@ omc_popen(const char *command, char * const *inShell, char * const *inEnvironLis
         if (link->info.outputFD >= 0)
             posix_spawn_file_actions_addclose(&file_actions, link->info.outputFD);
     }
+
+    // The token pipe, LAST of all the file actions and deliberately so: they are applied in
+    // order, and the loop above closes descriptors by number. An earlier child's pipe may well
+    // be sitting on the number the token is going to (3 is a very ordinary fd), so a dup2 placed
+    // before that loop would be undone by it.
+    if(inToken != NULL) {
+        // The read end was moved off inTokenFD above, so this dup2 always crosses descriptors -
+        // which is what makes it clear FD_CLOEXEC and actually deliver - and the close below is
+        // always of a different descriptor.
+        if (posix_spawn_file_actions_adddup2(&file_actions, tokenFDs[kPipeReadEnd], inTokenFD) != 0)
+            goto spawn_error;
+        if (posix_spawn_file_actions_addclose(&file_actions, tokenFDs[kPipeReadEnd]) != 0)
+            goto spawn_error;
+        // The child must not hold its own pipe's write end: it would then never see EOF on a
+        // token it did not read to the end. FD_CLOEXEC above covers this too; both are cheap.
+        //
+        // Guarded, and it matters: pipe() hands back the two lowest free descriptors, so the
+        // write end can perfectly well BE inTokenFD - ask for 7 and get a pipe on {6, 7}. The
+        // dup2 just above has already closed it in the child, and an unconditional close here
+        // would then close the token descriptor straight back off again.
+        if (tokenFDs[kPipeWriteEnd] != inTokenFD) {
+            if (posix_spawn_file_actions_addclose(&file_actions, tokenFDs[kPipeWriteEnd]) != 0)
+                goto spawn_error;
+        }
+    }
     
     // Spawn the process
     // NOTE: environ parameter must NOT be NULL - use empty array for no environment
     char *empty_env[] = { NULL };
     char *const *use_environ = (inEnvironList != NULL) ? inEnvironList : empty_env;
+
+    if(inToken != NULL) {
+        tokenEnviron = CreateEnvironForTokenDescriptor(inEnvironList, inTokenFD);
+        if(tokenEnviron == NULL)
+            goto spawn_error;
+        use_environ = tokenEnviron;
+
+        // Written before the spawn, not after: the parent holds both ends, so 65 bytes into an
+        // empty pipe cannot block, and a write that fails here fails with no child running
+        // rather than leaving one blocked forever on a token that will never arrive.
+        char tokenLine[PIPE_BUF];
+        memcpy(tokenLine, inToken, tokenLength);
+        tokenLine[tokenLength] = '\n';
+        ssize_t written = write(tokenFDs[kPipeWriteEnd], tokenLine, tokenLength + 1);
+        OMCSecureClear(tokenLine, tokenLength + 1);
+        if(written != (ssize_t)(tokenLength + 1))
+            goto spawn_error;
+    }
     
     int pid = 0;
     int spawn_result = posix_spawn(&pid, shellPath, &file_actions, &attr,
@@ -373,6 +564,16 @@ omc_popen(const char *command, char * const *inShell, char * const *inEnvironLis
     }
     
     THREAD_UNLOCK();
+
+    ReleaseEnviron(tokenEnviron);
+    tokenEnviron = NULL;
+
+    // The token is in the child's hands, or will be as soon as it reads. Both ends go now:
+    // nothing of the pipe remains in this process, and the write end in particular must go or
+    // the child never sees EOF. Deliberately NOT registered in sChildProcessInfoList - that list
+    // exists for the stdio pipes, which outlive the call; these two do not.
+    CLOSE_FILE_DESCRIPTOR( tokenFDs[kPipeWriteEnd] );
+    CLOSE_FILE_DESCRIPTOR( tokenFDs[kPipeReadEnd] );
 
     // Continue with existing parent code...
     thisLink->info.pid = pid;
@@ -411,7 +612,10 @@ spawn_error:
     CLOSE_FILE_DESCRIPTOR(inputFDs[kPipeWriteEnd]);
     CLOSE_FILE_DESCRIPTOR(outputFDs[kPipeReadEnd]);
     CLOSE_FILE_DESCRIPTOR(outputFDs[kPipeWriteEnd]);
+    CLOSE_FILE_DESCRIPTOR(tokenFDs[kPipeReadEnd]);
+    CLOSE_FILE_DESCRIPTOR(tokenFDs[kPipeWriteEnd]);
     
+    ReleaseEnviron(tokenEnviron);
     free(thisLink);
     free(newArgs);
     
