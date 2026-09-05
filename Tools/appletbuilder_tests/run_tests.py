@@ -36,6 +36,11 @@ TEMPLATES = REPO / "Distribution" / "AppletBuilder.app" / "Contents" / "Resource
 _DEFAULTS_DOMAIN = "com.abracode.applet-builder"
 _DEFAULTS_KEY = "BundleIDPrefix"
 
+# The ActionUI shell client and the two awk programs it runs. They travel as a set: the .zsh
+# sources the .sh, and the .sh refuses to load without both programs beside it.
+_SHELL_CLIENT_FILES = ("actionui_remote.sh", "actionui_remote.zsh",
+                       "actionui_remote_escape.awk", "actionui_remote_walk.awk")
+
 _passed = 0
 _failed = 0
 
@@ -335,21 +340,27 @@ def test_create_build() -> None:
             # An applet with only a Python handler must NOT be given the shell clients: they are
             # gated on a shell handler, and a gate that lets everything through is not a gate.
             check("build -> no shell client without a shell handler",
-                  not (packages / "actionui_remote.sh").exists(),
+                  not any((packages / q).exists() for q in _SHELL_CLIENT_FILES),
                   sorted(q.name for q in packages.iterdir()))
 
-            # Now give it a shell handler and rebuild. Both files must arrive together -
-            # actionui_remote.zsh sources actionui_remote.sh from its own directory - and both
-            # must be executable, because cp does not carry the mode across a plain overwrite.
+            # Now give it a shell handler and rebuild. All four files must arrive together -
+            # actionui_remote.zsh sources actionui_remote.sh from its own directory, and the .sh
+            # reads its two awk programs from there and refuses to load without them. The two
+            # clients must be executable, because cp does not carry the mode across a plain
+            # overwrite; the awk programs are read by awk and never run.
             handler = app / "Contents" / "Resources" / "Scripts" / f"{name}.shell.sh"
             handler.write_text("#!/bin/sh\necho hello\n")
             handler.chmod(0o755)
             rc, out, err = run("build", str(app))
             check("rebuild with a shell handler -> exit 0", rc == 0, f"got {rc}: {err.strip()[-300:]}")
-            for client in ("actionui_remote.sh", "actionui_remote.zsh"):
+            for client in _SHELL_CLIENT_FILES:
                 check(f"build -> {client} is installed", (packages / client).is_file())
-                check(f"build -> {client} is executable",
-                      (packages / client).exists() and os.access(packages / client, os.X_OK))
+                if client.endswith(".awk"):
+                    check(f"build -> {client} is readable",
+                          (packages / client).exists() and os.access(packages / client, os.R_OK))
+                else:
+                    check(f"build -> {client} is executable",
+                          (packages / client).exists() and os.access(packages / client, os.X_OK))
             check("build -> the install is reported", "shell client" in err, err.strip()[-300:])
     finally:
         if saved_prefix is None:

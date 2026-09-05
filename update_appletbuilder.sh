@@ -296,13 +296,15 @@ else
         build_failed=1
     fi
 
-    # actionui_remote.sh / .zsh - the same client for a handler written in sh or zsh. They are
-    # vendored beside actionui_remote.py, and both files go together: the .zsh sources the .sh
-    # from its own directory. A shell handler is the one kind that can hold the ActionUI remote
-    # token without showing it to `ps`, so these are not a convenience - see Shell/README.md in
-    # the ActionUI repository. Owned by ActionUI, never edited here.
+    # actionui_remote.sh / .zsh - the same client for a handler written in sh or zsh, and the two
+    # awk programs the .sh runs. They are vendored beside actionui_remote.py, and all four files
+    # go together: the .zsh sources the .sh from its own directory, the .sh reads the two .awk
+    # programs from there, and it refuses to load without them rather than failing on the first
+    # reply. A shell handler is the one kind that can hold the ActionUI remote token without
+    # showing it to `ps`, so these are not a convenience - see Shell/README.md in the ActionUI
+    # repository. Owned by ActionUI, never edited here.
     echo "  Copying the shell clients..."
-    for shell_client in actionui_remote.sh actionui_remote.zsh; do
+    for shell_client in actionui_remote.sh actionui_remote.zsh actionui_remote_escape.awk actionui_remote_walk.awk; do
         SHELL_CLIENT_SRC="$ACTIONUI_ROOT/ActionUIRemote/Shell/$shell_client"
         SHELL_CLIENT_DST="$DEST_PACKAGES/$shell_client"
         if [ ! -f "$SHELL_CLIENT_SRC" ]; then
@@ -320,12 +322,17 @@ else
             continue
         fi
 
-        # Sourced rather than executed, but a handler may well run one as a command; either way a
-        # non-executable copy is a trap, and cp does not carry the mode across a plain overwrite.
-        /bin/chmod 755 "$SHELL_CLIENT_DST"
+        # A client is sourced rather than executed, but a handler may well run one as a command;
+        # either way a non-executable copy is a trap, and cp does not carry the mode across a
+        # plain overwrite. An awk program is read by awk and never run, so it stays data.
+        case "$shell_client" in
+            *.awk) shell_client_mode=644 ;;
+            *)     shell_client_mode=755 ;;
+        esac
+        /bin/chmod "$shell_client_mode" "$SHELL_CLIENT_DST"
         chmod_rc=$?
         if [ "$chmod_rc" -ne 0 ]; then
-            echo -e "  ${RED}Failed to make $shell_client executable at: $SHELL_CLIENT_DST${NC}"
+            echo -e "  ${RED}Failed to set mode $shell_client_mode on: $SHELL_CLIENT_DST${NC}"
             build_failed=1
             continue
         fi

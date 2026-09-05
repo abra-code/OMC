@@ -25,6 +25,11 @@
 # under zsh with actionui_remote.zsh in front of it, the nc transport is replaced by zsh's own
 # socket module: no helper process at all, and one connection kept open across calls.
 #
+# The two awk programs this file runs are files of their own beside it, actionui_remote_escape.awk
+# and actionui_remote_walk.awk, found there when this file is sourced. The three go together:
+# copying only this one leaves a client that cannot escape a control character or read a reply,
+# so it says so and stops rather than letting the first call discover it.
+#
 # This file sets no traps, so a script interrupted in the middle of a call under the nc transport
 # leaves a small directory with two FIFOs under TMPDIR and an nc that exits when its timeout
 # expires. A script that cares can `trap` on INT and TERM itself. And under /bin/sh (POSIX mode)
@@ -88,6 +93,32 @@ _AUI_TAB=$(printf '\tx')
 _AUI_TAB=${_AUI_TAB%x}
 _AUI_CR=$(printf '\rx')
 _AUI_CR=${_AUI_CR%x}
+
+# Where the two awk programs are, resolved once here rather than on each call: the path is
+# relative to the directory this file was sourced from, and a handler is free to cd afterwards.
+# zsh's %x names the file being sourced whatever $0 has been set to; bash sets BASH_SOURCE when
+# sourced and $0 when executed. Any other shell lands on $0 too and is turned away at the end of
+# this file.
+if [ -n "${ZSH_VERSION:-}" ]; then
+    _AUI_SELF=${(%):-%x}
+else
+    _AUI_SELF=${BASH_SOURCE:-$0}
+fi
+_AUI_DIR=${_AUI_SELF%/*}
+if [ "$_AUI_DIR" = "$_AUI_SELF" ]; then
+    _AUI_DIR=.
+fi
+# cd and pwd are builtins in both shells, so an absolute path costs no process, and the subshell
+# keeps the directory change to itself.
+_AUI_DIR=$(cd "$_AUI_DIR" 2>/dev/null && pwd -P)
+_AUI_AWK_ESCAPE="$_AUI_DIR/actionui_remote_escape.awk"
+_AUI_AWK_WALK="$_AUI_DIR/actionui_remote_walk.awk"
+if [ -z "$_AUI_DIR" ] || [ ! -r "$_AUI_AWK_ESCAPE" ] || [ ! -r "$_AUI_AWK_WALK" ]; then
+    printf '%s\n' "actionui_remote.sh: cannot read actionui_remote_escape.awk and actionui_remote_walk.awk beside '$_AUI_SELF'; the three files go together, copy them as a set" >&2
+    unset _AUI_SELF _AUI_DIR _AUI_AWK_ESCAPE _AUI_AWK_WALK
+    return 2 2>/dev/null || exit 2
+fi
+unset _AUI_SELF
 
 # --- Configuration ------------------------------------------------------------------------------
 
@@ -251,28 +282,15 @@ actionui_handoff() {
 
 # Escape TEXT for use inside a JSON string, into _aui_escaped. The backslash and quote passes are
 # pure shell, so ordinary text - and the token - never leaves this process. Control characters
-# are rare in UI text and need one awk pass; awk is a restricted Apple binary and reads the text
-# on stdin, so the token is still never an argument.
+# are rare in UI text and need one awk pass, actionui_remote_escape.awk beside this file; awk is
+# a restricted Apple binary and reads the text on stdin, so the token is still never an argument.
 _aui_escape() {
     _aui_escaped=$1
     _aui_escaped=${_aui_escaped//\\/\\\\}
     _aui_escaped=${_aui_escaped//\"/\\\"}
     case $_aui_escaped in
         *[[:cntrl:]]*)
-            _aui_escaped=$(printf '%s\n' "$_aui_escaped" | /usr/bin/awk '
-                BEGIN {
-                    for (k = 1; k < 32; k++) ctl[sprintf("%c", k)] = sprintf("\\u%04x", k)
-                    ctl["\b"] = "\\b"; ctl["\f"] = "\\f"; ctl["\r"] = "\\r"; ctl["\t"] = "\\t"
-                    ctl[sprintf("%c", 127)] = "\\u007f"
-                }
-                NR > 1 { printf "\\n" }
-                {
-                    n = length($0)
-                    for (j = 1; j <= n; j++) {
-                        c = substr($0, j, 1)
-                        if (c in ctl) printf "%s", ctl[c]; else printf "%s", c
-                    }
-                }') ;;
+            _aui_escaped=$(printf '%s\n' "$_aui_escaped" | /usr/bin/awk -f "$_AUI_AWK_ESCAPE") ;;
     esac
     return 0
 }
@@ -356,117 +374,14 @@ _aui_element_params() {
 
 # --- JSON in -----------------------------------------------------------------------------------
 
-# One awk program walks the top level of a JSON text. It reads the text on stdin, and what it
+# One awk program walks the top level of a JSON text: actionui_remote_walk.awk beside this file,
+# where the modes and what each prints are documented. It reads the text on stdin, and what it
 # reads is replies - which carry no token - plus, in actionui_call, the caller's own params before
-# the token is added. Modes:
-#   reply  print four lines: kind (R result / E error / B batch array / N a well-formed line that
-#          is not a reply, to be ignored as PROTOCOL.md section 3 requires / X unparseable), the
-#          raw id, the raw value (the result, the error object, or the whole batch), and a "."
-#          terminator so that an empty value still splits correctly.
-#   key    print the raw value of top-level key KEY, or nothing (status 1) when absent.
-#   items  print each top-level array element raw, one per line.
+# the token is added. In mode reply it prints four lines: kind (R result / E error / B batch array
+# / N a well-formed line that is not a reply / X unparseable), the raw id, the raw value, and a
+# "." terminator so that an empty value still splits correctly.
 _aui_walk() {
-    /usr/bin/awk -v mode="$1" -v key="${2:-}" '
-        function ws(p) { while (p <= n && index(" \t\r", substr(s, p, 1))) p++; return p }
-        # Index just past the value that starts at p; 0 for an unterminated string or container,
-        # and p itself when there is no value there at all. Every caller demands progress, so
-        # malformed input ends the walk instead of looping on it.
-        function vend(p,    c, instr, st, o) {
-            c = substr(s, p, 1)
-            if (c == "\"") {
-                p++
-                while (p <= n) {
-                    c = substr(s, p, 1)
-                    if (c == "\\") { p += 2; continue }
-                    if (c == "\"") return p + 1
-                    p++
-                }
-                return 0
-            }
-            if (c == "{" || c == "[") {
-                st = ""; instr = 0; o = ""
-                while (p <= n) {
-                    c = substr(s, p, 1)
-                    if (instr) {
-                        if (c == "\\") { p += 2; continue }
-                        if (c == "\"") instr = 0
-                        p++; continue
-                    }
-                    if (c == "\"") instr = 1
-                    else if (c == "{" || c == "[") st = st c
-                    else if (c == "}" || c == "]") {
-                        # The closer must match the innermost opener; [} is not a container.
-                        if (st == "") return 0
-                        o = substr(st, length(st), 1)
-                        if ((c == "}" && o != "{") || (c == "]" && o != "[")) return 0
-                        st = substr(st, 1, length(st) - 1)
-                        if (st == "") return p + 1
-                    }
-                    p++
-                }
-                return 0
-            }
-            while (p <= n && !index(",}] \t\r", substr(s, p, 1))) p++
-            return p
-        }
-        function bad() { if (mode == "reply") { print "X"; print ""; print ""; print "." } exit 1 }
-        NR == 1 { s = $0; n = length(s) }
-        NR > 1 { exit 0 }
-        END {
-            i = ws(1)
-            c = substr(s, i, 1)
-            if (mode == "items") {
-                if (c != "[") bad()
-                i = ws(i + 1)
-                while (i <= n && substr(s, i, 1) != "]") {
-                    e = vend(i); if (e <= i) exit 1
-                    print substr(s, i, e - i)
-                    i = ws(e)
-                    if (substr(s, i, 1) == ",") i = ws(i + 1)
-                }
-                exit 0
-            }
-            if (mode == "reply" && c == "[") {
-                if (vend(i) <= 0) bad()
-                print "B"; print ""; print s; print "."; exit 0
-            }
-            if (mode == "reply" && c != "{") {
-                # Not an object: a JSON scalar is a line to ignore; anything else is not JSON.
-                rest = substr(s, i); sub(/[ \t\r]+$/, "", rest)
-                if (rest ~ /^"([^"\\]|\\.)*"$/ || rest ~ /^-?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][+-]?[0-9]+)?$/ ||
-                    rest == "true" || rest == "false" || rest == "null") {
-                    print "N"; print ""; print ""; print "."; exit 0
-                }
-                bad()
-            }
-            i = ws(i + 1)
-            kind = ""; id = ""; raw = ""; hasmethod = 0
-            while (i <= n) {
-                c = substr(s, i, 1)
-                if (c == "}") break
-                if (c == ",") { i = ws(i + 1); continue }
-                if (c != "\"") bad()
-                ke = vend(i); if (ke <= i) bad()
-                k = substr(s, i + 1, ke - i - 2)
-                i = ws(ke)
-                if (substr(s, i, 1) != ":") bad()
-                i = ws(i + 1)
-                ve = vend(i); if (ve <= i) bad()
-                v = substr(s, i, ve - i); i = ws(ve)
-                if (mode == "key") {
-                    if (k == key) { print v; exit 0 }
-                    continue
-                }
-                if (k == "result") { kind = "R"; raw = v }
-                else if (k == "error" && kind != "R") { kind = "E"; raw = v }
-                else if (k == "id") { id = v }
-                else if (k == "method") { hasmethod = 1 }
-            }
-            if (mode == "key") exit 1
-            # A method makes it a request from the host, not a reply, whatever id it carries.
-            if (kind == "") { kind = "N"; if (hasmethod) id = "" }
-            print kind; print id; print raw; print "."
-        }'
+    /usr/bin/awk -v mode="$1" -v key="${2:-}" -f "$_AUI_AWK_WALK"
 }
 
 # Turn a raw JSON string literal into its text, into _aui_text. plutil does the unescaping

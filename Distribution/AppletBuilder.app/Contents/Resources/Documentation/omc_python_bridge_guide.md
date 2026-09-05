@@ -277,7 +277,7 @@ Three consequences worth knowing:
 
 ### From a shell handler
 
-`actionui_remote.sh` (sh and zsh) and `actionui_remote.zsh` (zsh, persistent connection) ship in the same `Contents/Library/Packages` directory as `actionui_remote.py`, and read descriptor 3 the same way:
+`actionui_remote.sh` (sh and zsh) and `actionui_remote.zsh` (zsh, persistent connection) ship in the same `Contents/Library/Packages` directory as `actionui_remote.py`, alongside the two awk programs the `.sh` runs, and read descriptor 3 the same way:
 
 ```sh
 . "$OMC_APP_BUNDLE_PATH/Contents/Library/Packages/actionui_remote.sh"
@@ -287,6 +287,8 @@ actionui_set_string 3 "hello, $name"
 ```
 
 A shell handler is also the one kind that can hold the token without ever showing it to `ps`, because every Apple shell carries `CS_RESTRICT`. `ActionUIRemote/Shell/README.md` in the ActionUI repository has the measurements and the rules that keep that true.
+
+Copying the client somewhere by hand means copying the set: the `.sh` reads `actionui_remote_escape.awk` and `actionui_remote_walk.awk` from its own directory, and says so and refuses to load if they are not there.
 
 ## Related Documentation
 

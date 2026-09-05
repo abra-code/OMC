@@ -131,7 +131,14 @@ _aui_send_receive() {
 # returns without running the command line; that is done here, after both files are loaded.
 _aui_zsh_dir=${0:A:h}
 source "$_aui_zsh_dir/actionui_remote.sh"
+_aui_zsh_src_rc=$?
 unset _aui_zsh_dir
+if [[ $_aui_zsh_src_rc -ne 0 ]]; then
+    # The .sh turned itself away and has already said why - a partial copy, missing one of the
+    # awk programs it names, is the likely one. Do not leave half an API loaded behind it.
+    return $_aui_zsh_src_rc 2>/dev/null || exit $_aui_zsh_src_rc
+fi
+unset _aui_zsh_src_rc
 
 if [[ ${ZSH_EVAL_CONTEXT:-} == toplevel ]]; then
     actionui_main "$@"

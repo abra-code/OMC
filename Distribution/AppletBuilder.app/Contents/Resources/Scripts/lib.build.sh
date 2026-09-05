@@ -526,7 +526,8 @@ update_python_packages() {
 # runtime - and it is the one kind of handler that can hold the bridge's token without showing it
 # to `ps`, every Apple shell carrying CS_RESTRICT where python3 and node do not.
 #
-# Both files or neither: actionui_remote.zsh sources actionui_remote.sh from its own directory.
+# All four files or none: actionui_remote.zsh sources actionui_remote.sh from its own directory,
+# and actionui_remote.sh reads its two awk programs from there and refuses to load without them.
 # Overwritten unconditionally, like the Python modules: these ship with OMC and version with it.
 #
 # Not fatal to a build. A shell handler that never touches the bridge - which is most of them -
@@ -546,7 +547,7 @@ update_shell_clients() {
 
     local client
     local missing=0
-    for client in actionui_remote.sh actionui_remote.zsh; do
+    for client in actionui_remote.sh actionui_remote.zsh actionui_remote_escape.awk actionui_remote_walk.awk; do
         if [ ! -f "$src_packages/$client" ]; then
             missing=$((missing + 1))
         fi
@@ -566,7 +567,8 @@ update_shell_clients() {
     local copied=0
     local _cp_rc
     local _chmod_rc
-    for client in actionui_remote.sh actionui_remote.zsh; do
+    local _mode
+    for client in actionui_remote.sh actionui_remote.zsh actionui_remote_escape.awk actionui_remote_walk.awk; do
         /bin/cp "$src_packages/$client" "$dst_packages/$client"
         _cp_rc=$?
         if [ "$_cp_rc" -ne 0 ]; then
@@ -574,17 +576,23 @@ update_shell_clients() {
             continue
         fi
 
-        /bin/chmod 755 "$dst_packages/$client"
+        # A client is sourced, and may also be run as a command; an awk program is read by awk
+        # and never run, so it stays data.
+        case "$client" in
+            *.awk) _mode=644 ;;
+            *)     _mode=755 ;;
+        esac
+        /bin/chmod "$_mode" "$dst_packages/$client"
         _chmod_rc=$?
         if [ "$_chmod_rc" -ne 0 ]; then
-            ab_log "Could not make $client executable in $dst_packages"
+            ab_log "Could not set mode $_mode on $client in $dst_packages"
             continue
         fi
         copied=$((copied + 1))
     done
 
     if [ "$copied" -gt 0 ]; then
-        ab_log "Installed $copied ActionUI shell client(s) into Contents/Library/Packages"
+        ab_log "Installed $copied ActionUI shell client file(s) into Contents/Library/Packages"
     fi
     return 0
 }
