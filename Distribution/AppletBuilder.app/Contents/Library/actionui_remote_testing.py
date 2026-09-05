@@ -32,6 +32,11 @@ Behavior of the fake, by design:
 - Any other namespaced method (`omc.*`, `app.*`) is accepted, logged, and answered `true`,
   unless a handler was registered for it with `fake.register(name, callable)`.
 - Insert assigns the element's own `id` when it has one, otherwise the next free negative id.
+- Authentication follows PROTOCOL.md section 10 as the real host implements it. `tokens=[...]`
+  makes one required, and a request without a valid one is refused with 1006; a connection that
+  presents a valid token once is remembered for the rest of its life; and `token` is removed from
+  `params` before dispatch whether or not one is required, so no handler tested here ever sees a
+  key the real host would have taken away. The request log keeps it, redacted.
 - Not modeled, on purpose: rendering. `contentSizeLimits` is always null, `getValueString` is
   a plain stringification, `getColumnCount` counts stored rows only (the host also reads the
   `columns` property), and `removeElement` will remove a root the host refuses with 1003.
@@ -99,6 +104,11 @@ class FakeServer:
         self._log_file = None
         self._opened = False
         self._connections = set()
+        # Connections that have already presented a valid token, held by socket object so that
+        # a closed connection's identity can never be reused by a later one. Cleared with the
+        # connection in finish(), and wholesale in _open() and stop(): per-connection state that
+        # outlives its server is how the real server once let a stopped run authorize a new one.
+        self._authenticated = set()
 
     # -- setup
 
@@ -141,6 +151,7 @@ class FakeServer:
         with self._lock:
             open_connections = list(self._connections)
             self._connections.clear()
+            self._authenticated.clear()
         for connection in open_connections:
             try:
                 connection.shutdown(socket.SHUT_RDWR)
@@ -158,6 +169,8 @@ class FakeServer:
         except FileNotFoundError:
             pass
         fake = self
+        with self._lock:
+            fake._authenticated.clear()
 
         class Handler(socketserver.StreamRequestHandler):
             def setup(self):
@@ -168,6 +181,7 @@ class FakeServer:
             def finish(self):
                 with fake._lock:
                     fake._connections.discard(self.connection)
+                    fake._authenticated.discard(self.connection)
                 super().finish()
 
             def handle(self):
@@ -175,7 +189,7 @@ class FakeServer:
                     line = self.rfile.readline()
                     if not line:
                         return
-                    reply = fake.handle_line(line.rstrip(b"\r\n"))
+                    reply = fake.handle_line(line.rstrip(b"\r\n"), self.connection)
                     if reply is not None:
                         self.wfile.write(reply + b"\n")
                         self.wfile.flush()
@@ -214,15 +228,21 @@ class FakeServer:
 
     # -- JSON-RPC
 
-    def handle_line(self, line):
-        """Decode one line and return the reply bytes, or None when nothing is to be sent."""
+    def handle_line(self, line, connection=None):
+        """Decode one line and return the reply bytes, or None when nothing is to be sent.
+
+        `connection` identifies the peer, so that a token presented once is remembered for the
+        rest of that connection - what the real server does. None means "no connection identity",
+        under which every request must carry its own token; that is the safe reading for a caller
+        that drives this method directly rather than through the socket.
+        """
         try:
             value = json.loads(line.decode("utf-8"))
         except (UnicodeDecodeError, ValueError) as error:
             return _encode_error(None, PARSE_ERROR, "Parse error: %s" % error)
         if isinstance(value, dict):
             with self._lock:   # encode under the lock too: getters return live model objects
-                reply = self._handle_object(value)
+                reply = self._handle_object(value, connection)
                 return _encode(reply) if reply is not None else None
         if isinstance(value, list):
             if not value:
@@ -235,13 +255,13 @@ class FakeServer:
                     if not isinstance(entry, dict):
                         replies.append(_error_object(None, INVALID_REQUEST, "Invalid request: batch entry is not an object"))
                         continue
-                    reply = self._handle_object(entry)
+                    reply = self._handle_object(entry, connection)
                     if reply is not None:
                         replies.append(reply)
                 return _encode(replies) if replies else None
         return _encode_error(None, INVALID_REQUEST, "Invalid request: expected an object or an array")
 
-    def _handle_object(self, request):
+    def _handle_object(self, request, connection=None):
         request_id = request.get("id")
         if request_id is None:
             is_notification = True
@@ -274,14 +294,31 @@ class FakeServer:
             if self._log_file is not None:
                 self._log_file.write(json.dumps({"method": method, "params": logged, "id": request_id}, sort_keys=True) + "\n")
                 self._log_file.flush()
-            if self.tokens and params.get("token") not in self.tokens:
-                if is_notification:
-                    return None
-                return _error_object(request_id, UNAUTHENTICATED,
-                                     "This host requires a token. Pass it as the \"token\" "
-                                     "parameter; processes the host spawned receive it in "
-                                     "ACTIONUI_REMOTE_TOKEN, or on the descriptor named by "
-                                     "ACTIONUI_REMOTE_TOKEN_FD.")
+            if self.tokens:
+                # A token presented once authenticates the connection for the rest of its life,
+                # exactly as the real server does (ActionUIRemoteServer.authenticate): a
+                # long-lived client that sends it once must pass here too, or this fake would
+                # refuse what the host it stands in for accepts.
+                authenticated = connection is not None and connection in self._authenticated
+                if not authenticated:
+                    presented = params.get("token")
+                    if isinstance(presented, str) and presented in self.tokens:
+                        authenticated = True
+                        if connection is not None:
+                            self._authenticated.add(connection)
+                if not authenticated:
+                    if is_notification:
+                        return None
+                    return _error_object(request_id, UNAUTHENTICATED,
+                                         "This host requires a token. Pass it as the \"token\" "
+                                         "parameter; processes the host spawned receive it in "
+                                         "ACTIONUI_REMOTE_TOKEN, or on the descriptor named by "
+                                         "ACTIONUI_REMOTE_TOKEN_FD.")
+            # `token` is reserved on every method and is removed before dispatch whether or not
+            # this host requires one - the real server does the same, so a handler tested through
+            # this fake must never see a key the host would have taken away.
+            if "token" in params:
+                params = {key: value for key, value in params.items() if key != "token"}
             try:
                 result = self._dispatch(method, params)
             except Failure as failure:
