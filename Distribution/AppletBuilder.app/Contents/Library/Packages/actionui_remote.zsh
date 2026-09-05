@@ -129,16 +129,21 @@ _aui_send_receive() {
 
 # Now the API. When this file is executed as a command, the .sh sees itself sourced (it is) and
 # returns without running the command line; that is done here, after both files are loaded.
-_aui_zsh_dir=${0:A:h}
+_aui_zsh_dir=${${(%):-%x}:A:h}
 source "$_aui_zsh_dir/actionui_remote.sh"
-_aui_zsh_src_rc=$?
 unset _aui_zsh_dir
-if [[ $_aui_zsh_src_rc -ne 0 ]]; then
-    # The .sh turned itself away and has already said why - a partial copy, missing one of the
-    # awk programs it names, is the likely one. Do not leave half an API loaded behind it.
-    return $_aui_zsh_src_rc 2>/dev/null || exit $_aui_zsh_src_rc
+# The .sh turns itself away when its awk programs are not beside it, and says so itself. What is
+# tested here is what it was supposed to leave behind rather than the status it returned, because
+# a status is a proxy and the API is the thing that matters. actionui_main is the last thing the
+# .sh defines, and $+functions asks whether it is a function rather than whether the name resolves
+# to something - a stray executable of that name on PATH must not read as a loaded API. The
+# transport above was defined before the source and would otherwise survive it, actionui_disconnect
+# included.
+if (( ! ${+functions[actionui_main]} )); then
+    unset -f actionui_disconnect _aui_zsh_connect _aui_send_receive 2>/dev/null
+    unset _AUI_ZFD _AUI_ZENDPOINT
+    return 2 2>/dev/null || exit 2
 fi
-unset _aui_zsh_src_rc
 
 if [[ ${ZSH_EVAL_CONTEXT:-} == toplevel ]]; then
     actionui_main "$@"

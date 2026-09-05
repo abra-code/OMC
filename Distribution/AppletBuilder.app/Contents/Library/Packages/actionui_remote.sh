@@ -26,7 +26,8 @@
 # socket module: no helper process at all, and one connection kept open across calls.
 #
 # The two awk programs this file runs are files of their own beside it, actionui_remote_escape.awk
-# and actionui_remote_walk.awk, found there when this file is sourced. The three go together:
+# and actionui_remote_walk.awk, found there when this file is loaded, sourced or run. The three
+# go together:
 # copying only this one leaves a client that cannot escape a control character or read a reply,
 # so it says so and stops rather than letting the first call discover it.
 #
@@ -72,6 +73,83 @@
 # to. After every call ACTIONUI_RESULT holds the raw result, and on an error ACTIONUI_ERROR_CODE
 # and ACTIONUI_ERROR_MESSAGE are set, for callers that do not capture output.
 
+# Two things are settled before anything is defined, so that a shell that cannot run this file,
+# or a copy that arrived without its awk programs, is left holding nothing at all.
+
+# The shell. The element functions use ${var//x/y}, the nc transport needs `read -t`, and finding
+# this file's own directory below needs one or the other; nothing here is portable to a third
+# shell, and a silent no-op would be worse than a message.
+if [ -z "${ZSH_VERSION:-}" ] && [ -z "${BASH_VERSION:-}" ]; then
+    printf '%s\n' "actionui_remote.sh needs bash (macOS /bin/sh) or zsh; this shell is neither" >&2
+    return 2 2>/dev/null || exit 2
+fi
+
+# Where the two awk programs are: beside this file. Resolved once here, and made absolute, so a
+# handler that cd's afterwards still finds them - this is a library, and "afterwards" can be much
+# later. zsh's %x names the file being sourced whatever $0 has been set to, and :A resolves a
+# symlink to it as well; bash sets BASH_SOURCE when sourced and $0 when executed, and there a
+# symlink is followed by hand, so that a client reached through /usr/local/bin still finds them.
+if [ -n "${ZSH_VERSION:-}" ]; then
+    # Behind eval so that no other shell's parser ever sees zsh-only syntax: a dot-script is read
+    # ahead of what it runs, so the guard above does not protect a third shell from a parse error.
+    eval '_AUI_SELF=${${(%):-%x}:A}'
+else
+    _AUI_SELF=${BASH_SOURCE:-$0}
+    case $_AUI_SELF in
+        */*) ;;
+        *) _AUI_SELF=./$_AUI_SELF ;;
+    esac
+    # Bounded at what the kernel itself will follow, so that a chain it can resolve is not
+    # refused here and a cycle ends the loop instead of spinning in it. readlink is an Apple
+    # binary and takes a path, never anything secret.
+    _aui_hops=0
+    while [ -L "$_AUI_SELF" ] && [ "$_aui_hops" -lt 32 ]; do
+        _aui_link=$(/usr/bin/readlink "$_AUI_SELF")
+        if [ -z "$_aui_link" ]; then
+            break
+        fi
+        case $_aui_link in
+            /*) _AUI_SELF=$_aui_link ;;
+            *)
+                # Against the physical directory the link lives in, not by pasting the two paths
+                # together: a target with .. in it, reached through a symlinked directory, is a
+                # different place once the shell resolves that .. textually.
+                _aui_base=${_AUI_SELF%/*}
+                if [ -z "$_aui_base" ]; then
+                    _aui_base=/
+                fi
+                _aui_base=$(CDPATH= cd "$_aui_base" 2>/dev/null && pwd -P)
+                if [ -z "$_aui_base" ]; then
+                    break
+                fi
+                _AUI_SELF=$_aui_base/$_aui_link ;;
+        esac
+        _aui_hops=$((_aui_hops + 1))
+    done
+    unset _aui_hops _aui_link _aui_base
+fi
+# Both branches leave a path with a slash in it, so the directory is what precedes the last one,
+# and the empty result means this file is installed at the filesystem root.
+_AUI_LIB_DIR=${_AUI_SELF%/*}
+if [ -z "$_AUI_LIB_DIR" ]; then
+    _AUI_LIB_DIR=/
+fi
+# cd and pwd are builtins in both shells, so an absolute path costs no exec, and the subshell
+# keeps the directory change to itself. CDPATH is cleared for it: a relative path that CDPATH
+# happens to resolve lands somewhere else, and cd prints where it went, which would end up in
+# this capture and make a correct install look like a broken one.
+_AUI_LIB_DIR=$(CDPATH= cd "$_AUI_LIB_DIR" 2>/dev/null && pwd -P)
+_AUI_AWK_ESCAPE="$_AUI_LIB_DIR/actionui_remote_escape.awk"
+_AUI_AWK_WALK="$_AUI_LIB_DIR/actionui_remote_walk.awk"
+if [ -z "$_AUI_LIB_DIR" ] || [ ! -r "$_AUI_AWK_ESCAPE" ] || [ ! -r "$_AUI_AWK_WALK" ]; then
+    # The resolved directory, not the path as typed, so that the two shells say the same thing:
+    # zsh's :A resolves /var to /private/var and bash's symlink walk does not.
+    printf '%s\n' "actionui_remote.sh: cannot read actionui_remote_escape.awk and actionui_remote_walk.awk in '${_AUI_LIB_DIR:-${_AUI_SELF%/*}}'; the three files go together, copy them as a set" >&2
+    unset _AUI_SELF _AUI_LIB_DIR _AUI_AWK_ESCAPE _AUI_AWK_WALK
+    return 2 2>/dev/null || exit 2
+fi
+unset _AUI_SELF _AUI_LIB_DIR
+
 ACTIONUI_PROTOCOL_VERSION=1
 ACTIONUI_EXIT_OK=0
 ACTIONUI_EXIT_REMOTE_ERROR=1
@@ -93,32 +171,6 @@ _AUI_TAB=$(printf '\tx')
 _AUI_TAB=${_AUI_TAB%x}
 _AUI_CR=$(printf '\rx')
 _AUI_CR=${_AUI_CR%x}
-
-# Where the two awk programs are, resolved once here rather than on each call: the path is
-# relative to the directory this file was sourced from, and a handler is free to cd afterwards.
-# zsh's %x names the file being sourced whatever $0 has been set to; bash sets BASH_SOURCE when
-# sourced and $0 when executed. Any other shell lands on $0 too and is turned away at the end of
-# this file.
-if [ -n "${ZSH_VERSION:-}" ]; then
-    _AUI_SELF=${(%):-%x}
-else
-    _AUI_SELF=${BASH_SOURCE:-$0}
-fi
-_AUI_DIR=${_AUI_SELF%/*}
-if [ "$_AUI_DIR" = "$_AUI_SELF" ]; then
-    _AUI_DIR=.
-fi
-# cd and pwd are builtins in both shells, so an absolute path costs no process, and the subshell
-# keeps the directory change to itself.
-_AUI_DIR=$(cd "$_AUI_DIR" 2>/dev/null && pwd -P)
-_AUI_AWK_ESCAPE="$_AUI_DIR/actionui_remote_escape.awk"
-_AUI_AWK_WALK="$_AUI_DIR/actionui_remote_walk.awk"
-if [ -z "$_AUI_DIR" ] || [ ! -r "$_AUI_AWK_ESCAPE" ] || [ ! -r "$_AUI_AWK_WALK" ]; then
-    printf '%s\n' "actionui_remote.sh: cannot read actionui_remote_escape.awk and actionui_remote_walk.awk beside '$_AUI_SELF'; the three files go together, copy them as a set" >&2
-    unset _AUI_SELF _AUI_DIR _AUI_AWK_ESCAPE _AUI_AWK_WALK
-    return 2 2>/dev/null || exit 2
-fi
-unset _AUI_SELF
 
 # --- Configuration ------------------------------------------------------------------------------
 
@@ -1284,21 +1336,15 @@ actionui_main() {
 }
 
 # Run the command line only when executed, not when sourced. bash sets BASH_SOURCE to this file
-# and $0 to the caller's script when sourced; zsh records the context.
+# and $0 to the caller's script when sourced; zsh records the context. Which of the two shells
+# this is was settled at the top of the file, so there is no third case here.
 _aui_executed=0
 if [ -n "${ZSH_VERSION:-}" ]; then
     case ${ZSH_EVAL_CONTEXT:-} in
         toplevel) _aui_executed=1 ;;
     esac
-elif [ -n "${BASH_VERSION:-}" ]; then
-    if [ "${BASH_SOURCE:-}" = "$0" ]; then
-        _aui_executed=1
-    fi
-else
-    # Neither bash nor zsh: the transport's read -t and the sourced-or-executed test are not
-    # available, and a silent no-op would be worse than a message.
-    printf '%s\n' "actionui_remote.sh needs bash (macOS /bin/sh) or zsh; this shell is neither" >&2
-    return 2 2>/dev/null || exit 2
+elif [ "${BASH_SOURCE:-}" = "$0" ]; then
+    _aui_executed=1
 fi
 if [ "$_aui_executed" -eq 1 ]; then
     actionui_main "$@"

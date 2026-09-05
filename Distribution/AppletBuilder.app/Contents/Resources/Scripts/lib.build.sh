@@ -538,6 +538,10 @@ update_shell_clients() {
     local src_packages="${OMC_APP_BUNDLE_PATH}/Contents/Library/Packages"
     local dst_packages="$target_path/Contents/Library/Packages"
 
+    # Named once: the rollback below has to remove exactly what the copy loop writes, and two
+    # lists that have to agree are a list that eventually will not.
+    local clients="actionui_remote.sh actionui_remote.zsh actionui_remote_escape.awk actionui_remote_walk.awk"
+
     local _sh_handlers
     _sh_handlers=$(/usr/bin/find "$target_path/Contents/Resources/Scripts" \
                    \( -name "*.sh" -o -name "*.zsh" \) -print -quit 2>/dev/null)
@@ -545,9 +549,21 @@ update_shell_clients() {
         return 0
     fi
 
+    # Installing into the directory the files are read from is a no-op, and must be treated as
+    # one: cp refuses identical files, and the rollback below would then take AppletBuilder's own
+    # copies out. Physical paths, so that a symlinked route to the same directory counts as same.
+    # CDPATH cleared for the same reason the client clears it: the destination arrives from the
+    # command line unresolved, so it can be a relative path, and a CDPATH hit would send cd
+    # somewhere else and print where it went into the capture.
+    local _src_real=$(CDPATH= cd "$src_packages" 2>/dev/null && pwd -P)
+    local _dst_real=$(CDPATH= cd "$dst_packages" 2>/dev/null && pwd -P)
+    if [ -n "$_src_real" ] && [ "$_src_real" = "$_dst_real" ]; then
+        return 0
+    fi
+
     local client
     local missing=0
-    for client in actionui_remote.sh actionui_remote.zsh actionui_remote_escape.awk actionui_remote_walk.awk; do
+    for client in $clients; do
         if [ ! -f "$src_packages/$client" ]; then
             missing=$((missing + 1))
         fi
@@ -565,15 +581,17 @@ update_shell_clients() {
     fi
 
     local copied=0
+    local incomplete=0
     local _cp_rc
     local _chmod_rc
     local _mode
-    for client in actionui_remote.sh actionui_remote.zsh actionui_remote_escape.awk actionui_remote_walk.awk; do
+    for client in $clients; do
         /bin/cp "$src_packages/$client" "$dst_packages/$client"
         _cp_rc=$?
         if [ "$_cp_rc" -ne 0 ]; then
             ab_log "Could not copy $client to $dst_packages"
-            continue
+            incomplete=1
+            break
         fi
 
         # A client is sourced, and may also be run as a command; an awk program is read by awk
@@ -586,13 +604,28 @@ update_shell_clients() {
         _chmod_rc=$?
         if [ "$_chmod_rc" -ne 0 ]; then
             ab_log "Could not set mode $_mode on $client in $dst_packages"
-            continue
+            incomplete=1
+            break
         fi
         copied=$((copied + 1))
     done
 
+    # All four or none applies to what lands, not only to what was there to copy. Three of four
+    # is a client that refuses to load, which is worse for the handler than never having one, so
+    # an install that does not complete takes the whole set out again. Note what that means when
+    # the applet already had a good set and the first copy failed: it loses that set too. A stale
+    # set is not what this build would have shipped either, and the alternative is deciding which
+    # of the four on disk are each other's version - which nothing here can tell.
+    if [ "$incomplete" -ne 0 ]; then
+        for client in $clients; do
+            /bin/rm -f "$dst_packages/$client"
+        done
+        ab_log "Removed the ActionUI shell client set from $dst_packages - the install did not complete"
+        return 0
+    fi
+
     if [ "$copied" -gt 0 ]; then
-        ab_log "Installed $copied ActionUI shell client file(s) into Contents/Library/Packages"
+        ab_log "Installed $copied ActionUI shell client file(s) into $dst_packages"
     fi
     return 0
 }

@@ -361,7 +361,11 @@ def test_create_build() -> None:
                 else:
                     check(f"build -> {client} is executable",
                           (packages / client).exists() and os.access(packages / client, os.X_OK))
-            check("build -> the install is reported", "shell client" in err, err.strip()[-300:])
+            check("build -> the install is reported",
+                  "ActionUI shell client file(s)" in err
+                  and "missing from AppletBuilder" not in err
+                  and "Removed the ActionUI shell client set" not in err,
+                  err.strip()[-300:])
     finally:
         if saved_prefix is None:
             subprocess.run(["/usr/bin/defaults", "delete", _DEFAULTS_DOMAIN, _DEFAULTS_KEY],
@@ -369,6 +373,138 @@ def test_create_build() -> None:
         else:
             subprocess.run(["/usr/bin/defaults", "write", _DEFAULTS_DOMAIN, _DEFAULTS_KEY, saved_prefix],
                            capture_output=True)
+
+
+def test_shell_client_install() -> None:
+    """update_shell_clients, driven directly.
+
+    A real build has no way to make one copy of the four fail, and that is the case the
+    function's all-or-nothing rule is about: three of four is an ActionUI shell client that
+    refuses to load, which is worse for a handler than never having one at all.
+    """
+    print("shell client install (update_shell_clients):")
+    bundle = REPO / "Distribution" / "AppletBuilder.app"
+    packages = bundle / "Contents" / "Library" / "Packages"
+    for client in _SHELL_CLIENT_FILES:
+        if not (packages / client).is_file():
+            check(f"{client} is present to install from", False,
+                  "run update_appletbuilder.sh")
+            return
+
+    def call(target: Path, source_bundle: Path = bundle) -> str:
+        script = (f'export OMC_APP_BUNDLE_PATH="{bundle}"\n'
+                  f'source "$OMC_APP_BUNDLE_PATH/Contents/Resources/Scripts/lib.build.sh"\n'
+                  f'OMC_APP_BUNDLE_PATH="{source_bundle}" update_shell_clients "{target}"\n')
+        p = subprocess.run(["/bin/bash", "-c", script], capture_output=True, text=True)
+        return p.stdout + p.stderr
+
+    def make_target(root: Path) -> Path:
+        target = root / "Applet.app"
+        (target / "Contents" / "Resources" / "Scripts").mkdir(parents=True)
+        (target / "Contents" / "Library" / "Packages").mkdir(parents=True)
+        handler = target / "Contents" / "Resources" / "Scripts" / "handler.sh"
+        handler.write_text("#!/bin/sh\necho hi\n")
+        return target
+
+    def installed(target: Path) -> list:
+        dst = target / "Contents" / "Library" / "Packages"
+        return sorted(q for q in _SHELL_CLIENT_FILES if (dst / q).is_file())
+
+    with tempfile.TemporaryDirectory() as td:
+        target = make_target(Path(td))
+        # Pre-created with the opposite of the mode each should end up with, because cp takes
+        # the source's mode only when it creates the file; over an existing one it keeps what is
+        # there. That is the rebuild path, and the only path where the chmod does any work - and
+        # the mode has to be wrong in the direction each check reads, or that check cannot fail.
+        dst = target / "Contents" / "Library" / "Packages"
+        for client in _SHELL_CLIENT_FILES:
+            stale = dst / client
+            stale.write_text("stale, and not what the source says\n")
+            stale.chmod(0o755 if client.endswith(".awk") else 0o600)
+        call(target)
+        # Presence alone would be true before the call, since the four files were just created
+        # here. The contents are what prove the copy happened.
+        check("an install over a stale set lands all four files, with the source's contents",
+              installed(target) == sorted(_SHELL_CLIENT_FILES)
+              and all((dst / q).read_bytes() == (packages / q).read_bytes()
+                      for q in _SHELL_CLIENT_FILES),
+              str(installed(target)))
+        check("the clients are executable",
+              all(os.access(dst / q, os.X_OK) for q in _SHELL_CLIENT_FILES
+                  if not q.endswith(".awk")))
+        check("the awk programs are readable and not executable",
+              all(os.access(dst / q, os.R_OK) and not os.access(dst / q, os.X_OK)
+                  for q in _SHELL_CLIENT_FILES if q.endswith(".awk")))
+
+    # A copy that fails part way through takes the whole set back out again.
+    with tempfile.TemporaryDirectory() as td:
+        target = make_target(Path(td))
+        blocked = target / "Contents" / "Library" / "Packages" / "actionui_remote_walk.awk"
+        blocked.write_text("")
+        blocked.chmod(0o444)
+        out = call(target)
+        check("a failed copy leaves nothing behind", installed(target) == [],
+              str(installed(target)))
+        check("and says the set was removed", "Removed the ActionUI shell client set" in out,
+              out.strip()[-200:])
+
+    # The same, failing on a middle file rather than the last, so the rollback is pinned wherever
+    # in the loop the failure lands. It does not distinguish break from continue: once the whole
+    # set comes back out, the two leave the same directory behind.
+    with tempfile.TemporaryDirectory() as td:
+        target = make_target(Path(td))
+        blocked = target / "Contents" / "Library" / "Packages" / "actionui_remote.zsh"
+        blocked.write_text("")
+        blocked.chmod(0o444)
+        call(target)
+        check("a failure on a middle file rolls back too", installed(target) == [],
+              str(installed(target)))
+
+    # A source that is missing one of the four installs none of them.
+    with tempfile.TemporaryDirectory() as td:
+        target = make_target(Path(td))
+        staging = Path(td) / "Staging.app"
+        (staging / "Contents" / "Library" / "Packages").mkdir(parents=True)
+        for client in _SHELL_CLIENT_FILES:
+            if client != "actionui_remote_walk.awk":
+                shutil.copy2(packages / client, staging / "Contents" / "Library" / "Packages")
+        out = call(target, source_bundle=staging)
+        check("a source missing one program installs none", installed(target) == [],
+              str(installed(target)))
+        # The end state alone does not distinguish this from a rollback, so pin the gate itself:
+        # it must refuse before copying, not copy and then undo.
+        check("and refuses before copying, rather than rolling back after",
+              "missing from AppletBuilder" in out and "Removed the ActionUI shell client set" not in out,
+              out.strip()[-200:])
+
+    # Installing into the directory the files come from is a no-op. It must not run the copy at
+    # all: cp refuses identical files, and the rollback would then take the source out.
+    #
+    # Aimed at a throwaway copy of the source, never at the repository's own bundle. If this
+    # guard regresses, this case deletes its source - and the repository's copies are the ones
+    # AppletBuilder ships.
+    with tempfile.TemporaryDirectory() as td:
+        staging = Path(td) / "Staging.app"
+        staged_packages = staging / "Contents" / "Library" / "Packages"
+        staged_packages.mkdir(parents=True)
+        for client in _SHELL_CLIENT_FILES:
+            shutil.copy2(packages / client, staged_packages)
+        target = make_target(Path(td))
+        shutil.rmtree(target / "Contents" / "Library" / "Packages")
+        (target / "Contents" / "Library" / "Packages").symlink_to(staged_packages)
+        out = call(target, source_bundle=staging)
+        check("installing into its own source leaves the source alone",
+              sorted(q for q in _SHELL_CLIENT_FILES if (staged_packages / q).is_file())
+              == sorted(_SHELL_CLIENT_FILES),
+              str(sorted(q.name for q in staged_packages.iterdir())))
+        check("and does it silently, having copied nothing",
+              "Installed" not in out and "Removed" not in out, out.strip()[-200:])
+        # The check above would also pass if the function had never run at all, so prove the
+        # same source still installs normally into a target that is not itself.
+        other = make_target(Path(td) / "second")
+        call(other, source_bundle=staging)
+        check("and the staged source still installs into a real target",
+              installed(other) == sorted(_SHELL_CLIENT_FILES), str(installed(other)))
 
 
 def main() -> int:
@@ -382,6 +518,7 @@ def main() -> int:
     test_preview()
     test_create_arg_errors()
     test_create_build()
+    test_shell_client_install()
     print(f"\n{_passed} passed, {_failed} failed.")
     return 1 if _failed else 0
 
