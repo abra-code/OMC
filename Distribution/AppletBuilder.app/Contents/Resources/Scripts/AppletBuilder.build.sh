@@ -81,4 +81,10 @@ else
     ab_status_result "xmark.octagon.fill" "red" "Build failed"
 fi
 
+# update_python installs a runtime into any applet with Python handlers that has
+# none, so an applet that could not be thinned when this pane loaded may be
+# thinnable now. Re-asked after the verdict, not before: it only touches the
+# Embedded Python group.
+ab_thin_python_availability "$project_path"
+
 exit $status

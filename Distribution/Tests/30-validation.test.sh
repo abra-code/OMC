@@ -219,6 +219,34 @@ printf 'if [ 1 = 1 ]; then\n' > "$clean/Contents/Resources/Scripts/Broken.helper
 ab_cli validate "$clean" >/dev/null 2>&1
 check "a broken handler script fails the applet" "1" "$?"
 
+section "13b. an option with no value is refused, on every command that takes one"
+# The failure this pins is a HANG, not a wrong answer: `shift 2` with one argument
+# left shifts nothing and returns non-zero, so an option arriving as the final argv
+# token spins the loop forever at 100% CPU. A truncated argv is an ordinary thing
+# for an agent to produce, and every command that takes an option value is one
+# missing guard away from it.
+#
+# Run under a hard time cap, or a regression would hang this suite instead of
+# failing it. perl, because macOS ships no timeout(1).
+cli_capped() { # <seconds> <args...> -> the CLI's exit status, or 142 if it hung
+    _cap="$1"
+    shift
+    /usr/bin/perl -e 'alarm shift; exec @ARGV or exit 127' \
+        "$_cap" "$AB_AGENTS/appletbuilder" "$@" >/dev/null 2>&1
+    printf '%s' "$?"
+}
+
+check "create --name with nothing after it"    "2" "$(cli_capped 10 create --name)"
+check "create --template"                      "2" "$(cli_capped 10 create --template)"
+check "create --dest"                          "2" "$(cli_capped 10 create --dest)"
+check "create --identity"                      "2" "$(cli_capped 10 create --identity)"
+check "preview --screenshot"                   "2" "$(cli_capped 10 preview --screenshot)"
+check "build --identity"                       "2" "$(cli_capped 10 build --identity)"
+check "test --filter"                          "2" "$(cli_capped 10 test --filter)"
+# The value-shaped guard too: an option swallowing the NEXT option as its value is
+# the same argv typo one token longer.
+check "and an option is not a value"           "2" "$(cli_capped 10 create --name --python)"
+
 section "14. the manifest editor's operations, called directly"
 # plist_edit.py holds the rules for what a new command looks like. Its op_*
 # functions take a dict and mutate it with no I/O, so they can be called

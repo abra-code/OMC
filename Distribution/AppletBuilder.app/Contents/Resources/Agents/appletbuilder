@@ -19,19 +19,23 @@ resolve_self() {
     # Print the real directory containing this script, following symlinks.
     local src="$1" dir
     while [ -h "$src" ]; do
-        dir=$(cd -P "$(dirname "$src")" >/dev/null 2>&1 && pwd)
-        src=$(readlink "$src")
+        dir=$(CDPATH= cd -P -- "$(/usr/bin/dirname "$src")" >/dev/null 2>&1 && pwd)
+        src=$(/usr/bin/readlink "$src")
         case "$src" in
             /*) ;;
             *) src="$dir/$src" ;;
         esac
     done
-    cd -P "$(dirname "$src")" >/dev/null 2>&1 && pwd
+    # CDPATH= : the documented invocation is a RELATIVE path
+    # (Distribution/AppletBuilder.app/Contents/Resources/Agents/appletbuilder), which
+    # is exactly the shape an exported CDPATH intercepts - and this resolves which
+    # bundle the CLI then loads its libraries from.
+    CDPATH= cd -P -- "$(/usr/bin/dirname "$src")" >/dev/null 2>&1 && pwd
 }
 
 AGENTS_DIR=$(resolve_self "$0")
 # Agents → Resources → Contents → <App>.app
-APP_BUNDLE=$(cd "$AGENTS_DIR/../../.." >/dev/null 2>&1 && pwd)
+APP_BUNDLE=$(CDPATH= cd -P -- "$AGENTS_DIR/../../.." >/dev/null 2>&1 && pwd)
 export OMC_APP_BUNDLE_PATH="$APP_BUNDLE"
 
 LIB="$APP_BUNDLE/Contents/Resources/Scripts"
@@ -68,6 +72,9 @@ AB_WARNINGS_AS_ERRORS=0
 AB_ASSUME_YES=""
 AB_UPDATE_PYTHON=""
 AB_RUN_TESTS=""
+AB_THIN_PYTHON_ACTION=""
+AB_THIN_PLAN=""
+AB_THIN_SKIP_VERIFY=0
 
 usage() {
     cat >&2 <<'EOF'
@@ -83,6 +90,9 @@ Usage:
                          [--warnings-as-errors] [--update-python] [--force] [--test]
   appletbuilder test     <App.app> [--tests <dir>] [--filter <glob>] [--verbose]
                          [--keep-scratch] [--list]
+  appletbuilder thin-python plan|apply|plan-apply <App.app>
+                         [--plan <file>] [--dry-run] [--skip-verify]
+                         [--thin arm64|x86_64|none]
   appletbuilder prettify <file.json> [--stdout]
   appletbuilder preview  <UI.json> [--screenshot <out.png>]
   appletbuilder list-templates
@@ -118,14 +128,14 @@ cmd_create() {
     local template="" clone="" name="" dest="" bundle_id="" python="" icon=""
     while [ $# -gt 0 ]; do
         case "$1" in
-            --template)    template="$2"; shift 2 ;;
-            --clone)       clone="$2"; shift 2 ;;
-            --name)        name="$2"; shift 2 ;;
-            --dest)        dest="$2"; shift 2 ;;
-            --bundle-id)   bundle_id="$2"; shift 2 ;;
+            --template)    _need_value "$1" $# "$2" || return 2; template="$2"; shift 2 ;;
+            --clone)       _need_value "$1" $# "$2" || return 2; clone="$2"; shift 2 ;;
+            --name)        _need_value "$1" $# "$2" || return 2; name="$2"; shift 2 ;;
+            --dest)        _need_value "$1" $# "$2" || return 2; dest="$2"; shift 2 ;;
+            --bundle-id)   _need_value "$1" $# "$2" || return 2; bundle_id="$2"; shift 2 ;;
             --python)      python="1"; shift ;;
-            --icon)        icon="$2"; shift 2 ;;
-            --identity)    AB_IDENTITY="$2"; shift 2 ;;
+            --icon)        _need_value "$1" $# "$2" || return 2; icon="$2"; shift 2 ;;
+            --identity)    _need_value "$1" $# "$2" || return 2; AB_IDENTITY="$2"; shift 2 ;;
             --no-codesign) AB_NO_CODESIGN="1"; shift ;;
             -h|--help)     usage; return 2 ;;
             *) echo "create: unknown option: $1" >&2; return 2 ;;
@@ -283,7 +293,16 @@ cmd_build() {
             # spun this loop forever at 100% CPU, silently. "appletbuilder build
             # <app> --identity" hung before this.
             --identity)           _need_value "$1" $# "$2" || return 2; AB_IDENTITY="$2"; shift 2 ;;
-            --thin)               _need_value "$1" $# "$2" || return 2; AB_THIN_ARCH="$2"; shift 2 ;;
+            --thin)
+                _need_value "$1" $# "$2" || return 2
+                # Same check as thin-python's: thin_distribution.sh exits 1 on an
+                # arch it does not know, and the build used to log that one line
+                # and carry on to sign the universal applet anyway.
+                case "$2" in
+                    arm64|x86_64|none) ;;
+                    *) echo "build: --thin takes arm64, x86_64 or none: $2" >&2; return 2 ;;
+                esac
+                AB_THIN_ARCH="$2"; shift 2 ;;
             --warnings-as-errors) AB_WARNINGS_AS_ERRORS=1; shift ;;
             --update-python)      AB_UPDATE_PYTHON=1; shift ;;
             --test)               AB_RUN_TESTS=1; shift ;;
@@ -307,11 +326,11 @@ cmd_build() {
 # is an ordinary thing for an agent to produce.
 _need_value() { # <option> <remaining-arg-count> <candidate-value>
     if [ "$2" -lt 2 ]; then
-        echo "test: $1 requires a value" >&2
+        echo "appletbuilder: $1 requires a value" >&2
         return 1
     fi
     case "$3" in
-        -*) echo "test: $1 requires a value (got the option $3)" >&2; return 1 ;;
+        -*) echo "appletbuilder: $1 requires a value (got the option $3)" >&2; return 1 ;;
     esac
     return 0
 }
@@ -385,6 +404,85 @@ cmd_test() {
     omctest_run_suite "$target" "$tests_dir" "$filter"
 }
 
+# ── Thin embedded Python ──────────────────────────────────────────────────────
+
+# plan / apply / plan-apply, over the same lib.build.sh phase the pane's Execute
+# button drives. Only applets that bundle their own interpreter can be thinned;
+# the phase says so rather than failing obscurely.
+#
+# `plan` never modifies the applet - it analyzes a clone - so it is safe to run
+# on a development copy, which is where the plan is meant to be written and
+# committed from. `apply` rewrites the interpreter in place and is normally run
+# against a distribution copy prepared for release.
+cmd_thin_python() {
+    local verb="" target="" dry_run=0
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --plan)        _need_value "$1" $# "$2" || return 2; AB_THIN_PLAN="$2"; shift 2 ;;
+            --thin)
+                _need_value "$1" $# "$2" || return 2
+                # Checked here rather than left to the phase, which only forwards
+                # --arch for the two it recognizes: a typo would otherwise write a
+                # universal plan and say nothing about the architecture it dropped.
+                case "$2" in
+                    arm64|x86_64|none) ;;
+                    *) echo "thin-python: --thin takes arm64, x86_64 or none: $2" >&2; return 2 ;;
+                esac
+                AB_THIN_ARCH="$2"; shift 2 ;;
+            --dry-run)     dry_run=1; shift ;;
+            --skip-verify) AB_THIN_SKIP_VERIFY=1; shift ;;
+            -h|--help)     usage; return 2 ;;
+            -*) echo "thin-python: unknown option: $1" >&2; return 2 ;;
+            *)
+                if [ -z "$verb" ]; then
+                    verb="$1"
+                elif [ -z "$target" ]; then
+                    target="$1"
+                else
+                    echo "thin-python: unexpected argument: $1" >&2; return 2
+                fi
+                shift
+                ;;
+        esac
+    done
+
+    case "$verb" in
+        plan|apply|plan-apply) ;;
+        "") echo "thin-python: a verb is required: plan, apply or plan-apply" >&2; return 2 ;;
+        *)  echo "thin-python: unknown verb: $verb (expected plan, apply or plan-apply)" >&2; return 2 ;;
+    esac
+
+    if [ -z "$target" ]; then echo "thin-python: an applet bundle path is required" >&2; return 2; fi
+    if [ ! -d "$target/Contents" ]; then echo "thin-python: not an applet bundle: $target" >&2; return 2; fi
+
+    # --dry-run is a property of the removal, so it only means anything on a verb
+    # that performs one. Silently ignoring it on `plan` would report a run as a
+    # preview when it was the real thing.
+    if [ "$dry_run" -eq 1 ]; then
+        case "$verb" in
+            apply)      verb="apply-dry" ;;
+            plan-apply) verb="plan-apply-dry" ;;
+            *) echo "thin-python: --dry-run applies to apply and plan-apply only" >&2; return 2 ;;
+        esac
+    fi
+
+    # Same reasoning, same answer: verification is what an apply does after removing,
+    # so skipping it on a verb that removes nothing is a request that cannot be
+    # honored, and honoring it silently would suggest something was skipped.
+    if [ "$AB_THIN_SKIP_VERIFY" = "1" ] && [ "$verb" = "plan" ]; then
+        echo "thin-python: --skip-verify applies to apply and plan-apply only" >&2
+        return 2
+    fi
+
+    AB_THIN_PYTHON_ACTION="$verb"
+    # The verb is the confirmation. ab_confirm exists for the button, where a
+    # click on Execute has not yet said which action it meant; typing
+    # "thin-python apply" has already said it, and a CLI that answered its own
+    # prompt "no" would simply never work.
+    AB_ASSUME_YES=1
+    applet_thin_python "$target"
+}
+
 # ── Prettify ──────────────────────────────────────────────────────────────────
 
 cmd_prettify() {
@@ -394,7 +492,7 @@ cmd_prettify() {
             --stdout)  to_stdout=1; shift ;;
             -h|--help) usage; return 2 ;;
             -*) echo "prettify: unknown option: $1" >&2; return 2 ;;
-            *)  file="$1"; shift ;;
+            *)  if [ -z "$file" ]; then file="$1"; else echo "prettify: unexpected argument: $1" >&2; return 2; fi; shift ;;
         esac
     done
     if [ -z "$file" ] || [ ! -f "$file" ]; then echo "prettify: file not found: $file" >&2; return 2; fi
@@ -421,10 +519,10 @@ cmd_preview() {
     local screenshot="" file=""
     while [ $# -gt 0 ]; do
         case "$1" in
-            --screenshot) screenshot="$2"; shift 2 ;;
+            --screenshot) _need_value "$1" $# "$2" || return 2; screenshot="$2"; shift 2 ;;
             -h|--help)    usage; return 2 ;;
             -*) echo "preview: unknown option: $1" >&2; return 2 ;;
-            *)  file="$1"; shift ;;
+            *)  if [ -z "$file" ]; then file="$1"; else echo "preview: unexpected argument: $1" >&2; return 2; fi; shift ;;
         esac
     done
     if [ -z "$file" ] || [ ! -f "$file" ]; then echo "preview: file not found: $file" >&2; return 2; fi
@@ -493,6 +591,7 @@ case "$sub" in
     validate)       cmd_validate "$@" ;;
     build)          cmd_build "$@" ;;
     test)           cmd_test "$@" ;;
+    thin-python)    cmd_thin_python "$@" ;;
     prettify)       cmd_prettify "$@" ;;
     preview)        cmd_preview "$@" ;;
     list-templates) cmd_list_templates ;;

@@ -179,6 +179,12 @@ BUILD_STATUS_ID=408
 BUILD_BUILD_BTN_ID=409
 BUILD_TEST_BTN_ID=410
 BUILD_RUN_BTN_ID=411
+BUILD_THIN_PYTHON_BTN_ID=413
+BUILD_THIN_PLAN_ID=412
+BUILD_THIN_APPLY_ID=414
+BUILD_THIN_DRY_RUN_ID=415
+BUILD_THIN_NOTE_ID=416
+BUILD_THIN_GROUP_ID=417
 
 # ──────────────────────────────────────────────────────────────
 # State management (private pasteboards keyed by window UUID)
@@ -336,6 +342,21 @@ set_enabled() {
     fi
 }
 
+# Is a control's reported value ON? The engine exports a Toggle as "true"/"false"
+# (Bool.description), but this also reads values that never came from the engine -
+# a pasteboard round trip, a state file, a test driving a handler with "1" - which
+# would read as off if only one spelling were tested.
+#
+# Setting one is NOT symmetric: setElementValueFromString accepts only "true" and
+# "false" for a Bool view and logs a warning for anything else, so a set_value of
+# 0 or 1 on a Toggle is silently dropped.
+is_on() { # <value>
+    case "$1" in
+        1|true|TRUE|True|yes|YES) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
 set_visible() {
     local view_id="$1"
     local visible="$2"
@@ -490,7 +511,7 @@ ab_log_to_control() {
 # omc_set_property; its title is the element's runtime value, so plain set_value
 # updates it (see ActionUI's Label: valueType is String).
 #
-# Starting a run also disables the three action buttons, because the row is the
+# Starting a run also disables the pane's action buttons, because the row is the
 # PANE's status and there is only one of it. Clicking Build during a long test
 # run would otherwise finish in seconds and paint a green "Build succeeded" over
 # a suite still minutes from done - precisely the "looks finished when it isn't"
@@ -503,12 +524,51 @@ ab_actions_enabled() { # <true|false>
     set_enabled "$BUILD_BUILD_BTN_ID" "$1"
     set_enabled "$BUILD_TEST_BTN_ID" "$1"
     set_enabled "$BUILD_RUN_BTN_ID" "$1"
+    # The thinning checkboxes go with the buttons. They are live controls with a
+    # handler of their own (AppletBuilder.thin.python.changed), which re-enables
+    # Execute - so leaving them clickable during a run means a click on Write
+    # Thinning Plan re-arms Execute mid-apply, and a second thinning starts over
+    # the first, sharing one .thinbak.
+    set_enabled "$BUILD_THIN_PLAN_ID" "$1"
+    set_enabled "$BUILD_THIN_APPLY_ID" "$1"
+    if [ "$1" = "true" ] || [ "$1" = "1" ]; then
+        ab_thin_boxes_release
+    else
+        set_enabled "$BUILD_THIN_DRY_RUN_ID" false
+        set_enabled "$BUILD_THIN_PYTHON_BTN_ID" false
+    fi
+}
+
+# Dry Run and Execute are not simply "on" when a run ends: Dry Run follows Apply
+# Plan, and Execute needs at least one box ticked. Re-enabling them flat would
+# undo both rules - most visibly by reviving Execute after a build on a pane
+# where the user had cleared both boxes.
+#
+# The values are the ones the engine exported when this handler was dispatched,
+# which is still what the boxes hold: they were disabled for the run. Read as
+# literals with the id in a comment, the way the handlers read them, because the
+# name is what the engine exports, not something built from the id variable.
+ab_thin_boxes_release() {
+    local _ab_plan="$OMC_ACTIONUI_VIEW_412_VALUE"     # BUILD_THIN_PLAN_ID
+    local _ab_apply="$OMC_ACTIONUI_VIEW_414_VALUE"    # BUILD_THIN_APPLY_ID
+
+    if is_on "$_ab_apply"; then
+        set_enabled "$BUILD_THIN_DRY_RUN_ID" true
+    else
+        set_enabled "$BUILD_THIN_DRY_RUN_ID" false
+    fi
+
+    if is_on "$_ab_plan" || is_on "$_ab_apply"; then
+        set_enabled "$BUILD_THIN_PYTHON_BTN_ID" true
+    else
+        set_enabled "$BUILD_THIN_PYTHON_BTN_ID" false
+    fi
 }
 
 # Enable first, clear the flag last. The other order has a hole: a signal landing
-# between the clear and the third set_enabled would run the trap, which would see
-# a cleared flag, skip the enables, and leave a subset of the buttons dead. This
-# way the trap's worst case is enabling three already-enabled buttons.
+# between the clear and the last set_enabled would run the trap, which would see
+# a cleared flag, skip the enables, and leave a subset of the controls dead. This
+# way the trap's worst case is re-enabling controls that are already enabled.
 ab_actions_release() {
     if [ "$AB_BUILDRUN_ACTIVE" = "1" ]; then
         ab_actions_enabled true

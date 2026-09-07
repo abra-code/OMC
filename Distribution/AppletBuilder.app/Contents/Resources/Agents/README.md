@@ -3,8 +3,8 @@
 `appletbuilder` is a command-line front end to AppletBuilder.app, for AI agents and
 scripts. It performs the same operations a human does in the GUI — create an applet
 from a template, validate the command manifest / scripts / ActionUI JSON, prettify
-and preview ActionUI, and rebuild — by calling the **same** shared library code the
-GUI uses (`Contents/Resources/Scripts/lib.*.sh`), so results are identical.
+and preview ActionUI, rebuild, and thin an applet's embedded Python - by calling the
+**same** shared library code the GUI uses (`Contents/Resources/Scripts/lib.*.sh`), so results are identical.
 
 The tool lives inside the app bundle and finds everything it needs relative to
 itself; just run it by path:
@@ -84,10 +84,14 @@ appletbuilder build <App.app> [--identity <id>] [--thin arm64|x86_64|none] \
 Runs full validation, then refreshes `Abracode.framework` + the executable (and the
 embedded Python runtime for Python applets) from this AppletBuilder, removes
 `__pycache__`, optionally thins universal binaries, and codesigns. The build halts
-(exit `1`) before signing if validation finds errors.
+(exit `1`) before signing if validation finds errors, or if `--thin` was asked for and
+a binary could not be sliced to that architecture - including the case the underlying
+tool reports as a warning and exits 0 on, since signing then ships the architecture you
+asked to drop. A halt on that path leaves the bundle modified and unsigned: other
+binaries were already rewritten before the failing one.
 
 - `--identity <id>` — codesigning identity (default ad-hoc `-`).
-- `--thin arm64|x86_64` — thin universal binaries to one architecture (`none` = skip).
+- `--thin arm64|x86_64|none` — thin universal binaries to one architecture (`none` = skip). Anything else is a usage error.
 - `--warnings-as-errors` — treat validation warnings as build-halting errors.
 - `--force` — force the framework/executable refresh even if versions match, and
   answer the Python major-version-upgrade prompt with "yes" (non-interactive).
@@ -147,6 +151,56 @@ OMCTEST_LIB=<AppletBuilder.app>/Contents/Resources/Agents/omctest.sh \
 ```
 
 See `omctest_guide.md` in the Documentation folder for the test-author API.
+
+### thin-python - strip the applet's embedded Python
+
+```
+appletbuilder thin-python plan|apply|plan-apply <App.app> \
+                   [--plan <file>] [--dry-run] [--skip-verify] [--thin arm64|x86_64|none]
+```
+
+Closure-thins the interpreter an applet bundles - a full universal distribution of
+some 60 MB, of which a typical applet imports a small slice. Two phases with a
+reviewable JSON plan in between:
+
+- `plan` - analyze the applet and write `<App>.thinning-plan.json` beside the
+  bundle. The applet is never modified: the analysis clones it and executes only
+  the clone, every traced subprocess confined by `sandbox-exec` with no network
+  and no writes outside the staging area. Commit the plan next to the applet.
+- `apply` - remove what the plan names from the real interpreter, then verify by
+  re-running the plan's workload. A verification failure restores the backup the
+  applier took, so a plan that removed too much leaves a working applet behind.
+  `--dry-run` lists the removal and performs none of it.
+- `plan-apply` - both, for a distribution copy just made from a planned applet.
+  With `--dry-run`, writes the plan and then lists what applying it would remove.
+
+Only applets that bundle their own Python can be thinned; one that does not is
+refused by name rather than failing obscurely. The verb is the confirmation - the
+CLI does not prompt, where the GUI's **Execute** button asks before any
+removal. `--dry-run` is refused on `plan`, which removes nothing to preview,
+rather than being ignored there.
+
+- `--plan <file>` - a plan elsewhere. Without it: beside the bundle, then the last
+  plan AppletBuilder wrote for that applet, matched on its bundle identifier
+  (said so in the log).
+- `--thin arm64|x86_64|none` - also record that slice in the plan, so the interpreter
+  is thinned the same way `build --thin` slices the applet's other binaries. Anything
+  else is a usage error rather than a silently universal plan.
+- `--skip-verify` - skip the post-removal re-run. Rarely right: that re-run is
+  what makes a wrong plan recoverable.
+
+An optional `<App>.thinning-keep.txt` beside the bundle (one module name per line)
+is picked up automatically - the escape hatch for a module no analysis can
+discover. `Documentation/omc_python_scripting_guide.md` has the full workflow. The same
+front end, with the advanced options this subcommand does not surface (`--trace`
+for out-of-process entry points, `--keep`, `--execute-entry-points`), is the
+vendored copy inside this bundle:
+
+```
+<AppletBuilder.app>/Contents/Library/python_thinning/thin_applet_python.py
+```
+
+(`Distribution/Scripts/thin_applet_python.py` in an OMC checkout is the same file.)
 
 ### prettify — reformat ActionUI / JSON
 

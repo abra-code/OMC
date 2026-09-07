@@ -46,3 +46,28 @@ get_external_editor() {
 save_external_editor() {
     /usr/bin/defaults write "$prefs_domain" ExternalEditor "$1"
 }
+
+# ──────────────────────────────────────────────────────────────
+# Where an applet's last Python thinning plan was written
+# ──────────────────────────────────────────────────────────────
+#
+# Keyed by applet IDENTITY rather than by path, because the whole point is to
+# survive the copy: a plan written from ~/dev/MyApp.app is what an apply on
+# ~/Release/MyApp.app needs, and the two share no path. lib.build.sh builds the
+# key (applet_plan_key) - the bundle identifier where there is one, the applet's
+# name otherwise - so two unrelated applets both called MyApp do not share an
+# entry. It is still only a fallback: it is consulted only when no plan sits
+# beside the bundle, and the run says in its log that it was.
+
+get_thinning_plan() { # <plan key, from applet_plan_key>
+    /usr/bin/defaults read "$prefs_domain" "ThinningPlan:$1" 2>/dev/null
+}
+
+save_thinning_plan() { # <plan key, from applet_plan_key> <plan path>
+    # Errors not silenced, like the two setters above: a failed write disables
+    # the fallback, and a run that then cannot find its own plan should have
+    # something in the transcript explaining why.
+    # -string: an untyped value is PARSED, and a plan path containing {, ( or "
+    # fails with "Could not parse" rather than being stored.
+    /usr/bin/defaults write "$prefs_domain" "ThinningPlan:$1" -string "$2"
+}

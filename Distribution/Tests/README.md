@@ -11,8 +11,8 @@ open as a project in itself. `Documentation/omctest_guide.md` is the reference f
 writing the files; this README is the map of what AppletBuilder does and how much
 of it is covered.
 
-Current state: **285 checks across 4 files, all passing** (281 where `defaults`
-cannot reach cfprefsd - see section 4 - which skips one section and says so).
+Current state: **471 checks across 5 files, all passing** (458 where `defaults`
+cannot reach cfprefsd - see section 4 - which skips two sections and says so).
 
 ---
 
@@ -66,10 +66,11 @@ a build phase can be tested by reading its transcript instead of a window
 | J | Help viewer | `help.*` (10), `lib.help.sh` | - | **not covered** |
 | K | Settings | `settings.*` (3) | - | **not covered** |
 | L | Error/reference windows | `show.errors`, `show.reference` | indirectly, via `chain_asked` | thin |
+| M | Embedded-Python thinning | `thin.python`, `applet_thin_python` | `50-thin-python` | good |
 
 ### What each test file establishes
 
-**`10-project.test.sh`** (55 checks) - the path before anything else. `main` routes
+**`10-project.test.sh`** (53 checks) - the path before anything else. `main` routes
 a dropped `.app` to the project window and anything else to New Applet, and refuses
 a directory named `.app` with no `Info.plist`. `project.init` and `general.loaded`
 both claim the applet from the hand-off pasteboard (they race, and either can win).
@@ -91,7 +92,7 @@ test cannot reach on its own: that a manifest save leaves the file's permissions
 alone, and that every `mktemp` template in the shipped bundle - handlers, agent
 CLI, helpers and the applet templates themselves - ends in its `X`s.
 
-**`30-validation.test.sh`** (69 checks) - the gate every build passes through.
+**`30-validation.test.sh`** (77 checks) - the gate every build passes through.
 Scripts are checked with the shell OMC would actually run them with, so bash-only
 syntax in a `.sh` file is an error with an explanation. The bash-4 heuristic scanner
 is checked construct by construct, along with both of its escape hatches (comments,
@@ -99,6 +100,11 @@ is checked construct by construct, along with both of its escape hatches (commen
 of its rules provably cannot fire and the file pins down why. Also: manifest and
 ActionUI validation, `Command.json`-over-`Command.plist` resolution, framework
 version comparison (including `5.10` above `5.9`), and unique command id generation.
+Section 13b covers the CLI's argument surface, where the failure is a hang rather
+than a wrong answer: `shift 2` with one argument left shifts nothing and returns
+non-zero, so an option arriving as the last argv token spins the parser forever at
+100% CPU. Every command that takes an option value is checked, under a hard time
+cap - without one, a regression would hang the suite instead of failing it.
 
 **`40-build-hygiene.test.sh`** (50 checks) - what the build refuses to ship.
 `clean_build_junk` is the last thing between a working tree and a signed artifact,
@@ -119,6 +125,66 @@ outcome (all three importers leave nothing behind) as well as the seam (an
 inherited prefix is never overruled, which is what omctest's own isolation rests
 on). Every check strips `PYTHONPYCACHEPREFIX` from the child first: the harness
 exports its own, and would otherwise answer for the applet.
+
+**`50-thin-python.test.sh`** (164 checks) - Python thinning, from the
+arguments up. The analysis it drives is Python-Embedding's and is tested there;
+what belongs here is every decision AppletBuilder makes around it, so the front
+end is named through `AB_THIN_PYTHON_TOOL` and pointed at
+`helpers/thin_recorder.py`, which records its argv and honors the one part of
+the real contract the phase leans on - a successful `plan` leaves a plan file.
+Running the real thing would cost minutes and an applet with a working 60 MB
+interpreter per case, and would prove nothing about the applet's own logic.
+
+The properties pinned: an applet with no embedded Python is refused by reason
+rather than by a path three directories deep; the plan lands beside the bundle;
+the pane's architecture choice and an optional `<App>.thinning-keep.txt` reach
+the front end, and only when they should; all three plan-resolution routes
+(explicit, beside the bundle, and the plan remembered for that applet, matched on its bundle identifier,
+after it was copied elsewhere) behave, including a remembered path whose file has
+since been deleted; both answers to the confirmation, because "nothing ran" alone
+would pass for a handler that never got as far as asking; plan-and-apply ordering,
+and a failed plan stopping before the apply - which is the case the ordering
+exists for, since an apply after a failed plan would remove whatever some older
+file named. Sections 12 to 12h drive the pane itself: that the thinning group's three
+checkboxes are a product and every combination lands on the action it reads as,
+that neither box ticked runs nothing and says what to tick, that Dry Run follows
+Apply Plan (and is cleared on the way down, so re-ticking Apply cannot silently
+turn a real run into a preview), that the group is disabled with a note for an
+applet bundling no Python - and left alone when no project is open, which is a
+different claim - and that the log, verdict row and buttons all end up where a
+user would expect. Section 12g is static and crosses the one hop nothing else
+checks: that the checkboxes name their handler through `actionID`, the property a
+Toggle reads on a change. Slider, TextField, DatePicker and others do fire
+`valueChangeActionID`; a Toggle does not, and ActionUI accepts the property on
+any view, so a
+checkbox wired that way parses, validates, resolves to a real `COMMAND_ID` - and
+never calls it. Section 12h covers what a run does to the group: the checkboxes
+are disabled with the buttons (leaving them live let a click mid-apply re-arm
+Execute through the changed handler, and a second thinning would share one
+`.thinbak` with the first), and the end of a run restores Dry Run and Execute
+from the boxes rather than flat, so a build cannot revive Execute on a pane where
+both boxes are clear.
+
+Several sections exist because two rounds of independent review found what they
+now pin: a plan path built
+from a relative applet argument (`cd MyDir && appletbuilder thin-python plan
+MyApp.app`) used to be recorded relative and resolved later against a different
+working directory; a plan whose `packages.dir` points into another bundle would
+have had the applier delete from *that* bundle; AppletBuilder would apply a plan
+to itself, deleting modules out from under the interpreter running the thinning;
+and a guard that reported without logging left the previous run's transcript in
+the pane under a red verdict. The second round found two holes the first round's
+fixes had opened: an exported `CDPATH` redirected every `cd` used to resolve
+those paths - defeating the self-thinning guard outright - and the Packages
+check treated an answer it could not parse as permission. Section 2c and section
+6d are those, and 6c now carries the control that keeps the classifier from
+refusing everything. Section 13 covers the CLI's own surface, including
+that `--dry-run` on a verb that removes nothing is a usage error rather than a
+silent no-op.
+
+The remembered-plan section is guarded by `ab_prefs_usable`: that record lives in
+a `defaults` domain, and cfprefsd is unreachable from a sandboxed run, where
+`defaults write` exits 0 having written nothing.
 
 ---
 

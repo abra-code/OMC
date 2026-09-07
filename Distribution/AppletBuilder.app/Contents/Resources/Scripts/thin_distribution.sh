@@ -97,9 +97,25 @@ thin_to_single_arch() {
             set -e
             
             if [ $lipo_result -eq 0 ]; then
+                # Checked, and only counted when it took. An unchecked mv left the
+                # binary universal, left the .tmp beside it, and printed nothing -
+                # so a caller watching for the warning below saw a clean run.
+                set +e
                 /bin/mv "$tmp" "$file"
-                ((thinned++))
+                local mv_result=$?
+                set -e
+                if [ $mv_result -eq 0 ]; then
+                    thinned=$((thinned + 1))
+                else
+                    # Same "Warning: lipo -thin" prefix as the branch below, and for
+                    # the same reason: lib.build.sh's thin_binaries matches it to halt
+                    # the build rather than sign a binary that was not thinned.
+                    echo "    Warning: lipo -thin $arch could not replace $file (mv exit $mv_result)"
+                    /bin/rm -f "$tmp"
+                fi
             else
+                # AppletBuilder's build matches "Warning: lipo -thin" in this output to
+                # decide whether to halt (lib.build.sh, thin_binaries). Keep the prefix.
                 echo "    Warning: lipo -thin $arch failed on $file (arch possibly missing)"
                 /bin/rm -f "$tmp"
             fi

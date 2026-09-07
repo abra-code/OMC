@@ -7,6 +7,8 @@
 #      that one SPM build also produces the core and add-on documentation bundles + the Python verifier
 #      schemas are copied from source (core + each Add-ons/*/Schemas)
 #   2. mistune (markdown-to-HTML converter)
+#   2b. Python thinning toolkit - thin_applet_python.py from this repo plus the three
+#      Python-Embedding tools it drives, vendored into Contents/Library/python_thinning
 #   3. OMC documentation
 #   4. ActionUI documentation (from the built ActionUIDocumentation bundle)
 #   4b. ActionUI add-on documentation (from each built add-on documentation bundle)
@@ -474,6 +476,143 @@ elif [ "$bundled_version" != "$latest_version" ]; then
 else
     echo "  Latest on PyPI:  $latest_version"
     echo -e "  ${GREEN}Up to date${NC}"
+fi
+
+echo ""
+
+# ════════════════════════════════════════════════════════════
+# 2b. Python thinning toolkit
+# ════════════════════════════════════════════════════════════
+#
+# What the pane's Execute button and `appletbuilder thin-python` run. The front end
+# is this repository's (Distribution/Scripts), the three tools under it are
+# Python-Embedding's; vendoring the set is what lets an applet be thinned on a
+# machine with no checkout of that repository.
+#
+# A missing Python-Embedding is a WARNING, not a failure: the copies already in
+# the bundle are committed, so the app keeps working with whatever it shipped
+# with. A missing front end is an error - it lives in this repo, so its absence
+# means this script is looking in the wrong place.
+
+echo "── Checking the Python thinning toolkit ──"
+
+# Its own flag, not build_failed: that one belongs to the ActionUI section, which
+# has already tested it and exited by the time this runs, so a 1 written into it
+# here would be silently discarded.
+thinning_failed=0
+DEST_THINNING="$APPLET_BUILDER/Contents/Library/python_thinning"
+PYTHON_EMBEDDING="$OMC_ROOT/../Python-Embedding"
+
+/bin/mkdir -p "$DEST_THINNING"
+mkdir_rc=$?
+if [ "$mkdir_rc" -ne 0 ]; then
+    echo -e "  ${RED}Could not create: $DEST_THINNING${NC}"
+    thinning_failed=1
+else
+    THINNING_FRONT_END="$OMC_ROOT/Distribution/Scripts/thin_applet_python.py"
+    if [ ! -f "$THINNING_FRONT_END" ]; then
+        echo -e "  ${RED}thin_applet_python.py not found at: $THINNING_FRONT_END${NC}"
+        thinning_failed=1
+    else
+        files_match "$THINNING_FRONT_END" "$DEST_THINNING/thin_applet_python.py"
+        match_rc=$?
+        if [ "$match_rc" -eq 0 ]; then
+            /bin/chmod 755 "$DEST_THINNING/thin_applet_python.py"
+            chmod_rc=$?
+            if [ "$chmod_rc" -ne 0 ]; then
+                echo -e "  ${RED}Failed to set mode 755 on: $DEST_THINNING/thin_applet_python.py${NC}"
+                thinning_failed=1
+            else
+                # Only when the mode took as well: a green "up to date" under a red
+                # chmod failure describes a file the app cannot execute.
+                echo -e "  ${GREEN}thin_applet_python.py up to date${NC}"
+            fi
+        else
+            /bin/cp "$THINNING_FRONT_END" "$DEST_THINNING/thin_applet_python.py"
+            cp_rc=$?
+            if [ "$cp_rc" -ne 0 ]; then
+                echo -e "  ${RED}Failed to copy thin_applet_python.py to: $DEST_THINNING${NC}"
+                thinning_failed=1
+            else
+                /bin/chmod 755 "$DEST_THINNING/thin_applet_python.py"
+                chmod_rc=$?
+                if [ "$chmod_rc" -ne 0 ]; then
+                    echo -e "  ${RED}Failed to set mode 755 on: $DEST_THINNING/thin_applet_python.py${NC}"
+                    thinning_failed=1
+                else
+                    echo -e "  ${GREEN}thin_applet_python.py vendored${NC}"
+                    updated=1
+                fi
+            fi
+        fi
+    fi
+
+    # The generic half. All three go together: thin_with_plan.sh runs
+    # thin_python_distribution.sh from its own directory and calls
+    # analyze_python_deps.py for the paths a plan resolves to, and the front end
+    # only accepts a directory that holds the whole set - so a partial update
+    # would leave an analyzer of one version driving an applier of another.
+    if [ ! -d "$PYTHON_EMBEDDING" ]; then
+        echo -e "  ${YELLOW}Python-Embedding not found at: $PYTHON_EMBEDDING${NC}"
+        echo "    Keeping the copies already vendored. Clone it beside OMC to update them:"
+        echo "    https://github.com/abra-code/Python-Embedding"
+    else
+        for thinning_tool in analyze_python_deps.py thin_with_plan.sh thin_python_distribution.sh; do
+            THINNING_SRC="$PYTHON_EMBEDDING/$thinning_tool"
+            THINNING_DST="$DEST_THINNING/$thinning_tool"
+            if [ ! -f "$THINNING_SRC" ]; then
+                echo -e "  ${RED}$thinning_tool not found at: $THINNING_SRC${NC}"
+                thinning_failed=1
+                continue
+            fi
+
+            files_match "$THINNING_SRC" "$THINNING_DST"
+            match_rc=$?
+            if [ "$match_rc" -eq 0 ]; then
+                # Same content is not the same as usable: thin_with_plan.sh is
+                # EXECUTED by the front end and refuses to run when
+                # thin_python_distribution.sh beside it is not executable, so the
+                # mode is re-asserted on the unchanged file rather than only on a
+                # fresh copy - and checked, like every other mode change here.
+                /bin/chmod 755 "$THINNING_DST"
+                chmod_rc=$?
+                if [ "$chmod_rc" -ne 0 ]; then
+                    echo -e "  ${RED}Failed to set mode 755 on: $THINNING_DST${NC}"
+                    thinning_failed=1
+                    continue
+                fi
+                echo -e "  ${GREEN}$thinning_tool up to date${NC}"
+                continue
+            fi
+
+            /bin/cp "$THINNING_SRC" "$THINNING_DST"
+            cp_rc=$?
+            if [ "$cp_rc" -ne 0 ]; then
+                echo -e "  ${RED}Failed to copy $thinning_tool to: $DEST_THINNING${NC}"
+                thinning_failed=1
+                continue
+            fi
+
+            # thin_with_plan.sh execs thin_python_distribution.sh and refuses to
+            # run when it is not executable; cp does not carry the mode across an
+            # overwrite.
+            /bin/chmod 755 "$THINNING_DST"
+            chmod_rc=$?
+            if [ "$chmod_rc" -ne 0 ]; then
+                echo -e "  ${RED}Failed to set mode 755 on: $THINNING_DST${NC}"
+                thinning_failed=1
+                continue
+            fi
+
+            echo -e "  ${GREEN}$thinning_tool vendored${NC}"
+            updated=1
+        done
+    fi
+fi
+
+if [ "$thinning_failed" -eq 1 ]; then
+    echo -e "  ${RED}The Python thinning toolkit could not be vendored${NC}"
+    exit 1
 fi
 
 echo ""

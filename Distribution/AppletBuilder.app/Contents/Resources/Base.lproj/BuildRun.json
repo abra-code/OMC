@@ -4,196 +4,316 @@
         "spacing": 16,
         "alignment": "leading",
         "frame": {
-          "minWidth": 300
+            "minWidth": 300
         },
-        "padding": { "top": 16, "leading": 16, "trailing": 16, "bottom": 4 }
+        "padding": {
+            "top": 16,
+            "leading": 16,
+            "trailing": 16,
+            "bottom": 4
+        }
     },
     "children": [
-      {
-        "type": "LabeledContent",
-        "properties": {
-          "title": "Signing Identity:"
-        },
-        "children": [
-          {
-            "type": "Picker",
-            "id": 402,
+        {
+            "type": "HStack",
             "properties": {
-              "options": [
-                { "title": "Sign to Run Locally (ad-hoc)", "tag": "-" }
-              ],
-              "pickerStyle": "menu"
-            }
-          }
-        ]
-      },
-      {
-        "type": "LabeledContent",
-        "properties": {
-          "title": "Thin Universal Executables:"
-        },
-        "children": [
-          {
-            "type": "Picker",
-            "id": 404,
-            "properties": {
-              "options": [
-                { "title": "None", "tag": "none" },
-                { "title": "Apple Silicon (arm64)", "tag": "arm64" },
-                { "title": "Intel (x86_64)", "tag": "x86_64" }
-              ],
-              "pickerStyle": "menu"
-            }
-          }
-        ]
-      },
-      {
-        "type": "Toggle",
-        "id": 403,
-        "properties": {
-          "title": "Force Update Binaries",
-          "isOn": false
-        }
-      },
-      {
-        "type": "Toggle",
-        "id": 406,
-        "properties": {
-          "title": "Update Embedded Python",
-          "isOn": false
-        }
-      },
-      {
-        "type": "Toggle",
-        "id": 405,
-        "properties": {
-          "title": "Treat Validation Warnings As Errors",
-          "isOn": false
-        }
-      },
-      {
-        "type": "Section",
-        "properties": {
-          "padding": { "top": 0, "bottom": 0 }
-        },
-        "children": [
-          {
-            "type": "VStack",
-            "properties": {
-              "spacing": 12,
-              "padding": {
-                "top": 8,
-                "bottom": 8
-              }
+                "spacing": 24,
+                "alignment": "top"
             },
             "children": [
-              {
-                "type": "HStack",
-                "properties": {
-                  "spacing": 12
+                {
+                    "type": "VStack",
+                    "properties": {
+                        "spacing": 16,
+                        "alignment": "leading"
+                    },
+                    "children": [
+                        {
+                            "type": "LabeledContent",
+                            "properties": {
+                                "title": "Signing Identity:"
+                            },
+                            "children": [
+                                {
+                                    "type": "Picker",
+                                    "id": 402,
+                                    "properties": {
+                                        "options": [
+                                            {
+                                                "title": "Sign to Run Locally (ad-hoc)",
+                                                "tag": "-"
+                                            }
+                                        ],
+                                        "pickerStyle": "menu"
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "type": "LabeledContent",
+                            "properties": {
+                                "title": "Thin Universal Executables:"
+                            },
+                            "children": [
+                                {
+                                    "type": "Picker",
+                                    "id": 404,
+                                    "properties": {
+                                        "options": [
+                                            {
+                                                "title": "None",
+                                                "tag": "none"
+                                            },
+                                            {
+                                                "title": "Apple Silicon (arm64)",
+                                                "tag": "arm64"
+                                            },
+                                            {
+                                                "title": "Intel (x86_64)",
+                                                "tag": "x86_64"
+                                            }
+                                        ],
+                                        "pickerStyle": "menu"
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "type": "Toggle",
+                            "id": 403,
+                            "properties": {
+                                "title": "Force Update Binaries",
+                                "isOn": false
+                            }
+                        },
+                        {
+                            "type": "Toggle",
+                            "id": 406,
+                            "properties": {
+                                "title": "Update Embedded Python",
+                                "isOn": false
+                            }
+                        },
+                        {
+                            "type": "Toggle",
+                            "id": 405,
+                            "properties": {
+                                "title": "Treat Validation Warnings As Errors",
+                                "isOn": false
+                            }
+                        }
+                    ]
                 },
-                "children": [
-                  {
-                    "type": "Button",
-                    "id": 409,
+                {
+                    "type": "GroupBox",
+                    "id": 417,
                     "properties": {
-                      "title": "Build",
-                      "systemImage": "hammer",
-                      "buttonStyle": "borderedProminent",
-                      "actionID": "AppletBuilder.build"
-                    }
-                  },
-                  {
-                    "type": "Button",
-                    "id": 410,
-                    "properties": {
-                      "title": "Test",
-                      "systemImage": "checkmark.diamond",
-                      "buttonStyle": "bordered",
-                      "actionID": "AppletBuilder.test"
-                    }
-                  },
-                  {
-                    "type": "Button",
-                    "id": 411,
-                    "properties": {
-                      "title": "Run",
-                      "systemImage": "play.fill",
-                      "buttonStyle": "bordered",
-                      "actionID": "AppletBuilder.run"
-                    }
-                  },
-                  {
-                    "type": "Spacer"
-                  },
-                  {
-                    "type": "Button",
-                    "properties": {
-                      "title": "Show",
-                      "systemImage": "finder",
-                      "buttonStyle": "bordered",
-                      "actionID": "AppletBuilder.reveal"
-                    }
-                  }
-                ]
-              },
-              {
-                "type": "HStack",
-                "properties": {
-                  "spacing": 6
+                        "title": "Embedded Python Thinning"
+                    },
+                    "children": [
+                        {
+                            "type": "VStack",
+                            "properties": {
+                                "spacing": 16,
+                                "alignment": "leading",
+                                "padding": 8,
+                                "frame": {
+                                    "minWidth": 280,
+                                    "alignment": "leading"
+                                }
+                            },
+                            "children": [
+                                {
+                                    "type": "Toggle",
+                                    "id": 412,
+                                    "properties": {
+                                        "title": "Compute & Write Thinning Plan",
+                                        "isOn": true,
+                                        "actionID": "AppletBuilder.thin.python.changed"
+                                    }
+                                },
+                                {
+                                    "type": "Toggle",
+                                    "id": 414,
+                                    "properties": {
+                                        "title": "Apply Plan",
+                                        "isOn": false,
+                                        "actionID": "AppletBuilder.thin.python.changed"
+                                    }
+                                },
+                                {
+                                    "type": "Toggle",
+                                    "id": 415,
+                                    "properties": {
+                                        "title": "Dry Run",
+                                        "isOn": false,
+                                        "disabled": true
+                                    }
+                                },
+                                {
+                                    "type": "Text",
+                                    "id": 416,
+                                    "properties": {
+                                        "text": "",
+                                        "font": "caption",
+                                        "foregroundStyle": "secondary",
+                                        "hidden": true
+                                    }
+                                },
+                                {
+                                    "type": "Button",
+                                    "id": 413,
+                                    "properties": {
+                                        "title": "Execute",
+                                        "systemImage": "scissors",
+                                        "buttonStyle": "bordered",
+                                        "actionID": "AppletBuilder.thin.python"
+                                    }
+                                }
+                            ]
+                        }
+                    ]
                 },
-                "children": [
-                  {
-                    "type": "ProgressView",
-                    "id": 407,
-                    "properties": {
-                      "controlSize": "small",
-                      "hidden": true
-                    }
-                  },
-                  {
-                    "type": "Label",
-                    "id": 408,
-                    "properties": {
-                      "title": "",
-                      "systemImage": "checkmark.diamond",
-                      "font": "caption",
-                      "foregroundStyle": "secondary",
-                      "hidden": true
-                    }
-                  },
-                  {
+                {
                     "type": "Spacer"
-                  }
-                ]
-              }
+                }
             ]
-          }
-        ]
-      },
-      {
-        "type": "Section",
-        "properties": {
-          "header": "Log",
-          "padding": { "top": 0, "bottom": 0 }
         },
-        "children": [
-          {
-            "type": "TextEditor",
-            "id": 401,
+        {
+            "type": "Section",
             "properties": {
-              "text": "",
-              "font": { "size": 11, "design": "monospaced" },
-              "background": "background.secondary",
-              "scrollContentBackground": "hidden",
-              "readOnly": true,
-              "frame": {
-                "minHeight": 200,
-                "idealHeight": 300
-              }
-            }
-          }
-        ]
-      }
+                "padding": {
+                    "top": 0,
+                    "bottom": 0
+                }
+            },
+            "children": [
+                {
+                    "type": "VStack",
+                    "properties": {
+                        "spacing": 12,
+                        "padding": {
+                            "top": 8,
+                            "bottom": 8
+                        }
+                    },
+                    "children": [
+                        {
+                            "type": "HStack",
+                            "properties": {
+                                "spacing": 12
+                            },
+                            "children": [
+                                {
+                                    "type": "Button",
+                                    "id": 409,
+                                    "properties": {
+                                        "title": "Build",
+                                        "systemImage": "hammer",
+                                        "buttonStyle": "borderedProminent",
+                                        "actionID": "AppletBuilder.build"
+                                    }
+                                },
+                                {
+                                    "type": "Button",
+                                    "id": 410,
+                                    "properties": {
+                                        "title": "Test",
+                                        "systemImage": "checkmark.diamond",
+                                        "buttonStyle": "bordered",
+                                        "actionID": "AppletBuilder.test"
+                                    }
+                                },
+                                {
+                                    "type": "Button",
+                                    "id": 411,
+                                    "properties": {
+                                        "title": "Run",
+                                        "systemImage": "play.fill",
+                                        "buttonStyle": "bordered",
+                                        "actionID": "AppletBuilder.run"
+                                    }
+                                },
+                                {
+                                    "type": "Button",
+                                    "properties": {
+                                        "title": "Show",
+                                        "padding": {
+                                            "leading": 30
+                                        },
+                                        "systemImage": "finder",
+                                        "buttonStyle": "bordered",
+                                        "actionID": "AppletBuilder.reveal"
+                                    }
+                                },
+                                {
+                                    "type": "Spacer"
+                                }
+                            ]
+                        },
+                        {
+                            "type": "HStack",
+                            "properties": {
+                                "spacing": 6
+                            },
+                            "children": [
+                                {
+                                    "type": "ProgressView",
+                                    "id": 407,
+                                    "properties": {
+                                        "controlSize": "small",
+                                        "hidden": true
+                                    }
+                                },
+                                {
+                                    "type": "Label",
+                                    "id": 408,
+                                    "properties": {
+                                        "title": "",
+                                        "systemImage": "checkmark.diamond",
+                                        "font": "caption",
+                                        "foregroundStyle": "secondary",
+                                        "hidden": true
+                                    }
+                                },
+                                {
+                                    "type": "Spacer"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "Section",
+            "properties": {
+                "header": "Log",
+                "padding": {
+                    "top": 0,
+                    "bottom": 0
+                }
+            },
+            "children": [
+                {
+                    "type": "TextEditor",
+                    "id": 401,
+                    "properties": {
+                        "text": "",
+                        "font": {
+                            "size": 11,
+                            "design": "monospaced"
+                        },
+                        "background": "background.secondary",
+                        "scrollContentBackground": "hidden",
+                        "readOnly": true,
+                        "frame": {
+                            "minHeight": 200,
+                            "idealHeight": 300
+                        }
+                    }
+                }
+            ]
+        }
     ]
 }

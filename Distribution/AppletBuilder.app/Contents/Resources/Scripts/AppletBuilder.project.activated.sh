@@ -4,11 +4,17 @@
 
 source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.tables.sh"
 source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.plist.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.build.sh"
 
 project_path=$(load_project_path)
 if [ -z "$project_path" ]; then
     exit 0
 fi
+
+# An embedded Python can appear or disappear while the window is in the
+# background - installed by a build, or by hand - and this is the pane refresh
+# path, so the Embedded Python group is re-asked here too.
+ab_thin_python_availability "$project_path"
 
 # Refresh all three tables to pick up added/removed files
 cmd_plist=$(command_file_path "$project_path")

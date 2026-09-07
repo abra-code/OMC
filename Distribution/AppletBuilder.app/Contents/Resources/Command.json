@@ -565,6 +565,18 @@
       "NAME": "AppletBuilder"
     },
     {
+      "NOTES": "Plans and/or applies the embedded-Python thinning of the loaded applet, logging into the Build & Run log",
+      "COMMAND_ID": "AppletBuilder.thin.python",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "NOTES": "Keeps the Build & Run pane's Embedded Python checkboxes coherent (Dry Run follows Apply; the button needs an action)",
+      "COMMAND_ID": "AppletBuilder.thin.python.changed",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
       "COMMAND_ID": "AppletBuilder.run",
       "EXECUTION_MODE": "exe_script_file",
       "NAME": "AppletBuilder"

@@ -357,29 +357,85 @@ This works, but anything installed here is **destroyed when the runtime is repla
 
 ## Reducing Bundle Size: Thinning the Embedded Python
 
-The embedded Python is a full, universal (arm64 + x86_64) distribution — roughly 60 MB+ — and a typical applet imports only a small slice of the standard library. You can strip the unused parts with `Distribution/Scripts/thin_applet_python.sh`, a front end over the reusable [Python-Embedding](https://github.com/abra-code/Python-Embedding) toolkit. It needs a sibling Python-Embedding checkout next to the OMC repo.
+The embedded Python is a full, universal (arm64 + x86_64) distribution - roughly 60 MB+ - and a typical applet imports only a small slice of the standard library. The unused parts can be stripped, from the GUI or from a script.
 
-Thinning is **trace-driven and verified**, not a guess: it runs your real workload, records exactly which modules load (transitively, including C extensions and anything reached across a `subprocess`/bin-script boundary), removes the rest, then re-runs the workload to prove nothing needed was deleted (restoring automatically if it was). It works in two phases with a reviewable, committable **plan** in between:
+Thinning is **analysis-driven and verified**, not a guess: it reads what your handler scripts import, loads those modules and records the closure that results (transitively, including C extensions and anything reached across a `subprocess`/bin-script boundary), removes the rest, then re-runs that workload to prove nothing needed was deleted - restoring automatically if it was. No handler script is executed by default; `--execute-entry-points` on the script front end runs them instead, which finds imports that only happen at runtime. It works in two phases with a reviewable, committable **plan** in between.
+
+Three front doors, all running the same code - `thin_applet_python.py`, a front end over the reusable [Python-Embedding](https://github.com/abra-code/Python-Embedding) toolkit:
+
+- **AppletBuilder's Build & Run pane** - the **Embedded Python Thinning** group.
+- **`appletbuilder thin-python`** - the agent CLI.
+- **`Distribution/Scripts/thin_applet_python.py`** - the script itself, which is where the advanced options live.
+
+AppletBuilder vendors the whole toolkit into `Contents/Library/python_thinning`, so the button and the CLI work with no Python-Embedding checkout on the machine. The repo copy of the script uses a sibling Python-Embedding checkout next to the OMC repo, as it always has.
+
+### In AppletBuilder
+
+Open the applet and use the **Embedded Python Thinning** group in the second column of the pane: tick what you want, click **Execute**.
+
+| Write Thinning Plan | Apply Plan | Dry Run | What happens |
+|:---:|:---:|:---:|--------------|
+| x | | | Analyzes the applet and writes `<App>.thinning-plan.json` beside the bundle. The applet is never modified: the analysis clones it and runs only the clone. |
+| | x | | Removes what the plan names from the applet's real interpreter, then verifies. Confirms first. |
+| | x | x | Lists what that would remove, and what removing it would save: the interpreter's size now, the modules and megabytes the plan names, and the size it would leave. Removes nothing. |
+| x | x | | Both, in one click - the shortcut for a distribution copy you have just made. Confirms first. |
+| x | x | x | Writes a fresh plan, then lists what applying it would remove. |
+
+Dry Run is enabled only while Apply Plan is ticked - there is no removal to preview otherwise - and the button is live only when at least one of the two is. The group is disabled entirely, with a note saying why, for an applet that bundles no Python.
+
+The transcript streams into the Build & Run log, with the spinner and the verdict row, exactly like a build or a test run.
+
+**Thinning is deliberately not part of Build.** Removing modules from an interpreter is not something a routine rebuild should do behind your back, and the plan half of the workflow exists so the removal can be reviewed before it happens.
+
+**Usually you thin a distribution copy, not your working applet.** Write and review the plan against the development copy - planning cannot damage it - commit the plan next to it, then open the release copy in AppletBuilder and apply. Confirmation before an apply names the bundle it is about to rewrite.
+
+**The pane's "Thin Universal Executables" choice is carried into the plan.** An applet sliced to arm64 has no use for the x86_64 half of its interpreter, and recording the arch *in* the plan keeps a later re-apply doing what the first one did. It is read when the plan is written, so changing the picker and clicking Apply Plan changes nothing - re-plan to change the architecture.
+
+**Verification proves the plan against itself.** The workload it re-runs is the one recorded in the plan, so it catches a plan that removed more than that plan's own analysis needed - not a plan that was written for a different build of the applet, or before a handler grew a new import. After applying a plan you did not just write against that exact bundle, launch the applet once.
+
+### Two optional files beside the bundle
+
+| File | Purpose |
+|------|---------|
+| `<App>.thinning-plan.json` | The plan. Written by `plan`, read by `apply`, and meant to be committed next to the applet. |
+| `<App>.thinning-keep.txt` | Force-keep list, one module name per line, picked up automatically when it exists. The escape hatch for a module no analysis can discover - one imported under a name built at runtime, or loaded by a plugin host. |
+
+An `apply` looks for a plan in this order: the path you gave it, then beside the bundle, then the last plan AppletBuilder wrote for that applet (matched on its bundle identifier, so an unrelated applet of the same name cannot lend you its plan; it says so in the log, and copying that plan next to the bundle makes the run repeatable). That last fallback is what makes "plan on the development copy, apply on the release copy" work without hand-carrying the file.
+
+### From the CLI
 
 ```bash
-THIN="OMC/Distribution/Scripts/thin_applet_python.sh"
+AB="OMC/Distribution/AppletBuilder.app/Contents/Resources/Agents/appletbuilder"
 
-# 1) PLAN — trace the workload(s) and write a committable plan next to the bundle.
+"$AB" thin-python plan       MyApp.app                 # writes MyApp.thinning-plan.json
+"$AB" thin-python apply      MyApp.app --dry-run       # preview the removal
+"$AB" thin-python apply      MyApp.app                 # remove, then verify
+"$AB" thin-python plan-apply MyApp.app --thin arm64    # both, arm64 slice only
+```
+
+`--plan <file>` points at a plan elsewhere; `--skip-verify` turns off the re-run that restores a bad thin (rarely what you want). The verb is the confirmation - the CLI does not prompt.
+
+### From the script, for the options a button cannot hold
+
+```bash
+THIN="OMC/Distribution/Scripts/thin_applet_python.py"
+
+# 1) PLAN - trace the workload(s) and write a committable plan next to the bundle.
 "$THIN" plan MyApp.app \
     --trace "MyApp.app/Contents/Resources/Scripts/MyApp.monitor.start.py" \
     --arch arm64                                  # writes MyApp.thinning-plan.json
 
-# 2) APPLY — perform the removal recorded in the plan, then verify (restores on failure).
+# 2) APPLY - perform the removal recorded in the plan, then verify (restores on failure).
 "$THIN" apply MyApp.app                            # add --dry-run to preview
 ```
 
-The wrapper knows the OMC layout, so it automatically thins `Contents/Library/Python`, uses `Contents/Resources/Scripts` as a coverage cross-check, and exports `PYTHONPATH=Contents/Library/Packages` while tracing and verifying — so modules you installed in `Packages/` import the same way they do at runtime. **`Packages/` is never thinned**: only the interpreter's own stdlib/`site-packages` are trimmed.
+The wrapper knows the OMC layout, so it automatically thins `Contents/Library/Python`, uses `Contents/Resources/Scripts` as a coverage cross-check, and exports `PYTHONPATH=Contents/Library/Packages` while tracing and verifying - so modules you installed in `Packages/` import the same way they do at runtime. **`Packages/` is never thinned**: only the interpreter's own stdlib/`site-packages` are trimmed.
 
 Key points:
 
-- **Commit the plan.** `MyApp.thinning-plan.json` records module *names* plus options (arch, `include/`, bytecode). Review or hand-tweak `remove.modules`, commit it next to the app, and re-run `apply` any time — for example after AppletBuilder reinstalls a fresh, full Python (which wipes the previous thinning). `apply` resolves names against the *current* interpreter, so it re-thins correctly.
-- **Coverage is the rule.** Pass one `--trace` per distinct Python entry point your applet runs (each handler/command, not just the main one). The `--static` cross-check (automatic on the Scripts directory) warns when a handler imports something no trace exercised — heed it, or that module gets removed.
-- **`--trace` is the command after `python3 -X importtime`** — pass the script/module + args, with no leading `python3`. For a module entry point use `--trace "-m package.module …"`.
+- **Commit the plan.** `MyApp.thinning-plan.json` records module *names* plus options (arch, `include/`, bytecode). Review or hand-tweak `remove.modules`, commit it next to the app, and re-run `apply` any time - for example after AppletBuilder reinstalls a fresh, full Python (which wipes the previous thinning). `apply` resolves names against the *current* interpreter, so it re-thins correctly.
+- **Coverage is the rule.** Pass one `--trace` per distinct Python entry point your applet runs (each handler/command, not just the main one). The `--static` cross-check (automatic on the Scripts directory) warns when a handler imports something no trace exercised - heed it, or that module gets removed.
+- **`--trace` is the command after `python3 -X importtime`** - pass the script/module + args, with no leading `python3`. For a module entry point use `--trace "-m package.module ..."`.
 
 See the Python-Embedding README for the underlying `analyze_python_deps.py` / `thin_with_plan.sh` tools and the full methodology.
 

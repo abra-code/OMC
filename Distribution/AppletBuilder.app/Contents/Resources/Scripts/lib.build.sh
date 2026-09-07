@@ -20,6 +20,10 @@
 #                          overwrites Contents/Library/Python wholesale and wipes any
 #                          packages pip-installed into its site-packages — install
 #                          third-party modules into Contents/Library/Packages instead.
+#
+# The embedded-Python thinning phase at the bottom of this file reads a few more
+# (AB_THIN_PYTHON_ACTION, AB_THIN_PLAN, AB_THIN_SKIP_VERIFY); they are documented
+# there, next to the code that uses them.
 
 [ -n "$__LIB_BUILD_SH" ] && return 0
 __LIB_BUILD_SH=1
@@ -27,6 +31,10 @@ __LIB_BUILD_SH=1
 source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.common.sh"
 source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.plist.sh"
 source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.validate.sh"
+# For the thinning phase alone: where the last plan written for an applet went,
+# which is what lets an apply on a distribution copy find the plan that was
+# reviewed against the development one.
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.prefs.sh"
 
 # Update bundle identifier
 applet_set_bundle_id() {
@@ -51,7 +59,11 @@ applet_install_icon() {
     local icon_base=$(/usr/bin/basename "${icon_source%.*}")
 
     local resources_dir="$app_path/Contents/Resources"
-    local temp_dir=$(/usr/bin/mktemp -d) || return 1
+    local temp_dir
+    temp_dir=$(/usr/bin/mktemp -d)
+    if [ $? -ne 0 ] || [ -z "$temp_dir" ]; then
+        return 1
+    fi
 
     /usr/bin/xcrun actool "$icon_source" \
         --compile "$temp_dir" \
@@ -555,8 +567,8 @@ update_shell_clients() {
     # CDPATH cleared for the same reason the client clears it: the destination arrives from the
     # command line unresolved, so it can be a relative path, and a CDPATH hit would send cd
     # somewhere else and print where it went into the capture.
-    local _src_real=$(CDPATH= cd "$src_packages" 2>/dev/null && pwd -P)
-    local _dst_real=$(CDPATH= cd "$dst_packages" 2>/dev/null && pwd -P)
+    local _src_real=$(CDPATH= cd -P -- "$src_packages" 2>/dev/null && pwd -P)
+    local _dst_real=$(CDPATH= cd -P -- "$dst_packages" 2>/dev/null && pwd -P)
     if [ -n "$_src_real" ] && [ "$_src_real" = "$_dst_real" ]; then
         return 0
     fi
@@ -648,9 +660,16 @@ update_shell_clients() {
 # than losing a settings file. It is reported instead, because a versioned
 # applet still carries its whole repository into the signed copy.
 #
+# Internal, not a caller option: AB_ABORTING="1" says the build is already halting,
+# so a surviving-junk warning must not talk about what will be signed. Initialized
+# here rather than left to the environment, or `AB_ABORTING=1 appletbuilder build`
+# would quietly downgrade that report for a whole ordinary build.
+#
 # Returns 1 only when junk survived the sweep and AB_WARNINGS_AS_ERRORS is set;
 # a surviving item is a permanent defect in the signed artifact, so that case
 # halts the build rather than signing over it.
+AB_ABORTING=0
+
 clean_build_junk() {
     local target_path="$1"
 
@@ -660,7 +679,9 @@ clean_build_junk() {
     # Resolve to the physical path first. (The CLI's own `[ ! -d ]` guard
     # follows symlinks, so `appletbuilder build ~/link-to-MyApp.app` reaches
     # here.)
-    target_path=$(cd "$target_path" >/dev/null 2>&1 && /bin/pwd -P)
+    # CDPATH= : cd searches $CDPATH for a relative operand, and this function runs
+    # rm under whatever it resolves to.
+    target_path=$(CDPATH= cd -P -- "$target_path" >/dev/null 2>&1 && /bin/pwd -P)
     if [ -z "$target_path" ]; then
         ab_report "Error: could not resolve the project path to sweep for junk"
         return 1
@@ -759,7 +780,16 @@ clean_build_junk() {
     done
 
     if [ "$stuck" -gt 0 ]; then
-        ab_report "WARNING: ${stuck} junk item(s) survived and will be signed into the applet"
+        # AB_ABORTING is set by a caller that is already halting the build. The
+        # sweep still runs and still says what survived, but "will be signed into
+        # the applet" would be a claim about a signing that is not going to happen -
+        # and in the GUI ab_report is an error window, which would reach the user
+        # ahead of the caller's own report of why the build stopped.
+        if [ "$AB_ABORTING" = "1" ]; then
+            ab_log "WARNING: ${stuck} junk item(s) survived the sweep"
+        else
+            ab_report "WARNING: ${stuck} junk item(s) survived and will be signed into the applet"
+        fi
         [ "$AB_WARNINGS_AS_ERRORS" = "1" ] && return 1
     fi
     return 0
@@ -777,8 +807,35 @@ thin_binaries() {
 
     ab_log ""
     ab_log "Thinning universal executables to ${arch}..."
-    local thin_output=$(/bin/bash "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/thin_distribution.sh" --arch "$arch" "$target_path" 2>&1)
+    local thin_output
+    thin_output=$(/bin/bash "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/thin_distribution.sh" --arch "$arch" "$target_path" 2>&1)
+    local thin_status=$?
     ab_log "$thin_output"
+    # The status was thrown away here, and the tool exits 1 on an arch it does not
+    # recognize - so a typo used to print one error line into the log and go on to
+    # sign a universal applet, reporting success. Split assignment because `local`
+    # is a command: `local x=$(cmd)` sets $? from the declaration.
+    if [ "$thin_status" -ne 0 ]; then
+        ab_log "Thinning to ${arch} failed (exit ${thin_status})."
+        return 1
+    fi
+
+    # thin_distribution.sh treats a failed `lipo -thin` as a warning and still exits
+    # 0 - fair for a tool run by hand, wrong for a build that is about to sign the
+    # result: the applet keeps the architecture the developer asked to drop, the plan
+    # or the release notes say otherwise, and nothing downstream contradicts them. It
+    # only attempts binaries it found to be universal, so this means a fat binary that
+    # does not carry ${arch} at all.
+    # Matched on the wording thin_distribution.sh prints - both for a failed lipo and
+    # for a failed mv after a good one. If that text ever changes, this stops halting
+    # builds it should halt; there is a matching note at the other end.
+    case "$thin_output" in
+        *"Warning: lipo -thin"*)
+            ab_log "Thinning to ${arch} left at least one universal binary in place (see the warning above)."
+            return 1
+            ;;
+    esac
+    return 0
 }
 
 # Run all bundled validators (command file, scripts, ActionUI JSON) against the
@@ -1217,7 +1274,31 @@ applet_build() {
 
     update_shell_clients "$project_path"
 
-    thin_binaries "$project_path"
+    if ! thin_binaries "$project_path"; then
+        # Sweep on the way out. The junk sweep further down exists partly for the
+        # *.thin.tmp a killed lipo leaves beside a binary, and returning straight
+        # from here would jump past it - leaving that debris in the bundle after
+        # exactly the failure most likely to produce it. Its own status is not worth
+        # a second verdict: the build is already halting, and AB_ABORTING keeps it
+        # from announcing a signing that is no longer going to happen.
+        # Set around the call rather than prefixed to it: a var assignment in front
+        # of a FUNCTION persists in the shell afterwards, which is not what a reader
+        # expects from that form.
+        AB_ABORTING=1
+        clean_build_junk "$project_path"
+        AB_ABORTING=0
+        local ts=$(/bin/date "+%Y-%m-%d %H:%M:%S")
+        ab_log ""
+        # Says what state the bundle is in, because it is not the state it was in
+        # before: thin_distribution.sh carries on past a binary it could not slice,
+        # so the others have already been rewritten - and rewriting a Mach-O breaks
+        # its signature, which is why an unsigned half-thinned bundle must not be
+        # mistaken for an untouched one.
+        ab_log "Build halted - one or more binaries could not be sliced to ${AB_THIN_ARCH}."
+        ab_log "The bundle has been modified and is NOT signed. Fix the architecture or"
+        ab_log "clear the thinning option, then build again. (${ts})"
+        return 1
+    fi
 
     if ! validate_info_content "$project_path"; then
         local ts=$(/bin/date "+%Y-%m-%d %H:%M:%S")
@@ -1265,7 +1346,10 @@ applet_build() {
 # cannot be resolved, in which case nothing is printed.
 applet_tests_dir() { # <project-path>
     local parent
-    parent=$(cd "$(/usr/bin/dirname "$1")" >/dev/null 2>&1 && pwd) || return 1
+    # CDPATH= only. No -P: this path is printed and compared as the logical one the
+    # caller passed (/var/..., not /private/var/...), and resolving symlinks here
+    # would change what the Test button reports as much as what it finds.
+    parent=$(CDPATH= cd -- "$(/usr/bin/dirname "$1")" >/dev/null 2>&1 && pwd) || return 1
     [ -n "$parent" ] || return 1
     printf '%s/Tests\n' "$parent"
 }
@@ -1319,5 +1403,630 @@ applet_run_tests() {
     case "$rc" in
         ''|*[!0-9]*) rc=1 ;;
     esac
+    return "$rc"
+}
+
+# ──────────────────────────────────────────────────────────────
+# Embedded Python thinning (plan / apply)
+# ──────────────────────────────────────────────────────────────
+#
+# An applet that bundles its own Python ships a full universal distribution -
+# some 60 MB - of which a typical handler set imports a small slice. The
+# Python-Embedding toolkit removes the rest in two phases with a reviewable JSON
+# plan in between, and thin_applet_python.py is the front end that knows where an
+# OMC bundle keeps its interpreter, its handlers and its Packages. Both are
+# vendored into AppletBuilder (Contents/Library/python_thinning), so neither the
+# pane's Execute button nor `appletbuilder thin-python` needs a Python-Embedding
+# checkout on the machine.
+#
+# Options the caller sets, like every other phase in this file:
+#
+#   AB_THIN_PYTHON_ACTION  plan | apply | apply-dry | plan-apply |
+#                          plan-apply-dry (default: plan)
+#   AB_THIN_PLAN           explicit plan file; empty = resolved (see below)
+#   AB_THIN_ARCH           reused from the build options - a plan written while
+#                          the pane says "Apple Silicon" records that slice, so
+#                          the interpreter is thinned the same way the applet's
+#                          other universal binaries are
+#   AB_THIN_SKIP_VERIFY    "1" = do not re-run the workload after applying. CLI
+#                          only, and rarely right: that re-run is what restores
+#                          the interpreter when the plan removed too much.
+#
+# Only `plan` is safe to run without thinking: it clones the bundle and executes
+# only the clone, and the real applet is never written to. Everything that
+# removes modules goes through ab_confirm first.
+
+# The front end, named through a variable so a test can point the phase at a
+# recorder and assert on the arguments it assembles. Running the real thing takes
+# minutes and needs a whole applet with a working interpreter. Bound when this
+# library is sourced, so an override has to be exported before that.
+thin_python_tool="${AB_THIN_PYTHON_TOOL:-${OMC_APP_BUNDLE_PATH}/Contents/Library/python_thinning/thin_applet_python.py}"
+
+# The bundle name without its extension - what the plan and keep files are named
+# after.
+applet_short_name() { # <project-path>
+    local base
+    base=$(/usr/bin/basename "$1")
+    printf '%s' "${base%.app}"
+}
+
+# What the remembered plan is filed under. The applet's bundle identifier when it
+# has one, because that is the only thing about an applet that survives being
+# copied to a release directory AND distinguishes it from somebody else's applet
+# of the same name - and the plan file itself records nothing about which applet
+# or which build it was written for, so a mistaken match is not caught later.
+# Falls back to the name, prefixed apart so the two spaces cannot collide.
+applet_plan_key() { # <project-path>
+    local bundle_id
+    bundle_id=$(plist_read "$1/Contents/Info.plist" "CFBundleIdentifier")
+    if [ -n "$bundle_id" ]; then
+        printf 'id:%s' "$bundle_id"
+    else
+        printf 'name:%s' "$(applet_short_name "$1")"
+    fi
+}
+
+# The interpreter an applet bundles. Absent from an applet that has none, which
+# is the case applet_thin_python refuses on.
+applet_python_bin() { # <project-path>
+    printf '%s/Contents/Library/Python/bin/python3' "$1"
+}
+
+# The directory an applet's plan and keep file live in - its parent, ABSOLUTE.
+#
+# Absolute is load-bearing, not tidiness. `appletbuilder thin-python plan
+# MyApp.app` from the applet's own directory would otherwise produce
+# "./MyApp.thinning-plan.json", which is correct for that run and wrong forever
+# after: the path is recorded for the fallback below, and a later apply resolves
+# it against ITS working directory, where a same-named plan for an entirely
+# different applet may well be sitting. Confirmed by reproduction, not theory.
+applet_plan_dir() { # <project-path>
+    local dir
+    dir=$(/usr/bin/dirname "$1")
+    # CDPATH= and --, not a bare cd: `cd` searches $CDPATH for any operand that
+    # does not begin with /, ./ or ../, so an exported CDPATH silently resolves
+    # "sub/MyApp.app" somewhere else entirely - and this path is then written to,
+    # remembered, and applied from. The same guard is on update_shell_clients
+    # above, for the same reason.
+    local abs
+    abs=$(CDPATH= cd -P -- "$dir" >/dev/null 2>&1 && pwd -P)
+    if [ -n "$abs" ]; then
+        printf '%s' "$abs"
+    else
+        # Unresolvable (deleted out from under us, or no search permission).
+        # Degrade to what the caller gave rather than to an empty string, which
+        # would silently build a plan path at the filesystem root.
+        printf '%s' "$dir"
+    fi
+}
+
+# <App>.thinning-plan.json BESIDE the bundle: the front end's own default, and
+# where a plan belongs in version control - next to the applet it describes, not
+# inside it, where it would be signed in and wiped by the next Python install.
+applet_plan_path() { # <project-path>
+    printf '%s/%s.thinning-plan.json' \
+        "$(applet_plan_dir "$1")" "$(applet_short_name "$1")"
+}
+
+# Optional per-applet force-keep list, named to match: <App>.thinning-keep.txt,
+# one module name per line. It is the escape hatch for a module no analysis can
+# discover - one imported under a name built at runtime, or loaded by a plugin
+# host - and it sits beside the plan so the two are committed together.
+applet_keep_file() { # <project-path>
+    printf '%s/%s.thinning-keep.txt' \
+        "$(applet_plan_dir "$1")" "$(applet_short_name "$1")"
+}
+
+# Which plan an apply should use. Sets THIN_PLAN_PATH and THIN_PLAN_SOURCE
+# (explicit | beside | remembered; plan-apply sets "written" itself) and returns 1 when there is no plan to use.
+#
+# The remembered fallback is for the flow this feature exists to serve: the plan
+# is written and reviewed against the development copy, then a distribution copy
+# is made elsewhere and that is what gets thinned. The copy has no plan beside
+# it, and putting one there by hand is exactly the step that gets forgotten. So a
+# successful plan run records where it wrote, keyed by the applet's identity (see
+# applet_plan_key), and an apply that finds nothing beside the bundle falls back
+# to it - naming the file
+# in the log, because a plan carried over from a different build of the applet is
+# the one way this can remove the wrong set of modules.
+applet_resolve_plan() { # <project-path>
+    THIN_PLAN_PATH=""
+    THIN_PLAN_SOURCE=""
+
+    if [ -n "$AB_THIN_PLAN" ]; then
+        THIN_PLAN_PATH="$AB_THIN_PLAN"
+        THIN_PLAN_SOURCE="explicit"
+        # An explicit path that does not exist is the caller's mistake, and
+        # saying so here beats the front end's own "plan not found" - this one
+        # can say which of the three routes chose the path.
+        if [ ! -f "$THIN_PLAN_PATH" ]; then
+            return 1
+        fi
+        return 0
+    fi
+
+    local beside
+    beside=$(applet_plan_path "$1")
+    if [ -f "$beside" ]; then
+        THIN_PLAN_PATH="$beside"
+        THIN_PLAN_SOURCE="beside"
+        return 0
+    fi
+
+    local remembered
+    remembered=$(get_thinning_plan "$(applet_plan_key "$1")")
+    # Absolute only. A relative entry can only have come from a version of this
+    # code that stored one, and resolving it here would mean resolving it against
+    # whatever directory this run happens to start in.
+    case "$remembered" in
+        /*) ;;
+        *)  remembered="" ;;
+    esac
+    if [ -n "$remembered" ] && [ -f "$remembered" ]; then
+        THIN_PLAN_PATH="$remembered"
+        THIN_PLAN_SOURCE="remembered"
+        return 0
+    fi
+
+    return 1
+}
+
+# Run the front end, streaming its transcript through ab_log_stream, and return
+# ITS status. The subshell and the PIPESTATUS read on the very next line are the
+# same requirements applet_run_tests documents.
+thin_python_exec() { # <front-end args...>
+    local rc
+    # -u because this output is a PIPE. Python block-buffers stdout when it is
+    # not a terminal, so without it the front end's whole progress transcript -
+    # which phase is running, which entry point is being traced - arrives in one
+    # burst when the run ends, minutes after it would have been useful, and out
+    # of order against the stderr it is merged with here.
+    ( "$python3" -u "$thin_python_tool" "$@" 2>&1 ) | ab_log_stream
+    rc=${PIPESTATUS[0]}
+    case "$rc" in
+        ''|*[!0-9]*) rc=1 ;;
+    esac
+    return "$rc"
+}
+
+# Analyze the applet and write a plan. Never modifies the bundle: the front end
+# clones it and runs only the clone, under a sandbox profile with no network and
+# no writes outside the staging area.
+thin_python_plan() { # <project-path>
+    local project_path="$1"
+    local plan_path="$AB_THIN_PLAN"
+    if [ -z "$plan_path" ]; then
+        plan_path=$(applet_plan_path "$project_path")
+    fi
+
+    set -- plan "$project_path" --plan "$plan_path"
+
+    # The pane's "Thin Universal Executables" choice, reused: an applet thinned to
+    # one architecture has no use for the other slice of its interpreter, and
+    # recording the arch IN the plan keeps a re-apply after a Python reinstall
+    # doing what the first one did.
+    case "$AB_THIN_ARCH" in
+        arm64|x86_64) set -- "$@" --arch "$AB_THIN_ARCH" ;;
+    esac
+
+    local keep_file
+    keep_file=$(applet_keep_file "$project_path")
+    if [ -f "$keep_file" ]; then
+        ab_log "Force-keeping the modules listed in $(/usr/bin/basename "$keep_file")"
+        set -- "$@" --keep-file "$keep_file"
+    fi
+
+    ab_log ""
+    ab_log "Writing a thinning plan (the applet itself is not modified)..."
+
+    local rc
+    thin_python_exec "$@"
+    rc=$?
+    if [ "$rc" -ne 0 ]; then
+        ab_report "Writing the thinning plan failed. The analyzer's output is in the log."
+        return "$rc"
+    fi
+
+    # Recorded only for a plan that is really on disk. The front end reporting
+    # success without having written one would be a bug, but the record outlives
+    # this run and is what a later apply on a COPY of the applet resolves to, so
+    # it is checked rather than assumed.
+    if [ -f "$plan_path" ]; then
+        save_thinning_plan "$(applet_plan_key "$project_path")" "$plan_path"
+    fi
+    ab_log ""
+    ab_log "Review remove.modules in the plan and commit it next to the applet."
+    return 0
+}
+# What an apply should say when there is no plan to use. One function, because
+# the resolution now happens before the confirmation for a plain apply and after
+# the plan for plan-apply, and two copies of this message would drift.
+thin_python_report_no_plan() { # <project-path>
+    if [ "$THIN_PLAN_SOURCE" = "explicit" ]; then
+        ab_report "Thinning plan not found: ${THIN_PLAN_PATH}"
+        return 0
+    fi
+    ab_report "No thinning plan for $(applet_short_name "$1").
+
+Looked beside the applet at:
+  $(applet_plan_path "$1")
+
+Write one first - tick \"Write Thinning Plan\" in the Build & Run pane, or
+\"appletbuilder thin-python plan\" - review it, and commit it next to the applet."
+}
+
+# Does this plan's third-party Packages section point INSIDE the applet being
+# thinned? Prints "<inside|outside|none|unreadable>\t<count>\t<dir>".
+#
+# It has to be asked, because a plan records packages.dir as an absolute path
+# into the bundle it was planned against, and the applier resolves
+# packages.remove against THAT path rather than against the applet named on the
+# command line. Carry a plan to a copy - which is exactly what the remembered
+# fallback is for - and a non-empty packages.remove would back up and delete out
+# of the ORIGINAL bundle, invalidating its signature, with nothing in the
+# transcript naming it. packages.remove is emitted empty and only a human editing
+# the plan makes it non-empty, which is why this refuses rather than rewrites:
+# the entries are someone's deliberate choice about a specific bundle.
+thin_python_packages_check() { # <plan-file> <project-path>
+    "$python3" - "$1" "$2" <<'PYCHECK'
+import json, os, sys
+
+try:
+    with open(sys.argv[1]) as f:
+        plan = json.load(f)
+except (OSError, ValueError):
+    print("unreadable\t0\t")
+    raise SystemExit(0)
+
+pkgs = plan.get("packages") or {}
+directory = pkgs.get("dir") or ""
+count = len(pkgs.get("remove") or [])
+if not directory:
+    print("none\t%d\t" % count)
+    raise SystemExit(0)
+
+app = os.path.realpath(sys.argv[2])
+where = "inside" if os.path.realpath(directory).startswith(app + os.sep) else "outside"
+print("%s\t%d\t%s" % (where, count, directory))
+PYCHECK
+}
+
+# Perform a plan's removal against the applet's real interpreter, then verify by
+# re-running the plan's workload - a failure there restores the backup the
+# applier took.
+#
+# Resolution has usually happened already, in applet_thin_python, so that the
+# confirmation could name the plan. plan-apply is the exception: its plan does
+# not exist until the phase before this one has run.
+thin_python_apply() { # <project-path> <dry-run: 0|1>
+    local project_path="$1"
+    local dry_run="$2"
+
+    if [ -z "$THIN_PLAN_PATH" ]; then
+        if ! applet_resolve_plan "$project_path"; then
+            thin_python_report_no_plan "$project_path"
+            return 1
+        fi
+    fi
+
+    ab_log ""
+    ab_log "Plan: ${THIN_PLAN_PATH}"
+    if [ "$THIN_PLAN_SOURCE" = "remembered" ]; then
+        ab_log "  No plan beside the applet; using the one last written for $(applet_short_name "$project_path")."
+        ab_log "  Copy it next to the bundle to make this repeatable, and launch the applet"
+        ab_log "  afterwards: a plan written for a different build verifies against itself."
+    fi
+
+    local pkg_check
+    pkg_check=$(thin_python_packages_check "$THIN_PLAN_PATH" "$project_path")
+    local pkg_where
+    pkg_where=$(printf '%s' "$pkg_check" | /usr/bin/cut -f1)
+    local pkg_count
+    pkg_count=$(printf '%s' "$pkg_check" | /usr/bin/cut -f2)
+    local pkg_dir
+    pkg_dir=$(printf '%s' "$pkg_check" | /usr/bin/cut -f3)
+
+    case "$pkg_where" in
+        inside|none|unreadable)
+            # unreadable is left to the applier, which reports a malformed plan
+            # far better than this check could.
+            ;;
+        outside)
+            # Shape-tested before it is compared. A non-numeric count makes `[ -gt ]`
+            # exit 2, and an `if` reads that as "not greater than zero" - fail-open on
+            # the one guard standing between this apply and a deletion inside another
+            # bundle. "Could not tell" is refused here for the same reason as below.
+            case "$pkg_count" in
+                ''|*[!0-9]*)
+                    ab_report "The plan's Packages section could not be checked against this applet.
+
+  Plan: ${THIN_PLAN_PATH}
+
+Its audit names a directory in a different bundle, but the number of packages it
+removes came back as \"${pkg_count}\" rather than a count, so there is no telling
+whether applying it would delete anything there.
+
+Re-plan against this applet, or edit the plan's packages.dir to match it."
+                    return 1
+                    ;;
+            esac
+            if [ "$pkg_count" -gt 0 ]; then
+                ab_report "This plan's Packages section names a directory in a DIFFERENT bundle:
+  ${pkg_dir}
+
+It lists ${pkg_count} package(s) to remove, and the applier resolves them against that
+path - so applying it here would delete from that bundle, not from
+$(/usr/bin/basename "$project_path").
+
+Re-plan against this applet, or edit the plan's packages.dir to match it."
+                return 1
+            fi
+            ab_log "  (the plan's Packages audit refers to ${pkg_dir}; nothing there is removed)"
+            ;;
+        *)
+            # No answer at all: the interpreter failed, or a packages.dir with a
+            # newline in it split the reply. Refuse. The only thing this guard
+            # protects is deletion from another bundle, and "could not tell" is
+            # not "it is fine" - the previous shape read an empty answer as one.
+            ab_report "The plan's Packages section could not be checked against this applet.
+
+  Plan: ${THIN_PLAN_PATH}
+
+Refusing rather than applying: a plan whose packages.dir points into another
+bundle removes files from THAT bundle. Check the plan is well-formed JSON and
+that AppletBuilder's own Python is working."
+            return 1
+            ;;
+    esac
+
+    set -- apply "$project_path" --plan "$THIN_PLAN_PATH"
+    if [ "$dry_run" = "1" ]; then
+        set -- "$@" --dry-run
+        ab_log "Dry run - nothing will be removed."
+    fi
+    if [ "$AB_THIN_SKIP_VERIFY" = "1" ]; then
+        set -- "$@" --skip-verify
+        ab_log "WARNING: verification disabled - a plan that removes too much will not be caught."
+    fi
+
+    ab_log ""
+
+    local rc
+    thin_python_exec "$@"
+    rc=$?
+    if [ "$rc" -ne 0 ]; then
+        # Deliberately not promising a restore. The applier does restore the
+        # interpreter it backed up when verification fails, but it is not the
+        # only way to get here: it refuses outright when a .thinbak is already
+        # there, and the front end can fail before it ever runs.
+        ab_report "Thinning failed - read the log for which phase, and check whether the
+applet's interpreter was restored before shipping it."
+        return "$rc"
+    fi
+    return 0
+}
+
+# Enable or disable the Build & Run pane's Embedded Python group to match the
+# applet in front of the user, and say why when it is off.
+#
+# Disabling the GROUP rather than each control: SwiftUI's disabled state
+# propagates to descendants and an ancestor's "off" wins, so this also keeps
+# ab_actions_release from re-enabling the group's Execute button at the end of a
+# build on an applet that has nothing to thin.
+#
+# GUI-only, and a no-op with lib.common.sh's stderr reporters, so the agent CLI
+# can call the phase without it.
+ab_thin_python_availability() { # <project-path>
+    # No project yet - the pane can load before one is open - so there is nothing
+    # to answer. Leaving the group alone beats asserting "this applet has no
+    # embedded Python" about an applet nobody has chosen, which would then sit
+    # there until the pane was reloaded.
+    if [ -z "$1" ]; then
+        return 0
+    fi
+
+    if [ -x "$(applet_python_bin "$1")" ]; then
+        set_enabled "$BUILD_THIN_GROUP_ID" true
+        set_visible "$BUILD_THIN_NOTE_ID" false
+        return 0
+    fi
+
+    set_enabled "$BUILD_THIN_GROUP_ID" false
+    set_value "$BUILD_THIN_NOTE_ID" "This applet has no embedded Python."
+    set_visible "$BUILD_THIN_NOTE_ID" true
+    return 1
+}
+
+# The Python thinning action, as the pane and the CLI both drive it. Returns 0 on
+# success, 2 when the user declined the confirmation, and 1 (or the front end's
+# own status) when the applet cannot be thinned or a phase failed. Declining is
+# its own code because it is not a failure: the pane says so in orange rather
+# than reporting a build-style error over an applet nothing touched.
+applet_thin_python() { # <project-path>
+    local project_path="$1"
+    local action="${AB_THIN_PYTHON_ACTION:-plan}"
+
+    if [ -z "$project_path" ] || [ ! -d "$project_path" ]; then
+        ab_report "Error: No project loaded"
+        return 1
+    fi
+
+    local app_name
+    app_name=$(/usr/bin/basename "$project_path")
+
+    # Before the guards, not after them. This is the first ab_log of the run, and
+    # in the GUI it is what replaces the previous run's transcript in the log
+    # control - so a guard that reported and returned without logging would leave
+    # the pane showing an older, successful run under a red verdict.
+    ab_log "Thinning the embedded Python of ${app_name}..."
+
+    case "$action" in
+        plan|apply|apply-dry|plan-apply|plan-apply-dry) ;;
+        *)
+            ab_report "Unknown thinning action: ${action}"
+            return 1
+            ;;
+    esac
+
+    # Every route into the toolkit goes through this interpreter, including the
+    # plan reader below. Naming it beats an exit code of 127 out of a pipeline.
+    if [ ! -x "$python3" ]; then
+        ab_report "AppletBuilder's own Python is missing or not executable:
+  ${python3}
+
+This bundle is incomplete; rerun update_appletbuilder.sh."
+        return 1
+    fi
+
+    # An applet with no embedded interpreter has nothing to thin, and the front
+    # end's own refusal names a path rather than the reason.
+    if [ ! -x "$(applet_python_bin "$project_path")" ]; then
+        ab_report "${app_name} does not bundle its own Python, so there is nothing to thin.
+
+An applet gets an embedded interpreter from the New Applet panel's Python option,
+or from a build with \"Update Embedded Python\" checked."
+        return 1
+    fi
+
+    if [ ! -f "$thin_python_tool" ]; then
+        ab_report "AppletBuilder's Python thinning toolkit is missing:
+  ${thin_python_tool}
+
+Rerun update_appletbuilder.sh to vendor it back in."
+        return 1
+    fi
+
+    # Not on itself. The front end runs under $python3, which IS this bundle's
+    # interpreter, so an apply here would delete modules out from under the
+    # running process - and the verification hook then relaunches that same,
+    # now-thinned interpreter to import json, shlex and argparse.
+    #
+    # Removal is the whole reason, so the two actions that remove nothing are not
+    # refused: planning only ever executes a clone, and a dry run stops before the
+    # backup, listing what an apply would take (thin_with_plan.sh returns before
+    # it copies anything). Inspecting AppletBuilder's own bloat is a fair question
+    # to ask of AppletBuilder.
+    case "$action" in
+        apply|plan-apply)
+            # CDPATH= on both, or the comparison is defeated by an exported
+            # CDPATH that resolves a relative "AppletBuilder.app" to some other
+            # bundle: the two sides then differ and the guard waves through the
+            # one case it exists to stop. Reproduced.
+            local target_real
+            target_real=$(CDPATH= cd -P -- "$project_path" >/dev/null 2>&1 && pwd -P)
+            local self_real
+            self_real=$(CDPATH= cd -P -- "$OMC_APP_BUNDLE_PATH" >/dev/null 2>&1 && pwd -P)
+            if [ -n "$target_real" ] && [ "$target_real" = "$self_real" ]; then
+                ab_report "This is AppletBuilder itself, and the thinning runs under its interpreter -
+applying here would remove modules from the Python that is doing the removing.
+
+Write a plan from here if you like, then apply it with the standalone script:
+  Contents/Library/python_thinning/thin_applet_python.py apply <AppletBuilder.app>"
+                return 1
+            fi
+            ;;
+    esac
+
+    # Resolved BEFORE the confirmation, so the alert can name the plan that is
+    # about to be applied and where it came from. Which plan it is decides
+    # whether saying yes is safe, and it used to reach the log only afterwards.
+    # plan-apply resolves later, in thin_python_apply: its plan does not exist yet.
+    THIN_PLAN_PATH=""
+    THIN_PLAN_SOURCE=""
+    case "$action" in
+        apply|apply-dry)
+            if ! applet_resolve_plan "$project_path"; then
+                thin_python_report_no_plan "$project_path"
+                return 1
+            fi
+            ;;
+    esac
+
+    # Every path that actually removes modules asks first. A dry run does not: it
+    # writes nothing, and having to confirm a preview would train people to
+    # confirm without reading.
+    local confirm_plan
+    case "$action" in
+        apply|plan-apply)
+            if [ "$action" != "apply" ]; then
+                confirm_plan="$AB_THIN_PLAN"
+                if [ -z "$confirm_plan" ]; then
+                    confirm_plan=$(applet_plan_path "$project_path")
+                fi
+                confirm_plan="a plan about to be written to
+${confirm_plan}"
+            else
+                confirm_plan="the plan at
+${THIN_PLAN_PATH}"
+                if [ "$THIN_PLAN_SOURCE" = "remembered" ]; then
+                    confirm_plan="${confirm_plan}
+(no plan beside the applet - this is the one last written for $(applet_short_name "$project_path"))"
+                fi
+            fi
+
+            if ! ab_confirm "Remove unused Python modules from ${app_name}?
+
+This rewrites the applet's embedded interpreter in place, using ${confirm_plan}
+
+Thinning is usually done on a distribution copy prepared for release, not on the
+development copy the plan is written from."; then
+                ab_log ""
+                ab_log "Thinning canceled."
+                return 2
+            fi
+            ;;
+    esac
+
+    local rc
+    case "$action" in
+        plan)
+            thin_python_plan "$project_path"
+            rc=$?
+            ;;
+        apply)
+            thin_python_apply "$project_path" 0
+            rc=$?
+            ;;
+        apply-dry)
+            thin_python_apply "$project_path" 1
+            rc=$?
+            ;;
+        plan-apply|plan-apply-dry)
+            # One plan, then the apply that plan authorizes. A failed plan stops
+            # here rather than applying whatever older plan happens to be on
+            # disk - which is precisely what the resolution fallback would find.
+            thin_python_plan "$project_path"
+            rc=$?
+            if [ "$rc" -eq 0 ]; then
+                # Hand the apply the plan this run just wrote, through the
+                # resolution globals rather than by writing back into
+                # AB_THIN_PLAN. That is the CALLER's option: a phase that
+                # modifies its own input leaves it modified for the next call in
+                # the same shell, where a later "plan Beta.app" would have
+                # overwritten Alpha's reviewed plan. Not reachable from either
+                # front door today, and not a trap worth leaving set.
+                THIN_PLAN_PATH="$AB_THIN_PLAN"
+                if [ -z "$THIN_PLAN_PATH" ]; then
+                    THIN_PLAN_PATH=$(applet_plan_path "$project_path")
+                fi
+                THIN_PLAN_SOURCE="written"
+                if [ "$action" = "plan-apply-dry" ]; then
+                    thin_python_apply "$project_path" 1
+                else
+                    thin_python_apply "$project_path" 0
+                fi
+                rc=$?
+            fi
+            ;;
+    esac
+
+    # 2 is this function's "the user declined" code, and it is also what the
+    # front end's argparse exits with on a usage error - which would be a bug in
+    # the argument assembly above, not anything the user did. Normalizing it
+    # keeps the pane from reporting a canceled run over one that really failed.
+    if [ "$rc" -eq 2 ]; then
+        rc=1
+    fi
+
     return "$rc"
 }

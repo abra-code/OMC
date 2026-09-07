@@ -6,9 +6,9 @@
     "style": "sidebarAdaptable",
     "frame": {
       "minWidth": 860,
-      "minHeight": 500,
+      "minHeight": 620,
       "idealWidth": 980,
-      "idealHeight": 620
+      "idealHeight": 720
     }
   },
   "children": [
