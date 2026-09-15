@@ -431,9 +431,10 @@ appletbuilder preview MyApp.app/Contents/Resources/Base.lproj/MyApp.json \
 ```
 
 Read the PNG back and compare against screenshots of the old dialog, tab by tab.
-Two traps: the render is **transparent/black if the display is asleep or the
-screen is locked** - check for all-zero pixels before trusting it - and a static
-preview cannot show anything the init handler inserts at runtime.
+`preview` renders off screen, so it shows no window and works with the screen
+locked. Two traps remain: a static preview cannot show anything the init handler
+inserts at runtime, and on a locked screen the controls draw in the inactive gray
+tint instead of the accent color - judge layout, not tint.
 
 Then ask the user to launch the app once and click through it.
 

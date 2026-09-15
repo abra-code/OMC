@@ -94,7 +94,7 @@ Usage:
                          [--plan <file>] [--dry-run] [--skip-verify]
                          [--thin arm64|x86_64|none]
   appletbuilder prettify <file.json> [--stdout]
-  appletbuilder preview  <UI.json> [--screenshot <out.png>]
+  appletbuilder preview  <UI.json> [--screenshot <out.png>] [--show-window]
   appletbuilder list-templates
   appletbuilder list-icons
 
@@ -516,10 +516,11 @@ cmd_prettify() {
 # ── Preview ───────────────────────────────────────────────────────────────────
 
 cmd_preview() {
-    local screenshot="" file=""
+    local screenshot="" file="" show_window=0
     while [ $# -gt 0 ]; do
         case "$1" in
-            --screenshot) _need_value "$1" $# "$2" || return 2; screenshot="$2"; shift 2 ;;
+            --screenshot)  _need_value "$1" $# "$2" || return 2; screenshot="$2"; shift 2 ;;
+            --show-window) show_window=1; shift ;;
             -h|--help)    usage; return 2 ;;
             -*) echo "preview: unknown option: $1" >&2; return 2 ;;
             *)  if [ -z "$file" ]; then file="$1"; else echo "preview: unexpected argument: $1" >&2; return 2; fi; shift ;;
@@ -566,8 +567,18 @@ cmd_preview() {
         out="$outdir/preview.png"
     fi
 
-    # ActionUIViewer needs a window-server session; its own logs go to stderr.
-    "$viewer" --screenshot "$out" "$file" >&2
+    # Off screen by default: --hide-window draws the window in-process at an
+    # off-screen origin, so nothing appears over whatever the user is doing, no
+    # Screen Recording permission is involved, and the capture also works while
+    # the screen is locked - the usual state in an agent session. --show-window
+    # asks for the old window-server capture instead, which flashes a real window
+    # and comes back empty on a locked screen.
+    # Either way ActionUIViewer needs a window-server session; its logs go to stderr.
+    if [ "$show_window" -eq 1 ]; then
+        "$viewer" --screenshot "$out" "$file" >&2
+    else
+        "$viewer" --hide-window --screenshot "$out" "$file" >&2
+    fi
     local rc=$?
     if [ $rc -ne 0 ] || [ ! -s "$out" ]; then
         echo "preview: failed to capture screenshot (a logged-in GUI / window-server session is required)" >&2

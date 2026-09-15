@@ -296,6 +296,15 @@ of these bites or when behavior can't be explained from the code.
    `security`), state under `$HOME`, a background worker the handler spawns, or
    a global pasteboard key shared with every other test run. Each of those needs
    an overridable-variable seam in the applet's own lib.
+8. **Look at the window before calling an ActionUI change done.** Neither the
+   verifier nor the test harness sees a clipped label, a title wrapping onto a
+   second line, or a row that squeezes its controls off the edge.
+   `appletbuilder preview <UI.json> --screenshot <out.png>` prints the PNG path;
+   read the image. It renders off screen, so nothing appears on the user's
+   desktop and a locked screen is fine, but it still needs a logged-in GUI
+   session and it cannot show what an init handler fills in at runtime (an
+   unloaded `LoadableView`, table rows). On a locked screen controls carry the
+   inactive gray tint - judge layout, not tint.
 
 
 
@@ -449,7 +458,7 @@ Exit codes: `0` ok · `2` warnings · `1` errors.
 | `test <App.app> [--tests <dir>] [--filter <glob>] [--verbose] [--keep-scratch] [--list]` | Run the applet's `Tests/*.test.sh` against a mock OMC environment: real handlers, stubbed `alert`, a recording `omc_dialog_control` you can assert against. Validates the bundle first. Detail to stderr, `omctest: N passed, M failed, K files` to stdout. See `docs/omctest_guide.md`. |
 | `thin-python plan\|apply\|plan-apply <App.app> [--plan <file>] [--dry-run] [--skip-verify] [--thin arm64\|x86_64\|none]` | Closure-thin the applet's embedded Python. `plan` analyzes the applet on a clone and writes a committable `<App>.thinning-plan.json` beside the bundle, modifying nothing; `apply` removes what the plan names from the real interpreter and verifies, restoring on failure (`--dry-run` previews, on `apply` and `plan-apply`). Without `--plan`: beside the bundle, else the last plan written for that applet (matched on its bundle identifier). An optional `<App>.thinning-keep.txt` force-keep list is picked up automatically. GUI equivalent: the Embedded Python Thinning group in Build & Run (Write Thinning Plan / Apply Plan / Dry Run, then Execute), disabled for an applet that bundles no Python. See `docs/omc_python_scripting_guide.md`. |
 | `prettify <file.json> [--stdout]` | Reformat JSON in place (or to stdout). |
-| `preview <UI.json> [--screenshot <out.png>]` | Render an ActionUI view to a PNG (read it to inspect the layout); a `MainMenu.json` menu-bar doc prints a text summary instead. Needs a GUI session. |
+| `preview <UI.json> [--screenshot <out.png>] [--show-window]` | Render an ActionUI view to a PNG and print its path (read the PNG to inspect the layout); a `MainMenu.json` menu-bar doc prints a text summary instead. Renders off screen by default, so no window appears and a locked screen is fine; `--show-window` asks for the old on-screen capture. Still needs a logged-in GUI session. |
 | `list-templates` / `list-icons` | Names for `--template` / `--icon`. |
 
 Example — create a Python applet, then validate and build it:

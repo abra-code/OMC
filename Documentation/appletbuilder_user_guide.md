@@ -45,7 +45,7 @@ The usual flow is to write and review the plan against your development copy - p
 
 **UI Files** — Table of ActionUI JSON files (`.json` in `Base.lproj/` and `Resources/`). Right panel: text editor. Buttons:
 - **Validate** — runs the Python ActionUI verifier (`Contents/Library/actionui_verifier/validate_actionui.py`)
-- **Preview** — opens in ActionUIViewer
+- **Preview** — opens the view in ActionUIViewer, as a live window you can click through. (The agent CLI's `appletbuilder preview` renders the same view off screen to a PNG instead, so it shows no window and works with the screen locked.)
 - **Prettify** — formats JSON
 - **Save** — writes to disk
 - **Edit** — opens in external editor

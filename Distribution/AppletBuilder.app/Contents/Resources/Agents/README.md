@@ -214,7 +214,7 @@ exits `1` with the parse error on stderr.
 ### preview — render an ActionUI view to an image
 
 ```
-appletbuilder preview <UI.json> [--screenshot <out.png>]
+appletbuilder preview <UI.json> [--screenshot <out.png>] [--show-window]
 ```
 
 - For a normal ActionUI **view**, renders it with `ActionUIViewer` and writes a PNG,
@@ -223,8 +223,17 @@ appletbuilder preview <UI.json> [--screenshot <out.png>]
 - For a **menu-bar** document (`MainMenu.json`, a top-level array — not a view), prints
   a textual menu summary to stdout instead.
 
-**Requires a logged-in GUI / window-server session** (it briefly opens a window to
-capture it). It will report a failure if run headless.
+The view is rendered **off screen** (`ActionUIViewer --hide-window`): no window appears
+over what the user is doing, no Screen Recording permission is involved, and the capture
+works while the screen is locked, which is the usual state in an agent session. Pass
+`--show-window` to capture a real on-screen window through the window server instead -
+only useful for comparing the two rendering paths, and it comes back empty on a locked
+screen.
+
+**Requires a logged-in GUI / window-server session** even when hidden. It will report a
+failure if run headless - over ssh into a machine with nobody logged in, or from a shell
+sandbox that blocks the window-server connection (there the viewer hangs instead of
+printing anything; rerun outside the sandbox).
 
 ### list-templates / list-icons
 
