@@ -237,13 +237,13 @@ For `exe_script_file`, environment variables that are not auto-exported must be 
 
 **Recommendation**: Use bundled `.nib` format for in-place editing.
 
-> **For AI Agents**: Prefer editing existing NIB files rather than creating new ones. Use [WatchdogMonitor.nib](`WatchdogApp/Watchdog.app/Contents/Resources/Base.lproj/WatchdogMonitor.nib/designable.nib`) as a reference. Key patterns:
+> **For AI Agents**: Prefer editing existing NIB files rather than creating new ones. Use [Browser.nib](../AbracodeFramework/TestBundles/Browser.omc/Contents/Resources/Base.lproj/Browser.nib/designable.nib) (an `OMCTextField`, an `OMCButton` and an `OMCTableView`) as a reference. Key patterns:
 >
 > **Adding OMC properties** via `userDefinedRuntimeAttributes`:
 > ```xml
 > <userDefinedRuntimeAttributes>
->     <userDefinedRuntimeAttribute type="string" keyPath="commandID" value="watchdog.ok"/>
->     <userDefinedRuntimeAttribute type="string" keyPath="selectionCommandID" value="watchdog.selection"/>
+>     <userDefinedRuntimeAttribute type="string" keyPath="commandID" value="browser.path.changed"/>
+>     <userDefinedRuntimeAttribute type="string" keyPath="doubleClickCommandID" value="browser.open.selection"/>
 > </userDefinedRuntimeAttributes>
 > ```
 >
@@ -365,7 +365,7 @@ Example: TextField with tag=4 → value available as `$OMC_NIB_DIALOG_CONTROL_4_
 3. Add columns with header cells
 4. Set `tag="1"` directly as attribute on the table view
 
-> **Tip**: Copy from WatchdogMonitor.nib and modify for your needs.
+> **Tip**: Copy from Browser.nib and modify for your needs.
 
 ---
 
@@ -719,7 +719,7 @@ MyApp.app/
 - [Controls Reference](omc_controls_user_defined_runtime_attributes.md)
 
 ### Example Applets
-- [WatchdogApp](https://github.com/abra-code/WatchdogApp) — File system monitoring with custom UI (see `building_watchdog.md` for detailed step-by-step guide)
+- [WatchdogApp](https://github.com/abra-code/WatchdogApp) - File system monitoring in an ActionUI window with Python handlers (OMC 5.3). Its original NIB-era step-by-step guide, `building_watchdog.md`, is kept unmaintained under `Archive/`
 - [FindApp](https://github.com/abra-code/FindApp)
 - [DeltaApp](https://github.com/abra-code/DeltaApp)
 - [XattrApp](https://github.com/abra-code/XattrApp)

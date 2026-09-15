@@ -117,15 +117,15 @@ A `.nib` in these applets is not a single opaque file. It is a bundle directory 
 source and a build product:
 
 ```
-Base.lproj/WatchdogMonitor.nib/
+Base.lproj/<Name>.nib/
     designable.nib          <- Interface Builder XIB, XML, human-readable
     keyedobjects.nib        <- compiled binary, this is what loads at runtime
 ```
 
-Every app-owned nib across the five NIB applets has this shape, and every one carries a
+Every app-owned nib across the four NIB applets has this shape, and every one carries a
 `designable.nib`. No `.xib` file exists anywhere in these projects, so the in-bundle
 `designable.nib` is the source of record. The compiled member is `NIBArchive` in most cases
-(Xattr, Watchdog, Enoch, AIChat) and an Apple binary plist in Delta - do not assume either.
+(Xattr, Enoch, AIChat) and an Apple binary plist in Delta - do not assume either.
 `Xattr.nib` is the only one shipping per-deployment-target variants
 (`keyedobjects-101300.nib` and `keyedobjects-110000.nib`); every other nib ships a single
 `keyedobjects.nib`.
@@ -138,8 +138,9 @@ any confidence.** Three specific traps, none of them visible to a schema check:
    talk to OMC at all - add a stock `NSButton` and it compiles cleanly and is completely inert.
    `Nib-Guide.md` carries the mapping table (`OMCButton`, `OMCTextField`, `OMCComboBox`,
    `OMCPopUpButton`, `OMCTableView`, `OMCBox`, and the rest); menu items are `OMCMenuItem`,
-   documented in `MenuBar-Guide.md` rather than in `Nib-Guide.md`. `WatchdogMonitor.nib`, for
-   instance, is `OMCButton`s, `OMCTextField`s and one `OMCTableView`; the only stock AppKit views
+   documented in `MenuBar-Guide.md` rather than in `Nib-Guide.md`. Watchdog 1.0's
+   `WatchdogMonitor.nib` (tag `v1.0` in WatchdogApp; the current app has no nib), for
+   instance, was `OMCButton`s, `OMCTextField`s and one `OMCTableView`; the only stock AppKit views
    left in it are the static labels and the table's scroll view, which is exactly what
    `Nib-Guide.md` permits - "purely decorational controls do not need to be renamed".
 2. **Two independent couplings, both by hand-maintained identifier.** A `commandID` user-defined
@@ -190,13 +191,13 @@ the rest) really *are* flat, sourceless compiled files - the "opaque binary" des
 accurate for those, and they are framework internals you should not touch regardless. And the
 `AIChat.nib` in AIChat and Enoch is a thin shell around a single `OMCWebKitView` with zero
 tags and zero commandIDs; the UI lives in the JavaScript, not the nib, which makes those two far
-less constrained than Watchdog.
+less constrained than Xattr or Delta.
 
-NIB applets in this collection (reference only, not clone sources): Xattr, Watchdog,
-Delta, Enoch, and AIChat (hybrid: NIB main window + ActionUI dialogs).
+NIB applets in this collection (reference only, not clone sources): Xattr, Delta, Enoch, and
+AIChat (hybrid: NIB main window + ActionUI dialogs).
 
-**Find.app is the worked example of the migration out**, and the reason this list is shorter
-than it used to be. Through 1.x it was the richest NIB applet here - 2.0 is nibless -
+**Find.app and Watchdog.app are the worked examples of the migration out**, and the reason this
+list is shorter than it used to be. Find.app is the larger one. Through 1.x it was the richest NIB applet here - 2.0 is nibless -
 `Find.nib` became `Base.lproj/Find.json`, `MainMenu.nib` collapsed into a `MainMenu.json`
 that overrides nothing but the Open item, and `Command.plist` became `Command.json`.
 `nib_to_actionui_migration.md` is the step-by-step guide, written from this port.
@@ -206,6 +207,17 @@ from `38faa01` ("Port Find from a nib dialog to an ActionUI window") through `61
 not survive the move: the editable `OMCComboBox`, which ActionUI has no equivalent for and which
 Find now emulates (section 5.6); the "Commands" menu, dropped deliberately; and the Page Setup /
 Print / Preferences items, which had nothing wired to them.
+
+Watchdog's port is the smaller one, and the one to read for a **Python** applet and for
+dropping the menu nib entirely. `WatchdogMonitor.nib` became `Base.lproj/Watchdog.json` with the
+nib's tags reused as ActionUI ids, `Command.plist` became `Command.json` requiring OMC 5.3, and
+the shell handlers were rewritten in Python (the shell originals sit unmaintained under
+`Archive/`). `MainMenu.nib` went with no `MainMenu.json` in its place: dropping `NSMainNibFile`
+from `Info.plist` makes the engine build the standard menu bar itself. Read WatchdogApp's
+history from `6fe9216` ("Port Watchdog from a nib dialog to an ActionUI JSON window") through
+`21d9160` ("Widen the window's checkbox column and drop the last nib"). What did not survive:
+multi-row selection (ActionUI's `Table` selects one row, so Copy, File info, Reveal and
+QuickLook act on one row), and the Dock menu, which the nibless path does not replace.
 
 ---
 
@@ -274,6 +286,7 @@ Two payload notes that decide bundle size and signing work:
 | A single-model AI utility (not a chat) | **[InterpreterApp/Interpreter.app](https://github.com/abra-code/InterpreterApp)** | On-device inference behind a task UI, background poller, no chat metaphor |
 | An app-development / meta tool | **[OMC/Distribution/AppletBuilder.app](https://github.com/abra-code/omc)** | The most complex applet: a tabbed editor over many commands and JSON files, embedded verifiers, companion CLI |
 | A form of options that composes a CLI invocation and runs it | **[FindApp/Find.app](https://github.com/abra-code/FindApp)** | Tabbed option form, live command preview, run into an output window. Also the reference for an editable combo box, declarative control defaults, and named configs |
+| A live monitor that streams rows into a table as events arrive | **[WatchdogApp/Watchdog.app](https://github.com/abra-code/WatchdogApp)** | Small all-Python applet: a background watcher process pushes table rows into the window, one window per watched folder, a QuickLook preview window, export through the remote bridge |
 | A one-shot Services menu action, no window | Templates `Empty.applet` | Plus read the `NSServices` block in [FindApp](https://github.com/abra-code/FindApp) or [InterpreterApp](https://github.com/abra-code/InterpreterApp) |
 
 ---
@@ -381,12 +394,12 @@ made - three states, enabled / disabled / untouched, not merely "not enabled" - 
 `50-library` calls `get_command_from_dialog_controls()` directly and feeds its output to
 `/usr/bin/find` to prove the generated text is accepted.
 
-### 5.7 Monitors and one-shot utilities (NIB - reference only)
+### 5.7 Monitors and one-shot utilities
 
-| Applet | Purpose | Manifest / UI | Notes |
-|---|---|---|---|
-| **[WatchdogApp/Watchdog.app](https://github.com/abra-code/WatchdogApp)** | live FSEvents folder monitor | Command.plist / **NIB** | `act_folder`. Pushes rows into a NIB table in real time via `omc_dialog_control` as events arrive - **event-driven, not polled**. Embeds the `watchdog` Python package with a compiled `_watchdog_fsevents` extension in `Contents/Library/Packages`. Read the Python handlers; any structural UI change needs Xcode (section 2). |
-| **[DeltaApp/Delta.app](https://github.com/abra-code/DeltaApp)** | TSV diff report between two directory trees | Command.plist / **NIB** | Bundles the `replay` parallel-execution tool in `Contents/MacOS`. Read for the `replay` fan-out pattern. |
+| Applet | Purpose | Manifest / UI | Complexity | Size | Tests | Notes |
+|---|---|---|---|---|---|---|
+| **[WatchdogApp/Watchdog.app](https://github.com/abra-code/WatchdogApp)** | live FSEvents folder monitor | Command.json / ActionUI | small | large | yes | **The live-monitor reference.** `act_folder` opens one `Watchdog.json` window per folder. `watchmedo` (from the embedded `watchdog` Python package, with its compiled `_watchdog_fsevents` extension in `Contents/Library/Packages`) runs `Scripts/event.sh` per event, which pipes a row into table id 1 with `omc_dialog_control ... omc_table_add_rows_from_stdin` - **event-driven, not polled**. Every other handler is Python, sharing `Scripts/lib_watchdog.py`. The eye button chains to a second window, `Preview.json`, holding one `QuickLook` element; the selected path travels to it on a pasteboard keyed by the parent window's uuid (`$OMC_PARENT_DIALOG_GUID`). `watchdog.export.events.py` reads the whole table back through the OMC 5.3 remote bridge (`import omc`). Nibless: no `NSMainNibFile`, no `MainMenu.json`. Requires OMC 5.3. |
+| **[DeltaApp/Delta.app](https://github.com/abra-code/DeltaApp)** | TSV diff report between two directory trees | Command.plist / **NIB** | small | compact | none | NIB - reference only (section 2). Bundles the `replay` parallel-execution tool in `Contents/MacOS`. Read for the `replay` fan-out pattern. |
 
 ### 5.8 The meta tool
 
@@ -425,7 +438,9 @@ that shares the GUI's shell libraries so both paths behave identically.
 | Batch queue with drag-drop table | Sips | `Scripts/sips.files.drop.sh`, `sips.start.batch.sh` |
 | Progress dialog with working Cancel | Zip | `PROGRESS` + `END_CANCEL_SUBCOMMAND_ID` in `Command.json` |
 | Modal sheet | Zip (password), Notarize (credentials wizard) | `PasswordSheet.json`, `CredentialSheet.json` |
-| QuickLook preview pane | PDFUtil, TextUtil, QuickPDF, DocToDoc | `*QuickLook.json` + `.quicklook.init.sh` |
+| QuickLook preview pane | PDFUtil, TextUtil, QuickPDF, DocToDoc; Watchdog (Python) | `*QuickLook.json` + `.quicklook.init.sh`; Watchdog: `Preview.json` + `watchdog.preview.init.py` |
+| Handing a value to a chained child window | Watchdog, AppletBuilder | pasteboard named after the parent window's uuid, read back via `$OMC_PARENT_DIALOG_GUID` in the child's init handler (`watchdog.quicklook.py` -> `watchdog.preview.init.py`) |
+| Reading live window state from a handler (remote bridge) | Watchdog | `import omc`, `omc.window().get_rows(...)` in `watchdog.export.events.py` - the way to get all rows of an ActionUI table |
 | Tabs with lazy loading | OTool, AppletBuilder | `LoadableView` inside `TabView` |
 | Sidebar + content split | OTool, Cadabra, Sips | `NavigationSplitView` |
 | One window per dropped input | OTool | `act_file_or_folder` + `OPEN_OBJECT_DIALOG` / `ALLOW_MULTIPLE_ITEMS`. Note: `MULTIPLE_OBJECT_SETTINGS` = `proc_separately` appears in **no** shipping applet. The batch converters all use `proc_together`. |
@@ -440,9 +455,9 @@ that shares the GUI's shell libraries so both paths behave identically.
 | Command chaining | almost all | `omc_next_command`, `NEXT_COMMAND_ID` |
 | Per-window state | ICEdit (pasteboard), OTool (scratch dir) | keyed by `$OMC_ACTIONUI_WINDOW_UUID` |
 | Background process + UI polling | Interpreter | `interp.poll.sh`, broker `status.json` |
-| Live table updates from an event source | Watchdog | `omc_dialog_control` driven by FSEvents |
+| Live table updates from an event source | Watchdog | `watchmedo` runs `Scripts/event.sh` per FSEvents event, which calls `omc_dialog_control $OMC_ACTIONUI_WINDOW_UUID 1 omc_table_add_rows_from_stdin` |
 | Parallel fan-out of shell work | Delta, Cadabra | the `replay` binary |
-| Embedded Python, all handlers in `.py` | Zip, ICEdit | `Contents/Library/Python` + `.py` handlers |
+| Embedded Python, all handlers in `.py` | Zip, ICEdit, Watchdog (smallest) | `Contents/Library/Python` + `.py` handlers |
 | Embedded Python packages | Cadabra, Watchdog | `Contents/Library/Packages/` (AppletBuilder is the exception: its libraries sit directly in `Contents/Library/`) |
 | Bundling a third-party CLI | DocToDoc (pandoc), QuickPDF (qpdf) | `Contents/Helpers/` + the `update_*.sh` script |
 | Writing your own helper CLI | PDFUtil (`pdfutil`, Swift), ICEdit (`icedit`, Python; `glyphsvg`, C) | `Contents/Helpers/` |
@@ -476,7 +491,7 @@ that shares the GUI's shell libraries so both paths behave identically.
 | AppletBuilder | yes | JSON | ActionUI | very large | large | `act_folder` | Python, ActionUIViewer, verifiers | via target |
 | Enoch | yes | plist | **NIB** | small | **multi-GB** | launch | llama.cpp, in-bundle GGUF | none |
 | Xattr | yes | plist | **NIB** | small | compact | `act_file_or_folder`, Services | getxattr | none |
-| Watchdog | yes | plist | **NIB** | small | large | `act_folder` | Python, watchdog | none |
+| Watchdog | yes | JSON | ActionUI | small | large | `act_folder` | Python, watchdog | yes |
 | Delta | yes | plist | **NIB** | small | compact | launch | replay | none |
 | Find | yes | JSON | ActionUI | small | compact | `act_always`, Services | - | yes |
 
