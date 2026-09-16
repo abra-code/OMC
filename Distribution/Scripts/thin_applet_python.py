@@ -7,7 +7,9 @@ not is the applet layout:
     Contents/Library/Python     the embedded interpreter that gets thinned
     Contents/Resources/Scripts  the handler scripts - the app's Python entry points
     Contents/Library/Packages   third-party deps on PYTHONPATH, audited but never
-                                thinned automatically
+                                thinned automatically - except the dist-info
+                                folders of older versions pip left behind, which
+                                carry no code and misreport the installed version
 
 The analysis itself lives in the Python-Embedding toolkit, which is deliberately
 app-agnostic: it is told where the distribution, the scripts and the deps are, and knows
@@ -258,7 +260,8 @@ def cmd_plan(args):
     ver = subprocess.run([lay.pybin, "--version"], capture_output=True, text=True)
     print("  Python   : %s  (%s)" % ((ver.stdout or ver.stderr).strip(), lay.python))
     if os.path.isdir(lay.packages):
-        print("  Packages : %s (audited; never removed automatically)" % lay.packages)
+        print("  Packages : %s (audited; only superseded dist-info is removed automatically)"
+              % lay.packages)
     print("  Plan     : %s" % plan_path)
     print()
 
@@ -339,6 +342,10 @@ def cmd_plan(args):
     if orphans:
         print("  packages: %d orphan candidate(s) reported for review "
               "(packages.remove is empty)" % len(orphans))
+    superseded = (plan.get("packages") or {}).get("superseded_metadata", [])
+    if superseded:
+        print("  packages: %d superseded dist-info folder(s) from older versions; "
+              "apply removes them" % len(superseded))
     print("Review/tweak remove.modules, commit it next to the app, then:")
     print("  %s apply \"%s\"" % (os.path.basename(sys.argv[0]), args.app))
     return 0
@@ -361,6 +368,10 @@ def cmd_apply(args):
     # here and removed here; the hook only fills it.
     work = tempfile.mkdtemp(prefix="omcverify")
     cmd = [APPLY, "--python", lay.python, "--plan", plan_path]
+    # This bundle's own Packages, named explicitly: superseded metadata is removed only
+    # from the directory the applier is handed here, never from the plan's packages.dir.
+    if os.path.isdir(lay.packages):
+        cmd += ["--packages", lay.packages]
     if args.dry_run:
         cmd.append("--dry-run")
     if args.skip_verify:
@@ -423,7 +434,10 @@ def main(argv):
                "the app's own shell/config text, backing a console script, of unknown\n"
                "provenance, or an orphan candidate. packages.remove is emitted EMPTY on\n"
                "purpose - an unimported dependency is usually a lazy TLS/auth/timezone path,\n"
-               "not dead weight. Move a name into it by hand, then re-run apply.")
+               "not dead weight. Move a name into it by hand, then re-run apply.\n"
+               "The one automatic Packages removal is superseded metadata: dist-info folders\n"
+               "of older versions that pip --target --upgrade left behind. Set\n"
+               "packages.remove_superseded_metadata to false in the plan to keep them.")
     sub = p.add_subparsers(dest="verb", required=True)
 
     sp = sub.add_parser("plan", help="analyze the applet and write a reviewable plan")

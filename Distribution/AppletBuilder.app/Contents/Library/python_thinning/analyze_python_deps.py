@@ -1348,6 +1348,121 @@ def dist_graph(packages_dir):
     return provides, requires, authoritative
 
 
+_VERSION_RE = re.compile(
+    r"^v?(?P<release>\d+(?:\.\d+)*)"
+    r"(?:[-_.]?(?P<pre_l>a|alpha|b|beta|c|rc|pre|preview)[-_.]?(?P<pre_n>\d*))?"
+    r"(?:(?:-(?P<post_n1>\d+))|(?:[-_.]?(?:post|rev|r)[-_.]?(?P<post_n2>\d*)))?"
+    r"(?:[-_.]?dev[-_.]?(?P<dev_n>\d*))?$")
+
+
+def _version_key(text):
+    """A sort key for a PEP 440 version, or None when the text is not one this can order.
+
+    Local versions (`1.0+abc`) are deliberately unorderable here: PEP 440 gives them no
+    order against each other, and a wrong answer deletes the metadata of the version that
+    is actually installed."""
+    m = _VERSION_RE.match((text or "").strip().lower())
+    if not m:
+        return None
+    release = [int(x) for x in m.group("release").split(".")]
+    while len(release) > 1 and release[-1] == 0:
+        release.pop()
+    inf = float("inf")
+    pre_l = m.group("pre_l")
+    post = m.group("post_n1") or m.group("post_n2")
+    has_post = m.group("post_n1") is not None or m.group("post_n2") is not None
+    dev = m.group("dev_n")
+    has_dev = dev is not None
+    if pre_l:
+        rank = {"a": 0, "alpha": 0, "b": 1, "beta": 1}.get(pre_l, 2)
+        pre = (rank, int(m.group("pre_n") or 0))
+    elif has_dev and not has_post:
+        pre = (-1, 0)          # 1.0.dev1 sorts before 1.0a1
+    else:
+        pre = (inf, 0)
+    return (tuple(release), pre,
+            int(post or 0) if has_post else -1,
+            int(dev or 0) if has_dev else inf)
+
+
+def superseded_dist_infos(packages_dir):
+    """Metadata folders left behind for versions that are no longer installed.
+
+    `pip install --target --upgrade` replaces a package's code but never removes the
+    dist-info of the version it replaced, because the new one has a different folder
+    name. The leftovers are not harmless clutter: `importlib.metadata` returns whichever
+    folder it lists first, so an app that upgraded uvicorn 0.48.0 -> 0.53.0 reports
+    0.48.0, and the old folder's license files ship next to code they do not describe.
+
+    The installed version is the HIGHEST one, but only when the install times agree: an
+    older version whose METADATA is strictly newer means a deliberate downgrade, and then
+    nothing in the group is removed. Equal times are accepted, because a copy without -p
+    or an unpacked archive resets them all. A group whose versions cannot all be ordered,
+    or where two folders claim the same version, is left alone too.
+
+    Returns (superseded, ambiguous): folder names to remove, and one
+    {"dist", "entries", "reason"} per group left alone. Only .dist-info is considered;
+    .egg-info names do not reliably separate the version from a Python tag.
+    """
+    groups = {}
+    if not packages_dir or not os.path.isdir(packages_dir):
+        return [], []
+    for entry in sorted(os.listdir(packages_dir)):
+        if not entry.endswith(".dist-info"):
+            continue
+        name, sep, folder_version = entry[:-len(".dist-info")].rpartition("-")
+        if not sep:
+            continue
+        groups.setdefault(_norm_dist(name), []).append((entry, folder_version))
+
+    superseded, ambiguous = [], []
+    for dist, members in sorted(groups.items()):
+        if len(members) < 2:
+            continue
+        entries = [e for e, _v in members]
+        infos = []
+        for entry, folder_version in members:
+            meta = os.path.join(packages_dir, entry, "METADATA")
+            version = folder_version
+            try:
+                with open(meta, encoding="utf-8", errors="replace") as f:
+                    for line in f:
+                        if line.startswith("Version:"):
+                            version = line.split(":", 1)[1].strip()
+                            break
+                        if not line.strip():
+                            break
+                mtime = os.stat(meta).st_mtime
+            except OSError:
+                mtime = None
+            infos.append((entry, version, _version_key(version), mtime))
+
+        if any(key is None for _e, _v, key, _m in infos):
+            bad = [v for _e, v, key, _m in infos if key is None]
+            ambiguous.append({"dist": dist, "entries": entries,
+                              "reason": "version not orderable: %s" % ", ".join(bad)})
+            continue
+        if any(mtime is None for _e, _v, _k, mtime in infos):
+            ambiguous.append({"dist": dist, "entries": entries,
+                              "reason": "a METADATA file is missing or unreadable"})
+            continue
+        infos.sort(key=lambda i: i[2])
+        live = infos[-1]
+        if infos[-2][2] == live[2]:
+            ambiguous.append({"dist": dist, "entries": entries,
+                              "reason": "two folders claim version %s" % live[1]})
+            continue
+        # One second of slack: HFS+ and some archive formats store whole seconds.
+        newer = [i[0] for i in infos[:-1] if i[3] > live[3] + 1.0]
+        if newer:
+            ambiguous.append({"dist": dist, "entries": entries,
+                              "reason": "%s was installed after %s (a downgrade?)"
+                                        % (", ".join(newer), live[0])})
+            continue
+        superseded.extend(i[0] for i in infos[:-1])
+    return superseded, ambiguous
+
+
 def reachable_dists(packages_dir, app_names):
     """Distributions reachable from the APP's own code, following Requires-Dist edges.
 
@@ -1527,6 +1642,7 @@ def packages_report(packages_dir, reached, mentions=None, unreachable=None):
         entries.append(entry)
 
     orphans = [e["name"] for e in entries if e["verdict"] == "orphan-candidate"]
+    superseded, superseded_ambiguous = superseded_dist_infos(packages_dir)
     out = {
         # Absolute, always. A plan is applied later, from somewhere else, by a tool
         # that backs this directory up and deletes out of it - "./deps" recorded
@@ -1556,7 +1672,20 @@ def packages_report(packages_dir, reached, mentions=None, unreachable=None):
         "orphan_candidates": orphans,
         "entries": entries,
         "remove": [],
+        # The one automatic removal in Packages, and it removes no code: metadata folders
+        # of versions pip replaced but did not clean up. Recomputed at apply time against
+        # the directory the applier is given with --packages, never against `dir` above,
+        # so a plan carried to another bundle cannot delete from the one it came from.
+        # Set to false to keep them.
+        "remove_superseded_metadata": True,
+        "superseded_metadata": superseded,
+        "superseded_metadata_note": (
+            "dist-info folders of older versions that pip --target --upgrade left behind. "
+            "importlib.metadata reads whichever it finds first, so they misreport the "
+            "installed version. Removed on apply when the applier is given --packages."),
     }
+    if superseded_ambiguous:
+        out["superseded_metadata_kept"] = superseded_ambiguous
     if unreachable is not None:
         # A second, independent signal, recorded alongside rather than folded into the
         # verdict. "Nothing the app names leads here through declared dependencies" is the
@@ -1848,7 +1977,7 @@ def main(argv):
                    help="with --plan: re-run the plan's traces under --python; exit non-zero on failure")
     p.add_argument("--print", dest="emit",
                    choices=["report", "removable-names", "removable-paths", "keep-names", "plan",
-                            "packages-remove-paths"],
+                            "packages-remove-paths", "packages-superseded-paths"],
                    default="report")
     args = p.parse_args(argv)
 
@@ -1922,6 +2051,21 @@ def main(argv):
                     print("# packages warn: %s is not present; already removed?" % n,
                           file=sys.stderr)
             print("\n".join(sorted(set(out))))
+            return 0
+        if args.emit == "packages-superseded-paths":
+            # Resolved against --packages ONLY. packages.dir is an absolute path into
+            # whichever bundle the plan was written for, and a plan with an empty
+            # packages.remove is allowed to point elsewhere precisely because nothing is
+            # deleted from there. No --packages means nothing to remove.
+            pkgs = plan.get("packages") or {}
+            if not args.packages or pkgs.get("remove_superseded_metadata", True) is False:
+                return 0
+            superseded, kept = superseded_dist_infos(args.packages)
+            for k in kept:
+                print("# packages warn: kept %s (%s): %s"
+                      % (k["dist"], k["reason"], ", ".join(k["entries"])), file=sys.stderr)
+            root = os.path.abspath(args.packages)
+            print("\n".join(os.path.join(root, e) for e in superseded))
             return 0
         remove_set = set(plan.get("remove", {}).get("modules", []))
         if args.emit == "removable-paths":

@@ -23,7 +23,13 @@
 #
 # USAGE
 #   thin_with_plan.sh --python <PYDIR> --plan <plan.json> [--dry-run] [--skip-verify]
-#                     [--verify-prepare CMD]
+#                     [--verify-prepare CMD] [--packages <DIR>]
+#
+# --packages DIR names the third-party packages directory that belongs to THIS app. It is
+# where superseded metadata is removed from: the dist-info folders of older versions that
+# `pip install --target --upgrade` leaves behind (set packages.remove_superseded_metadata
+# to false in the plan to keep them). It is never inferred from the plan's packages.dir,
+# which may point into the bundle the plan was written for rather than this one.
 #
 # This script knows nothing about how the consuming app is laid out. If a plan's workload
 # is a set of entry-point scripts that must be re-run somewhere staged, supply
@@ -49,10 +55,12 @@ PLAN=""
 VERIFY_PREPARE=""
 DRYRUN=false
 SKIP_VERIFY=false
+PACKAGES_ARG=""
 
 while [ $# -gt 0 ]; do
     case "$1" in
         --python)      PYDIR="$2"; shift 2 ;;
+        --packages)    PACKAGES_ARG="$2"; shift 2 ;;
         --plan)        PLAN="$2"; shift 2 ;;
         --verify-prepare) VERIFY_PREPARE="$2"; shift 2 ;;
         --dry-run)     DRYRUN=true; shift ;;
@@ -261,10 +269,48 @@ if [ -n "$PKGDIR" ]; then
     fi
 fi
 
+# Superseded metadata: dist-info folders of versions pip replaced without removing. The
+# one Packages removal that needs no review, because it takes no code - but it is resolved
+# only against --packages, the directory the caller vouches for, and never against the
+# plan's packages.dir, which a plan carried to a copy still points into the original.
+SUP_PATHS=""
+SUP_COUNT=0
+if [ -n "$PACKAGES_ARG" ]; then
+    if [ ! -d "$PACKAGES_ARG" ]; then
+        echo "Error: --packages is not a directory: $PACKAGES_ARG"
+        exit 1
+    fi
+    PACKAGES_REAL="$(CDPATH= cd -P -- "$PACKAGES_ARG" 2>/dev/null && pwd -P)"
+    if [ -z "$PACKAGES_REAL" ] || [ "$PACKAGES_REAL" = "/" ] || [ "$PACKAGES_REAL" = "//" ]; then
+        echo "Error: could not resolve --packages to a usable directory: $PACKAGES_ARG"
+        exit 1
+    fi
+    SUP_PATHS="$("$PYBIN" "$ANALYZER" --python "$PYDIR" --plan "$PLAN" --packages "$PACKAGES_REAL" --print packages-superseded-paths)"
+    ANALYZER_RC=$?
+    if [ "$ANALYZER_RC" -ne 0 ]; then
+        echo "Error: the analyzer could not list superseded metadata in $PACKAGES_REAL (exit $ANALYZER_RC)"
+        exit 1
+    fi
+    SUP_COUNT=$(printf '%s\n' "$SUP_PATHS" | /usr/bin/grep -c .)
+    if [ "$SUP_COUNT" -gt 0 ]; then
+        # Both removals share one backup, so they must be about one directory.
+        if [ "$PKG_COUNT" -gt 0 ] && [ "$PKGDIR" != "$PACKAGES_REAL" ]; then
+            echo "Error: --packages and the plan's packages.dir name different directories,"
+            echo "       and both have something to remove:"
+            echo "         --packages   : $PACKAGES_REAL"
+            echo "         packages.dir : $PKGDIR"
+            exit 1
+        fi
+        PKGDIR="$PACKAGES_REAL"
+    fi
+fi
+PKG_ALL_COUNT=$(( PKG_COUNT + SUP_COUNT ))
+
 echo "Plan   : $PLAN"
 echo "Python : $("$PYBIN" --version 2>&1)  ($PYDIR)"
 echo "Remove : $REMOVE_COUNT modules"
 [ "$PKG_COUNT" -gt 0 ] && echo "         + $PKG_COUNT entry/entries from Packages (explicitly listed in packages.remove)"
+[ "$SUP_COUNT" -gt 0 ] && echo "         + $SUP_COUNT superseded dist-info folder(s) from Packages (older versions no longer installed)"
 [ ${#DYLIBS[@]} -gt 0 ] && echo "         + ${#DYLIBS[@]} orphaned dylib(s): ${DYLIBS[*]}"
 [ "$INCLUDE_HEADERS" = "1" ] && echo "         + include/ headers"
 [ "$BYTECODE" = "1" ] && echo "         + bytecode (.pyc)"
@@ -322,6 +368,11 @@ if $DRYRUN; then
         # rather than folded into a total that would then describe neither.
         echo "  Packages to remove  : $PKG_COUNT entry/entries, occupying $(fmt_mb "$(paths_kb "$PKG_PATHS")")"
         echo "                        under $PKGDIR"
+    fi
+    if [ "$SUP_COUNT" -gt 0 ]; then
+        echo "  Superseded metadata : $SUP_COUNT dist-info folder(s), occupying $(fmt_mb "$(paths_kb "$SUP_PATHS")")"
+        echo "                        under $PKGDIR"
+        printf '%s\n' "$SUP_PATHS" | /usr/bin/sed 's#^.*/#                          #'
     fi
     # Same shape as the line a real run ends on, so the two can be compared.
     echo "  Estimated result    : $(fmt_mb "$CUR_KB") -> about $(fmt_mb "$LEFT_KB")"
@@ -502,7 +553,7 @@ BEFORE="$(calc_size "$PYDIR")"
 # Packages is a separate tree from the interpreter, so it needs its own backup before
 # anything is taken out of it - restoring $PYDIR would not put it back.
 PKG_BACKUP=""
-if [ "$PKG_COUNT" -gt 0 ] && [ -n "$PKGDIR" ] && [ -d "$PKGDIR" ]; then
+if [ "$PKG_ALL_COUNT" -gt 0 ] && [ -n "$PKGDIR" ] && [ -d "$PKGDIR" ]; then
     # A candidate path, not yet a backup: PKG_BACKUP is what the trap and restore()
     # act on, so it is set after the copy succeeds, not before it starts.
     # A pre-existing backup here is refused up front, before the exit trap is armed, so
@@ -531,6 +582,12 @@ done
 if [ "$PKG_COUNT" -gt 0 ]; then
     echo "Deleting $PKG_COUNT reviewed entry/entries from Packages..."
     printf '%s\n' "$PKG_PATHS" | while IFS= read -r pth; do
+        [ -n "$pth" ] && { echo "  removing $(/usr/bin/basename "$pth")"; /bin/rm -rf "$pth"; }
+    done
+fi
+if [ "$SUP_COUNT" -gt 0 ]; then
+    echo "Deleting $SUP_COUNT superseded dist-info folder(s) from Packages..."
+    printf '%s\n' "$SUP_PATHS" | while IFS= read -r pth; do
         [ -n "$pth" ] && { echo "  removing $(/usr/bin/basename "$pth")"; /bin/rm -rf "$pth"; }
     done
 fi
