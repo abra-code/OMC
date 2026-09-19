@@ -1207,7 +1207,7 @@ GetAllDialogControllers()
 
 						if( kCFCompareEqualTo == CFStringCompare( controlID, CFSTR("omc_window"), 0) )
 						{
-							[self.window setContentSize:newSize];
+							[self setWindowContentSize:newSize];
 						}
 						else
 						{
@@ -1279,6 +1279,13 @@ GetAllDialogControllers()
 	}
 
 	[self.window setFrameOrigin:absolutePosition];
+}
+
+// The size a script asks for is the area the dialog's content lays out in. Subclasses whose
+// content view is larger than that (a full-size content view spans the titlebar) convert here.
+- (void)setWindowContentSize:(NSSize)inContentSize
+{
+	[self.window setContentSize:inContentSize];
 }
 
 

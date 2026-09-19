@@ -69,6 +69,7 @@ class CommandRuntimeData;
 // Shared implementation - parses control dictionary and dispatches to abstract methods
 - (void)setControlValues:(CFDictionaryRef)inControlDict;
 - (void)setWindowTopLeftPosition:(NSPoint)absolutePosition;
+- (void)setWindowContentSize:(NSSize)inContentSize;
 
 - (void)invokeMessages:(CFArrayRef)messages onTarget:(id)target;
 - (void)sendObjCMessage:(CFArrayRef)oneObjCMessage toTarget:(id)messageTarget;

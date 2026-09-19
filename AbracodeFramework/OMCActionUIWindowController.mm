@@ -100,6 +100,15 @@ static NSArray<ActionUIObjCDialogButton *> *OMCParseButtonSpecs(NSArray *specs)
     return buttons;
 }
 
+@interface OMCActionUIWindowController ()
+// The SwiftUI content's size limits, which describe the LAYOUT area (what is left of the
+// content view once the titlebar is subtracted). The window's contentMinSize/contentMaxSize
+// are these plus the titlebar's height - see -omcApplyContentSizeLimits.
+@property (nonatomic) NSSize omcMinLayoutSize;
+@property (nonatomic) NSSize omcMaxLayoutSize;
+@property (nonatomic) BOOL omcHasSizeLimits;
+@end
+
 @implementation OMCActionUIWindowController
 
 // Command.plist SCHEMA SOURCE OF TRUTH — ACTIONUI_WINDOW (JSON_NAME, WINDOW_TYPE enum
@@ -204,8 +213,22 @@ static NSArray<ActionUIObjCDialogButton *> *OMCParseButtonSpecs(NSArray *specs)
         ((maxContentSize.width - minContentSize.width) < 1.0) &&
         ((maxContentSize.height - minContentSize.height) < 1.0);
 
-    // Determine window style and class based on WINDOW_TYPE
-    NSWindowStyleMask styleMask = NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskResizable;
+    // Determine window style and class based on WINDOW_TYPE.
+    //
+    // NSWindowStyleMaskFullSizeContentView is required, not cosmetic. On macOS 27 (the same
+    // layout rendered correctly on 26), AppKit gives each column of SwiftUI's
+    // NavigationSplitView an NSTitlebarBackgroundView (carrying the scroll-edge-effect pocket)
+    // at the top of the split view's own bounds, which is only right while the split view
+    // starts at the top of the window. Without this bit the content view starts below the
+    // titlebar, the split view can never get there, and those bands paint over the detail
+    // column's first ~52 points - the top of the detail pane is hidden behind a strip of glass.
+    // Spanning the full height also puts the window title beside the sidebar, where the system
+    // apps put it. SwiftUI insets the content by the window's safe area either way, so plain
+    // (non-split) dialogs keep their layout. The one visible difference is a root background:
+    // it now shows through the titlebar, the way it does in a SwiftUI WindowGroup window. A
+    // split-view root with padding of its own needs ActionUI's windowRootSafeArea as well, or
+    // the padding keeps it below the titlebar.
+    NSWindowStyleMask styleMask = NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskResizable | NSWindowStyleMaskFullSizeContentView;
     if(isFixedSize)
         styleMask &= ~NSWindowStyleMaskResizable;
     BOOL usePanel = NO;
@@ -254,12 +277,13 @@ static NSArray<ActionUIObjCDialogButton *> *OMCParseButtonSpecs(NSArray *specs)
     [window setReleasedWhenClosed:NO];
     [window setContentView:self.hostingController.view];
 
-    // Constrain user resizing to the content's SwiftUI size limits.
-    if(hasSizeLimits)
-    {
-        window.contentMinSize = minContentSize;
-        window.contentMaxSize = maxContentSize;
-    }
+    // Constrain user resizing to the content's SwiftUI size limits. The content view spans the
+    // titlebar (see the style mask above), so the limits have to include its height.
+    self.omcMinLayoutSize = minContentSize;
+    self.omcMaxLayoutSize = maxContentSize;
+    self.omcHasSizeLimits = hasSizeLimits;
+    self.window = window; // -omcApplyContentSizeLimits reads self.window
+    [self omcApplyContentSizeLimits];
 
     // Autosave name: if a saved frame exists it overrides the fitting size above.
     NSString *autosaveName = [NSString stringWithFormat:@"OMC.%@", dialogJsonName];
@@ -268,8 +292,10 @@ static NSArray<ActionUIObjCDialogButton *> *OMCParseButtonSpecs(NSArray *specs)
     BOOL frameRestored = [window setFrameUsingName:autosaveName];
     if(!frameRestored)
     {
-        // First launch — no saved frame yet, use fitting size and center
-        // view.fitting size contains ideal size for the content view
+        // First launch - no saved frame yet, use fitting size and center.
+        // The hosting view's fittingSize is the content's ideal size PLUS the window's safe
+        // area (the titlebar), so unlike the layout-area sizes below it already spans the
+        // full-size content view and must not have the titlebar height added again.
        NSSize fittingSize = self.hostingController.view.fittingSize;
         if(fittingSize.width > 10 && fittingSize.height > 10)
             [window setContentSize:fittingSize];
@@ -279,7 +305,9 @@ static NSArray<ActionUIObjCDialogButton *> *OMCParseButtonSpecs(NSArray *specs)
     {
         // A frame autosaved before the content became fixed-size may carry a
         // stale size; the content size is authoritative, keep the position.
-        [window setContentSize:minContentSize];
+        NSSize fixedSize = minContentSize;
+        fixedSize.height += [self omcTitlebarHeight];
+        [window setContentSize:fixedSize];
     }
 
     [window setDelegate:self];
@@ -344,9 +372,87 @@ static NSArray<ActionUIObjCDialogButton *> *OMCParseButtonSpecs(NSArray *specs)
         }];
     });
 
+    // SwiftUI installs its NSToolbar the first time the hosting view lays out in a window, and a
+    // toolbar makes the titlebar taller. Re-apply the limits once that has settled, so the
+    // window's minimum still matches what the content needs.
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self omcApplyContentSizeLimits];
+    });
+
     return self;
 }
 
+#pragma mark - Full-size content view geometry
+
+/// The height the titlebar takes out of the content view.
+///
+/// With NSWindowStyleMaskFullSizeContentView the content view spans the whole window, so the
+/// area SwiftUI actually lays out in is the content view minus this. It is not a constant: a
+/// toolbar makes the titlebar taller, and SwiftUI installs its toolbar only once the hosting
+/// view has laid out in a window - hence the layout pass before measuring.
+- (CGFloat)omcTitlebarHeight
+{
+    NSWindow *window = self.window;
+    if(window == nil)
+        return 0.0;
+
+    [window layoutIfNeeded];
+
+    CGFloat titlebarHeight = NSHeight(window.frame) - NSHeight(window.contentLayoutRect);
+    if(titlebarHeight < 0.0)
+        return 0.0;
+
+    return titlebarHeight;
+}
+
+/// Applies the SwiftUI content's size limits to the window, converted from layout-area sizes to
+/// content-view sizes by adding the titlebar's height.
+///
+/// Call it again whenever that height may have changed (the toolbar appearing is the case that
+/// matters); re-applying is cheap and idempotent.
+- (void)omcApplyContentSizeLimits
+{
+    if(!self.omcHasSizeLimits)
+        return;
+
+    NSWindow *window = self.window;
+    if(window == nil)
+        return;
+
+    CGFloat titlebarHeight = [self omcTitlebarHeight];
+
+    NSSize minContentSize = self.omcMinLayoutSize;
+    minContentSize.height += titlebarHeight;
+
+    NSSize maxContentSize = self.omcMaxLayoutSize;
+    // The max is CGFLOAT_MAX (or infinity) for flexible content; leave an unlimited axis alone.
+    if(maxContentSize.height < (CGFLOAT_MAX - titlebarHeight))
+        maxContentSize.height += titlebarHeight;
+
+    window.contentMinSize = minContentSize;
+    window.contentMaxSize = maxContentSize;
+
+    // Raising the minimum does not resize the window, so a window sized before the toolbar
+    // appeared would keep squeezing its content. Grow it to the new minimum.
+    NSSize currentSize = window.contentLayoutRect.size;
+    currentSize.height += titlebarHeight;
+    if((currentSize.height + 0.5) < minContentSize.height || (currentSize.width + 0.5) < minContentSize.width)
+    {
+        NSSize grown = NSMakeSize(MAX(currentSize.width, minContentSize.width),
+                                  MAX(currentSize.height, minContentSize.height));
+        [window setContentSize:grown];
+    }
+}
+
+/// omc_dialog_control's "omc_window omc_resize W H" names the layout area, as it always has; the
+/// content view now also spans the titlebar, so convert like the size limits.
+- (void)setWindowContentSize:(NSSize)inContentSize
+{
+    inContentSize.height += [self omcTitlebarHeight];
+    [self.window setContentSize:inContentSize];
+}
+
+#pragma mark -
 
 - (void)dealloc
 {
