@@ -68,7 +68,7 @@ enum
 
 CFStringRef kBundleIDString = CFSTR("com.abracode.AbracodeFramework");
 
-SInt32 OnMyCommandCM::sMacOSVersion = 101300;
+SInt32 OnMyCommandCM::sMacOSVersion = 140600;
 
 OnMyCommandCM::OnMyCommandCM(CFPropertyListRef inPlistRef)
 	: ACMPlugin( kBundleIDString ) //mBundleRef is pointing to Abracode.framework bundle
