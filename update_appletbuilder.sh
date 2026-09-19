@@ -213,6 +213,18 @@ else
     ACTIONUI_BUILD_ARM64="$ACTIONUI_BUILD/arm64"
     ACTIONUI_BUILD_X86="$ACTIONUI_BUILD/x86_64"
 
+    # SDK stamp. Under Xcode 27 the default SwiftPM engine (Swift Build) runs the link step without
+    # SDKROOT in its environment, and swiftc then records the DEPLOYMENT TARGET as the SDK version
+    # in the binary (LC_BUILD_VERSION says "sdk 14.6"), although the code is compiled against the
+    # current SDK. AppKit picks its design from that stamp, so such a viewer runs in the pre-Liquid
+    # Glass compatibility layout and its previews do not match real applets. The viewer's own
+    # Package.swift states both versions to the linker; this script only checks the result, below.
+    ACTIONUI_SDK_VERSION="$(/usr/bin/xcrun --sdk macosx --show-sdk-version 2>/dev/null)"
+    if [ -z "$ACTIONUI_SDK_VERSION" ]; then
+        echo -e "  ${RED}Cannot determine the macOS SDK version (xcrun --sdk macosx --show-sdk-version)${NC}"
+        build_failed=1
+    fi
+
     # Executable products — built as universal binaries
     actionui_products=(ActionUIViewer)
 
@@ -245,6 +257,27 @@ else
             "$ACTIONUI_BUILD_ARM64/release/$product" \
             "$ACTIONUI_BUILD_X86/release/$product" \
             -output "$universal"
+        rc=$?
+        if [ "$rc" -ne 0 ]; then
+            echo -e "  ${RED}Failed to create the universal $product${NC}"
+            build_failed=1
+            continue
+        fi
+
+        # Guard the stamp: every slice must say the SDK it was built with, or the tool ships
+        # without the current system look (see the SDK stamp note above). A mismatch means the
+        # ActionUI checkout predates the linker setting in Apps/ActionUIViewer/Package.swift, or
+        # that the setting has stopped working.
+        stamped_sdks="$(/usr/bin/xcrun vtool -show-build "$universal" 2>/dev/null | /usr/bin/awk '$1 == "sdk" { print $2 }' | /usr/bin/sort -u | /usr/bin/tr '\n' ' ')"
+        if [ "$stamped_sdks" != "$ACTIONUI_SDK_VERSION " ]; then
+            echo -e "  ${RED}$product is stamped with SDK '${stamped_sdks% }', expected '$ACTIONUI_SDK_VERSION'${NC}"
+            echo "  Check with: xcrun vtool -show-build \"$universal\""
+            echo "  The stamp comes from the linker setting in $ACTIONUI_VIEWER_PKG/Package.swift."
+            echo "  SwiftPM relinks only when an input or the command line changed. To force it, delete"
+            echo "  \"$ACTIONUI_BUILD\" and run this script again."
+            build_failed=1
+            continue
+        fi
 
         dst="$DEST_HELPERS/$product"
         if files_match "$universal" "$dst"; then
