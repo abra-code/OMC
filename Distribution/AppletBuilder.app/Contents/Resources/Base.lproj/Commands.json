@@ -41,6 +41,7 @@
                 "imageScale": "large",
                 "buttonStyle": "plain",
                 "actionID": "AppletBuilder.commands.add",
+                "help": "Add a command",
                 "frame": { "width": 32, "height": 28 }
               }
             },
@@ -52,6 +53,7 @@
                 "imageScale": "large",
                 "buttonStyle": "plain",
                 "actionID": "AppletBuilder.commands.remove",
+                "help": "Remove the selected command",
                 "disabled": true,
                 "frame": { "width": 32, "height": 28 }
               }
@@ -64,6 +66,7 @@
                 "imageScale": "medium",
                 "buttonStyle": "plain",
                 "actionID": "AppletBuilder.commands.loaded",
+                "help": "Reload the command list from disk",
                 "frame": { "width": 32, "height": 28 }
               }
             },
@@ -82,6 +85,7 @@
                 "imageScale": "medium",
                 "buttonStyle": "plain",
                 "actionID": "AppletBuilder.commands.reveal",
+                "help": "Show the command file in Finder",
                 "disabled": true,
                 "frame": { "width": 32, "height": 28 }
               }
@@ -166,7 +170,8 @@
               "properties": {
                 "systemImage": "questionmark.circle",
                 "buttonStyle": "plain",
-                "actionID": "AppletBuilder.help.show.commands"
+                "actionID": "AppletBuilder.help.show.commands",
+                "help": "Open the command reference"
               }
             }
           ]

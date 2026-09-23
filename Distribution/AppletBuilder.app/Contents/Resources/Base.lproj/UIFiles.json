@@ -41,6 +41,7 @@
                 "imageScale": "large",
                 "buttonStyle": "plain",
                 "actionID": "AppletBuilder.uifiles.add",
+                "help": "Add a UI file",
                 "frame": { "width": 32, "height": 28 }
               }
             },
@@ -52,6 +53,7 @@
                 "imageScale": "large",
                 "buttonStyle": "plain",
                 "actionID": "AppletBuilder.uifiles.remove",
+                "help": "Delete the selected UI file",
                 "disabled": true,
                 "frame": { "width": 32, "height": 28 }
               }
@@ -64,6 +66,7 @@
                 "imageScale": "medium",
                 "buttonStyle": "plain",
                 "actionID": "AppletBuilder.uifiles.loaded",
+                "help": "Reload the UI file list from disk",
                 "frame": { "width": 32, "height": 28 }
               }
             },
@@ -82,6 +85,7 @@
                 "imageScale": "medium",
                 "buttonStyle": "plain",
                 "actionID": "AppletBuilder.uifiles.reveal",
+                "help": "Show the selected UI file in Finder",
                 "disabled": true,
                 "frame": { "width": 32, "height": 28 }
               }
@@ -203,7 +207,8 @@
               "properties": {
                 "systemImage": "questionmark.circle",
                 "buttonStyle": "plain",
-                "actionID": "AppletBuilder.help.show"
+                "actionID": "AppletBuilder.help.show",
+                "help": "Open the guide for the selected UI file type"
               }
             }
           ]

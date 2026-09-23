@@ -205,6 +205,7 @@
                 "systemImage": "questionmark.circle",
                 "buttonStyle": "plain",
                 "actionID": "AppletBuilder.help.show.services",
+                "help": "Open the Services reference",
                 "padding": { "trailing": 16 }
               }
             }
@@ -260,6 +261,7 @@
                     "imageScale": "large",
                     "buttonStyle": "plain",
                     "actionID": "AppletBuilder.services.add",
+                    "help": "Add a Services menu item",
                     "frame": { "width": 32, "height": 28 }
                   }
                 },
@@ -272,6 +274,7 @@
                     "buttonStyle": "plain",
                     "disabled": true,
                     "actionID": "AppletBuilder.services.remove",
+                    "help": "Remove the selected Services menu item",
                     "frame": { "width": 32, "height": 28 }
                   }
                 },

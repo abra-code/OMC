@@ -26,7 +26,8 @@
             "buttonStyle": "bordered",
             "controlSize": "small",
             "disabled": true,
-            "actionID": "AppletBuilder.help.back"
+            "actionID": "AppletBuilder.help.back",
+            "help": "Back"
           }
         },
         {
@@ -37,7 +38,8 @@
             "buttonStyle": "bordered",
             "controlSize": "small",
             "disabled": true,
-            "actionID": "AppletBuilder.help.forward"
+            "actionID": "AppletBuilder.help.forward",
+            "help": "Forward"
           }
         },
         {
