@@ -49,8 +49,9 @@ fi
 source "$LIB/lib.create.sh"
 
 # $python3 is set by lib.common.sh to AppletBuilder's embedded interpreter. It has
-# to be there: prettify, preview and both verifiers are Python, so without it
-# this CLI cannot do its job.
+# to be there: prettify, preview, the command verifier and the ActionUI verifier's
+# fallback are Python (the preferred ActionUI verifier is the Swift actionui-verify
+# in Contents/Helpers), so without it this CLI cannot do its job.
 #
 # Deliberately NOT falling back to /usr/bin/python3. macOS does not guarantee a
 # system python3 - it ships only with the Xcode command line tools, and Apple has

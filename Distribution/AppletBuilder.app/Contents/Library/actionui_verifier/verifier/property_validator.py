@@ -93,7 +93,9 @@ def validate_property(key: str, value, prop_spec: dict, path: str) -> list[Valid
                         f"missing required '{disc_key}' field"
                     ))
                     continue
-                if item_type not in schemas:
+                # A list or object discriminator is unhashable; report it as an
+                # unknown type rather than letting the lookup raise TypeError.
+                if not isinstance(item_type, str) or item_type not in schemas:
                     known = sorted(schemas.keys())
                     issues.append(ValidationIssue(
                         "warning", f"{item_path}.{disc_key}",

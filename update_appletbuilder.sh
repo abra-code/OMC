@@ -6,6 +6,8 @@
 #   1. ActionUIViewer — built from the Apps/ActionUIViewer aggregator package (links core + add-ons);
 #      that one SPM build also produces the core and add-on documentation bundles + the Python verifier
 #      schemas are copied from source (core + each Add-ons/*/Schemas)
+#   1b. actionui-verify — the Swift ActionUI verifier (ActionUI's Apps/ActionUIVerifier), universal,
+#      into Contents/Helpers; AppletBuilder prefers it over the Python verifier, which stays as fallback
 #   2. mistune (markdown-to-HTML converter)
 #   2b. Python thinning toolkit - thin_applet_python.py from this repo plus the three
 #      Python-Embedding tools it drives, vendored into Contents/Library/python_thinning
@@ -295,6 +297,78 @@ else
             updated=1
         fi
     done
+
+    # actionui-verify - the Swift ActionUI document verifier, from ActionUI's Apps/ActionUIVerifier.
+    # It is a package of its own, so it builds apart from the viewer, into its own scratch paths.
+    # Only the binary is installed: AppletBuilder runs it with --schemas pointing at the Python
+    # verifier's schemas/ (copied below), so both verifiers read one copy, and the tool's resource
+    # bundle - a second copy of the same schemas - is left out. There is no SDK stamp check: a
+    # command-line tool has no AppKit look to pick.
+    ACTIONUI_VERIFY_PKG="$ACTIONUI_ROOT/Apps/ActionUIVerifier"
+    ACTIONUI_VERIFY_BUILD_ARM64="$ACTIONUI_BUILD/verifier-arm64"
+    ACTIONUI_VERIFY_BUILD_X86="$ACTIONUI_BUILD/verifier-x86_64"
+    verify_product="actionui-verify"
+    verify_ok=1
+    if [ ! -d "$ACTIONUI_VERIFY_PKG" ]; then
+        echo -e "  ${RED}ActionUI verifier package not found at: $ACTIONUI_VERIFY_PKG${NC}"
+        build_failed=1
+        verify_ok=0
+    fi
+
+    if [ "$verify_ok" -eq 1 ]; then
+        echo "  Building $verify_product (universal)..."
+        /usr/bin/xcrun swift build --package-path "$ACTIONUI_VERIFY_PKG" --scratch-path "$ACTIONUI_VERIFY_BUILD_ARM64" \
+            --product "$verify_product" --configuration release --arch arm64 2>/dev/null
+        rc=$?
+        if [ "$rc" -ne 0 ]; then
+            echo -e "  ${RED}Failed to build $verify_product (arm64)${NC}"
+            build_failed=1
+            verify_ok=0
+        fi
+    fi
+
+    if [ "$verify_ok" -eq 1 ]; then
+        /usr/bin/xcrun swift build --package-path "$ACTIONUI_VERIFY_PKG" --scratch-path "$ACTIONUI_VERIFY_BUILD_X86" \
+            --product "$verify_product" --configuration release --arch x86_64 2>/dev/null
+        rc=$?
+        if [ "$rc" -ne 0 ]; then
+            echo -e "  ${RED}Failed to build $verify_product (x86_64)${NC}"
+            build_failed=1
+            verify_ok=0
+        fi
+    fi
+
+    if [ "$verify_ok" -eq 1 ]; then
+        verify_universal="$ACTIONUI_BUILD/$verify_product"
+        /usr/bin/lipo -create \
+            "$ACTIONUI_VERIFY_BUILD_ARM64/release/$verify_product" \
+            "$ACTIONUI_VERIFY_BUILD_X86/release/$verify_product" \
+            -output "$verify_universal"
+        rc=$?
+        if [ "$rc" -ne 0 ]; then
+            echo -e "  ${RED}Failed to create the universal $verify_product${NC}"
+            build_failed=1
+            verify_ok=0
+        fi
+    fi
+
+    if [ "$verify_ok" -eq 1 ]; then
+        verify_dst="$DEST_HELPERS/$verify_product"
+        if files_match "$verify_universal" "$verify_dst"; then
+            echo -e "  ${GREEN}$verify_product up to date${NC}"
+        else
+            /bin/mkdir -p "$DEST_HELPERS"
+            /bin/cp "$verify_universal" "$verify_dst"
+            cp_rc=$?
+            if [ "$cp_rc" -ne 0 ]; then
+                echo -e "  ${RED}Failed to copy $verify_product to: $verify_dst${NC}"
+                build_failed=1
+            else
+                echo -e "  ${GREEN}Updated: $verify_product${NC}"
+                updated=1
+            fi
+        fi
+    fi
 
     # Documentation bundles — no separate build needed. The ActionUIViewer aggregator package depends
     # on every documentation product (core + each add-on), so the arm64 viewer build above already

@@ -67,3 +67,30 @@ def platform_matches(token: str, platform: str) -> bool:
 def platforms_include(annotation: list[str], platform: str) -> bool:
     """True if any entry in a schema `platforms` list applies to `platform`."""
     return any(platform_matches(entry, platform) for entry in annotation)
+
+
+def select_variant(variants: list, platform: str):
+    """Pick the variant that survives the runtime filter on `platform`.
+
+    `variants` is a list of `(suffix_or_None, value)` pairs for one base key.
+    Mirrors `PlatformFilter.filterObject` in ActionUI/Common/PlatformFilter.swift:
+    an exact platform suffix outranks an umbrella suffix (`apple` for `macos`),
+    which outranks the unsuffixed key; variants for other platforms and unknown
+    suffixes are dropped. Returns the winning pair, or None when nothing applies.
+    Key order does not matter: a platform matches at most one suffix per rank.
+    """
+    best = None
+    best_rank = -1
+    for suffix, value in variants:
+        if suffix is None:
+            rank = 0
+        elif suffix == platform:
+            rank = 2
+        elif platform_matches(suffix, platform):
+            rank = 1
+        else:
+            continue
+        if rank > best_rank:
+            best = (suffix, value)
+            best_rank = rank
+    return best

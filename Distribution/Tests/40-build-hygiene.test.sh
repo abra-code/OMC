@@ -240,7 +240,12 @@ check "the command verifier really ran" "1" \
     "$(printf '%s\n' "$cmd_out" | /usr/bin/grep -c 'All files valid')"
 check "and importing it left nothing in the bundle" "0" "$(ab_pyc_dirs)"
 
+# The Python ActionUI verifier is the fallback now - the Swift actionui-verify is
+# preferred and writes no bytecode - so the seam points at no tool to make sure
+# it is the Python one that runs here.
 ui_out="$( unset PYTHONPYCACHEPREFIX
+           AB_ACTIONUI_VERIFY_TOOL="$OMCTEST_WORK/no-such-actionui-verify"
+           export AB_ACTIONUI_VERIFY_TOOL
            ab_call_out lib.validate.sh ACTIONUI_VALIDATE_OUTPUT validate_actionui_file \
                "$OMC_APP_BUNDLE_PATH/Contents/Resources/Base.lproj/Settings.json" )"
 check "the ActionUI verifier really ran" "1" \

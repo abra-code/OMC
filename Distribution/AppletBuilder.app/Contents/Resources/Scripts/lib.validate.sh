@@ -168,13 +168,37 @@ validate_command_file() {
     return $?
 }
 
-# Validate one ActionUI JSON file with the bundled verifier.
+# The two ActionUI verifiers AppletBuilder ships. actionui-verify is the Swift one (ActionUI's
+# Apps/ActionUIVerifier): it needs no Python and is preferred. It gets --schemas pointing at the
+# Python verifier's schemas/, so both read the one copy of the element schemas (add-ons in its
+# add-ons/). Both apply the same rules and print the same lines with the same exit codes; ActionUI
+# checks that with a parity script. The Python verifier stays as the fallback for a bundle that
+# lacks the tool. Overridable, so a test can force either route.
+actionui_verify_tool="${AB_ACTIONUI_VERIFY_TOOL:-${OMC_APP_BUNDLE_PATH}/Contents/Helpers/actionui-verify}"
+actionui_verifier_dir="${OMC_APP_BUNDLE_PATH}/Contents/Library/actionui_verifier"
+
+# 0 when either ActionUI verifier can run.
+actionui_verifier_available() {
+    if [ -x "$actionui_verify_tool" ] && [ -d "$actionui_verifier_dir/schemas" ]; then
+        return 0
+    fi
+    if [ -f "$actionui_verifier_dir/validate_actionui.py" ] && [ -x "$python3" ]; then
+        return 0
+    fi
+    return 1
+}
+
+# Validate one ActionUI JSON file with the bundled verifier (the Swift one when present).
 # Sets ACTIONUI_VALIDATE_OUTPUT. Returns: 0 valid, 2 warnings, 1 errors, 99 no verifier.
 ACTIONUI_VALIDATE_OUTPUT=""
 validate_actionui_file() {
     local file="$1"
     ACTIONUI_VALIDATE_OUTPUT=""
-    local verifier="${OMC_APP_BUNDLE_PATH}/Contents/Library/actionui_verifier/validate_actionui.py"
+    if [ -x "$actionui_verify_tool" ] && [ -d "$actionui_verifier_dir/schemas" ]; then
+        ACTIONUI_VALIDATE_OUTPUT=$("$actionui_verify_tool" --schemas "$actionui_verifier_dir/schemas" "$file" 2>&1)
+        return $?
+    fi
+    local verifier="$actionui_verifier_dir/validate_actionui.py"
     if [ ! -f "$verifier" ] || [ ! -x "$python3" ]; then
         ACTIONUI_VALIDATE_OUTPUT="Verifier not found"
         return 99

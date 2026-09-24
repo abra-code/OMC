@@ -137,6 +137,50 @@ printf '{"elements":[{"type":"NoSuchElementType","id":9}]}' > "$nonsense"
 check "an unknown element type is not called valid" "0" \
     "$(_rc=$(ab_call_rc $VALIDATE validate_actionui_file "$nonsense"); [ "$_rc" = "0" ] && echo 1 || echo 0)"
 
+section "8b. the Swift verifier is preferred, the Python one is the fallback"
+# Two verifiers ship: actionui-verify (Swift, Contents/Helpers) and the Python one
+# (Contents/Library/actionui_verifier). Section 8 above ran whichever is preferred.
+# This section pins which one that is, what it is given, and that the fallback
+# still gives the same answers. AB_ACTIONUI_VERIFY_TOOL is the seam; every use is
+# inside $(...), so the override cannot outlive its check.
+
+check "the Swift verifier is bundled" "yes" \
+    "$([ -x "$OMC_APP_BUNDLE_PATH/Contents/Helpers/actionui-verify" ] && echo yes || echo no)"
+
+# A stand-in that records its arguments, to see what validate_actionui_file runs.
+verify_stub="$OMCTEST_WORK/actionui-verify-stub"
+verify_args="$OMCTEST_WORK/actionui-verify-args"
+printf '#!/bin/sh\nprintf "%%s\\n" "$@" > "%s"\necho "[OK] stub"\n' "$verify_args" > "$verify_stub"
+/bin/chmod 755 "$verify_stub"
+window_json="$project/Contents/Resources/Base.lproj/Window.json"
+check "the tool is what runs when it is there" "[OK] stub" \
+    "$(AB_ACTIONUI_VERIFY_TOOL="$verify_stub" ab_call_out $VALIDATE ACTIONUI_VALIDATE_OUTPUT validate_actionui_file "$window_json")"
+check "it reads the schemas the Python verifier ships" \
+    "--schemas
+$OMC_APP_BUNDLE_PATH/Contents/Library/actionui_verifier/schemas
+$window_json" \
+    "$(/bin/cat "$verify_args" 2>/dev/null)"
+
+# The fallback, forced by pointing the seam at nothing.
+no_tool="$OMCTEST_WORK/no-such-actionui-verify"
+check "without the tool, the Python verifier passes the template's window" "0" \
+    "$(AB_ACTIONUI_VERIFY_TOOL="$no_tool" ab_call_rc $VALIDATE validate_actionui_file "$window_json")"
+check "and still rejects an unknown element type" "0" \
+    "$(_rc=$(AB_ACTIONUI_VERIFY_TOOL="$no_tool" ab_call_rc $VALIDATE validate_actionui_file "$nonsense"); [ "$_rc" = "0" ] && echo 1 || echo 0)"
+
+# Same lines from both, on a document with errors and warnings in it - the
+# property that makes the swap invisible to everything that reads the report.
+mixed="$OMCTEST_WORK/Mixed.json"
+printf '{"type":"VStack","children":[{"type":"Text","id":1,"properties":{"txt":"typo"}},{"type":"Text","id":1},{"type":"Nope"}]}' > "$mixed"
+swift_report="$(ab_call_out $VALIDATE ACTIONUI_VALIDATE_OUTPUT validate_actionui_file "$mixed" | /usr/bin/sort)"
+python_report="$(AB_ACTIONUI_VERIFY_TOOL="$no_tool" ab_call_out $VALIDATE ACTIONUI_VALIDATE_OUTPUT validate_actionui_file "$mixed" | /usr/bin/sort)"
+check "the mixed document has something to compare" "yes" \
+    "$(printf '%s\n' "$swift_report" | /usr/bin/grep -q 'duplicate' && printf '%s\n' "$swift_report" | /usr/bin/grep -q 'possible typo' && echo yes || echo no)"
+check "and both verifiers report it line for line" "$python_report" "$swift_report"
+check "with the same exit code" \
+    "$(AB_ACTIONUI_VERIFY_TOOL="$no_tool" ab_call_rc $VALIDATE validate_actionui_file "$mixed")" \
+    "$(ab_call_rc $VALIDATE validate_actionui_file "$mixed")"
+
 section "9. which manifest a project uses, decided the way OMC decides it"
 # OMC reads Command.json when both exist. A resolver that disagreed would let the
 # editor save into the file the engine ignores.

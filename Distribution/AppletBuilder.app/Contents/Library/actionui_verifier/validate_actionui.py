@@ -20,9 +20,13 @@ add-on libraries (e.g. ActionUIQuickLook/Schemas), so documents using an add-on'
 element type validate without that type being baked into the core schemas. The
 built-in schemas take precedence on a name collision. The option is repeatable.
 
+The core element schemas are read from schemas/ next to this script in a packaged
+copy (Skill dist, AppletBuilder.app), or from ../../ActionUIVerifier/Schemas/ when
+running in-place inside the ActionUI repo (the Swift verifier reads the same files).
+
 Add-on schemas are also auto-discovered (no --schema-dir needed) from:
-  - schemas/add-ons/<AddOn>/   next to this script (populated when the verifier is
-                               packaged into a Skill dist or AppletBuilder.app), and
+  - add-ons/<AddOn>/ in the core schemas directory (populated when the verifier is
+                     packaged into a Skill dist or AppletBuilder.app), and
   - ../../Add-ons/<AddOn>/Schemas/   when running in-place inside the ActionUI repo.
 Explicit --schema-dir directories take precedence over auto-discovered ones.
 
@@ -44,12 +48,31 @@ def _strip_jsonc(text: str) -> str:
     """Strip trailing commas before } or ] — matches Foundation JSON parser leniency."""
     return re.sub(r',(\s*[}\]])', r'\1', text)
 
-# Resolve schemas directory relative to this script
-_SCRIPT_DIR = Path(__file__).parent
-_SCHEMAS_DIR = _SCRIPT_DIR / "schemas"
+# Resolved, so a symlink to this folder (Skill/scripts -> ../Tools/verifier) still finds the
+# repository around the real script.
+_SCRIPT_DIR = Path(__file__).resolve().parent
 
 sys.path.insert(0, str(_SCRIPT_DIR))
 from verifier import SchemaLoader, ElementValidator, ValidationIssue, ALL_PLATFORMS
+
+
+def find_schemas_dir(script_dir: Path) -> Path:
+    """The core element schemas, in the verifier's two homes:
+      1. <script_dir>/schemas/          - a packaged copy (Skill dist, AppletBuilder.app),
+         where the packaging step places the schemas next to the script;
+      2. <repo>/ActionUIVerifier/Schemas/ - in-place inside the ActionUI repo (script at
+         <repo>/Tools/verifier), where the Swift verifier bundles the same files.
+    A packaged copy is recognized by its View.json, not by the folder alone: a checkout
+    from before the schemas moved can keep an old Tools/verifier/schemas/ that holds only
+    untracked files (git leaves such a folder behind, e.g. with a .DS_Store in it).
+    """
+    packaged = script_dir / "schemas"
+    if (packaged / "View.json").is_file():
+        return packaged
+    return script_dir.parent.parent / "ActionUIVerifier" / "Schemas"
+
+
+_SCHEMAS_DIR = find_schemas_dir(_SCRIPT_DIR)
 
 
 def discover_addon_schema_dirs(script_dir: Path) -> list[Path]:
@@ -57,9 +80,10 @@ def discover_addon_schema_dirs(script_dir: Path) -> list[Path]:
     (e.g. ActionUIQuickLook's "QuickLook") validate without an explicit --schema-dir.
 
     Two optional sources, covering the verifier's two homes:
-      1. <script_dir>/schemas/add-ons/<AddOn>/  - the reserved directory next to the
-         core schemas, populated when the verifier is copied into a Skill dist or
-         AppletBuilder.app (the copy is otherwise self-contained, with no repo around it).
+      1. <core schemas>/add-ons/<AddOn>/  - the reserved directory in the core schemas
+         directory (see find_schemas_dir), populated when the verifier is copied into a
+         Skill dist or AppletBuilder.app (the copy is otherwise self-contained, with no
+         repo around it).
       2. <repo>/Add-ons/<AddOn>/Schemas/        - the add-on sources, for running the
          verifier in-place inside the ActionUI repo (script at <repo>/Tools/verifier).
 
@@ -68,7 +92,7 @@ def discover_addon_schema_dirs(script_dir: Path) -> list[Path]:
     """
     dirs: list[Path] = []
 
-    reserved = script_dir / "schemas" / "add-ons"
+    reserved = find_schemas_dir(script_dir) / "add-ons"
     if reserved.is_dir():
         dirs += [sub for sub in sorted(reserved.iterdir()) if sub.is_dir()]
         dirs.append(reserved)  # also allow schemas placed directly in add-ons/
@@ -228,7 +252,8 @@ def main():
     if not _SCHEMAS_DIR.exists():
         print(
             f"[ERROR] Schemas directory not found: {_SCHEMAS_DIR}\n"
-            "Ensure 'schemas/' is present next to this script.",
+            "Ensure 'schemas/' is present next to this script, or run it inside the "
+            "ActionUI repository (ActionUIVerifier/Schemas).",
             file=sys.stderr,
         )
         sys.exit(1)

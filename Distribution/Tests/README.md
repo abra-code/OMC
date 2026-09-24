@@ -25,6 +25,7 @@ cannot reach cfprefsd - see section 4 - which skips two sections and says so).
 | 14 window documents | `Resources/Base.lproj/*.json` | ActionUI windows, sheets and the menu bar |
 | 5 applet templates | `Resources/Templates/*.applet` | what "New Applet" copies from |
 | 2 verifiers | `Contents/Library/{command,actionui}_verifier/` | Python schema validators |
+| ActionUI verifier (Swift) | `Contents/Helpers/actionui-verify` | preferred over the Python ActionUI verifier, which is the fallback; reads its `schemas/` |
 | agent CLI | `Resources/Agents/appletbuilder` | `create`/`validate`/`build`/`test`/`prettify`/`preview` |
 | the harness | `Resources/Agents/omctest.sh` | shipped here, used by every OMC applet |
 

@@ -12,6 +12,7 @@ from .platform_filter import (
     format_suffix_label,
     platform_matches,
     platforms_include,
+    select_variant,
 )
 
 
@@ -76,13 +77,31 @@ class ElementValidator:
         expanded, suffix_warnings = _expand_suffixed_keys(node, path)
         issues += suffix_warnings
 
+        # In deployment mode, resolve the node's keys as the runtime filter does:
+        # only the winning variant of `type`, `id`, `properties` and each subview
+        # key survives on the target platform, so only that variant is checked.
+        # (Variants of keys inside `properties` are handled in _validate_properties.)
+        had_type = "type" in expanded
+        if self._target_platform is not None:
+            selected: dict[str, list[tuple[str | None, object]]] = {}
+            for base, variants in expanded.items():
+                winner = select_variant(variants, self._target_platform)
+                if winner is not None:
+                    selected[base] = [winner]
+            expanded = selected
+
         # ── type ──────────────────────────────────────────────────────────────
         # `type` may appear unsuffixed or as `type:<platform>`. Each variant
-        # must be a known element type. For schema selection, prefer the
-        # unsuffixed variant, then any other valid one.
+        # must be a known element type.
         type_variants = expanded.get("type", [])
         if not type_variants:
-            issues.append(ValidationIssue("error", path, "missing or invalid 'type' field"))
+            if had_type:
+                issues.append(ValidationIssue(
+                    "error", path,
+                    f"no 'type' variant applies to target platform '{self._target_platform}'"
+                ))
+            else:
+                issues.append(ValidationIssue("error", path, "missing or invalid 'type' field"))
             return issues
 
         # suffix -> validated type name (only types that exist as schemas)
@@ -102,13 +121,21 @@ class ElementValidator:
                 continue
             type_by_suffix[suffix] = value
 
-        primary_type = type_by_suffix.get(None)
-        if primary_type is None and type_by_suffix:
-            primary_type = next(iter(type_by_suffix.values()))
-
-        if primary_type is None:
+        variant_types = sorted(set(type_by_suffix.values()))
+        if not variant_types:
             # No variant resolved to a known type — can't validate further.
             return issues
+
+        # The primary type pairs with the unsuffixed `properties` block. It is
+        # the unsuffixed `type`, or the only type left (always the case in
+        # deployment mode). An element whose platform variants name different
+        # types and that has no unsuffixed `type` has no primary type: its
+        # unsuffixed `properties` apply under every variant, so they are
+        # checked against all of them, whatever the key order in the file.
+        primary_type = type_by_suffix.get(None)
+        if primary_type is None and len(variant_types) == 1:
+            primary_type = variant_types[0]
+        type_label = primary_type or " or ".join(variant_types)
 
         # ── id ────────────────────────────────────────────────────────────────
         # id is always optional. When present it must be a positive non-zero
@@ -148,14 +175,12 @@ class ElementValidator:
         # Collect schemas for every type variant so topLevelKeys / subviewKeys
         # accept keys that are valid under any platform's chosen type.
         type_schemas: list[dict] = []
-        seen_type_names: set[str] = set()
-        for t in type_by_suffix.values():
-            if t in seen_type_names:
-                continue
-            seen_type_names.add(t)
+        for t in variant_types:
             s = self._loader.element_schema(t)
             if s:
                 type_schemas.append(s)
+        if not type_schemas:
+            return issues
 
         # ── top-level keys ────────────────────────────────────────────────────
         allowed_top = set(_STRUCTURAL_KEYS) | set(_UNIVERSAL_SUBVIEW_KEYS)
@@ -166,42 +191,77 @@ class ElementValidator:
             if base not in allowed_top:
                 issues.append(ValidationIssue(
                     "warning", path,
-                    f"unexpected top-level key '{base}' for {primary_type}"
+                    f"unexpected top-level key '{base}' for {type_label}"
                 ))
-
-        primary_schema = self._loader.element_schema(primary_type)
-        if primary_schema is None:
-            return issues
 
         # ── properties ────────────────────────────────────────────────────────
         # Each `properties:X` variant pairs with the matching `type:X` schema.
-        # `properties` (unsuffixed) pairs with `type` (unsuffixed) when present,
-        # otherwise the primary type's schema.
+        # Any other `properties` block pairs with the primary type, or with
+        # every type variant when there is no primary type.
         for suffix, props in expanded.get("properties", []):
             label_path = f"{path}{sep}{format_suffix_label('properties', suffix)}"
             if not isinstance(props, dict):
                 issues.append(ValidationIssue("error", label_path, "must be an object"))
                 continue
             paired_type = type_by_suffix.get(suffix) or primary_type
-            paired_schema = self._loader.element_schema(paired_type)
-            paired_own_props = paired_schema.get("ownProperties", {}) if paired_schema else {}
+            if paired_type is not None:
+                paired_schema = self._loader.element_schema(paired_type)
+                paired_own_props = paired_schema.get("ownProperties", {}) if paired_schema else {}
+                paired_label = paired_type
+            else:
+                paired_own_props = self._merged_own_props(variant_types)
+                paired_label = type_label
             issues += self._validate_properties(
-                props, paired_own_props, paired_type, label_path
+                props, paired_own_props, paired_label, label_path
             )
 
         # ── recursive children / subviews ─────────────────────────────────────
         # Subview keys allowed: union of every type variant's topLevelKeys plus
-        # the universal subview set.
+        # the universal subview set. Sorted so that which of two subtrees reports
+        # a duplicate id does not vary between runs.
         all_subview_keys: set[str] = set(_UNIVERSAL_SUBVIEW_KEYS)
         for s in type_schemas:
             all_subview_keys |= set(s.get("topLevelKeys", []))
 
-        for child_key in all_subview_keys:
-            for suffix, children in expanded.get(child_key, []):
+        for child_key in sorted(all_subview_keys):
+            variants = expanded.get(child_key, [])
+            if len(variants) <= 1:
+                for suffix, children in variants:
+                    child_label = f"{path}{sep}{format_suffix_label(child_key, suffix)}"
+                    issues += self._validate_subview_value(children, child_label, seen_ids)
+                continue
+            # Platform variants of one subview key (`children`, `children:ios`)
+            # never survive together at runtime, so the same id may appear in
+            # each of them. Check every variant against the ids seen so far,
+            # but not against its sibling variants; then record all their ids.
+            ids_before = set(seen_ids)
+            for suffix, children in variants:
                 child_label = f"{path}{sep}{format_suffix_label(child_key, suffix)}"
-                issues += self._validate_subview_value(children, child_label, seen_ids)
+                variant_ids = set(ids_before)
+                issues += self._validate_subview_value(children, child_label, variant_ids)
+                seen_ids |= variant_ids
 
         return issues
+
+    def _merged_own_props(self, type_names: list[str]) -> dict:
+        """Union of the ownProperties of `type_names`, for a `properties` block
+        that applies under several element types. On a key known to more than
+        one type, the spec of the first type in `type_names` is used. A property
+        is required only when every type requires it."""
+        own_props_list = []
+        for t in type_names:
+            s = self._loader.element_schema(t)
+            own_props_list.append(s.get("ownProperties", {}) if s else {})
+        merged: dict = {}
+        for own_props in own_props_list:
+            for key, spec in own_props.items():
+                merged.setdefault(key, spec)
+        for key, spec in merged.items():
+            if spec.get("required") and not all(
+                p.get(key, {}).get("required") for p in own_props_list
+            ):
+                merged[key] = {**spec, "required": False}
+        return merged
 
     def _validate_subview_value(self, val, child_path: str, seen_ids: set) -> list[ValidationIssue]:
         issues: list[ValidationIssue] = []

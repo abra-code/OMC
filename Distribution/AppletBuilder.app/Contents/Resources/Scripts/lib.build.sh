@@ -944,8 +944,7 @@ ${SCRIPT_VALIDATE_OUTPUT}
     # ActionUI JSON — bundled verifier (rc 0 = valid, 2 = warnings, else errors)
     # Only files matching the ActionUI heuristic (root dict with "type" elements)
     # are validated; unrelated JSON is skipped.
-    local verifier="${OMC_APP_BUNDLE_PATH}/Contents/Library/actionui_verifier/validate_actionui.py"
-    if [ -f "$verifier" ] && [ -x "$python3" ]; then
+    if actionui_verifier_available; then
         local jf jname vrc
         local ui_ok=0
         # Scan every localized .lproj (Base.lproj / English.lproj / en.lproj / …)
