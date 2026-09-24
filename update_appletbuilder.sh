@@ -432,6 +432,26 @@ else
                 build_failed=1
             fi
 
+            # The core element schemas live in ActionUIVerifier/Schemas (shared with the Swift
+            # verifier), not in Tools/verifier. The packaged verifier reads them from schemas/
+            # next to validate_actionui.py; the add-on schemas go into its add-ons/ below.
+            VERIFIER_SCHEMAS_SRC="$ACTIONUI_ROOT/ActionUIVerifier/Schemas"
+            if [ -d "$VERIFIER_SCHEMAS_SRC" ]; then
+                # A checkout from before the move can keep Tools/verifier/schemas around (git
+                # leaves a folder that still holds untracked files such as .DS_Store), and the
+                # copy above brings it along; cp -R would then nest Schemas inside it.
+                /bin/rm -rf "$VERIFIER_DST/schemas"
+                /bin/cp -R "$VERIFIER_SCHEMAS_SRC" "$VERIFIER_DST/schemas"
+                cp_rc=$?
+                if [ "$cp_rc" -ne 0 ]; then
+                    echo -e "  ${RED}Failed to copy ActionUI verifier schemas to: $VERIFIER_DST/schemas${NC}"
+                    build_failed=1
+                fi
+            else
+                echo -e "  ${RED}ActionUI verifier schemas not found at: $VERIFIER_SCHEMAS_SRC${NC}"
+                build_failed=1
+            fi
+
             echo -e "  ${GREEN}Updated: actionui_verifier${NC}"
             updated=1
         fi
