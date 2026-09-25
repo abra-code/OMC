@@ -146,18 +146,18 @@ JSON schema and usage documentation for `Chat` (ActionUIChat add-on).
 // element pre-filters its stream so chat text lands in the transcript. The element is GENERIC: the same
 // element backs AI-agent chat and person-to-person chat - the transport and appearance differ, not the view.
 //
-// Landed so far: the "local" transport and single-alignment transcript (M1); streaming Markdown message
-// bodies plus standalone image items (M2); the agentic surfaces (M3) - streamed reasoning folded behind
+// Supported: the "local" transport and single-alignment transcript; streaming Markdown message
+// bodies plus standalone image items; the agentic surfaces - streamed reasoning folded behind
 // a "Thoughts" disclosure, tool-call cards that mutate in place through their pending / in-progress /
 // completed / failed lifecycle, and a permission gate that pins an approval card above the composer and
 // pauses input until answered ("surfaces" routes each of these; the local transport's "agentic" reply
-// style demonstrates them all); and the ACP transport (M3, macOS) - the element launches any Agent
+// style demonstrates them all); and the ACP transport (macOS) - the element launches any Agent
 // Client Protocol agent as a subprocess (newline-delimited JSON-RPC over stdio), negotiates capabilities
 // (advertising no fs / terminal services), opens a session, and demuxes the session/update stream onto
 // those same surfaces, with session/request_permission wired to the approval card and Stop wired to
 // session/cancel. The same module also registers "acp-remote", which speaks that protocol to an agent
 // on ANOTHER machine over a WebSocket to a chatview-acp-bridge, on every platform - it owns no
-// subprocess, and it is the only transport that emits resume checkpoints. And the first M5
+// subprocess, and it is the only transport that emits resume checkpoints. And the first
 // session-status surfaces: the agent's evolving plan pinned above the transcript (routed by
 // surfaces.plan; ACP `plan`), plus a status line under the composer showing the
 // session's model / mode and token / cost usage (ACP `usage_update`) - the local transport's "agentic"
@@ -191,9 +191,9 @@ JSON schema and usage documentation for `Chat` (ActionUIChat add-on).
 // advertises the matching capability; those conversation actions flow to the transport as commands, and the
 // sole new host action ID is "attachActionID" (the composer's attach button). The built-in "local-p2p"
 // transport scripts all of it with no wire (the ChatPeople / ChatGroup examples). The remaining surfaces
-// (terminals, multi-session) arrive in later milestones (see Private/chat-element-design.md).
+// (terminals, multi-session) are not implemented yet.
 //
-// Session transcript (P0-2): the element has no scalar value - its session transcript is CONTENT. A host
+// Session transcript: the element has no scalar value - its session transcript is CONTENT. A host
 // RESTORES a saved session at runtime by injecting a serialized ChatTranscript (version, items, usage, plan,
 // title) into states["content"], AFTER the interface is built - the same place Table / List keep their
 // content, and the right vehicle for session DATA (a static UI document describes how to build the interface,

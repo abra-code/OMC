@@ -26,7 +26,7 @@
 // schemas and rebuilding the skill, else the Command.plist verifier drifts:
 //   verifier schemas: Distribution/AppletBuilder.app/Contents/Library/command_verifier/schemas/_shared/NavDialog.json
 //                     (+ SAVE_AS_DIALOG / CHOOSE_FILE_DIALOG / CHOOSE_FOLDER_DIALOG / CHOOSE_OBJECT_DIALOG / OPEN_OBJECT_DIALOG.json)
-//   rebuild skill:    python3 Skill/build_skill.py   (design: Private/CommandPlist-Verifier-Design.md; keys: Private/CommandPlist-Keys.csv)
+//   rebuild skill:    python3 Skill/build_skill.py
 UInt32
 GetNavDialogParams(CFDictionaryRef inParams, CFStringRef &outMessage, CFArrayRef &outDefaultName, CFArrayRef &outDefaultLocation, CFStringRef &outIdentifier, CFStringRef &outPrompt, CFArrayRef &outAllowedContentTypes)
 {

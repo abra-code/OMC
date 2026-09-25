@@ -325,7 +325,7 @@ _is_nested_loose_file() {
 # evaluates every nested item against its policy rules, and an ad-hoc signature
 # has no certificate chain to match one with. The assessment then fails with a
 # bare "rejected" and syspolicyd logs "rejecting due to lack of matching active
-# rule" - once per such file. See Private/Design-nested-code-signing.md.
+# rule" - once per such file.
 list_nested_loose_files() {
     local file_path
     /usr/bin/find "$app_to_sign" -type f ! -path "*/_CodeSignature/*" -print \

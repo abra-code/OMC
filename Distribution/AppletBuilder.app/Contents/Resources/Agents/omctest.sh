@@ -91,8 +91,7 @@ OMCTEST_DEFAULT_STUBS="alert notify omc_dialog_control omc_next_command pasteboa
 #
 # Everything omc_run does below is a deliberate reproduction of engine behavior,
 # read out of the source rather than remembered. Recorded here with sources so a
-# future reader can re-verify rather than re-guess (full write-up in the OMC
-# repo's Private/omctest-phase0-findings.md):
+# future reader can re-verify rather than re-guess:
 #
 #   Interpreter map          AbracodeFramework/OmcExecutor.cp:620-635
 #                            (sExtensionToShellMap). .sh -> /bin/sh, .zsh ->

@@ -117,7 +117,7 @@ const CFIndex kMaxSpecialWordLen = sizeof("__DLG_CHOOSE_FOLDER_NAME_NO_EXTENSION
 // updating the matching verifier schema and rebuilding the skill, else the Command.plist
 // verifier drifts (false positives/negatives):
 //   verifier schemas: Distribution/AppletBuilder.app/Contents/Library/command_verifier/schemas/MULTIPLE_OBJECT_SETTINGS.json + SORT_OPTIONS.json
-//   rebuild skill:    python3 Skill/build_skill.py   (design: Private/CommandPlist-Verifier-Design.md; keys: Private/CommandPlist-Keys.csv)
+//   rebuild skill:    python3 Skill/build_skill.py
 static void
 GetMultiCommandParams(CommandDescription &outDesc, CFDictionaryRef inParams)
 {
@@ -361,7 +361,7 @@ GetSpecialEnvironWordID(CFStringRef inStr)
 // updating the matching verifier schema and rebuilding the skill, else the Command.plist
 // verifier drifts (false positives/negatives):
 //   verifier schema: Distribution/AppletBuilder.app/Contents/Library/command_verifier/schemas/INPUT_DIALOG.json
-//   rebuild skill:   python3 Skill/build_skill.py   (design: Private/CommandPlist-Verifier-Design.md; keys: Private/CommandPlist-Keys.csv)
+//   rebuild skill:   python3 Skill/build_skill.py
 static void
 GetInputDialogParams(CommandDescription &outDesc, CFDictionaryRef inParams)
 {
@@ -460,7 +460,7 @@ static void AddRequestedSpecialNibDialogValuesToMutableSet(const void *key, cons
 // updating the matching verifier schema and rebuilding the skill, else the Command.plist
 // verifier drifts (false positives/negatives):
 //   verifier schema: Distribution/AppletBuilder.app/Contents/Library/command_verifier/schemas/ACTIVATION_OBJECT_STRING_MATCH.json
-//   rebuild skill:   python3 Skill/build_skill.py   (design: Private/CommandPlist-Verifier-Design.md; keys: Private/CommandPlist-Keys.csv)
+//   rebuild skill:   python3 Skill/build_skill.py
 void
 GetContextMatchingParams(CommandDescription &outDesc, CFDictionaryRef inParams)
 {
@@ -522,7 +522,6 @@ GetContextMatchingParams(CommandDescription &outDesc, CFDictionaryRef inParams)
 //   verifier schemas: Distribution/AppletBuilder.app/Contents/Library/command_verifier/schemas/Command.json
 //                     (+ the relevant sub-dict <KEY>.json for any sub-dictionary key)
 //   rebuild skill:    python3 Skill/build_skill.py
-//   refs:             Private/CommandPlist-Verifier-Design.md, Private/CommandPlist-Keys.csv
 // ════════════════════════════════════════════════════════════════════════════
 void
 GetOneCommandParams(CommandDescription &outDesc, CFDictionaryRef inOneCommand, CFURLRef externBundleOverrideURL)

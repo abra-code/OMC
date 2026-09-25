@@ -156,8 +156,8 @@ OnMyCommandCM::Init()
 		//
 		// Clearing both names at Init() is safe for a host that does serve one: this runs long
 		// before any window exists, and OMCActionUIRemoteHost sets them again when it binds.
-		// This is the "unsetenv on failure" case of Private/AlwaysExportedVars-Setenv-Findings.md:
-		// an empty value would be wrong and an inherited value would be worse.
+		// Unset, not set to empty: an empty value would be wrong and an inherited value would be
+		// worse.
 		unsetenv("ACTIONUI_REMOTE_ENDPOINT");
 		unsetenv("OMC_ACTIONUI_REMOTE_ENDPOINT");
 	});
@@ -2171,7 +2171,7 @@ OnMyCommandCM::LoadCommandsFromPlistFile(CFURLRef inPlistFileURL)
 // verifier (Root.json + bundle_resolver.py) and rebuild the skill, else it drifts:
 //   verifier: Distribution/AppletBuilder.app/Contents/Library/command_verifier/schemas/Root.json
 //             (synthesis: .../command_verifier/verifier/bundle_resolver.py)
-//   rebuild:  python3 Skill/build_skill.py   (refs: Private/CommandPlist-Verifier-Design.md, Private/CommandPlist-Keys.csv)
+//   rebuild:  python3 Skill/build_skill.py
 void
 OnMyCommandCM::LoadCommandsFromPlistRef(CFPropertyListRef inPlistRef)
 {

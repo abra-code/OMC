@@ -1,6 +1,6 @@
 {
   "name": "Command",
-  "description": "One action handler dictionary inside COMMAND_LIST. Key surface ground-truthed against AbracodeFramework GetOneCommandParams (see CommandPlist-Keys.csv).",
+  "description": "One action handler dictionary inside COMMAND_LIST. Key surface ground-truthed against AbracodeFramework GetOneCommandParams.",
   "annotationKeys": ["VERSION", "NOTES", "CATEGORIES"],
   "removedKeys": {
     "SEND_TASK_TO_BACKGROUND_APP": { "note": "background-app delegation is no longer supported" },

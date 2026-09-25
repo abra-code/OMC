@@ -35,7 +35,7 @@
 // Adding/removing/renaming/deprecating/retyping any key here REQUIRES updating the matching
 // verifier schema and rebuilding the skill, else the Command.plist verifier drifts:
 //   verifier schema: Distribution/AppletBuilder.app/Contents/Library/command_verifier/schemas/NIB_DIALOG.json
-//   rebuild skill:   python3 Skill/build_skill.py   (design: Private/CommandPlist-Verifier-Design.md; keys: Private/CommandPlist-Keys.csv)
+//   rebuild skill:   python3 Skill/build_skill.py
 - (id)initWithOmc:(OnMyCommandCM *)inOmc commandRuntimeData:(CommandRuntimeData *)inCommandRuntimeData
 {
    self = [super initWithOmc:inOmc commandRuntimeData:inCommandRuntimeData];

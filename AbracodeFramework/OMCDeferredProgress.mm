@@ -339,7 +339,7 @@ CounterParams::~CounterParams()
 // Adding/removing/renaming/deprecating/retyping any key here REQUIRES updating the matching
 // verifier schema and rebuilding the skill, else the Command.plist verifier drifts:
 //   verifier schema: Distribution/AppletBuilder.app/Contents/Library/command_verifier/schemas/DETERMINATE_COUNTER.json
-//   rebuild skill:   python3 Skill/build_skill.py   (design: Private/CommandPlist-Verifier-Design.md; keys: Private/CommandPlist-Keys.csv)
+//   rebuild skill:   python3 Skill/build_skill.py
 void
 CounterParams::Init(CFDictionaryRef counterDict, CFStringRef inLocTable, CFBundleRef inLocBundle)
 {
@@ -588,7 +588,7 @@ StepsParams::~StepsParams()
 // Adding/removing/renaming/deprecating/retyping any key (or enum value) here REQUIRES updating
 // the matching verifier schema and rebuilding the skill, else the Command.plist verifier drifts:
 //   verifier schema: Distribution/AppletBuilder.app/Contents/Library/command_verifier/schemas/DETERMINATE_STEPS.json
-//   rebuild skill:   python3 Skill/build_skill.py   (design: Private/CommandPlist-Verifier-Design.md; keys: Private/CommandPlist-Keys.csv)
+//   rebuild skill:   python3 Skill/build_skill.py
 void
 StepsParams::Init(CFDictionaryRef stepsDict, CFStringRef inLocTable, CFBundleRef inLocBundle)
 {
@@ -768,7 +768,7 @@ inline double CalculateTotalProgress(OMCTaskProgress *allTasks, CFIndex inCount)
 // Adding/removing/renaming/deprecating/retyping any key here REQUIRES updating the matching
 // verifier schema and rebuilding the skill, else the Command.plist verifier drifts:
 //   verifier schema: Distribution/AppletBuilder.app/Contents/Library/command_verifier/schemas/PROGRESS.json
-//   rebuild skill:   python3 Skill/build_skill.py   (design: Private/CommandPlist-Verifier-Design.md; keys: Private/CommandPlist-Keys.csv)
+//   rebuild skill:   python3 Skill/build_skill.py
 -(id)initWithParams:(CFDictionaryRef)inParams forCommand:(CFStringRef)inCommandName taskCount:(CFIndex)inTaskCount locTable:(CFStringRef)inLocTable locBundle:(CFBundleRef)inLocBundle
 {
 	self = [super init];
