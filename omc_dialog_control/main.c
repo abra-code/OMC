@@ -368,7 +368,7 @@ int main (int argc, const char * argv[])
 
 	if(plistDict == NULL)
 	{
-		fprintf(stderr, "An error ocurred when creating new property list. Out of memory?!\n");
+		fprintf(stderr, "An error occurred when creating new property list. Out of memory?!\n");
 		result = -1;
 		goto error_exit;
 	}
@@ -392,7 +392,7 @@ int main (int argc, const char * argv[])
 				}
 				else
 				{
-					fprintf(stderr, "An error ocurred when creating new CFDictionary. Out of memory?!\n");
+					fprintf(stderr, "An error occurred when creating new CFDictionary. Out of memory?!\n");
 					result = -1;
 					goto error_exit;
 				}
@@ -449,7 +449,7 @@ int main (int argc, const char * argv[])
 					}
 					else
 					{
-						fprintf(stderr, "An error ocurred when creating new CFDictionary. Out of memory?!\n");
+						fprintf(stderr, "An error occurred when creating new CFDictionary. Out of memory?!\n");
 						result = -1;
 						goto error_exit;
 					}
@@ -484,7 +484,7 @@ int main (int argc, const char * argv[])
 				}
 				else
 				{
-					fprintf(stderr, "An error ocurred when creating new CFDictionary. Out of memory?!\n");
+					fprintf(stderr, "An error occurred when creating new CFDictionary. Out of memory?!\n");
 					result = -1;
 					goto error_exit;
 				}
@@ -511,7 +511,7 @@ int main (int argc, const char * argv[])
 				}
 				else
 				{
-					fprintf(stderr, "An error ocurred when creating new CFDictionary. Out of memory?!\n");
+					fprintf(stderr, "An error occurred when creating new CFDictionary. Out of memory?!\n");
 					result = -1;
 					goto error_exit;
 				}
@@ -550,7 +550,7 @@ int main (int argc, const char * argv[])
 				}
 				else
 				{
-					fprintf(stderr, "An error ocurred when creating new CFDictionary. Out of memory?!\n");
+					fprintf(stderr, "An error occurred when creating new CFDictionary. Out of memory?!\n");
 					result = -1;
 					goto error_exit;
 				}
@@ -570,7 +570,7 @@ int main (int argc, const char * argv[])
 				}
 				else
 				{
-					fprintf(stderr, "An error ocurred when creating new CFArray. Out of memory?!\n");
+					fprintf(stderr, "An error occurred when creating new CFArray. Out of memory?!\n");
 					result = -1;
 					goto error_exit;
 				}
@@ -591,7 +591,7 @@ int main (int argc, const char * argv[])
 						}
 						else
 						{
-							fprintf(stderr, "An error ocurred when creating string with CFStringCreateWithCString. Not UTF-8?\n");
+							fprintf(stderr, "An error occurred when creating string with CFStringCreateWithCString. Not UTF-8?\n");
 						}
 					}
 					CFArrayAppendValue( itemArray, objCMessageArray );
@@ -617,7 +617,7 @@ int main (int argc, const char * argv[])
 				}
 				else
 				{
-					fprintf(stderr, "An error ocurred when creating new CFDictionary. Out of memory?!\n");
+					fprintf(stderr, "An error occurred when creating new CFDictionary. Out of memory?!\n");
 					result = -1;
 					goto error_exit;
 				}
@@ -637,7 +637,7 @@ int main (int argc, const char * argv[])
 				}
 				else
 				{
-					fprintf(stderr, "An error ocurred when creating new CFArray. Out of memory?!\n");
+					fprintf(stderr, "An error occurred when creating new CFArray. Out of memory?!\n");
 					result = -1;
 					goto error_exit;
 				}
@@ -661,7 +661,7 @@ int main (int argc, const char * argv[])
 					}
 					else
 					{
-						fprintf(stderr, "An error ocurred when creating string with CFStringCreateWithCString. Not UTF-8?\n");
+						fprintf(stderr, "An error occurred when creating string with CFStringCreateWithCString. Not UTF-8?\n");
 					}
 				}
 			}
@@ -708,7 +708,7 @@ int main (int argc, const char * argv[])
 							}
 							else
 							{
-								fprintf(stderr, "An error ocurred when creating string with CFStringCreateWithBytes. Not UTF-8?\n");
+								fprintf(stderr, "An error occurred when creating string with CFStringCreateWithBytes. Not UTF-8?\n");
 							}
 						}
 					}
@@ -738,7 +738,7 @@ int main (int argc, const char * argv[])
 				}
 				else
 				{
-					fprintf(stderr, "An error ocurred when creating new CFDictionary. Out of memory?!\n");
+					fprintf(stderr, "An error occurred when creating new CFDictionary. Out of memory?!\n");
 					result = -1;
 					goto error_exit;
 				}
@@ -764,7 +764,7 @@ int main (int argc, const char * argv[])
     {   //overwrites previous file content
         bool success = WritePropertyList(plistDict, urlRef, kCFPropertyListBinaryFormat_v1_0);
         if(!success)
-            fprintf(stderr, "An error ocurred when writing property list to %s\n", sFilePath);
+            fprintf(stderr, "An error occurred when writing property list to %s\n", sFilePath);
     }
     else if(remotePort != NULL)
     {
@@ -773,7 +773,7 @@ int main (int argc, const char * argv[])
         {
             result = CFMessagePortSendRequest(remotePort, 0/*msgid*/, plistData, 5/*send timeout*/, 0/*rcv timout*/, NULL/*kCFRunLoopDefaultMode*/, NULL/*replyData*/);
             if(result != 0)
-                fprintf(stderr, "An error ocurred when sending request to dialog port: %d\n", result);
+                fprintf(stderr, "An error occurred when sending request to dialog port: %d\n", result);
         }
     }
 
