@@ -5,6 +5,7 @@
 //  Integration tests for ActionUI dialog controller (setControlValues: code paths)
 //
 
+#import <AppKit/AppKit.h>
 #import "OMCTestCase.h"
 #import "OMCCommandExecutor.h"
 #import "OMCBundleTestHelper.h"
@@ -231,6 +232,44 @@
     XCTAssertEqualObjects(diag[@"TERM_COMPLETE"], @"YES",
                           @"Terminate script should complete after INVOKE close");
 
+    [self cleanupDiagnosticFilesForUUID:uuid prefix:@"actionui"];
+}
+
+/// A regular non-blocking ActionUI window must be minimizable: NSWindow disables the yellow
+/// button and Window > Minimize (performMiniaturize:) for a window without the miniaturizable bit.
+- (void)testActionUIRegularWindowIsMiniaturizable {
+    NSURL *bundleURL = [OMCBundleTestHelper testBundleURL:@"ActionUI-Form"];
+    if (bundleURL == nil) {
+        NSLog(@"Skipping - ActionUI-Form.omc not found in test resources");
+        return;
+    }
+
+    NSString *omcBundlePath = [bundleURL path];
+    NSString *uuid = [self openActionUIDialogWithBundlePath:omcBundlePath];
+
+    NSString *initPath = [NSString stringWithFormat:@"/tmp/OMC_test_actionui_init_%@", uuid];
+    BOOL initFound = [self pollForFileAtPath:initPath timeout:5.0];
+    XCTAssertTrue(initFound, @"Init diagnostic file should be created");
+
+    // The window controller names the frame autosave "OMC.<JSON_NAME>".
+    NSWindow *formWindow = nil;
+    for (NSWindow *window in [NSApp windows]) {
+        if (window.isVisible && [window.frameAutosaveName isEqualToString:@"OMC.Form"]) {
+            formWindow = window;
+            break;
+        }
+    }
+    XCTAssertNotNil(formWindow, @"The Form window should be open");
+    XCTAssertTrue((formWindow.styleMask & NSWindowStyleMaskMiniaturizable) != 0,
+                  @"A regular non-blocking window should have the miniaturizable style bit");
+
+    NSMenuItem *minimizeItem = [[NSMenuItem alloc] initWithTitle:@"Minimize"
+                                                          action:@selector(performMiniaturize:)
+                                                   keyEquivalent:@"m"];
+    XCTAssertTrue([formWindow validateMenuItem:minimizeItem],
+                  @"Window > Minimize should be enabled for a regular non-blocking window");
+
+    [self closeActionUIDialogWithUUID:uuid bundlePath:omcBundlePath];
     [self cleanupDiagnosticFilesForUUID:uuid prefix:@"actionui"];
 }
 

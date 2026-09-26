@@ -251,6 +251,14 @@ static NSArray<ActionUIObjCDialogButton *> *OMCParseButtonSpecs(NSArray *specs)
         // "regular" is the default, no changes needed
     }
 
+    // A regular non-blocking window gets the minimize button, and with it a working Window >
+    // Minimize (Cmd-M): NSWindow disables performMiniaturize: for a window without this bit.
+    // A blocking dialog runs in a modal session, and minimizing it would leave the app stuck
+    // behind an invisible modal window. Floating panels follow the system convention for panels,
+    // which do not minimize.
+    if(!usePanel && !mIsModal)
+        styleMask |= NSWindowStyleMaskMiniaturizable;
+
     NSWindow *window;
     if(usePanel)
     {
