@@ -209,6 +209,66 @@ else
         "$(ab_call lib.prefs.sh get_bundle_id_prefix)"
 fi
 
+section "15. a renamed applet's URL scheme replaces the template's, not joins it"
+# plutil -replace on an array index inserts rather than overwrites, so a new
+# applet once kept the template's scheme beside its own. New Applet and the
+# General tab rename both go through applet_update_url_scheme.
+
+schemed="$(ab_make_project Schemed)"
+ab_call lib.build.sh applet_update_url_scheme "$schemed/Contents/Info.plist" "My Schemed App"
+check "exactly one scheme, the new one" '["my-schemed-app"]' \
+    "$(/usr/bin/plutil -extract CFBundleURLTypes.0.CFBundleURLSchemes json -o - "$schemed/Contents/Info.plist" 2>/dev/null)"
+check "the URL name followed" "My Schemed App" "$(ab_plist_read "$schemed" CFBundleURLTypes.0.CFBundleURLName)"
+
+section "16. the scheme derived from a name is always a valid URL scheme"
+# A scheme must start with a letter (RFC 3986).
+
+check "a plain name"                 "my-tool"        "$(ab_call lib.build.sh applet_url_scheme_for_name "My Tool")"
+check "punctuation is dropped"       "tools-v2"       "$(ab_call lib.build.sh applet_url_scheme_for_name "Tool's v2!")"
+check "leading hyphens are dropped"  "tool"           "$(ab_call lib.build.sh applet_url_scheme_for_name " - Tool")"
+check "a leading digit gets a prefix" "applet-123-app" "$(ab_call lib.build.sh applet_url_scheme_for_name "123 App")"
+non_ascii_sum="$(printf '%s' "日本語" | /usr/bin/cksum | /usr/bin/awk '{print $1}')"
+check "a name with nothing usable gets a checksum" "applet-$non_ascii_sum" \
+    "$(ab_call lib.build.sh applet_url_scheme_for_name "日本語")"
+
+section "17. URL scheme errors are reported, a missing URL type is not one"
+
+no_url="$(ab_make_project NoURL)"
+/usr/bin/plutil -remove CFBundleURLTypes "$no_url/Contents/Info.plist"
+ab_call lib.build.sh applet_update_url_scheme "$no_url/Contents/Info.plist" "Other Name" 2>/dev/null
+check "an applet with no URL type succeeds"   "0" "$?"
+check "and still has none" "" "$(ab_plist_read "$no_url" CFBundleURLTypes)"
+
+broken_plist="$OMCTEST_WORK/broken-Info.plist"
+printf 'not a plist' > "$broken_plist"
+broken_report="$(ab_call lib.build.sh applet_update_url_scheme "$broken_plist" "Other Name" 2>&1 >/dev/null)"
+check "an unreadable Info.plist fails"        "1" "$?"
+case "$broken_report" in
+    "Cannot update the URL scheme, Info.plist is not readable:"*) broken_said="yes" ;;
+    *) broken_said="$broken_report" ;;
+esac
+check "and says why"                          "yes" "$broken_said"
+
+section "18. New Applet removes the copy when the URL scheme cannot be set"
+
+broken_tmpl="$OMCTEST_WORK/Broken.applet"
+/bin/rm -rf "$broken_tmpl"
+/bin/cp -Rp "$AB_TEMPLATES/Empty.applet" "$broken_tmpl"
+/bin/chmod -R u+w "$broken_tmpl"
+printf 'not a plist' > "$broken_tmpl/Contents/Info.plist"
+create_dest="$OMCTEST_WORK/create-dest"
+/bin/rm -rf "$create_dest"
+/bin/mkdir -p "$create_dest"
+create_report="$(AB_NO_CODESIGN=1 ab_call lib.create.sh applet_create_from_template \
+    "$broken_tmpl" "Never Made" "$create_dest" "" "" "" "" 2>&1 >/dev/null)"
+check "create failed"                         "1" "$?"
+case "$create_report" in
+    *"Cannot update the URL scheme, Info.plist is not readable:"*) create_said="yes" ;;
+    *) create_said="$create_report" ;;
+esac
+check "at the URL scheme step"                "yes" "$create_said"
+check "and left nothing behind"               "" "$(/bin/ls -A "$create_dest")"
+
 section "cumulative: no handler wrote to a view id the window does not declare"
 check "no undeclared ids"    "" "$(ui_unknown_writes)"
 check "no table was clobbered" "" "$(ui_suspect_writes)"

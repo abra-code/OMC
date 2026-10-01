@@ -4,6 +4,11 @@
 source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.prefs.sh"
 source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.plist.sh"
 source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.build.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.errors.sh"
+
+# Pipeline errors go to the error window: the status field is overwritten below,
+# and the window closes and reopens after a rename.
+ab_report() { show_errors "$1"; }
 
 project_path=$(load_project_path)
 

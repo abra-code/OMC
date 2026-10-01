@@ -178,6 +178,14 @@ applet_create_from_template() {
 
     # Full rename pipeline (plist, nibs, scripts, credits, URL scheme)
     applet_rename_contents "$new_app_path" "$original_name" "$applet_name"
+    if [ $? -ne 0 ]; then
+        # The reason was already reported; a second ab_report would overwrite it in the
+        # GUI's one-line status field. Remove the copy, which this call created (it did
+        # not exist above), rather than leave an applet carrying the template's URL
+        # scheme - and so that a retry is not refused with "Already exists".
+        /bin/rm -rf "$new_app_path"
+        return 1
+    fi
 
     # Update bundle ID and remember prefix
     if [ -z "$bundle_id" ]; then

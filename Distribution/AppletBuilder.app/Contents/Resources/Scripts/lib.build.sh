@@ -210,14 +210,65 @@ applet_update_credits() {
     fi
 }
 
-# Update URL scheme in Info.plist
+# Derive a URL scheme from an applet name and print it. A scheme must start with a
+# letter, then letters, digits, "+", "-" or "." (RFC 3986); this keeps to lowercase
+# letters, digits and "-". Leading hyphens are dropped, a name starting with a digit
+# gets an "applet-" prefix, and a name with nothing usable left (only non-ASCII, say)
+# gets "applet-" plus a checksum of the name, so two such applets still differ.
+applet_url_scheme_for_name() {
+    local name="$1"
+    local scheme=$(printf '%s' "$name" | LC_ALL=C /usr/bin/tr '[:upper:]' '[:lower:]' | LC_ALL=C /usr/bin/tr ' ' '-' | LC_ALL=C /usr/bin/tr -cd 'a-z0-9-')
+    while [ "${scheme#-}" != "$scheme" ]; do
+        scheme="${scheme#-}"
+    done
+    local name_sum
+    case "$scheme" in
+        "")
+            name_sum=$(printf '%s' "$name" | /usr/bin/cksum | /usr/bin/awk '{print $1}')
+            scheme="applet-$name_sum"
+            ;;
+        [0-9]*)
+            scheme="applet-$scheme"
+            ;;
+    esac
+    printf '%s\n' "$scheme"
+}
+
+# Update URL scheme in Info.plist. An applet with no URL type has nothing to update,
+# which is not an error. Returns 1, after an ab_report, when Info.plist is unreadable
+# or a write fails.
 applet_update_url_scheme() {
     local plist="$1"
     local new_name="$2"
 
-    local url_scheme=$(echo "$new_name" | /usr/bin/tr '[:upper:]' '[:lower:]' | /usr/bin/tr ' ' '-' | /usr/bin/tr -cd 'a-z0-9-')
-    /usr/bin/plutil -replace "CFBundleURLTypes.0.CFBundleURLName" -string "$new_name" "$plist" 2>/dev/null
-    /usr/bin/plutil -replace "CFBundleURLTypes.0.CFBundleURLSchemes.0" -string "$url_scheme" "$plist" 2>/dev/null
+    local plutil_out
+    plutil_out=$(/usr/bin/plutil -lint -s "$plist" 2>&1)
+    if [ $? -ne 0 ]; then
+        ab_report "Cannot update the URL scheme, Info.plist is not readable: $plutil_out"
+        return 1
+    fi
+
+    /usr/bin/plutil -extract "CFBundleURLTypes.0" xml1 -o /dev/null "$plist" > /dev/null 2>&1
+    if [ $? -ne 0 ]; then
+        return 0
+    fi
+
+    plutil_out=$(/usr/bin/plutil -replace "CFBundleURLTypes.0.CFBundleURLName" -string "$new_name" "$plist" 2>&1)
+    if [ $? -ne 0 ]; then
+        ab_report "Could not set the URL name in $plist: $plutil_out"
+        return 1
+    fi
+
+    # Replace the whole array: on an array index, plutil -replace inserts before the
+    # existing element instead of overwriting it, which left the template's scheme behind.
+    # The scheme is limited to [a-z0-9-], so it is safe to splice into JSON.
+    local url_scheme=$(applet_url_scheme_for_name "$new_name")
+    plutil_out=$(/usr/bin/plutil -replace "CFBundleURLTypes.0.CFBundleURLSchemes" -json "[\"$url_scheme\"]" "$plist" 2>&1)
+    if [ $? -ne 0 ]; then
+        ab_report "Could not set the URL scheme \"$url_scheme\" in $plist: $plutil_out"
+        return 1
+    fi
+    return 0
 }
 
 # Full rename pipeline: renames all parts of an applet from old_name to new_name
@@ -235,6 +286,7 @@ applet_rename_contents() {
     plist_write "$plist" "NSAppleEventsUsageDescription" \
         "$new_name sends AppleEvents to other apps to provide functionality unique to this applet."
     applet_update_url_scheme "$plist" "$new_name"
+    local url_scheme_rc=$?
 
     # Recompile nibs
     applet_recompile_nib "$app_path" "$old_name" "$new_name"
@@ -258,6 +310,10 @@ applet_rename_contents() {
 
     # Update Credits.rtf
     applet_update_credits "$app_path" "$old_name" "$new_name"
+
+    # Only the URL scheme step is checked. Its failure (already reported) is returned
+    # after the other steps have run, so the applet is not left half-renamed.
+    return "$url_scheme_rc"
 }
 
 # Ad-hoc codesign using the standalone script
