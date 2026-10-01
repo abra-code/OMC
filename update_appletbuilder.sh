@@ -71,6 +71,17 @@ files_match() {
     [ -f "$2" ] && /usr/bin/diff -q "$1" "$2" > /dev/null 2>&1
 }
 
+# Helper: print the directory holding a SwiftPM resource bundle's files. The swiftbuild backend
+# (used by Swift 6.4 here) writes macOS-layout bundles with the files under Contents/Resources;
+# the older native backend put them at the bundle root. Accept either.
+bundle_resources_dir() {
+    if [ -d "$1/Contents/Resources" ]; then
+        printf '%s\n' "$1/Contents/Resources"
+    else
+        printf '%s\n' "$1"
+    fi
+}
+
 # Helper: download mistune $1 from PyPI and install it into $DEST_MISTUNE.
 # Returns 0 on success (and sets the global 'updated'), non-zero on failure.
 install_mistune() {
@@ -211,6 +222,29 @@ if [ ! -d "$ACTIONUI_ROOT" ]; then
     fi
     echo ""
 else
+    # Agent scratch directories. Claude Code leaves an empty .claude/.cc-writes in every directory a
+    # shell command changes into, and SwiftPM's .copy() resource rules then pack it into the built
+    # documentation bundles (section 4 copies only regular files, so it does not reach AppletBuilder.app
+    # today; this keeps the build output clean). Remove only that exact pattern: .cc-writes must be empty, and its
+    # .claude parent goes only if nothing else is in it (rmdir), so a real .claude with settings or
+    # skills stays. Build and git directories are pruned.
+    # The list is captured before anything is deleted, so find never walks a tree that is changing.
+    ccw_list=$(/usr/bin/find -H "$ACTIONUI_ROOT" \( -name .git -o -name .build \) -prune -o \
+        -type d -path '*/.claude/.cc-writes' -empty -print 2>/dev/null)
+    if [ -n "$ccw_list" ]; then
+        printf '%s\n' "$ccw_list" | while IFS= read -r ccw_dir; do
+            /bin/rmdir "$ccw_dir"
+            /bin/rmdir "$(/usr/bin/dirname "$ccw_dir")" 2>/dev/null
+        done
+        ccw_before=$(printf '%s\n' "$ccw_list" | /usr/bin/wc -l | /usr/bin/tr -d ' ')
+        ccw_after=$(/usr/bin/find -H "$ACTIONUI_ROOT" \( -name .git -o -name .build \) -prune -o \
+            -type d -path '*/.claude/.cc-writes' -empty -print 2>/dev/null | /usr/bin/wc -l | /usr/bin/tr -d ' ')
+        echo "  Removed $((ccw_before - ccw_after)) .claude/.cc-writes from the ActionUI checkout"
+        if [ "$ccw_after" -gt 0 ]; then
+            echo -e "  ${YELLOW}$ccw_after .claude/.cc-writes could not be removed from the ActionUI checkout${NC}"
+        fi
+    fi
+
     build_failed=0
     ACTIONUI_BUILD_ARM64="$ACTIONUI_BUILD/arm64"
     ACTIONUI_BUILD_X86="$ACTIONUI_BUILD/x86_64"
@@ -376,7 +410,7 @@ else
     # its products dir (resources only, no arch dependency). Locate them.
     ACTIONUI_DOC_BUNDLE=$(/usr/bin/find "$ACTIONUI_BUILD_ARM64" -name "ActionUI_ActionUIDocumentation.bundle" -type d 2>/dev/null | /usr/bin/head -1)
     if [ -n "$ACTIONUI_DOC_BUNDLE" ] && [ -d "$ACTIONUI_DOC_BUNDLE" ]; then
-        ACTIONUI_DOCS="$ACTIONUI_DOC_BUNDLE"
+        ACTIONUI_DOCS=$(bundle_resources_dir "$ACTIONUI_DOC_BUNDLE")
         ACTIONUI_PRODUCTS_DIR=$(/usr/bin/dirname "$ACTIONUI_DOC_BUNDLE")
         echo -e "  ${GREEN}ActionUI + add-on documentation built (via ActionUIViewer)${NC}"
     else
@@ -815,8 +849,8 @@ else
         src="$ACTIONUI_DOCS/$doc"
         dst="$DEST_DOCS/$doc"
         if [ ! -f "$src" ]; then
-            echo -e "  ${YELLOW}Source missing: $doc${NC}"
-            continue
+            echo -e "  ${RED}ActionUI doc missing: $src${NC}"
+            exit 1
         fi
         if files_match "$src" "$dst"; then
             :
@@ -867,6 +901,9 @@ else
             actionui_updated=1
             updated=1
         fi
+    else
+        echo -e "  ${RED}ActionUI Schemas missing: $ACTIONUI_DOCS/Schemas${NC}"
+        exit 1
     fi
 
     # Copy Elements directory
@@ -903,6 +940,9 @@ else
             actionui_updated=1
             updated=1
         fi
+    else
+        echo -e "  ${RED}ActionUI Elements missing: $ACTIONUI_DOCS/Elements${NC}"
+        exit 1
     fi
 
     if [ "$actionui_updated" -eq 0 ]; then
@@ -929,8 +969,9 @@ else
         [ -d "$addon_bundle" ] || continue
         bundle_name=$(/usr/bin/basename "$addon_bundle")
         [ "$bundle_name" = "ActionUI_ActionUIDocumentation.bundle" ] && continue
+        addon_resources=$(bundle_resources_dir "$addon_bundle")
         for subdir in Schemas Elements; do
-            src_dir="$addon_bundle/$subdir"
+            src_dir="$addon_resources/$subdir"
             [ -d "$src_dir" ] || continue
             /bin/mkdir -p "$DEST_DOCS/$subdir"
             for src in "$src_dir"/*; do
