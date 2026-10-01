@@ -60,7 +60,7 @@ JSON schema and usage documentation for `Canvas`.
        // Shadow (drop shadow filter – affects subsequent ops)
        {
          "type": "shadow",
-         "color": "#000000",     // Optional, default black
+         "color": "#000000",     // Optional, default SwiftUI's shadow color, black at 33% opacity
          "radius": 0.012,        // Optional (normalized), default 0.005
          "x": 0.004,             // Optional (normalized offset), default 0.002
          "y": 0.006,             // Optional (normalized offset), default 0.004

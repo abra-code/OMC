@@ -19,11 +19,17 @@ JSON schema and usage documentation for `RichText` (ActionUIRichText add-on).
                                              //           block / document layout. "hug" sizes to the content
                                              //           width, wrapping only when it exceeds the proposal (the
                                              //           messaging-bubble idiom; pair with frame.maxWidth to cap).
-     "showFindBar": false                    // Optional: Bool (default false); a find bar over this document
+     "showFindBar": false,                   // Optional: Bool (default false); a find bar over this document
                                              //           (Cmd-F to open, Cmd-G / Shift-Cmd-G next / previous, Escape
                                              //           to close, options for case / whole word / diacritics).
                                              //           Matches are painted behind the text without re-laying it
                                              //           out. Off, states["search"] still highlights (see below).
+     "remoteImages": "on-click"              // Optional (default "automatic"): when http / https images are fetched.
+                                             //           "automatic": as soon as the document renders. "on-click": a
+                                             //           placeholder shows the alt text and the image's host until
+                                             //           the reader clicks it. "never": not fetched. data: images
+                                             //           always show. Use "on-click" or "never" for Markdown a model
+                                             //           or an agent wrote: an image URL can carry data out.
    }
  }
 // A rich-text DISPLAY element backed by the RichText package, implemented as an ActionUI add-on

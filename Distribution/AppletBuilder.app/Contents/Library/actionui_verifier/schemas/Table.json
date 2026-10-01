@@ -48,7 +48,6 @@
   },
   "observable": {
     "value":                { "types": ["array"],  "description": "Selected row as [String] (column values); access via getElementValue" },
-    "states.content":       { "types": ["array"],  "description": "All rows as [[String]]; use getElementRows/setElementRows" },
-    "states.selectedRowID": { "types": ["string"], "description": "Stable row ID of selected row; nil when nothing selected" }
+    "states.content":       { "types": ["array"],  "description": "All rows as [[String]]; use getElementRows/setElementRows" }
   }
 }

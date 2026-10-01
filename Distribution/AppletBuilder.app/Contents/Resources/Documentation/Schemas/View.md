@@ -138,7 +138,7 @@ JSON schema and usage documentation for `View`.
      "accessibilityHidden": false, // Optional: Boolean to hide view from VoiceOver
      "accessibilityIdentifier": "view_1", // Optional: String for UI testing identifier
      "shadow": {           // Optional: Dictionary for shadow styling
-       "color": "black",   // Optional: SwiftUI color or hex, defaults to black
+       "color": "black",   // Optional: SwiftUI color or hex, defaults to SwiftUI's shadow color, black at 33% opacity
        "radius": 5.0,      // Optional: Double for shadow radius
        "x": 0.0,           // Optional: Double for x-offset
        "y": 2.0            // Optional: Double for y-offset
