@@ -64,4 +64,4 @@ The Element template picker (top right of UI Files panel) inserts a starter snip
 
 ## What AppletBuilder Cannot Do
 
-AppletBuilder does not edit `Info.plist` directly beyond the General tab fields. For adding custom `NSDocumentTypes`, or URL schemes, edit `Info.plist` manually using Xcode or `plutil`.
+AppletBuilder does not edit `Info.plist` directly beyond the General tab fields. For adding custom `NSDocumentTypes`, or URL schemes, edit `Info.plist` manually using Xcode or `plutil`. A new applet gets one URL scheme derived from its name; a link can run only the commands that set `URL_INVOCABLE` (see "Opening the Applet with a URL" in [Building OMC Applets](building_omc_applet.md)).

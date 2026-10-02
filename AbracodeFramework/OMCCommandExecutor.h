@@ -29,4 +29,23 @@
 
 + (OSStatus)runCommand:(NSString *)inCommandNameOrId forCommandFile:(NSString *)inFileName withContext:(id)inContext useNavDialog:(BOOL)allowNavDialog allowKeyWindowSubcommand:(BOOL)allowKeyWindowSubcommand delegate:(id)delegate;
 
+/// Runs the command a URL sent to the applet asks for. A URL is untrusted input: any web page,
+/// document or other application can send one, so this is the only entry point that applies
+/// the URL rules, and URL handling must go through it rather than through runCommand:...
+///
+/// <scheme>://exe?commandID=<id>[&text=<text>][&file=<absolute path>]...
+///   Runs command <id> only if it sets URL_INVOCABLE to true in the command description.
+///   Application lifecycle commands (app.will.terminate, ...) and dialog event handlers
+///   (INIT_SUBCOMMAND_ID, END_OK_SUBCOMMAND_ID, ...) are refused whatever the key says.
+///   "text" becomes the text context, "file" (repeatable) the file context; files win over text.
+///   Each "file" must be an absolute path of an existing item, or the whole URL is refused.
+/// any other URL
+///   Runs the command with id omc.app.handle-url, if the applet has one, with the whole URL
+///   as text context. That command needs no key: receiving URLs is all it is for.
+///
+/// The URL is exported to the command chain as OMC_TRIGGER_URL, absent for every other run.
+/// A refused URL runs nothing, logs one line saying why and returns errAEEventNotPermitted.
+
++ (OSStatus)runCommandForURL:(NSString *)inURLString forCommandFile:(NSString *)inFileName delegate:(id)delegate;
+
 @end

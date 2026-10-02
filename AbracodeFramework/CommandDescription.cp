@@ -72,6 +72,7 @@ static const SpecialWordAndID sSpecialWordAndIDList[] =
     { sizeof("__CURRENT_COMMAND_GUID__")-1,                    CFSTR("__CURRENT_COMMAND_GUID__"), CFSTR("OMC_CURRENT_COMMAND_GUID"),  CURRENT_COMMAND_GUID, true },
     { sizeof("__PARENT_COMMAND_GUID__")-1,                    CFSTR("__PARENT_COMMAND_GUID__"), CFSTR("OMC_PARENT_COMMAND_GUID"),  PARENT_COMMAND_GUID, true },
     { sizeof("__PARENT_DIALOG_GUID__")-1,                     CFSTR("__PARENT_DIALOG_GUID__"), CFSTR("OMC_PARENT_DIALOG_GUID"),  PARENT_DIALOG_GUID, true },
+    { sizeof("__TRIGGER_URL__")-1,                            CFSTR("__TRIGGER_URL__"), CFSTR("OMC_TRIGGER_URL"),  TRIGGER_URL, true },
 
     { sizeof("__FRONT_PROCESS_ID__")-1,                        CFSTR("__FRONT_PROCESS_ID__"), CFSTR("OMC_FRONT_PROCESS_ID"),  FRONT_PROCESS_ID, false },
     { sizeof("__FRONT_APPLICATION_NAME__")-1,                CFSTR("__FRONT_APPLICATION_NAME__"), CFSTR("OMC_FRONT_APPLICATION_NAME"),  FRONT_APPLICATION_NAME, false },
@@ -109,6 +110,10 @@ const CFIndex kMaxSpecialWordLen = sizeof("__DLG_CHOOSE_FOLDER_NAME_NO_EXTENSION
 //
 // ActionUI remote bridge (set only while this process is serving one):
 //                 __ACTIONUI_REMOTE_ENDPOINT__                OMC_ACTIONUI_REMOTE_ENDPOINT
+//
+// URL trigger (set only when the command chain was started by a URL sent to the applet;
+// environment variable only - the token is not substituted in command text):
+//                 __TRIGGER_URL__                             OMC_TRIGGER_URL
 
 // Command.plist SCHEMA SOURCE OF TRUTH — MULTIPLE_OBJECT_SETTINGS (PROCESSING_MODE,
 // PREFIX, SUFFIX, SEPARATOR, SORT_METHOD, SORT_OPTIONS{SORT_ASCENDING,
@@ -510,7 +515,7 @@ GetContextMatchingParams(CommandDescription &outDesc, CFDictionaryRef inParams)
 // ════════════════════════════════════════════════════════════════════════════
 // Command.plist SCHEMA SOURCE OF TRUTH — the top-level COMMAND dict (Command.json).
 // This is the master parser for a single command: NAME, COMMAND_ID, COMMAND,
-// EXECUTION_MODE, ACTIVATION_MODE, ESCAPE_SPECIAL_CHARS, TEXT_REPLACE_OPTION,
+// EXECUTION_MODE, ACTIVATION_MODE, ESCAPE_SPECIAL_CHARS, TEXT_REPLACE_OPTION, URL_INVOCABLE,
 // activation/required-version keys, and every sub-dictionary (it copies them here
 // and they are parsed by their own controllers — see those files' SOURCE OF TRUTH
 // banners). EXECUTION_MODE deprecated aliases are handled here too.
@@ -939,6 +944,9 @@ GetOneCommandParams(CommandDescription &outDesc, CFDictionaryRef inOneCommand, C
     {
         outDesc.executionOptions |= kExecutionOption_WaitForTaskCompletion;
     }
+
+//opt-in for the applet's "exe" URL (<scheme>://exe?commandID=...). Default false: a link cannot run the command
+    oneCmd.GetValue(CFSTR("URL_INVOCABLE"), outDesc.urlInvocable);
     
 //name/path/text matching settings
     if( oneCmd.GetValue(CFSTR("ACTIVATION_OBJECT_STRING_MATCH"), theDict) )

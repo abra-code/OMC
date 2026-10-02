@@ -572,6 +572,57 @@ next_command_tool="$OMC_OMC_SUPPORT_PATH/omc_next_command"
 
 ---
 
+## Step 8b: Opening the Applet with a URL
+
+Applets created by AppletBuilder declare a URL scheme derived from the applet name (`CFBundleURLSchemes` in `Info.plist`). macOS starts the applet, if needed, and hands it any URL on that scheme.
+
+### Running a Command (`exe`)
+
+```
+myapp://exe?commandID=myapp.open.item&text=some%20text
+myapp://exe?commandID=myapp.import&file=/Users/me/a.txt&file=/Users/me/b.txt
+```
+
+A command can be run this way only when it opts in:
+
+```xml
+<dict>
+    <key>NAME</key>
+    <string>MyApp</string>
+    <key>COMMAND_ID</key>
+    <string>myapp.open.item</string>
+    <key>URL_INVOCABLE</key>
+    <true/>
+</dict>
+```
+
+`text` arrives as `$OMC_OBJ_TEXT`, `file` (repeatable, absolute paths of existing items only) as `$OMC_OBJ_PATH`. Lifecycle commands (`app.will.terminate` and the others) and dialog event handlers are never run by a URL. The full rules are in the [Command Reference](omc_command_reference.md), section 3.
+
+### Handling Any Other URL (`omc.app.handle-url`)
+
+A URL whose host is not `exe`, for example `myapp://item/42`, runs the command with id `omc.app.handle-url`, if the applet defines one. The whole URL is in `$OMC_OBJ_TEXT`. This is the better choice when the applet wants its own URL layout: the script decides what each URL means and ignores the rest.
+
+```bash
+#!/bin/bash
+# Scripts/omc.app.handle-url.sh
+case "$OMC_OBJ_TEXT" in
+    myapp://item/*) item_id="${OMC_OBJ_TEXT#myapp://item/}" ;;
+    *) exit 0 ;;
+esac
+```
+
+### Link Content Is Untrusted
+
+Any web page, email, document or application can send a URL, and the sender chooses the command id, the text and the paths.
+
+- Opt in (`URL_INVOCABLE`) only commands meant as entry points, and never one that deletes, overwrites, installs or sends something without asking the user.
+- Validate `$OMC_OBJ_TEXT` and `$OMC_OBJ_PATH` before use. Quote them, and never `eval` them.
+- `$OMC_TRIGGER_URL` holds the URL for a run started by one, and is absent otherwise. A command shared with a menu or a button can use it to be stricter for links.
+- A refused URL runs nothing. Look for `OMC: URL refused` in Console to see why a link did not work.
+- An applet that needs no links does not need a URL scheme: remove `CFBundleURLTypes` from its `Info.plist`.
+
+---
+
 ## Step 9: Long-Running Processes
 
 Background processes started by scripts can outlive the parent applet. Handle cleanup properly.

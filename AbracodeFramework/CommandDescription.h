@@ -72,7 +72,8 @@ typedef enum SpecialWordID
     PARENT_COMMAND_GUID,
     PARENT_DIALOG_GUID,
     FRONT_PROCESS_ID,
-    FRONT_APPLICATION_NAME
+    FRONT_APPLICATION_NAME,
+    TRIGGER_URL //the URL that started this command chain - exported only for runs started by a URL
 } SpecialWordID;
 
 
@@ -134,6 +135,7 @@ typedef struct CommandDescription
     Boolean			debugging {false}; //set to true when control keyboard modifier is held
     Boolean			disabled {false};
     Boolean			isSubcommand {false};
+    Boolean			urlInvocable {false}; //URL_INVOCABLE: the applet's "exe" URL may run this command
     SInt32			requiredOMCVersion {MIN_OMC_VERSION};
     SInt32			requiredMacOSMinVersion {MIN_MAC_OS_VERSION};
     SInt32			requiredMacOSMaxVersion {MAX_MAC_OS_VERSION};

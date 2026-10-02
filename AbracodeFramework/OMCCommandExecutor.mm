@@ -44,6 +44,7 @@ bool IsFileOrFolderActivation(UInt32 activationType)
 @interface OMCCommandExecutor()
 + (CFPropertyListRef)cachedPlistForCommandFile:(NSString *)inFileName;
 + (CFPropertyListRef)cachedPlistForURL:(NSURL *)inURL;
++ (OSStatus)runCommand:(NSString *)inCommandNameOrId forCommandFile:(NSString *)inFileName withContext:(id)inContext useNavDialog:(BOOL)clientAllowsNavDialog allowKeyWindowSubcommand:(BOOL)allowKeyWindowSubcommand delegate:(id)delegate triggerURL:(NSString *)inTriggerURL requireURLInvocable:(BOOL)requireURLInvocable;
 @end
 
 
@@ -53,6 +54,87 @@ bool IsFileOrFolderActivation(UInt32 activationType)
 //otherwise when the file context is missing the command is not executed
 //if USE_NAV_DIALOG_FOR_MISSING_FILE_CONTEXT is false, the command always executes and no nav dialog is shown
 + (OSStatus)runCommand:(NSString *)inCommandNameOrId forCommandFile:(NSString *)inFileName withContext:(id)inContext useNavDialog:(BOOL)clientAllowsNavDialog allowKeyWindowSubcommand:(BOOL)allowKeyWindowSubcommand delegate:(id)delegate
+{
+	return [OMCCommandExecutor runCommand:inCommandNameOrId forCommandFile:inFileName withContext:inContext useNavDialog:clientAllowsNavDialog allowKeyWindowSubcommand:allowKeyWindowSubcommand delegate:delegate triggerURL:nil requireURLInvocable:NO];
+}
+
++ (OSStatus)runCommandForURL:(NSString *)inURLString forCommandFile:(NSString *)inFileName delegate:(id)delegate
+{
+	if((inURLString == nil) || ([inURLString length] == 0))
+		return paramErr;
+
+	// The log lines below name the command id but never the whole URL: its text and file
+	// values are the sender's and may be long or private.
+	NSURLComponents *components = [NSURLComponents componentsWithString:inURLString];
+	if(components == nil)
+	{
+		NSLog(@"OMC: URL refused: it is not a valid URL");
+		return errAEEventNotPermitted;
+	}
+
+	NSString *host = [components host];
+	BOOL isExecuteURL = (host != nil) && ([host caseInsensitiveCompare:@"exe"] == NSOrderedSame);
+	if(!isExecuteURL)
+	{
+		// Not an "exe" URL: the applet's own URL handler gets the whole URL as text, if it has one
+		return [OMCCommandExecutor runCommand:@"omc.app.handle-url" forCommandFile:inFileName withContext:inURLString useNavDialog:NO allowKeyWindowSubcommand:NO delegate:delegate triggerURL:inURLString requireURLInvocable:NO];
+	}
+
+	NSString *urlCommandID = nil;
+	NSString *textContext = nil;
+	NSMutableArray<NSURL*> *fileList = nil;
+
+	// queryItems removes the percent-encoding of names and values
+	for(NSURLQueryItem *oneItem in [components queryItems])
+	{
+		NSString *key = [oneItem name];
+		NSString *value = [oneItem value];
+		if((key == nil) || (value == nil))
+			continue; // malformed query item without a value - skip it
+
+		if([key caseInsensitiveCompare:@"commandID"] == NSOrderedSame)
+		{
+			urlCommandID = value;
+		}
+		else if([key caseInsensitiveCompare:@"text"] == NSOrderedSame)
+		{
+			textContext = value;
+		}
+		else if([key caseInsensitiveCompare:@"file"] == NSOrderedSame)
+		{
+			// A relative path would resolve against the applet's working directory, which the
+			// sender of the link has no business knowing or depending on. A path to nothing is
+			// refused here rather than handed to a command that expects its context to exist.
+			if(![value isAbsolutePath] || ![[NSFileManager defaultManager] fileExistsAtPath:value])
+			{
+				NSLog(@"OMC: URL refused: a \"file\" value is not an absolute path of an existing item");
+				return errAEEventNotPermitted;
+			}
+
+			if(fileList == nil) //lazy creator
+				fileList = [NSMutableArray array];
+
+			[fileList addObject:[NSURL fileURLWithPath:value]];
+		}
+	}
+
+	if((urlCommandID == nil) || ([urlCommandID length] == 0))
+	{
+		NSLog(@"OMC: URL refused: it does not name a command id");
+		return errAEEventNotPermitted;
+	}
+
+	// we don't support both file and text contexts. files take precedence if someone specifies text too
+	id urlContext = textContext;
+	if((fileList != nil) && ([fileList count] > 0))
+		urlContext = fileList;
+
+	return [OMCCommandExecutor runCommand:urlCommandID forCommandFile:inFileName withContext:urlContext useNavDialog:NO allowKeyWindowSubcommand:NO delegate:delegate triggerURL:inURLString requireURLInvocable:YES];
+}
+
+// inTriggerURL: not nil when the run was started by a URL sent to the applet (exported as OMC_TRIGGER_URL)
+// requireURLInvocable: the command id came from the URL itself, so the command must allow that
++ (OSStatus)runCommand:(NSString *)inCommandNameOrId forCommandFile:(NSString *)inFileName withContext:(id)inContext useNavDialog:(BOOL)clientAllowsNavDialog allowKeyWindowSubcommand:(BOOL)allowKeyWindowSubcommand delegate:(id)delegate triggerURL:(NSString *)inTriggerURL requireURLInvocable:(BOOL)requireURLInvocable
 {
 	OSStatus error = userCanceledErr;//pessimistic scenario
 	
@@ -70,8 +152,49 @@ bool IsFileOrFolderActivation(UInt32 activationType)
 	if(omcExec != NULL)
 	{
         OMCCommandRef commandRef = OMCFindCommand( omcExec, (__bridge CFStringRef)inCommandNameOrId );
+		if( requireURLInvocable )
+		{
+			// Fail closed: anything but an explicit "allowed" from the engine refuses the URL
+			UInt32 urlInvocation = kOmcURLInvocation_RefusedNotOptedIn;
+			const char *refusalReason = NULL;
+			if( !OMCIsValidCommandRef(commandRef) )
+			{
+				refusalReason = "the applet has no such command";
+			}
+			else if( (OMCGetCommandInfo(omcExec, commandRef, kOmcInfo_URLInvocation, &urlInvocation) != noErr) ||
+					 (urlInvocation != kOmcURLInvocation_Allowed) )
+			{
+				switch(urlInvocation)
+				{
+					case kOmcURLInvocation_RefusedLifecycleCommand:
+						refusalReason = "an application lifecycle command is never run by a URL";
+					break;
+
+					case kOmcURLInvocation_RefusedDialogSubcommand:
+						refusalReason = "a dialog event handler is never run by a URL";
+					break;
+
+					default:
+						refusalReason = "the command does not set URL_INVOCABLE to true in the command description";
+					break;
+				}
+			}
+
+			if(refusalReason != NULL)
+			{
+				// the id is the sender's: keep the log line short whatever was sent
+				NSString *loggedID = ([inCommandNameOrId length] > 128) ? [inCommandNameOrId substringToIndex:128] : inCommandNameOrId;
+				NSLog(@"OMC: URL refused for command id \"%@\": %s", loggedID, refusalReason);
+				OMCReleaseExecutor(omcExec);
+				return errAEEventNotPermitted;
+			}
+		}
+
 		if( OMCIsValidCommandRef(commandRef) )
 		{
+			if(inTriggerURL != nil)
+				OMCSetTriggerURL(omcExec, (__bridge CFStringRef)inTriggerURL);
+
             // If the key window is managed by an OMCWindowController, dispatch the command
             // as a dialog subcommand so it inherits the window's dialog context and control values.
             // Exception: commands with OPEN_OBJECT_DIALOG need to run independently to show the open panel.

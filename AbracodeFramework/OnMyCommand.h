@@ -106,6 +106,9 @@ public:
 	Boolean				IsSubcommand(CFArrayRef inName, CFIndex inCommandIndex);
 	SInt32				FindCommandIndex( CFStringRef inNameOrId );
 	OSStatus			GetCommandInfo(SInt32 inCommandRef, OMCInfoType infoType, void *outInfo);
+	UInt32				GetURLInvocationStatus(const CommandDescription &inCommand) const;
+	bool				IsDialogSubcommandID(CFStringRef inCommandID) const;
+	void				SetTriggerURL(CFStringRef inURL) { mTriggerURL.Adopt(inURL, kCFObjRetain); }
 
 	CFMutableStringRef	CreateCommandStringWithObjects(CFArrayRef inFragments,
                                                        CommandRuntimeData &commandRuntimeData,
@@ -191,6 +194,10 @@ protected:
     // using the same OnMyCommandCM object (the engine was never designed for multithreading anyway)
     
     ARefCountedObj<CommandRuntimeData> mInitialRuntimeData;
+
+    // Set once, before the first context check, when this executor runs a command for a URL sent
+    // to the applet. Stamped on every CommandRuntimeData this executor creates.
+    CFObj<CFStringRef>			mTriggerURL;
 
 	CFObj<CFStringRef>			mMyHostBundlePath;
 	CFObj<CFStringRef>			mMyHostAppName;

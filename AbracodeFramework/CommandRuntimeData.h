@@ -24,7 +24,8 @@ public:
           parentCommandUUID(commandRuntimeData.parentCommandUUID), parentDialogUUID(commandRuntimeData.parentDialogUUID),
           inputText(commandRuntimeData.inputText),
           controlContextViewID(commandRuntimeData.controlContextViewID), controlContextViewPartID(commandRuntimeData.controlContextViewPartID),
-          controlContextJSON(commandRuntimeData.controlContextJSON)
+          controlContextJSON(commandRuntimeData.controlContextJSON),
+          triggerURL(commandRuntimeData.triggerURL)
     {
         auto element_count = contextData.objectList.size();
         if((objectIndex < 0) || (objectIndex >= element_count))
@@ -159,6 +160,12 @@ public:
     CFIndex            controlContextViewID     { -1 };
     CFIndex            controlContextViewPartID { -1 };
     CFObj<CFStringRef> controlContextJSON; // JSON or plain-string serialisation of the opaque ActionUI context; nullptr = not set
+
+    // The URL that started this command chain, when it was started by a URL sent to the applet.
+    // Set from the executor in CommonContextCheck and carried into subcommands, next commands and
+    // the handlers of any dialog the chain opens, so each of them can tell that its context came
+    // from a link. nullptr = not started by a URL.
+    CFObj<CFStringRef> triggerURL;
 
     // if caching is requested the following objects are meant to remain valid and passed from command to subcommand
     CFObj<CFURLRef>    cachedSaveAsPath;

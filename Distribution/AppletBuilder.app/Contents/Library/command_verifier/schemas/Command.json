@@ -73,6 +73,7 @@
     "NEXT_COMMAND_ID": { "types": ["string"], "description": "Static chain to another command on success (subcommand id reference)." },
     "LOCALIZATION_TABLE_NAME": { "types": ["string"], "description": "Strings table for droplets / extern modules." },
 
+    "URL_INVOCABLE": { "types": ["boolean"], "description": "Default false; when true the applet's exe URL (<scheme>://exe?commandID=<id>) may run this command. Lifecycle commands and dialog event handlers are refused whatever this says." },
     "USE_NAV_DIALOG_FOR_MISSING_FILE_CONTEXT": { "types": ["boolean"], "description": "Default true; show an open dialog when file context is required but absent." },
     "REQUIRED_OMC_VERSION": { "types": ["string"], "description": "Minimum OMC version (e.g. \"5.0\")." },
     "REQUIRED_MAC_OS_MIN_VERSION": { "types": ["string"] },

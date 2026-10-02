@@ -368,6 +368,7 @@ Same shape with `NIB_NAME` instead of `JSON_NAME`, plus `IS_BLOCKING` (false = m
 | Key | Type | Description |
 |-----|------|-------------|
 | `NEXT_COMMAND_ID` | string | Static: always chains to this command after execution |
+| `URL_INVOCABLE` | boolean | Default false. `true` lets a link `<scheme>://exe?commandID=<id>&text=...` (or `&file=<absolute path>`) run this command |
 | `END_NOTIFICATION` | dict | Shows a completion alert (`TITLE`, `MESSAGE` strings) |
 | `PROGRESS` | dict | Progress bar dialog (`TITLE`, `MODE`: `steps`/`counter`/`indeterminate`) |
 | `INPUT_DIALOG` | dict | Prompts for user input before running (`TYPE`: `text`/`password`/`popup`/`combo`) |
@@ -385,6 +386,10 @@ These are invoked automatically without being declared in `COMMAND_LIST`:
 | `app.did.activate` | App comes to the foreground |
 | `app.did.deactivate` | App loses focus |
 | `app.will.terminate` | App is about to quit — use to clean up background processes |
+
+## URLs Sent to the Applet
+
+Link content is untrusted: anyone can send a URL on the applet's scheme. `<scheme>://exe?commandID=<id>` runs only a command with `URL_INVOCABLE` true; lifetime event commands and dialog subcommands (`INIT_SUBCOMMAND_ID`, `END_OK_SUBCOMMAND_ID`, ...) are always refused. Any other URL runs `omc.app.handle-url` (no key needed) with the URL in `$OMC_OBJ_TEXT`. `$OMC_TRIGGER_URL` is set only for runs started by a URL. Validate `$OMC_OBJ_TEXT` / `$OMC_OBJ_PATH` in such commands and never opt in a destructive one. A refused link logs `OMC: URL refused`.
 
 
 

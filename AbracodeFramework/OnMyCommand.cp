@@ -160,6 +160,11 @@ OnMyCommandCM::Init()
 		// worse.
 		unsetenv("ACTIONUI_REMOTE_ENDPOINT");
 		unsetenv("OMC_ACTIONUI_REMOTE_ENDPOINT");
+
+		// Same reasoning for the URL trigger: it describes one command chain of the applet that
+		// exported it. An applet started by a script of that chain must not report the parent's
+		// URL for its own commands, none of which were started by one.
+		unsetenv("OMC_TRIGGER_URL");
 	});
 
 //#if _DEBUG_
@@ -249,6 +254,8 @@ OnMyCommandCM::CommonContextCheck( const AEDesc *inAEContext, CFTypeRef inContex
     
     assert(mInitialRuntimeData == nullptr);
     mInitialRuntimeData.Adopt(new CommandRuntimeData());
+    if(mTriggerURL != nullptr)
+        mInitialRuntimeData->triggerURL.Adopt(mTriggerURL, kCFObjRetain);
     OMCContextData &contextData = mInitialRuntimeData->GetContextData();
     
 #if _DEBUG_
@@ -1657,11 +1664,122 @@ OnMyCommandCM::GetCommandInfo(SInt32 inCommandRef, OMCInfoType infoType, void *o
 		}
 		break;
 
+		case kOmcInfo_URLInvocation:
+		{
+			UInt32 *outInfoData = (UInt32 *)outInfo;
+			*outInfoData = GetURLInvocationStatus(currCommand);
+		}
+		break;
+
 		default:
 			err = paramErr;
 		break;
 	}
 	return err;
+}
+
+// Ids the application lifecycle runs (OMCAppLifetimeEvents.mm). A link must never run them:
+// app.will.terminate, for one, tears the applet's state down while the applet keeps running.
+static const CFStringRef sAppLifecycleCommandIDs[] =
+{
+	CFSTR("app.will.launch"),
+	CFSTR("app.did.launch"),
+	CFSTR("app.did.activate"),
+	CFSTR("app.did.deactivate"),
+	CFSTR("app.will.terminate")
+};
+
+// Keys of NIB_DIALOG / ACTIONUI_WINDOW naming the commands a window runs for its own events
+// (OMCNibWindowController.mm, OMCActionUIWindowController.mm).
+static const CFStringRef sDialogSubcommandKeys[] =
+{
+	CFSTR("INIT_SUBCOMMAND_ID"),
+	CFSTR("END_OK_SUBCOMMAND_ID"),
+	CFSTR("END_CANCEL_SUBCOMMAND_ID"),
+	CFSTR("WINDOW_DID_ACTIVATE_SUBCOMMAND_ID"),
+	CFSTR("WINDOW_DID_DEACTIVATE_SUBCOMMAND_ID")
+};
+
+// Whether any command's dialog names inCommandID as one of its event handlers, or it is one of
+// the predefined dialog ids. Such a command reads its window's control values and has no meaning
+// without the window. Matched by id across all command groups: stricter than the per-group
+// dispatch, which is the safe direction for a refusal.
+bool
+OnMyCommandCM::IsDialogSubcommandID(CFStringRef inCommandID) const
+{
+	if(inCommandID == nullptr)
+		return false;
+
+	if(OMCDialog::IsPredefinedDialogCommandID(inCommandID))
+		return true;
+
+	if(mCommandList == nullptr)
+		return false;
+
+	const size_t keyCount = sizeof(sDialogSubcommandKeys)/sizeof(sDialogSubcommandKeys[0]);
+	for(UInt32 i = 0; i < mCommandCount; i++)
+	{
+		const CFDictionaryRef dialogDicts[] = { mCommandList[i].nibDialog, mCommandList[i].actionUIWindow };
+		for(CFDictionaryRef oneDialogDict : dialogDicts)
+		{
+			if(oneDialogDict == nullptr)
+				continue;
+
+			for(size_t k = 0; k < keyCount; k++)
+			{
+				CFStringRef oneID = ACFType<CFStringRef>::DynamicCast( ::CFDictionaryGetValue(oneDialogDict, sDialogSubcommandKeys[k]) );
+				if( (oneID != nullptr) && ::CFEqual(oneID, inCommandID) )
+					return true;
+			}
+		}
+	}
+	return false;
+}
+
+// The answer for kOmcInfo_URLInvocation: may the applet's "exe" URL run this command?
+// The refusals that no key can lift are checked first, so an author who sets URL_INVOCABLE
+// on a lifecycle or dialog handler is told the real reason.
+UInt32
+OnMyCommandCM::GetURLInvocationStatus(const CommandDescription &inCommand) const
+{
+	// The lifecycle dispatch finds its command by id or by NAME (FindCommandIndex), so a command
+	// NAMEd "app.will.terminate" is a lifecycle command too, whatever its id is.
+	CFObj<CFStringRef> combinedName;
+	if(inCommand.name != nullptr)
+		combinedName.Adopt( ::CFStringCreateByCombiningStrings(kCFAllocatorDefault, inCommand.name, CFSTR("")) );
+
+	const size_t lifecycleCount = sizeof(sAppLifecycleCommandIDs)/sizeof(sAppLifecycleCommandIDs[0]);
+	for(size_t i = 0; i < lifecycleCount; i++)
+	{
+		if( (inCommand.commandID != nullptr) && ::CFEqual(inCommand.commandID, sAppLifecycleCommandIDs[i]) )
+			return kOmcURLInvocation_RefusedLifecycleCommand;
+
+		if( (combinedName != nullptr) && ::CFEqual((CFStringRef)combinedName, sAppLifecycleCommandIDs[i]) )
+			return kOmcURLInvocation_RefusedLifecycleCommand;
+	}
+
+	if( (inCommand.commandID != nullptr) && IsDialogSubcommandID(inCommand.commandID) )
+		return kOmcURLInvocation_RefusedDialogSubcommand;
+
+	// The main command's id is normalized to 'top!', but a dialog can name it as a handler by
+	// its implicit ids "main" and "<NAME>.main" (FindMainCommandByImplicitID) as well.
+	if( (inCommand.commandID != nullptr) && ::CFEqual(inCommand.commandID, kOMCTopCommandID) )
+	{
+		if( IsDialogSubcommandID(CFSTR("main")) )
+			return kOmcURLInvocation_RefusedDialogSubcommand;
+
+		if(combinedName != nullptr)
+		{
+			CFObj<CFStringRef> implicitMainID( ::CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("%@.main"), (CFStringRef)combinedName) );
+			if( (implicitMainID != nullptr) && IsDialogSubcommandID(implicitMainID) )
+				return kOmcURLInvocation_RefusedDialogSubcommand;
+		}
+	}
+
+	if(inCommand.disabled || !inCommand.urlInvocable)
+		return kOmcURLInvocation_RefusedNotOptedIn;
+
+	return kOmcURLInvocation_Allowed;
 }
 
 #pragma mark -
@@ -3003,6 +3121,12 @@ OnMyCommandCM::AppendTextToCommand(CFMutableStringRef inCommandRef, CFStringRef 
 			// keep the SpecialWordID switch exhaustive (-Wswitch).
 			break;
 
+		case TRIGGER_URL:
+			// Deliberately not substituted: the URL is written by whoever sent the link, and
+			// pasting it into command text would hand that sender a place in the shell command.
+			// It is available as the OMC_TRIGGER_URL environment variable only.
+			break;
+
 		case ACTIONUI_REMOTE_ENDPOINT:
 		{
 			// Unlike the trigger tokens this one IS resolvable here: it is a property of the
@@ -3395,6 +3519,16 @@ OnMyCommandCM::PopulateEnvironList(CFMutableDictionaryRef ioEnvironList, Command
 			{
                 newStrRef = commandRuntimeData.GetParentDialogUUID();
                 releaseNewString = false;
+			}
+			break;
+
+			case TRIGGER_URL: //always exported, but only for a command chain started by a URL
+			{
+				if(commandRuntimeData.triggerURL != nullptr)
+				{
+					newStrRef = commandRuntimeData.triggerURL;
+					releaseNewString = false;
+				}
 			}
 			break;
 

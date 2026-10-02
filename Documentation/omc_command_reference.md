@@ -138,6 +138,43 @@ Controls **when** an action handler is available and what primary runtime contex
 | `act_selected_text` | Text selected or in clipboard |
 | `act_file_or_folder_not_finder_window` | Excludes Desktop/Finder window |
 
+### Running a Command from a URL (`URL_INVOCABLE`)
+
+An applet that declares a URL scheme in its `Info.plist` (`CFBundleURLSchemes`) can be asked to run a command by a link:
+
+```
+myapp://exe?commandID=myapp.open.item&text=some%20text
+myapp://exe?commandID=myapp.import&file=/Users/me/a.txt&file=/Users/me/b.txt
+```
+
+| Key | Type | Default | Description |
+|-----|------|---------|-----------|
+| `URL_INVOCABLE` | Boolean | `false` | When `true`, the applet's `exe` URL may run this command. Without it the URL is refused. |
+
+A link can come from anywhere: a web page, an email, a document, another application, or text shown inside the applet itself. The sender picks the command id and the context, so a command is reachable this way **only when it opts in**.
+
+Rules for the `exe` URL:
+
+- `commandID` names the command. It must set `URL_INVOCABLE` to `true`.
+- `text` becomes the text context (`$OMC_OBJ_TEXT`). `file`, which may repeat, becomes the file context (`$OMC_OBJ_PATH`). When both are given, the files win.
+- Each `file` must be the absolute path of an existing file or folder. One bad value refuses the whole URL.
+- Never run by a URL, whatever the key says:
+  - application lifecycle commands: `app.will.launch`, `app.did.launch`, `app.did.activate`, `app.did.deactivate`, `app.will.terminate`, whether that is the command's `COMMAND_ID` or its `NAME`;
+  - dialog event handlers: any id named by `INIT_SUBCOMMAND_ID`, `END_OK_SUBCOMMAND_ID`, `END_CANCEL_SUBCOMMAND_ID`, `WINDOW_DID_ACTIVATE_SUBCOMMAND_ID` or `WINDOW_DID_DEACTIVATE_SUBCOMMAND_ID` of a `NIB_DIALOG` or `ACTIONUI_WINDOW`, and the predefined `omc.dialog.*` ids. This includes the main command when a dialog names it by `main` or `<NAME>.main`.
+- The command runs with no window, so it gets no control values.
+- When the URL carries no `text`, `$OMC_OBJ_TEXT` is not empty by rule: as in any run with no text context, a command that uses it may get the clipboard text. Use `$OMC_TRIGGER_URL` to see what the link itself said.
+- A refused URL runs nothing and writes one line to the system log, starting with `OMC: URL refused`, naming the command id and the reason.
+
+Any URL on the applet's scheme whose host is not `exe` runs the command with id `omc.app.handle-url`, if the applet has one, with the whole URL as text context. That command needs no key: receiving URLs is its only purpose.
+
+Every run started by a URL exports the URL as `$OMC_TRIGGER_URL`. The variable is absent for every other run. It is also set for the commands chained after it (`NEXT_COMMAND_ID`, `omc_next_command`) and for the handlers of a window the command opens.
+
+> **Treat link content as untrusted input**:
+> - Set `URL_INVOCABLE` only on commands meant to be entry points. Do not set it on a command that deletes, overwrites, installs or sends something without asking the user first.
+> - Validate `$OMC_OBJ_TEXT` and `$OMC_OBJ_PATH` before using them: the sender chose them. Never pass them to `eval`, and always quote them.
+> - A command that is also run from a menu or a button can check `$OMC_TRIGGER_URL` and be stricter when it is set, for example by showing a confirmation first.
+> - `exe_system` and the `exe_applescript` modes get no environment variables, so they cannot see `$OMC_TRIGGER_URL`. Prefer `exe_script_file` for URL-invocable commands.
+
 ---
 
 

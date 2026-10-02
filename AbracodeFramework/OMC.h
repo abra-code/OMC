@@ -96,6 +96,11 @@ enum
 
 OSStatus		OMCExamineContext( OMCExecutorRef inOMCExecutor, OMCCommandRef inCommandRef, CFTypeRef inContext, UInt32 inOptions );
 
+//Mark everything this executor runs as started by a URL sent to the applet. The URL is exported
+//as OMC_TRIGGER_URL to the command, its subcommands and next commands, and the handlers of any
+//dialog it opens. Call before OMCExamineContext(). The executor must not be reused for other runs.
+void			OMCSetTriggerURL( OMCExecutorRef inOMCExecutor, CFStringRef inURL );
+
 	
 //Querying for information about the command:
 	
@@ -104,7 +109,8 @@ typedef enum OMCInfoType
 	kOmcInfo_CommandObjects, //sizeof(UInt32)
 	kOmcInfo_ActivationType, //sizeof(UInt32)
 	kOmcInfo_ExecutionOptions, //sizeof(UInt32)
-	kOmcInfo_OpenObjectDialogParams //sizeof(CFDictionaryRef) - OPEN_OBJECT_DIALOG settings or NULL
+	kOmcInfo_OpenObjectDialogParams, //sizeof(CFDictionaryRef) - OPEN_OBJECT_DIALOG settings or NULL
+	kOmcInfo_URLInvocation //sizeof(UInt32) - whether the applet's "exe" URL may run the command
 } OMCInfoType;
 
 	
@@ -121,6 +127,16 @@ enum
 	kOmcCommandContainsChooseFileDialog		= 0x00000020,
 	kOmcCommandContainsChooseFolderDialog	= 0x00000040,
 	kOmcCommandContainsChooseObjectDialog	= 0x00000080
+};
+
+//information for kOmcInfo_URLInvocation passed back as UInt32
+//only kOmcURLInvocation_Allowed lets a URL run the command; the other values say why not
+enum
+{
+	kOmcURLInvocation_Allowed = 0,
+	kOmcURLInvocation_RefusedNotOptedIn,		//URL_INVOCABLE is not set to true (the default), or the command is disabled
+	kOmcURLInvocation_RefusedLifecycleCommand,	//app.will.launch, app.will.terminate, ... - refused whatever the key says
+	kOmcURLInvocation_RefusedDialogSubcommand	//an init/OK/cancel/activate handler of a dialog - refused whatever the key says
 };
 
 //information for kOmcInfo_ActivationType passed back as UInt32

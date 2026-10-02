@@ -177,6 +177,21 @@ extern "C" OSStatus OMCExamineContext(OMCExecutorRef inOMCExecutor, OMCCommandRe
 }
 
 
+extern "C" void OMCSetTriggerURL(OMCExecutorRef inOMCExecutor, CFStringRef inURL)
+{
+	try
+	{
+		if(inOMCExecutor != nullptr)
+        {
+            inOMCExecutor->SetTriggerURL(inURL);
+        }
+	}
+	catch(...)
+	{
+
+	}
+}
+
 extern "C" OMCCommandRef OMCFindCommand(OMCExecutorRef inOMCExecutor, CFStringRef inNameOrId)
 {
 	OMCCommandRef outCommandRef = -1;

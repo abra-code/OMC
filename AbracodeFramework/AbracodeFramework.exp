@@ -9,6 +9,7 @@ _OMCRetainExecutor
 _OMCFindCommand
 _OMCExamineContext
 _OMCExamineContextAE
+_OMCSetTriggerURL
 _OMCGetCommandInfo
 _OMCExecuteCommandAE
 _OMCExecuteCommand
