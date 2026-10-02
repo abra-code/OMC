@@ -21,6 +21,7 @@ top!/main, not *.main, and not already declared become commands automatically.
 from __future__ import annotations
 
 import json
+import plistlib
 from pathlib import Path
 
 from .errors import ValidationIssue
@@ -78,6 +79,10 @@ _RESERVED_ACTION_IDS = frozenset({
     "omc.dialog.terminate.ok",
     "omc.dialog.terminate.cancel",
 })
+
+# The command that receives every URL on the applet's scheme that is not an "exe" URL
+# (OMCCommandExecutor's runCommandForURL:). It needs no URL_INVOCABLE.
+_HANDLE_URL_COMMAND_ID = "omc.app.handle-url"
 
 # The bundle's own command description: a JSON sibling of the UI documents but not
 # one of them, and already validated in full by Layer 1.
@@ -251,6 +256,9 @@ class BundleResolver:
 
         # actionID cross-check - document-driven, so once per bundle, not per command
         issues += self._check_actionui_action_ids(self._exact_spellings(commands))
+
+        # URL scheme against the commands a URL can reach - once per bundle
+        issues += self._check_url_scheme(commands)
 
         for i, cmd in enumerate(commands):
             if not isinstance(cmd, dict):
@@ -434,6 +442,65 @@ class BundleResolver:
                         f"{key} '{value}' does not resolve to any command or script "
                         f"in the bundle{times}"
                     ))
+        return issues
+
+    def _url_schemes(self) -> list[str] | None:
+        """URL schemes the bundle declares in Info.plist, or None when Info.plist is
+        missing or unreadable (nothing can be said about the schemes then)."""
+        try:
+            with open(self.bundle / "Contents" / "Info.plist", "rb") as f:
+                info = plistlib.load(f)
+        except Exception:
+            return None
+        schemes: list[str] = []
+        url_types = info.get("CFBundleURLTypes") if isinstance(info, dict) else None
+        if isinstance(url_types, list):
+            for one_type in url_types:
+                if isinstance(one_type, dict) and isinstance(one_type.get("CFBundleURLSchemes"), list):
+                    schemes += [s for s in one_type["CFBundleURLSchemes"] if isinstance(s, str) and s]
+        return schemes
+
+    def _check_url_scheme(self, commands: list) -> list[ValidationIssue]:
+        """Check the applet's URL scheme against the commands a URL can reach.
+
+        A URL reaches a command two ways: the "exe" form runs a command that sets
+        URL_INVOCABLE, and every other URL runs 'omc.app.handle-url' (declared, or
+        synthesized from a script of that name).
+
+        URL_INVOCABLE with no scheme is a warning: the author expects a link to work
+        and none can arrive. A scheme with nothing to reach is only an info note:
+        AppletBuilder gives every new applet a scheme, so this is the normal state of
+        an applet that simply does not use links, and it is harmless - every URL is
+        refused or ignored.
+        """
+        schemes = self._url_schemes()
+        if schemes is None:
+            return []
+
+        invocable = [
+            (i, cmd) for i, cmd in enumerate(commands)
+            if isinstance(cmd, dict) and cmd.get("URL_INVOCABLE") is True and cmd.get("DISABLED") is not True
+        ]
+        has_url_handler = (
+            any(isinstance(cmd, dict) and cmd.get("COMMAND_ID") == _HANDLE_URL_COMMAND_ID for cmd in commands)
+            or _HANDLE_URL_COMMAND_ID in self._synthesizable_exact()
+        )
+
+        issues: list[ValidationIssue] = []
+        if not schemes:
+            for i, cmd in invocable:
+                issues.append(ValidationIssue(
+                    "warning", f"{self._cmd_path(cmd, i)}.URL_INVOCABLE",
+                    "URL_INVOCABLE is set but the applet declares no URL scheme "
+                    "(CFBundleURLTypes / CFBundleURLSchemes in Info.plist), so no link can reach this command"
+                ))
+        elif not invocable and not has_url_handler:
+            issues.append(ValidationIssue(
+                "info", "Info.plist.CFBundleURLTypes",
+                f"the applet declares the URL scheme '{schemes[0]}' but no command sets URL_INVOCABLE "
+                f"and there is no '{_HANDLE_URL_COMMAND_ID}' command, so every link is refused. "
+                f"Fine if the applet does not use links; the scheme can also be removed."
+            ))
         return issues
 
     def _check_image(self, cmd: dict, path: str) -> list[ValidationIssue]:

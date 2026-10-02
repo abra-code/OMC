@@ -546,6 +546,195 @@ def test_action_ids() -> None:
               "not.a.ui.document" not in out, out.strip())
 
 
+# -- URL_INVOCABLE and the applet's URL scheme --
+def _url_bundle_plist(commands: str) -> str:
+    return f"""<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+  <key>COMMAND_LIST</key><array>
+    <dict>
+      <key>NAME</key><string>MyApp</string>
+      <key>EXECUTION_MODE</key><string>exe_script_file</string>
+    </dict>
+{commands}
+  </array>
+  <key>VERSION</key><integer>2</integer>
+</dict></plist>
+"""
+
+
+def _url_command(command_id: str, extra: str = "<key>URL_INVOCABLE</key><true/>") -> str:
+    return f"""    <dict>
+      <key>NAME</key><string>MyApp</string>
+      <key>COMMAND_ID</key><string>{command_id}</string>
+      <key>EXECUTION_MODE</key><string>exe_script_file</string>
+      {extra}
+    </dict>"""
+
+
+_INFO_WITH_SCHEME = """<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+  <key>CFBundleURLTypes</key><array>
+    <dict><key>CFBundleURLSchemes</key><array><string>myapp</string></array></dict>
+  </array>
+</dict></plist>
+"""
+
+_INFO_WITHOUT_SCHEME = """<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+  <key>CFBundleName</key><string>MyApp</string>
+</dict></plist>
+"""
+
+
+def test_url_invocable() -> None:
+    print("URL_INVOCABLE and the URL scheme:")
+    with tempfile.TemporaryDirectory() as d:
+        scheme = {"../Info.plist": _INFO_WITH_SCHEME}
+        no_scheme = {"../Info.plist": _INFO_WITHOUT_SCHEME}
+
+        # An opted-in command in an applet with a scheme: nothing to say.
+        good = _make_bundle(Path(d) / "Good.app", _url_bundle_plist(_url_command("myapp.open")),
+                            ["MyApp.main.sh", "myapp.open.sh"], scheme)
+        rc, out = run(str(good))
+        check("URL_INVOCABLE with a scheme -> exit 0", rc == 0, f"got {rc}: {out.strip()}")
+        check("URL_INVOCABLE with a scheme: no notes at all",
+              "[ERROR]" not in out and "[WARNING]" not in out and "[INFO]" not in out, out.strip())
+
+        # A wrong type is caught by the schema.
+        typed = _make_bundle(Path(d) / "Typed.app",
+                             _url_bundle_plist(_url_command("myapp.open", "<key>URL_INVOCABLE</key><string>yes</string>")),
+                             ["MyApp.main.sh", "myapp.open.sh"], scheme)
+        rc, out = run(str(typed))
+        check("URL_INVOCABLE must be a boolean", rc == 1 and "URL_INVOCABLE" in out, f"got {rc}: {out.strip()}")
+
+        # The engine refuses lifecycle commands whatever the key says.
+        for lifecycle_id in ("app.will.launch", "app.did.launch", "app.did.activate",
+                             "app.did.deactivate", "app.will.terminate"):
+            b = _make_bundle(Path(d) / f"Life-{lifecycle_id}.app", _url_bundle_plist(_url_command(lifecycle_id)),
+                             ["MyApp.main.sh", f"{lifecycle_id}.sh"], scheme)
+            rc, out = run(str(b))
+            check(f"URL_INVOCABLE on {lifecycle_id} -> error",
+                  rc == 1 and "application lifecycle command" in out, f"got {rc}: {out.strip()}")
+
+        # A command NAMEd like a lifecycle id is one too: the lifecycle dispatch finds by id or NAME.
+        named = """    <dict>
+      <key>NAME</key><string>app.will.terminate</string>
+      <key>COMMAND_ID</key><string>myapp.cleanup</string>
+      <key>EXECUTION_MODE</key><string>exe_script_file</string>
+      <key>URL_INVOCABLE</key><true/>
+    </dict>"""
+        b = _make_bundle(Path(d) / "LifeByName.app", _url_bundle_plist(named),
+                         ["MyApp.main.sh", "myapp.cleanup.sh"], scheme)
+        rc, out = run(str(b))
+        check("URL_INVOCABLE on a command NAMEd app.will.terminate -> error",
+              rc == 1 and "'app.will.terminate' is an application lifecycle command" in out, f"got {rc}: {out.strip()}")
+
+        # ... and dialog event handlers, wherever in the list the dialog is declared.
+        dialog_owner = """    <dict>
+      <key>NAME</key><string>MyApp</string>
+      <key>COMMAND_ID</key><string>myapp.dialog</string>
+      <key>ACTIONUI_WINDOW</key><dict>
+        <key>JSON_NAME</key><string>MyWindow</string>
+        <key>INIT_SUBCOMMAND_ID</key><string>myapp.dialog.init</string>
+        <key>END_OK_SUBCOMMAND_ID</key><string>myapp.dialog.ok</string>
+      </dict>
+    </dict>"""
+        handler = _make_bundle(Path(d) / "Handler.app",
+                               _url_bundle_plist(_url_command("myapp.dialog.ok") + "\n" + dialog_owner),
+                               ["MyApp.main.sh", "myapp.dialog.init.sh", "myapp.dialog.ok.sh"],
+                               {"MyWindow.json": "{}\n", **scheme})
+        rc, out = run(str(handler))
+        check("URL_INVOCABLE on a dialog event handler -> error",
+              rc == 1 and "'myapp.dialog.ok' is a dialog event handler" in out, f"got {rc}: {out.strip()}")
+        check("the dialog's other handler is not blamed", "'myapp.dialog.init' is a dialog" not in out, out.strip())
+
+        predefined = _make_bundle(Path(d) / "Predefined.app",
+                                  _url_bundle_plist(_url_command("omc.dialog.initialize")),
+                                  ["MyApp.main.sh", "omc.dialog.initialize.sh"], scheme)
+        rc, out = run(str(predefined))
+        check("URL_INVOCABLE on a predefined dialog id -> error",
+              rc == 1 and "is a dialog event handler" in out, f"got {rc}: {out.strip()}")
+
+        # The main command named as a handler by its implicit "<NAME>.main" id.
+        main_handler = """<?xml version="1.0" encoding="UTF-8"?>
+<plist version="1.0"><dict>
+  <key>COMMAND_LIST</key><array>
+    <dict>
+      <key>NAME</key><string>MyApp</string>
+      <key>URL_INVOCABLE</key><true/>
+    </dict>
+    <dict>
+      <key>NAME</key><string>MyApp</string>
+      <key>COMMAND_ID</key><string>myapp.dialog</string>
+      <key>ACTIONUI_WINDOW</key><dict>
+        <key>JSON_NAME</key><string>MyWindow</string>
+        <key>INIT_SUBCOMMAND_ID</key><string>MyApp.main</string>
+      </dict>
+    </dict>
+  </array>
+  <key>VERSION</key><integer>2</integer>
+</dict></plist>
+"""
+        main_bundle = _make_bundle(Path(d) / "MainHandler.app", main_handler, ["MyApp.main.sh"],
+                                   {"MyWindow.json": "{}\n", **scheme})
+        rc, out = run(str(main_bundle))
+        check("URL_INVOCABLE on a main command named as a dialog handler -> error",
+              rc == 1 and "'MyApp.main' is a dialog event handler" in out, f"got {rc}: {out.strip()}")
+
+        # The same errors without a bundle: they need the command list only.
+        flat = Path(d) / "Command.plist"
+        flat.write_text(_url_bundle_plist(_url_command("app.will.terminate")), encoding="utf-8")
+        rc, out = run(str(flat))
+        check("lifecycle error is reported for a bare command file too",
+              rc == 1 and "application lifecycle command" in out, f"got {rc}: {out.strip()}")
+
+        # Opted in, but no link can arrive.
+        unreachable = _make_bundle(Path(d) / "Unreachable.app", _url_bundle_plist(_url_command("myapp.open")),
+                                   ["MyApp.main.sh", "myapp.open.sh"], no_scheme)
+        rc, out = run(str(unreachable))
+        check("URL_INVOCABLE without a scheme -> warning", rc == 2 and "declares no URL scheme" in out,
+              f"got {rc}: {out.strip()}")
+
+        # A scheme nothing answers: advisory only, because AppletBuilder adds one to every applet.
+        unused = _make_bundle(Path(d) / "Unused.app", _url_bundle_plist(_url_command("myapp.open", "")),
+                              ["MyApp.main.sh", "myapp.open.sh"], scheme)
+        rc, out = run(str(unused))
+        check("scheme with nothing to reach -> exit 0", rc == 0, f"got {rc}: {out.strip()}")
+        check("scheme with nothing to reach: info note only",
+              "[INFO]" in out and "every link is refused" in out and "[WARNING]" not in out, out.strip())
+
+        # URL_INVOCABLE=false is the same as leaving it out.
+        opted_out = _make_bundle(Path(d) / "OptedOut.app",
+                                 _url_bundle_plist(_url_command("myapp.open", "<key>URL_INVOCABLE</key><false/>")),
+                                 ["MyApp.main.sh", "myapp.open.sh"], scheme)
+        rc, out = run(str(opted_out))
+        check("URL_INVOCABLE=false counts as not reachable", rc == 0 and "every link is refused" in out,
+              f"got {rc}: {out.strip()}")
+
+        # omc.app.handle-url answers the scheme, declared or as a bare script.
+        declared = _make_bundle(Path(d) / "Declared.app",
+                                _url_bundle_plist(_url_command("omc.app.handle-url", "")),
+                                ["MyApp.main.sh", "omc.app.handle-url.sh"], scheme)
+        rc, out = run(str(declared))
+        check("declared omc.app.handle-url answers the scheme", rc == 0 and "[INFO]" not in out,
+              f"got {rc}: {out.strip()}")
+        scripted = _make_bundle(Path(d) / "Scripted.app", _url_bundle_plist(""),
+                                ["MyApp.main.sh", "omc.app.handle-url.sh"], scheme)
+        rc, out = run(str(scripted))
+        check("a bare omc.app.handle-url script answers the scheme", rc == 0 and "[INFO]" not in out,
+              f"got {rc}: {out.strip()}")
+
+        # No Info.plist at all: nothing can be said about schemes, so nothing is.
+        bare = _make_bundle(Path(d) / "Bare.app", _url_bundle_plist(_url_command("myapp.open")),
+                            ["MyApp.main.sh", "myapp.open.sh"])
+        rc, out = run(str(bare))
+        check("no Info.plist -> no scheme notes", rc == 0 and "[WARNING]" not in out and "[INFO]" not in out,
+              f"got {rc}: {out.strip()}")
+
+
 def main() -> int:
     if not VERIFIER.exists():
         print(f"verifier not found: {VERIFIER}", file=sys.stderr)
@@ -553,6 +742,7 @@ def main() -> int:
     test_flat_fixtures()
     test_layer2()
     test_action_ids()
+    test_url_invocable()
     print(f"\n{_passed} passed, {_failed} failed.")
     return 1 if _failed else 0
 

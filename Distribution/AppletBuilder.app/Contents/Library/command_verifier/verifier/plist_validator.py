@@ -28,6 +28,24 @@ _COMMAND_ANNOTATION_KEYS = {"VERSION", "NOTES", "CATEGORIES"}
 
 _COND_IN_RE = re.compile(r"^(\w+)\s+in\s+\[(.*)\]$")
 
+# Commands the engine refuses to run for a URL whatever URL_INVOCABLE says
+# (OnMyCommandCM::GetURLInvocationStatus). Matching is exact, as the engine's is.
+_LIFECYCLE_COMMAND_IDS = frozenset({
+    "app.will.launch", "app.did.launch", "app.did.activate",
+    "app.did.deactivate", "app.will.terminate",
+})
+# OMCDialog::IsPredefinedDialogCommandID, including the 4-character Carbon ids.
+_PREDEFINED_DIALOG_COMMAND_IDS = frozenset({
+    "omc.dialog.ok", "omc.dialog.cancel", "omc.dialog.initialize",
+    "omc.dialog.terminate.ok", "omc.dialog.terminate.cancel",
+    "ok  ", "cncl", "ini!", "end!", "cnc!",
+})
+# Keys of NIB_DIALOG / ACTIONUI_WINDOW that name a window's event handlers.
+_DIALOG_SUBCOMMAND_KEYS = (
+    "INIT_SUBCOMMAND_ID", "END_OK_SUBCOMMAND_ID", "END_CANCEL_SUBCOMMAND_ID",
+    "WINDOW_DID_ACTIVATE_SUBCOMMAND_ID", "WINDOW_DID_DEACTIVATE_SUBCOMMAND_ID",
+)
+
 
 def _eval_condition(cond: str, obj: dict, dialog_name: str | None) -> bool:
     cond = cond.strip()
@@ -81,6 +99,64 @@ class PlistValidator:
                     issues += self._validate_command(cmd, cpath)
                 else:
                     issues.append(ValidationIssue("error", cpath, "command must be a dictionary"))
+            issues += self._check_url_invocable(command_list)
+        return issues
+
+    # -- URL_INVOCABLE on a command no URL can run --
+    def _check_url_invocable(self, command_list: list) -> list[ValidationIssue]:
+        """URL_INVOCABLE=true on a lifecycle command or a dialog event handler.
+
+        The engine refuses those for a URL whatever the key says, so the key there is
+        either a mistake about what the command is or an attempt to expose a handler
+        that must not be exposed. Either way the link will not work: an error.
+        The dialog handler ids are collected across the whole command list, not per
+        command group, which is how the engine decides too.
+        """
+        dialog_handler_ids: set[str] = set(_PREDEFINED_DIALOG_COMMAND_IDS)
+        for cmd in command_list:
+            if not isinstance(cmd, dict):
+                continue
+            for container_key in ("NIB_DIALOG", "ACTIONUI_WINDOW"):
+                sub = cmd.get(container_key)
+                if isinstance(sub, dict):
+                    for k in _DIALOG_SUBCOMMAND_KEYS:
+                        ref = sub.get(k)
+                        if isinstance(ref, str) and ref:
+                            dialog_handler_ids.add(ref)
+
+        issues: list[ValidationIssue] = []
+        for i, cmd in enumerate(command_list):
+            if not isinstance(cmd, dict) or cmd.get("URL_INVOCABLE") is not True:
+                continue
+            cid = cmd.get("COMMAND_ID")
+            # The lifecycle dispatch finds its command by id or by NAME, so the engine
+            # refuses a command NAMEd like a lifecycle id too, whatever its id is.
+            name = cmd.get("NAME")
+            if isinstance(name, list):
+                name = "".join(part for part in name if isinstance(part, str))
+            where = f"{self._command_path(cmd, i)}.URL_INVOCABLE"
+            lifecycle = next((v for v in (cid, name) if isinstance(v, str) and v in _LIFECYCLE_COMMAND_IDS), None)
+            if lifecycle is not None:
+                issues.append(ValidationIssue(
+                    "error", where,
+                    f"'{lifecycle}' is an application lifecycle command; a URL never runs it, "
+                    f"so URL_INVOCABLE has no effect here - remove it"
+                ))
+                continue
+            # The main command answers to 'top!', 'main' and '<NAME>.main', and a dialog
+            # can name it as a handler by any of them.
+            is_main = (not (isinstance(cid, str) and cid)) or cid in ("top!", "main") \
+                or (isinstance(name, str) and cid == f"{name}.main")
+            own_ids = [cid] if isinstance(cid, str) and cid else []
+            if is_main:
+                own_ids = ["top!", "main"] + ([f"{name}.main"] if isinstance(name, str) else [])
+            handler = next((v for v in own_ids if v in dialog_handler_ids), None)
+            if handler is not None:
+                issues.append(ValidationIssue(
+                    "error", where,
+                    f"'{handler}' is a dialog event handler; a URL never runs it, "
+                    f"so URL_INVOCABLE has no effect here - remove it"
+                ))
         return issues
 
     # ── Pass A — root ─────────────────────────────────────────────────────────
