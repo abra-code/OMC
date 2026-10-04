@@ -316,11 +316,66 @@ applet_rename_contents() {
     return "$url_scheme_rc"
 }
 
-# Ad-hoc codesign using the standalone script
+# Give the applet's executable a Mach-O UUID of its own, derived from the bundle
+# identifier. The executable is a copy of AppletBuilder's, so without this every
+# applet has the same UUID, and macOS, which identifies a program by it for Local
+# Network privacy, asks about and lists whichever applet the Mac saw first. The UUID
+# depends only on the bundle identifier, so it survives rebuilds and engine updates
+# and the user is not asked again. See macho_set_uuid.py.
+#
+# Called from applet_codesign and nowhere else: rewriting the UUID breaks the
+# signature, and an arm64 executable with a broken signature does not run, so the
+# stamp may only happen where a signing follows. A failure is reported and is not
+# fatal: the applet works as before, with the shared UUID.
+applet_stamp_executable_uuid() {
+    local app_path="$1"
+    local bundle_id="$(plist_read "$app_path/Contents/Info.plist" CFBundleIdentifier)"
+    local exe_name="$(plist_read "$app_path/Contents/Info.plist" CFBundleExecutable)"
+    if [ -z "$bundle_id" ] || [ -z "$exe_name" ] || [ ! -f "$app_path/Contents/MacOS/$exe_name" ]; then
+        ab_log "Executable UUID not set: no bundle identifier or executable in ${app_path}."
+        return 1
+    fi
+    local stamp_output
+    stamp_output=$("$python3" "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/macho_set_uuid.py" "$app_path/Contents/MacOS/$exe_name" "$bundle_id" 2>&1)
+    local stamp_status=$?
+    if [ "$stamp_status" -ne 0 ]; then
+        ab_log "Warning: the executable's UUID could not be set (exit ${stamp_status}): ${stamp_output}"
+        ab_log "The applet shares its UUID with other applets; macOS may name another applet when it asks for Local Network access."
+        return 1
+    fi
+    ab_log "Executable UUID for ${bundle_id}:"
+    ab_log "$stamp_output"
+    # Whether bytes were written, for applet_codesign: an unchanged file still has
+    # the signature it had.
+    case "$stamp_output" in
+        *" -> "*) AB_UUID_WRITTEN="$app_path/Contents/MacOS/$exe_name" ;;
+    esac
+    return 0
+}
+
+# Codesign using the standalone script, after giving the executable its own UUID
 applet_codesign() {
     local app_path="$1"
     local identity="$2"
+    AB_UUID_WRITTEN=""
+    applet_stamp_executable_uuid "$app_path"
     /bin/sh "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/codesign_applet.sh" "$app_path" "$identity"
+    local sign_status=$?
+    # A failed signing (a wrong identity, a locked keychain) after the UUID was written
+    # leaves an executable whose old signature no longer matches, which macOS kills at
+    # launch on Apple silicon. Before the stamp existed such an applet still launched
+    # on the signature it came with, so give the executable an ad hoc one: the applet
+    # is not signed as asked, and the failure is still returned, but it runs.
+    if [ "$sign_status" -ne 0 ] && [ -n "$AB_UUID_WRITTEN" ]; then
+        /usr/bin/codesign --force --sign - "$AB_UUID_WRITTEN" > /dev/null 2>&1
+        local adhoc_status=$?
+        if [ "$adhoc_status" -eq 0 ]; then
+            ab_log "Signing failed; the executable was signed ad hoc so that the applet still launches."
+        else
+            ab_log "Signing failed, and the executable could not be signed ad hoc either: the applet will not launch until a build signs it."
+        fi
+    fi
+    return "$sign_status"
 }
 
 # ──────────────────────────────────────────────────────────────

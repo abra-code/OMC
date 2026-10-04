@@ -304,7 +304,7 @@ def test_create_build() -> None:
             d = Path(d)
             name = "TestApplet"
             rc, out, err = run("create", "--template", "Empty", "--name", name,
-                               "--dest", str(d), "--python", "--no-codesign",
+                               "--dest", str(d), "--python",
                                "--bundle-id", "com.test.testapplet")
             check("create Empty --python → exit 0", rc == 0, f"got {rc}: {err.strip()}")
             app = d / f"{name}.app"
@@ -366,6 +366,96 @@ def test_create_build() -> None:
                   and "missing from AppletBuilder" not in err
                   and "Removed the ActionUI shell client set" not in err,
                   err.strip()[-300:])
+    finally:
+        if saved_prefix is None:
+            subprocess.run(["/usr/bin/defaults", "delete", _DEFAULTS_DOMAIN, _DEFAULTS_KEY],
+                           capture_output=True)
+        else:
+            subprocess.run(["/usr/bin/defaults", "write", _DEFAULTS_DOMAIN, _DEFAULTS_KEY, saved_prefix],
+                           capture_output=True)
+
+
+def _uuids(executable: Path) -> list[str]:
+    """The Mach-O UUID of each architecture in `executable`, as macho_set_uuid.py --show prints them."""
+    tool = CLI.parent.parent / "Scripts" / "macho_set_uuid.py"
+    p = subprocess.run([sys.executable, str(tool), "--show", str(executable)], capture_output=True, text=True)
+    return [line.split(": ", 1)[1] for line in p.stdout.splitlines() if ": " in line]
+
+
+def test_executable_uuid() -> None:
+    """Each applet's executable gets a UUID of its own, from its bundle identifier.
+
+    macOS identifies a program by its executable's Mach-O UUID for Local Network privacy. Applet
+    executables are copies of AppletBuilder's, so without the stamp they all share one, and macOS
+    asks about whichever applet it saw first.
+    """
+    print("executable UUID (toolchain):")
+    if not shutil.which("codesign"):
+        print("  skip executable UUID - codesign not available")
+        return
+
+    saved = subprocess.run(["/usr/bin/defaults", "read", _DEFAULTS_DOMAIN, _DEFAULTS_KEY],
+                           capture_output=True, text=True)
+    saved_prefix = saved.stdout.strip() if saved.returncode == 0 else None
+    try:
+        with tempfile.TemporaryDirectory() as d:
+            d = Path(d)
+            master = _uuids(CLI.parents[2] / "MacOS" / "AppletBuilder")
+            check("the master executable has a UUID per architecture", len(master) >= 1, str(master))
+
+            apps = {}
+            for name, bundle_id in (("UuidOne", "com.test.uuidone"), ("UuidTwo", "com.test.uuidtwo")):
+                rc, out, err = run("create", "--template", "Empty", "--name", name,
+                                   "--dest", str(d), "--bundle-id", bundle_id)
+                check(f"create {name} -> exit 0", rc == 0, f"got {rc}: {err.strip()}")
+                apps[name] = d / f"{name}.app"
+            one = _uuids(apps["UuidOne"] / "Contents" / "MacOS" / "UuidOne")
+            two = _uuids(apps["UuidTwo"] / "Contents" / "MacOS" / "UuidTwo")
+            check("create -> as many UUIDs as the master has", len(one) == len(master), str(one))
+            check("create -> no UUID is the master's", not set(one) & set(master), str(one))
+            check("create -> two applets share no UUID", not set(one) & set(two), f"{one} {two}")
+            check("create -> architectures of one applet differ", len(set(one)) == len(one), str(one))
+            verify = subprocess.run(["/usr/bin/codesign", "--verify", "--deep", str(apps["UuidOne"])],
+                                    capture_output=True, text=True)
+            check("create -> the stamped applet's signature is valid", verify.returncode == 0, verify.stderr.strip())
+
+            # A build keeps the UUID: macOS would otherwise ask the user again after every update.
+            rc, out, err = run("build", str(apps["UuidOne"]))
+            check("build -> exit 0", rc == 0, f"got {rc}: {err.strip()[-300:]}")
+            check("build -> the UUID is reported", "Executable UUID for com.test.uuidone" in err, err.strip()[-400:])
+            check("build -> the same UUIDs as before", _uuids(apps["UuidOne"] / "Contents" / "MacOS" / "UuidOne") == one)
+            rc, out, err = run("build", str(apps["UuidOne"]), "--force")
+            check("build --force (executable copied again) -> exit 0", rc == 0, f"got {rc}: {err.strip()[-300:]}")
+            check("build --force -> the same UUIDs as before",
+                  _uuids(apps["UuidOne"] / "Contents" / "MacOS" / "UuidOne") == one)
+            verify = subprocess.run(["/usr/bin/codesign", "--verify", "--deep", str(apps["UuidOne"])],
+                                    capture_output=True, text=True)
+            check("build -> the signature is valid", verify.returncode == 0, verify.stderr.strip())
+
+            # A signing that fails after the stamp must not leave an executable that cannot
+            # launch: its old signature no longer matches, so it gets an ad hoc one.
+            rc, out, err = run("build", str(apps["UuidTwo"]), "--force", "--identity", "No Such Identity 0000")
+            check("build with a bad identity -> exit 1", rc == 1, f"got {rc}")
+            verify = subprocess.run(["/usr/bin/codesign", "--verify",
+                                     str(apps["UuidTwo"] / "Contents" / "MacOS" / "UuidTwo")],
+                                    capture_output=True, text=True)
+            check("build with a bad identity -> the executable's signature is still valid",
+                  verify.returncode == 0, verify.stderr.strip())
+            check("build with a bad identity -> the UUIDs are the applet's own",
+                  _uuids(apps["UuidTwo"] / "Contents" / "MacOS" / "UuidTwo") == two)
+
+            # --no-codesign is accepted and ignored: an unsigned applet does not launch, and its
+            # executable would keep the UUID every applet shares.
+            rc, out, err = run("create", "--template", "Empty", "--name", "UuidPlain", "--dest", str(d),
+                               "--bundle-id", "com.test.uuidplain", "--no-codesign")
+            check("create --no-codesign -> exit 0", rc == 0, f"got {rc}: {err.strip()}")
+            check("create --no-codesign -> says the option is ignored", "--no-codesign is ignored" in err, err.strip())
+            plain = d / "UuidPlain.app"
+            check("create --no-codesign -> the applet has its own UUIDs",
+                  not set(_uuids(plain / "Contents" / "MacOS" / "UuidPlain")) & set(master))
+            verify = subprocess.run(["/usr/bin/codesign", "--verify", "--deep", str(plain)],
+                                    capture_output=True, text=True)
+            check("create --no-codesign -> the applet is signed", verify.returncode == 0, verify.stderr.strip())
     finally:
         if saved_prefix is None:
             subprocess.run(["/usr/bin/defaults", "delete", _DEFAULTS_DOMAIN, _DEFAULTS_KEY],
@@ -518,6 +608,7 @@ def main() -> int:
     test_preview()
     test_create_arg_errors()
     test_create_build()
+    test_executable_uuid()
     test_shell_client_install()
     print(f"\n{_passed} passed, {_failed} failed.")
     return 1 if _failed else 0

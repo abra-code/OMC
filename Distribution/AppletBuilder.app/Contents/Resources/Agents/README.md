@@ -30,7 +30,7 @@ itself; just run it by path:
 appletbuilder create (--template <name|path> | --clone <App.app>) \
                      --name <Name> --dest <dir> \
                      [--bundle-id <id>] [--python] [--icon <name|path>] \
-                     [--identity <id>] [--no-codesign]
+                     [--identity <id>]
 ```
 
 - `--template <name|path>` — a template name from `list-templates` (e.g.
@@ -43,8 +43,8 @@ appletbuilder create (--template <name|path> | --clone <App.app>) \
 - `--python` — embed the Python runtime and start from a `<Name>.main.py` script.
 - `--icon <name|path>` — an icon name from `list-icons` (e.g. `Bolt`) or a path to a
   `.icon`/`.icns`/image; omit to keep the template's icon.
-- `--identity <id>` — codesigning identity (default ad-hoc `-`).
-- `--no-codesign` — skip codesigning.
+- `--identity <id>` — codesigning identity (default ad-hoc `-`). A new applet is always
+  signed; the old `--no-codesign` is accepted and ignored.
 
 On success the new applet's path is printed to **stdout**. Example:
 

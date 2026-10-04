@@ -8,7 +8,9 @@
 #
 # Codesigning honors the same knobs as the build pipeline:
 #   AB_IDENTITY      signing identity (default "-" ad-hoc)
-#   AB_NO_CODESIGN   "1" = skip codesigning entirely
+#   AB_NO_CODESIGN   "1" = skip codesigning entirely. For AppletBuilder's own tests of
+#                    creations that fail; the agent CLI never sets it. An unsigned
+#                    applet does not launch on Apple silicon.
 
 [ -n "$__LIB_CREATE_SH" ] && return 0
 __LIB_CREATE_SH=1

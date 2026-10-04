@@ -52,6 +52,8 @@ The usual flow is to write and review the plan against your development copy - p
 
 The Element template picker (top right of UI Files panel) inserts a starter snippet for any element type.
 
+**The executable's own identity.** Every signing (New Applet and Build) first gives the applet's executable in `Contents/MacOS` a Mach-O UUID of its own, derived from the bundle identifier. The executable is a copy of AppletBuilder's, and macOS identifies a program by that UUID for Local Network privacy: with one UUID in every applet, the "find devices on local networks" prompt and the row in System Settings > Privacy & Security > Local Network name whichever applet the Mac saw first, and one answer applies to all of them. The UUID depends only on the bundle identifier, so it is the same after every build and engine update and the user is not asked again; changing the bundle identifier makes the applet a new program to macOS. `Abracode.framework` is not changed. An applet that reaches the local network (or starts a tool that does) should also carry `NSLocalNetworkUsageDescription` in its Info.plist, the sentence macOS shows in the prompt. An applet built before this change keeps the shared UUID until it is built again. `Scripts/macho_set_uuid.py --show <executable>` in AppletBuilder prints the UUIDs.
+
 ## Common Workflows
 
 **Add a command**: Commands tab → `+` → New Command dialog (Name, COMMAND_ID, execution mode, activation mode, script type) → Create. AppletBuilder appends the entry to `Command.plist` and creates the matching script file in `Scripts/`.

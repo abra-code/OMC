@@ -85,7 +85,7 @@ Usage:
   appletbuilder create   (--template <name|path> | --clone <App.app>)
                          --name <Name> --dest <dir>
                          [--bundle-id <id>] [--python] [--icon <name|path>]
-                         [--identity <id>] [--no-codesign]
+                         [--identity <id>]
   appletbuilder validate <App.app | Command.json | UI.json | script-file>
   appletbuilder build    <App.app> [--identity <id>] [--thin arm64|x86_64|none]
                          [--warnings-as-errors] [--update-python] [--force] [--test]
@@ -137,7 +137,10 @@ cmd_create() {
             --python)      python="1"; shift ;;
             --icon)        _need_value "$1" $# "$2" || return 2; icon="$2"; shift 2 ;;
             --identity)    _need_value "$1" $# "$2" || return 2; AB_IDENTITY="$2"; shift 2 ;;
-            --no-codesign) AB_NO_CODESIGN="1"; shift ;;
+            # Accepted and ignored, so that an old script still runs. An applet is always
+            # signed: an unsigned one does not launch on Apple silicon, and its executable
+            # keeps the UUID it shares with every other applet until something signs it.
+            --no-codesign) echo "create: --no-codesign is ignored: an applet is always signed (ad hoc unless --identity is given)" >&2; shift ;;
             -h|--help)     usage; return 2 ;;
             *) echo "create: unknown option: $1" >&2; return 2 ;;
         esac
