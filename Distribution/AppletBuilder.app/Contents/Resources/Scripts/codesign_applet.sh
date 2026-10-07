@@ -592,6 +592,28 @@ trap '/bin/rm -rf "$ent_cache_dir"; exit 130' INT
 trap '/bin/rm -rf "$ent_cache_dir"; exit 131' QUIT
 trap '/bin/rm -rf "$ent_cache_dir"; exit 143' TERM
 
+# Take out of a cached entitlements file what Xcode adds to every plain build
+# (xcodebuild build, in any configuration; only an archive leaves it out):
+# com.apple.security.get-task-allow, which lets a debugger attach, and the empty
+# com.apple.application-identifier that comes with it. The notary service
+# refuses a program that asks for the first, so a helper built that way and
+# carried over faithfully would fail the whole submission. Only for a signing
+# with a certificate: an ad-hoc run leaves a development build debuggable.
+# Arguments: entitlements_file, path (for the message)
+drop_debug_entitlements() {
+    local debug_key="com.apple.security.get-task-allow"
+    /usr/libexec/PlistBuddy -c "Delete :$debug_key" "$1" >/dev/null 2>&1
+    if [ "$?" = "0" ]; then
+        echo "Dropping the debugger entitlement (get-task-allow) from $(/usr/bin/basename "$2"): not allowed in a release"
+    fi
+    local app_id_key="com.apple.application-identifier"
+    local app_id
+    app_id="$(/usr/libexec/PlistBuddy -c "Print :$app_id_key" "$1" 2>/dev/null)"
+    if [ "$?" = "0" ] && [ -z "$app_id" ]; then
+        /usr/libexec/PlistBuddy -c "Delete :$app_id_key" "$1" >/dev/null 2>&1
+    fi
+}
+
 # Record what re-signing a path would otherwise lose: its entitlements (subject to
 # the ad-hoc rule above) and, with a second argument "identifier", its signing
 # identifier unless the linker made it. One codesign call reads both: the
@@ -611,6 +633,14 @@ cache_signature() {
     if [ "$identity" = "-" ]; then
         case "$details" in
             *"Signature=adhoc"*) ;;
+            *) keep_entitlements="no" ;;
+        esac
+    fi
+    if [ "$keep_entitlements" = "yes" ] && [ "$identity" != "-" ]; then
+        drop_debug_entitlements "$cache_base.entitlements" "$target_path"
+        entitlements_xml="$(/bin/cat "$cache_base.entitlements" 2>/dev/null)"
+        case "$entitlements_xml" in
+            *'<key>'*) ;;
             *) keep_entitlements="no" ;;
         esac
     fi
