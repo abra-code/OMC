@@ -5,7 +5,7 @@
   "inheritsViewProperties": true,
   "topLevelKeys": [],
   "ownProperties": {
-    "isOn":  { "types": ["boolean"], "required": false, "description": "Initial on/off state; defaults to false" },
+    "isOn":  { "types": ["boolean"], "required": false, "description": "Initial on/off state; defaults to false. In a data-driven template, a single column reference such as \"$1\": the row holds the state ('true' or '1' is on, 'false', '0' or empty is off) and a user toggle writes 'true' or 'false' back into that column" },
     "title": { "types": ["string"],  "required": false, "description": "Label text; defaults to 'Toggle'" },
     "style": { "types": ["string"],  "required": false, "enum": ["switch","button","checkbox"], "description": "'checkbox' is macOS only; defaults to 'switch'" }
   },

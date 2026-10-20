@@ -1,0 +1,17 @@
+{
+  "type": "List",
+  "id": 1,
+  "properties": {
+    "actionID": "list.selection.changed"
+  },
+  "template": {
+    "type": "Toggle",
+    "properties": {
+      "style": "checkbox",
+      "isOn": "$1",
+      "title": "$2",
+      "disabled": "$3",
+      "actionID": "list.item.toggled"
+    }
+  }
+}

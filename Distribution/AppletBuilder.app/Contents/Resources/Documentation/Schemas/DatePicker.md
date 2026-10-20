@@ -23,4 +23,14 @@ JSON schema and usage documentation for `DatePicker`.
 //                    "hourAndMinute" and "dateAndTime" emit a full ISO datetime "YYYY-MM-DDTHH:mm:ss"
 //                    ("hourAndMinute" uses today's date so a host can read the HH:mm).
 //                    Write an ISO 8601 date/datetime string to set the value programmatically.
+//                    What an input string means (selectedDate, range, and values written by a host):
+//                      "YYYY-MM-DD"                          a calendar day
+//                      "YYYY-MM-DDTHH:mm[:ss]"               wall-clock time in the device's time zone
+//                      "YYYY-MM-DDTHH:mm[:ss[.fff]]" + "Z", "+hh:mm", "+hhmm" or "+hh"
+//                                                            an instant; the zone is honored and the
+//                                                            picker shows it in the device's time zone
+//                                                            (a "date" picker shows that instant's local day)
+//                      "HH:mm[:ss]"                          that wall-clock time today
+//                    Emitted values never carry a zone: they are the local day or local wall-clock time.
+//                    To give a calendar day, pass "YYYY-MM-DD", not a UTC midnight such as "...T00:00:00Z".
 ```

@@ -159,10 +159,71 @@ Layout follows SwiftUI stacking rules:
 | `AsyncImage` | Image loaded from URL |
 | `ProgressView` | Determinate or indeterminate progress |
 | `Gauge` | Value indicator |
+| `Chart` | Bar, line, point, area, rule, rectangle and sector charts (Swift Charts) - **Apple**; Android and Web show a placeholder; see [Charts](#charts) |
 | `Table` | Multi-column data table — **macOS, iPadOS, Web** (Web shows a stacked-card layout on narrow screens) |
 | `List` | Scrollable list of items |
 | `Divider` | Visual separator |
 | `Spacer` | Flexible space |
+
+## Charts
+
+`Chart` draws a chart with Swift Charts. The whole chart is one property, `chart`: a description holding the columns of the data, optional inline rows, and the marks in Swift Charts' vocabulary (`BarMark`, `LineMark`, `PointMark`, `AreaMark`, `RuleMark`, `RectangleMark`, `SectorMark`), grouped by `ForEach` and `Plot`.
+
+```json
+{
+  "type": "Chart",
+  "id": 10,
+  "properties": {
+    "frame": { "minHeight": 240 },
+    "chart": {
+      "columns": ["day", { "name": "visits", "type": "number" }],
+      "data": [["Mon", 120], ["Tue", 180], ["Wed", 150]],
+      "content": [
+        { "type": "ForEach", "content": [
+          { "type": "BarMark",
+            "x": { "label": "Day", "value": "$day" },
+            "y": { "label": "Visits", "value": "$visits" } }
+        ] }
+      ],
+      "chartYAxisLabel": "Visits"
+    }
+  }
+}
+```
+
+- **Columns** name and type the cells of each row: `string` (a bare name is a string column), `number`, `integer` or `date`. Dates are ISO 8601; `"2026-08-03"` is a calendar day.
+- **ForEach** draws its content once per row. Inside it, `"$name"` (or `"$1"`, counting from 1) reads that cell of the row. Outside a ForEach, a `"$..."` string is plain text.
+- **Values** are objects, `{"label", "value"}`, with an optional `"type"` and, for dates, a `"unit"` (`day`, `weekOfYear`, `month`, ...). Each mark takes the keys of one Swift Charts initializer, for example `x` and `y`, or `x`, `yStart` and `yEnd`.
+- **Mark modifiers** sit on the mark: `foregroundStyle`, `symbol`, `lineStyle`, `interpolationMethod`, `cornerRadius` and more. `{"by": value}` styles the marks by a column and adds a legend. A `Plot` applies its modifiers to every mark inside it.
+- **Chart keys** set the scales (`chartXScale`, `chartYScale`, and style scales such as `chartForegroundStyleScale`), the axes (`chartXAxis`: `"hidden"`, or up to 4 `AxisMarks` with their values, grid lines, ticks and label formats), the axis titles (`chartXAxisLabel`), the legend (`chartLegend`) and the plot area (`chartPlotStyle`).
+
+**At runtime** (give the Chart an `id`):
+
+- Replace the chart whole by setting its `chart` property to a new description. A description with `data` also replaces the rows; one without keeps them.
+- Stream data with the rows calls (set, append and clear rows), as for a Table: each row is an array of cells in column order. The in-process adapters take cells as strings (`"120"`, `"2026-08-03"`). Changing the rows never changes the description.
+
+**Selection.** `"chartXSelection": "value"` (or `"range"`; also `chartYSelection`, and `"chartAngleSelection": "value"` for sectors) lets the user select with the pointer or by touch, as Swift Charts does on each platform. The selection becomes the chart's value, a JSON string such as `{"x": "Tue"}` (`""` when nothing is selected), and `valueChangeActionID` fires once the selection settles; `"selectionActionTiming": "continuous"` fires it on every change. Swift Charts draws nothing for a selection, so draw it with a mark outside the ForEach whose value is `"$selection"`, drawn only while something is selected:
+
+```json
+{ "type": "RuleMark", "x": { "label": "Selected", "value": "$selection" }, "foregroundStyle": "gray.opacity(0.4)" }
+```
+
+**Scrolling.** `"chartScrollableAxes": "horizontal"` makes the chart scroll; `"chartXVisibleDomain": {"length": 30}` sets how much of the axis shows (data units on a number axis, seconds on a date axis, a count of categories on a string axis), and `"chartScrollPosition": {"initialX": "2026-09-01"}` where it starts.
+
+**Annotations.** `"annotation"` on a mark draws an ActionUI view next to it, as Swift Charts' `annotation` modifier does; `alignment`, `spacing` and `overflowResolution` follow Swift too. The view is built for each row, as a template row is, so inside a ForEach its text reads the row's cells:
+
+```json
+{ "type": "BarMark", "x": { "label": "Day", "value": "$day" }, "y": { "label": "Visits", "value": "$visits" },
+  "annotation": { "position": "top", "content": { "type": "Text", "properties": { "text": "$visits", "font": "caption" } } } }
+```
+
+Annotate a few marks (a goal line, the selection, the largest values), not every row of a long series: past 1000 annotations Swift Charts takes seconds to draw, and the chart leaves them out with a warning.
+
+**Checks.** The verifier checks the description's structure: mark types, the keys of each initializer, value types and enum values. ActionUI warns about the rest when it draws the chart: a `"$name"` that names no column, a row whose cell does not parse under its column's type (the row is skipped). Settings Swift Charts cannot draw, such as a log scale that reaches 0 or a stride that would draw thousands of axis marks, are refused or fall back to the automatic form, with a warning.
+
+**Platforms.** Apple only, on every platform ActionUI supports. Android and Web draw a "Chart Unavailable" placeholder in its place, sized by its frame, and log one warning; the value, the rows calls and setting `chart` still work there, so the same host code runs unchanged.
+
+The complete vocabulary is in [Schemas/Chart.md](Schemas/Chart.md); a template is in [Elements/Chart.json](Elements/Chart.json).
 
 ## Universal Modifiers
 

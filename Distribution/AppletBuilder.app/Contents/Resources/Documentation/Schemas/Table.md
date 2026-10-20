@@ -12,12 +12,16 @@ JSON schema and usage documentation for `Table`.
      "columns": ["Name", "Action", "Icon"], // Required: Array of strings for column headers
      "columnHeadersVisibility": "hidden",   // Optional: column headers visibility: "automatic", "hidden", "visible"
      "columnTypes": [                       // Optional: Per-column type config array. Defaults to all Text.
-       { "viewType": "Text" },              // Each entry: { "viewType": "Text"|"Button"|"Image"|"AsyncImage"
+       { "viewType": "Text" },              // Each entry: { "viewType": "Text"|"Button"|"Image"|"AsyncImage"|"Toggle"
        { "viewType": "Button",              // Columns without an entry default to Text.
          "actionContext": "rowIndex",       // "actionContext": "title"|"rowIndex"|"columnIndex"|"rowColumnIndex" (Button only)
          "actionID": "row.action" },        // "actionID": "..." (Button only — fires on button click) }
        { "viewType": "Image",
-         "dataInterpretation": "systemName" } // "dataInterpretation": "path"|"systemName"|"assetName"|"resourceName"|"mixed" (Image & Button)
+         "dataInterpretation": "systemName" }, // "dataInterpretation": "path"|"systemName"|"assetName"|"resourceName"|"mixed" (Image & Button)
+       { "viewType": "Toggle",              // A checkbox per row. The cell text is its state: "true" or "1" is on, "false", "0" or empty is off (any letter case).
+         "style": "checkbox",               // "style": "checkbox" (default)|"switch"|"button" (Toggle only)
+         "actionID": "row.toggled",         // "actionID": "..." (Toggle only - fires on a user toggle, after the cell is written; viewPartID = column index, context = row index)
+         "disabledColumn": 4 }              // "disabledColumn": 1-based column number (hidden columns included) whose text, read the same way, disables the cell for that row (Toggle only)
      ],
      "widths": [100, 80, 40],               // Optional: Array of integers for ideal column widths (resizable; last column fills remaining space)
      "minWidths": [80, 60, 30],             // Optional: Array of integers for minimum column widths in points; columns cannot be resized below these. Missing entries default to 10.
@@ -38,3 +42,39 @@ JSON schema and usage documentation for `Table`.
 //                                       Access via getElementRows / setElementRows / appendElementRows /
 //                                       clearElementRows / getElementColumnCount.
 ```
+
+## Toggle columns
+
+A column with `"viewType": "Toggle"` shows a checkbox in every row, with no title: the column header names it.
+
+```json
+{
+  "type": "Table",
+  "id": 600,
+  "properties": {
+    "columns": ["", "Pack"],
+    "columnTypes": [
+      { "viewType": "Toggle", "style": "checkbox", "actionID": "packs.toggled", "disabledColumn": 4 },
+      { "viewType": "Text" }
+    ],
+    "widths": [28, 240],
+    "actionID": "packs.selection.changed"
+  }
+}
+```
+
+with rows such as `["true", "Xcode and Swift builds", "xcode", "false"]` (columns past `columns` are hidden data).
+
+- **State.** The cell text is the state: `"true"` or `"1"` is on; `"false"`, `"0"` or an empty string is off; letter case does not matter; any other text is off.
+- **Write-back.** A user toggle writes `"true"` or `"false"` into that cell of the rows. `getElementRows` returns the new state.
+- **Action.** The entry's `actionID` then fires with `viewID` = the table's id, `viewPartID` = the column index and `context` = the 0-based row index (the same as a Button cell with `"actionContext": "rowIndex"`). The handler reads the new state from the rows: `rows[context][viewPartID]`.
+- **`disabledColumn`.** A 1-based column number, hidden columns included, whose text is read the same way; when it is on, the cell is disabled for that row.
+- **Selection is separate.** Toggling does not select the row and does not fire the table's `actionID`. A selection stays on its row across the write.
+- **Changes made by the host fire nothing.** `setElementRows`, `appendElementRows` and `clearElementRows` change what the cells show and fire no action.
+
+Note the two conventions: in a `Table` the column is `viewPartID` and the row is the context, as for a Button cell; for a `Toggle` in a template the row is `viewPartID` and the context is the new Boolean, as for a Button in a template (see `Toggle`).
+
+### Host differences
+
+- **Android** has no `Table` (it renders nothing there); use a `List` with a `Toggle` template.
+- **Web** draws `button` style as `switch`. A toggled cell keeps its place (the row is not rebuilt), so a cell of the same row that depends on the toggled column, such as another Toggle whose `disabledColumn` is that column, changes only at the next rows change.

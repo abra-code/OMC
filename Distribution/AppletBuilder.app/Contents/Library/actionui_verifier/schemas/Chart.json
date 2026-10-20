@@ -1,0 +1,474 @@
+{
+  "type": "Chart",
+  "description": "A Swift Charts surface. What it shows is one 'chart' description (columns, optional inline data, marks and chart modifiers) that a host replaces whole with setElementProperty; data rows are also set through the rows API. Column references, their types and one type per axis are checked by the Chart element when the document loads.",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": true,
+  "topLevelKeys": [],
+  "definitions": {
+    "plottable": {
+      "types": ["object"],
+      "description": "A plottable value: .value(label, value). Inside a ForEach, \"$N\" or \"$name\" reads a cell of each row.",
+      "properties": {
+        "label": { "types": ["string"], "required": true },
+        "value": { "types": ["string", "number"], "required": true, "description": "A column reference (\"$users\", \"$2\"), a number or a string" },
+        "type":  { "types": ["string"], "enum": ["string", "number", "integer", "date"], "description": "The value's type; wins over its column's" },
+        "unit":  { "types": ["string"], "enum": ["year", "quarter", "month", "weekOfYear", "weekOfMonth", "day", "hour", "minute", "second"], "description": "Calendar unit for a date value" }
+      }
+    },
+    "argument": {
+      "oneOf": [
+        { "$ref": "plottable" },
+        { "types": ["number"], "description": "A position in points" }
+      ]
+    },
+    "byValue": {
+      "types": ["object"],
+      "properties": { "by": { "$ref": "plottable", "required": true } }
+    },
+    "dimension": {
+      "oneOf": [
+        { "types": ["number"], "description": "Fixed size in points" },
+        { "types": ["string"], "enum": ["automatic"] },
+        { "types": ["object"], "properties": {
+          "ratio": { "types": ["number"] },
+          "inset": { "types": ["number"] },
+          "fixed": { "types": ["number"] }
+        } }
+      ]
+    },
+    "markModifiers": {
+      "type": { "types": ["string"], "required": true },
+      "foregroundStyle": { "oneOf": [ { "types": ["string"], "description": "A color" }, { "$ref": "byValue" } ] },
+      "symbol": { "oneOf": [
+        { "types": ["string"], "enum": ["circle", "square", "triangle", "diamond", "pentagon", "plus", "cross", "asterisk"] },
+        { "$ref": "byValue" }
+      ] },
+      "symbolSize": { "oneOf": [
+        { "types": ["number"], "description": "Symbol area" },
+        { "types": ["object"], "properties": {
+          "width": { "types": ["number"] },
+          "height": { "types": ["number"] },
+          "by": { "$ref": "plottable" }
+        } }
+      ] },
+      "lineStyle": { "types": ["object"], "description": "A stroke style, or {\"by\": value}", "properties": {
+        "lineWidth": { "types": ["number"] },
+        "lineCap": { "types": ["string"], "enum": ["butt", "round", "square"] },
+        "lineJoin": { "types": ["string"], "enum": ["miter", "round", "bevel"] },
+        "miterLimit": { "types": ["number"] },
+        "dash": { "types": ["array"], "itemTypes": ["number"] },
+        "dashPhase": { "types": ["number"] },
+        "by": { "$ref": "plottable" }
+      } },
+      "interpolationMethod": { "oneOf": [
+        { "types": ["string"], "enum": ["linear", "cardinal", "catmullRom", "monotone", "stepStart", "stepCenter", "stepEnd"] },
+        { "types": ["object"], "properties": {
+          "cardinal": { "types": ["object"], "properties": { "tension": { "types": ["number"], "required": true } } },
+          "catmullRom": { "types": ["object"], "properties": { "alpha": { "types": ["number"], "required": true } } }
+        } }
+      ] },
+      "position": { "types": ["object"], "properties": {
+        "by": { "$ref": "plottable", "required": true },
+        "axis": { "types": ["string"], "enum": ["horizontal", "vertical"] },
+        "span": { "$ref": "dimension" }
+      } },
+      "cornerRadius": { "oneOf": [
+        { "types": ["number"] },
+        { "types": ["object"], "properties": {
+          "radius": { "types": ["number"], "required": true },
+          "style": { "types": ["string"], "enum": ["continuous", "circular"] }
+        } }
+      ] },
+      "opacity": { "types": ["number"] },
+      "zIndex": { "types": ["number"] },
+      "blur": { "types": ["number"], "description": "Blur radius" },
+      "offset": { "types": ["object"], "properties": {
+        "x": { "types": ["number"] }, "y": { "types": ["number"] },
+        "xStart": { "types": ["number"] }, "xEnd": { "types": ["number"] },
+        "yStart": { "types": ["number"] }, "yEnd": { "types": ["number"] }
+      } },
+      "shadow": { "types": ["object"], "properties": {
+        "radius": { "types": ["number"], "required": true },
+        "color": { "types": ["string"] },
+        "x": { "types": ["number"] },
+        "y": { "types": ["number"] }
+      } },
+      "alignsMarkStylesWithPlotArea": { "types": ["boolean"] },
+      "accessibilityLabel": { "types": ["string"], "description": "Text; inside a ForEach it may embed \"$N\" / \"$name\" references" },
+      "accessibilityValue": { "types": ["string"] },
+      "accessibilityIdentifier": { "types": ["string"] },
+      "accessibilityHidden": { "types": ["boolean"] },
+      "annotation": { "types": ["object"], "description": "A view drawn next to the mark", "properties": {
+        "content": { "types": ["object"], "element": true, "excludesTypes": ["Chart"], "required": true, "description":"An ActionUI view element, built for each row as a template row is; inside a ForEach its text may embed \"$N\" / \"$name\" references" },
+        "position": { "types": ["string"], "enum": ["automatic", "overlay", "top", "bottom", "leading", "trailing", "topLeading", "topTrailing", "bottomLeading", "bottomTrailing"] },
+        "alignment": { "types": ["string"], "enum": ["center", "leading", "trailing", "top", "bottom", "topLeading", "topTrailing", "bottomLeading", "bottomTrailing"] },
+        "spacing": { "types": ["number"], "description": "Points between the mark and the view" },
+        "overflowResolution": { "types": ["object"], "description": "What happens to a view that would overflow the chart, per axis", "properties": {
+          "x": { "$ref": "overflowStrategy" },
+          "y": { "$ref": "overflowStrategy" }
+        } }
+      } }
+    },
+    "overflowStrategy": { "oneOf": [
+      { "types": ["string"], "enum": ["automatic", "fit", "padScale", "disabled"] },
+      { "types": ["object"], "properties": { "fit": { "types": ["string"], "enum": ["plot", "chart", "automatic"], "required": true } } }
+    ] },
+    "xyArguments": {
+      "$ref": "markModifiers",
+      "x": { "$ref": "argument" },
+      "y": { "$ref": "argument" },
+      "xStart": { "$ref": "argument" },
+      "xEnd": { "$ref": "argument" },
+      "yStart": { "$ref": "argument" },
+      "yEnd": { "$ref": "argument" }
+    },
+    "markSchemas": {
+      "BarMark": {
+        "$ref": "xyArguments",
+        "width": { "$ref": "dimension" },
+        "height": { "$ref": "dimension" },
+        "stacking": { "types": ["string"], "enum": ["standard", "normalized", "center", "unstacked"] }
+      },
+      "LineMark": {
+        "$ref": "markModifiers",
+        "x": { "$ref": "argument" },
+        "y": { "$ref": "argument" },
+        "series": { "$ref": "argument" }
+      },
+      "PointMark": {
+        "$ref": "markModifiers",
+        "x": { "$ref": "argument" },
+        "y": { "$ref": "argument" }
+      },
+      "RuleMark": { "$ref": "xyArguments" },
+      "AreaMark": {
+        "$ref": "xyArguments",
+        "series": { "$ref": "argument" },
+        "stacking": { "types": ["string"], "enum": ["standard", "normalized", "center", "unstacked"] }
+      },
+      "RectangleMark": {
+        "$ref": "xyArguments",
+        "width": { "$ref": "dimension" },
+        "height": { "$ref": "dimension" }
+      },
+      "SectorMark": {
+        "$ref": "markModifiers",
+        "angle": { "types": ["object"], "description": "A number or integer value: each sector's share of the sum", "properties": {
+          "label": { "types": ["string"], "required": true },
+          "value": { "types": ["string", "number"], "required": true },
+          "type": { "types": ["string"], "enum": ["number", "integer"] }
+        } },
+        "innerRadius": { "$ref": "dimension" },
+        "outerRadius": { "$ref": "dimension" },
+        "angularInset": { "types": ["number"], "description": "Gap between sectors, in points" }
+      }
+    },
+    "markPatterns": {
+      "BarMark": {
+        "keys": ["x", "y", "xStart", "xEnd", "yStart", "yEnd", "series", "angle", "angularInset"],
+        "patterns": [
+          { "values": ["x", "y"], "points": [], "form": "x + y" },
+          { "values": ["x"], "points": ["yStart", "yEnd"], "form": "x (+ yStart/yEnd points)" },
+          { "values": ["x", "yStart", "yEnd"], "points": [], "form": "x + yStart + yEnd" },
+          { "values": ["y"], "points": ["xStart", "xEnd"], "form": "(xStart/xEnd points +) y" },
+          { "values": ["yStart", "yEnd"], "points": ["xStart", "xEnd"], "form": "(xStart/xEnd points +) yStart + yEnd" },
+          { "values": ["xStart", "xEnd", "y"], "points": [], "form": "xStart + xEnd + y" },
+          { "values": ["xStart", "xEnd"], "points": ["yStart", "yEnd"], "form": "xStart + xEnd (+ yStart/yEnd points)" }
+        ]
+      },
+      "LineMark": {
+        "keys": ["x", "y", "xStart", "xEnd", "yStart", "yEnd", "series", "angle", "angularInset"],
+        "patterns": [
+          { "values": ["x", "y"], "points": [], "form": "x + y" },
+          { "values": ["x", "y", "series"], "points": [], "form": "x + y + series" }
+        ]
+      },
+      "PointMark": {
+        "keys": ["x", "y", "xStart", "xEnd", "yStart", "yEnd", "series", "angle", "angularInset"],
+        "patterns": [
+          { "values": ["x", "y"], "points": [], "form": "x + y" },
+          { "values": ["y"], "points": ["x"], "form": "(x point +) y" },
+          { "values": ["x"], "points": ["y"], "form": "x (+ y point)" }
+        ]
+      },
+      "RuleMark": {
+        "keys": ["x", "y", "xStart", "xEnd", "yStart", "yEnd", "series", "angle", "angularInset"],
+        "patterns": [
+          { "values": ["yStart", "yEnd"], "points": ["x"], "form": "(x point +) yStart + yEnd" },
+          { "values": ["x"], "points": ["yStart", "yEnd"], "form": "x (+ yStart/yEnd points)" },
+          { "values": ["x", "yStart", "yEnd"], "points": [], "form": "x + yStart + yEnd" },
+          { "values": ["y"], "points": ["xStart", "xEnd"], "form": "(xStart/xEnd points +) y" },
+          { "values": ["xStart", "xEnd"], "points": ["y"], "form": "xStart + xEnd (+ y point)" },
+          { "values": ["xStart", "xEnd", "y"], "points": [], "form": "xStart + xEnd + y" }
+        ]
+      },
+      "AreaMark": {
+        "keys": ["x", "y", "xStart", "xEnd", "yStart", "yEnd", "series", "angle", "angularInset"],
+        "patterns": [
+          { "values": ["x", "y"], "points": [], "form": "x + y" },
+          { "values": ["xStart", "xEnd", "y"], "points": [], "form": "xStart + xEnd + y" },
+          { "values": ["x", "yStart", "yEnd"], "points": [], "form": "x + yStart + yEnd" },
+          { "values": ["x", "y", "series"], "points": [], "form": "x + y + series" },
+          { "values": ["xStart", "xEnd", "y", "series"], "points": [], "form": "xStart + xEnd + y + series" },
+          { "values": ["x", "yStart", "yEnd", "series"], "points": [], "form": "x + yStart + yEnd + series" }
+        ]
+      },
+      "RectangleMark": {
+        "keys": ["x", "y", "xStart", "xEnd", "yStart", "yEnd", "series", "angle", "angularInset"],
+        "patterns": [
+          { "values": ["x", "y"], "points": [], "form": "x + y" },
+          { "values": ["x"], "points": ["yStart", "yEnd"], "form": "x (+ yStart/yEnd points)" },
+          { "values": ["y"], "points": ["xStart", "xEnd"], "form": "(xStart/xEnd points +) y" },
+          { "values": ["xStart", "xEnd", "y"], "points": [], "form": "xStart + xEnd + y" },
+          { "values": ["xStart", "xEnd"], "points": ["yStart", "yEnd"], "form": "xStart + xEnd (+ yStart/yEnd points)" },
+          { "values": ["x", "yStart", "yEnd"], "points": [], "form": "x + yStart + yEnd" },
+          { "values": ["yStart", "yEnd"], "points": ["xStart", "xEnd"], "form": "(xStart/xEnd points +) yStart + yEnd" },
+          { "values": ["xStart", "xEnd", "yStart", "yEnd"], "points": [], "form": "xStart + xEnd + yStart + yEnd" },
+          { "values": [], "points": ["xStart", "xEnd", "yStart", "yEnd"], "form": "xStart/xEnd/yStart/yEnd points" }
+        ]
+      },
+      "SectorMark": {
+        "keys": ["x", "y", "xStart", "xEnd", "yStart", "yEnd", "series", "angle", "angularInset"],
+        "patterns": [
+          { "values": ["angle"], "points": ["angularInset"], "form": "angle (+ angularInset points)" }
+        ]
+      }
+    },
+    "markItems": {
+      "discriminator": "type",
+      "schemas": { "$ref": "markSchemas" },
+      "argumentPatterns": { "$ref": "markPatterns" }
+    },
+    "plotOfMarks": {
+      "$ref": "markModifiers",
+      "content": {
+        "types": ["array"],
+        "required": true,
+        "description": "Marks; the Plot's modifiers apply to each",
+        "discriminatedItems": { "$ref": "markItems" }
+      }
+    },
+    "forEach": {
+      "type": { "types": ["string"], "required": true },
+      "data": { "types": ["array"], "itemTypes": ["array"], "description": "Its own inline rows, drawn instead of the chart's rows; kept in the description" },
+      "columns": { "types": ["array"], "itemTypes": ["string", "object"], "description": "Names and types of its own data's cells (only with 'data')" },
+      "content": {
+        "types": ["array"],
+        "required": true,
+        "description": "Marks and Plots drawn once per row",
+        "discriminatedItems": {
+          "discriminator": "type",
+          "schemas": { "$ref": "markSchemas", "Plot": { "$ref": "plotOfMarks" } },
+          "argumentPatterns": { "$ref": "markPatterns" }
+        }
+      }
+    },
+    "scale": {
+      "types": ["object"],
+      "properties": {
+        "domain": { "types": ["array", "object"], "description": "Two numbers or two dates (a range), a list of strings, or {\"automatic\": {\"includesZero\", \"reversed\"}}" },
+        "range": { "types": ["object", "array"], "description": "{\"startPadding\", \"endPadding\"}, {\"padding\"} or two numbers (points)" },
+        "type": { "oneOf": [
+          { "types": ["string"], "enum": ["linear", "log", "date", "category", "squareRoot", "symmetricLog"] },
+          { "types": ["object"], "properties": {
+            "power": { "types": ["object"], "properties": { "exponent": { "types": ["number"], "required": true } } },
+            "symmetricLog": { "types": ["object"], "properties": { "slopeAtZero": { "types": ["number"], "required": true } } }
+          } }
+        ] }
+      }
+    },
+    "axisLabel": {
+      "oneOf": [
+        { "types": ["string"] },
+        { "types": ["object"], "properties": {
+          "text": { "types": ["string"], "required": true },
+          "position": { "types": ["string"], "enum": ["automatic", "overlay", "top", "bottom", "leading", "trailing", "topLeading", "topTrailing", "bottomLeading", "bottomTrailing"] },
+          "alignment": { "types": ["string"], "enum": ["center", "leading", "trailing", "top", "bottom", "topLeading", "topTrailing", "bottomLeading", "bottomTrailing"] },
+          "spacing": { "types": ["number"] }
+        } }
+      ]
+    },
+    "visibility": { "types": ["string"], "enum": ["automatic", "visible", "hidden"] },
+    "strokeStyle": { "types": ["object"], "properties": {
+      "lineWidth": { "types": ["number"] },
+      "lineCap": { "types": ["string"], "enum": ["butt", "round", "square"] },
+      "lineJoin": { "types": ["string"], "enum": ["miter", "round", "bevel"] },
+      "miterLimit": { "types": ["number"] },
+      "dash": { "types": ["array"], "itemTypes": ["number"] },
+      "dashPhase": { "types": ["number"] }
+    } },
+    "axisFormat": {
+      "types": ["string", "object"],
+      "enum": ["integer", "decimal", "percent", "currency"],
+      "description": "A number format (with fractionLength, currencyCode) on a number axis, or a date format on a date axis",
+      "properties": {
+        "dateTime": { "types": ["object"], "properties": {
+          "year": { "types": ["string"], "enum": ["defaultDigits", "twoDigits"] },
+          "quarter": { "types": ["string"], "enum": ["oneDigit", "twoDigits", "abbreviated", "wide", "narrow"] },
+          "month": { "types": ["string"], "enum": ["defaultDigits", "twoDigits", "abbreviated", "wide", "narrow"] },
+          "day": { "types": ["string"], "enum": ["defaultDigits", "twoDigits"] },
+          "weekday": { "types": ["string"], "enum": ["abbreviated", "wide", "narrow", "short"] },
+          "hour": { "types": ["string"], "enum": ["defaultDigits", "twoDigits"] },
+          "minute": { "types": ["string"], "enum": ["defaultDigits", "twoDigits"] },
+          "second": { "types": ["string"], "enum": ["defaultDigits", "twoDigits"] }
+        } },
+        "date": { "types": ["string"], "enum": ["omitted", "numeric", "abbreviated", "long", "complete"] },
+        "time": { "types": ["string"], "enum": ["omitted", "shortened", "standard", "complete"] }
+      }
+    },
+    "axisItemModifiers": {
+      "type": { "types": ["string"], "required": true },
+      "foregroundStyle": { "types": ["string"], "description": "A color" },
+      "font": { "types": ["string", "object"] },
+      "offset": { "types": ["object"], "properties": { "x": { "types": ["number"] }, "y": { "types": ["number"] } } }
+    },
+    "axis": {
+      "types": ["string", "array"],
+      "enum": ["automatic", "visible", "hidden"],
+      "description": "Visibility, or up to 4 AxisMarks",
+      "discriminatedItems": {
+        "discriminator": "type",
+        "schemas": {
+          "AxisMarks": {
+            "type": { "types": ["string"], "required": true },
+            "preset": { "types": ["string"], "enum": ["automatic", "extended", "aligned", "inset"] },
+            "position": { "types": ["string"], "enum": ["automatic", "leading", "trailing", "top", "bottom"] },
+            "values": { "types": ["string", "object", "array"], "enum": ["automatic"],
+              "description": "\"automatic\", {\"automatic\": {...}}, {\"stride\": {\"by\", \"count\"}} or a list typed by the axis",
+              "properties": {
+                "automatic": { "types": ["object"], "properties": {
+                  "desiredCount": { "types": ["number"], "description": "1 to 100" },
+                  "roundLowerBound": { "types": ["boolean"] },
+                  "roundUpperBound": { "types": ["boolean"] }
+                } },
+                "stride": { "types": ["object"], "properties": {
+                  "by": { "types": ["string", "number"], "required": true, "description": "A calendar unit (dates) or a step (numbers); a stride drawing more than 1000 marks falls back to automatic" },
+                  "count": { "types": ["number"] }
+                } }
+              } },
+            "format": { "$ref": "axisFormat", "description": "Only without content" },
+            "fractionLength": { "types": ["number", "object"] },
+            "currencyCode": { "types": ["string"] },
+            "stroke": { "$ref": "strokeStyle", "description": "Only without content" },
+            "content": {
+              "types": ["array"],
+              "description": "Up to 4 marks; absent = Swift's default marks, empty = none",
+              "discriminatedItems": {
+                "discriminator": "type",
+                "schemas": {
+                  "AxisGridLine": { "$ref": "axisItemModifiers", "centered": { "types": ["boolean"] }, "stroke": { "$ref": "strokeStyle" } },
+                  "AxisTick": { "$ref": "axisItemModifiers", "centered": { "types": ["boolean"] }, "stroke": { "$ref": "strokeStyle" },
+                    "length": { "types": ["number", "string", "object"], "enum": ["automatic", "label", "longestLabel"] } },
+                  "AxisValueLabel": { "$ref": "axisItemModifiers",
+                    "format": { "$ref": "axisFormat" },
+                    "fractionLength": { "types": ["number", "object"] },
+                    "currencyCode": { "types": ["string"] },
+                    "centered": { "types": ["boolean"] },
+                    "anchor": { "types": ["string"], "enum": ["center", "leading", "trailing", "top", "bottom", "topLeading", "topTrailing", "bottomLeading", "bottomTrailing"] },
+                    "multiLabelAlignment": { "types": ["string"], "enum": ["center", "leading", "trailing", "top", "bottom", "topLeading", "topTrailing", "bottomLeading", "bottomTrailing"] },
+                    "collisionResolution": { "types": ["string", "object"], "enum": ["automatic", "greedy", "truncate", "disabled"] },
+                    "offsetsMarks": { "types": ["boolean"] },
+                    "orientation": { "types": ["string"], "enum": ["automatic", "horizontal", "vertical", "verticalReversed"] },
+                    "horizontalSpacing": { "types": ["number"] },
+                    "verticalSpacing": { "types": ["number"] } }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "styleDomain": { "types": ["array", "object"], "description": "Two numbers or two dates (a range), a list of strings, or {\"automatic\": {\"includesZero\", \"reversed\"}}, typed by the {\"by\"} values the scale styles" }
+  },
+  "ownProperties": {
+    "chart": {
+      "types": ["object"],
+      "required": false,
+      "description": "The chart description; replace it whole at runtime with setElementProperty.",
+      "properties": {
+        "columns": { "types": ["array"], "itemTypes": ["string", "object"], "description": "Names (string columns) or {\"name\", \"type\": string|number|integer|date}" },
+        "data": { "types": ["array"], "itemTypes": ["array"], "description": "Inline rows; cells are strings, numbers, booleans or null" },
+        "content": {
+          "types": ["array"],
+          "description": "ForEach entries, Plots and marks",
+          "discriminatedItems": {
+            "discriminator": "type",
+            "schemas": {
+              "$ref": "markSchemas",
+              "ForEach": { "$ref": "forEach" },
+              "Plot": {
+                "$ref": "markModifiers",
+                "content": {
+                  "types": ["array"],
+                  "required": true,
+                  "description": "ForEach entries, Plots of marks and marks; the Plot's modifiers apply to each mark",
+                  "discriminatedItems": {
+                    "discriminator": "type",
+                    "schemas": { "$ref": "markSchemas", "ForEach": { "$ref": "forEach" }, "Plot": { "$ref": "plotOfMarks" } },
+                    "argumentPatterns": { "$ref": "markPatterns" }
+                  }
+                }
+              }
+            },
+            "argumentPatterns": { "$ref": "markPatterns" }
+          }
+        },
+        "chartXScale": { "$ref": "scale" },
+        "chartYScale": { "$ref": "scale" },
+        "chartForegroundStyleScale": { "types": ["object"], "properties": {
+          "domain": { "$ref": "styleDomain" },
+          "range": { "oneOf": [
+            { "types": ["array"], "itemTypes": ["string"], "description": "Colors, one per domain value" },
+            { "types": ["object"], "properties": { "gradient": { "types": ["array"], "itemTypes": ["string"], "required": true } } }
+          ] }
+        } },
+        "chartSymbolScale": { "types": ["object"], "properties": {
+          "domain": { "$ref": "styleDomain" },
+          "range": { "types": ["array"], "itemTypes": ["string"], "itemEnum": ["circle", "square", "triangle", "diamond", "pentagon", "plus", "cross", "asterisk"] }
+        } },
+        "chartLineStyleScale": { "types": ["object"], "properties": {
+          "domain": { "$ref": "styleDomain" },
+          "range": { "types": ["array"], "itemTypes": ["object"], "description": "Stroke styles {\"lineWidth\", \"lineCap\", \"lineJoin\", \"miterLimit\", \"dash\", \"dashPhase\"}" }
+        } },
+        "chartSymbolSizeScale": { "types": ["object"], "properties": {
+          "domain": { "$ref": "styleDomain" },
+          "range": { "types": ["array"], "itemTypes": ["number"], "description": "Two numbers: the smallest and largest symbol area" }
+        } },
+        "chartXAxis": { "$ref": "axis" },
+        "chartYAxis": { "$ref": "axis" },
+        "chartXAxisLabel": { "$ref": "axisLabel" },
+        "chartYAxisLabel": { "$ref": "axisLabel" },
+        "chartLegend": { "oneOf": [
+          { "$ref": "visibility" },
+          { "types": ["object"], "properties": {
+            "position": { "types": ["string"], "enum": ["automatic", "overlay", "top", "bottom", "leading", "trailing", "topLeading", "topTrailing", "bottomLeading", "bottomTrailing"] }
+          } }
+        ] },
+        "chartPlotStyle": { "types": ["object"], "description": "View properties for the plot area: padding, background, border, frame, cornerRadius, clipShape, shadow, opacity, offset, foregroundStyle", "properties": {
+          "padding": { "types": ["number", "string", "object"] },
+          "background": { "types": ["string"] },
+          "border": { "types": ["object"] },
+          "frame": { "types": ["object"] },
+          "cornerRadius": { "types": ["number"] },
+          "clipShape": { "types": ["string", "object"] },
+          "shadow": { "types": ["object"] },
+          "opacity": { "types": ["number"] },
+          "offset": { "types": ["object"] },
+          "foregroundStyle": { "types": ["string"] }
+        } },
+        "chartXSelection": { "types": ["string"], "enum": ["value", "range"], "description": "The user selects on the x axis; draw the selection with \"$selection\" marks" },
+        "chartYSelection": { "types": ["string"], "enum": ["value", "range"], "description": "The user selects on the y axis; draw the selection with \"$selection\" marks" },
+        "chartAngleSelection": { "types": ["string"], "enum": ["value"], "description": "The user selects a SectorMark" },
+        "chartScrollableAxes": { "types": ["string", "array"], "enum": ["horizontal", "vertical"], "itemTypes": ["string"], "itemEnum": ["horizontal", "vertical"], "description": "The axes the chart scrolls along" },
+        "chartXVisibleDomain": { "types": ["object"], "description": "How much of the scrolling x axis shows: data units, seconds on a date axis, a count of categories", "properties": { "length": { "types": ["number"], "required": true } } },
+        "chartYVisibleDomain": { "types": ["object"], "description": "How much of the scrolling y axis shows", "properties": { "length": { "types": ["number"], "required": true } } },
+        "chartScrollPosition": { "types": ["object"], "description": "Where each scrolling axis starts, a value of the axis's type", "properties": { "initialX": { "types": ["string", "number"] }, "initialY": { "types": ["string", "number"] } } }
+      }
+    },
+    "selectionActionTiming": { "types": ["string"], "enum": ["settled", "continuous"], "description": "When valueChangeActionID fires on a selection change: settled (default, after 150 ms of rest) or continuous" }
+  },
+  "observable": {
+    "value": { "types": ["string"], "description": "The selection as a JSON string, \"\" when nothing is selected: {\"x\": \"Tue\"}, {\"x\": [2.5, 7]}, {\"angle\": 51.2, \"row\": 1}" },
+    "states.content": { "types": ["array"], "description": "The chart's data rows as [[String]]; use getElementRows/setElementRows/appendElementRows" }
+  }
+}

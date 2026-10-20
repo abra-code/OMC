@@ -3,6 +3,8 @@ Validates a single ActionUI element node and its subtree recursively.
 """
 from __future__ import annotations
 
+import re
+
 from .errors import ValidationIssue
 from .schema_loader import SchemaLoader
 from .property_validator import validate_property
@@ -29,6 +31,19 @@ _UNIVERSAL_SUBVIEW_KEYS = {"overlay", "sheet", "popover", "fullScreenCover", "ba
 
 # Annotation-only keys: intentional JSON "comments"; silently allowed everywhere
 _ANNOTATION_KEYS = {"description", "note", "comment", "info"}
+
+# Boolean properties that an element inside a data-driven "template" may give as a
+# string: the runtime reads them from the row after substituting the $N column
+# references ("true" or "1" is on, "false", "0" or empty is off).
+_ROW_BOOL_KEYS = {"isOn", "disabled", "hidden"}
+
+# Exactly one column reference, the form of "isOn" that lets a Toggle in a template
+# write its state back into its row. "$0" (all columns) does not name one column.
+_SINGLE_COLUMN_REF = re.compile(r"\$[0-9]+")
+
+
+def _is_single_column_ref(value) -> bool:
+    return isinstance(value, str) and _SINGLE_COLUMN_REF.fullmatch(value) is not None and value.strip("$0") != ""
 
 
 def _expand_suffixed_keys(
@@ -70,7 +85,10 @@ class ElementValidator:
         # flagged. When None, validate as a cross-platform authoring document.
         self._target_platform = target_platform
 
-    def validate(self, node: dict, path: str, seen_ids: set, _is_root: bool = True) -> list[ValidationIssue]:
+    def validate(self, node: dict, path: str, seen_ids: set, _is_root: bool = True,
+                 _in_template: bool = False) -> list[ValidationIssue]:
+        # `_in_template`: the node is a data-driven "template" or inside one, where the
+        # row data supplies some property values (see _ROW_BOOL_KEYS).
         issues: list[ValidationIssue] = []
         sep = ": " if _is_root else "."
 
@@ -212,7 +230,7 @@ class ElementValidator:
                 paired_own_props = self._merged_own_props(variant_types)
                 paired_label = type_label
             issues += self._validate_properties(
-                props, paired_own_props, paired_label, label_path
+                props, paired_own_props, paired_label, label_path, in_template=_in_template
             )
 
         # ── recursive children / subviews ─────────────────────────────────────
@@ -228,7 +246,8 @@ class ElementValidator:
             if len(variants) <= 1:
                 for suffix, children in variants:
                     child_label = f"{path}{sep}{format_suffix_label(child_key, suffix)}"
-                    issues += self._validate_subview_value(children, child_label, seen_ids)
+                    issues += self._validate_subview_value(
+                        children, child_label, seen_ids, _in_template or child_key == "template")
                 continue
             # Platform variants of one subview key (`children`, `children:ios`)
             # never survive together at runtime, so the same id may appear in
@@ -238,7 +257,8 @@ class ElementValidator:
             for suffix, children in variants:
                 child_label = f"{path}{sep}{format_suffix_label(child_key, suffix)}"
                 variant_ids = set(ids_before)
-                issues += self._validate_subview_value(children, child_label, variant_ids)
+                issues += self._validate_subview_value(
+                    children, child_label, variant_ids, _in_template or child_key == "template")
                 seen_ids |= variant_ids
 
         return issues
@@ -263,26 +283,33 @@ class ElementValidator:
                 merged[key] = {**spec, "required": False}
         return merged
 
-    def _validate_subview_value(self, val, child_path: str, seen_ids: set) -> list[ValidationIssue]:
+    def _validate_subview_value(self, val, child_path: str, seen_ids: set,
+                                in_template: bool = False) -> list[ValidationIssue]:
         issues: list[ValidationIssue] = []
         if isinstance(val, list):
             for i, child in enumerate(val):
                 ipath = f"{child_path}[{i}]"
                 if isinstance(child, dict):
-                    issues += self.validate(child, ipath, seen_ids, _is_root=False)
+                    issues += self.validate(child, ipath, seen_ids, _is_root=False, _in_template=in_template)
                 elif isinstance(child, list):
                     # 2D array (e.g., Grid rows)
                     for j, cell in enumerate(child):
                         cpath = f"{ipath}[{j}]"
                         if isinstance(cell, dict):
-                            issues += self.validate(cell, cpath, seen_ids, _is_root=False)
+                            issues += self.validate(cell, cpath, seen_ids, _is_root=False, _in_template=in_template)
                         else:
                             issues.append(ValidationIssue("error", cpath, "cell must be an object"))
                 else:
                     issues.append(ValidationIssue("error", ipath, "child must be an object"))
         elif isinstance(val, dict):
-            issues += self.validate(val, child_path, seen_ids, _is_root=False)
+            issues += self.validate(val, child_path, seen_ids, _is_root=False, _in_template=in_template)
         return issues
+
+    def _validate_embedded(self, node: dict, path: str) -> list[ValidationIssue]:
+        """An element held in a property ("element": true), such as a chart annotation's
+        view: it is built for each row as a template row is, and never registered, so its
+        ids are its own. Mirrors validateEmbedded in the Swift verifier."""
+        return self.validate(node, path, set(), _is_root=False, _in_template=True)
 
     def _validate_properties(
         self,
@@ -292,6 +319,7 @@ class ElementValidator:
         path: str,
         base_props: dict | None = None,
         kind: str = "property",
+        in_template: bool = False,
     ) -> list[ValidationIssue]:
         # Validates one key/value block against `own_props` specs, falling back
         # to `base_props` (the View base schema) for keys not in `own_props`.
@@ -322,7 +350,9 @@ class ElementValidator:
 
                 if spec is not None:
                     issues += self._check_property_platform(base, suffix, spec, label, path)
-                    issues += validate_property(label, value, spec, path)
+                    if in_template and base in _ROW_BOOL_KEYS and isinstance(value, str):
+                        continue  # read from the row as a Boolean
+                    issues += validate_property(label, value, spec, path, self._validate_embedded)
                 elif base in _ANNOTATION_KEYS:
                     issues.append(ValidationIssue(
                         "info",
@@ -344,6 +374,27 @@ class ElementValidator:
                     "error", f"{path}.{key}",
                     f"required {kind} '{key}' is missing"
                 ))
+
+        # A Toggle in a template keeps its state in its row, which it can only write
+        # back when isOn is exactly one column reference.
+        if in_template and element_type == "Toggle":
+            is_on = [(s, v) for s, v in expanded.get("isOn", [])
+                     if self._target_platform is None or s is None
+                     or platform_matches(s, self._target_platform)]
+            if not is_on:
+                issues.append(ValidationIssue(
+                    "warning", path,
+                    "Toggle in a template has no 'isOn' column reference such as \"$1\"; "
+                    "it cannot keep its state and is display-only"
+                ))
+            for suffix, value in is_on:
+                if not _is_single_column_ref(value):
+                    label = format_suffix_label("isOn", suffix)
+                    issues.append(ValidationIssue(
+                        "warning", f"{path}.{label}",
+                        f"'{label}' of a Toggle in a template must be a single column reference "
+                        "such as \"$1\"; the Toggle cannot keep its state and is display-only"
+                    ))
 
         return issues
 

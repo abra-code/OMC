@@ -125,7 +125,9 @@ JSON schema and usage documentation for `View`.
                            //   Context: { "isTargeted": Bool }
      "keyboardShortcut": { // Optional: Dictionary for keyboard shortcut, supports key with array of modifiers
        "key": "a",         // Required: String for KeyEquivalent (single character like "a" or special key like "return", "space", "upArrow")
-       "modifiers": ["command", "shift"] // Optional: Array of strings for modifiers (e.g., ["command", "shift"]), defaults to ["command"], must contain unique elements
+       "modifiers": ["command", "shift"] // Optional: Array of strings for modifiers (e.g., ["command", "shift"]), must contain unique elements.
+                           //   Omitted means ["command"] (the macOS menu convention, like SwiftUI's own default).
+                           //   An explicit empty array [] means no modifier at all: a plain key such as "return" or "escape".
      },
      "buttonStyle": "automatic", // Optional: "automatic", "plain", "borderless", "bordered", "borderedProminent"; defaults to "automatic".
                                 // Applicable to Button, Menu, Link, NavigationLink. On container views (VStack, HStack, List, Form, etc.) the style propagates to all buttons inside.
@@ -165,7 +167,7 @@ JSON schema and usage documentation for `View`.
                                             // "automatic": platform default. "inline": compact nav bar title.
                                             // "large": large expandable title (iOS style). "inlineLarge": collapses on scroll (iOS 17+).
      "destinationViewId": 10,               // Optional: Int linking this view to a destination in a navigation container.
-                                            // Does not apply any modifier; the value is kept in validatedProperties for navigation logic.
+                                            // Does not apply any modifier; the value stays in the element's properties for navigation logic.
                                             // Used by NavigationLink (Form 2) to identify the push target in NavigationStack,
                                             // and by sidebar List children in NavigationSplitView to select a destination view.
      "textSelection": "enabled",            // Optional: "enabled" or "disabled". Controls whether the user can select text in this view.
@@ -219,8 +221,12 @@ JSON schema and usage documentation for `View`.
 //  You can also use hex color strings (e.g., "#FF0000", "#FF000080")
 // 
 //  Supported modifiers for keyboardShortcut:
-//    - "command", "shift", "option", "control", "capsLock"
+//    - "command", "shift", "option", "control", "capsLock" (names are case-insensitive)
 //    - Must be unique within the array; duplicates are ignored with a warning
+//    - "modifiers" omitted and "modifiers": [] are different: omitted defaults to ["command"],
+//      an empty array binds the bare key with no modifier (plain Return for a default button,
+//      plain Escape for a cancel button). An array with only unknown names falls back to ["command"]
+//      with a warning, like an omitted one.
 // 
 //  Supported keys for keyboardShortcut:
 //    - Single character (e.g., "a", "1")

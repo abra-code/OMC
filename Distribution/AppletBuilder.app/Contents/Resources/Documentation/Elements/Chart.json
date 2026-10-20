@@ -1,0 +1,34 @@
+{
+  "type": "Chart",
+  "id": 1,
+  "properties": {
+    "frame": { "minHeight": 240 },
+    "chart": {
+      "columns": [{ "name": "week", "type": "date" }, "platform", { "name": "users", "type": "number" }],
+      "data": [
+        ["2026-08-03", "iOS", 1180], ["2026-08-03", "macOS", 790],
+        ["2026-08-10", "iOS", 1240], ["2026-08-10", "macOS", 805],
+        ["2026-08-17", "iOS", 1310], ["2026-08-17", "macOS", 860]
+      ],
+      "content": [
+        { "type": "ForEach", "content": [
+          { "type": "LineMark",
+            "x": { "label": "Week", "value": "$week", "unit": "weekOfYear" },
+            "y": { "label": "Users", "value": "$users" },
+            "foregroundStyle": { "by": { "label": "Platform", "value": "$platform" } } },
+          { "type": "PointMark",
+            "x": { "label": "Week", "value": "$week", "unit": "weekOfYear" },
+            "y": { "label": "Users", "value": "$users" },
+            "foregroundStyle": { "by": { "label": "Platform", "value": "$platform" } } }
+        ] },
+        { "type": "RuleMark", "y": { "label": "Goal", "value": 1250 },
+          "lineStyle": { "lineWidth": 1, "dash": [4, 3] }, "foregroundStyle": "gray",
+          "annotation": { "position": "top", "alignment": "leading",
+            "content": { "type": "Text", "properties": { "text": "Goal", "font": "caption", "foregroundStyle": "secondary" } } } }
+      ],
+      "chartXAxisLabel": "Week",
+      "chartYAxisLabel": "Users",
+      "chartLegend": { "position": "bottom" }
+    }
+  }
+}

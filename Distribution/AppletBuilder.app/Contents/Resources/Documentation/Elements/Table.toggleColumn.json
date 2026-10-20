@@ -1,0 +1,26 @@
+{
+  "type": "Table",
+  "id": 1,
+  "properties": {
+    "columns": [
+      "",
+      "Name"
+    ],
+    "columnTypes": [
+      {
+        "viewType": "Toggle",
+        "style": "checkbox",
+        "actionID": "table.row.toggled",
+        "disabledColumn": 3
+      },
+      {
+        "viewType": "Text"
+      }
+    ],
+    "widths": [
+      28,
+      240
+    ],
+    "actionID": "table.item.selected"
+  }
+}

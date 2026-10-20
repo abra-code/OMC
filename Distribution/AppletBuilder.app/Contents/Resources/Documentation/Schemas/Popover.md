@@ -21,7 +21,7 @@ The `popover` modifier is not a standalone view — it is a baseline View modifi
    }
    // The popover child can be any view or container (VStack, HStack, Form, etc.)
 
-   // Note: popoverArrowEdge is a baseline View property validated in View.swift.
+   // Note: popoverArrowEdge is a baseline View property, read with the other baseline View properties.
    // The "popover" key is a top-level JSON key stored in subviews["popover"], following the same
    // pattern as "content", "destination", "sidebar", and "detail".
  }

@@ -24,7 +24,7 @@ JSON schema and usage documentation for `CommandGroup`.
          "actionID": "custom.action",         // Optional: Identifier for action dispatching
          "keyboardShortcut": {                // Optional
            "key": "n",                        // Required: Single character or special key (e.g., "return")
-           "modifiers": ["command"]           // Optional: Array of modifiers (e.g., ["command", "shift"])
+           "modifiers": ["command"]           // Optional: Array of modifiers (e.g., ["command", "shift"]); omitted means ["command"], an explicit [] means no modifier
          }
        }
      }

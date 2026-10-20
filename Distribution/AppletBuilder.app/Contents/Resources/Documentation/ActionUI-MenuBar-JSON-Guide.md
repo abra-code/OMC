@@ -244,7 +244,10 @@ identifier your host expects.
   `space`, `escape`, `delete`/`backspace`, `deleteForward`, the arrows
   (`upArrow`…), `home`, `end`, `pageUp`, `pageDown`, `f1`–`f12`.
 - `modifiers` — array of `"command"`, `"shift"`, `"option"`, `"control"`,
-  `"capsLock"`. Defaults to `["command"]` when omitted.
+  `"capsLock"`. Defaults to `["command"]` when omitted, so `{ "key": "n" }` is
+  Command-N. An explicit empty array `[]` is different: it binds the bare key with
+  no modifier (plain Return or Escape), which is what a dialog's default and
+  cancel buttons need. Menu items normally want a modifier.
 
 ### Divider
 

@@ -4,6 +4,49 @@ import json
 from pathlib import Path
 
 
+class SchemaReferenceError(ValueError):
+    """A schema's $ref names nothing, or refers back to itself."""
+
+
+def expand_references(schema, name: str):
+    """Expand `$ref` within one schema file.
+
+    An object holding `"$ref": "name"` becomes the schema's `definitions[name]`,
+    expanded too, merged with the object's other keys (which win). The
+    `definitions` key itself is removed. Mirrors SchemaSet.expandReferences in
+    the Swift verifier.
+    """
+    if not isinstance(schema, dict):
+        return schema
+    top = dict(schema)
+    definitions = top.pop("definitions", None)
+    if not isinstance(definitions, dict):
+        definitions = {}
+
+    def expand(value, trail: tuple[str, ...]):
+        if isinstance(value, list):
+            return [expand(item, trail) for item in value]
+        if not isinstance(value, dict):
+            return value
+        if "$ref" not in value:
+            return {key: expand(item, trail) for key, item in value.items()}
+        reference = value["$ref"]
+        if not isinstance(reference, str):
+            raise SchemaReferenceError(f"schema {name}: $ref must name a definition")
+        if reference in trail:
+            raise SchemaReferenceError(f"schema {name}: $ref '{reference}' refers back to itself")
+        definition = definitions.get(reference)
+        if not isinstance(definition, dict):
+            raise SchemaReferenceError(f"schema {name}: $ref '{reference}' names no object in 'definitions'")
+        merged = expand(definition, trail + (reference,))
+        for key, sibling in value.items():
+            if key != "$ref":
+                merged[key] = expand(sibling, trail)
+        return merged
+
+    return expand(top, ())
+
+
 class SchemaLoader:
     """Loads element schemas from one or more directories.
 
@@ -41,7 +84,7 @@ class SchemaLoader:
             path = d / f"{name}.json"
             if path.exists():
                 with open(path, encoding="utf-8") as f:
-                    schema = json.load(f)
+                    schema = expand_references(json.load(f), name)
                 self._cache[name] = schema
                 return schema
         return None

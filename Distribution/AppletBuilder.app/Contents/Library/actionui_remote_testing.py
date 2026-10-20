@@ -80,7 +80,7 @@ class Failure(Exception):
 def _new_window():
     return {"elements": {}, "values": {}, "strings": {}, "properties": {}, "states": {},
             "rows": {}, "selection": {}, "modal": None, "dialog": None, "toast": None,
-            "next_negative_id": -1}
+            "next_negative_id": -2}
 
 
 class FakeServer:

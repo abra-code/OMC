@@ -28,7 +28,7 @@ JSON schema and usage documentation for `NavigationLink`.
    }
  }
 
- // Note: "destinationViewId" is a base View property validated by View.validateProperties.
+ // Note: "destinationViewId" is a base View property, read like the other base View properties.
  // NavigationLink uses it specifically to create SwiftUI.NavigationLink(title, value: destinationViewId)
  // for push-based navigation inside NavigationStack.
  // The same property is also used by sidebar List children in NavigationSplitView to select a destination view.

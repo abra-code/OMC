@@ -24,9 +24,11 @@
       "items": {
         "types": ["object"],
         "properties": {
-          "viewType":          { "types": ["string"], "required": false, "enum": ["Text","Button","Image","AsyncImage"] },
+          "viewType":          { "types": ["string"], "required": false, "enum": ["Text","Button","Image","AsyncImage","Toggle"], "description": "Toggle: a checkbox per row whose state is the cell text ('true' or '1' is on, 'false', '0' or empty is off); a user toggle writes 'true' or 'false' into the cell" },
           "actionContext":     { "types": ["string"], "required": false, "enum": ["title","rowIndex","columnIndex","rowColumnIndex"], "description": "Button only" },
-          "actionID":          { "types": ["string"], "required": false, "description": "Button only — fires on button click" },
+          "actionID":          { "types": ["string"], "required": false, "description": "Button: fires on click. Toggle: fires on a user toggle, after the cell is written; viewPartID = column index, context = row index" },
+          "style":             { "types": ["string"], "required": false, "enum": ["checkbox","switch","button"], "description": "Toggle only; default 'checkbox'" },
+          "disabledColumn":    { "types": ["integer"], "required": false, "description": "Toggle only; 1-based column number (hidden columns included) whose text, read as a Boolean, disables the cell for that row" },
           "dataInterpretation":{ "types": ["string"], "required": false, "enum": ["path","systemName","assetName","resourceName","mixed"], "description": "Image/Button only" }
         }
       }

@@ -158,7 +158,7 @@
       "types": ["object"],
       "properties": {
         "key":       { "types": ["string"], "required": true, "description": "Single char or special key name" },
-        "modifiers": { "types": ["array"],  "required": false, "itemTypes": ["string"], "itemEnum": ["command","shift","option","control","capsLock"] }
+        "modifiers": { "types": ["array"],  "required": false, "itemTypes": ["string"], "itemEnum": ["command","shift","option","control","capsLock"], "description": "Omitted: [\"command\"]. An explicit empty array []: no modifier, the bare key (plain Return or Escape)." }
       }
     },
     "buttonStyle":   { "types": ["string"], "required": false, "enum": ["automatic","plain","borderless","bordered","borderedProminent"] },

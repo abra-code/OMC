@@ -22,8 +22,10 @@ Every applet below has, or lives inside, a public repository under
 A clone gives you the applet *sources*: inside the bundle, `Info.plist`, `Command.json` or
 `Command.plist`, `Base.lproj/*.json` or `*.nib`, `Scripts/*`, and the app resources; at the repo
 root, `Tests/` (in most repos - see the Tests column in section 7), `README.md`,
-`codesign_applet.sh`, `LICENSE`, `Icon/`, `OMCApplet.entitlements`, and any `update_*.sh`
-vendoring script. That is the set of files this catalog tells you to read.
+`LICENSE`, `Icon/`, `OMCApplet.entitlements`, and any `update_*.sh` vendoring script, which
+brings the `codesign_applet.sh` it signs with. A repo without such a script has no signer of
+its own: AppletBuilder builds and signs it. That is the set of files this catalog tells you
+to read.
 
 What is *not* in a repo: compiled frameworks, the embedded Python runtime and its site-packages,
 model weights, and compiled helper binaries - all added at build time. Hand-written helper

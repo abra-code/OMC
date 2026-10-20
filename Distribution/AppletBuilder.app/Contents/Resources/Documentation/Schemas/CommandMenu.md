@@ -28,7 +28,7 @@ JSON schema and usage documentation for `CommandMenu`.
          "actionID": "test.something",        // Optional: Identifier for action dispatching
          "keyboardShortcut": {                // Optional
            "key": "t",                        // Required: Single character or special key (e.g., "return")
-           "modifiers": ["command", "shift"]  // Optional: Array of modifiers (e.g., ["command", "shift"])
+           "modifiers": ["command", "shift"]  // Optional: Array of modifiers (e.g., ["command", "shift"]); omitted means ["command"], an explicit [] means no modifier
          }
        }
      },
