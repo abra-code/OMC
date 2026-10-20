@@ -4,9 +4,10 @@
 //
 //  Tests for commands run by a URL sent to the applet (+runCommandForURL:forCommandFile:delegate:):
 //  the URL_INVOCABLE opt-in, the commands a URL can never run, the file context rules
-//  and the OMC_TRIGGER_URL variable.
+//  and the OMC_TRIGGER_URL variable. Also the clipboard text a command with no text of its own reads.
 //
 
+#import <AppKit/AppKit.h>
 #import "OMCTestCase.h"
 #import "OMCCommandExecutor.h"
 #import "OMCTestExecutionObserver.h"
@@ -17,6 +18,15 @@
 static NSString * const kReportContext = @"echo \"text=[${OMC_OBJ_TEXT}] path=[${OMC_OBJ_PATH}] trigger=[${OMC_TRIGGER_URL-unset}]\"";
 
 @interface OMCURLInvocationTests : OMCTestCase
+@end
+
+// Promises clipboard flavors and delivers none of them, like an application that quit after a copy.
+@interface OMCEmptyFlavorProvider : NSObject <NSPasteboardItemDataProvider>
+@end
+
+@implementation OMCEmptyFlavorProvider
+- (void)pasteboard:(NSPasteboard *)pasteboard item:(NSPasteboardItem *)item provideDataForType:(NSPasteboardType)type {
+}
 @end
 
 @implementation OMCURLInvocationTests
@@ -315,6 +325,91 @@ static NSString * const kReportContext = @"echo \"text=[${OMC_OBJ_TEXT}] path=[$
 
     NSString *expected = [NSString stringWithFormat:@"next trigger=[%@]", url];
     XCTAssertTrue([report containsString:expected], @"The next command should run and see the URL. Report: %@", report);
+}
+
+#pragma mark - Clipboard text
+
+// A command with no text of its own reads OMC_OBJ_TEXT from the clipboard, so these tests put an
+// item there and restore the user's clipboard afterwards (keeping each flavor that has data).
+
+- (NSArray<NSPasteboardItem *> *)copyOfClipboardItems {
+    NSMutableArray<NSPasteboardItem *> *copies = [NSMutableArray array];
+    for (NSPasteboardItem *item in NSPasteboard.generalPasteboard.pasteboardItems) {
+        NSPasteboardItem *copy = NSPasteboardItem.new;
+        for (NSPasteboardType type in item.types) {
+            NSData *data = [item dataForType:type];
+            if (data != nil) {
+                [copy setData:data forType:type];
+            }
+        }
+        [copies addObject:copy];
+    }
+    return copies;
+}
+
+- (NSString *)runWithNoContextUnderClipboardItem:(NSPasteboardItem *)item {
+    NSPasteboard *clipboard = NSPasteboard.generalPasteboard;
+    NSArray<NSPasteboardItem *> *saved = [self copyOfClipboardItems];
+    [clipboard clearContents];
+    [clipboard writeObjects:@[item]];
+
+    OMCTestExecutionObserver *observer = OMCTestExecutionObserver.new;
+    OSStatus err = [OMCCommandExecutor runCommand:@"url.opted.in"
+                                   forCommandFile:[self.testPlistURL path]
+                                      withContext:nil
+                                     useNavDialog:NO
+                         allowKeyWindowSubcommand:NO
+                                         delegate:observer];
+    BOOL completed = (err == noErr) && [observer waitForCompletionWithTimeout:kDefaultExecutionTimeout];
+
+    [clipboard clearContents];
+    if (saved.count > 0) {
+        [clipboard writeObjects:saved];
+    }
+    XCTAssertEqual(err, noErr);
+    XCTAssertTrue(completed, @"The command did not complete");
+    return observer.capturedOutput;
+}
+
+- (void)testClipboardTextIsReadFromItsUTF8Flavor {
+    // Text outside Mac Roman: the traditional Mac text flavor the system derives from it loses
+    // those characters, so only a read of the UTF-8 (or UTF-16) flavor gives the text back whole.
+    NSPasteboardItem *item = NSPasteboardItem.new;
+    [item setString:@"clipboard \u65E5\u672C words" forType:NSPasteboardTypeString];
+    NSString *output = [self runWithNoContextUnderClipboardItem:item];
+    XCTAssertTrue([output containsString:@"text=[clipboard \u65E5\u672C words]"], @"Output: %@", output);
+}
+
+- (void)testAClipboardItemWithNoTextLeavesTheTextEmpty {
+    // No text flavor at all: the command still runs, with empty text.
+    NSPasteboardItem *item = NSPasteboardItem.new;
+    [item setData:[@"one" dataUsingEncoding:NSUTF8StringEncoding] forType:@"com.abracode.omc.test.first"];
+    [item setData:[@"two" dataUsingEncoding:NSUTF8StringEncoding] forType:@"com.abracode.omc.test.second"];
+    NSString *output = [self runWithNoContextUnderClipboardItem:item];
+    XCTAssertTrue([output containsString:@"text=[]"], @"Output: %@", output);
+}
+
+- (void)testClipboardTextIsReadWhenItsOtherTextFlavorsHaveNoData {
+    // Text copied from an application that has since quit: the item still lists the flavors that
+    // application promised, but asking for them returns nothing. Only the UTF-8 text has data.
+    NSPasteboardItem *item = NSPasteboardItem.new;
+    OMCEmptyFlavorProvider *provider = OMCEmptyFlavorProvider.new;
+    // The empty UTF-16 flavor is listed before the UTF-8 one, so the reader must move past it.
+    [item setDataProvider:provider forTypes:@[NSPasteboardTypeRTF, @"public.utf16-plain-text"]];
+    [item setString:@"clipboard words" forType:NSPasteboardTypeString];
+    [item setDataProvider:provider forTypes:@[@"public.utf16-external-plain-text", @"com.apple.traditional-mac-plain-text"]];
+    NSString *output = [self runWithNoContextUnderClipboardItem:item];
+    XCTAssertTrue([output containsString:@"text=[clipboard words]"], @"Output: %@", output);
+}
+
+- (void)testClipboardTextFlavorsWithNoDataLeaveTheTextEmpty {
+    // Every text flavor is promised and none delivers: the reader tries each one, finds no text
+    // and stops at the end of the item's flavor list. The command still runs, with empty text.
+    NSPasteboardItem *item = NSPasteboardItem.new;
+    OMCEmptyFlavorProvider *provider = OMCEmptyFlavorProvider.new;
+    [item setDataProvider:provider forTypes:@[NSPasteboardTypeRTF, NSPasteboardTypeString, @"public.utf16-plain-text", @"com.apple.traditional-mac-plain-text"]];
+    NSString *output = [self runWithNoContextUnderClipboardItem:item];
+    XCTAssertTrue([output containsString:@"text=[]"], @"Output: %@", output);
 }
 
 @end

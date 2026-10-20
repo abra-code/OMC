@@ -101,15 +101,23 @@ CMUtils::CreateCFStringFromClipboardText(long inReplaceOption)
 			if(flavorUTIs != NULL)
 			{
 				CFIndex flavorCount = CFArrayGetCount(flavorUTIs);
-				for(CFIndex flIndex = 0; i < flavorCount; flIndex++)
+				// In the order the item lists its flavors, richest first. A flavor whose data is not
+				// available (promised by an application that has since quit) is skipped.
+				for(CFIndex flIndex = 0; flIndex < flavorCount; flIndex++)
 				{
 					CFTypeRef oneItem = CFArrayGetValueAtIndex(flavorUTIs, flIndex);
 					CFStringRef oneUTI = ACFType<CFStringRef>::DynamicCast(oneItem);
 					if(oneUTI != NULL)
 					{
 						bool isUTF16 = false;
+						CFStringEncoding byteEncoding = ::CFStringGetSystemEncoding();
 						CFObj<CFDataRef> textData;
-						if( UTTypeEqual(oneUTI, CFSTR("com.apple.utf16-plain-text")) )
+						if( UTTypeEqual(oneUTI, CFSTR("public.utf8-plain-text")) )
+						{
+							err = PasteboardCopyItemFlavorData( clipboardRef, itemID, oneUTI, &textData );
+							byteEncoding = kCFStringEncodingUTF8;
+						}
+						else if( UTTypeEqual(oneUTI, CFSTR("public.utf16-plain-text")) || UTTypeEqual(oneUTI, CFSTR("com.apple.utf16-plain-text")) )
 						{
 							err = PasteboardCopyItemFlavorData( clipboardRef, itemID, oneUTI, &textData );
 							isUTF16 = true;
@@ -135,12 +143,12 @@ CMUtils::CreateCFStringFromClipboardText(long inReplaceOption)
 										UniChar *theText = (UniChar *)textDataPtr;
 										UniCharCount theCount = textDataLength/sizeof(UniChar);
 										
-										if(theText[0] == 0xFEFF)
+										if((theCount > 0) && (theText[0] == 0xFEFF))
 										{
 											theText++;
 											theCount--;
 										}
-										else if(theText[0] == 0xFFFE)
+										else if((theCount > 0) && (theText[0] == 0xFFFE))
 										{//how the heck the text in clipboard might be in swapped form?
 											theText++;
 											theCount--;
@@ -164,7 +172,7 @@ CMUtils::CreateCFStringFromClipboardText(long inReplaceOption)
 										else if(inReplaceOption == kTextReplaceCRsWithLFs)
 											ReplaceCharacters((char*)textDataPtr, textDataLength, 0x0D, 0x0A);
 
-										outString = ::CFStringCreateWithBytes(kCFAllocatorDefault, (const UInt8*)textDataPtr, textDataLength, ::CFStringGetSystemEncoding(), true);
+										outString = ::CFStringCreateWithBytes(kCFAllocatorDefault, (const UInt8*)textDataPtr, textDataLength, byteEncoding, true);
 									}
 								}
 							}
