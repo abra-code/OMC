@@ -86,7 +86,8 @@ bundle_resources_dir() {
 }
 
 # Helper: download mistune $1 from PyPI and install it into $DEST_MISTUNE.
-# Returns 0 on success (and sets the global 'updated'), non-zero on failure.
+# Returns 0 on success (and sets the global 'updated'), non-zero on failure. A missing
+# LICENSE returns non-zero after the code is installed, so 'updated' is set then too.
 # Uses the embedded Python's pip, not /usr/bin/pip3: mistune runs on the embedded
 # Python, and pip only offers releases whose requires_python the running interpreter
 # meets (mistune 3.4.0 needs 3.10+, /usr/bin/pip3 is 3.9). -I ignores the user's PYTHON* variables
@@ -95,7 +96,7 @@ bundle_resources_dir() {
 install_mistune() {
     local version="$1"
     local bundled_python="$DEST_PYTHON/bin/python3"
-    local tmp_dir cp_rc pip_output
+    local tmp_dir cp_rc pip_output license_src license_rc
     if [ ! -x "$bundled_python" ]; then
         echo -e "  ${RED}Embedded Python not found at: $bundled_python (see section 0b)${NC}"
         return 1
@@ -118,6 +119,15 @@ install_mistune() {
     /bin/rm -rf "$DEST_MISTUNE"
     /bin/cp -R "$tmp_dir/mistune" "$DEST_MISTUNE"
     cp_rc=$?
+    # mistune's BSD license has to ship with its code, but pip keeps it in the dist-info
+    # folder, which is not copied above. Carry it into the package folder, where git tracks it.
+    if [ "$cp_rc" -eq 0 ]; then
+        license_src=$(/usr/bin/find "$tmp_dir" -maxdepth 3 -path '*.dist-info/*' -type f -name 'LICENSE*' | /usr/bin/head -n 1)
+        if [ -n "$license_src" ]; then
+            /bin/cp "$license_src" "$DEST_MISTUNE/LICENSE"
+            license_rc=$?
+        fi
+    fi
     /bin/rm -rf "$tmp_dir"
     if [ "$cp_rc" -ne 0 ]; then
         echo -e "  ${RED}Failed to copy mistune to: $DEST_MISTUNE${NC}"
@@ -127,6 +137,15 @@ install_mistune() {
     /usr/bin/find "$DEST_MISTUNE" -name "__pycache__" -type d -exec /bin/rm -rf {} + 2>/dev/null
     echo -e "  ${GREEN}Installed mistune $version${NC}"
     updated=1
+    # The code is in place either way, so a license problem is reported, not rolled back.
+    if [ -z "$license_src" ]; then
+        echo -e "  ${RED}No LICENSE file in the mistune $version package; $DEST_MISTUNE/LICENSE is missing${NC}"
+        return 1
+    fi
+    if [ "$license_rc" -ne 0 ]; then
+        echo -e "  ${RED}Failed to copy mistune's LICENSE to: $DEST_MISTUNE${NC}"
+        return 1
+    fi
     return 0
 }
 
