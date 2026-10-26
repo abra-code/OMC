@@ -107,7 +107,7 @@ Here `font` is `"headline"` on Android and `"title"` everywhere else, and the `p
 
 Resolution rules:
 
-- **Recognized tokens:** `ios`, `macos`, `tvos`, `watchos`, `visionos`, `apple` (matches any Apple platform), `android`, and `web`. (`androidtv`, `wear`, and `desktop` are reserved for future use and match nothing today.)
+- **Recognized tokens:** `ios`, `macos`, `tvos`, `watchos`, `visionos`, `apple` (matches any Apple platform), `android`, `web`, and `linux`. (`androidtv`, `wear`, and `desktop` are reserved for future use and match nothing today.)
 - **Specificity:** a specific token beats `apple`, which beats the unsuffixed key. So with `title`, `title:apple`, and `title:macos` all present, macOS uses `title:macos`, other Apple platforms use `title:apple`, and non-Apple platforms use `title`.
 - **Fallback:** the unsuffixed key is used when no suffixed variant matches the current platform.
 - **Inactive platform:** a key aimed at a recognized but non-active platform (e.g. `font:ios` seen on Android) is dropped silently.

@@ -5,7 +5,7 @@
   "inheritsViewProperties": true,
   "topLevelKeys": [],
   "ownProperties": {
-    "minLength": { "types": ["number"], "required": false, "description": "Minimum size in points" }
+    "minLength": { "types": ["number"], "required": false, "description": "Minimum length in points along the enclosing stack's axis" }
   },
   "observable": {}
 }

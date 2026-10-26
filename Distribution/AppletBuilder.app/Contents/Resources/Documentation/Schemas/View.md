@@ -13,6 +13,7 @@ JSON schema and usage documentation for `View`.
      "hidden": false,      // Optional: Boolean to hide the view - SwiftUI's .hidden(): invisible and non-interactive,
                            //   but STILL LAID OUT, so its space is reserved. Same on all four hosts; there is no
                            //   collapse semantic (overlay panels in a ZStack and hide all but one to swap views).
+                           //   The whole view hides: its background, border, overlay and shadow too.
                            //   Inside a toolbar it instead removes the item entirely on Android and Web.
      "foregroundStyle": "blue", // Optional: SwiftUI color (e.g., "red", "blue") or semantic style for text/content tint, resolved via foregroundStyle
      "tint": "red",        // Optional: SwiftUI color for tinting interactive controls (buttons, toggles, sliders, etc.), resolved via tint

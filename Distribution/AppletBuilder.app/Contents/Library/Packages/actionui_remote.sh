@@ -875,6 +875,12 @@ actionui_elements() { _aui_window_call "actionui.getElementInfo"; }
 actionui_get_element_info() { _aui_window_call "actionui.getElementInfo"; }
 actionui_content_size_limits() { _aui_window_call "actionui.contentSizeLimits"; }
 
+# -- window model
+
+# actionui_remove_window: the host forgets the window's model once you are done with the window.
+# Afterwards the window is unknown, as one never loaded; an unknown window is ignored.
+actionui_remove_window() { _aui_window_set "actionui.removeWindow"; }
+
 # -- values
 
 # actionui_get_value VIEWID [PART]

@@ -658,6 +658,14 @@ class Window:
         """(min_w, min_h, max_w, max_h) of the loaded root element, or None."""
         return _POST["content_size_limits"](self.call("actionui.contentSizeLimits"))
 
+    # -- window model
+
+    def remove_window(self):
+        """Ask the host to forget this window's model (its loaded description and every
+        element's value and state) once you are done with the window. Afterwards the window is
+        unknown, as one never loaded; an unknown window is ignored, so a second call is harmless."""
+        return self.call("actionui.removeWindow")
+
     # -- values
 
     def get_value(self, view_id, view_part_id=0):

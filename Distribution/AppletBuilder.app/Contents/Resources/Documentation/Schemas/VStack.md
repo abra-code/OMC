@@ -39,7 +39,7 @@ JSON schema and usage documentation for `VStack`.
    // "actionID" is the exception. A VStack carrying one becomes tappable as a WHOLE - the
    // rich-cell idiom: one tap target for an avatar + name + status line, instead of a small
    // Button wedged inside the cell. It is wired by ContainerAction.apply
-   // (Helpers/ContainerActionHelper.swift), called from ActionUIRegistry.applyViewModifiers
+   // (Helpers/ContainerAction+SwiftUI.swift), called from ActionUIRegistry.applyViewModifiers
    // AFTER the baseline modifiers, so the target covers the container's FINAL box - frame,
    // padding and background included. Inside a template row it dispatches with the owning
    // container's id as viewID and the row index as viewPartID, exactly as a Button in that

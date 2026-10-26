@@ -12,7 +12,7 @@ JSON schema and usage documentation for `ScrollViewReader`.
      "type": "ScrollView", "properties": { "content": { "type": "Text", "properties": { "text": "Item 1" } } }
    },
    "properties": {
-     "scrollTo": 5,       // Optional: Integer ID to scroll to, defaults to nil
+     "scrollTo": 5,       // Optional: Integer ID to scroll to, defaults to nil. Scrolled to when the reader appears, and again (animated) after every write to the reader (setElementProperty, setElementValue, setElementState): writing the same ID again brings the element back after the user scrolled away.
      "anchor": "top"      // Optional: "top", "center", "bottom"; defaults to "center"
    }
    // Note: These properties are specific to ScrollViewReader. Baseline View properties (padding, hidden, foregroundStyle, font, background, frame, opacity, cornerRadius, actionID, disabled) and additional View protocol modifiers are inherited and applied via ActionUIRegistry.shared.applyModifiers(to: baseView, properties: element.properties).

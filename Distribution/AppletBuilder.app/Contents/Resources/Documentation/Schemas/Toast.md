@@ -20,7 +20,7 @@ The framework owns the cross-cutting details that are easy to get wrong per-host
 - Reduce-motion: the slide-in transition collapses to a plain fade when Reduce Motion is on.
 
 ```swift
-// Sources/Common/ActionUIModel.swift, Common/ToastOverlayView.swift, Common/WindowModalView.swift
+// ActionUI/Core/Common/ActionUIModel.swift, Common/ToastOverlayView.swift, Common/WindowModalView.swift
 ```
 
 ---

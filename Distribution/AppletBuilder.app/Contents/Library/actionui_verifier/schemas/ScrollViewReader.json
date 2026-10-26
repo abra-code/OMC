@@ -6,7 +6,7 @@
   "topLevelKeys": ["content"],
   "content": { "required": true, "description": "Single child view — typically a ScrollView" },
   "ownProperties": {
-    "scrollTo": { "types": ["integer"], "required": false, "description": "Element ID to scroll to on appear" },
+    "scrollTo": { "types": ["integer"], "required": false, "description": "Element ID to scroll to: when the reader appears, and again after every write to the reader (setElementProperty, setElementValue, setElementState; the same ID scrolls again)" },
     "anchor":   { "types": ["string"],  "required": false, "enum": ["top","center","bottom"], "description": "Alignment anchor for the scrolled-to item; default 'center'" }
   },
   "observable": {}

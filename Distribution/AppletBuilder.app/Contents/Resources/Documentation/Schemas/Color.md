@@ -25,7 +25,7 @@ JSON schema and usage documentation for `Color`.
 
 The displayed color defaults to the `color` property and can be overridden at runtime (like `Image`'s value overriding its `systemName`/`assetName`) - the block re-renders:
 
-- `setElementValue(viewID:value:)` with a `Color`.
-- `setElementValueFromString(viewID:value:)` with a color string ("red", "#FF0000", "blue.opacity(0.3)") - parsed via `ColorHelper.resolveColor`.
+- `setElementValue(viewID:value:)` with a `ColorSpec` (on Apple a SwiftUI `Color` too, stored as its sRGB components).
+- `setElementValueFromString(viewID:value:)` with a color string ("red", "#FF0000", "blue.opacity(0.3)") - parsed via `ColorSpec.parse`.
 
-`getElementValue(viewID:)` returns the runtime override, or `nil` when the `color` property is still in effect.
+`getElementValue(viewID:)` returns the runtime override (a `ColorSpec`), or `nil` when the `color` property is still in effect.

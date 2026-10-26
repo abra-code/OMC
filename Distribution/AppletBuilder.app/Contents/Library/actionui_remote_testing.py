@@ -363,6 +363,10 @@ class FakeServer:
         window = p.window()
         return {str(i): t for i, t in window["elements"].items() if i > 0}
 
+    def _m_actionui_removeWindow(self, p):
+        self.model.pop(p.string("window"), None)   # an unknown window is ignored, as in the host
+        return True
+
     def _m_actionui_getValue(self, p):
         window, view_id = p.window_and_view()
         value = window["values"].get(view_id)

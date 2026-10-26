@@ -5,7 +5,7 @@ JSON schema and usage documentation for window-level `alert` and `confirmationDi
 These are always **Tier 2 (window-level)** — they are data-driven (title + message + buttons) and have no view sub-tree to declare in JSON. There is no subview key variant; they are always triggered programmatically from action handlers.
 
 ```swift
-// Sources/Common/ActionUIModel.swift, Common/WindowModalView.swift
+// ActionUI/Core/Common/ActionUIModel.swift, Common/WindowModalView.swift
 ```
 
 ---
@@ -66,9 +66,14 @@ ActionUISwift.dismissDialog(windowUUID: uuid)
 
 ```swift
 public struct DialogButton {
-    public let title: String        // Button label
-    public let role: ButtonRole?    // nil = default, .destructive, .cancel
-    public let actionID: String?    // Action fired on tap; nil = dismiss only
+    public let title: String              // Button label
+    public let role: DialogButtonRole?    // nil = default, .destructive, .cancel
+    public let actionID: String?          // Action fired on tap; nil = dismiss only
+}
+
+public enum DialogButtonRole {
+    case cancel
+    case destructive
 }
 ```
 
