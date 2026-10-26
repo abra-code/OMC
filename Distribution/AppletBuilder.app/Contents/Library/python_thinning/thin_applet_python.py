@@ -204,22 +204,46 @@ def write_sandbox_profile(path, work):
 def analyzer_driver(pybin):
     """The analyzer needs json/ast/datetime, which an ALREADY-thinned interpreter no
     longer has - re-planning after an apply died on "No module named 'datetime'". Fall
-    back to the system interpreter; the traces themselves always run under the target."""
+    back to the interpreter running this script; the traces themselves always run under
+    the target.
+
+    The fallback must be at least the target's version, because the analyzer parses the
+    target's stdlib and scripts with its own ast module, and a file it cannot parse is
+    skipped with only a warning, so its conditional imports silently drop out of the plan.
+    That is why /usr/bin/python3 is never used: it is 3.9, which cannot parse 15 files of
+    the 3.14 stdlib (typing, dataclasses, traceback, site, asyncio among them) nor 3.15's
+    `lazy import`, and macOS does not guarantee it exists."""
     # -I: the question is whether THIS interpreter still has these modules, so nothing
     # outside it may answer. It implies -E and -s (no PYTHON* environment, no user
     # site) and also drops the "" entry -c puts on sys.path - without that last part a
     # datetime.py in whatever directory the caller happened to be in decides the
     # answer, in both directions. -B because -I drops the cache prefix set above, and
     # the probe must not write bytecode into the distribution it is inspecting.
+    # The version is printed first, from sys alone, so a thinned interpreter still
+    # reports it before the imports fail.
     probe = subprocess.run([pybin, "-B", "-I", "-c",
+                            "import sys; print('%d.%d' % sys.version_info[:2]); "
                             "import json, ast, datetime, argparse"],
-                           capture_output=True)
+                           capture_output=True, text=True)
     if probe.returncode == 0:
         return pybin
-    for cand in ("/usr/bin/python3", sys.executable):
-        if cand and os.path.exists(cand):
-            return cand
-    fail("the app's Python is already thinned and no system python3 was found")
+    try:
+        target = tuple(int(p) for p in probe.stdout.split()[0].split("."))
+    except (IndexError, ValueError):
+        fail("the app's Python at %s does not run (status %d)%s"
+             % (pybin, probe.returncode,
+                ":\n" + probe.stderr.strip() if probe.stderr.strip() else ""))
+    target_text = "%d.%d" % target
+    here_text = "%d.%d" % sys.version_info[:2]
+    if not sys.executable:
+        fail("the app's Python %s is already thinned, and the interpreter running this "
+             "script does not name its executable" % target_text)
+    if sys.version_info[:2] < target:
+        fail("the app's Python %s is already thinned, so it cannot run the analyzer, and "
+             "this script runs on Python %s (%s), which cannot parse %s sources. Run this "
+             "script with Python %s or newer, or reinstall the app's Python and plan again."
+             % (target_text, here_text, sys.executable, target_text, target_text))
+    return sys.executable
 
 
 def sweep_stale(*prefixes):
