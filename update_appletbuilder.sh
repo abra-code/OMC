@@ -3,6 +3,8 @@
 #
 # Updates:
 #   0. OMCApplet — builds universal (arm64 + x86_64) Release binary and Abracode.framework
+#   0b. Embedded Python - when Contents/Library/Python is missing (a fresh clone), offers to build
+#      the OMCPythonApplet target and copy its Python in; an existing Python is left as is
 #   1. ActionUIViewer — built from the Apps/ActionUIViewer aggregator package (links core + add-ons);
 #      that one SPM build also produces the core and add-on documentation bundles + the Python verifier
 #      schemas are copied from source (core + each Add-ons/*/Schemas)
@@ -40,6 +42,7 @@ OMC_ROOT="${1:-$(cd "$(/usr/bin/dirname "$0")" && pwd)}"
 APPLET_BUILDER="$OMC_ROOT/Distribution/AppletBuilder.app"
 DEST_DOCS="$APPLET_BUILDER/Contents/Resources/Documentation"
 DEST_MISTUNE="$APPLET_BUILDER/Contents/Library/mistune"
+DEST_PYTHON="$APPLET_BUILDER/Contents/Library/Python"
 DEST_PACKAGES="$APPLET_BUILDER/Contents/Library/Packages"
 DEST_HELPERS="$APPLET_BUILDER/Contents/Helpers"
 ACTIONUI_BUILD="$OMC_ROOT/.build/ActionUI"
@@ -84,13 +87,30 @@ bundle_resources_dir() {
 
 # Helper: download mistune $1 from PyPI and install it into $DEST_MISTUNE.
 # Returns 0 on success (and sets the global 'updated'), non-zero on failure.
+# Uses the embedded Python's pip, not /usr/bin/pip3: mistune runs on the embedded
+# Python, and pip only offers releases whose requires_python the running interpreter
+# meets (mistune 3.4.0 needs 3.10+, /usr/bin/pip3 is 3.9). -I ignores the user's PYTHON* variables
+# and site-packages; -B keeps pip from writing
+# .pyc files into the bundle.
 install_mistune() {
     local version="$1"
-    local tmp_dir cp_rc
+    local bundled_python="$DEST_PYTHON/bin/python3"
+    local tmp_dir cp_rc pip_output
+    if [ ! -x "$bundled_python" ]; then
+        echo -e "  ${RED}Embedded Python not found at: $bundled_python (see section 0b)${NC}"
+        return 1
+    fi
     tmp_dir=$(/usr/bin/mktemp -d)
-    /usr/bin/pip3 install --target="$tmp_dir" --no-deps mistune=="$version" 2>/dev/null
+    # An empty --target makes pip install into the embedded Python's own site-packages.
+    if [ -z "$tmp_dir" ] || [ ! -d "$tmp_dir" ]; then
+        echo -e "  ${RED}Failed to create a temporary directory for mistune${NC}"
+        return 1
+    fi
+    pip_output=$("$bundled_python" -I -B -m pip install --disable-pip-version-check --no-compile \
+        --target="$tmp_dir" --no-deps mistune=="$version" 2>&1)
     if [ ! -d "$tmp_dir/mistune" ]; then
-        echo -e "  ${RED}Failed to download mistune${NC}"
+        echo -e "  ${RED}Failed to download mistune $version${NC}"
+        printf '%s\n' "$pip_output" | /usr/bin/sed 's/^/    /'
         /bin/rm -rf "$tmp_dir"
         return 1
     fi
@@ -194,6 +214,86 @@ if [ "$cp_rc" -ne 0 ]; then
 fi
 echo -e "  ${GREEN}Updated: MacOS/AppletBuilder (from OMCApplet binary)${NC}"
 updated=1
+
+echo ""
+
+# ════════════════════════════════════════════════════════════
+# 0b. Embedded Python (from the OMCPythonApplet target)
+# ════════════════════════════════════════════════════════════
+# Contents/Library/Python is not in git, so a fresh clone has none. Several AppletBuilder pieces
+# run on it, and so do the mistune install (2) and the thinning (6) below. An existing Python is
+# kept as is: building one compiles Python, OpenSSL and liblzma from source and takes a long time,
+# so it is only offered, with a prompt, when the bundle has none. The OMCPythonApplet target's
+# "Build Embedded Python" phase owns the build options and clones ../Python-Embedding if missing.
+
+echo "── Checking embedded Python ──"
+
+if [ -e "$DEST_PYTHON/bin/python3" ] || [ -L "$DEST_PYTHON/bin/python3" ]; then
+    python_version=$("$DEST_PYTHON/bin/python3" -B -V 2>&1)
+    python_rc=$?
+    if [ "$python_rc" -eq 0 ]; then
+        echo -e "  ${GREEN}Present: $python_version${NC}"
+    else
+        echo -e "  ${YELLOW}The embedded Python does not run (status $python_rc): $python_version${NC}"
+        echo "  To rebuild it, remove $DEST_PYTHON and run this script again."
+    fi
+else
+    echo -e "  ${YELLOW}AppletBuilder.app has no embedded Python at: $DEST_PYTHON${NC}"
+    echo "  AppletBuilder needs it: several of its tools run on Python and will not work without it."
+    echo "  It is built from source by the OMCPythonApplet target (Python, OpenSSL, liblzma),"
+    echo "  which downloads the sources and takes a while."
+    read -p "  Build the embedded Python now? [y/N] " answer
+    if [ "$answer" = "y" ] || [ "$answer" = "Y" ]; then
+        /bin/mkdir -p "$OMCAPPLET_BUILD"
+        python_build_log="$OMCAPPLET_BUILD/OMCPythonApplet-build.log"
+        echo "  Running xcodebuild (log: $python_build_log)..."
+        /usr/bin/xcodebuild \
+            -workspace "$OMC_WORKSPACE" \
+            -scheme "OMCPythonApplet" \
+            -configuration Release \
+            -derivedDataPath "$OMCAPPLET_BUILD" \
+            ARCHS="arm64 x86_64" \
+            ONLY_ACTIVE_ARCH=NO \
+            build > "$python_build_log" 2>&1
+        xcode_rc=$?
+        if [ "$xcode_rc" -ne 0 ]; then
+            echo -e "  ${RED}OMCPythonApplet build failed. Last lines of the log:${NC}"
+            /usr/bin/tail -n 40 "$python_build_log"
+            echo "  Full log: $python_build_log"
+            exit 1
+        fi
+
+        # The phase only warns when Python-Embedding cannot be found or cloned, so the build can
+        # succeed without a Python in it. Check before copying.
+        built_python="$OMCAPPLET_BUILD/Build/Products/Release/OMCPythonApplet.app/Contents/Library/Python"
+        if [ ! -x "$built_python/bin/python3" ]; then
+            echo -e "  ${RED}OMCPythonApplet built without an embedded Python: $built_python${NC}"
+            echo "  Check that ../Python-Embedding exists or can be cloned. Full log: $python_build_log"
+            exit 1
+        fi
+
+        /bin/mkdir -p "$(/usr/bin/dirname "$DEST_PYTHON")"
+        /bin/rm -rf "$DEST_PYTHON"
+        /usr/bin/ditto --norsrc --noextattr --clone "$built_python" "$DEST_PYTHON"
+        ditto_rc=$?
+        if [ "$ditto_rc" -ne 0 ]; then
+            echo -e "  ${RED}Failed to copy the embedded Python to: $DEST_PYTHON${NC}"
+            exit 1
+        fi
+        python_version=$("$DEST_PYTHON/bin/python3" -B -V 2>&1)
+        python_rc=$?
+        if [ "$python_rc" -ne 0 ]; then
+            echo -e "  ${RED}The copied embedded Python does not run (status $python_rc): $python_version${NC}"
+            exit 1
+        fi
+        echo -e "  ${GREEN}Installed: $python_version${NC}"
+        updated=1
+    else
+        echo -e "  ${YELLOW}Skipped. AppletBuilder.app will not work fully, and mistune cannot be installed.${NC}"
+        echo "  Run this script again and answer y, or build the OMCPythonApplet scheme in OMC.xcworkspace"
+        echo "  and copy its Contents/Library/Python into: $DEST_PYTHON"
+    fi
+fi
 
 echo ""
 
