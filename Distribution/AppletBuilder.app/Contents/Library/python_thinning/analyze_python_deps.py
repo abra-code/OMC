@@ -202,9 +202,12 @@ class Isolation:
         env = dict(os.environ)
         # _PYTHON_SYSCONFIGDATA_NAME belongs here too: it redirects sysconfig to a data
         # module for a DIFFERENT build, so an inherited one silently changes which
-        # modules the traced code loads.
+        # modules the traced code loads. PYTHON_LAZY_IMPORTS (3.15+) too: "all" makes
+        # every module-level import lazy, so the trace never sees what they load while
+        # conditional_imports() still assumes they fired - measured, a package's plain
+        # `import graphlib` then left graphlib in remove.modules.
         for var in ("PYTHONPATH", "PYTHONHOME", "PYTHONSTARTUP", "PYTHONUSERBASE",
-                    "_PYTHON_SYSCONFIGDATA_NAME"):
+                    "_PYTHON_SYSCONFIGDATA_NAME", "PYTHON_LAZY_IMPORTS"):
             env.pop(var, None)
         # DYLD_* too. The embedded interpreter is ad-hoc signed with no library
         # validation, so an inherited DYLD_INSERT_LIBRARIES would load code from outside
@@ -250,7 +253,12 @@ class Isolation:
         return [p for p in entries if not os.path.abspath(p).startswith(self.root)]
 
 
-MISSING_RE = re.compile(r"ModuleNotFoundError: No module named ['\"]([\w.]+)['\"]")
+# Python 3.15's traceback reports a missing STDLIB module as "Standard library module
+# 'x' was not found" instead of "No module named 'x'" - and those are exactly the
+# modules thinning removes. Windows-only stdlib modules get a third wording ("Unsupported
+# platform for ..."), which is deliberately not matched: they never existed on macOS.
+MISSING_RE = re.compile(
+    r"ModuleNotFoundError: (?:No module named|Standard library module) ['\"]([\w.]+)['\"]")
 # Breakage that thinning causes but that is NOT a ModuleNotFoundError: a package whose
 # submodule was removed raises "cannot import name", and deleting a dylib (or slicing an
 # arch) turns an extension module into a dlopen failure. Judging on missing module names
@@ -547,14 +555,19 @@ def entry_point_modules(packages_dir):
 
 
 def pth_imports(*dirs):
-    """Modules imported by .pth files. `site` executes any .pth line beginning with
-    `import`, before the app's own code runs, so these are unconditional startup
-    dependencies that no import statement in the app names."""
+    """Modules imported by .pth and .start files. `site` executes any .pth line beginning
+    with `import`, and (Python 3.15+, PEP 829) resolves each `pkg.mod:callable` line of a
+    .start file with pkgutil.resolve_name() and calls it - both before the app's own code
+    runs, so these are unconditional startup dependencies that no import statement in the
+    app names. pkgutil itself is one too wherever a .start file exists."""
     out = set()
     for d in dirs:
         if not d or not os.path.isdir(d):
             continue
         for entry in os.listdir(d):
+            if entry.endswith(".start"):
+                out |= _start_file_imports(os.path.join(d, entry))
+                continue
             if not entry.endswith(".pth"):
                 continue
             try:
@@ -574,6 +587,27 @@ def pth_imports(*dirs):
                                     out.add(nm)
             except OSError:
                 continue
+    return out
+
+
+def _start_file_imports(path):
+    """Modules a .start file's entry points import: the part before the colon of each
+    non-comment line. site reads .start files as UTF-8 (a BOM allowed) and skips one it
+    cannot decode, so this does the same."""
+    out = set()
+    try:
+        with open(path, encoding="utf-8-sig") as f:
+            lines = f.read().splitlines()
+    except (OSError, UnicodeDecodeError):
+        return out
+    for line in lines:
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        out.add("pkgutil")
+        mod = line.split(":", 1)[0].strip()
+        if mod and all(p.isidentifier() for p in mod.split(".")):
+            out.add(mod)
     return out
 
 
@@ -917,6 +951,18 @@ def conditional_imports(path, pkg):
     already fired when the module loaded; these are the ones that fire only if some
     branch is taken.
 
+    A module-level `lazy import` (Python 3.15+, PEP 810) has NOT fired when the module
+    loaded - it binds a proxy that imports on first use - so it counts as conditional.
+    The 3.15 stdlib uses it for real dependencies: traceback -> _colorize, pathlib ->
+    shutil and glob, dataclasses -> copy and re, collections -> copy and heapq.
+    So is a plain module-level import whose target a module-level `__lazy_modules__`
+    names - the PEP's compatibility form, for code that must also run before 3.15 (the
+    3.15 stdlib's tomllib._parser uses it). Measured on 3.15.2: the target is the full
+    name of each `import a.b` alias, and the resolved module of a `from M import x`
+    (`from xml import dom` is eager under ["xml.dom"]). A value that is not a literal
+    cannot be read here, so then every module-level import counts as conditional - that
+    only re-traces imports that may already have fired.
+
     Relative imports are resolved against pkg so `from . import x` yields a name that
     can actually be imported."""
     try:
@@ -924,12 +970,16 @@ def conditional_imports(path, pkg):
             tree = ast.parse(f.read())
     except (OSError, SyntaxError, UnicodeDecodeError, ValueError):
         return set()
+    lazy_modules = _lazy_modules_names(tree)
     toplevel = set()
     for node in tree.body:
+        if getattr(node, "is_lazy", 0) or lazy_modules is None:
+            continue
         if isinstance(node, ast.Import):
-            toplevel.update(id(a) for a in node.names)
+            toplevel.update(id(a) for a in node.names if a.name not in lazy_modules)
         elif isinstance(node, ast.ImportFrom):
-            toplevel.add(id(node))
+            if _import_from_target(node, pkg) not in lazy_modules:
+                toplevel.add(id(node))
     names = set()
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
@@ -937,15 +987,46 @@ def conditional_imports(path, pkg):
                 if id(a) not in toplevel:
                     names.add(a.name)
         elif isinstance(node, ast.ImportFrom) and id(node) not in toplevel:
-            if node.level == 0 and node.module:
-                names.add(node.module)
-            elif node.level > 0 and pkg:
-                head = pkg.split(".")
-                head = head[:max(0, len(head) - node.level + 1)]
-                if node.module:
-                    head = head + node.module.split(".")
-                if head:
-                    names.add(".".join(head))
+            target = _import_from_target(node, pkg)
+            if target:
+                names.add(target)
+    return names
+
+
+def _import_from_target(node, pkg):
+    """The absolute module a `from ... import` statement imports from, or None when a
+    relative one has no package to resolve against."""
+    if node.level == 0:
+        return node.module or None
+    if not pkg:
+        return None
+    head = pkg.split(".")
+    head = head[:max(0, len(head) - node.level + 1)]
+    if node.module:
+        head = head + node.module.split(".")
+    return ".".join(head) if head else None
+
+
+def _lazy_modules_names(tree):
+    """The names in a module-level `__lazy_modules__` (an empty set when there is none),
+    or None when it is bound to something this cannot evaluate statically."""
+    names = set()
+    for node in tree.body:
+        if isinstance(node, ast.Assign):
+            targets, value = node.targets, node.value
+        elif isinstance(node, (ast.AnnAssign, ast.AugAssign)):
+            targets, value = [node.target], node.value
+        else:
+            continue
+        if not any(isinstance(t, ast.Name) and t.id == "__lazy_modules__" for t in targets):
+            continue
+        try:
+            got = ast.literal_eval(value) if value is not None else ()
+        except (ValueError, TypeError, SyntaxError, MemoryError, RecursionError):
+            return None
+        if not isinstance(got, (list, tuple, set)) or not all(isinstance(n, str) for n in got):
+            return None
+        names.update(got)
     return names
 
 
@@ -1983,6 +2064,18 @@ def main(argv):
 
     python_dir = args.python or os.path.dirname(os.path.dirname(os.path.dirname(os.__file__)))
     stdlib = find_stdlib(python_dir)
+    # This analyzer parses the target's sources with ITS OWN ast module, and a file it
+    # cannot parse contributes nothing, without failing - an analyzer older than the
+    # target would silently drop imports (every module-level `lazy import` of the 3.15
+    # stdlib, for one). The target's own interpreter, while it is still complete, or its
+    # backup is always new enough.
+    m = re.match(r"python(\d+)\.(\d+)", os.path.basename(stdlib))
+    if m and sys.version_info[:2] < (int(m.group(1)), int(m.group(2))):
+        raise SystemExit("analyze_python_deps.py is running on Python %d.%d, older than the "
+                         "target's %s.%s, so it cannot parse the target's sources. Run it "
+                         "with Python %s.%s or newer." % (sys.version_info[0], sys.version_info[1],
+                                                         m.group(1), m.group(2),
+                                                         m.group(1), m.group(2)))
     dynload = os.path.join(stdlib, "lib-dynload")
     site = os.path.join(stdlib, "site-packages")
     python_bin = os.path.join(python_dir, "bin", "python3")

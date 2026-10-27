@@ -638,7 +638,12 @@ else
     echo
     echo "Verifying: re-running traced workload(s) against the thinned interpreter..."
     VERIFY_PY="$BACKUP/bin/python3"
-    [ -x "$VERIFY_PY" ] || VERIFY_PY="/usr/bin/python3"
+    # No fallback to /usr/bin/python3: it is 3.9, the analyzer parses the distribution's
+    # sources with its own interpreter and skips what it cannot parse, and macOS does not
+    # guarantee it exists. Without the backup's interpreter there is nothing to verify with.
+    if [ ! -x "$VERIFY_PY" ]; then
+        echo "Error: the backup has no interpreter at $VERIFY_PY; cannot verify."; restore; exit 1
+    fi
     VARGS=(--plan "$PLAN" --verify)
     VERIFY_PYDIR="$PYDIR"
 
