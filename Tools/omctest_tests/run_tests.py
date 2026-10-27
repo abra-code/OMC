@@ -90,10 +90,12 @@ def _child_env() -> dict:
 _CLI_TIMEOUT = 300
 
 
-def run_cli(*args: str, timeout: int = _CLI_TIMEOUT):
+def run_cli(*args: str, timeout: int = _CLI_TIMEOUT, extra_env: dict = None):
+    env = _child_env()
+    env.update(extra_env or {})
     try:
         p = subprocess.run([str(CLI), *args], capture_output=True, text=True,
-                           env=_child_env(), input="not for the handler\n",
+                           env=env, input="not for the handler\n",
                            timeout=timeout)
     except subprocess.TimeoutExpired as exc:
         return 124, exc.stdout or "", (exc.stderr or "") + f"\nTIMEOUT after {timeout}s"
@@ -200,7 +202,8 @@ out="${TMPDIR}env.txt"
 : > "$out"
 for name in OMC_APP_BUNDLE_PATH OMC_APP_PROCESS_ID OMC_OMC_SUPPORT_PATH OMC_OMC_RESOURCES_PATH \
             OMC_ACTIONUI_WINDOW_UUID OMC_PARENT_DIALOG_GUID OMC_CURRENT_COMMAND_GUID \
-            OMC_NIB_DLG_GUID TMPDIR OMCTEST_WORK OMCTEST_UI OMCTEST_FIXTURES; do
+            OMC_NIB_DLG_GUID TMPDIR OMCTEST_WORK OMCTEST_UI OMCTEST_FIXTURES \
+            OMC_ACTIONUI_VIEW_405_VALUE OMC_ACTIONUI_TRIGGER_VIEW_ID OMC_OBJ_NAME; do
     eval "value=\${$name-<<UNSET>>}"
     printf '%s=%s\n' "$name" "$value" >> "$out"
 done
@@ -548,6 +551,11 @@ check "TMPDIR keeps its trailing slash" "yes"       "$(case "$TMPDIR" in (*/) ec
 check "TMPDIR is in the scratch" "yes"              "$(case "$TMPDIR" in ("$OMCTEST_SCRATCH"/*) echo yes ;; (*) echo no ;; esac)"
 check "handlers run from the work dir" "$(cd "$OMCTEST_WORK" && /bin/pwd -P)" "$(cd "$(field CWD)" && /bin/pwd -P)"
 check "fixtures dir exported" "$OMCTEST_FIXTURES"   "$(field OMCTEST_FIXTURES)"
+# Vacuous in a plain run; test_launcher_env sets all three in the runner's own
+# environment, the way a suite launched from AppletBuilder's Test button gets them.
+check "a launcher's control value is not inherited" "<<UNSET>>" "$(field OMC_ACTIONUI_VIEW_405_VALUE)"
+check "nor its trigger id"  "<<UNSET>>"             "$(field OMC_ACTIONUI_TRIGGER_VIEW_ID)"
+check "nor its object"      "<<UNSET>>"             "$(field OMC_OBJ_NAME)"
 
 section "the app process id names a process that is actually alive"
 # The whole point of the variable: a handler asks whether the instance that owns a
@@ -1273,7 +1281,7 @@ omctest_end
 
 
 EXPECTED_COUNTS = {
-    "10-environment.test.sh": (16, 0),
+    "10-environment.test.sh": (19, 0),
     "20-lifetime.test.sh": (36, 0),
     "30-omcrun.test.sh": (13, 0),
     "40-alerts.test.sh": (16, 0),
@@ -1569,6 +1577,50 @@ def test_bridge_cleanup(app: Path) -> None:
     check("and no socket was left behind", not leaked, str([p.name for p in leaked]))
 
 
+def test_bridge_inherited_env(app: Path) -> None:
+    """A suite launched from inside a live ActionUI window must not use that window's bridge.
+
+    AppletBuilder's Test button runs the suite as one of AppletBuilder's own handlers, so
+    the run inherits AppletBuilder's endpoint, window uuid and token variables. The token
+    descriptor is AppletBuilder's and not open in a test's handlers, so every bridge call
+    in a test failed on it ("nothing could be read from descriptor 3") while the same
+    suite passed from a terminal. subprocess.run closes descriptor 3 in the child, which
+    is the state a test's handler meets.
+    """
+    print("Bridge with an inherited bridge environment:")
+    rc, out, err = run_cli("test", str(app), "--filter", "75-*", extra_env={
+        "ACTIONUI_REMOTE_TOKEN_FD": "3",
+        "ACTIONUI_REMOTE_TOKEN": "the launching host's token",
+        "ACTIONUI_REMOTE_ENDPOINT": "/nonexistent/launching-host.sock",
+        "OMC_ACTIONUI_REMOTE_ENDPOINT": "/nonexistent/launching-host.sock",
+        "ACTIONUI_WINDOW_UUID": "LAUNCHING-HOST-WINDOW",
+    })
+    check("the bridge suite still passes", rc == 0, err.strip()[-300:])
+    counts = suite_counts(out)
+    want = EXPECTED_COUNTS["75-bridge.test.sh"][0]
+    check(f"with all {want} checks", counts is not None and counts[:2] == (want, 0),
+          out.strip()[:200])
+
+
+def test_launcher_env(app: Path) -> None:
+    """The rest of a launching handler's OMC surface must not reach a test either.
+
+    The Test button's handler carries AppletBuilder's control values, its trigger id
+    and its object; a test's handler reading one the test never set got AppletBuilder's.
+    """
+    print("Environment with a launching handler's OMC variables:")
+    rc, out, err = run_cli("test", str(app), "--filter", "10-*", extra_env={
+        "OMC_ACTIONUI_VIEW_405_VALUE": "the launcher's control",
+        "OMC_ACTIONUI_TRIGGER_VIEW_ID": "9001",
+        "OMC_OBJ_NAME": "Launcher.app",
+    })
+    check("the environment suite still passes", rc == 0, err.strip()[-300:])
+    counts = suite_counts(out)
+    want = EXPECTED_COUNTS["10-environment.test.sh"][0]
+    check(f"with all {want} checks", counts is not None and counts[:2] == (want, 0),
+          out.strip()[:200])
+
+
 def test_bridge_gate(root: Path) -> None:
     """An applet that does not ship the client must get no fake host.
 
@@ -1739,6 +1791,8 @@ def main() -> int:
         test_uuid_uniqueness(app)
         test_standalone(project, app)
         test_bridge_cleanup(app)
+        test_bridge_inherited_env(app)
+        test_launcher_env(app)
         test_bridge_gate(Path(td))
         test_regressions(app)
         test_build_integration(project, app)

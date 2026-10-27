@@ -652,6 +652,12 @@ omctest_prepare_env() { # <app> <label>
     OMCTEST_FIXTURES="$OMCTEST_TESTS/fixtures"
 
     # --- the OMC surface -----------------------------------------------------
+    # None of it is inherited. Run from AppletBuilder's Test button, the suite is
+    # itself an OMC handler and arrives carrying AppletBuilder's control values,
+    # table cells, trigger id, object and dialog answers - which a test's handler
+    # would then read wherever the test set nothing of its own, so the same suite
+    # could pass in a terminal and fail in the GUI. Cleared here, set below.
+    omctest_unset_matching 'OMC_[A-Za-z0-9_]*'
     OMC_APP_BUNDLE_PATH="$OMCTEST_APP"
     OMC_OMC_SUPPORT_PATH="$OMCTEST_SUPPORT"
     OMC_OMC_RESOURCES_PATH="$OMCTEST_APP/Contents/Frameworks/Abracode.framework/Versions/A/Resources"
@@ -742,6 +748,17 @@ omctest_prepare_env() { # <app> <label>
     : > "$OMCTEST_UI/alert_answers"
     : > "$OMCTEST_UI/chain.queue"
     : > "$OMCTEST_UI/chain.log"
+
+    # The bridge variables belong to whichever host launched the suite, not to this one.
+    # Run from AppletBuilder's Test button, the suite is itself an OMC handler of a live
+    # ActionUI window, so it inherits that window's endpoint, uuid and token - and
+    # ACTIONUI_REMOTE_TOKEN_FD names a descriptor that is AppletBuilder's, already read
+    # and not open in a test's handlers, which then fail before sending anything
+    # ("nothing could be read from descriptor 3"). The fake host requires no token.
+    # Cleared before the start rather than overwritten after it, so a fake that fails
+    # to start leaves no endpoint pointing a handler at the real window either.
+    omctest_unset_matching 'ACTIONUI_REMOTE_[A-Za-z0-9_]*|OMC_ACTIONUI_REMOTE_[A-Za-z0-9_]*'
+    unset ACTIONUI_WINDOW_UUID
 
     # After the environment above: the fake host is seeded with OMC_ACTIONUI_WINDOW_UUID,
     # so a handler's omc.window() addresses the same window the rest of the harness does.
