@@ -31,6 +31,22 @@
                         {
                             "type": "LabeledContent",
                             "properties": {
+                                "title": "OMC Engine:"
+                            },
+                            "children": [
+                                {
+                                    "type": "Text",
+                                    "id": 418,
+                                    "properties": {
+                                        "text": "",
+                                        "textSelection": "enabled"
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "type": "LabeledContent",
+                            "properties": {
                                 "title": "Signing Identity:"
                             },
                             "children": [
@@ -105,70 +121,95 @@
                     ]
                 },
                 {
-                    "type": "GroupBox",
-                    "id": 417,
+                    "type": "VStack",
                     "properties": {
-                        "title": "Embedded Python Thinning"
+                        "spacing": 16,
+                        "alignment": "leading"
                     },
                     "children": [
                         {
-                            "type": "VStack",
+                            "type": "LabeledContent",
                             "properties": {
-                                "spacing": 16,
-                                "alignment": "leading",
-                                "padding": 8,
-                                "frame": {
-                                    "minWidth": 280,
-                                    "alignment": "leading"
-                                }
+                                "title": "Embedded Python:"
                             },
                             "children": [
                                 {
-                                    "type": "Toggle",
-                                    "id": 412,
-                                    "properties": {
-                                        "title": "Compute & Write Thinning Plan",
-                                        "isOn": true,
-                                        "actionID": "AppletBuilder.thin.python.changed"
-                                    }
-                                },
-                                {
-                                    "type": "Toggle",
-                                    "id": 414,
-                                    "properties": {
-                                        "title": "Apply Plan",
-                                        "isOn": false,
-                                        "actionID": "AppletBuilder.thin.python.changed"
-                                    }
-                                },
-                                {
-                                    "type": "Toggle",
-                                    "id": 415,
-                                    "properties": {
-                                        "title": "Dry Run",
-                                        "isOn": false,
-                                        "disabled": true
-                                    }
-                                },
-                                {
                                     "type": "Text",
-                                    "id": 416,
+                                    "id": 419,
                                     "properties": {
                                         "text": "",
-                                        "font": "caption",
-                                        "foregroundStyle": "secondary",
-                                        "hidden": true
+                                        "textSelection": "enabled"
                                     }
-                                },
+                                }
+                            ]
+                        },
+                        {
+                            "type": "GroupBox",
+                            "id": 417,
+                            "properties": {
+                                "title": "Embedded Python Thinning"
+                            },
+                            "children": [
                                 {
-                                    "type": "Button",
-                                    "id": 413,
+                                    "type": "VStack",
                                     "properties": {
-                                        "title": "Execute",
-                                        "systemImage": "scissors",
-                                        "buttonStyle": "bordered",
-                                        "actionID": "AppletBuilder.thin.python"
-                                    }
+                                        "spacing": 16,
+                                        "alignment": "leading",
+                                        "padding": 8,
+                                        "frame": {
+                                            "minWidth": 280,
+                                            "alignment": "leading"
+                                        }
+                                    },
+                                    "children": [
+                                        {
+                                            "type": "Toggle",
+                                            "id": 412,
+                                            "properties": {
+                                                "title": "Compute & Write Thinning Plan",
+                                                "isOn": true,
+                                                "actionID": "AppletBuilder.thin.python.changed"
+                                            }
+                                        },
+                                        {
+                                            "type": "Toggle",
+                                            "id": 414,
+                                            "properties": {
+                                                "title": "Apply Plan",
+                                                "isOn": false,
+                                                "actionID": "AppletBuilder.thin.python.changed"
+                                            }
+                                        },
+                                        {
+                                            "type": "Toggle",
+                                            "id": 415,
+                                            "properties": {
+                                                "title": "Dry Run",
+                                                "isOn": false,
+                                                "disabled": true
+                                            }
+                                        },
+                                        {
+                                            "type": "Text",
+                                            "id": 416,
+                                            "properties": {
+                                                "text": "",
+                                                "font": "caption",
+                                                "foregroundStyle": "secondary",
+                                                "hidden": true
+                                            }
+                                        },
+                                        {
+                                            "type": "Button",
+                                            "id": 413,
+                                            "properties": {
+                                                "title": "Execute",
+                                                "systemImage": "scissors",
+                                                "buttonStyle": "bordered",
+                                                "actionID": "AppletBuilder.thin.python"
+                                            }
+                                        }
+                                    ]
                                 }
                             ]
                         }

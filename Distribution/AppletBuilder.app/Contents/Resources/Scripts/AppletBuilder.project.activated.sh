@@ -15,6 +15,7 @@ fi
 # background - installed by a build, or by hand - and this is the pane refresh
 # path, so the Embedded Python group is re-asked here too.
 ab_thin_python_availability "$project_path"
+ab_applet_versions "$project_path"
 
 # Refresh all three tables to pick up added/removed files
 cmd_plist=$(command_file_path "$project_path")

@@ -39,6 +39,7 @@ options="${options}]"
 # before anyone ticks a box - and asked again after a build, which is the one
 # operation that can install a runtime into an applet that had none.
 ab_thin_python_availability "$(load_project_path)"
+ab_applet_versions "$(load_project_path)"
 
 # Its answer is the group's state, not this handler's verdict: it returns 1 for an
 # applet with no embedded Python, which is an ordinary applet, and the pane loaded

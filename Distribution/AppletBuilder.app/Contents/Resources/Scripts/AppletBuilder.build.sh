@@ -86,5 +86,7 @@ fi
 # thinnable now. Re-asked after the verdict, not before: it only touches the
 # Embedded Python group.
 ab_thin_python_availability "$project_path"
+# The framework and the runtime are the two things a build updates.
+ab_applet_versions "$project_path"
 
 exit $status

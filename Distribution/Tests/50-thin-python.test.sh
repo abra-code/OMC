@@ -808,6 +808,119 @@ omc_run AppletBuilder.buildrun.loaded
 check "no project leaves the group alone" "" "$(ui_enabled "$BUILD_THIN_GROUP_ID")"
 check "and writes no note"                "" "$(ui_value "$BUILD_THIN_NOTE_ID")"
 
+section "12i. the pane shows the applet's engine and Python versions"
+# Read from the applet's own files, so the fixtures carry them: the framework is just
+# the Info.plist the version comes from, and the runtime is the files its version is
+# read from. Never from RUNNING the interpreter - this is the pane load and the window
+# activation, and executing an applet's code there would run it before anyone pressed
+# Build. So the fake interpreter records every run, and the section asserts none.
+
+# What this AppletBuilder would install, read the way the applet reads it.
+own_engine="$(/usr/bin/plutil -extract CFBundleVersion raw \
+    "$OMC_APP_BUNDLE_PATH/Contents/Frameworks/Abracode.framework/Resources/Info.plist")"
+[ -n "$own_engine" ] || ab_fatal "AppletBuilder under test has no Abracode.framework version"
+
+add_engine() { # <app> <version>
+    _ae_res="$1/Contents/Frameworks/Abracode.framework/Resources"
+    /bin/mkdir -p "$_ae_res"
+    /usr/bin/plutil -create xml1 "$_ae_res/Info.plist"
+    /usr/bin/plutil -insert CFBundleVersion -string "$2" "$_ae_res/Info.plist"
+}
+
+python_runs="$OMCTEST_WORK/python-runs.txt"
+/bin/rm -f "$python_runs"
+
+# <app> <X.Y.Z> <where the version is recorded: vars | header | dirname | none>
+add_versioned_python() {
+    _avp_py="$1/Contents/Library/Python"
+    _avp_minor="${2%.*}"
+    /bin/mkdir -p "$_avp_py/bin"
+    printf '#!/bin/sh\necho "$0" >> "%s"\n' "$python_runs" > "$_avp_py/bin/python3"
+    /bin/chmod +x "$_avp_py/bin/python3"
+    case "$3" in
+        vars)
+            /bin/mkdir -p "$_avp_py/lib/python$_avp_minor"
+            printf '{\n  "py_version": "%s",\n  "py_version_short": "%s"\n}\n' "$2" "$_avp_minor" \
+                > "$_avp_py/lib/python$_avp_minor/_sysconfig_vars__darwin_darwin.json" ;;
+        header)
+            /bin/mkdir -p "$_avp_py/lib/python$_avp_minor" "$_avp_py/include/python$_avp_minor"
+            printf '#define PY_MINOR_VERSION %s\n#define PY_VERSION "%s"\n' "${_avp_minor#*.}" "$2" \
+                > "$_avp_py/include/python$_avp_minor/patchlevel.h" ;;
+        dirname)
+            /bin/mkdir -p "$_avp_py/lib/python$_avp_minor" ;;
+    esac
+}
+
+# A fresh template copy is what a new applet is before its first build: no
+# framework, no runtime.
+ui_reset
+bare="$(ab_make_project Bare)"
+ab_open_project "$bare"
+omc_run AppletBuilder.buildrun.loaded
+check "no framework says Build installs ours" "Not installed - Build installs $own_engine" \
+    "$(ui_value "$BUILD_ENGINE_VERSION_ID")"
+check "no runtime says None"                  "None" "$(ui_value "$BUILD_PYTHON_VERSION_ID")"
+
+ui_reset
+older="$(ab_make_project Older)"
+add_engine "$older" "1.0.0"
+add_versioned_python "$older" "3.15.2" vars
+ab_open_project "$older"
+omc_run AppletBuilder.buildrun.loaded
+check "an older engine names the update a build makes" "1.0.0 - Build updates it to $own_engine" \
+    "$(ui_value "$BUILD_ENGINE_VERSION_ID")"
+check "the full version comes from the sysconfig vars" "3.15.2" \
+    "$(ui_value "$BUILD_PYTHON_VERSION_ID")"
+
+# Thinning can remove the vars file and the headers, so each fallback is pinned.
+ui_reset
+current="$(ab_make_project Current)"
+add_engine "$current" "$own_engine"
+add_versioned_python "$current" "3.14.8" header
+ab_open_project "$current"
+omc_run AppletBuilder.buildrun.loaded
+check "a current engine is just its version"  "$own_engine" "$(ui_value "$BUILD_ENGINE_VERSION_ID")"
+check "without the vars, patchlevel.h answers" "3.14.8" "$(ui_value "$BUILD_PYTHON_VERSION_ID")"
+
+ui_reset
+stripped="$(ab_make_project Stripped)"
+/bin/mkdir -p "$stripped/Contents/Frameworks/Abracode.framework/Resources"   # no Info.plist
+add_versioned_python "$stripped" "3.13.5" dirname
+ab_open_project "$stripped"
+omc_run AppletBuilder.buildrun.loaded
+check "an unreadable engine is not called missing" "Version unknown - Build updates it to $own_engine" \
+    "$(ui_value "$BUILD_ENGINE_VERSION_ID")"
+check "with neither, the stdlib name gives X.Y"    "3.13" "$(ui_value "$BUILD_PYTHON_VERSION_ID")"
+
+ui_reset
+husk="$(ab_make_project Husk)"
+add_versioned_python "$husk" "3.15.2" none
+ab_open_project "$husk"
+omc_run AppletBuilder.buildrun.loaded
+check "an interpreter with no stdlib is present, not None" "Present, version unknown" \
+    "$(ui_value "$BUILD_PYTHON_VERSION_ID")"
+
+# A build is not the only thing that changes them, so the window's activation
+# refresh answers too - here after the runtime was installed by hand.
+ui_reset
+add_versioned_python "$bare" "3.14.8" vars
+ab_open_project "$bare"
+omc_run AppletBuilder.project.activated
+check "activation refreshes the Python line" "3.14.8" "$(ui_value "$BUILD_PYTHON_VERSION_ID")"
+
+# Every fake interpreter above records its runs. Paired with the version checks,
+# which prove each one was looked at.
+check "no applet interpreter was run" "0" \
+    "$([ -f "$python_runs" ] && /usr/bin/wc -l < "$python_runs" | /usr/bin/tr -d ' ' || echo 0)"
+
+# No project: nothing to describe. Paired with the cases above, which prove the
+# same dispatch does write both lines when there is an applet.
+ui_reset
+ab_open_project ""
+omc_run AppletBuilder.buildrun.loaded
+check "no project writes no engine line" "" "$(ui_value "$BUILD_ENGINE_VERSION_ID")"
+check "and no Python line"               "" "$(ui_value "$BUILD_PYTHON_VERSION_ID")"
+
 section "12c. a refused run replaces the log, it does not leave the last one up"
 # The pane keeps one log control and one verdict row. A guard that reported to
 # the error window and returned without logging used to leave the previous run's

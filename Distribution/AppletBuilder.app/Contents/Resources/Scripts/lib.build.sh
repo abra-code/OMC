@@ -1947,6 +1947,92 @@ ab_thin_python_availability() { # <project-path>
     return 1
 }
 
+# The version of an applet's embedded Python, read from its files - never by running
+# it. Opening a project or bringing its window forward must not execute code from it:
+# it may be an applet nobody has built here, and a quarantined interpreter would put
+# up a Gatekeeper prompt on every activation. Three sources, most precise first,
+# because thinning can remove the first two:
+#   lib/pythonX.Y/_sysconfig_vars_*.json  "py_version": "3.15.2"   (3.14 and later)
+#   include/pythonX.Y/patchlevel.h        #define PY_VERSION "3.15.2"
+#   the lib/pythonX.Y directory name      3.15
+# Prints nothing when the runtime has no lib/python3.* at all.
+applet_python_version() { # <project-path>
+    local _ab_stdlib _ab_vars _ab_header
+    local _ab_found=""
+    for _ab_stdlib in "$1"/Contents/Library/Python/lib/python3.*; do
+        if [ -d "$_ab_stdlib" ]; then
+            _ab_found="$_ab_stdlib"
+            break
+        fi
+    done
+    if [ -z "$_ab_found" ]; then
+        return 0
+    fi
+
+    local _ab_version=""
+    for _ab_vars in "$_ab_found"/_sysconfig_vars_*.json; do
+        if [ -f "$_ab_vars" ]; then
+            # sed, not jq: /usr/bin/jq ships with macOS 15, and AppletBuilder runs on
+            # 14.6. The file is written one key per line.
+            _ab_version=$(/usr/bin/sed -n 's/^[[:space:]]*"py_version":[[:space:]]*"\([^"]*\)".*/\1/p' "$_ab_vars")
+            break
+        fi
+    done
+    if [ -z "$_ab_version" ]; then
+        _ab_header="$1/Contents/Library/Python/include/${_ab_found##*/}/patchlevel.h"
+        if [ -f "$_ab_header" ]; then
+            _ab_version=$(/usr/bin/sed -n 's/^#define PY_VERSION[[:space:]]*"\([^"]*\)".*/\1/p' "$_ab_header")
+        fi
+    fi
+    if [ -z "$_ab_version" ]; then
+        _ab_version="${_ab_found##*/python}"
+    fi
+    printf '%s\n' "$_ab_version"
+}
+
+# What the applet runs on, in the Build & Run pane: its OMC engine (the version of
+# its Abracode.framework) and its embedded Python. Refreshed wherever the Embedded
+# Python group is, because a build changes both: it updates an older framework and
+# installs a missing runtime. The engine line says what Build will do about it, since
+# that is the reason to look; the Python line does not, because Build replaces a
+# working runtime only when asked to.
+ab_applet_versions() { # <project-path>
+    # No project yet: as for the Embedded Python group, no answer beats one about an
+    # applet nobody has chosen.
+    if [ -z "$1" ]; then
+        return 0
+    fi
+
+    local _ab_fw="$1/Contents/Frameworks/Abracode.framework"
+    local _ab_engine="$(plist_read "$_ab_fw/Resources/Info.plist" CFBundleVersion)"
+    local _ab_own_engine="$(plist_read "${OMC_APP_BUNDLE_PATH}/Contents/Frameworks/Abracode.framework/Resources/Info.plist" CFBundleVersion)"
+    local _ab_engine_cmp="$(compare_versions "$_ab_own_engine" "$_ab_engine")"
+    # update_framework's three outcomes: install when the folder is missing, update
+    # when ours compares newer (which an unreadable version always does), else keep.
+    if [ ! -d "$_ab_fw" ]; then
+        set_value "$BUILD_ENGINE_VERSION_ID" "Not installed - Build installs ${_ab_own_engine}"
+    elif [ -z "$_ab_engine" ]; then
+        set_value "$BUILD_ENGINE_VERSION_ID" "Version unknown - Build updates it to ${_ab_own_engine}"
+    elif [ -n "$_ab_own_engine" ] && [ "$_ab_engine_cmp" = "newer" ]; then
+        set_value "$BUILD_ENGINE_VERSION_ID" "${_ab_engine} - Build updates it to ${_ab_own_engine}"
+    else
+        set_value "$BUILD_ENGINE_VERSION_ID" "$_ab_engine"
+    fi
+
+    # The same test as the Embedded Python group, so the two never disagree.
+    if [ ! -x "$(applet_python_bin "$1")" ]; then
+        set_value "$BUILD_PYTHON_VERSION_ID" "None"
+        return 0
+    fi
+    local _ab_python="$(applet_python_version "$1")"
+    if [ -z "$_ab_python" ]; then
+        set_value "$BUILD_PYTHON_VERSION_ID" "Present, version unknown"
+    else
+        set_value "$BUILD_PYTHON_VERSION_ID" "$_ab_python"
+    fi
+    return 0
+}
+
 # The Python thinning action, as the pane and the CLI both drive it. Returns 0 on
 # success, 2 when the user declined the confirmation, and 1 (or the front end's
 # own status) when the applet cannot be thinned or a phase failed. Declining is

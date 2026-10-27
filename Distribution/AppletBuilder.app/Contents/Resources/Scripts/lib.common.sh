@@ -185,6 +185,8 @@ BUILD_THIN_APPLY_ID=414
 BUILD_THIN_DRY_RUN_ID=415
 BUILD_THIN_NOTE_ID=416
 BUILD_THIN_GROUP_ID=417
+BUILD_ENGINE_VERSION_ID=418
+BUILD_PYTHON_VERSION_ID=419
 
 # ──────────────────────────────────────────────────────────────
 # State management (private pasteboards keyed by window UUID)
