@@ -35,6 +35,8 @@ JSON schema and usage documentation for `RichText` (ActionUIRichText add-on).
 // A rich-text DISPLAY element backed by the RichText package, implemented as an ActionUI add-on
 // (registered via ActionUIRichText.register()):
 //   macOS / iOS / visionOS - RichText.RichText (a SwiftUI View; RichText's platforms).
+//   Linux - RichTextGtkView (a GtkTextView). Ctrl+F, Ctrl+G and Shift+Ctrl+G stand for the Cmd keys, while the focus
+//   is inside the element; copy gives HTML and Markdown, not RTF; only a table's last column wraps.
 // A whole Markdown document (headings, code blocks, quotes, lists, GFM tables, inline styling, links) is
 // laid out into ONE native text view, so the entire document is selectable and copyable as a single unit
 // (copy is table-aware: RTF / HTML / Markdown).

@@ -23,7 +23,9 @@
 #
 # Requirements: /bin/sh as shipped on macOS (bash 3.2 in POSIX mode) or zsh. Nothing else. Sourced
 # under zsh with actionui_remote.zsh in front of it, the nc transport is replaced by zsh's own
-# socket module: no helper process at all, and one connection kept open across calls.
+# socket module: no helper process at all, and one connection kept open across calls. On Linux
+# this file is loaded by actionui_remote_linux.bash, which replaces what is macOS's here (the nc
+# transport and plutil), and refuses to load on its own.
 #
 # The two awk programs this file runs are files of their own beside it, actionui_remote_escape.awk
 # and actionui_remote_walk.awk, found there when this file is loaded, sourced or run. The three
@@ -83,6 +85,17 @@ if [ -z "${ZSH_VERSION:-}" ] && [ -z "${BASH_VERSION:-}" ]; then
     printf '%s\n' "actionui_remote.sh needs bash (macOS /bin/sh) or zsh; this shell is neither" >&2
     return 2 2>/dev/null || exit 2
 fi
+
+# The system. On Linux this file is the API behind actionui_remote_linux.bash, which sets
+# _AUI_LINUX_WRAPPER while it sources it; alone it would fail on the first escaped string it
+# reads back, since plutil is macOS's, so it says so instead. Both shells set OSTYPE.
+case ${OSTYPE:-} in
+    linux*)
+        if [ "${_AUI_LINUX_WRAPPER:-}" != 1 ]; then
+            printf '%s\n' "actionui_remote.sh is for macOS; on Linux use actionui_remote_linux.bash (bash 5)" >&2
+            return 2 2>/dev/null || exit 2
+        fi ;;
+esac
 
 # Where the two awk programs are: beside this file. Resolved once here, and made absolute, so a
 # handler that cd's afterwards still finds them - this is a library, and "afterwards" can be much

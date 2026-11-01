@@ -1,6 +1,6 @@
 {
   "type": "CachedImage",
-  "description": "Cached, off-main image view (ActionUICachedImage add-on) backed by AsyncImageCache's ImageStore. Fetches/decodes/downscales off the main thread and serves from a two-tier memory + on-disk cache; the natural pixel size is known up front so layout reserves the exact box with no reflow on hydration. macOS/iOS/visionOS. Driven by the element value or the url property.",
+  "description": "Cached, off-main image view (ActionUICachedImage add-on) backed by AsyncImageCache's ImageStore. Fetches/decodes/downscales off the main thread and serves from a two-tier memory + on-disk cache; the natural pixel size is known up front so layout reserves the exact box with no reflow on hydration. macOS/iOS/visionOS/Linux. Driven by the element value or the url property.",
   "id": { "policy": "optional" },
   "inheritsViewProperties": true,
   "topLevelKeys": [],

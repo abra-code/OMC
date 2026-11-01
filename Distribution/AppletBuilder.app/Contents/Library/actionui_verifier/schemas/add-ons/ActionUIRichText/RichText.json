@@ -1,6 +1,6 @@
 {
   "type": "RichText",
-  "description": "Rich-text DISPLAY element (ActionUIRichText add-on) backed by the RichText package. Renders a whole Markdown document (headings, code blocks, quotes, lists, GFM tables, inline styling, links) into one native text view, selectable and copyable as a single unit. macOS/iOS/visionOS. Driven by the element value or the markdown property.",
+  "description": "Rich-text DISPLAY element (ActionUIRichText add-on) backed by the RichText package. Renders a whole Markdown document (headings, code blocks, quotes, lists, GFM tables, inline styling, links) into one native text view, selectable and copyable as a single unit. macOS/iOS/visionOS/Linux. Driven by the element value or the markdown property.",
   "id": { "policy": "optional" },
   "inheritsViewProperties": true,
   "topLevelKeys": [],

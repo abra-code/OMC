@@ -9,10 +9,14 @@ Command line:
 
     python3 -m actionui_remote_testing --socket PATH [--log PATH.jsonl] [--state PATH.json]
                                        [--window UUID ...] [--element WINDOW:ID:TYPE ...]
+                                       [--no-reply]
 
     The process serves until it receives SIGTERM or SIGINT, then writes the state file (if
     requested) and exits 0. `--window` pre-creates windows; `--element` pre-creates elements in
-    them so unknown-view checks behave like the real host.
+    them so unknown-view checks behave like the real host. `--no-reply` makes a host that
+    accepts connections and reads requests but never answers, holding each connection open until
+    it is stopped, even after the client has shut its sending side: what a client's timeout is
+    tested against. (`nc -l` hangs up once the client half-closes, which OpenBSD netcat's -N does.)
 
 In-process:
 
@@ -87,8 +91,11 @@ class FakeServer:
     """See the module docstring."""
 
     def __init__(self, socket_path, log_path=None, host_name="FakeHost", host_version="0",
-                 tokens=None):
+                 tokens=None, no_reply=False):
         self.socket_path = socket_path
+        # Read every request and answer none (see --no-reply in the module docstring).
+        self.no_reply = no_reply
+        self._stopped = threading.Event()
         self.log_path = log_path
         self.host_name = host_name
         self.host_version = host_version
@@ -140,6 +147,7 @@ class FakeServer:
             self._close()
 
     def stop(self):
+        self._stopped.set()
         server = self._server
         if server is not None:
             server.shutdown()
@@ -171,6 +179,7 @@ class FakeServer:
         fake = self
         with self._lock:
             fake._authenticated.clear()
+        fake._stopped.clear()
 
         class Handler(socketserver.StreamRequestHandler):
             def setup(self):
@@ -185,6 +194,11 @@ class FakeServer:
                 super().finish()
 
             def handle(self):
+                if fake.no_reply:
+                    while self.rfile.readline():
+                        pass
+                    fake._stopped.wait()
+                    return
                 while True:
                     line = self.rfile.readline()
                     if not line:
@@ -762,10 +776,12 @@ def main(argv=None):
     parser.add_argument("--host-version", default="0")
     parser.add_argument("--token", action="append", default=[],
                         help="require this token (repeatable); omit to require none")
+    parser.add_argument("--no-reply", action="store_true",
+                        help="read requests and answer none, holding each connection open")
     args = parser.parse_args(argv)
 
     fake = FakeServer(args.socket, log_path=args.log, host_name=args.host_name,
-                      host_version=args.host_version, tokens=args.token)
+                      host_version=args.host_version, tokens=args.token, no_reply=args.no_reply)
     for uuid in args.window:
         fake.add_window(uuid)
     for spec in args.element:

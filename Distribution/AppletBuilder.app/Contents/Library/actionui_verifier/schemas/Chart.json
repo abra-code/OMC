@@ -334,7 +334,7 @@
             "preset": { "types": ["string"], "enum": ["automatic", "extended", "aligned", "inset"] },
             "position": { "types": ["string"], "enum": ["automatic", "leading", "trailing", "top", "bottom"] },
             "values": { "types": ["string", "object", "array"], "enum": ["automatic"],
-              "description": "\"automatic\", {\"automatic\": {...}}, {\"stride\": {\"by\", \"count\"}} or a list typed by the axis",
+              "description": "\"automatic\", {\"automatic\": {...}}, {\"stride\": {\"by\", \"count\"}} or a list of numbers or dates (a list of names on a category axis changes nothing)",
               "properties": {
                 "automatic": { "types": ["object"], "properties": {
                   "desiredCount": { "types": ["number"], "description": "1 to 100" },
@@ -342,7 +342,7 @@
                   "roundUpperBound": { "types": ["boolean"] }
                 } },
                 "stride": { "types": ["object"], "properties": {
-                  "by": { "types": ["string", "number"], "required": true, "description": "A calendar unit (dates) or a step (numbers); a stride drawing more than 1000 marks falls back to automatic" },
+                  "by": { "types": ["string", "number"], "required": true, "description": "A calendar unit but quarter or weekOfMonth (dates) or a step (numbers); a stride drawing more than 1000 marks falls back to automatic" },
                   "count": { "types": ["number"] }
                 } }
               } },
