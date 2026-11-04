@@ -57,7 +57,7 @@ class ACFMutableArr : public ACFArrayBase<CFMutableArrayRef>
 {
 public:
 	ACFMutableArr(CFIndex maxCount = 0) noexcept
-	: ACFArrayBase<CFMutableArrayRef>( ::CFArrayCreateMutable( kCFAllocatorDefault, maxCount, &kCFTypeArrayCallBacks ) )
+	: ACFArrayBase<CFMutableArrayRef>( ::CFArrayCreateMutable( kCFAllocatorDefault, maxCount, &kCFTypeArrayCallBacks ), kCFObjDontRetain )
 	{
 	}
 
