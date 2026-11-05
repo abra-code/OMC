@@ -1,11 +1,13 @@
-#include "ACFURL.h"
-#import <Foundation/Foundation.h>
+//
+//  StandardDirectories.m
+//  Abracode
+//
+//  macOS implementation of Platform/StandardDirectories.h, over NSFileManager.
+//  The per-user folders live in ~/Library here; a Linux implementation uses the XDG folders.
+//
 
-bool DeleteFile(CFURLRef fileURL)
-{
-    NSFileManager *fileManager = [NSFileManager defaultManager];
-    return (bool)[fileManager removeItemAtURL:(__bridge NSURL*)fileURL error:NULL];
- }
+#include "StandardDirectories.h"
+#import <Foundation/Foundation.h>
 
 CFURLRef CopyPreferencesDirURL(void)
 {
@@ -18,7 +20,7 @@ CFURLRef CopyPreferencesDirURL(void)
                                 error:NULL];
     if(userLibraryDirURL == NULL)
         return NULL;
-    
+
     NSURL *prefsURL = [userLibraryDirURL URLByAppendingPathComponent:@"Preferences" isDirectory:YES];
     return (CFURLRef)CFBridgingRetain(prefsURL);
 }

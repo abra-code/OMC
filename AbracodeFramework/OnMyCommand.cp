@@ -54,7 +54,7 @@ extern "C" const char *OMCGetActionUIRemoteEndpoint(void);
 #include "OMCInputDialog.h"
 #include "SelectionIterator.h"
 #include "ACFPropertyList.h"
-#include "ACFURL.h"
+#include "StandardDirectories.h"
 #include "OMCHelpers.h"
 #include "OMCStrings.h"
 #include "OMCTerminalExecutor.h"

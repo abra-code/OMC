@@ -5,13 +5,9 @@
 extern "C" {
 #endif
 
+// Removes the file at fileURL (a file or a symbolic link; not a folder). Returns true on success.
 bool DeleteFile(CFURLRef fileURL);
-
-CFURLRef CopyPreferencesDirURL(void);
-CFURLRef CopyApplicationSupportDirURL(void);
 
 #ifdef __cplusplus
 }
 #endif
-
-

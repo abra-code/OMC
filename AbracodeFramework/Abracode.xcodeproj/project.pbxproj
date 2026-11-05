@@ -36,7 +36,8 @@
 		1D9B1F6521FF191D004704A7 /* SubmenuTree.cp in Sources */ = {isa = PBXBuildFile; fileRef = 1D9B1F6321FF191D004704A7 /* SubmenuTree.cp */; };
 		1D9B1F7121FF1F9F004704A7 /* progress.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1D9B1F6F21FF1F9F004704A7 /* progress.xib */; };
 		1D9BCB7F22CC95E500F4EAB6 /* ACFPropertyList.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1D9BCB7C22CC95E500F4EAB6 /* ACFPropertyList.mm */; };
-		1D9BCB8822CCA65A00F4EAB6 /* ACFURL.m in Sources */ = {isa = PBXBuildFile; fileRef = 1D9BCB8722CCA65A00F4EAB6 /* ACFURL.m */; };
+		1D9BCB8822CCA65A00F4EAB6 /* StandardDirectories.m in Sources */ = {isa = PBXBuildFile; fileRef = 1D9BCB8722CCA65A00F4EAB6 /* StandardDirectories.m */; };
+		1D0A1B2C2F6A000000000006 /* ACFURL.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1D0A1B2C2F6A000000000005 /* ACFURL.cpp */; };
 		1D9BCB8C22CCAB4F00F4EAB6 /* OMCStrings.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1D9BCB8B22CCAB4F00F4EAB6 /* OMCStrings.cpp */; };
 		1DA51CB62EACCD1B00BFF670 /* OMCAppLifetimeEvents.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1DA51CB42EACC95B00BFF670 /* OMCAppLifetimeEvents.mm */; };
 		1DAACE122FDE9A0100C0FFEE /* ActionUIMenuBar in Frameworks */ = {isa = PBXBuildFile; productRef = 1DAACE112FDE9A0100C0FFEE /* ActionUIMenuBar */; };
@@ -419,7 +420,9 @@
 		1D9B1F6421FF191D004704A7 /* SubmenuTree.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SubmenuTree.h; sourceTree = "<group>"; };
 		1D9BCB7B22CC95E500F4EAB6 /* ACFPropertyList.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ACFPropertyList.h; sourceTree = "<group>"; };
 		1D9BCB7C22CC95E500F4EAB6 /* ACFPropertyList.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ACFPropertyList.mm; sourceTree = "<group>"; };
-		1D9BCB8722CCA65A00F4EAB6 /* ACFURL.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ACFURL.m; sourceTree = "<group>"; };
+		1D9BCB8722CCA65A00F4EAB6 /* StandardDirectories.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = StandardDirectories.m; sourceTree = "<group>"; };
+		1D0A1B2C2F6A000000000004 /* StandardDirectories.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StandardDirectories.h; sourceTree = "<group>"; };
+		1D0A1B2C2F6A000000000005 /* ACFURL.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ACFURL.cpp; sourceTree = "<group>"; };
 		1D9BCB8A22CCA66500F4EAB6 /* ACFURL.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ACFURL.h; sourceTree = "<group>"; };
 		1D9BCB8B22CCAB4F00F4EAB6 /* OMCStrings.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCStrings.cpp; sourceTree = "<group>"; };
 		1DA51CB42EACC95B00BFF670 /* OMCAppLifetimeEvents.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCAppLifetimeEvents.mm; sourceTree = "<group>"; };
@@ -650,7 +653,7 @@
 				E29ED1B10D09531300C9D5E8 /* Common */,
 				E29ED19E0D09528600C9D5E8 /* MoreAppleEvents */,
 				E29ED2390D09FEF800C9D5E8 /* OMC */,
-				1D0A1B2C2F6A000000000001 /* NibDialogs */,
+				1D0A1B2C2F6A000000000002 /* Platform */,
 				32C88DFF0371C24200C91783 /* Other Sources */,
 				089C1665FE841158C02AAC07 /* Resources */,
 				1D039D782E16823200D4924A /* AbracodeFramework-target.xcconfig */,
@@ -834,6 +837,24 @@
 			name = "Support Tools";
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
+		1D0A1B2C2F6A000000000002 /* Platform */ = {
+			isa = PBXGroup;
+			children = (
+				1D0A1B2C2F6A000000000004 /* StandardDirectories.h */,
+				1D0A1B2C2F6A000000000003 /* Apple */,
+			);
+			path = Platform;
+			sourceTree = "<group>";
+		};
+		1D0A1B2C2F6A000000000003 /* Apple */ = {
+			isa = PBXGroup;
+			children = (
+				1D9BCB8722CCA65A00F4EAB6 /* StandardDirectories.m */,
+				1D0A1B2C2F6A000000000001 /* NibDialogs */,
+			);
+			path = Apple;
+			sourceTree = "<group>";
+		};
 		1D0A1B2C2F6A000000000001 /* NibDialogs */ = {
 			isa = PBXGroup;
 			children = (
@@ -848,7 +869,7 @@
 				1DE10DFB23C9D0EE003FCCDA /* OMCWebKitSupport.js */,
 				E2517C3C0D1BCC2700180C68 /* CocoaControls */,
 			);
-			path = Platform/Apple/NibDialogs;
+			path = NibDialogs;
 			sourceTree = "<group>";
 		};
 		E2517C3C0D1BCC2700180C68 /* CocoaControls */ = {
@@ -932,7 +953,7 @@
 				E2ED3BC00D0B293E00481D8F /* ACMPlugin.cp */,
 				1D71F32A2206F1A1009FAF91 /* ACMPlugin.h */,
 				E27F2D030D56F7410060D231 /* CFObj.h */,
-				1D9BCB8722CCA65A00F4EAB6 /* ACFURL.m */,
+				1D0A1B2C2F6A000000000005 /* ACFURL.cpp */,
 				1D9BCB8A22CCA66500F4EAB6 /* ACFURL.h */,
 				1D9BCB7B22CC95E500F4EAB6 /* ACFPropertyList.h */,
 				1D9BCB7C22CC95E500F4EAB6 /* ACFPropertyList.mm */,
@@ -1397,7 +1418,8 @@
 				E29ED1800D09525700C9D5E8 /* CMUtilsMenu.cp in Sources */,
 				E29ED1820D09525700C9D5E8 /* CMUtilsClipboard.cp in Sources */,
 				E29ED1840D09525700C9D5E8 /* CMUtilsObjectList.cp in Sources */,
-				1D9BCB8822CCA65A00F4EAB6 /* ACFURL.m in Sources */,
+				1D9BCB8822CCA65A00F4EAB6 /* StandardDirectories.m in Sources */,
+				1D0A1B2C2F6A000000000006 /* ACFURL.cpp in Sources */,
 				E29ED1850D09525700C9D5E8 /* CMUtilsAEText.cp in Sources */,
 				1D690CA12F444FAC006FECE8 /* OMCWindowController.mm in Sources */,
 				E29ED1860D09525700C9D5E8 /* CMUtilsSendAE.cp in Sources */,
