@@ -24,8 +24,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/abra-code/DiffView",
       "state" : {
-        "revision" : "8a7a956dd95e83437f656c514b67faec80558111",
-        "version" : "0.1.0"
+        "revision" : "7cd50eb73c33499da610fcca065bfc7ff5af1391",
+        "version" : "0.2.0"
       }
     },
     {
