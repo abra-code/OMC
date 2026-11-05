@@ -14,3 +14,17 @@ FRAMEWORK_VERSION = A
 USER_HEADER_SEARCH_PATHS = $(inherited) $(BUILT_PRODUCTS_DIR)/generated $(SRCROOT)/../Common
 
 OTHER_CODE_SIGN_FLAGS = --deep --verbose
+
+// Nib dialogs: see OMC_NIB_DIALOGS in OmcProjectCommon.xcconfig.
+// NO leaves the module's files out of every build phase, drops its exported classes,
+// and makes OnMyCommand.cp refuse NIB_DIALOG commands with an alert.
+OMC_NIB_DIALOGS_DEFINITIONS_YES = OMC_NIB_DIALOGS=1
+OMC_NIB_DIALOGS_DEFINITIONS_NO = OMC_NIB_DIALOGS=0
+OMC_NIB_DIALOGS_EXCLUDED_YES =
+// Xcode's "*" does not cross a "/", so each folder level needs its own pattern (CocoaControls is the second).
+OMC_NIB_DIALOGS_EXCLUDED_NO = */Platform/Apple/NibDialogs/* */Platform/Apple/NibDialogs/*/*
+OMC_NIB_DIALOGS_LDFLAGS_YES = -Wl,-exported_symbols_list,$(SRCROOT)/Platform/Apple/NibDialogs/NibDialogs.exp
+OMC_NIB_DIALOGS_LDFLAGS_NO =
+GCC_PREPROCESSOR_DEFINITIONS = $(inherited) $(OMC_NIB_DIALOGS_DEFINITIONS_$(OMC_NIB_DIALOGS))
+EXCLUDED_SOURCE_FILE_NAMES = $(inherited) $(OMC_NIB_DIALOGS_EXCLUDED_$(OMC_NIB_DIALOGS))
+OTHER_LDFLAGS = $(inherited) $(OMC_NIB_DIALOGS_LDFLAGS_$(OMC_NIB_DIALOGS))

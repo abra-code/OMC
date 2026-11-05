@@ -1,0 +1,20 @@
+# Exported only when OMC_NIB_DIALOGS = YES (OMC 5.x): the controls that nib files name as custom classes.
+# Linked as a second exported-symbols list by AbracodeFramework-target.xcconfig.
+
+_OBJC_CLASS_$_OMCPopUpButton
+_OBJC_CLASS_$_OMCSearchField
+_OBJC_CLASS_$_OMCButton
+_OBJC_CLASS_$_OMCButtonCell
+_OBJC_CLASS_$_OMCImageView
+_OBJC_CLASS_$_OMCTextView
+_OBJC_CLASS_$_OMCSlider
+_OBJC_CLASS_$_OMCWebKitView
+_OBJC_CLASS_$_OMCIKImageView
+_OBJC_CLASS_$_OMCProgressIndicator
+_OBJC_CLASS_$_OMCTextField
+_OBJC_CLASS_$_OMCSecureTextField
+_OBJC_CLASS_$_OMCView
+_OBJC_CLASS_$_OMCPDFView
+_OBJC_CLASS_$_OMCBox
+_OBJC_CLASS_$_OMCTableView
+_OBJC_CLASS_$_OMCComboBox

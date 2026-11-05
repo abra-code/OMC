@@ -59,3 +59,8 @@ GCC_WARN_UNUSED_VARIABLE = YES
 CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE
 CLANG_WARN_DOCUMENTATION_COMMENTS = YES
 CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES
+
+// Nib dialogs (NIB_DIALOG) live in AbracodeFramework/Platform/Apple/NibDialogs and nothing else depends on them.
+// OMC 5.x builds them; OMC 6 turns this off and deletes the folder. Build with OMC_NIB_DIALOGS=NO
+// on the xcodebuild command line to check that the rest of the framework still builds without them.
+OMC_NIB_DIALOGS = YES

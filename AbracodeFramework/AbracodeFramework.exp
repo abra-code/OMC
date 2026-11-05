@@ -21,29 +21,14 @@ _OMCUnregisterObserver
 
 .objc_class_name_OMCCommandExecutor
 
-_OBJC_CLASS_$_OMCPopUpButton
-_OBJC_CLASS_$_OMCSearchField
 _OBJC_CLASS_$_OMCCommandMenu
-_OBJC_CLASS_$_OMCButton
 _OBJC_CLASS_$_OMCMenuItem
-_OBJC_CLASS_$_OMCButtonCell
-_OBJC_CLASS_$_OMCImageView
-_OBJC_CLASS_$_OMCTextView
 _OBJC_CLASS_$_OMCDropletController
 _OBJC_CLASS_$_OMCService
 _OBJC_CLASS_$_OMCSingleCommand
 _OBJC_CLASS_$_OMCMainMenuController
-_OBJC_CLASS_$_OMCSlider
-_OBJC_CLASS_$_OMCWebKitView
-_OBJC_CLASS_$_OMCIKImageView
-_OBJC_CLASS_$_OMCProgressIndicator
-_OBJC_CLASS_$_OMCTextField
-_OBJC_CLASS_$_OMCSecureTextField
-_OBJC_CLASS_$_OMCView
-_OBJC_CLASS_$_OMCPDFView
-_OBJC_CLASS_$_OMCBox
-_OBJC_CLASS_$_OMCTableView
-_OBJC_CLASS_$_OMCComboBox
+
+# The nib dialog controls are in Platform/Apple/NibDialogs/NibDialogs.exp.
 
 
 __ZN13OnMyCommandCMC1EPKv

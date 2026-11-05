@@ -42,7 +42,14 @@ extern "C" const char *OMCGetActionUIRemoteEndpoint(void);
 #include "OmcTaskManager.h"
 #include "ACFDict.h"
 #include "ACFArr.h"
-#include "OMCNibDialog.h"
+// Nib dialogs are an optional macOS-only module (Platform/Apple/NibDialogs), on in OMC 5.x.
+// The build sets OMC_NIB_DIALOGS (OmcProjectCommon.xcconfig); a build that does not say keeps them.
+#ifndef OMC_NIB_DIALOGS
+	#define OMC_NIB_DIALOGS 1
+#endif
+#if OMC_NIB_DIALOGS
+	#include "OMCNibDialog.h"
+#endif
 #include "OMCActionUIDialog.h"
 #include "OMCInputDialog.h"
 #include "SelectionIterator.h"
@@ -62,6 +69,38 @@ enum
 	kPopupMenuDialogIndx		= 130,
 	kComboBoxDialogIndx			= 131
 };
+
+// The engine's only way into the nib dialog module. In a build without the module, a NIB_DIALOG
+// command gets an alert, headed with the command's name as other command alerts are, saying what to
+// use instead, and no dialog, so the caller cancels the command as it does for a nib dialog that
+// failed to open.
+static ARefCountedObj<OMCDialog>
+RunNibDialogOrRefuse(OnMyCommandCM *inPlugin, CFBundleRef inFrameworkBundle, const CommandDescription &inCommand,
+					CommandRuntimeData *inRuntimeData, CFBundleRef inLocalizationBundle)
+{
+#if OMC_NIB_DIALOGS
+	(void)inFrameworkBundle;
+	(void)inCommand;
+	(void)inLocalizationBundle;
+	return RunNibDialog(inPlugin, inRuntimeData);
+#else
+	CFObj<CFStringRef> commandName( inPlugin->CreateDynamicCommandName(inCommand, *inRuntimeData,
+										inCommand.localizationTableName, inLocalizationBundle) );
+	// a subcommand is named by its COMMAND_ID too; the main command's ID is the internal "top!" marker
+	bool isSubcommand = (inCommand.commandID != nullptr) &&
+						(::CFStringCompare(inCommand.commandID, kOMCTopCommandID, 0) != kCFCompareEqualTo);
+	CFObj<CFStringRef> alertString;
+	if(isSubcommand)
+		alertString.Adopt( ::CFStringCreateWithFormat(kCFAllocatorDefault, nullptr,
+			CFSTR("The command \"%@\" uses NIB_DIALOG, which this version of OMC no longer supports. Use ACTIONUI_WINDOW instead."),
+			inCommand.commandID) );
+	else
+		alertString.Adopt( CFSTR("This command uses NIB_DIALOG, which this version of OMC no longer supports. Use ACTIONUI_WINDOW instead."), kCFObjRetain );
+	LOG_CFSTR(alertString);
+	DisplayAlert(inFrameworkBundle, commandName, alertString);
+	return ARefCountedObj<OMCDialog>();
+#endif
+}
 
 #pragma mark -
 #pragma mark **** IMPLEMENTATION ****
@@ -1162,7 +1201,7 @@ OnMyCommandCM::ExecuteCommandWithObjects(CommandRuntimeData *initialCommandRunti
 			StSwitchToFront switcher(false);
 
 			 // we create one dialog for all objects or we create for each object when processing separately
-			activeDialog = RunNibDialog(this, commandRuntimeData);
+			activeDialog = RunNibDialogOrRefuse(this, mBundleRef, currCommand, commandRuntimeData, localizationBundle);
 			if(activeDialog != nullptr)
 			{
 				SelectionIterator* selIterator = activeDialog->GetSelectionIterator();
@@ -1333,7 +1372,7 @@ OnMyCommandCM::ExecuteCommandWithText(CommandDescription &currCommand, CFStringR
         //don't restore because for non-modal dialogs this would bring executing app behind along with the dialog
         StSwitchToFront switcher(false);
 
-        activeDialog = RunNibDialog(this, commandRuntimeData);
+        activeDialog = RunNibDialogOrRefuse(this, mBundleRef, currCommand, commandRuntimeData, localizationBundle);
         if(activeDialog == nullptr)
         {
             throw OSStatus(userCanceledErr);
