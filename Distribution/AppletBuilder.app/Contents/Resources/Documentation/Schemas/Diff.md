@@ -20,7 +20,11 @@ JSON schema and usage documentation for `Diff` (ActionUIDiff add-on).
    }
  }
 // An embedded unified line-diff viewer, implemented as an ActionUI add-on (registered via
-// ActionUIDiff.register()). It renders the difference between two texts with the standalone DiffView
+// ActionUIDiff.register()):
+//   macOS / iOS / visionOS - DiffView.DiffView (a SwiftUI View).
+//   Linux - DiffView.DiffGtkView (GTK widgets), drawn as on Apple: each number, marker and line is selectable on
+//   its own. A Swift program links ActionUIDiff and calls ActionUIDiff.register(), as on Apple.
+// It renders the difference between two texts with the standalone DiffView
 // component: hunks with old/new line-number gutters, +/- markers, tinted added/removed rows, "N
 // unchanged lines" gaps where context collapsed, and honest degenerate cases (identical texts say "No
 // changes"; oversized inputs fall back to a plain-text preview).
