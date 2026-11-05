@@ -23,6 +23,19 @@ public:
 //		TRACE_CSTR( "ARefCounted::ARefCounted\n" );
 	}
 
+	// A copy is a new object with its own ref count of 1. The implicit copy constructor copied the
+	// source's count, so "new Derived(*existing)" started above 1 and was never deleted.
+	ARefCounted(const ARefCounted &) noexcept
+		: mRefCount(1)
+	{
+	}
+
+	// Assigning a value does not change who owns this object, so the count stays
+	ARefCounted &operator=(const ARefCounted &) noexcept
+	{
+		return *this;
+	}
+
 	virtual ~ARefCounted() noexcept
 	{
 //		TRACE_CSTR( "ARefCounted::~ARefCounted\n" );

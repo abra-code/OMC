@@ -44,7 +44,7 @@ Boolean IsFileExecutable(CFURLRef inFileURL)
         return false;
     }
     
-    CFErrorRef error = nullptr;
+    CFObj<CFErrorRef> error;
     CFObj<CFBooleanRef> isExecutableRef;
     if(::CFURLCopyResourcePropertyForKey(inFileURL, kCFURLIsExecutableKey, &isExecutableRef, &error))
     {
