@@ -8,7 +8,6 @@
 
 #import "OMCNibDialog.h"
 #import "OMCNibWindowController.h"
-#import "OMCControlAccessor.h"
 #include "OnMyCommand.h"
 #include "CommandRuntimeData.h"
 #include "CMUtils.h"
@@ -73,21 +72,8 @@ OMCNibDialog::CopyAllControlValues(CFSetRef requestedNibControls, SelectionItera
     //column index 0 is a meta value for table and means: get array of all column values
     //this way a regular method of querying controls works with table too: produces a selected row strings
 
-    @try
-    {
-        if(mControlAccessor != NULL)
-        {
-            id<OMCControlAccessor> controller = (__bridge id<OMCControlAccessor>)mControlAccessor;
-            [controller
-                         allControlValues:(__bridge NSMutableDictionary *)mControlValues.Get()
-                            andProperties:(__bridge NSMutableDictionary *)mControlCustomProperties.Get()
-                             withIterator:inSelIterator];
-        }
-    }
-    @catch (NSException *localException)
-    {
-        NSLog(@"OMCNibDialog::CopyAllControlValues received exception: %@", localException);
-    }
+    if(mControlAccessor != nullptr)
+        mControlAccessor->CopyAllControlValues(mControlValues, mControlCustomProperties, inSelIterator);
 
     // after getting all standard values from controls, also check if there is a request
     // for special expensive values not covered by CopyAllControlValues

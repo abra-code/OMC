@@ -11,6 +11,8 @@
 
 #include "AObserver.h"
 #include "MessagePortListener.h"
+#include "OMCDialogControlAccessor.h"
+#include <memory>
 
 class SelectionIterator;
 class OnMyCommandCM;
@@ -75,9 +77,10 @@ public:
 	static CFStringRef		CreateControlValueString(CFTypeRef controlValue, CFDictionaryRef customProperties, UInt16 escSpecialCharsMode, bool isEnvStyle) noexcept;
     static Boolean          IsPredefinedDialogCommandID(CFStringRef inCommandID) noexcept;
 
-	void					SetControlAccessor(void *inControlAccessor) noexcept
+	// The window layer gives the dialog its control accessor; nullptr detaches it (window closing).
+	void					SetControlAccessor(std::unique_ptr<OMCDialogControlAccessor> inControlAccessor) noexcept
 							{
-								mControlAccessor = inControlAccessor;
+								mControlAccessor = std::move(inControlAccessor);
 							}
 
 protected:
@@ -86,7 +89,7 @@ protected:
 	CFObj<CFMutableDictionaryRef> mControlValues;//key: controlID string, value: dictionary for columnID (as long) & value (CFType)
 	CFObj<CFMutableDictionaryRef> mControlCustomProperties;
 	SelectionIterator *		mSelectionIterator;//temporary reference for subcommand execution
-	void *					mControlAccessor; // not owned - weak opaque reference to control accessor
+	std::unique_ptr<OMCDialogControlAccessor> mControlAccessor; // owned; the accessor itself refers to the window weakly
 
 private:
 	OMCDialog *				next;

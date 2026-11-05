@@ -7,6 +7,7 @@
 //
 
 #import "OMCActionUIWindowController.h"
+#include "OMCControlAccessorBridge.h"
 #import "OMCActionUIDialog.h"
 #import "OMCControlAccessor.h"
 #include "OnMyCommand.h"
@@ -127,7 +128,7 @@ static NSArray<ActionUIObjCDialogButton *> *OMCParseButtonSpecs(NSArray *specs)
 		return nil;
 
     mOMCDialogProxy.Adopt( new OMCActionUIDialog() );
-    mOMCDialogProxy->SetControlAccessor((__bridge void *)self);
+    mOMCDialogProxy->SetControlAccessor(OMCMakeControlAccessorBridge(self));
     self->mCommandRuntimeData->SetAssociatedDialogUUID(mOMCDialogProxy->GetDialogUUID());
 
     // The window now has a UUID, which is the only thing a remote client needs to address it, so
@@ -466,7 +467,7 @@ static NSArray<ActionUIObjCDialogButton *> *OMCParseButtonSpecs(NSArray *specs)
 {
     OMCActionUIDialog *actionUIDialog = (OMCActionUIDialog *)mOMCDialogProxy.Get();
     if(actionUIDialog != nullptr)
-        actionUIDialog->SetControlAccessor(nil);
+        actionUIDialog->SetControlAccessor(nullptr);
 
     [self.window setDelegate:nil];
     // hostingController released by property, taking SwiftUI view hierarchy with it

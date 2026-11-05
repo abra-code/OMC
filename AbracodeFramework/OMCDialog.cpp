@@ -1,5 +1,5 @@
 /*
- *  OMCDialog.mm
+ *  OMCDialog.cpp
  *  Abracode
  *
  *  Created by Tomasz Kukielka on 3/2/08.
@@ -9,7 +9,6 @@
 
 #include "OMCDialog.h"
 #include "OMCDialogControlHelpers.h"
-#import "OMCControlAccessor.h"
 #include "AppGroupIdentifier.h"
 #include "OnMyCommand.h"
 #include "OMCDialogControlHelpers.h"
@@ -220,44 +219,17 @@ OMCDialog::CopyControlValue(CFStringRef inControlID, CFStringRef inControlPart, 
 	if(outCustomProperties != NULL)
 		*outCustomProperties = NULL;
 
-	id outValue = NULL;
+	if(mControlAccessor == nullptr)
+		return NULL;
 
-    @try
-    {
-        if(mControlAccessor != NULL)
-        {
-            id<OMCControlAccessor> controller = (__bridge id<OMCControlAccessor>)mControlAccessor;
-            outValue = [controller controlValueForID:(__bridge NSString *)inControlID
-                                             forPart:(__bridge NSString *)inControlPart
-                                        withIterator:inSelIterator
-                                       outProperties:outCustomProperties];
-        }
-    }
-    @catch (NSException *localException)
-    {
-        NSLog(@"OMCDialog::CopyControlValue received exception: %@", localException);
-    }
-
-    return (CFTypeRef)CFBridgingRetain(outValue);
+	return mControlAccessor->CopyControlValue(inControlID, inControlPart, inSelIterator, outCustomProperties);
 }
 
 void
 OMCDialog::CopyAllControlValues(CFSetRef requestedNibControls, SelectionIterator *inSelIterator) noexcept
 {
-    @try
-    {
-        if(mControlAccessor != NULL)
-        {
-            id<OMCControlAccessor> controller = (__bridge id<OMCControlAccessor>)mControlAccessor;
-            [controller allControlValues:(__bridge NSMutableDictionary *)mControlValues.Get()
-                            andProperties:(__bridge NSMutableDictionary *)mControlCustomProperties.Get()
-                             withIterator:inSelIterator];
-        }
-    }
-    @catch (NSException *localException)
-    {
-        NSLog(@"OMCDialog::CopyAllControlValues received exception: %@", localException);
-    }
+	if(mControlAccessor != nullptr)
+		mControlAccessor->CopyAllControlValues(mControlValues, mControlCustomProperties, inSelIterator);
 }
 
 
@@ -269,25 +241,14 @@ OMCDialog::CopyAllControlValues(CFSetRef requestedNibControls, SelectionIterator
 CFDataRef
 OMCDialog::ReceivePortMessage( SInt32 msgid, CFDataRef inData ) noexcept
 {
-	if( mControlAccessor == NULL )
+	if( mControlAccessor == nullptr )
 		return NULL;
 
 	CFObj<CFPropertyListRef> thePlist( CFPropertyListCreateWithData( kCFAllocatorDefault, inData,
                                                                        kCFPropertyListImmutable, nullptr, nullptr) );
 	CFDictionaryRef plistDict = ACFType<CFDictionaryRef>::DynamicCast( (CFPropertyListRef)thePlist );
-
-    @try
-    {
-        if(plistDict != NULL)
-        {
-            id<OMCControlAccessor> controller = (__bridge id<OMCControlAccessor>)mControlAccessor;
-            [controller setControlValues:plistDict];
-        }
-    }
-    @catch (NSException *localException)
-    {
-        NSLog(@"OMCDialog::ReceivePortMessage received exception: %@", localException);
-    }
+	if(plistDict != NULL)
+		mControlAccessor->SetControlValues(plistDict);
 
 	return NULL;
 }
@@ -295,7 +256,7 @@ OMCDialog::ReceivePortMessage( SInt32 msgid, CFDataRef inData ) noexcept
 void
 OMCDialog::ReceiveNotification(void *ioData) noexcept
 {
-	if( (ioData == NULL) || (mControlAccessor == NULL) )
+	if( (ioData == NULL) || (mControlAccessor == nullptr) )
 		return;
 
 	OmcTaskData *taskData = (OmcTaskData *)ioData;
@@ -310,18 +271,8 @@ OMCDialog::ReceiveNotification(void *ioData) noexcept
 
 			CFObj<CFDictionaryRef> controlValues( ReadControlValuesFromPlist(GetDialogUUID()) );
 
-            @try
-            {
-                if(controlValues != NULL)
-                {
-                    id<OMCControlAccessor> controller = (__bridge id<OMCControlAccessor>)mControlAccessor;
-                    [controller setControlValues:(CFDictionaryRef)controlValues];
-                }
-            }
-            @catch (NSException *localException)
-            {
-                NSLog(@"OMCDialog::ReceiveNotification received exception: %@", localException);
-            }
+			if(controlValues != NULL)
+				mControlAccessor->SetControlValues(controlValues);
 		}
 		break;
 

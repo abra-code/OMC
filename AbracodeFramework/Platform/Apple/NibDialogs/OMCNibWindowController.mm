@@ -10,6 +10,7 @@
 #import <Quartz/Quartz.h>
 #import <PDFKit/PDFKit.h>
 #import "OMCNibWindowController.h"
+#include "OMCControlAccessorBridge.h"
 #import "OMCPopUpButton.h"
 #include "OnMyCommand.h"
 #include "ACFDict.h"
@@ -43,7 +44,7 @@
 		return nil;
 
     mOMCDialogProxy.Adopt( new OMCNibDialog() );
-    mOMCDialogProxy->SetControlAccessor((__bridge void *)self);
+    mOMCDialogProxy->SetControlAccessor(OMCMakeControlAccessorBridge(self));
     self->mCommandRuntimeData->SetAssociatedDialogUUID(mOMCDialogProxy->GetDialogUUID());
 
 	CommandDescription &currCommand = self->mPlugin->GetCurrentCommand();
@@ -196,7 +197,7 @@
 {
 	OMCNibDialog *nibDialog = (OMCNibDialog *)mOMCDialogProxy.Get();
 	if(nibDialog != nullptr)
-		nibDialog->SetControlAccessor(nil);
+		nibDialog->SetControlAccessor(nullptr);
 	
 	if(self.window != nil)
 	{
