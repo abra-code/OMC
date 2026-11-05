@@ -102,10 +102,10 @@ protected:
 	CFObj<CFMutableDictionaryRef> mEnvironmentVariables;
 
     ChildProcessInfo		mChildProcessInfo {-1, -1, NULL};
-    CFSocketRef				mReadSocket {NULL};
-    CFSocketRef				mWriteSocket {NULL};
-    CFRunLoopSourceRef		mReadSource {NULL};
-    CFRunLoopSourceRef		mWriteSource {NULL};
+    CFObj<CFSocketRef>			mReadSocket;
+    CFObj<CFSocketRef>			mWriteSocket;
+    CFObj<CFRunLoopSourceRef>	mReadSource;
+    CFObj<CFRunLoopSourceRef>	mWriteSource;
 
 	std::string		        mInputString;
     ByteCount				mWrittenInputBytesCount {0};

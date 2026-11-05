@@ -23,7 +23,7 @@
 	CounterParams	mCounterParams;
 	CFIndex			mTaskCount;
 	OMCTaskProgress *mTasks;
-	CFRunLoopTimerRef mDeferTimer;
+	CFObj<CFRunLoopTimerRef> mDeferTimer;
 	CFObj<CFStringRef> mTitleString;
 	OMCProgressWindowController *mController;
 

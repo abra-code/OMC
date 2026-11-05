@@ -2,6 +2,7 @@
 
 #include "OMC.h"
 #include "OMCConstants.h"
+#include "CFObj.h"
 
 extern CFStringRef kOMCTopCommandID;
 
@@ -79,11 +80,11 @@ typedef enum SpecialWordID
 
 typedef struct CommandDescription
 {
-    CFArrayRef		name {NULL};
-    CFStringRef		namePlural {NULL};
-    CFArrayRef		command {NULL};//array of CFStrings
-    CFArrayRef		inputPipe {NULL};//array of CFStrings
-    CFArrayRef      activationExtensions {NULL};//array of CFStrings
+    CFObj<CFArrayRef>		name;
+    CFObj<CFStringRef>		namePlural;
+    CFObj<CFArrayRef>		command;//array of CFStrings
+    CFObj<CFArrayRef>		inputPipe;//array of CFStrings
+    CFObj<CFArrayRef>      activationExtensions;//array of CFStrings
     OSType *		activationTypes {NULL};
     UInt32			activationTypeCount {0};
     UInt32          prescannedCommandInfo {kOmcCommandNoSpecialObjects};
@@ -95,13 +96,13 @@ typedef struct CommandDescription
     UInt8			sortMethod {kSortMethodNone};
     UInt8			sortAscending {true};
     UInt8			sortOptions {0};
-    CFStringRef		mulObjPrefix {NULL};
-    CFStringRef		mulObjSuffix {NULL};
-    CFStringRef		mulObjSeparator {NULL};
-    CFStringRef		warningStr {NULL};
-    CFStringRef		warningExecuteStr {NULL};
-    CFStringRef		warningCancelStr {NULL};
-    CFStringRef		submenuName {NULL};
+    CFObj<CFStringRef>		mulObjPrefix;
+    CFObj<CFStringRef>		mulObjSuffix;
+    CFObj<CFStringRef>		mulObjSeparator;
+    CFObj<CFStringRef>		warningStr;
+    CFObj<CFStringRef>		warningExecuteStr;
+    CFObj<CFStringRef>		warningCancelStr;
+    CFObj<CFStringRef>		submenuName;
     Boolean			isPrescanned {false};
     Boolean			bringTerminalToFront {true};
     Boolean			openNewTerminalSession {true};
@@ -109,28 +110,28 @@ typedef struct CommandDescription
     Boolean			nameIsDynamic {false};
     Boolean			nameContainsDynamicText {false};
     UInt16			inputDialogType {kInputNone};
-    CFStringRef		inputDialogOK {NULL};
-    CFStringRef		inputDialogCancel {NULL};
-    CFStringRef		inputDialogMessage {NULL};
-    CFArrayRef		inputDialogDefault {NULL};
-    CFArrayRef		inputDialogMenuItems {NULL};//array of name & value pairs
-    CFArrayRef		refresh {NULL};//a list of strings forming a path for Finder refresh
-    CFDictionaryRef	saveAsParams {NULL};
-    CFDictionaryRef	chooseFileParams {NULL};
-    CFDictionaryRef	chooseFolderParams {NULL};
-    CFDictionaryRef	chooseObjectParams {NULL};
-    CFDictionaryRef	openObjectParams {NULL}; // OPEN_OBJECT_DIALOG: customizes the open dialog shown when main command requires file context
-    CFDictionaryRef	outputWindowOptions {NULL};
-    CFDictionaryRef nibDialog {NULL};
-    CFDictionaryRef actionUIWindow {NULL};
-    CFArrayRef		appNames {NULL};
-    CFStringRef		commandID {NULL};//"top!" = main command, other value = command handler/subcommand - should not appear in contextual menu
-    CFStringRef		nextCommandID {NULL}; //if not NULL, next command
-    CFStringRef		externalBundlePath {NULL};
-    CFBundleRef		externBundle {NULL};//populated on first request and cached
-    CFArrayRef		popenShell {NULL};
-    CFMutableDictionaryRef	customEnvironVariables {NULL};
-    CFMutableSetRef specialRequestedNibControls {NULL}; //set of special words to export
+    CFObj<CFStringRef>		inputDialogOK;
+    CFObj<CFStringRef>		inputDialogCancel;
+    CFObj<CFStringRef>		inputDialogMessage;
+    CFObj<CFArrayRef>		inputDialogDefault;
+    CFObj<CFArrayRef>		inputDialogMenuItems;//array of name & value pairs
+    CFObj<CFArrayRef>		refresh;//a list of strings forming a path for Finder refresh
+    CFObj<CFDictionaryRef>	saveAsParams;
+    CFObj<CFDictionaryRef>	chooseFileParams;
+    CFObj<CFDictionaryRef>	chooseFolderParams;
+    CFObj<CFDictionaryRef>	chooseObjectParams;
+    CFObj<CFDictionaryRef>	openObjectParams; // OPEN_OBJECT_DIALOG: customizes the open dialog shown when main command requires file context
+    CFObj<CFDictionaryRef>	outputWindowOptions;
+    CFObj<CFDictionaryRef> nibDialog;
+    CFObj<CFDictionaryRef> actionUIWindow;
+    CFObj<CFArrayRef>		appNames;
+    CFObj<CFStringRef>		commandID;//"top!" = main command, other value = command handler/subcommand - should not appear in contextual menu
+    CFObj<CFStringRef>		nextCommandID; //if not NULL, next command
+    CFObj<CFStringRef>		externalBundlePath;
+    CFObj<CFBundleRef>		externBundle;//populated on first request and cached
+    CFObj<CFArrayRef>		popenShell;
+    CFObj<CFMutableDictionaryRef>	customEnvironVariables;
+    CFObj<CFMutableSetRef> specialRequestedNibControls; //set of special words to export
     Boolean			actOnlyInListedApps {false};//if true - activate only in those listed, if false - exclude those listed
     Boolean			debugging {false}; //set to true when control keyboard modifier is held
     Boolean			disabled {false};
@@ -139,18 +140,25 @@ typedef struct CommandDescription
     SInt32			requiredOMCVersion {MIN_OMC_VERSION};
     SInt32			requiredMacOSMinVersion {MIN_MAC_OS_VERSION};
     SInt32			requiredMacOSMaxVersion {MAX_MAC_OS_VERSION};
-    CFStringRef		iTermShellPath {NULL};
-    CFDictionaryRef	endNotification {NULL};
-    CFDictionaryRef progress {NULL};
+    CFObj<CFStringRef>		iTermShellPath;
+    CFObj<CFDictionaryRef>	endNotification;
+    CFObj<CFDictionaryRef> progress;
     CFIndex			maxTaskCount {0};
-    CFStringRef		contextMatchString {NULL};
+    CFObj<CFStringRef>		contextMatchString;
     UInt32          textReplaceOptions {0};
     UInt8			matchCompareOptions {0};//currently only kCFCompareCaseInsensitive
     UInt8			matchMethod {kMatchExact}; //kMatchExact, kMatchContains, kMatchRegularExpression
     UInt8			matchFileOptions {kMatchFileName};//kMatchFileName, kMatchFilePath
     Boolean			externBundleResolved {false};//costly call to find the extern bundle - do it once and flag it here
-    CFDictionaryRef multipleSelectionIteratorParams {NULL}; //control id and forward/reverse flag
-    CFStringRef		localizationTableName {NULL};
+    CFObj<CFDictionaryRef> multipleSelectionIteratorParams; //control id and forward/reverse flag
+    CFObj<CFStringRef>		localizationTableName;
+
+    // The CF members are owned and released by their CFObj; activationTypes is owned too.
+    // Commands are never copied: OnMyCommandCM keeps them in one array and hands out references.
+    CommandDescription() = default;
+    ~CommandDescription() { delete [] activationTypes; }
+    CommandDescription(const CommandDescription &) = delete;
+    CommandDescription &operator=(const CommandDescription &) = delete;
 } CommandDescription;
 
 

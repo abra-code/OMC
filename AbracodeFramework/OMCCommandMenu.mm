@@ -173,7 +173,7 @@ PopulateCommandsMenu(OnMyCommandCM *inPlugin, NSMenu *topMenu)
 			if(newItem != NULL)
 			{
 				[newItem setTarget:topMenu];
-                [newItem setCommandID:(__bridge NSString *)(commandList[i].commandID)];
+                [newItem setCommandID:(__bridge NSString *)(commandList[i].commandID.Get())];
 				//CFIndex retCount = CFGetRetainCount((CFStringRef)staticName);
                 [newItem setRepresentedObject: localizedName];//the original non-localized name stuffed here. retained object
 				//retCount = CFGetRetainCount((CFStringRef)staticName);

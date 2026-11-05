@@ -70,16 +70,12 @@ inline double CalculateTotalProgress(OMCTaskProgress *allTasks, CFIndex inCount)
         }
     }
 
-	CFStringRef titleStr = NULL;
+	CFObj<CFStringRef> titleStr;
 	if( params.CopyValue( CFSTR("TITLE"), titleStr ) )
 	{
 		if( (titleStr != NULL) && (inLocTable != NULL) && (inLocBundle != NULL) )
-		{
-			CFStringRef locString = CFCopyLocalizedStringFromTableInBundle( titleStr, inLocTable, inLocBundle, "");
-			CFRelease(titleStr);
-			titleStr = locString;
-		}
-		mTitleString = titleStr; // CFObj takes ownership
+			titleStr.Adopt( CFCopyLocalizedStringFromTableInBundle( titleStr, inLocTable, inLocBundle, "") );
+		mTitleString.Swap(titleStr);
 	}
 
 	if(mTitleString == NULL)
@@ -92,18 +88,17 @@ inline double CalculateTotalProgress(OMCTaskProgress *allTasks, CFIndex inCount)
 	double delay = 0.0;
 	params.GetValue( CFSTR("DELAY"), delay );
 	
-	mDeferTimer = NULL;
 	if( delay > 0.0 )
 	{//use CFRunLoopTimer so we don't rely on existance of NSRunLoop (those are not toll-free bridged equivalents)
         CFRunLoopTimerContext timerContext = {0, (__bridge void *)self, NULL, NULL, NULL};
-		mDeferTimer = CFRunLoopTimerCreate(
+		mDeferTimer.Adopt( CFRunLoopTimerCreate(
 											   kCFAllocatorDefault,
 											   CFAbsoluteTimeGetCurrent() + delay,
 											   0,		// interval
 											   0,		// flags
 											   0,		// order
 											   OMCDeferredProgressCallBack,
-											   &timerContext);
+											   &timerContext) );
 		
 		if(mDeferTimer != NULL)
 		{
@@ -123,8 +118,7 @@ inline double CalculateTotalProgress(OMCTaskProgress *allTasks, CFIndex inCount)
 	if(mDeferTimer != NULL)
 	{
 		CFRunLoopTimerInvalidate(mDeferTimer);
-		CFRelease(mDeferTimer);
-		mDeferTimer = NULL;
+		mDeferTimer.Release();
 	}
 
 	if( mController != NULL )
@@ -230,8 +224,7 @@ inline double CalculateTotalProgress(OMCTaskProgress *allTasks, CFIndex inCount)
 	if(mDeferTimer != NULL)//if called from timer
 	{
 		CFRunLoopTimerInvalidate(mDeferTimer);
-		CFRelease(mDeferTimer);
-		mDeferTimer = NULL;
+		mDeferTimer.Release();
 	}
 	
 	if(mController == NULL)

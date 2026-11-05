@@ -809,132 +809,7 @@ OnMyCommandCM::DeleteCommandList()
 {
 	if( mCommandList != NULL )
 	{
-		for(UInt32 i = 0; i < mCommandCount; i++)
-		{
-			if(mCommandList[i].name != NULL)
-				::CFRelease(mCommandList[i].name);
-
-			if(mCommandList[i].namePlural != NULL)
-				::CFRelease(mCommandList[i].namePlural);
-
-			if(mCommandList[i].command != NULL)
-				::CFRelease(mCommandList[i].command);
-				
-			if(mCommandList[i].inputPipe != NULL)
-				::CFRelease(mCommandList[i].inputPipe);
-
-			if(mCommandList[i].activationExtensions != NULL)
-				::CFRelease(mCommandList[i].activationExtensions);
-	
-			if( mCommandList[i].activationTypes != NULL )
-				delete [] mCommandList[i].activationTypes;
-
-			if(mCommandList[i].mulObjPrefix != NULL)
-				::CFRelease(mCommandList[i].mulObjPrefix);
-
-			if(mCommandList[i].mulObjSuffix != NULL)
-				::CFRelease(mCommandList[i].mulObjSuffix);
-
-			if(mCommandList[i].mulObjSeparator != NULL)
-				::CFRelease(mCommandList[i].mulObjSeparator);
-			
-			if(mCommandList[i].warningStr != NULL)
-				::CFRelease(mCommandList[i].warningStr);
-			
-			if(mCommandList[i].warningExecuteStr != NULL)
-				::CFRelease(mCommandList[i].warningExecuteStr);
-
-			if(mCommandList[i].warningCancelStr != NULL)
-				::CFRelease(mCommandList[i].warningCancelStr);
-
-			if(mCommandList[i].submenuName != NULL)
-				::CFRelease(mCommandList[i].submenuName);
-
-			if(mCommandList[i].inputDialogOK != NULL)
-				::CFRelease(mCommandList[i].inputDialogOK);
-
-			if(mCommandList[i].inputDialogCancel != NULL)
-				::CFRelease(mCommandList[i].inputDialogCancel);
-
-			if(mCommandList[i].inputDialogMessage != NULL)
-				::CFRelease(mCommandList[i].inputDialogMessage);
-
-			if(mCommandList[i].inputDialogDefault != NULL)
-				::CFRelease(mCommandList[i].inputDialogDefault);
-
-			if(mCommandList[i].inputDialogMenuItems != NULL)
-				::CFRelease(mCommandList[i].inputDialogMenuItems);
-			
-			if(mCommandList[i].refresh != NULL)
-				::CFRelease(mCommandList[i].refresh);
-
-			if(mCommandList[i].saveAsParams != NULL)
-				::CFRelease(mCommandList[i].saveAsParams);
-			
-			if(mCommandList[i].chooseFileParams != NULL)
-				::CFRelease(mCommandList[i].chooseFileParams);	
-			
-			if(mCommandList[i].chooseFolderParams != NULL)
-				::CFRelease(mCommandList[i].chooseFolderParams);
-
-			if(mCommandList[i].chooseObjectParams != NULL)
-				::CFRelease(mCommandList[i].chooseObjectParams);
-
-			if(mCommandList[i].openObjectParams != NULL)
-				::CFRelease(mCommandList[i].openObjectParams);
-
-			if(mCommandList[i].outputWindowOptions != NULL)
-				::CFRelease(mCommandList[i].outputWindowOptions);
-				
-			if(mCommandList[i].nibDialog != NULL)
-				::CFRelease(mCommandList[i].nibDialog);
-
-			if(mCommandList[i].actionUIWindow != NULL)
-				::CFRelease(mCommandList[i].actionUIWindow);
-
-			if(mCommandList[i].appNames != NULL)
-				::CFRelease(mCommandList[i].appNames);
-
-			if(mCommandList[i].commandID != NULL)
-				::CFRelease(mCommandList[i].commandID);
-			
-			if(mCommandList[i].nextCommandID != NULL)
-				::CFRelease(mCommandList[i].nextCommandID);
-
-			if(mCommandList[i].externalBundlePath != NULL)
-				::CFRelease(mCommandList[i].externalBundlePath);
-			
-			if(mCommandList[i].externBundle != NULL)
-				::CFRelease(mCommandList[i].externBundle);
-			
-			if(mCommandList[i].popenShell != NULL)
-				::CFRelease(mCommandList[i].popenShell);
-			
-			if(mCommandList[i].customEnvironVariables != NULL)
-				::CFRelease(mCommandList[i].customEnvironVariables);
-
-			if(mCommandList[i].specialRequestedNibControls != nullptr)
-				::CFRelease(mCommandList[i].specialRequestedNibControls);
-
-			if(mCommandList[i].iTermShellPath != NULL)
-				::CFRelease(mCommandList[i].iTermShellPath);
-
-			if(mCommandList[i].endNotification != NULL)
-				::CFRelease(mCommandList[i].endNotification);
-
-			if(mCommandList[i].progress != NULL)
-				::CFRelease(mCommandList[i].progress);
-		
-			if(mCommandList[i].contextMatchString != NULL)
-				::CFRelease(mCommandList[i].contextMatchString);
-		
-			if(mCommandList[i].multipleSelectionIteratorParams != NULL)
-				::CFRelease(mCommandList[i].multipleSelectionIteratorParams);
-				
-			if(mCommandList[i].localizationTableName != NULL)
-				::CFRelease(mCommandList[i].localizationTableName);
-		}
-
+		//each CommandDescription releases what it owns
 		delete [] mCommandList;
 		mCommandList = NULL;
 	}
@@ -1528,8 +1403,7 @@ OnMyCommandCM::DisplayWarning(CommandDescription &currCommand, CommandRuntimeDat
 		execLen = ::CFStringGetLength(currCommand.warningExecuteStr);
 		if(execLen == 0)
 		{
-			::CFRelease(currCommand.warningExecuteStr);
-			currCommand.warningExecuteStr = NULL;
+			currCommand.warningExecuteStr.Release();
 		}
 	}
 
@@ -1538,8 +1412,7 @@ OnMyCommandCM::DisplayWarning(CommandDescription &currCommand, CommandRuntimeDat
 		cancelLen = ::CFStringGetLength(currCommand.warningCancelStr);
 		if(cancelLen == 0)
 		{
-			::CFRelease(currCommand.warningCancelStr);
-			currCommand.warningCancelStr = NULL;
+			currCommand.warningCancelStr.Release();
 		}
 	}
 	
@@ -2635,9 +2508,9 @@ OnMyCommandCM::CreateCommandStringWithObjects(CFArrayRef inFragments,
 	CFIndex theCount = fragments.GetCount();
 	
 	// command's explicit values take priority; fall back to potential parent context values if not set
-	CFStringRef mulObjPrefix = currCommand.mulObjPrefix != nullptr ? currCommand.mulObjPrefix : contextData.mulObjPrefix.Get();
-	CFStringRef mulObjSuffix = currCommand.mulObjSuffix != nullptr ? currCommand.mulObjSuffix : contextData.mulObjSuffix.Get();
-	CFStringRef mulObjSeparator = currCommand.mulObjSeparator != nullptr ? currCommand.mulObjSeparator : contextData.mulObjSeparator.Get();
+	CFStringRef mulObjPrefix = currCommand.mulObjPrefix != nullptr ? currCommand.mulObjPrefix.Get() : contextData.mulObjPrefix.Get();
+	CFStringRef mulObjSuffix = currCommand.mulObjSuffix != nullptr ? currCommand.mulObjSuffix.Get() : contextData.mulObjSuffix.Get();
+	CFStringRef mulObjSeparator = currCommand.mulObjSeparator != nullptr ? currCommand.mulObjSeparator.Get() : contextData.mulObjSeparator.Get();
 	
 	for(CFIndex i = 0; i < theCount; i++ )
 	{
@@ -2723,9 +2596,9 @@ OnMyCommandCM::CreateEnvironmentVariablesDict(CFStringRef inObjTextRef, CommandR
 		}
 
 		// command's explicit values take priority; fall back to potential parent context values if not set
-		CFStringRef mulObjPrefix = currCommand.mulObjPrefix != nullptr ? currCommand.mulObjPrefix : contextData.mulObjPrefix.Get();
-		CFStringRef mulObjSuffix = currCommand.mulObjSuffix != nullptr ? currCommand.mulObjSuffix : contextData.mulObjSuffix.Get();
-		CFStringRef mulObjSeparator = currCommand.mulObjSeparator != nullptr ? currCommand.mulObjSeparator : contextData.mulObjSeparator.Get();
+		CFStringRef mulObjPrefix = currCommand.mulObjPrefix != nullptr ? currCommand.mulObjPrefix.Get() : contextData.mulObjPrefix.Get();
+		CFStringRef mulObjSuffix = currCommand.mulObjSuffix != nullptr ? currCommand.mulObjSuffix.Get() : contextData.mulObjSuffix.Get();
+		CFStringRef mulObjSeparator = currCommand.mulObjSeparator != nullptr ? currCommand.mulObjSeparator.Get() : contextData.mulObjSeparator.Get();
 		
 		PopulateEnvironList( outEnviron, commandRuntimeData,
                             contextData.objectList.data(), contextData.objectList.size(), contextData.currObjectIndex,
@@ -3871,14 +3744,14 @@ OnMyCommandCM::GetCurrentCommandExternBundle()
 		CFObj<CFURLRef> bundleURL( ::CFURLCreateWithFileSystemPath(kCFAllocatorDefault, currCommand.externalBundlePath, kCFURLPOSIXPathStyle, true) );
 		if(bundleURL != nullptr)
 		{
-			currCommand.externBundle = CMUtils::CFBundleCreate(bundleURL);
+			currCommand.externBundle.Adopt( CMUtils::CFBundleCreate(bundleURL) );
 			if(currCommand.externBundle != nullptr)
 				return currCommand.externBundle;
 		}
 	}
 
 	//not explicitly set but might exist - so check it now
-	currCommand.externBundle = CreateDefaultExternBundleRef(currCommand.name);
+	currCommand.externBundle.Adopt( CreateDefaultExternBundleRef(currCommand.name) );
 	
 	return currCommand.externBundle;
 }

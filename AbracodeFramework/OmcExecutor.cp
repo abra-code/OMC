@@ -372,16 +372,15 @@ POpenExecutor::Execute( const char *inCommand, OSStatus &outError )
 
 #if 0 //_DEBUG_
 		//::CFShow( ::CFRunLoopGetCurrent() );
-		CFStringRef outStr = CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("PopenExecutor::Execute cfRunLoop=0x%p"), (void *) CFRunLoopGetCurrent() );
+		CFObj<CFStringRef> outStr( CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("PopenExecutor::Execute cfRunLoop=0x%p"), (void *) CFRunLoopGetCurrent() ) );
 		CFShow( outStr );
-		CFRelease(outStr);
 #endif
 
-		mReadSocket = ::CFSocketCreateWithNative( kCFAllocatorDefault, mChildProcessInfo.outputFD, kCFSocketReadCallBack,
-												PopenCFSocketCallback, &context);
+		mReadSocket.Adopt( ::CFSocketCreateWithNative( kCFAllocatorDefault, mChildProcessInfo.outputFD, kCFSocketReadCallBack,
+												PopenCFSocketCallback, &context) );
 		if(mReadSocket != nullptr)
 		{
-			mReadSource = ::CFSocketCreateRunLoopSource(kCFAllocatorDefault, mReadSocket, 0);
+			mReadSource.Adopt( ::CFSocketCreateRunLoopSource(kCFAllocatorDefault, mReadSocket, 0) );
 			if(mReadSource != nullptr)
 			{
 				::CFRunLoopAddSource( ::CFRunLoopGetCurrent(), mReadSource, kCFRunLoopCommonModes/*kCFRunLoopDefaultMode*/ );
@@ -402,11 +401,11 @@ POpenExecutor::Execute( const char *inCommand, OSStatus &outError )
 				}
 			}
 		
-			mWriteSocket = ::CFSocketCreateWithNative( kCFAllocatorDefault, mChildProcessInfo.inputFD, kCFSocketWriteCallBack,
-													PopenCFSocketCallback, &context);
+			mWriteSocket.Adopt( ::CFSocketCreateWithNative( kCFAllocatorDefault, mChildProcessInfo.inputFD, kCFSocketWriteCallBack,
+													PopenCFSocketCallback, &context) );
 			if(mWriteSocket != nullptr)
 			{
-				mWriteSource = ::CFSocketCreateRunLoopSource(kCFAllocatorDefault, mWriteSocket, 0);
+				mWriteSource.Adopt( ::CFSocketCreateRunLoopSource(kCFAllocatorDefault, mWriteSocket, 0) );
 				if(mWriteSource != nullptr)
 				{
 					::CFRunLoopAddSource( ::CFRunLoopGetCurrent(), mWriteSource, kCFRunLoopCommonModes/*kCFRunLoopDefaultMode*/ );
@@ -457,29 +456,25 @@ POpenExecutor::~POpenExecutor()
 	if(mReadSocket != nullptr)
 	{
 		::CFSocketInvalidate( mReadSocket );
-		::CFRelease( mReadSocket );
-		mReadSocket = nullptr;
+		mReadSocket.Release();
 	}
 
 	if(mWriteSocket != nullptr)
 	{
 		::CFSocketInvalidate( mWriteSocket );
-		::CFRelease( mWriteSocket );
-		mWriteSocket = nullptr;
+		mWriteSocket.Release();
 	}
 
 	if( mReadSource != nullptr )
 	{
 		::CFRunLoopRemoveSource( ::CFRunLoopGetCurrent(), mReadSource, kCFRunLoopCommonModes/*kCFRunLoopDefaultMode*/ );
-		::CFRelease(mReadSource);
-		mReadSource = nullptr;
+		mReadSource.Release();
 	}
 
 	if( mWriteSource != nullptr )
 	{
 		::CFRunLoopRemoveSource( ::CFRunLoopGetCurrent(), mWriteSource, kCFRunLoopCommonModes/*kCFRunLoopDefaultMode*/ );
-		::CFRelease(mWriteSource);
-		mWriteSource = nullptr;
+		mWriteSource.Release();
 	}
 }
 
@@ -505,29 +500,25 @@ POpenExecutor::Finish(bool wasSynchronous, bool sendNotification, OSStatus inErr
 	if(mReadSocket != nullptr)
 	{
 		::CFSocketInvalidate( mReadSocket );
-		::CFRelease( mReadSocket );
-		mReadSocket = nullptr;
+		mReadSocket.Release();
 	}
 
 	if(mWriteSocket != nullptr)
 	{
 		::CFSocketInvalidate( mWriteSocket );
-		::CFRelease( mWriteSocket );
-		mWriteSocket = nullptr;
+		mWriteSocket.Release();
 	}
 
 	if( mReadSource != nullptr )
 	{
 		::CFRunLoopRemoveSource( ::CFRunLoopGetCurrent(), mReadSource, kCFRunLoopCommonModes/*kCFRunLoopDefaultMode*/ );
-		::CFRelease(mReadSource);
-		mReadSource = nullptr;
+		mReadSource.Release();
 	}
 
 	if( mWriteSource != nullptr )
 	{
 		::CFRunLoopRemoveSource( ::CFRunLoopGetCurrent(), mWriteSource, kCFRunLoopCommonModes/*kCFRunLoopDefaultMode*/ );
-		::CFRelease(mWriteSource);
-		mWriteSource = nullptr;
+		mWriteSource.Release();
 	}
 	
     if(mWaitForTaskCompletion)
@@ -562,15 +553,13 @@ POpenExecutor::CloseWriting()
 	if(mWriteSocket != nullptr)
 	{
 		::CFSocketInvalidate( mWriteSocket );
-		::CFRelease( mWriteSocket );
-		mWriteSocket = nullptr;
+		mWriteSocket.Release();
 	}
 
 	if( mWriteSource != nullptr )
 	{
 		::CFRunLoopRemoveSource( ::CFRunLoopGetCurrent(), mWriteSource, kCFRunLoopCommonModes/*kCFRunLoopDefaultMode*/ );
-		::CFRelease(mWriteSource);
-		mWriteSource = nullptr;
+		mWriteSource.Release();
 	}
 }
 

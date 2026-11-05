@@ -20,8 +20,7 @@ LocalizedString(CFStringRef inStr, CFBundleRef localizationBundle, CFStringRef l
     NSString *__strong nsLocalizedStr = nil;
     if(inStr != NULL)
     {
-        CFRetain(inStr);
-        nsLocalizedStr = CFBridgingRelease(inStr);
+        nsLocalizedStr = (__bridge NSString *)inStr;//the strong variable retains it
         if(localizationTableName != NULL)
         {
             nsLocalizedStr = (NSString *)CFBridgingRelease(::CFCopyLocalizedStringFromTableInBundle(inStr, localizationTableName, localizationBundle, ""));
@@ -96,14 +95,8 @@ Boolean RunCocoaInputDialog(OnMyCommandCM *inPlugin,
         [theController setMessageText:inputDialogMessage];
         
         // inputDialogMenuItems is only populated for popup/combo dialogs; it is
-        // NULL for clear/password input. Guard the retain so CFRetain(NULL) does
-        // not crash (it does) when this is a plain text or password prompt.
-        NSArray *__strong inputDialogMenuItems = nil;
-        if(currCommand.inputDialogMenuItems != NULL)
-        {
-            CFRetain(currCommand.inputDialogMenuItems);
-            inputDialogMenuItems = (NSArray *)CFBridgingRelease(currCommand.inputDialogMenuItems);
-        }
+        // NULL (nil here) for clear/password input. The strong variable retains it.
+        NSArray *__strong inputDialogMenuItems = (__bridge NSArray *)currCommand.inputDialogMenuItems.Get();
 
         if( (dialogType == kInputPopupMenu) || (dialogType == kInputComboBox) )
         {

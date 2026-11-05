@@ -1302,8 +1302,8 @@ GetAllDialogControllers()
 
 - (void) sendObjCMessage:(CFArrayRef)oneObjCMessage toTarget:(id)messageTarget
 {
-    CFLocaleRef currentLocale = NULL;
-    CFNumberFormatterRef numberFormatter = NULL;
+    CFObj<CFLocaleRef> currentLocale;
+    CFObj<CFNumberFormatterRef> numberFormatter;
 
     @try
     {
@@ -1417,10 +1417,10 @@ GetAllDialogControllers()
                                 case kObjCArgULonglongType:
                                 {
                                     if(currentLocale == NULL)
-                                        currentLocale = CFLocaleCopyCurrent();
+                                        currentLocale.Adopt( CFLocaleCopyCurrent() );
                                     
                                     if(numberFormatter == NULL)
-                                        numberFormatter = CFNumberFormatterCreate(kCFAllocatorDefault, currentLocale, kCFNumberFormatterDecimalStyle);
+                                        numberFormatter.Adopt( CFNumberFormatterCreate(kCFAllocatorDefault, currentLocale, kCFNumberFormatterDecimalStyle) );
 
                                     long long longlongVal = 0;
                                     okToAddArgument = CFNumberFormatterGetValueFromString(numberFormatter, argString, NULL, kCFNumberLongLongType, &longlongVal);
@@ -1663,12 +1663,6 @@ GetAllDialogControllers()
     {
         NSLog(@"OMCNibWindowController sendObjCMessage received exception while trying to invoke a custom message: %@", localException);
     }
-    
-    if( currentLocale != NULL )
-       CFRelease(currentLocale);
-
-    if( numberFormatter != NULL )
-       CFRelease(numberFormatter);
 }
 
 

@@ -150,34 +150,31 @@ GetMultiCommandParams(CommandDescription &outDesc, CFDictionaryRef inParams)
         //handle \r \n \t strings that may be present here
         if( (outDesc.mulObjPrefix != NULL) && (::CFStringGetLength(outDesc.mulObjPrefix) > 1) )
         {
-            CFMutableStringRef mutableString = CFStringCreateMutableCopy(kCFAllocatorDefault, 0, outDesc.mulObjPrefix);
+            CFObj<CFMutableStringRef> mutableString( CFStringCreateMutableCopy(kCFAllocatorDefault, 0, outDesc.mulObjPrefix) );
             if(mutableString != NULL)
             {
                 ReplaceWhitespaceEscapesWithCharacters(mutableString);
-                CFRelease(outDesc.mulObjPrefix);
-                outDesc.mulObjPrefix = mutableString;
+                outDesc.mulObjPrefix.Adopt( mutableString.Detach() );//releases the original
             }
         }
         
         if( (outDesc.mulObjSuffix != NULL) && (::CFStringGetLength(outDesc.mulObjSuffix) > 1) )
         {
-            CFMutableStringRef mutableString = CFStringCreateMutableCopy(kCFAllocatorDefault, 0, outDesc.mulObjSuffix);
+            CFObj<CFMutableStringRef> mutableString( CFStringCreateMutableCopy(kCFAllocatorDefault, 0, outDesc.mulObjSuffix) );
             if(mutableString != NULL)
             {
                 ReplaceWhitespaceEscapesWithCharacters(mutableString);
-                CFRelease(outDesc.mulObjSuffix);
-                outDesc.mulObjSuffix = mutableString;
+                outDesc.mulObjSuffix.Adopt( mutableString.Detach() );//releases the original
             }
         }
         
         if( (outDesc.mulObjSeparator != NULL) && (::CFStringGetLength(outDesc.mulObjSeparator) > 1) )
         {
-            CFMutableStringRef mutableString = CFStringCreateMutableCopy(kCFAllocatorDefault, 0, outDesc.mulObjSeparator);
+            CFObj<CFMutableStringRef> mutableString( CFStringCreateMutableCopy(kCFAllocatorDefault, 0, outDesc.mulObjSeparator) );
             if(mutableString != NULL)
             {
                 ReplaceWhitespaceEscapesWithCharacters(mutableString);
-                CFRelease(outDesc.mulObjSeparator);
-                outDesc.mulObjSeparator = mutableString;
+                outDesc.mulObjSeparator.Adopt( mutableString.Detach() );//releases the original
             }
         }
     }
@@ -405,9 +402,9 @@ GetInputDialogParams(CommandDescription &outDesc, CFDictionaryRef inParams)
     }
     else if( params.GetValue(CFSTR("DEFAULT"), theStr) )
     {
-        CFMutableArrayRef mutableArray = ::CFArrayCreateMutable( kCFAllocatorDefault, 1, &kCFTypeArrayCallBacks );
+        CFObj<CFMutableArrayRef> mutableArray( ::CFArrayCreateMutable( kCFAllocatorDefault, 1, &kCFTypeArrayCallBacks ) );
         ::CFArrayAppendValue(mutableArray, theStr);
-        outDesc.inputDialogDefault = mutableArray;
+        outDesc.inputDialogDefault.Adopt( mutableArray.Detach() );
     }
 
     if((outDesc.inputDialogType == kInputPopupMenu) || (outDesc.inputDialogType == kInputComboBox))
@@ -546,9 +543,9 @@ GetOneCommandParams(CommandDescription &outDesc, CFDictionaryRef inOneCommand, C
     outDesc.nameIsDynamic = false;//optimization
     if( oneCmd.GetValue(CFSTR("NAME"), theStr) )
     {
-        CFMutableArrayRef mutableArray = ::CFArrayCreateMutable( kCFAllocatorDefault, 1, &kCFTypeArrayCallBacks );
+        CFObj<CFMutableArrayRef> mutableArray( ::CFArrayCreateMutable( kCFAllocatorDefault, 1, &kCFTypeArrayCallBacks ) );
         ::CFArrayAppendValue(mutableArray, theStr);
-        outDesc.name = mutableArray;
+        outDesc.name.Adopt( mutableArray.Detach() );
     }
     else if( oneCmd.CopyValue(CFSTR("NAME"), outDesc.name) )
     {
@@ -571,8 +568,7 @@ GetOneCommandParams(CommandDescription &outDesc, CFDictionaryRef inOneCommand, C
 
     if(outDesc.commandID == NULL)
     {
-        outDesc.commandID = kOMCTopCommandID;
-        ::CFRetain( outDesc.commandID );
+        outDesc.commandID.Adopt(kOMCTopCommandID, kCFObjRetain);
     }
     else if( !::CFEqual(outDesc.commandID, kOMCTopCommandID) )
     {
@@ -597,9 +593,7 @@ GetOneCommandParams(CommandDescription &outDesc, CFDictionaryRef inOneCommand, C
         }
         if(isMainID)
         {
-            ::CFRelease(outDesc.commandID);
-            outDesc.commandID = kOMCTopCommandID;
-            ::CFRetain( outDesc.commandID );
+            outDesc.commandID.Adopt(kOMCTopCommandID, kCFObjRetain);//releases the explicit id
         }
     }
 
@@ -867,18 +861,18 @@ GetOneCommandParams(CommandDescription &outDesc, CFDictionaryRef inOneCommand, C
 //externalBundlePath
     if(externBundleOverrideURL != nullptr)//extern bundle path override is used when OMC is passed a .omc package for execution instead of plist file
     {
-        outDesc.externalBundlePath = ::CFURLCopyFileSystemPath(externBundleOverrideURL, kCFURLPOSIXPathStyle);
+        outDesc.externalBundlePath.Adopt( ::CFURLCopyFileSystemPath(externBundleOverrideURL, kCFURLPOSIXPathStyle) );
     }
     else if(oneCmd.GetValue(CFSTR("EXTERNAL_BUNDLE_PATH"), theStr))
     {
-        outDesc.externalBundlePath = CreatePathByExpandingTilde( theStr );//keep the string, we are responsible for releasing it
+        outDesc.externalBundlePath.Adopt( CreatePathByExpandingTilde( theStr ) );
     }
 
 //popenShell
     oneCmd.CopyValue(CFSTR("POPEN_SHELL"), outDesc.popenShell);
 
 //customEnvironVariables
-    outDesc.customEnvironVariables = CreateAllCoreEnvironmentVariablePlaceholders(); //the list of always exported variables
+    outDesc.customEnvironVariables.Adopt( CreateAllCoreEnvironmentVariablePlaceholders() ); //the list of always exported variables
 
     CFDictionaryRef commandMustExportEnvironVariables = nullptr;
     oneCmd.GetValue(CFSTR("ENVIRONMENT_VARIABLES"), commandMustExportEnvironVariables);
@@ -886,12 +880,11 @@ GetOneCommandParams(CommandDescription &outDesc, CFDictionaryRef inOneCommand, C
     {
         CFDictionaryApplyFunction(commandMustExportEnvironVariables, SetKeyValueInMutableDict, (void *)outDesc.customEnvironVariables);
 
-        outDesc.specialRequestedNibControls = CFSetCreateMutable(kCFAllocatorDefault, 0, &kCFTypeSetCallBacks);
+        outDesc.specialRequestedNibControls.Adopt( CFSetCreateMutable(kCFAllocatorDefault, 0, &kCFTypeSetCallBacks) );
         CFDictionaryApplyFunction(commandMustExportEnvironVariables, AddRequestedSpecialNibDialogValuesToMutableSet, (void *)outDesc.specialRequestedNibControls);
         if(CFSetGetCount(outDesc.specialRequestedNibControls) == 0)
         {
-            CFRelease(outDesc.specialRequestedNibControls);
-            outDesc.specialRequestedNibControls = nullptr;
+            outDesc.specialRequestedNibControls.Release();
         }
     }
 
@@ -1083,7 +1076,7 @@ ProcessOnePrescannedWord(CommandDescription &currCommand, SInt32 specialWordID, 
         {
 //            TRACE_CSTR("NIB_TABLE_VALUE\n" );
             if( currCommand.specialRequestedNibControls == nullptr)
-                currCommand.specialRequestedNibControls = CFSetCreateMutable(kCFAllocatorDefault, 0, &kCFTypeSetCallBacks);
+                currCommand.specialRequestedNibControls.Adopt( CFSetCreateMutable(kCFAllocatorDefault, 0, &kCFTypeSetCallBacks) );
 
             CFSetAddValue(currCommand.specialRequestedNibControls, inSpecialWord);
         }
@@ -1149,7 +1142,7 @@ FindEnvironmentVariables(CommandDescription &currCommand, CFStringRef inString)
                         ProcessOnePrescannedWord(currCommand, specialWordID, varString, true);
                         
                         if(currCommand.customEnvironVariables == nullptr)
-                            currCommand.customEnvironVariables = CFDictionaryCreateMutable(kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+                            currCommand.customEnvironVariables.Adopt( CFDictionaryCreateMutable(kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks) );
                         ::CFDictionarySetValue(currCommand.customEnvironVariables, (CFStringRef)varString, CFSTR(""));
                     }
                 }
