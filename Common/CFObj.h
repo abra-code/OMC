@@ -28,6 +28,7 @@
 #pragma once
 
 #include <CoreFoundation/CoreFoundation.h>
+#include <cstddef>
 
 typedef enum CFObjRetainType
 {
@@ -53,14 +54,23 @@ public:
             CFRetain(mRef);
     }
 
-    // Copy constructor from another CFObj<> makes this instance a second owner of the same CF object
-    explicit CFObj(const CFObj& inRef) noexcept
-        : mRef(inRef)
+    // Copy constructor from another CFObj<> makes this instance a second owner of the same CF object (it retains).
+    // Not explicit: with an explicit copy constructor, "CFObj<T> x = other;" or passing a CFObj by value
+    // still compiled, through operator T() and the constructor above, and adopted WITHOUT retaining.
+    CFObj(const CFObj& inRef) noexcept
+        : mRef(inRef.mRef)
     {
         if(mRef != nullptr)
             CFRetain(mRef);
     }
-    
+
+    // Move constructor takes over the other instance's ownership without retaining and leaves it empty
+    CFObj(CFObj&& inRef) noexcept
+        : mRef(inRef.mRef)
+    {
+        inRef.mRef = nullptr;
+    }
+
     virtual ~CFObj() noexcept
     {
         Release();
@@ -106,9 +116,23 @@ public:
         return *this;
     }
 
+    // Makes this instance a second owner of the other instance's object (it retains)
     CFObj& operator=(const CFObj& inRef) noexcept
     {
         Adopt(inRef.mRef, kCFObjRetain);
+        return *this;
+    }
+
+    // Takes over the other instance's ownership without retaining and leaves it empty.
+    // When both already hold the same object, each keeps its own reference.
+    CFObj& operator=(CFObj&& inRef) noexcept
+    {
+        if (mRef != inRef.mRef)
+        {
+            Release();
+            mRef = inRef.mRef;
+            inRef.mRef = nullptr;
+        }
         return *this;
     }
     
@@ -137,11 +161,11 @@ protected:
 };
 
 
-template<class T> bool operator==(CFObj<T>& inObj, nullptr_t)
+template<class T> bool operator==(CFObj<T>& inObj, std::nullptr_t)
 {
    return ((T)inObj == (T)nullptr);
 }
-template<class T> bool operator!=(CFObj<T>& inObj, nullptr_t)
+template<class T> bool operator!=(CFObj<T>& inObj, std::nullptr_t)
 {
    return ((T)inObj != (T)nullptr);
 }
