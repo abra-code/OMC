@@ -5,16 +5,16 @@
 //  Created by Tomasz Kukielka on 4/6/08.
 //  Copyright 2008 Abracode. All rights reserved.
 //
+//  The Objective-C entry for running commands (menus, the droplet, lifetime events, services).
+//  The rules live in the portable OMCCommandRunner; this class adds what only macOS has: the key
+//  window's controller, Open Recent, the delegate as an observer, and NSURLComponents for URLs.
+//
 
 #import "OMCCommandExecutor.h"
 #import "OMCWindowController.h"
 #include "OMC.h"
-#include "OMCFilePanels.h"
-#include "OMCNavigationDialogs.h"
-#include "ACFPropertyList.h"
+#include "OMCCommandRunner.h"
 #import "OMCObserverDelegate.h"
-
-static NSMutableDictionary *sCachedPlists = NULL;
 
 void OMCDelegateObserverCallback(OmcObserverMessage inMessage, CFIndex inTaskID, CFTypeRef inResult, void *userData)
 {
@@ -22,7 +22,7 @@ void OMCDelegateObserverCallback(OmcObserverMessage inMessage, CFIndex inTaskID,
     {
         return;
     }
-    
+
     id __weak objcObject = (__bridge id)userData;
     if ([objcObject conformsToProtocol:@protocol(OMCObserverDelegate)])
     {
@@ -31,23 +31,58 @@ void OMCDelegateObserverCallback(OmcObserverMessage inMessage, CFIndex inTaskID,
     }
 }
 
-static inline
-bool IsFileOrFolderActivation(UInt32 activationType)
+// What a run needs from macOS. Lives on the stack for the length of one call.
+struct OMCExecutorHookContext
 {
-    return ((activationType == kActiveFile) ||
-            (activationType == kActiveFolder) ||
-            (activationType == kActiveFileOrFolder) ||
-            (activationType == kActiveFinderWindow) ||
-            (activationType == kActiveFolderExcludeFinderWindow) ||
-            (activationType == kActiveFileOrFolderExcludeFinderWindow));
+    __unsafe_unretained id delegate;
+};
+
+static bool DispatchToKeyWindow(void *inHookContext, CFStringRef inCommandNameOrId, CFTypeRef inContext)
+{
+    (void)inHookContext;
+    OMCWindowController *keyWindowController = [OMCWindowController findControllerForKeyWindow];
+    if (keyWindowController == nil)
+        return false;
+    [keyWindowController dispatchCommand:(__bridge NSString *)inCommandNameOrId withContext:inContext];
+    return true;
 }
 
-@interface OMCCommandExecutor()
-+ (CFPropertyListRef)cachedPlistForCommandFile:(NSString *)inFileName;
-+ (CFPropertyListRef)cachedPlistForURL:(NSURL *)inURL;
-+ (OSStatus)runCommand:(NSString *)inCommandNameOrId forCommandFile:(NSString *)inFileName withContext:(id)inContext useNavDialog:(BOOL)clientAllowsNavDialog allowKeyWindowSubcommand:(BOOL)allowKeyWindowSubcommand delegate:(id)delegate triggerURL:(NSString *)inTriggerURL requireURLInvocable:(BOOL)requireURLInvocable;
-@end
+static void NoteRecentFiles(void *inHookContext, CFArrayRef inFileURLs)
+{
+    (void)inHookContext;
+    NSArray<NSURL*> *__weak absoluteURLArray = (__bridge NSArray<NSURL*> *)inFileURLs;
+    for (NSURL *oneFileURL in absoluteURLArray)
+    {
+        [NSDocumentController.sharedDocumentController noteNewRecentDocumentURL:oneFileURL];
+    }
+}
 
+static OMCObserverRef CreateDelegateObserver(void *inHookContext)
+{
+    OMCExecutorHookContext *hookContext = (OMCExecutorHookContext *)inHookContext;
+    id delegate = hookContext->delegate;
+    if ((delegate == nil) || ![delegate conformsToProtocol:@protocol(OMCObserverDelegate)])
+        return NULL;
+
+    id<OMCObserverDelegate> observerDelegate = (id<OMCObserverDelegate>)delegate;
+    // Create observer with the delegate as userData (stored weakly there)
+    OMCObserverRef observer = OMCCreateObserver(kOmcObserverAllMessages,
+                                                 OMCDelegateObserverCallback,
+                                                 (__bridge void *)observerDelegate);
+    if (observer != NULL)
+        [observerDelegate setObserver:observer]; // Delegate takes the ownership of the observer and retains it
+    return observer; // the runner adds it to the run and releases this reference
+}
+
+static OMCRunHooks MakeHooks(OMCExecutorHookContext *inHookContext)
+{
+    OMCRunHooks hooks;
+    hooks.dispatchToKeyWindow = DispatchToKeyWindow;
+    hooks.noteRecentFiles = NoteRecentFiles;
+    hooks.createObserver = CreateDelegateObserver;
+    hooks.context = inHookContext;
+    return hooks;
+}
 
 @implementation OMCCommandExecutor
 
@@ -56,389 +91,29 @@ bool IsFileOrFolderActivation(UInt32 activationType)
 //if USE_NAV_DIALOG_FOR_MISSING_FILE_CONTEXT is false, the command always executes and no nav dialog is shown
 + (OSStatus)runCommand:(NSString *)inCommandNameOrId forCommandFile:(NSString *)inFileName withContext:(id)inContext useNavDialog:(BOOL)clientAllowsNavDialog allowKeyWindowSubcommand:(BOOL)allowKeyWindowSubcommand delegate:(id)delegate
 {
-	return [OMCCommandExecutor runCommand:inCommandNameOrId forCommandFile:inFileName withContext:inContext useNavDialog:clientAllowsNavDialog allowKeyWindowSubcommand:allowKeyWindowSubcommand delegate:delegate triggerURL:nil requireURLInvocable:NO];
+    OMCExecutorHookContext hookContext = { delegate };
+    OMCRunHooks hooks = MakeHooks(&hookContext);
+    return OMCRunCommandFromFile((__bridge CFStringRef)inCommandNameOrId, (__bridge CFStringRef)inFileName, (__bridge CFTypeRef)inContext,
+                                 clientAllowsNavDialog, allowKeyWindowSubcommand, NULL, false, &hooks);
 }
 
 + (OSStatus)runCommandForURL:(NSString *)inURLString forCommandFile:(NSString *)inFileName delegate:(id)delegate
 {
-	if((inURLString == nil) || ([inURLString length] == 0))
-		return paramErr;
+    OMCExecutorHookContext hookContext = { delegate };
+    OMCRunHooks hooks = MakeHooks(&hookContext);
 
-	// The log lines below name the command id but never the whole URL: its text and file
-	// values are the sender's and may be long or private.
-	NSURLComponents *components = [NSURLComponents componentsWithString:inURLString];
-	if(components == nil)
-	{
-		NSLog(@"OMC: URL refused: it is not a valid URL");
-		return errAEEventNotPermitted;
-	}
-
-	NSString *host = [components host];
-	BOOL isExecuteURL = (host != nil) && ([host caseInsensitiveCompare:@"exe"] == NSOrderedSame);
-	if(!isExecuteURL)
-	{
-		// Not an "exe" URL: the applet's own URL handler gets the whole URL as text, if it has one
-		return [OMCCommandExecutor runCommand:@"omc.app.handle-url" forCommandFile:inFileName withContext:inURLString useNavDialog:NO allowKeyWindowSubcommand:NO delegate:delegate triggerURL:inURLString requireURLInvocable:NO];
-	}
-
-	NSString *urlCommandID = nil;
-	NSString *textContext = nil;
-	NSMutableArray<NSURL*> *fileList = nil;
-
-	// queryItems removes the percent-encoding of names and values
-	for(NSURLQueryItem *oneItem in [components queryItems])
-	{
-		NSString *key = [oneItem name];
-		NSString *value = [oneItem value];
-		if((key == nil) || (value == nil))
-			continue; // malformed query item without a value - skip it
-
-		if([key caseInsensitiveCompare:@"commandID"] == NSOrderedSame)
-		{
-			urlCommandID = value;
-		}
-		else if([key caseInsensitiveCompare:@"text"] == NSOrderedSame)
-		{
-			textContext = value;
-		}
-		else if([key caseInsensitiveCompare:@"file"] == NSOrderedSame)
-		{
-			// A relative path would resolve against the applet's working directory, which the
-			// sender of the link has no business knowing or depending on. A path to nothing is
-			// refused here rather than handed to a command that expects its context to exist.
-			if(![value isAbsolutePath] || ![[NSFileManager defaultManager] fileExistsAtPath:value])
-			{
-				NSLog(@"OMC: URL refused: a \"file\" value is not an absolute path of an existing item");
-				return errAEEventNotPermitted;
-			}
-
-			if(fileList == nil) //lazy creator
-				fileList = [NSMutableArray array];
-
-			[fileList addObject:[NSURL fileURLWithPath:value]];
-		}
-	}
-
-	if((urlCommandID == nil) || ([urlCommandID length] == 0))
-	{
-		NSLog(@"OMC: URL refused: it does not name a command id");
-		return errAEEventNotPermitted;
-	}
-
-	// we don't support both file and text contexts. files take precedence if someone specifies text too
-	id urlContext = textContext;
-	if((fileList != nil) && ([fileList count] > 0))
-		urlContext = fileList;
-
-	return [OMCCommandExecutor runCommand:urlCommandID forCommandFile:inFileName withContext:urlContext useNavDialog:NO allowKeyWindowSubcommand:NO delegate:delegate triggerURL:inURLString requireURLInvocable:YES];
-}
-
-// inTriggerURL: not nil when the run was started by a URL sent to the applet (exported as OMC_TRIGGER_URL)
-// requireURLInvocable: the command id came from the URL itself, so the command must allow that
-+ (OSStatus)runCommand:(NSString *)inCommandNameOrId forCommandFile:(NSString *)inFileName withContext:(id)inContext useNavDialog:(BOOL)clientAllowsNavDialog allowKeyWindowSubcommand:(BOOL)allowKeyWindowSubcommand delegate:(id)delegate triggerURL:(NSString *)inTriggerURL requireURLInvocable:(BOOL)requireURLInvocable
-{
-	OSStatus error = userCanceledErr;//pessimistic scenario
-	
-    CFTypeRef commandRef = nil;
-    NSString *ext = [inFileName pathExtension];
-    if ([ext isEqualToString:@"omc"]) {
-        commandRef = (__bridge CFURLRef)[NSURL fileURLWithPath:inFileName isDirectory:YES];
-    }
-    else
+    // The URL is parsed here, by NSURLComponents, so applets keep its exact rules; the decisions
+    // about what the URL may run are OMCRunCommandForURL's.
+    NSURLComponents *components = ([inURLString length] > 0) ? [NSURLComponents componentsWithString:inURLString] : nil;
+    NSMutableArray *queryItems = [NSMutableArray array];
+    for (NSURLQueryItem *oneItem in [components queryItems])
     {
-        commandRef = [OMCCommandExecutor cachedPlistForCommandFile:inFileName];
+        // queryItems removes the percent-encoding of names and values; nil where it does not decode
+        [queryItems addObject:@[ oneItem.name ?: (id)[NSNull null], oneItem.value ?: (id)[NSNull null] ]];
     }
-    
-	OMCExecutorRef omcExec = OMCCreateExecutor( commandRef );
-	if(omcExec != NULL)
-	{
-        OMCCommandRef commandRef = OMCFindCommand( omcExec, (__bridge CFStringRef)inCommandNameOrId );
-		if( requireURLInvocable )
-		{
-			// Fail closed: anything but an explicit "allowed" from the engine refuses the URL
-			UInt32 urlInvocation = kOmcURLInvocation_RefusedNotOptedIn;
-			const char *refusalReason = NULL;
-			if( !OMCIsValidCommandRef(commandRef) )
-			{
-				refusalReason = "the applet has no such command";
-			}
-			else if( (OMCGetCommandInfo(omcExec, commandRef, kOmcInfo_URLInvocation, &urlInvocation) != noErr) ||
-					 (urlInvocation != kOmcURLInvocation_Allowed) )
-			{
-				switch(urlInvocation)
-				{
-					case kOmcURLInvocation_RefusedLifecycleCommand:
-						refusalReason = "an application lifecycle command is never run by a URL";
-					break;
 
-					case kOmcURLInvocation_RefusedDialogSubcommand:
-						refusalReason = "a dialog event handler is never run by a URL";
-					break;
-
-					default:
-						refusalReason = "the command does not set URL_INVOCABLE to true in the command description";
-					break;
-				}
-			}
-
-			if(refusalReason != NULL)
-			{
-				// the id is the sender's: keep the log line short whatever was sent
-				NSString *loggedID = ([inCommandNameOrId length] > 128) ? [inCommandNameOrId substringToIndex:128] : inCommandNameOrId;
-				NSLog(@"OMC: URL refused for command id \"%@\": %s", loggedID, refusalReason);
-				OMCReleaseExecutor(omcExec);
-				return errAEEventNotPermitted;
-			}
-		}
-
-		if( OMCIsValidCommandRef(commandRef) )
-		{
-			if(inTriggerURL != nil)
-				OMCSetTriggerURL(omcExec, (__bridge CFStringRef)inTriggerURL);
-
-            // If the key window is managed by an OMCWindowController, dispatch the command
-            // as a dialog subcommand so it inherits the window's dialog context and control values.
-            // Exception: commands with OPEN_OBJECT_DIALOG need to run independently to show the open panel.
-            OMCWindowController *keyWindowController = allowKeyWindowSubcommand ? [OMCWindowController findControllerForKeyWindow] : nil;
-            if (keyWindowController != nil)
-            {
-                CFDictionaryRef openDialogParams = NULL;
-                OMCGetCommandInfo(omcExec, commandRef, kOmcInfo_OpenObjectDialogParams, &openDialogParams);
-                if (openDialogParams == NULL) // no open dialog — dispatch as window subcommand
-                {
-                    [keyWindowController dispatchCommand:inCommandNameOrId withContext:(__bridge CFTypeRef)inContext];
-                    OMCReleaseExecutor(omcExec);
-                    return noErr;
-                }
-            }
-
-			error = noErr;
-
-            // evaluate if we have a path object context for requested path OR file or folder activation
-            bool hasFiles = false;
-            if (inContext != NULL)
-            {
-                CFTypeID contextType = CFGetTypeID((__bridge CFTypeRef)inContext);
-                hasFiles = ((contextType == CFArrayGetTypeID()) || (contextType == CFURLGetTypeID()));
-            }
-            
-            bool requiresNavDialog = false;
-            UInt32 activationType = kActiveAlways;
-            CFArrayRef selectedFiles = NULL;
-            
-            if (!hasFiles) // no file context provided. consider carefully whether the command needs files and allows displaying nav dialog
-            {
-                // does the command description allows using nav dialogs for missing file context (default = true, must be explicitly disallowed)
-                UInt32 executionOptions = 0;
-                OMCGetCommandInfo(omcExec, commandRef, kOmcInfo_ExecutionOptions, &executionOptions);
-                if ((executionOptions & kExecutionOption_UseNavDialogForMissingFileContext) != 0)
-                {
-                    // do we have file/dir objects referenced in command or declared in environment variables?
-                    UInt32 objectsInfo = kOmcCommandNoSpecialObjects;
-                    OMCGetCommandInfo(omcExec, commandRef, kOmcInfo_CommandObjects, &objectsInfo);
-                    
-                    // does the command activation require file/dir?
-                    OMCGetCommandInfo(omcExec, commandRef, kOmcInfo_ActivationType, &activationType);
-                    requiresNavDialog = ((objectsInfo & kOmcCommandContainsFileObject) != 0) || IsFileOrFolderActivation(activationType);
-                }
-            }
-            
-			if (requiresNavDialog && clientAllowsNavDialog) // all good to go with nav dialog
-			{
-                NSBundle *appBundle = [NSBundle mainBundle];
-                NSString *appName = [appBundle objectForInfoDictionaryKey:@"CFBundleName"];
-                if(appName == NULL)
-                    appName = @"OMCApplet";
-
-                // Check if the command has OPEN_OBJECT_DIALOG customization
-                CFDictionaryRef openDialogParams = NULL;
-                OMCGetCommandInfo(omcExec, commandRef, kOmcInfo_OpenObjectDialogParams, &openDialogParams);
-
-                CFStringRef dialogMessage = NULL;
-                CFArrayRef dialogDefaultName = NULL;
-                CFArrayRef dialogDefaultLocation = NULL;
-                CFStringRef dialogIdentifier = NULL;
-                CFStringRef dialogPrompt = NULL;
-                CFArrayRef dialogAllowedContentTypes = NULL;
-                UInt32 dialogFlags = 0;
-
-                if (openDialogParams != NULL)
-                {
-                    dialogFlags = CopyNavDialogParams(openDialogParams, &dialogMessage, &dialogDefaultName, &dialogDefaultLocation, &dialogIdentifier, &dialogPrompt, &dialogAllowedContentTypes);
-                    dialogFlags &= ~kOMCFilePanelUseCachedPath; // not applicable to the startup open dialog
-                }
-
-                // Use first element of DEFAULT_LOCATION array as default directory path
-                CFStringRef dialogDefaultDir = NULL;
-                if (dialogDefaultLocation != NULL && CFArrayGetCount(dialogDefaultLocation) > 0)
-                    dialogDefaultDir = (CFStringRef)CFArrayGetValueAtIndex(dialogDefaultLocation, 0);
-
-                if (dialogMessage == NULL)
-                {
-                    dialogMessage = CFCopyLocalizedStringFromTable(CFSTR("Choose Objects To Process"), CFSTR("Localizable"), "");
-                }
-
-                // If OPEN_OBJECT_DIALOG didn't set ALLOW_MULTIPLE_ITEMS, default to allowing multiple
-                if (openDialogParams == NULL)
-                    dialogFlags |= kOMCFilePanelAllowMultipleItems;
-
-                switch(activationType)
-                {
-                    case kActiveFile:
-                    {
-                        selectedFiles = CreateCFURLsFromOpenDialog( (__bridge CFStringRef)appName, dialogMessage, NULL, dialogDefaultDir, dialogIdentifier, dialogPrompt, dialogAllowedContentTypes, dialogFlags | kOMCFilePanelCanChooseFiles );
-                    }
-                    break;
-
-                    case kActiveFolder:
-                    case kActiveFinderWindow:
-                    case kActiveFolderExcludeFinderWindow:
-                    {
-                        selectedFiles = CreateCFURLsFromOpenDialog( (__bridge CFStringRef)appName, dialogMessage, NULL, dialogDefaultDir, dialogIdentifier, dialogPrompt, dialogAllowedContentTypes, dialogFlags | kOMCFilePanelCanChooseDirectories );
-                    }
-                    break;
-
-                    default:
-                    {
-                        selectedFiles = CreateCFURLsFromOpenDialog( (__bridge CFStringRef)appName, dialogMessage, NULL, dialogDefaultDir, dialogIdentifier, dialogPrompt, dialogAllowedContentTypes, dialogFlags | kOMCFilePanelCanChooseFiles | kOMCFilePanelCanChooseDirectories );
-                    }
-                    break;
-                }
-
-                if (dialogMessage != NULL)
-                    CFRelease(dialogMessage);
-                if (dialogDefaultName != NULL)
-                    CFRelease(dialogDefaultName);
-                if (dialogDefaultLocation != NULL)
-                    CFRelease(dialogDefaultLocation);
-                if (dialogIdentifier != NULL)
-                    CFRelease(dialogIdentifier);
-                if (dialogPrompt != NULL)
-                    CFRelease(dialogPrompt);
-                if (dialogAllowedContentTypes != NULL)
-                    CFRelease(dialogAllowedContentTypes);
-                error = (selectedFiles != NULL) ? noErr : userCanceledErr;
-			}
-            else if (requiresNavDialog)
-            { // we don't have files, we need the nav dialog but command description explicitly disallows it
-                error = userCanceledErr; // command will not execute if we don't specify files
-            }
-
-            if (error == noErr)
-            {
-                // Applet execution path: examine the context and prepare runtime data, but do not reject
-                // the command when its ACTIVATION_MODE does not match the context (e.g. ACTIVATION_MODE=act_file
-                // with USE_NAV_DIALOG_FOR_MISSING_FILE_CONTEXT=false launched with no files). Activation matching
-                // gating is a contextual-menu/service concern; here the command was invoked explicitly and must run.
-                error = OMCExamineContext( omcExec, commandRef, (selectedFiles != NULL) ? selectedFiles : (__bridge CFTypeRef)inContext, kOMCAllowContextMismatch );
-            }
-
-			if (selectedFiles != NULL)
-			{
-                if (error == noErr)
-                {
-                    // add to open recent
-                    NSArray<NSURL*> *__weak absoluteURLArray = (__bridge NSArray<NSURL*> *)selectedFiles;
-                    for (NSURL *oneFileURL in absoluteURLArray)
-                    {
-                        [NSDocumentController.sharedDocumentController noteNewRecentDocumentURL:oneFileURL];
-                    }
-                }
-
-                CFRelease(selectedFiles);
-                selectedFiles = NULL;
-			}
-
-			if (error == noErr)
-			{
-                // Check if delegate wants to observe task execution
-                if ((delegate != nil) && [delegate conformsToProtocol:@protocol(OMCObserverDelegate)])
-                {
-                    id<OMCObserverDelegate> observerDelegate = (id<OMCObserverDelegate>)delegate;
-                    
-                    // Create observer with the delegate as userData (stored weakly there)
-                    OMCObserverRef observer = OMCCreateObserver(kOmcObserverAllMessages,
-                                                                 OMCDelegateObserverCallback,
-                                                                 (__bridge void *)observerDelegate);
-                    if (observer != NULL)
-                    {
-                        [observerDelegate setObserver:observer]; // Delegate takes the ownership of the observer and retains it
-                        OMCAddObserver(omcExec, observer);
-                        OMCReleaseObserver(observer); // Release our local reference - delegate now owns it
-                    }
-                }
-
-				error = OMCExecuteCommand( omcExec, commandRef );
-				if(error != noErr)
-				{
-					NSLog(@"OMCRunCommand returned error = %d", (int)error);
-				}
-			}
-		}
-		
-		OMCReleaseExecutor( omcExec ); // safe to release here. task lives on if execution is asynchronous
-	}
-		
-	return error;
+    return OMCRunCommandForURL((__bridge CFStringRef)inURLString, (components != nil), (__bridge CFStringRef)[components host],
+                               (__bridge CFArrayRef)queryItems, (__bridge CFStringRef)inFileName, &hooks);
 }
-
-
-+ (CFPropertyListRef)cachedPlistForCommandFile:(NSString *)inFileName
-{
-	NSURL *commandURL = NULL;
-	if( inFileName != NULL )
-	{
-		inFileName = [inFileName stringByExpandingTildeInPath];
-		if( [inFileName isAbsolutePath] )
-		{
-			commandURL = [NSURL fileURLWithPath:inFileName];
-		}
-		else
-		{
-			// Relative name resolved in the app bundle; prefer Command.json over Command.plist.
-			CFURLRef resolvedURL = CopyCommandFileURLInBundle(CFBundleGetMainBundle(), (__bridge CFStringRef)inFileName);
-			if(resolvedURL != NULL)
-				commandURL = CFBridgingRelease(resolvedURL);
-		}
-	}
-	
-	return [OMCCommandExecutor cachedPlistForURL:commandURL];
-}
-
-+ (CFPropertyListRef)cachedPlistForURL:(NSURL *)inURL
-{
-	if(inURL == NULL)
-		return NULL;
-
-	NSURL *absURL = [inURL absoluteURL];
-	if(absURL == NULL)
-		return NULL;
-	
-	if(sCachedPlists != NULL)
-	{
-        CFPropertyListRef outPlist = (__bridge CFPropertyListRef)([sCachedPlists objectForKey:absURL]);
-		if(outPlist != NULL)
-			return outPlist;
-	}
-
-
-//not found, load it and cache
-
-    CFPropertyListRef thePlist = CreatePropertyList((__bridge CFURLRef)absURL, kCFPropertyListImmutable);
-
-	if(thePlist == NULL)
-		return NULL;
-
-	if(sCachedPlists == nil)
-	{
-		sCachedPlists = [[NSMutableDictionary alloc] init];
-	}
-
-    id __strong propertyList = CFBridgingRelease(thePlist);
-    [sCachedPlists setObject:propertyList forKey:absURL];
-
-	return thePlist;
-}
-
 
 @end
