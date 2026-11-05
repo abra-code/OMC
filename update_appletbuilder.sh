@@ -2,9 +2,13 @@
 # update_appletbuilder.sh - Sync bundled resources in AppletBuilder.app
 #
 # Updates:
+#   0a. ActionUI checkout next to OMC (../ActionUI) - when missing, offers to clone the latest
+#      tagged release from GitHub; a checkout this script cloned is moved to a newer tag when one
+#      exists; any other checkout is used as is
 #   0. OMCApplet — builds universal (arm64 + x86_64) Release binary and Abracode.framework
 #   0b. Embedded Python - when Contents/Library/Python is missing (a fresh clone), offers to build
 #      the OMCPythonApplet target and copy its Python in; an existing Python is left as is
+#      unless --update-python is given
 #   1. ActionUIViewer — built from the Apps/ActionUIViewer aggregator package (links core + add-ons);
 #      that one SPM build also produces the core and add-on documentation bundles + the Python verifier
 #      schemas are copied from source (core + each Add-ons/*/Schemas)
@@ -22,19 +26,47 @@
 #   8. Codesigns AppletBuilder.app (ad-hoc)
 #
 # Usage:
-#   ./update_appletbuilder.sh [OMC_ROOT]
-#   ./update_appletbuilder.sh --github [OMC_ROOT]
+#   ./update_appletbuilder.sh [--update-python] [OMC_ROOT]
+#   ./update_appletbuilder.sh --help
 #
-# Options:
-#   --github    Clone ActionUI from github.com/abra-code/ActionUI
-#               instead of using a local checkout next to OMC
+# Run ./update_appletbuilder.sh --help for the options.
+
+print_usage() {
+    /bin/cat <<'USAGE'
+Usage: update_appletbuilder.sh [options] [OMC_ROOT]
+
+Builds OMCApplet and ActionUI's tools, syncs the resources and documentation
+bundled in Distribution/AppletBuilder.app, and codesigns the app (ad-hoc).
+
+OMC_ROOT defaults to the folder that holds this script.
+
+ActionUI is built from the checkout next to OMC (../ActionUI). When there is
+none, the script offers to clone the latest tagged release from
+github.com/abra-code/ActionUI there, and on later runs moves that clone to a
+newer release when one exists. A checkout on a branch, or with local changes,
+is used as is.
+
+Options:
+  --update-python   Rebuild the embedded Python (Contents/Library/Python) from
+                    the latest stable Python release and replace the existing
+                    one. Without it, Python is built only when the app has none,
+                    and only after a prompt. The build compiles Python, OpenSSL
+                    and liblzma from source and takes a while.
+  -h, --help        Show this help and exit.
+USAGE
+}
 
 # Parse options
-USE_GITHUB=0
-while [[ "$1" == --* ]]; do
+UPDATE_PYTHON=0
+while [[ "$1" == -* ]]; do
     case "$1" in
-        --github) USE_GITHUB=1; shift ;;
-        *) echo "Unknown option: $1"; exit 1 ;;
+        --update-python) UPDATE_PYTHON=1; shift ;;
+        -h|--help) print_usage; exit 0 ;;
+        *)
+            echo "Unknown option: $1" >&2
+            echo "Run $0 --help for the options." >&2
+            exit 1
+            ;;
     esac
 done
 
@@ -47,12 +79,10 @@ DEST_PACKAGES="$APPLET_BUILDER/Contents/Library/Packages"
 DEST_HELPERS="$APPLET_BUILDER/Contents/Helpers"
 ACTIONUI_BUILD="$OMC_ROOT/.build/ActionUI"
 
-if [ "$USE_GITHUB" -eq 1 ]; then
-    ACTIONUI_ROOT="$OMC_ROOT/.build/ActionUI-source"
-else
-    # Local checkout next to OMC (matches Xcode project reference)
-    ACTIONUI_ROOT="$OMC_ROOT/../ActionUI"
-fi
+# Checkout next to OMC: Abracode.xcodeproj refers to it by this relative path, so it cannot live
+# anywhere else. Section 0a clones it when missing.
+ACTIONUI_ROOT="$OMC_ROOT/../ActionUI"
+ACTIONUI_URL="https://github.com/abra-code/ActionUI.git"
 
 ACTIONUI_DOCS="$ACTIONUI_ROOT/Documentation"
 # The add-on-aware preview tool is its own aggregator package (links core + add-ons). Building it
@@ -149,9 +179,160 @@ install_mistune() {
     return 0
 }
 
+# Helper: print the newest version tag of ActionUI on GitHub. Tags are "0.9.5" or, for older
+# releases, "v0.9.1"; the "v" is ignored when comparing. Returns non-zero, with git's output on
+# stderr, when the tags cannot be read.
+latest_actionui_tag() {
+    local refs
+    refs=$(/usr/bin/git ls-remote --tags --refs "$ACTIONUI_URL" 2>&1)
+    local ls_rc=$?
+    if [ "$ls_rc" -ne 0 ]; then
+        printf '%s\n' "$refs" | /usr/bin/sed 's/^/    /' >&2
+        return 1
+    fi
+    local tag="$(printf '%s\n' "$refs" \
+        | /usr/bin/sed -E -n 's|^[0-9a-f]+[[:space:]]+refs/tags/(v?)([0-9]+(\.[0-9]+)*)$|\2 \1\2|p' \
+        | /usr/bin/sort -V -k1,1 | /usr/bin/tail -n 1 | /usr/bin/cut -d ' ' -f 2)"
+    if [ -z "$tag" ]; then
+        echo "    No version tags found at: $ACTIONUI_URL" >&2
+        return 1
+    fi
+    printf '%s\n' "$tag"
+}
+
+# Helper: returns 0 when version tag $2 is newer than version tag $1 (a leading "v" is ignored).
+actionui_tag_is_newer() {
+    local current="${1#v}"
+    local candidate="${2#v}"
+    if [ "$current" = "$candidate" ]; then
+        return 1
+    fi
+    local newest="$(printf '%s\n%s\n' "$current" "$candidate" | /usr/bin/sort -V | /usr/bin/tail -n 1)"
+    [ "$newest" = "$candidate" ]
+}
+
 updated=0
 
 echo "Updating AppletBuilder resources..."
+echo ""
+
+# ════════════════════════════════════════════════════════════
+# 0a. ActionUI checkout next to OMC
+# ════════════════════════════════════════════════════════════
+# Abracode.xcodeproj (step 0) and the ActionUI tools (step 1) both build from ../ActionUI. When it
+# is missing, offer to clone the latest tagged release there; it is a permanent folder outside
+# this repository, so only after a prompt. A checkout this script cloned is recognized by being
+# clean, detached exactly at a version tag, with GitHub's ActionUI as origin; it is moved to a
+# newer tag when one exists. Any other checkout (on a branch, with local changes, or from another
+# remote) is someone's working copy and is used as is, without asking GitHub anything.
+
+echo "── Checking the ActionUI checkout ──"
+
+if [ ! -e "$ACTIONUI_ROOT" ]; then
+    echo -e "  ${YELLOW}ActionUI not found at: $ACTIONUI_ROOT${NC}"
+    echo "  OMC builds against an ActionUI checkout next to it and cannot be built without one."
+    latest_tag=$(latest_actionui_tag)
+    tag_rc=$?
+    if [ "$tag_rc" -ne 0 ]; then
+        echo -e "  ${RED}Could not read ActionUI's release tags from: $ACTIONUI_URL${NC}"
+        echo "  Check the network, or clone ActionUI yourself into: $ACTIONUI_ROOT"
+        exit 1
+    fi
+    read -p "  Clone ActionUI $latest_tag from GitHub into $ACTIONUI_ROOT? [y/N] " answer
+    if [ "$answer" != "y" ] && [ "$answer" != "Y" ]; then
+        echo -e "  ${YELLOW}Not cloned. Run this script again and answer y, or clone ActionUI yourself into:${NC}"
+        echo "  $ACTIONUI_ROOT"
+        exit 1
+    fi
+    # Clone, then check out the tag: "clone --branch <annotated tag>" warns "is not a commit!".
+    # Until the checkout is done, the clone sits on a branch with no files, and at ../ActionUI the
+    # next run would take it for a working copy. So it is made in a staging folder and moved into
+    # place only when complete; a failed or interrupted run leaves nothing at ../ActionUI, and the
+    # staging folder (this script's own name) is removed before the next attempt.
+    clone_staging="$ACTIONUI_ROOT.partial-clone"
+    /bin/rm -rf "$clone_staging"
+    /usr/bin/git clone --quiet --no-checkout "$ACTIONUI_URL" "$clone_staging"
+    clone_rc=$?
+    if [ "$clone_rc" -ne 0 ]; then
+        /bin/rm -rf "$clone_staging"
+        echo -e "  ${RED}Cloning ActionUI failed (status $clone_rc)${NC}"
+        exit 1
+    fi
+    /usr/bin/git -C "$clone_staging" -c advice.detachedHead=false checkout --quiet "$latest_tag"
+    checkout_rc=$?
+    if [ "$checkout_rc" -ne 0 ]; then
+        /bin/rm -rf "$clone_staging"
+        echo -e "  ${RED}Checking out ActionUI $latest_tag failed (status $checkout_rc)${NC}"
+        exit 1
+    fi
+    /bin/mv "$clone_staging" "$ACTIONUI_ROOT"
+    mv_rc=$?
+    if [ "$mv_rc" -ne 0 ]; then
+        echo -e "  ${RED}Failed to move the ActionUI clone into place: $ACTIONUI_ROOT${NC}"
+        echo "  The complete clone is at: $clone_staging"
+        exit 1
+    fi
+    echo -e "  ${GREEN}Cloned ActionUI $latest_tag${NC}"
+elif [ -e "$ACTIONUI_ROOT/.git" ]; then
+    current_tag=$(/usr/bin/git -C "$ACTIONUI_ROOT" describe --tags --exact-match HEAD 2>/dev/null)
+    describe_rc=$?
+    /usr/bin/git -C "$ACTIONUI_ROOT" symbolic-ref -q HEAD > /dev/null 2>&1
+    symbolic_rc=$?
+    origin_url=$(/usr/bin/git -C "$ACTIONUI_ROOT" remote get-url origin 2>/dev/null)
+    # A clone of a tag: HEAD exactly at a version tag and detached (symbolic-ref fails then),
+    # with GitHub's ActionUI as origin.
+    tag_clone=0
+    if [ "$describe_rc" -eq 0 ] && [ "$symbolic_rc" -ne 0 ]; then
+        if [ "$origin_url" = "$ACTIONUI_URL" ] || [ "$origin_url" = "${ACTIONUI_URL%.git}" ]; then
+            tag_clone=1
+        fi
+    fi
+    if [ "$tag_clone" -eq 1 ]; then
+        local_changes=$(/usr/bin/git -C "$ACTIONUI_ROOT" status --porcelain 2>&1)
+        status_rc=$?
+        if [ "$status_rc" -ne 0 ] || [ -n "$local_changes" ]; then
+            echo -e "  ${YELLOW}ActionUI $current_tag has local changes, so it is not updated: $ACTIONUI_ROOT${NC}"
+            tag_clone=0
+        fi
+    else
+        echo -e "  ${GREEN}Using the ActionUI working copy at: $ACTIONUI_ROOT${NC}"
+    fi
+    if [ "$tag_clone" -eq 1 ]; then
+        latest_tag=$(latest_actionui_tag)
+        tag_rc=$?
+        if [ "$tag_rc" -ne 0 ]; then
+            echo -e "  ${YELLOW}Could not check GitHub for a newer ActionUI; using $current_tag${NC}"
+        else
+            actionui_tag_is_newer "$current_tag" "$latest_tag"
+            newer_rc=$?
+            if [ "$newer_rc" -ne 0 ]; then
+                echo -e "  ${GREEN}ActionUI $current_tag is the latest release${NC}"
+            else
+                echo "  Updating ActionUI from $current_tag to $latest_tag..."
+                /usr/bin/git -C "$ACTIONUI_ROOT" fetch --quiet --tags origin
+                fetch_rc=$?
+                if [ "$fetch_rc" -ne 0 ]; then
+                    echo -e "  ${RED}Fetching ActionUI's tags failed (status $fetch_rc)${NC}"
+                    exit 1
+                fi
+                /usr/bin/git -C "$ACTIONUI_ROOT" -c advice.detachedHead=false checkout --quiet "$latest_tag"
+                checkout_rc=$?
+                if [ "$checkout_rc" -ne 0 ]; then
+                    echo -e "  ${RED}Checking out ActionUI $latest_tag failed (status $checkout_rc): $ACTIONUI_ROOT${NC}"
+                    exit 1
+                fi
+                echo -e "  ${GREEN}Updated ActionUI to $latest_tag${NC}"
+            fi
+        fi
+    fi
+elif [ -d "$ACTIONUI_ROOT" ]; then
+    echo -e "  ${GREEN}Using the ActionUI folder at: $ACTIONUI_ROOT${NC}"
+else
+    echo -e "  ${RED}Not a folder: $ACTIONUI_ROOT${NC}"
+    echo "  OMC builds against an ActionUI checkout at that path. Move the item away and run again."
+    exit 1
+fi
+
 echo ""
 
 # ════════════════════════════════════════════════════════════
@@ -241,11 +422,96 @@ echo ""
 # ════════════════════════════════════════════════════════════
 # Contents/Library/Python is not in git, so a fresh clone has none. Several AppletBuilder pieces
 # run on it, and so do the mistune install (2) and the thinning (6) below. An existing Python is
-# kept as is: building one compiles Python, OpenSSL and liblzma from source and takes a long time,
-# so it is only offered, with a prompt, when the bundle has none. The OMCPythonApplet target's
-# "Build Embedded Python" phase owns the build options and clones ../Python-Embedding if missing.
+# kept as is unless --update-python is given: building one compiles Python, OpenSSL and liblzma
+# from source and takes a long time, so without the option it is only offered, with a prompt,
+# when the bundle has none. The OMCPythonApplet target's "Build Embedded Python" phase owns the
+# build options (latest stable Python) and clones ../Python-Embedding if missing.
+
+# Builds the OMCPythonApplet target and copies its Python into $DEST_PYTHON, replacing any
+# Python there. Exits the script on failure; the existing Python is kept unless the copy itself
+# fails. Sets the global 'updated' on success.
+build_embedded_python() {
+    local built_app="$OMCAPPLET_BUILD/Build/Products/Release/OMCPythonApplet.app"
+    local built_python="$built_app/Contents/Library/Python"
+    local python_build_log="$OMCAPPLET_BUILD/OMCPythonApplet-build.log"
+    local staged_python="$DEST_PYTHON.new"
+    local new_version
+
+    /bin/mkdir -p "$OMCAPPLET_BUILD"
+    # The build phase declares this folder as its output, so Xcode skips the phase while an
+    # earlier build's Python is still there. Remove it to make the phase run and pick up the
+    # latest Python release.
+    /bin/rm -rf "$built_python"
+    if [ -e "$built_python" ]; then
+        echo -e "  ${RED}Failed to remove the previously built Python at: $built_python${NC}"
+        exit 1
+    fi
+
+    echo "  Running xcodebuild (log: $python_build_log)..."
+    /usr/bin/xcodebuild \
+        -workspace "$OMC_WORKSPACE" \
+        -scheme "OMCPythonApplet" \
+        -configuration Release \
+        -derivedDataPath "$OMCAPPLET_BUILD" \
+        ARCHS="arm64 x86_64" \
+        ONLY_ACTIVE_ARCH=NO \
+        build > "$python_build_log" 2>&1
+    local xcode_rc=$?
+    if [ "$xcode_rc" -ne 0 ]; then
+        echo -e "  ${RED}OMCPythonApplet build failed. Last lines of the log:${NC}"
+        /usr/bin/tail -n 40 "$python_build_log"
+        echo "  Full log: $python_build_log"
+        exit 1
+    fi
+
+    # The phase only warns when Python-Embedding cannot be found or cloned, so the build can
+    # succeed without a Python in it. Check before copying.
+    if [ ! -x "$built_python/bin/python3" ]; then
+        echo -e "  ${RED}OMCPythonApplet built without an embedded Python: $built_python${NC}"
+        echo "  Check that ../Python-Embedding exists or can be cloned. Full log: $python_build_log"
+        exit 1
+    fi
+
+    # Copy next to the destination first, so a failed copy leaves the existing Python in place.
+    /bin/mkdir -p "$(/usr/bin/dirname "$DEST_PYTHON")"
+    /bin/rm -rf "$staged_python"
+    /usr/bin/ditto --norsrc --noextattr --clone "$built_python" "$staged_python"
+    local ditto_rc=$?
+    if [ "$ditto_rc" -ne 0 ]; then
+        /bin/rm -rf "$staged_python"
+        echo -e "  ${RED}Failed to copy the embedded Python to: $staged_python${NC}"
+        exit 1
+    fi
+    /bin/rm -rf "$DEST_PYTHON"
+    # A folder left behind would make mv put the new Python inside it, and the check below
+    # would then run whatever old python3 survived.
+    if [ -e "$DEST_PYTHON" ]; then
+        echo -e "  ${RED}Failed to remove the existing embedded Python at: $DEST_PYTHON${NC}"
+        echo "  The new one is staged at: $staged_python"
+        exit 1
+    fi
+    /bin/mv "$staged_python" "$DEST_PYTHON"
+    local mv_rc=$?
+    if [ "$mv_rc" -ne 0 ]; then
+        echo -e "  ${RED}Failed to move the new embedded Python into place: $DEST_PYTHON${NC}"
+        exit 1
+    fi
+
+    new_version=$("$DEST_PYTHON/bin/python3" -B -V 2>&1)
+    local new_rc=$?
+    if [ "$new_rc" -ne 0 ]; then
+        echo -e "  ${RED}The copied embedded Python does not run (status $new_rc): $new_version${NC}"
+        exit 1
+    fi
+    echo -e "  ${GREEN}Installed: $new_version${NC}"
+    updated=1
+}
 
 echo "── Checking embedded Python ──"
+
+# A run interrupted during the copy leaves this staging folder in the bundle, where codesign
+# would seal it in. Remove it whether or not Python is rebuilt this time.
+/bin/rm -rf "$DEST_PYTHON.new"
 
 if [ -e "$DEST_PYTHON/bin/python3" ] || [ -L "$DEST_PYTHON/bin/python3" ]; then
     python_version=$("$DEST_PYTHON/bin/python3" -B -V 2>&1)
@@ -254,63 +520,31 @@ if [ -e "$DEST_PYTHON/bin/python3" ] || [ -L "$DEST_PYTHON/bin/python3" ]; then
         echo -e "  ${GREEN}Present: $python_version${NC}"
     else
         echo -e "  ${YELLOW}The embedded Python does not run (status $python_rc): $python_version${NC}"
-        echo "  To rebuild it, remove $DEST_PYTHON and run this script again."
+    fi
+    if [ "$UPDATE_PYTHON" -eq 1 ]; then
+        echo "  --update-python: rebuilding it from the latest stable Python release..."
+        build_embedded_python
+    elif [ "$python_rc" -ne 0 ]; then
+        echo "  To rebuild it, run this script again with --update-python."
     fi
 else
     echo -e "  ${YELLOW}AppletBuilder.app has no embedded Python at: $DEST_PYTHON${NC}"
-    echo "  AppletBuilder needs it: several of its tools run on Python and will not work without it."
-    echo "  It is built from source by the OMCPythonApplet target (Python, OpenSSL, liblzma),"
-    echo "  which downloads the sources and takes a while."
-    read -p "  Build the embedded Python now? [y/N] " answer
-    if [ "$answer" = "y" ] || [ "$answer" = "Y" ]; then
-        /bin/mkdir -p "$OMCAPPLET_BUILD"
-        python_build_log="$OMCAPPLET_BUILD/OMCPythonApplet-build.log"
-        echo "  Running xcodebuild (log: $python_build_log)..."
-        /usr/bin/xcodebuild \
-            -workspace "$OMC_WORKSPACE" \
-            -scheme "OMCPythonApplet" \
-            -configuration Release \
-            -derivedDataPath "$OMCAPPLET_BUILD" \
-            ARCHS="arm64 x86_64" \
-            ONLY_ACTIVE_ARCH=NO \
-            build > "$python_build_log" 2>&1
-        xcode_rc=$?
-        if [ "$xcode_rc" -ne 0 ]; then
-            echo -e "  ${RED}OMCPythonApplet build failed. Last lines of the log:${NC}"
-            /usr/bin/tail -n 40 "$python_build_log"
-            echo "  Full log: $python_build_log"
-            exit 1
-        fi
-
-        # The phase only warns when Python-Embedding cannot be found or cloned, so the build can
-        # succeed without a Python in it. Check before copying.
-        built_python="$OMCAPPLET_BUILD/Build/Products/Release/OMCPythonApplet.app/Contents/Library/Python"
-        if [ ! -x "$built_python/bin/python3" ]; then
-            echo -e "  ${RED}OMCPythonApplet built without an embedded Python: $built_python${NC}"
-            echo "  Check that ../Python-Embedding exists or can be cloned. Full log: $python_build_log"
-            exit 1
-        fi
-
-        /bin/mkdir -p "$(/usr/bin/dirname "$DEST_PYTHON")"
-        /bin/rm -rf "$DEST_PYTHON"
-        /usr/bin/ditto --norsrc --noextattr --clone "$built_python" "$DEST_PYTHON"
-        ditto_rc=$?
-        if [ "$ditto_rc" -ne 0 ]; then
-            echo -e "  ${RED}Failed to copy the embedded Python to: $DEST_PYTHON${NC}"
-            exit 1
-        fi
-        python_version=$("$DEST_PYTHON/bin/python3" -B -V 2>&1)
-        python_rc=$?
-        if [ "$python_rc" -ne 0 ]; then
-            echo -e "  ${RED}The copied embedded Python does not run (status $python_rc): $python_version${NC}"
-            exit 1
-        fi
-        echo -e "  ${GREEN}Installed: $python_version${NC}"
-        updated=1
+    if [ "$UPDATE_PYTHON" -eq 1 ]; then
+        echo "  --update-python: building it from the latest stable Python release..."
+        build_embedded_python
     else
-        echo -e "  ${YELLOW}Skipped. AppletBuilder.app will not work fully, and mistune cannot be installed.${NC}"
-        echo "  Run this script again and answer y, or build the OMCPythonApplet scheme in OMC.xcworkspace"
-        echo "  and copy its Contents/Library/Python into: $DEST_PYTHON"
+        echo "  AppletBuilder needs it: several of its tools run on Python and will not work without it."
+        echo "  It is built from source by the OMCPythonApplet target (Python, OpenSSL, liblzma),"
+        echo "  which downloads the sources and takes a while."
+        read -p "  Build the embedded Python now? [y/N] " answer
+        if [ "$answer" = "y" ] || [ "$answer" = "Y" ]; then
+            build_embedded_python
+        else
+            echo -e "  ${YELLOW}Skipped. AppletBuilder.app will not work fully, and mistune cannot be installed.${NC}"
+            echo "  Run this script again and answer y (or pass --update-python), or build the"
+            echo "  OMCPythonApplet scheme in OMC.xcworkspace and copy its Contents/Library/Python into:"
+            echo "  $DEST_PYTHON"
+        fi
     fi
 fi
 
@@ -322,23 +556,9 @@ echo ""
 
 echo "── Building ActionUI tools ──"
 
-if [ "$USE_GITHUB" -eq 1 ]; then
-    if [ -d "$ACTIONUI_ROOT/.git" ]; then
-        echo "  Updating ActionUI from GitHub..."
-        /usr/bin/git -C "$ACTIONUI_ROOT" pull --quiet
-    else
-        echo "  Cloning ActionUI from GitHub..."
-        /bin/mkdir -p "$(/usr/bin/dirname "$ACTIONUI_ROOT")"
-        /usr/bin/git clone --quiet https://github.com/abra-code/ActionUI.git "$ACTIONUI_ROOT"
-    fi
-fi
-
+# Section 0a exits when there is no ActionUI folder, so this is only a guard.
 if [ ! -d "$ACTIONUI_ROOT" ]; then
     echo -e "  ${RED}ActionUI not found at: $ACTIONUI_ROOT${NC}"
-    if [ "$USE_GITHUB" -eq 0 ]; then
-        echo "  Expected ActionUI checkout next to OMC"
-        echo "  Or use --github to clone from GitHub"
-    fi
     echo ""
 else
     # Agent scratch directories. Claude Code leaves an empty .claude/.cc-writes in every directory a
