@@ -1,5 +1,6 @@
 
 #pragma once
+#include <CoreFoundation/CoreFoundation.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -19,7 +20,6 @@ void		   ReplaceWhitespaceCharactersWithEscapes(CFMutableStringRef ioStrRef);
 
 CFStringRef    CreateEscapedStringCopy(CFStringRef inStrRef, UInt16 escSpecialCharsMode);
 
-bool		   WriteStringToFile(CFStringRef inContentStr, CFStringRef inFilePath);
 
 CFStringRef    CreateCombinedString(CFArrayRef inStringsArray, CFStringRef inSeparator, CFStringRef inPrefix, CFStringRef inSuffix, UInt16 escSpecialCharsMode);
 

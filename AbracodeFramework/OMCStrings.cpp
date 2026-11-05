@@ -1,25 +1,245 @@
-#import <Foundation/Foundation.h>
 #include "OMCStrings.h"
 #include "OMCConstants.h"
 #include "CFObj.h"
 #include "ACFType.h"
+#include <pwd.h>
+#include <unistd.h>
+#include <errno.h>
+#include <string>
+#include <vector>
 
+// The path, case and escaping functions below used to call NSString. They are plain CF and POSIX
+// now, so they build on Linux, and they reproduce what Foundation returned on macOS (checked
+// against Foundation for every Unicode scalar and for all short strings over the characters that
+// matter: see the commit note "OMCStrings to C++").
+
+namespace
+{
+
+std::vector<UniChar>
+CopyCharacters(CFStringRef inStr)
+{
+	CFIndex length = ::CFStringGetLength(inStr);
+	std::vector<UniChar> chars((size_t)length);
+	if(length > 0)
+		::CFStringGetCharacters(inStr, CFRangeMake(0, length), chars.data());
+	return chars;
+}
+
+CFStringRef
+CreateStringFromCharacters(const std::vector<UniChar> &inChars, size_t inStart, size_t inEnd)
+{
+	if(inEnd <= inStart)
+		return ::CFStringCreateWithCharacters(kCFAllocatorDefault, nullptr, 0);
+	return ::CFStringCreateWithCharacters(kCFAllocatorDefault, inChars.data() + inStart, (CFIndex)(inEnd - inStart));
+}
+
+// Home folder from the password database, as NSString's tilde expansion does: $HOME is not consulted.
+// An empty name means the current user. Returns NULL for an unknown user. Foundation's quirks are
+// kept: a name is cut at an embedded NUL ("~root\0x" is root, "~\0" is unknown), and a name that
+// has no UTF-8 form (a lone surrogate: "~root\uD800") means the current user.
+CFStringRef
+CreateHomeDirectoryForUser(CFStringRef inUserName)
+{
+	bool isCurrentUser = (inUserName == nullptr) || (::CFStringGetLength(inUserName) == 0);
+	std::string userName;
+	if(!isCurrentUser)
+	{
+		CFIndex maxSize = ::CFStringGetMaximumSizeForEncoding(::CFStringGetLength(inUserName), kCFStringEncodingUTF8) + 1;
+		std::vector<char> nameBuf((size_t)maxSize);
+		if(::CFStringGetCString(inUserName, nameBuf.data(), maxSize, kCFStringEncodingUTF8))
+			userName = nameBuf.data();
+		else
+			isCurrentUser = true;
+	}
+
+	long bufSize = ::sysconf(_SC_GETPW_R_SIZE_MAX);
+	if(bufSize <= 0)
+		bufSize = 16384;
+
+	while(true)
+	{
+		std::vector<char> buf((size_t)bufSize);
+		struct passwd pwd;
+		struct passwd *found = nullptr;
+		int err = isCurrentUser
+					? ::getpwuid_r(::getuid(), &pwd, buf.data(), buf.size(), &found)
+					: ::getpwnam_r(userName.c_str(), &pwd, buf.data(), buf.size(), &found);
+		if((err == ERANGE) && (bufSize < 1024 * 1024))
+		{
+			bufSize *= 4;
+			continue;
+		}
+		if((err != 0) || (found == nullptr) || (found->pw_dir == nullptr))
+			return nullptr;
+		return ::CFStringCreateWithFileSystemRepresentation(kCFAllocatorDefault, found->pw_dir);
+	}
+}
+
+// What NSString's stringByExpandingTildeInPath also does to every path: runs of "/" become one,
+// and a trailing "/" goes, except for the root itself. "." and ".." stay.
+CFStringRef
+CreateStringWithStandardSlashes(const std::vector<UniChar> &inChars)
+{
+	std::vector<UniChar> out;
+	out.reserve(inChars.size());
+	for(UniChar oneChar : inChars)
+	{
+		if((oneChar == '/') && !out.empty() && (out.back() == '/'))
+			continue;
+		out.push_back(oneChar);
+	}
+	if((out.size() > 1) && (out.back() == '/'))
+		out.pop_back();
+	return CreateStringFromCharacters(out, 0, out.size());
+}
+
+bool
+IsASCIIAlphanumeric(UTF32Char inChar)
+{
+	return ((inChar >= 'a') && (inChar <= 'z')) || ((inChar >= 'A') && (inChar <= 'Z')) || ((inChar >= '0') && (inChar <= '9'));
+}
+
+// The characters of NSCharacterSet's URLQueryAllowedCharacterSet; it has no others (none above ASCII).
+bool
+IsURLQueryAllowed(UTF32Char inChar)
+{
+	if(IsASCIIAlphanumeric(inChar))
+		return true;
+	static const char kOtherAllowed[] = "!$&'()*+,-./:;=?@_~";
+	for(const char *allowed = kOtherAllowed; *allowed != 0; allowed++)
+	{
+		if((UTF32Char)*allowed == inChar)
+			return true;
+	}
+	return false;
+}
+
+void
+AppendUTF8(std::string &ioOut, UTF32Char inChar)
+{
+	if(inChar < 0x80)
+	{
+		ioOut.push_back((char)inChar);
+	}
+	else if(inChar < 0x800)
+	{
+		ioOut.push_back((char)(0xC0 | (inChar >> 6)));
+		ioOut.push_back((char)(0x80 | (inChar & 0x3F)));
+	}
+	else if(inChar < 0x10000)
+	{
+		ioOut.push_back((char)(0xE0 | (inChar >> 12)));
+		ioOut.push_back((char)(0x80 | ((inChar >> 6) & 0x3F)));
+		ioOut.push_back((char)(0x80 | (inChar & 0x3F)));
+	}
+	else
+	{
+		ioOut.push_back((char)(0xF0 | (inChar >> 18)));
+		ioOut.push_back((char)(0x80 | ((inChar >> 12) & 0x3F)));
+		ioOut.push_back((char)(0x80 | ((inChar >> 6) & 0x3F)));
+		ioOut.push_back((char)(0x80 | (inChar & 0x3F)));
+	}
+}
+
+} // namespace
+
+// "~" and "~user" at the start become that user's home folder; an unknown user leaves the tilde
+// part as it is. Every result has its slashes standardized as NSString did (see above).
 CFStringRef CreatePathByExpandingTilde(CFStringRef inPath)
 {
-    NSString *expandedString = [(__bridge NSString *)inPath stringByExpandingTildeInPath];
-    return (CFStringRef)CFBridgingRetain(expandedString);
+	if(inPath == nullptr)
+		return nullptr;
+
+	std::vector<UniChar> chars = CopyCharacters(inPath);
+	if(chars.empty() || (chars[0] != '~'))
+		return CreateStringWithStandardSlashes(chars);
+
+	size_t firstSlash = 1;
+	while((firstSlash < chars.size()) && (chars[firstSlash] != '/'))
+		firstSlash++;
+
+	CFObj<CFStringRef> userName( CreateStringFromCharacters(chars, 1, firstSlash) );
+	CFObj<CFStringRef> homeDir( CreateHomeDirectoryForUser(userName) );
+	if(homeDir == nullptr)
+		return CreateStringWithStandardSlashes(chars);
+
+	std::vector<UniChar> expanded = CopyCharacters(homeDir);
+	expanded.insert(expanded.end(), chars.begin() + (std::ptrdiff_t)firstSlash, chars.end());
+	return CreateStringWithStandardSlashes(expanded);
 }
 
+// The extension of the last path component, as NSString's pathExtension: trailing slashes are
+// ignored, and there is none for a name without a dot, a name ending with a dot, a name whose
+// part before the last dot is empty, "." or ".." (".bashrc", "..x", "...x"), or an extension
+// containing a space or a bidirectional formatting character (U+061C, U+200E, U+200F,
+// U+202A to U+202E, U+2066 to U+2069).
 CFStringRef CopyFilenameExtension(CFStringRef inFilePath)
 {
-    NSString *pathExtension = [(__bridge NSString*)inFilePath pathExtension];
-    return (CFStringRef)CFBridgingRetain(pathExtension);
+	if(inFilePath == nullptr)
+		return nullptr;
+
+	std::vector<UniChar> chars = CopyCharacters(inFilePath);
+	size_t end = chars.size();
+	while((end > 0) && (chars[end - 1] == '/'))
+		end--;
+
+	size_t start = end;
+	while((start > 0) && (chars[start - 1] != '/'))
+		start--;
+
+	size_t dot = end;
+	for(size_t i = end; i > start; i--)
+	{
+		if(chars[i - 1] == '.')
+		{
+			dot = i - 1;
+			break;
+		}
+	}
+
+	bool hasExtension = (dot < end) && (dot + 1 < end);
+	if(hasExtension)
+	{
+		// the name before the extension may not be empty (".bashrc"), "." ("..x") or ".." ("...x");
+		// a longer run of dots is an ordinary name ("....x" has the extension "x")
+		size_t stemLength = dot - start;
+		bool stemIsDotName = (stemLength == 0) ||
+							((stemLength == 1) && (chars[start] == '.')) ||
+							((stemLength == 2) && (chars[start] == '.') && (chars[start + 1] == '.'));
+		if(stemIsDotName)
+			hasExtension = false;
+	}
+	if(hasExtension)
+	{
+		for(size_t i = dot + 1; i < end; i++)
+		{
+			UniChar oneChar = chars[i];
+			bool isInvalid = (oneChar == ' ') || (oneChar == 0x061C) || (oneChar == 0x200E) || (oneChar == 0x200F) ||
+							((oneChar >= 0x202A) && (oneChar <= 0x202E)) || ((oneChar >= 0x2066) && (oneChar <= 0x2069));
+			if(isInvalid)
+			{
+				hasExtension = false;
+				break;
+			}
+		}
+	}
+
+	if(!hasExtension)
+		return ::CFStringCreateWithCharacters(kCFAllocatorDefault, nullptr, 0);
+	return CreateStringFromCharacters(chars, dot + 1, end);
 }
 
+// Not localized, as NSString's lowercaseString.
 CFStringRef CreateLowercaseString(CFStringRef inStr)
 {
-    NSString *lowercaseString = [(__bridge NSString*)inStr lowercaseString];
-    return (CFStringRef)CFBridgingRetain(lowercaseString);
+	if(inStr == nullptr)
+		return nullptr;
+
+	CFMutableStringRef lowercaseStr = ::CFStringCreateMutableCopy(kCFAllocatorDefault, 0, inStr);
+	if(lowercaseStr != nullptr)
+		::CFStringLowercase(lowercaseStr, nullptr);
+	return lowercaseStr;
 }
 
 UInt32 StringToVersion(CFStringRef inString)
@@ -109,11 +329,54 @@ CFStringRef CreateVersionString(UInt32 inVersion)
     return wholeStr;
 }
 
+// As NSString's stringByAddingPercentEncodingWithAllowedCharacters with URLQueryAllowedCharacterSet
+// (escapeAll false) or alphanumericCharacterSet (escapeAll true): every other character becomes
+// %XX for each byte of its UTF-8, in upper case. That method encodes every non-ASCII character
+// whatever the set says, so "escape all" keeps exactly ASCII letters and digits, not the Unicode
+// letters alphanumericCharacterSet holds. A string with a lone surrogate gives NULL, as there.
 CFStringRef CreateStringByAddingPercentEscapes(CFStringRef inStr, bool escapeAll)
 {
-    NSString *escapedString = [(__bridge NSString *)inStr stringByAddingPercentEncodingWithAllowedCharacters:
-                                        escapeAll ? [NSCharacterSet alphanumericCharacterSet] : [NSCharacterSet URLQueryAllowedCharacterSet]];
-    return (CFStringRef)CFBridgingRetain(escapedString);
+	if(inStr == nullptr)
+		return nullptr;
+
+	static const char kHexDigits[] = "0123456789ABCDEF";
+	std::vector<UniChar> chars = CopyCharacters(inStr);
+	std::string escaped;
+	escaped.reserve(chars.size() * 3);
+
+	for(size_t i = 0; i < chars.size(); i++)
+	{
+		UTF32Char oneChar = chars[i];
+		if(::CFStringIsSurrogateHighCharacter(chars[i]))
+		{
+			if((i + 1 >= chars.size()) || !::CFStringIsSurrogateLowCharacter(chars[i + 1]))
+				return nullptr;
+			oneChar = ::CFStringGetLongCharacterForSurrogatePair(chars[i], chars[i + 1]);
+			i++;
+		}
+		else if(::CFStringIsSurrogateLowCharacter(chars[i]))
+		{
+			return nullptr;
+		}
+
+		bool isAllowed = escapeAll ? IsASCIIAlphanumeric(oneChar) : IsURLQueryAllowed(oneChar);
+		if(isAllowed)
+		{
+			AppendUTF8(escaped, oneChar);
+			continue;
+		}
+
+		std::string utf8;
+		AppendUTF8(utf8, oneChar);
+		for(unsigned char oneByte : utf8)
+		{
+			escaped.push_back('%');
+			escaped.push_back(kHexDigits[oneByte >> 4]);
+			escaped.push_back(kHexDigits[oneByte & 0x0F]);
+		}
+	}
+
+	return ::CFStringCreateWithBytes(kCFAllocatorDefault, (const UInt8 *)escaped.data(), (CFIndex)escaped.size(), kCFStringEncodingUTF8, false);
 }
 
 //replaces \r, \n, \t, \\ with real values
@@ -373,21 +636,6 @@ CreateEscapedStringCopy(CFStringRef inStrRef, UInt16 escSpecialCharsMode)
 
 	::CFRetain(inStrRef);
 	return inStrRef;
-}
-
-bool
-WriteStringToFile(CFStringRef inContentStr, CFStringRef inFilePath)
-{
-	if((inContentStr == NULL) || (inFilePath == NULL))
-		return false;
-
-    NSError *error = nil;
-    NSString *__weak contentStr = (__bridge NSString *)inContentStr;
-    BOOL succeed = [contentStr writeToFile:(__bridge NSString *)inFilePath
-                                atomically:NO
-                                  encoding:NSUTF8StringEncoding
-                                     error:&error];
-    return (bool)succeed;
 }
 
 
