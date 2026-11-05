@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1D0A1B2C2F6E000000000103 /* OMCProgressParsing.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1D0A1B2C2F6E000000000101 /* OMCProgressParsing.cpp */; };
 		1D0A1B2C2F6D000000000104 /* OMCCommandRunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1D0A1B2C2F6D000000000101 /* OMCCommandRunner.cpp */; };
 		1D0A1B2C2F6D000000000105 /* OMCLog.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1D0A1B2C2F6D000000000103 /* OMCLog.mm */; };
 		1D0A1B2C2F6A000000000106 /* ACFJSON.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1D0A1B2C2F6A000000000101 /* ACFJSON.cpp */; };
@@ -371,6 +372,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		1D0A1B2C2F6E000000000100 /* OMCProgressParsing.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCProgressParsing.h; sourceTree = "<group>"; };
+		1D0A1B2C2F6E000000000101 /* OMCProgressParsing.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCProgressParsing.cpp; sourceTree = "<group>"; };
+		1D0A1B2C2F6E000000000102 /* ACFString.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ACFString.h; sourceTree = "<group>"; };
 		1D0A1B2C2F6D000000000100 /* OMCCommandRunner.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCCommandRunner.h; sourceTree = "<group>"; };
 		1D0A1B2C2F6D000000000101 /* OMCCommandRunner.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCCommandRunner.cpp; sourceTree = "<group>"; };
 		1D0A1B2C2F6D000000000102 /* OMCLog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCLog.h; sourceTree = "<group>"; };
@@ -990,6 +994,7 @@
 				1D71F32A2206F1A1009FAF91 /* ACMPlugin.h */,
 				E27F2D030D56F7410060D231 /* CFObj.h */,
 				1D0A1B2C2F6A000000000005 /* ACFURL.cpp */,
+				1D0A1B2C2F6E000000000102 /* ACFString.h */,
 				1D9BCB8A22CCA66500F4EAB6 /* ACFURL.h */,
 				1D9BCB7B22CC95E500F4EAB6 /* ACFPropertyList.h */,
 				1D9BCB7C22CC95E500F4EAB6 /* ACFPropertyList.cpp */,
@@ -1031,6 +1036,8 @@
 				E2D92E541043D74E003DC96B /* OMCInputDialogController.m */,
 				E2D92E531043D74E003DC96B /* OMCInputDialogController.h */,
 				E258B20F0E46E37C00926F10 /* OMCDeferredProgress.mm */,
+				1D0A1B2C2F6E000000000100 /* OMCProgressParsing.h */,
+				1D0A1B2C2F6E000000000101 /* OMCProgressParsing.cpp */,
 				E2C10C5A0E45783200454DB1 /* OMCDeferredProgress.h */,
 				E20026D510B68F3200D5388F /* OMCCustomWindow.mm */,
 				E24B17230DE94DB800E44A45 /* OMCPanel.h */,
@@ -1529,6 +1536,7 @@
 				E2C433620DEE751300E976D2 /* OMCDropletController.mm in Sources */,
 				1D9B1F6521FF191D004704A7 /* SubmenuTree.cp in Sources */,
 				E258B2110E46E37C00926F10 /* OMCDeferredProgress.mm in Sources */,
+				1D0A1B2C2F6E000000000103 /* OMCProgressParsing.cpp in Sources */,
 				E2BB1E480E6F886200D2DDE5 /* OMCView.m in Sources */,
 				E28181AF0EBC228C00E9652F /* OMCProgressWindowController.m in Sources */,
 				1D9B1F5D21FF1572004704A7 /* OnMyCommand.cp in Sources */,

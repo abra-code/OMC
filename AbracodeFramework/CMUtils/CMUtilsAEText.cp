@@ -14,6 +14,7 @@
 #include "DebugSettings.h"
 #include "StAEDesc.h"
 #include "CFObj.h"
+#include "ACFString.h"
 #include <vector>
 
 Boolean
@@ -223,30 +224,8 @@ CMUtils::ReplaceUnicodeCharacters(UniChar *ioText, UniCharCount inCount, UniChar
 std::string
 CMUtils::CreateUTF8StringFromCFString(CFStringRef inString)
 {
-//	TRACE_CSTR("Entering CreateUTF8CStringFromCFString\n");
-
-	if( inString == NULL )
-	{
-		TRACE_CSTR("Input CFString is NULL, return\n");
-		return std::string();
-	}
-
-	//OSStatus err = noErr;
-	CFIndex uniCount = ::CFStringGetLength(inString);
-	if(uniCount > 0)
-	{
-		CFIndex maxCount = ::CFStringGetMaximumSizeForEncoding(uniCount, kCFStringEncodingUTF8); //too big size
-        std::string string(maxCount+1, '\0');//+ 1 for null char
-        Boolean isOK = ::CFStringGetCString(inString, &string[0], maxCount+1, kCFStringEncodingUTF8);
-        if(isOK)
-        {
-            string.resize(strnlen(&string[0], maxCount));//shrink down to exact size
-            return string;
-        }
-	}
-	
-	TRACE_CSTR("CreateUTF8CStringFromCFString. Empty string\n");
-	return std::string();
+	// The body is portable and moved to Common/ACFString.h; this exported name stays for its callers.
+	return ACFStringToUTF8(inString);
 }
 
 //character, not byte, count is given on output
