@@ -5,13 +5,14 @@
 //  Created by Tomasz Kukielka on 5/25/08.
 //  Copyright 2008 Abracode Inc. All rights reserved.
 //
+//  macOS implementation of Platform/OMCFilePanels.h, over NSSavePanel and NSOpenPanel.
+//
 
 #import <Cocoa/Cocoa.h>
 #import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 #import "OMCFilePanels.h"
 #include "CFObj.h"
 #include "ACFType.h"
-#include "OMCNavigationDialogs.h"
 
 CFURLRef
 CreateCFURLFromSaveAsDialog( CFStringRef inClientName, CFStringRef inMessage, CFStringRef inDefaultName, CFStringRef inDefaultDirPath, CFStringRef inIdentifier, CFStringRef inPrompt, CFArrayRef inAllowedContentTypes, UInt32 inAdditonalFlags )
@@ -141,12 +142,4 @@ CreateCFURLsFromOpenDialog( CFStringRef inClientName, CFStringRef inMessage, CFS
 	}
 	
     return (CFArrayRef)CFBridgingRetain(outURLs);
-}
-
-// C-compatible wrapper for GetNavDialogParams (uses pointers instead of C++ references)
-UInt32
-CopyNavDialogParams(CFDictionaryRef inParams, CFStringRef *outMessage, CFArrayRef *outDefaultName, CFArrayRef *outDefaultLocation, CFStringRef *outIdentifier, CFStringRef *outPrompt, CFArrayRef *outAllowedContentTypes)
-{
-    // The C++ version in OMCNavigationDialogs.cp uses references — forward to it
-    return ::GetNavDialogParams(inParams, *outMessage, *outDefaultName, *outDefaultLocation, *outIdentifier, *outPrompt, *outAllowedContentTypes);
 }

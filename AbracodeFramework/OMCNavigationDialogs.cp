@@ -57,6 +57,13 @@ GetNavDialogParams(CFDictionaryRef inParams, CFStringRef &outMessage, CFArrayRef
     return outAdditionalNavServiesFlags;
 }
 
+// Moved here from OMCFilePanels.mm: it is parameter parsing, not a panel.
+UInt32
+CopyNavDialogParams(CFDictionaryRef inParams, CFStringRef *outMessage, CFArrayRef *outDefaultName, CFArrayRef *outDefaultLocation, CFStringRef *outIdentifier, CFStringRef *outPrompt, CFArrayRef *outAllowedContentTypes)
+{
+    return ::GetNavDialogParams(inParams, *outMessage, *outDefaultName, *outDefaultLocation, *outIdentifier, *outPrompt, *outAllowedContentTypes);
+}
+
 void
 PresentSaveAsDialog(OnMyCommandCM *inPlugin,
                     CommandRuntimeData &commandRuntimeData,

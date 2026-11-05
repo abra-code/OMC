@@ -844,6 +844,7 @@
 		1D0A1B2C2F6A000000000002 /* Platform */ = {
 			isa = PBXGroup;
 			children = (
+				E24B18140DE96F6D00E44A45 /* OMCFilePanels.h */,
 				1D0A1B2C2F6A000000000004 /* StandardDirectories.h */,
 				1D0A1B2C2F6A000000000003 /* Apple */,
 			);
@@ -855,6 +856,7 @@
 			children = (
 				1D0A1B2C2F6A000000000008 /* OMCControlAccessorBridge.h */,
 				1D0A1B2C2F6A000000000009 /* OMCControlAccessorBridge.mm */,
+				E24B18150DE96F6D00E44A45 /* OMCFilePanels.mm */,
 				1D9BCB8722CCA65A00F4EAB6 /* StandardDirectories.m */,
 				1D0A1B2C2F6A000000000001 /* NibDialogs */,
 			);
@@ -996,8 +998,6 @@
 				E2D92E871043E0C2003DC96B /* OMCInputDialog.h */,
 				E2D92E541043D74E003DC96B /* OMCInputDialogController.m */,
 				E2D92E531043D74E003DC96B /* OMCInputDialogController.h */,
-				E24B18140DE96F6D00E44A45 /* OMCFilePanels.h */,
-				E24B18150DE96F6D00E44A45 /* OMCFilePanels.mm */,
 				E258B20F0E46E37C00926F10 /* OMCDeferredProgress.mm */,
 				E2C10C5A0E45783200454DB1 /* OMCDeferredProgress.h */,
 				E20026D510B68F3200D5388F /* OMCCustomWindow.mm */,

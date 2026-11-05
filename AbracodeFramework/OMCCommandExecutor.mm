@@ -10,6 +10,7 @@
 #import "OMCWindowController.h"
 #include "OMC.h"
 #include "OMCFilePanels.h"
+#include "OMCNavigationDialogs.h"
 #include "ACFPropertyList.h"
 #import "OMCObserverDelegate.h"
 
