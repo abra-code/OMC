@@ -2,3 +2,6 @@ CREATE_INFOPLIST_SECTION_IN_BINARY = YES
 INFOPLIST_FILE = ../Common/OmcTool_Info.plist
 PRODUCT_BUNDLE_IDENTIFIER = com.abracode.${TARGET_NAME}
 PRODUCT_NAME = ${TARGET_NAME}
+
+// ACFPropertyList (Common) uses ACFJSON, which includes the vendored yyjson.h.
+USER_HEADER_SEARCH_PATHS = $(inherited) $(SRCROOT)/../Common $(SRCROOT)/../ThirdParty/yyjson

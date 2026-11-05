@@ -4,6 +4,8 @@
 //
 //  OMCStrings.cpp reimplements, in plain CF and POSIX so it builds on Linux, four functions that
 //  used to call NSString: tilde expansion, path extension, lowercasing and percent escaping.
+//  Common/ACFPath.cpp holds the path rules, and also stringByDeletingPathExtension, which
+//  ACFPropertyList uses to find an applet's command file.
 //  Scripts see their results (paths, the escaping modes of special words), so they must keep
 //  returning exactly what Foundation returns on macOS. Foundation is the oracle here: every test
 //  compares the C++ function with the NSString call it replaced, over exhaustive inputs.
@@ -18,6 +20,7 @@
 
 #include "../OMCStrings.cpp"
 #include "ACFType.cp"
+#include "ACFPath.h"//compiled by OMCTestsACFPath.cpp
 
 @interface OMCStringsFoundationParityTests : XCTestCase
 @end
@@ -81,6 +84,9 @@ static NSString *DescribeString(CFStringRef s)
            ported:CreatePathByExpandingTilde(s)];
     [self compare:@"extension" input:s foundation:(CFStringRef)CFBridgingRetain(ns.pathExtension)
            ported:CopyFilenameExtension(s)];
+    // ACFPropertyList's CopyCommandFileURLInBundle relies on this one
+    [self compare:@"deleting extension" input:s foundation:(CFStringRef)CFBridgingRetain(ns.stringByDeletingPathExtension)
+           ported:ACFPathCreateDeletingExtension(s)];
 }
 
 - (void)checkCaseAndEscapes:(CFStringRef)s
@@ -191,6 +197,7 @@ static CFStringRef CreateFromCharacters(const std::vector<UniChar> &chars)
     XCTAssertTrue(CreatePathByExpandingTilde(NULL) == NULL);
     XCTAssertTrue(CopyFilenameExtension(NULL) == NULL);
     XCTAssertTrue(CreateLowercaseString(NULL) == NULL);
+    XCTAssertTrue(ACFPathCreateDeletingExtension(NULL) == NULL);
     XCTAssertTrue(CreateStringByAddingPercentEscapes(NULL, false) == NULL);
     [self assertNoMismatches];
 }

@@ -2,6 +2,7 @@
 #include "OMCConstants.h"
 #include "CFObj.h"
 #include "ACFType.h"
+#include "ACFPath.h"
 #include <pwd.h>
 #include <unistd.h>
 #include <errno.h>
@@ -76,24 +77,6 @@ CreateHomeDirectoryForUser(CFStringRef inUserName)
 	}
 }
 
-// What NSString's stringByExpandingTildeInPath also does to every path: runs of "/" become one,
-// and a trailing "/" goes, except for the root itself. "." and ".." stay.
-CFStringRef
-CreateStringWithStandardSlashes(const std::vector<UniChar> &inChars)
-{
-	std::vector<UniChar> out;
-	out.reserve(inChars.size());
-	for(UniChar oneChar : inChars)
-	{
-		if((oneChar == '/') && !out.empty() && (out.back() == '/'))
-			continue;
-		out.push_back(oneChar);
-	}
-	if((out.size() > 1) && (out.back() == '/'))
-		out.pop_back();
-	return CreateStringFromCharacters(out, 0, out.size());
-}
-
 bool
 IsASCIIAlphanumeric(UTF32Char inChar)
 {
@@ -145,7 +128,8 @@ AppendUTF8(std::string &ioOut, UTF32Char inChar)
 } // namespace
 
 // "~" and "~user" at the start become that user's home folder; an unknown user leaves the tilde
-// part as it is. Every result has its slashes standardized as NSString did (see above).
+// part as it is. Every result has its slashes standardized as NSString did
+// (ACFPathCreateWithStandardSlashes).
 CFStringRef CreatePathByExpandingTilde(CFStringRef inPath)
 {
 	if(inPath == nullptr)
@@ -153,7 +137,7 @@ CFStringRef CreatePathByExpandingTilde(CFStringRef inPath)
 
 	std::vector<UniChar> chars = CopyCharacters(inPath);
 	if(chars.empty() || (chars[0] != '~'))
-		return CreateStringWithStandardSlashes(chars);
+		return ACFPathCreateWithStandardSlashes(inPath);
 
 	size_t firstSlash = 1;
 	while((firstSlash < chars.size()) && (chars[firstSlash] != '/'))
@@ -162,72 +146,18 @@ CFStringRef CreatePathByExpandingTilde(CFStringRef inPath)
 	CFObj<CFStringRef> userName( CreateStringFromCharacters(chars, 1, firstSlash) );
 	CFObj<CFStringRef> homeDir( CreateHomeDirectoryForUser(userName) );
 	if(homeDir == nullptr)
-		return CreateStringWithStandardSlashes(chars);
+		return ACFPathCreateWithStandardSlashes(inPath);
 
 	std::vector<UniChar> expanded = CopyCharacters(homeDir);
 	expanded.insert(expanded.end(), chars.begin() + (std::ptrdiff_t)firstSlash, chars.end());
-	return CreateStringWithStandardSlashes(expanded);
+	CFObj<CFStringRef> expandedPath( CreateStringFromCharacters(expanded, 0, expanded.size()) );
+	return ACFPathCreateWithStandardSlashes(expandedPath);
 }
 
-// The extension of the last path component, as NSString's pathExtension: trailing slashes are
-// ignored, and there is none for a name without a dot, a name ending with a dot, a name whose
-// part before the last dot is empty, "." or ".." (".bashrc", "..x", "...x"), or an extension
-// containing a space or a bidirectional formatting character (U+061C, U+200E, U+200F,
-// U+202A to U+202E, U+2066 to U+2069).
+// The extension of the last path component, as NSString's pathExtension (rules in ACFPath.cpp).
 CFStringRef CopyFilenameExtension(CFStringRef inFilePath)
 {
-	if(inFilePath == nullptr)
-		return nullptr;
-
-	std::vector<UniChar> chars = CopyCharacters(inFilePath);
-	size_t end = chars.size();
-	while((end > 0) && (chars[end - 1] == '/'))
-		end--;
-
-	size_t start = end;
-	while((start > 0) && (chars[start - 1] != '/'))
-		start--;
-
-	size_t dot = end;
-	for(size_t i = end; i > start; i--)
-	{
-		if(chars[i - 1] == '.')
-		{
-			dot = i - 1;
-			break;
-		}
-	}
-
-	bool hasExtension = (dot < end) && (dot + 1 < end);
-	if(hasExtension)
-	{
-		// the name before the extension may not be empty (".bashrc"), "." ("..x") or ".." ("...x");
-		// a longer run of dots is an ordinary name ("....x" has the extension "x")
-		size_t stemLength = dot - start;
-		bool stemIsDotName = (stemLength == 0) ||
-							((stemLength == 1) && (chars[start] == '.')) ||
-							((stemLength == 2) && (chars[start] == '.') && (chars[start + 1] == '.'));
-		if(stemIsDotName)
-			hasExtension = false;
-	}
-	if(hasExtension)
-	{
-		for(size_t i = dot + 1; i < end; i++)
-		{
-			UniChar oneChar = chars[i];
-			bool isInvalid = (oneChar == ' ') || (oneChar == 0x061C) || (oneChar == 0x200E) || (oneChar == 0x200F) ||
-							((oneChar >= 0x202A) && (oneChar <= 0x202E)) || ((oneChar >= 0x2066) && (oneChar <= 0x2069));
-			if(isInvalid)
-			{
-				hasExtension = false;
-				break;
-			}
-		}
-	}
-
-	if(!hasExtension)
-		return ::CFStringCreateWithCharacters(kCFAllocatorDefault, nullptr, 0);
-	return CreateStringFromCharacters(chars, dot + 1, end);
+	return ACFPathCopyExtension(inFilePath);
 }
 
 // Not localized, as NSString's lowercaseString.

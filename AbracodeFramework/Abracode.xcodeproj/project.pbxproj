@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1D0A1B2C2F6A000000000106 /* ACFJSON.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1D0A1B2C2F6A000000000101 /* ACFJSON.cpp */; };
+		1D0A1B2C2F6A000000000107 /* ACFPath.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1D0A1B2C2F6A000000000103 /* ACFPath.cpp */; };
+		1D0A1B2C2F6A000000000108 /* yyjson.c in Sources */ = {isa = PBXBuildFile; fileRef = 1D0A1B2C2F6A000000000105 /* yyjson.c */; settings = {COMPILER_FLAGS = "-w"; }; };
 		1D011A402FFC516C009FD073 /* ActionUICachedImage in Frameworks */ = {isa = PBXBuildFile; productRef = 1D011A3F2FFC516C009FD073 /* ActionUICachedImage */; };
 		1D011A442FFC5199009FD073 /* ActionUIRichText in Frameworks */ = {isa = PBXBuildFile; productRef = 1D011A432FFC5199009FD073 /* ActionUIRichText */; };
 		1D011A472FFC5209009FD073 /* ActionUIDiff in Frameworks */ = {isa = PBXBuildFile; productRef = 1D011A462FFC5209009FD073 /* ActionUIDiff */; };
@@ -35,7 +38,7 @@
 		1D9B1F5D21FF1572004704A7 /* OnMyCommand.cp in Sources */ = {isa = PBXBuildFile; fileRef = 1D9B1F5C21FF1572004704A7 /* OnMyCommand.cp */; };
 		1D9B1F6521FF191D004704A7 /* SubmenuTree.cp in Sources */ = {isa = PBXBuildFile; fileRef = 1D9B1F6321FF191D004704A7 /* SubmenuTree.cp */; };
 		1D9B1F7121FF1F9F004704A7 /* progress.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1D9B1F6F21FF1F9F004704A7 /* progress.xib */; };
-		1D9BCB7F22CC95E500F4EAB6 /* ACFPropertyList.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1D9BCB7C22CC95E500F4EAB6 /* ACFPropertyList.mm */; };
+		1D9BCB7F22CC95E500F4EAB6 /* ACFPropertyList.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1D9BCB7C22CC95E500F4EAB6 /* ACFPropertyList.cpp */; };
 		1D9BCB8822CCA65A00F4EAB6 /* StandardDirectories.m in Sources */ = {isa = PBXBuildFile; fileRef = 1D9BCB8722CCA65A00F4EAB6 /* StandardDirectories.m */; };
 		1D0A1B2C2F6A000000000006 /* ACFURL.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1D0A1B2C2F6A000000000005 /* ACFURL.cpp */; };
 		1D9BCB8C22CCAB4F00F4EAB6 /* OMCStrings.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1D9BCB8B22CCAB4F00F4EAB6 /* OMCStrings.cpp */; };
@@ -366,6 +369,12 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		1D0A1B2C2F6A000000000100 /* ACFJSON.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ACFJSON.h; sourceTree = "<group>"; };
+		1D0A1B2C2F6A000000000101 /* ACFJSON.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ACFJSON.cpp; sourceTree = "<group>"; };
+		1D0A1B2C2F6A000000000102 /* ACFPath.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ACFPath.h; sourceTree = "<group>"; };
+		1D0A1B2C2F6A000000000103 /* ACFPath.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ACFPath.cpp; sourceTree = "<group>"; };
+		1D0A1B2C2F6A000000000104 /* yyjson.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = yyjson.h; sourceTree = "<group>"; };
+		1D0A1B2C2F6A000000000105 /* yyjson.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = yyjson.c; sourceTree = "<group>"; };
 		0867D69BFE84028FC02AAC07 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
 		0867D6A5FE840307C02AAC07 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		1058C7B1FEA5585E11CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
@@ -420,7 +429,7 @@
 		1D9B1F6321FF191D004704A7 /* SubmenuTree.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SubmenuTree.cp; sourceTree = "<group>"; };
 		1D9B1F6421FF191D004704A7 /* SubmenuTree.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SubmenuTree.h; sourceTree = "<group>"; };
 		1D9BCB7B22CC95E500F4EAB6 /* ACFPropertyList.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ACFPropertyList.h; sourceTree = "<group>"; };
-		1D9BCB7C22CC95E500F4EAB6 /* ACFPropertyList.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ACFPropertyList.mm; sourceTree = "<group>"; };
+		1D9BCB7C22CC95E500F4EAB6 /* ACFPropertyList.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ACFPropertyList.cpp; sourceTree = "<group>"; };
 		1D9BCB8722CCA65A00F4EAB6 /* StandardDirectories.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = StandardDirectories.m; sourceTree = "<group>"; };
 		1D0A1B2C2F6A000000000004 /* StandardDirectories.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StandardDirectories.h; sourceTree = "<group>"; };
 		1D0A1B2C2F6A000000000005 /* ACFURL.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ACFURL.cpp; sourceTree = "<group>"; };
@@ -641,6 +650,16 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		1D0A1B2C2F6A000000000109 /* yyjson */ = {
+			isa = PBXGroup;
+			children = (
+				1D0A1B2C2F6A000000000104 /* yyjson.h */,
+				1D0A1B2C2F6A000000000105 /* yyjson.c */,
+			);
+			name = yyjson;
+			path = ../ThirdParty/yyjson;
+			sourceTree = "<group>";
+		};
 		034768DFFF38A50411DB9C8B /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -655,6 +674,7 @@
 			children = (
 				E29ED1710D09525700C9D5E8 /* CMUtils */,
 				E29ED1B10D09531300C9D5E8 /* Common */,
+				1D0A1B2C2F6A000000000109 /* yyjson */,
 				E29ED19E0D09528600C9D5E8 /* MoreAppleEvents */,
 				E29ED2390D09FEF800C9D5E8 /* OMC */,
 				1D0A1B2C2F6A000000000002 /* Platform */,
@@ -964,7 +984,11 @@
 				1D0A1B2C2F6A000000000005 /* ACFURL.cpp */,
 				1D9BCB8A22CCA66500F4EAB6 /* ACFURL.h */,
 				1D9BCB7B22CC95E500F4EAB6 /* ACFPropertyList.h */,
-				1D9BCB7C22CC95E500F4EAB6 /* ACFPropertyList.mm */,
+				1D9BCB7C22CC95E500F4EAB6 /* ACFPropertyList.cpp */,
+				1D0A1B2C2F6A000000000100 /* ACFJSON.h */,
+				1D0A1B2C2F6A000000000101 /* ACFJSON.cpp */,
+				1D0A1B2C2F6A000000000102 /* ACFPath.h */,
+				1D0A1B2C2F6A000000000103 /* ACFPath.cpp */,
 				E29ED1B50D09532500C9D5E8 /* ACFType.h */,
 				E29ED1B60D09532500C9D5E8 /* ACFType.cp */,
 				1DED8E4C22229D1800A2CAF7 /* ACFArr.h */,
@@ -1475,7 +1499,10 @@
 				E2E407860D8C3770009AD8CA /* OMCImageView.m in Sources */,
 				E23DC9640D9A2616009D2AD8 /* OMCPDFView.m in Sources */,
 				1D3EA0602E38A1E00064354E /* OneObjProperties.cp in Sources */,
-				1D9BCB7F22CC95E500F4EAB6 /* ACFPropertyList.mm in Sources */,
+				1D9BCB7F22CC95E500F4EAB6 /* ACFPropertyList.cpp in Sources */,
+				1D0A1B2C2F6A000000000106 /* ACFJSON.cpp in Sources */,
+				1D0A1B2C2F6A000000000107 /* ACFPath.cpp in Sources */,
+				1D0A1B2C2F6A000000000108 /* yyjson.c in Sources */,
 				E23DC9680D9A2616009D2AD8 /* OMCIKImageView.m in Sources */,
 				E29A6AB60D9F7A01006A97B0 /* OMCMainMenuController.mm in Sources */,
 				E2C84D8B0DA9D2600056DBC2 /* OMCSingleCommand.m in Sources */,
