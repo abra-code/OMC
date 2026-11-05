@@ -27,7 +27,7 @@ OutputWindowHandler::OutputWindowHandler( CFDictionaryRef inSettingsDict,
 										CFBundleRef inExternBundleRef,
 										CFStringRef inLocalizationTableName)
 	: mTaskObserver( new AObserver<OutputWindowHandler>(this) ),
-	mOutputWindowController(NULL), mAutoCloseTimer(NULL),
+	mOutputWindowController(NULL),
 	mShouldCloseWindow(false), mAutoCloseOnSuccessOnly(true), mUseFadeOut(false),
 	mAutoCloseTimeout(-1.0)
 {
@@ -56,7 +56,7 @@ OutputWindowHandler::OutputWindowHandler(CFArrayRef inCommandName,
 										CFBundleRef inExternBundleRef,
 										CFStringRef inLocalizationTableName)
 	:  mTaskObserver( new AObserver<OutputWindowHandler>(this) ),
-	mOutputWindowController(NULL), mAutoCloseTimer(NULL), 
+	mOutputWindowController(NULL), 
 	mShouldCloseWindow(false), mAutoCloseOnSuccessOnly(true), mUseFadeOut(false), 
 	mAutoCloseTimeout(-1.0)
 {
@@ -92,8 +92,7 @@ OutputWindowHandler::~OutputWindowHandler()
 	if(mAutoCloseTimer != NULL)
 	{
 		CFRunLoopTimerInvalidate(mAutoCloseTimer);
-		CFRelease(mAutoCloseTimer);
-		mAutoCloseTimer = NULL;
+		mAutoCloseTimer.Release();
 	}
 
 	if( mOutputWindowController != NULL)
@@ -322,26 +321,25 @@ OutputWindowHandler::GetOutputWindowSettings(CFArrayRef inCommandName,
 	settings.GetValue(CFSTR("FRACT_POSITION_TOP"), outSettings.specialPosition.y);
 	settings.GetValue(CFSTR("FRACT_POSITION_LEFT"), outSettings.specialPosition.x);
 	
-	CGImageRef customImage = nullptr;
+	CFObj<CGImageRef> customImage;
 	if( settings.GetValue(CFSTR("CUSTOM_WINDOW_PNG_IMAGE"), theStr) )
 	{
 		//try reading with from external bundle
 		if(inExternBundleRef != nullptr)
-			customImage = CreateImage(inExternBundleRef, theStr);
+			customImage.Adopt( CreateImage(inExternBundleRef, theStr) );
 		
 		if(customImage == nullptr)//not found in external - try in main app bundle
 		{
 			CFBundleRef appBundleRef = CFBundleGetMainBundle();
-			customImage = CreateImage(appBundleRef, theStr);
+			customImage.Adopt( CreateImage(appBundleRef, theStr) );
 		}
 	}
 	
 	if(customImage != nullptr)
 	{
-		outSettings.backgroundImage.Adopt(customImage, kCFObjRetain);
 		outSettings.width = ::CGImageGetWidth(customImage);
 		outSettings.height = ::CGImageGetHeight(customImage);
-		CFRelease(customImage);
+		outSettings.backgroundImage.Swap(customImage);
 	}
 	else
 	{
@@ -478,17 +476,17 @@ OutputWindowHandler::CreateImage(CFBundleRef inBundle, CFStringRef inBackgroundP
 		return NULL;
 
 	UniChar firstChar = ::CFStringGetCharacterAtIndex(inBackgroundPictureName, 0);
-	CFURLRef url = NULL;
+	CFObj<CFURLRef> url;
 	
 	if(firstChar == (UniChar)'/')
 	{//absolute path
-		url = ::CFURLCreateWithFileSystemPath(kCFAllocatorDefault, inBackgroundPictureName, kCFURLPOSIXPathStyle, false);
+		url.Adopt( ::CFURLCreateWithFileSystemPath(kCFAllocatorDefault, inBackgroundPictureName, kCFURLPOSIXPathStyle, false) );
 	}
 	else
 	{//image in resources
 		if(inBundle == NULL)
 			inBundle = ::CFBundleGetMainBundle();
-		url = ::CFBundleCopyResourceURL( inBundle, inBackgroundPictureName, NULL, NULL );
+		url.Adopt( ::CFBundleCopyResourceURL( inBundle, inBackgroundPictureName, NULL, NULL ) );
 	}
 
 	if( url == NULL )
@@ -498,8 +496,6 @@ OutputWindowHandler::CreateImage(CFBundleRef inBundle, CFStringRef inBackgroundP
 	CGImageRef outImage = NULL;
 	if(imgSource != NULL)
 		outImage = CGImageSourceCreateImageAtIndex( imgSource, 0, NULL );
-
-	::CFRelease( url );
 	
 	return outImage;
 }

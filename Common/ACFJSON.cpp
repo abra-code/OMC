@@ -31,13 +31,14 @@ struct ACFSInt128
 
 #pragma mark - Reading
 
+// Adopts inError (+1) and hands it to the caller, or releases it when the caller asked for none.
+// Takes a raw pointer on purpose: a CFObj passed to a by-value CFObj parameter would be adopted without a retain.
 void
 SetError(CFStringRef *outError, CFStringRef inError)
 {
+	CFObj<CFStringRef> error(inError);
 	if(outError != nullptr)
-		*outError = inError;
-	else if(inError != nullptr)
-		::CFRelease(inError);
+		*outError = error.Detach();
 }
 
 CFStringRef

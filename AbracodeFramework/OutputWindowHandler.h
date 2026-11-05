@@ -120,7 +120,7 @@ protected:
 	ARefCountedObj< AObserver<OutputWindowHandler> > mTaskObserver;
 	OMCOutputWindowControllerRef mOutputWindowController;
 
-	CFRunLoopTimerRef		mAutoCloseTimer;
+	CFObj<CFRunLoopTimerRef>	mAutoCloseTimer;
 	CFTimeInterval			mAutoCloseTimeout;
 
 	Boolean					mShouldCloseWindow;

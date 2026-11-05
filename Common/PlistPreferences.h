@@ -1,5 +1,6 @@
 #pragma once
 #include <CoreFoundation/CoreFoundation.h>
+#include "CFObj.h"
 
 
 class PlistPreferences
@@ -22,7 +23,7 @@ public:
 	void				SetStringForKey(CFStringRef inKey, CFStringRef inString);
 
 protected:
-	CFStringRef			mPrefsIdentifier;
+	CFObj<CFStringRef>	mPrefsIdentifier;
 
 };
 

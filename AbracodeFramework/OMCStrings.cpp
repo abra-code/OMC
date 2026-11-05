@@ -226,35 +226,19 @@ CFStringRef CreateVersionString(UInt32 inVersion)
     inVersion -= (100 * minorVersion);
     int veryMinorVersion = inVersion;
     
-    //    CFStringRef higestStr = NULL;
-    CFStringRef veryMinorStr = NULL;
-    
-    //    if(higestByte != 0)
-    //        higestStr = CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("%d"), higestByte);
-    
-    CFStringRef mainStr = CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("%d.%d"), majorVersion, minorVersion);
+    CFObj<CFStringRef> veryMinorStr;
+    CFObj<CFStringRef> mainStr( CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("%d.%d"), majorVersion, minorVersion) );
     
     if(veryMinorVersion != 0)
-        veryMinorStr = CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR(".%d"), veryMinorVersion);
+        veryMinorStr.Adopt( CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR(".%d"), veryMinorVersion) );
     
     CFMutableStringRef wholeStr = ::CFStringCreateMutable( kCFAllocatorDefault, 0);
-    //    if(higestStr != NULL)
-    //    {
-    //        ::CFStringAppend( wholeStr, higestStr );
-    //        ::CFRelease(higestStr);
-    //    }
     
     if(mainStr != NULL)
-    {
         ::CFStringAppend( wholeStr, mainStr );
-        ::CFRelease(mainStr);
-    }
     
     if(veryMinorStr != NULL)
-    {
         ::CFStringAppend( wholeStr, veryMinorStr );
-        ::CFRelease(veryMinorStr);
-    }
     
     return wholeStr;
 }
@@ -688,12 +672,9 @@ CreateStringFromCFURLArray(CFArrayRef inURLArray, CFURLToStringProc inProc,
     for(CFIndex i = 0; i < count; i++)
     {
         CFURLRef url = (CFURLRef)CFArrayGetValueAtIndex(inURLArray, i);
-        CFStringRef str = inProc(url, escSpecialCharsMode);
+        CFObj<CFStringRef> str( inProc(url, escSpecialCharsMode) );
         if(str != nullptr)
-        {
             CFArrayAppendValue(stringArray, str);
-            CFRelease(str);
-        }
     }
 
     return CreateCombinedString(stringArray, inSeparator, inPrefix, inSuffix, escSpecialCharsMode);

@@ -16,12 +16,13 @@
 #include <CoreFoundation/CoreFoundation.h>
 #include "AObserverBase.h"
 #include "ANotifier.h"
+#include "CFObj.h"
 
 template <typename T> class AObserver : public AObserverBase
 {
 public:
 	AObserver(T *inOwner)
-		: mOwner(inOwner), mNotifiers(NULL), mIterationArray(NULL), mIterationArrayElementCount(0)
+		: mOwner(inOwner), mIterationArray(NULL), mIterationArrayElementCount(0)
 	{
 	}
 
@@ -49,8 +50,7 @@ public:
 		if(mNotifiers != NULL)
 		{
 			CallAllNotifiers(TellNotifierToRemoveObserver, this);
-			::CFRelease(mNotifiers);
-			mNotifiers = NULL;
+			mNotifiers.Release();
 		}
 	}
 
@@ -120,7 +120,7 @@ protected:
 		//Observers keep strong reference to all notifiers
 		if(mNotifiers == NULL)
         {
-            mNotifiers = ::CFSetCreateMutable(kCFAllocatorDefault, 0, ARefCounted::GetCFSetCallbacks());
+            mNotifiers.Adopt( ::CFSetCreateMutable(kCFAllocatorDefault, 0, ARefCounted::GetCFSetCallbacks()) );
         }
 		
 		::CFSetAddValue(mNotifiers, (const void *)inNotifier);
@@ -151,7 +151,7 @@ protected:
 
 private:
 	mutable T *mOwner; // weak reference: owner owns us and is almost always valid. in some cases we may outlive host for a while though
-	mutable CFMutableSetRef mNotifiers;//we need to keep a list of notifiers so we can tell them when we die
+	mutable CFObj<CFMutableSetRef> mNotifiers;//we need to keep a list of notifiers so we can tell them when we die
 	mutable const void **mIterationArray;
 	mutable CFIndex mIterationArrayElementCount;
 };

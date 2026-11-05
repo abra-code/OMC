@@ -60,14 +60,12 @@ CopyNextCommandID(const CommandDescription &currCommand, CFStringRef currCommand
 {
     static char sFilePath[1024];
     static char sCommandUUID[512];
-    CFStringRef theNextID = currCommand.nextCommandID;//statically assigned id or NULL is default
-    if(theNextID != NULL)
-        ::CFRetain(theNextID);
+    CFObj<CFStringRef> theNextID(currCommand.nextCommandID, kCFObjRetain);//statically assigned id or NULL is default
 
     // currCommandUUID used to be optional. In normal situation it should not be nil
     if( (CFStringRef)currCommandUUID == NULL )
     {
-        return theNextID;
+        return theNextID.Detach();
     }
 
     sCommandUUID[0] = 0;
@@ -102,15 +100,14 @@ CopyNextCommandID(const CommandDescription &currCommand, CFStringRef currCommand
 
                 if(idLen > 0)
                 {
-                    if(theNextID != NULL)
-                        ::CFRelease(theNextID);//release the static one
-                    theNextID = ::CFStringCreateWithBytes(kCFAllocatorDefault, (const UInt8 *)sCommandUUID, idLen, kCFStringEncodingUTF8, false);
+                    //replaces the statically assigned one
+                    theNextID.Adopt( ::CFStringCreateWithBytes(kCFAllocatorDefault, (const UInt8 *)sCommandUUID, idLen, kCFStringEncodingUTF8, false) );
                 }
             }
             unlink(sFilePath);
         }
     }
-    return theNextID;
+    return theNextID.Detach();
 }
 
 
@@ -210,14 +207,15 @@ OmcHostTaskManager::Finalize()
     if(mCurrCommand.simulatePaste && (mPlugin->GetError() == noErr))
     {
         TRACE_CSTR( "OnMyCommandCM::Finalize: simulate paste\n" );
-        CFRunLoopTimerRef myTimer = CFRunLoopTimerCreate(
+        //one-shot timer: the run loop retains it while it is scheduled and invalidates it after it fires
+        CFObj<CFRunLoopTimerRef> myTimer( CFRunLoopTimerCreate(
                                                          kCFAllocatorDefault,
                                                          CFAbsoluteTimeGetCurrent() + 0.05,
                                                          0,		// interval
                                                          0,		// flags
                                                          0,		// order
                                                          KeyPressSimulationCallBack,
-                                                         NULL);
+                                                         NULL) );
         
         if(myTimer != NULL)
         {
@@ -818,8 +816,7 @@ bool OMCTaskUnpackData( CFDataRef inData, OmcTaskData &outStruct )
 
 	CFDictionaryRef plistDict = ACFType<CFDictionaryRef>::DynamicCast(thePlist);
 	if(plistDict == NULL)
-	{//not a CFDictionary?
-		::CFRelease(thePlist);
+	{//not a CFDictionary? thePlist releases it
 		return false;
 	}
 
@@ -927,9 +924,6 @@ KeyPressSimulationCallBack(CFRunLoopTimerRef timer, void* context)
     CGEventPost(kCGHIDEventTap, cmdUp);
 
 	if(timer != nullptr)
-	{
-		CFRunLoopTimerInvalidate(timer);
-		CFRelease(timer);
-	}
+		CFRunLoopTimerInvalidate(timer);//our creator released its reference after scheduling it
 }
 

@@ -14,6 +14,7 @@
 #include <CoreFoundation/CoreFoundation.h>
 #include <CoreServices/CoreServices.h>
 #include <Carbon/Carbon.h> // for MenuItemAttributes
+#include "CFObj.h"
 
 class AbstractMenuItem
 {
@@ -30,10 +31,10 @@ public:
 	virtual bool	IsSubmenu() { return true; }
 
 	AEDescList		aeItemList;
-	CFURLRef		path;
-	CFStringRef		name;
+	CFObj<CFURLRef>		path;
+	CFObj<CFStringRef>	name;
 //	CFMutableArrayRef submenuList;//objects not owned
-	CFMutableArrayRef itemList; // a list of command items or submenu items records
+	CFObj<CFMutableArrayRef> itemList; // a list of command items or submenu items records, owned by this item
 	Boolean			isAppended;
 	class SubmenuItem *previousItem;
 };
@@ -49,8 +50,8 @@ public:
 	virtual			~CommandMenuItem();
 	virtual bool	IsSubmenu() { return false; }
 
-	CFStringRef submenuPathString;
-	CFStringRef itemName;
+	CFObj<CFStringRef> submenuPathString;
+	CFObj<CFStringRef> itemName;
 	SInt32 commandID;
 	MenuItemAttributes attributes;
 	UInt32 modifiers;

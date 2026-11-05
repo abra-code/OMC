@@ -207,27 +207,25 @@ static NSString *Describe(NSString *folder, NSString *name, ino_t inodeBefore, B
     for(size_t i = 0; i < sizeof(cases) / sizeof(cases[0]); i++)
     {
         ACFPropertyListFormat format = kACFPropertyListFormat_unknown;
-        CFPropertyListRef value = CreatePropertyListAndFormat((__bridge CFURLRef)[NSURL fileURLWithPath:cases[i].path],
-                                                              kCFPropertyListImmutable, &format);
+        CFObj<CFPropertyListRef> value( CreatePropertyListAndFormat((__bridge CFURLRef)[NSURL fileURLWithPath:cases[i].path],
+                                                              kCFPropertyListImmutable, &format) );
         XCTAssertEqual(value != NULL, (bool)cases[i].readable, @"%@", cases[i].path.lastPathComponent);
         XCTAssertEqual(format, cases[i].format, @"%@", cases[i].path.lastPathComponent);
-        if(value != NULL)
-            CFRelease(value);
     }
 
     // a URL that is not a file URL reads as missing, though CF gives its path
     NSURL *httpURL = [NSURL URLWithString:[@"http://localhost" stringByAppendingString:json]];
-    XCTAssertTrue(CreatePropertyList((__bridge CFURLRef)httpURL, kCFPropertyListImmutable) == NULL);
+    CFObj<CFPropertyListRef> httpValue( CreatePropertyList((__bridge CFURLRef)httpURL, kCFPropertyListImmutable) );
+    XCTAssertTrue(httpValue == NULL);
 
     // mutable containers when asked: the result can be changed in place
-    CFPropertyListRef mutableValue = CreatePropertyList((__bridge CFURLRef)[NSURL fileURLWithPath:json], kCFPropertyListMutableContainers);
+    CFObj<CFPropertyListRef> mutableValue( CreatePropertyList((__bridge CFURLRef)[NSURL fileURLWithPath:json], kCFPropertyListMutableContainers) );
     XCTAssertTrue(mutableValue != NULL);
     if(mutableValue != NULL)
     {
-        CFDictionarySetValue((CFMutableDictionaryRef)mutableValue, CFSTR("added"), kCFBooleanTrue);
-        CFArrayAppendValue((CFMutableArrayRef)CFDictionaryGetValue((CFDictionaryRef)mutableValue, CFSTR("k")), kCFNull);
-        XCTAssertEqual(CFArrayGetCount((CFArrayRef)CFDictionaryGetValue((CFDictionaryRef)mutableValue, CFSTR("k"))), 4);
-        CFRelease(mutableValue);
+        CFDictionarySetValue((CFMutableDictionaryRef)mutableValue.Get(), CFSTR("added"), kCFBooleanTrue);
+        CFArrayAppendValue((CFMutableArrayRef)CFDictionaryGetValue((CFDictionaryRef)mutableValue.Get(), CFSTR("k")), kCFNull);
+        XCTAssertEqual(CFArrayGetCount((CFArrayRef)CFDictionaryGetValue((CFDictionaryRef)mutableValue.Get(), CFSTR("k"))), 4);
     }
 }
 

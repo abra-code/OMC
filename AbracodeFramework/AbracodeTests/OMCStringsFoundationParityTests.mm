@@ -61,6 +61,8 @@ static NSString *DescribeString(CFStringRef s)
 // Takes ownership of both results.
 - (void)compare:(NSString *)what input:(CFStringRef)input foundation:(CFStringRef)expected ported:(CFStringRef)actual
 {
+    CFObj<CFStringRef> expectedOwner(expected);
+    CFObj<CFStringRef> actualOwner(actual);
     _checks++;
     bool same = ((expected == NULL) && (actual == NULL)) ||
                 ((expected != NULL) && (actual != NULL) && (CFStringCompare(expected, actual, 0) == kCFCompareEqualTo));
@@ -71,10 +73,6 @@ static NSString *DescribeString(CFStringRef s)
             [_firstMismatches addObject:[NSString stringWithFormat:@"%@ %@: Foundation %@, OMCStrings %@",
                                          what, DescribeString(input), DescribeString(expected), DescribeString(actual)]];
     }
-    if(expected != NULL)
-        CFRelease(expected);
-    if(actual != NULL)
-        CFRelease(actual);
 }
 
 - (void)checkPaths:(CFStringRef)s
@@ -128,9 +126,8 @@ static CFStringRef CreateFromCharacters(const std::vector<UniChar> &chars)
 {
     std::vector<UniChar> whole = inPrefix;
     whole.insert(whole.end(), ioCurrent.begin(), ioCurrent.end());
-    CFStringRef s = CreateFromCharacters(whole);
+    CFObj<CFStringRef> s( CreateFromCharacters(whole) );
     [self checkPaths:s];
-    CFRelease(s);
     if(ioCurrent.size() == inMaxLength)
         return;
     for(UniChar c : inAlphabet)
@@ -155,12 +152,10 @@ static CFStringRef CreateFromCharacters(const std::vector<UniChar> &chars)
         std::vector<UniChar> chars = {'A'};
         chars.insert(chars.end(), pair, pair + count);
         chars.push_back('b');
-        CFStringRef mixed = CreateFromCharacters(chars);
+        CFObj<CFStringRef> mixed( CreateFromCharacters(chars) );
         [self checkCaseAndEscapes:mixed];
-        CFRelease(mixed);
-        CFStringRef alone = CFStringCreateWithCharacters(kCFAllocatorDefault, pair, count);
+        CFObj<CFStringRef> alone( CFStringCreateWithCharacters(kCFAllocatorDefault, pair, count) );
         [self checkCaseAndEscapes:alone];
-        CFRelease(alone);
     }
     [self assertNoMismatches];
 }
@@ -188,10 +183,9 @@ static CFStringRef CreateFromCharacters(const std::vector<UniChar> &chars)
     const CFIndex brokenLengths[] = {3, 2, 2, 8, 4};
     for(size_t i = 0; i < 5; i++)
     {
-        CFStringRef s = CFStringCreateWithCharacters(kCFAllocatorDefault, broken[i], brokenLengths[i]);
+        CFObj<CFStringRef> s( CFStringCreateWithCharacters(kCFAllocatorDefault, broken[i], brokenLengths[i]) );
         [self checkPaths:s];
         [self checkCaseAndEscapes:s];
-        CFRelease(s);
     }
 
     XCTAssertTrue(CreatePathByExpandingTilde(NULL) == NULL);

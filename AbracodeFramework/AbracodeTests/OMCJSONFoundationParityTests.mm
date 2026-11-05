@@ -136,18 +136,14 @@ static bool SameValue(id a, CFTypeRef b)
         _checks++;
         NSJSONReadingOptions options = NSJSONReadingAllowFragments | (isMutable ? NSJSONReadingMutableContainers : 0);
         id expected = [NSJSONSerialization JSONObjectWithData:data options:options error:NULL];
-        CFStringRef error = NULL;
-        CFPropertyListRef actual = ACFJSONCreatePropertyList((__bridge CFDataRef)data,
-                                        isMutable ? kCFPropertyListMutableContainers : kCFPropertyListImmutable, &error);
+        CFObj<CFStringRef> error;
+        CFObj<CFPropertyListRef> actual( ACFJSONCreatePropertyList((__bridge CFDataRef)data,
+                                        isMutable ? kCFPropertyListMutableContainers : kCFPropertyListImmutable, &error) );
         if(!SameValue(expected, actual))
             [self report:[NSString stringWithFormat:@"read%@ [%@]: Foundation %@, ACFJSON %@ (%@)", isMutable ? @" mutable" : @"",
-                          ShowBytes(data), ShowObject(expected), ShowObject((__bridge id)actual), error ? (__bridge NSString *)error : @""]];
+                          ShowBytes(data), ShowObject(expected), ShowObject((__bridge id)actual.Get()), (error != NULL) ? (__bridge NSString *)error.Get() : @""]];
         if((actual == NULL) && (error == NULL))
             [self report:[NSString stringWithFormat:@"read [%@]: failed without an error description", ShowBytes(data)]];
-        if(actual != NULL)
-            CFRelease(actual);
-        if(error != NULL)
-            CFRelease(error);
     }
 }
 
@@ -176,16 +172,14 @@ static NSData *FoundationWrite(id obj)
     _checks++;
     NSData *expected = FoundationWrite(obj);
     ACFJSONWriteStatus status = kACFJSONWriteOK;
-    CFDataRef actual = ACFJSONCreateData((__bridge CFPropertyListRef)obj, &status);
+    CFObj<CFDataRef> actual( ACFJSONCreateData((__bridge CFPropertyListRef)obj, &status) );
     bool same = ((expected == nil) && (actual == NULL)) ||
-                ((expected != nil) && (actual != NULL) && [expected isEqualToData:(__bridge NSData *)actual]);
+                ((expected != nil) && (actual != NULL) && [expected isEqualToData:(__bridge NSData *)actual.Get()]);
     if(!same)
         [self report:[NSString stringWithFormat:@"write %@: Foundation [%@], ACFJSON [%@] status %d", label,
-                      expected ? ShowBytes(expected) : @"nil", actual ? ShowBytes((__bridge NSData *)actual) : @"NULL", (int)status]];
+                      expected ? ShowBytes(expected) : @"nil", (actual != NULL) ? ShowBytes((__bridge NSData *)actual.Get()) : @"NULL", (int)status]];
     if((actual == NULL) == (status == kACFJSONWriteOK))
         [self report:[NSString stringWithFormat:@"write %@: status %d does not match the result", label, (int)status]];
-    if(actual != NULL)
-        CFRelease(actual);
 }
 
 - (void)checkReadsOfAllStringsOver:(const char *)alphabet maxLength:(size_t)maxLength current:(std::string &)current
@@ -359,18 +353,12 @@ static NSArray<NSString *> *SampleDocuments(void)
         id expected = (foundationWritten != nil) ? [NSJSONSerialization JSONObjectWithData:foundationWritten
                                                                                     options:NSJSONReadingAllowFragments error:NULL] : nil;
         _checks++;
-        CFPropertyListRef first = ACFJSONCreatePropertyList((__bridge CFDataRef)data, kCFPropertyListImmutable, NULL);
-        CFDataRef written = (first != NULL) ? ACFJSONCreateData(first, NULL) : NULL;
-        CFPropertyListRef second = (written != NULL) ? ACFJSONCreatePropertyList(written, kCFPropertyListImmutable, NULL) : NULL;
+        CFObj<CFPropertyListRef> first( ACFJSONCreatePropertyList((__bridge CFDataRef)data, kCFPropertyListImmutable, NULL) );
+        CFObj<CFDataRef> written( (first != NULL) ? ACFJSONCreateData(first, NULL) : NULL );
+        CFObj<CFPropertyListRef> second( (written != NULL) ? ACFJSONCreatePropertyList(written, kCFPropertyListImmutable, NULL) : NULL );
         if(!SameValue(expected, second))
             [self report:[NSString stringWithFormat:@"round trip of %@: Foundation %@, ACFJSON %@", document,
-                          ShowObject(expected), ShowObject((__bridge id)second)]];
-        if(first != NULL)
-            CFRelease(first);
-        if(written != NULL)
-            CFRelease(written);
-        if(second != NULL)
-            CFRelease(second);
+                          ShowObject(expected), ShowObject((__bridge id)second.Get())]];
     }
     [self assertNoMismatches];
 }

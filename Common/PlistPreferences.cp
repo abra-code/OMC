@@ -3,17 +3,13 @@
 #include "ACFType.h"
 
 PlistPreferences::PlistPreferences(CFStringRef inPrefsIdentifier)
-	: mPrefsIdentifier(inPrefsIdentifier)
+	: mPrefsIdentifier(inPrefsIdentifier, kCFObjRetain)
 {
-	if(mPrefsIdentifier != NULL)
-		::CFRetain(mPrefsIdentifier);
 }
 
 
 PlistPreferences::~PlistPreferences()
 {
-	if(mPrefsIdentifier != NULL)
-		::CFRelease(mPrefsIdentifier);
 }
 
 void

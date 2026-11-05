@@ -32,7 +32,7 @@ SendMessageToRemotePortWithoutResponse(CFStringRef inPort, SInt32 inMsgId, CFDat
 CFDataRef
 SendMessageToRemotePortWithResponse(CFStringRef inPort, SInt32 inMsgId, CFDataRef dataToSend)
 {
-	CFDataRef outReplyData = NULL;
+	CFObj<CFDataRef> outReplyData;
 	CFObj<CFMessagePortRef> remotePort( ::CFMessagePortCreateRemote(kCFAllocatorDefault, inPort) );
 	if(remotePort != NULL)
 	{
@@ -44,11 +44,8 @@ SendMessageToRemotePortWithResponse(CFStringRef inPort, SInt32 inMsgId, CFDataRe
 						10,//rcv timout
 						kCFRunLoopDefaultMode,
 						&outReplyData );
-		if( (result != kCFMessagePortSuccess) && (outReplyData != NULL) )
-		{
-			::CFRelease(outReplyData);
-			outReplyData = NULL;
-		}
+		if(result != kCFMessagePortSuccess)
+			outReplyData.Release();
 	}
-	return outReplyData;
+	return outReplyData.Detach();
 }

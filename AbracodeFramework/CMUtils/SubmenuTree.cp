@@ -17,48 +17,25 @@ CommandMenuItem::CommandMenuItem(CFStringRef inSubmenuPathString,
 							SInt32 inCommandID,
 							MenuItemAttributes inAttributes,
 							UInt32 inModifiers)
-	: submenuPathString(inSubmenuPathString), itemName(inItemName), commandID(inCommandID),
+	: submenuPathString(inSubmenuPathString, kCFObjRetain), itemName(inItemName, kCFObjRetain), commandID(inCommandID),
 		attributes(inAttributes), modifiers(inModifiers)
 {
-	if(submenuPathString != NULL)
-		CFRetain(submenuPathString);
-
-	if(itemName != NULL)
-		CFRetain(itemName);
 }
 
 CommandMenuItem::~CommandMenuItem()
 {
-	if(submenuPathString != NULL)
-		CFRelease(submenuPathString);
-
-	if(itemName != NULL)
-		CFRelease(itemName);
 }
 
 
 SubmenuItem::SubmenuItem(CFURLRef inPath, CFStringRef inName)
-	: path(inPath), name(inName), /*submenuList(NULL),*/ itemList(NULL), isAppended(false), previousItem(NULL)
+	: path(inPath, kCFObjRetain), name(inName, kCFObjRetain), /*submenuList(NULL),*/ isAppended(false), previousItem(NULL)
 {
 	aeItemList.descriptorType = typeNull;
 	aeItemList.dataHandle = NULL;
-
-	if(path != NULL)
-		CFRetain(path);
-	
-	if(name != NULL)
-		CFRetain(name);
 }
 
 SubmenuItem::~SubmenuItem()
 {
-	if(path != NULL)
-		CFRelease(path);
-
-	if(name != NULL)
-		CFRelease(name);
-	
-	
 	if(aeItemList.dataHandle != NULL)
 		AEDisposeDesc( &aeItemList );
 
@@ -72,8 +49,7 @@ SubmenuItem::~SubmenuItem()
 			//if( (oneMenuObj != NULL) && (oneMenuObj->IsSubmenu() == false) )//don't delete submenu items, the chain owns them
 			//	delete oneMenuObj;
 		}
-
-		CFRelease(itemList);
+		//the array itself is released by itemList after this destructor body
 	}
 		
 //	if(submenuList != NULL)
@@ -87,7 +63,7 @@ SubmenuTree::SubmenuTree(AEDescList* inRootMenu)
 	: mSubmenuList(NULL)
 {
 	mRootItem = new SubmenuItem(NULL, CFSTR(""));//(SubmenuItem *)calloc(1, sizeof(SubmenuItem));
-	mRootItem->path = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, CFSTR("/"), kCFURLPOSIXPathStyle, true);//item takes owneship
+	mRootItem->path.Adopt( CFURLCreateWithFileSystemPath(kCFAllocatorDefault, CFSTR("/"), kCFURLPOSIXPathStyle, true) );//item takes owneship
 	
 	//mRootItem->itemList = NULL;//lazy initialization, create array later only when actually need
 	//mRootItem->itemList = CFArrayCreateMutable(kCFAllocatorDefault, 0, NULL);//NULL callback. no retain and no release. objects not owned
@@ -145,7 +121,7 @@ SubmenuTree::FindOrAddSubmenu(CFURLRef urlRef)
 		return NULL;
 	}
 	
-	newHead->name = CFURLCopyLastPathComponent(newHead->path);//responsible for deleting it
+	newHead->name.Adopt( CFURLCopyLastPathComponent(newHead->path) );//responsible for deleting it
 	
 	
 	//newHead->itemList = NULL; //lazy //CFArrayCreateMutable(kCFAllocatorDefault, 0, NULL);//NULL callback. no retain and no release. objects not owned	
@@ -187,14 +163,11 @@ SubmenuTree::AddMenuItem(	CFStringRef inSubmenuPathString,
 							MenuItemAttributes attributes,
 							UInt32 modifiers)
 {
-	CFURLRef submenuPath = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, inSubmenuPathString, kCFURLPOSIXPathStyle, true);
+	CFObj<CFURLRef> submenuPath( CFURLCreateWithFileSystemPath(kCFAllocatorDefault, inSubmenuPathString, kCFURLPOSIXPathStyle, true) );
 
 	SubmenuItem *submenuItem = NULL;
 	if(submenuPath != NULL)
-	{
 		submenuItem = FindOrAddSubmenu(submenuPath);
-		CFRelease(submenuPath);
-	}
 
 	if(submenuItem == NULL)
 	{
@@ -216,7 +189,7 @@ SubmenuTree::AddMenuItem(	CFStringRef inSubmenuPathString,
 										modifiers);
 
 	if(submenuItem->itemList == NULL)//we were lazy, now we have to work
-		submenuItem->itemList = CFArrayCreateMutable(kCFAllocatorDefault, 0, NULL);//NULL callback. no retain and no release. objects not owned
+		submenuItem->itemList.Adopt( CFArrayCreateMutable(kCFAllocatorDefault, 0, NULL) );//NULL callback. no retain and no release. objects not owned
 	CFArrayAppendValue(submenuItem->itemList, newItem);
 
 	return noErr;
@@ -331,7 +304,6 @@ void
 SubmenuTree::AppendSubmenu(SubmenuItem *inSubmenu)
 {
 	SubmenuItem *parentItem = NULL;
-	CFURLRef parentPath = NULL;
 
 	if(inSubmenu->isAppended)
 	{
@@ -344,7 +316,7 @@ SubmenuTree::AppendSubmenu(SubmenuItem *inSubmenu)
 	}
 
 	//if it is empty it may be root menu. we do not add root menu to itself
-	parentPath = CFURLCreateCopyDeletingLastPathComponent( kCFAllocatorDefault, inSubmenu->path );
+	CFObj<CFURLRef> parentPath( CFURLCreateCopyDeletingLastPathComponent( kCFAllocatorDefault, inSubmenu->path ) );
 	if(parentPath != NULL)
 	{
 		parentItem = FindOrAddSubmenu(parentPath);
@@ -358,11 +330,10 @@ SubmenuTree::AppendSubmenu(SubmenuItem *inSubmenu)
 			*/
 
 			if(parentItem->itemList == NULL)//we were lazy, now we have to work
-				parentItem->itemList = CFArrayCreateMutable(kCFAllocatorDefault, 0, NULL);//NULL callback. no retain and no release. objects not owned
+				parentItem->itemList.Adopt( CFArrayCreateMutable(kCFAllocatorDefault, 0, NULL) );//NULL callback. no retain and no release. objects not owned
 			CFArrayAppendValue(parentItem->itemList, inSubmenu);
 			
 			AppendSubmenu(parentItem);
 		}
-		CFRelease(parentPath);
 	}
 }

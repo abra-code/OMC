@@ -340,8 +340,7 @@ CreateCommonParentPath(OneObjProperties *inObjList, CFIndex inObjCount )
 		return nullptr;
 
 	OneObjProperties *oneObj;
-	std::vector<CFMutableArrayRef> arrayList(inObjCount);
-	memset(arrayList.data(), 0, inObjCount*sizeof(CFMutableArrayRef));
+	std::vector< CFObj<CFMutableArrayRef> > arrayList(inObjCount); //each starts empty
 
 //create parent paths starting from branches, going to the root,
 //putting in reverse order, so it will be easier to iterate from the root later
@@ -349,27 +348,23 @@ CreateCommonParentPath(OneObjProperties *inObjList, CFIndex inObjCount )
 	{
 		oneObj = inObjList + i;
 
-		CFMutableArrayRef pathsArray = ::CFArrayCreateMutable( kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks );
-		arrayList[i] = pathsArray;
+		arrayList[i].Adopt( ::CFArrayCreateMutable( kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks ) );
+		CFMutableArrayRef pathsArray = arrayList[i];
 		if(pathsArray != nullptr)
 		{
-			CFURLRef newURL = (oneObj->url != nullptr) ? CFURLCopyAbsoluteURL(oneObj->url) : nullptr;
+			CFObj<CFURLRef> newURL( (oneObj->url != nullptr) ? CFURLCopyAbsoluteURL(oneObj->url) : nullptr );
 
 			//we dispose of all these URLs, we leave only strings derived from them
  			while(newURL != nullptr)
  			{
- 				CFObj<CFURLRef> urlDel(newURL);//delete previous when we are done
-				newURL = ::CFURLCreateCopyDeletingLastPathComponent( kCFAllocatorDefault, newURL );
+				newURL.Adopt( ::CFURLCreateCopyDeletingLastPathComponent( kCFAllocatorDefault, newURL ) );//releases the previous one
 				if(newURL != nullptr)
 				{
 					CFObj<CFStringRef> aPath( ::CFURLCopyFileSystemPath(newURL, kCFURLPOSIXPathStyle) );
 					::CFArrayInsertValueAtIndex( pathsArray, 0, aPath.Get());//grand parent is inserted in front
 
 					if( kCFCompareEqualTo == ::CFStringCompare( CFSTR("/"), aPath.Get(), 0) ) //we reached the top
-					{	
-						::CFRelease(newURL);//delete current URL and end the loop
-						newURL = nullptr;
-					}
+						newURL.Release();//delete current URL and end the loop
 				}
 			}
 		}
@@ -392,7 +387,8 @@ CreateCommonParentPath(OneObjProperties *inObjList, CFIndex inObjCount )
 		}
 	}
 
-	CFStringRef commonParentPath = nullptr;
+	CFStringRef commonParentPath = nullptr;//borrowed from arrayList[0]
+	CFObj<CFStringRef> outPath;
 
 //find common parent
 	if( (minCount > 0) && (minCount < 0x7FFFFFFF) )
@@ -430,43 +426,30 @@ CreateCommonParentPath(OneObjProperties *inObjList, CFIndex inObjCount )
 		CFTypeRef commonLevelItem = ::CFArrayGetValueAtIndex( arrayList[0], commonPathLevel);
 		commonParentPath = ACFType<CFStringRef>::DynamicCast(commonLevelItem);
 		//Assert(commonParentPath != NULL);
-		
 		if(commonParentPath != nullptr)
 		{
 			//add slash at the end of parent path unless it is a root folder which has it already
 			if( kCFCompareEqualTo == ::CFStringCompare( commonParentPath, CFSTR("/"), 0 ) )
 			{
-				::CFRetain(commonParentPath);//prevent from deleting, we return this string
+				outPath.Adopt(commonParentPath, kCFObjRetain);//we return this string, it must outlive arrayList
 			}
 			else
 			{//we are adding just one character
-				CFMutableStringRef	modifStr = ::CFStringCreateMutableCopy( kCFAllocatorDefault,
+				CFObj<CFMutableStringRef> modifStr( ::CFStringCreateMutableCopy( kCFAllocatorDefault,
 																		::CFStringGetLength(commonParentPath)+1,
-																		commonParentPath );
+																		commonParentPath ) );
 				if(modifStr != nullptr)
 				{
 					::CFStringAppend( modifStr, CFSTR("/") );
-					commonParentPath = modifStr;
+					outPath.Adopt( modifStr.Detach() );
 				}
-				else
-					commonParentPath = nullptr;//failed
+				//else failed: outPath stays NULL
 			}
 
-			DEBUG_CFSTR( commonParentPath );
+			DEBUG_CFSTR( outPath.Get() );
 		}
 	}
-
-//dispose of path arrays
-	for(CFIndex i = 0; i < inObjCount; i++)
-	{
-		if(arrayList[i] != nullptr)
-		{
-			::CFRelease( arrayList[i] );
-			arrayList[i] = nullptr;
-		}
-	}
-	
-	return commonParentPath;
+	return outPath.Detach();//path arrays are released by arrayList
 }
 
 

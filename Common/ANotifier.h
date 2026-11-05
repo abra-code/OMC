@@ -17,13 +17,14 @@
 #include "AObserverBase.h"
 #include "DebugSettings.h"
 #include "ARefCounted.h"
+#include "CFObj.h"
 
 class ANotifier : public ARefCounted
 {
 public:
 
 	ANotifier()
-		: mObservers(NULL), mIterationArray(NULL), mIterationArrayElementCount(0)
+		: mIterationArray(NULL), mIterationArrayElementCount(0)
 	{
 	}
 
@@ -32,8 +33,7 @@ public:
 		if(mObservers != NULL)
 		{
 			CallAllObservers(TellObserverThisNotiferDies, this);
-			::CFRelease(mObservers);
-			mObservers = NULL;
+			mObservers.Release();
 		}
 	}
 
@@ -49,7 +49,7 @@ public:
 		//Before observer dies it calls RemoveObserver() on all its notifiers
 
 		if(mObservers == NULL)
-			mObservers = ::CFSetCreateMutable( kCFAllocatorDefault, 0, NULL/*ARefCounted::GetCFSetCallbacks()*/ );
+			mObservers.Adopt( ::CFSetCreateMutable( kCFAllocatorDefault, 0, NULL/*ARefCounted::GetCFSetCallbacks()*/ ) );
 
 		//if we are currently iterating, the new element added will not be processed
 		//unlikely sitaution but we should log it
@@ -164,7 +164,7 @@ protected:
 	}
 
 private:
-	mutable CFMutableSetRef mObservers;
+	mutable CFObj<CFMutableSetRef> mObservers;
 	mutable const void **mIterationArray;
 	mutable CFIndex mIterationArrayElementCount;
 };
