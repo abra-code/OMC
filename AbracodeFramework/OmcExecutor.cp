@@ -18,13 +18,15 @@
 #include "StAEDesc.h"
 #include "OmcTaskManager.h"
 #include "OmcTaskNotification.h"
-#include <sys/socket.h>
 #include "OnMyCommand.h"
 #include "OMCScriptsManager.h"
 #include "OMCPrivateConstants.h"
 #include "OMCActionUIRemoteHost.h"    // the per-command token: its C half is visible to C++
-
-static char oneLine[512];
+#include "OMCDialog.h"
+#include "OMCMainThreadSignal.h"
+#include <dispatch/dispatch.h>
+#include <mutex>
+#include <algorithm>
 
 void
 AddBundlePathToDict(ACFMutableDict &ioDict, CFStringRef inKey, CFBundleRef inBundle)
@@ -219,45 +221,276 @@ OmcExecutor::ReceiveNotification(void *ioData)
 
 #pragma mark -
 
-//we don't care about the data here, we only care about the info that it ended
-void PopenCFSocketCallback(
-		   CFSocketRef s, 
-		   CFSocketCallBackType callbackType, 
-		   CFDataRef address, 
-		   const void *data, 
-		   void *info )
+// Pipe I/O for one child process (Phase 3 step 4, Private/phase3-run-loop-design.md). The two
+// dispatch sources run on a private serial queue and only move bytes: output into pendingOutput,
+// input from a copy of the input string. Observers, Finish and everything else run on the main
+// thread. The I/O queue never touches the executor, whose reference count is not atomic; each
+// source and each pending delivery holds the state by a shared_ptr of its own.
+// A delivery reaches the main thread through OMCMainThreadSignal (platform code).
+struct POpenIO
 {
-	POpenExecutor *executor = (POpenExecutor *)info;
+						~POpenIO();
 
-	//DEBUG_CSTR("PopenCFSocketCallback called\n");
+	std::mutex			lock;
+	// guarded by lock
+	std::string			pendingOutput;				// read, not delivered yet
+	bool				outputEnded {false};		// EOF or a read error: nothing more will be read
+	OSStatus			readError {noErr};
+	bool				deliveryScheduled {false};	// a delivery is on its way
+	bool				readSuspended {false};		// too much undelivered output, see kMaxPendingOutput
+	bool				stopping {false};			// StopPipeIO has begun: the read source must not suspend again
+	std::unique_ptr<OMCMainThreadSignal> delivery;	// destroyed when the I/O stops; signaled only under the lock
 
-	if( executor != nullptr )
+	// main thread only
+	POpenExecutor *		executor {nullptr};			// nullptr once the executor has finished
+	bool				delivering {false};
+
+	// set before the sources start, then read-only
+	pid_t				pid {-1};
+	int					outputFD {-1};
+	int					inputFD {-1};
+	dispatch_queue_t	queue {nullptr};
+	dispatch_source_t	readSource {nullptr};
+	dispatch_source_t	writeSource {nullptr};
+	dispatch_group_t	descriptorsClosed {nullptr};	// entered per source, left by its cancel handler
+
+	// I/O queue only
+	std::string			input;
+	size_t				writtenInputBytes {0};
+};
+
+POpenIO::~POpenIO()
+{
+	if(readSource != nullptr)
+		dispatch_release(readSource);
+	if(writeSource != nullptr)
+		dispatch_release(writeSource);
+	if(descriptorsClosed != nullptr)
+		dispatch_release(descriptorsClosed);
+	if(queue != nullptr)
+		dispatch_release(queue);
+}
+
+// At most this much is read per read event, so a fast writer cannot hold the I/O queue
+static const size_t kMaxReadPerEvent = 256 * 1024;
+// Above this much undelivered output the read source is suspended until a delivery takes it.
+// The pipe used to give this backpressure by itself: nothing was read until the main thread read it.
+static const size_t kMaxPendingOutput = 1024 * 1024;
+// Observers get the output in pieces of this size, what the CFSocket callback used to read at once,
+// so progress parsing sees the same granularity
+static const size_t kOutputDeliveryPieceSize = 512;
+// At most this much per delivery: the rest goes in the next pass of the run loop, so events, timers
+// and other commands are served in between (the CFSocket callback returned after every 512 bytes)
+static const size_t kMaxDeliveryPerPass = 64 * 1024;
+
+typedef std::shared_ptr<POpenIO> POpenIOHandle;
+
+// Called with io->lock held, from either thread. Asks the main thread for a delivery, once until it runs.
+static void ScheduleDelivery(const POpenIOHandle &io)
+{
+	if( !io->deliveryScheduled && (io->delivery != nullptr) )
 	{
-		CFSocketNativeHandle fd = ::CFSocketGetNative( s );
-		if(fd < 0)
+		io->deliveryScheduled = true;
+		io->delivery->Signal();
+	}
+}
+
+// Main thread. Hands what was read to the observers, in order, at most kMaxDeliveryPerPass per call,
+// and finishes the executor after the last bytes. The rest, and what arrives meanwhile, goes in the
+// next pass of the run loop (or of the wait), so events, timers and other commands are served between
+// batches. A child
+// that writes faster than the observers take its output would otherwise keep the main thread here,
+// where nothing can cancel it, until it ends. Re-entered from an observer (one that runs the run
+// loop), it returns, and the newer bytes follow the older ones in the next pass.
+static void DeliverPendingOutput(const POpenIOHandle &io)
+{
+	if( io->delivering || (io->executor == nullptr) )
+		return;
+
+	io->delivering = true;
+	ARefCountedObj<POpenExecutor> keepAlive(io->executor, kARefCountRetain);
+
+	std::string output;
+	bool ended = false;
+	OSStatus error = noErr;
+	bool resume = false;
+	{
+		std::lock_guard<std::mutex> guard(io->lock);
+		if(io->pendingOutput.size() > kMaxDeliveryPerPass)
 		{
-			executor->Finish(false, true, readErr);
-			return; //error
+			output.assign(io->pendingOutput, 0, kMaxDeliveryPerPass);
+			io->pendingOutput.erase(0, kMaxDeliveryPerPass);
 		}
-		
-		if(callbackType == kCFSocketReadCallBack)
+		else
 		{
-			ssize_t bytesRead = read( fd, oneLine, sizeof(oneLine) );
-			if(bytesRead < 0)//error
-			{
-				executor->Finish(false, true, readErr);
-				return;
-			}
-			else if(bytesRead > 0)
-				executor->ProcessOutputData( oneLine, bytesRead );
-			else //if( bytesRead == 0 )
-				executor->Finish(false, true, noErr);//end of pipe, kill reading
+			output.swap(io->pendingOutput);
 		}
-		else if(callbackType == kCFSocketWriteCallBack)
+		io->deliveryScheduled = false;
+		ended = io->outputEnded && (io->pendingOutput.size() == 0); // the end comes after the last bytes
+		error = io->readError;
+		if(io->readSuspended)
 		{
-			executor->WriteInputStringChunk();
+			io->readSuspended = false;
+			resume = true;
 		}
 	}
+
+	if(resume)
+		dispatch_resume(io->readSource);
+
+	for(size_t offset = 0; (offset < output.size()) && (io->executor != nullptr); offset += kOutputDeliveryPieceSize)
+		io->executor->ProcessOutputData( output.data() + offset, std::min(kOutputDeliveryPieceSize, output.size() - offset) );
+
+	if(io->executor != nullptr)
+	{
+		if(ended)
+		{
+			io->executor->Finish(false, true, error);
+		}
+		else
+		{
+			std::lock_guard<std::mutex> guard(io->lock);
+			if( (io->pendingOutput.size() > 0) || io->outputEnded )
+			{
+				// A re-entered call may have taken the signal for these bytes: ask again
+				io->deliveryScheduled = false;
+				ScheduleDelivery(io);
+			}
+		}
+	}
+
+	io->delivering = false;
+}
+
+// The delivery signal's callbacks; its context is a POpenIOHandle the signal owns
+static void DeliverySignaled(void *inContext)
+{
+	POpenIOHandle io = *static_cast<POpenIOHandle *>(inContext); // a copy: the delivery may stop the I/O and destroy the signal
+	DeliverPendingOutput(io);
+}
+
+static void DeliveryContextRelease(void *inContext)
+{
+	delete static_cast<POpenIOHandle *>(inContext);
+}
+
+static void ReadEvent(void *inContext)
+{
+	const POpenIOHandle &io = *static_cast<POpenIOHandle *>(inContext);
+
+	char buffer[16 * 1024];
+	std::string chunk;
+	bool ended = false;
+	OSStatus error = noErr;
+	while(chunk.size() < kMaxReadPerEvent)
+	{
+		ssize_t bytesRead = read(io->outputFD, buffer, sizeof(buffer));
+		if(bytesRead > 0)
+		{
+			chunk.append(buffer, (size_t)bytesRead);
+		}
+		else if(bytesRead == 0)
+		{
+			ended = true;
+			break;
+		}
+		else if(errno == EINTR)
+		{
+			continue;
+		}
+		else if(errno == EAGAIN)
+		{
+			break; // all read: the descriptor is non-blocking
+		}
+		else
+		{
+			ended = true;
+			error = readErr;
+			break;
+		}
+	}
+
+	if( (chunk.size() == 0) && !ended )
+		return;
+
+	{
+		std::lock_guard<std::mutex> guard(io->lock);
+		io->pendingOutput.append(chunk);
+		if(ended)
+		{
+			io->outputEnded = true;
+			io->readError = error;
+		}
+		else if( (io->pendingOutput.size() >= kMaxPendingOutput) && !io->readSuspended && !io->stopping )
+		{
+			io->readSuspended = true;
+			dispatch_suspend(io->readSource);
+		}
+
+		ScheduleDelivery(io);
+	}
+
+	if(ended)
+		dispatch_source_cancel(io->readSource);
+}
+
+static void WriteEvent(void *inContext)
+{
+	POpenIO &io = **static_cast<POpenIOHandle *>(inContext);
+
+	if(io.writtenInputBytes < io.input.size())
+	{
+		ssize_t bytesWritten = write(io.inputFD, io.input.data() + io.writtenInputBytes, io.input.size() - io.writtenInputBytes);
+		if(bytesWritten > 0)
+		{
+			io.writtenInputBytes += (size_t)bytesWritten;
+		}
+		else if( (bytesWritten < 0) && ((errno == EAGAIN) || (errno == EINTR)) )
+		{
+			return; // the pipe is full: the source fires again when there is room
+		}
+		else
+		{
+			// 0, or failed for good (EPIPE when the child closed its input): stop writing
+			io.writtenInputBytes = io.input.size();
+		}
+	}
+
+	if(io.writtenInputBytes >= io.input.size())
+	{
+		std::string().swap(io.input); // free it now, it cannot be written twice
+		io.writtenInputBytes = 0;
+		dispatch_source_cancel(io.writeSource); // the cancel handler closes the pipe: the child sees the end of its input
+	}
+}
+
+// A cancel handler is the only place that closes its descriptor, and the last call with its context
+static void CloseDescriptorAfterCancel(void *inContext, bool inOutput)
+{
+	POpenIOHandle *ioBox = static_cast<POpenIOHandle *>(inContext);
+	POpenIO &io = **ioBox;
+	int fd = inOutput ? io.outputFD : io.inputFD;
+	omc_pforget_fd(io.pid, fd);
+	(void)close(fd);
+	dispatch_group_leave(io.descriptorsClosed);
+	delete ioBox; // may be the last reference: nothing after this
+}
+
+static void ReadCanceled(void *inContext)
+{
+	CloseDescriptorAfterCancel(inContext, true);
+}
+
+static void WriteCanceled(void *inContext)
+{
+	CloseDescriptorAfterCancel(inContext, false);
+}
+
+static void SetNonBlocking(int inFD)
+{
+	int fileFlags = fcntl(inFD, F_GETFL);
+	if(fileFlags != -1)
+		(void)fcntl(inFD, F_SETFL, fileFlags | O_NONBLOCK);
 }
 
 
@@ -365,30 +598,6 @@ POpenExecutor::Execute( const char *inCommand, OSStatus &outError )
 	
 	if(outError == 0)
 	{
-		CFSocketContext context;
-		context.version = 0;
-		context.info = this;
-		context.retain = nullptr;
-		context.release = nullptr;
-		context.copyDescription = nullptr;
-
-#if 0 //_DEBUG_
-		//::CFShow( ::CFRunLoopGetCurrent() );
-		CFObj<CFStringRef> outStr( CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("PopenExecutor::Execute cfRunLoop=0x%p"), (void *) CFRunLoopGetCurrent() ) );
-		CFShow( outStr );
-#endif
-
-		mReadSocket.Adopt( ::CFSocketCreateWithNative( kCFAllocatorDefault, mChildProcessInfo.outputFD, kCFSocketReadCallBack,
-												PopenCFSocketCallback, &context) );
-		if(mReadSocket != nullptr)
-		{
-			mReadSource.Adopt( ::CFSocketCreateRunLoopSource(kCFAllocatorDefault, mReadSocket, 0) );
-			if(mReadSource != nullptr)
-			{
-				::CFRunLoopAddSource( ::CFRunLoopGetCurrent(), mReadSource, kCFRunLoopCommonModes/*kCFRunLoopDefaultMode*/ );
-			}
-		}
-	
 		if(wantsToWriteToStdin)
 		{
 			//set SIGPIPE handler to IGNORE so the host app will not be forced quit if writing to broken pipe happens
@@ -402,101 +611,189 @@ POpenExecutor::Execute( const char *inCommand, OSStatus &outError )
 					err = sigaction(SIGPIPE, &signalState, nullptr);
 				}
 			}
-		
-			// Non-blocking writes: the input is written on this thread, which is also the one that reads the
-			// child's output. A blocking write of more than the pipe holds waited for the child to read, while
-			// the child waited for us to read its output, and the applet hung. Now write() takes what fits
-			// and the next write callback continues. The flag is on our end of the pipe only, not the child's.
-			{
-				int fileFlags = fcntl(mChildProcessInfo.inputFD, F_GETFL);
-				if(fileFlags != -1)
-					(void)fcntl(mChildProcessInfo.inputFD, F_SETFL, fileFlags | O_NONBLOCK);
-			}
-
-			mWriteSocket.Adopt( ::CFSocketCreateWithNative( kCFAllocatorDefault, mChildProcessInfo.inputFD, kCFSocketWriteCallBack,
-													PopenCFSocketCallback, &context) );
-			if(mWriteSocket != nullptr)
-			{
-				mWriteSource.Adopt( ::CFSocketCreateRunLoopSource(kCFAllocatorDefault, mWriteSocket, 0) );
-				if(mWriteSource != nullptr)
-				{
-					::CFRunLoopAddSource( ::CFRunLoopGetCurrent(), mWriteSource, kCFRunLoopCommonModes/*kCFRunLoopDefaultMode*/ );
-				}
-			}
 		}
-        
+
+		if( !StartPipeIO(wantsToWriteToStdin) )
+		{
+			outError = ioErr; // nothing would read the child's output; Finish closes the pipes and waits for it
+			return true;
+		}
+
         if (mWaitForTaskCompletion)
         {
-            // keep us alive for the duration of the loop
-            // we may end up with Finish() while in runloop, get released and dealloced
+            // keep us alive for the duration of the wait
+            // we may end up with Finish() while waiting, get released and dealloced
             ARefCountedObj<POpenExecutor> localRetain(this, kARefCountRetain);
-            
-            TRACE_CSTR("POpenExecutor waiting for child process execution to finish\n");
-            do
-            {
-                CFRunLoopRunResult runLoopResult = CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0, true /*returnAfterSourceHandled*/);
-                if((runLoopResult == kCFRunLoopRunFinished) ||
-                   (runLoopResult == kCFRunLoopRunStopped))
-                {
-                    break;
-                }
-            }
-            while(mWaitForTaskCompletion);
 
-            // Even if we were waiting here in the loop, we don't consider this case
+            TRACE_CSTR("POpenExecutor waiting for child process execution to finish\n");
+            WaitForTaskCompletion();
+
+            // Even if we were waiting here, we don't consider this case
             // a blocking execution for the purpose of OmcHostTaskManager::RunNext()
             // With popen async execution the OMCHostTaskManager should receive NoteTaskEnded() and call RunNext()
             // returning true here indicates the call was blocking and had no chance to call Finish()
             // calling Finish() too many times causes overrelease and crash
-            bool hasFinished = this->mHasFinished;            
-            return !hasFinished;
+            return !mHasFinished;
         }
-        
+
 		return false;
 	}
-	
+
 	return true; // error condition. finished
+}
+
+// Starts reading the child's output and, when there is input, writing it. Main thread.
+bool
+POpenExecutor::StartPipeIO(bool inWritesInput)
+{
+	POpenIOHandle io = std::make_shared<POpenIO>();
+	io->executor = this;
+	io->pid = mChildProcessInfo.pid;
+	io->outputFD = mChildProcessInfo.outputFD;
+	io->inputFD = inWritesInput ? mChildProcessInfo.inputFD : -1;
+	if( (io->outputFD < 0) || (inWritesInput && (io->inputFD < 0)) )
+		return false;
+
+	// User-interactive, the main thread's class: StopPipeIO waits on the main thread for this queue's
+	// cancel handlers, and waiting on a lower class is a priority inversion. The queue only moves bytes.
+	dispatch_queue_attr_t queueAttributes = dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_SERIAL, QOS_CLASS_USER_INTERACTIVE, 0);
+	io->queue = dispatch_queue_create("com.abracode.OMC.POpenExecutor.io", queueAttributes);
+	io->descriptorsClosed = dispatch_group_create();
+	if( (io->queue == nullptr) || (io->descriptorsClosed == nullptr) )
+		return false;
+
+	// Non-blocking on our ends only (O_NONBLOCK belongs to the open file description, and the child's
+	// ends are other ones): a read event reads what is there, and a write takes what fits instead of
+	// waiting for the child to read, which deadlocked when the child wrote output while it read
+	// (the stdin fix, OMCStandardInputTests).
+	SetNonBlocking(io->outputFD);
+	io->readSource = dispatch_source_create(DISPATCH_SOURCE_TYPE_READ, (uintptr_t)io->outputFD, 0, io->queue);
+	if(inWritesInput)
+	{
+		SetNonBlocking(io->inputFD);
+		io->input.swap(mInputString);
+		io->writeSource = dispatch_source_create(DISPATCH_SOURCE_TYPE_WRITE, (uintptr_t)io->inputFD, 0, io->queue);
+	}
+
+	bool sourcesCreated = (io->readSource != nullptr) && (!inWritesInput || (io->writeSource != nullptr));
+	if(sourcesCreated)
+		io->delivery = OMCMainThreadSignal::Create(DeliverySignaled, new POpenIOHandle(io), DeliveryContextRelease);
+
+	if( !sourcesCreated || (io->delivery == nullptr) )
+	{
+		// A source must be activated before its last release; with no handlers, nothing runs.
+		// The descriptors stay with omc_popen, and Finish closes them.
+		if(io->readSource != nullptr)
+		{
+			dispatch_source_cancel(io->readSource);
+			dispatch_resume(io->readSource);
+		}
+		if(io->writeSource != nullptr)
+		{
+			dispatch_source_cancel(io->writeSource);
+			dispatch_resume(io->writeSource);
+		}
+		mInputString.swap(io->input);
+		return false;
+	}
+
+	dispatch_set_context(io->readSource, new POpenIOHandle(io));
+	dispatch_source_set_event_handler_f(io->readSource, ReadEvent);
+	dispatch_source_set_cancel_handler_f(io->readSource, ReadCanceled);
+	dispatch_group_enter(io->descriptorsClosed);
+
+	if(io->writeSource != nullptr)
+	{
+		dispatch_set_context(io->writeSource, new POpenIOHandle(io));
+		dispatch_source_set_event_handler_f(io->writeSource, WriteEvent);
+		dispatch_source_set_cancel_handler_f(io->writeSource, WriteCanceled);
+		dispatch_group_enter(io->descriptorsClosed);
+	}
+
+	mIO = io;
+	dispatch_resume(io->readSource);
+	if(io->writeSource != nullptr)
+		dispatch_resume(io->writeSource);
+	return true;
+}
+
+// Stops both sources and returns once their cancel handlers have closed the descriptors, so the
+// child sees the pipes closed before omc_pclose waits for it. Main thread; safe to call again.
+void
+POpenExecutor::StopPipeIO()
+{
+	POpenIOHandle io = mIO;
+	if(io == nullptr)
+		return;
+
+	io->executor = nullptr; // no more deliveries to us
+
+	bool resume = false;
+	std::unique_ptr<OMCMainThreadSignal> delivery;
+	{
+		std::lock_guard<std::mutex> guard(io->lock);
+		// A read event already running would otherwise suspend the source after this check, and a
+		// suspended source never runs its cancel handler: the wait below would never return
+		io->stopping = true;
+		if(io->readSuspended)
+		{
+			io->readSuspended = false;
+			resume = true;
+		}
+		delivery.swap(io->delivery); // the I/O queue signals it only under the lock
+	}
+
+	// Its context holds the state, so it must go (a cycle otherwise); also when called from its callback
+	delivery.reset();
+
+	dispatch_source_cancel(io->readSource);
+	if(resume)
+		dispatch_resume(io->readSource); // a suspended source runs its cancel handler only once resumed
+	if(io->writeSource != nullptr)
+		dispatch_source_cancel(io->writeSource);
+
+	// The handlers on the I/O queue never wait for the main thread, so this cannot deadlock
+	dispatch_group_wait(io->descriptorsClosed, DISPATCH_TIME_FOREVER);
+	mChildProcessInfo.outputFD = -1;
+	mChildProcessInfo.inputFD = -1;
+}
+
+// WAIT_FOR_TASK_COMPLETION: returns once the executor has finished. Main thread.
+void
+POpenExecutor::WaitForTaskCompletion()
+{
+	POpenIOHandle io = mIO;
+	if(io == nullptr)
+		return;
+
+	// What a pass runs is platform code (OMCMainThreadSignal::WaitPass): on macOS the run loop's default
+	// mode, as released (owner, 2026-11-06), on Linux only the engine's own work. Neither spins: a pass
+	// sleeps until something arrives, at most 0.1 s.
+	while(!mHasFinished)
+	{
+		bool keepWaiting = OMCMainThreadSignal::WaitPass(0.1);
+		DeliverPendingOutput(io); // usually done by the delivery signal during the pass already
+		OMCDialog::ServicePendingMessages(); // what the script sends its dialog lands during the wait
+		if(!keepWaiting)
+			break;
+	}
 }
 
 POpenExecutor::~POpenExecutor()
 {
 	TRACE_CSTR("POpenExecutor::~POpenExecutor()\n");
-	//just to be safe, if it did not go the normal way through Finish(), we need to release the socket
-
+	//just to be safe, if it did not go the normal way through Finish()
+	StopPipeIO();
 	(void)omc_pclose( mChildProcessInfo.pid );
-
-	if(mReadSocket != nullptr)
-	{
-		::CFSocketInvalidate( mReadSocket );
-		mReadSocket.Release();
-	}
-
-	if(mWriteSocket != nullptr)
-	{
-		::CFSocketInvalidate( mWriteSocket );
-		mWriteSocket.Release();
-	}
-
-	if( mReadSource != nullptr )
-	{
-		::CFRunLoopRemoveSource( ::CFRunLoopGetCurrent(), mReadSource, kCFRunLoopCommonModes/*kCFRunLoopDefaultMode*/ );
-		mReadSource.Release();
-	}
-
-	if( mWriteSource != nullptr )
-	{
-		::CFRunLoopRemoveSource( ::CFRunLoopGetCurrent(), mWriteSource, kCFRunLoopCommonModes/*kCFRunLoopDefaultMode*/ );
-		mWriteSource.Release();
-	}
 }
 
 void
 POpenExecutor::Finish(bool wasSynchronous, bool sendNotification, OSStatus inError)
 {
     // check if Finish() has already been called
-    // normally in async execution it is called just once when closing the output pipe
+    // normally in async execution it is called just once when the output ends
     // in synchronous execution it is also called after the task ends so let's return early
-    
+
     if(mHasFinished)
     {
         return;
@@ -505,39 +802,15 @@ POpenExecutor::Finish(bool wasSynchronous, bool sendNotification, OSStatus inErr
 
 	TRACE_CSTR("POpenExecutor::Finish\n");
 
-	int pipeResult = 0;
+	StopPipeIO();
 
-	pipeResult = omc_pclose( mChildProcessInfo.pid );
+	int pipeResult = omc_pclose( mChildProcessInfo.pid );
 
-	if(mReadSocket != nullptr)
-	{
-		::CFSocketInvalidate( mReadSocket );
-		mReadSocket.Release();
-	}
-
-	if(mWriteSocket != nullptr)
-	{
-		::CFSocketInvalidate( mWriteSocket );
-		mWriteSocket.Release();
-	}
-
-	if( mReadSource != nullptr )
-	{
-		::CFRunLoopRemoveSource( ::CFRunLoopGetCurrent(), mReadSource, kCFRunLoopCommonModes/*kCFRunLoopDefaultMode*/ );
-		mReadSource.Release();
-	}
-
-	if( mWriteSource != nullptr )
-	{
-		::CFRunLoopRemoveSource( ::CFRunLoopGetCurrent(), mWriteSource, kCFRunLoopCommonModes/*kCFRunLoopDefaultMode*/ );
-		mWriteSource.Release();
-	}
-	
     if(mWaitForTaskCompletion)
     {
         mWaitForTaskCompletion = false;
-        
-        // even if we wait for the task completion in the runloop
+
+        // even if we wait for the task completion
         // we don't consider popen a synchronous execution
         // this matters because the logic for determining if all tasks finished is different
         // for synchronous (blocking) and asynchronouse execution
@@ -552,68 +825,6 @@ void
 POpenExecutor::SetInputString( CFStringRef inInputPipe )
 {
 	mInputString = CMUtils::CreateUTF8StringFromCFString(inInputPipe);
-	mWrittenInputBytesCount = 0;
-}
-
-
-void
-POpenExecutor::CloseWriting()
-{
-	omc_pclose_write( mChildProcessInfo.pid );
-	mChildProcessInfo.inputFD = -1;
-
-	if(mWriteSocket != nullptr)
-	{
-		::CFSocketInvalidate( mWriteSocket );
-		mWriteSocket.Release();
-	}
-
-	if( mWriteSource != nullptr )
-	{
-		::CFRunLoopRemoveSource( ::CFRunLoopGetCurrent(), mWriteSource, kCFRunLoopCommonModes/*kCFRunLoopDefaultMode*/ );
-		mWriteSource.Release();
-	}
-}
-
-void
-POpenExecutor::WriteInputStringChunk()
-{
-	if( (mInputString.length() > 0) && (mWrittenInputBytesCount < mInputString.length()) && (mWriteSocket != nullptr) )
-	{
-		const char *dataToWrite = mInputString.c_str() + mWrittenInputBytesCount;
-		size_t byteCount = mInputString.length() - mWrittenInputBytesCount;
-
-		CFSocketNativeHandle fd = ::CFSocketGetNative( mWriteSocket );
-		ssize_t bytesWritten = write(fd, dataToWrite, byteCount);
-		if(bytesWritten > 0)
-		{
-			mWrittenInputBytesCount += bytesWritten;
-		}
-		else if( (bytesWritten < 0) && ((errno == EAGAIN) || (errno == EINTR)) )
-		{
-			// the pipe is full (the fd is non-blocking): wait for the next write callback
-		}
-		else
-		{
-			// write() returned 0 or failed for good (e.g. EPIPE when the child closed stdin).
-			// Never add a negative result to the unsigned counter - that underflows it.
-			// Force the completion path below so the pipe is closed deterministically.
-			mWrittenInputBytesCount = mInputString.length();
-		}
-
-		// CFSocket does not re-enable the write callback by itself: ask for the next one while input remains
-		if( (mWrittenInputBytesCount < mInputString.length()) && (mWriteSocket != nullptr) )
-			::CFSocketEnableCallBacks( mWriteSocket, kCFSocketWriteCallBack );
-	}
-	
-	if( (mWrittenInputBytesCount >= mInputString.length()) || (mWriteSocket == nullptr) )
-	{
-		CloseWriting();
-
-		//release input string early - we cannot write it twice anyway because we close the pipe
-		mInputString.resize(0);
-		mWrittenInputBytesCount = 0;
-	}
 }
 
 #pragma mark -

@@ -198,15 +198,23 @@ static NSString *ExpectedSequence(NSInteger count)
 - (void)checkLargeOutputWithWait:(BOOL)wait
 {
     // 40000 lines are about 229 KB, several times a pipe buffer (16 to 64 KB)
-    NSString *commandID = wait ? @"large_output_wait" : @"large_output_async";
-    NSURL *bundleURL = [self bundleNamed:(wait ? @"RunLoopLargeOutputWait" : @"RunLoopLargeOutputAsync")
-                               commandID:commandID script:@"#!/bin/sh\n/usr/bin/seq 1 40000\n" wait:wait extraKeys:nil];
+    [self checkOutputOfLines:40000 wait:wait label:@"large" busyMainThread:0];
+}
+
+- (void)checkOutputOfLines:(NSInteger)lineCount wait:(BOOL)wait label:(NSString *)label busyMainThread:(NSTimeInterval)busySeconds
+{
+    NSString *commandID = [NSString stringWithFormat:@"%@_output_%@", label, wait ? @"wait" : @"async"];
+    NSString *bundleName = [NSString stringWithFormat:@"RunLoopOutput_%@", commandID];
+    NSString *script = [NSString stringWithFormat:@"#!/bin/sh\n/usr/bin/seq 1 %ld\n", (long)lineCount];
+    NSURL *bundleURL = [self bundleNamed:bundleName commandID:commandID script:script wait:wait extraKeys:nil];
 
     OMCTestExecutionObserver *observer = [OMCTestExecutionObserver new];
     XCTAssertEqual([self runCommand:commandID inBundle:bundleURL observer:observer], noErr);
+    if (busySeconds > 0)
+        [NSThread sleepForTimeInterval:busySeconds]; // the main thread does not deliver meanwhile
     XCTAssertTrue([observer waitForCompletionWithTimeout:kRunLoopTestTimeout]);
 
-    NSString *expected = ExpectedSequence(40000);
+    NSString *expected = ExpectedSequence(lineCount);
     NSString *output = observer.capturedOutput;
     XCTAssertEqual(output.length, expected.length, @"All of the output should arrive (wait=%d)", wait);
     XCTAssertTrue([output isEqualToString:expected], @"The output should arrive in order (wait=%d)", wait);
@@ -220,6 +228,18 @@ static NSString *ExpectedSequence(NSInteger count)
 - (void)testLargeOutputArrivesWholeAndInOrderWithWait
 {
     [self checkLargeOutputWithWait:YES];
+}
+
+/// About 4.6 MB while the main thread is busy for a second: more than the engine buffers before it
+/// stops reading until the observers catch up (1 MB), so reading pauses and resumes.
+- (void)testVeryLargeOutputArrivesWholeAndInOrder
+{
+    [self checkOutputOfLines:600000 wait:NO label:@"huge" busyMainThread:1.0];
+}
+
+- (void)testVeryLargeOutputArrivesWholeAndInOrderWithWait
+{
+    [self checkOutputOfLines:600000 wait:YES label:@"huge" busyMainThread:0];
 }
 
 #pragma mark - Dialog messages before the next command

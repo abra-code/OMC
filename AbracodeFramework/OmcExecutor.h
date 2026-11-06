@@ -19,9 +19,11 @@
 #include "omc_popen.h"
 #include <vector>
 #include <string>
+#include <memory>
 
 char ** CreateEnvironmentList(CFDictionaryRef inEnviron);
 
+struct POpenIO;
 class OmcTaskManager;
 class OutputWindowHandler;
 class CommandDescription;
@@ -87,14 +89,15 @@ public:
 
 	virtual void		Finish(bool wasSynchronous, bool sendNotification, OSStatus inError);
 	virtual pid_t		GetChildProcessID() const { return mChildProcessInfo.pid; }
-	
-	void				CloseWriting();
-	void				WriteInputStringChunk();
-
 
 protected:
 	virtual void		SetInputString( CFStringRef inInputPipe );
 	virtual bool		Execute( const char *inCommand, OSStatus &outError );
+
+private:
+	bool				StartPipeIO(bool inWritesInput);
+	void				StopPipeIO();
+	void				WaitForTaskCompletion();
 
 protected:
 
@@ -102,13 +105,9 @@ protected:
 	CFObj<CFMutableDictionaryRef> mEnvironmentVariables;
 
     ChildProcessInfo		mChildProcessInfo {-1, -1, NULL};
-    CFObj<CFSocketRef>			mReadSocket;
-    CFObj<CFSocketRef>			mWriteSocket;
-    CFObj<CFRunLoopSourceRef>	mReadSource;
-    CFObj<CFRunLoopSourceRef>	mWriteSource;
+	std::shared_ptr<POpenIO> mIO; // the pipes' dispatch sources and the output not delivered yet
 
 	std::string		        mInputString;
-    ByteCount				mWrittenInputBytesCount {0};
     bool                    mWaitForTaskCompletion {false};
     bool                    mHasFinished {false};
 };

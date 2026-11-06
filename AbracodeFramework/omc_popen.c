@@ -671,6 +671,29 @@ omc_pclose(pid_t inChildPid)
     return (pid == inChildPid) ? status : -1;
 }
 
+void omc_pforget_fd(pid_t inChildPid, int inFD)
+{
+	ChildProcessInfoLink *thisLink = NULL;
+
+	if(inFD < 0)
+		return;
+
+	THREAD_LOCK();
+
+	for (thisLink = sChildProcessInfoList; thisLink != NULL; thisLink = thisLink->next)
+	{
+		if (thisLink->info.pid == inChildPid)
+		{
+			if(thisLink->info.inputFD == inFD)
+				thisLink->info.inputFD = -1;
+			if(thisLink->info.outputFD == inFD)
+				thisLink->info.outputFD = -1;
+		}
+	}
+
+	THREAD_UNLOCK();
+}
+
 //half-close. needs to be followed by full omc_pclose() when really done
 void omc_pclose_write(pid_t inChildPid)
 {

@@ -59,6 +59,11 @@ int omc_popen_with_token(const char *command, char * const *inShell, char * cons
 int omc_pclose(pid_t inChildPid);
 void omc_pclose_write(pid_t inChildPid);
 
+//For a caller that closes the child's pipe descriptor itself: forget it, so that omc_pclose and
+//omc_pclose_write do not close the same number again (it may by then belong to another file).
+//Call it right before closing inFD. Does nothing when inFD is not one of the child's descriptors.
+void omc_pforget_fd(pid_t inChildPid, int inFD);
+
 #ifdef __cplusplus
 }
 #endif
