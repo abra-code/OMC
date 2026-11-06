@@ -38,4 +38,9 @@ public:
 	// Main thread: runs the work that is ready now, without waiting. Used before a NEXT_COMMAND_ID
 	// command starts, so other commands' output and events triggered meanwhile land first.
 	static void				RunReadyWork();
+
+	// Main thread: runs inCallback(inContext) once, on the main thread, after inDelaySeconds, also during a
+	// nested wait (WaitPass) on both platforms. Returns
+	// false when it cannot be scheduled; then nothing runs, and the caller still owns inContext.
+	static bool				RunAfter(double inDelaySeconds, Callback inCallback, void *inContext);
 };

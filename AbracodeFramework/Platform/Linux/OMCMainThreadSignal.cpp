@@ -68,6 +68,24 @@ void RunPendingCallbacksOnMainQueue(void *)
 	RunPendingCallbacks();
 }
 
+// Any thread. Queues a signaled state for the main thread: the main queue runs it, or a nested wait does.
+void EnqueueSignaled(const std::shared_ptr<SignalState> &inState)
+{
+	bool scheduleDrain = false;
+	{
+		std::lock_guard<std::mutex> guard(sLock);
+		if(inState->valid && !inState->signaled)
+		{
+			inState->signaled = true;
+			scheduleDrain = sPending.empty();
+			sPending.push_back(inState);
+		}
+	}
+	if(scheduleDrain)
+		dispatch_async_f(dispatch_get_main_queue(), nullptr, RunPendingCallbacksOnMainQueue);
+	dispatch_semaphore_signal(WakeSemaphore());
+}
+
 class MainQueueSignal : public OMCMainThreadSignal
 {
 public:
@@ -85,19 +103,7 @@ public:
 
 	void					Signal() override
 							{
-								bool scheduleDrain = false;
-								{
-									std::lock_guard<std::mutex> guard(sLock);
-									if(mState->valid && !mState->signaled)
-									{
-										mState->signaled = true;
-										scheduleDrain = sPending.empty();
-										sPending.push_back(mState);
-									}
-								}
-								if(scheduleDrain)
-									dispatch_async_f(dispatch_get_main_queue(), nullptr, RunPendingCallbacksOnMainQueue);
-								dispatch_semaphore_signal(WakeSemaphore());
+								EnqueueSignaled(mState);
 							}
 
 private:
@@ -122,6 +128,48 @@ OMCMainThreadSignal::WaitPass(double inTimeoutSeconds)
 	// Only the engine's own work (option A): the signaled callbacks. The caller services dialog messages.
 	(void)dispatch_semaphore_wait(WakeSemaphore(), dispatch_time(DISPATCH_TIME_NOW, (int64_t)(inTimeoutSeconds * NSEC_PER_SEC)));
 	RunPendingCallbacks();
+	return true;
+}
+
+namespace
+{
+
+struct DelayedCall
+{
+	OMCMainThreadSignal::Callback	callback;
+	void *							context;
+};
+
+void RunDelayedCall(void *inContext)
+{
+	DelayedCall *delayedCall = static_cast<DelayedCall *>(inContext);
+	delayedCall->callback(delayedCall->context);
+}
+
+void DeleteDelayedCall(void *inContext)
+{
+	delete static_cast<DelayedCall *>(inContext);
+}
+
+// On a background queue when the delay has passed. The call joins the signaled callbacks rather than
+// going to the main queue directly, so it also runs during a nested wait, as the macOS timer does.
+void DelayedCallDue(void *inContext)
+{
+	std::shared_ptr<SignalState> state = std::make_shared<SignalState>();
+	state->callback = RunDelayedCall;
+	state->context = inContext;
+	state->release = DeleteDelayedCall; // when the last copy of the state goes, after the call
+	EnqueueSignaled(state);
+}
+
+} // namespace
+
+bool
+OMCMainThreadSignal::RunAfter(double inDelaySeconds, Callback inCallback, void *inContext)
+{
+	dispatch_after_f(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(inDelaySeconds * NSEC_PER_SEC)),
+					dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0),
+					new DelayedCall { inCallback, inContext }, DelayedCallDue);
 	return true;
 }
 

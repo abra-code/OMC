@@ -30,7 +30,7 @@
 #include <mach/host_info.h>
 #include <mach/mach_host.h>
 
-void KeyPressSimulationCallBack(CFRunLoopTimerRef timer, void* context);
+void KeyPressSimulationCallBack(void *context);
 
 static void
 RefreshObjectsInFinder(CommandRuntimeData &commandRuntimeData)
@@ -208,25 +208,14 @@ OmcHostTaskManager::Finalize()
     if(mCurrCommand.simulatePaste && (mPlugin->GetError() == noErr))
     {
         TRACE_CSTR( "OnMyCommandCM::Finalize: simulate paste\n" );
-        //one-shot timer: the run loop retains it while it is scheduled and invalidates it after it fires
-        CFObj<CFRunLoopTimerRef> myTimer( CFRunLoopTimerCreate(
-                                                         kCFAllocatorDefault,
-                                                         CFAbsoluteTimeGetCurrent() + 0.05,
-                                                         0,		// interval
-                                                         0,		// flags
-                                                         0,		// order
-                                                         KeyPressSimulationCallBack,
-                                                         NULL) );
-        
-        if(myTimer != NULL)
+        if( OMCMainThreadSignal::RunAfter(0.05, KeyPressSimulationCallBack, nullptr) )
         {
-            TRACE_CSTR( "OnMyCommandCM:Finalize: adding timer for paste simulation\n" );
-            CFRunLoopAddTimer(CFRunLoopGetCurrent(), myTimer, kCFRunLoopCommonModes);
+            TRACE_CSTR( "OnMyCommandCM:Finalize: scheduled paste simulation\n" );
         }
         else
         {
             usleep(50000);//0.05s for compatibility with "Shortcuts"
-            KeyPressSimulationCallBack(NULL, NULL);
+            KeyPressSimulationCallBack(nullptr);
         }
     }
     
@@ -746,11 +735,9 @@ GetHostBasicInfo()
 
 
 
-//it is a one-shot timer which is supposed to self-invalidate but also needs to be released
-//so we invalidate here and release as well
-
+// Runs 50 ms after a command that asked for SIMULATE_PASTE has finished (OMCMainThreadSignal::RunAfter)
 void
-KeyPressSimulationCallBack(CFRunLoopTimerRef timer, void* context)
+KeyPressSimulationCallBack(void *context)
 {
 #pragma unused (context)
 
@@ -778,8 +765,5 @@ KeyPressSimulationCallBack(CFRunLoopTimerRef timer, void* context)
 
     CFObj<CGEventRef> cmdUp = CGEventCreateKeyboardEvent(nullptr, (CGKeyCode)55, false);
     CGEventPost(kCGHIDEventTap, cmdUp);
-
-	if(timer != nullptr)
-		CFRunLoopTimerInvalidate(timer);//our creator released its reference after scheduling it
 }
 

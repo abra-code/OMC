@@ -91,6 +91,47 @@ OMCMainThreadSignal::WaitPass(double inTimeoutSeconds)
 	return (runLoopResult != kCFRunLoopRunStopped) && (runLoopResult != kCFRunLoopRunFinished);
 }
 
+namespace
+{
+
+struct DelayedCall
+{
+	OMCMainThreadSignal::Callback	callback;
+	void *							context;
+};
+
+void DelayedCallFired(CFRunLoopTimerRef, void *inInfo)
+{
+	DelayedCall *delayedCall = static_cast<DelayedCall *>(inInfo);
+	delayedCall->callback(delayedCall->context);
+}
+
+void DelayedCallRelease(const void *inInfo)
+{
+	delete static_cast<const DelayedCall *>(inInfo);
+}
+
+} // namespace
+
+bool
+OMCMainThreadSignal::RunAfter(double inDelaySeconds, Callback inCallback, void *inContext)
+{
+	// A one-shot CFRunLoopTimer in the common modes, as released: the run loop holds it while it is
+	// scheduled and invalidates it after it fires; CF then releases its info.
+	CFRunLoopTimerContext timerContext = {};
+	timerContext.info = new DelayedCall { inCallback, inContext };
+	timerContext.release = DelayedCallRelease;
+	CFObj<CFRunLoopTimerRef> timer( ::CFRunLoopTimerCreate(kCFAllocatorDefault, ::CFAbsoluteTimeGetCurrent() + inDelaySeconds,
+															0 /*interval*/, 0 /*flags*/, 0 /*order*/, DelayedCallFired, &timerContext) );
+	if(timer == nullptr)
+	{
+		DelayedCallRelease(timerContext.info);
+		return false;
+	}
+	::CFRunLoopAddTimer(::CFRunLoopGetCurrent(), timer, kCFRunLoopCommonModes);
+	return true;
+}
+
 void
 OMCMainThreadSignal::RunReadyWork()
 {
