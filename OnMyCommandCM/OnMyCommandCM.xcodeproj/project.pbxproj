@@ -68,7 +68,6 @@
 		1DED8E512222AFEA00A2CAF7 /* DebugSettings.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DebugSettings.h; sourceTree = "<group>"; };
 		E2269B9D0EB6DBF90029CCF5 /* OmcProjectCommon.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = OmcProjectCommon.xcconfig; path = ../Common/OmcProjectCommon.xcconfig; sourceTree = SOURCE_ROOT; };
 		E242355D0B2E8F1A00D1E25A /* OnMyCommand.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = OnMyCommand.h; path = ../AbracodeFramework/OnMyCommand.h; sourceTree = SOURCE_ROOT; };
-		E24976C40B18435500D1A1DA /* MessagePortListener.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MessagePortListener.h; sourceTree = "<group>"; };
 		E24977430B18C1DC00D1A1DA /* ACFType.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ACFType.h; sourceTree = "<group>"; };
 		E24977440B18C1DC00D1A1DA /* ACFArr.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ACFArr.h; sourceTree = "<group>"; };
 		E24977460B18C1DC00D1A1DA /* ACFDict.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ACFDict.h; sourceTree = "<group>"; };
@@ -174,7 +173,6 @@
 			children = (
 				E25898140B3525A5001DCCBE /* ARefCounted.h */,
 				1DED8E502222AFA800A2CAF7 /* ACMPlugin.h */,
-				E24976C40B18435500D1A1DA /* MessagePortListener.h */,
 				E24977430B18C1DC00D1A1DA /* ACFType.h */,
 				E24977440B18C1DC00D1A1DA /* ACFArr.h */,
 				E24977460B18C1DC00D1A1DA /* ACFDict.h */,

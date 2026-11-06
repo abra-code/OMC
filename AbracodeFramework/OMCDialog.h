@@ -10,7 +10,7 @@
 #pragma once
 
 #include "AObserver.h"
-#include "MessagePortListener.h"
+#include "OMCMessagePortListener.h"
 #include "OMCDialogControlAccessor.h"
 #include <memory>
 
@@ -67,7 +67,7 @@ public:
 	virtual CFTypeRef		CopyControlValue(CFStringRef inControlID, CFStringRef inControlPart, SelectionIterator *inSelIterator, CFDictionaryRef *outCustomProperties) noexcept;
 	virtual void			CopyAllControlValues(CFSetRef requestedNibControls, SelectionIterator *inSelIterator) noexcept;
 
-	virtual CFDataRef		ReceivePortMessage( SInt32 msgid, CFDataRef inData ) noexcept;
+	void					ReceivePortMessage( CFDataRef inData ) noexcept;
 	virtual void			ReceiveNotification(void *ioData) noexcept;
 
 	virtual CFStringRef		CreateControlValue(SInt32 inSpecialWordID, CFStringRef inControlString, UInt16 escSpecialCharsMode, bool isEnvStyle) noexcept = 0;
@@ -96,6 +96,6 @@ protected:
 private:
 	OMCDialog *				next;
 	ARefCountedObj< AObserver<OMCDialog> > mTaskObserver;
-	MessagePortListener<OMCDialog> mListener;
+	std::unique_ptr<OMCMessagePortListener> mListener;
 	CFObj<CFStringRef>		mDialogUUID;
 };

@@ -23,6 +23,7 @@
 #include "OnMyCommand.h"
 #include "CommandRuntimeData.h"
 #include "OMCDialog.h"
+#include "OMCMainThreadSignal.h"
 #include "OMCHelpers.h"
 #include "OMCEngineTempDir.h"
 
@@ -357,20 +358,11 @@ OmcHostTaskManager::NoteTaskEnded(CFIndex finishedExecutorIndex, bool wasSynchro
             
             if(nextCommandID != nullptr)
             {
-                // Before kicking off the next command process whatever events might have been triggered in the meantime
-                // This is especially needed for dialog control messages which might change the state of the dialog values
-                // and affect the next command if it tries to read them back
-
-                CFRunLoopRunResult runloopResult;
-                do
-                {
-                    runloopResult = CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0, true /*returnAfterSourceHandled*/);
-                }
-                while(runloopResult == kCFRunLoopRunHandledSource);
-
-                // The loop above can stop while a dialog message is still queued: a pass that receives
-                // the run loop's own wake-up or a timer message also reports "timed out". Handle what the
-                // finished script sent before its exit, so the next command reads the values it set.
+                // Before kicking off the next command process whatever events might have been triggered in the meantime,
+                // above all the dialog control messages the finished script sent before it exited: they may change
+                // the dialog values the next command reads. RunReadyWork can stop while a message is still queued,
+                // so the dialog ports are serviced on their own as well.
+                OMCMainThreadSignal::RunReadyWork();
                 OMCDialog::ServicePendingMessages();
 
                 OSStatus __unused err = mPlugin->ExecuteSubcommand(mCurrCommand.name, nextCommandID, finishedTask->commandRuntimeData, nullptr);

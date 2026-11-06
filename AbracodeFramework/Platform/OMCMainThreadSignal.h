@@ -34,4 +34,8 @@ public:
 	// Main thread: one pass of a nested wait. Returns after a signaled callback or other work ran, or
 	// after inTimeoutSeconds. Returns false when the wait must end early (the run loop was stopped).
 	static bool				WaitPass(double inTimeoutSeconds);
+
+	// Main thread: runs the work that is ready now, without waiting. Used before a NEXT_COMMAND_ID
+	// command starts, so other commands' output and events triggered meanwhile land first.
+	static void				RunReadyWork();
 };

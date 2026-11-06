@@ -10,6 +10,7 @@
 		1D0A1B2C2F6E000000000103 /* OMCProgressParsing.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1D0A1B2C2F6E000000000101 /* OMCProgressParsing.cpp */; };
 		1D0A1B2C2F6D000000000104 /* OMCCommandRunner.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1D0A1B2C2F6D000000000101 /* OMCCommandRunner.cpp */; };
 		1D0A1B2C2F6D000000000105 /* OMCLog.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1D0A1B2C2F6D000000000103 /* OMCLog.mm */; };
+		1D0A1B2C2F70000000000106 /* OMCMessagePortListener.cp in Sources */ = {isa = PBXBuildFile; fileRef = 1D0A1B2C2F70000000000105 /* OMCMessagePortListener.cp */; };
 		1D0A1B2C2F70000000000103 /* OMCMainThreadSignal.cp in Sources */ = {isa = PBXBuildFile; fileRef = 1D0A1B2C2F70000000000102 /* OMCMainThreadSignal.cp */; };
 		1D0A1B2C2F6A000000000106 /* ACFJSON.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1D0A1B2C2F6A000000000101 /* ACFJSON.cpp */; };
 		1D0A1B2C2F6A000000000107 /* ACFPath.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1D0A1B2C2F6A000000000103 /* ACFPath.cpp */; };
@@ -380,6 +381,8 @@
 		1D0A1B2C2F6D000000000101 /* OMCCommandRunner.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCCommandRunner.cpp; sourceTree = "<group>"; };
 		1D0A1B2C2F6D000000000102 /* OMCLog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCLog.h; sourceTree = "<group>"; };
 		1D0A1B2C2F6D000000000103 /* OMCLog.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCLog.mm; sourceTree = "<group>"; };
+		1D0A1B2C2F70000000000104 /* OMCMessagePortListener.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCMessagePortListener.h; sourceTree = "<group>"; };
+		1D0A1B2C2F70000000000105 /* OMCMessagePortListener.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCMessagePortListener.cp; sourceTree = "<group>"; };
 		1D0A1B2C2F70000000000101 /* OMCMainThreadSignal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCMainThreadSignal.h; sourceTree = "<group>"; };
 		1D0A1B2C2F70000000000102 /* OMCMainThreadSignal.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCMainThreadSignal.cp; sourceTree = "<group>"; };
 		1D0A1B2C2F6A000000000100 /* ACFJSON.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ACFJSON.h; sourceTree = "<group>"; };
@@ -418,7 +421,6 @@
 		1D71F32C2206F214009FAF91 /* ACFDict.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ACFDict.h; sourceTree = "<group>"; };
 		1D71F32E2206F353009FAF91 /* StAEDesc.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StAEDesc.h; sourceTree = "<group>"; };
 		1D71F32F2206F5FB009FAF91 /* StSwitchToFront.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StSwitchToFront.h; sourceTree = "<group>"; };
-		1D71F3302206F778009FAF91 /* MessagePortListener.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MessagePortListener.h; sourceTree = "<group>"; };
 		1D71F336220702D7009FAF91 /* notify */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = notify; sourceTree = "<group>"; };
 		1D742DC219388292005DFF97 /* pasteboard */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = pasteboard; sourceTree = "<group>"; };
 		1D80B9B822E447E800CF1AF5 /* OMCiTermExecutor.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCiTermExecutor.cp; sourceTree = "<group>"; };
@@ -881,6 +883,7 @@
 				1D0A1B2C2F6A000000000004 /* StandardDirectories.h */,
 				1D0A1B2C2F6D000000000102 /* OMCLog.h */,
 				1D0A1B2C2F70000000000101 /* OMCMainThreadSignal.h */,
+				1D0A1B2C2F70000000000104 /* OMCMessagePortListener.h */,
 				1D0A1B2C2F6A000000000003 /* Apple */,
 			);
 			path = Platform;
@@ -895,6 +898,7 @@
 				1D9BCB8722CCA65A00F4EAB6 /* StandardDirectories.m */,
 				1D0A1B2C2F6D000000000103 /* OMCLog.mm */,
 				1D0A1B2C2F70000000000102 /* OMCMainThreadSignal.cp */,
+				1D0A1B2C2F70000000000105 /* OMCMessagePortListener.cp */,
 				1D0A1B2C2F6A000000000001 /* NibDialogs */,
 			);
 			path = Apple;
@@ -1015,7 +1019,6 @@
 				E29ED21B0D09FD8D00C9D5E8 /* ARefCounted.h */,
 				1D3BB165229BEB1D00542933 /* AUniquePtr.h */,
 				1D71F3292206F116009FAF91 /* DebugSettings.h */,
-				1D71F3302206F778009FAF91 /* MessagePortListener.h */,
 				E2C433440DEE72F700E976D2 /* PlistPreferences.cp */,
 				E2C433430DEE72F600E976D2 /* PlistPreferences.h */,
 				E2ED3AEC0D0B27E400481D8F /* StSwitchToFront.mm */,
@@ -1532,6 +1535,7 @@
 				1D0A1B2C2F6D000000000104 /* OMCCommandRunner.cpp in Sources */,
 				1D0A1B2C2F6D000000000105 /* OMCLog.mm in Sources */,
 				1D0A1B2C2F70000000000103 /* OMCMainThreadSignal.cp in Sources */,
+				1D0A1B2C2F70000000000106 /* OMCMessagePortListener.cp in Sources */,
 				E2C84DEB0DA9F30F0056DBC2 /* OMCCommandMenu.mm in Sources */,
 				1D80B9BA22E447E800CF1AF5 /* OMCiTermExecutor.cp in Sources */,
 				E24243580DDC140F0002BF9E /* OMCOutputWindowController.mm in Sources */,

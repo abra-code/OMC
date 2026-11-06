@@ -90,3 +90,17 @@ OMCMainThreadSignal::WaitPass(double inTimeoutSeconds)
 	CFRunLoopRunResult runLoopResult = ::CFRunLoopRunInMode(kCFRunLoopDefaultMode, inTimeoutSeconds, true /*returnAfterSourceHandled*/);
 	return (runLoopResult != kCFRunLoopRunStopped) && (runLoopResult != kCFRunLoopRunFinished);
 }
+
+void
+OMCMainThreadSignal::RunReadyWork()
+{
+	// The default mode until a pass handles nothing, as released since v4.0.1. A pass that receives the
+	// run loop's own wake-up or a timer message also ends it, so callers that need every queued dialog
+	// message also call OMCDialog::ServicePendingMessages().
+	CFRunLoopRunResult runLoopResult;
+	do
+	{
+		runLoopResult = ::CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0, true /*returnAfterSourceHandled*/);
+	}
+	while(runLoopResult == kCFRunLoopRunHandledSource);
+}

@@ -124,3 +124,9 @@ OMCMainThreadSignal::WaitPass(double inTimeoutSeconds)
 	RunPendingCallbacks();
 	return true;
 }
+
+void
+OMCMainThreadSignal::RunReadyWork()
+{
+	RunPendingCallbacks();
+}

@@ -90,7 +90,11 @@ void
 OMCDialog::StartListening()
 {
 	CFObj<CFStringRef> portName( ::CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("%s.OMCDialogControlPort-%@"), GetAppGroupIdentifier(), GetDialogUUID()) );
-	mListener.StartListening(this, portName);
+	mListener.reset(); // a second start replaces the first port
+	mListener = OMCMessagePortListener::Create(portName, [](void *inContext, CFDataRef inData)
+	{
+		static_cast<OMCDialog *>(inContext)->ReceivePortMessage(inData);
+	}, this);
 }
 
 /*static*/
@@ -103,7 +107,10 @@ OMCDialog::ServicePendingMessages() noexcept
 		openDialogs.emplace_back(oneLink, kARefCountRetain);
 
 	for(ARefCountedObj<OMCDialog> &oneDialog : openDialogs)
-		oneDialog->mListener.ServicePending();
+	{
+		if(oneDialog->mListener != nullptr)
+			oneDialog->mListener->ServicePending();
+	}
 }
 
 
@@ -252,19 +259,17 @@ OMCDialog::CopyAllControlValues(CFSetRef requestedNibControls, SelectionIterator
 // instead of saving to file and wait for command to finish
 //inData is a plist XML data in exactly the same format as read from temp plist file for disk-based communication
 
-CFDataRef
-OMCDialog::ReceivePortMessage( SInt32 msgid, CFDataRef inData ) noexcept
+void
+OMCDialog::ReceivePortMessage( CFDataRef inData ) noexcept
 {
 	if( mControlAccessor == nullptr )
-		return NULL;
+		return;
 
 	CFObj<CFPropertyListRef> thePlist( CFPropertyListCreateWithData( kCFAllocatorDefault, inData,
                                                                        kCFPropertyListImmutable, nullptr, nullptr) );
 	CFDictionaryRef plistDict = ACFType<CFDictionaryRef>::DynamicCast( (CFPropertyListRef)thePlist );
 	if(plistDict != NULL)
 		mControlAccessor->SetControlValues(plistDict);
-
-	return NULL;
 }
 
 void
