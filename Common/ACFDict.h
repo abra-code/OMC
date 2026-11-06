@@ -122,7 +122,7 @@ public:
     
     //note: reverse retain default than CFObj!
 	ACFMutableDict( CFMutableDictionaryRef inObj, CFObjRetainType inRetainType = kCFObjRetain ) noexcept
-		: ACFDictBase<CFMutableDictionaryRef>( inObj, kCFObjRetain )
+		: ACFDictBase<CFMutableDictionaryRef>( inObj, inRetainType )
 	{
 	}
 

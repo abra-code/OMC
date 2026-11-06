@@ -1497,7 +1497,7 @@ GetAllDialogControllers()
                                 {
                                     memset(stackBuff, 0, sizeof(stackBuff));
                                     
-                                    CFArrayRef numberArray = CFStringCreateArrayBySeparatingStrings( kCFAllocatorDefault, argString, CFSTR(",") );
+                                    CFObj<CFArrayRef> numberArray( CFStringCreateArrayBySeparatingStrings( kCFAllocatorDefault, argString, CFSTR(",") ) );
                                     CFIndex numberCount = 0;
                                     if(numberArray != NULL)
                                         numberCount = CFArrayGetCount(numberArray);
@@ -1576,16 +1576,16 @@ GetAllDialogControllers()
                                             else
                                                 okToAddArgument = NO;
 
-                                            oneItemRef = ::CFArrayGetValueAtIndex(numberArray, 0);
+                                            oneItemRef = ::CFArrayGetValueAtIndex(numberArray, 2);
                                             numString = ACFType<CFStringRef>::DynamicCast( oneItemRef );
                                             if(numString != NULL)
                                                 theRect->size.width = (CGFloat)::CFStringGetDoubleValue(numString);
                                             else
                                                 okToAddArgument = NO;
                                             
-                                            oneItemRef = ::CFArrayGetValueAtIndex(numberArray, 1);
+                                            oneItemRef = ::CFArrayGetValueAtIndex(numberArray, 3);
                                             numString = ACFType<CFStringRef>::DynamicCast( oneItemRef );
-                                            if(theRect != NULL)
+                                            if(numString != NULL)
                                                 theRect->size.height =  (CGFloat)::CFStringGetDoubleValue(numString);
                                             else
                                                 okToAddArgument = NO;

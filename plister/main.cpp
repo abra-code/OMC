@@ -1341,7 +1341,7 @@ CFObjSpec *
 AddObjSpec(CFURLRef propPath, CFObjSpec *oldHead)
 {
 	CFObjSpec *newHead = new CFObjSpec(oldHead);
-	CFStringRef oneComponent = ::CFURLCopyLastPathComponent(propPath);
+	CFObj<CFStringRef> oneComponent( ::CFURLCopyLastPathComponent(propPath) );
 	
 	if( (kCFCompareEqualTo == ::CFStringCompare(oneComponent, CFSTR("/"), 0)) ||
 		(kCFCompareEqualTo == ::CFStringCompare(oneComponent, CFSTR(""), 0)) )
@@ -1349,7 +1349,7 @@ AddObjSpec(CFURLRef propPath, CFObjSpec *oldHead)
 		return newHead;
 	}
 	
-	newHead->key.Adopt( oneComponent );
+	newHead->key.Swap( oneComponent );
 	newHead->index = GetPositiveInteger(newHead->key);
 
 	CFObj<CFURLRef> parentPath( ::CFURLCreateCopyDeletingLastPathComponent( kCFAllocatorDefault, propPath ) );
