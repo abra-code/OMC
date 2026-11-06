@@ -42,7 +42,7 @@ Special values:
 	omc_resize [followed by 2 space separated numbers] (for dialog window or controls)
 	omc_move [followed by 2 space separated numbers] (for dialog window or controls)
 	omc_scroll [followed by 2 space separated numbers] (for view within NSScrollerView)
-	omc_invoke [followed by space separated ObjC message] (may be sent to control or window)
+	omc_invoke [followed by space separated ObjC message] (may be sent to control or window; a range, point, size or rect argument is comma-separated numbers: location,length / x,y / width,height / x,y,width,height)
 	omc_set_property <property_key> <value> (ActionUI only; value is a string or a JSON fragment)
 	omc_set_state <state_key> <value> (ActionUI only; value is a string or JSON fragment)
 	omc_present_modal <resource_name_or_path> [dismiss_action_id] (ActionUI only)
@@ -87,6 +87,7 @@ omc_dialog_control __NIB_DLG_GUID__ 4 omc_scroll 0 0
 omc_dialog_control __NIB_DLG_GUID__ omc_window "My Window Title"
 omc_dialog_control __NIB_DLG_GUID__ omc_window omc_terminate_cancel
 omc_dialog_control __NIB_DLG_GUID__ 2 omc_invoke setAlignment: 2
+omc_dialog_control __ACTIONUI_WINDOW_UUID__ omc_window omc_invoke setFrame: 100,100,600,400 display: YES
 omc_dialog_control __ACTIONUI_WINDOW_UUID__ 1 omc_set_property "columns" '["Name","Action"]'
 omc_dialog_control __ACTIONUI_WINDOW_UUID__ 2 omc_set_property "disabled" true
 omc_dialog_control __ACTIONUI_WINDOW_UUID__ 4 omc_set_state "isLoading" true
