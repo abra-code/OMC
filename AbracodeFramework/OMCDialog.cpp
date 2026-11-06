@@ -14,6 +14,7 @@
 #include "OMCDialogControlHelpers.h"
 #include "ACFType.h"
 #include "OmcTaskNotification.h"
+#include <vector>
 
 OMCDialog* sChainHead = nullptr;
 
@@ -90,6 +91,19 @@ OMCDialog::StartListening()
 {
 	CFObj<CFStringRef> portName( ::CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("%s.OMCDialogControlPort-%@"), GetAppGroupIdentifier(), GetDialogUUID()) );
 	mListener.StartListening(this, portName);
+}
+
+/*static*/
+void
+OMCDialog::ServicePendingMessages() noexcept
+{
+	// A message can close its dialog and so unlink it, so take the list first and keep each dialog alive
+	std::vector< ARefCountedObj<OMCDialog> > openDialogs;
+	for(OMCDialog *oneLink = sChainHead; oneLink != nullptr; oneLink = oneLink->next)
+		openDialogs.emplace_back(oneLink, kARefCountRetain);
+
+	for(ARefCountedObj<OMCDialog> &oneDialog : openDialogs)
+		oneDialog->mListener.ServicePending();
 }
 
 

@@ -74,6 +74,8 @@ public:
 	virtual void			AddEnvironmentVariablesForAllControls(CFMutableDictionaryRef ioEnvironList) noexcept = 0;
 
 	static ARefCountedObj<OMCDialog> FindDialogByUUID(CFStringRef inUUID);
+	// Handles the omc_dialog_control messages already queued for every open dialog, and nothing else.
+	static void				ServicePendingMessages() noexcept;
 	static CFStringRef		CreateControlValueString(CFTypeRef controlValue, CFDictionaryRef customProperties, UInt16 escSpecialCharsMode, bool isEnvStyle) noexcept;
     static Boolean          IsPredefinedDialogCommandID(CFStringRef inCommandID) noexcept;
 

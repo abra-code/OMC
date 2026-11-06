@@ -11,6 +11,7 @@
 
 #include <CoreFoundation/CoreFoundation.h>
 #include "CFObj.h"
+#include <mach/mach.h>
 
 // "Receiver" class must implement ReceivePortMessage method as follows:
 // CFDataRef	ReceivePortMessage( SInt32 msgid, CFDataRef inData );
@@ -58,6 +59,9 @@ public:
 								}
 
 								::CFRunLoopAddSource( ::CFRunLoopGetCurrent(), mRunLoopSource, kCFRunLoopCommonModes/*kCFRunLoopDefaultMode*/);
+								// also in a mode of its own, for ServicePending()
+								::CFRunLoopAddSource( ::CFRunLoopGetCurrent(), mRunLoopSource, ServicePendingMode());
+								mRunLoop.Adopt( ::CFRunLoopGetCurrent(), kCFObjRetain );
 							}
 							return noErr;
 						}
@@ -73,8 +77,28 @@ public:
 							if( mRunLoopSource != NULL )
 							{
 								::CFRunLoopRemoveSource( ::CFRunLoopGetCurrent(), mRunLoopSource, kCFRunLoopCommonModes/*kCFRunLoopDefaultMode*/);
+								::CFRunLoopRemoveSource( ::CFRunLoopGetCurrent(), mRunLoopSource, ServicePendingMode());
 								mRunLoopSource.Release();
 							}
+							mRunLoop.Release();
+						}
+
+	// Handles the messages already queued on the port before returning, and runs no other source.
+	// Looping until a zero-timeout CFRunLoopRunInMode reports "timed out" is not enough: each pass
+	// receives one Mach message from the mode's port set, and when that message is the run loop's
+	// own wake-up or a timer firing, the pass reports "timed out" while the port still holds
+	// messages. So this loops on the port's queue length, in a mode that holds only listener sources.
+	// Must be called on the thread that started listening; elsewhere it does nothing.
+	void				ServicePending()
+						{
+							if( (mRunLoopSource == NULL) || (mRunLoop == NULL) || (::CFRunLoopGetCurrent() != mRunLoop) )
+								return;
+
+							// Each pass handles a message or consumes a wake-up or timer message; the bound only
+							// stops a sender that keeps the queue full from holding the caller here.
+							const int kMaxPasses = 64;
+							for(int pass = 0; (pass < kMaxPasses) && (PendingMessageCount() > 0); pass++)
+								(void)::CFRunLoopRunInMode(ServicePendingMode(), 0, true /*returnAfterSourceHandled*/);
 						}
 
 	bool				IsListening() { return (mMessagePort != NULL); }
@@ -98,6 +122,40 @@ public:
 						}
 
 protected:
+	static CFStringRef	ServicePendingMode()
+						{
+							return CFSTR("com.abracode.MessagePortListener.ServicePending");
+						}
+
+	// The number of messages waiting on the port's Mach receive right.
+	mach_port_msgcount_t PendingMessageCount() const
+						{
+							if(mRunLoopSource == NULL)
+								return 0;
+
+							// Ask for a version 0 context, the larger one, so the copy fits whatever the source is;
+							// the version copied back says which one it is.
+							union
+							{
+								CFRunLoopSourceContext	version0;
+								CFRunLoopSourceContext1	version1;
+							} sourceContext = {};
+							::CFRunLoopSourceGetContext(mRunLoopSource.Get(), &sourceContext.version0);
+							if( (sourceContext.version1.version != 1) || (sourceContext.version1.getPort == NULL) )
+								return 0;
+
+							mach_port_t port = sourceContext.version1.getPort(sourceContext.version1.info);
+							if(port == MACH_PORT_NULL)
+								return 0;
+
+							mach_port_status_t portStatus = {};
+							mach_msg_type_number_t statusCount = MACH_PORT_RECEIVE_STATUS_COUNT;
+							kern_return_t result = ::mach_port_get_attributes(mach_task_self(), port, MACH_PORT_RECEIVE_STATUS,
+																			(mach_port_info_t)&portStatus, &statusCount);
+							return (result == KERN_SUCCESS) ? portStatus.mps_msgcount : 0;
+						}
+
 	CFObj<CFMessagePortRef>		mMessagePort;
     CFObj<CFRunLoopSourceRef>	mRunLoopSource;
+	CFObj<CFRunLoopRef>			mRunLoop; // the run loop the source was added to, for ServicePending()
 };

@@ -368,6 +368,11 @@ OmcHostTaskManager::NoteTaskEnded(CFIndex finishedExecutorIndex, bool wasSynchro
                 }
                 while(runloopResult == kCFRunLoopRunHandledSource);
 
+                // The loop above can stop while a dialog message is still queued: a pass that receives
+                // the run loop's own wake-up or a timer message also reports "timed out". Handle what the
+                // finished script sent before its exit, so the next command reads the values it set.
+                OMCDialog::ServicePendingMessages();
+
                 OSStatus __unused err = mPlugin->ExecuteSubcommand(mCurrCommand.name, nextCommandID, finishedTask->commandRuntimeData, nullptr);
             }
             break;

@@ -222,6 +222,95 @@ static NSString *ExpectedSequence(NSInteger count)
     [self checkLargeOutputWithWait:YES];
 }
 
+#pragma mark - Dialog messages before the next command
+
+/// An ActionUI window whose init command sets text field 2 with omc_dialog_control and exits at
+/// once; its NEXT_COMMAND_ID command writes OMC_ACTIONUI_VIEW_2_VALUE to a file. close_window
+/// closes a window given its UUID as the selected text.
+- (NSURL *)nextCommandBundle
+{
+    NSString *readScript = @"f=\"/tmp/OMC_test_runloop_next_${OMC_ACTIONUI_WINDOW_UUID}\"\n"
+                            "echo \"${OMC_ACTIONUI_VIEW_2_VALUE}\" > \"$f.tmp\"\n"
+                            "/bin/mv \"$f.tmp\" \"$f\"\n";
+    NSArray *commands = @[
+        @{ @"NAME": @"RunLoopNextCommand", @"ACTIVATION_MODE": @"act_always", @"EXECUTION_MODE": @"exe_shell_script",
+           @"COMMAND": @[@"echo \"${OMC_ACTIONUI_WINDOW_UUID}\"\n"],
+           @"ACTIONUI_WINDOW": @{ @"JSON_NAME": @"NextCommand", @"INIT_SUBCOMMAND_ID": @"next.init",
+                                  @"END_CANCEL_SUBCOMMAND_ID": @"next.cancel", @"IS_BLOCKING": @NO } },
+        @{ @"NAME": @"RunLoopNextCommand", @"COMMAND_ID": @"next.init", @"EXECUTION_MODE": @"exe_shell_script",
+           @"COMMAND": @[@"\"$OMC_OMC_SUPPORT_PATH/omc_dialog_control\" \"$OMC_ACTIONUI_WINDOW_UUID\" 2 \"Gargamel\"\n"],
+           @"NEXT_COMMAND_ID": @"next.read" },
+        @{ @"NAME": @"RunLoopNextCommand", @"COMMAND_ID": @"next.read", @"EXECUTION_MODE": @"exe_shell_script",
+           @"COMMAND": @[readScript] },
+        @{ @"NAME": @"RunLoopNextCommand", @"COMMAND_ID": @"next.cancel", @"EXECUTION_MODE": @"exe_shell_script",
+           @"COMMAND": @[@"true\n"] },
+        @{ @"NAME": @"RunLoopNextCommand", @"COMMAND_ID": @"close_window", @"ACTIVATION_MODE": @"act_selected_text",
+           @"EXECUTION_MODE": @"exe_shell_script",
+           @"COMMAND": @[@"\"$OMC_OMC_SUPPORT_PATH/omc_dialog_control\" \"$OMC_OBJ_TEXT\" omc_window omc_terminate_cancel\n"] },
+    ];
+    NSURL *bundleURL = [OMCBundleTestHelper createTestBundle:@"RunLoopNextCommand" withCommands:commands scripts:@{}];
+    XCTAssertNotNil(bundleURL);
+    if (bundleURL == nil)
+        return nil;
+    [self.bundlesToCleanup addObject:bundleURL];
+
+    NSString *json = @"{\"type\": \"VStack\", \"id\": 1, \"children\": ["
+                      "{\"type\": \"TextField\", \"id\": 2, \"properties\": {\"placeholder\": \"Name\"}}]}";
+    NSString *lproj = [[bundleURL path] stringByAppendingPathComponent:@"Contents/Resources/Base.lproj"];
+    [[NSFileManager defaultManager] createDirectoryAtPath:lproj withIntermediateDirectories:YES attributes:nil error:nil];
+    XCTAssertTrue([json writeToFile:[lproj stringByAppendingPathComponent:@"NextCommand.json"]
+                         atomically:YES encoding:NSUTF8StringEncoding error:nil]);
+    return bundleURL;
+}
+
+/// Before it starts a NEXT_COMMAND_ID command, the engine handles the omc_dialog_control messages the
+/// finished script sent, so the next command reads the values that script set. omc_dialog_control
+/// does not wait for its message to be handled, so the message is still queued when the script
+/// exits. The engine used to run the run loop only until one pass reported "timed out", and a pass
+/// that received the run loop's own wake-up or a timer message reports that too: about 1 run in 12
+/// read the old value, and 4 in 5 with the 1 ms timer below, which keeps a timer message pending.
+- (void)testNextCommandSeesTheValueThePreviousScriptSet
+{
+    NSURL *bundleURL = [self nextCommandBundle];
+    if (bundleURL == nil)
+        return;
+
+    NSTimer *busyTimer = [NSTimer timerWithTimeInterval:0.001 repeats:YES block:^(NSTimer *timer) { (void)timer; }];
+    [[NSRunLoop currentRunLoop] addTimer:busyTimer forMode:NSRunLoopCommonModes];
+
+    for (int run = 0; run < 10; run++)
+    {
+        OMCTestExecutionObserver *observer = [OMCTestExecutionObserver new];
+        OSStatus err = [OMCCommandExecutor runCommand:@"RunLoopNextCommand"
+                                       forCommandFile:[bundleURL path]
+                                          withContext:[NSURL fileURLWithPath:NSHomeDirectory()]
+                                         useNavDialog:NO
+                             allowKeyWindowSubcommand:NO
+                                             delegate:observer];
+        XCTAssertEqual(err, noErr);
+        XCTAssertTrue([observer waitForCompletionWithTimeout:kRunLoopTestTimeout]);
+        NSString *uuid = [observer.capturedOutput stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceAndNewlineCharacterSet];
+        XCTAssertTrue(uuid.length > 0, @"The window command should print its UUID");
+        if (uuid.length == 0)
+            break;
+
+        NSString *valuePath = [NSString stringWithFormat:@"/tmp/OMC_test_runloop_next_%@", uuid];
+        [self.filesToCleanup addObject:valuePath];
+        XCTAssertTrue([self spinUntil:^BOOL{ return [[NSFileManager defaultManager] fileExistsAtPath:valuePath]; }
+                              timeout:kRunLoopTestTimeout], @"The next command should run (run %d)", run);
+        NSString *value = [[NSString stringWithContentsOfFile:valuePath encoding:NSUTF8StringEncoding error:nil]
+                           stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceAndNewlineCharacterSet];
+        XCTAssertEqualObjects(value, @"Gargamel", @"The next command should see the value the init script set (run %d)", run);
+
+        OMCTestExecutionObserver *closeObserver = [OMCTestExecutionObserver new];
+        [OMCCommandExecutor runCommand:@"close_window" forCommandFile:[bundleURL path] withContext:uuid
+                          useNavDialog:NO allowKeyWindowSubcommand:NO delegate:closeObserver];
+        XCTAssertTrue([closeObserver waitForCompletionWithTimeout:kRunLoopTestTimeout]);
+    }
+
+    [busyTimer invalidate];
+}
+
 #pragma mark - PROGRESS with DELAY
 
 - (BOOL)progressWindowVisibleWithTitle:(NSString *)title
