@@ -93,35 +93,38 @@ OMCTEST_DEFAULT_STUBS="alert notify omc_dialog_control omc_next_command pasteboa
 # read out of the source rather than remembered. Recorded here with sources so a
 # future reader can re-verify rather than re-guess:
 #
-#   Interpreter map          AbracodeFramework/OmcExecutor.cp:620-635
+#   Interpreter map          AbracodeFramework/OmcExecutor.cp:881-896
 #                            (sExtensionToShellMap). .sh -> /bin/sh, .zsh ->
 #                            /bin/zsh, .bash -> /bin/bash, .py -> see below.
 #                            An unknown or absent extension gets kDefaultShell,
 #                            /bin/sh.
-#   Python resolution        OmcExecutor.cp:664-703. The map's /usr/bin/python3
+#   Python resolution        OmcExecutor.cp:925-964. The map's /usr/bin/python3
 #                            for .py is a placeholder that is always overridden.
 #                            GetEmbeddedPythonPath() accepts
 #                            <bundle>/Contents/Library/Python/bin/python3 only
 #                            when it is an EXECUTABLE FILE (not merely when a
 #                            Library/Python directory exists). Failing that,
-#                            FindInstalledPython() (:55-78) tries, in order and
+#                            FindInstalledPython() (:60-83) tries, in order and
 #                            with access(X_OK):
 #                              /Library/Frameworks/Python.framework/Versions/Current/bin/python3
 #                              /opt/homebrew/bin/python3
 #                              /usr/local/bin/python3
 #                              /opt/local/bin/python3
 #                            and falls back to /usr/bin/python3 untested.
-#   Python environment       OmcExecutor.cp:783-827. Exported whenever the app
+#   Python environment       OmcExecutor.cp:1043-1097. Exported whenever the app
 #                            bundles its own Python, whatever the handler's
-#                            language (the engine's own comment at :789-790).
+#                            language (the engine's own comment at :1050-1051).
 #                            Embedded: PATH gets the embedded bin/,
 #                            PYTHONPYCACHEPREFIX is set, and PYTHONPATH gets
 #                            Contents/Library/Packages ONLY when that directory
-#                            exists (:760-763). No embedded Python and a .py
-#                            handler: PATH only (:811-819).
-#   Shebang                  never honored. omc_popen.c:253-294 puts the
+#                            exists (:1021-1024). No embedded Python and a .py
+#                            handler: PATH only (:1082-1089). An extensionless
+#                            script gets it too: ACFPathCopyExtension
+#                            (Common/ACFPath.cpp) returns an empty string, not
+#                            null, so the early return at :1047-1048 is not taken.
+#   Shebang                  never honored. omc_popen.c:400-441 puts the
 #                            interpreter in shellPath and appends the script as
-#                            the last argv element; posix_spawn (:360-361) execs
+#                            the last argv element; posix_spawn (:551-552) execs
 #                            the interpreter.
 #   Working directory        the engine sets none - the child inherits the
 #                            applet's cwd. It is therefore not a contract a
@@ -135,7 +138,7 @@ OMCTEST_DEFAULT_STUBS="alert notify omc_dialog_control omc_next_command pasteboa
 #                            PRECEDENCE IS UNDEFINED in the engine. omc_run
 #                            therefore picks a documented deterministic order:
 #                            .sh, .py, .zsh, .bash.
-#   One-shot variables       omc_runtime_context_reference.md:166-172 scopes the
+#   One-shot variables       omc_runtime_context_reference.md:159-175 scopes the
 #                            OMC_ACTIONUI_TRIGGER_* family to a control-action
 #                            dispatch. It says nothing at all about the lifetime
 #                            of OMC_DLG_*; clearing that family after every
@@ -147,8 +150,9 @@ OMCTEST_DEFAULT_STUBS="alert notify omc_dialog_control omc_next_command pasteboa
 # Two deliberate deviations from the engine, both documented in the guide:
 #
 #   PYTHONPYCACHEPREFIX      the engine uses Pyc inside the per-user temporary
-#                            directory (/var/folders/<...>/T, NOT $TMPDIR) and
-#                            sets it only in the embedded branch. The harness
+#                            directory (/var/folders/<...>/T, NOT $TMPDIR;
+#                            OMCGetPythonPycachePrefix in OMCAppLifetimeEvents.mm)
+#                            and sets it only in the embedded branch. The harness
 #                            points it into the
 #                            scratch in BOTH branches, so a test run can never
 #                            write __pycache__ into the bundle under test and
@@ -575,7 +579,7 @@ omctest_setup_python() { # <app>
 
     # Only the EMBEDDED branch prepends PATH for every handler language. With no
     # embedded Python the engine prepends it only for a .py handler
-    # (OmcExecutor.cp:811-819), so doing it here would put the developer's
+    # (OmcExecutor.cp:1082-1089), so doing it here would put the developer's
     # framework Python in front of a plain .sh handler's PATH - which live would
     # see the stock one. A shell handler calling bare "python3" would then be
     # tested against an interpreter it will never get, and the machine's Python
@@ -1030,7 +1034,7 @@ case "$verb" in
     omc_hide)    printf '0' > "$v.visible" ;;
     omc_set_value_from_stdin)
         /bin/cat > "$v.value"
-        # Its optional contentType is gated on argc == 5 too (main.c:403-405).
+        # Its optional contentType is gated on argc == 5 too (main.c:404-406).
         [ $# -eq 2 ] && printf '%s' "$2" > "$v.content_type" ;;
     omc_table_set_columns)
         shift; : > "$v.columns"
@@ -1110,7 +1114,7 @@ case "$verb" in
     omc_insert_element|omc_insert_element_row|omc_remove_element) : ;;
     *)  # Not an instruction word, so GetInstructionID falls back to
         # omc_set_control_value. The contentType is decided by ARGUMENT COUNT,
-        # not by a word list: main.c:317-323 takes argv[3] as the content type
+        # not by a word list: main.c:320-327 takes argv[3] as the content type
         # for ANY unrecognized word whenever argc is exactly 5. The five names in
         # the usage text are documentation, not a parser table - "mytype" works
         # just as well, and "json a b" (argc 6) is NOT a content-type call.
