@@ -87,8 +87,8 @@ JSON schema and usage documentation for `View`.
      },
      "transition": ["opacity", { "type": "scale" }], // Array form: the transitions combined.
                               //   A view without "transition" is inserted/removed instantly (the default).
-                              //   Platform note: Apple animates both insertion and removal; Android and Web
-                              //   animate the insertion (entrance) only - removal is instant there.
+                              //   Platform note: Apple animates both insertion and removal; Android, Web and
+                              //   Linux animate the insertion (entrance) only - removal is instant there.
                               //   Container note: stack containers (VStack/HStack/ZStack/LazyVStack/LazyHStack)
                               //   honor the full transition (geometry + fade). SwiftUI's List substitutes its
                               //   own row animation - on iOS only the opacity (fade) survives, custom geometry
@@ -245,3 +245,8 @@ JSON schema and usage documentation for `View`.
 //  - Modifier is ignored unless view is used inside NavigationSplitView column.
 //  - System tries to respect values, but macOS users can still drag divider beyond min/max in some situations.
 ```
+
+### Host differences
+
+- **Linux** runs `animation` with SwiftUI's curves and when SwiftUI does: on a host's change of the element (setElementProperty, setElementState, setElementValue), or with `value`, a change of that property, state or value; not when the view first appears, and not for the user's own input. What it moves: opacity, offset, rotationEffect, scaleEffect and shadow, a spring with SwiftUI's own spring, and background, border, cornerRadius, clipShape's rounding and foregroundStyle, through a GTK transition in which a spring is the closest cubic curve to it. hidden, a shadow that appears or goes, fonts and tint change at once, and so does the layout: a changed frame or padding, and what moves in a stack because of it, takes its place at once where SwiftUI animates it. While an element declares an animation and its foregroundStyle has changed with one, that animation takes the place of the control's own transitions (a button's hover fade). As every GTK application does, ActionUI follows the desktop's setting: with animations turned off (GNOME Settings, Accessibility, Reduce Animation), every change is at once.
+- **Linux** plays a `transition`'s insertion when the host inserts the element (insertElement, insertRow) into a view already shown, with SwiftUI's default animation (the smooth spring), as Apple's withAnimation around the insert does: `opacity` from transparent, `scale` from its factor around its anchor, `move` and `slide` from one frame's width or height off toward the edge, `offset` from its points, combined ones together, and an `asymmetric` one's `insertion`. Only the inserted element plays it, not the elements inside it, and not a row of a List (SwiftUI's List animates its rows its own way); a Group plays it on each of its children, and its overlay and safe area inset views move with it. Removal is at once, as on Android and Web, and leading and trailing are not mirrored in a right-to-left layout.

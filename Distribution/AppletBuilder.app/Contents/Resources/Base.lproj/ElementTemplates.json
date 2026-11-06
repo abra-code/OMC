@@ -87,5 +87,6 @@
 {"title": "Diff", "tag": "Diff"},
 {"title": "CachedImage", "tag": "CachedImage"},
 {"title": "RichText", "tag": "RichText"},
-{"title": "Chat", "tag": "Chat"}
+{"title": "Chat", "tag": "Chat"},
+{"title": "HostSurface", "tag": "HostSurface"}
 ]

@@ -1,0 +1,21 @@
+{
+  "type": "HostSurface",
+  "description": "A rectangle whose pixels a client program draws with its own renderer (ActionUIHostSurface add-on). The client binds to it by surfaceName through the add-on's C or Swift API and gets the native surface (a CAMetalLayer on macOS and iOS; on Linux it presents frames to a frame sink), its size and scale, frame ticks and input. No observable value.",
+  "id": { "policy": "optional" },
+  "inheritsViewProperties": true,
+  "topLevelKeys": [],
+  "ownProperties": {
+    "surfaceName":        { "types": ["string"],  "required": true,  "description": "Binds the element to the client registered under this name. Fixed at load" },
+    "kind":               { "types": ["string"],  "required": false, "enum": ["native", "sink", "gl"], "description": "native (default): the platform's surface, a CAMetalLayer on macOS and iOS, a frame sink on Linux. sink: a frame sink on every platform (the client presents pixels). gl: a GL area the client draws in from its render callback (Linux). A kind the platform lacks draws a placeholder. Fixed at load" },
+    "continuous":         { "types": ["boolean"], "required": false, "description": "A frame callback at every display refresh while on screen; default false (one per requestFrame)" },
+    "preferredFrameRate": { "types": ["number"],  "required": false, "description": "Frames per second hint; default 0, the display rate" },
+    "focusable":          { "types": ["boolean"], "required": false, "description": "A click or tap gives the surface keyboard focus; default true. It never takes focus unasked" },
+    "opaque":             { "types": ["boolean"], "required": false, "description": "Default true. false lets content behind the element show through transparent pixels the client draws" },
+    "composited":         { "types": ["boolean"], "required": false, "description": "Android only: a TextureView instead of a SurfaceView, which honors opacity but is not paced by the display. Fixed at load. Ignored elsewhere" },
+    "idealWidth":         { "types": ["number"],  "required": false, "description": "Natural width in points, used where the parent leaves the width unspecified; default 320" },
+    "idealHeight":        { "types": ["number"],  "required": false, "description": "Natural height in points, used where the parent leaves the height unspecified; default 240" }
+  },
+  "observable": {
+    "states.size": { "types": ["array"], "description": "Surface size as [width, height] in points; updated when the surface size changes" }
+  }
+}

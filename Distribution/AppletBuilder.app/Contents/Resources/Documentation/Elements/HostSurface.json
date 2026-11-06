@@ -1,0 +1,10 @@
+{
+  "type": "HostSurface",
+  "id": 1,
+  "properties": {
+    "surfaceName": "viewport",
+    "continuous": false,
+    "idealWidth": 320,
+    "idealHeight": 240
+  }
+}
