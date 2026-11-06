@@ -176,6 +176,66 @@ fi
 			<string>Test command: close window via INVOKE instead of omc_terminate_cancel</string>
 		</dict>
 		<dict>
+			<key>ACTIVATION_MODE</key>
+			<string>act_selected_text</string>
+			<key>COMMAND</key>
+			<array>
+				<string>WINDOW_UUID="${OMC_OBJ_TEXT}"
+if [ -n "${WINDOW_UUID}" ]; then
+    "$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$WINDOW_UUID" omc_window omc_invoke setFrame: 120,140,560,420 display: YES
+fi
+				</string>
+			</array>
+			<key>COMMAND_ID</key>
+			<string>form.invoke.setframe</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_shell_script</string>
+			<key>NAME</key>
+			<string>Form</string>
+			<key>NOTES</key>
+			<string>Test command: INVOKE with an NSRect (CGRect) argument and a BOOL</string>
+		</dict>
+		<dict>
+			<key>ACTIVATION_MODE</key>
+			<string>act_selected_text</string>
+			<key>COMMAND</key>
+			<array>
+				<string>WINDOW_UUID="${OMC_OBJ_TEXT}"
+if [ -n "${WINDOW_UUID}" ]; then
+    "$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$WINDOW_UUID" omc_window omc_invoke setFrameOrigin: 160,180
+fi
+				</string>
+			</array>
+			<key>COMMAND_ID</key>
+			<string>form.invoke.setframeorigin</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_shell_script</string>
+			<key>NAME</key>
+			<string>Form</string>
+			<key>NOTES</key>
+			<string>Test command: INVOKE with an NSPoint (CGPoint) argument</string>
+		</dict>
+		<dict>
+			<key>ACTIVATION_MODE</key>
+			<string>act_selected_text</string>
+			<key>COMMAND</key>
+			<array>
+				<string>WINDOW_UUID="${OMC_OBJ_TEXT}"
+if [ -n "${WINDOW_UUID}" ]; then
+    "$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$WINDOW_UUID" omc_window omc_invoke setContentSize: 540,380
+fi
+				</string>
+			</array>
+			<key>COMMAND_ID</key>
+			<string>form.invoke.setcontentsize</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_shell_script</string>
+			<key>NAME</key>
+			<string>Form</string>
+			<key>NOTES</key>
+			<string>Test command: INVOKE with an NSSize (CGSize) argument</string>
+		</dict>
+		<dict>
 			<key>COMMAND</key>
 			<array>
 				<string>term_file="/tmp/OMC_test_actionui_term_${OMC_ACTIONUI_WINDOW_UUID}"

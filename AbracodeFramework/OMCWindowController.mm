@@ -11,6 +11,7 @@
 #include "OnMyCommand.h"
 #include "CommandRuntimeData.h"
 #include "ACFDict.h"
+#include <string>
 #include <vector>
 
 /*
@@ -90,6 +91,44 @@ typedef enum ObjCSelectorArgumentType
     kObjCArgUnionType = '(',
     kObjCArgBitfield = 'b'
 } ObjCSelectorArgumentType;
+
+// The structures an INVOKE argument can carry. On 64-bit macOS the AppKit geometry types are the
+// CG ones, so their type encodings name CGPoint, CGSize and CGRect ("{CGRect={CGPoint=dd}{CGSize=dd}}"),
+// while NSRange keeps "{_NSRange=QQ}". The NS spellings are accepted too, for 32-bit-era encodings.
+typedef enum ObjCStructKind
+{
+    kObjCStructUnsupported = 0,
+    kObjCStructRange,
+    kObjCStructPoint,
+    kObjCStructSize,
+    kObjCStructRect
+} ObjCStructKind;
+
+static ObjCStructKind
+FindStructKind(const char *argTypeStr)
+{
+    if(argTypeStr == NULL)
+        return kObjCStructUnsupported;
+    if(argTypeStr[0] == 'r')//const - skip it
+        argTypeStr++;
+    if(argTypeStr[0] != '{')
+        return kObjCStructUnsupported;
+
+    //the structure name runs from after '{' to the first '=' or '}'
+    const char *nameStart = argTypeStr + 1;
+    size_t nameLength = strcspn(nameStart, "=}");
+    std::string structName(nameStart, nameLength);
+
+    if( (structName == "_NSRange") || (structName == "NSRange") )
+        return kObjCStructRange;
+    if( (structName == "CGPoint") || (structName == "_NSPoint") || (structName == "NSPoint") )
+        return kObjCStructPoint;
+    if( (structName == "CGSize") || (structName == "_NSSize") || (structName == "NSSize") )
+        return kObjCStructSize;
+    if( (structName == "CGRect") || (structName == "_NSRect") || (structName == "NSRect") )
+        return kObjCStructRect;
+    return kObjCStructUnsupported;
+}
 
 static ObjCSelectorArgumentType
 FindArgumentType(const char *argTypeStr)
@@ -1340,7 +1379,7 @@ GetAllDialogControllers()
                 BOOL okToAddArgument = YES;
                 [messageInvocation setTarget:messageTarget];
                 [messageInvocation setSelector:methodSelector];
-                char stackBuff[128];//128 bytes should be enough for most structures
+                alignas(16) char stackBuff[128];//128 bytes should be enough for most structures; aligned for the doubles and CGFloats written into it
                 NSUInteger argCount = [methodSig numberOfArguments] - 2;//count only real arguments, skip self and selector
                 for(NSUInteger argIndex = 0; argIndex < argCount; argIndex++)
                 {
@@ -1404,6 +1443,7 @@ GetAllDialogControllers()
                                 {
                                     *(int *)stackBuff = (int)CFStringGetIntValue(argString);
                                 }
+                                break;
 
                                 case kObjCArgLongType:
                                 {
@@ -1497,111 +1537,75 @@ GetAllDialogControllers()
                                 {
                                     memset(stackBuff, 0, sizeof(stackBuff));
                                     
+                                    //the members are comma-separated numbers: "location,length", "x,y", "width,height", "x,y,width,height"
                                     CFObj<CFArrayRef> numberArray( CFStringCreateArrayBySeparatingStrings( kCFAllocatorDefault, argString, CFSTR(",") ) );
-                                    CFIndex numberCount = 0;
-                                    if(numberArray != NULL)
-                                        numberCount = CFArrayGetCount(numberArray);
-                                    //first char is '{', next follows the structure name
-                                    if(numberCount >= 2)
-                                    {//all structures here require at least 2 numbers
-                                        if( 0 == strncmp("_NSRange", argTypeStr+1, sizeof("_NSRange")-1) )
-                                        {
-                                            NSRange *theRange = (NSRange *)stackBuff;
-                                            
-                                            CFTypeRef oneItemRef = ::CFArrayGetValueAtIndex(numberArray, 0);
-                                            CFStringRef numString = ACFType<CFStringRef>::DynamicCast( oneItemRef );
-                                            if(numString != NULL)
-                                                theRange->location = ::CFStringGetIntValue(numString);
-                                            else
-                                                okToAddArgument = NO;
-                                            
-                                            oneItemRef = ::CFArrayGetValueAtIndex(numberArray, 1);
-                                            numString = ACFType<CFStringRef>::DynamicCast( oneItemRef );
-                                            if(numString != NULL)
-                                                theRange->length =  ::CFStringGetIntValue(numString);
-                                            else
-                                                okToAddArgument = NO;
-                                        }
-                                        else if( 0 == strncmp("_NSPoint", argTypeStr+1, sizeof("_NSPoint")-1) )
-                                        {
-                                            NSPoint *thePoint = (NSPoint *)stackBuff;
-                                            
-                                            CFTypeRef oneItemRef = ::CFArrayGetValueAtIndex(numberArray, 0);
-                                            CFStringRef numString = ACFType<CFStringRef>::DynamicCast( oneItemRef );
-                                            if(numString != NULL)
-                                                thePoint->x = (CGFloat)::CFStringGetDoubleValue(numString);
-                                            else
-                                                okToAddArgument = NO;
-                                            
-                                            oneItemRef = ::CFArrayGetValueAtIndex(numberArray, 1);
-                                            numString = ACFType<CFStringRef>::DynamicCast( oneItemRef );
-                                            if(numString != NULL)
-                                                thePoint->y =  (CGFloat)::CFStringGetDoubleValue(numString);
-                                            else
-                                                okToAddArgument = NO;
-                                        }
-                                        else if( 0 == strncmp("_NSSize", argTypeStr+1, sizeof("_NSSize")-1) )
-                                        {
-                                            NSSize *theSize = (NSSize *)stackBuff;
-
-                                            CFTypeRef oneItemRef = ::CFArrayGetValueAtIndex(numberArray, 0);
-                                            CFStringRef numString = ACFType<CFStringRef>::DynamicCast( oneItemRef );
-                                            if(numString != NULL)
-                                                theSize->width = (CGFloat)::CFStringGetDoubleValue(numString);
-                                            else
-                                                okToAddArgument = NO;
-                                            
-                                            oneItemRef = ::CFArrayGetValueAtIndex(numberArray, 1);
-                                            numString = ACFType<CFStringRef>::DynamicCast( oneItemRef );
-                                            if(numString != NULL)
-                                                theSize->height =  (CGFloat)::CFStringGetDoubleValue(numString);
-                                            else
-                                                okToAddArgument = NO;
-                                        }
-                                        else if( (numberCount >= 4) && (0 == strncmp("_NSRect", argTypeStr+1, sizeof("_NSRect")-1)) )
-                                        {
-                                            NSRect *theRect = (NSRect *)stackBuff;
-
-                                            CFTypeRef oneItemRef = ::CFArrayGetValueAtIndex(numberArray, 0);
-                                            CFStringRef numString = ACFType<CFStringRef>::DynamicCast( oneItemRef );
-                                            if(numString != NULL)
-                                                theRect->origin.x = (CGFloat)::CFStringGetDoubleValue(numString);
-                                            else
-                                                okToAddArgument = NO;
-                                            
-                                            oneItemRef = ::CFArrayGetValueAtIndex(numberArray, 1);
-                                            numString = ACFType<CFStringRef>::DynamicCast( oneItemRef );
-                                            if(numString != NULL)
-                                                theRect->origin.y =  (CGFloat)::CFStringGetDoubleValue(numString);
-                                            else
-                                                okToAddArgument = NO;
-
-                                            oneItemRef = ::CFArrayGetValueAtIndex(numberArray, 2);
-                                            numString = ACFType<CFStringRef>::DynamicCast( oneItemRef );
-                                            if(numString != NULL)
-                                                theRect->size.width = (CGFloat)::CFStringGetDoubleValue(numString);
-                                            else
-                                                okToAddArgument = NO;
-                                            
-                                            oneItemRef = ::CFArrayGetValueAtIndex(numberArray, 3);
-                                            numString = ACFType<CFStringRef>::DynamicCast( oneItemRef );
-                                            if(numString != NULL)
-                                                theRect->size.height =  (CGFloat)::CFStringGetDoubleValue(numString);
-                                            else
-                                                okToAddArgument = NO;
-                                        }
-                                        else
-                                        {
-                                            okToAddArgument = NO;
-                                            NSLog(@"OMCNibWindowController sendObjCMessage: this structure type unsuppported for argument %d for \"%@\" selector", (int)argIndex+1, methodName);
-                                        }
+                                    CFIndex numberCount = (numberArray != NULL) ? CFArrayGetCount(numberArray) : 0;
+                                    ObjCStructKind structKind = FindStructKind(argTypeStr);
+                                    CFIndex requiredCount = (structKind == kObjCStructRect) ? 4 : 2;
+                                    
+                                    if(structKind == kObjCStructUnsupported)
+                                    {
+                                        okToAddArgument = NO;
+                                        NSLog(@"OMCWindowController sendObjCMessage: structure type %s unsupported for argument %d for \"%@\" selector", argTypeStr, (int)argIndex+1, methodName);
+                                    }
+                                    else if(numberCount < requiredCount)
+                                    {
+                                        okToAddArgument = NO;
+                                        NSLog(@"OMCWindowController sendObjCMessage: structure argument %d for \"%@\" selector needs %d comma-separated numbers", (int)argIndex+1, methodName, (int)requiredCount);
                                     }
                                     else
                                     {
-                                        okToAddArgument = NO;
-                                        NSLog(@"OMCNibWindowController sendObjCMessage: invalid count of members for structure argument %d for \"%@\" selector", (int)argIndex+1, methodName);
+                                        CFStringRef members[4] = { NULL, NULL, NULL, NULL };
+                                        for(CFIndex i = 0; i < requiredCount; i++)
+                                        {
+                                            members[i] = ACFType<CFStringRef>::DynamicCast( ::CFArrayGetValueAtIndex(numberArray, i) );
+                                            if(members[i] == NULL)
+                                                okToAddArgument = NO;
+                                        }
+                                        
+                                        if(okToAddArgument)
+                                        {
+                                            switch(structKind)
+                                            {
+                                                case kObjCStructRange:
+                                                {
+                                                    NSRange *theRange = (NSRange *)stackBuff;
+                                                    theRange->location = ::CFStringGetIntValue(members[0]);
+                                                    theRange->length = ::CFStringGetIntValue(members[1]);
+                                                }
+                                                break;
+                                                
+                                                case kObjCStructPoint:
+                                                {
+                                                    NSPoint *thePoint = (NSPoint *)stackBuff;
+                                                    thePoint->x = (CGFloat)::CFStringGetDoubleValue(members[0]);
+                                                    thePoint->y = (CGFloat)::CFStringGetDoubleValue(members[1]);
+                                                }
+                                                break;
+                                                
+                                                case kObjCStructSize:
+                                                {
+                                                    NSSize *theSize = (NSSize *)stackBuff;
+                                                    theSize->width = (CGFloat)::CFStringGetDoubleValue(members[0]);
+                                                    theSize->height = (CGFloat)::CFStringGetDoubleValue(members[1]);
+                                                }
+                                                break;
+                                                
+                                                case kObjCStructRect:
+                                                {
+                                                    NSRect *theRect = (NSRect *)stackBuff;
+                                                    theRect->origin.x = (CGFloat)::CFStringGetDoubleValue(members[0]);
+                                                    theRect->origin.y = (CGFloat)::CFStringGetDoubleValue(members[1]);
+                                                    theRect->size.width = (CGFloat)::CFStringGetDoubleValue(members[2]);
+                                                    theRect->size.height = (CGFloat)::CFStringGetDoubleValue(members[3]);
+                                                }
+                                                break;
+                                                
+                                                case kObjCStructUnsupported:
+                                                break;
+                                            }
+                                        }
                                     }
-                                    
                                 }
                                 break;
                                     
@@ -1618,7 +1622,7 @@ GetAllDialogControllers()
                                     else
                                     {
                                         okToAddArgument = NO;
-                                        NSLog(@"OMCNibWindowController sendObjCMessage: unsupported argument type for argument %d for \"%@\" selector", (int)argIndex+1, methodName);
+                                        NSLog(@"OMCWindowController sendObjCMessage: unsupported argument type for argument %d for \"%@\" selector", (int)argIndex+1, methodName);
                                     }
                                 }
                                 break;
@@ -1629,7 +1633,7 @@ GetAllDialogControllers()
                                 default:
                                 {
                                     okToAddArgument = NO;
-                                    NSLog(@"OMCNibWindowController sendObjCMessage: invalid argument %d for \"%@\" selector", (int)argIndex+1, methodName);
+                                    NSLog(@"OMCWindowController sendObjCMessage: invalid argument %d for \"%@\" selector", (int)argIndex+1, methodName);
                                 }
                                 break;
                             }
@@ -1646,7 +1650,7 @@ GetAllDialogControllers()
                     }
                     else
                     {
-                        NSLog(@"OMCNibWindowController sendObjCMessage: argument count mismatch for \"%@\" selector", methodName);
+                        NSLog(@"OMCWindowController sendObjCMessage: argument count mismatch for \"%@\" selector", methodName);
                     }
                 }
                 
@@ -1656,12 +1660,12 @@ GetAllDialogControllers()
         }
         else
         {
-            NSLog(@"OMCNibWindowController sendObjCMessage: target object does not respond to \"%@\" selector", methodName);
+            NSLog(@"OMCWindowController sendObjCMessage: target object does not respond to \"%@\" selector", methodName);
         }
     }
     @catch (NSException *localException)
     {
-        NSLog(@"OMCNibWindowController sendObjCMessage received exception while trying to invoke a custom message: %@", localException);
+        NSLog(@"OMCWindowController sendObjCMessage received exception while trying to invoke a custom message: %@", localException);
     }
 }
 

@@ -273,6 +273,92 @@
     [self cleanupDiagnosticFilesForUUID:uuid prefix:@"actionui"];
 }
 
+#pragma mark - INVOKE with structure arguments
+
+/// The open Form window (the window controller names the frame autosave "OMC.<JSON_NAME>").
+- (NSWindow *)visibleFormWindow {
+    for (NSWindow *window in [NSApp windows]) {
+        if (window.isVisible && [window.frameAutosaveName isEqualToString:@"OMC.Form"])
+            return window;
+    }
+    return nil;
+}
+
+/// Runs one of the form.invoke.* commands against the open Form window, then spins the run loop
+/// until the condition holds (the INVOKE arrives through the dialog's message port) or 5 seconds pass.
+- (BOOL)runInvokeCommand:(NSString *)commandID uuid:(NSString *)uuid bundlePath:(NSString *)omcBundlePath
+               condition:(BOOL (^)(void))condition {
+    OMCTestExecutionObserver *invokeObserver = OMCTestExecutionObserver.new;
+    OSStatus err = [OMCCommandExecutor runCommand:commandID
+                                   forCommandFile:omcBundlePath
+                                      withContext:uuid
+                                     useNavDialog:NO
+                                         allowKeyWindowSubcommand:NO
+                                         delegate:invokeObserver];
+    XCTAssertEqual(err, noErr, @"Should execute %@", commandID);
+    BOOL completed = [invokeObserver waitForCompletionWithTimeout:kDefaultExecutionTimeout];
+    XCTAssertTrue(completed, @"%@ should complete within timeout", commandID);
+
+    NSDate *deadline = [NSDate dateWithTimeIntervalSinceNow:5.0];
+    while (!condition() && [deadline timeIntervalSinceNow] > 0)
+        [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:0.05]];
+    return condition();
+}
+
+static BOOL OMCNearlyEqual(CGFloat a, CGFloat b) {
+    return fabs(a - b) < 0.5;
+}
+
+/// On 64-bit macOS NSRect, NSPoint and NSSize encode as CGRect, CGPoint and CGSize. INVOKE used to look
+/// only for the _NSRect-style names, so these messages were refused as "unsupported structure".
+- (void)testActionUIInvokeWithGeometryStructureArguments {
+    NSURL *bundleURL = [OMCBundleTestHelper testBundleURL:@"ActionUI-Form"];
+    if (bundleURL == nil) {
+        NSLog(@"Skipping - ActionUI-Form.omc not found in test resources");
+        return;
+    }
+
+    NSString *omcBundlePath = [bundleURL path];
+    NSString *uuid = [self openActionUIDialogWithBundlePath:omcBundlePath];
+
+    NSString *initPath = [NSString stringWithFormat:@"/tmp/OMC_test_actionui_init_%@", uuid];
+    BOOL initFound = [self pollForFileAtPath:initPath timeout:5.0];
+    XCTAssertTrue(initFound, @"Init diagnostic file should be created");
+
+    NSWindow *formWindow = [self visibleFormWindow];
+    XCTAssertNotNil(formWindow, @"The Form window should be open");
+
+    // setFrame: 120,140,560,420 display: YES - a CGRect (four numbers) and a BOOL
+    BOOL frameSet = [self runInvokeCommand:@"form.invoke.setframe" uuid:uuid bundlePath:omcBundlePath condition:^BOOL{
+        NSRect frame = formWindow.frame;
+        return OMCNearlyEqual(frame.origin.x, 120) && OMCNearlyEqual(frame.origin.y, 140) &&
+               OMCNearlyEqual(frame.size.width, 560) && OMCNearlyEqual(frame.size.height, 420);
+    }];
+    XCTAssertTrue(frameSet, @"setFrame:display: should set the frame to {120,140,560,420}, got %@",
+                  NSStringFromRect(formWindow.frame));
+
+    // setFrameOrigin: 160,180 - a CGPoint; the size stays
+    BOOL originSet = [self runInvokeCommand:@"form.invoke.setframeorigin" uuid:uuid bundlePath:omcBundlePath condition:^BOOL{
+        NSRect frame = formWindow.frame;
+        return OMCNearlyEqual(frame.origin.x, 160) && OMCNearlyEqual(frame.origin.y, 180);
+    }];
+    XCTAssertTrue(originSet, @"setFrameOrigin: should move the window to {160,180}, got %@",
+                  NSStringFromRect(formWindow.frame));
+    XCTAssertTrue(OMCNearlyEqual(formWindow.frame.size.width, 560) && OMCNearlyEqual(formWindow.frame.size.height, 420),
+                  @"setFrameOrigin: should keep the size, got %@", NSStringFromRect(formWindow.frame));
+
+    // setContentSize: 540,380 - a CGSize
+    BOOL sizeSet = [self runInvokeCommand:@"form.invoke.setcontentsize" uuid:uuid bundlePath:omcBundlePath condition:^BOOL{
+        NSRect content = [formWindow contentRectForFrameRect:formWindow.frame];
+        return OMCNearlyEqual(content.size.width, 540) && OMCNearlyEqual(content.size.height, 380);
+    }];
+    XCTAssertTrue(sizeSet, @"setContentSize: should set the content size to {540,380}, got %@",
+                  NSStringFromRect([formWindow contentRectForFrameRect:formWindow.frame]));
+
+    [self closeActionUIDialogWithUUID:uuid bundlePath:omcBundlePath];
+    [self cleanupDiagnosticFilesForUUID:uuid prefix:@"actionui"];
+}
+
 @end
 
 #endif // CURRENT_OMC_VERSION >= 50000

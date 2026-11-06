@@ -215,7 +215,7 @@ int main (int argc, const char * argv[])
 		fprintf(stdout, "\tomc_resize [followed by 2 space separated numbers] (for dialog window or controls)\n");
 		fprintf(stdout, "\tomc_move [followed by 2 space separated numbers] (for dialog window or controls)\n");
 		fprintf(stdout, "\tomc_scroll [followed by 2 space separated numbers] (for view within NSScrollerView)\n");
-		fprintf(stdout, "\tomc_invoke [followed by space separated ObjC message] (may be sent to control or window)\n");
+		fprintf(stdout, "\tomc_invoke [followed by space separated ObjC message] (may be sent to control or window; a range, point, size or rect argument is comma-separated numbers: location,length / x,y / width,height / x,y,width,height)\n");
 		fprintf(stdout, "\tomc_set_property <property_key> <value> (ActionUI only; value is a string or a JSON fragment)\n");
 		fprintf(stdout, "\tomc_set_state <state_key> <value> (ActionUI only; value is a string or JSON fragment)\n");
 		fprintf(stdout, "\tomc_present_modal <resource_name_or_path> [dismiss_action_id] (ActionUI only)\n");
@@ -258,6 +258,7 @@ int main (int argc, const char * argv[])
 		fprintf(stdout, "omc_dialog_control __NIB_DLG_GUID__ omc_window \"My Window Title\"\n");
 		fprintf(stdout, "omc_dialog_control __NIB_DLG_GUID__ omc_window omc_terminate_cancel\n");
 		fprintf(stdout, "omc_dialog_control __NIB_DLG_GUID__ 2 omc_invoke setAlignment: 2\n");
+		fprintf(stdout, "omc_dialog_control __ACTIONUI_WINDOW_UUID__ omc_window omc_invoke setFrame: 100,100,600,400 display: YES\n");
 		fprintf(stdout, "omc_dialog_control __ACTIONUI_WINDOW_UUID__ 1 omc_set_property \"columns\" '[\"Name\",\"Action\"]'\n");
 		fprintf(stdout, "omc_dialog_control __ACTIONUI_WINDOW_UUID__ 2 omc_set_property \"disabled\" true\n");
 		fprintf(stdout, "omc_dialog_control __ACTIONUI_WINDOW_UUID__ 4 omc_set_state \"isLoading\" true\n");
