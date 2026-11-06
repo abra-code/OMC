@@ -89,12 +89,6 @@ OutputWindowHandler::~OutputWindowHandler()
 	if(mTaskObserver != NULL)
 		mTaskObserver->SetOwner(NULL);//observer may outlive us so it is very important to tell that we died
 
-	if(mAutoCloseTimer != NULL)
-	{
-		CFRunLoopTimerInvalidate(mAutoCloseTimer);
-		mAutoCloseTimer.Release();
-	}
-
 	if( mOutputWindowController != NULL)
 	{
 		ReleaseOutputWindowController(mOutputWindowController);
@@ -187,7 +181,7 @@ OutputWindowHandler::AppendOutputData( const UInt8 *inData, size_t inSize, Boole
 	if( inSize == 0 )
 	{
 		Boolean allowAutoclose = ( !mAutoCloseOnSuccessOnly || inSuccess );
-		if( (mAutoCloseTimeout >= 0.0) && allowAutoclose && (mAutoCloseTimer == NULL) )
+		if( (mAutoCloseTimeout >= 0.0) && allowAutoclose )
 		{
             OMCOutputWindowScheduleClosing(mOutputWindowController, mAutoCloseTimeout);
 		}
@@ -196,13 +190,6 @@ OutputWindowHandler::AppendOutputData( const UInt8 *inData, size_t inSize, Boole
 	{
 		AppendText( inData, inSize);
 	}
-}
-
-void OutputWindowHandlerDeleterCallBack(CFRunLoopTimerRef timer, void* info)
-{
-#pragma unused (timer)
-	OutputWindowHandler *theHandler = (OutputWindowHandler *)info;
-	delete theHandler;//the destructor will remove the timer
 }
 
 // Command.plist SCHEMA SOURCE OF TRUTH — OUTPUT_WINDOW_SETTINGS (WINDOW_TITLE,

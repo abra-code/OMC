@@ -46,5 +46,3 @@ typedef struct OmcTaskData
 	} data;
 } OmcTaskData;
 
-CFDataRef OMCTaskCreatePackedData( const OmcTaskData &iStruct );
-bool OMCTaskUnpackData( CFDataRef inData, OmcTaskData &outStruct );

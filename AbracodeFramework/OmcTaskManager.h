@@ -8,7 +8,6 @@
  */
 
 #include "CFObj.h"
-#include "MessagePortListener.h"
 #include "AObserver.h"
 #include "OMCDeferredProgress.h"
 #include <mach/host_info.h>
@@ -57,8 +56,6 @@ public:
 
 	virtual void	ShowEndNotification();
 
-	CFDataRef		ReceivePortMessage( SInt32 msgid, CFDataRef inData );//remote message
-
 	virtual AObserverBase *	GetObserver()//task manager as observer
 					{
 						return (AObserver<OmcHostTaskManager> *)mTaskObserver;
@@ -95,10 +92,8 @@ protected:
     CFIndex						mMaxTaskCount {0};
     CFIndex						mTaskCount {0};
     CFIndex						mFinishedTasks {0};
-	CFObj<CFStringRef>			mUniqueID;
 	ARefCountedObj< AObserver<OmcHostTaskManager> > mTaskObserver;
 	ARefCountedObj< ANotifier > mNotifier;//the task manager is also a notifier and forwards all messages to its observers
-	MessagePortListener<OmcHostTaskManager> mListener;
     OMCDeferredProgressRef		mProgress {nullptr};
 	CFObj<CFStringRef>			mLastOutputText;
 	CFObj<CFStringRef>			mLastStatusLine;
