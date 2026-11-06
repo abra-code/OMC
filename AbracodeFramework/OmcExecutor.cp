@@ -10,6 +10,8 @@
 #include "OmcExecutor.h"
 #include <stdio.h>
 #include <unistd.h>
+#include <fcntl.h>
+#include <errno.h>
 #include <sys/stat.h>
 #include "CMUtils.h"
 #include "OutputWindowHandler.h"
@@ -401,6 +403,16 @@ POpenExecutor::Execute( const char *inCommand, OSStatus &outError )
 				}
 			}
 		
+			// Non-blocking writes: the input is written on this thread, which is also the one that reads the
+			// child's output. A blocking write of more than the pipe holds waited for the child to read, while
+			// the child waited for us to read its output, and the applet hung. Now write() takes what fits
+			// and the next write callback continues. The flag is on our end of the pipe only, not the child's.
+			{
+				int fileFlags = fcntl(mChildProcessInfo.inputFD, F_GETFL);
+				if(fileFlags != -1)
+					(void)fcntl(mChildProcessInfo.inputFD, F_SETFL, fileFlags | O_NONBLOCK);
+			}
+
 			mWriteSocket.Adopt( ::CFSocketCreateWithNative( kCFAllocatorDefault, mChildProcessInfo.inputFD, kCFSocketWriteCallBack,
 													PopenCFSocketCallback, &context) );
 			if(mWriteSocket != nullptr)
@@ -577,13 +589,21 @@ POpenExecutor::WriteInputStringChunk()
 		{
 			mWrittenInputBytesCount += bytesWritten;
 		}
+		else if( (bytesWritten < 0) && ((errno == EAGAIN) || (errno == EINTR)) )
+		{
+			// the pipe is full (the fd is non-blocking): wait for the next write callback
+		}
 		else
 		{
-			// write() returned 0 or -1 (e.g. EPIPE when the child closed stdin, EINTR, EAGAIN).
+			// write() returned 0 or failed for good (e.g. EPIPE when the child closed stdin).
 			// Never add a negative result to the unsigned counter - that underflows it.
 			// Force the completion path below so the pipe is closed deterministically.
 			mWrittenInputBytesCount = mInputString.length();
 		}
+
+		// CFSocket does not re-enable the write callback by itself: ask for the next one while input remains
+		if( (mWrittenInputBytesCount < mInputString.length()) && (mWriteSocket != nullptr) )
+			::CFSocketEnableCallBacks( mWriteSocket, kCFSocketWriteCallBack );
 	}
 	
 	if( (mWrittenInputBytesCount >= mInputString.length()) || (mWriteSocket == nullptr) )
