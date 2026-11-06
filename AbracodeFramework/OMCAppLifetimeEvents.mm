@@ -20,6 +20,7 @@ extern "C" void ActionUICachedImage_register(void);
 extern "C" void ActionUIRichText_register(void);
 extern "C" void ActionUIDiff_register(void);
 extern "C" void ActionUIChat_register(void);
+extern "C" void ActionUIHostSurface_register(void);
 
 // NSTemporaryDirectory() on macOS is confstr(_CS_DARWIN_USER_TEMP_DIR): the /var/folders/<...>/T
 // directory launchd creates per uid, mode 0700. It does NOT consult $TMPDIR - checking the
@@ -220,6 +221,7 @@ const char *OMCGetPythonPycachePrefix(void)
     ActionUIRichText_register();
     ActionUIDiff_register();
     ActionUIChat_register();
+    ActionUIHostSurface_register();
 
     // Disabled: eager compileall cost 23.7 ms of synchronous launch time on every start to save
     // 2.1 ms once, and the part it was written for - precompiling the top-level handler scripts -

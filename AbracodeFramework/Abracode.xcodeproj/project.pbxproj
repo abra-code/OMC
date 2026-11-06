@@ -20,6 +20,7 @@
 		1D011A472FFC5209009FD073 /* ActionUIDiff in Frameworks */ = {isa = PBXBuildFile; productRef = 1D011A462FFC5209009FD073 /* ActionUIDiff */; };
 		1D011A492FFC5209009FD073 /* DiffView in Frameworks */ = {isa = PBXBuildFile; productRef = 1D011A482FFC5209009FD073 /* DiffView */; };
 		1D011A4C2FFC52A5009FD073 /* ActionUIChat in Frameworks */ = {isa = PBXBuildFile; productRef = 1D011A4B2FFC52A5009FD073 /* ActionUIChat */; };
+		1D011A522FFC5300009FD073 /* ActionUIHostSurface in Frameworks */ = {isa = PBXBuildFile; productRef = 1D011A512FFC5300009FD073 /* ActionUIHostSurface */; };
 		1D386DAB23BEED4B00A16967 /* OMCWebKitView.h in Headers */ = {isa = PBXBuildFile; fileRef = 1D386DA923BEED4A00A16967 /* OMCWebKitView.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		1D386DAC23BEED4B00A16967 /* OMCWebKitView.m in Sources */ = {isa = PBXBuildFile; fileRef = 1D386DAA23BEED4A00A16967 /* OMCWebKitView.m */; };
 		1D39A8932FF1E47900909493 /* ActionUIQuickLook in Frameworks */ = {isa = PBXBuildFile; productRef = 1D39A8922FF1E47900909493 /* ActionUIQuickLook */; };
@@ -657,6 +658,7 @@
 				1D011A472FFC5209009FD073 /* ActionUIDiff in Frameworks */,
 				E23DC9F60D9A289E009D2AD8 /* WebKit.framework in Frameworks */,
 				1D011A4C2FFC52A5009FD073 /* ActionUIChat in Frameworks */,
+				1D011A522FFC5300009FD073 /* ActionUIHostSurface in Frameworks */,
 				1DAACE122FDE9A0100C0FFEE /* ActionUIMenuBar in Frameworks */,
 				1DAB10022FFD0001009FD073 /* ActionUIRemote in Frameworks */,
 			);
@@ -1285,6 +1287,7 @@
 				1D011A422FFC5199009FD073 /* XCLocalSwiftPackageReference "../../ActionUI/Add-ons/ActionUIRichText" */,
 				1D011A452FFC5209009FD073 /* XCLocalSwiftPackageReference "../../ActionUI/Add-ons/ActionUIDiff" */,
 				1D011A4A2FFC52A5009FD073 /* XCLocalSwiftPackageReference "../../ActionUI/Add-ons/ActionUIChat" */,
+				1D011A502FFC5300009FD073 /* XCLocalSwiftPackageReference "../../ActionUI/Add-ons/ActionUIHostSurface" */,
 			);
 			productRefGroup = 034768DFFF38A50411DB9C8B /* Products */;
 			projectDirPath = "";
@@ -1784,6 +1787,10 @@
 			isa = XCLocalSwiftPackageReference;
 			relativePath = "../../ActionUI/Add-ons/ActionUIChat";
 		};
+		1D011A502FFC5300009FD073 /* XCLocalSwiftPackageReference "../../ActionUI/Add-ons/ActionUIHostSurface" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "../../ActionUI/Add-ons/ActionUIHostSurface";
+		};
 		1D39A8912FF1E47900909493 /* XCLocalSwiftPackageReference "../../ActionUI/Add-ons/ActionUIQuickLook" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = "../../ActionUI/Add-ons/ActionUIQuickLook";
@@ -1825,6 +1832,10 @@
 		1D011A4B2FFC52A5009FD073 /* ActionUIChat */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = ActionUIChat;
+		};
+		1D011A512FFC5300009FD073 /* ActionUIHostSurface */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = ActionUIHostSurface;
 		};
 		1D39A8922FF1E47900909493 /* ActionUIQuickLook */ = {
 			isa = XCSwiftPackageProductDependency;
