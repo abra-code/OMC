@@ -222,6 +222,8 @@ except omc.OMCError:
 
 Error codes are normative in `ActionUIRemote/PROTOCOL.md`.
 
+**Not from a waiting handler started by a value change.** Every bridge call waits for the window to answer. A handler whose command has `WAIT_FOR_TASK_COMPLETION=true` and was started by a value change (a Picker, Toggle, Slider, Stepper, DatePicker or ColorPicker change, a field's `valueChangeActionID`, or a Table or List row selection) runs while the window cannot answer: each bridge call stalls the applet for 10 seconds, then raises `RemoteError` with code 1005 (`mainThreadUnavailable`), and the change is not applied. Button presses and a field's submit `actionID` are not affected. Use `omc_dialog_control` in such a handler, or turn `WAIT_FOR_TASK_COMPLETION` off for it.
+
 ## 11. When to use `omc_dialog_control` instead
 
 It is unchanged and fully supported.

@@ -104,6 +104,8 @@ Declared with `<key>EXECUTION_MODE</key>`. Default `exe_shell_script` if key not
 > - `exe_silent_system`: use `exe_system`
 >
 > **New in v4.3**: `WAIT_FOR_TASK_COMPLETION` (boolean) forces sync for some async modes.
+>
+> **Do not use the Python bridge (`omc.window()`) from a `WAIT_FOR_TASK_COMPLETION` handler started by a value change in an ActionUI window**: a Picker, Toggle, Slider, Stepper, DatePicker or ColorPicker change, a field's `valueChangeActionID`, or a Table or List row selection. ActionUI delivers those actions after the change, from the main queue, and while the handler runs the window cannot answer a bridge call: each call stalls the applet for 10 seconds, then fails with error 1005 (`mainThreadUnavailable`) and is not applied. Button presses and a field's submit `actionID` are not affected. Use `omc_dialog_control`, which does not wait for an answer, or leave `WAIT_FOR_TASK_COMPLETION` off for that handler.
 
 
 > **Best Practices**:
