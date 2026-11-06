@@ -80,7 +80,8 @@
     BOOL completed = [executionObserver waitForCompletionWithTimeout:kDefaultExecutionTimeout];
     XCTAssertTrue(completed, @"Form should complete within timeout");
 
-    NSString *uuid = [executionObserver.capturedOutput stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+    NSString *firstLine = [executionObserver waitForFirstOutputLineWithTimeout:kDefaultExecutionTimeout];
+    NSString *uuid = [firstLine stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]] ?: @"";
     XCTAssertTrue(uuid.length > 0, @"Should capture window UUID");
     return uuid;
 }

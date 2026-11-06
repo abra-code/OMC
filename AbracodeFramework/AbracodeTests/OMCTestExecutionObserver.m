@@ -57,6 +57,23 @@
     return self.allTasksFinished;
 }
 
+- (nullable NSString *)waitForFirstOutputLineWithTimeout:(NSTimeInterval)timeout {
+    NSDate *timeoutDate = [NSDate dateWithTimeIntervalSinceNow:timeout];
+    NSRunLoop *runLoop = [NSRunLoop currentRunLoop];
+
+    while (YES) {
+        NSString *output = self.capturedOutput;
+        NSRange lineEnd = [output rangeOfCharacterFromSet:[NSCharacterSet newlineCharacterSet]];
+        if (lineEnd.location != NSNotFound)
+            return [output substringToIndex:lineEnd.location];
+        if ([timeoutDate timeIntervalSinceNow] <= 0)
+            return nil;
+        BOOL ranLoop = [runLoop runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:0.1]];
+        if (!ranLoop)
+            [NSThread sleepForTimeInterval:0.01];
+    }
+}
+
 #pragma mark - OMCObserverDelegate
 
 - (void)setObserver:(OMCObserverRef)inObserver {
@@ -95,7 +112,9 @@
                 
             case kOmcObserverAllTasksFinished:
                 self.allTasksFinished = YES;
-                [self setObserver: nil]; // Clean up observer
+                // Stay registered (dealloc unregisters): every task manager of the command reports to this
+                // observer, and another one, such as a window's init command, may finish before this command
+                // has delivered its output
                 break;
                 
             default:

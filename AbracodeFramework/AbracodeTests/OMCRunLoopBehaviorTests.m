@@ -309,7 +309,7 @@ static NSString *ExpectedSequence(NSInteger count)
                                              delegate:observer];
         XCTAssertEqual(err, noErr);
         XCTAssertTrue([observer waitForCompletionWithTimeout:kRunLoopTestTimeout]);
-        NSString *uuid = [observer.capturedOutput stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceAndNewlineCharacterSet];
+        NSString *uuid = [[observer waitForFirstOutputLineWithTimeout:kRunLoopTestTimeout] stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceCharacterSet] ?: @"";
         XCTAssertTrue(uuid.length > 0, @"The window command should print its UUID");
         if (uuid.length == 0)
             break;
