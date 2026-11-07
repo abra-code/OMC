@@ -1,0 +1,24 @@
+{
+  "COMMAND_LIST": [
+    {
+      "NAME": "ITestFixture",
+      "ACTIVATION_MODE": "act_always",
+      "EXECUTION_MODE": "exe_script_file",
+      "ACTIONUI_WINDOW": {
+        "JSON_NAME": "Window",
+        "IS_BLOCKING": false,
+        "INIT_SUBCOMMAND_ID": "fixture.init"
+      },
+      "REQUIRED_OMC_VERSION": "5.1",
+      "REQUIRED_MAC_OS_MIN_VERSION": "14.6"
+    },
+    { "NAME": "ITestFixture", "COMMAND_ID": "fixture.init", "EXECUTION_MODE": "exe_script_file" },
+    { "NAME": "ITestFixture", "COMMAND_ID": "fixture.greet", "EXECUTION_MODE": "exe_script_file", "NEXT_COMMAND_ID": "fixture.after" },
+    { "NAME": "ITestFixture", "COMMAND_ID": "fixture.after", "EXECUTION_MODE": "exe_script_file" },
+    { "NAME": "ITestFixture", "COMMAND_ID": "fixture.echo", "ACTIVATION_MODE": "act_always", "EXECUTION_MODE": "exe_script_file" },
+    { "NAME": "ITestFixture", "COMMAND_ID": "fixture.slow", "ACTIVATION_MODE": "act_always", "EXECUTION_MODE": "exe_script_file" },
+    { "NAME": "ITestFixture", "COMMAND_ID": "app.did.launch", "EXECUTION_MODE": "exe_script_file" },
+    { "NAME": "ITestFixture", "COMMAND_ID": "app.will.terminate", "EXECUTION_MODE": "exe_script_file" }
+  ],
+  "VERSION": 2
+}

@@ -91,6 +91,8 @@ Usage:
                          [--warnings-as-errors] [--update-python] [--force] [--test]
   appletbuilder test     <App.app> [--tests <dir>] [--filter <glob>] [--verbose]
                          [--keep-scratch] [--list]
+  appletbuilder itest    <App.app> [--tests <dir>] [--filter <glob>] [--verbose]
+                         [--keep] [--list]
   appletbuilder thin-python plan|apply|plan-apply <App.app>
                          [--plan <file>] [--dry-run] [--skip-verify]
                          [--thin arm64|x86_64|none]
@@ -408,6 +410,105 @@ cmd_test() {
     omctest_run_suite "$target" "$tests_dir" "$filter"
 }
 
+# ── Integration tests ─────────────────────────────────────────────────────────
+
+# Runs the *.itest.sh files beside the applet against the real applet: each file gets a fresh
+# applet process, launched for a test, and drives it over its ActionUI bridge (omcitest.sh). The
+# applet must be signed for local use (ad hoc, as `build` signs it by default); windows open on
+# the screen while the tests run.
+cmd_itest() {
+    local target="" tests_dir="" filter="" list_only=0
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --tests)   _need_value "$1" $# "$2" || return 2; tests_dir="$2"; shift 2 ;;
+            --filter)  _need_value "$1" $# "$2" || return 2; filter="$2"; shift 2 ;;
+            --verbose) export OMCITEST_VERBOSE=1; shift ;;
+            --keep)    export OMCITEST_KEEP=1; shift ;;
+            --list)    list_only=1; shift ;;
+            -h|--help) usage; return 2 ;;
+            -*) echo "itest: unknown option: $1" >&2; return 2 ;;
+            *)  if [ -z "$target" ]; then target="$1"; else echo "itest: unexpected argument: $1" >&2; return 2; fi; shift ;;
+        esac
+    done
+
+    if [ -z "$target" ]; then echo "itest: an applet bundle path is required" >&2; return 2; fi
+    if [ ! -d "$target/Contents" ]; then echo "itest: not an applet bundle: $target" >&2; return 2; fi
+    if [ -z "$tests_dir" ]; then
+        tests_dir=$(applet_tests_dir "$target")
+    fi
+    if [ -z "$tests_dir" ] || [ ! -d "$tests_dir" ]; then
+        echo "itest: no tests directory at ${tests_dir:-<beside $target>} (use --tests <dir>)" >&2
+        return 2
+    fi
+
+    local files="" matched=0 test_file base
+    for test_file in "$tests_dir"/*.itest.sh; do
+        [ -f "$test_file" ] || continue
+        base=$(/usr/bin/basename "$test_file")
+        if [ -n "$filter" ]; then
+            case "$base" in
+                $filter) ;;
+                *) continue ;;
+            esac
+        fi
+        matched=$((matched + 1))
+        if [ "$list_only" -eq 1 ]; then printf '%s\n' "$test_file"; fi
+    done
+    if [ "$matched" -eq 0 ]; then
+        echo "itest: no integration test files (*.itest.sh) matched in $tests_dir" >&2
+        return 2
+    fi
+    if [ "$list_only" -eq 1 ]; then return 0; fi
+
+    local lib="$AGENTS_DIR/omcitest.sh"
+    local rpc="$AGENTS_DIR/omcitest_rpc.py"
+    if [ ! -f "$lib" ] || [ ! -f "$rpc" ]; then
+        echo "itest: cannot find the harness at $lib and $rpc" >&2
+        return 1
+    fi
+
+    local results
+    results=$(/usr/bin/mktemp "${TMPDIR:-/tmp}/omcitest-results.XXXXXX")
+    local status=$?
+    if [ "$status" -ne 0 ] || [ -z "$results" ]; then
+        echo "itest: cannot create a results file" >&2
+        return 1
+    fi
+
+    for test_file in "$tests_dir"/*.itest.sh; do
+        [ -f "$test_file" ] || continue
+        base=$(/usr/bin/basename "$test_file")
+        if [ -n "$filter" ]; then
+            case "$base" in
+                $filter) ;;
+                *) continue ;;
+            esac
+        fi
+        # Its own bash process per file, so one file's variables and functions cannot leak into
+        # the next, as for omctest.
+        OMCITEST_PYTHON="$python3" OMCITEST_RPC="$rpc" OMCITEST_RESULTS="$results" \
+            /bin/bash -c 'source "$1"; omcitest_run_file "$2" "$3"' omcitest "$lib" "$target" "$test_file"
+    done
+
+    local passed=0 failed=0 count=0 name p f
+    while read -r p f name; do
+        [ -n "$name" ] || continue
+        count=$((count + 1))
+        passed=$((passed + p))
+        failed=$((failed + f))
+    done < "$results"
+    /bin/rm -f "$results"
+    if [ "$count" -lt "$matched" ]; then
+        failed=$((failed + matched - count))
+        echo "itest: $((matched - count)) file(s) reported no result" >&2
+    fi
+    echo "itest: $passed passed, $failed failed, $matched files"
+    if [ "$failed" -ne 0 ]; then
+        return 1
+    fi
+    return 0
+}
+
 # ── Thin embedded Python ──────────────────────────────────────────────────────
 
 # plan / apply / plan-apply, over the same lib.build.sh phase the pane's Execute
@@ -606,6 +707,7 @@ case "$sub" in
     validate)       cmd_validate "$@" ;;
     build)          cmd_build "$@" ;;
     test)           cmd_test "$@" ;;
+    itest)          cmd_itest "$@" ;;
     thin-python)    cmd_thin_python "$@" ;;
     prettify)       cmd_prettify "$@" ;;
     preview)        cmd_preview "$@" ;;
