@@ -38,6 +38,15 @@ check_contains "and fails, as from the menu" '"status": -128' "$log"
 check_contains "an unknown window is refused" "-32602" "$(itest_run fixture.greet --window NOT-A-WINDOW 2>&1)"
 check_contains "and so is --window with --key-window" "-32602" "$(itest_run fixture.greet --window "$window" --key-window 2>&1)"
 
+section "Closing the window as its close button does"
+check_contains "an unknown window is refused" "-32602" "$(itest_close NOT-A-WINDOW 2>&1)"
+check_contains "the close is taken" '"closing": true' "$(itest_close "$window")"
+itest_wait_idle
+check "its end command ran, while the window still had its values" "closed:Window" "$(/bin/cat "$ITEST_WORK/closed.txt" 2>/dev/null)"
+# The engine no longer has the window. (actionui.listWindows still names it: OMC does not remove a
+# closed window's ActionUI model, reported to the owner.)
+check_contains "the closed window is refused" "-32602" "$(itest_close "$window" 2>&1)"
+
 section "A private home and the applet under test"
 run="$(itest_run fixture.env)"
 itest_wait_idle

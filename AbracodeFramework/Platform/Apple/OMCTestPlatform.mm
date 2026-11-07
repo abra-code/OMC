@@ -40,6 +40,20 @@ OMCTestPlatformDispatchToWindow(CFStringRef inWindowUUID, CFStringRef inCommandN
 	return true;
 }
 
+bool
+OMCTestPlatformCloseWindow(CFStringRef inWindowUUID)
+{
+	if(inWindowUUID == nullptr)
+		return false;
+	OMCWindowController *controller = [OMCWindowController findControllerByUUID:(__bridge NSString *)inWindowUUID];
+	if(controller == nil)
+		return false;
+	// The close button's way (windowShouldClose:, then windowWillClose: and the end command), without
+	// making the window key or activating the application.
+	[controller.window performClose:nil];
+	return true;
+}
+
 void
 OMCTestPlatformRequestQuit(void)
 {

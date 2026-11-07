@@ -25,6 +25,8 @@
 #   itest_wait_idle [seconds]              waits until nothing runs and the applet has settled
 #   itest_windows                          the open ActionUI windows, one uuid per line
 #   itest_new_window <before>              the window in itest_windows that was not in <before>
+#   itest_close <window>                   closes the window as its close button does (its end command
+#                                          runs); then itest_wait_idle
 #   itest_value <window> <view-id> [part]  a control's value as text
 #   itest_set_value <window> <view-id> <text> [part]
 #   itest_click <window> <view-id> [part]  fires the control's actionID as a click would; prints it
@@ -181,6 +183,10 @@ itest_wait_idle() { # [seconds]
 
 itest_windows() {
     _omcitest_rpc windows
+}
+
+itest_close() { # <window>
+    _omcitest_rpc call omc.test.closeWindow "{\"window\": \"$1\"}"
 }
 
 itest_new_window() { # <before: output of itest_windows>

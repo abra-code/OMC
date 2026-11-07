@@ -37,11 +37,12 @@
 //  starts the bridge at that path at once instead of with the first window, registers the token
 //  under the label "omc.test" and adds these methods next to the bridge's own actionui.* ones:
 //
-//    omc.test.status      {} -> {idle, activeCommands, scheduledRuns, activity, pasteboardPrefix,
-//                         skippedPastes, supportPath?}
-//                         idle: no command at work and no runCommand waiting to start. activity
-//                         changes with every start or end of work, so a client that reads the same
-//                         activity twice, some time apart, knows the applet has settled.
+//    omc.test.status      {} -> {idle, activeCommands, scheduledRuns, scheduledCloses, activity,
+//                         pasteboardPrefix, skippedPastes, supportPath?}
+//                         idle: no command at work and no runCommand or closeWindow waiting to
+//                         start. activity changes with every start or end of work, so a client that
+//                         reads the same activity twice, some time apart, knows the applet has
+//                         settled.
 //                         pasteboardPrefix: the run's pasteboards (above). skippedPastes: how many
 //                         PASTE_AFTER_EXECUTION pastes were not sent. supportPath: the support
 //                         folder handlers get, when the launch brought one (OMC_TEST_SUPPORT_PATH).
@@ -88,6 +89,16 @@
 //                         tasks ended, or at once when it started none. A command whose tasks are
 //                         torn down before they finish (a dialog canceled first) may never report
 //                         finished: wait on omc.test.status, which is the engine's own count.
+//    omc.test.closeWindow {window} -> {closing: true}
+//                         Closes an open OMC window (its uuid, as actionui.listWindows gives it) as
+//                         its close button does, on the next main-thread turn, so the window's end
+//                         command (END_CANCEL_SUBCOMMAND_ID) runs as when a user closes it and the
+//                         reply never waits for it. The window is not made key. Wait on
+//                         omc.test.status, then check the outcome: a window can refuse to close, and
+//                         a closed one is refused by a later closeWindow (actionui.listWindows still
+//                         names it, as the engine keeps a closed window's ActionUI model). An unknown
+//                         uuid is refused. A request for a window whose close is still under way
+//                         answers the same and adds nothing.
 //    omc.test.quit        {} -> {quitting: true}
 //                         Terminates the applet normally, so app.will.terminate runs.
 //

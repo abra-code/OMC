@@ -24,6 +24,10 @@ bool OMCTestPlatformHasWindow(CFStringRef inWindowUUID);
 // that window's subcommand and returns true; false when no such window is open. Main thread.
 bool OMCTestPlatformDispatchToWindow(CFStringRef inWindowUUID, CFStringRef inCommandNameOrId, CFTypeRef inContext);
 
+// What the close button does, for the window with this uuid: asks the window to close, so its end
+// command runs as when a user closes it. Returns false when no such window is open. Main thread.
+bool OMCTestPlatformCloseWindow(CFStringRef inWindowUUID);
+
 // Asks the application to terminate the normal way, so its termination events run. Main thread.
 void OMCTestPlatformRequestQuit(void);
 

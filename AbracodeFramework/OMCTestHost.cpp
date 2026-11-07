@@ -76,6 +76,8 @@ struct TestRun
 bool sActive = false;
 std::vector< std::unique_ptr<TestRun> > sRuns;
 long sScheduledRuns = 0;
+long sScheduledCloses = 0; // omc.test.closeWindow requests not yet carried out
+CFObj<CFMutableSetRef> sClosingWindows; // uuids with a close scheduled or still running its end command
 long sSkippedPastes = 0;
 std::string sPasteboardPrefix;
 CFObj<CFStringRef> sClipboardName; // "<prefix>.general", what the engine reads as the clipboard
@@ -711,9 +713,10 @@ HandleStatus()
 {
 	CFObj<CFMutableDictionaryRef> result( CreateMutableDict() );
 	long active = OMCGetUnfinishedTaskManagerCount();
-	SetBool(result, CFSTR("idle"), (active <= 0) && (sScheduledRuns <= 0));
+	SetBool(result, CFSTR("idle"), (active <= 0) && (sScheduledRuns <= 0) && (sScheduledCloses <= 0));
 	SetNumber(result, CFSTR("activeCommands"), active);
 	SetNumber(result, CFSTR("scheduledRuns"), sScheduledRuns);
+	SetNumber(result, CFSTR("scheduledCloses"), sScheduledCloses);
 	SetNumber(result, CFSTR("activity"), (long)OMCGetEngineActivityCount());
 	SetNumber(result, CFSTR("skippedPastes"), sSkippedPastes);
 	CFObj<CFStringRef> prefix( ::CFStringCreateWithCString(kCFAllocatorDefault, sPasteboardPrefix.c_str(), kCFStringEncodingUTF8) );
@@ -831,6 +834,55 @@ HandleLog(CFDictionaryRef inParams)
 }
 
 void
+CloseNow(void *inContext)
+{
+	CFObj<CFStringRef> windowUUID( (CFStringRef)inContext ); // the reference HandleCloseWindow detached
+	sScheduledCloses--;
+	// A window closed meanwhile has nothing left to do; the end command of one that closes now is
+	// counted among the active commands before this returns.
+	(void)OMCTestPlatformCloseWindow(windowUUID);
+	// Closed, or refused by the window (no close button): a later request may try again.
+	if(sClosingWindows != nullptr)
+		::CFSetRemoveValue(sClosingWindows, windowUUID);
+	OMCNoteEngineActivity();
+}
+
+char *
+HandleCloseWindow(CFDictionaryRef inParams)
+{
+	CFStringRef windowUUID = ACFType<CFStringRef>::DynamicCast(::CFDictionaryGetValue(inParams, CFSTR("window")));
+	if((windowUUID == nullptr) || !OMCTestPlatformHasWindow(windowUUID))
+		return CreateErrorReply(kInvalidParams, CFSTR("window: the uuid of an open OMC window is required"));
+
+	CFObj<CFMutableDictionaryRef> result( CreateMutableDict() );
+	SetBool(result, CFSTR("closing"), true);
+
+	// A window already closing stays registered until its end command returns, and that command's
+	// nested wait would carry out a second close inside the first: the end command would run twice,
+	// which no click can do. The close already taken stands for this one too.
+	if((sClosingWindows != nullptr) && ::CFSetContainsValue(sClosingWindows, windowUUID))
+		return CreateResultReply(result);
+
+	// On the next main-thread turn, as a run starts: the window's end command may wait for its task
+	// or show a panel, and the reply must not wait for either.
+	CFObj<CFStringRef> held(windowUUID, kCFObjRetain);
+	CFStringRef passed = held.Detach();
+	if(!OMCMainThreadSignal::RunAfter(0.0, CloseNow, (void *)passed))
+	{
+		held.Adopt(passed); // nothing was scheduled, so the reference is still ours
+		return CreateErrorReply(kHostRefused, CFSTR("the close could not be scheduled"));
+	}
+	sScheduledCloses++;
+	if(sClosingWindows == nullptr)
+		sClosingWindows.Adopt( ::CFSetCreateMutable(kCFAllocatorDefault, 0, &kCFTypeSetCallBacks) );
+	if(sClosingWindows != nullptr)
+		::CFSetAddValue(sClosingWindows, windowUUID);
+	OMCNoteEngineActivity();
+
+	return CreateResultReply(result);
+}
+
+void
 QuitNow(void *inContext)
 {
 	(void)inContext;
@@ -875,12 +927,14 @@ HandleMethod(void *inContext, const char *inMethod, const char *inParamsJSON)
 		return HandleAnswer(params);
 	if(strcmp(inMethod, "omc.test.panels") == 0)
 		return HandlePanels(params);
+	if(strcmp(inMethod, "omc.test.closeWindow") == 0)
+		return HandleCloseWindow(params);
 	if(strcmp(inMethod, "omc.test.quit") == 0)
 		return HandleQuit();
 	return CreateErrorReply(-32601, CFSTR("Method not found"));
 }
 
-const char *kMethods[] = { "omc.test.status", "omc.test.runCommand", "omc.test.log", "omc.test.answer", "omc.test.panels", "omc.test.quit" };
+const char *kMethods[] = { "omc.test.status", "omc.test.runCommand", "omc.test.log", "omc.test.answer", "omc.test.panels", "omc.test.closeWindow", "omc.test.quit" };
 
 } // namespace
 
