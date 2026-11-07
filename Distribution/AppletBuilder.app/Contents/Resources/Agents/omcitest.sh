@@ -17,8 +17,9 @@
 #   section <header>                       a heading in the output
 #   check <description> <expected> <actual>
 #   check_contains <description> <needle> <haystack>
-#   itest_run <command-id> [--text T] [--file PATH]... [--key-window]
+#   itest_run <command-id> [--text T] [--file PATH]... [--key-window] [--open-panel]
 #                                          runs a command as its menu item would; prints the run number
+#                                          (--open-panel: a command that needs files asks for them)
 #   itest_wait_idle [seconds]              waits until nothing runs and the applet has settled
 #   itest_windows                          the open ActionUI windows, one uuid per line
 #   itest_new_window <before>              the window in itest_windows that was not in <before>
@@ -27,6 +28,17 @@
 #   itest_click <window> <view-id> [part]  fires the control's actionID as a click would; prints it
 #   itest_output <run>                     the text the run's tasks wrote
 #   itest_run_finished <run>               "yes" when all of the run's tasks ended, else "no"
+#   itest_answer_save <path>               the next panel is a save panel; answer it with <path>
+#   itest_answer_open <path>...            the next panel is an open panel; answer it with these
+#   itest_answer_cancel                    cancel the next panel
+#                                          (a panel with no answer queued is canceled too; every
+#                                          panel is recorded, answered or not)
+#   itest_panel_count                      how many save and open panels the applet asked for
+#   itest_panel <index|last> <field>       a field of that panel's record: kind, title, message,
+#                                          prompt, defaultName, defaultDirectory, identifier,
+#                                          allowedContentTypes, canChooseFiles, canChooseDirectories,
+#                                          allowsMultiple, paths, canceled, problem
+#   itest_panels_clear                     forget the panel records and any answers not yet taken
 #   itest_call <method> [params-json]      any bridge method; prints the result as JSON
 #   itest_quit                             quits now (normally the runner does this after the file)
 #   ITEST_WORK                             a private folder for the test's own files
@@ -96,8 +108,32 @@ itest_call() { # <method> [params-json]
     _omcitest_rpc call "$1" "${2:-}"
 }
 
-itest_run() { # <command-id> [--text T] [--file PATH]... [--key-window]
+itest_run() { # <command-id> [--text T] [--file PATH]... [--key-window] [--open-panel]
     _omcitest_rpc run "$@"
+}
+
+itest_answer_save() { # <path>
+    _omcitest_rpc answer save "$1" > /dev/null
+}
+
+itest_answer_open() { # <path>...
+    _omcitest_rpc answer open "$@" > /dev/null
+}
+
+itest_answer_cancel() {
+    _omcitest_rpc answer cancel > /dev/null
+}
+
+itest_panel_count() {
+    _omcitest_rpc panel-count
+}
+
+itest_panel() { # <index|last> <field>
+    _omcitest_rpc panel "$1" "$2"
+}
+
+itest_panels_clear() {
+    _omcitest_rpc panels --clear > /dev/null
 }
 
 itest_wait_idle() { # [seconds]

@@ -14,17 +14,21 @@
 #include "OMCActionUIRemoteHost.h"
 #include "OMCCommandRunner.h"
 #include "OMCMainThreadSignal.h"
+#include "OMCFilePanels.h"
 #include "ACFJSON.h"
 #include "ACFType.h"
 #include "CFObj.h"
+#include <deque>
 #include <memory>
 #include <string>
 #include <vector>
 #include <errno.h>
+#include <limits.h>
 #include <poll.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -51,6 +55,7 @@ struct TestRun
 	CFObj<CFStringRef>		commandID;
 	CFObj<CFTypeRef>		context;
 	bool					allowKeyWindow {false};
+	bool					allowOpenPanel {false};
 	bool					dispatchedToWindow {false};
 	bool					started {false};
 	bool					finished {false};
@@ -67,6 +72,17 @@ struct TestRun
 bool sActive = false;
 std::vector< std::unique_ptr<TestRun> > sRuns;
 long sScheduledRuns = 0;
+
+// A queued omc.test.answer.
+enum class PanelAnswerKind { save, open, cancel };
+struct PanelAnswer
+{
+	PanelAnswerKind		kind {PanelAnswerKind::cancel};
+	CFObj<CFArrayRef>	paths; // CFStrings, absolute: one for save, one or more for open
+};
+
+std::deque<PanelAnswer> sPanelAnswers;
+CFObj<CFMutableArrayRef> sPanelRecords; // what omc.test.panels reports, in order
 
 [[noreturn]] void
 RefuseTestLaunch(const char *inReason)
@@ -317,9 +333,10 @@ StartRun(void *inContext)
 	hooks.createObserver = CreateRunObserver;
 	hooks.context = run;
 
-	// The menu's way (OMCCommandMenu), but with no open panel: a test has no one to answer it.
+	// The menu's way (OMCCommandMenu), with the open panel only when the test asked for it: it
+	// takes a queued answer like every panel here.
 	run->status = OMCRunCommandFromFile(run->commandID, CFSTR("Command.plist"), run->context,
-										false, run->allowKeyWindow, nullptr, false, &hooks);
+										run->allowOpenPanel, run->allowKeyWindow, nullptr, false, &hooks);
 	if(!run->observerCreated)
 		run->finished = true; // it never got as far as running anything
 	OMCNoteEngineActivity();
@@ -352,7 +369,249 @@ CreateFileContext(CFArrayRef inPaths, CFStringRef &outProblem)
 	return urls.Detach();
 }
 
+#pragma mark - Panels
+
+void
+SetStringIfAny(CFMutableDictionaryRef ioDict, CFStringRef inKey, CFStringRef inValue)
+{
+	if(inValue != nullptr)
+		::CFDictionarySetValue(ioDict, inKey, inValue);
+}
+
+CFMutableDictionaryRef
+CreatePanelRecord(bool inIsSave, CFStringRef inClientName, CFStringRef inMessage, CFStringRef inDefaultName, CFStringRef inDefaultDirPath,
+					CFStringRef inIdentifier, CFStringRef inPrompt, CFArrayRef inAllowedContentTypes, UInt32 inFlags)
+{
+	CFMutableDictionaryRef record = CreateMutableDict();
+	::CFDictionarySetValue(record, CFSTR("kind"), inIsSave ? CFSTR("save") : CFSTR("open"));
+	SetStringIfAny(record, CFSTR("title"), inClientName);
+	SetStringIfAny(record, CFSTR("message"), inMessage);
+	SetStringIfAny(record, CFSTR("prompt"), inPrompt);
+	SetStringIfAny(record, CFSTR("defaultName"), inDefaultName);
+	SetStringIfAny(record, CFSTR("defaultDirectory"), inDefaultDirPath);
+	SetStringIfAny(record, CFSTR("identifier"), inIdentifier);
+	if(inAllowedContentTypes != nullptr)
+		::CFDictionarySetValue(record, CFSTR("allowedContentTypes"), inAllowedContentTypes);
+	if(!inIsSave)
+	{
+		SetBool(record, CFSTR("canChooseFiles"), (inFlags & kOMCFilePanelCanChooseFiles) != 0);
+		SetBool(record, CFSTR("canChooseDirectories"), (inFlags & kOMCFilePanelCanChooseDirectories) != 0);
+		SetBool(record, CFSTR("allowsMultiple"), (inFlags & kOMCFilePanelAllowMultipleItems) != 0);
+	}
+	return record;
+}
+
+// Whether a path names something, and whether that is a directory (following symlinks, as a panel does).
+bool
+StatPath(CFStringRef inPath, bool &outIsDirectory)
+{
+	outIsDirectory = false;
+	char path[PATH_MAX];
+	if(!::CFStringGetFileSystemRepresentation(inPath, path, sizeof(path)))
+		return false;
+	struct stat info;
+	if(stat(path, &info) != 0)
+		return false;
+	outIsDirectory = S_ISDIR(info.st_mode);
+	return true;
+}
+
+CFURLRef
+CreateFileURL(CFStringRef inPath, bool inIsDirectory)
+{
+	return ::CFURLCreateWithFileSystemPath(kCFAllocatorDefault, inPath, kCFURLPOSIXPathStyle, inIsDirectory);
+}
+
+// Takes the next queued answer for a panel and checks it against what the panel could have given.
+// Returns the reason it was refused, or NULL; outURLs is left empty for a cancel or a refusal.
+CFStringRef
+TakePanelAnswer(bool inIsSave, UInt32 inFlags, CFObj<CFMutableArrayRef> &outURLs)
+{
+	if(sPanelAnswers.empty())
+		return CFSTR("no answer was queued");
+	PanelAnswer answer = sPanelAnswers.front();
+	sPanelAnswers.pop_front();
+
+	if(answer.kind == PanelAnswerKind::cancel)
+		return nullptr;
+	if(inIsSave && (answer.kind != PanelAnswerKind::save))
+		return CFSTR("the queued answer is for an open panel");
+	if(!inIsSave && (answer.kind != PanelAnswerKind::open))
+		return CFSTR("the queued answer is for a save panel");
+
+	CFIndex count = ::CFArrayGetCount(answer.paths);
+	CFObj<CFMutableArrayRef> urls( ::CFArrayCreateMutable(kCFAllocatorDefault, count, &kCFTypeArrayCallBacks) );
+	if(inIsSave)
+	{
+		CFStringRef path = (CFStringRef)::CFArrayGetValueAtIndex(answer.paths, 0);
+		// A save panel names a file: never an existing folder, never a path ending in a slash.
+		bool pathIsDirectory = false;
+		if(::CFStringHasSuffix(path, CFSTR("/")) || (StatPath(path, pathIsDirectory) && pathIsDirectory))
+			return CFSTR("a folder for a save panel");
+		CFObj<CFURLRef> url( CreateFileURL(path, false) );
+		CFObj<CFURLRef> parent( (url != nullptr) ? ::CFURLCreateCopyDeletingLastPathComponent(kCFAllocatorDefault, url) : nullptr );
+		CFObj<CFStringRef> parentPath( (parent != nullptr) ? ::CFURLCopyFileSystemPath(parent, kCFURLPOSIXPathStyle) : nullptr );
+		bool parentIsDirectory = false;
+		if((parentPath == nullptr) || !StatPath(parentPath, parentIsDirectory) || !parentIsDirectory)
+			return CFSTR("the folder of the answered save path does not exist");
+		::CFArrayAppendValue(urls, url);
+	}
+	else
+	{
+		if((count > 1) && ((inFlags & kOMCFilePanelAllowMultipleItems) == 0))
+			return CFSTR("several paths for a panel that takes one");
+		for(CFIndex i = 0; i < count; i++)
+		{
+			CFStringRef path = (CFStringRef)::CFArrayGetValueAtIndex(answer.paths, i);
+			bool isDirectory = false;
+			if(!StatPath(path, isDirectory))
+				return CFSTR("an answered path does not exist");
+			if(isDirectory && ((inFlags & kOMCFilePanelCanChooseDirectories) == 0))
+				return CFSTR("a folder for a panel that takes only files");
+			if(!isDirectory && ((inFlags & kOMCFilePanelCanChooseFiles) == 0))
+				return CFSTR("a file for a panel that takes only folders");
+			CFObj<CFURLRef> url( CreateFileURL(path, isDirectory) );
+			if(url == nullptr)
+				return CFSTR("an answered path is not usable");
+			::CFArrayAppendValue(urls, url);
+		}
+	}
+	outURLs.Swap(urls);
+	return nullptr;
+}
+
+// Records the panel and answers it. Returns the chosen URLs (+1), or NULL for canceled.
+CFArrayRef
+AnswerPanel(bool inIsSave, CFStringRef inClientName, CFStringRef inMessage, CFStringRef inDefaultName, CFStringRef inDefaultDirPath,
+			CFStringRef inIdentifier, CFStringRef inPrompt, CFArrayRef inAllowedContentTypes, UInt32 inFlags)
+{
+	CFObj<CFMutableDictionaryRef> record( CreatePanelRecord(inIsSave, inClientName, inMessage, inDefaultName, inDefaultDirPath,
+															inIdentifier, inPrompt, inAllowedContentTypes, inFlags) );
+	CFObj<CFMutableArrayRef> urls;
+	CFStringRef problem = TakePanelAnswer(inIsSave, inFlags, urls);
+	bool answered = (problem == nullptr) && (urls != nullptr) && (::CFArrayGetCount(urls) > 0);
+	if(answered)
+	{
+		CFIndex count = ::CFArrayGetCount(urls);
+		CFObj<CFMutableArrayRef> paths( ::CFArrayCreateMutable(kCFAllocatorDefault, count, &kCFTypeArrayCallBacks) );
+		for(CFIndex i = 0; i < count; i++)
+		{
+			CFObj<CFStringRef> path( ::CFURLCopyFileSystemPath((CFURLRef)::CFArrayGetValueAtIndex(urls, i), kCFURLPOSIXPathStyle) );
+			if(path != nullptr)
+				::CFArrayAppendValue(paths, path);
+		}
+		::CFDictionarySetValue(record, CFSTR("paths"), paths);
+	}
+	SetBool(record, CFSTR("canceled"), !answered);
+	SetStringIfAny(record, CFSTR("problem"), problem);
+
+	if(sPanelRecords == nullptr)
+		sPanelRecords.Adopt( ::CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks) );
+	if(sPanelRecords != nullptr)
+		::CFArrayAppendValue(sPanelRecords, record);
+	OMCNoteEngineActivity();
+
+	if(!answered)
+		return nullptr;
+	return (CFArrayRef)urls.Detach();
+}
+
+// An array of absolute paths, as CFStrings, from a param; NULL with outProblem set when it is not one.
+CFArrayRef
+CopyAbsolutePaths(CFTypeRef inValue, CFStringRef &outProblem)
+{
+	outProblem = nullptr;
+	CFArrayRef paths = ACFType<CFArrayRef>::DynamicCast(inValue);
+	if((paths == nullptr) || (::CFArrayGetCount(paths) == 0))
+	{
+		outProblem = CFSTR("paths: a non-empty array of absolute paths is required");
+		return nullptr;
+	}
+	CFIndex count = ::CFArrayGetCount(paths);
+	for(CFIndex i = 0; i < count; i++)
+	{
+		CFStringRef path = ACFType<CFStringRef>::DynamicCast(::CFArrayGetValueAtIndex(paths, i));
+		if((path == nullptr) || !::CFStringHasPrefix(path, CFSTR("/")))
+		{
+			outProblem = CFSTR("paths: every path must be absolute");
+			return nullptr;
+		}
+	}
+	return (CFArrayRef)::CFRetain(paths);
+}
+
 #pragma mark - Methods
+
+char *
+HandleAnswer(CFDictionaryRef inParams)
+{
+	CFStringRef kind = ACFType<CFStringRef>::DynamicCast(::CFDictionaryGetValue(inParams, CFSTR("kind")));
+	if(kind == nullptr)
+		return CreateErrorReply(kInvalidParams, CFSTR("kind: save, open or cancel is required"));
+
+	PanelAnswer answer;
+	if(::CFStringCompare(kind, CFSTR("save"), 0) == kCFCompareEqualTo)
+	{
+		CFStringRef path = ACFType<CFStringRef>::DynamicCast(::CFDictionaryGetValue(inParams, CFSTR("path")));
+		if((path == nullptr) || !::CFStringHasPrefix(path, CFSTR("/")) || (::CFStringGetLength(path) < 2))
+			return CreateErrorReply(kInvalidParams, CFSTR("path: an absolute path is required for a save answer"));
+		const void *values[] = { path };
+		answer.kind = PanelAnswerKind::save;
+		answer.paths.Adopt( ::CFArrayCreate(kCFAllocatorDefault, values, 1, &kCFTypeArrayCallBacks) );
+	}
+	else if(::CFStringCompare(kind, CFSTR("open"), 0) == kCFCompareEqualTo)
+	{
+		CFStringRef problem = nullptr;
+		answer.kind = PanelAnswerKind::open;
+		answer.paths.Adopt( CopyAbsolutePaths(::CFDictionaryGetValue(inParams, CFSTR("paths")), problem) );
+		if(answer.paths == nullptr)
+			return CreateErrorReply(kInvalidParams, (problem != nullptr) ? problem : CFSTR("paths: not usable"));
+	}
+	else if(::CFStringCompare(kind, CFSTR("cancel"), 0) == kCFCompareEqualTo)
+	{
+		answer.kind = PanelAnswerKind::cancel;
+	}
+	else
+	{
+		return CreateErrorReply(kInvalidParams, CFSTR("kind: must be save, open or cancel"));
+	}
+	if((answer.kind != PanelAnswerKind::cancel) && (answer.paths == nullptr))
+		return CreateErrorReply(kHostRefused, CFSTR("the answer could not be stored"));
+
+	sPanelAnswers.push_back(answer);
+	CFObj<CFMutableDictionaryRef> result( CreateMutableDict() );
+	SetNumber(result, CFSTR("pending"), (long)sPanelAnswers.size());
+	return CreateResultReply(result);
+}
+
+char *
+HandlePanels(CFDictionaryRef inParams)
+{
+	CFTypeRef clearValue = ::CFDictionaryGetValue(inParams, CFSTR("clear"));
+	CFBooleanRef clear = ACFType<CFBooleanRef>::DynamicCast(clearValue);
+	if((clearValue != nullptr) && (clear == nullptr))
+		return CreateErrorReply(kInvalidParams, CFSTR("clear: must be true or false"));
+
+	CFObj<CFMutableDictionaryRef> result( CreateMutableDict() );
+	if(sPanelRecords != nullptr)
+	{
+		::CFDictionarySetValue(result, CFSTR("panels"), sPanelRecords);
+	}
+	else
+	{
+		CFObj<CFArrayRef> none( ::CFArrayCreate(kCFAllocatorDefault, nullptr, 0, &kCFTypeArrayCallBacks) );
+		::CFDictionarySetValue(result, CFSTR("panels"), none);
+	}
+	SetNumber(result, CFSTR("pending"), (long)sPanelAnswers.size());
+	char *reply = CreateResultReply(result); // written out now, before anything is cleared
+
+	if((clear != nullptr) && ::CFBooleanGetValue(clear))
+	{
+		sPanelRecords.Release();
+		sPanelAnswers.clear();
+	}
+	return reply;
+}
 
 char *
 HandleStatus()
@@ -388,10 +647,16 @@ HandleRunCommand(CFDictionaryRef inParams)
 	if((keyWindowValue != nullptr) && (keyWindow == nullptr))
 		return CreateErrorReply(kInvalidParams, CFSTR("keyWindow: must be true or false"));
 
+	CFTypeRef openPanelValue = ::CFDictionaryGetValue(inParams, CFSTR("openPanel"));
+	CFBooleanRef openPanel = ACFType<CFBooleanRef>::DynamicCast(openPanelValue);
+	if((openPanelValue != nullptr) && (openPanel == nullptr))
+		return CreateErrorReply(kInvalidParams, CFSTR("openPanel: must be true or false"));
+
 	std::unique_ptr<TestRun> run(new TestRun());
 	run->number = (long)sRuns.size() + 1;
 	run->commandID.Adopt(commandID, kCFObjRetain);
 	run->allowKeyWindow = (keyWindow != nullptr) && ::CFBooleanGetValue(keyWindow);
+	run->allowOpenPanel = (openPanel != nullptr) && ::CFBooleanGetValue(openPanel);
 	if((files != nullptr) && (::CFArrayGetCount(files) > 0))
 	{
 		CFStringRef problem = nullptr;
@@ -498,12 +763,16 @@ HandleMethod(void *inContext, const char *inMethod, const char *inParamsJSON)
 		return HandleRunCommand(params);
 	if(strcmp(inMethod, "omc.test.log") == 0)
 		return HandleLog(params);
+	if(strcmp(inMethod, "omc.test.answer") == 0)
+		return HandleAnswer(params);
+	if(strcmp(inMethod, "omc.test.panels") == 0)
+		return HandlePanels(params);
 	if(strcmp(inMethod, "omc.test.quit") == 0)
 		return HandleQuit();
 	return CreateErrorReply(-32601, CFSTR("Method not found"));
 }
 
-const char *kMethods[] = { "omc.test.status", "omc.test.runCommand", "omc.test.log", "omc.test.quit" };
+const char *kMethods[] = { "omc.test.status", "omc.test.runCommand", "omc.test.log", "omc.test.answer", "omc.test.panels", "omc.test.quit" };
 
 } // namespace
 
@@ -565,4 +834,19 @@ bool
 OMCTestHostIsActive(void)
 {
 	return sActive;
+}
+
+CFURLRef
+OMCTestHostAnswerSavePanel(CFStringRef inClientName, CFStringRef inMessage, CFStringRef inDefaultName, CFStringRef inDefaultDirPath, CFStringRef inIdentifier, CFStringRef inPrompt, CFArrayRef inAllowedContentTypes, UInt32 inFlags)
+{
+	CFObj<CFArrayRef> urls( AnswerPanel(true, inClientName, inMessage, inDefaultName, inDefaultDirPath, inIdentifier, inPrompt, inAllowedContentTypes, inFlags) );
+	if((urls == nullptr) || (::CFArrayGetCount(urls) == 0))
+		return nullptr;
+	return (CFURLRef)::CFRetain(::CFArrayGetValueAtIndex(urls, 0));
+}
+
+CFArrayRef
+OMCTestHostAnswerOpenPanel(CFStringRef inClientName, CFStringRef inMessage, CFStringRef inDefaultName, CFStringRef inDefaultDirPath, CFStringRef inIdentifier, CFStringRef inPrompt, CFArrayRef inAllowedContentTypes, UInt32 inFlags)
+{
+	return AnswerPanel(false, inClientName, inMessage, inDefaultName, inDefaultDirPath, inIdentifier, inPrompt, inAllowedContentTypes, inFlags);
 }

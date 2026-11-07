@@ -5,7 +5,10 @@
 //  Created by Tomasz Kukielka on 5/25/08.
 //  Copyright 2008 Abracode Inc. All rights reserved.
 //
-//  The system's save and open panels. Implemented per platform: Platform/Apple/OMCFilePanels.mm
+//  The save and open panels. The engine calls CreateCFURLFromSaveAsDialog and
+//  CreateCFURLsFromOpenDialog (OMCFilePanels.cpp, portable): in a test launch they are answered by
+//  the test host from the answers a test queued (OMCTestHost.h), otherwise they show the system's
+//  panels through the OMCPlatformRun* functions, implemented per platform: Platform/Apple/OMCFilePanels.mm
 //  (NSSavePanel, NSOpenPanel); a Linux implementation can use ActionUI's panels
 //  (actionUIAppRunSavePanel, actionUIAppRunOpenPanel). Each call blocks until the user answers.
 //  The dialog settings from Command.plist are parsed by GetNavDialogParams (OMCNavigationDialogs.h).
@@ -31,6 +34,10 @@ enum
 // Each returns the chosen URL(s), retained (caller releases), or NULL when the user cancels.
 CFURLRef CreateCFURLFromSaveAsDialog( CFStringRef inClientName, CFStringRef inMessage, CFStringRef inDefaultName, CFStringRef inDefaultDirPath, CFStringRef inIdentifier, CFStringRef inPrompt, CFArrayRef inAllowedContentTypes, UInt32 inAdditonalFlags);
 CFArrayRef CreateCFURLsFromOpenDialog( CFStringRef inClientName, CFStringRef inMessage, CFStringRef inDefaultName, CFStringRef inDefaultDirPath, CFStringRef inIdentifier, CFStringRef inPrompt, CFArrayRef inAllowedContentTypes, UInt32 inAdditonalFlags);
+
+// The platform's panels, with the same arguments and results. Called only by the two above.
+CFURLRef OMCPlatformRunSavePanel( CFStringRef inClientName, CFStringRef inMessage, CFStringRef inDefaultName, CFStringRef inDefaultDirPath, CFStringRef inIdentifier, CFStringRef inPrompt, CFArrayRef inAllowedContentTypes, UInt32 inAdditonalFlags);
+CFArrayRef OMCPlatformRunOpenPanel( CFStringRef inClientName, CFStringRef inMessage, CFStringRef inDefaultName, CFStringRef inDefaultDirPath, CFStringRef inIdentifier, CFStringRef inPrompt, CFArrayRef inAllowedContentTypes, UInt32 inAdditonalFlags);
 
 #ifdef __cplusplus
 }

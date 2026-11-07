@@ -5,7 +5,8 @@
 //  Created by Tomasz Kukielka on 5/25/08.
 //  Copyright 2008 Abracode Inc. All rights reserved.
 //
-//  macOS implementation of Platform/OMCFilePanels.h, over NSSavePanel and NSOpenPanel.
+//  macOS implementation of Platform/OMCFilePanels.h's OMCPlatformRun* functions, over NSSavePanel
+//  and NSOpenPanel.
 //
 
 #import <Cocoa/Cocoa.h>
@@ -15,7 +16,7 @@
 #include "ACFType.h"
 
 CFURLRef
-CreateCFURLFromSaveAsDialog( CFStringRef inClientName, CFStringRef inMessage, CFStringRef inDefaultName, CFStringRef inDefaultDirPath, CFStringRef inIdentifier, CFStringRef inPrompt, CFArrayRef inAllowedContentTypes, UInt32 inAdditonalFlags )
+OMCPlatformRunSavePanel( CFStringRef inClientName, CFStringRef inMessage, CFStringRef inDefaultName, CFStringRef inDefaultDirPath, CFStringRef inIdentifier, CFStringRef inPrompt, CFArrayRef inAllowedContentTypes, UInt32 inAdditonalFlags )
 {
 	NSURL *outURL = nil;
 
@@ -73,14 +74,14 @@ CreateCFURLFromSaveAsDialog( CFStringRef inClientName, CFStringRef inMessage, CF
 	}
 	@catch (NSException *localException)
 	{
-		NSLog(@"CreateCFURLFromSaveAsDialog received exception: %@", localException);
+		NSLog(@"OMCPlatformRunSavePanel received exception: %@", localException);
 	}
 	
     return (CFURLRef)CFBridgingRetain(outURL);
 }
 
 CFArrayRef
-CreateCFURLsFromOpenDialog( CFStringRef inClientName, CFStringRef inMessage, CFStringRef inDefaultName, CFStringRef inDefaultDirPath, CFStringRef inIdentifier, CFStringRef inPrompt, CFArrayRef inAllowedContentTypes, UInt32 inAdditonalFlags)
+OMCPlatformRunOpenPanel( CFStringRef inClientName, CFStringRef inMessage, CFStringRef inDefaultName, CFStringRef inDefaultDirPath, CFStringRef inIdentifier, CFStringRef inPrompt, CFArrayRef inAllowedContentTypes, UInt32 inAdditonalFlags)
 {
 #pragma unused(inDefaultName) //NSOpenPanel API no longer supports default name
 	NSArray *outURLs = nil;
@@ -138,7 +139,7 @@ CreateCFURLsFromOpenDialog( CFStringRef inClientName, CFStringRef inMessage, CFS
 	}
 	@catch (NSException *localException)
 	{
-		NSLog(@"CreateCFURLsFromOpenDialog received exception: %@", localException);
+		NSLog(@"OMCPlatformRunOpenPanel received exception: %@", localException);
 	}
 	
     return (CFArrayRef)CFBridgingRetain(outURLs);

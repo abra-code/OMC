@@ -11,8 +11,16 @@ Commands (results on stdout, problems on stderr):
 
     call <method> [params-json] [--raw]   any method; prints the result as JSON, or a string
                                           result as plain text with --raw
-    run <commandID> [--text T] [--file PATH]... [--key-window]
+    run <commandID> [--text T] [--file PATH]... [--key-window] [--open-panel]
                                           omc.test.runCommand; prints the run number
+    answer save <path> | answer open <path>... | answer cancel
+                                          omc.test.answer: queues the next panel's answer;
+                                          prints how many answers are waiting
+    panels [--clear]                      omc.test.panels' records, as JSON
+    panel <index|last> <field>            one field of one panel record (index from 1): a
+                                          string as text, true/false, a list one item per line;
+                                          nothing when the record has no such field
+    panel-count                           how many panels the applet asked for
     value <window> <viewID> [--part N]    actionui.getValueString; prints the text
     set-value <window> <viewID> <text> [--part N]
                                           actionui.setValueString
@@ -196,6 +204,22 @@ def run_record(client, run):
     return runs[0]
 
 
+def panel_records(client):
+    return client.call("omc.test.panels").get("panels", [])
+
+
+def print_field(value):
+    if value is None:
+        return
+    if isinstance(value, bool):
+        print("true" if value else "false")
+    elif isinstance(value, list):
+        for item in value:
+            print(item)
+    else:
+        print(value)
+
+
 def main(argv):
     if not argv:
         print(__doc__, file=sys.stderr)
@@ -231,6 +255,7 @@ def main(argv):
             text = take_option(args, "--text")
             files = take_all(args, "--file")
             key_window = take_option(args, "--key-window", flag=True)
+            open_panel = take_option(args, "--open-panel", flag=True)
             if len(args) != 1:
                 raise SystemExit("omcitest_rpc: run needs one command id")
             params = {"commandID": args[0]}
@@ -240,7 +265,39 @@ def main(argv):
                 params["files"] = files
             if key_window:
                 params["keyWindow"] = True
+            if open_panel:
+                params["openPanel"] = True
             print(client.call("omc.test.runCommand", params)["run"])
+        elif command == "answer":
+            if not args:
+                raise SystemExit("omcitest_rpc: answer needs save <path>, open <path>... or cancel")
+            kind, paths = args[0], args[1:]
+            if kind == "save" and len(paths) == 1:
+                params = {"kind": "save", "path": paths[0]}
+            elif kind == "open" and paths:
+                params = {"kind": "open", "paths": paths}
+            elif kind == "cancel" and not paths:
+                params = {"kind": "cancel"}
+            else:
+                raise SystemExit("omcitest_rpc: answer needs save <path>, open <path>... or cancel")
+            print(client.call("omc.test.answer", params)["pending"])
+        elif command == "panels":
+            clear = take_option(args, "--clear", flag=True)
+            params = {"clear": True} if clear else {}
+            print(json.dumps(client.call("omc.test.panels", params), sort_keys=True))
+        elif command == "panel":
+            if len(args) != 2:
+                raise SystemExit("omcitest_rpc: panel needs an index (or last) and a field")
+            records = panel_records(client)
+            if args[0] == "last":
+                index = len(records)
+            else:
+                index = as_int(args[0], "index")
+            if index < 1 or index > len(records):
+                raise RPCError(-32602, "no panel %s: the applet asked for %d" % (args[0], len(records)))
+            print_field(records[index - 1].get(args[1]))
+        elif command == "panel-count":
+            print(len(panel_records(client)))
         elif command == "value":
             part = take_option(args, "--part")
             if len(args) != 2:

@@ -54,6 +54,7 @@
 		1DAB10022FFD0001009FD073 /* ActionUIRemote in Frameworks */ = {isa = PBXBuildFile; productRef = 1DAB10012FFD0001009FD073 /* ActionUIRemote */; };
 		1D0A1B2C2F72000000000110 /* OMCTestHost.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1D0A1B2C2F72000000000106 /* OMCTestHost.cpp */; };
 		1D0A1B2C2F72000000000111 /* OMCTestPlatform.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1D0A1B2C2F72000000000109 /* OMCTestPlatform.mm */; };
+		1D0A1B2C2F73000000000102 /* OMCFilePanels.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1D0A1B2C2F73000000000101 /* OMCFilePanels.cpp */; };
 		1DAB10032FFD0001009FD073 /* OMCActionUIRemoteHost.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1DAB10062FFD0001009FD073 /* OMCActionUIRemoteHost.mm */; };
 		1DAB10042FFD0001009FD073 /* OMCActionUIRemoteHost.h in Headers */ = {isa = PBXBuildFile; fileRef = 1DAB10052FFD0001009FD073 /* OMCActionUIRemoteHost.h */; };
 		1DADB52F232B5857005AD883 /* loco in Copy Support Executables */ = {isa = PBXBuildFile; fileRef = 1DADB52E232B5847005AD883 /* loco */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
@@ -460,6 +461,7 @@
 		1DA51CB42EACC95B00BFF670 /* OMCAppLifetimeEvents.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCAppLifetimeEvents.mm; sourceTree = "<group>"; };
 		1D0A1B2C2F72000000000105 /* OMCTestHost.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCTestHost.h; sourceTree = "<group>"; };
 		1D0A1B2C2F72000000000106 /* OMCTestHost.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCTestHost.cpp; sourceTree = "<group>"; };
+		1D0A1B2C2F73000000000101 /* OMCFilePanels.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCFilePanels.cpp; sourceTree = "<group>"; };
 		1D0A1B2C2F72000000000107 /* OMCEngineActivity.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCEngineActivity.h; sourceTree = "<group>"; };
 		1D0A1B2C2F72000000000108 /* OMCTestPlatform.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCTestPlatform.h; sourceTree = "<group>"; };
 		1D0A1B2C2F72000000000109 /* OMCTestPlatform.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCTestPlatform.mm; sourceTree = "<group>"; };
@@ -1102,6 +1104,7 @@
 				1D0A1B2C2F72000000000105 /* OMCTestHost.h */,
 				1D0A1B2C2F72000000000106 /* OMCTestHost.cpp */,
 				1D0A1B2C2F72000000000107 /* OMCEngineActivity.h */,
+				1D0A1B2C2F73000000000101 /* OMCFilePanels.cpp */,
 				E2E1892D1075BEBC001B7591 /* SelectionIterator.h */,
 				E2FB111E0D185A2C005EB1E8 /* OMC.cpp */,
 				E2FB111D0D185A2C005EB1E8 /* OMC.h */,
@@ -1520,6 +1523,7 @@
 				1DAB10032FFD0001009FD073 /* OMCActionUIRemoteHost.mm in Sources */,
 				1D0A1B2C2F72000000000110 /* OMCTestHost.cpp in Sources */,
 				1D0A1B2C2F72000000000111 /* OMCTestPlatform.mm in Sources */,
+				1D0A1B2C2F73000000000102 /* OMCFilePanels.cpp in Sources */,
 				1DED8E572222BD8E00A2CAF7 /* MoreAppleEvents.cp in Sources */,
 				E2ED3BC10D0B293E00481D8F /* ACMPlugin.cp in Sources */,
 				E2FB11200D185A2C005EB1E8 /* OMC.cpp in Sources */,
