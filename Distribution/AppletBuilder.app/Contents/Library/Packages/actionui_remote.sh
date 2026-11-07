@@ -1097,6 +1097,25 @@ actionui_clear_selection() {
     _aui_element_set "actionui.clearSelection" "$1" ""
 }
 
+# -- actions
+
+# actionui_perform_action VIEWID [PART] [PROPERTY]   - prints the action id it fired
+# Fires the element's action as a click would: its actionID, or PROPERTY (a name ending in
+# ActionID), through the host's action handler. Only a host that turned actionui.performAction on
+# (a test harness) has it; any other answers -32601.
+actionui_perform_action() {
+    _aui_need "$#" "actionui_perform_action VIEWID [PART] [PROPERTY]" || return $?
+    _aui_int "$1" "VIEWID" || { _aui_rc=$?; printf '%s\n' "$_aui_error" >&2; return "$_aui_rc"; }
+    _aui_more=""
+    if [ -n "${3:-}" ]; then
+        _aui_json_string "$3"
+        _aui_more="\"property\":$_aui_json"
+    fi
+    _aui_element_params "$1" "${2:-0}" "$_aui_more" || { _aui_rc=$?; printf '%s\n' "$_aui_error" >&2; return "$_aui_rc"; }
+    _aui_request "actionui.performAction" "$_aui_members" || return $?
+    _aui_print_text
+}
+
 # -- structural mutation
 
 # Optional container and position members for the insert methods, into _aui_more.

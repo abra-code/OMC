@@ -84,7 +84,7 @@ class Failure(Exception):
 def _new_window():
     return {"elements": {}, "values": {}, "strings": {}, "properties": {}, "states": {},
             "rows": {}, "selection": {}, "modal": None, "dialog": None, "toast": None,
-            "next_negative_id": -2}
+            "performed": [], "next_negative_id": -2}
 
 
 class FakeServer:
@@ -534,6 +534,21 @@ class FakeServer:
         window["selection"].pop(view_id, None)
         window["values"].pop(view_id, None)
         return True
+
+    # As a host that turned actionui.performAction on: the action id is the element's property,
+    # set beforehand with setProperty; each call is recorded in window["performed"].
+    def _m_actionui_performAction(self, p):
+        window, view_id = p.window_and_view()
+        view_part_id = p.optional_int("viewPartID") or 0
+        prop = p.optional_string("property") or "actionID"
+        if prop != "actionID" and not (prop.endswith("ActionID") and len(prop) > len("ActionID")):
+            raise Failure(INVALID_PARAMS, 'Param "property" must be actionID or end in ActionID, not "%s"' % prop)
+        action_id = window["properties"].get(view_id, {}).get(prop)
+        if not isinstance(action_id, str) or not action_id:
+            raise Failure(ENGINE_FAILURE, "View %d has no %s to perform" % (view_id, prop))
+        window["performed"].append({"actionID": action_id, "viewID": view_id, "viewPartID": view_part_id,
+                                    "context": p.raw.get("context")})
+        return action_id
 
     def _m_actionui_insertElement(self, p):
         window = p.window()

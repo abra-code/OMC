@@ -764,6 +764,20 @@ class Window:
     def clear_selection(self, view_id):
         return self._connection.call("actionui.clearSelection", self._params(view_id=view_id))
 
+    # -- actions
+
+    def perform_action(self, view_id, view_part_id=None, property=None, context=None):
+        """Fire the element's action as a click would: its actionID, or another property ending
+        in ActionID (property=), through the host's action handler, with view_part_id and context
+        handed through. Returns the action id. Only a host that turned actionui.performAction on
+        (a test harness) has it; any other answers RemoteError -32601."""
+        more = {}
+        if property is not None:
+            more["property"] = str(property)
+        if context is not None:
+            more["context"] = context
+        return self._connection.call("actionui.performAction", self._params(more, view_id, view_part_id))
+
     # -- structural mutation
 
     def insert_element(self, parent_id, element, container=None, position=None):
