@@ -43,6 +43,13 @@
 #                                          general): what a handler's pasteboard tool, or the
 #                                          engine as the clipboard, put there
 #   itest_set_pasteboard <text> [name]     puts <text> there, e.g. the clipboard a command reads
+#   alert_answer <rc> [rc ...]             answers for the next alerts, in order (0 OK, 1 Cancel,
+#                                          2 Other); with none queued an alert answers 0
+#   alerts_count, alerts_mention <text>    the alerts shown so far, and how many mention <text>
+#   notify_count, notify_mention <text>    the same for notifications
+#   alerts_reset, alert_answers_reset      forget the alerts shown, or the answers not yet taken
+#                                          (alert and notify are omctest's recording stand-ins:
+#                                          nothing is shown, the words are omctest's)
 #   itest_call <method> [params-json]      any bridge method; prints the result as JSON
 #   itest_quit                             quits now (normally the runner does this after the file)
 #   ITEST_WORK                             a private folder for the test's own files
@@ -60,13 +67,14 @@ OMCITEST_PID=""
 ITEST_WORK=""
 ITEST_PASTEBOARD_PREFIX=""
 OMCITEST_PASTEBOARD_TOOL=""
+OMCTEST_UI=""
 _OMCITEST_MADE_WORK=""
 
 _omcitest_rpc() {
     "$OMCITEST_PYTHON" "$OMCITEST_RPC" "$@"
 }
 
-# ── Checks ──────────────────────────────────────────────────────────────────
+# -- Checks ------------------------------------------------------------------------------------
 
 section() { # <header>
     printf '\n== %s ==\n' "$1" >&2
@@ -110,7 +118,7 @@ _omcitest_count() { # <pass|fail>
     /usr/bin/wc -c < "$_file" | /usr/bin/tr -d ' '
 }
 
-# ── Driving the applet ──────────────────────────────────────────────────────
+# -- Driving the applet ------------------------------------------------------------------------
 
 itest_call() { # <method> [params-json]
     _omcitest_rpc call "$1" "${2:-}"
@@ -226,6 +234,26 @@ itest_set_pasteboard() { # <text> [name]
     _omcitest_pasteboard "${2:-general}" put "$1"
 }
 
+# -- Alerts and notifications ------------------------------------------------------------------
+#
+# The applet's handlers run omctest's alert and notify stand-ins from the run's support folder
+# (_omcitest_build_support), which log to and answer from $OMCTEST_UI. These are omctest's words over
+# the same files, so a ported omctest scenario keeps its alert answers and counts.
+
+alert_answer() { # <rc> [rc ...]
+    local _rc
+    for _rc; do
+        printf '%s\n' "$_rc" >> "$OMCTEST_UI/alert_answers"
+    done
+}
+
+alerts_reset() { : > "$OMCTEST_UI/alerts.log"; }
+alert_answers_reset() { : > "$OMCTEST_UI/alert_answers"; }
+alerts_count() { /usr/bin/awk 'END { print NR }' "$OMCTEST_UI/alerts.log" 2>/dev/null; }
+alerts_mention() { /usr/bin/grep -c -- "$1" "$OMCTEST_UI/alerts.log" 2>/dev/null | /usr/bin/tr -d ' '; }
+notify_count() { /usr/bin/awk 'END { print NR }' "$OMCTEST_UI/notifications.log" 2>/dev/null; }
+notify_mention() { /usr/bin/grep -c -- "$1" "$OMCTEST_UI/notifications.log" 2>/dev/null | /usr/bin/tr -d ' '; }
+
 itest_quit() {
     if [ -z "$OMCITEST_PID" ]; then
         return 0
@@ -234,7 +262,7 @@ itest_quit() {
     _omcitest_wait_exit "$OMCITEST_QUIT_TIMEOUT"
 }
 
-# ── Launch and teardown ─────────────────────────────────────────────────────
+# -- Launch and teardown -----------------------------------------------------------------------
 
 # Waits up to <seconds> for the applet to exit; then OMCITEST_EXIT_STATUS is its status and the
 # pid is cleared. Returns 1 when it is still running.
@@ -256,6 +284,40 @@ _omcitest_wait_exit() { # <seconds>
     OMCITEST_EXIT_STATUS=$?
     OMCITEST_PID=""
     return 0
+}
+
+# The run's support folder: a link to each of the applet's own Support tools, except alert and notify,
+# which are omctest's recording stand-ins (written by omctest.sh's own emitters, so both harnesses
+# answer and log alike). The applet hands this folder to its handlers as OMC_OMC_SUPPORT_PATH.
+_omcitest_build_support() { # <App.app> <dest>
+    local _real="$1/Contents/Frameworks/Abracode.framework/Versions/A/Support"
+    if [ ! -d "$_real" ]; then
+        _real="$1/Contents/Frameworks/Abracode.framework/Support"
+    fi
+    if [ ! -d "$_real" ]; then
+        printf 'omcitest: no Abracode.framework Support folder in %s\n' "$1" >&2
+        return 1
+    fi
+    local _lib="${OMCITEST_RPC%/*}/omctest.sh"
+    if [ ! -f "$_lib" ]; then
+        printf 'omcitest: omctest.sh is not beside omcitest_rpc.py: %s\n' "$_lib" >&2
+        return 1
+    fi
+    /bin/mkdir -p "$2" || return 1
+    local _tool
+    for _tool in "$_real"/*; do
+        [ -e "$_tool" ] || continue
+        case "${_tool##*/}" in
+            alert|notify) ;;
+            *) /bin/ln -s "$_tool" "$2/${_tool##*/}" || return 1 ;;
+        esac
+    done
+    local _name
+    for _name in alert notify; do
+        # shellcheck disable=SC1090
+        ( unset OMCTEST_PREPARED; OMCTEST_RUNNER=1; . "$_lib"; "omctest_emit_stub_$_name" ) > "$2/$_name" || return 1
+        /bin/chmod 755 "$2/$_name" || return 1
+    done
 }
 
 _omcitest_executable() { # <App.app>
@@ -306,11 +368,25 @@ omcitest_launch() { # <App.app>
     ITEST_PASTEBOARD_PREFIX="omcitest.$$.${_work##*/omcit.}"
     export ITEST_PASTEBOARD_PREFIX
 
+    # alert and notify record and answer instead of showing anything.
+    OMCTEST_UI="$_work/ui"
+    /bin/mkdir -p "$OMCTEST_UI" || return 1
+    : > "$OMCTEST_UI/alerts.log"
+    : > "$OMCTEST_UI/notifications.log"
+    : > "$OMCTEST_UI/alert_answers"
+    _omcitest_build_support "$_app" "$_work/support"
+    _status=$?
+    if [ "$_status" -ne 0 ]; then
+        printf 'omcitest: cannot build the run'"'"'s support folder\n' >&2
+        return 1
+    fi
+
     # The token goes to the applet on descriptor 3, never in its environment.
     # The harness's own variables stay out of the applet and its handlers; ITEST_WORK goes in, so a
     # handler can leave files there for the test to check.
     /usr/bin/env -u OMCITEST_TOKEN_FILE -u OMCITEST_SOCKET -u OMCITEST_RESULTS -u OMCITEST_RPC -u OMCITEST_PYTHON \
         OMC_TEST_BRIDGE_PATH="$OMCITEST_SOCKET" OMC_TEST_TOKEN_FD=3 OMC_TEST_PASTEBOARD_PREFIX="$ITEST_PASTEBOARD_PREFIX" \
+        OMC_TEST_SUPPORT_PATH="$_work/support" OMCTEST_UI="$OMCTEST_UI" \
         "$_exe" 3< "$OMCITEST_TOKEN_FILE" > "$_work/applet.log" 2>&1 &
     OMCITEST_PID=$!
 
@@ -346,6 +422,17 @@ omcitest_launch() { # <App.app>
             ;;
         *)
             printf 'omcitest: the applet did not report the run'"'"'s pasteboards; itest_pasteboard is off\n' >&2
+            ;;
+    esac
+
+    # An engine that ignores OMC_TEST_SUPPORT_PATH hands its handlers the real alert, which waits
+    # for a click no one will make: refuse the launch rather than stall each test on it.
+    case "$_status_reply" in
+        *"\"supportPath\": \"$_work/support\""*) ;;
+        *)
+            printf 'omcitest: the applet did not take the run'"'"'s support folder (an engine without it): its alert and notify would be the real ones\n' >&2
+            itest_quit
+            return 1
             ;;
     esac
     return 0

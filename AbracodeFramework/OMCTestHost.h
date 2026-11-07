@@ -23,6 +23,12 @@
 //                          one never redirects a handler. (A handler that runs /usr/bin/pbcopy or
 //                          pbpaste itself still reaches the user's clipboard.)
 //
+//    OMC_TEST_SUPPORT_PATH  a folder of the harness's to hand to handlers as OMC_OMC_SUPPORT_PATH in
+//                          place of the framework's Support folder: the same tools, with alert and
+//                          notify replaced by ones that record and answer instead of showing
+//                          anything. Removed from the environment; refused unless it is an absolute
+//                          path to a folder.
+//
 //  In a test launch PASTE_AFTER_EXECUTION sends no keystrokes (they would paste into whatever app is
 //  in front); omc.test.status counts what it skipped.
 //
@@ -32,12 +38,13 @@
 //  under the label "omc.test" and adds these methods next to the bridge's own actionui.* ones:
 //
 //    omc.test.status      {} -> {idle, activeCommands, scheduledRuns, activity, pasteboardPrefix,
-//                         skippedPastes}
+//                         skippedPastes, supportPath?}
 //                         idle: no command at work and no runCommand waiting to start. activity
 //                         changes with every start or end of work, so a client that reads the same
 //                         activity twice, some time apart, knows the applet has settled.
 //                         pasteboardPrefix: the run's pasteboards (above). skippedPastes: how many
-//                         PASTE_AFTER_EXECUTION pastes were not sent.
+//                         PASTE_AFTER_EXECUTION pastes were not sent. supportPath: the support
+//                         folder handlers get, when the launch brought one (OMC_TEST_SUPPORT_PATH).
 //    omc.test.runCommand  {commandID, text?, files?, keyWindow?, openPanel?} -> {run}
 //                         Runs a command as its menu item would, on the next main-thread turn, so
 //                         the reply never waits for the command. text is the text context, files
@@ -106,6 +113,10 @@ bool OMCTestHostIsActive(void);
 // for the system's clipboard (a normal launch). A launch for a test gets its own from the very first
 // read, also one made before OMCTestHostStartIfRequested runs. Not retained. Main thread.
 CFStringRef OMCTestHostGetClipboardName(void);
+
+// The support folder handlers get as OMC_OMC_SUPPORT_PATH in a test launch that brought one
+// (OMC_TEST_SUPPORT_PATH), or NULL for the framework's own. Not retained.
+CFStringRef OMCTestHostGetSupportPath(void);
 
 // A command's PASTE_AFTER_EXECUTION that a test launch did not send: counted for omc.test.status.
 void OMCTestHostNoteSkippedPaste(void);

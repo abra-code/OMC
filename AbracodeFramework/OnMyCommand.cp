@@ -38,6 +38,7 @@ extern "C" const char *OMCGetActionUIRemoteEndpoint(void);
 //#include "OMCCarbonDialog.h"
 #include "SubmenuTree.h"
 #include "StSwitchToFront.h"
+#include "OMCTestHost.h"
 #include "DefaultExternBundle.h"
 #include "OmcTaskManager.h"
 #include "ACFDict.h"
@@ -236,6 +237,11 @@ OnMyCommandCM::InitOmcBundlePaths()
 									true));
 		mOmcSupportPath.Adopt(CreatePathFromCFURL(supportPathURL, kEscapeNone), kCFObjDontRetain);
 	}
+
+	// An integration test's own support folder (OMCTestHost.h): alert and notify that record.
+	CFStringRef testSupportPath = OMCTestHostGetSupportPath();
+	if(testSupportPath != nullptr)
+		mOmcSupportPath.Adopt(testSupportPath, kCFObjRetain);
 
 	CFObj<CFURLRef> resPathURL = CFBundleCopyResourcesDirectoryURL(mBundleRef);
 	mOmcResourcesPath.Adopt(CreatePathFromCFURL(resPathURL, kEscapeNone), kCFObjDontRetain);

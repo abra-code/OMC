@@ -31,6 +31,8 @@
     { "NAME": "ITestFixture", "COMMAND_ID": "fixture.clip", "ACTIVATION_MODE": "act_clipboard_text", "EXECUTION_MODE": "exe_script_file",
       "ENVIRONMENT_VARIABLES": { "OMC_OBJ_TEXT": "" } },
     { "NAME": "ITestFixture", "COMMAND_ID": "fixture.paste", "ACTIVATION_MODE": "act_always", "EXECUTION_MODE": "exe_script_file", "PASTE_AFTER_EXECUTION": true },
+    { "NAME": "ITestFixture", "COMMAND_ID": "fixture.confirm", "ACTIVATION_MODE": "act_always", "EXECUTION_MODE": "exe_script_file" },
+    { "NAME": "ITestFixture", "COMMAND_ID": "fixture.notify", "ACTIVATION_MODE": "act_always", "EXECUTION_MODE": "exe_script_file" },
     { "NAME": "ITestFixture", "COMMAND_ID": "app.did.launch", "EXECUTION_MODE": "exe_script_file" },
     { "NAME": "ITestFixture", "COMMAND_ID": "app.will.terminate", "EXECUTION_MODE": "exe_script_file" }
   ],

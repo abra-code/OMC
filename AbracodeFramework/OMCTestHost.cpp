@@ -38,6 +38,7 @@ namespace
 const char *kTokenFDVariable = "OMC_TEST_TOKEN_FD";
 const char *kBridgePathVariable = "OMC_TEST_BRIDGE_PATH";
 const char *kPasteboardPrefixVariable = "OMC_TEST_PASTEBOARD_PREFIX";
+const char *kSupportPathVariable = "OMC_TEST_SUPPORT_PATH";
 const size_t kMaxPasteboardPrefixLength = 100;
 const char *kTokenLabel = "omc.test";
 const int kRefusedExitStatus = 78; // EX_CONFIG
@@ -77,6 +78,7 @@ long sScheduledRuns = 0;
 long sSkippedPastes = 0;
 std::string sPasteboardPrefix;
 CFObj<CFStringRef> sClipboardName; // "<prefix>.general", what the engine reads as the clipboard
+CFObj<CFStringRef> sSupportPath; // the harness's support folder, handed to handlers as OMC_OMC_SUPPORT_PATH
 
 // A queued omc.test.answer.
 enum class PanelAnswerKind { save, open, cancel };
@@ -693,6 +695,8 @@ HandleStatus()
 	CFObj<CFStringRef> prefix( ::CFStringCreateWithCString(kCFAllocatorDefault, sPasteboardPrefix.c_str(), kCFStringEncodingUTF8) );
 	if(prefix != nullptr)
 		::CFDictionarySetValue(result, CFSTR("pasteboardPrefix"), prefix);
+	if(sSupportPath != nullptr)
+		::CFDictionarySetValue(result, CFSTR("supportPath"), sSupportPath);
 	return CreateResultReply(result);
 }
 
@@ -857,6 +861,7 @@ OMCTestHostStartIfRequested(void)
 		// A normal launch. The pasteboard tool redirects every pasteboard when it sees this
 		// variable, so one inherited from wherever the applet was started must not reach a handler.
 		unsetenv(kPasteboardPrefixVariable);
+		unsetenv(kSupportPathVariable);
 		return;
 	}
 
@@ -898,6 +903,21 @@ OMCTestHostStartIfRequested(void)
 	if(setenv(kPasteboardPrefixVariable, sPasteboardPrefix.c_str(), 1) != 0)
 		RefuseTestLaunch("OMC_TEST_PASTEBOARD_PREFIX could not be set for the handlers");
 
+	// The harness's support folder, in place of the framework's: the same tools, but alert and notify
+	// record and answer instead of showing anything. Handlers get it as OMC_OMC_SUPPORT_PATH.
+	const char *supportText = getenv(kSupportPathVariable);
+	std::string supportPath = (supportText != nullptr) ? supportText : "";
+	unsetenv(kSupportPathVariable);
+	if(supportText != nullptr)
+	{
+		struct stat info;
+		if(supportPath.empty() || (supportPath[0] != '/') || (stat(supportPath.c_str(), &info) != 0) || !S_ISDIR(info.st_mode))
+			RefuseTestLaunch("OMC_TEST_SUPPORT_PATH must be an absolute path to a folder");
+		sSupportPath.Adopt( ::CFStringCreateWithCString(kCFAllocatorDefault, supportPath.c_str(), kCFStringEncodingUTF8) );
+		if(sSupportPath == nullptr)
+			RefuseTestLaunch("OMC_TEST_SUPPORT_PATH is not usable");
+	}
+
 	if(!OMCStartActionUIRemoteBridgeAtPath(bridgePath.c_str()))
 		RefuseTestLaunch("the ActionUI remote bridge did not start at OMC_TEST_BRIDGE_PATH (see the log)");
 	if(!OMCAddActionUIRemoteToken(token.c_str(), kTokenLabel))
@@ -935,6 +955,12 @@ OMCTestHostGetClipboardName(void)
 		return sClipboardName;
 	}
 	return nullptr;
+}
+
+CFStringRef
+OMCTestHostGetSupportPath(void)
+{
+	return sActive ? (CFStringRef)sSupportPath : nullptr;
 }
 
 void
