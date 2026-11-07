@@ -110,6 +110,23 @@ static NSMutableArray<NSString *> *sMintedLabels = nil;
         return;
     }
 
+    (void)[self startAtSocketPath:socketPath];
+}
+
+// One bind per process, as for -ensureStarted: a test launch binds before any window exists, so
+// finding a bind already attempted means misuse, and the answer is no.
+- (BOOL)startOnceAtSocketPath:(const char *)socketPath
+{
+    if(mStartAttempted)
+        return NO;
+    mStartAttempted = YES;
+    return [self startAtSocketPath:socketPath];
+}
+
+// The bind and everything that goes with it, for both callers: -ensureStarted, which picks the
+// engine's own path, and OMCStartActionUIRemoteBridgeAtPath, which a test launch gives one.
+- (BOOL)startAtSocketPath:(const char *)socketPath
+{
     // Deliberately no second, /tmp-based location when this one is too long. OMCEngineTempDir.h
     // exists precisely because the shared /tmp/OMC directory was replaceable by any local user,
     // and a private path that does not fit is a better outcome than a reachable one that does.
@@ -119,7 +136,7 @@ static NSMutableArray<NSString *> *sMintedLabels = nil;
     {
         NSLog(@"[OMCActionUIRemoteHost] socket path is %zu bytes, over the %zu the platform allows: '%s'; remote bridge not started",
               pathLength, kMaxUnixSocketPathLength, socketPath);
-        return;
+        return NO;
     }
 
     NSString *hostName = [self hostName];
@@ -128,7 +145,7 @@ static NSMutableArray<NSString *> *sMintedLabels = nil;
     {
         // ActionUIRemote has already logged the reason through the engine's logger.
         NSLog(@"[OMCActionUIRemoteHost] remote bridge did not start on '%s'", socketPath);
-        return;
+        return NO;
     }
 
     // The token ActionUIRemote minted and exported must not stay in this process's environment:
@@ -154,7 +171,7 @@ static NSMutableArray<NSString *> *sMintedLabels = nil;
     {
         NSLog(@"[OMCActionUIRemoteHost] remote bridge started but reported no endpoint; stopping it");
         actionUIRemoteStopServer();
-        return;
+        return NO;
     }
 
     mEndpoint = [[NSFileManager defaultManager] stringWithFileSystemRepresentation:boundPath
@@ -163,7 +180,7 @@ static NSMutableArray<NSString *> *sMintedLabels = nil;
     {
         NSLog(@"[OMCActionUIRemoteHost] could not represent the socket path as a string; stopping the bridge");
         actionUIRemoteStopServer();
-        return;
+        return NO;
     }
 
     // ActionUIRemote set ACTIONUI_REMOTE_ENDPOINT itself; this is the OMC-prefixed alias, so both
@@ -178,6 +195,7 @@ static NSMutableArray<NSString *> *sMintedLabels = nil;
     setenv([kOMCActionUIRemoteEndpointVariable UTF8String], boundPath, 1);
 
     TRACE_CSTR("OMCActionUIRemoteHost: remote bridge listening\n");
+    return YES;
 }
 
 - (void)stop
@@ -202,6 +220,31 @@ static NSMutableArray<NSString *> *sMintedLabels = nil;
 }
 
 @end
+
+extern "C" bool OMCStartActionUIRemoteBridgeAtPath(const char *inSocketPath)
+{
+    if((inSocketPath == NULL) || (inSocketPath[0] == 0))
+        return false;
+
+    return [[OMCActionUIRemoteHost shared] startOnceAtSocketPath:inSocketPath];
+}
+
+extern "C" bool OMCRegisterActionUIRemoteMethod(const char *inMethod, OMCActionUIRemoteMethod inCallback, void *inContext)
+{
+    if((inMethod == NULL) || (inCallback == NULL))
+        return false;
+    return actionUIRemoteRegisterMethod(inMethod, inCallback, inContext);
+}
+
+extern "C" bool OMCEnableActionUIRemotePerformAction(void)
+{
+    return actionUIRemoteEnablePerformAction();
+}
+
+extern "C" bool OMCAddActionUIRemoteToken(const char *inToken, const char *inLabel)
+{
+    return actionUIRemoteAddToken(inToken, inLabel);
+}
 
 extern "C" const char *OMCGetActionUIRemoteEndpoint(void)
 {

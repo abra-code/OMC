@@ -10,6 +10,7 @@
 #include "DebugSettings.h"
 #include "OMCPrivateConstants.h"
 #include <string.h>
+#include "OMCTestHost.h"
 
 // Optional ActionUI add-ons: register extra element types so dialogs can use them.
 // Each is linked via its own ActionUI Swift package (see project setup) and exposes a plain
@@ -214,6 +215,10 @@ const char *OMCGetPythonPycachePrefix(void)
 
     // Before anything can spawn a child: this is what every descendant inherits from.
     [OMCAppLifetimeEvents setPythonPycachePrefixIfEmbedded:[NSBundle mainBundle]];
+
+    // A launch for an integration test (OMCTestHost.h) sets up its bridge here, before any command
+    // runs, so the test sees app.will.launch too; a normal launch is untouched.
+    OMCTestHostStartIfRequested();
 
     // Register optional ActionUI add-on element types before any dialog window is built.
     ActionUIQuickLook_register();

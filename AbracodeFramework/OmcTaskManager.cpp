@@ -26,6 +26,8 @@
 #include "OMCMainThreadSignal.h"
 #include "OMCHelpers.h"
 #include "OMCEngineTempDir.h"
+#include "OMCEngineActivity.h"
+#include <atomic>
 
 #include <mach/host_info.h>
 #include <mach/mach_host.h>
@@ -147,6 +149,32 @@ public:
 };
 
 
+namespace
+{
+// Task managers constructed and not yet finalized: the engine's own measure of a command at work.
+// Main thread in practice; atomic so a reader on another thread never sees a torn value.
+std::atomic<long> sUnfinishedTaskManagers {0};
+std::atomic<unsigned long> sEngineActivity {0};
+}
+
+long
+OMCGetUnfinishedTaskManagerCount(void)
+{
+	return sUnfinishedTaskManagers.load();
+}
+
+unsigned long
+OMCGetEngineActivityCount(void)
+{
+	return sEngineActivity.load();
+}
+
+void
+OMCNoteEngineActivity(void)
+{
+	sEngineActivity++;
+}
+
 OmcHostTaskManager::OmcHostTaskManager(OnMyCommandCM *inPlugin, const CommandDescription &currCommand,
 										CFStringRef inCommandName, CFBundleRef inBundle, CFIndex inMaxTaskCount)
 	: mPlugin(inPlugin, kARefCountRetain), mCurrCommand(currCommand),
@@ -164,11 +192,19 @@ OmcHostTaskManager::OmcHostTaskManager(OnMyCommandCM *inPlugin, const CommandDes
 		mMaxTaskCount = 1024;
 
 	mRunningTasks.Adopt( ::CFArrayCreateMutable(kCFAllocatorDefault, mMaxTaskCount, ARefCounted::GetCFArrayCallbacks()) );
+
+	sUnfinishedTaskManagers++;
+	OMCNoteEngineActivity();
 }
 
 OmcHostTaskManager::~OmcHostTaskManager()
 {
 	TRACE_CSTR( "OmcHostTaskManager::~OmcHostTaskManager this=%p\n", (void *)this);
+	if(!mHasFinalized) // destroyed without running to the end: it no longer counts as at work
+	{
+		sUnfinishedTaskManagers--;
+		OMCNoteEngineActivity();
+	}
 }
 
 void
@@ -185,6 +221,8 @@ OmcHostTaskManager::Finalize()
     
     mHasFinalized = true;
     ARefCountedObj<OmcHostTaskManager> scopeRelease(this, kARefCountDontRetain);
+    sUnfinishedTaskManagers--;
+    OMCNoteEngineActivity();
     
     OmcTaskData notificationData;
     memset( &notificationData, 0, sizeof(notificationData) );

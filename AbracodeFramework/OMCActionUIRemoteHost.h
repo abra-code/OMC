@@ -79,6 +79,31 @@ extern "C" {
 /// that back would make the child advertise its parent's windows as its own.
 const char *OMCGetActionUIRemoteEndpoint(void);
 
+/// Start the bridge now, bound at `inSocketPath`, instead of lazily from the first ActionUI window.
+/// For a test launch (OMCTestHost.h), whose harness picks the path in a private directory of its
+/// own and connects there. Main thread. Returns false when a bind was already attempted in this
+/// process, or when this one failed (logged).
+bool OMCStartActionUIRemoteBridgeAtPath(const char *inSocketPath);
+
+/// A host method for the bridge, as ActionUIRemote's actionUIRemoteRegisterMethod takes it: called
+/// on the main thread with the request's params as JSON text, it returns a JSON reply,
+/// {"result": ...} or {"error": {"code": ..., "message": ...}}, in a malloc buffer the bridge frees.
+typedef char *(*OMCActionUIRemoteMethod)(void *inContext, const char *inMethod, const char *inParamsJSON);
+
+/// Register a host method on the running bridge (forwards to actionUIRemoteRegisterMethod, which
+/// only this file can see, through its Swift module). False when no bridge runs or the name is
+/// refused (not namespaced, or in actionui.).
+bool OMCRegisterActionUIRemoteMethod(const char *inMethod, OMCActionUIRemoteMethod inCallback, void *inContext);
+
+/// Turn on the bridge's actionui.performAction, which fires an element's action as a click would
+/// (forwards to actionUIRemoteEnablePerformAction). Only a test launch does this. False when no
+/// bridge runs.
+bool OMCEnableActionUIRemotePerformAction(void);
+
+/// Register a token the caller was handed, under inLabel (forwards to actionUIRemoteAddToken).
+/// False when no bridge runs or an argument is empty.
+bool OMCAddActionUIRemoteToken(const char *inToken, const char *inLabel);
+
 /// The descriptor a spawned handler reads its token from, and the number the engine exports as
 /// ACTIONUI_REMOTE_TOKEN_FD. 3 because that is what the shell clients' `actionui_handoff` uses
 /// and what ActionUIRemote/Shell/README.md documents, so the two creators of these pipes agree.
