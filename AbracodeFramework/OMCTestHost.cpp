@@ -37,6 +37,8 @@ namespace
 
 const char *kTokenFDVariable = "OMC_TEST_TOKEN_FD";
 const char *kBridgePathVariable = "OMC_TEST_BRIDGE_PATH";
+const char *kPasteboardPrefixVariable = "OMC_TEST_PASTEBOARD_PREFIX";
+const size_t kMaxPasteboardPrefixLength = 100;
 const char *kTokenLabel = "omc.test";
 const int kRefusedExitStatus = 78; // EX_CONFIG
 const int kTokenReadTimeoutMilliseconds = 5000;
@@ -72,6 +74,9 @@ struct TestRun
 bool sActive = false;
 std::vector< std::unique_ptr<TestRun> > sRuns;
 long sScheduledRuns = 0;
+long sSkippedPastes = 0;
+std::string sPasteboardPrefix;
+CFObj<CFStringRef> sClipboardName; // "<prefix>.general", what the engine reads as the clipboard
 
 // A queued omc.test.answer.
 enum class PanelAnswerKind { save, open, cancel };
@@ -106,6 +111,68 @@ ParseDescriptor(const char *inText, int &outFD)
 		return false;
 	outFD = (int)value;
 	return true;
+}
+
+// 1 to kMaxPasteboardPrefixLength characters of [A-Za-z0-9._-], as the pasteboard tool takes them.
+bool
+IsUsablePasteboardPrefix(const std::string &inPrefix)
+{
+	if(inPrefix.empty() || (inPrefix.size() > kMaxPasteboardPrefixLength))
+		return false;
+	for(char c : inPrefix)
+	{
+		bool usable = ((c >= 'a') && (c <= 'z')) || ((c >= 'A') && (c <= 'Z')) || ((c >= '0') && (c <= '9')) ||
+						(c == '.') || (c == '_') || (c == '-');
+		if(!usable)
+			return false;
+	}
+	return true;
+}
+
+// A prefix of the engine's own for a test launch that brought none: unique to this launch, and
+// not derived from the token, which must stay secret.
+std::string
+MakePasteboardPrefix()
+{
+	struct timespec now;
+	clock_gettime(CLOCK_REALTIME, &now);
+	char text[64];
+	snprintf(text, sizeof(text), "omc.test.%ld.%lx", (long)getpid(), (unsigned long)now.tv_nsec ^ ((unsigned long)now.tv_sec << 20));
+	return std::string(text);
+}
+
+// The run's pasteboards, decided once and at the first need. That can come before the launch is
+// set up: the engine looks at the clipboard while it builds its menus, before app.will.launch, and
+// that look must already go to the run's pasteboard, not the user's clipboard. A launch for a test
+// is recognized by its variables then; the launch itself (OMCTestHostStartIfRequested) refuses a
+// prefix that is not usable, so an early read only ever uses a usable one, the engine's own when
+// the harness's is not. Main thread, as every clipboard read and the launch are.
+bool sPasteboardsDecided = false;
+bool sPasteboardPrefixRefused = false;
+
+bool
+IsTestLaunchRequested()
+{
+	return (getenv(kTokenFDVariable) != nullptr) || (getenv(kBridgePathVariable) != nullptr);
+}
+
+void
+DecidePasteboards()
+{
+	if(sPasteboardsDecided)
+		return;
+	sPasteboardsDecided = true;
+
+	const char *prefixText = getenv(kPasteboardPrefixVariable);
+	std::string prefix = (prefixText != nullptr) ? prefixText : "";
+	if(prefix.empty() || !IsUsablePasteboardPrefix(prefix))
+	{
+		sPasteboardPrefixRefused = (prefixText != nullptr);
+		prefix = MakePasteboardPrefix();
+	}
+	std::string clipboardName = prefix + ".general";
+	sClipboardName.Adopt( ::CFStringCreateWithCString(kCFAllocatorDefault, clipboardName.c_str(), kCFStringEncodingUTF8) );
+	sPasteboardPrefix = prefix;
 }
 
 bool
@@ -622,6 +689,10 @@ HandleStatus()
 	SetNumber(result, CFSTR("activeCommands"), active);
 	SetNumber(result, CFSTR("scheduledRuns"), sScheduledRuns);
 	SetNumber(result, CFSTR("activity"), (long)OMCGetEngineActivityCount());
+	SetNumber(result, CFSTR("skippedPastes"), sSkippedPastes);
+	CFObj<CFStringRef> prefix( ::CFStringCreateWithCString(kCFAllocatorDefault, sPasteboardPrefix.c_str(), kCFStringEncodingUTF8) );
+	if(prefix != nullptr)
+		::CFDictionarySetValue(result, CFSTR("pasteboardPrefix"), prefix);
 	return CreateResultReply(result);
 }
 
@@ -782,7 +853,12 @@ OMCTestHostStartIfRequested(void)
 	const char *fdText = getenv(kTokenFDVariable);
 	const char *pathText = getenv(kBridgePathVariable);
 	if((fdText == nullptr) && (pathText == nullptr))
-		return; // a normal launch
+	{
+		// A normal launch. The pasteboard tool redirects every pasteboard when it sees this
+		// variable, so one inherited from wherever the applet was started must not reach a handler.
+		unsetenv(kPasteboardPrefixVariable);
+		return;
+	}
 
 	// Copied before the variables go: unsetenv may free what getenv returned.
 	std::string fdString = (fdText != nullptr) ? fdText : "";
@@ -812,6 +888,16 @@ OMCTestHostStartIfRequested(void)
 	if(bridgePath.empty() || (bridgePath[0] != '/'))
 		RefuseTestLaunch("OMC_TEST_BRIDGE_PATH must be an absolute path");
 
+	// The run's own pasteboards: handlers inherit the variable, so the pasteboard tool uses
+	// "<prefix>.<name>" for every pasteboard, and the engine reads "<prefix>.general" as the clipboard.
+	DecidePasteboards();
+	if(sPasteboardPrefixRefused)
+		RefuseTestLaunch("OMC_TEST_PASTEBOARD_PREFIX must be 1 to 100 characters of A-Z a-z 0-9 . _ -");
+	if(sClipboardName == nullptr)
+		RefuseTestLaunch("the test pasteboard name could not be made");
+	if(setenv(kPasteboardPrefixVariable, sPasteboardPrefix.c_str(), 1) != 0)
+		RefuseTestLaunch("OMC_TEST_PASTEBOARD_PREFIX could not be set for the handlers");
+
 	if(!OMCStartActionUIRemoteBridgeAtPath(bridgePath.c_str()))
 		RefuseTestLaunch("the ActionUI remote bridge did not start at OMC_TEST_BRIDGE_PATH (see the log)");
 	if(!OMCAddActionUIRemoteToken(token.c_str(), kTokenLabel))
@@ -826,7 +912,7 @@ OMCTestHostStartIfRequested(void)
 		RefuseTestLaunch("the bridge did not turn on actionui.performAction");
 
 	sActive = true;
-	fprintf(stderr, "OMC test launch: bridge at %s\n", bridgePath.c_str());
+	fprintf(stderr, "OMC test launch: bridge at %s, pasteboards %s.*\n", bridgePath.c_str(), sPasteboardPrefix.c_str());
 	fflush(stderr);
 }
 
@@ -834,6 +920,30 @@ bool
 OMCTestHostIsActive(void)
 {
 	return sActive;
+}
+
+CFStringRef
+OMCTestHostGetClipboardName(void)
+{
+	if(sActive)
+		return sClipboardName;
+	// Before the launch is set up (or while it is): a test launch already reads the run's pasteboard.
+	// Once OMCTestHostStartIfRequested has run, the variables are gone, so a normal launch stays here.
+	if(sPasteboardsDecided || IsTestLaunchRequested())
+	{
+		DecidePasteboards();
+		return sClipboardName;
+	}
+	return nullptr;
+}
+
+void
+OMCTestHostNoteSkippedPaste(void)
+{
+	sSkippedPastes++;
+	OMCNoteEngineActivity();
+	fprintf(stderr, "OMC test launch: PASTE_AFTER_EXECUTION skipped (no keystrokes are sent in a test)\n");
+	fflush(stderr);
 }
 
 CFURLRef

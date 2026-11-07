@@ -27,6 +27,7 @@
 #include "OMCHelpers.h"
 #include "OMCEngineTempDir.h"
 #include "OMCEngineActivity.h"
+#include "OMCTestHost.h"
 #include <atomic>
 
 #include <mach/host_info.h>
@@ -243,7 +244,12 @@ OmcHostTaskManager::Finalize()
     }
     
     // In case of error, we don't do any extra post-execution tasks
-    if(mCurrCommand.simulatePaste && (mPlugin->GetError() == noErr))
+    if(mCurrCommand.simulatePaste && (mPlugin->GetError() == noErr) && OMCTestHostIsActive())
+    {
+        // Cmd-V would go to whatever app is in front of the user's screen, not to the test.
+        OMCTestHostNoteSkippedPaste();
+    }
+    else if(mCurrCommand.simulatePaste && (mPlugin->GetError() == noErr))
     {
         TRACE_CSTR( "OnMyCommandCM::Finalize: simulate paste\n" );
         if( OMCMainThreadSignal::RunAfter(0.05, KeyPressSimulationCallBack, nullptr) )

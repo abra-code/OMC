@@ -14,7 +14,39 @@
 #include "DebugSettings.h"
 #include "CFObj.h"
 #include "ACFType.h"
+#include "OMCTestHost.h"
 #include <vector>
+
+// The clipboard, or in an OMC test launch the run's own general pasteboard (OMCTestHost.h), so a
+// test never reads or replaces the user's clipboard. Returns a reference the caller releases.
+//
+// The run's pasteboard is opened once and kept for the life of the process. A reference kept open
+// sees what another process (a handler's pasteboard tool, the test) writes at its next
+// PasteboardSynchronize, but a new reference to a named pasteboard, opened after this process
+// released its earlier one, reads as empty (checked on macOS 27). The system clipboard has no such
+// trouble and is opened per call, as before.
+static OSStatus
+CreateClipboardRef(PasteboardRef *outClipboard)
+{
+	*outClipboard = NULL;
+	CFStringRef testName = OMCTestHostGetClipboardName();
+	if(testName == NULL)
+		return PasteboardCreate(kPasteboardClipboard, outClipboard);
+
+	// Opened for the first name seen and kept: correct because the test host decides the name once
+	// per process (DecidePasteboards in OMCTestHost.cpp) and never changes it.
+	static PasteboardRef sTestClipboard = [testName]()
+	{
+		PasteboardRef board = NULL;
+		if(PasteboardCreate(testName, &board) != noErr)
+			return (PasteboardRef)NULL;
+		return board;
+	}();
+	if(sTestClipboard == NULL)
+		return -1;
+	*outClipboard = (PasteboardRef)CFRetain(sTestClipboard);
+	return noErr;
+}
 
 #define SwapHiLoBytes(x)	( (unsigned short)((unsigned char)(x)<<8) | ((unsigned short)(x) >> 8) )
 
@@ -26,7 +58,7 @@ CMUtils::IsTextInClipboard()
 	Boolean outTextPresent = false;
 
 	CFObj<PasteboardRef> clipboardRef;
-	OSStatus err = PasteboardCreate( kPasteboardClipboard, &clipboardRef );
+	OSStatus err = CreateClipboardRef( &clipboardRef );
 	if( (err != noErr) || (clipboardRef == NULL) )
 		return false;
 
@@ -64,7 +96,6 @@ CMUtils::IsTextInClipboard()
 		if(outTextPresent)
 			break;
 	}
-	
 	return outTextPresent;
 }
 
@@ -78,7 +109,7 @@ CMUtils::CreateCFStringFromClipboardText(long inReplaceOption)
 	CFStringRef outString = NULL;
 
 	CFObj<PasteboardRef> clipboardRef;
-	OSStatus err = PasteboardCreate( kPasteboardClipboard, &clipboardRef );
+	OSStatus err = CreateClipboardRef( &clipboardRef );
 	if( (err != noErr) || (clipboardRef == NULL) )
 		return NULL;
 
@@ -186,7 +217,6 @@ CMUtils::CreateCFStringFromClipboardText(long inReplaceOption)
 		if( outString != NULL )
 			break;
 	}
-
 	return outString;
 }
 
@@ -203,13 +233,16 @@ CMUtils::PutCFStringToClipboard(CFStringRef inString)
 		return noErr;
 
 	CFObj<PasteboardRef> clipboardRef;
-	OSStatus err = PasteboardCreate( kPasteboardClipboard, &clipboardRef );
+	OSStatus err = CreateClipboardRef( &clipboardRef );
 	if(err != noErr)
 		return err;
 		
 	if(clipboardRef == NULL)
 		return -1;
 
+	// A kept reference (the run's board in a test launch) must catch up with other processes' writes
+	// before it may clear the board, or the clear fails as modified (badPasteboardSyncErr).
+	/*PasteboardSyncFlags  syncFlags =*/ PasteboardSynchronize( clipboardRef );
 	err = PasteboardClear(clipboardRef);
 
 	if(err == noErr)

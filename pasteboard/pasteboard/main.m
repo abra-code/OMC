@@ -40,6 +40,32 @@ void print_help(void)
 //pasteboard "PBName" put "String To Put"
 //pasteboard "PBName" get
 
+// OMC_TEST_PASTEBOARD_PREFIX, set by the engine for the handlers of an OMC test launch (the
+// integration tests, OMCTestHost.h): the prefix every pasteboard name gets, so a test never reads
+// or writes the user's pasteboards. An empty string when it is not set; NULL, with the reason on
+// stderr, when it is set but not 1 to 100 characters of [A-Za-z0-9._-].
+NSString *
+TestPasteboardPrefix(void)
+{
+	const char *prefix = getenv("OMC_TEST_PASTEBOARD_PREFIX");
+	if(prefix == NULL)
+		return @"";
+	size_t length = strlen(prefix);
+	bool usable = (length > 0) && (length <= 100);
+	for(size_t i = 0; usable && (i < length); i++)
+	{
+		char c = prefix[i];
+		usable = ((c >= 'a') && (c <= 'z')) || ((c >= 'A') && (c <= 'Z')) || ((c >= '0') && (c <= '9')) ||
+				(c == '.') || (c == '_') || (c == '-');
+	}
+	if(!usable)
+	{
+		fprintf(stderr, "pasteboard: OMC_TEST_PASTEBOARD_PREFIX must be 1 to 100 characters of A-Z a-z 0-9 . _ -\n");
+		return NULL;
+	}
+	return [NSString stringWithUTF8String:prefix];
+}
+
 char *
 CreateCStringFromStdIn(void)
 {
@@ -140,13 +166,31 @@ int main(int argc, const char * argv[])
 	@autoreleasepool
 	{
 		NSString *pasteboardName = NULL;
+		NSString *testPrefix = TestPasteboardPrefix();
+		if(testPrefix == NULL)
+			return -1; // set but unusable: never fall back to the user's pasteboards
+
 		if( strncmp("general", pbNameStr, 7) == 0)
 			pasteboardName = NSPasteboardNameGeneral;
 		else if( strncmp("find", pbNameStr, 4) == 0)
 			pasteboardName = NSPasteboardNameFind;
 		else
 			pasteboardName = [NSString stringWithUTF8String:pbNameStr];
-	    
+
+		// In an OMC test launch every pasteboard, the general and find ones included, is the run's
+		// own: "<prefix>.<name>". The engine reads the general one under the same name.
+		if(testPrefix.length > 0)
+		{
+			NSString *name = [NSString stringWithUTF8String:pbNameStr];
+			if(pasteboardName == NSPasteboardNameGeneral)
+				name = @"general";
+			else if(pasteboardName == NSPasteboardNameFind)
+				name = @"find";
+			if(name == NULL)
+				return -1;
+			pasteboardName = [NSString stringWithFormat:@"%@.%@", testPrefix, name];
+		}
+
 		NSPasteboard *myPasteboard = [NSPasteboard pasteboardWithName:pasteboardName];
 		
 		if( pbOperation == kOperationPut )

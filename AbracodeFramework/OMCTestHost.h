@@ -11,15 +11,33 @@
 //    OMC_TEST_BRIDGE_PATH  where to bind the ActionUI remote bridge, in a private directory of
 //                          the harness's
 //
+//  and optionally:
+//
+//    OMC_TEST_PASTEBOARD_PREFIX  the run's own pasteboards (1 to 100 characters of [A-Za-z0-9._-]);
+//                          the engine makes one unique to the launch when it is absent. It stays in
+//                          the environment, so every handler's pasteboard tool uses
+//                          "<prefix>.<name>" for every pasteboard, general and find included, and
+//                          the engine reads "<prefix>.general" wherever it would read the clipboard
+//                          (a command's clipboard text). A test never reads or writes the user's
+//                          pasteboards through OMC. A normal launch removes the variable, so a stray
+//                          one never redirects a handler. (A handler that runs /usr/bin/pbcopy or
+//                          pbpaste itself still reaches the user's clipboard.)
+//
+//  In a test launch PASTE_AFTER_EXECUTION sends no keystrokes (they would paste into whatever app is
+//  in front); omc.test.status counts what it skipped.
+//
 //  Then, before app.will.launch runs, the engine reads and closes the descriptor, removes both
 //  variables (so no handler inherits them), checks OMCGetTestSurfaceStatus (Platform/OMCTestability.h),
 //  starts the bridge at that path at once instead of with the first window, registers the token
 //  under the label "omc.test" and adds these methods next to the bridge's own actionui.* ones:
 //
-//    omc.test.status      {} -> {idle, activeCommands, scheduledRuns, activity}
+//    omc.test.status      {} -> {idle, activeCommands, scheduledRuns, activity, pasteboardPrefix,
+//                         skippedPastes}
 //                         idle: no command at work and no runCommand waiting to start. activity
 //                         changes with every start or end of work, so a client that reads the same
 //                         activity twice, some time apart, knows the applet has settled.
+//                         pasteboardPrefix: the run's pasteboards (above). skippedPastes: how many
+//                         PASTE_AFTER_EXECUTION pastes were not sent.
 //    omc.test.runCommand  {commandID, text?, files?, keyWindow?, openPanel?} -> {run}
 //                         Runs a command as its menu item would, on the next main-thread turn, so
 //                         the reply never waits for the command. text is the text context, files
@@ -83,6 +101,14 @@ void OMCTestHostStartIfRequested(void);
 
 // True after a test launch set the surface up.
 bool OMCTestHostIsActive(void);
+
+// The pasteboard the engine reads as the clipboard in a test launch ("<prefix>.general"), or NULL
+// for the system's clipboard (a normal launch). A launch for a test gets its own from the very first
+// read, also one made before OMCTestHostStartIfRequested runs. Not retained. Main thread.
+CFStringRef OMCTestHostGetClipboardName(void);
+
+// A command's PASTE_AFTER_EXECUTION that a test launch did not send: counted for omc.test.status.
+void OMCTestHostNoteSkippedPaste(void);
 
 // A save or open panel in a test launch (OMCFilePanels.cpp): records it and answers it from the
 // queue instead of showing it. Same arguments and results as Platform/OMCFilePanels.h: the chosen

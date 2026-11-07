@@ -39,9 +39,15 @@
 #                                          allowedContentTypes, canChooseFiles, canChooseDirectories,
 #                                          allowsMultiple, paths, canceled, problem
 #   itest_panels_clear                     forget the panel records and any answers not yet taken
+#   itest_pasteboard [name]                the text on the run's own pasteboard <name> (default
+#                                          general): what a handler's pasteboard tool, or the
+#                                          engine as the clipboard, put there
+#   itest_set_pasteboard <text> [name]     puts <text> there, e.g. the clipboard a command reads
 #   itest_call <method> [params-json]      any bridge method; prints the result as JSON
 #   itest_quit                             quits now (normally the runner does this after the file)
 #   ITEST_WORK                             a private folder for the test's own files
+#   ITEST_PASTEBOARD_PREFIX                the run's pasteboards are "<prefix>.<name>": the applet
+#                                          and its handlers never touch the user's pasteboards
 #
 # bash 3.2, no set -e; every external tool by absolute path.
 
@@ -52,6 +58,8 @@ OMCITEST_IDLE_TIMEOUT="${OMCITEST_IDLE_TIMEOUT:-20}"
 OMCITEST_QUIT_TIMEOUT="${OMCITEST_QUIT_TIMEOUT:-10}"
 OMCITEST_PID=""
 ITEST_WORK=""
+ITEST_PASTEBOARD_PREFIX=""
+OMCITEST_PASTEBOARD_TOOL=""
 _OMCITEST_MADE_WORK=""
 
 _omcitest_rpc() {
@@ -201,6 +209,23 @@ itest_run_finished() { # <run>
     esac
 }
 
+# The applet's own pasteboard tool, with the run's prefix, so it reads and writes the run's boards.
+_omcitest_pasteboard() { # <name> <get|put> [text]
+    if [ -z "$OMCITEST_PASTEBOARD_TOOL" ] || [ -z "$ITEST_PASTEBOARD_PREFIX" ]; then
+        printf 'omcitest: no pasteboard tool in the applet\n' >&2
+        return 1
+    fi
+    OMC_TEST_PASTEBOARD_PREFIX="$ITEST_PASTEBOARD_PREFIX" "$OMCITEST_PASTEBOARD_TOOL" "$@"
+}
+
+itest_pasteboard() { # [name]
+    _omcitest_pasteboard "${1:-general}" get
+}
+
+itest_set_pasteboard() { # <text> [name]
+    _omcitest_pasteboard "${2:-general}" put "$1"
+}
+
 itest_quit() {
     if [ -z "$OMCITEST_PID" ]; then
         return 0
@@ -277,11 +302,15 @@ omcitest_launch() { # <App.app>
     OMCITEST_SOCKET="$_work/bridge.sock"
     export OMCITEST_TOKEN_FILE OMCITEST_SOCKET
 
+    # The run's own pasteboards, unique to this launch: the folder's random name and this process.
+    ITEST_PASTEBOARD_PREFIX="omcitest.$$.${_work##*/omcit.}"
+    export ITEST_PASTEBOARD_PREFIX
+
     # The token goes to the applet on descriptor 3, never in its environment.
     # The harness's own variables stay out of the applet and its handlers; ITEST_WORK goes in, so a
     # handler can leave files there for the test to check.
     /usr/bin/env -u OMCITEST_TOKEN_FILE -u OMCITEST_SOCKET -u OMCITEST_RESULTS -u OMCITEST_RPC -u OMCITEST_PYTHON \
-        OMC_TEST_BRIDGE_PATH="$OMCITEST_SOCKET" OMC_TEST_TOKEN_FD=3 \
+        OMC_TEST_BRIDGE_PATH="$OMCITEST_SOCKET" OMC_TEST_TOKEN_FD=3 OMC_TEST_PASTEBOARD_PREFIX="$ITEST_PASTEBOARD_PREFIX" \
         "$_exe" 3< "$OMCITEST_TOKEN_FILE" > "$_work/applet.log" 2>&1 &
     OMCITEST_PID=$!
 
@@ -300,7 +329,37 @@ omcitest_launch() { # <App.app>
     fi
     # The launch itself ran app.will.launch and app.did.launch; let them finish.
     _omcitest_rpc wait-idle --timeout "$OMCITEST_IDLE_TIMEOUT" > /dev/null
+
+    # The applet's pasteboard tool, only once its engine reports the run's prefix: an older tool
+    # ignores OMC_TEST_PASTEBOARD_PREFIX and would read, write and clear the user's pasteboards.
+    local _status_reply
+    _status_reply="$(itest_call omc.test.status)"
+    case "$_status_reply" in
+        *"\"pasteboardPrefix\": \"$ITEST_PASTEBOARD_PREFIX\""*)
+            OMCITEST_PASTEBOARD_TOOL="$_app/Contents/Frameworks/Abracode.framework/Versions/A/Support/pasteboard"
+            if [ ! -x "$OMCITEST_PASTEBOARD_TOOL" ]; then
+                OMCITEST_PASTEBOARD_TOOL="$_app/Contents/Frameworks/Abracode.framework/Support/pasteboard"
+            fi
+            if [ ! -x "$OMCITEST_PASTEBOARD_TOOL" ]; then
+                OMCITEST_PASTEBOARD_TOOL=""
+            fi
+            ;;
+        *)
+            printf 'omcitest: the applet did not report the run'"'"'s pasteboards; itest_pasteboard is off\n' >&2
+            ;;
+    esac
     return 0
+}
+
+# Empties the run's general and find pasteboards once the applet is gone. Pasteboards under names a
+# handler chose stay in the pasteboard server until the user logs out; nothing reads them, since
+# their names carry this run's prefix.
+_omcitest_clear_pasteboards() {
+    if [ -z "$OMCITEST_PASTEBOARD_TOOL" ] || [ -z "$ITEST_PASTEBOARD_PREFIX" ]; then
+        return 0
+    fi
+    _omcitest_pasteboard general put "" > /dev/null 2>&1
+    _omcitest_pasteboard find put "" > /dev/null 2>&1
 }
 
 omcitest_finish() {
@@ -349,6 +408,8 @@ omcitest_run_file() { # <App.app> <test-file>
             /usr/bin/sed 's/^/    /' "$ITEST_WORK/applet.log" >&2
         fi
     fi
+
+    _omcitest_clear_pasteboards
 
     local _passed _failed
     _passed="$(_omcitest_count pass)"
