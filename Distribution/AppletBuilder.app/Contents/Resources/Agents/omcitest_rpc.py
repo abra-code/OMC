@@ -11,8 +11,9 @@ Commands (results on stdout, problems on stderr):
 
     call <method> [params-json] [--raw]   any method; prints the result as JSON, or a string
                                           result as plain text with --raw
-    run <commandID> [--text T] [--file PATH]... [--key-window] [--open-panel]
-                                          omc.test.runCommand; prints the run number
+    run <commandID> [--text T] [--file PATH]... [--key-window] [--open-panel] [--window UUID]
+                                          omc.test.runCommand; prints the run number (--window:
+                                          as that window's subcommand, as its menu item would)
     answer save <path> | answer open <path>... | answer cancel
                                           omc.test.answer: queues the next panel's answer;
                                           prints how many answers are waiting
@@ -256,6 +257,7 @@ def main(argv):
             files = take_all(args, "--file")
             key_window = take_option(args, "--key-window", flag=True)
             open_panel = take_option(args, "--open-panel", flag=True)
+            window = take_option(args, "--window")
             if len(args) != 1:
                 raise SystemExit("omcitest_rpc: run needs one command id")
             params = {"commandID": args[0]}
@@ -267,6 +269,8 @@ def main(argv):
                 params["keyWindow"] = True
             if open_panel:
                 params["openPanel"] = True
+            if window is not None:
+                params["window"] = window
             print(client.call("omc.test.runCommand", params)["run"])
         elif command == "answer":
             if not args:

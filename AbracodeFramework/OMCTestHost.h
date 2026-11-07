@@ -45,7 +45,7 @@
 //                         pasteboardPrefix: the run's pasteboards (above). skippedPastes: how many
 //                         PASTE_AFTER_EXECUTION pastes were not sent. supportPath: the support
 //                         folder handlers get, when the launch brought one (OMC_TEST_SUPPORT_PATH).
-//    omc.test.runCommand  {commandID, text?, files?, keyWindow?, openPanel?} -> {run}
+//    omc.test.runCommand  {commandID, text?, files?, keyWindow?, openPanel?, window?} -> {run}
 //                         Runs a command as its menu item would, on the next main-thread turn, so
 //                         the reply never waits for the command. text is the text context, files
 //                         (absolute paths) the file context; files win. keyWindow (default false)
@@ -54,7 +54,14 @@
 //                         act in a window, perform a control's action instead (below). A command
 //                         that needs files and gets none does not run, unless openPanel is true
 //                         (default false): then it asks for them in the open panel, as the menu
-//                         does, and the panel takes a queued answer (omc.test.answer).
+//                         does, and the panel takes a queued answer (omc.test.answer). window (the
+//                         uuid of an open OMC window, as actionui.listWindows gives it) runs the
+//                         command as that window's subcommand, as a menu item does for the key
+//                         window: how a test reaches menu bar commands, since a test launch has no
+//                         key window. The window runs it, so the run observes nothing
+//                         (dispatchedToWindow); wait on omc.test.status. Not with keyWindow. As
+//                         from the menu, a command with OPEN_OBJECT_DIALOG runs on its own, and an
+//                         unknown command does not run (status userCanceledErr).
 //    omc.test.answer      {kind: "save", path} | {kind: "open", paths} | {kind: "cancel"} -> {pending}
 //                         Queues the answer to the next save or open panel the engine shows (a
 //                         Command.json SAVE_AS_DIALOG, CHOOSE_FILE_DIALOG, CHOOSE_FOLDER_DIALOG,

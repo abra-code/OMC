@@ -58,6 +58,7 @@ struct TestRun
 	CFObj<CFStringRef>		commandID;
 	CFObj<CFTypeRef>		context;
 	bool					allowKeyWindow {false};
+	CFObj<CFStringRef>		windowUUID; // run as this window's subcommand (runCommand "window")
 	bool					allowOpenPanel {false};
 	bool					dispatchedToWindow {false};
 	bool					started {false};
@@ -388,6 +389,19 @@ DispatchToKeyWindow(void *inHookContext, CFStringRef inCommandNameOrId, CFTypeRe
 	return dispatched;
 }
 
+// As a menu item runs a command for the key window, but for the window the test named ("window").
+bool
+DispatchToNamedWindow(void *inHookContext, CFStringRef inCommandNameOrId, CFTypeRef inContext)
+{
+	TestRun *run = (TestRun *)inHookContext;
+	if((run == nullptr) || (run->windowUUID == nullptr))
+		return false;
+	bool dispatched = OMCTestPlatformDispatchToWindow(run->windowUUID, inCommandNameOrId, inContext);
+	if(dispatched)
+		run->dispatchedToWindow = true; // the window runs it; this run observes nothing
+	return dispatched;
+}
+
 void
 StartRun(void *inContext)
 {
@@ -396,16 +410,26 @@ StartRun(void *inContext)
 	run->started = true;
 	OMCNoteEngineActivity();
 
+	if((run->windowUUID != nullptr) && !OMCTestPlatformHasWindow(run->windowUUID))
+	{
+		run->status = paramErr; // the window closed between the request and the run
+		run->finished = true;
+		OMCNoteEngineActivity();
+		return;
+	}
+
 	OMCRunHooks hooks;
-	hooks.dispatchToKeyWindow = DispatchToKeyWindow;
+	hooks.dispatchToKeyWindow = (run->windowUUID != nullptr) ? DispatchToNamedWindow : DispatchToKeyWindow;
 	hooks.noteRecentFiles = nullptr;
 	hooks.createObserver = CreateRunObserver;
 	hooks.context = run;
 
 	// The menu's way (OMCCommandMenu), with the open panel only when the test asked for it: it
-	// takes a queued answer like every panel here.
+	// takes a queued answer like every panel here. With "window" the runner checks the command and
+	// hands it to that window as it would to the key window (not a command with OPEN_OBJECT_DIALOG).
+	bool toWindow = run->allowKeyWindow || (run->windowUUID != nullptr);
 	run->status = OMCRunCommandFromFile(run->commandID, CFSTR("Command.plist"), run->context,
-										run->allowOpenPanel, run->allowKeyWindow, nullptr, false, &hooks);
+										run->allowOpenPanel, toWindow, nullptr, false, &hooks);
 	if(!run->observerCreated)
 		run->finished = true; // it never got as far as running anything
 	OMCNoteEngineActivity();
@@ -722,6 +746,13 @@ HandleRunCommand(CFDictionaryRef inParams)
 	if((keyWindowValue != nullptr) && (keyWindow == nullptr))
 		return CreateErrorReply(kInvalidParams, CFSTR("keyWindow: must be true or false"));
 
+	CFTypeRef windowValue = ::CFDictionaryGetValue(inParams, CFSTR("window"));
+	CFStringRef windowUUID = ACFType<CFStringRef>::DynamicCast(windowValue);
+	if((windowValue != nullptr) && ((windowUUID == nullptr) || !OMCTestPlatformHasWindow(windowUUID)))
+		return CreateErrorReply(kInvalidParams, CFSTR("window: the uuid of an open OMC window is required"));
+	if((windowUUID != nullptr) && (keyWindow != nullptr) && ::CFBooleanGetValue(keyWindow))
+		return CreateErrorReply(kInvalidParams, CFSTR("window and keyWindow: give one or the other"));
+
 	CFTypeRef openPanelValue = ::CFDictionaryGetValue(inParams, CFSTR("openPanel"));
 	CFBooleanRef openPanel = ACFType<CFBooleanRef>::DynamicCast(openPanelValue);
 	if((openPanelValue != nullptr) && (openPanel == nullptr))
@@ -732,6 +763,8 @@ HandleRunCommand(CFDictionaryRef inParams)
 	run->commandID.Adopt(commandID, kCFObjRetain);
 	run->allowKeyWindow = (keyWindow != nullptr) && ::CFBooleanGetValue(keyWindow);
 	run->allowOpenPanel = (openPanel != nullptr) && ::CFBooleanGetValue(openPanel);
+	if(windowUUID != nullptr)
+		run->windowUUID.Adopt(windowUUID, kCFObjRetain);
 	if((files != nullptr) && (::CFArrayGetCount(files) > 0))
 	{
 		CFStringRef problem = nullptr;

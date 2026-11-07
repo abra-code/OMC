@@ -20,6 +20,26 @@ OMCTestPlatformDispatchToKeyWindow(CFStringRef inCommandNameOrId, CFTypeRef inCo
 	return true;
 }
 
+bool
+OMCTestPlatformHasWindow(CFStringRef inWindowUUID)
+{
+	if(inWindowUUID == nullptr)
+		return false;
+	return ([OMCWindowController findControllerByUUID:(__bridge NSString *)inWindowUUID] != nil);
+}
+
+bool
+OMCTestPlatformDispatchToWindow(CFStringRef inWindowUUID, CFStringRef inCommandNameOrId, CFTypeRef inContext)
+{
+	if(inWindowUUID == nullptr)
+		return false;
+	OMCWindowController *controller = [OMCWindowController findControllerByUUID:(__bridge NSString *)inWindowUUID];
+	if(controller == nil)
+		return false;
+	[controller dispatchCommand:(__bridge NSString *)inCommandNameOrId withContext:inContext];
+	return true;
+}
+
 void
 OMCTestPlatformRequestQuit(void)
 {

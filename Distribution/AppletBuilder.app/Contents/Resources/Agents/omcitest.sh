@@ -17,9 +17,11 @@
 #   section <header>                       a heading in the output
 #   check <description> <expected> <actual>
 #   check_contains <description> <needle> <haystack>
-#   itest_run <command-id> [--text T] [--file PATH]... [--key-window] [--open-panel]
+#   itest_run <command-id> [--text T] [--file PATH]... [--key-window] [--open-panel] [--window W]
 #                                          runs a command as its menu item would; prints the run number
-#                                          (--open-panel: a command that needs files asks for them)
+#                                          (--open-panel: a command that needs files asks for them;
+#                                          --window: as window W's subcommand, as a menu bar command
+#                                          runs for the key window, which a test launch does not have)
 #   itest_wait_idle [seconds]              waits until nothing runs and the applet has settled
 #   itest_windows                          the open ActionUI windows, one uuid per line
 #   itest_new_window <before>              the window in itest_windows that was not in <before>
@@ -139,7 +141,7 @@ itest_call() { # <method> [params-json]
     _omcitest_rpc call "$1" "${2:-}"
 }
 
-itest_run() { # <command-id> [--text T] [--file PATH]... [--key-window] [--open-panel]
+itest_run() { # <command-id> [--text T] [--file PATH]... [--key-window] [--open-panel] [--window W]
     _omcitest_rpc run "$@"
 }
 

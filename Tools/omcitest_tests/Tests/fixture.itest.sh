@@ -24,6 +24,20 @@ itest_wait_idle
 check "the handler saw the field and wrote the greeting" "Hello, Tom" "$(itest_value "$window" 4)"
 check "NEXT_COMMAND_ID ran after it" "after ran" "$(itest_value "$window" 5)"
 
+section "A command run as the window's subcommand (--window)"
+itest_set_value "$window" 2 "Window"
+run="$(itest_run fixture.greet --window "$window")"
+itest_wait_idle
+check "the window ran it with its own field" "Hello, Window" "$(itest_value "$window" 4)"
+check_contains "the run says the window took it" '"dispatchedToWindow": true' "$(itest_call omc.test.log "{\"run\": $run}")"
+run="$(itest_run fixture.no.such.command --window "$window")"
+itest_wait_idle
+log="$(itest_call omc.test.log "{\"run\": $run}")"
+check_contains "an unknown command does not count as taken" '"dispatchedToWindow": false' "$log"
+check_contains "and fails, as from the menu" '"status": -128' "$log"
+check_contains "an unknown window is refused" "-32602" "$(itest_run fixture.greet --window NOT-A-WINDOW 2>&1)"
+check_contains "and so is --window with --key-window" "-32602" "$(itest_run fixture.greet --window "$window" --key-window 2>&1)"
+
 section "A private home and the applet under test"
 run="$(itest_run fixture.env)"
 itest_wait_idle

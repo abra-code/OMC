@@ -17,6 +17,13 @@ extern "C" {
 // subcommand and returns true; false when no OMC window is key. Main thread.
 bool OMCTestPlatformDispatchToKeyWindow(CFStringRef inCommandNameOrId, CFTypeRef inContext);
 
+// Whether an OMC window with this uuid (the ActionUI window uuid tests see) is open. Main thread.
+bool OMCTestPlatformHasWindow(CFStringRef inWindowUUID);
+
+// What a menu item does for the key window, for the window with this uuid: runs the command as
+// that window's subcommand and returns true; false when no such window is open. Main thread.
+bool OMCTestPlatformDispatchToWindow(CFStringRef inWindowUUID, CFStringRef inCommandNameOrId, CFTypeRef inContext);
+
 // Asks the application to terminate the normal way, so its termination events run. Main thread.
 void OMCTestPlatformRequestQuit(void);
 
