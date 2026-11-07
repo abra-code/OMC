@@ -33,6 +33,7 @@
     { "NAME": "ITestFixture", "COMMAND_ID": "fixture.paste", "ACTIVATION_MODE": "act_always", "EXECUTION_MODE": "exe_script_file", "PASTE_AFTER_EXECUTION": true },
     { "NAME": "ITestFixture", "COMMAND_ID": "fixture.confirm", "ACTIVATION_MODE": "act_always", "EXECUTION_MODE": "exe_script_file" },
     { "NAME": "ITestFixture", "COMMAND_ID": "fixture.notify", "ACTIVATION_MODE": "act_always", "EXECUTION_MODE": "exe_script_file" },
+    { "NAME": "ITestFixture", "COMMAND_ID": "fixture.env", "ACTIVATION_MODE": "act_always", "EXECUTION_MODE": "exe_script_file" },
     { "NAME": "ITestFixture", "COMMAND_ID": "app.did.launch", "EXECUTION_MODE": "exe_script_file" },
     { "NAME": "ITestFixture", "COMMAND_ID": "app.will.terminate", "EXECUTION_MODE": "exe_script_file" }
   ],

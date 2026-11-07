@@ -23,3 +23,12 @@ check "the button's actionID" "fixture.greet" "$(itest_click "$window" 3)"
 itest_wait_idle
 check "the handler saw the field and wrote the greeting" "Hello, Tom" "$(itest_value "$window" 4)"
 check "NEXT_COMMAND_ID ran after it" "after ran" "$(itest_value "$window" 5)"
+
+section "A private home and the applet under test"
+run="$(itest_run fixture.env)"
+itest_wait_idle
+output="$(itest_output "$run")"
+check "handlers get the file's private home" "home:$ITEST_HOME" "$(printf '%s\n' "$output" | /usr/bin/sed -n 1p)"
+check "and its private temporary folder" "tmp:$ITEST_TMPDIR" "$(printf '%s\n' "$output" | /usr/bin/sed -n 2p)"
+check "inside the test's folder" "yes" "$(case "$ITEST_HOME" in ("$ITEST_WORK"/*) printf yes ;; (*) printf no ;; esac)"
+check "ITEST_APP names the applet" "yes" "$([ -f "$ITEST_APP/Contents/Resources/Command.json" ] && printf yes || printf no)"

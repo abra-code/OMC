@@ -53,6 +53,18 @@
 #   itest_call <method> [params-json]      any bridge method; prints the result as JSON
 #   itest_quit                             quits now (normally the runner does this after the file)
 #   ITEST_WORK                             a private folder for the test's own files
+#   ITEST_HOME                             the applet's $HOME for this file: a private folder with
+#                                          Library/Application Support, Preferences and Caches, so
+#                                          what shell and Python handlers keep under $HOME or ~
+#                                          is the test's, not the user's. Whatever asks the system
+#                                          for the home folder instead (NSHomeDirectory,
+#                                          CFPreferences, NSUserDefaults, a framework's own
+#                                          Application Support lookup) still gets the user's.
+#   ITEST_TMPDIR                           the applet's $TMPDIR for this file, private as omctest's:
+#                                          applets keep per-window state there and sweep it at quit
+#                                          (PackageBuilder deletes every packagebuilder-state-*), so
+#                                          a shared one would let a test delete the user's own work
+#   ITEST_APP                              the applet under test
 #   ITEST_PASTEBOARD_PREFIX                the run's pasteboards are "<prefix>.<name>": the applet
 #                                          and its handlers never touch the user's pasteboards
 #
@@ -65,6 +77,9 @@ OMCITEST_IDLE_TIMEOUT="${OMCITEST_IDLE_TIMEOUT:-20}"
 OMCITEST_QUIT_TIMEOUT="${OMCITEST_QUIT_TIMEOUT:-10}"
 OMCITEST_PID=""
 ITEST_WORK=""
+ITEST_HOME=""
+ITEST_TMPDIR=""
+ITEST_APP=""
 ITEST_PASTEBOARD_PREFIX=""
 OMCITEST_PASTEBOARD_TOOL=""
 OMCTEST_UI=""
@@ -368,6 +383,20 @@ omcitest_launch() { # <App.app>
     ITEST_PASTEBOARD_PREFIX="omcitest.$$.${_work##*/omcit.}"
     export ITEST_PASTEBOARD_PREFIX
 
+    # A private $HOME, as omctest gives every file: an applet's own state under $HOME (recents,
+    # saved configurations, caches) is the test's, and the user's is never read or rewritten.
+    ITEST_HOME="$_work/home"
+    /bin/mkdir -p "$ITEST_HOME/Library/Application Support" "$ITEST_HOME/Library/Preferences" "$ITEST_HOME/Library/Caches" || return 1
+    export ITEST_HOME
+
+    # A private $TMPDIR too, with omctest's trailing slash. Applets keep per-window state in TMPDIR
+    # and clean it up at quit by pattern: PackageBuilder's app.will.terminate deletes every
+    # packagebuilder-state-* there and stops the builds they record, which in the user's own TMPDIR
+    # would be the user's open, unsaved projects.
+    ITEST_TMPDIR="$_work/tmp/"
+    /bin/mkdir -p "$ITEST_TMPDIR" || return 1
+    export ITEST_TMPDIR
+
     # alert and notify record and answer instead of showing anything.
     OMCTEST_UI="$_work/ui"
     /bin/mkdir -p "$OMCTEST_UI" || return 1
@@ -386,7 +415,7 @@ omcitest_launch() { # <App.app>
     # handler can leave files there for the test to check.
     /usr/bin/env -u OMCITEST_TOKEN_FILE -u OMCITEST_SOCKET -u OMCITEST_RESULTS -u OMCITEST_RPC -u OMCITEST_PYTHON \
         OMC_TEST_BRIDGE_PATH="$OMCITEST_SOCKET" OMC_TEST_TOKEN_FD=3 OMC_TEST_PASTEBOARD_PREFIX="$ITEST_PASTEBOARD_PREFIX" \
-        OMC_TEST_SUPPORT_PATH="$_work/support" OMCTEST_UI="$OMCTEST_UI" \
+        OMC_TEST_SUPPORT_PATH="$_work/support" OMCTEST_UI="$OMCTEST_UI" HOME="$ITEST_HOME" TMPDIR="$ITEST_TMPDIR" \
         "$_exe" 3< "$OMCITEST_TOKEN_FILE" > "$_work/applet.log" 2>&1 &
     OMCITEST_PID=$!
 
@@ -471,6 +500,8 @@ omcitest_finish() {
 omcitest_run_file() { # <App.app> <test-file>
     local _app="$1"
     local _file="$2"
+    ITEST_APP="$_app"
+    export ITEST_APP
     local _name
     _name="$(/usr/bin/basename "$_file")"
     printf '\n## %s\n' "$_name" >&2
