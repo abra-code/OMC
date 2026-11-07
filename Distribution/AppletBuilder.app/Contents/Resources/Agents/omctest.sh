@@ -406,7 +406,7 @@ omctest_helper_script() { # <name> -> prints the path
 omctest_applet_uses_bridge() { # <app> -> 0 if it does
     local app_path="$1" found
     [ -f "$app_path/Contents/Library/Packages/actionui_remote.py" ] || return 1
-    found=$(/usr/bin/find "$app_path/Contents/Resources/Scripts" -name '*.py' -print -quit 2>/dev/null)
+    found=$(/usr/bin/find "$app_path/Contents/Resources/Scripts" -iname '*.py' -print -quit 2>/dev/null)
     [ -n "$found" ]
 }
 
@@ -1474,17 +1474,28 @@ omctest_resolve_script() { # <command-id>
     return 1
 }
 
+# The engine's whole table (sExtensionToShellMap, OmcExecutor.cp:881-896),
+# matched case-insensitively as GetShellFromScriptExtension does, so "X.PY" runs
+# under Python there and must here. Every extension the table lists is mapped:
+# omctest_resolve_script finds a handler of any extension, so a missing arm ran
+# a .js or .csh handler under /bin/sh and reported its syntax errors as the
+# applet's.
 omctest_interpreter_for() { # <script-path>
-    local script_path="$1" base
+    local script_path="$1" base ext
     base=$(/usr/bin/basename "$script_path")
-    case "$base" in
-        *.sh) printf '/bin/sh' ;;
-        *.zsh) printf '/bin/zsh' ;;
-        *.bash) printf '/bin/bash' ;;
-        *.py) printf '%s' "$OMCTEST_PYTHON" ;;
-        *.pl) printf '/usr/bin/perl' ;;
-        *.rb) printf '/usr/bin/ruby' ;;
-        *.applescript|*.scpt) printf '/usr/bin/osascript' ;;
+    ext=$(omctest_extension_of "$base" | LC_ALL=C /usr/bin/tr 'A-Z' 'a-z')
+    case "$ext" in
+        sh) printf '/bin/sh' ;;
+        py) printf '%s' "$OMCTEST_PYTHON" ;;
+        pl) printf '/usr/bin/perl' ;;
+        applescript|scpt) printf '/usr/bin/osascript' ;;
+        zsh) printf '/bin/zsh' ;;
+        bash) printf '/bin/bash' ;;
+        csh) printf '/bin/csh' ;;
+        tcsh) printf '/bin/tcsh' ;;
+        dash) printf '/bin/dash' ;;
+        rb) printf '/usr/bin/ruby' ;;
+        js|mjs) printf '/System/Library/Frameworks/JavaScriptCore.framework/Versions/Current/Helpers/jsc' ;;
         # kDefaultShell: an unknown or absent extension runs under /bin/sh.
         *) printf '/bin/sh' ;;
     esac
@@ -1502,10 +1513,10 @@ omctest_dispatch() { # <command-id> <interpreter> <script> <status-file>
     ( cd "$OMCTEST_WORK" 2>/dev/null || exit 127
       # The non-embedded PATH prepend is a .py-only thing in the engine, and it
       # lives here so it applies to one dispatch and never leaks.
-      if [ "$OMCTEST_PYTHON_EMBEDDED" != "1" ]; then
-          case "$3" in
-              *.py) PATH="$OMCTEST_PYTHON_BIN:$PATH"; export PATH ;;
-          esac
+      # Keyed on the interpreter omctest_interpreter_for chose, as the engine
+      # keys it on its kScriptExtPy match, so "X.PY" gets it too.
+      if [ "$OMCTEST_PYTHON_EMBEDDED" != "1" ] && [ "$2" = "$OMCTEST_PYTHON" ]; then
+          PATH="$OMCTEST_PYTHON_BIN:$PATH"; export PATH
       fi
       "$2" "$3" </dev/null )
     printf '%s\n' "$?" > "$4"

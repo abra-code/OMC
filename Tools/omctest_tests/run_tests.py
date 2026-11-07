@@ -1657,6 +1657,32 @@ omctest_end
     check("and all four checks ran", "4 passed, 0 failed" in err, err.strip()[-200:])
 
 
+def test_interpreter_map() -> None:
+    print("Interpreter map:")
+    # The engine's whole sExtensionToShellMap (OmcExecutor.cp), matched
+    # case-insensitively. A missing arm ran the handler under /bin/sh.
+    jsc = "/System/Library/Frameworks/JavaScriptCore.framework/Versions/Current/Helpers/jsc"
+    py = "/fake/python3"
+    cases = [
+        ("a.sh", "/bin/sh"), ("a.SH", "/bin/sh"), ("a.py", py), ("a.PY", py), ("a.Py", py),
+        ("a.pl", "/usr/bin/perl"), ("a.applescript", "/usr/bin/osascript"),
+        ("a.scpt", "/usr/bin/osascript"), ("a.zsh", "/bin/zsh"), ("a.bash", "/bin/bash"),
+        ("a.csh", "/bin/csh"), ("a.tcsh", "/bin/tcsh"), ("a.dash", "/bin/dash"),
+        ("a.rb", "/usr/bin/ruby"), ("a.js", jsc), ("a.mjs", jsc), ("a.JS", jsc),
+        ("noext", "/bin/sh"), (".zshrc", "/bin/sh"), ("a.unknown", "/bin/sh"),
+        ("a.tar.py", py),
+    ]
+    driver = f'OMCTEST_RUNNER=1 . "{OMCTEST}" || exit 1\nOMCTEST_PYTHON="{py}"\n'
+    for name, _ in cases:
+        driver += f'printf "%s\\n" "$(omctest_interpreter_for "/x/Scripts/{name}")"\n'
+    p = subprocess.run(["/bin/sh", "-c", driver], capture_output=True, text=True)
+    check("the library sourced and ran", p.returncode == 0, p.stderr.strip())
+    got = p.stdout.splitlines()
+    for i, (name, want) in enumerate(cases):
+        actual = got[i] if i < len(got) else "(missing)"
+        check(f"{name} -> {want}", actual == want, f"got {actual}")
+
+
 def test_regressions(app: Path) -> None:
     print("Regression pins:")
     # The python interpreter must be the one the engine's chain would pick.
@@ -1771,6 +1797,7 @@ def main() -> int:
 
     test_hygiene()
     test_emitted_stubs()
+    test_interpreter_map()
 
     global _PRIVATE_TMP
     with tempfile.TemporaryDirectory(prefix="omctest-selftest-") as td:

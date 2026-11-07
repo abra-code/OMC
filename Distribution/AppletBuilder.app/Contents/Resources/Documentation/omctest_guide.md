@@ -286,7 +286,7 @@ An empty view id is accepted - what `omc_control` and `omc_trigger` refuse is an
 | `omc_run` | `<script-stem>` | resolves `Scripts/<stem>.<ext>` case-insensitively, runs it under the right interpreter with `$OMCTEST_WORK` as cwd, appends output to `handlers.log`, records the exit code in `$OMCTEST_STATUS`, then clears the one-shot variables. Returns the handler's exit code, or `127` when no script matches. |
 | `omc_fire` | `<command-id> <view-id> [value]` | `omc_control` (when a value is given) + `omc_trigger` + `omc_run`. The common three-liner. |
 
-Extension precedence is `.sh`, `.py`, `.zsh`, `.bash`, extensionless, then any other extension - the engine's order. No shebang is honored, exactly like OMC.
+When several scripts share a stem, the harness picks `.sh`, `.py`, `.zsh`, `.bash`, then any other extension or none, in directory order. The engine leaves that case undefined, so this order is the harness's own choice: give each command one script. Each script runs under the interpreter the engine's table gives its extension, matched case-insensitively (`.PY` runs under Python, `.js` under JavaScriptCore's `jsc`). No shebang is honored, exactly like OMC.
 
 **What `omc_run` takes is the script's file stem, not the manifest's `COMMAND_ID`.** For most commands these are the same string, which is why it is easy to believe otherwise - and why the distinction only bites on the one command that matters most.
 
@@ -546,7 +546,7 @@ Nothing in the test-file format changes. Test files are POSIX `sh` even for a fu
 
 What the harness does for you:
 
-- **Interpreter resolution mirrors the engine.** `.py` runs under the applet's embedded `Contents/Library/Python/bin/python3` when the bundle has one, else `/usr/bin/python3`. `.sh` runs under `/bin/sh` - which is bash 3.2 in POSIX mode, never `bash`.
+- **Interpreter resolution mirrors the engine.** `.py` runs under the applet's embedded `Contents/Library/Python/bin/python3` when the bundle has one, else under the first installed Python the engine would find (python.org's, then Homebrew's, `/usr/local`, MacPorts), and only then `/usr/bin/python3`. Every other extension gets the engine's interpreter for it. `.sh` runs under `/bin/sh` - which is bash 3.2 in POSIX mode, never `bash`.
 - **The Python environment mirrors the engine.** With an embedded runtime the harness prepends its `bin/` to `PATH` and prepends `Contents/Library/Packages` to `PYTHONPATH` when that directory exists.
 - **Interception needs nothing extra.** A Python lib that builds tool paths from `os.environ["OMC_OMC_SUPPORT_PATH"]` hits the stubs exactly as a shell handler does.
 - **`$TMPDIR` is redirected**, so a Python applet deriving a scratch directory from it lands inside the harness scratch and gets cleaned up.
