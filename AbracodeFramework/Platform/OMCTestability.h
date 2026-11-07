@@ -9,10 +9,11 @@
 //  it exists only where a process of the same user can already run its own code inside the applet,
 //  so it grants nothing new there. Platform code:
 //  - macOS: from the running applet's own code signature (Platform/Apple/OMCTestability.mm).
-//    Allowed only when the signature is valid, is not from a Developer ID or App Store certificate,
-//    and either carries com.apple.security.get-task-allow (a debug build, which a debugger can
-//    attach to) or has none of the hardened runtime, library validation and restrict flags (so
-//    DYLD_INSERT_LIBRARIES already works on it). AppletBuilder's ad hoc and self-signed builds are
+//    Allowed only when the signature is valid, is not Apple's own or from an Apple certificate
+//    other than a development one (so not Developer ID, App Store, TestFlight or Apple
+//    Distribution), and either carries com.apple.security.get-task-allow (a debug build, which a
+//    debugger can attach to) or has none of the hardened runtime, library validation and restrict
+//    flags (so DYLD_INSERT_LIBRARIES already works on it). AppletBuilder's ad hoc and self-signed builds are
 //    the second kind; its Developer ID builds always get the hardened runtime.
 //  - Linux: no code signing, and LD_PRELOAD works on any process of the same user, so it is a build
 //    setting instead: allowed when OMC_TEST_SURFACE is defined to 1, which debug builds do
@@ -32,7 +33,7 @@ typedef enum OMCTestSurfaceStatus
 {
 	kOMCTestSurface_Allowed = 0,
 	kOMCTestSurface_NoValidSignature,		// unsigned, invalid, or the signature could not be read
-	kOMCTestSurface_DistributionSigned,		// Developer ID or App Store certificate
+	kOMCTestSurface_DistributionSigned,		// Apple's own, or an Apple certificate other than a development one
 	kOMCTestSurface_Hardened,				// hardened runtime, library validation or restrict, without get-task-allow
 	kOMCTestSurface_NotInThisBuild			// a build that leaves the surface out (Linux without OMC_TEST_SURFACE)
 } OMCTestSurfaceStatus;

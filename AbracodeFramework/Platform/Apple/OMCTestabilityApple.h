@@ -19,8 +19,9 @@ extern "C" {
 #endif //__cplusplus
 
 // The rule, from the facts a signature gives: whether it is valid, whether its certificate is a
-// Developer ID or App Store one, whether it carries com.apple.security.get-task-allow, and its
-// static code directory flags (kSecCodeInfoFlags).
+// distribution one (Apple's own, or any Apple certificate but a development one), whether it
+// carries com.apple.security.get-task-allow, and its static code directory flags
+// (kSecCodeInfoFlags).
 OMCTestSurfaceStatus OMCDecideTestSurfaceStatus(bool inIsValid, bool inIsDistributionSigned, bool inHasGetTaskAllow, uint32_t inStaticFlags);
 
 // The answer for the code at inPath (a Mach-O file or a bundle), validated statically, as if it

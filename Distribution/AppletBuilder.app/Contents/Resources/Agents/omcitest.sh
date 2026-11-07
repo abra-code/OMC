@@ -10,7 +10,8 @@
 # killed if it does not.
 #
 # The engine only offers this to an applet signed for local use (ad hoc, self-signed, or a debug
-# build with get-task-allow); a Developer ID or App Store build refuses the launch (exit 78).
+# build with get-task-allow); a Developer ID, App Store or TestFlight build, or one signed with
+# any other Apple certificate that is not a development one, refuses the launch (exit 78).
 #
 # Test-file vocabulary (omctest's words where they mean the same):
 #   section <header>                       a heading in the output

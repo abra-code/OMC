@@ -20,10 +20,15 @@
 namespace
 {
 
-// The leaf certificates of distributed builds: Developer ID Application (1.2.840.113635.100.6.1.13)
-// and the Mac App Store's own signing (1.2.840.113635.100.6.1.9), plus anything Apple signs itself.
-// A build signed this way never gets the surface, whatever its flags say.
-const CFStringRef kDistributionRequirement = CFSTR("anchor apple or (anchor apple generic and (certificate leaf[field.1.2.840.113635.100.6.1.13] or certificate leaf[field.1.2.840.113635.100.6.1.9]))");
+// Distributed builds: anything Apple signs itself, and any certificate Apple issues except a
+// development one. The development leaves are Mac Developer (1.2.840.113635.100.6.1.12) and iPhone
+// Developer (1.2.840.113635.100.6.1.2); an Apple Development certificate carries both. Everything
+// else under Apple's anchor is a distribution kind: Developer ID Application (1.13), the Mac App
+// Store's own signing (1.9), TestFlight's, Apple Distribution, and any kind Apple adds later, so
+// the list to keep is the short one that does not grow. A build signed this way never gets the
+// surface, whatever its flags say. A certificate that does not chain to Apple (self-signed, for
+// local use) is not matched.
+const CFStringRef kDistributionRequirement = CFSTR("anchor apple or (anchor apple generic and !(certificate leaf[field.1.2.840.113635.100.6.1.12] or certificate leaf[field.1.2.840.113635.100.6.1.2]))");
 
 // The static flags that stop DYLD_INSERT_LIBRARIES or an unsigned library from loading.
 const uint32_t kInjectionBlockingFlags = kSecCodeSignatureRuntime | kSecCodeSignatureLibraryValidation | kSecCodeSignatureRestrict;
@@ -199,7 +204,7 @@ OMCGetTestSurfaceStatusDescription(OMCTestSurfaceStatus inStatus)
 		case kOMCTestSurface_NoValidSignature:
 			return "refused: the applet has no valid code signature, or it could not be read";
 		case kOMCTestSurface_DistributionSigned:
-			return "refused: the applet is signed with a Developer ID or App Store certificate";
+			return "refused: the applet is signed for distribution (Developer ID, App Store, TestFlight or another Apple certificate that is not a development one)";
 		case kOMCTestSurface_Hardened:
 			return "refused: the applet is signed with the hardened runtime, library validation or restrict, and without com.apple.security.get-task-allow";
 		case kOMCTestSurface_NotInThisBuild:
