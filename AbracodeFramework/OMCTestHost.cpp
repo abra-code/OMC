@@ -79,6 +79,7 @@ long sScheduledRuns = 0;
 long sScheduledCloses = 0; // omc.test.closeWindow requests not yet carried out
 CFObj<CFMutableSetRef> sClosingWindows; // uuids with a close scheduled or still running its end command
 long sSkippedPastes = 0;
+long sSkippedRecentDocuments = 0;
 std::string sPasteboardPrefix;
 CFObj<CFStringRef> sClipboardName; // "<prefix>.general", what the engine reads as the clipboard
 CFObj<CFStringRef> sSupportPath; // the harness's support folder, handed to handlers as OMC_OMC_SUPPORT_PATH
@@ -380,6 +381,16 @@ CreateRunObserver(void *inHookContext)
 	return observer; // +1: the runner adds it to the run and releases this reference
 }
 
+// Files chosen in a run's open panel: not added to the user's recent documents, counted like the
+// other routes (OMCNoteRecentDocumentURL).
+void
+CountSkippedRecentFiles(void *inHookContext, CFArrayRef inFileURLs)
+{
+	(void)inHookContext;
+	if(inFileURLs != nullptr)
+		sSkippedRecentDocuments += ::CFArrayGetCount(inFileURLs);
+}
+
 bool
 DispatchToKeyWindow(void *inHookContext, CFStringRef inCommandNameOrId, CFTypeRef inContext)
 {
@@ -423,7 +434,7 @@ StartRun(void *inContext)
 
 	OMCRunHooks hooks;
 	hooks.dispatchToKeyWindow = (run->windowUUID != nullptr) ? DispatchToNamedWindow : DispatchToKeyWindow;
-	hooks.noteRecentFiles = nullptr;
+	hooks.noteRecentFiles = CountSkippedRecentFiles;
 	hooks.createObserver = CreateRunObserver;
 	hooks.context = run;
 
@@ -811,6 +822,7 @@ HandleStatus()
 	SetNumber(result, CFSTR("scheduledCloses"), sScheduledCloses);
 	SetNumber(result, CFSTR("activity"), (long)OMCGetEngineActivityCount());
 	SetNumber(result, CFSTR("skippedPastes"), sSkippedPastes);
+	SetNumber(result, CFSTR("skippedRecentDocuments"), sSkippedRecentDocuments);
 	CFObj<CFStringRef> prefix( ::CFStringCreateWithCString(kCFAllocatorDefault, sPasteboardPrefix.c_str(), kCFStringEncodingUTF8) );
 	if(prefix != nullptr)
 		::CFDictionarySetValue(result, CFSTR("pasteboardPrefix"), prefix);
@@ -1149,6 +1161,12 @@ OMCTestHostNoteSkippedPaste(void)
 	OMCNoteEngineActivity();
 	fprintf(stderr, "OMC test launch: PASTE_AFTER_EXECUTION skipped (no keystrokes are sent in a test)\n");
 	fflush(stderr);
+}
+
+void
+OMCTestHostNoteSkippedRecentDocument(void)
+{
+	sSkippedRecentDocuments++;
 }
 
 CFURLRef

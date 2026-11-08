@@ -84,3 +84,19 @@ check "handlers get the file's private home" "home:$ITEST_HOME" "$(printf '%s\n'
 check "and its private temporary folder" "tmp:$ITEST_TMPDIR" "$(printf '%s\n' "$output" | /usr/bin/sed -n 2p)"
 check "inside the test's folder" "yes" "$(case "$ITEST_HOME" in ("$ITEST_WORK"/*) printf yes ;; (*) printf no ;; esac)"
 check "ITEST_APP names the applet" "yes" "$([ -f "$ITEST_APP/Contents/Resources/Command.json" ] && printf yes || printf no)"
+
+section "A window opened on a file stays out of the user's recent documents"
+# Open Recent and Recent Items are kept per user, not under the private home: a test's files,
+# deleted when it ends, would push the user's own entries out. The engine counts each file it
+# did not add.
+check_contains "none skipped yet" '"skippedRecentDocuments": 0' "$(itest_call omc.test.status)"
+RECENT="$ITEST_WORK/recent-sample.txt"
+printf 'sample\n' > "$RECENT"
+before="$(itest_windows)"
+itest_run ITestFixture --file "$RECENT" > /dev/null
+itest_wait_idle
+window="$(itest_new_window "$before")"
+check "the main command opened a window on the file" "yes" "$([ -n "$window" ] && printf yes || printf no)"
+check_contains "the file was not added, and counted" '"skippedRecentDocuments": 1' "$(itest_call omc.test.status)"
+itest_close "$window" > /dev/null
+itest_wait_idle

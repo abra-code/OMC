@@ -105,7 +105,7 @@ static OMCService *sOMCService = NULL;
 - (void)openDocumentWithContentsOfURL:(NSURL *)absoluteURL display:(BOOL)displayDocument completionHandler:(void (^)(NSDocument * _Nullable document, BOOL documentWasAlreadyOpen, NSError * _Nullable error))completionHandler
 {
     if(absoluteURL != NULL)
-        [self noteNewRecentDocumentURL:absoluteURL];
+        OMCNoteRecentDocumentURL(absoluteURL);
     
     _runningCommandCount++;
     /*OSStatus err = */[OMCCommandExecutor runCommand:self.commandID forCommandFile:self.commandFilePath withContext:absoluteURL useNavDialog:YES allowKeyWindowSubcommand:NO delegate:self];
@@ -125,7 +125,7 @@ static OMCService *sOMCService = NULL;
 	for( i = 0; i < fileCount; i++ )
 	{
 		id oneFileURL = [absoluteURLArray objectAtIndex:i];
-		[self noteNewRecentDocumentURL:oneFileURL];
+		OMCNoteRecentDocumentURL(oneFileURL);
 	}
 	
 	_runningCommandCount++;

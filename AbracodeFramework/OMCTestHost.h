@@ -38,13 +38,18 @@
 //  under the label "omc.test" and adds these methods next to the bridge's own actionui.* ones:
 //
 //    omc.test.status      {} -> {idle, activeCommands, scheduledRuns, scheduledCloses, activity,
-//                         pasteboardPrefix, skippedPastes, supportPath?}
+//                         pasteboardPrefix, skippedPastes, skippedRecentDocuments, supportPath?}
 //                         idle: no command at work and no runCommand or closeWindow waiting to
 //                         start. activity changes with every start or end of work, so a client that
 //                         reads the same activity twice, some time apart, knows the applet has
 //                         settled.
 //                         pasteboardPrefix: the run's pasteboards (above). skippedPastes: how many
-//                         PASTE_AFTER_EXECUTION pastes were not sent. supportPath: the support
+//                         PASTE_AFTER_EXECUTION pastes were not sent. skippedRecentDocuments: how
+//                         many times a file was not added to the user's recent documents (a
+//                         test's files never reach Open Recent or Recent Items; files a run's
+//                         open panel took count too; one file can count more than once, as a
+//                         dropped file and again as its window's file).
+//                         supportPath: the support
 //                         folder handlers get, when the launch brought one (OMC_TEST_SUPPORT_PATH).
 //    omc.test.runCommand  {commandID, text?, files?, keyWindow?, openPanel?, window?} -> {run}
 //                         Runs a command as its menu item would, on the next main-thread turn, so
@@ -153,6 +158,10 @@ CFStringRef OMCTestHostGetSupportPath(void);
 
 // A command's PASTE_AFTER_EXECUTION that a test launch did not send: counted for omc.test.status.
 void OMCTestHostNoteSkippedPaste(void);
+
+// A file a test launch did not add to the recent documents (OMCNoteRecentDocumentURL): counted
+// for omc.test.status.
+void OMCTestHostNoteSkippedRecentDocument(void);
 
 // A save or open panel in a test launch (OMCFilePanels.cpp): records it and answers it from the
 // queue instead of showing it. Same arguments and results as Platform/OMCFilePanels.h: the chosen

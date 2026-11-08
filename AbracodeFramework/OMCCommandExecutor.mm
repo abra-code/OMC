@@ -14,6 +14,7 @@
 #import "OMCWindowController.h"
 #include "OMC.h"
 #include "OMCCommandRunner.h"
+#include "OMCTestHost.h"
 #import "OMCObserverDelegate.h"
 
 void OMCDelegateObserverCallback(OmcObserverMessage inMessage, CFIndex inTaskID, CFTypeRef inResult, void *userData)
@@ -47,13 +48,29 @@ static bool DispatchToKeyWindow(void *inHookContext, CFStringRef inCommandNameOr
     return true;
 }
 
+void OMCNoteRecentDocumentURL(NSURL *inURL)
+{
+    if(inURL == nil)
+        return;
+    // A test launch works on the test's own files, deleted when it ends. The recent documents
+    // are kept per user, not under the test's private HOME, so recording them would fill the
+    // user's real Open Recent menu and Recent Items and push the user's own entries out, and
+    // then leave entries for files that no longer exist.
+    if(OMCTestHostIsActive())
+    {
+        OMCTestHostNoteSkippedRecentDocument();
+        return;
+    }
+    [NSDocumentController.sharedDocumentController noteNewRecentDocumentURL:inURL];
+}
+
 static void NoteRecentFiles(void *inHookContext, CFArrayRef inFileURLs)
 {
     (void)inHookContext;
     NSArray<NSURL*> *__weak absoluteURLArray = (__bridge NSArray<NSURL*> *)inFileURLs;
     for (NSURL *oneFileURL in absoluteURLArray)
     {
-        [NSDocumentController.sharedDocumentController noteNewRecentDocumentURL:oneFileURL];
+        OMCNoteRecentDocumentURL(oneFileURL);
     }
 }
 

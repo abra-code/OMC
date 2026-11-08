@@ -7,6 +7,7 @@
 //
 
 #import "OMCActionUIWindowController.h"
+#import "OMCCommandExecutor.h"
 #include "OMCControlAccessorBridge.h"
 #import "OMCActionUIDialog.h"
 #import "OMCControlAccessor.h"
@@ -339,7 +340,7 @@ static NSArray<ActionUIObjCDialogButton *> *OMCParseButtonSpecs(NSArray *specs)
                 NSURL *associatedFileURL = (__bridge NSURL *)fileURL;
                 window.representedURL = associatedFileURL;
                 [window setTitleWithRepresentedFilename:associatedFileURL.path];
-                [NSDocumentController.sharedDocumentController noteNewRecentDocumentURL:associatedFileURL];
+                OMCNoteRecentDocumentURL(associatedFileURL);
             }
         }
         else

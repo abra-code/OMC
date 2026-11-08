@@ -10,6 +10,7 @@
 #import <Quartz/Quartz.h>
 #import <PDFKit/PDFKit.h>
 #import "OMCNibWindowController.h"
+#import "OMCCommandExecutor.h"
 #include "OMCControlAccessorBridge.h"
 #import "OMCPopUpButton.h"
 #include "OnMyCommand.h"
@@ -150,9 +151,9 @@
                     self.window.representedURL = associatedFileURL;
                     [self.window setTitleWithRepresentedFilename:associatedFileURL.path];
                     // associating file with a window makes it appear as a document for user
-                    // we may arrive here via different ways which may not end up calling `noteNewRecentDocumentURL:`
+                    // we may arrive here via different ways which may not end up calling `OMCNoteRecentDocumentURL`
                     // but calling it twice on the same URL is not a problem
-                    [NSDocumentController.sharedDocumentController noteNewRecentDocumentURL:associatedFileURL];
+                    OMCNoteRecentDocumentURL(associatedFileURL);
                 }
             }
             

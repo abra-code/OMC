@@ -49,3 +49,15 @@
 + (OSStatus)runCommandForURL:(NSString *)inURLString forCommandFile:(NSString *)inFileName delegate:(id)delegate;
 
 @end
+
+/// Adds a file a window or a run was opened on to the applet's Open Recent menu (and, through
+/// AppKit, the system's Recent Items). Every engine call site goes through this rather than
+/// calling noteNewRecentDocumentURL: itself: in a test launch it records nothing and only counts
+/// the call for omc.test.status. Main thread.
+#ifdef __cplusplus
+extern "C" {
+#endif
+void OMCNoteRecentDocumentURL(NSURL *inURL);
+#ifdef __cplusplus
+}
+#endif
