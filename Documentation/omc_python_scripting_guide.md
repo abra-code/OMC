@@ -454,7 +454,7 @@ OMC determines the interpreter from the file extension, so a command can be impl
 
 ## Debugging
 
-- **Print to stdout**: use `print()` statements. Hold the Control key when triggering a command to see output in a window, or temporarily set `EXECUTION_MODE=exe_script_file_with_output_window`
+- **Print to stdout**: use `print()` statements. Hold the Control key when triggering a command to see output in a window, or temporarily set `EXECUTION_MODE=exe_script_file_with_output_window`. The window shows stdout only, so a traceback (which goes to stderr) does not appear there; to see it, put `sys.stderr = sys.stdout` at the top of the handler while debugging
 - **Dump environment**: `for name in sorted(os.environ): print(f"{name} = {os.environ[name]}")`
 - **Log to file**: `with open("/tmp/myapp_debug.log", "a") as f: f.write("checkpoint\n")`
 

@@ -753,7 +753,7 @@ MyApp.app/
    Change `exe_script_file` to `exe_script_file_with_output_window`
 
 3. **Control-click to show output**:
-   Hold Control when starting command to see stdout
+   Hold Control when starting command to see stdout (stdout only: add `exec 2>&1` to the script to see its errors there too)
 
 4. **Test nib loading**:
    ```bash

@@ -314,7 +314,7 @@ Script files follow the pattern `AppName.area.action.sh`, matching the `COMMAND_
 A few approaches that can help when things aren't working as expected:
 
 - **Dump environment**: `env | sort > /tmp/debug_env.txt` — shows all variables OMC exports for your script
-- **Output window**: temporarily change `EXECUTION_MODE` to `exe_script_file_with_output_window` to see stdout/stderr. Or hold the Control key when triggering the command.
+- **Output window**: temporarily change `EXECUTION_MODE` to `exe_script_file_with_output_window` to see the script's stdout. Or hold the Control key when triggering the command. The window shows stdout only; to see error messages there as well, add `exec 2>&1` near the top of the script, or `2>&1` to the one command whose errors you want.
 - **Manual testing**: run `omc_dialog_control` from Terminal with the window UUID to test commands interactively
 - **Log file**: `echo "checkpoint reached" >> /tmp/myapp_debug.log`
 

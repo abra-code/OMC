@@ -954,6 +954,8 @@ The `OUTPUT_WINDOW_SETTINGS` dictionary controls the **output window** shown whe
 
 This provides a lightweight alternative to full NIB dialogs for displaying command results or logs.
 
+The window shows the command's **standard output only**; standard error is not captured. A command that wants its errors shown there redirects them to stdout: `2>&1` on a command, or `exec 2>&1` at the top of a shell script (`sys.stderr = sys.stdout` in Python).
+
 ---
 
 ### `OUTPUT_WINDOW_SETTINGS` Dictionary Keys

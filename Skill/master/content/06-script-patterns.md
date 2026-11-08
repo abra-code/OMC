@@ -133,7 +133,7 @@ set_enabled "$REVEAL_BTN_ID" "$has_selection"
 
 ### Debugging
 
-Control-click (or right-click + hold Ctrl) when triggering a command to see stdout in a window, without permanently setting `EXECUTION_MODE` to `exe_script_file_with_output_window`.
+Control-click (or right-click + hold Ctrl) when triggering a command to see stdout in a window, without permanently setting `EXECUTION_MODE` to `exe_script_file_with_output_window`. The window shows stdout only: add `exec 2>&1` to a shell handler (`sys.stderr = sys.stdout` in Python) to see its errors there too.
 
 Dump the full environment from any script:
 ```bash

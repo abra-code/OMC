@@ -213,8 +213,10 @@ resolves questions that hours of code-rereading cannot. (This is how the
 picker index semantics in §5 were discovered.)
 
 Other live-debugging tools:
-- **Ctrl-click** the control that triggers a command → its stdout/stderr
-  appears in an output window.
+- **Ctrl-click** the control that triggers a command: its stdout
+  appears in an output window. Only stdout: to see errors there too, send
+  stderr to stdout (`exec 2>&1` at the top of a shell handler,
+  `sys.stderr = sys.stdout` in a Python one).
 - `printenv | sort` inside a handler dumps the full OMC context.
 
 ---
