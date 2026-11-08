@@ -37,7 +37,7 @@ appletbuilder itest MyApp.app [--tests <dir>] [--filter <glob>] [--verbose] [--k
 
 - `--tests` defaults to the `Tests/` folder beside the bundle; `--filter` picks files by name (`--filter 'speech*'`); `--list` prints the files that would run.
 - `--verbose` prints the applet's own output (stdout and stderr) after each file: the first place to look when a window never opens.
-- `--keep` keeps each file's private folder (the applet's home, temp folder and `applet.log`) and prints where it is.
+- Each file runs in a private folder under `/tmp/omcit.*`: the applet's home, temp folder, `applet.log` (the applet's own output) and the test's files. **A file that fails keeps it** and prints `kept: <path>`, since that is what explains the failure; delete it when done. A file that passes removes it. `--keep` keeps it for passing files too.
 - The summary line is `itest: N passed, M failed, K files`. The exit status is 0 only when everything passed; 2 means bad arguments or no test files.
 
 In AppletBuilder, the **Integration Test** button in the Build & Run pane runs the same command on the loaded applet and streams the transcript into the pane's log. If a copy of the applet is already running, it asks to quit it first (normal quit, so the copy may ask about unsaved work); the tests never run beside a running copy.
@@ -53,6 +53,8 @@ Tools/omcitest_tests/run_fixture.sh --app ~/git/MyAppApp/MyApp.app \
 ```
 
 With no `--app` it runs the ITestFixture applet, the end-to-end check of the harness itself. `--keep` keeps the copy as well as each file's private folder.
+
+The applet and `--tests` paths may be relative: `appletbuilder itest` resolves them first.
 
 ---
 
@@ -113,7 +115,7 @@ There is no `omctest_end`: the runner sources the file inside a function, counts
 
 ## 5. What a test file runs in
 
-Each file gets a **fresh applet process**, launched with the applet's own executable, and its own private folder under `/tmp/omcit.*`, removed afterwards.
+Each file gets a **fresh applet process**, launched with the applet's own executable, and its own private folder under `/tmp/omcit.*`, removed afterwards when the file passed and kept when it failed.
 
 | Variable | What it is |
 |---|---|
@@ -305,10 +307,11 @@ check "the applet was not changed" "$app_digest" "$(/bin/cat ... | /sbin/md5 -q)
 | Symptom | Likely cause |
 |---|---|
 | `OMC test launch refused: <reason>` | the signature (section 2) |
+| `the applet ended during the test; its output is in .../applet.log` | the applet crashed, or quit by itself (an applet whose launch opened nothing may quit). Every later call fails at once instead of waiting out its timeout. Read the log. A test that means to quit the applet uses `itest_quit` |
 | `the applet did not come up for the test` | an engine older than 5.5, or the applet crashed at launch: rerun with `--verbose` |
 | `Unknown view N in window ...` | the view is not loaded: a tab not shown, a sheet not open, a LoadableView not yet loaded |
 | a window never opens | the primary command takes a file: check `itest_panel last kind` for a canceled open panel |
 | `params are not JSON` | quoting in an `itest_call` parameter: build the JSON in one double-quoted string with `\"` around each key |
 | tool output with "couldn't create cache file" | the agent sandbox blocking `xcrun`; run with the sandbox off |
 
-`--verbose` prints the applet's own output after each file; `--keep` keeps each file's private folder (the applet's home, temp folder and `applet.log`) to look into afterwards.
+A failing file's private folder is kept (`kept: <path>`), with the applet's `applet.log`, its home and temp folder, and the test's files. `--verbose` prints the applet's output after each file as well; `--keep` keeps the folder of a passing file too.

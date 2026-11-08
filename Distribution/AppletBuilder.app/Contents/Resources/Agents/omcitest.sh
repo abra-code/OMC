@@ -7,7 +7,9 @@
 # and the token, the token reaches the applet on descriptor 3, and the applet starts its ActionUI
 # bridge at launch with the omc.test.* methods. The test file is then sourced and uses the
 # functions below; afterwards the applet is asked to quit, so app.will.terminate runs, and is
-# killed if it does not.
+# killed if it does not. The file's private folder is removed when it passed and kept (its path
+# printed) when it failed: applet.log there is the applet's own output. An applet that ends during
+# the test is reported once, and every later call fails at once rather than waiting out its timeout.
 #
 # The engine only offers this to an applet signed for local use (ad hoc, self-signed, or a debug
 # build with get-task-allow); a Developer ID, App Store or TestFlight build, or one signed with
@@ -98,8 +100,29 @@ ITEST_PASTEBOARD_PREFIX=""
 OMCITEST_PASTEBOARD_TOOL=""
 OMCTEST_UI=""
 _OMCITEST_MADE_WORK=""
+_OMCITEST_LAUNCHED=""
 
 _omcitest_rpc() {
+    # The applet ended by itself (it crashed, or quit because its launch opened nothing): every call
+    # would only wait out its timeout against a bridge that is gone, a minute at a time. Say so once,
+    # as one failure that names the applet's own output, and fail the rest at once. Most calls run
+    # in a command substitution, a subshell, so the state is a file in the test's folder, not a
+    # variable. A normal quit (itest_quit, the runner's finish) has already cleared OMCITEST_PID.
+    # Only once the launch is done: during it, omcitest_launch reports an applet that never came up
+    # in its own words.
+    local _gone="$ITEST_WORK/applet.gone"
+    if [ -n "$_OMCITEST_LAUNCHED" ] && [ -n "$OMCITEST_PID" ] && [ ! -f "$_gone" ]; then
+        kill -0 "$OMCITEST_PID" 2>/dev/null
+        local _alive=$?
+        if [ "$_alive" -ne 0 ]; then
+            : > "$_gone"
+            _omcitest_fail "the applet ended during the test; its output is in $ITEST_WORK/applet.log"
+        fi
+    fi
+    if [ -n "$_OMCITEST_LAUNCHED" ] && [ -f "$_gone" ]; then
+        printf 'omcitest_rpc: the applet is no longer running\n' >&2
+        return 1
+    fi
     "$OMCITEST_PYTHON" "$OMCITEST_RPC" "$@"
 }
 
@@ -189,7 +212,14 @@ itest_wait_idle() { # [seconds]
     local _timeout="${1:-$OMCITEST_IDLE_TIMEOUT}"
     _omcitest_rpc wait-idle --timeout "$_timeout"
     local _status=$?
-    if [ "$_status" -ne 0 ]; then
+    # An applet that ended did not "not settle": it has been reported once already (_omcitest_rpc),
+    # or it ended during this wait and the next call, or the runner's finish, reports it.
+    local _alive=0
+    if [ "$_status" -ne 0 ] && [ -n "$OMCITEST_PID" ]; then
+        kill -0 "$OMCITEST_PID" 2>/dev/null
+        _alive=$?
+    fi
+    if [ "$_status" -ne 0 ] && [ ! -f "$ITEST_WORK/applet.gone" ] && [ "$_alive" -eq 0 ]; then
         _omcitest_fail "the applet did not become idle within ${_timeout}s"
     fi
     return "$_status"
@@ -294,6 +324,16 @@ notify_mention() { /usr/bin/grep -c -- "$1" "$OMCTEST_UI/notifications.log" 2>/d
 itest_quit() {
     if [ -z "$OMCITEST_PID" ]; then
         return 0
+    fi
+    # Already gone (it ended by itself after the test's last call, or _omcitest_rpc reported it):
+    # only reap it. Asking would go through _omcitest_rpc, whose one failure for an applet that
+    # ended would be counted here with its message thrown away below; the runner reports an exit
+    # status that is not 0.
+    /bin/kill -0 "$OMCITEST_PID" 2>/dev/null
+    local _alive=$?
+    if [ "$_alive" -ne 0 ]; then
+        _omcitest_wait_exit 0
+        return $?
     fi
     _omcitest_rpc call omc.test.quit > /dev/null 2>&1
     _omcitest_wait_exit "$OMCITEST_QUIT_TIMEOUT"
@@ -511,6 +551,7 @@ omcitest_launch() { # <App.app>
             return 1
             ;;
     esac
+    _OMCITEST_LAUNCHED=1
     return 0
 }
 
@@ -565,7 +606,8 @@ omcitest_run_file() { # <App.app> <test-file>
         # shellcheck disable=SC1090
         source "$_file"
         omcitest_finish
-        if [ -n "${OMCITEST_EXIT_STATUS:-}" ] && [ "$OMCITEST_EXIT_STATUS" != "0" ]; then
+        # (Already reported, with its log, when it ended during the test.)
+        if [ ! -f "$ITEST_WORK/applet.gone" ] && [ -n "${OMCITEST_EXIT_STATUS:-}" ] && [ "$OMCITEST_EXIT_STATUS" != "0" ]; then
             _omcitest_fail "the applet exited with status $OMCITEST_EXIT_STATUS"
         fi
         if [ "${OMCITEST_VERBOSE:-0}" = "1" ]; then
@@ -580,8 +622,11 @@ omcitest_run_file() { # <App.app> <test-file>
     _passed="$(_omcitest_count pass)"
     _failed="$(_omcitest_count fail)"
     printf '%s %s %s\n' "$_passed" "$_failed" "$_name" >> "$OMCITEST_RESULTS"
-    if [ "${OMCITEST_KEEP:-0}" = "1" ]; then
-        printf 'kept: %s\n' "$ITEST_WORK" >&2
+    # Kept when asked, and whenever the file failed: the applet's output (applet.log), its home and
+    # temporary folder, and the test's own files are what explains a failure. A passing file's
+    # folder goes, so a green run leaves nothing under /tmp.
+    if [ "${OMCITEST_KEEP:-0}" = "1" ] || [ "$_failed" != "0" ]; then
+        printf 'kept: %s (applet.log is the applet'"'"'s output)\n' "$_OMCITEST_MADE_WORK" >&2
     else
         # The whole folder: the test's own files (ITEST_WORK) are in it too. The one mktemp made,
         # not ITEST_WORK, which a test file could have reassigned.
