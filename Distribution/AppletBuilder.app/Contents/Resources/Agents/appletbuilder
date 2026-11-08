@@ -433,6 +433,20 @@ cmd_itest() {
 
     if [ -z "$target" ]; then echo "itest: an applet bundle path is required" >&2; return 2; fi
     if [ ! -d "$target/Contents" ]; then echo "itest: not an applet bundle: $target" >&2; return 2; fi
+    # Absolute from here on: the harness links the applet's support tools into each test's private
+    # folder (/tmp/omcit.*/support), and a link made from a relative path ("MyApp.app/Contents/...")
+    # resolves against that folder, not against the directory the command was run in, so every
+    # handler that runs pasteboard or omc_next_command failed. ITEST_APP and the test files' own
+    # paths (BASH_SOURCE) are absolute too, whatever a test then changes directory to. Logical,
+    # not -P, as applet_tests_dir: tests compare paths they were given as strings.
+    local resolved
+    resolved=$(CDPATH= cd -- "$target" && pwd)
+    if [ -z "$resolved" ]; then echo "itest: cannot resolve the applet path: $target" >&2; return 2; fi
+    target="$resolved"
+    if [ -n "$tests_dir" ] && [ -d "$tests_dir" ]; then
+        resolved=$(CDPATH= cd -- "$tests_dir" && pwd)
+        if [ -n "$resolved" ]; then tests_dir="$resolved"; fi
+    fi
     if [ -z "$tests_dir" ]; then
         tests_dir=$(applet_tests_dir "$target")
     fi
