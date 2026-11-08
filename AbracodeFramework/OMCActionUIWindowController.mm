@@ -14,6 +14,7 @@
 #include "CommandRuntimeData.h"
 #include "ACFDict.h"
 #include "OMCStrings.h"
+#include "OMCActionUIModelLifetime.h"
 
 // enable only in OMC version 5.0 or later
 #if CURRENT_OMC_VERSION >= 50000
@@ -470,7 +471,26 @@ static NSArray<ActionUIObjCDialogButton *> *OMCParseButtonSpecs(NSArray *specs)
         actionUIDialog->SetControlAccessor(nullptr);
 
     [self.window setDelegate:nil];
-    // hostingController released by property, taking SwiftUI view hierarchy with it
+
+    // The window's ActionUI model (its description, values and states) outlives this controller
+    // until the last command started for the window has ended: the end command, which starts as
+    // the window closes, may read the closed window through the ActionUI remote bridge
+    // (OMCActionUIModelLifetime.h). Without the removal every window the applet ever showed would
+    // stay in ActionUI (and in actionui.listWindows) for the life of the process. The hosting view
+    // may outlive the model (the window's content view holds it until the window goes), which is
+    // harmless: an ActionUI view without a model draws a placeholder. Main thread only, like
+    // ActionUI's model; a dealloc elsewhere hands it to the main queue.
+    NSString *windowUUID = nil;
+    if(mOMCDialogProxy.Get() != nullptr)
+        windowUUID = [(__bridge NSString *)mOMCDialogProxy->GetDialogUUID() copy];
+    self.hostingController = nil;
+    if(windowUUID != nil)
+    {
+        if([NSThread isMainThread])
+            OMCActionUIModelWindowClosed((__bridge CFStringRef)windowUUID);
+        else
+            dispatch_async(dispatch_get_main_queue(), ^{ OMCActionUIModelWindowClosed((__bridge CFStringRef)windowUUID); });
+    }
 }
 
 #pragma mark - OMCControlAccessor protocol

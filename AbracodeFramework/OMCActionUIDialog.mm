@@ -29,6 +29,7 @@ ARefCountedObj<OMCDialog> RunActionUIDialog(OnMyCommandCM *inPlugin, CommandRunt
 		return outDialog;
 
 	assert(commandRuntimeData != nullptr);
+	CommandDescription &currCommand = inPlugin->GetCurrentCommand();
 
 	@autoreleasepool
 	{
@@ -47,7 +48,10 @@ ARefCountedObj<OMCDialog> RunActionUIDialog(OnMyCommandCM *inPlugin, CommandRunt
 					{
 						if(outDialog != nullptr)
 						{
-							outDialog->CopyAllControlValues(nullptr, nullptr);
+							// The window is closed but its controller lives until this function
+							// returns, so collect the requested special values (all rows) now, as
+							// the nib dialog does: afterwards the engine can no longer read them.
+							outDialog->CopyAllControlValues(currCommand.specialRequestedNibControls, nullptr);
 						}
 					}
 					else
@@ -78,7 +82,11 @@ OMCActionUIDialog::CopyAllControlValues(CFSetRef requestedNibControls, Selection
     // Let the base class collect standard control values via allControlValues:andProperties:withIterator:
     OMCDialog::CopyAllControlValues(requestedNibControls, inSelIterator);
 
-    if(requestedNibControls == nullptr)
+    // No accessor: the window's controller is gone, and with it the engine's reads of the window,
+    // as for a nib window (its ActionUI model may outlive it for the bridge, see
+    // OMCActionUIModelLifetime.h). Keep the values collected while it lived (a blocking window's
+    // command reads them after it closed).
+    if((requestedNibControls == nullptr) || (mControlAccessor == nullptr))
         return;
 
     CFIndex specialWordCount = ::CFSetGetCount(requestedNibControls);

@@ -27,6 +27,7 @@
 #include "OMCHelpers.h"
 #include "OMCEngineTempDir.h"
 #include "OMCEngineActivity.h"
+#include "OMCActionUIModelLifetime.h"
 #include "OMCTestHost.h"
 #include <atomic>
 
@@ -123,11 +124,22 @@ public:
 		: mExec(inNewExec, kARefCountRetain), commandRuntimeData(commandRuntimeData, kARefCountRetain), mCommand(inCommand, kCFObjRetain), mInputPipe(inInputPipe, kCFObjRetain),
 		mObjName(inObjName, kCFObjRetain)
 	{
+		// A task of a command started for a window holds the window's ActionUI model until it is
+		// destroyed, so the command can read the window through the remote bridge even after the
+		// window closed (OMCActionUIModelLifetime.h). A copy: the run data's window can change later.
+		CFStringRef windowUUID = (commandRuntimeData != nullptr) ? commandRuntimeData->GetAssociatedDialogUUID() : nullptr;
+		if(windowUUID != nullptr)
+		{
+			mWindowUUID.Adopt( ::CFStringCreateCopy(kCFAllocatorDefault, windowUUID), kCFObjDontRetain );
+			OMCActionUIModelHoldForTask(mWindowUUID);
+		}
 	}
 
 	virtual ~OmcTask()
 	{
 		TRACE_CSTR( "OmcTask::~OmcTask\n" );
+		if(mWindowUUID != nullptr)
+			OMCActionUIModelReleaseForTask(mWindowUUID);
 	}
 
 	//returns true if task finished synchronously
@@ -147,6 +159,7 @@ public:
 	CFObj<CFStringRef>		mCommand;
 	CFObj<CFStringRef>		mInputPipe;
 	CFObj<CFStringRef>		mObjName;
+	CFObj<CFStringRef>		mWindowUUID; // the window whose ActionUI model this task holds, or none
 };
 
 

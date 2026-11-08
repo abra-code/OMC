@@ -39,13 +39,42 @@ check_contains "an unknown window is refused" "-32602" "$(itest_run fixture.gree
 check_contains "and so is --window with --key-window" "-32602" "$(itest_run fixture.greet --window "$window" --key-window 2>&1)"
 
 section "Closing the window as its close button does"
+# The end command also reads the closed window through the ActionUI remote bridge, with the shell
+# client AppletBuilder ships (fixture.closed.sh): a window's model lasts until the last command
+# started for it has ended.
+client="$(/usr/bin/dirname "$OMCITEST_RPC")/../../Library/Packages/actionui_remote.sh"
+check "the bridge's shell client is there" "yes" "$([ -f "$client" ] && printf yes || printf no)"
+printf '%s\n' "$client" > "$ITEST_WORK/actionui_remote.path"
 check_contains "an unknown window is refused" "-32602" "$(itest_close NOT-A-WINDOW 2>&1)"
 check_contains "the close is taken" '"closing": true' "$(itest_close "$window")"
 itest_wait_idle
-check "its end command ran, while the window still had its values" "closed:Window" "$(/bin/cat "$ITEST_WORK/closed.txt" 2>/dev/null)"
-# The engine no longer has the window. (actionui.listWindows still names it: OMC does not remove a
-# closed window's ActionUI model, reported to the owner.)
-check_contains "the closed window is refused" "-32602" "$(itest_close "$window" 2>&1)"
+check "its end command ran, while the window still had its values" "closed:Window" "$(/usr/bin/sed -n 1p "$ITEST_WORK/closed.txt" 2>/dev/null)"
+check "and read the closed window through the bridge" "bridge:0:Window" "$(/usr/bin/sed -n 2p "$ITEST_WORK/closed.txt" 2>/dev/null)"
+check "once it ended, the window is gone, its ActionUI model too" "" "$(itest_windows | /usr/bin/grep -x -- "$window")"
+check_contains "and a second close is refused" "-32602" "$(itest_close "$window" 2>&1)"
+
+section "A blocking window: its command gets the values it had when OK'd"
+# The window runs modally, so the applet is not idle until it is OK'd: wait for its table instead.
+before="$(itest_windows)"
+itest_run fixture.modal > /dev/null
+modal=""
+rows=""
+n=0
+while [ "$n" -lt 80 ]; do
+    [ -z "$modal" ] && modal="$(itest_new_window "$before")"
+    [ -n "$modal" ] && rows="$(itest_call actionui.getRows "{\"window\": \"$modal\", \"viewID\": 7}" 2>/dev/null)"
+    case "$rows" in (*beta*) break ;; esac
+    /bin/sleep 0.25
+    n=$((n + 1))
+done
+check "the blocking window opened, its table filled" "yes" "$(case "$rows" in (*beta*) printf yes ;; (*) printf no ;; esac)"
+itest_set_value "$modal" 2 "Ada"
+check "OK fires omc.dialog.ok" "omc.dialog.ok" "$(itest_click "$modal" 3)"
+itest_wait_idle
+check "the command saw the field" "field:Ada" "$(/usr/bin/sed -n 1p "$ITEST_WORK/modal.txt" 2>/dev/null)"
+check "and all rows of the table" "rows:alpha|beta|" "$(/usr/bin/sed -n 2p "$ITEST_WORK/modal.txt" 2>/dev/null)"
+check "and could read the closed window through the bridge" "bridge:0:Ada" "$(/usr/bin/sed -n 3p "$ITEST_WORK/modal.txt" 2>/dev/null)"
+check "once it ended, the window is gone, its ActionUI model too" "" "$(itest_windows | /usr/bin/grep -x -- "$modal")"
 
 section "A private home and the applet under test"
 run="$(itest_run fixture.env)"

@@ -110,10 +110,10 @@ else
         printf 'run_fixture: cannot copy Command.json\n' >&2
         exit 1
     fi
-    /bin/cp "$here/ITestFixture/Base.lproj/Window.json" "$resources/Base.lproj/Window.json"
+    /bin/cp "$here/ITestFixture/Base.lproj/"*.json "$resources/Base.lproj/"
     status=$?
     if [ "$status" -ne 0 ]; then
-        printf 'run_fixture: cannot copy Window.json\n' >&2
+        printf 'run_fixture: cannot copy the window descriptions (Base.lproj)\n' >&2
         exit 1
     fi
     /bin/cp "$here/ITestFixture/Scripts/"*.sh "$resources/Scripts/"

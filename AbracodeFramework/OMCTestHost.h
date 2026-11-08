@@ -94,11 +94,12 @@
 //                         its close button does, on the next main-thread turn, so the window's end
 //                         command (END_CANCEL_SUBCOMMAND_ID) runs as when a user closes it and the
 //                         reply never waits for it. The window is not made key. Wait on
-//                         omc.test.status, then check the outcome: a window can refuse to close, and
-//                         a closed one is refused by a later closeWindow (actionui.listWindows still
-//                         names it, as the engine keeps a closed window's ActionUI model). An unknown
-//                         uuid is refused. A request for a window whose close is still under way
-//                         answers the same and adds nothing.
+//                         omc.test.status, then see that the window is gone from listWindows (a
+//                         window can refuse to close; a closed window stays there, readable, until
+//                         the commands started for it have ended, its end command among them:
+//                         OMCActionUIModelLifetime.h). An unknown uuid, or a window already closed,
+//                         is refused. A request for a window whose close is still under way answers
+//                         the same and adds nothing.
 //    omc.test.quit        {} -> {quitting: true}
 //                         Terminates the applet normally, so app.will.terminate runs.
 //
