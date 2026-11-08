@@ -32,12 +32,12 @@ omctest replaces the clicking for everything that leaves a trace.
 ### What is out of scope, stated plainly
 
 - **No rendering or layout testing.** The harness never creates a window. Spacing, truncation, dark mode, resizing, focus and tab order, drag feedback, animations: a human at the screen must confirm these.
-- **No testing of the engine.** The harness *simulates* the engine's contract as documented in `omc_runtime_context_reference.md`; it does not execute the engine. If the simulation and the engine disagree, your tests pass and your app misbehaves. When the engine's behavior is the question, instrument the live app (see `omc_agent_tips_and_troubleshooting.md` section 6) rather than trusting the harness.
+- **No testing of the engine.** The harness *simulates* the engine's contract as documented in `omc_runtime_context_reference.md`; it does not execute the engine. If the simulation and the engine disagree, your tests pass and your app misbehaves. When the engine's behavior is the question, write an integration test (`omcitest_guide.md`: the real applet through the real engine, OMC 5.5), or instrument the live app (see `omc_agent_tips_and_troubleshooting.md` section 6).
 - **No synthesized UI events.** Handlers are dispatched directly, so the wiring from a control's `actionID` to the handler is never exercised by a test. A typo'd `actionID` is silent here - `validate` is what catches it, warning for any `*ActionID` in the bundle's JSON that resolves to no command.
 - **NIB dialogs are not supported.** ActionUI only.
 - **External-world effects are not faked.** Keychain, `notarytool`, `codesign`, network. Handlers call these by absolute path, which the harness cannot redirect. See section 8, the seam contract.
 
-**The honest boundary.** A green `omctest` run plus a green `validate` means the handler logic is correct *given the documented engine contract and given real support tools*. A human must still launch the app once per release and confirm the window looks right, loads, and reacts.
+**The honest boundary.** A green `omctest` run plus a green `validate` means the handler logic is correct *given the documented engine contract and given real support tools*. Integration tests (`appletbuilder itest`, `omcitest_guide.md`) then cover what the engine does with those handlers: the launch, the order and overlap of view handlers, panels, close handlers. A human must still look at the window once per release.
 
 ---
 
