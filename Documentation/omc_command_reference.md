@@ -164,7 +164,7 @@ Rules for the `exe` URL:
   - application lifecycle commands: `app.will.launch`, `app.did.launch`, `app.did.activate`, `app.did.deactivate`, `app.will.terminate`, whether that is the command's `COMMAND_ID` or its `NAME`;
   - dialog event handlers: any id named by `INIT_SUBCOMMAND_ID`, `END_OK_SUBCOMMAND_ID`, `END_CANCEL_SUBCOMMAND_ID`, `WINDOW_DID_ACTIVATE_SUBCOMMAND_ID` or `WINDOW_DID_DEACTIVATE_SUBCOMMAND_ID` of a `NIB_DIALOG` or `ACTIONUI_WINDOW`, and the predefined `omc.dialog.*` ids. This includes the main command when a dialog names it by `main` or `<NAME>.main`.
 - The command runs with no window, so it gets no control values.
-- When the URL carries no `text`, `$OMC_OBJ_TEXT` is not empty by rule: as in any run with no text context, a command that uses it may get the clipboard text. Use `$OMC_TRIGGER_URL` to see what the link itself said.
+- When the URL carries no `text`, `$OMC_OBJ_TEXT` is not empty by rule: as in any run with no text context, a command that declares the text object (`__OBJ_TEXT__` in its `COMMAND`, or `OMC_OBJ_TEXT` in its `ENVIRONMENT_VARIABLES`) gets the clipboard text; one that does not gets it empty (`omc_runtime_context_reference.md`, step 2a). Use `$OMC_TRIGGER_URL` to see what the link itself said.
 - A refused URL runs nothing and writes one line to the system log, starting with `OMC: URL refused`, naming the command id and the reason.
 
 Any URL on the applet's scheme whose host is not `exe` runs the command with id `omc.app.handle-url`, if the applet has one, with the whole URL as text context. That command needs no key: receiving URLs is its only purpose.

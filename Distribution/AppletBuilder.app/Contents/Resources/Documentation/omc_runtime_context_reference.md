@@ -13,7 +13,8 @@ The list is derived **directly** from the source files:
 | Step | What happens |
 |------|--------------|
 | **1. Substitution** | Every `__FOO__` separate string in a command array (`COMMAND`, `NAME`, `WARNING`, etc.) is replaced with its resolved value **before** execution. |
-| **2. Automatic Export** | The following variables are **always exported** (regardless of scanning):<br>`$OMC_OBJ_TEXT`, `$OMC_OBJ_PATH`, `$OMC_OMC_RESOURCES_PATH`, `$OMC_OMC_SUPPORT_PATH`, `$OMC_APP_BUNDLE_PATH`, `$OMC_APP_PROCESS_ID`, `$OMC_NIB_DLG_GUID`, `$OMC_CURRENT_COMMAND_GUID`. |
+| **2. Automatic Export** | The following variables are **always exported** (regardless of scanning):<br>`$OMC_OBJ_TEXT`, `$OMC_OBJ_PATH`, `$OMC_OMC_RESOURCES_PATH`, `$OMC_OMC_SUPPORT_PATH`, `$OMC_APP_BUNDLE_PATH`, `$OMC_APP_PROCESS_ID`, `$OMC_NIB_DLG_GUID`, `$OMC_CURRENT_COMMAND_GUID`.<br>`$OMC_OBJ_TEXT` is always present, but it carries text only as step 2a says. |
+| **2a. Where `$OMC_OBJ_TEXT` comes from** | The run's own text, when it has one: a URL's `text`, a service's selected text, a command run with text context. With none, the engine looks for text (the selection, else the clipboard) **only when the command declares the text object**: `__OBJ_TEXT__` in `COMMAND` or `INPUT_PIPE`, or an `OMC_OBJ_TEXT` key in `ENVIRONMENT_VARIABLES` (any string value, such as `""`). A command that does neither, which includes every `exe_script_file` command that does not list it, gets an empty `$OMC_OBJ_TEXT`, and the clipboard is never read for it. This is deliberate: an applet command run from a menu or a button should not pick up whatever happens to be on the clipboard. |
 | **3. Export detection** | For all other variables, the engine scans the `COMMAND` array for the literal string `OMC_FOO`. If found, the resolved value is exported (for modes that support env vars). |
 | **4. External scripts** | `exe_script_file` scripts are **not** scanned. Force export via `ENVIRONMENT_VARIABLES`. |
 | **5. `NAME` arrays** | Only `__FOO__` works in dynamic labels – env vars are not expanded. |
@@ -25,7 +26,7 @@ The list is derived **directly** from the source files:
 | Category | Special Word | Environment Variable | Description | Export |
 |----------|--------------|----------------------|-------------|--------|
 | **Object** | `__OBJ_PATH__` | `$OMC_OBJ_PATH` | Full path (escaped). | **Always** |
-| **Object** | `__OBJ_TEXT__` | `$OMC_OBJ_TEXT` | Selected text (or clipboard). | **Always** |
+| **Object** | `__OBJ_TEXT__` | `$OMC_OBJ_TEXT` | The run's text; else, for a command that declares it, the selected text or the clipboard (step 2a). | **Always** (empty unless the run brought text or the command declares it) |
 | **Object** | `__OBJ_NAME__` | `$OMC_OBJ_NAME` | Base name (folder ends with `/`). | Scanned |
 | **Object** | `__OBJ_NAME_NO_EXTENSION__` | `$OMC_OBJ_NAME_NO_EXTENSION` | Name without extension. | Scanned |
 | **Object** | `__OBJ_EXTENSION_ONLY__` | `$OMC_OBJ_EXTENSION_ONLY` | Extension only (no dot). | Scanned |
