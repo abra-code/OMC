@@ -179,6 +179,7 @@ BUILD_STATUS_ID=408
 BUILD_BUILD_BTN_ID=409
 BUILD_TEST_BTN_ID=410
 BUILD_RUN_BTN_ID=411
+BUILD_ITEST_BTN_ID=420
 BUILD_THIN_PYTHON_BTN_ID=413
 BUILD_THIN_PLAN_ID=412
 BUILD_THIN_APPLY_ID=414
@@ -526,6 +527,7 @@ ab_actions_enabled() { # <true|false>
     set_enabled "$BUILD_BUILD_BTN_ID" "$1"
     set_enabled "$BUILD_TEST_BTN_ID" "$1"
     set_enabled "$BUILD_RUN_BTN_ID" "$1"
+    set_enabled "$BUILD_ITEST_BTN_ID" "$1"
     # The thinning checkboxes go with the buttons. They are live controls with a
     # handler of their own (AppletBuilder.thin.python.changed), which re-enables
     # Execute - so leaving them clickable during a run means a click on Write

@@ -257,6 +257,16 @@
                                 },
                                 {
                                     "type": "Button",
+                                    "id": 411,
+                                    "properties": {
+                                        "title": "Run",
+                                        "systemImage": "play.fill",
+                                        "buttonStyle": "bordered",
+                                        "actionID": "AppletBuilder.run"
+                                    }
+                                },
+                                {
+                                    "type": "Button",
                                     "id": 410,
                                     "properties": {
                                         "title": "Test",
@@ -267,12 +277,12 @@
                                 },
                                 {
                                     "type": "Button",
-                                    "id": 411,
+                                    "id": 420,
                                     "properties": {
-                                        "title": "Run",
-                                        "systemImage": "play.fill",
+                                        "title": "Integration Test",
+                                        "systemImage": "app.badge.checkmark",
                                         "buttonStyle": "bordered",
-                                        "actionID": "AppletBuilder.run"
+                                        "actionID": "AppletBuilder.itest"
                                     }
                                 },
                                 {

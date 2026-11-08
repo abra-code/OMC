@@ -565,6 +565,12 @@
       "NAME": "AppletBuilder"
     },
     {
+      "NOTES": "Runs the integration tests (*.itest.sh) in Tests/ beside the applet against the real applet, logging into the Build & Run log",
+      "COMMAND_ID": "AppletBuilder.itest",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
       "NOTES": "Plans and/or applies the embedded-Python thinning of the loaded applet, logging into the Build & Run log",
       "COMMAND_ID": "AppletBuilder.thin.python",
       "EXECUTION_MODE": "exe_script_file",

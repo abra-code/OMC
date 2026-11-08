@@ -1464,6 +1464,66 @@ applet_tests_dir() { # <project-path>
     printf '%s/Tests\n' "$parent"
 }
 
+# The integration test files (*.itest.sh) in the applet's Tests/ directory, one
+# path per line; nothing when there are none.
+applet_itest_files() { # <project-path>
+    local tests_dir test_file
+    tests_dir=$(applet_tests_dir "$1")
+    [ -n "$tests_dir" ] && [ -d "$tests_dir" ] || return 0
+    for test_file in "$tests_dir"/*.itest.sh; do
+        [ -f "$test_file" ] && printf '%s\n' "$test_file"
+    done
+    return 0
+}
+
+# Running applications with the same bundle identifier as <App.app>, wherever
+# they were started from, one "<pid> <bundle path>" line each; nothing when none
+# runs. Asked of Launch Services (lsappinfo), where every applet checks in at
+# launch, so a copy at another path counts too: it shares the preferences.
+applet_running_instances() { # <App.app>
+    local bundle_id
+    bundle_id=$(/usr/bin/plutil -extract CFBundleIdentifier raw -o - "$1/Contents/Info.plist" 2>/dev/null)
+    [ -n "$bundle_id" ] || return 0
+    local found
+    found=$(/usr/bin/lsappinfo find bundleid="$bundle_id" 2>/dev/null)
+    # One full "info" per entry, read for its "pid = " and "bundle path=" lines,
+    # instead of "-only pid" and "-only bundlepath": what -only prints has not
+    # stayed the same across macOS releases.
+    local asn info pid bundle_path
+    for asn in $(printf '%s\n' "$found" | /usr/bin/grep -oE 'ASN:0x[0-9a-fA-F]+-0x[0-9a-fA-F]+'); do
+        info=$(/usr/bin/lsappinfo info "$asn" 2>/dev/null)
+        pid=$(printf '%s\n' "$info" | /usr/bin/sed -nE 's/^ *pid = ([0-9]+).*/\1/p' | /usr/bin/head -1)
+        case "$pid" in
+            ''|*[!0-9]*|0) continue ;;
+        esac
+        bundle_path=$(printf '%s\n' "$info" | /usr/bin/sed -nE 's/^ *bundle path="(.*)" *$/\1/p' | /usr/bin/head -1)
+        printf '%s %s\n' "$pid" "${bundle_path:-?}"
+    done
+    return 0
+}
+
+# Ask the application with <pid> to quit, as its Quit menu item would (it may
+# ask about unsaved work, or decline), and wait up to <seconds> for it to end.
+# Returns 0 once it is gone, 1 if it is still running.
+applet_quit_instance() { # <pid> <seconds>
+    local pid="$1" seconds="$2"
+    case "$seconds" in
+        ''|*[!0-9]*) seconds=60 ;;
+    esac
+    local reply
+    reply=$(/usr/bin/osascript -l JavaScript "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/ab_quit_application.js" "$pid" 2>&1)
+    ab_log "  Quit request for process $pid: ${reply:-no reply}"
+    local waited=0
+    while kill -0 "$pid" 2>/dev/null; do
+        if [ "$waited" -ge $((seconds * 2)) ]; then
+            return 1
+        fi
+        /bin/sleep 0.5
+        waited=$((waited + 1))
+    done
+    return 0
+}
+
 # Run the applet's omctest suite. Returns non-zero when the suite fails or when
 # it was asked for and there is nothing to run.
 applet_run_tests() {

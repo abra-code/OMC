@@ -366,10 +366,31 @@ _omcitest_executable() { # <App.app>
     printf '%s\n' "$1/Contents/MacOS/$_name"
 }
 
+_omcitest_unset_matching() { # <ere-matching-the-whole-name>
+    local _pattern="$1" _name
+    for _name in $(/usr/bin/env | LC_ALL=C /usr/bin/sed -nE "s/^($_pattern)=.*/\\1/p"); do
+        unset "$_name"
+    done
+}
+
+# What an OMC host exports to its handlers, taken out of this file's shell and so out of the
+# applet's environment. Run from AppletBuilder's Integration Test button, the runner is itself an
+# AppletBuilder handler: the engine passes its own environment on to everything a handler starts,
+# so the applet under test, and every handler it runs, would see AppletBuilder's control values,
+# trigger, bundle path and window bridge wherever its own engine sets nothing. An applet started
+# from the Finder has none of them. In a terminal there is nothing to remove. The Python variables
+# stay in this shell: the harness's own Python needs PYTHONPYCACHEPREFIX (lib.common.sh) to keep
+# its byte code out of AppletBuilder's bundle, and omcitest_launch keeps PYTHONPATH from the
+# applet only.
+_omcitest_unset_host_environment() {
+    _omcitest_unset_matching 'OMC_[A-Za-z0-9_]*|ACTIONUI_[A-Za-z0-9_]*'
+}
+
 # Launches <App.app> for a test. Sets ITEST_WORK, OMCITEST_PID, OMCITEST_SOCKET and
 # OMCITEST_TOKEN_FILE. Returns 1, with the reason on stderr, when the applet does not come up.
 omcitest_launch() { # <App.app>
     local _app="$1"
+    _omcitest_unset_host_environment
     local _exe
     _exe="$(_omcitest_executable "$_app")"
     if [ -z "$_exe" ] || [ ! -x "$_exe" ]; then
@@ -435,7 +456,11 @@ omcitest_launch() { # <App.app>
     # The token goes to the applet on descriptor 3, never in its environment.
     # The harness's own variables stay out of the applet and its handlers; ITEST_WORK goes in, so a
     # handler can leave files there for the test to check.
+    # Nor a host's PYTHONPATH (see _omcitest_unset_host_environment): an applet with its own Python
+    # puts its Packages in front of the one it inherits, so AppletBuilder's would follow them. The
+    # byte-code cache prefix does go in: it keeps the applet's caches out of its bundle.
     /usr/bin/env -u OMCITEST_TOKEN_FILE -u OMCITEST_SOCKET -u OMCITEST_RESULTS -u OMCITEST_RPC -u OMCITEST_PYTHON \
+        -u PYTHONPATH \
         OMC_TEST_BRIDGE_PATH="$OMCITEST_SOCKET" OMC_TEST_TOKEN_FD=3 OMC_TEST_PASTEBOARD_PREFIX="$ITEST_PASTEBOARD_PREFIX" \
         OMC_TEST_SUPPORT_PATH="$_work/support" OMCTEST_UI="$OMCTEST_UI" HOME="$ITEST_HOME" TMPDIR="$ITEST_TMPDIR" \
         "$_exe" 3< "$OMCITEST_TOKEN_FILE" > "$_work/applet.log" 2>&1 &
