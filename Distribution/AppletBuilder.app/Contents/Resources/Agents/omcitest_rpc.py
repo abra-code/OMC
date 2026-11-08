@@ -14,7 +14,7 @@ Commands (results on stdout, problems on stderr):
     run <commandID> [--text T] [--file PATH]... [--key-window] [--open-panel] [--window UUID]
                                           omc.test.runCommand; prints the run number (--window:
                                           as that window's subcommand, as its menu item would)
-    answer save <path> | answer open <path>... | answer cancel
+    answer save <path> | answer open <path>... | answer cancel | answer alert <default|alternate|other>
                                           omc.test.answer: queues the next panel's answer;
                                           prints how many answers are waiting
     panels [--clear]                      omc.test.panels' records, as JSON
@@ -273,8 +273,9 @@ def main(argv):
                 params["window"] = window
             print(client.call("omc.test.runCommand", params)["run"])
         elif command == "answer":
+            usage = "omcitest_rpc: answer needs save <path>, open <path>..., cancel or alert <button>"
             if not args:
-                raise SystemExit("omcitest_rpc: answer needs save <path>, open <path>... or cancel")
+                raise SystemExit(usage)
             kind, paths = args[0], args[1:]
             if kind == "save" and len(paths) == 1:
                 params = {"kind": "save", "path": paths[0]}
@@ -282,8 +283,10 @@ def main(argv):
                 params = {"kind": "open", "paths": paths}
             elif kind == "cancel" and not paths:
                 params = {"kind": "cancel"}
+            elif kind == "alert" and len(paths) == 1 and paths[0] in ("default", "alternate", "other"):
+                params = {"kind": "alert", "button": paths[0]}
             else:
-                raise SystemExit("omcitest_rpc: answer needs save <path>, open <path>... or cancel")
+                raise SystemExit(usage)
             print(client.call("omc.test.answer", params)["pending"])
         elif command == "panels":
             clear = take_option(args, "--clear", flag=True)

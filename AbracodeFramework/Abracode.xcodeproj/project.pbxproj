@@ -57,6 +57,8 @@
 		1D0A1B2C2F73000000000102 /* OMCFilePanels.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1D0A1B2C2F73000000000101 /* OMCFilePanels.cpp */; };
 		1D0A1B2C2F75000000000102 /* OMCActionUIModelLifetime.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1D0A1B2C2F75000000000101 /* OMCActionUIModelLifetime.cpp */; };
 		1D0A1B2C2F75000000000106 /* OMCActionUIModels.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1D0A1B2C2F75000000000105 /* OMCActionUIModels.mm */; };
+		1D0A1B2C2F74000000000102 /* OMCAlerts.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1D0A1B2C2F74000000000101 /* OMCAlerts.cpp */; };
+		1D0A1B2C2F74000000000105 /* OMCAlerts.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1D0A1B2C2F74000000000104 /* OMCAlerts.mm */; };
 		1DAB10032FFD0001009FD073 /* OMCActionUIRemoteHost.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1DAB10062FFD0001009FD073 /* OMCActionUIRemoteHost.mm */; };
 		1DAB10042FFD0001009FD073 /* OMCActionUIRemoteHost.h in Headers */ = {isa = PBXBuildFile; fileRef = 1DAB10052FFD0001009FD073 /* OMCActionUIRemoteHost.h */; };
 		1DADB52F232B5857005AD883 /* loco in Copy Support Executables */ = {isa = PBXBuildFile; fileRef = 1DADB52E232B5847005AD883 /* loco */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
@@ -468,6 +470,9 @@
 		1D0A1B2C2F75000000000103 /* OMCActionUIModelLifetime.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCActionUIModelLifetime.h; sourceTree = "<group>"; };
 		1D0A1B2C2F75000000000104 /* OMCActionUIModels.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCActionUIModels.h; sourceTree = "<group>"; };
 		1D0A1B2C2F75000000000105 /* OMCActionUIModels.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCActionUIModels.mm; sourceTree = "<group>"; };
+		1D0A1B2C2F74000000000101 /* OMCAlerts.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCAlerts.cpp; sourceTree = "<group>"; };
+		1D0A1B2C2F74000000000103 /* OMCAlerts.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCAlerts.h; sourceTree = "<group>"; };
+		1D0A1B2C2F74000000000104 /* OMCAlerts.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCAlerts.mm; sourceTree = "<group>"; };
 		1D0A1B2C2F72000000000107 /* OMCEngineActivity.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCEngineActivity.h; sourceTree = "<group>"; };
 		1D0A1B2C2F72000000000108 /* OMCTestPlatform.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCTestPlatform.h; sourceTree = "<group>"; };
 		1D0A1B2C2F72000000000109 /* OMCTestPlatform.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCTestPlatform.mm; sourceTree = "<group>"; };
@@ -908,6 +913,7 @@
 				1D0A1B2C2F72000000000101 /* OMCTestability.h */,
 				1D0A1B2C2F72000000000108 /* OMCTestPlatform.h */,
 				1D0A1B2C2F75000000000104 /* OMCActionUIModels.h */,
+				1D0A1B2C2F74000000000103 /* OMCAlerts.h */,
 				1D0A1B2C2F6A000000000003 /* Apple */,
 			);
 			path = Platform;
@@ -927,6 +933,7 @@
 				1D0A1B2C2F72000000000102 /* OMCTestability.mm */,
 				1D0A1B2C2F72000000000109 /* OMCTestPlatform.mm */,
 				1D0A1B2C2F75000000000105 /* OMCActionUIModels.mm */,
+				1D0A1B2C2F74000000000104 /* OMCAlerts.mm */,
 				1D0A1B2C2F6A000000000001 /* NibDialogs */,
 			);
 			path = Apple;
@@ -1115,6 +1122,7 @@
 				1D0A1B2C2F73000000000101 /* OMCFilePanels.cpp */,
 				1D0A1B2C2F75000000000101 /* OMCActionUIModelLifetime.cpp */,
 				1D0A1B2C2F75000000000103 /* OMCActionUIModelLifetime.h */,
+				1D0A1B2C2F74000000000101 /* OMCAlerts.cpp */,
 				E2E1892D1075BEBC001B7591 /* SelectionIterator.h */,
 				E2FB111E0D185A2C005EB1E8 /* OMC.cpp */,
 				E2FB111D0D185A2C005EB1E8 /* OMC.h */,
@@ -1536,6 +1544,8 @@
 				1D0A1B2C2F73000000000102 /* OMCFilePanels.cpp in Sources */,
 				1D0A1B2C2F75000000000102 /* OMCActionUIModelLifetime.cpp in Sources */,
 				1D0A1B2C2F75000000000106 /* OMCActionUIModels.mm in Sources */,
+				1D0A1B2C2F74000000000102 /* OMCAlerts.cpp in Sources */,
+				1D0A1B2C2F74000000000105 /* OMCAlerts.mm in Sources */,
 				1DED8E572222BD8E00A2CAF7 /* MoreAppleEvents.cp in Sources */,
 				E2ED3BC10D0B293E00481D8F /* ACMPlugin.cp in Sources */,
 				E2FB11200D185A2C005EB1E8 /* OMC.cpp in Sources */,

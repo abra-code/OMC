@@ -83,12 +83,13 @@ std::string sPasteboardPrefix;
 CFObj<CFStringRef> sClipboardName; // "<prefix>.general", what the engine reads as the clipboard
 CFObj<CFStringRef> sSupportPath; // the harness's support folder, handed to handlers as OMC_OMC_SUPPORT_PATH
 
-// A queued omc.test.answer.
-enum class PanelAnswerKind { save, open, cancel };
+// A queued omc.test.answer: for a save or open panel, or for one of the engine's alerts.
+enum class PanelAnswerKind { save, open, cancel, alert };
 struct PanelAnswer
 {
 	PanelAnswerKind		kind {PanelAnswerKind::cancel};
 	CFObj<CFArrayRef>	paths; // CFStrings, absolute: one for save, one or more for open
+	OMCAlertResponse	button {kOMCAlertDefaultResponse}; // for an alert
 };
 
 std::deque<PanelAnswer> sPanelAnswers;
@@ -529,6 +530,8 @@ TakePanelAnswer(bool inIsSave, UInt32 inFlags, CFObj<CFMutableArrayRef> &outURLs
 
 	if(answer.kind == PanelAnswerKind::cancel)
 		return nullptr;
+	if(answer.kind == PanelAnswerKind::alert)
+		return CFSTR("the queued answer is for an alert");
 	if(inIsSave && (answer.kind != PanelAnswerKind::save))
 		return CFSTR("the queued answer is for an open panel");
 	if(!inIsSave && (answer.kind != PanelAnswerKind::open))
@@ -611,6 +614,82 @@ AnswerPanel(bool inIsSave, CFStringRef inClientName, CFStringRef inMessage, CFSt
 	return (CFArrayRef)urls.Detach();
 }
 
+CFStringRef
+AlertButtonName(OMCAlertResponse inButton)
+{
+	switch(inButton)
+	{
+		case kOMCAlertDefaultResponse:		return CFSTR("default");
+		case kOMCAlertAlternateResponse:	return CFSTR("alternate");
+		case kOMCAlertOtherResponse:		return CFSTR("other");
+		default:							return CFSTR("none");
+	}
+}
+
+CFStringRef
+AlertLevelName(OMCAlertLevel inLevel)
+{
+	switch(inLevel)
+	{
+		case kOMCAlertLevelCaution:	return CFSTR("caution");
+		case kOMCAlertLevelNote:	return CFSTR("note");
+		default:					return CFSTR("stop");
+	}
+}
+
+// Records one of the engine's alerts and answers it from the queue. Without a usable answer the
+// alert takes the answer that does nothing: its alternate (Cancel) button when it has one, else its
+// only button; the record says why.
+OMCAlertResponse
+AnswerAlert(OMCAlertLevel inLevel, CFStringRef inHeader, CFStringRef inMessage,
+			CFStringRef inDefaultButton, CFStringRef inAlternateButton, CFStringRef inOtherButton)
+{
+	CFObj<CFMutableDictionaryRef> record( CreateMutableDict() );
+	::CFDictionarySetValue(record, CFSTR("kind"), CFSTR("alert"));
+	::CFDictionarySetValue(record, CFSTR("level"), AlertLevelName(inLevel));
+	SetStringIfAny(record, CFSTR("title"), inHeader);
+	SetStringIfAny(record, CFSTR("message"), inMessage);
+	CFObj<CFMutableArrayRef> buttons( ::CFArrayCreateMutable(kCFAllocatorDefault, 3, &kCFTypeArrayCallBacks) );
+	CFStringRef titles[] = { inDefaultButton, inAlternateButton, inOtherButton };
+	for(CFStringRef title : titles)
+	{
+		if((title != nullptr) && (buttons != nullptr))
+			::CFArrayAppendValue(buttons, title);
+	}
+	if(buttons != nullptr)
+		::CFDictionarySetValue(record, CFSTR("buttons"), buttons);
+
+	OMCAlertResponse safe = (inAlternateButton != nullptr) ? kOMCAlertAlternateResponse : kOMCAlertDefaultResponse;
+	OMCAlertResponse response = safe;
+	CFStringRef problem = nullptr;
+	if(sPanelAnswers.empty())
+	{
+		problem = CFSTR("no answer was queued");
+	}
+	else
+	{
+		PanelAnswer answer = sPanelAnswers.front();
+		sPanelAnswers.pop_front();
+		if(answer.kind != PanelAnswerKind::alert)
+			problem = CFSTR("the queued answer is for a panel");
+		else if((answer.button == kOMCAlertAlternateResponse) && (inAlternateButton == nullptr))
+			problem = CFSTR("the alert has no alternate button");
+		else if((answer.button == kOMCAlertOtherResponse) && (inOtherButton == nullptr))
+			problem = CFSTR("the alert has no other button");
+		else
+			response = answer.button;
+	}
+	::CFDictionarySetValue(record, CFSTR("button"), AlertButtonName(response));
+	SetStringIfAny(record, CFSTR("problem"), problem);
+
+	if(sPanelRecords == nullptr)
+		sPanelRecords.Adopt( ::CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks) );
+	if(sPanelRecords != nullptr)
+		::CFArrayAppendValue(sPanelRecords, record);
+	OMCNoteEngineActivity();
+	return response;
+}
+
 // An array of absolute paths, as CFStrings, from a param; NULL with outProblem set when it is not one.
 CFArrayRef
 CopyAbsolutePaths(CFTypeRef inValue, CFStringRef &outProblem)
@@ -642,7 +721,7 @@ HandleAnswer(CFDictionaryRef inParams)
 {
 	CFStringRef kind = ACFType<CFStringRef>::DynamicCast(::CFDictionaryGetValue(inParams, CFSTR("kind")));
 	if(kind == nullptr)
-		return CreateErrorReply(kInvalidParams, CFSTR("kind: save, open or cancel is required"));
+		return CreateErrorReply(kInvalidParams, CFSTR("kind: save, open, cancel or alert is required"));
 
 	PanelAnswer answer;
 	if(::CFStringCompare(kind, CFSTR("save"), 0) == kCFCompareEqualTo)
@@ -666,11 +745,24 @@ HandleAnswer(CFDictionaryRef inParams)
 	{
 		answer.kind = PanelAnswerKind::cancel;
 	}
+	else if(::CFStringCompare(kind, CFSTR("alert"), 0) == kCFCompareEqualTo)
+	{
+		CFStringRef button = ACFType<CFStringRef>::DynamicCast(::CFDictionaryGetValue(inParams, CFSTR("button")));
+		answer.kind = PanelAnswerKind::alert;
+		if((button != nullptr) && (::CFStringCompare(button, CFSTR("default"), 0) == kCFCompareEqualTo))
+			answer.button = kOMCAlertDefaultResponse;
+		else if((button != nullptr) && (::CFStringCompare(button, CFSTR("alternate"), 0) == kCFCompareEqualTo))
+			answer.button = kOMCAlertAlternateResponse;
+		else if((button != nullptr) && (::CFStringCompare(button, CFSTR("other"), 0) == kCFCompareEqualTo))
+			answer.button = kOMCAlertOtherResponse;
+		else
+			return CreateErrorReply(kInvalidParams, CFSTR("button: default, alternate or other is required for an alert answer"));
+	}
 	else
 	{
-		return CreateErrorReply(kInvalidParams, CFSTR("kind: must be save, open or cancel"));
+		return CreateErrorReply(kInvalidParams, CFSTR("kind: must be save, open, cancel or alert"));
 	}
-	if((answer.kind != PanelAnswerKind::cancel) && (answer.paths == nullptr))
+	if(((answer.kind == PanelAnswerKind::save) || (answer.kind == PanelAnswerKind::open)) && (answer.paths == nullptr))
 		return CreateErrorReply(kHostRefused, CFSTR("the answer could not be stored"));
 
 	sPanelAnswers.push_back(answer);
@@ -1072,4 +1164,32 @@ CFArrayRef
 OMCTestHostAnswerOpenPanel(CFStringRef inClientName, CFStringRef inMessage, CFStringRef inDefaultName, CFStringRef inDefaultDirPath, CFStringRef inIdentifier, CFStringRef inPrompt, CFArrayRef inAllowedContentTypes, UInt32 inFlags)
 {
 	return AnswerPanel(false, inClientName, inMessage, inDefaultName, inDefaultDirPath, inIdentifier, inPrompt, inAllowedContentTypes, inFlags);
+}
+
+OMCAlertResponse
+OMCTestHostAnswerAlert(OMCAlertLevel inLevel, CFStringRef inHeader, CFStringRef inMessage,
+						CFStringRef inDefaultButton, CFStringRef inAlternateButton, CFStringRef inOtherButton)
+{
+	return AnswerAlert(inLevel, inHeader, inMessage, inDefaultButton, inAlternateButton, inOtherButton);
+}
+
+void
+OMCTestHostRecordNotice(CFStringRef inHeader, CFStringRef inMessage, CFStringRef inButton)
+{
+	CFObj<CFMutableDictionaryRef> record( CreateMutableDict() );
+	::CFDictionarySetValue(record, CFSTR("kind"), CFSTR("notice"));
+	SetStringIfAny(record, CFSTR("title"), inHeader);
+	SetStringIfAny(record, CFSTR("message"), inMessage);
+	if(inButton != nullptr)
+	{
+		const void *values[] = { inButton };
+		CFObj<CFArrayRef> buttons( ::CFArrayCreate(kCFAllocatorDefault, values, 1, &kCFTypeArrayCallBacks) );
+		if(buttons != nullptr)
+			::CFDictionarySetValue(record, CFSTR("buttons"), buttons);
+	}
+	if(sPanelRecords == nullptr)
+		sPanelRecords.Adopt( ::CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks) );
+	if(sPanelRecords != nullptr)
+		::CFArrayAppendValue(sPanelRecords, record);
+	OMCNoteEngineActivity();
 }

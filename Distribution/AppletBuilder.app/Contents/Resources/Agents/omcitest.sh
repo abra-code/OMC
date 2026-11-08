@@ -37,11 +37,21 @@
 #   itest_answer_cancel                    cancel the next panel
 #                                          (a panel with no answer queued is canceled too; every
 #                                          panel is recorded, answered or not)
-#   itest_panel_count                      how many save and open panels the applet asked for
-#   itest_panel <index|last> <field>       a field of that panel's record: kind, title, message,
-#                                          prompt, defaultName, defaultDirectory, identifier,
-#                                          allowedContentTypes, canChooseFiles, canChooseDirectories,
-#                                          allowsMultiple, paths, canceled, problem
+#   itest_answer_alert <default|alternate|other>
+#                                          answers the next of the engine's own alerts (a command's
+#                                          WARNING confirmation, a version warning, an error alert)
+#                                          with that button; it shares the panels' queue, in order.
+#                                          An alert with no usable answer takes its alternate
+#                                          (Cancel) button, or its only one. Not the alert tool a
+#                                          handler runs: answer that with alert_answer
+#   itest_panel_count                      how many panels, engine alerts and END_NOTIFICATION
+#                                          notices the applet showed
+#   itest_panel <index|last> <field>       a field of that record: kind (save, open, alert, notice),
+#                                          title, message, prompt, defaultName, defaultDirectory,
+#                                          identifier, allowedContentTypes, canChooseFiles,
+#                                          canChooseDirectories, allowsMultiple, paths, canceled,
+#                                          problem; for an alert or notice also level, buttons and
+#                                          button (the one that answered)
 #   itest_panels_clear                     forget the panel records and any answers not yet taken
 #   itest_pasteboard [name]                the text on the run's own pasteboard <name> (default
 #                                          general): what a handler's pasteboard tool, or the
@@ -157,6 +167,10 @@ itest_answer_open() { # <path>...
 
 itest_answer_cancel() {
     _omcitest_rpc answer cancel > /dev/null
+}
+
+itest_answer_alert() { # <default|alternate|other>
+    _omcitest_rpc answer alert "$1" > /dev/null
 }
 
 itest_panel_count() {

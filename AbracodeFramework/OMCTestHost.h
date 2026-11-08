@@ -74,6 +74,14 @@
 //                         does not exist) cancels the panel and is reported in its record. The
 //                         panel's allowed content types are recorded but not checked against the
 //                         answer. pending: answers not yet taken.
+//                         {kind: "alert", button: "default" | "alternate" | "other"} answers the
+//                         next of the engine's own alerts instead (Platform/OMCAlerts.h: a
+//                         command's WARNING confirmation, the version warnings, error alerts), from
+//                         the same queue, so a command that asks and then shows a panel takes its
+//                         answers in that order. An alert without a usable answer (none queued, an
+//                         answer for a panel, a button it does not have) takes its alternate button
+//                         when it has one, else its only button, and its record says why; a panel
+//                         that meets an alert answer is canceled.
 //    omc.test.panels      {clear?} -> {panels: [{kind, title, message, prompt, defaultName,
 //                         defaultDirectory, identifier, allowedContentTypes, canChooseFiles,
 //                         canChooseDirectories, allowsMultiple, paths, canceled, problem}], pending}
@@ -81,7 +89,12 @@
 //                         paths when it was given an answer, canceled true otherwise; problem says
 //                         why an answer was refused, or "no answer was queued". Fields the panel
 //                         did not set are left out. clear true forgets the records and drops the
-//                         answers not yet taken, after this reply is made.
+//                         answers not yet taken, after this reply is made. An alert's record is
+//                         {kind: "alert", level (stop, caution, note), title, message, buttons (in
+//                         order: default, alternate, other), button (the one that answered:
+//                         default, alternate or other), problem}. A notice's (END_NOTIFICATION,
+//                         which does not wait for its button and takes no answer) is {kind:
+//                         "notice", title, message, buttons}.
 //    omc.test.log         {run?} -> {runs: [{run, commandID, started, finished, status, canceled,
 //                         dispatchedToWindow, output}]}
 //                         What each runCommand run did: status is the start's OSStatus; output is
@@ -116,6 +129,7 @@
 
 #pragma once
 #include <CoreFoundation/CoreFoundation.h>
+#include "OMCAlerts.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -145,6 +159,16 @@ void OMCTestHostNoteSkippedPaste(void);
 // URL(s), retained, or NULL for canceled. Call only when OMCTestHostIsActive().
 CFURLRef OMCTestHostAnswerSavePanel(CFStringRef inClientName, CFStringRef inMessage, CFStringRef inDefaultName, CFStringRef inDefaultDirPath, CFStringRef inIdentifier, CFStringRef inPrompt, CFArrayRef inAllowedContentTypes, UInt32 inFlags);
 CFArrayRef OMCTestHostAnswerOpenPanel(CFStringRef inClientName, CFStringRef inMessage, CFStringRef inDefaultName, CFStringRef inDefaultDirPath, CFStringRef inIdentifier, CFStringRef inPrompt, CFArrayRef inAllowedContentTypes, UInt32 inFlags);
+
+// One of the engine's own alerts in a test launch (OMCAlerts.cpp): records it with the panels and
+// answers it from the same queue instead of showing it. Same arguments and result as
+// Platform/OMCAlerts.h. Call only when OMCTestHostIsActive().
+OMCAlertResponse OMCTestHostAnswerAlert(OMCAlertLevel inLevel, CFStringRef inHeader, CFStringRef inMessage,
+										CFStringRef inDefaultButton, CFStringRef inAlternateButton, CFStringRef inOtherButton);
+
+// The END_NOTIFICATION notice in a test launch (OMCAlerts.cpp): recorded with the panels, not shown.
+// It takes no answer. Call only when OMCTestHostIsActive().
+void OMCTestHostRecordNotice(CFStringRef inHeader, CFStringRef inMessage, CFStringRef inButton);
 
 #ifdef __cplusplus
 }

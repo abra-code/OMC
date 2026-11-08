@@ -21,6 +21,7 @@
 #include "DefaultExternBundle.h"
 
 #include "OnMyCommand.h"
+#include "OMCAlerts.h"
 #include "CommandRuntimeData.h"
 #include "OMCDialog.h"
 #include "OMCMainThreadSignal.h"
@@ -579,15 +580,8 @@ OmcHostTaskManager::ShowEndNotification()
 	double autoTimeout = 0.0;//no timeout
 //	params.GetValue( CFSTR("AUTO_CLOSE_TIMEOUT"), autoTimeout );
 
-	/*SInt32 success = */(void)::CFUserNotificationDisplayNotice(
-						   autoTimeout,
-						   kCFUserNotificationNoteAlertLevel, //kCFUserNotificationPlainAlertLevel, //CFOptionFlags flags,
-						   iconURL,
-						   NULL, //CFURLRef soundURL,
-						   NULL, //CFURLRef localizationURL,
-						   titleStr,
-						   messageStr, //CFStringRef alertMessage,
-						   CFSTR("OK") ); //CFSTR("Roger") CFStringRef defaultButtonTitle
+	(void)autoTimeout;
+	OMCShowNotice(titleStr, messageStr, CFSTR("OK"), iconURL);
 }
 
 //static

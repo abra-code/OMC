@@ -9,6 +9,7 @@
 #include "OnMyCommand.h"
 #include "CommandRuntimeData.h"
 #include "OMCNavigationDialogs.h"
+#include "OMCAlerts.h"
 #include "CMUtils.h"
 #include "CFObj.h"
 #include "StAEDesc.h"
@@ -1441,24 +1442,8 @@ OnMyCommandCM::DisplayWarning(CommandDescription &currCommand, CommandRuntimeDat
 	if(dynamicCommandName == NULL)
 		dynamicCommandName.Adopt(CFSTR("Warning"), kCFObjRetain);
 
-	CFOptionFlags responseFlags = 0;
-	/*SInt32 isSuccessfull = */(void)CFUserNotificationDisplayAlert (
-										0.0, //timeout
-										kCFUserNotificationCautionAlertLevel,
-										NULL, //iconURL
-										NULL, //soundURL
-										NULL, //localizationURL
-										dynamicCommandName, //alertHeader
-										warningStr,
-										warningExecuteStr,
-										warningCancelStr,
-										NULL, //otherButtonTitle,
-										&responseFlags );
-	
-	if( (responseFlags & 0x03) == kCFUserNotificationDefaultResponse )//OK button
-		return true;
-
-	return false;
+	// the Execute button runs the command; anything else, including an alert that could not be shown, does not
+	return (OMCShowAlert(kOMCAlertLevelCaution, dynamicCommandName, warningStr, warningExecuteStr, warningCancelStr, NULL) == kOMCAlertDefaultResponse);
 }
 
 Boolean
@@ -1483,28 +1468,12 @@ DisplayVersionWarning(CFBundleRef inBundleRef, CFStringRef dynamicCommandName, C
 	if(dynamicCommandName == NULL)
 		dynamicCommandName = CFSTR("Version Warning");
 	
-	CFOptionFlags responseFlags = 0;
-	/*SInt32 isSuccessfull = */(void)CFUserNotificationDisplayAlert (
-										0.0, //timeout
-										kCFUserNotificationCautionAlertLevel,
-										NULL, //iconURL
-										NULL, //soundURL
-										NULL, //localizationURL
-										dynamicCommandName, //alertHeader
-										warningText,
-										tryButtName,
-										cancelButtName,
-										NULL, //otherButtonTitle,
-										&responseFlags );
-	
-	if( (responseFlags & 0x03) == kCFUserNotificationDefaultResponse )// Execute/Go button
-		return true;
-
-	return false;
+	// Try Anyway runs the command; anything else, including an alert that could not be shown, does not
+	return (OMCShowAlert(kOMCAlertLevelCaution, dynamicCommandName, warningText, tryButtName, cancelButtName, NULL) == kOMCAlertDefaultResponse);
 }
 
 Boolean
-DisplayAlert(CFBundleRef inBundleRef, CFStringRef dynamicCommandName, CFStringRef inAlertString, CFOptionFlags inAlertLevel /*= kCFUserNotificationStopAlertLevel*/ )
+DisplayAlert(CFBundleRef inBundleRef, CFStringRef dynamicCommandName, CFStringRef inAlertString)
 {
 	CFObj<CFStringRef> alertString( ::CFCopyLocalizedStringFromTableInBundle( inAlertString, CFSTR("Private"), inBundleRef, "") );
 	CFObj<CFStringRef> defaultButtName( ::CFCopyLocalizedStringFromTableInBundle( CFSTR("OK"), CFSTR("Private"), inBundleRef, "") );
@@ -1512,24 +1481,7 @@ DisplayAlert(CFBundleRef inBundleRef, CFStringRef dynamicCommandName, CFStringRe
 	if(dynamicCommandName == NULL)
 		dynamicCommandName = CFSTR("Error");
 
-	CFOptionFlags responseFlags = 0;
-	/*SInt32 isSuccessfull = */(void)CFUserNotificationDisplayAlert (
-										0.0, //timeout
-										inAlertLevel,
-										NULL, //iconURL
-										NULL, //soundURL
-										NULL, //localizationURL
-										dynamicCommandName, //alertHeader
-										alertString,
-										defaultButtName,
-										NULL,
-										NULL, //otherButtonTitle,
-										&responseFlags );
-
-	if( (responseFlags & 0x03) == kCFUserNotificationDefaultResponse )// Execute/Go button
-		return true;
-
-	return false;
+	return (OMCShowAlert(kOMCAlertLevelStop, dynamicCommandName, alertString, defaultButtName, NULL, NULL) == kOMCAlertDefaultResponse);
 }
 
 
