@@ -251,6 +251,16 @@ itest_click "$window" "$SYMBOLS_TAB_ID" > /dev/null
 itest_wait_idle 60
 ```
 
+**Selecting a table row.** A table's handler reads the selected row (`OMC_ACTIONUI_TABLE_<id>_COLUMN_<n>_VALUE`). Select the row over the bridge, which fires nothing, then click the table, which fires its `actionID` with that row:
+
+```bash
+itest_call actionui.selectRow "{\"window\": \"$window\", \"viewID\": $TABLE_ID, \"index\": 0}" > /dev/null
+itest_click "$window" "$TABLE_ID" > /dev/null
+itest_wait_idle 60
+```
+
+Do not set a table's value to select a row: that replaces its rows.
+
 **Reading JSON.** `actionui.getProperty` and `getRows` answer with JSON as Python prints it: `["x86_64", "arm64"]`, with a space after each comma. Compare with `check_contains` on one element, or strip the spaces (`| /usr/bin/tr -d ' '`).
 
 **Per-window state.** Applets keep a window's state in `$TMPDIR/<app>-state-<window-uuid>`. Under test that is `$ITEST_TMPDIR/...`, and the uuid is the one `itest_windows` prints. Check that the folder exists before asserting that closing removed it, or a wrong path passes forever.
