@@ -12,6 +12,8 @@
 //    Picker, Toggle, Slider, TextField edits, row selection). The main-queue case is the one a naive
 //    port deadlocks on: a nested run loop inside a main-queue block runs no other main-queue work.
 //  - Output larger than a pipe buffer arrives whole and in order (standard input: OMCStandardInputTests).
+//  - A multi-byte character cut between two pieces of output arrives whole (added in 5.6: this was
+//    a shipped bug, not today's behavior).
 //  - A PROGRESS window with DELAY appears only when the command outlasts the delay.
 //
 
@@ -240,6 +242,60 @@ static NSString *ExpectedSequence(NSInteger count)
 - (void)testVeryLargeOutputArrivesWholeAndInOrderWithWait
 {
     [self checkOutputOfLines:600000 wait:YES label:@"huge" busyMainThread:0];
+}
+
+#pragma mark - Characters cut between pieces of output
+
+// Observers get the output in pieces (kOutputDeliveryPieceSize, 512 bytes, in OmcExecutor.cp) and
+// make each into a string from UTF-8. A piece that ended inside a multi-byte character was not valid
+// UTF-8, so the string was NULL and the observers dropped the whole piece (every release through 5.5).
+
+/// Runs a script whose output is the given bytes, written as printf octal escapes, and checks that
+/// the observer gets exactly the expected text.
+- (void)checkOutputOfScript:(NSString *)script expected:(NSString *)expected label:(NSString *)label
+{
+    NSString *commandID = [NSString stringWithFormat:@"utf8_%@", label];
+    NSString *bundleName = [NSString stringWithFormat:@"RunLoopOutput_%@", commandID];
+    NSURL *bundleURL = [self bundleNamed:bundleName commandID:commandID script:script wait:NO extraKeys:nil];
+
+    OMCTestExecutionObserver *observer = [OMCTestExecutionObserver new];
+    XCTAssertEqual([self runCommand:commandID inBundle:bundleURL observer:observer], noErr);
+    XCTAssertTrue([observer waitForCompletionWithTimeout:kRunLoopTestTimeout]);
+
+    NSString *output = observer.capturedOutput;
+    XCTAssertEqual(output.length, expected.length, @"All of the output should arrive (%@)", label);
+    XCTAssertTrue([output isEqualToString:expected], @"The output should arrive unchanged (%@)", label);
+}
+
+static NSString *Run(NSString *letter, NSUInteger count)
+{
+    return [@"" stringByPaddingToLength:count withString:letter startingAtIndex:0];
+}
+
+/// One write, so one read and one delivery: a 2-byte, a 3-byte and a 4-byte character each
+/// straddle the end of a piece. A cut piece is shorter, so the next piece starts earlier: pieces
+/// 0-511 (cut to 0-510, before the 2-byte character at 511-512), 511-1022 (cut to 511-1020, before
+/// the 3-byte character at 1021-1023) and 1021-1532 (cut to 1021-1529, before the 4-byte character
+/// at 1530-1533).
+- (void)testCharactersAcrossPieceBoundariesArriveWhole
+{
+    NSString *text = [NSString stringWithFormat:@"%@\u00E9%@\u20AC%@\U0001F600 end\n", Run(@"a", 511), Run(@"b", 508), Run(@"c", 506)];
+    NSString *script = [NSString stringWithFormat:@"#!/bin/sh\n/usr/bin/printf '%@\\303\\251%@\\342\\202\\254%@\\360\\237\\230\\200 end\\n'\n", Run(@"a", 511), Run(@"b", 508), Run(@"c", 506)];
+    [self checkOutputOfScript:script expected:text label:@"pieces"];
+}
+
+/// Two writes with a pause between them, so two deliveries: the character is cut between them.
+- (void)testCharacterAcrossDeliveriesArrivesWhole
+{
+    NSString *script = @"#!/bin/sh\n/usr/bin/printf 'start \\342\\202'\n/bin/sleep 0.5\n/usr/bin/printf '\\254 end\\n'\n";
+    [self checkOutputOfScript:script expected:@"start \u20AC end\n" label:@"deliveries"];
+}
+
+/// Output that ends with an incomplete character: the text before it still arrives.
+- (void)testTextBeforeAnIncompleteLastCharacterArrives
+{
+    NSString *script = @"#!/bin/sh\n/usr/bin/printf 'complete text\\342\\202'\n";
+    [self checkOutputOfScript:script expected:@"complete text" label:@"incomplete_end"];
 }
 
 #pragma mark - Dialog messages before the next command

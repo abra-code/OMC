@@ -244,6 +244,7 @@ struct POpenIO
 	// main thread only
 	POpenExecutor *		executor {nullptr};			// nullptr once the executor has finished
 	bool				delivering {false};
+	std::string			heldIncompleteCharacter;	// taken from pendingOutput, not delivered yet: the start of a character whose other bytes are not read yet
 
 	// set before the sources start, then read-only
 	pid_t				pid {-1};
@@ -284,6 +285,37 @@ static const size_t kOutputDeliveryPieceSize = 512;
 static const size_t kMaxDeliveryPerPass = 64 * 1024;
 
 typedef std::shared_ptr<POpenIO> POpenIOHandle;
+
+// The length of inData without a trailing incomplete UTF-8 character: a lead byte followed by fewer
+// continuation bytes than it announces. Observers make each piece into a string from UTF-8, which
+// fails for a piece that ends inside a character, and they drop that piece. Bytes that are not UTF-8
+// at all are left as they are.
+static size_t LengthWithoutIncompleteUTF8Tail(const char *inData, size_t inLength)
+{
+	size_t continuationCount = 0;
+	while( (continuationCount < 3) && (continuationCount < inLength) )
+	{
+		unsigned char oneByte = (unsigned char)inData[inLength - 1 - continuationCount];
+		if( (oneByte & 0xC0) == 0x80 )
+		{
+			continuationCount++;
+			continue;
+		}
+
+		size_t characterLength = 1;
+		if( (oneByte & 0xE0) == 0xC0 )
+			characterLength = 2;
+		else if( (oneByte & 0xF0) == 0xE0 )
+			characterLength = 3;
+		else if( (oneByte & 0xF8) == 0xF0 )
+			characterLength = 4;
+
+		if(characterLength > continuationCount + 1)
+			return inLength - continuationCount - 1;
+		return inLength;
+	}
+	return inLength;
+}
 
 // Called with io->lock held, from either thread. Asks the main thread for a delivery, once until it runs.
 static void ScheduleDelivery(const POpenIOHandle &io)
@@ -338,8 +370,30 @@ static void DeliverPendingOutput(const POpenIOHandle &io)
 	if(resume)
 		dispatch_resume(io->readSource);
 
-	for(size_t offset = 0; (offset < output.size()) && (io->executor != nullptr); offset += kOutputDeliveryPieceSize)
-		io->executor->ProcessOutputData( output.data() + offset, std::min(kOutputDeliveryPieceSize, output.size() - offset) );
+	// A character cut by a read, or by the kMaxDeliveryPerPass limit, waits for its other bytes.
+	// After the end, an incomplete last character is delivered as it is, in a piece of its own.
+	if( !io->heldIncompleteCharacter.empty() )
+	{
+		output.insert(0, io->heldIncompleteCharacter);
+		io->heldIncompleteCharacter.clear();
+	}
+	if(!ended)
+	{
+		size_t completeLength = LengthWithoutIncompleteUTF8Tail(output.data(), output.size());
+		io->heldIncompleteCharacter.assign(output, completeLength, std::string::npos);
+		output.resize(completeLength);
+	}
+
+	size_t offset = 0;
+	while( (offset < output.size()) && (io->executor != nullptr) )
+	{
+		size_t pieceLength = std::min(kOutputDeliveryPieceSize, output.size() - offset);
+		size_t completeLength = LengthWithoutIncompleteUTF8Tail(output.data() + offset, pieceLength);
+		if(completeLength > 0) // 0 only for an incomplete last character after the end, delivered as it is
+			pieceLength = completeLength;
+		io->executor->ProcessOutputData(output.data() + offset, pieceLength);
+		offset += pieceLength;
+	}
 
 	if(io->executor != nullptr)
 	{
