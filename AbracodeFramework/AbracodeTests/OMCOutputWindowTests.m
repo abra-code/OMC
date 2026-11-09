@@ -365,6 +365,16 @@ static void AssertColor(OMCOutputWindowTests *test, NSColor *color, CGFloat red,
     AssertColor(self, [self outputWindowBackground:window], 0, 0, 1, @"BACKGROUND_COLOR");
 }
 
+/// A color may start with #, as the command reference's examples write it (5.5 ignored such a color).
+- (void)testColorsWithAHash
+{
+    NSMutableDictionary *settings = [@{@"TEXT_COLOR": @"#00FF00", @"BACKGROUND_COLOR": @"#000000"} mutableCopy];
+    NSWindow *window = [self runScript:@"#!/bin/sh\necho hashed\n" label:@"hash" settings:settings];
+    XCTAssertNotNil(window);
+    AssertColor(self, [self textViewOfWindow:window].textColor, 0, 1, 0, @"TEXT_COLOR with #");
+    AssertColor(self, [self outputWindowBackground:window], 0, 0, 0, @"BACKGROUND_COLOR with #");
+}
+
 #pragma mark - Closing by itself
 
 /// Without AUTO_CLOSE_TIMEOUT the window stays open after the command ends.

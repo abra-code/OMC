@@ -385,11 +385,17 @@ OutputWindowHandler::GetOutputWindowSettings(CFArrayRef inCommandName,
 CFStringRef
 OutputWindowHandler::CreateColorString(CFStringRef inHexDigits)
 {
-	if( (inHexDigits == nullptr) || (CFStringGetLength(inHexDigits) != 6) )
+	if(inHexDigits == nullptr)
+		return nullptr;
+	CFIndex length = CFStringGetLength(inHexDigits);
+	CFIndex start = 0;
+	if( (length == 7) && (CFStringGetCharacterAtIndex(inHexDigits, 0) == '#') )
+		start = 1; // the docs' examples and the verifier allow a leading #
+	if( (length - start) != 6 )
 		return nullptr;
 
 	UniChar hexChars[6] = {0, 0, 0, 0, 0, 0};
-	CFStringGetCharacters(inHexDigits, CFRangeMake(0, 6), hexChars);
+	CFStringGetCharacters(inHexDigits, CFRangeMake(start, 6), hexChars);
 	for(UniChar oneChar : hexChars)
 	{
 		bool isHexDigit = ((oneChar >= '0') && (oneChar <= '9')) ||
@@ -398,5 +404,6 @@ OutputWindowHandler::CreateColorString(CFStringRef inHexDigits)
 		if(!isHexDigit)
 			return nullptr;
 	}
-	return CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("#%@"), inHexDigits);
+	return CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("#%C%C%C%C%C%C"),
+									hexChars[0], hexChars[1], hexChars[2], hexChars[3], hexChars[4], hexChars[5]);
 }

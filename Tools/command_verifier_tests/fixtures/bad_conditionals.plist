@@ -16,11 +16,14 @@
       <dict>
         <key>WINDOW_TYPE</key>
         <string>regular</string>
-        <key>WINDOW_ALPHA</key>
-        <real>1.5</real>
+        <!-- TEXT_SIZE out of range -->
+        <key>TEXT_SIZE</key>
+        <integer>0</integer>
         <key>TEXT_COLOR</key>
         <string>not-a-color</string>
-        <!-- CUSTOM_* without WINDOW_TYPE=custom -> no effect -->
+        <!-- removed in OMC 5.6 -> removed and ignored -->
+        <key>WINDOW_ALPHA</key>
+        <real>0.9</real>
         <key>CUSTOM_TEXTBOX_WIDTH</key>
         <integer>300</integer>
         <!-- FRACT_* without WINDOW_POSITION=absolute -> no effect -->

@@ -963,32 +963,22 @@ The window shows the command's **standard output only**; standard error is not c
 | Key | Type | Default | Description & Best Practices | Example |
 |-----|------|---------|------------------------------|---------|
 | `WINDOW_TITLE` | String or Array<String> | Command `NAME` | Window title. Use array for dynamic content. | `["Result: ", __OBJ_NAME__]` |
-| `WINDOW_TYPE` | String | `"floating"` | Window behavior: `"regular"` (standard), `"floating"` (app-top), `"global_floating"` (always-top), `"custom"` (PNG-shaped). | `"custom"` |
-| `WINDOW_POSITION` | String | `"alert"` | Positioning: `"absolute"` (fixed coords), `"alert"` (alert-like), `"center"` (screen center), `"cascade"` (stacked). | `"center"` |
-| `WINDOW_WIDTH` | Integer | `400` | Window width in points. | `600` |
-| `WINDOW_HEIGHT` | Integer | `200` | Window height in points. | `400` |
-| `FRACT_POSITION_LEFT` | Real | `0.5` | Left fraction of screen (0.0=left, 1.0=right). Requires `WINDOW_POSITION="absolute"`. | `0.1` (left side) |
-| `FRACT_POSITION_TOP` | Real | `0.5` | Top fraction of screen (0.0=top, 1.0=bottom). Requires `WINDOW_POSITION="absolute"`. | `0.9` (bottom) |
+| `WINDOW_TYPE` | String | `"floating"` | Window behavior: `"regular"` (standard window), `"floating"` (a utility panel above the app's windows, hidden while the app is not active), `"global_floating"` (a utility panel above all windows, shown also while the app is not active; the default in a process that is not a regular app). `"custom"` is read as `"floating"` since 5.6. | `"regular"` |
+| `WINDOW_POSITION` | String | `"alert"` | Positioning: `"absolute"` (fixed coords), `"alert"` (alert-like), `"center"` (screen center), `"cascade"` (stacked). macOS only: on Linux the desktop places windows. | `"center"` |
+| `WINDOW_WIDTH` | Integer | `400` | Width of the text area in points. | `600` |
+| `WINDOW_HEIGHT` | Integer | `200` | Height of the text area in points. | `400` |
+| `FRACT_POSITION_LEFT` | Real | None | Places the window's middle at this fraction of the screen width (0.0=left, 1.0=right) instead of `ABSOLUTE_POSITION_LEFT`. Requires `WINDOW_POSITION="absolute"`. | `0.1` (left side) |
+| `FRACT_POSITION_TOP` | Real | None | Places the window's middle at this fraction of the screen height (0.0=top, 1.0=bottom) instead of `ABSOLUTE_POSITION_TOP`. Requires `WINDOW_POSITION="absolute"`. | `0.9` (bottom) |
 | `ABSOLUTE_POSITION_TOP` | Integer | `50` | Absolute top position (points; for `"absolute"`). | `100` |
 | `ABSOLUTE_POSITION_LEFT` | Integer | `50` | Absolute left position (points; for `"absolute"`). | `100` |
-| `WINDOW_ALPHA` | Real | `1.0` | Transparency (0.0=transparent, 1.0=opaque). | `0.95` |
-| `TEXT_FONT` | String | `"Monaco"` | Font family. | `"Menlo-Regular"` |
-| `TEXT_SIZE` | Integer | `10` | Font size in points. | `12` |
-| `TEXT_COLOR` | String | `"000000"` | Text color (6-hex RRGGBB). | `"#002B36"` |
-| `BACKGROUND_COLOR` | String | `"FFFFFF"` | Background color (6-hex RRGGBB). | `"#FDF6E3"` |
-| `CUSTOM_WINDOW_PNG_IMAGE` | String | None | PNG path for `WINDOW_TYPE="custom"` (defines shape/background). | `"custom.png"` |
-| `CUSTOM_TEXTBOX_POSITION_TOP` | Integer | `0` | Text area top offset (custom only). | `20` |
-| `CUSTOM_TEXTBOX_POSITION_LEFT` | Integer | `0` | Text area left offset (custom only). | `20` |
-| `CUSTOM_TEXTBOX_WIDTH` | Integer | Window width | Text area width (custom only). | `300` |
-| `CUSTOM_TEXTBOX_HEIGHT` | Integer | Window height | Text area height (custom only). | `200` |
-| `CUSTOM_CLOSEBOX_POSITION_TOP` | Integer | `0` | Close area top (custom only). | `5` |
-| `CUSTOM_CLOSEBOX_POSITION_LEFT` | Integer | `0` | Close area left (custom only). | `5` |
-| `CUSTOM_CLOSEBOX_WIDTH` | Integer | Window width | Close area width (custom only). | `20` |
-| `CUSTOM_CLOSEBOX_HEIGHT` | Integer | Window height | Close area height (custom only). | `20` |
-| `WINDOW_OPEN_FADE_IN` | Boolean | `false` | Fade in on open. | `<true/>` |
-| `WINDOW_CLOSE_FADE_OUT` | Boolean | `false` | Fade out on close. | `<true/>` |
-| `AUTO_CLOSE_TIMEOUT` | Real | `0` (no auto-close) | Auto-close delay (seconds; post-v1.7). | `5.0` |
-| `AUTO_CLOSE_ON_SUCCESS_ONLY` | Boolean | `false` | Auto-close only on success (exit 0). | `<true/>` |
+| `TEXT_FONT` | String | `"Monaco"` | Font name. Where the font is missing, the monospaced system font is used. | `"Menlo-Regular"` |
+| `TEXT_SIZE` | Integer | `12` | Font size in points. | `14` |
+| `TEXT_COLOR` | String | System text color | Text color: 6 hex digits RRGGBB, with or without a leading `#`. Without it the text follows the system's light or dark appearance. | `"#002B36"` |
+| `BACKGROUND_COLOR` | String | System text background | Background color: 6 hex digits RRGGBB, with or without a leading `#`. Without it the background follows the system's light or dark appearance. | `"#FDF6E3"` |
+| `AUTO_CLOSE_TIMEOUT` | Real | None (stays open) | Closes the window this many seconds after the command ends; `0` closes it at once. | `5.0` |
+| `AUTO_CLOSE_ON_SUCCESS_ONLY` | Boolean | `true` | With `AUTO_CLOSE_TIMEOUT`: close only after a command that succeeded, so a failed command's output stays visible. `false` closes after a failure too. | `<false/>` |
+
+> **Removed in OMC 5.6**: the output window is a built-in ActionUI document, and these keys are ignored (the verifier warns): `WINDOW_ALPHA` (transparency), `WINDOW_OPEN_FADE_IN`, `WINDOW_CLOSE_FADE_OUT`, `CUSTOM_WINDOW_PNG_IMAGE` and every `CUSTOM_TEXTBOX_*`, `CUSTOM_CLOSEBOX_*` and `CUSTOM_RESIZEBOX_*` key (custom PNG-shaped windows).
 
 ---
 
@@ -1004,7 +994,7 @@ The window shows the command's **standard output only**; standard error is not c
 
 ---
 
-### Example: Custom Shaped Window with Fade & Positioning
+### Example: Positioned Output Window that Closes by Itself
 
 ```xml
 <dict>
@@ -1022,7 +1012,7 @@ The window shows the command's **standard output only**; standard error is not c
       <string>__OBJ_NAME__</string>
     </array>
     <key>WINDOW_TYPE</key>
-    <string>custom</string>
+    <string>regular</string>
     <key>WINDOW_POSITION</key>
     <string>absolute</string>
     <key>FRACT_POSITION_LEFT</key>
@@ -1030,37 +1020,19 @@ The window shows the command's **standard output only**; standard error is not c
     <key>FRACT_POSITION_TOP</key>
     <real>0.33</real>
     <key>WINDOW_WIDTH</key>
-    <integer>300</integer>
+    <integer>500</integer>
     <key>WINDOW_HEIGHT</key>
-    <integer>200</integer>
-    <key>WINDOW_ALPHA</key>
-    <real>0.95</real>
+    <integer>300</integer>
     <key>TEXT_FONT</key>
     <string>Menlo-Regular</string>
     <key>TEXT_SIZE</key>
-    <integer>12</integer>
+    <integer>13</integer>
     <key>TEXT_COLOR</key>
-    <string>002B36</string>
+    <string>#002B36</string>
     <key>BACKGROUND_COLOR</key>
-    <string>FDF6E3</string>
-    <key>CUSTOM_WINDOW_PNG_IMAGE</key>
-    <string>bezel.png</string>
-    <key>CUSTOM_TEXTBOX_POSITION_TOP</key>
-    <integer>20</integer>
-    <key>CUSTOM_TEXTBOX_POSITION_LEFT</key>
-    <integer>20</integer>
-    <key>CUSTOM_CLOSEBOX_POSITION_TOP</key>
-    <integer>5</integer>
-    <key>CUSTOM_CLOSEBOX_POSITION_LEFT</key>
-    <integer>5</integer>
-    <key>WINDOW_OPEN_FADE_IN</key>
-    <true/>
-    <key>WINDOW_CLOSE_FADE_OUT</key>
-    <true/>
+    <string>#FDF6E3</string>
     <key>AUTO_CLOSE_TIMEOUT</key>
     <real>5.0</real>
-    <key>AUTO_CLOSE_ON_SUCCESS_ONLY</key>
-    <true/>
   </dict>
 </dict>
 ```

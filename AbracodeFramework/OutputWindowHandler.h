@@ -87,7 +87,8 @@ public:
 													CFStringRef inLocalizationTableName,
 													OutputWindowSettings &outSettings);
 
-	// "#RRGGBB" for a color of six hex digits, as OUTPUT_WINDOW_SETTINGS gives them; NULL for anything else
+	// "#RRGGBB" for a color of six hex digits, with or without a leading #, as OUTPUT_WINDOW_SETTINGS
+	// gives them; NULL for anything else
 	static CFStringRef		CreateColorString(CFStringRef inHexDigits);
 
 protected:

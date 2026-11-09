@@ -61,6 +61,8 @@ def test_flat_fixtures() -> None:
     check("bad_conditionals: requiredWhen fires", "should be set when" in out)
     check("bad_conditionals: range fires", "outside the expected range" in out)
     check("bad_conditionals: hexColor fires", "not a 6-digit hex" in out)
+    check("bad_conditionals: WINDOW_ALPHA removed in 5.6", "'WINDOW_ALPHA' is removed and ignored" in out)
+    check("bad_conditionals: CUSTOM_* removed in 5.6", "'CUSTOM_TEXTBOX_WIDTH' is removed and ignored" in out)
 
 
 # ── Layer 2: synthesized bundles ──────────────────────────────────────────────
@@ -782,6 +784,35 @@ def test_input_menu() -> None:
         check("INPUT_MENU number item -> error", rc == 1, f"got {rc}: {out.strip()}")
 
 
+def test_output_window_custom_type() -> None:
+    """WINDOW_TYPE custom is deprecated since 5.6 (read as floating); a #RRGGBB color is fine."""
+    plist = """<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+  <key>COMMAND_LIST</key><array>
+    <dict>
+      <key>NAME</key><string>MyApp</string>
+      <key>COMMAND_ID</key><string>myapp.show</string>
+      <key>EXECUTION_MODE</key><string>exe_shell_script_with_output_window</string>
+      <key>COMMAND</key><array><string>echo hello</string></array>
+      <key>OUTPUT_WINDOW_SETTINGS</key><dict>
+        <key>WINDOW_TYPE</key><string>custom</string>
+        <key>TEXT_COLOR</key><string>#00FF00</string>
+      </dict>
+    </dict>
+  </array>
+  <key>VERSION</key><integer>2</integer>
+</dict></plist>
+"""
+    with tempfile.TemporaryDirectory() as d:
+        path = Path(d) / "custom.plist"
+        path.write_text(plist)
+        rc, out = run(str(path))
+        check("WINDOW_TYPE custom -> exit 2 (warning)", rc == 2, f"got {rc}: {out.strip()}")
+        check("WINDOW_TYPE custom: deprecated, use floating", "'custom' is deprecated; use 'floating'" in out, out.strip())
+        check("#RRGGBB color accepted", "not a 6-digit hex" not in out, out.strip())
+
+
 def main() -> int:
     if not VERIFIER.exists():
         print(f"verifier not found: {VERIFIER}", file=sys.stderr)
@@ -791,6 +822,7 @@ def main() -> int:
     test_action_ids()
     test_url_invocable()
     test_input_menu()
+    test_output_window_custom_type()
     print(f"\n{_passed} passed, {_failed} failed.")
     return 1 if _failed else 0
 

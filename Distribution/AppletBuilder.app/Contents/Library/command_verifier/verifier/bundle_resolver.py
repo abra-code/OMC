@@ -6,8 +6,7 @@ references actually exists / resolves:
 
   * script map      — Contents/Resources/Scripts/* keyed by lowercase name-sans-ext
                       (the engine resolves exe_script_file by lowercase COMMAND_ID).
-  * resource index  — *.json and *.nib basenames (for JSON_NAME / NIB_NAME), plus all
-                      resource file basenames (for CUSTOM_WINDOW_PNG_IMAGE).
+  * resource index  — *.json and *.nib basenames (for JSON_NAME / NIB_NAME).
   * command graph   — declared COMMAND_IDs (+ group) ∪ synthesizable script IDs.
                       The no-COMMAND_ID main command also contributes its implicit
                       '<NAME>.main' / 'main' / 'top!' ids so references resolve.
@@ -164,7 +163,6 @@ class BundleResolver:
         self._scripts_orig: set[str] | None = None
         self._json_lc: set[str] | None = None
         self._nib_lc: set[str] | None = None
-        self._resource_files_lc: set[str] | None = None
 
     # ── index builders (lazy) ─────────────────────────────────────────────────
     def _scan_scripts(self) -> None:
@@ -231,16 +229,6 @@ class BundleResolver:
             self._nib_lc = {p.stem.lower() for p in self.resources.rglob("*.nib")} if self.resources.is_dir() else set()
         return self._nib_lc
 
-    def _resource_basenames(self) -> set[str]:
-        if self._resource_files_lc is None:
-            s: set[str] = set()
-            if self.resources.is_dir():
-                for p in self.resources.rglob("*"):
-                    if p.is_file():
-                        s.add(p.name.lower())
-            self._resource_files_lc = s
-        return self._resource_files_lc
-
     # ── entry point ───────────────────────────────────────────────────────────
     def cross_reference(self, data: dict, plist_path: str) -> list[ValidationIssue]:
         issues: list[ValidationIssue] = []
@@ -267,7 +255,6 @@ class BundleResolver:
             issues += self._check_executable(cmd, path)
             issues += self._check_dialog_resources(cmd, path)
             issues += self._check_subcommand_refs(cmd, path, resolvable)
-            issues += self._check_image(cmd, path)
         return issues
 
     # ── individual checks ─────────────────────────────────────────────────────
@@ -502,20 +489,6 @@ class BundleResolver:
                 f"Fine if the applet does not use links; the scheme can also be removed."
             ))
         return issues
-
-    def _check_image(self, cmd: dict, path: str) -> list[ValidationIssue]:
-        ows = cmd.get("OUTPUT_WINDOW_SETTINGS")
-        if not isinstance(ows, dict):
-            return []
-        img = ows.get("CUSTOM_WINDOW_PNG_IMAGE")
-        if isinstance(img, str) and img:
-            base = Path(img).name.lower()
-            if base not in self._resource_basenames():
-                return [ValidationIssue(
-                    "warning", f"{path}.OUTPUT_WINDOW_SETTINGS.CUSTOM_WINDOW_PNG_IMAGE",
-                    f"image '{img}' not found in the bundle's Resources"
-                )]
-        return []
 
     def _check_duplicates(self, group_pairs: list[tuple], commands: list) -> list[ValidationIssue]:
         """Same (group NAME, COMMAND_ID) twice is an ambiguous dispatch target."""
