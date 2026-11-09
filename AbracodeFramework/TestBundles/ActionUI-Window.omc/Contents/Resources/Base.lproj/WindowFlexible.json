@@ -1,0 +1,20 @@
+{
+  "type": "VStack",
+  "properties": {
+    "frame": {
+      "minWidth": 300,
+      "minHeight": 150,
+      "maxWidth": 4000,
+      "maxHeight": 3000
+    }
+  },
+  "children": [
+    {
+      "type": "Text",
+      "id": 2,
+      "properties": {
+        "text": "Flexible"
+      }
+    }
+  ]
+}

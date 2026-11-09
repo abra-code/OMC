@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>COMMAND_LIST</key>
+	<array>
+		<dict>
+			<key>ACTIONUI_WINDOW</key>
+			<dict>
+				<key>IS_BLOCKING</key>
+				<false/>
+				<key>JSON_NAME</key>
+				<string>WindowFixed</string>
+				<key>WINDOW_TITLE</key>
+				<string>A Title Of Its Own</string>
+			</dict>
+			<key>ACTIVATION_MODE</key>
+			<string>act_always</string>
+			<key>COMMAND</key>
+			<array>
+				<string>echo "${OMC_ACTIONUI_WINDOW_UUID}"
+</string>
+			</array>
+			<key>EXECUTION_MODE</key>
+			<string>exe_shell_script</string>
+			<key>NAME</key>
+			<string>Window With A Title</string>
+			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
+			<string>14.6</string>
+			<key>REQUIRED_OMC_VERSION</key>
+			<string>5.0</string>
+		</dict>
+		<dict>
+			<key>ACTIONUI_WINDOW</key>
+			<dict>
+				<key>IS_BLOCKING</key>
+				<false/>
+				<key>JSON_NAME</key>
+				<string>WindowFlexible</string>
+			</dict>
+			<key>ACTIVATION_MODE</key>
+			<string>act_always</string>
+			<key>COMMAND</key>
+			<array>
+				<string>echo "${OMC_ACTIONUI_WINDOW_UUID}"
+</string>
+			</array>
+			<key>EXECUTION_MODE</key>
+			<string>exe_shell_script</string>
+			<key>NAME</key>
+			<string>Named By Its Command</string>
+			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
+			<string>14.6</string>
+			<key>REQUIRED_OMC_VERSION</key>
+			<string>5.0</string>
+		</dict>
+		<dict>
+			<key>ACTIONUI_WINDOW</key>
+			<dict>
+				<key>IS_BLOCKING</key>
+				<false/>
+				<key>JSON_NAME</key>
+				<string>WindowFloating</string>
+				<key>WINDOW_TYPE</key>
+				<string>floating</string>
+			</dict>
+			<key>ACTIVATION_MODE</key>
+			<string>act_always</string>
+			<key>COMMAND</key>
+			<array>
+				<string>echo "${OMC_ACTIONUI_WINDOW_UUID}"
+</string>
+			</array>
+			<key>EXECUTION_MODE</key>
+			<string>exe_shell_script</string>
+			<key>NAME</key>
+			<string>Window Floating</string>
+			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
+			<string>14.6</string>
+			<key>REQUIRED_OMC_VERSION</key>
+			<string>5.0</string>
+		</dict>
+		<dict>
+			<key>ACTIVATION_MODE</key>
+			<string>act_selected_text</string>
+			<key>COMMAND</key>
+			<array>
+				<string>WINDOW_UUID="${OMC_OBJ_TEXT}"
+if [ -n "${WINDOW_UUID}" ]; then
+    "$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$WINDOW_UUID" omc_window "Retitled By A Handler"
+fi
+</string>
+			</array>
+			<key>COMMAND_ID</key>
+			<string>window.retitle</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_shell_script</string>
+			<key>NAME</key>
+			<string>Window Tests</string>
+			<key>NOTES</key>
+			<string>Takes the window UUID as its text context</string>
+		</dict>
+		<dict>
+			<key>ACTIVATION_MODE</key>
+			<string>act_selected_text</string>
+			<key>COMMAND</key>
+			<array>
+				<string>WINDOW_UUID="${OMC_OBJ_TEXT}"
+if [ -n "${WINDOW_UUID}" ]; then
+    "$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$WINDOW_UUID" omc_window omc_terminate_cancel
+fi
+</string>
+			</array>
+			<key>COMMAND_ID</key>
+			<string>window.close</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_shell_script</string>
+			<key>NAME</key>
+			<string>Window Tests</string>
+			<key>NOTES</key>
+			<string>Takes the window UUID as its text context</string>
+		</dict>
+	</array>
+	<key>VERSION</key>
+	<integer>2</integer>
+</dict>
+</plist>

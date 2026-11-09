@@ -1,0 +1,18 @@
+{
+  "type": "VStack",
+  "properties": {
+    "frame": {
+      "minWidth": 240,
+      "minHeight": 120
+    }
+  },
+  "children": [
+    {
+      "type": "Text",
+      "id": 2,
+      "properties": {
+        "text": "Floating"
+      }
+    }
+  ]
+}
