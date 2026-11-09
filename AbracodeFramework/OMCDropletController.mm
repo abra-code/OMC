@@ -13,7 +13,7 @@
 #include "OMCFilePanels.h"
 #include "OMC.h"
 #import "OMCService.h"
-#include "OMCHelpers.h"
+#include "OMCHostInfo.h"
 
 
 extern CFStringRef kBundleIDString;
@@ -265,7 +265,7 @@ static OMCService *sOMCService = NULL;
 
 - (void)application:(NSApplication *)sender openURLs:(NSArray<NSURL *> *)urls
 {
-	if( _startingUp && ((_startupModifiers & kCGEventFlagMaskAlternate) != 0) )
+	if( _startingUp && ((_startupModifiers & kOMCModifierOption) != 0) )
 		return;
 	
 	// Only files are opened here. A URL on the applet's own scheme belongs to handleGetURLEvent
@@ -328,7 +328,7 @@ static OMCService *sOMCService = NULL;
 
 - (BOOL)applicationOpenUntitledFile:(NSApplication *)theApplication
 {
-	if( _startingUp && ((_startupModifiers & kCGEventFlagMaskAlternate) != 0) )
+	if( _startingUp && ((_startupModifiers & kOMCModifierOption) != 0) )
 		return FALSE;
 		
 	_runningCommandCount++;

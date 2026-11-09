@@ -20,9 +20,8 @@
 #include "ACFString.h"
 #include "ActionUIC.h"
 #include "DebugSettings.h"
-#include "StSwitchToFront.h"
 #include "OmcTaskNotification.h"
-#include "OMCHelpers.h"
+#include "OMCHostInfo.h"
 #include <algorithm>
 
 // The document's text view (BuiltInDocuments/omc_output.json)

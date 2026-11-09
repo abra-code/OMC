@@ -71,7 +71,7 @@
 		1DAB10042FFD0001009FD073 /* OMCActionUIRemoteHost.h in Headers */ = {isa = PBXBuildFile; fileRef = 1DAB10052FFD0001009FD073 /* OMCActionUIRemoteHost.h */; };
 		1DADB52F232B5857005AD883 /* loco in Copy Support Executables */ = {isa = PBXBuildFile; fileRef = 1DADB52E232B5847005AD883 /* loco */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		1DB9D8C62324F01E003F6849 /* OMCEnvironmentExportScript.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1DB9D8C42324F01E003F6849 /* OMCEnvironmentExportScript.cpp */; };
-		1DBCC43522CE209300A1DD8F /* OMCHelpers.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1DBCC43222CE209300A1DD8F /* OMCHelpers.mm */; };
+		1DBCC43522CE209300A1DD8F /* OMCHostInfo.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1DBCC43222CE209300A1DD8F /* OMCHostInfo.mm */; };
 		1DCBC0D92F15FCE40002B8AB /* Abracode.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8DC2EF5B0486A6940098B216 /* Abracode.framework */; };
 		1DCBC16E2F176A9D0002B8AB /* TestBundles in CopyFiles */ = {isa = PBXBuildFile; fileRef = 1DCBC16D2F176A9D0002B8AB /* TestBundles */; };
 		1DE10DFC23C9D0EE003FCCDA /* OMCWebKitSupport.js in Resources */ = {isa = PBXBuildFile; fileRef = 1DE10DFB23C9D0EE003FCCDA /* OMCWebKitSupport.js */; };
@@ -179,7 +179,6 @@
 		E2E407870D8C3770009AD8CA /* OMCImageView.h in Headers */ = {isa = PBXBuildFile; fileRef = E2E407850D8C376F009AD8CA /* OMCImageView.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E2ED3AEA0D0B27D300481D8F /* DefaultExternBundle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E2ED3AE80D0B27D300481D8F /* DefaultExternBundle.cpp */; };
 		E2ED3AEB0D0B27D300481D8F /* DefaultExternBundle.h in Headers */ = {isa = PBXBuildFile; fileRef = E2ED3AE90D0B27D300481D8F /* DefaultExternBundle.h */; };
-		E2ED3AED0D0B27E400481D8F /* StSwitchToFront.mm in Sources */ = {isa = PBXBuildFile; fileRef = E2ED3AEC0D0B27E400481D8F /* StSwitchToFront.mm */; };
 		E2ED3AF20D0B27F700481D8F /* OMCDialogControlHelpers.cp in Sources */ = {isa = PBXBuildFile; fileRef = E2ED3AEE0D0B27F700481D8F /* OMCDialogControlHelpers.cp */; };
 		E2ED3BA60D0B287000481D8F /* OutputWindowHandler.cp in Sources */ = {isa = PBXBuildFile; fileRef = E2ED3BA20D0B287000481D8F /* OutputWindowHandler.cp */; };
 		E2ED3BAE0D0B288400481D8F /* OmcTaskManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E2ED3BA80D0B288400481D8F /* OmcTaskManager.cpp */; };
@@ -423,7 +422,6 @@
 		1D71F32B2206F1D8009FAF91 /* CMUtils.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CMUtils.h; sourceTree = "<group>"; };
 		1D71F32C2206F214009FAF91 /* ACFDict.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ACFDict.h; sourceTree = "<group>"; };
 		1D71F32E2206F353009FAF91 /* StAEDesc.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StAEDesc.h; sourceTree = "<group>"; };
-		1D71F32F2206F5FB009FAF91 /* StSwitchToFront.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StSwitchToFront.h; sourceTree = "<group>"; };
 		1D71F336220702D7009FAF91 /* notify */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = notify; sourceTree = "<group>"; };
 		1D742DC219388292005DFF97 /* pasteboard */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = pasteboard; sourceTree = "<group>"; };
 		1D80B9B822E447E800CF1AF5 /* OMCiTermExecutor.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCiTermExecutor.cp; sourceTree = "<group>"; };
@@ -482,8 +480,8 @@
 		1DADB52E232B5847005AD883 /* loco */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = loco; sourceTree = "<group>"; };
 		1DB9D8C42324F01E003F6849 /* OMCEnvironmentExportScript.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCEnvironmentExportScript.cpp; sourceTree = "<group>"; };
 		1DB9D8C52324F01E003F6849 /* OMCEnvironmentExportScript.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCEnvironmentExportScript.h; sourceTree = "<group>"; };
-		1DBCC43122CE209200A1DD8F /* OMCHelpers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCHelpers.h; sourceTree = "<group>"; };
-		1DBCC43222CE209300A1DD8F /* OMCHelpers.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCHelpers.mm; sourceTree = "<group>"; };
+		1DBCC43122CE209200A1DD8F /* OMCHostInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCHostInfo.h; sourceTree = "<group>"; };
+		1DBCC43222CE209300A1DD8F /* OMCHostInfo.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCHostInfo.mm; sourceTree = "<group>"; };
 		1DCBC0D52F15FCE40002B8AB /* AbracodeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AbracodeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		1DCBC0E02F15FD220002B8AB /* AbracodeTests-target.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "AbracodeTests-target.xcconfig"; sourceTree = "<group>"; };
 		1DCBC16D2F176A9D0002B8AB /* TestBundles */ = {isa = PBXFileReference; lastKnownFileType = folder; path = TestBundles; sourceTree = "<group>"; };
@@ -613,7 +611,6 @@
 		E2E407850D8C376F009AD8CA /* OMCImageView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCImageView.h; sourceTree = "<group>"; };
 		E2ED3AE80D0B27D300481D8F /* DefaultExternBundle.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DefaultExternBundle.cpp; sourceTree = "<group>"; };
 		E2ED3AE90D0B27D300481D8F /* DefaultExternBundle.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DefaultExternBundle.h; sourceTree = "<group>"; };
-		E2ED3AEC0D0B27E400481D8F /* StSwitchToFront.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = StSwitchToFront.mm; path = ../Common/StSwitchToFront.mm; sourceTree = SOURCE_ROOT; };
 		E2ED3AEE0D0B27F700481D8F /* OMCDialogControlHelpers.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCDialogControlHelpers.cp; sourceTree = "<group>"; };
 		E2ED3BA20D0B287000481D8F /* OutputWindowHandler.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OutputWindowHandler.cp; sourceTree = "<group>"; };
 		E2ED3BA80D0B288400481D8F /* OmcTaskManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OmcTaskManager.cpp; sourceTree = "<group>"; };
@@ -888,6 +885,7 @@
 				1D0A1B2C2F75000000000104 /* OMCActionUIModels.h */,
 				1D0A1B2C2F74000000000103 /* OMCAlerts.h */,
 				1D560A1B2F80000000000003 /* OMCWindowHost.h */,
+				1DBCC43122CE209200A1DD8F /* OMCHostInfo.h */,
 				1D0A1B2C2F6A000000000003 /* Apple */,
 			);
 			path = Platform;
@@ -909,6 +907,7 @@
 				1D0A1B2C2F75000000000105 /* OMCActionUIModels.mm */,
 				1D0A1B2C2F74000000000104 /* OMCAlerts.mm */,
 				1D560A1B2F80000000000004 /* OMCWindowHost.mm */,
+				1DBCC43222CE209300A1DD8F /* OMCHostInfo.mm */,
 				1D0A1B2C2F6A000000000001 /* NibDialogs */,
 			);
 			path = Apple;
@@ -1031,8 +1030,6 @@
 				1D71F3292206F116009FAF91 /* DebugSettings.h */,
 				E2C433440DEE72F700E976D2 /* PlistPreferences.cp */,
 				E2C433430DEE72F600E976D2 /* PlistPreferences.h */,
-				E2ED3AEC0D0B27E400481D8F /* StSwitchToFront.mm */,
-				1D71F32F2206F5FB009FAF91 /* StSwitchToFront.h */,
 				1D71F32E2206F353009FAF91 /* StAEDesc.h */,
 			);
 			name = Common;
@@ -1045,8 +1042,6 @@
 				E2517C410D1BCC2700180C68 /* OMCMenuItem.h */,
 				E2517C420D1BCC2700180C68 /* OMCMenuItem.m */,
 				1DA51CB42EACC95B00BFF670 /* OMCAppLifetimeEvents.mm */,
-				1DBCC43122CE209200A1DD8F /* OMCHelpers.h */,
-				1DBCC43222CE209300A1DD8F /* OMCHelpers.mm */,
 				E2D92E8D1043E0E3003DC96B /* OMCInputDialog.cpp */,
 				E2D92E871043E0C2003DC96B /* OMCInputDialog.h */,
 				E258B20F0E46E37C00926F10 /* OMCDeferredProgress.mm */,
@@ -1494,7 +1489,6 @@
 				E29ED1B80D09532500C9D5E8 /* ACFType.cp in Sources */,
 				E29ED21A0D09FD8800C9D5E8 /* ARefCounted.cp in Sources */,
 				E2ED3AEA0D0B27D300481D8F /* DefaultExternBundle.cpp in Sources */,
-				E2ED3AED0D0B27E400481D8F /* StSwitchToFront.mm in Sources */,
 				E2ED3AF20D0B27F700481D8F /* OMCDialogControlHelpers.cp in Sources */,
 				1DB9D8C62324F01E003F6849 /* OMCEnvironmentExportScript.cpp in Sources */,
 				1D9BCB8C22CCAB4F00F4EAB6 /* OMCStrings.cpp in Sources */,
@@ -1535,7 +1529,7 @@
 				E22FBAEF0D7A0D7700DC5BB4 /* OMCNibDialog.mm in Sources */,
 				E2735F830D7BC89F004D81CE /* OMCDialog.cpp in Sources */,
 				1D0A1B2C2F6A00000000000A /* OMCControlAccessorBridge.mm in Sources */,
-				1DBCC43522CE209300A1DD8F /* OMCHelpers.mm in Sources */,
+				1DBCC43522CE209300A1DD8F /* OMCHostInfo.mm in Sources */,
 				E2E407000D8A5B00009AD8CA /* OMCSecureTextField.m in Sources */,
 				E2E4072A0D8AD1E3009AD8CA /* OMCSearchField.m in Sources */,
 				1D80B9C222E447F900CF1AF5 /* OMCTerminalExecutor.cp in Sources */,

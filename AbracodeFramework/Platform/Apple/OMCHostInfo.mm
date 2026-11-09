@@ -1,4 +1,13 @@
-#include "OMCHelpers.h"
+//
+//  OMCHostInfo.mm
+//  Abracode
+//
+//  The macOS implementation of Platform/OMCHostInfo.h: NSWorkspace, NSRunningApplication,
+//  NSProcessInfo and the current CGEvent flags.
+//
+
+#import <Cocoa/Cocoa.h>
+#include "OMCHostInfo.h"
 #include "CFObj.h"
 
 CFStringRef CopyFrontAppName()
@@ -8,7 +17,6 @@ CFStringRef CopyFrontAppName()
     return (CFStringRef)CFBridgingRetain(appName);
 }
 
-
 CFStringRef CopyHostAppName()
 {
     NSBundle *mainBundle = [NSBundle mainBundle];
@@ -17,7 +25,6 @@ CFStringRef CopyHostAppName()
         appName = [mainBundle objectForInfoDictionaryKey:@"CFBundleName"];
     return (CFStringRef)CFBridgingRetain(appName);
 }
-
 
 CFStringRef CopyFrontAppBundleIdentifier()
 {
@@ -43,7 +50,6 @@ CFStringRef CopyAppNameForPID(pid_t pid)
 
     return nullptr;
 }
-
 
 bool RunningInRegularGUIApp()
 {
@@ -71,13 +77,59 @@ GetOperatingSystemVersion(long* outMajorVersion, long* outMinorVersion, long* ou
     *outPatchVersion = osVersion.patchVersion;
 }
 
-CGEventFlags
+OMCModifierKeys
 GetKeyboardModifiers()
 {
-	CGEventFlags outModifiers = 0;
+	CGEventFlags flags = 0;
 	CFObj<CGEventRef> eventRef( CGEventCreate(nullptr /*default event source*/) );
 	if(eventRef != nullptr)
-		outModifiers = CGEventGetFlags(eventRef);
+		flags = CGEventGetFlags(eventRef);
+
+	OMCModifierKeys outModifiers = 0;
+	if((flags & kCGEventFlagMaskAlphaShift) != 0)
+		outModifiers |= kOMCModifierCapsLock;
+	if((flags & kCGEventFlagMaskShift) != 0)
+		outModifiers |= kOMCModifierShift;
+	if((flags & kCGEventFlagMaskControl) != 0)
+		outModifiers |= kOMCModifierControl;
+	if((flags & kCGEventFlagMaskAlternate) != 0)
+		outModifiers |= kOMCModifierOption;
+	if((flags & kCGEventFlagMaskCommand) != 0)
+		outModifiers |= kOMCModifierCommand;
 	return outModifiers;
 }
 
+// Brings this process to the front if it is not there already, and the previous front app back
+// at the end of the scope
+StSwitchToFront::StSwitchToFront(bool inRestore /*= true*/) noexcept
+{
+    @autoreleasepool
+    {
+        NSRunningApplication *currentApp = [NSRunningApplication currentApplication];
+        BOOL isCurrAppActive = [currentApp isActive];
+        if(!isCurrAppActive)
+        {
+            if(inRestore)
+            {
+                NSRunningApplication *frontmostApp = [[NSWorkspace sharedWorkspace] frontmostApplication];
+                mPreviousFrontAppPID = [frontmostApp processIdentifier];
+            }
+            /*BOOL isOK =*/ [currentApp activateWithOptions:NSApplicationActivateAllWindows];
+        }
+    }
+}
+
+StSwitchToFront::~StSwitchToFront(void) noexcept
+{
+    @autoreleasepool
+    {
+        if(mPreviousFrontAppPID != 0)
+        {
+            NSRunningApplication *previousFrontApp = [NSRunningApplication runningApplicationWithProcessIdentifier:mPreviousFrontAppPID];
+            if(previousFrontApp != nil)
+            {
+                /*BOOL isOK =*/ [previousFrontApp activateWithOptions:NSApplicationActivateAllWindows];
+            }
+        }
+    }
+}

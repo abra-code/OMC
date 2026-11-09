@@ -38,7 +38,7 @@ extern "C" const char *OMCGetActionUIRemoteEndpoint(void);
 #include "OMCDialogControlHelpers.h"
 //#include "OMCCarbonDialog.h"
 #include "SubmenuTree.h"
-#include "StSwitchToFront.h"
+#include "OMCHostInfo.h"
 #include "OMCTestHost.h"
 #include "DefaultExternBundle.h"
 #include "OmcTaskManager.h"
@@ -57,7 +57,6 @@ extern "C" const char *OMCGetActionUIRemoteEndpoint(void);
 #include "SelectionIterator.h"
 #include "ACFPropertyList.h"
 #include "StandardDirectories.h"
-#include "OMCHelpers.h"
 #include "OMCWindowHost.h"
 #include "OMCStrings.h"
 #include "OMCTerminalExecutor.h"
@@ -650,11 +649,11 @@ OnMyCommandCM::ExecuteCommand(AEDesc *inAEContext, SInt32 inCommandIndex, const 
         }
 
 
-		CGEventFlags keyboardModifiers = GetKeyboardModifiers();
+		OMCModifierKeys keyboardModifiers = GetKeyboardModifiers();
 		//only if lone control key is pressed we consider it a debug request
 		currCommand.debugging = ((keyboardModifiers &
-								(kCGEventFlagMaskAlphaShift | kCGEventFlagMaskShift | kCGEventFlagMaskAlternate | kCGEventFlagMaskCommand)) == 0)
-								&& ((keyboardModifiers & kCGEventFlagMaskControl) != 0);
+								(kOMCModifierCapsLock | kOMCModifierShift | kOMCModifierOption | kOMCModifierCommand)) == 0)
+								&& ((keyboardModifiers & kOMCModifierControl) != 0);
 		
 		//take original command by reference, not copy
 		PrescanCommandDescription( currCommand );

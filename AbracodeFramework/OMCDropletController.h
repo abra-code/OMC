@@ -11,7 +11,7 @@ IB_DESIGNABLE
 @interface OMCDropletController : NSDocumentController<NSApplicationDelegate, NSMenuDelegate>
 {
 	BOOL		_startingUp;
-	CGEventFlags _startupModifiers;
+	uint32_t _startupModifiers; // OMCModifierKeys
 	int			_runningCommandCount;
 }
 

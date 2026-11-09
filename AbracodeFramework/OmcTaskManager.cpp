@@ -25,7 +25,7 @@
 #include "CommandRuntimeData.h"
 #include "OMCDialog.h"
 #include "OMCMainThreadSignal.h"
-#include "OMCHelpers.h"
+#include "OMCHostInfo.h"
 #include "OMCEngineTempDir.h"
 #include "OMCEngineActivity.h"
 #include "OMCActionUIModelLifetime.h"

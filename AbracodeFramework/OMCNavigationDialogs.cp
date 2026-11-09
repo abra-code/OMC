@@ -12,7 +12,7 @@
 #include "CommandRuntimeData.h"
 #include "OMCContextData.h"
 #include "OMCFilePanels.h"
-#include "StSwitchToFront.h"
+#include "OMCHostInfo.h"
 #include "ACFDict.h"
 #include "CMUtils.h"
 
