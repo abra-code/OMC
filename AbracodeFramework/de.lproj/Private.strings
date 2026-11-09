@@ -13,3 +13,6 @@
 
 /*Alert strings*/
 "OK" = "OK";
+
+/* Progress window: the Stop button's accessibility label and help tag */
+"Stop" = "Stoppen";

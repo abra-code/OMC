@@ -1,0 +1,20 @@
+{
+  "type": "VStack",
+  "properties": {
+    "alignment": "leading",
+    "spacing": 6,
+    "padding": 14,
+    "frame": { "minWidth": 300, "idealWidth": 382, "maxWidth": "infinity", "minHeight": 60 }
+  },
+  "children": [
+    {
+      "type": "HStack",
+      "properties": { "spacing": 8 },
+      "children": [
+        { "type": "ProgressView", "id": 3, "properties": { "progressViewStyle": "linear", "total": 100, "controlSize": "small" } },
+        { "type": "Button", "id": 4, "properties": { "systemImage": "xmark.circle.fill", "buttonStyle": "borderless", "actionID": "omc.builtin.progress.stop" } }
+      ]
+    },
+    { "type": "Text", "id": 2, "properties": { "text": "", "font": { "size": 11 }, "foregroundStyle": "secondary", "frame": { "height": 14, "alignment": "leading" } } }
+  ]
+}

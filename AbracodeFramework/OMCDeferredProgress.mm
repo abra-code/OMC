@@ -7,7 +7,6 @@
 //
 
 #import "OMCDeferredProgress.h"
-#import "OMCProgressWindowController.h"
 #include "ACFDict.h"
 #include "DebugSettings.h"
 #include <vector>
@@ -83,8 +82,6 @@ inline double CalculateTotalProgress(OMCTaskProgress *allTasks, CFIndex inCount)
 		mTitleString.Adopt(inCommandName, kCFObjRetain);
 	}
 
-	mController = NULL;
-
 	double delay = 0.0;
 	params.GetValue( CFSTR("DELAY"), delay );
 	
@@ -121,11 +118,7 @@ inline double CalculateTotalProgress(OMCTaskProgress *allTasks, CFIndex inCount)
 		mDeferTimer.Release();
 	}
 
-	if( mController != NULL )
-	{
-		[mController close];
-		mController = NULL;
-	}
+	mWindow.reset(); // closes the window
 
 	delete [] mTasks;
 	mTasks = NULL;
@@ -149,9 +142,9 @@ inline double CalculateTotalProgress(OMCTaskProgress *allTasks, CFIndex inCount)
 
 	[self calculateOneTaskProgress:inTaskIndex childPid:inChildPID withLines:(CFArrayRef)lineArray taskEnded:isTaskEnded];
 
-	if(mController != NULL)
+	if(mWindow != nullptr)
 	{//already shown up
-		if( [mController isCanceled] )//calcellation is passive this way, maybe we need to send notification and make it active
+		if( mWindow->IsCanceled() )//calcellation is passive this way, maybe we need to send notification and make it active
 		{
 			[self cancelAllChildProcesses];
 			return true;
@@ -161,7 +154,7 @@ inline double CalculateTotalProgress(OMCTaskProgress *allTasks, CFIndex inCount)
 		if( mProgressType != kOMCProgressIndeterminate)
 			totalProgress = CalculateTotalProgress(mTasks, mTaskCount);
 		
-        [mController setProgress:totalProgress text:(__bridge NSString *)(CFStringRef)mLastLineStr];
+		mWindow->SetProgress(totalProgress, mLastLineStr);
 	}
 	
 	return false;
@@ -227,13 +220,11 @@ inline double CalculateTotalProgress(OMCTaskProgress *allTasks, CFIndex inCount)
 		mDeferTimer.Release();
 	}
 	
-	if(mController == NULL)
+	if(mWindow == nullptr)
 	{
-		mController = [[OMCProgressWindowController alloc] initWithWindowNibName:@"progress"];
-        [[mController window] setTitle:(__bridge NSString *)(CFStringRef)mTitleString];
-
-		NSString *frameAutosaveName = [NSString stringWithFormat: @"omc_progress_window %@", (__bridge NSString *)(CFStringRef)mTitleString];
-		[mController setWindowFrameAutosaveName:frameAutosaveName];
+		mWindow = OMCProgressWindow::Create(mTitleString); // titled, its frame remembered as "omc_progress_window <title>"
+		if(mWindow == nullptr)
+			return;
 		
 		double totalProgress = -1.0;
 		if( mProgressType != kOMCProgressIndeterminate)
@@ -241,15 +232,15 @@ inline double CalculateTotalProgress(OMCTaskProgress *allTasks, CFIndex inCount)
 
 		if(mLastLineStr != NULL)
 		{
-            [mController setProgress:totalProgress text:(__bridge NSString *)(CFStringRef)mLastLineStr];
+			mWindow->SetProgress(totalProgress, mLastLineStr);
 			mLastLineStr.Release();
 		}
 		else
 		{
-			[mController setProgress:totalProgress text:@""];
+			mWindow->SetProgress(totalProgress, CFSTR(""));
 		}
 
-		[mController showWindow:self];
+		mWindow->Show();
 	}
 }
 

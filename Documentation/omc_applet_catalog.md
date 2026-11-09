@@ -188,7 +188,7 @@ that anything beyond a trivial attribute tweak needs Xcode, and scope your work 
 those are shell or Python text and fully editable.
 
 Two footnotes. The dialog nibs inside `Abracode.framework`
-(`Versions/A/Resources/Base.lproj/progress.nib`, `input_combo.nib`, `OMCOutputWindow.nib`, and
+(`Versions/A/Resources/Base.lproj/input_combo.nib`, `OMCOutputWindow.nib`, and
 the rest) really *are* flat, sourceless compiled files - the "opaque binary" description is
 accurate for those, and they are framework internals you should not touch regardless. And the
 `AIChat.nib` in AIChat and Enoch is a thin shell around a single `OMCWebKitView` with zero

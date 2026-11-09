@@ -13,7 +13,8 @@
 
 #import <Cocoa/Cocoa.h>
 
-@class OMCProgressWindowController;
+#include "OMCProgressWindow.h"
+#include <memory>
 
 @interface OMCDeferredProgress : NSObject
 {
@@ -25,7 +26,7 @@
 	OMCTaskProgress *mTasks;
 	CFObj<CFRunLoopTimerRef> mDeferTimer;
 	CFObj<CFStringRef> mTitleString;
-	OMCProgressWindowController *mController;
+	std::unique_ptr<OMCProgressWindow> mWindow;
 
 	CFObj<CFStringRef> mLastLineStr;
 	CFObj<CFStringRef> mLastPartialLineStr;		
