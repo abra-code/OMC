@@ -17,8 +17,6 @@ class OMCActionUIDialog;
 {
 }
 
-@property (nonatomic, strong) NSViewController *hostingController;
-
 // OMCControlAccessor
 - (void)allControlValues:(NSMutableDictionary *)ioControlValues andProperties:(NSMutableDictionary *)ioCustomProperties withIterator:(SelectionIterator *)inSelIterator;
 - (id)controlValueForID:(NSString *)inControlID forPart:(NSString *)inControlPart withIterator:(SelectionIterator *)inSelIterator outProperties:(CFDictionaryRef *)outCustomProperties;

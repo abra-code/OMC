@@ -11,10 +11,11 @@
 //  "OMC.<JSON_NAME>". The window opened on a file (title from the file) is not tested here: in an
 //  XCTest run the engine would add that file to the user's real recent documents.
 //
-//  Nor is the maximum size: the controller sets contentMaxSize from the content's maximum
-//  (omcApplyContentSizeLimits), but once the window is open contentMaxSize reads infinite, for the
-//  fixed-size window too - most likely AppKit taking the limits from the hosting view's layout
-//  constraints instead. That is AppKit's behavior, not the controller's, so it is not pinned.
+//  Nor is the maximum size: the window host sets contentMaxSize from the content's maximum
+//  (ApplySizeLimits in Platform/Apple/OMCWindowHost.mm), but once the window is open contentMaxSize
+//  reads infinite, for the fixed-size window too - most likely AppKit taking the limits from the
+//  hosting view's layout constraints instead. That is AppKit's behavior, not OMC's, so it is not
+//  pinned.
 //
 
 #import <AppKit/AppKit.h>

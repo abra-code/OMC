@@ -2,9 +2,9 @@
 //  OMCWindowHost.mm
 //  Abracode
 //
-//  The macOS host of the built-in ActionUI documents (Platform/OMCWindowHost.h): an NSWindow, or a
-//  utility NSPanel for the floating levels, whose content view controller is the ObjC adapter's
-//  hosting controller for the document.
+//  The macOS host of the built-in ActionUI documents and the ActionUI command windows
+//  (Platform/OMCWindowHost.h): an NSWindow, or a utility NSPanel for the floating levels, whose
+//  content view controller is the ObjC adapter's hosting controller for the document.
 //
 
 #import <Cocoa/Cocoa.h>
@@ -19,7 +19,51 @@ static void PlaceWindow(NSWindow *inWindow, const OMCHostedWindowSpec &inSpec);
 
 @interface OMCHostedWindowDelegate : NSObject <NSWindowDelegate>
 @property (nonatomic, assign) OMCAppleHostedWindow *owner; // cleared by the owner before it goes away
+// sizeLimitsFromDocument: the document's limits, which are those of the area below the titlebar
+@property (nonatomic) BOOL hasSizeLimits;
+@property (nonatomic) NSSize minLayoutSize;
+@property (nonatomic) NSSize maxLayoutSize;
 @end
+
+// The height the titlebar takes out of the content view: 0 unless the content spans the titlebar.
+// Not a constant: a toolbar makes the titlebar taller, and SwiftUI installs its toolbar only once
+// the hosting view has laid out in a window, hence the layout pass before measuring.
+static CGFloat TitlebarHeight(NSWindow *inWindow)
+{
+	[inWindow layoutIfNeeded];
+	CGFloat height = NSHeight([inWindow contentRectForFrameRect:inWindow.frame]) - NSHeight(inWindow.contentLayoutRect);
+	return (height < 0.0) ? 0.0 : height;
+}
+
+// Applies the document's size limits, converted from the area below the titlebar to the content
+// view by adding the titlebar's height. Run again when that height may have changed (the toolbar
+// appearing); cheap and idempotent.
+static void ApplySizeLimits(NSWindow *inWindow, OMCHostedWindowDelegate *inLimits)
+{
+	if( (inWindow == nil) || (inLimits == nil) || !inLimits.hasSizeLimits )
+		return;
+
+	CGFloat titlebarHeight = TitlebarHeight(inWindow);
+	NSSize minContentSize = inLimits.minLayoutSize;
+	minContentSize.height += titlebarHeight;
+	NSSize maxContentSize = inLimits.maxLayoutSize;
+	// the maximum is CGFLOAT_MAX (or infinity) for flexible content: leave an unlimited axis alone
+	if(maxContentSize.height < (CGFLOAT_MAX - titlebarHeight))
+		maxContentSize.height += titlebarHeight;
+
+	inWindow.contentMinSize = minContentSize;
+	inWindow.contentMaxSize = maxContentSize;
+
+	// Raising the minimum does not resize the window, so a window sized before the toolbar appeared
+	// would keep squeezing its content: grow it to the new minimum
+	NSSize currentSize = inWindow.contentLayoutRect.size;
+	currentSize.height += titlebarHeight;
+	if( ((currentSize.height + 0.5) < minContentSize.height) || ((currentSize.width + 0.5) < minContentSize.width) )
+	{
+		NSSize grown = NSMakeSize(MAX(currentSize.width, minContentSize.width), MAX(currentSize.height, minContentSize.height));
+		[inWindow setContentSize:grown];
+	}
+}
 
 // Command-W closes a closable window, also in a process with no menu bar (a background app)
 static BOOL HandleCloseKey(NSWindow *inWindow, NSEvent *inEvent)
@@ -58,16 +102,17 @@ static int sOpenHostedWindowCount = 0;
 class OMCAppleHostedWindow : public OMCHostedWindow
 {
 public:
-							OMCAppleHostedWindow(NSWindow *inWindow, NSViewController *inController, CFStringRef inWindowUUID,
-												const OMCHostedWindowSpec &inSpec, std::function<void()> inOnClosedByUser)
-								: mWindow(inWindow), mController(inController), mWindowUUID(inWindowUUID, kCFObjRetain),
+							OMCAppleHostedWindow(NSWindow *inWindow, NSViewController *inController, OMCHostedWindowDelegate *inDelegate,
+												CFStringRef inWindowUUID, const OMCHostedWindowSpec &inSpec, std::function<void()> inOnClosedByUser)
+								: mWindow(inWindow), mController(inController), mDelegate(inDelegate), mWindowUUID(inWindowUUID, kCFObjRetain),
 								mOnClosedByUser(std::move(inOnClosedByUser)), mPlacement(inSpec)
 							{
-								// only the size and placement are kept: the strings are not retained
+								// only the size, placement and flags are kept: the references are not retained
 								mPlacement.documentName = nullptr;
+								mPlacement.documentURL = nullptr;
+								mPlacement.windowUUID = nullptr;
 								mPlacement.title = nullptr;
 								mPlacement.frameAutosaveName = nullptr;
-								mDelegate = [OMCHostedWindowDelegate new];
 								mDelegate.owner = this;
 								mWindow.delegate = mDelegate;
 							}
@@ -79,8 +124,11 @@ public:
 								mWindow.delegate = nil;
 								mWindow.contentViewController = nil;
 								mController = nil;
-								std::string uuid = ACFStringToUTF8(mWindowUUID);
-								actionUIRemoveWindow(uuid.c_str());
+								if(mPlacement.removesModelWhenDestroyed)
+								{
+									std::string uuid = ACFStringToUTF8(mWindowUUID);
+									actionUIRemoveWindow(uuid.c_str());
+								}
 							}
 
 	virtual CFStringRef		GetWindowUUID() const override { return mWindowUUID; }
@@ -145,14 +193,71 @@ public:
 								[NSApp postEvent:wakeUp atStart:NO];
 							}
 
+	virtual void			SetRepresentedFile(CFURLRef inFileURL) override
+							{
+								NSURL *fileURL = (__bridge NSURL *)inFileURL;
+								if(fileURL == nil)
+									return;
+								mWindow.representedURL = fileURL;
+								[mWindow setTitleWithRepresentedFilename:fileURL.path];
+							}
+
+	virtual void			SetTitle(CFStringRef inTitle) override
+							{
+								if(inTitle != nullptr)
+									mWindow.title = (__bridge NSString *)inTitle;
+							}
+
+	virtual bool			IsKey() const override { return mWindow.isKeyWindow; }
+
+	virtual void			SetTopLeftPosition(double inLeft, double inTop) override
+							{
+								OMCHostedWindowSpec position;
+								position.placement = OMCHostedWindowPlacement::absolute;
+								position.absoluteLeft = inLeft;
+								position.absoluteTop = inTop;
+								PlaceWindow(mWindow, position);
+							}
+
+	virtual void			SetLayoutSize(double inWidth, double inHeight) override
+							{
+								[mWindow setContentSize:NSMakeSize(inWidth, inHeight + TitlebarHeight(mWindow))];
+							}
+
+	virtual void			SetKeyChangeCallbacks(std::function<void()> inOnBecameKey, std::function<void()> inOnResignedKey) override
+							{
+								mOnBecameKey = std::move(inOnBecameKey);
+								mOnResignedKey = std::move(inOnResignedKey);
+							}
+
+	virtual void *			GetNativeWindow() const override { return (__bridge void *)mWindow; }
+
 	// From the window's delegate
+	void					BecameKey()
+							{
+								// a copy: the callback may delete this, and with it the member while it runs
+								std::function<void()> callback = mOnBecameKey;
+								if(callback)
+									callback(); // may delete this
+							}
+
+	void					ResignedKey()
+							{
+								// a copy: the callback may delete this, and with it the member while it runs
+								std::function<void()> callback = mOnResignedKey;
+								if(callback)
+									callback(); // may delete this
+							}
+
 	void					WindowWillClose()
 							{
 								if(mClosed)
 									return;
 								MarkClosed();
-								if(mOnClosedByUser)
-									mOnClosedByUser(); // may delete this
+								// a copy: the callback may delete this, and with it the member while it runs
+								std::function<void()> callback = mOnClosedByUser;
+								if(callback)
+									callback(); // may delete this
 							}
 
 private:
@@ -172,6 +277,8 @@ private:
 	OMCHostedWindowDelegate *mDelegate;
 	CFObj<CFStringRef>		mWindowUUID;
 	std::function<void()>	mOnClosedByUser;
+	std::function<void()>	mOnBecameKey;
+	std::function<void()>	mOnResignedKey;
 	OMCHostedWindowSpec		mPlacement;
 	bool					mShown {false};
 	bool					mClosed {false};
@@ -186,6 +293,20 @@ private:
 	OMCAppleHostedWindow *owner = self.owner;
 	if(owner != nullptr)
 		owner->WindowWillClose();
+}
+
+- (void)windowDidBecomeKey:(NSNotification *)notification
+{
+	OMCAppleHostedWindow *owner = self.owner;
+	if(owner != nullptr)
+		owner->BecameKey();
+}
+
+- (void)windowDidResignKey:(NSNotification *)notification
+{
+	OMCAppleHostedWindow *owner = self.owner;
+	if(owner != nullptr)
+		owner->ResignedKey();
 }
 
 @end
@@ -208,7 +329,7 @@ OMCOpenHostedWindowCount()
 static void PlaceWindow(NSWindow *inWindow, const OMCHostedWindowSpec &inSpec)
 {
 	NSScreen *mainScreen = [NSScreen mainScreen];
-	if( (inSpec.placement == OMCHostedWindowPlacement::standard) || (mainScreen == nil) )
+	if( (inSpec.placement == OMCHostedWindowPlacement::standard) || (inSpec.placement == OMCHostedWindowPlacement::restoredElseCentered) || (mainScreen == nil) )
 	{
 		[inWindow center];
 		return;
@@ -282,35 +403,71 @@ static void PlaceWindow(NSWindow *inWindow, const OMCHostedWindowSpec &inSpec)
 std::unique_ptr<OMCHostedWindow>
 OMCCreateHostedWindow(const OMCHostedWindowSpec &inSpec, std::function<void()> inOnClosedByUser)
 {
-	if(inSpec.documentName == nullptr)
-		return nullptr;
-
-	NSBundle *frameworkBundle = [NSBundle bundleForClass:[OMCHostedWindowDelegate class]];
-	NSURL *documentURL = [frameworkBundle URLForResource:(__bridge NSString *)inSpec.documentName withExtension:@"json"];
+	NSURL *documentURL = (__bridge NSURL *)inSpec.documentURL;
 	if(documentURL == nil)
 	{
-		NSLog(@"OMC: the built-in document %@ is missing from %@", (__bridge NSString *)inSpec.documentName, frameworkBundle.bundlePath);
-		return nullptr;
+		if(inSpec.documentName == nullptr)
+			return nullptr;
+		NSBundle *frameworkBundle = [NSBundle bundleForClass:[OMCHostedWindowDelegate class]];
+		documentURL = [frameworkBundle URLForResource:(__bridge NSString *)inSpec.documentName withExtension:@"json"];
+		if(documentURL == nil)
+		{
+			NSLog(@"OMC: the built-in document %@ is missing from %@", (__bridge NSString *)inSpec.documentName, frameworkBundle.bundlePath);
+			return nullptr;
+		}
 	}
 
-	NSString *windowUUID = [NSUUID UUID].UUIDString;
+	NSString *windowUUID = (inSpec.windowUUID != nullptr) ? [(__bridge NSString *)inSpec.windowUUID copy] : [NSUUID UUID].UUIDString;
 	NSViewController *controller = [ActionUIObjC loadHostingControllerWithURL:documentURL windowUUID:windowUUID isContentView:YES];
 	if(controller == nil)
 	{
-		NSLog(@"OMC: cannot load the built-in document %@", documentURL.path);
+		NSLog(@"OMC: cannot load the ActionUI document %@", documentURL.path);
 		return nullptr;
+	}
+
+	OMCHostedWindowDelegate *delegate = [OMCHostedWindowDelegate new];
+
+	// The document's limits: the minimum is what the content reports for a zero size proposal, the
+	// maximum for an infinite one (measured on the bare root element: the window-level toast and
+	// modal wrapper always expands to fill). A root with a fixed frame (exact width and height)
+	// reports the same minimum and maximum, which makes a window of fixed size.
+	bool isFixedSize = false;
+	if(inSpec.sizeLimitsFromDocument)
+	{
+		NSSize minLayoutSize = [ActionUIObjC minContentSizeForWindowUUID:windowUUID];
+		NSSize maxLayoutSize = [ActionUIObjC maxContentSizeForWindowUUID:windowUUID];
+		delegate.hasSizeLimits = (minLayoutSize.width > 10.0) && (minLayoutSize.height > 10.0);
+		delegate.minLayoutSize = minLayoutSize;
+		delegate.maxLayoutSize = maxLayoutSize;
+		isFixedSize = delegate.hasSizeLimits &&
+						((maxLayoutSize.width - minLayoutSize.width) < 1.0) &&
+						((maxLayoutSize.height - minLayoutSize.height) < 1.0);
 	}
 
 	bool isPanel = (inSpec.level != OMCHostedWindowLevel::normal);
 	NSWindowStyleMask style = NSWindowStyleMaskTitled;
 	if(isPanel)
 		style |= NSWindowStyleMaskUtilityWindow;
-	else
+	else if(inSpec.miniaturizable)
 		style |= NSWindowStyleMaskMiniaturizable;
 	if(inSpec.closable)
 		style |= NSWindowStyleMaskClosable;
-	if(inSpec.resizable)
+	if(inSpec.resizable && !isFixedSize)
 		style |= NSWindowStyleMaskResizable;
+	// NSWindowStyleMaskFullSizeContentView is required, not cosmetic, for the command windows. On
+	// macOS 27 (the same layout rendered correctly on 26), AppKit gives each column of SwiftUI's
+	// NavigationSplitView an NSTitlebarBackgroundView (carrying the scroll-edge-effect pocket) at the
+	// top of the split view's own bounds, which is only right while the split view starts at the top
+	// of the window. Without this bit the content view starts below the titlebar, the split view can
+	// never get there, and those bands paint over the detail column's first ~52 points: the top of
+	// the detail pane is hidden behind a strip of glass. Spanning the full height also puts the window
+	// title beside the sidebar, where the system apps put it. SwiftUI insets the content by the
+	// window's safe area either way, so plain (non-split) documents keep their layout. The one visible
+	// difference is a root background: it shows through the titlebar, the way it does in a SwiftUI
+	// WindowGroup window. A split-view root with padding of its own needs ActionUI's
+	// windowRootSafeArea as well, or the padding keeps it below the titlebar.
+	if(inSpec.contentSpansTitlebar)
+		style |= NSWindowStyleMaskFullSizeContentView;
 
 	NSSize contentSize = controller.view.fittingSize;
 	if(inSpec.contentWidth > 0)
@@ -321,9 +478,15 @@ OMCCreateHostedWindow(const OMCHostedWindowSpec &inSpec, std::function<void()> i
 	NSRect contentRect = NSMakeRect(0, 0, contentSize.width, contentSize.height);
 	NSWindow *window = nil;
 	if(isPanel)
-		window = [[OMCHostedNSPanel alloc] initWithContentRect:contentRect styleMask:style backing:NSBackingStoreBuffered defer:YES];
+	{
+		NSPanel *panel = [[OMCHostedNSPanel alloc] initWithContentRect:contentRect styleMask:style backing:NSBackingStoreBuffered defer:YES];
+		panel.floatingPanel = YES; // before the level below: it sets the level too
+		window = panel;
+	}
 	else
+	{
 		window = [[OMCHostedNSWindow alloc] initWithContentRect:contentRect styleMask:style backing:NSBackingStoreBuffered defer:YES];
+	}
 	window.releasedWhenClosed = NO;
 	window.identifier = windowUUID; // the document's window UUID: tests read the document through it
 	window.contentViewController = controller;
@@ -348,9 +511,54 @@ OMCCreateHostedWindow(const OMCHostedWindowSpec &inSpec, std::function<void()> i
 		break;
 	}
 
-	PlaceWindow(window, inSpec);
-	if(inSpec.frameAutosaveName != nullptr)
-		[window setFrameAutosaveName:(__bridge NSString *)inSpec.frameAutosaveName]; // restores a saved frame
+	ApplySizeLimits(window, delegate);
 
-	return std::unique_ptr<OMCHostedWindow>(new OMCAppleHostedWindow(window, controller, (__bridge CFStringRef)windowUUID, inSpec, std::move(inOnClosedByUser)));
+	if(inSpec.placement == OMCHostedWindowPlacement::restoredElseCentered)
+	{
+		BOOL frameRestored = NO;
+		if(inSpec.frameAutosaveName != nullptr)
+		{
+			NSString *autosaveName = (__bridge NSString *)inSpec.frameAutosaveName;
+			[window setFrameAutosaveName:autosaveName];
+			frameRestored = [window setFrameUsingName:autosaveName];
+		}
+
+		if(!frameRestored)
+		{
+			// The hosting view's fitting size is the content's ideal size plus the window's safe area
+			// (the titlebar, when the content spans it): unlike the limits it needs nothing added
+			NSSize fittingSize = controller.view.fittingSize;
+			if( (fittingSize.width > 10) && (fittingSize.height > 10) )
+				[window setContentSize:fittingSize];
+			[window center];
+		}
+		else if(isFixedSize)
+		{
+			// a frame saved before the document became fixed-size may carry a stale size: the
+			// document's size wins, the saved position stays
+			NSSize fixedSize = delegate.minLayoutSize;
+			fixedSize.height += TitlebarHeight(window);
+			[window setContentSize:fixedSize];
+		}
+	}
+	else
+	{
+		PlaceWindow(window, inSpec);
+		if(inSpec.frameAutosaveName != nullptr)
+			[window setFrameAutosaveName:(__bridge NSString *)inSpec.frameAutosaveName]; // restores a saved frame
+	}
+
+	if(delegate.hasSizeLimits)
+	{
+		// SwiftUI installs its NSToolbar the first time the hosting view lays out in a window, and a
+		// toolbar makes the titlebar taller: apply the limits again once that has settled, so the
+		// window's minimum still matches what the document needs
+		__weak NSWindow *weakWindow = window;
+		__weak OMCHostedWindowDelegate *weakDelegate = delegate;
+		dispatch_async(dispatch_get_main_queue(), ^{
+			ApplySizeLimits(weakWindow, weakDelegate);
+		});
+	}
+
+	return std::unique_ptr<OMCHostedWindow>(new OMCAppleHostedWindow(window, controller, delegate, (__bridge CFStringRef)windowUUID, inSpec, std::move(inOnClosedByUser)));
 }
