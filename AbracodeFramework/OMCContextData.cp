@@ -1,7 +1,6 @@
 #include "OMCClipboard.h"
 #include "OMCContextData.h"
 #include "CommandDescription.h"
-#include "CMUtils.h"
 #include "OMC.h"
 
 class FileNameAndIndex
@@ -84,19 +83,36 @@ SortObjectListByName(OMCContextData &contextData,
     return noErr;
 }
 
+// The text with its line endings changed as a TEXT_REPLACE_OPTION says (kTextReplace* in OMCConstants.h)
+static CFStringRef
+CreateTextWithReplacedLineEndings(CFStringRef inText, long inReplaceOption)
+{
+	if(inText == NULL)
+		return NULL;
+	if( (inReplaceOption != kTextReplaceLFsWithCRs) && (inReplaceOption != kTextReplaceCRsWithLFs) )
+		return (CFStringRef)CFRetain(inText);
+
+	CFMutableStringRef outText = CFStringCreateMutableCopy(kCFAllocatorDefault, 0, inText);
+	if(outText == NULL)
+		return NULL;
+	CFStringRef from = (inReplaceOption == kTextReplaceLFsWithCRs) ? CFSTR("\n") : CFSTR("\r");
+	CFStringRef to = (inReplaceOption == kTextReplaceLFsWithCRs) ? CFSTR("\r") : CFSTR("\n");
+	CFStringFindAndReplace(outText, from, to, CFRangeMake(0, CFStringGetLength(outText)), 0);
+	return outText;
+}
+
 void
 CreateTextContext(const CommandDescription &currCommand,
-                  OMCContextData &contextData,
-                  const AEDesc *inAEContext)
+                  OMCContextData &contextData)
 {
     if(contextData.contextText != NULL)
         return; // already created
 
     if( contextData.isTextContext && (currCommand.activationMode != kActiveClipboardText) )
     {
-        if( (inAEContext != NULL) && (contextData.isNullContext == false) )
+        if( (contextData.hostSelectedText != NULL) && (contextData.isNullContext == false) )
         {
-            contextData.contextText.Adopt( CMUtils::CreateCFStringFromAEDesc( *inAEContext, currCommand.textReplaceOptions ), kCFObjDontRetain);
+            contextData.contextText.Adopt( CreateTextWithReplacedLineEndings(contextData.hostSelectedText, currCommand.textReplaceOptions), kCFObjDontRetain);
         }
     }
     else if(contextData.isTextInClipboard)

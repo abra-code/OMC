@@ -12,6 +12,7 @@ class AObserverBase;
 class OMCDialog;
 class CommandRuntimeData;
 class OMCContextData;
+struct OMCHostSelection;
 struct OneObjProperties;
 
 #define CM_IMPL_PLUGIN_PREFS_INDENTIFIER	"com.abracode.OnMyCommandCMPrefs"
@@ -48,13 +49,17 @@ public:
 	// reject the command - the command designer is responsible for handling missing context.
 	virtual OSStatus	ExamineContext( CFTypeRef inContext, SInt32 inCommandRef, bool inEnforceActivationMatch = true );
 
-    // the contextual menu API to execute a command
-	virtual OSStatus	HandleSelection( AEDesc *inAEContext, SInt32 inCommandRef ); // pass NULL for inAEContext when executing with CF Context
+    // the contextual menu API to execute a command: the context is the one the last ExamineContext
+    // examined (EntryPoints/Apple/OnMyCommandAE.cp)
+	virtual OSStatus	HandleSelection( AEDesc *inAEContext, SInt32 inCommandRef );
     virtual void		PostMenuCleanup();
 
-	OSStatus			CommonContextCheck( const AEDesc *inAEContext, CFTypeRef inContext, const OMCContextData *inParentContext, AEDescList *outCommandPairs, SInt32 inCmdIndex, bool inEnforceActivationMatch = true );
-    // internal API to execute a command
-    OSStatus            ExecuteCommand( AEDesc *inAEContext, SInt32 inCommandIndex, const CommandRuntimeData *parentCommandRuntimeData ); // pass NULL for inAEContext when executing with CF Context
+	OSStatus			CommonContextCheck( CFTypeRef inContext, const OMCHostSelection *inHostSelection, const OMCContextData *inParentContext, AEDescList *outCommandPairs, SInt32 inCmdIndex, bool inEnforceActivationMatch = true );
+    // internal API to execute a command, with the context the last CommonContextCheck examined
+    OSStatus            ExecuteCommand( SInt32 inCommandIndex, const CommandRuntimeData *parentCommandRuntimeData );
+    // the same for a command reference (kCMCommandStart + index), as the contextual menu and OMC.h hand
+    // them out: the portable form of HandleSelection
+    OSStatus            ExecuteCommandRef( SInt32 inCommandRef );
 
 	void				AddObserver(AObserverBase *inObserver)
 						{
@@ -74,18 +79,15 @@ public:
 	OSStatus			ExecuteCommandWithObjects(CommandRuntimeData *commandRuntimeData);
 	OSStatus			ExecuteCommandWithText(CommandDescription &currCommand, CFStringRef inStrRef, CommandRuntimeData *commandRuntimeData);
 	Boolean				DisplayWarning(CommandDescription &currCommand, CommandRuntimeData &commandRuntimeData);
-	Boolean				PopulateItemsMenu( const AEDesc *inAEContext,
-                                          CommandRuntimeData &commandRuntimeData,
+	Boolean				PopulateItemsMenu( CommandRuntimeData &commandRuntimeData,
                                           AEDescList* ioRootMenu,
                                           Boolean runningInSpecialApp,
                                           CFStringRef inFrontAppName );
 	bool				IsCommandEnabled(CommandDescription &currCommand,
                                          OMCContextData &contextData,
-                                         const AEDesc *inAEContext,
                                          CFStringRef currAppName,
                                          bool skipFinderWindowCheck);
 	bool				IsCommandEnabled(SInt32 inCmdIndex,
-                                         const AEDesc *inAEContext,
                                          OMCContextData &contextData,
                                          bool runningInSpecialApp,
                                          CFStringRef inFrontAppName);

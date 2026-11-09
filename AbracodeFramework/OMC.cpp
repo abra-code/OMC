@@ -44,7 +44,7 @@ extern "C" OSStatus OMCRunCommand(CFTypeRef inPlistRef, CFStringRef inCommandNam
 		err = omcPlugin->ExamineContext(inContext, kCMCommandStart+commandIndex);
 		if(err == noErr)
 		{
-			err = omcPlugin->HandleSelection(nullptr, kCMCommandStart+commandIndex);
+			err = omcPlugin->ExecuteCommandRef(kCMCommandStart+commandIndex);
 			omcPlugin->PostMenuCleanup();//currently doing nothing, just for completeness
 		}
 	}
@@ -271,7 +271,7 @@ extern "C" OSStatus OMCExecuteCommand(OMCExecutorRef inOMCExecutor, OMCCommandRe
 		{
 			if(OMCIsValidCommandRef(inCommandRef))
             {
-                err = inOMCExecutor->HandleSelection(nullptr, inCommandRef);
+                err = inOMCExecutor->ExecuteCommandRef(inCommandRef);
             }
 			inOMCExecutor->PostMenuCleanup();//currently does nothing
 		}

@@ -4,7 +4,6 @@
 #include "OMCConstants.h"
 
 class CommandDescription;
-struct AEDesc;
 
 struct OMCSortSettings
 {
@@ -32,6 +31,7 @@ public:
 	OMCContextData() {}
     OMCContextData(const OMCContextData &otherContextData)
       : contextText(otherContextData.contextText),
+        hostSelectedText(otherContextData.hostSelectedText),
         clipboardText(otherContextData.clipboardText),
         objectList(otherContextData.objectList),
         objectListSorting(otherContextData.objectListSorting),
@@ -53,6 +53,7 @@ public:
     }
 
 	CFObj<CFStringRef>			contextText;
+    CFObj<CFStringRef>          hostSelectedText; // a contextual menu host's selected text, raw (OMCHostSelection): contextText once a command takes it
     CFObj<CFStringRef>          clipboardText; // may be the same as contextText, just retained
 	std::vector<OneObjProperties> objectList;
     OMCSortSettings             objectListSorting; // keeps the current object sorting settings. updated after sorting changes
@@ -76,6 +77,7 @@ OSStatus SortObjectListByName(OMCContextData &contextData,
                               CFOptionFlags compareOptions,
                               bool sortAscending);
 
+// Sets contextText when the command needs it: the host's selected text, else the clipboard text, with
+// the command's TEXT_REPLACE_OPTION applied
 void CreateTextContext(const CommandDescription &currCommand,
-                       OMCContextData &contextData,
-                       const AEDesc *inAEContext);
+                       OMCContextData &contextData);
