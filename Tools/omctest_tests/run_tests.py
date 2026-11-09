@@ -686,6 +686,19 @@ check "the predicate came true" "yes" "$([ -f "${TMPDIR}slow.txt" ] && echo yes 
 omc_wait_for "[ -f \"${TMPDIR}never\" ]" 1
 check "and a timeout returns 1" "1" "$?"
 
+# omc_run finds handlers through an index of the Scripts folder, built once and
+# built again when the folder changes. The dispatches above built it; a handler
+# written now must still be found, and one removed must stop resolving.
+section "a handler added during the file is found, and a removed one is gone"
+late="$OMC_APP_BUNDLE_PATH/Contents/Resources/Scripts/Fixture.latecomer.sh"
+printf '#!/bin/sh\nprintf added > "${TMPDIR}latecomer.txt"\n' > "$late"
+omc_run Fixture.latecomer
+check_status "a handler written after earlier dispatches runs" 0
+check "and it ran" "added" "$(/bin/cat "${TMPDIR}latecomer.txt" 2>/dev/null)"
+/bin/rm -f "$late"
+omc_run Fixture.latecomer 2>/dev/null
+check_status "once removed it no longer resolves" 127
+
 omctest_end
 '''
 
@@ -917,6 +930,18 @@ check "a button actionID" "ok.act" "$(ui_alert_action OK)"
 check "a missing from_file did not truncate" "4" "$(ui_row_count 100)"
 check "a journal-only verb changed nothing"  "4" "$(ui_row_count 100)"
 check "but was journaled" "1" "$(ui_calls omc_resize)"
+# One journal line per call: a tab or a newline inside an argument becomes a space
+# there, and each argument is followed by one. The value file keeps them. Written
+# to a window of its own, so no view of this window changes (view 11 has rows
+# here, and a value onto rows is a suspect write the checks below count).
+tab=$(printf '\t')
+journal_window="${OMC_ACTIONUI_WINDOW_UUID}-journal"
+"$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$journal_window" 11 "one${tab}two
+three"
+check "the journal flattens a tab and a newline, in one line" \
+    "$journal_window${tab}11${tab}one two three " "$(/usr/bin/tail -n 1 "$OMCTEST_UI/journal.tsv")"
+check "and the value keeps them" "one${tab}two
+three" "$(/bin/cat "$OMCTEST_UI/win-$journal_window/v11.value")"
 
 section "the argument-count rule, as the tool applies it"
 ui_reset
@@ -1025,6 +1050,14 @@ check "the stub round-trips"          "hello" "$("$pb" omctest_probe_board get 2
 check "the real board is untouched"   ""      "$("$real_pb" omctest_probe_board get 2>/dev/null)"
 check "and it is backed by a file"    "1" \
     "$(/usr/bin/find "$OMCTEST_UI/pb" -name 'omctest_probe_board.*' 2>/dev/null | /usr/bin/wc -l | /usr/bin/tr -d ' ')"
+# A name of safe characters is its own file name, with no checksum to compute.
+check "  under its own name"         "yes" \
+    "$([ -f "$OMCTEST_UI/pb/omctest_probe_board.plain" ] && echo yes || echo no)"
+# The real tool tells boards apart by case; the scratch's file system does not.
+"$pb" Omctest_Case put upper >/dev/null 2>&1
+"$pb" omctest_case put lower >/dev/null 2>&1
+check "  and names that differ only in case are two boards" "upper lower" \
+    "$("$pb" Omctest_Case get 2>/dev/null) $("$pb" omctest_case get 2>/dev/null)"
 # No prefix left to publish: there is no shared namespace to carve any more.
 check "no namespace prefix is published" "yes" \
     "$([ -z "${OMCTEST_PB_PREFIX:-}" ] && echo yes || echo no)"
@@ -1283,12 +1316,12 @@ omctest_end
 EXPECTED_COUNTS = {
     "10-environment.test.sh": (19, 0),
     "20-lifetime.test.sh": (36, 0),
-    "30-omcrun.test.sh": (13, 0),
+    "30-omcrun.test.sh": (16, 0),
     "40-alerts.test.sh": (16, 0),
     "50-chain.test.sh": (11, 0),
     "55-defaults.test.sh": (25, 0),
-    "60-window.test.sh": (56, 0),
-    "70-tools.test.sh": (49, 0),
+    "60-window.test.sh": (58, 0),
+    "70-tools.test.sh": (51, 0),
     "75-bridge.test.sh": (22, 0),
     "85-noise.test.sh": (1, 0),
 }
