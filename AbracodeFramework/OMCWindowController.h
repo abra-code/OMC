@@ -72,7 +72,6 @@ class CommandRuntimeData;
 - (void)setWindowContentSize:(NSSize)inContentSize;
 
 - (void)invokeMessages:(CFArrayRef)messages onTarget:(id)target;
-- (void)sendObjCMessage:(CFArrayRef)oneObjCMessage toTarget:(id)messageTarget;
 
 // OMCWindowControlProtocol — no-op defaults provided here; subclasses override for their UI framework.
 

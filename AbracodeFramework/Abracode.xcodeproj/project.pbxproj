@@ -61,6 +61,7 @@
 		1D0A1B2C2F74000000000102 /* OMCAlerts.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1D0A1B2C2F74000000000101 /* OMCAlerts.cpp */; };
 		1D560A1B2F80000000000002 /* ActionUICAdapter in Frameworks */ = {isa = PBXBuildFile; productRef = 1D560A1B2F80000000000001 /* ActionUICAdapter */; };
 		1D560A1B2F80000000000005 /* OMCWindowHost.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1D560A1B2F80000000000004 /* OMCWindowHost.mm */; };
+		1D560A1B2F8000000000002A /* OMCObjCInvoke.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1D560A1B2F80000000000029 /* OMCObjCInvoke.mm */; };
 		1D560A1B2F80000000000026 /* OMCActionUIAddOns.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1D560A1B2F80000000000025 /* OMCActionUIAddOns.cpp */; };
 		1D560A1B2F8000000000001D /* OMCAppleScriptRunner.cp in Sources */ = {isa = PBXBuildFile; fileRef = 1D560A1B2F8000000000001C /* OMCAppleScriptRunner.cp */; };
 		1D560A1B2F80000000000008 /* OMCProgressWindow.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1D560A1B2F80000000000007 /* OMCProgressWindow.cpp */; };
@@ -470,6 +471,8 @@
 		1D0A1B2C2F74000000000103 /* OMCAlerts.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCAlerts.h; sourceTree = "<group>"; };
 		1D0A1B2C2F74000000000104 /* OMCAlerts.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCAlerts.mm; sourceTree = "<group>"; };
 		1D560A1B2F80000000000003 /* OMCWindowHost.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCWindowHost.h; sourceTree = "<group>"; };
+		1D560A1B2F80000000000027 /* OMCInvoke.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCInvoke.h; sourceTree = "<group>"; };
+		1D560A1B2F80000000000028 /* OMCObjCInvoke.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCObjCInvoke.h; sourceTree = "<group>"; };
 		1D560A1B2F8000000000001A /* OMCTerminalLauncher.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCTerminalLauncher.h; sourceTree = "<group>"; };
 		1D560A1B2F80000000000024 /* OMCActionUIAddOns.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCActionUIAddOns.h; sourceTree = "<group>"; };
 		1D560A1B2F80000000000025 /* OMCActionUIAddOns.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCActionUIAddOns.cpp; sourceTree = "<group>"; };
@@ -477,6 +480,7 @@
 		1D560A1B2F8000000000001C /* OMCAppleScriptRunner.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCAppleScriptRunner.cp; sourceTree = "<group>"; };
 		1D560A1B2F80000000000019 /* OMCClipboard.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCClipboard.h; sourceTree = "<group>"; };
 		1D560A1B2F80000000000004 /* OMCWindowHost.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCWindowHost.mm; sourceTree = "<group>"; };
+		1D560A1B2F80000000000029 /* OMCObjCInvoke.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCObjCInvoke.mm; sourceTree = "<group>"; };
 		1D560A1B2F80000000000006 /* OMCProgressWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCProgressWindow.h; sourceTree = "<group>"; };
 		1D560A1B2F80000000000007 /* OMCProgressWindow.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCProgressWindow.cpp; sourceTree = "<group>"; };
 		1D560A1B2F8000000000000A /* omc_progress.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = BuiltInDocuments/omc_progress.json; sourceTree = "<group>"; };
@@ -895,6 +899,7 @@
 				1D0A1B2C2F75000000000104 /* OMCActionUIModels.h */,
 				1D0A1B2C2F74000000000103 /* OMCAlerts.h */,
 				1D560A1B2F80000000000003 /* OMCWindowHost.h */,
+				1D560A1B2F80000000000027 /* OMCInvoke.h */,
 				1D560A1B2F8000000000001A /* OMCTerminalLauncher.h */,
 				1D560A1B2F8000000000001B /* OMCAppleScriptRunner.h */,
 				1D560A1B2F80000000000024 /* OMCActionUIAddOns.h */,
@@ -921,6 +926,8 @@
 				1D0A1B2C2F75000000000105 /* OMCActionUIModels.mm */,
 				1D0A1B2C2F74000000000104 /* OMCAlerts.mm */,
 				1D560A1B2F80000000000004 /* OMCWindowHost.mm */,
+				1D560A1B2F80000000000028 /* OMCObjCInvoke.h */,
+				1D560A1B2F80000000000029 /* OMCObjCInvoke.mm */,
 				1D80B9BF22E447F900CF1AF5 /* OMCTerminalExecutor.cp */,
 				1D80B9B822E447E800CF1AF5 /* OMCiTermExecutor.cp */,
 				1D560A1B2F8000000000001C /* OMCAppleScriptRunner.cp */,
@@ -1526,6 +1533,7 @@
 				1D0A1B2C2F75000000000106 /* OMCActionUIModels.mm in Sources */,
 				1D0A1B2C2F74000000000102 /* OMCAlerts.cpp in Sources */,
 				1D560A1B2F80000000000005 /* OMCWindowHost.mm in Sources */,
+				1D560A1B2F8000000000002A /* OMCObjCInvoke.mm in Sources */,
 				1D560A1B2F8000000000001D /* OMCAppleScriptRunner.cp in Sources */,
 				1D560A1B2F80000000000026 /* OMCActionUIAddOns.cpp in Sources */,
 				1D560A1B2F80000000000008 /* OMCProgressWindow.cpp in Sources */,
