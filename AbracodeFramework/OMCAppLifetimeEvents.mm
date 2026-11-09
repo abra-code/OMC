@@ -11,17 +11,7 @@
 #include "OMCPrivateConstants.h"
 #include <string.h>
 #include "OMCTestHost.h"
-
-// Optional ActionUI add-ons: register extra element types so dialogs can use them.
-// Each is linked via its own ActionUI Swift package (see project setup) and exposes a plain
-// C entry point (@_cdecl) rather than an Objective-C class, so we forward-declare it here - it is
-// not emitted into a generated -Swift.h. Call each once on the main thread before any dialog is built.
-extern "C" void ActionUIQuickLook_register(void);
-extern "C" void ActionUICachedImage_register(void);
-extern "C" void ActionUIRichText_register(void);
-extern "C" void ActionUIDiff_register(void);
-extern "C" void ActionUIChat_register(void);
-extern "C" void ActionUIHostSurface_register(void);
+#include "OMCActionUIAddOns.h"
 
 // NSTemporaryDirectory() on macOS is confstr(_CS_DARWIN_USER_TEMP_DIR): the /var/folders/<...>/T
 // directory launchd creates per uid, mode 0700. It does NOT consult $TMPDIR - checking the
@@ -221,12 +211,7 @@ const char *OMCGetPythonPycachePrefix(void)
     OMCTestHostStartIfRequested();
 
     // Register optional ActionUI add-on element types before any dialog window is built.
-    ActionUIQuickLook_register();
-    ActionUICachedImage_register();
-    ActionUIRichText_register();
-    ActionUIDiff_register();
-    ActionUIChat_register();
-    ActionUIHostSurface_register();
+    OMCRegisterActionUIAddOns();
 
     // Disabled: eager compileall cost 23.7 ms of synchronous launch time on every start to save
     // 2.1 ms once, and the part it was written for - precompiling the top-level handler scripts -

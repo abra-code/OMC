@@ -61,6 +61,7 @@
 		1D0A1B2C2F74000000000102 /* OMCAlerts.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1D0A1B2C2F74000000000101 /* OMCAlerts.cpp */; };
 		1D560A1B2F80000000000002 /* ActionUICAdapter in Frameworks */ = {isa = PBXBuildFile; productRef = 1D560A1B2F80000000000001 /* ActionUICAdapter */; };
 		1D560A1B2F80000000000005 /* OMCWindowHost.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1D560A1B2F80000000000004 /* OMCWindowHost.mm */; };
+		1D560A1B2F80000000000026 /* OMCActionUIAddOns.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1D560A1B2F80000000000025 /* OMCActionUIAddOns.cpp */; };
 		1D560A1B2F8000000000001D /* OMCAppleScriptRunner.cp in Sources */ = {isa = PBXBuildFile; fileRef = 1D560A1B2F8000000000001C /* OMCAppleScriptRunner.cp */; };
 		1D560A1B2F80000000000008 /* OMCProgressWindow.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1D560A1B2F80000000000007 /* OMCProgressWindow.cpp */; };
 		1D560A1B2F8000000000000B /* omc_progress.json in Resources */ = {isa = PBXBuildFile; fileRef = 1D560A1B2F8000000000000A /* omc_progress.json */; };
@@ -470,6 +471,8 @@
 		1D0A1B2C2F74000000000104 /* OMCAlerts.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCAlerts.mm; sourceTree = "<group>"; };
 		1D560A1B2F80000000000003 /* OMCWindowHost.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCWindowHost.h; sourceTree = "<group>"; };
 		1D560A1B2F8000000000001A /* OMCTerminalLauncher.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCTerminalLauncher.h; sourceTree = "<group>"; };
+		1D560A1B2F80000000000024 /* OMCActionUIAddOns.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCActionUIAddOns.h; sourceTree = "<group>"; };
+		1D560A1B2F80000000000025 /* OMCActionUIAddOns.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCActionUIAddOns.cpp; sourceTree = "<group>"; };
 		1D560A1B2F8000000000001B /* OMCAppleScriptRunner.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCAppleScriptRunner.h; sourceTree = "<group>"; };
 		1D560A1B2F8000000000001C /* OMCAppleScriptRunner.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCAppleScriptRunner.cp; sourceTree = "<group>"; };
 		1D560A1B2F80000000000019 /* OMCClipboard.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCClipboard.h; sourceTree = "<group>"; };
@@ -894,6 +897,7 @@
 				1D560A1B2F80000000000003 /* OMCWindowHost.h */,
 				1D560A1B2F8000000000001A /* OMCTerminalLauncher.h */,
 				1D560A1B2F8000000000001B /* OMCAppleScriptRunner.h */,
+				1D560A1B2F80000000000024 /* OMCActionUIAddOns.h */,
 				1D560A1B2F80000000000019 /* OMCClipboard.h */,
 				1DBCC43122CE209200A1DD8F /* OMCHostInfo.h */,
 				1D0A1B2C2F6A000000000003 /* Apple */,
@@ -920,6 +924,7 @@
 				1D80B9BF22E447F900CF1AF5 /* OMCTerminalExecutor.cp */,
 				1D80B9B822E447E800CF1AF5 /* OMCiTermExecutor.cp */,
 				1D560A1B2F8000000000001C /* OMCAppleScriptRunner.cp */,
+				1D560A1B2F80000000000025 /* OMCActionUIAddOns.cpp */,
 				E29ED1750D09525700C9D5E8 /* OMCClipboard.cp */,
 				1DBCC43222CE209300A1DD8F /* OMCHostInfo.mm */,
 				1D0A1B2C2F6A000000000001 /* NibDialogs */,
@@ -1522,6 +1527,7 @@
 				1D0A1B2C2F74000000000102 /* OMCAlerts.cpp in Sources */,
 				1D560A1B2F80000000000005 /* OMCWindowHost.mm in Sources */,
 				1D560A1B2F8000000000001D /* OMCAppleScriptRunner.cp in Sources */,
+				1D560A1B2F80000000000026 /* OMCActionUIAddOns.cpp in Sources */,
 				1D560A1B2F80000000000008 /* OMCProgressWindow.cpp in Sources */,
 				1D0A1B2C2F74000000000105 /* OMCAlerts.mm in Sources */,
 				1DED8E572222BD8E00A2CAF7 /* MoreAppleEvents.cp in Sources */,
