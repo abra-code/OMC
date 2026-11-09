@@ -17,6 +17,7 @@
 #include "OMCStrings.h"
 #include "OMCActionUIModelLifetime.h"
 #include "OMCWindowHost.h"
+#include "OMCActionUIDocumentLookup.h"
 #include <memory>
 
 // enable only in OMC version 5.0 or later
@@ -639,52 +640,12 @@ static NSArray<NSArray<NSString*>*> *OMCParseTabSeparatedRows(CFArrayRef cfRows)
     [ActionUIObjC clearElementSelectionWithWindowUUID:windowUUID viewID:viewID];
 }
 
-/// Resolves a resource name or absolute path to a file URL.
-/// Searches the same bundle chain used for the main dialog JSON (external bundle > main bundle > framework bundle).
+/// Where the document named by JSON_NAME or omc_present_modal is (OMCActionUIDocumentLookup.h): an
+/// absolute path, else a resource of the command's bundle, the main bundle or OMC's framework
 - (NSURL *)resolveJSONURL:(NSString *)resourceNameOrPath
 {
-    if (resourceNameOrPath.length == 0) return nil;
-
-    // Absolute path: use directly
-    if ([resourceNameOrPath hasPrefix:@"/"])
-        return [NSURL fileURLWithPath:resourceNameOrPath];
-
-    // Strip .json extension for resource lookup if present
-    NSString *baseName = [resourceNameOrPath hasSuffix:@".json"]
-        ? [resourceNameOrPath stringByDeletingPathExtension]
-        : resourceNameOrPath;
-
-    if (mExternBundleRef != NULL) {
-        CFObj<CFURLRef> bundleURL( CFBundleCopyBundleURL(mExternBundleRef) );
-        if (bundleURL != NULL) {
-            CFObj<CFStringRef> bundlePath = CreatePathFromCFURL(bundleURL, kEscapeNone);
-            if (bundlePath != nullptr) {
-                NSBundle *externBundle = [NSBundle bundleWithPath:(__bridge NSString *)bundlePath.Get()];
-                NSString *jsonPath = [externBundle pathForResource:baseName ofType:@"json"];
-                if (jsonPath != nil)
-                    return [NSURL fileURLWithPath:jsonPath];
-            }
-        }
-    }
-
-    NSString *jsonPath = [[NSBundle mainBundle] pathForResource:baseName ofType:@"json"];
-    if (jsonPath != nil)
-        return [NSURL fileURLWithPath:jsonPath];
-
-    CFBundleRef frameworkBundleRef = mPlugin->GetBundleRef();
-    if (frameworkBundleRef != NULL) {
-        CFObj<CFURLRef> bundleURL( CFBundleCopyBundleURL(frameworkBundleRef) );
-        if (bundleURL != NULL) {
-            CFObj<CFStringRef> bundlePath = CreatePathFromCFURL(bundleURL, kEscapeNone);
-            if (bundlePath != nullptr) {
-                NSBundle *omcBundle = [NSBundle bundleWithPath:(__bridge NSString *)bundlePath.Get()];
-                NSString *path = [omcBundle pathForResource:baseName ofType:@"json"];
-                if (path != nil) return [NSURL fileURLWithPath:path];
-            }
-        }
-    }
-
-    return nil;
+    return (NSURL *)CFBridgingRelease(OMCCopyActionUIDocumentURL((__bridge CFStringRef)resourceNameOrPath,
+                                                                 mExternBundleRef, mPlugin->GetBundleRef()));
 }
 
 #pragma mark - Modal presentation (ActionUI)
