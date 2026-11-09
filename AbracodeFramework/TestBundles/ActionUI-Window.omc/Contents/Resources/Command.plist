@@ -214,6 +214,54 @@ fi
 			<key>NAME</key>
 			<string>Window Tests</string>
 		</dict>
+		<dict>
+			<key>ACTIONUI_WINDOW</key>
+			<dict>
+				<key>IS_BLOCKING</key>
+				<false/>
+				<key>JSON_NAME</key>
+				<string>WindowControls</string>
+			</dict>
+			<key>ACTIVATION_MODE</key>
+			<string>act_always</string>
+			<key>COMMAND</key>
+			<array>
+				<string>echo "${OMC_ACTIONUI_WINDOW_UUID}"
+</string>
+			</array>
+			<key>EXECUTION_MODE</key>
+			<string>exe_shell_script</string>
+			<key>NAME</key>
+			<string>Window Controls</string>
+			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
+			<string>14.6</string>
+			<key>REQUIRED_OMC_VERSION</key>
+			<string>5.0</string>
+		</dict>
+		<dict>
+			<key>ACTIVATION_MODE</key>
+			<string>act_selected_text</string>
+			<key>COMMAND</key>
+			<array>
+				<string>args_line="$(printf '%s\n' "${OMC_OBJ_TEXT}" | /usr/bin/head -n 1)"
+input_text="$(printf '%s\n' "${OMC_OBJ_TEXT}" | /usr/bin/tail -n +2)"
+eval "set -- ${args_line}"
+if [ -n "${input_text}" ]; then
+    printf '%s\n' "${input_text}" | "$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$@"
+else
+    "$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$@" &lt; /dev/null
+fi
+</string>
+			</array>
+			<key>COMMAND_ID</key>
+			<string>window.control</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_shell_script</string>
+			<key>NAME</key>
+			<string>Window Tests</string>
+			<key>NOTES</key>
+			<string>Its text context is a request: the first line is the arguments for omc_dialog_control (the window UUID first), in shell syntax; any further lines go to its standard input</string>
+		</dict>
 	</array>
 	<key>VERSION</key>
 	<integer>2</integer>

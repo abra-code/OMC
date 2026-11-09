@@ -1,0 +1,54 @@
+{
+  "type": "VStack",
+  "properties": {
+    "frame": {
+      "minWidth": 360,
+      "minHeight": 300,
+      "maxWidth": 4000,
+      "maxHeight": 3000
+    }
+  },
+  "children": [
+    {
+      "type": "TextField",
+      "id": 2,
+      "properties": {}
+    },
+    {
+      "type": "Button",
+      "id": 3,
+      "properties": {
+        "title": "Press"
+      }
+    },
+    {
+      "type": "List",
+      "id": 4,
+      "properties": {}
+    },
+    {
+      "type": "Table",
+      "id": 5,
+      "properties": {
+        "columns": [
+          "A",
+          "B"
+        ]
+      }
+    },
+    {
+      "type": "VStack",
+      "id": 6,
+      "properties": {},
+      "children": [
+        {
+          "type": "Text",
+          "id": 7,
+          "properties": {
+            "text": "Removable"
+          }
+        }
+      ]
+    }
+  ]
+}
