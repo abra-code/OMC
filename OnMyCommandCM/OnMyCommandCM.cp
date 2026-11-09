@@ -9,7 +9,7 @@
 //**************************************************************************************
 
 
-#include "OnMyCommand.h"
+#include "OnMyCommandAE.h"
 
 #pragma mark -
 #pragma mark **** IMPLEMENTATION ****
@@ -21,6 +21,6 @@ CFUUIDRef kCMPluginFactoryID = ::CFUUIDGetConstantUUIDWithBytes( NULL,
 ACMPlugin *CreateNewCMPlugin()
 {
 //	TRACE_CSTR( "CreateNewCMPlugin for OnMyCommandCM\n" );
-	return new OnMyCommandCM(NULL);
+	return new OnMyCommandCMPlugin();
 }
 

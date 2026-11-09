@@ -112,8 +112,8 @@ CFStringRef kBundleIDString = CFSTR("com.abracode.AbracodeFramework");
 SInt32 OnMyCommandCM::sMacOSVersion = 140600;
 
 OnMyCommandCM::OnMyCommandCM(CFPropertyListRef inPlistRef)
-	: ACMPlugin( kBundleIDString ) //mBundleRef is pointing to Abracode.framework bundle
 {
+	mBundleRef.Adopt( ::CFBundleGetBundleWithIdentifier(kBundleIDString), kCFObjRetain ); //Abracode.framework
 	TRACE_CSTR( "OnMyCommandCM::OnMyCommandCM\n" );
 
 	if(inPlistRef != NULL)
@@ -249,7 +249,8 @@ OnMyCommandCM::InitOmcBundlePaths()
 
 }
 
-// The Apple event forms of ExamineContext and HandleSelection: EntryPoints/Apple/OnMyCommandAE.cp
+// The Apple event face (the contextual menu plugin's OnMyCommandCMPlugin and OMC.h's Apple event
+// functions) is EntryPoints/Apple/OnMyCommandAE.cp; it calls ExamineHostSelection and ExecuteCommandRef
 
 //new API for OMC.h
 OSStatus
@@ -262,6 +263,20 @@ OnMyCommandCM::ExamineContext( CFTypeRef inContext, SInt32 inCommandRef, bool in
 		mCurrCommandIndex = 0;
 
 	return CommonContextCheck( inContext, nullptr, nullptr, nullptr, cmdIndex, inEnforceActivationMatch );
+}
+
+// The host's files come in as the CF context, the same path as a CF caller's; the selection, the
+// selected text and the Finder open-folder check come from inSelection
+OSStatus
+OnMyCommandCM::ExamineHostSelection( const OMCHostSelection &inSelection, SInt32 inCommandRef, OMCMenuModel *outMenu )
+{
+	SInt32 cmdIndex = -1;
+	if(inCommandRef >= kCMCommandStart)
+		cmdIndex = mCurrCommandIndex = inCommandRef - kCMCommandStart;
+	else
+		mCurrCommandIndex = 0;
+
+	return CommonContextCheck( inSelection.files, &inSelection, nullptr, outMenu, cmdIndex );
 }
 
 // inContext: a CFString (text), a CFURL or a CFArray of CFURLs or POSIX paths (files), or NULL.

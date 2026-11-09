@@ -12,7 +12,6 @@
 #import "OMCMenuItem.h"
 #include "ARefCounted.h"
 #include "CFObj.h"
-#include "StAEDesc.h"
 #include "ACFPropertyList.h"
 
 typedef struct OneSubmenuName
@@ -248,8 +247,8 @@ PopulateCommandsMenu(OnMyCommandCM *inPlugin, NSMenu *topMenu)
 	NSURL *commandURL = CFBridgingRelease(resolvedURL);
 
     ARefCountedObj<OnMyCommandCM> omcPlugin( new OnMyCommandCM( (__bridge CFURLRef)commandURL ), kARefCountDontRetain );
-	StAEDesc contextDesc;//empty context
-	error = omcPlugin->ExamineContext(contextDesc, NULL);
+	omcPlugin->Init();
+	error = omcPlugin->ExamineContext((CFTypeRef)NULL, kOmcUnspecifiedCommand);//no context, all commands
 	if( error == noErr )
 	{
 		PopulateCommandsMenu(omcPlugin, self);

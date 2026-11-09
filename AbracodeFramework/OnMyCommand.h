@@ -1,7 +1,8 @@
 #pragma once
 
 #include "OutputWindowHandler.h"
-#include "ACMPlugin.h"
+#include "ARefCounted.h"
+#include "CFObj.h"
 #include "OMCStrings.h"
 #include "CommandDescription.h"
 #include "AUniquePtr.h"
@@ -31,7 +32,9 @@ typedef enum
     kOMCHostApp_ShortcutsObserver
 } OMCHostApp;
 
-class OnMyCommandCM : public ACMPlugin
+// The engine: one command file, its context checks and command runs. Portable. The contextual menu
+// plugin's Apple event face is OnMyCommandCMPlugin (EntryPoints/Apple/OnMyCommandAE.h).
+class OnMyCommandCM : public ARefCounted
 {
 public:
 
@@ -40,19 +43,18 @@ public:
 	
 	virtual OSStatus	Init();
 
-	virtual OSStatus	ExamineContext( const AEDesc *inAEContext, AEDescList *outCommandPairs );
-	virtual OSStatus	ExamineContext( const AEDesc *inAEContext, SInt32 inCommandRef, AEDescList *outCommandPairs );
 	// inEnforceActivationMatch == true (contextual menu / services): the command is rejected
 	// with errAEWrongDataType when its ACTIVATION_MODE does not match the supplied context.
 	// inEnforceActivationMatch == false (explicit applet execution): the context is still examined
 	// and runtime data prepared, but a mismatch (e.g. act_file with empty file context) does not
 	// reject the command - the command designer is responsible for handling missing context.
 	virtual OSStatus	ExamineContext( CFTypeRef inContext, SInt32 inCommandRef, bool inEnforceActivationMatch = true );
-
-    // the contextual menu API to execute a command: the context is the one the last ExamineContext
-    // examined (EntryPoints/Apple/OnMyCommandAE.cp)
-	virtual OSStatus	HandleSelection( AEDesc *inAEContext, SInt32 inCommandRef );
-    virtual void		PostMenuCleanup();
+	// A contextual menu host's selection (macOS: EntryPoints/Apple/OnMyCommandAE.cp), checked as a
+	// menu: one command (inCommandRef = kCMCommandStart + index) or all of them (below kCMCommandStart).
+	// Fills outMenu when it is not NULL; activation is always enforced.
+	OSStatus			ExamineHostSelection( const OMCHostSelection &inSelection, SInt32 inCommandRef, OMCMenuModel *outMenu );
+	void				PostMenuCleanup();
+	CFBundleRef			GetBundleRef() const { return mBundleRef; } // Abracode.framework
 
 	OSStatus			CommonContextCheck( CFTypeRef inContext, const OMCHostSelection *inHostSelection, const OMCContextData *inParentContext, OMCMenuModel *outMenu, SInt32 inCmdIndex, bool inEnforceActivationMatch = true );
     // internal API to execute a command, with the context the last CommonContextCheck examined
@@ -180,6 +182,8 @@ private:
 protected:
     static SInt32				sMacOSVersion;
 
+	CFObj<CFBundleRef>			mBundleRef; // Abracode.framework
+
 	CFObj<CFURLRef>				mPlistURL;
 	CFObj<CFURLRef>				mExternBundleOverrideURL;
     CommandDescription			*mCommandList {nullptr};
@@ -187,12 +191,13 @@ protected:
     UInt32						mCurrCommandIndex {0};
     
     // Command execution runtime data should be separate from the OnMyCommandCM engine instance.
-    // However, the constraints of original contextual menu APIs contract prevent us from creating
-    // a new CommandRuntimeData and passing to ExamineContext() and then HandleSelection().
-    // A workaround is to create a new CommandRuntimeData in ExamineContext(), place it in mInitialRuntimeData and
-    // then immediately consume in HandleSelection() and empty the temporary mInitialRuntimeData storage
-    // this way ExamineContext() always starts with empty runtime data
-    // This is not multithreading safe of course: we cannot run ExamineContext()/HandleSelection() concurrently
+    // However, the constraints of original contextual menu APIs contract (ExamineContext() then
+    // HandleSelection(), which the context check and ExecuteCommandRef() follow) prevent us from creating
+    // a new CommandRuntimeData and passing it from one call to the other.
+    // A workaround is to create a new CommandRuntimeData in the context check, place it in mInitialRuntimeData and
+    // then immediately consume it when the command runs and empty the temporary mInitialRuntimeData storage
+    // this way a context check always starts with empty runtime data
+    // This is not multithreading safe of course: we cannot run a context check and a command run concurrently
     // using the same OnMyCommandCM object (the engine was never designed for multithreading anyway)
     
     ARefCountedObj<CommandRuntimeData> mInitialRuntimeData;

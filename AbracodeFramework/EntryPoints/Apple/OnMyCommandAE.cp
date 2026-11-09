@@ -2,14 +2,17 @@
 //  OnMyCommandAE.cp
 //  Abracode
 //
-//  The Apple event face of OnMyCommandCM: the contextual menu plugin API (ACMPlugin's ExamineContext
-//  and HandleSelection, loaded by Shortcuts.app) and OMC.h's Apple event functions reach the engine
-//  here. The Apple event descriptor of the selection is turned into an OMCHostSelection (CF) before
-//  the engine's context check sees it; the engine itself takes no Apple event types for the context.
+//  The Apple event face of the engine: the contextual menu plugin's object (OnMyCommandCMPlugin,
+//  loaded by Shortcuts.app) and OMC.h's Apple event functions (OMCRunCommandAE, OMCExamineContextAE,
+//  OMCExecuteCommandAE) reach OnMyCommandCM here. The Apple event descriptor of the selection is
+//  turned into an OMCHostSelection (CF) and the engine's menu model into the Menu Manager's
+//  AEDescList; the engine itself takes no Apple event types.
 //  macOS only. Phase 5 step 6 (Private/phase5-interfaces-design.md).
 //
 
+#include "OnMyCommandAE.h"
 #include "OnMyCommand.h"
+#include "OMC.h"
 #include "OMCHostSelection.h"
 #include "OMCMenuModel.h"
 #include "SubmenuTree.h"
@@ -71,41 +74,158 @@ AddMenuToAEList(const OMCMenuModel &inMenu, AEDescList *ioRootMenu)
 	itemTree.BuildSubmenuTree();
 }
 
-//classic API for CM
-OSStatus
-OnMyCommandCM::ExamineContext( const AEDesc *inAEContext, AEDescList *outCommandPairs )
+// The context check for an Apple event selection: one command (kCMCommandStart + index) or all of
+// them (below kCMCommandStart); the menu is built whenever a list is given, also when the check then
+// refuses the command
+static OSStatus
+ExamineAEContext(OnMyCommandCM &inEngine, const AEDesc *inAEContext, SInt32 inCommandRef, AEDescList *outCommandPairs)
 {
-	OSStatus __unused err = Init();
 	OMCHostSelection selection;
 	MakeHostSelection(inAEContext, selection);
 	OMCMenuModel menu;
-	OSStatus checkErr = CommonContextCheck( selection.files, &selection, nullptr, (outCommandPairs != nullptr) ? &menu : nullptr, -1 /*inCmdIndex*/ );
+	OSStatus checkErr = inEngine.ExamineHostSelection( selection, inCommandRef, (outCommandPairs != nullptr) ? &menu : nullptr );
 	AddMenuToAEList(menu, outCommandPairs);
 	return checkErr;
 }
 
-//new API for OMC.h
-OSStatus
-OnMyCommandCM::ExamineContext( const AEDesc *inAEContext, SInt32 inCommandRef, AEDescList *outCommandPairs )
-{
-	SInt32 cmdIndex = -1;
-	if(inCommandRef >= kCMCommandStart)
-		cmdIndex = mCurrCommandIndex = inCommandRef - kCMCommandStart;
-	else
-		mCurrCommandIndex = 0;
+#pragma mark -
+#pragma mark **** The contextual menu plugin's object ****
 
-	OMCHostSelection selection;
-	MakeHostSelection(inAEContext, selection);
-	OMCMenuModel menu;
-	OSStatus checkErr = CommonContextCheck( selection.files, &selection, nullptr, (outCommandPairs != nullptr) ? &menu : nullptr, cmdIndex );
-	AddMenuToAEList(menu, outCommandPairs);
-	return checkErr;
+OnMyCommandCMPlugin::OnMyCommandCMPlugin()
+	: ACMPlugin(nullptr) // the bundle is the engine's
+	, mEngine(new OnMyCommandCM(nullptr), kARefCountDontRetain)
+{
+}
+
+OnMyCommandCMPlugin::~OnMyCommandCMPlugin()
+{
+}
+
+OSStatus
+OnMyCommandCMPlugin::ExamineContext( const AEDesc *inAEContext, AEDescList *outCommandPairs )
+{
+	OSStatus __unused err = mEngine->Init();
+	return ExamineAEContext(*mEngine, inAEContext, kOmcUnspecifiedCommand, outCommandPairs);
 }
 
 // Carry out the command that the user selected; the context is the one ExamineContext examined
 // (inAEContext is the same selection, from the Menu Manager's contextual menu API)
 OSStatus
-OnMyCommandCM::HandleSelection( AEDesc *inAEContext, SInt32 inCommandRef )
+OnMyCommandCMPlugin::HandleSelection( AEDesc *inAEContext, SInt32 inCommandID )
 {
-	return ExecuteCommandRef(inCommandRef);
+	return mEngine->ExecuteCommandRef(inCommandID);
+}
+
+void
+OnMyCommandCMPlugin::PostMenuCleanup()
+{
+	mEngine->PostMenuCleanup();
+}
+
+CFBundleRef
+OnMyCommandCMPlugin::GetBundleRef() const
+{
+	return mEngine->GetBundleRef();
+}
+
+#pragma mark -
+#pragma mark **** OMC.h: the Apple event functions ****
+
+//the same as OMCRunCommand() but takes AEDesc which may be text, file or a list of files
+
+extern "C" OSStatus OMCRunCommandAE(CFTypeRef inPlistRef, CFStringRef inCommandNameOrID, AEDesc *inAEContext)
+{
+	OSStatus err = noErr;
+
+	try
+	{
+		ARefCountedObj<OnMyCommandCM> omcPlugin(new OnMyCommandCM(inPlistRef), kARefCountDontRetain);
+		omcPlugin->Init();
+		SInt32 commandIndex = omcPlugin->FindCommandIndex(inCommandNameOrID);
+		if(commandIndex < 0)
+        {
+            return fnfErr;
+        }
+
+		StAEDesc replacementContext;
+		if((inAEContext != nullptr) && (inAEContext->dataHandle != nullptr))
+		{
+			if((inAEContext->descriptorType != typeAEList) &&
+				(inAEContext->descriptorType != typeUnicodeText) &&
+				(inAEContext->descriptorType != typeChar) &&
+				(inAEContext->descriptorType != typeCString) &&
+				(inAEContext->descriptorType != typePString) &&
+				(inAEContext->descriptorType != typeUTF16ExternalRepresentation) &&
+				(inAEContext->descriptorType != typeUTF8Text))
+			{//try to coerce to see if it might be a single file ref
+			//make a list even if single file. preferrable because Finder in 10.3 or higher does that
+				StAEDesc coercedRef;
+				err = ::AECoerceDesc(inAEContext, typeFileURL, coercedRef);
+				if(err == noErr)
+				{
+					err = ::AECreateList(nullptr, 0, false, replacementContext);
+					if(err == noErr)
+					{
+						err = ::AEPutDesc(replacementContext, // the list
+											0, // put at the end of our list
+											coercedRef);
+						inAEContext = replacementContext;
+					}
+				}
+			}
+		}
+
+		// all commands, as the contextual menu examines them: the activation is not checked here
+		err = ExamineAEContext(*omcPlugin, inAEContext, kOmcUnspecifiedCommand, nullptr);
+		if(err == noErr)
+		{
+			err = omcPlugin->ExecuteCommandRef(kCMCommandStart+commandIndex);
+			omcPlugin->PostMenuCleanup();//currently doing nothing, just for completeness
+		}
+	}
+	catch(...)
+	{
+		err = -1;
+	}
+
+	return err;
+}
+
+extern "C" OSStatus OMCExamineContextAE(OMCExecutorRef inOMCExecutor, OMCCommandRef inCmdRef, const AEDesc *inAEContext, AEDescList *outCommandPairs)
+{
+	try
+	{
+		if(inOMCExecutor != nullptr)
+        {
+            return ExamineAEContext(*inOMCExecutor, inAEContext, inCmdRef, outCommandPairs);
+        }
+	}
+	catch(...)
+	{
+
+	}
+	return paramErr;
+}
+
+extern "C" OSStatus OMCExecuteCommandAE(OMCExecutorRef inOMCExecutor, AEDesc *inAEContext, OMCCommandRef inCommandRef)
+{
+	OSStatus err = paramErr;
+
+	try
+	{
+		if(inOMCExecutor != NULL)
+		{
+			if(OMCIsValidCommandRef(inCommandRef))
+            {
+                err = inOMCExecutor->ExecuteCommandRef(inCommandRef);
+            }
+			inOMCExecutor->PostMenuCleanup();//currently does nothing
+		}
+	}
+	catch(...)
+	{
+		err = -1;
+	}
+
+	return err;
 }

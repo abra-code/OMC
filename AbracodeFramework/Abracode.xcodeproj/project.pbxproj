@@ -409,6 +409,7 @@
 		1D560A1B2F80000000000021 /* OMCMenuModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCMenuModel.h; sourceTree = "<group>"; };
 		1D560A1B2F80000000000017 /* OMCObjectList.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCObjectList.cpp; sourceTree = "<group>"; };
 		1D560A1B2F8000000000001E /* OMCHostSelection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCHostSelection.h; sourceTree = "<group>"; };
+		1D560A1B2F80000000000022 /* OnMyCommandAE.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OnMyCommandAE.h; path = EntryPoints/Apple/OnMyCommandAE.h; sourceTree = "<group>"; };
 		1D560A1B2F8000000000001F /* OnMyCommandAE.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = OnMyCommandAE.cp; path = EntryPoints/Apple/OnMyCommandAE.cp; sourceTree = "<group>"; };
 		1D3EA0612E38A6000064354E /* CommandDescription.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CommandDescription.h; sourceTree = "<group>"; };
 		1D3EA0622E38B4A30064354E /* CommandRuntimeData.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CommandRuntimeData.h; sourceTree = "<group>"; };
@@ -1117,6 +1118,7 @@
 				1D560A1B2F80000000000021 /* OMCMenuModel.h */,
 				1D560A1B2F80000000000017 /* OMCObjectList.cpp */,
 				1D560A1B2F8000000000001E /* OMCHostSelection.h */,
+				1D560A1B2F80000000000022 /* OnMyCommandAE.h */,
 				1D560A1B2F8000000000001F /* OnMyCommandAE.cp */,
 				1D3EA0632E3E10910064354E /* OMCNavigationDialogs.h */,
 				1D3EA0642E3E10910064354E /* OMCNavigationDialogs.cp */,

@@ -10,8 +10,6 @@
 #include "OMC.h"
 #include "CFObj.h"
 #include "ACFType.h"
-#include "StAEDesc.h"
-#include "CMUtils.h"
 #include "OnMyCommand.h"
 
 extern "C" UInt32 OMCGetCurrentVersion(void)
@@ -64,65 +62,8 @@ extern "C" OSStatus OMCRunCommand(CFTypeRef inPlistRef, CFStringRef inCommandNam
 	return err;
 }
 
-//the same as OMCRunCommand() but takes AEDesc which may be text, file or a list of files
-
-extern "C" OSStatus OMCRunCommandAE(CFTypeRef inPlistRef, CFStringRef inCommandNameOrID, AEDesc *inAEContext)
-{
-	OSStatus err = noErr;
-
-	try
-	{
-		ARefCountedObj<OnMyCommandCM> omcPlugin(new OnMyCommandCM(inPlistRef), kARefCountDontRetain);
-		omcPlugin->Init();
-		SInt32 commandIndex = omcPlugin->FindCommandIndex(inCommandNameOrID);
-		if(commandIndex < 0)
-        {
-            return fnfErr;
-        }
-
-		StAEDesc replacementContext;
-		if((inAEContext != nullptr) && (inAEContext->dataHandle != nullptr))
-		{
-			if((inAEContext->descriptorType != typeAEList) &&
-				(inAEContext->descriptorType != typeUnicodeText) &&
-				(inAEContext->descriptorType != typeChar) &&
-				(inAEContext->descriptorType != typeCString) &&
-				(inAEContext->descriptorType != typePString) &&
-				(inAEContext->descriptorType != typeUTF16ExternalRepresentation) &&
-				(inAEContext->descriptorType != typeUTF8Text))
-			{//try to coerce to see if it might be a single file ref
-			//make a list even if single file. preferrable because Finder in 10.3 or higher does that
-				StAEDesc coercedRef;
-				err = ::AECoerceDesc(inAEContext, typeFileURL, coercedRef);
-				if(err == noErr)
-				{
-					err = ::AECreateList(nullptr, 0, false, replacementContext);
-					if(err == noErr)
-					{
-						err = ::AEPutDesc(replacementContext, // the list
-											0, // put at the end of our list
-											coercedRef);
-						inAEContext = replacementContext;
-					}				
-				}
-			}
-		}
-
-		err = omcPlugin->ExamineContext(inAEContext, nullptr);
-		if(err == noErr)
-		{
-			err = omcPlugin->HandleSelection(inAEContext, kCMCommandStart+commandIndex);
-			omcPlugin->PostMenuCleanup();//currently doing nothing, just for completeness
-		}
-	}
-	catch(...)
-	{
-		err = -1;
-	}
-
-	return err;
-}
-
+// OMC.h's Apple event functions (OMCRunCommandAE, OMCExamineContextAE, OMCExecuteCommandAE) are in
+// EntryPoints/Apple/OnMyCommandAE.cp
 
 extern "C" OMCExecutorRef OMCCreateExecutor(CFTypeRef inPlistRef)
 {
@@ -138,22 +79,6 @@ extern "C" OMCExecutorRef OMCCreateExecutor(CFTypeRef inPlistRef)
 	}
 
 	return omcPlugin;
-}
-
-extern "C" OSStatus OMCExamineContextAE(OMCExecutorRef inOMCExecutor, OMCCommandRef inCmdRef, const AEDesc *inAEContext, AEDescList *outCommandPairs)
-{
-	try
-	{
-		if(inOMCExecutor != nullptr)
-        {
-            return inOMCExecutor->ExamineContext(inAEContext, inCmdRef, outCommandPairs);
-        }
-	}
-	catch(...)
-	{
-	
-	}
-	return paramErr;
 }
 
 extern "C" OSStatus OMCExamineContext(OMCExecutorRef inOMCExecutor, OMCCommandRef inCmdRef, CFTypeRef inContext, UInt32 inOptions)
@@ -235,29 +160,6 @@ extern "C" OSStatus OMCGetCommandInfo(OMCExecutorRef inOMCExecutor, OMCCommandRe
 		err = -1;
 	}
 	
-	return err;
-}
-
-extern "C" OSStatus OMCExecuteCommandAE(OMCExecutorRef inOMCExecutor, AEDesc *inAEContext, OMCCommandRef inCommandRef)
-{
-	OSStatus err = paramErr;
-
-	try
-	{
-		if(inOMCExecutor != NULL)
-		{
-			if(OMCIsValidCommandRef(inCommandRef))
-            {
-                err = inOMCExecutor->HandleSelection(inAEContext, inCommandRef);
-            }
-			inOMCExecutor->PostMenuCleanup();//currently does nothing
-		}
-	}
-	catch(...)
-	{
-		err = -1;
-	}
-
 	return err;
 }
 

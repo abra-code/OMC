@@ -32,6 +32,7 @@ _OBJC_CLASS_$_OMCMainMenuController
 
 
 __ZN13OnMyCommandCMC1EPKv
+__ZN19OnMyCommandCMPluginC1Ev
 
 _CreateDefaultExternBundleRef
 _ReplaceWhitespaceEscapesWithCharacters
