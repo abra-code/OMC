@@ -18,6 +18,7 @@
 #include "OMCActionUIModelLifetime.h"
 #include "OMCWindowHost.h"
 #include "OMCActionUIDocumentLookup.h"
+#include "OMCActionUIControls.h"
 #include <memory>
 
 // enable only in OMC version 5.0 or later
@@ -25,39 +26,6 @@
 @import ActionUIObjCAdapter;
 
 #import "OMCActionUIRemoteHost.h"
-
-/// Returns YES if the string's first character suggests it could be a JSON fragment.
-/// Mirrors JSONHelper.looksLikeJSONFragment in Swift — avoids NSJSONSerialization overhead
-/// for plain strings, which are the most common case.
-static BOOL LooksLikeJSONFragment(NSString *s)
-{
-    if (s.length == 0) return NO;
-    unichar first = [s characterAtIndex:0];
-    switch (first) {
-        case '{': case '[':           // object, array
-        case '"':                     // quoted string fragment
-        case 't': case 'f': case 'n': // true, false, null
-            return YES;
-        default:
-            return (first >= '0' && first <= '9') || first == '-'; // number
-    }
-}
-
-/// Parses a string as JSON if it looks like a JSON fragment; otherwise returns the string as-is.
-/// Falls back to the original string if JSON parsing fails.
-static id ParseStringOrJSON(NSString *value)
-{
-    if (!LooksLikeJSONFragment(value))
-        return value;
-    NSData *data = [value dataUsingEncoding:NSUTF8StringEncoding];
-    if (data == nil)
-        return value;
-    NSError *error = nil;
-    id parsed = [NSJSONSerialization JSONObjectWithData:data
-                                               options:NSJSONReadingAllowFragments
-                                                 error:&error];
-    return (error == nil && parsed != nil) ? parsed : value;
-}
 
 /// Converts the opaque ActionUI action-callback context to a string suitable for env-var export.
 /// NSDictionary/NSArray to compact JSON
@@ -367,50 +335,34 @@ static NSArray<ActionUIObjCDialogButton *> *OMCParseButtonSpecs(NSArray *specs)
 
 #pragma mark - OMCControlAccessor protocol
 
+// The control operations are portable C++ over ActionUI's C interface (OMCActionUIControls.h)
+
 - (void)setControlStringValue:(NSString *)inValue forControlID:(NSString *)inControlID contentType:(NSString *)contentType
 {
-    NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
-    if(windowUUID == nil || inValue == nil || inControlID == nil)
-        return;
-
-    NSInteger viewID = [inControlID integerValue];
-    [ActionUIObjC setElementValueFromStringWithWindowUUID:windowUUID viewID:viewID viewPartID:0 value:inValue contentType:contentType];
+    OMCActionUISetControlValue(mOMCDialogProxy->GetDialogUUID(), (__bridge CFStringRef)inControlID,
+                               (__bridge CFStringRef)inValue, (__bridge CFStringRef)contentType);
 }
 
 - (void)setControlEnabled:(BOOL)enabled forControlID:(NSString *)inControlID
 {
-    NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
-    if (windowUUID == nil || inControlID == nil) return;
-    NSInteger viewID = [inControlID integerValue];
-    [ActionUIObjC setElementPropertyWithWindowUUID:windowUUID viewID:viewID propertyName:@"disabled" value:@(!enabled)];
+    OMCActionUISetControlEnabled(mOMCDialogProxy->GetDialogUUID(), (__bridge CFStringRef)inControlID, enabled);
 }
 
 - (void)setControlVisible:(BOOL)visible forControlID:(NSString *)inControlID
 {
-    NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
-    if (windowUUID == nil || inControlID == nil) return;
-    NSInteger viewID = [inControlID integerValue];
-    [ActionUIObjC setElementPropertyWithWindowUUID:windowUUID viewID:viewID propertyName:@"hidden" value:@(!visible)];
+    OMCActionUISetControlVisible(mOMCDialogProxy->GetDialogUUID(), (__bridge CFStringRef)inControlID, visible);
 }
 
 - (void)setPropertyKey:(NSString *)propertyKey jsonValue:(NSString *)jsonValue forControlID:(NSString *)inControlID
 {
-    NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
-    if (windowUUID == nil || inControlID == nil || propertyKey == nil || jsonValue == nil)
-        return;
-    NSInteger viewID = [inControlID integerValue];
-    id parsedValue = ParseStringOrJSON(jsonValue);
-    [ActionUIObjC setElementPropertyWithWindowUUID:windowUUID viewID:viewID propertyName:propertyKey value:parsedValue];
+    OMCActionUISetControlProperty(mOMCDialogProxy->GetDialogUUID(), (__bridge CFStringRef)inControlID,
+                                  (__bridge CFStringRef)propertyKey, (__bridge CFStringRef)jsonValue);
 }
 
 - (void)setStateKey:(NSString *)stateKey stringOrJsonValue:(NSString *)value forControlID:(NSString *)inControlID
 {
-    NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
-    if (windowUUID == nil || inControlID == nil || stateKey == nil || value == nil)
-        return;
-    NSInteger viewID = [inControlID integerValue];
-    id parsedValue = ParseStringOrJSON(value);
-    [ActionUIObjC setElementStateWithWindowUUID:windowUUID viewID:viewID key:stateKey value:parsedValue];
+    OMCActionUISetControlState(mOMCDialogProxy->GetDialogUUID(), (__bridge CFStringRef)inControlID,
+                               (__bridge CFStringRef)stateKey, (__bridge CFStringRef)value);
 }
 
 #pragma mark - List controls

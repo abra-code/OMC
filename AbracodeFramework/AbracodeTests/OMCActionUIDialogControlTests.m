@@ -186,6 +186,9 @@ static id ActionUIObjCClass(void)
         @"omcTestQuoted": @[@"'\"quoted\"'", @"quoted"],
         @"omcTestText":   @[@"'plain words'", @"plain words"],
         @"omcTestWord":   @[@"fred", @"fred"],
+        @"omcTestNull":   @[@"null", [NSNull null]],
+        // NSJSONSerialization, which read these values first, allowed a trailing comma
+        @"omcTestTrailingComma": @[@"'[1,2,]'", @[@1, @2]],
     };
     for (NSString *key in cases) {
         NSString *argument = cases[key][0];
@@ -194,6 +197,37 @@ static id ActionUIObjCClass(void)
         id value = [self waitFor:expected read:^id{ return [self property:key ofView:kButtonID]; }];
         XCTAssertEqualObjects(value, expected, @"omc_set_property %@ %@", key, argument);
     }
+}
+
+// A number keeps the type it had when OMC parsed it with NSJSONSerialization and ActionUI took the
+// NSNumber: an integral number, written with a fraction or not, is an integer, and any other a double.
+// Equality cannot tell them apart (@1 equals @1.0), the number's type can.
+- (void)testSetPropertyKeepsIntegerAndDoubleNumbers {
+    NSString *button = [NSString stringWithFormat:@"%ld", (long)kButtonID];
+    NSDictionary<NSString *, NSArray *> *cases = @{
+        @"omcTestInteger":      @[@"7", @"q"],
+        @"omcTestIntegralFloat": @[@"1.0", @"q"],
+        @"omcTestDouble":       @[@"1.5", @"d"],
+        @"omcTestNegative":     @[@"-0.25", @"d"],
+    };
+    for (NSString *key in cases) {
+        NSString *argument = cases[key][0];
+        [self control:[NSString stringWithFormat:@"%@ omc_set_property %@ %@", button, key, argument]];
+        __block id value = nil;
+        [self spinUntil:^BOOL{ value = [self property:key ofView:kButtonID]; return value != nil; } timeout:5.0];
+        XCTAssertTrue([value isKindOfClass:[NSNumber class]], @"omc_set_property %@ %@ gives a number: %@", key, argument, value);
+        NSString *type = [value isKindOfClass:[NSNumber class]] ? [NSString stringWithUTF8String:[(NSNumber *)value objCType]] : @"";
+        XCTAssertEqualObjects(type, cases[key][1], @"omc_set_property %@ %@: %@", key, argument, value);
+        XCTAssertEqualWithAccuracy([value doubleValue], [argument doubleValue], 1e-12);
+    }
+
+    // NSJSONSerialization read a number with a fraction as a double, so one past 2^53 lost its last
+    // digit before ActionUI made it an integer; reading the text exactly would keep it
+    [self control:[NSString stringWithFormat:@"%@ omc_set_property omcTestPastDoublePrecision 9007199254740993.0", button]];
+    __block id value = nil;
+    [self spinUntil:^BOOL{ value = [self property:@"omcTestPastDoublePrecision" ofView:kButtonID]; return value != nil; } timeout:5.0];
+    XCTAssertTrue([value isKindOfClass:[NSNumber class]], @"a number: %@", value);
+    XCTAssertEqual([value longLongValue], 9007199254740992LL, @"the double's value, as before: %@", value);
 }
 
 - (void)testSetStateParsesItsValueLikeAProperty {
