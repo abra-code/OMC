@@ -4,7 +4,12 @@
 //  JSON to and from CF property list objects, in C++ over CF and the vendored yyjson
 //  (ThirdParty/yyjson), so it builds on macOS and Linux. It replaces NSJSONSerialization and
 //  reproduces what OMC got from it on macOS; OMCJSONFoundationParityTests holds it to that.
-//  Measured behaviors and the reasons for each rule: Private/json-port-design.md.
+//
+//  Reading goes through yyjson. Writing is our own code: the output has to be the bytes
+//  NSJSONSerialization writes with NSJSONWritingPrettyPrinted | NSJSONWritingSortedKeys, on macOS
+//  and Linux alike, and yyjson's writer cannot be set to produce them (it does not sort keys, and
+//  writes no doubles with 17 significant digits). Keys are sorted because Foundation's unsorted
+//  order follows its hashing, which cannot be reproduced and would differ on Linux.
 //
 
 #pragma once

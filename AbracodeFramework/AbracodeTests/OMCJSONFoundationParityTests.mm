@@ -6,7 +6,7 @@
 //  .json files plister reads and writes. Scripts see the results, so it must read exactly what
 //  Foundation read and write exactly the bytes Foundation wrote with NSJSONWritingPrettyPrinted |
 //  NSJSONWritingSortedKeys. Foundation is the oracle: each test compares both over the same
-//  inputs. The rules and the deliberate differences are in ACFJSON.h and Private/json-port-design.md.
+//  inputs. The rules and the deliberate differences are in ACFJSON.h.
 //
 //  ACFJSON and yyjson are not exported from Abracode.framework, so they compile into this bundle
 //  (ACFJSON.cpp here, yyjson.c through OMCTestsYYJSON.c).
