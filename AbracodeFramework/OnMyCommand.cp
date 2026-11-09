@@ -19,11 +19,7 @@
 #include "OMCFilePanels.h"
 #include "OmcExecutor.h"
 
-// The ActionUI remote bridge's socket path, or NULL when this process serves no bridge. Defined
-// in OMCActionUIRemoteHost.mm; declared rather than included because that header is Objective-C
-// and this file is compiled as C++. Same arrangement as the ActionUI add-on registrations in
-// OMCAppLifetimeEvents.mm.
-extern "C" const char *OMCGetActionUIRemoteEndpoint(void);
+#include "OMCActionUIRemoteHost.h" // OMCGetActionUIRemoteEndpoint
 //#include <sys/stat.h>
 #include <unistd.h>
 #include <regex.h>

@@ -21,7 +21,7 @@
 #include "OnMyCommand.h"
 #include "OMCScriptsManager.h"
 #include "OMCPrivateConstants.h"
-#include "OMCActionUIRemoteHost.h"    // the per-command token: its C half is visible to C++
+#include "OMCActionUIRemoteHost.h"    // the per-command token
 #include "OMCDialog.h"
 #include "OMCMainThreadSignal.h"
 #include <dispatch/dispatch.h>

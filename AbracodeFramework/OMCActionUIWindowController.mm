@@ -137,7 +137,7 @@ static NSArray<ActionUIObjCDialogButton *> *OMCParseButtonSpecs(NSArray *specs)
     // this is the earliest point at which serving is meaningful - and it is before the init
     // subcommand runs, so that subcommand's own handler can already reach back in. Idempotent:
     // every later window finds the server already up.
-    [[OMCActionUIRemoteHost shared] ensureStarted];
+    OMCEnsureActionUIRemoteBridgeStarted();
 
 	CommandDescription &currCommand = self->mPlugin->GetCurrentCommand();
 

@@ -288,7 +288,7 @@ const char *OMCGetPythonPycachePrefix(void)
     // Last chance to unlink the socket: NSApplication's terminate ends in libc exit(), so nothing
     // that runs after the run loop would ever fire. ActionUIRemote keeps an atexit backstop for
     // hosts that skip this notification entirely, but doing it here is the orderly path.
-    [[OMCActionUIRemoteHost shared] stop];
+    OMCStopActionUIRemoteBridge();
 
     [[NSNotificationCenter defaultCenter] removeObserver:self];
 }

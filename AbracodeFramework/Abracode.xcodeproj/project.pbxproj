@@ -70,7 +70,7 @@
 		1D560A1B2F80000000000015 /* omc_input_combo.json in Resources */ = {isa = PBXBuildFile; fileRef = 1D560A1B2F80000000000014 /* omc_input_combo.json */; };
 		1D560A1B2F8000000000000D /* omc_output.json in Resources */ = {isa = PBXBuildFile; fileRef = 1D560A1B2F8000000000000C /* omc_output.json */; };
 		1D0A1B2C2F74000000000105 /* OMCAlerts.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1D0A1B2C2F74000000000104 /* OMCAlerts.mm */; };
-		1DAB10032FFD0001009FD073 /* OMCActionUIRemoteHost.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1DAB10062FFD0001009FD073 /* OMCActionUIRemoteHost.mm */; };
+		1DAB10032FFD0001009FD073 /* OMCActionUIRemoteHost.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1DAB10062FFD0001009FD073 /* OMCActionUIRemoteHost.cpp */; };
 		1DAB10042FFD0001009FD073 /* OMCActionUIRemoteHost.h in Headers */ = {isa = PBXBuildFile; fileRef = 1DAB10052FFD0001009FD073 /* OMCActionUIRemoteHost.h */; };
 		1DADB52F232B5857005AD883 /* loco in Copy Support Executables */ = {isa = PBXBuildFile; fileRef = 1DADB52E232B5847005AD883 /* loco */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		1DB9D8C62324F01E003F6849 /* OMCEnvironmentExportScript.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1DB9D8C42324F01E003F6849 /* OMCEnvironmentExportScript.cpp */; };
@@ -486,7 +486,7 @@
 		1D0A1B2C2F72000000000108 /* OMCTestPlatform.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCTestPlatform.h; sourceTree = "<group>"; };
 		1D0A1B2C2F72000000000109 /* OMCTestPlatform.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCTestPlatform.mm; sourceTree = "<group>"; };
 		1DAB10052FFD0001009FD073 /* OMCActionUIRemoteHost.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OMCActionUIRemoteHost.h; sourceTree = "<group>"; };
-		1DAB10062FFD0001009FD073 /* OMCActionUIRemoteHost.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCActionUIRemoteHost.mm; sourceTree = "<group>"; };
+		1DAB10062FFD0001009FD073 /* OMCActionUIRemoteHost.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = OMCActionUIRemoteHost.cpp; sourceTree = "<group>"; };
 		1DADB52E232B5847005AD883 /* loco */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = loco; sourceTree = "<group>"; };
 		1DB9D8C42324F01E003F6849 /* OMCEnvironmentExportScript.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCEnvironmentExportScript.cpp; sourceTree = "<group>"; };
 		1DB9D8C52324F01E003F6849 /* OMCEnvironmentExportScript.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCEnvironmentExportScript.h; sourceTree = "<group>"; };
@@ -1088,7 +1088,7 @@
 				1D690DE12F450991006FECE8 /* OMCActionUIWindowController.h */,
 				1D690DE22F450991006FECE8 /* OMCActionUIWindowController.mm */,
 				1DAB10052FFD0001009FD073 /* OMCActionUIRemoteHost.h */,
-				1DAB10062FFD0001009FD073 /* OMCActionUIRemoteHost.mm */,
+				1DAB10062FFD0001009FD073 /* OMCActionUIRemoteHost.cpp */,
 				1D0A1B2C2F72000000000105 /* OMCTestHost.h */,
 				1D0A1B2C2F72000000000106 /* OMCTestHost.cpp */,
 				1D0A1B2C2F72000000000107 /* OMCEngineActivity.h */,
@@ -1513,7 +1513,7 @@
 				E2ED3BB00D0B288400481D8F /* OmcExecutor.cp in Sources */,
 				E2ED3BB20D0B288400481D8F /* omc_popen.c in Sources */,
 				1D690DE42F450991006FECE8 /* OMCActionUIWindowController.mm in Sources */,
-				1DAB10032FFD0001009FD073 /* OMCActionUIRemoteHost.mm in Sources */,
+				1DAB10032FFD0001009FD073 /* OMCActionUIRemoteHost.cpp in Sources */,
 				1D0A1B2C2F72000000000110 /* OMCTestHost.cpp in Sources */,
 				1D0A1B2C2F72000000000111 /* OMCTestPlatform.mm in Sources */,
 				1D0A1B2C2F73000000000102 /* OMCFilePanels.cpp in Sources */,

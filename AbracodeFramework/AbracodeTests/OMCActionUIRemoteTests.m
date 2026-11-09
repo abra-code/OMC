@@ -980,14 +980,8 @@ static const char * const kTestTokenLabel = "AbracodeTests";
     XCTAssertNotNil([self runningEndpoint]);
     [self closeFormDialogWithUUID:uuid bundlePath:omcBundlePath];
 
-    // -appWillTerminate: is what calls this in a real host, and XCTest never gets there. The class
-    // is not in AbracodeFramework.exp so it cannot be linked, but it IS registered in the loaded
-    // image, which is all NSClassFromString needs.
-    Class hostClass = NSClassFromString(@"OMCActionUIRemoteHost");
-    XCTAssertNotNil(hostClass, @"OMCActionUIRemoteHost should be in the loaded framework image");
-    id host = [hostClass performSelector:@selector(shared)];
-    XCTAssertNotNil(host);
-    [host performSelector:@selector(stop)];
+    // -appWillTerminate: is what calls this in a real host, and XCTest never gets there.
+    OMCStopActionUIRemoteBridge();
 
     XCTAssertNil([self runningEndpoint], @"stop must unlink the socket");
     XCTAssertTrue(getenv("ACTIONUI_REMOTE_ENDPOINT") == NULL,
@@ -1031,7 +1025,7 @@ static const char * const kTestTokenLabel = "AbracodeTests";
                   @"hello should list the window the engine just opened; got %@", windows);
 
     // The version must be the ENGINE's, from Abracode.framework's own Info.plist. Asserting only
-    // that it is non-empty would pass if -hostVersion were deleted, because ActionUIRemote falls
+    // that it is non-empty would pass if CopyHostVersion were deleted, because ActionUIRemote falls
     // back to the main bundle's version on its own.
     NSDictionary *host = result[@"host"];
     NSString *engineVersion = [[NSBundle bundleWithIdentifier:@"com.abracode.AbracodeFramework"]
