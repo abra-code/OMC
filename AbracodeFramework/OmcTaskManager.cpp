@@ -26,6 +26,7 @@
 #include "OMCDialog.h"
 #include "OMCMainThreadSignal.h"
 #include "OMCHostInfo.h"
+#include "OMCClipboard.h"
 #include "OMCEngineTempDir.h"
 #include "OMCEngineActivity.h"
 #include "OMCActionUIModelLifetime.h"
@@ -792,29 +793,6 @@ KeyPressSimulationCallBack(void *context)
 {
 #pragma unused (context)
 
-    //synchronize pasteboard before simulating cmd+v
-    {
-        CFObj<PasteboardRef> thePasteboard;
-        OSStatus err = PasteboardCreate( kPasteboardClipboard, &thePasteboard );
-        if( (err == noErr) && (thePasteboard != nullptr) )
-        {
-            [[maybe_unused]] PasteboardSyncFlags syncFlags = PasteboardSynchronize( thePasteboard );
-    #if _DEBUG_
-            printf("OMC: PasteboardSyncFlags = 0x%.8X\n", (unsigned int)syncFlags);
-    #endif
-        }
-    }
-
-    CFObj<CGEventRef> cmdDown = CGEventCreateKeyboardEvent(nullptr, (CGKeyCode)55, true);
-    CGEventPost(kCGHIDEventTap, cmdDown);
-    
-    CFObj<CGEventRef> vDown = CGEventCreateKeyboardEvent(nullptr, (CGKeyCode)9, true); // 'v' down
-    CGEventPost(kCGHIDEventTap, vDown);
-
-    CFObj<CGEventRef> vUp = CGEventCreateKeyboardEvent(nullptr, (CGKeyCode)9, false); // 'v' up
-    CGEventPost(kCGHIDEventTap, vUp);
-
-    CFObj<CGEventRef> cmdUp = CGEventCreateKeyboardEvent(nullptr, (CGKeyCode)55, false);
-    CGEventPost(kCGHIDEventTap, cmdUp);
+    OMCPasteIntoFrontApp();
 }
 

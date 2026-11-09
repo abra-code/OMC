@@ -1,16 +1,18 @@
 //**************************************************************************************
-// Filename:	CMUtilsClipboard.cp
-//				Part of Contextual Menu Workshop by Abracode Inc.
-//				http://free.abracode.com/cmworkshop/
+// Filename:	OMCClipboard.cp
+//				(was CMUtils/CMUtilsClipboard.cp, part of Contextual Menu Workshop by Abracode Inc.)
 //
-// Copyright � 2002-2004 Abracode, Inc.  All rights reserved.
+// Copyright (c) 2002-2026 Abracode, Inc.  All rights reserved.
 //
-// Description:	static utilities for Contextual Menu Plugins
-//
+// Description:	the macOS clipboard for the engine (Platform/OMCClipboard.h), on the Pasteboard
+//				Manager, and the exported CMUtils::PutCFStringToClipboard*.
 //
 //**************************************************************************************
 
-#include "CMUtils.h"
+#include <ApplicationServices/ApplicationServices.h>
+#include "OMCClipboard.h"
+#include "CMUtils.h" // CMUtils::PutCFStringToClipboard*, exported, and the character helpers
+#include "OMCConstants.h"
 #include "DebugSettings.h"
 #include "CFObj.h"
 #include "ACFType.h"
@@ -52,10 +54,10 @@ CreateClipboardRef(PasteboardRef *outClipboard)
 
 
 
-Boolean
-CMUtils::IsTextInClipboard()
+bool
+OMCIsTextInClipboard()
 {
-	Boolean outTextPresent = false;
+	bool outTextPresent = false;
 
 	CFObj<PasteboardRef> clipboardRef;
 	OSStatus err = CreateClipboardRef( &clipboardRef );
@@ -102,9 +104,9 @@ CMUtils::IsTextInClipboard()
 
 
 CFStringRef
-CMUtils::CreateCFStringFromClipboardText(long inReplaceOption)
+OMCCopyClipboardText(long inReplaceOption)
 {
-	TRACE_CSTR( "CreateCFStringFromClipboardText\n" );
+	TRACE_CSTR( "OMCCopyClipboardText\n" );
 	
 	CFStringRef outString = NULL;
 
@@ -190,18 +192,18 @@ CMUtils::CreateCFStringFromClipboardText(long inReplaceOption)
 										}
 										
 										if(inReplaceOption == kTextReplaceLFsWithCRs)
-											ReplaceUnicodeCharacters(theText, theCount, 0x000A, 0x000D);
+											CMUtils::ReplaceUnicodeCharacters(theText, theCount, 0x000A, 0x000D);
 										else if(inReplaceOption == kTextReplaceCRsWithLFs)
-											ReplaceUnicodeCharacters(theText, theCount, 0x000D, 0x000A);
+											CMUtils::ReplaceUnicodeCharacters(theText, theCount, 0x000D, 0x000A);
 										
 										outString = ::CFStringCreateWithCharacters(kCFAllocatorDefault, theText, theCount );
 									}
 									else
 									{
 										if(inReplaceOption == kTextReplaceLFsWithCRs)
-											ReplaceCharacters((char *)textDataPtr, textDataLength, 0x0A, 0x0D);
+											CMUtils::ReplaceCharacters((char *)textDataPtr, textDataLength, 0x0A, 0x0D);
 										else if(inReplaceOption == kTextReplaceCRsWithLFs)
-											ReplaceCharacters((char*)textDataPtr, textDataLength, 0x0D, 0x0A);
+											CMUtils::ReplaceCharacters((char*)textDataPtr, textDataLength, 0x0D, 0x0A);
 
 										outString = ::CFStringCreateWithBytes(kCFAllocatorDefault, (const UInt8*)textDataPtr, textDataLength, byteEncoding, true);
 									}
@@ -317,4 +319,36 @@ CMUtils::PutCFStringToClipboardAsMacEncodedText(PasteboardRef inPasteboardRef, P
 			err = memFullErr;
 	}
 	return err;
+}
+
+
+// Pastes the clipboard into the app in front: the system clipboard is synchronized, then Command-V
+// is posted as four key events
+void
+OMCPasteIntoFrontApp()
+{
+	//synchronize pasteboard before simulating cmd+v
+	{
+		CFObj<PasteboardRef> thePasteboard;
+		OSStatus err = PasteboardCreate( kPasteboardClipboard, &thePasteboard );
+		if( (err == noErr) && (thePasteboard != nullptr) )
+		{
+			[[maybe_unused]] PasteboardSyncFlags syncFlags = PasteboardSynchronize( thePasteboard );
+	#if _DEBUG_
+			printf("OMC: PasteboardSyncFlags = 0x%.8X\n", (unsigned int)syncFlags);
+	#endif
+		}
+	}
+
+	CFObj<CGEventRef> cmdDown = CGEventCreateKeyboardEvent(nullptr, (CGKeyCode)55, true);
+	CGEventPost(kCGHIDEventTap, cmdDown);
+
+	CFObj<CGEventRef> vDown = CGEventCreateKeyboardEvent(nullptr, (CGKeyCode)9, true); // 'v' down
+	CGEventPost(kCGHIDEventTap, vDown);
+
+	CFObj<CGEventRef> vUp = CGEventCreateKeyboardEvent(nullptr, (CGKeyCode)9, false); // 'v' up
+	CGEventPost(kCGHIDEventTap, vUp);
+
+	CFObj<CGEventRef> cmdUp = CGEventCreateKeyboardEvent(nullptr, (CGKeyCode)55, false);
+	CGEventPost(kCGHIDEventTap, cmdUp);
 }

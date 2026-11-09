@@ -1,3 +1,4 @@
+#include "OMCClipboard.h"
 #include "OMCContextData.h"
 #include "CommandDescription.h"
 #include "CMUtils.h"
@@ -100,7 +101,7 @@ CreateTextContext(const CommandDescription &currCommand,
     }
     else if(contextData.isTextInClipboard)
     {
-        contextData.contextText.Adopt( CMUtils::CreateCFStringFromClipboardText(currCommand.textReplaceOptions), kCFObjDontRetain );
+        contextData.contextText.Adopt( OMCCopyClipboardText(currCommand.textReplaceOptions), kCFObjDontRetain );
         contextData.clipboardText.Adopt( contextData.contextText, kCFObjRetain );
     }
 }

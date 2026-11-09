@@ -39,6 +39,7 @@ extern "C" const char *OMCGetActionUIRemoteEndpoint(void);
 //#include "OMCCarbonDialog.h"
 #include "SubmenuTree.h"
 #include "OMCHostInfo.h"
+#include "OMCClipboard.h"
 #include "OMCTestHost.h"
 #include "DefaultExternBundle.h"
 #include "OMCObjectList.h"
@@ -319,7 +320,7 @@ OnMyCommandCM::CommonContextCheck( const AEDesc *inAEContext, CFTypeRef inContex
 	
 	//from now on we assume that PostMenuCleanup will be called so we own the data
 
-    contextData.isTextInClipboard = CMUtils::IsTextInClipboard();
+    contextData.isTextInClipboard = OMCIsTextInClipboard();
 
 	//remember if the context was null on CMPluginExamineContext
 	//we cannot trust it when handling the selection later
@@ -2458,7 +2459,7 @@ OnMyCommandCM::CreateCommandStringWithObjects(CFArrayRef inFragments,
 
 	if( ((currCommand.prescannedCommandInfo & kOmcCommandContainsTextObject) != 0) && (contextData.clipboardText == nullptr) )
 	{
-        contextData.clipboardText.Adopt( CMUtils::CreateCFStringFromClipboardText(currCommand.textReplaceOptions), kCFObjDontRetain );
+        contextData.clipboardText.Adopt( OMCCopyClipboardText(currCommand.textReplaceOptions), kCFObjDontRetain );
 	}
 
 	ACFArr fragments(inFragments);
@@ -2549,7 +2550,7 @@ OnMyCommandCM::CreateEnvironmentVariablesDict(CFStringRef inObjTextRef, CommandR
 
 		if( ((currCommand.prescannedCommandInfo & kOmcCommandContainsTextObject) != 0) && (contextData.clipboardText == NULL) )
 		{
-            contextData.clipboardText.Adopt( CMUtils::CreateCFStringFromClipboardText(currCommand.textReplaceOptions), kCFObjDontRetain );
+            contextData.clipboardText.Adopt( OMCCopyClipboardText(currCommand.textReplaceOptions), kCFObjDontRetain );
 		}
 
 		// command's explicit values take priority; fall back to potential parent context values if not set

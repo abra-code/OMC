@@ -136,7 +136,7 @@
 		E29A6AB60D9F7A01006A97B0 /* OMCMainMenuController.mm in Sources */ = {isa = PBXBuildFile; fileRef = E29A6AB20D9F7A01006A97B0 /* OMCMainMenuController.mm */; };
 		E29ED0720D094EB000C9D5E8 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E29ED0710D094EB000C9D5E8 /* Carbon.framework */; };
 		E29ED1800D09525700C9D5E8 /* CMUtilsMenu.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED1730D09525700C9D5E8 /* CMUtilsMenu.cp */; };
-		E29ED1820D09525700C9D5E8 /* CMUtilsClipboard.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED1750D09525700C9D5E8 /* CMUtilsClipboard.cp */; };
+		E29ED1820D09525700C9D5E8 /* OMCClipboard.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED1750D09525700C9D5E8 /* OMCClipboard.cp */; };
 		E29ED1840D09525700C9D5E8 /* CMUtilsObjectList.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED1770D09525700C9D5E8 /* CMUtilsObjectList.cp */; };
 		E29ED1850D09525700C9D5E8 /* CMUtilsAEText.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED1780D09525700C9D5E8 /* CMUtilsAEText.cp */; };
 		E29ED1860D09525700C9D5E8 /* CMUtilsSendAE.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED1790D09525700C9D5E8 /* CMUtilsSendAE.cp */; };
@@ -465,6 +465,7 @@
 		1D0A1B2C2F74000000000103 /* OMCAlerts.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCAlerts.h; sourceTree = "<group>"; };
 		1D0A1B2C2F74000000000104 /* OMCAlerts.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCAlerts.mm; sourceTree = "<group>"; };
 		1D560A1B2F80000000000003 /* OMCWindowHost.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCWindowHost.h; sourceTree = "<group>"; };
+		1D560A1B2F80000000000019 /* OMCClipboard.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCClipboard.h; sourceTree = "<group>"; };
 		1D560A1B2F80000000000004 /* OMCWindowHost.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCWindowHost.mm; sourceTree = "<group>"; };
 		1D560A1B2F80000000000006 /* OMCProgressWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCProgressWindow.h; sourceTree = "<group>"; };
 		1D560A1B2F80000000000007 /* OMCProgressWindow.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCProgressWindow.cpp; sourceTree = "<group>"; };
@@ -568,7 +569,7 @@
 		E29A6AB20D9F7A01006A97B0 /* OMCMainMenuController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCMainMenuController.mm; sourceTree = "<group>"; };
 		E29ED0710D094EB000C9D5E8 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = /System/Library/Frameworks/Carbon.framework; sourceTree = "<absolute>"; };
 		E29ED1730D09525700C9D5E8 /* CMUtilsMenu.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CMUtilsMenu.cp; sourceTree = "<group>"; };
-		E29ED1750D09525700C9D5E8 /* CMUtilsClipboard.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CMUtilsClipboard.cp; sourceTree = "<group>"; };
+		E29ED1750D09525700C9D5E8 /* OMCClipboard.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCClipboard.cp; sourceTree = "<group>"; };
 		E29ED1770D09525700C9D5E8 /* CMUtilsObjectList.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CMUtilsObjectList.cp; sourceTree = "<group>"; };
 		E29ED1780D09525700C9D5E8 /* CMUtilsAEText.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CMUtilsAEText.cp; sourceTree = "<group>"; };
 		E29ED1790D09525700C9D5E8 /* CMUtilsSendAE.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CMUtilsSendAE.cp; sourceTree = "<group>"; };
@@ -886,6 +887,7 @@
 				1D0A1B2C2F75000000000104 /* OMCActionUIModels.h */,
 				1D0A1B2C2F74000000000103 /* OMCAlerts.h */,
 				1D560A1B2F80000000000003 /* OMCWindowHost.h */,
+				1D560A1B2F80000000000019 /* OMCClipboard.h */,
 				1DBCC43122CE209200A1DD8F /* OMCHostInfo.h */,
 				1D0A1B2C2F6A000000000003 /* Apple */,
 			);
@@ -908,6 +910,7 @@
 				1D0A1B2C2F75000000000105 /* OMCActionUIModels.mm */,
 				1D0A1B2C2F74000000000104 /* OMCAlerts.mm */,
 				1D560A1B2F80000000000004 /* OMCWindowHost.mm */,
+				E29ED1750D09525700C9D5E8 /* OMCClipboard.cp */,
 				1DBCC43222CE209300A1DD8F /* OMCHostInfo.mm */,
 				1D0A1B2C2F6A000000000001 /* NibDialogs */,
 			);
@@ -981,7 +984,6 @@
 			children = (
 				1D71F32B2206F1D8009FAF91 /* CMUtils.h */,
 				E29ED1730D09525700C9D5E8 /* CMUtilsMenu.cp */,
-				E29ED1750D09525700C9D5E8 /* CMUtilsClipboard.cp */,
 				E29ED1770D09525700C9D5E8 /* CMUtilsObjectList.cp */,
 				E29ED1780D09525700C9D5E8 /* CMUtilsAEText.cp */,
 				E29ED1790D09525700C9D5E8 /* CMUtilsSendAE.cp */,
@@ -1477,7 +1479,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				E29ED1800D09525700C9D5E8 /* CMUtilsMenu.cp in Sources */,
-				E29ED1820D09525700C9D5E8 /* CMUtilsClipboard.cp in Sources */,
+				E29ED1820D09525700C9D5E8 /* OMCClipboard.cp in Sources */,
 				E29ED1840D09525700C9D5E8 /* CMUtilsObjectList.cp in Sources */,
 				1D9BCB8822CCA65A00F4EAB6 /* StandardDirectories.m in Sources */,
 				1D0A1B2C2F6A000000000006 /* ACFURL.cpp in Sources */,

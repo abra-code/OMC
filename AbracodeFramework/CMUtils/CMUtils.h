@@ -101,8 +101,6 @@ public:
 	static CFStringRef	CreateCFStringFromAEDesc(const AEDesc &inDesc, long inReplaceOption);
 	static OSStatus		CreateUniTextDescFromCFString(CFStringRef inStringRef, AEDesc &outDesc);
 
-	static Boolean		IsTextInClipboard();
-	static CFStringRef	CreateCFStringFromClipboardText(long inReplaceOption);
 	static OSStatus		PutCFStringToClipboard(CFStringRef inString);
 	static OSStatus		PutCFStringToClipboardAsUnicodeText(PasteboardRef inPasteboardRef, PasteboardItemID inItem, CFStringRef inString);
 	static OSStatus		PutCFStringToClipboardAsMacEncodedText(PasteboardRef inPasteboardRef, PasteboardItemID inItem, CFStringRef inString);
