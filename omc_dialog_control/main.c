@@ -128,12 +128,6 @@ static InstructionWord sInstructionWordList[] =
 
 };
 
-//min and max len defined for slight optimization in resolving instructions
-//the shortest is omc_show
-const size_t kMinInstructionWordLen = sizeof("omc_show") - 1;
-//the longest is omc_present_confirmation_dialog
-const size_t kMaxInstructionWordLen = sizeof("omc_present_confirmation_dialog") - 1;
-
 
 static inline InstructionID
 GetInstructionID(CFStringRef inStr)
@@ -142,7 +136,7 @@ GetInstructionID(CFStringRef inStr)
 		return omc_set_control_value;
 
   	size_t	strLen = (size_t)CFStringGetLength(inStr);
-	if( (strLen < kMinInstructionWordLen) || (strLen > kMaxInstructionWordLen))
+	if(strLen == 0)
 		return omc_set_control_value;
 
   	UniChar oneChar = CFStringGetCharacterAtIndex(inStr, 0);

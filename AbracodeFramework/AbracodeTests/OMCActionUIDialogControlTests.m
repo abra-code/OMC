@@ -15,9 +15,7 @@
 //
 //  Not pinned: toasts (ActionUI has no getter for the current toast); the per-control omc_move,
 //  omc_resize, omc_scroll, omc_select and omc_set_command_id, which only log for an ActionUI window
-//  (OMCActionUIWindowController.mm); and omc_list_append_items_from_stdin, which omc_dialog_control
-//  does not recognize: the word is one character longer than its longest-word limit, so it is sent
-//  as the list's value.
+//  (OMCActionUIWindowController.mm).
 //
 
 #import <AppKit/AppKit.h>
@@ -241,6 +239,21 @@ static id ActionUIObjCClass(void)
     [self control:[list stringByAppendingString:@" omc_list_remove_all"]];
     XCTAssertEqualObjects([self waitFor:@[] read:^id{ return [self rowsOfView:kListID]; }], @[],
                           @"omc_list_remove_all removes every item");
+}
+
+// The longest verb: omc_dialog_control once skipped words longer than a stale longest-word limit
+// and sent this one as the list's value, so the list became one item, the verb's own name
+- (void)testListAppendItemsFromStdinAppendsOneItemPerLine {
+    NSString *list = [NSString stringWithFormat:@"%ld", (long)kListID];
+    [self control:[list stringByAppendingString:@" omc_list_set_items alpha"]];
+    NSArray *expected = @[@[@"alpha"]];
+    XCTAssertEqualObjects([self waitFor:expected read:^id{ return [self rowsOfView:kListID]; }], expected,
+                          @"the list has an item before the append");
+
+    [self control:[list stringByAppendingString:@" omc_list_append_items_from_stdin"] input:@"beta\ngamma"];
+    expected = @[@[@"alpha"], @[@"beta"], @[@"gamma"]];
+    XCTAssertEqualObjects([self waitFor:expected read:^id{ return [self rowsOfView:kListID]; }], expected,
+                          @"omc_list_append_items_from_stdin appends one item per line");
 }
 
 - (void)testTablePrepareEmptyRemovesTheRowsAndKeepsTheColumns {
