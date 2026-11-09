@@ -13,6 +13,7 @@ class OMCDialog;
 class CommandRuntimeData;
 class OMCContextData;
 struct OMCHostSelection;
+struct OMCMenuModel;
 struct OneObjProperties;
 
 #define CM_IMPL_PLUGIN_PREFS_INDENTIFIER	"com.abracode.OnMyCommandCMPrefs"
@@ -54,7 +55,7 @@ public:
 	virtual OSStatus	HandleSelection( AEDesc *inAEContext, SInt32 inCommandRef );
     virtual void		PostMenuCleanup();
 
-	OSStatus			CommonContextCheck( CFTypeRef inContext, const OMCHostSelection *inHostSelection, const OMCContextData *inParentContext, AEDescList *outCommandPairs, SInt32 inCmdIndex, bool inEnforceActivationMatch = true );
+	OSStatus			CommonContextCheck( CFTypeRef inContext, const OMCHostSelection *inHostSelection, const OMCContextData *inParentContext, OMCMenuModel *outMenu, SInt32 inCmdIndex, bool inEnforceActivationMatch = true );
     // internal API to execute a command, with the context the last CommonContextCheck examined
     OSStatus            ExecuteCommand( SInt32 inCommandIndex, const CommandRuntimeData *parentCommandRuntimeData );
     // the same for a command reference (kCMCommandStart + index), as the contextual menu and OMC.h hand
@@ -80,7 +81,7 @@ public:
 	OSStatus			ExecuteCommandWithText(CommandDescription &currCommand, CFStringRef inStrRef, CommandRuntimeData *commandRuntimeData);
 	Boolean				DisplayWarning(CommandDescription &currCommand, CommandRuntimeData &commandRuntimeData);
 	Boolean				PopulateItemsMenu( CommandRuntimeData &commandRuntimeData,
-                                          AEDescList* ioRootMenu,
+                                          OMCMenuModel &ioMenu,
                                           Boolean runningInSpecialApp,
                                           CFStringRef inFrontAppName );
 	bool				IsCommandEnabled(CommandDescription &currCommand,

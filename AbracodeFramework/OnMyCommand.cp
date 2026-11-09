@@ -10,9 +10,7 @@
 #include "CommandRuntimeData.h"
 #include "OMCNavigationDialogs.h"
 #include "OMCAlerts.h"
-#include "CMUtils.h"
 #include "CFObj.h"
-#include "StAEDesc.h"
 #include <string>
 #include <vector>
 
@@ -33,17 +31,16 @@ extern "C" const char *OMCGetActionUIRemoteEndpoint(void);
 // OMCCocoaHelper was only useful for CM plugins executed in-proc
 // these days are long gone
 //#include "OMCCocoaHelperExterns.h"
-#include "MoreAppleEvents.h"
 //#include "AAEDesc.h"
 #include "OMCDialogControlHelpers.h"
 //#include "OMCCarbonDialog.h"
-#include "SubmenuTree.h"
 #include "OMCHostInfo.h"
 #include "OMCClipboard.h"
 #include "OMCTestHost.h"
 #include "DefaultExternBundle.h"
 #include "OMCObjectList.h"
 #include "OMCHostSelection.h"
+#include "OMCMenuModel.h"
 #include "ACFString.h"
 #include "OmcTaskManager.h"
 #include "ACFDict.h"
@@ -271,7 +268,7 @@ OnMyCommandCM::ExamineContext( CFTypeRef inContext, SInt32 inCommandRef, bool in
 // inHostSelection: a contextual menu host's selection (its files come in inContext), or NULL.
 
 OSStatus
-OnMyCommandCM::CommonContextCheck( CFTypeRef inContext, const OMCHostSelection *inHostSelection, const OMCContextData *inParentContextData, AEDescList *outCommandPairs, SInt32 inCmdIndex, bool inEnforceActivationMatch )
+OnMyCommandCM::CommonContextCheck( CFTypeRef inContext, const OMCHostSelection *inHostSelection, const OMCContextData *inParentContextData, OMCMenuModel *outMenu, SInt32 inCmdIndex, bool inEnforceActivationMatch )
 {
 	TRACE_CSTR( "OnMyCommandCM::CommonContextCheck\n" );
 	OSStatus err = noErr;
@@ -484,10 +481,10 @@ OnMyCommandCM::CommonContextCheck( CFTypeRef inContext, const OMCHostSelection *
 	CFObj<CFStringRef> frontProcessName = CopyFrontAppName();
 
 	//menu population requested
-	if(outCommandPairs != nullptr)
+	if(outMenu != nullptr)
 	{
 		(void)PopulateItemsMenu(*mInitialRuntimeData,
-                                outCommandPairs,
+                                *outMenu,
 								runningInEditorApp || runningInShortcutsObserver,
 								frontProcessName);
 	}
@@ -1623,7 +1620,7 @@ OnMyCommandCM::GetURLInvocationStatus(const CommandDescription &inCommand) const
 
 Boolean
 OnMyCommandCM::PopulateItemsMenu( CommandRuntimeData &commandRuntimeData,
-                                 AEDescList* ioRootMenu,
+                                 OMCMenuModel &ioMenu,
                                  Boolean runningInSpecialApp,
                                  CFStringRef inFrontAppName)
 {
@@ -1635,8 +1632,6 @@ OnMyCommandCM::PopulateItemsMenu( CommandRuntimeData &commandRuntimeData,
 //	OSStatus err = noErr;
 	bool doActivate = false;
 	CFStringRef submenuName = nullptr;
-	
-	SubmenuTree itemTree(ioRootMenu);
 	
 	CFStringRef rootMenuName = CFSTR("/");
 	CFStringRef currAppName = mMyHostAppName;
@@ -1725,19 +1720,15 @@ OnMyCommandCM::PopulateItemsMenu( CommandRuntimeData &commandRuntimeData,
                                                                             commandRuntimeData,
                                                                             currCommand.localizationTableName,
                                                                             localizationBundle) );
-			itemTree.AddMenuItem(
-								submenuName,
-								dynamicCommandName,
-								kCMCommandStart + i,
-								0,
-								kMenuNoModifiers);
+			OMCMenuItemEntry entry;
+			entry.submenuPath.Adopt(submenuName, kCFObjRetain);
+			entry.name.Adopt(dynamicCommandName, kCFObjRetain);
+			entry.commandRef = kCMCommandStart + i;
+			ioMenu.items.push_back(entry);
 		}
 	}
 	
 
-//	DEBUG_CSTR( "OMC->PopulateItemsMenu. About to call itemTree.BuildSubmenuTree()\n" );
-	itemTree.BuildSubmenuTree();
-	
 	return doActivate;
 }
 
@@ -3591,17 +3582,20 @@ OnMyCommandCM::ExecuteSubcommand(CFArrayRef inCommandName, CFStringRef inCommand
 	return ExecuteSubcommand(commandIndex, parentCommandRuntimeData, inContext);
 }
 
+// No such subcommand: Carbon's eventNotHandledErr, the value callers have always received
+static const OSStatus kSubcommandNotHandledErr = -9874;
+
 OSStatus
 OnMyCommandCM::ExecuteSubcommand(SInt32 commandIndex, CommandRuntimeData *parentCommandRuntimeData, CFTypeRef inContext)
 {
     if(commandIndex < 0)
     {
-        return eventNotHandledErr;
+        return kSubcommandNotHandledErr;
     }
     
     if((mCommandList == nullptr) || (mCommandCount == 0))
     {
-        return eventNotHandledErr;
+        return kSubcommandNotHandledErr;
     }
     
     SInt32 parentCommandIndex = mCurrCommandIndex;

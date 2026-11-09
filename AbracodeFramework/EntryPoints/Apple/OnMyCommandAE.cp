@@ -11,6 +11,8 @@
 
 #include "OnMyCommand.h"
 #include "OMCHostSelection.h"
+#include "OMCMenuModel.h"
+#include "SubmenuTree.h"
 #include "OMCConstants.h"
 #include "CMUtils.h"
 #include "StAEDesc.h"
@@ -56,6 +58,19 @@ MakeHostSelection(const AEDesc *inAEContext, OMCHostSelection &outSelection)
 	};
 }
 
+// The menu as the Menu Manager's contextual menu API takes it: command records in an Apple event list,
+// submenus nested, built from the engine's menu model in its order
+static void
+AddMenuToAEList(const OMCMenuModel &inMenu, AEDescList *ioRootMenu)
+{
+	if(ioRootMenu == nullptr)
+		return;
+	SubmenuTree itemTree(ioRootMenu);
+	for(const OMCMenuItemEntry &entry : inMenu.items)
+		itemTree.AddMenuItem(entry.submenuPath, entry.name, entry.commandRef, 0, kMenuNoModifiers);
+	itemTree.BuildSubmenuTree();
+}
+
 //classic API for CM
 OSStatus
 OnMyCommandCM::ExamineContext( const AEDesc *inAEContext, AEDescList *outCommandPairs )
@@ -63,7 +78,10 @@ OnMyCommandCM::ExamineContext( const AEDesc *inAEContext, AEDescList *outCommand
 	OSStatus __unused err = Init();
 	OMCHostSelection selection;
 	MakeHostSelection(inAEContext, selection);
-	return CommonContextCheck( selection.files, &selection, nullptr, outCommandPairs, -1 /*inCmdIndex*/ );
+	OMCMenuModel menu;
+	OSStatus checkErr = CommonContextCheck( selection.files, &selection, nullptr, (outCommandPairs != nullptr) ? &menu : nullptr, -1 /*inCmdIndex*/ );
+	AddMenuToAEList(menu, outCommandPairs);
+	return checkErr;
 }
 
 //new API for OMC.h
@@ -78,7 +96,10 @@ OnMyCommandCM::ExamineContext( const AEDesc *inAEContext, SInt32 inCommandRef, A
 
 	OMCHostSelection selection;
 	MakeHostSelection(inAEContext, selection);
-	return CommonContextCheck( selection.files, &selection, nullptr, outCommandPairs, cmdIndex );
+	OMCMenuModel menu;
+	OSStatus checkErr = CommonContextCheck( selection.files, &selection, nullptr, (outCommandPairs != nullptr) ? &menu : nullptr, cmdIndex );
+	AddMenuToAEList(menu, outCommandPairs);
+	return checkErr;
 }
 
 // Carry out the command that the user selected; the context is the one ExamineContext examined

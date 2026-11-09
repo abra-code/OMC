@@ -406,6 +406,7 @@
 		1D3EA05E2E389FF10064354E /* OneObjProperties.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OneObjProperties.h; sourceTree = "<group>"; };
 		1D3EA05F2E38A1E00064354E /* OneObjProperties.cp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = OneObjProperties.cp; sourceTree = "<group>"; };
 		1D560A1B2F80000000000016 /* OMCObjectList.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCObjectList.h; sourceTree = "<group>"; };
+		1D560A1B2F80000000000021 /* OMCMenuModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCMenuModel.h; sourceTree = "<group>"; };
 		1D560A1B2F80000000000017 /* OMCObjectList.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCObjectList.cpp; sourceTree = "<group>"; };
 		1D560A1B2F8000000000001E /* OMCHostSelection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCHostSelection.h; sourceTree = "<group>"; };
 		1D560A1B2F8000000000001F /* OnMyCommandAE.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = OnMyCommandAE.cp; path = EntryPoints/Apple/OnMyCommandAE.cp; sourceTree = "<group>"; };
@@ -1113,6 +1114,7 @@
 				1D3EA05E2E389FF10064354E /* OneObjProperties.h */,
 				1D3EA05F2E38A1E00064354E /* OneObjProperties.cp */,
 				1D560A1B2F80000000000016 /* OMCObjectList.h */,
+				1D560A1B2F80000000000021 /* OMCMenuModel.h */,
 				1D560A1B2F80000000000017 /* OMCObjectList.cpp */,
 				1D560A1B2F8000000000001E /* OMCHostSelection.h */,
 				1D560A1B2F8000000000001F /* OnMyCommandAE.cp */,
