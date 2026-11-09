@@ -263,6 +263,29 @@ static BOOL PressEscape(NSWindow *dialog) { return PressKey(dialog, [NSString st
     XCTAssertEqualObjects(output, @"input=2", @"OK without a change gives the DEFAULT item's VALUE");
 }
 
+/// INPUT_MENU as plain strings, as the reference documents it: each string is shown and is the
+/// choice (5.5 read only NAME/VALUE dictionaries and showed an empty menu for strings).
+- (void)testMenusOfPlainStrings
+{
+    NSDictionary *popup = @{@"INPUT_TYPE": @"input_popup_menu", @"DEFAULT": @"Medium", @"INPUT_MENU": @[@"Low", @"Medium", @"High"]};
+    NSString *output = [self runInputDialog:popup label:@"strings_popup" answer:^(NSWindow *dialog) {
+        NSArray *options = Property(dialog, kInputFieldID, @"options");
+        XCTAssertEqual(options.count, (NSUInteger)3);
+        XCTAssertEqualObjects(FieldValue(dialog), @"2", @"The DEFAULT string should be chosen");
+        SetFieldValue(dialog, @"3");
+        XCTAssertTrue(PressReturn(dialog));
+    }];
+    XCTAssertEqualObjects(output, @"input=High");
+
+    NSDictionary *combo = @{@"INPUT_TYPE": @"input_combo_box", @"INPUT_MENU": @[@"Low", @"High"]};
+    output = [self runInputDialog:combo label:@"strings_combo" answer:^(NSWindow *dialog) {
+        XCTAssertEqualObjects(Property(dialog, kFirstMenuItemID + 1, @"title"), @"High");
+        SetFieldValue(dialog, @"Low");
+        XCTAssertTrue(PressReturn(dialog));
+    }];
+    XCTAssertEqualObjects(output, @"input=Low");
+}
+
 /// The combo box's menu has a button per item; text that is an item's name gives its VALUE, any
 /// other text is the choice itself.
 - (void)testComboBoxReturnsAValueForANameAndOtherwiseTheText

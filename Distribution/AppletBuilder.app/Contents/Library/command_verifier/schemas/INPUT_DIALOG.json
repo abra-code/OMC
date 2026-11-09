@@ -9,6 +9,6 @@
     "CANCEL_BUTTON_NAME": { "types": ["string"] },
     "DEFAULT_VALUE": { "types": ["array"], "itemTypes": ["string"], "description": "Pre-filled value (array form; supports __FOO__ tokens)." },
     "DEFAULT": { "types": ["string"], "description": "Pre-filled value (string form)." },
-    "INPUT_MENU": { "types": ["array"], "itemTypes": ["string"], "appliesWhen": "INPUT_TYPE in [input_popup_menu, input_combo_box]", "requiredWhen": "INPUT_TYPE in [input_popup_menu, input_combo_box]" }
+    "INPUT_MENU": { "types": ["array"], "itemSpec": { "types": ["string", "dict"], "properties": { "NAME": { "types": ["string"], "required": true, "description": "Shown in the menu (localized with LOCALIZATION_TABLE_NAME)." }, "VALUE": { "types": ["string"], "description": "The choice when this item is chosen; defaults to NAME." } } }, "description": "Menu items: strings (each shown and returned), or dictionaries with NAME and an optional VALUE.", "appliesWhen": "INPUT_TYPE in [input_popup_menu, input_combo_box]", "requiredWhen": "INPUT_TYPE in [input_popup_menu, input_combo_box]" }
   }
 }

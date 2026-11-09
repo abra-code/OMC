@@ -26,7 +26,8 @@ _failed = 0
 
 
 def run(target: str) -> tuple[int, str]:
-    p = subprocess.run([PY, str(VERIFIER), target], capture_output=True, text=True)
+    # -B: no __pycache__ inside the signed AppletBuilder bundle
+    p = subprocess.run([PY, "-B", str(VERIFIER), target], capture_output=True, text=True)
     return p.returncode, p.stdout + p.stderr
 
 
@@ -735,6 +736,52 @@ def test_url_invocable() -> None:
               f"got {rc}: {out.strip()}")
 
 
+def _input_menu_plist(items: str) -> str:
+    return f"""<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+  <key>COMMAND_LIST</key><array>
+    <dict>
+      <key>NAME</key><string>MyApp</string>
+      <key>COMMAND_ID</key><string>myapp.ask</string>
+      <key>EXECUTION_MODE</key><string>exe_shell_script</string>
+      <key>COMMAND</key><array><string>echo __DLG_INPUT_TEXT__</string></array>
+      <key>INPUT_DIALOG</key><dict>
+        <key>INPUT_TYPE</key><string>input_popup_menu</string>
+        <key>INPUT_MENU</key><array>{items}</array>
+      </dict>
+    </dict>
+  </array>
+  <key>VERSION</key><integer>2</integer>
+</dict></plist>
+"""
+
+
+def test_input_menu() -> None:
+    """INPUT_MENU items are strings or NAME/VALUE dictionaries (OMC 5.6 reads both)."""
+    with tempfile.TemporaryDirectory() as d:
+        cases = [
+            ("strings", "<string>Low</string><string>High</string>"),
+            ("NAME/VALUE dictionaries", "<dict><key>NAME</key><string>Low</string><key>VALUE</key><string>1</string></dict>"
+                                        "<dict><key>NAME</key><string>High</string></dict>"),
+        ]
+        for label, items in cases:
+            path = Path(d) / f"{label.split()[0].replace('/', '-')}.plist"
+            path.write_text(_input_menu_plist(items))
+            rc, out = run(str(path))
+            check(f"INPUT_MENU of {label} -> exit 0", rc == 0, f"got {rc}: {out.strip()}")
+
+        path = Path(d) / "noname.plist"
+        path.write_text(_input_menu_plist("<dict><key>VALUE</key><string>1</string></dict>"))
+        rc, out = run(str(path))
+        check("INPUT_MENU dictionary without NAME -> error", rc == 1 and "NAME" in out, f"got {rc}: {out.strip()}")
+
+        path = Path(d) / "number.plist"
+        path.write_text(_input_menu_plist("<integer>3</integer>"))
+        rc, out = run(str(path))
+        check("INPUT_MENU number item -> error", rc == 1, f"got {rc}: {out.strip()}")
+
+
 def main() -> int:
     if not VERIFIER.exists():
         print(f"verifier not found: {VERIFIER}", file=sys.stderr)
@@ -743,6 +790,7 @@ def main() -> int:
     test_layer2()
     test_action_ids()
     test_url_invocable()
+    test_input_menu()
     print(f"\n{_passed} passed, {_failed} failed.")
     return 1 if _failed else 0
 

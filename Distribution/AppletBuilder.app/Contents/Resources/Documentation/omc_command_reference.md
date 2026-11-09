@@ -1271,7 +1271,7 @@ Prompts **before** command runs. Value available via `$OMC_DLG_INPUT_TEXT`.
 | `MESSAGE` | String | `""` | Prompt text. | `"Enter name:"` |
 | `DEFAULT_VALUE` | Array<String> | `""` | Pre-filled value, array form (fragments are combined; supports `__FOO__` tokens). A plain string under this key is **ignored** — use `DEFAULT` for a string value. | `["User: ", __OBJ_NAME__]` |
 | `DEFAULT` | String | `""` | Pre-filled value, string form (alternative to `DEFAULT_VALUE`). | `"__OBJ_NAME__"` |
-| `INPUT_MENU` | Array<String> | None | Menu items for `input_popup_menu` / `input_combo_box`. | `["Option 1", "Option 2"]` |
+| `INPUT_MENU` | Array<String or Dict> | None | Menu items for `input_popup_menu` / `input_combo_box`: strings (each shown and returned), or dictionaries with `NAME` (shown) and an optional `VALUE` (returned instead of the name). With `LOCALIZATION_TABLE_NAME` the shown names are localized; a string item still returns the string as written. | `["Option 1", "Option 2"]` |
 | `OK_BUTTON_NAME` | String | System default | Custom confirm-button label. | `"Apply"` |
 | `CANCEL_BUTTON_NAME` | String | System default | Custom cancel-button label. | `"Dismiss"` |
 
@@ -1325,7 +1325,8 @@ Prompts **before** command runs. Value available via `$OMC_DLG_INPUT_TEXT`.
 **Notes**:
 - `$OMC_DLG_INPUT_TEXT` returns:
   - `input_clear_text` / `input_password_text`: entered string
-  - `input_popup_menu` / `input_combo_box`: selected item
+  - `input_popup_menu`: the chosen item's `VALUE`, else the item itself (its `NAME`)
+  - `input_combo_box`: the text in the field; when it is an item's name, that item's `VALUE`
 - Use `__DLG_INPUT_TEXT__` in `COMMAND` for substitution.
 - Dialog is **blocking**.
 - `input_combo_box` allows typing; `input_popup_menu` is dropdown only.

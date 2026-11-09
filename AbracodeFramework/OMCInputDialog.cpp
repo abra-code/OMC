@@ -329,18 +329,29 @@ RunInputDialog(OnMyCommandCM *inPlugin, CommandRuntimeData &commandRuntimeData)
 	settings.cancelTitle.Adopt( CopyLocalizedString(currCommand.inputDialogCancel, localizationBundle, tableName) );
 	settings.defaultValue.Adopt( inPlugin->CreateCombinedStringWithObjects(currCommand.inputDialogDefault, commandRuntimeData, tableName, localizationBundle) );
 
-	// INPUT_MENU: dictionaries with a NAME (shown, localized) and an optional VALUE (the choice)
+	// INPUT_MENU: strings (shown localized; the choice is the string itself, not localized), or
+	// dictionaries with a NAME (shown, localized) and an optional VALUE (the choice)
 	CFArrayRef menuItems = currCommand.inputDialogMenuItems;
 	CFIndex itemCount = (menuItems != nullptr) ? CFArrayGetCount(menuItems) : 0;
 	for(CFIndex i = 0; i < itemCount; i++)
 	{
 		CFTypeRef oneItem = CFArrayGetValueAtIndex(menuItems, i);
-		if( (oneItem == nullptr) || (CFGetTypeID(oneItem) != CFDictionaryGetTypeID()) )
+		if(oneItem == nullptr)
 			continue;
-		CFTypeRef name = CFDictionaryGetValue((CFDictionaryRef)oneItem, CFSTR("NAME"));
+		CFTypeRef name = nullptr;
+		CFTypeRef value = nullptr;
+		if(CFGetTypeID(oneItem) == CFStringGetTypeID())
+		{
+			name = oneItem;
+			value = oneItem;
+		}
+		else if(CFGetTypeID(oneItem) == CFDictionaryGetTypeID())
+		{
+			name = CFDictionaryGetValue((CFDictionaryRef)oneItem, CFSTR("NAME"));
+			value = CFDictionaryGetValue((CFDictionaryRef)oneItem, CFSTR("VALUE"));
+		}
 		if( (name == nullptr) || (CFGetTypeID(name) != CFStringGetTypeID()) )
 			continue;
-		CFTypeRef value = CFDictionaryGetValue((CFDictionaryRef)oneItem, CFSTR("VALUE"));
 
 		OMCInputMenuItem item;
 		item.name.Adopt( CopyLocalizedString((CFStringRef)name, localizationBundle, tableName) );
