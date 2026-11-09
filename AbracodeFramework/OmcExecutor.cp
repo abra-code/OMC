@@ -9,14 +9,13 @@
 
 #include "OmcExecutor.h"
 #include "ACFString.h"
+#include "OMCAppleScriptRunner.h"
 #include <stdio.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <sys/stat.h>
-#include "CMUtils.h"
 #include "OutputWindowHandler.h"
-#include "StAEDesc.h"
 #include "OmcTaskManager.h"
 #include "OmcTaskNotification.h"
 #include "OnMyCommand.h"
@@ -1299,7 +1298,7 @@ AppleScriptExecutor::AppleScriptExecutor(const CommandDescription &inCommandDesc
 										CFStringRef inDynamicName,
 										CFBundleRef inExternBundleRef,
 										Boolean useOutputWindow)
-	: OmcExecutor(), mOSAComponent(nullptr), mActiveUPP(nullptr),
+	: OmcExecutor(),
 	mSettingsDict(inCommandDesc.outputWindowOptions, kCFObjRetain),
 	mCommandName(inCommandDesc.name, kCFObjRetain),
 	mDynamicCommandName(inDynamicName, kCFObjRetain),
@@ -1307,22 +1306,10 @@ AppleScriptExecutor::AppleScriptExecutor(const CommandDescription &inCommandDesc
 	mLocalizationTableName(inCommandDesc.localizationTableName, kCFObjRetain),
 	mUseOutput(useOutputWindow)
 {
-    //TODO: try if it can be implemented easily with NSAppleScript instead
-    mOSAComponent = OpenDefaultComponent( kOSAComponentType, kOSAGenericScriptingComponentSubtype );
-
-	mActiveUPP = ::NewOSAActiveUPP( AppleScriptExecutor::OSAActiveProc );
-	if( (mActiveUPP != nullptr) && (mOSAComponent != nullptr) )
-	{
-		/*OSAError err =*/ ::OSASetActiveProc( mOSAComponent, mActiveUPP, (SRefCon)this );
-	}
 }
 
 AppleScriptExecutor::~AppleScriptExecutor()
 {
-	if (mOSAComponent != nullptr)
-		::CloseComponent(mOSAComponent);
-	if(mActiveUPP != nullptr)
-		::DisposeOSAActiveUPP( mActiveUPP );
 }
 
 
@@ -1336,48 +1323,14 @@ AppleScriptExecutor::ExecuteCFString( CFStringRef inCommand, CFStringRef inInput
 		Finish(true, true, noErr);
 		return true;
 	}
-	
-	if( mOSAComponent == nullptr )
-		mOSAComponent = OpenDefaultComponent( kOSAComponentType, kOSAGenericScriptingComponentSubtype );
-
-	if( mOSAComponent == nullptr )
-	{
-		Finish(true, true, noErr);
-		return true;
-	}
-
-	StAEDesc theCommandDesc;
-
-	OSStatus err = CMUtils::CreateUniTextDescFromCFString(inCommand, theCommandDesc);
-
-	if(err != noErr)
-	{
-		Finish(true, true, err);
-		return true;
-	}
 
 	ProcessOutputString(nullptr); //send one progress notification before we start non-stoppable AS execution
-	
-	StAEDesc resultDesc;
-    //TODO: (NSAppleEventDescriptor *)executeAndReturnError:(NSDictionary<NSString *, id> * _Nullable * _Nullable)errorInfo;
-	OSAError osaErr = ::OSADoScript(
-						mOSAComponent,
-						theCommandDesc,
-						kOSANullScript,
-						typeUnicodeText,
-						kOSAModeCompileIntoContext | kOSAModeCanInteract | kOSAModeDisplayForHumans,
-						resultDesc);
 
-	if(osaErr != noErr)
-	{
-		LOG_CSTR("OMC->AppleScriptExecutor::ExecuteCFString. OSADoScript returned error: %d\n", (int)osaErr);
-	}
-
-	CFObj<CFStringRef> resultString( CMUtils::CreateCFStringFromAEDesc(resultDesc, kTextReplaceNothing) );
+	CFObj<CFStringRef> resultString;
+	OSStatus osaErr = OMCRunAppleScript(inCommand, AppleScriptExecutor::StillRunning, this, &resultString);
 
 	if(mUseOutput)
 	{
-//		::CFShow(resultString);
 		OutputWindowHandler *theOutput = new OutputWindowHandler(mSettingsDict, mCommandName, mDynamicCommandName, mExternBundleRef, mLocalizationTableName);
 		if(theOutput != nullptr)
 		{
@@ -1391,19 +1344,13 @@ AppleScriptExecutor::ExecuteCFString( CFStringRef inCommand, CFStringRef inInput
 	return true;
 }
 
-OSErr
-AppleScriptExecutor::OSAActiveProc(SRefCon refCon)
+// While the script runs: let our progress indicator know we are still alive
+void
+AppleScriptExecutor::StillRunning(void *inContext)
 {
-	AppleScriptExecutor *theThis = (AppleScriptExecutor *)refCon;
-	//just let our progress indicator know we are still alive
+	AppleScriptExecutor *theThis = (AppleScriptExecutor *)inContext;
 	if(theThis != nullptr)
 		theThis->ProcessOutputString(nullptr);
-	
-	Boolean isCanceled = ::CheckEventQueueForUserCancel();
-	if(isCanceled)
-		return userCanceledErr;
-	
-	return noErr;
 }
 
 /*

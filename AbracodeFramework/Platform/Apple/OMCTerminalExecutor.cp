@@ -3,6 +3,8 @@
  *
  */
 
+#include "OMCTerminalLauncher.h"
+#include "OMCEnvironmentExportScript.h" // IsShDefaultLoginShell
 #include "StAEDesc.h"
 #include "CMUtils.h"
 #include "CFObj.h"
@@ -121,4 +123,32 @@ SendEventToTerminal(const AEDesc &inCommandDesc, bool openInNewWindow, bool brin
 	}
 
 	return err;
+}
+
+// It is reasonable to check default shell only once during the lifetime of the process.
+// If the user changes Terminal or iTerm shell while an OMC applet is running
+// the change would go unnoticed. Sorry, we will not pay the price of hitting this code every time
+// to cover the corner case which has an easy workaround (restart the darn app)
+// Save the cycles, save the energy, save the Earth...
+
+bool IsShDefaultInTerminal()
+{
+	static bool sIsShDefault = true;
+	static dispatch_once_t onceToken;
+	dispatch_once(&onceToken, ^{
+		CFObj<CFTypeRef> resultRef( ::CFPreferencesCopyAppValue(CFSTR("Shell"), CFSTR("com.apple.Terminal")) );
+		CFStringRef shellPath = ACFType<CFStringRef>::DynamicCast(resultRef);
+		if((shellPath != nullptr) && (CFStringGetLength(shellPath) > 0))
+		{
+			//all shells but csh or tcsh are behaving the same for OMC environment export purposes
+			CFRange foundRange = ::CFStringFind(shellPath, CFSTR("csh"), 0);
+			sIsShDefault = (foundRange.location == kCFNotFound);
+		}
+		else
+		{
+			sIsShDefault = IsShDefaultLoginShell();
+		}
+	});
+
+	return sIsShDefault;
 }

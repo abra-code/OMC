@@ -7,8 +7,7 @@
  *
  */
 
-#include <CoreServices/CoreServices.h>
-#include <Carbon/Carbon.h>
+#include <CoreFoundation/CoreFoundation.h>
 
 #include "DebugSettings.h"
 #include "CFObj.h"
@@ -203,11 +202,9 @@ public:
 //	virtual void		Finish(bool wasSynchronous, bool sendNotification, OSStatus inError);
 
 	virtual bool		UsesOutputWindow() const { return mUseOutput; }
-	static OSErr		OSAActiveProc(SRefCon refCon);
+	static void			StillRunning(void *inContext);
 
 protected:
-	ComponentInstance		mOSAComponent;
-	OSAActiveUPP			mActiveUPP;
 	CFObj<CFDictionaryRef>	mSettingsDict;
 	CFObj<CFArrayRef>		mCommandName;
 	CFObj<CFStringRef>		mDynamicCommandName;

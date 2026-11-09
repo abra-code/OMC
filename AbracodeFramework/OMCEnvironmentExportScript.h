@@ -10,6 +10,6 @@
 
 bool WriteEnvironmentSetupScriptToTmp(CFDictionaryRef inEnvironmentDict, CFStringRef inCommandGUID, bool isSh);
 CFStringRef CreateEnvironmentSetupCommandForShell(CFStringRef inCommandGUID, bool isSh);
-bool IsShDefaultInTerminal();
-bool IsShDefaultInITem();
+// Whether the user's login shell takes sh syntax (not csh or tcsh); the terminals' fallback
+bool IsShDefaultLoginShell();
 

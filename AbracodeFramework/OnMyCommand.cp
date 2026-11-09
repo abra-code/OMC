@@ -62,9 +62,8 @@ extern "C" const char *OMCGetActionUIRemoteEndpoint(void);
 #include "StandardDirectories.h"
 #include "OMCWindowHost.h"
 #include "OMCStrings.h"
-#include "OMCTerminalExecutor.h"
+#include "OMCTerminalLauncher.h"
 #include "OMCScriptsManager.h"
-#include "OMCiTermExecutor.h"
 #include "OMCEnvironmentExportScript.h"
 
 enum
@@ -1144,7 +1143,7 @@ OnMyCommandCM::ExecuteCommandWithObjects(CommandRuntimeData *initialCommandRunti
 			
 			case kExecITerm:
 			{
-				bool isSh = IsShDefaultInITem();
+				bool isSh = IsShDefaultInITerm();
 				CFObj<CFStringRef> commandWithEnvSetup = CreateTerminalCommandWithEnvironmentSetup(theCommand,
                                                                                                    currCommand,
                                                                                                    *commandRuntimeData,
@@ -1319,7 +1318,7 @@ OnMyCommandCM::ExecuteCommandWithText(CommandDescription &currCommand, CFStringR
 		
 		case kExecITerm:
 		{
-			bool isSh = IsShDefaultInITem();
+			bool isSh = IsShDefaultInITerm();
 			CFObj<CFStringRef> commandWithEnvSetup = CreateTerminalCommandWithEnvironmentSetup(theCommand,
                                                                                                currCommand,
                                                                                                *commandRuntimeData,

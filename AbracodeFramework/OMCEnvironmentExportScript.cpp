@@ -176,7 +176,7 @@ CFStringRef CreateEnvironmentSetupCommandForShell(CFStringRef inCommandGUID, boo
 	return CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("%@ \"%@\"\n"), sourceCmd, (CFStringRef)scriptPath);
 }
 
-static inline bool IsShDefaultLoginShell()
+bool IsShDefaultLoginShell()
 {
 	char *shellEnv = getenv("SHELL");
 	if(shellEnv != nullptr)
@@ -187,116 +187,4 @@ static inline bool IsShDefaultLoginShell()
 	return true;
 }
 
-// It is reasonable to check default shell only once during the lifetime of the process.
-// If the user changes Terminal or iTerm shell while an OMC applet is running
-// the change would go unnoticed. Sorry, we will not pay the price of hitting this code every time
-// to cover the corner case which has an easy workaround (restart the darn app)
-// Save the cycles, save the energy, save the Earth...
 
-bool IsShDefaultInTerminal()
-{
-	static bool sIsShDefault = true;
-	static dispatch_once_t onceToken;
-	dispatch_once(&onceToken, ^{
-		CFObj<CFTypeRef> resultRef( ::CFPreferencesCopyAppValue(CFSTR("Shell"), CFSTR("com.apple.Terminal")) );
-		CFStringRef shellPath = ACFType<CFStringRef>::DynamicCast(resultRef);
-		if((shellPath != nullptr) && (CFStringGetLength(shellPath) > 0))
-		{
-			//all shells but csh or tcsh are behaving the same for OMC environment export purposes
-			CFRange foundRange = ::CFStringFind(shellPath, CFSTR("csh"), 0);
-			sIsShDefault = (foundRange.location == kCFNotFound);
-		}
-		else
-		{
-			sIsShDefault = IsShDefaultLoginShell();
-		}
-	});
-
-	return sIsShDefault;
-}
-
-/*
-   Looking at  com.googlecode.iterm2.plist:
-
-   more complex structure with multiple profiles named "bookmarks"
-   the default one is identified by GUID in root level
-   the shell is named "command"
-   even if "command" is set, its activation is controlled by "Custom Command" string
-   
-<key>Default Bookmark Guid</key>
-<string>6777374D-5516-4559-907C-F1A309BA889D</string>
-
-<key>New Bookmarks</key>
-<array>
-	<dict>
-
-		<key>Command</key>
-		<string>/bin/tcsh</string>
-
-		<key>Custom Command</key>
-		<string>No</string>
-
-		<key>Guid</key>
-		<string>6777374D-5516-4559-907C-F1A309BA889D</string>
-
-*/
-
-bool IsShDefaultInITem()
-{
-	static bool sIsShDefault = true;
-	static dispatch_once_t onceToken;
-
-	dispatch_once(&onceToken, ^{
-		CFObj<CFTypeRef> profileArrayRef = CFPreferencesCopyAppValue(CFSTR("New Bookmarks"), CFSTR("com.googlecode.iterm2"));
-		CFArrayRef profileArray = ACFType<CFArrayRef>::DynamicCast(profileArrayRef);
-		CFDictionaryRef foundDefaultProfile = nullptr;
-		CFIndex profileCount = 0;
-
-		if(profileArray != nullptr)
-			profileCount = CFArrayGetCount(profileArray);
-
-		if(profileCount == 1)
-		{
-			foundDefaultProfile = ACFType<CFDictionaryRef>::DynamicCast(CFArrayGetValueAtIndex(profileArray, 0));
-		}
-		else if(profileCount > 1)
-		{
-			CFObj<CFTypeRef> defaultProfileGuidRef = CFPreferencesCopyAppValue(CFSTR("Default Bookmark Guid"), CFSTR("com.googlecode.iterm2"));
-			CFStringRef defaultProfileGuid = ACFType<CFStringRef>::DynamicCast(defaultProfileGuidRef);
-			for(CFIndex i = 0; i < profileCount; i++)
-			{
-				CFDictionaryRef oneProfile = ACFType<CFDictionaryRef>::DynamicCast(CFArrayGetValueAtIndex(profileArray, i));
-				if(oneProfile != nullptr)
-				{
-					CFStringRef oneGuid = ACFType<CFStringRef>::DynamicCast(CFDictionaryGetValue(oneProfile, CFSTR("Guid")));
-					if((oneGuid != nullptr) && (kCFCompareEqualTo == CFStringCompare(oneGuid, defaultProfileGuid, kCFCompareCaseInsensitive)))
-					{
-						foundDefaultProfile = oneProfile;
-					}
-				}
-			}
-		}
-		
-		bool customShellFound = false;
-		if(foundDefaultProfile != nullptr)
-		{
-			CFStringRef isCustomStr = ACFType<CFStringRef>::DynamicCast(CFDictionaryGetValue(foundDefaultProfile, CFSTR("Custom Command")));
-			if((isCustomStr != nullptr) && (kCFCompareEqualTo == CFStringCompare(isCustomStr, CFSTR("Yes"), kCFCompareCaseInsensitive)))
-			{
-				CFStringRef shellPath = ACFType<CFStringRef>::DynamicCast(CFDictionaryGetValue(foundDefaultProfile, CFSTR("Command")));
-				if((shellPath != nullptr) && (CFStringGetLength(shellPath) > 0))
-				{
-					//all shells but csh or tcsh are behaving the same for OMC environment export purposes
-					CFRange foundRange = ::CFStringFind(shellPath, CFSTR("csh"), 0);
-					sIsShDefault = (foundRange.location == kCFNotFound);
-					customShellFound = true;
-				}
-			}
-		}
-		
-		if(!customShellFound)
-			sIsShDefault = IsShDefaultLoginShell();
-	});
-
-	return sIsShDefault;
-}
