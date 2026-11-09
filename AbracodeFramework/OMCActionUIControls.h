@@ -79,6 +79,23 @@ void OMCActionUIInsertElement(CFStringRef inWindowUUID, CFIndex inParentID, CFSt
 void OMCActionUIInsertElementRow(CFStringRef inWindowUUID, CFIndex inParentID, CFStringRef inJSON, CFStringRef inContainer, CFStringRef inPosition) noexcept;
 void OMCActionUIRemoveElement(CFStringRef inWindowUUID, CFIndex inViewID) noexcept;
 
+// The values of all the window's elements with a positive id, for the commands run from the window:
+// ioControlValues gets, for each element's id as text, a mutable dictionary of its parts' values
+// as text. A table or list (an element with columns) gets part "0", its selected row with the
+// cells joined by tabs, and parts "1" to the column count, each column's cell of the selected row,
+// all of them, empty when nothing is selected; any other element gets part "0", its value, when it
+// has one.
+void OMCActionUICopyAllControlValues(CFStringRef inWindowUUID, CFMutableDictionaryRef ioControlValues) noexcept;
+
+// One part of an element's value as text (part 0 when inControlPart is NULL), or NULL; the caller
+// releases it
+CFStringRef OMCActionUICopyControlValue(CFStringRef inWindowUUID, CFStringRef inControlID, CFStringRef inControlPart) noexcept;
+
+// OMC_ACTIONUI_TABLE_<ID>_COLUMN_<M>_ALL_ROWS: every row of the table, one per line; column 0 is the
+// whole row with its cells joined by tabs, 1 to N that column's cell (empty for a shorter row). An
+// empty string when the table has no rows. The caller releases it.
+CFStringRef OMCActionUICopyAllRowsValue(CFStringRef inWindowUUID, CFStringRef inControlID, CFIndex inColumnIndex) noexcept;
+
 // The JSON ActionUI is given for a value omc_dialog_control passed as text: when the text starts as
 // a JSON fragment does ({, [, ", t, f, n, a digit or -) and parses as JSON (as NSJSONSerialization
 // did, ACFJSON.h), that value, written out again; otherwise the text as a JSON string. Empty when

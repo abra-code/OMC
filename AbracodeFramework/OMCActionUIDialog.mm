@@ -14,11 +14,7 @@
 #include "OMCDialogControlHelpers.h"
 #include "ACFType.h"
 #include "OMCStrings.h"
-
-// enable only in OMC version 5.0 or later
-#if CURRENT_OMC_VERSION >= 50000
-@import ActionUIObjCAdapter;
-#endif
+#include "OMCActionUIControls.h"
 
 ARefCountedObj<OMCDialog> RunActionUIDialog(OnMyCommand *inPlugin, CommandRuntimeData *commandRuntimeData)
 {
@@ -93,11 +89,6 @@ OMCActionUIDialog::CopyAllControlValues(CFSetRef requestedNibControls, Selection
     if(specialWordCount <= 0)
         return;
 
-    // Get the window UUID for ActionUI API calls
-    NSString *windowUUID = (__bridge NSString *)GetDialogUUID();
-    if(windowUUID.length == 0)
-        return;
-
     std::vector<CFStringRef> specialWordList(specialWordCount);
     CFSetGetValues(requestedNibControls, (const void **)specialWordList.data());
 
@@ -121,35 +112,11 @@ OMCActionUIDialog::CopyAllControlValues(CFSetRef requestedNibControls, Selection
         if(controlID == nullptr)
             continue;
 
-        NSString *viewIDStr = (__bridge NSString *)(CFStringRef)controlID;
-        NSInteger viewID = [viewIDStr integerValue];
-
-        // Fetch all content rows from ActionUI
-        NSArray<NSArray<NSString*>*> *allRows = [ActionUIObjC getElementRowsWithWindowUUID:windowUUID viewID:viewID];
-        if (allRows == nil)
-            allRows = @[];
-
-        NSInteger colIdx = [((__bridge NSString *)(CFStringRef)columnIndexStr) integerValue]; // 0 = whole row, 1..N = column
-
-        NSMutableArray<NSString*> *columnValues = [NSMutableArray arrayWithCapacity:allRows.count];
-        for(NSArray<NSString*> *row in allRows)
-        {
-            if(colIdx == 0)
-            {
-                // Whole row: join columns with tab
-                [columnValues addObject:[row componentsJoinedByString:@"\t"]];
-            }
-            else
-            {
-                // Specific column (1-based) to 0-based array index
-                NSInteger arrayIdx = colIdx - 1;
-                [columnValues addObject:(arrayIdx < (NSInteger)row.count) ? row[arrayIdx] : @""];
-            }
-        }
-
-        // Join all-row values with newline and store under allRows modifier key
-        NSString *allRowsString = [columnValues componentsJoinedByString:@"\n"];
-        CFObj<CFStringRef> allRowsCFStr((__bridge CFStringRef)allRowsString, kCFObjRetain);
+        // Every row of the table, one per line: the whole row (column 0) or one column (1..N)
+        CFIndex columnIndex = ::CFStringGetIntValue(columnIndexStr);
+        CFObj<CFStringRef> allRowsCFStr( OMCActionUICopyAllRowsValue(GetDialogUUID(), controlID, columnIndex) );
+        if(allRowsCFStr == nullptr)
+            allRowsCFStr.Adopt(CFSTR(""), kCFObjRetain);
         CFObj<CFStringRef> allRowsControlID( CreateControlIDByAddingModifiers(controlID, kControlModifier_AllRows) );
 
         StoreControlValue(allRowsControlID, allRowsCFStr, columnIndexStr);

@@ -14,6 +14,8 @@
 #include "ActionUIC.h"
 #include "OMCLog.h"
 #include <climits>
+#include <cstring>
+#include <vector>
 #include <fstream>
 #include <iterator>
 
@@ -501,4 +503,131 @@ OMCActionUIRemoveElement(CFStringRef inWindowUUID, CFIndex inViewID) noexcept
 	std::string uuid = ACFStringToUTF8(inWindowUUID);
 	if( !actionUIRemoveElement(uuid.c_str(), (int64_t)inViewID) )
 		OMCLogMessage("omc_dialog_control omc_remove_element: %s", LastActionUIError().c_str());
+}
+
+#pragma mark - Values for the commands
+
+// ActionUI's text as a CFString (the caller releases it), or NULL; frees inText
+static CFStringRef
+CreateStringAndFree(char *inText) noexcept
+{
+	if(inText == nullptr)
+		return nullptr;
+	CFStringRef outString = ::CFStringCreateWithCString(kCFAllocatorDefault, inText, kCFStringEncodingUTF8);
+	actionUIFreeString(inText);
+	return outString;
+}
+
+// ActionUI's JSON as a property list (the caller releases it), or NULL; frees inJSON
+static CFPropertyListRef
+CreatePropertyListAndFree(char *inJSON) noexcept
+{
+	if(inJSON == nullptr)
+		return nullptr;
+	CFObj<CFDataRef> data( ::CFDataCreate(kCFAllocatorDefault, (const UInt8 *)inJSON, (CFIndex)strlen(inJSON)) );
+	actionUIFreeString(inJSON);
+	if(data == nullptr)
+		return nullptr;
+	return ACFJSONCreatePropertyList(data, kCFPropertyListImmutable, nullptr);
+}
+
+static CFStringRef
+CopyElementValue(const std::string &inWindowUUID, int64_t inViewID, int64_t inPartID) noexcept
+{
+	return CreateStringAndFree( actionUIGetElementValueString(inWindowUUID.c_str(), inViewID, inPartID, nullptr) );
+}
+
+void
+OMCActionUICopyAllControlValues(CFStringRef inWindowUUID, CFMutableDictionaryRef ioControlValues) noexcept
+{
+	if( (inWindowUUID == nullptr) || (ioControlValues == nullptr) )
+		return;
+	std::string uuid = ACFStringToUTF8(inWindowUUID);
+
+	// {"<id>": "<element type>", ...}, the ids ActionUI lists (positive ones)
+	CFObj<CFPropertyListRef> info( CreatePropertyListAndFree(actionUIGetElementInfoJSON(uuid.c_str())) );
+	if( (info == nullptr) || (::CFGetTypeID(info) != ::CFDictionaryGetTypeID()) )
+		return;
+	CFDictionaryRef infoDict = (CFDictionaryRef)info.Get();
+	CFIndex elementCount = ::CFDictionaryGetCount(infoDict);
+	if(elementCount == 0)
+		return;
+	std::vector<CFTypeRef> keys((size_t)elementCount);
+	::CFDictionaryGetKeysAndValues(infoDict, keys.data(), nullptr);
+
+	for(CFTypeRef key : keys)
+	{
+		if( (key == nullptr) || (::CFGetTypeID(key) != ::CFStringGetTypeID()) )
+			continue;
+		CFStringRef controlID = (CFStringRef)key;
+		int64_t viewID = ViewIDFromControlID(controlID);
+
+		int64_t columnCount = actionUIGetElementColumnCount(uuid.c_str(), viewID);
+		if(columnCount > 0)
+		{
+			// Every column's part, empty when no row is selected, so that
+			// OMC_ACTIONUI_TABLE_<ID>_COLUMN_<M>_VALUE is always exported
+			CFObj<CFMutableDictionaryRef> parts( ::CFDictionaryCreateMutable(kCFAllocatorDefault, (CFIndex)columnCount + 1,
+															&kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks) );
+			for(int64_t partID = 0; partID <= columnCount; partID++)
+			{
+				CFObj<CFStringRef> partKey( ::CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("%lld"), (long long)partID) );
+				CFObj<CFStringRef> value( CopyElementValue(uuid, viewID, partID) );
+				::CFDictionarySetValue(parts, partKey, (value != nullptr) ? (CFStringRef)value : CFSTR(""));
+			}
+			::CFDictionarySetValue(ioControlValues, controlID, parts);
+		}
+		else
+		{
+			CFObj<CFStringRef> value( CopyElementValue(uuid, viewID, 0) );
+			if(value == nullptr)
+				continue;
+			CFObj<CFMutableDictionaryRef> parts( ::CFDictionaryCreateMutable(kCFAllocatorDefault, 1,
+															&kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks) );
+			::CFDictionarySetValue(parts, CFSTR("0"), value);
+			::CFDictionarySetValue(ioControlValues, controlID, parts);
+		}
+	}
+}
+
+CFStringRef
+OMCActionUICopyControlValue(CFStringRef inWindowUUID, CFStringRef inControlID, CFStringRef inControlPart) noexcept
+{
+	if( (inWindowUUID == nullptr) || (inControlID == nullptr) )
+		return nullptr;
+	std::string uuid = ACFStringToUTF8(inWindowUUID);
+	int64_t partID = (inControlPart != nullptr) ? (int64_t)::CFStringGetIntValue(inControlPart) : 0;
+	return CopyElementValue(uuid, ViewIDFromControlID(inControlID), partID);
+}
+
+CFStringRef
+OMCActionUICopyAllRowsValue(CFStringRef inWindowUUID, CFStringRef inControlID, CFIndex inColumnIndex) noexcept
+{
+	if( (inWindowUUID == nullptr) || (inControlID == nullptr) )
+		return nullptr;
+	std::string uuid = ACFStringToUTF8(inWindowUUID);
+	CFObj<CFPropertyListRef> rows( CreatePropertyListAndFree(actionUIGetElementRowsJSON(uuid.c_str(), ViewIDFromControlID(inControlID))) );
+	CFIndex rowCount = ( (rows != nullptr) && (::CFGetTypeID(rows) == ::CFArrayGetTypeID()) ) ? ::CFArrayGetCount((CFArrayRef)rows.Get()) : 0;
+
+	CFObj<CFMutableArrayRef> lines( ::CFArrayCreateMutable(kCFAllocatorDefault, rowCount, &kCFTypeArrayCallBacks) );
+	for(CFIndex i = 0; i < rowCount; i++)
+	{
+		CFTypeRef row = ::CFArrayGetValueAtIndex((CFArrayRef)rows.Get(), i);
+		if( (row == nullptr) || (::CFGetTypeID(row) != ::CFArrayGetTypeID()) )
+			continue;
+		CFArrayRef cells = (CFArrayRef)row;
+		if(inColumnIndex == 0)
+		{
+			CFObj<CFStringRef> line( ::CFStringCreateByCombiningStrings(kCFAllocatorDefault, cells, CFSTR("\t")) );
+			::CFArrayAppendValue(lines, (line != nullptr) ? (CFStringRef)line : CFSTR(""));
+		}
+		else
+		{
+			CFIndex cellIndex = inColumnIndex - 1;
+			CFTypeRef cell = ( (cellIndex >= 0) && (cellIndex < ::CFArrayGetCount(cells)) ) ? ::CFArrayGetValueAtIndex(cells, cellIndex) : nullptr;
+			bool isString = (cell != nullptr) && (::CFGetTypeID(cell) == ::CFStringGetTypeID());
+			::CFArrayAppendValue(lines, isString ? cell : CFSTR(""));
+		}
+	}
+	return ::CFStringCreateByCombiningStrings(kCFAllocatorDefault, lines, CFSTR("\n"));
 }

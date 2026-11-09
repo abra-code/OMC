@@ -389,60 +389,15 @@ static NSString *SerializeActionContext(id context)
 
 - (void)allControlValues:(NSMutableDictionary *)ioControlValues andProperties:(NSMutableDictionary *)ioCustomProperties withIterator:(SelectionIterator *)inSelIterator
 {
-    NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
-    if(windowUUID == nil)
-        return;
-
-    NSDictionary *elementInfo = [ActionUIObjC getElementInfoWithWindowUUID:windowUUID];
-    if(elementInfo == nil || elementInfo.count == 0)
-        return;
-
-    for(NSNumber *viewIDNumber in elementInfo)
-    {
-        NSInteger viewID = [viewIDNumber integerValue];
-        NSString *controlID = [viewIDNumber stringValue];
-
-        NSInteger columnCount = [ActionUIObjC getElementColumnCountWithWindowUUID:windowUUID viewID:viewID];
-        if(columnCount > 0)
-        {
-            // Table: store key "0" (tab-joined selected row) plus one key per column (1..columnCount).
-            // Column keys are always stored so OMC_ACTIONUI_TABLE_N_COLUMN_M_VALUE is exported
-            // even when no row is selected (in which case values are empty strings).
-            NSMutableDictionary *partsDict = [NSMutableDictionary dictionaryWithCapacity:columnCount + 1];
-            partsDict[@"0"] = [ActionUIObjC getElementValueAsStringWithWindowUUID:windowUUID viewID:viewID viewPartID:0 contentType:nil] ?: @"";
-            for(NSInteger colIdx = 1; colIdx <= columnCount; colIdx++)
-            {
-                NSString *colKey = [NSString stringWithFormat:@"%ld", (long)colIdx];
-                partsDict[colKey] = [ActionUIObjC getElementValueAsStringWithWindowUUID:windowUUID viewID:viewID viewPartID:colIdx contentType:nil] ?: @"";
-            }
-            ioControlValues[controlID] = partsDict;
-        }
-        else
-        {
-            // Non-table: single value under key "0"
-            NSString *value = [ActionUIObjC getElementValueAsStringWithWindowUUID:windowUUID viewID:viewID viewPartID:0 contentType:nil];
-            if(value != nil)
-            {
-                ioControlValues[controlID] = [NSMutableDictionary dictionaryWithObject:value forKey:@"0"];
-            }
-        }
-    }
+    OMCActionUICopyAllControlValues(mOMCDialogProxy->GetDialogUUID(), (__bridge CFMutableDictionaryRef)ioControlValues);
 }
 
 - (id)controlValueForID:(NSString *)inControlID forPart:(NSString *)inControlPart withIterator:(SelectionIterator *)inSelIterator outProperties:(CFDictionaryRef *)outCustomProperties
 {
     if(outCustomProperties != NULL)
         *outCustomProperties = NULL;
-
-    NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
-    if(windowUUID == nil)
-        return nil;
-
-    NSInteger viewID = [inControlID integerValue];
-    NSInteger viewPartID = (inControlPart != nil) ? [inControlPart integerValue] : 0;
-
-    NSString *value = [ActionUIObjC getElementValueAsStringWithWindowUUID:windowUUID viewID:viewID viewPartID:viewPartID contentType:nil];
-    return value;
+    return (NSString *)CFBridgingRelease(OMCActionUICopyControlValue(mOMCDialogProxy->GetDialogUUID(),
+                                                                     (__bridge CFStringRef)inControlID, (__bridge CFStringRef)inControlPart));
 }
 
 #pragma mark - Table setters
