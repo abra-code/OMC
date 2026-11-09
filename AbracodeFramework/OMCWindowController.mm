@@ -13,6 +13,7 @@
 #include "ACFDict.h"
 #include "OMCInvoke.h"
 #include "OMCObjCInvoke.h"
+#include "OMCDialogControlDispatch.h"
 #include <string>
 #include <vector>
 
@@ -27,6 +28,89 @@ GetAllDialogControllers()
 
     return sAllDialogControllers;
 }
+
+// The window controller as the target of an omc_dialog_control message: each call goes to the
+// controller's method that handled the same key before the dispatcher moved to C++
+class OMCWindowControllerTarget final : public OMCDialogControlTarget
+{
+public:
+	explicit OMCWindowControllerTarget(OMCWindowController *inController) : mController(inController) { }
+
+	void RemoveAllListItems(CFStringRef inControlID) override { [mController removeAllListItemsForControlID:(__bridge NSString *)inControlID]; }
+	void SetListItems(CFStringRef inControlID, CFArrayRef inItems) override { [mController setListItems:inItems forControlID:(__bridge NSString *)inControlID]; }
+	void AppendListItems(CFStringRef inControlID, CFArrayRef inItems) override { [mController appendListItems:inItems forControlID:(__bridge NSString *)inControlID]; }
+	void EmptyTable(CFStringRef inControlID) override { [mController emptyTableForControlID:(__bridge NSString *)inControlID]; }
+	void RemoveTableRows(CFStringRef inControlID) override { [mController removeTableRowsForControlID:(__bridge NSString *)inControlID]; }
+	void SetTableRows(CFStringRef inControlID, CFArrayRef inRows) override { [mController setTableRows:inRows forControlID:(__bridge NSString *)inControlID]; }
+	void AddTableRows(CFStringRef inControlID, CFArrayRef inRows) override { [mController addTableRows:inRows forControlID:(__bridge NSString *)inControlID]; }
+	void SetTableColumns(CFStringRef inControlID, CFArrayRef inColumns) override { [mController setTableColumns:inColumns forControlID:(__bridge NSString *)inControlID]; }
+	void SetTableColumnWidths(CFStringRef inControlID, CFArrayRef inWidths) override { [mController setTableColumnWidths:inWidths forControlID:(__bridge NSString *)inControlID]; }
+	void SelectRow(CFStringRef inControlID, CFIndex inRowIndex) override { [mController selectRow:inRowIndex forControlID:(__bridge NSString *)inControlID]; }
+	void SelectRowWithContent(CFStringRef inControlID, CFStringRef inText, CFIndex inColumnNumber) override
+		{ [mController selectRowWithContent:(__bridge NSString *)inText column:inColumnNumber forControlID:(__bridge NSString *)inControlID]; }
+	void DeselectRow(CFStringRef inControlID) override { [mController deselectRowForControlID:(__bridge NSString *)inControlID]; }
+
+	void SetProperty(CFStringRef inControlID, CFStringRef inKey, CFStringRef inValue) override
+		{ [mController setPropertyKey:(__bridge NSString *)inKey jsonValue:(__bridge NSString *)inValue forControlID:(__bridge NSString *)inControlID]; }
+	void SetState(CFStringRef inControlID, CFStringRef inKey, CFStringRef inValue) override
+		{ [mController setStateKey:(__bridge NSString *)inKey stringOrJsonValue:(__bridge NSString *)inValue forControlID:(__bridge NSString *)inControlID]; }
+
+	void PresentModal(CFStringRef inResourceNameOrPath, CFStringRef inOnDismissActionID) override
+		{ [mController presentModalWithResourceNameOrPath:(__bridge NSString *)inResourceNameOrPath onDismissActionID:(__bridge NSString *)inOnDismissActionID]; }
+	void DismissModal() override { [mController dismissModal]; }
+	void PresentToast(CFStringRef inMessage, double inDuration, CFStringRef inActionTitle, CFStringRef inActionID) override
+		{ [mController presentToastWithMessage:(__bridge NSString *)inMessage duration:inDuration actionTitle:(__bridge NSString *)inActionTitle actionID:(__bridge NSString *)inActionID]; }
+	void DismissToast() override { [mController dismissToast]; }
+	void PresentAlert(CFStringRef inTitle, CFStringRef inMessage, CFArrayRef inButtonSpecs) override
+		{ [mController presentAlertWithTitle:(__bridge NSString *)inTitle message:(__bridge NSString *)inMessage buttonSpecs:(__bridge NSArray *)inButtonSpecs]; }
+	void PresentConfirmationDialog(CFStringRef inTitle, CFStringRef inMessage, CFArrayRef inButtonSpecs) override
+		{ [mController presentConfirmationDialogWithTitle:(__bridge NSString *)inTitle message:(__bridge NSString *)inMessage buttonSpecs:(__bridge NSArray *)inButtonSpecs]; }
+	void DismissDialog() override { [mController dismissDialog]; }
+
+	void InsertElement(CFIndex inParentID, CFStringRef inJSON, CFStringRef inContainer, CFStringRef inPosition) override
+		{ [mController insertElementWithParentID:inParentID json:(__bridge NSString *)inJSON container:(__bridge NSString *)inContainer positionString:(__bridge NSString *)inPosition]; }
+	void InsertElementRow(CFIndex inParentID, CFStringRef inJSON, CFStringRef inContainer, CFStringRef inPosition) override
+		{ [mController insertElementRowWithParentID:inParentID json:(__bridge NSString *)inJSON container:(__bridge NSString *)inContainer positionString:(__bridge NSString *)inPosition]; }
+	void RemoveElement(CFIndex inViewID) override { [mController removeElementWithViewID:inViewID]; }
+
+	void SetWindowTitle(CFStringRef inTitle) override { [mController.window setTitle:(__bridge NSString *)inTitle]; }
+	void SetControlValue(CFStringRef inControlID, CFStringRef inValue, CFStringRef inContentType) override
+		{ [mController setControlStringValue:(__bridge NSString *)inValue forControlID:(__bridge NSString *)inControlID contentType:(__bridge NSString *)inContentType]; }
+	void SetControlEnabled(CFStringRef inControlID, bool inEnabled) override { [mController setControlEnabled:inEnabled forControlID:(__bridge NSString *)inControlID]; }
+	void SetControlVisible(CFStringRef inControlID, bool inVisible) override { [mController setControlVisible:inVisible forControlID:(__bridge NSString *)inControlID]; }
+	void SetCommandID(CFStringRef inControlID, CFStringRef inCommandID) override { [mController setCommandID:(__bridge NSString *)inCommandID forControlID:(__bridge NSString *)inControlID]; }
+
+	void BringWindowToFront() override { [mController.window makeKeyAndOrderFront:mController]; }
+	void ActivateApplication() override { [[NSApplication sharedApplication] activateIgnoringOtherApps:YES]; }
+	void SelectControl(CFStringRef inControlID) override { [mController selectControlWithID:(__bridge NSString *)inControlID]; }
+
+	// The window closes as its OK or Cancel would: windowWillClose: runs the matching end subcommand
+	void CloseWindow(bool inOK) override
+	{
+		if(inOK)
+			mController.currentCommandID = mController.endOKSubcommandID ?: @"omc.dialog.ok";
+		else
+			mController.currentCommandID = mController.endCancelSubcommandID ?: @"omc.dialog.cancel";
+		[mController.window close];
+	}
+	void QuitApplication() override { [[NSApplication sharedApplication] terminate:mController]; }
+
+	void SetWindowTopLeftPosition(double inLeft, double inTop) override { [mController setWindowTopLeftPosition:NSMakePoint(inLeft, inTop)]; }
+	void MoveControl(CFStringRef inControlID, double inLeft, double inTop) override
+		{ [mController moveControlWithID:(__bridge NSString *)inControlID toPosition:NSMakePoint(inLeft, inTop)]; }
+	void ScrollControl(CFStringRef inControlID, double inLeft, double inTop) override
+		{ [mController scrollControlWithID:(__bridge NSString *)inControlID toPosition:NSMakePoint(inLeft, inTop)]; }
+	void SetWindowLayoutSize(double inWidth, double inHeight) override { [mController setWindowContentSize:NSMakeSize(inWidth, inHeight)]; }
+	void ResizeControl(CFStringRef inControlID, double inWidth, double inHeight) override
+		{ [mController resizeControlWithID:(__bridge NSString *)inControlID toSize:NSMakeSize(inWidth, inHeight)]; }
+
+	void InvokeMessages(OMCInvokeTarget inTarget, CFArrayRef inMessages) override { OMCInvokeMessages(inTarget, (__bridge void *)mController.window, inMessages); }
+	void InvokeMessagesOnControl(CFStringRef inControlID, CFArrayRef inMessages) override
+		{ [mController invokeMessagesForControlID:(__bridge NSString *)inControlID messages:inMessages]; }
+
+private:
+	OMCWindowController *mController; // for the length of one message
+};
 
 @implementation OMCWindowController
 
@@ -322,847 +406,12 @@ GetAllDialogControllers()
 
 #pragma mark - setControlValues: shared implementation
 
+// The omc_dialog_control message, handled by the portable dispatcher (OMCDialogControlDispatch.h),
+// which calls this controller's methods through OMCWindowControllerTarget
 - (void)setControlValues:(CFDictionaryRef)inControlDict
 {
-	if( inControlDict == NULL )
-		return;
-
-	CFIndex itemCount = ::CFDictionaryGetCount(inControlDict);
-	if(itemCount == 0)
-		return;
-
-	ACFDict controlValues(inControlDict);
-
-	CFDictionaryRef removeListItemsDict;
-	if( controlValues.GetValue(CFSTR("REMOVE_LIST_ITEMS"), removeListItemsDict) )
-	{
-		itemCount = ::CFDictionaryGetCount(removeListItemsDict);
-		if(itemCount > 0)
-		{
-			std::vector<CFTypeRef> keyList(itemCount);
-			::CFDictionaryGetKeysAndValues(removeListItemsDict, (const void **)keyList.data(), NULL);
-			for(CFIndex i = 0; i < itemCount; i++)
-			{
-				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
-				if(controlID != NULL)
-					[self removeAllListItemsForControlID:(__bridge NSString *)controlID];
-			}
-		}
-	}
-
-	CFDictionaryRef setListItemsDict;
-	if( controlValues.GetValue(CFSTR("SET_LIST_ITEMS"), setListItemsDict) )
-	{
-		itemCount = ::CFDictionaryGetCount(setListItemsDict);
-		if(itemCount > 0)
-		{
-			std::vector<CFTypeRef> keyList(itemCount);
-			std::vector<CFTypeRef> valueList(itemCount);
-			::CFDictionaryGetKeysAndValues(setListItemsDict, (const void **)keyList.data(), (const void **)valueList.data());
-			for(CFIndex i = 0; i < itemCount; i++)
-			{
-				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
-				CFArrayRef theArr = ACFType<CFArrayRef>::DynamicCast( valueList[i] );
-				if( (controlID != NULL) && (theArr != NULL) )
-					[self setListItems:theArr forControlID:(__bridge NSString *)controlID];
-			}
-		}
-	}
-
-	CFDictionaryRef appendListItemsDict;
-	if( controlValues.GetValue(CFSTR("APPEND_LIST_ITEMS"), appendListItemsDict) )
-	{
-		itemCount = ::CFDictionaryGetCount(appendListItemsDict);
-		if(itemCount > 0)
-		{
-			std::vector<CFTypeRef> keyList(itemCount);
-			std::vector<CFTypeRef> valueList(itemCount);
-			::CFDictionaryGetKeysAndValues(appendListItemsDict, (const void **)keyList.data(), (const void **)valueList.data());
-			for(CFIndex i = 0; i < itemCount; i++)
-			{
-				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
-				CFArrayRef theArr = ACFType<CFArrayRef>::DynamicCast( valueList[i] );
-				if( (controlID != NULL) && (theArr != NULL) )
-					[self appendListItems:theArr forControlID:(__bridge NSString *)controlID];
-			}
-		}
-	}
-
-	CFDictionaryRef emptyTableDict;
-	if( controlValues.GetValue(CFSTR("PREPARE_TABLE_EMPTY"), emptyTableDict) )
-	{
-		itemCount = ::CFDictionaryGetCount(emptyTableDict);
-		if(itemCount > 0)
-		{
-			std::vector<CFTypeRef> keyList(itemCount);
-			::CFDictionaryGetKeysAndValues(emptyTableDict, (const void **)keyList.data(), NULL);
-			for(CFIndex i = 0; i < itemCount; i++)
-			{
-				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
-				if(controlID != NULL)
-					[self emptyTableForControlID:(__bridge NSString *)controlID];
-			}
-		}
-	}
-
-	CFDictionaryRef removeTableRowsDict;
-	if( controlValues.GetValue(CFSTR("REMOVE_TABLE_ROWS"), removeTableRowsDict) )
-	{
-		itemCount = ::CFDictionaryGetCount(removeTableRowsDict);
-		if(itemCount > 0)
-		{
-			std::vector<CFTypeRef> keyList(itemCount);
-			::CFDictionaryGetKeysAndValues(removeTableRowsDict, (const void **)keyList.data(), NULL);
-			for(CFIndex i = 0; i < itemCount; i++)
-			{
-				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
-				if(controlID != NULL)
-					[self removeTableRowsForControlID:(__bridge NSString *)controlID];
-			}
-		}
-	}
-
-	CFDictionaryRef setTableRowsDict;
-	if( controlValues.GetValue(CFSTR("SET_TABLE_ROWS"), setTableRowsDict) )
-	{
-		itemCount = ::CFDictionaryGetCount(setTableRowsDict);
-		if(itemCount > 0)
-		{
-			std::vector<CFTypeRef> keyList(itemCount);
-			std::vector<CFTypeRef> valueList(itemCount);
-			::CFDictionaryGetKeysAndValues(setTableRowsDict, (const void **)keyList.data(), (const void **)valueList.data());
-			for(CFIndex i = 0; i < itemCount; i++)
-			{
-				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
-				CFArrayRef theArr = ACFType<CFArrayRef>::DynamicCast( valueList[i] );
-				if( (controlID != NULL) && (theArr != NULL) )
-					[self setTableRows:theArr forControlID:(__bridge NSString *)controlID];
-			}
-		}
-	}
-
-	CFDictionaryRef addTableRowsDict;
-	if( controlValues.GetValue(CFSTR("ADD_TABLE_ROWS"), addTableRowsDict) )
-	{
-		itemCount = ::CFDictionaryGetCount(addTableRowsDict);
-		if(itemCount > 0)
-		{
-			std::vector<CFTypeRef> keyList(itemCount);
-			std::vector<CFTypeRef> valueList(itemCount);
-			::CFDictionaryGetKeysAndValues(addTableRowsDict, (const void **)keyList.data(), (const void **)valueList.data());
-			for(CFIndex i = 0; i < itemCount; i++)
-			{
-				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
-				CFArrayRef theArr = ACFType<CFArrayRef>::DynamicCast( valueList[i] );
-				if( (controlID != NULL) && (theArr != NULL) )
-					[self addTableRows:theArr forControlID:(__bridge NSString *)controlID];
-			}
-		}
-	}
-
-	CFDictionaryRef addTableColumnsDict;
-	if( controlValues.GetValue(CFSTR("SET_TABLE_COLUMNS"), addTableColumnsDict) )
-	{
-		itemCount = ::CFDictionaryGetCount(addTableColumnsDict);
-		if(itemCount > 0)
-		{
-			std::vector<CFTypeRef> keyList(itemCount);
-			std::vector<CFTypeRef> valueList(itemCount);
-			::CFDictionaryGetKeysAndValues(addTableColumnsDict, (const void **)keyList.data(), (const void **)valueList.data());
-			for(CFIndex i = 0; i < itemCount; i++)
-			{
-				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
-				CFArrayRef theArr = ACFType<CFArrayRef>::DynamicCast( valueList[i] );
-				if( (controlID != NULL) && (theArr != NULL) )
-					[self setTableColumns:theArr forControlID:(__bridge NSString *)controlID];
-			}
-		}
-	}
-
-	CFDictionaryRef setTableWidthsDict;
-	if( controlValues.GetValue(CFSTR("SET_TABLE_WIDTHS"), setTableWidthsDict) )
-	{
-		itemCount = ::CFDictionaryGetCount(setTableWidthsDict);
-		if(itemCount > 0)
-		{
-			std::vector<CFTypeRef> keyList(itemCount);
-			std::vector<CFTypeRef> valueList(itemCount);
-			::CFDictionaryGetKeysAndValues(setTableWidthsDict, (const void **)keyList.data(), (const void **)valueList.data());
-			for(CFIndex i = 0; i < itemCount; i++)
-			{
-				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
-				CFArrayRef theArr = ACFType<CFArrayRef>::DynamicCast( valueList[i] );
-				if( (controlID != NULL) && (theArr != NULL) )
-					[self setTableColumnWidths:theArr forControlID:(__bridge NSString *)controlID];
-			}
-		}
-	}
-
-	// Row selection is applied after the row-setting blocks above so that a single message
-	// that both sets rows and selects a row populates the content first.
-	CFDictionaryRef selectRowDict;
-	if( controlValues.GetValue(CFSTR("SELECT_ROW"), selectRowDict) )
-	{
-		itemCount = ::CFDictionaryGetCount(selectRowDict);
-		if(itemCount > 0)
-		{
-			std::vector<CFTypeRef> keyList(itemCount);
-			std::vector<CFTypeRef> valueList(itemCount);
-			::CFDictionaryGetKeysAndValues(selectRowDict, (const void **)keyList.data(), (const void **)valueList.data());
-			for(CFIndex i = 0; i < itemCount; i++)
-			{
-				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
-				CFStringRef indexStr = ACFType<CFStringRef>::DynamicCast( valueList[i] );
-				if( (controlID != NULL) && (indexStr != NULL) )
-					[self selectRow:[(__bridge NSString *)indexStr integerValue] forControlID:(__bridge NSString *)controlID];
-			}
-		}
-	}
-
-	CFDictionaryRef selectRowContentDict;
-	if( controlValues.GetValue(CFSTR("SELECT_ROW_CONTENT"), selectRowContentDict) )
-	{
-		itemCount = ::CFDictionaryGetCount(selectRowContentDict);
-		if(itemCount > 0)
-		{
-			std::vector<CFTypeRef> keyList(itemCount);
-			std::vector<CFTypeRef> valueList(itemCount);
-			::CFDictionaryGetKeysAndValues(selectRowContentDict, (const void **)keyList.data(), (const void **)valueList.data());
-			for(CFIndex i = 0; i < itemCount; i++)
-			{
-				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
-				CFArrayRef theArr = ACFType<CFArrayRef>::DynamicCast( valueList[i] );
-				if( (controlID != NULL) && (theArr != NULL) && (::CFArrayGetCount(theArr) >= 1) )
-				{
-					CFStringRef text = ACFType<CFStringRef>::DynamicCast( ::CFArrayGetValueAtIndex(theArr, 0) );
-					NSInteger columnNumber = 0; // 0 = match any column
-					if( ::CFArrayGetCount(theArr) >= 2 )
-					{
-						CFStringRef colStr = ACFType<CFStringRef>::DynamicCast( ::CFArrayGetValueAtIndex(theArr, 1) );
-						if( colStr != NULL )
-							columnNumber = [(__bridge NSString *)colStr integerValue];
-					}
-					if( text != NULL )
-						[self selectRowWithContent:(__bridge NSString *)text column:columnNumber forControlID:(__bridge NSString *)controlID];
-				}
-			}
-		}
-	}
-
-	CFDictionaryRef deselectRowDict;
-	if( controlValues.GetValue(CFSTR("DESELECT_ROW"), deselectRowDict) )
-	{
-		itemCount = ::CFDictionaryGetCount(deselectRowDict);
-		if(itemCount > 0)
-		{
-			std::vector<CFTypeRef> keyList(itemCount);
-			::CFDictionaryGetKeysAndValues(deselectRowDict, (const void **)keyList.data(), NULL);
-			for(CFIndex i = 0; i < itemCount; i++)
-			{
-				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
-				if( controlID != NULL )
-					[self deselectRowForControlID:(__bridge NSString *)controlID];
-			}
-		}
-	}
-
-	CFDictionaryRef setPropertyDict;
-	if( controlValues.GetValue(CFSTR("SET_PROPERTY"), setPropertyDict) )
-	{
-		itemCount = ::CFDictionaryGetCount(setPropertyDict);
-		if(itemCount > 0)
-		{
-			std::vector<CFTypeRef> keyList(itemCount);
-			std::vector<CFTypeRef> valueList(itemCount);
-			::CFDictionaryGetKeysAndValues(setPropertyDict, (const void **)keyList.data(), (const void **)valueList.data());
-			for(CFIndex i = 0; i < itemCount; i++)
-			{
-				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
-				CFArrayRef theArr = ACFType<CFArrayRef>::DynamicCast( valueList[i] );
-				if( (controlID != NULL) && (theArr != NULL) && (::CFArrayGetCount(theArr) >= 2) )
-				{
-					CFStringRef propKey   = ACFType<CFStringRef>::DynamicCast( ::CFArrayGetValueAtIndex(theArr, 0) );
-					CFStringRef jsonValue = ACFType<CFStringRef>::DynamicCast( ::CFArrayGetValueAtIndex(theArr, 1) );
-					if( (propKey != NULL) && (jsonValue != NULL) )
-						[self setPropertyKey:(__bridge NSString *)propKey jsonValue:(__bridge NSString *)jsonValue forControlID:(__bridge NSString *)controlID];
-				}
-			}
-		}
-	}
-
-	CFDictionaryRef setStateDict;
-	if( controlValues.GetValue(CFSTR("SET_STATE"), setStateDict) )
-	{
-		itemCount = ::CFDictionaryGetCount(setStateDict);
-		if(itemCount > 0)
-		{
-			std::vector<CFTypeRef> keyList(itemCount);
-			std::vector<CFTypeRef> valueList(itemCount);
-			::CFDictionaryGetKeysAndValues(setStateDict, (const void **)keyList.data(), (const void **)valueList.data());
-			for(CFIndex i = 0; i < itemCount; i++)
-			{
-				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
-				CFArrayRef theArr = ACFType<CFArrayRef>::DynamicCast( valueList[i] );
-				if( (controlID != NULL) && (theArr != NULL) && (::CFArrayGetCount(theArr) >= 2) )
-				{
-					CFStringRef stateKey = ACFType<CFStringRef>::DynamicCast( ::CFArrayGetValueAtIndex(theArr, 0) );
-					CFStringRef stateVal = ACFType<CFStringRef>::DynamicCast( ::CFArrayGetValueAtIndex(theArr, 1) );
-					if( (stateKey != NULL) && (stateVal != NULL) )
-						[self setStateKey:(__bridge NSString *)stateKey stringOrJsonValue:(__bridge NSString *)stateVal forControlID:(__bridge NSString *)controlID];
-				}
-			}
-		}
-	}
-
-	// Modal presentation (ActionUI only; Nib controller stubs log and return)
-	{
-	CFDictionaryRef presentModalDict = NULL;
-	if( controlValues.GetValue(CFSTR("PRESENT_MODAL"), presentModalDict) )
-	{
-		CFArrayRef theArr = (CFArrayRef)::CFDictionaryGetValue(presentModalDict, CFSTR("omc_window"));
-		if( theArr != NULL && ::CFArrayGetCount(theArr) >= 1 )
-		{
-			NSString *resourceNameOrPath = (__bridge NSString *)ACFType<CFStringRef>::DynamicCast( ::CFArrayGetValueAtIndex(theArr, 0) );
-			NSString *dismissActionID = (::CFArrayGetCount(theArr) >= 2) ? (__bridge NSString *)ACFType<CFStringRef>::DynamicCast( ::CFArrayGetValueAtIndex(theArr, 1) ) : nil;
-			if( resourceNameOrPath != nil )
-				[self presentModalWithResourceNameOrPath:resourceNameOrPath onDismissActionID:dismissActionID];
-		}
-	}
-	}
-
-	{
-	CFDictionaryRef dismissModalDict = NULL;
-	if( controlValues.GetValue(CFSTR("DISMISS_MODAL"), dismissModalDict) )
-	{
-		if( dismissModalDict != NULL && ::CFDictionaryGetValue(dismissModalDict, CFSTR("omc_window")) != NULL )
-			[self dismissModal];
-	}
-	}
-
-	// Toast (ActionUI only)
-	{
-	CFDictionaryRef presentToastDict = NULL;
-	if( controlValues.GetValue(CFSTR("PRESENT_TOAST"), presentToastDict) )
-	{
-		CFArrayRef theArr = (CFArrayRef)::CFDictionaryGetValue(presentToastDict, CFSTR("omc_window"));
-		if( theArr != NULL && ::CFArrayGetCount(theArr) >= 1 )
-		{
-			CFIndex n = ::CFArrayGetCount(theArr);
-			NSString *message = (__bridge NSString *)ACFType<CFStringRef>::DynamicCast( ::CFArrayGetValueAtIndex(theArr, 0) );
-			NSString *durationStr = (n >= 2) ? (__bridge NSString *)ACFType<CFStringRef>::DynamicCast( ::CFArrayGetValueAtIndex(theArr, 1) ) : nil;
-			NSString *actionTitle = (n >= 3) ? (__bridge NSString *)ACFType<CFStringRef>::DynamicCast( ::CFArrayGetValueAtIndex(theArr, 2) ) : nil;
-			NSString *actionID = (n >= 4) ? (__bridge NSString *)ACFType<CFStringRef>::DynamicCast( ::CFArrayGetValueAtIndex(theArr, 3) ) : nil;
-			if( message != nil )
-				[self presentToastWithMessage:message duration:(durationStr != nil ? [durationStr doubleValue] : 0.0) actionTitle:actionTitle actionID:actionID];
-		}
-	}
-	}
-
-	{
-	CFDictionaryRef dismissToastDict = NULL;
-	if( controlValues.GetValue(CFSTR("DISMISS_TOAST"), dismissToastDict) )
-	{
-		if( dismissToastDict != NULL && ::CFDictionaryGetValue(dismissToastDict, CFSTR("omc_window")) != NULL )
-			[self dismissToast];
-	}
-	}
-
-	{
-	CFDictionaryRef presentAlertDict = NULL;
-	if( controlValues.GetValue(CFSTR("PRESENT_ALERT"), presentAlertDict) )
-	{
-		CFArrayRef theArr = (CFArrayRef)::CFDictionaryGetValue(presentAlertDict, CFSTR("omc_window"));
-		if( theArr != NULL && ::CFArrayGetCount(theArr) >= 1 )
-		{
-			NSString *title = (__bridge NSString *)ACFType<CFStringRef>::DynamicCast( ::CFArrayGetValueAtIndex(theArr, 0) );
-			NSString *message = (::CFArrayGetCount(theArr) >= 2) ? (__bridge NSString *)ACFType<CFStringRef>::DynamicCast( ::CFArrayGetValueAtIndex(theArr, 1) ) : nil;
-			NSMutableArray *buttonSpecs = [NSMutableArray array];
-			for( CFIndex i = 2; i < ::CFArrayGetCount(theArr); i++ )
-			{
-				NSString *spec = (__bridge NSString *)ACFType<CFStringRef>::DynamicCast( ::CFArrayGetValueAtIndex(theArr, i) );
-				if( spec != nil )
-					[buttonSpecs addObject:spec];
-			}
-			if( title != nil )
-				[self presentAlertWithTitle:title message:message buttonSpecs:buttonSpecs];
-		}
-	}
-	}
-
-	{
-	CFDictionaryRef presentConfirmDict = NULL;
-	if( controlValues.GetValue(CFSTR("PRESENT_CONFIRMATION_DIALOG"), presentConfirmDict) )
-	{
-		CFArrayRef theArr = (CFArrayRef)::CFDictionaryGetValue(presentConfirmDict, CFSTR("omc_window"));
-		if( theArr != NULL && ::CFArrayGetCount(theArr) >= 1 )
-		{
-			NSString *title = (__bridge NSString *)ACFType<CFStringRef>::DynamicCast( ::CFArrayGetValueAtIndex(theArr, 0) );
-			NSString *message = (::CFArrayGetCount(theArr) >= 2) ? (__bridge NSString *)ACFType<CFStringRef>::DynamicCast( ::CFArrayGetValueAtIndex(theArr, 1) ) : nil;
-			NSMutableArray *buttonSpecs = [NSMutableArray array];
-			for( CFIndex i = 2; i < ::CFArrayGetCount(theArr); i++ )
-			{
-				NSString *spec = (__bridge NSString *)ACFType<CFStringRef>::DynamicCast( ::CFArrayGetValueAtIndex(theArr, i) );
-				if( spec != nil )
-					[buttonSpecs addObject:spec];
-			}
-			if( title != nil )
-				[self presentConfirmationDialogWithTitle:title message:message buttonSpecs:buttonSpecs];
-		}
-	}
-	}
-
-	{
-	CFDictionaryRef dismissDialogDict = NULL;
-	if( controlValues.GetValue(CFSTR("DISMISS_DIALOG"), dismissDialogDict) )
-	{
-		if( dismissDialogDict != NULL && ::CFDictionaryGetValue(dismissDialogDict, CFSTR("omc_window")) != NULL )
-			[self dismissDialog];
-	}
-	}
-
-	// Runtime structural mutations (ActionUI only; Nib controller stubs log and return)
-	{
-	CFDictionaryRef insertElementDict = NULL;
-	if( controlValues.GetValue(CFSTR("INSERT_ELEMENT"), insertElementDict) )
-	{
-		itemCount = ::CFDictionaryGetCount(insertElementDict);
-		if(itemCount > 0)
-		{
-			std::vector<CFTypeRef> keyList(itemCount);
-			std::vector<CFTypeRef> valueList(itemCount);
-			::CFDictionaryGetKeysAndValues(insertElementDict, (const void **)keyList.data(), (const void **)valueList.data());
-			for(CFIndex i = 0; i < itemCount; i++)
-			{
-				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
-				CFArrayRef theArr = ACFType<CFArrayRef>::DynamicCast( valueList[i] );
-				if( controlID != NULL && theArr != NULL && ::CFArrayGetCount(theArr) >= 1 )
-				{
-					NSString *json = (__bridge NSString *)ACFType<CFStringRef>::DynamicCast( ::CFArrayGetValueAtIndex(theArr, 0) );
-					NSString *container = (::CFArrayGetCount(theArr) >= 2) ? (__bridge NSString *)ACFType<CFStringRef>::DynamicCast( ::CFArrayGetValueAtIndex(theArr, 1) ) : nil;
-					NSString *positionStr = (::CFArrayGetCount(theArr) >= 3) ? (__bridge NSString *)ACFType<CFStringRef>::DynamicCast( ::CFArrayGetValueAtIndex(theArr, 2) ) : nil;
-					NSInteger parentID = [(__bridge NSString *)controlID integerValue];
-					if( json != nil )
-						[self insertElementWithParentID:parentID json:json container:container positionString:positionStr];
-				}
-			}
-		}
-	}
-	}
-
-	{
-	CFDictionaryRef insertRowDict = NULL;
-	if( controlValues.GetValue(CFSTR("INSERT_ELEMENT_ROW"), insertRowDict) )
-	{
-		itemCount = ::CFDictionaryGetCount(insertRowDict);
-		if(itemCount > 0)
-		{
-			std::vector<CFTypeRef> keyList(itemCount);
-			std::vector<CFTypeRef> valueList(itemCount);
-			::CFDictionaryGetKeysAndValues(insertRowDict, (const void **)keyList.data(), (const void **)valueList.data());
-			for(CFIndex i = 0; i < itemCount; i++)
-			{
-				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
-				CFArrayRef theArr = ACFType<CFArrayRef>::DynamicCast( valueList[i] );
-				if( controlID != NULL && theArr != NULL && ::CFArrayGetCount(theArr) >= 1 )
-				{
-					NSString *json = (__bridge NSString *)ACFType<CFStringRef>::DynamicCast( ::CFArrayGetValueAtIndex(theArr, 0) );
-					NSString *container = (::CFArrayGetCount(theArr) >= 2) ? (__bridge NSString *)ACFType<CFStringRef>::DynamicCast( ::CFArrayGetValueAtIndex(theArr, 1) ) : nil;
-					NSString *positionStr = (::CFArrayGetCount(theArr) >= 3) ? (__bridge NSString *)ACFType<CFStringRef>::DynamicCast( ::CFArrayGetValueAtIndex(theArr, 2) ) : nil;
-					NSInteger parentID = [(__bridge NSString *)controlID integerValue];
-					if( json != nil )
-						[self insertElementRowWithParentID:parentID json:json container:container positionString:positionStr];
-				}
-			}
-		}
-	}
-	}
-
-	{
-	CFDictionaryRef removeElementDict = NULL;
-	if( controlValues.GetValue(CFSTR("REMOVE_ELEMENT"), removeElementDict) )
-	{
-		itemCount = ::CFDictionaryGetCount(removeElementDict);
-		if(itemCount > 0)
-		{
-			std::vector<CFTypeRef> keyList(itemCount);
-			std::vector<CFTypeRef> valueList(itemCount);
-			::CFDictionaryGetKeysAndValues(removeElementDict, (const void **)keyList.data(), (const void **)valueList.data());
-			for(CFIndex i = 0; i < itemCount; i++)
-			{
-				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
-				if( controlID != NULL )
-				{
-					NSInteger viewID = [(__bridge NSString *)controlID integerValue];
-					[self removeElementWithViewID:viewID];
-				}
-			}
-		}
-	}
-	}
-
-	{
-	CFDictionaryRef valuesDict = NULL;
-	if( controlValues.GetValue(CFSTR("VALUES"), valuesDict) )
-	{
-		itemCount = ::CFDictionaryGetCount(valuesDict);
-		if(itemCount > 0)
-		{
-			CFDictionaryRef contentTypesDict = NULL;
-			controlValues.GetValue(CFSTR("VALUE_CONTENT_TYPES"), contentTypesDict);
-
-			std::vector<CFTypeRef> keyList(itemCount);
-			std::vector<CFTypeRef> valueList(itemCount);
-			::CFDictionaryGetKeysAndValues(valuesDict, (const void **)keyList.data(), (const void **)valueList.data());
-			for(CFIndex i = 0; i < itemCount; i++)
-			{
-				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
-				if(controlID != NULL)
-				{
-					if( kCFCompareEqualTo == CFStringCompare( controlID, CFSTR("omc_window"), 0) )
-					{
-						CFStringRef titleStr = ACFType<CFStringRef>::DynamicCast( valueList[i] );
-						if(titleStr != NULL)
-							[self.window setTitle:(__bridge NSString *)titleStr];
-					}
-					else
-					{
-						NSString *contentType = nil;
-						if(contentTypesDict != NULL)
-						{
-							CFStringRef ct = ACFType<CFStringRef>::DynamicCast(
-								::CFDictionaryGetValue(contentTypesDict, controlID));
-							if(ct != NULL)
-								contentType = (__bridge NSString *)ct;
-						}
-						[self setControlStringValue:(__bridge NSString *)ACFType<CFStringRef>::DynamicCast( valueList[i] )
-										forControlID:(__bridge NSString *)controlID
-										contentType:contentType];
-					}
-				}
-			}
-		}
-	}
-	}
-
-	{
-	CFDictionaryRef enableDisableDict = NULL;
-	if( controlValues.GetValue(CFSTR("ENABLE_DISABLE"), enableDisableDict) )
-	{
-		itemCount = ::CFDictionaryGetCount(enableDisableDict);
-		if(itemCount > 0)
-		{
-			std::vector<CFTypeRef> keyList(itemCount);
-			std::vector<CFTypeRef> valueList(itemCount);
-			::CFDictionaryGetKeysAndValues(enableDisableDict, (const void **)keyList.data(), (const void **)valueList.data());
-			for(CFIndex i = 0; i < itemCount; i++)
-			{
-				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
-				CFBooleanRef theVal = ACFType<CFBooleanRef>::DynamicCast( valueList[i] );
-				if( (controlID != NULL) && (theVal != NULL) )
-				{
-					BOOL doEnable = (BOOL)::CFBooleanGetValue(theVal);
-					[self setControlEnabled:doEnable forControlID:(__bridge NSString *)controlID];
-				}
-			}
-		}
-	}
-	}
-
-	{
-	CFDictionaryRef showHideDict = NULL;
-	if( controlValues.GetValue(CFSTR("SHOW_HIDE"), showHideDict) )
-	{
-		itemCount = ::CFDictionaryGetCount(showHideDict);
-		if(itemCount > 0)
-		{
-			std::vector<CFTypeRef> keyList(itemCount);
-			std::vector<CFTypeRef> valueList(itemCount);
-			::CFDictionaryGetKeysAndValues(showHideDict, (const void **)keyList.data(), (const void **)valueList.data());
-			for(CFIndex i = 0; i < itemCount; i++)
-			{
-				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
-				CFBooleanRef theVal = ACFType<CFBooleanRef>::DynamicCast( valueList[i] );
-				if( (controlID != NULL) && (theVal != NULL) )
-				{
-					BOOL makeVisible = (BOOL)::CFBooleanGetValue(theVal);
-					[self setControlVisible:makeVisible forControlID:(__bridge NSString *)controlID];
-				}
-			}
-		}
-	}
-	}
-
-	{
-	CFDictionaryRef commandIdsDict = NULL;
-	if( controlValues.GetValue(CFSTR("COMMAND_IDS"), commandIdsDict) )
-	{
-		itemCount = ::CFDictionaryGetCount(commandIdsDict);
-		if(itemCount > 0)
-		{
-			std::vector<CFTypeRef> keyList(itemCount);
-			std::vector<CFTypeRef> valueList(itemCount);
-			::CFDictionaryGetKeysAndValues(commandIdsDict, (const void **)keyList.data(), (const void **)valueList.data());
-			for(CFIndex i = 0; i < itemCount; i++)
-			{
-				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
-				CFStringRef theVal = ACFType<CFStringRef>::DynamicCast( valueList[i] );
-				if( (controlID != NULL) && (theVal != NULL) )
-					[self setCommandID:(__bridge NSString *)theVal forControlID:(__bridge NSString *)controlID];
-			}
-		}
-	}
-	}
-
-	{
-	CFDictionaryRef selectDict = NULL;
-	if( controlValues.GetValue(CFSTR("SELECT"), selectDict) )
-	{
-		itemCount = ::CFDictionaryGetCount(selectDict);
-		if(itemCount > 0)
-		{
-			std::vector<CFTypeRef> keyList(itemCount);
-			::CFDictionaryGetKeysAndValues(selectDict, (const void **)keyList.data(), NULL);
-			for(CFIndex i = 0; i < itemCount; i++)
-			{
-				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
-				if(controlID != NULL)
-				{
-					if( kCFCompareEqualTo == CFStringCompare( controlID, CFSTR("omc_window"), 0) )
-					{
-						[self.window makeKeyAndOrderFront:self];
-					}
-					else if( kCFCompareEqualTo == CFStringCompare( controlID, CFSTR("omc_application"), 0) )
-					{
-						NSApplication *myApp = [NSApplication sharedApplication];
-						if(myApp != nil)
-							[myApp activateIgnoringOtherApps:YES];
-					}
-					else
-					{
-						[self selectControlWithID:(__bridge NSString *)controlID];
-					}
-				}
-			}
-		}
-	}
-	}
-
-	{
-	CFDictionaryRef terminateDict = NULL;
-	if( controlValues.GetValue(CFSTR("TERMINATE"), terminateDict) )
-	{
-		itemCount = ::CFDictionaryGetCount(terminateDict);
-		if(itemCount > 0)
-		{
-			std::vector<CFTypeRef> keyList(itemCount);
-			std::vector<CFTypeRef> valueList(itemCount);
-			::CFDictionaryGetKeysAndValues(terminateDict, (const void **)keyList.data(), (const void **)valueList.data());
-			for(CFIndex i = 0; i < itemCount; i++)
-			{
-				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
-				CFBooleanRef theVal = ACFType<CFBooleanRef>::DynamicCast( valueList[i] );
-				if( (controlID != NULL) && (theVal != NULL) )
-				{
-					if( kCFCompareEqualTo == CFStringCompare( controlID, CFSTR("omc_window"), 0) )
-					{
-						Boolean terminateOK = ::CFBooleanGetValue(theVal);
-						NSString *commandID;
-						if(terminateOK)
-						{
-							commandID = self.endOKSubcommandID ?: @"omc.dialog.ok";
-						}
-						else
-						{
-							commandID = self.endCancelSubcommandID ?: @"omc.dialog.cancel";
-						}
-
-						self.currentCommandID = commandID;
-						[self.window close];
-						return;
-					}
-					else if( kCFCompareEqualTo == CFStringCompare( controlID, CFSTR("omc_application"), 0) )
-					{
-						NSApplication *myApp = [NSApplication sharedApplication];
-						if(myApp != NULL)
-						{
-							[myApp terminate:self];
-							return;
-						}
-					}
-				}
-			}
-		}
-	}
-	}
-
-	{
-		CFDictionaryRef moveDict = NULL;
-		if( controlValues.GetValue(CFSTR("MOVE"), moveDict) )
-		{
-			itemCount = ::CFDictionaryGetCount(moveDict);
-			if(itemCount > 0)
-			{
-				std::vector<CFTypeRef> keyList(itemCount);
-				std::vector<CFTypeRef> valueList(itemCount);
-				::CFDictionaryGetKeysAndValues(moveDict, (const void **)keyList.data(), (const void **)valueList.data());
-				for(CFIndex i = 0; i < itemCount; i++)
-				{
-					CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
-					CFArrayRef theArr = ACFType<CFArrayRef>::DynamicCast( valueList[i] );
-
-					if( (controlID != NULL) && (theArr != NULL) )
-					{
-						NSPoint newTopLeftOrigin = {0, 0};
-						CFIndex theCount = ::CFArrayGetCount(theArr);
-						if(theCount > 0)
-						{
-							CFTypeRef oneItemRef = ::CFArrayGetValueAtIndex(theArr, 0);
-							CFStringRef numString = ACFType<CFStringRef>::DynamicCast( oneItemRef );
-							if(numString != NULL)
-								newTopLeftOrigin.x = ::CFStringGetIntValue(numString);
-						}
-
-						if(theCount > 1)
-						{
-							CFTypeRef oneItemRef = ::CFArrayGetValueAtIndex(theArr, 1);
-							CFStringRef numString = ACFType<CFStringRef>::DynamicCast( oneItemRef );
-							if(numString != NULL)
-								newTopLeftOrigin.y = ::CFStringGetIntValue(numString);
-						}
-
-						if( kCFCompareEqualTo == CFStringCompare( controlID, CFSTR("omc_window"), 0) )
-						{
-							[self setWindowTopLeftPosition:newTopLeftOrigin];
-						}
-						else
-						{
-							[self moveControlWithID:(__bridge NSString *)controlID toPosition:newTopLeftOrigin];
-						}
-					}
-				}
-			}
-		}
-	}
-
-	{
-		CFDictionaryRef scrollDict = NULL;
-		if( controlValues.GetValue(CFSTR("SCROLL"), scrollDict) )
-		{
-			itemCount = ::CFDictionaryGetCount(scrollDict);
-			if(itemCount > 0)
-			{
-				std::vector<CFTypeRef> keyList(itemCount);
-				std::vector<CFTypeRef> valueList(itemCount);
-				::CFDictionaryGetKeysAndValues(scrollDict, (const void **)keyList.data(), (const void **)valueList.data());
-				for(CFIndex i = 0; i < itemCount; i++)
-				{
-					CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
-					CFArrayRef theArr = ACFType<CFArrayRef>::DynamicCast( valueList[i] );
-
-					if( (controlID != NULL) && (theArr != NULL) )
-					{
-						NSPoint newTopLeftOrigin = {0, 0};
-						CFIndex theCount = ::CFArrayGetCount(theArr);
-						if(theCount > 0)
-						{
-							CFTypeRef oneItemRef = ::CFArrayGetValueAtIndex(theArr, 0);
-							CFStringRef numString = ACFType<CFStringRef>::DynamicCast( oneItemRef );
-							if(numString != NULL)
-								newTopLeftOrigin.x = ::CFStringGetIntValue(numString);
-						}
-
-						if(theCount > 1)
-						{
-							CFTypeRef oneItemRef = ::CFArrayGetValueAtIndex(theArr, 1);
-							CFStringRef numString = ACFType<CFStringRef>::DynamicCast( oneItemRef );
-							if(numString != NULL)
-								newTopLeftOrigin.y = ::CFStringGetIntValue(numString);
-						}
-
-						[self scrollControlWithID:(__bridge NSString *)controlID toPosition:newTopLeftOrigin];
-					}
-				}
-			}
-		}
-	}
-
-	{
-		CFDictionaryRef resizeDict = NULL;
-		if( controlValues.GetValue(CFSTR("RESIZE"), resizeDict) )
-		{
-			itemCount = ::CFDictionaryGetCount(resizeDict);
-			if(itemCount > 0)
-			{
-				std::vector<CFTypeRef> keyList(itemCount);
-				std::vector<CFTypeRef> valueList(itemCount);
-				::CFDictionaryGetKeysAndValues(resizeDict, (const void **)keyList.data(), (const void **)valueList.data());
-				for(CFIndex i = 0; i < itemCount; i++)
-				{
-					CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
-					CFArrayRef theArr = ACFType<CFArrayRef>::DynamicCast( valueList[i] );
-					if( (controlID != NULL) && (theArr != NULL) )
-					{
-						NSSize newSize = { 0, 0 };
-						CFIndex theCount = ::CFArrayGetCount(theArr);
-						if(theCount > 0)
-						{
-							CFTypeRef oneItemRef = ::CFArrayGetValueAtIndex(theArr, 0);
-							CFStringRef numString = ACFType<CFStringRef>::DynamicCast( oneItemRef );
-							if(numString != NULL)
-								newSize.width = ::CFStringGetIntValue(numString);
-						}
-
-						if(theCount > 1)
-						{
-							CFTypeRef oneItemRef = ::CFArrayGetValueAtIndex(theArr, 1);
-							CFStringRef numString = ACFType<CFStringRef>::DynamicCast( oneItemRef );
-							if(numString != NULL)
-								newSize.height = ::CFStringGetIntValue(numString);
-						}
-
-						if( kCFCompareEqualTo == CFStringCompare( controlID, CFSTR("omc_window"), 0) )
-						{
-							[self setWindowContentSize:newSize];
-						}
-						else
-						{
-							[self resizeControlWithID:(__bridge NSString *)controlID toSize:newSize];
-						}
-					}
-				}
-			}
-		}
-	}
-
-	{
-	CFDictionaryRef invokeDict;
-	if( controlValues.GetValue(CFSTR("INVOKE"), invokeDict) )
-	{
-		itemCount = ::CFDictionaryGetCount(invokeDict);
-		if(itemCount > 0)
-		{
-			std::vector<CFTypeRef> keyList(itemCount);
-			std::vector<CFTypeRef> valueList(itemCount);
-			::CFDictionaryGetKeysAndValues(invokeDict, (const void **)keyList.data(), (const void **)valueList.data());
-			for(CFIndex i = 0; i < itemCount; i++)
-			{
-				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast( keyList[i] );
-				CFArrayRef theArr = ACFType<CFArrayRef>::DynamicCast( valueList[i] );
-				if( (controlID != NULL) && (theArr != NULL) )
-				{
-					if( kCFCompareEqualTo == CFStringCompare( controlID, CFSTR("omc_window"), 0) )
-						OMCInvokeMessages(OMCInvokeTarget::window, (__bridge void *)self.window, theArr);
-					else if( kCFCompareEqualTo == CFStringCompare( controlID, CFSTR("omc_application"), 0) )
-						OMCInvokeMessages(OMCInvokeTarget::application, nullptr, theArr);
-					else if( kCFCompareEqualTo == CFStringCompare( controlID, CFSTR("omc_workspace"), 0) )
-						OMCInvokeMessages(OMCInvokeTarget::workspace, nullptr, theArr);
-					else
-						[self invokeMessagesForControlID:(__bridge NSString *)controlID messages:theArr];
-				}
-			}
-		}
-	}
-	}
+    OMCWindowControllerTarget target(self);
+    OMCDispatchDialogControlMessage(inControlDict, target);
 }
 
 - (void)setWindowTopLeftPosition:(NSPoint)absolutePosition

@@ -59,6 +59,7 @@
 		1D0A1B2C2F75000000000102 /* OMCActionUIModelLifetime.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1D0A1B2C2F75000000000101 /* OMCActionUIModelLifetime.cpp */; };
 		1D560A1B2F8000000000002D /* OMCActionUIDocumentLookup.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1D560A1B2F8000000000002B /* OMCActionUIDocumentLookup.cpp */; };
 		1D560A1B2F80000000000030 /* OMCActionUIControls.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1D560A1B2F8000000000002E /* OMCActionUIControls.cpp */; };
+		1D560A1B2F80000000000033 /* OMCDialogControlDispatch.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1D560A1B2F80000000000031 /* OMCDialogControlDispatch.cpp */; };
 		1D0A1B2C2F75000000000106 /* OMCActionUIModels.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1D0A1B2C2F75000000000105 /* OMCActionUIModels.mm */; };
 		1D0A1B2C2F74000000000102 /* OMCAlerts.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1D0A1B2C2F74000000000101 /* OMCAlerts.cpp */; };
 		1D560A1B2F80000000000002 /* ActionUICAdapter in Frameworks */ = {isa = PBXBuildFile; productRef = 1D560A1B2F80000000000001 /* ActionUICAdapter */; };
@@ -471,6 +472,8 @@
 		1D560A1B2F8000000000002C /* OMCActionUIDocumentLookup.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCActionUIDocumentLookup.h; sourceTree = "<group>"; };
 		1D560A1B2F8000000000002E /* OMCActionUIControls.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCActionUIControls.cpp; sourceTree = "<group>"; };
 		1D560A1B2F8000000000002F /* OMCActionUIControls.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCActionUIControls.h; sourceTree = "<group>"; };
+		1D560A1B2F80000000000031 /* OMCDialogControlDispatch.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCDialogControlDispatch.cpp; sourceTree = "<group>"; };
+		1D560A1B2F80000000000032 /* OMCDialogControlDispatch.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCDialogControlDispatch.h; sourceTree = "<group>"; };
 		1D0A1B2C2F75000000000104 /* OMCActionUIModels.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCActionUIModels.h; sourceTree = "<group>"; };
 		1D0A1B2C2F75000000000105 /* OMCActionUIModels.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCActionUIModels.mm; sourceTree = "<group>"; };
 		1D0A1B2C2F74000000000101 /* OMCAlerts.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCAlerts.cpp; sourceTree = "<group>"; };
@@ -1117,6 +1120,8 @@
 				1D560A1B2F8000000000002C /* OMCActionUIDocumentLookup.h */,
 				1D560A1B2F8000000000002E /* OMCActionUIControls.cpp */,
 				1D560A1B2F8000000000002F /* OMCActionUIControls.h */,
+				1D560A1B2F80000000000031 /* OMCDialogControlDispatch.cpp */,
+				1D560A1B2F80000000000032 /* OMCDialogControlDispatch.h */,
 				1D0A1B2C2F74000000000101 /* OMCAlerts.cpp */,
 				1D560A1B2F80000000000006 /* OMCProgressWindow.h */,
 				1D560A1B2F80000000000007 /* OMCProgressWindow.cpp */,
@@ -1542,6 +1547,7 @@
 				1D0A1B2C2F75000000000102 /* OMCActionUIModelLifetime.cpp in Sources */,
 				1D560A1B2F8000000000002D /* OMCActionUIDocumentLookup.cpp in Sources */,
 				1D560A1B2F80000000000030 /* OMCActionUIControls.cpp in Sources */,
+				1D560A1B2F80000000000033 /* OMCDialogControlDispatch.cpp in Sources */,
 				1D0A1B2C2F75000000000106 /* OMCActionUIModels.mm in Sources */,
 				1D0A1B2C2F74000000000102 /* OMCAlerts.cpp in Sources */,
 				1D560A1B2F80000000000005 /* OMCWindowHost.mm in Sources */,
