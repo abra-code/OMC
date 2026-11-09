@@ -120,6 +120,60 @@ fi
 			<key>NOTES</key>
 			<string>Takes the window UUID as its text context</string>
 		</dict>
+		<dict>
+			<key>ACTIONUI_WINDOW</key>
+			<dict>
+				<key>IS_BLOCKING</key>
+				<false/>
+				<key>JSON_NAME</key>
+				<string>WindowActivation</string>
+				<key>WINDOW_DID_ACTIVATE_SUBCOMMAND_ID</key>
+				<string>window.did.activate</string>
+				<key>WINDOW_DID_DEACTIVATE_SUBCOMMAND_ID</key>
+				<string>window.did.deactivate</string>
+			</dict>
+			<key>ACTIVATION_MODE</key>
+			<string>act_always</string>
+			<key>COMMAND</key>
+			<array>
+				<string>echo "${OMC_ACTIONUI_WINDOW_UUID}"
+</string>
+			</array>
+			<key>EXECUTION_MODE</key>
+			<string>exe_shell_script</string>
+			<key>NAME</key>
+			<string>Window Activation</string>
+			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
+			<string>14.6</string>
+			<key>REQUIRED_OMC_VERSION</key>
+			<string>5.0</string>
+		</dict>
+		<dict>
+			<key>COMMAND</key>
+			<array>
+				<string>echo activate &gt;&gt; "/tmp/OMC_test_window_activation_${OMC_ACTIONUI_WINDOW_UUID}"
+</string>
+			</array>
+			<key>COMMAND_ID</key>
+			<string>window.did.activate</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_shell_script</string>
+			<key>NAME</key>
+			<string>Window Tests</string>
+		</dict>
+		<dict>
+			<key>COMMAND</key>
+			<array>
+				<string>echo deactivate &gt;&gt; "/tmp/OMC_test_window_activation_${OMC_ACTIONUI_WINDOW_UUID}"
+</string>
+			</array>
+			<key>COMMAND_ID</key>
+			<string>window.did.deactivate</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_shell_script</string>
+			<key>NAME</key>
+			<string>Window Tests</string>
+		</dict>
 	</array>
 	<key>VERSION</key>
 	<integer>2</integer>

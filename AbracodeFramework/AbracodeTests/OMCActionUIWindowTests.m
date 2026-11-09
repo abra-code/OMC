@@ -228,6 +228,47 @@ static CGFloat TitlebarHeight(NSWindow *window) {
     [self closeWindowWithUUID:uuid autosaveName:kFixedAutosaveName];
 }
 
+#pragma mark - Activation subcommands
+
+// The lines the window's WINDOW_DID_ACTIVATE / WINDOW_DID_DEACTIVATE subcommands appended
+- (NSArray<NSString *> *)activationLinesForUUID:(NSString *)uuid {
+    NSString *path = [@"/tmp/OMC_test_window_activation_" stringByAppendingString:uuid];
+    NSString *contents = [NSString stringWithContentsOfFile:path encoding:NSUTF8StringEncoding error:nil] ?: @"";
+    NSMutableArray<NSString *> *lines = [NSMutableArray array];
+    for (NSString *line in [contents componentsSeparatedByString:@"\n"]) {
+        if (line.length > 0)
+            [lines addObject:line];
+    }
+    return lines;
+}
+
+// The test process is not the active app, so its windows never really become key, and activating
+// it would take focus from whoever runs the tests. Instead each key change is posted as AppKit
+// posts it: NSWindow delivers its own notifications to its delegate, whichever object that is.
+- (void)testKeyChangesRunTheActivationSubcommands {
+    NSString *uuid = nil;
+    NSWindow *window = [self openWindowWithCommand:@"Window Activation" autosaveName:@"OMC.WindowActivation" uuid:&uuid];
+    NSUInteger opened = [self activationLinesForUUID:uuid].count;
+
+    [[NSNotificationCenter defaultCenter] postNotificationName:NSWindowDidResignKeyNotification object:window];
+    [self spinUntil:^BOOL{ return [self activationLinesForUUID:uuid].count > opened; } timeout:5.0];
+    NSArray<NSString *> *lines = [self activationLinesForUUID:uuid];
+    XCTAssertEqualObjects(lines.lastObject, @"deactivate",
+                          @"resigning key runs WINDOW_DID_DEACTIVATE_SUBCOMMAND_ID: %@", lines);
+
+    NSUInteger before = lines.count;
+    [[NSNotificationCenter defaultCenter] postNotificationName:NSWindowDidBecomeKeyNotification object:window];
+    [self spinUntil:^BOOL{ return [self activationLinesForUUID:uuid].count > before; } timeout:5.0];
+    lines = [self activationLinesForUUID:uuid];
+    XCTAssertEqualObjects(lines.lastObject, @"activate",
+                          @"becoming key runs WINDOW_DID_ACTIVATE_SUBCOMMAND_ID: %@", lines);
+    XCTAssertEqual(lines.count, before + 1, @"once: %@", lines);
+
+    [self closeWindowWithUUID:uuid autosaveName:@"OMC.WindowActivation"];
+    [[NSFileManager defaultManager] removeItemAtPath:[@"/tmp/OMC_test_window_activation_" stringByAppendingString:uuid] error:nil];
+    [[NSUserDefaults standardUserDefaults] removeObjectForKey:FrameDefaultsKey(@"OMC.WindowActivation")];
+}
+
 @end
 
 #endif // CURRENT_OMC_VERSION >= 50000
