@@ -83,23 +83,7 @@ static OMCService *sOMCService = NULL;
 		//	_startupModifiers = [currEvent modifierFlags];
 	}
 
-	NSBundle *appBundle = [NSBundle mainBundle];
-	NSString *bunldeRefID = [appBundle bundleIdentifier];
-	if(bunldeRefID == NULL)
-		bunldeRefID = @"com.abracode.OMCApplet";
-
 	_startupModifiers = GetKeyboardModifiers();
-}
-
-- (NSArray *)URLsFromRunningOpenPanel
-{
-	NSOpenPanel *openPanel = [NSOpenPanel openPanel];
-	NSModalResponse response = [openPanel runModal];
-	if(response == NSModalResponseOK)
-	{
-		return [openPanel URLs];
-	}
-	return NULL;
 }
 
 - (void)openDocumentWithContentsOfURL:(NSURL *)absoluteURL display:(BOOL)displayDocument completionHandler:(void (^)(NSDocument * _Nullable document, BOOL documentWasAlreadyOpen, NSError * _Nullable error))completionHandler

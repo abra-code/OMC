@@ -171,8 +171,6 @@
 		E2C8486110D61C33002DFDB5 /* OMCBox.h in Headers */ = {isa = PBXBuildFile; fileRef = E2C8485D10D61C33002DFDB5 /* OMCBox.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E2C8486210D61C33002DFDB5 /* OMCBox.m in Sources */ = {isa = PBXBuildFile; fileRef = E2C8485E10D61C33002DFDB5 /* OMCBox.m */; };
 		E2C84D750DA9AC090056DBC2 /* OMCCommandMenu.h in Headers */ = {isa = PBXBuildFile; fileRef = E2C84D710DA9AC090056DBC2 /* OMCCommandMenu.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		E2C84D8B0DA9D2600056DBC2 /* OMCSingleCommand.m in Sources */ = {isa = PBXBuildFile; fileRef = E2C84D870DA9D2600056DBC2 /* OMCSingleCommand.m */; };
-		E2C84D8C0DA9D2600056DBC2 /* OMCSingleCommand.h in Headers */ = {isa = PBXBuildFile; fileRef = E2C84D880DA9D2600056DBC2 /* OMCSingleCommand.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E2C84DAC0DA9D4CD0056DBC2 /* OMCCommandExecutor.h in Headers */ = {isa = PBXBuildFile; fileRef = E2C84DA80DA9D4CD0056DBC2 /* OMCCommandExecutor.h */; };
 		E2C84DAD0DA9D4CD0056DBC2 /* OMCCommandExecutor.mm in Sources */ = {isa = PBXBuildFile; fileRef = E2C84DA90DA9D4CD0056DBC2 /* OMCCommandExecutor.mm */; };
 		E2C84DEB0DA9F30F0056DBC2 /* OMCCommandMenu.mm in Sources */ = {isa = PBXBuildFile; fileRef = E2C84DE90DA9F30F0056DBC2 /* OMCCommandMenu.mm */; };
@@ -622,8 +620,6 @@
 		E2C8485D10D61C33002DFDB5 /* OMCBox.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCBox.h; sourceTree = "<group>"; };
 		E2C8485E10D61C33002DFDB5 /* OMCBox.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMCBox.m; sourceTree = "<group>"; };
 		E2C84D710DA9AC090056DBC2 /* OMCCommandMenu.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCCommandMenu.h; sourceTree = "<group>"; };
-		E2C84D870DA9D2600056DBC2 /* OMCSingleCommand.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMCSingleCommand.m; sourceTree = "<group>"; };
-		E2C84D880DA9D2600056DBC2 /* OMCSingleCommand.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCSingleCommand.h; sourceTree = "<group>"; };
 		E2C84DA80DA9D4CD0056DBC2 /* OMCCommandExecutor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCCommandExecutor.h; sourceTree = "<group>"; };
 		E2C84DA90DA9D4CD0056DBC2 /* OMCCommandExecutor.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCCommandExecutor.mm; sourceTree = "<group>"; };
 		E2C84DE90DA9F30F0056DBC2 /* OMCCommandMenu.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCCommandMenu.mm; sourceTree = "<group>"; };
@@ -1099,8 +1095,6 @@
 				E29A6AB10D9F7A00006A97B0 /* OMCMainMenuController.h */,
 				E2C84DE90DA9F30F0056DBC2 /* OMCCommandMenu.mm */,
 				E2C84D710DA9AC090056DBC2 /* OMCCommandMenu.h */,
-				E2C84D870DA9D2600056DBC2 /* OMCSingleCommand.m */,
-				E2C84D880DA9D2600056DBC2 /* OMCSingleCommand.h */,
 				E2C84DA90DA9D4CD0056DBC2 /* OMCCommandExecutor.mm */,
 				1D0A1B2C2F6D000000000100 /* OMCCommandRunner.h */,
 				1D0A1B2C2F6D000000000101 /* OMCCommandRunner.cpp */,
@@ -1225,7 +1219,6 @@
 				E23DC96A0D9A2616009D2AD8 /* OMCIKImageView.h in Headers */,
 				E29A6AB50D9F7A01006A97B0 /* OMCMainMenuController.h in Headers */,
 				E2C84D750DA9AC090056DBC2 /* OMCCommandMenu.h in Headers */,
-				E2C84D8C0DA9D2600056DBC2 /* OMCSingleCommand.h in Headers */,
 				E2C84DAC0DA9D4CD0056DBC2 /* OMCCommandExecutor.h in Headers */,
 				1D690DDE2F45096A006FECE8 /* OMCActionUIDialog.h in Headers */,
 				E25D78990DBB24800065C7A3 /* OMCDropletController.h in Headers */,
@@ -1596,7 +1589,6 @@
 				1D0A1B2C2F6A000000000108 /* yyjson.c in Sources */,
 				E23DC9680D9A2616009D2AD8 /* OMCIKImageView.m in Sources */,
 				E29A6AB60D9F7A01006A97B0 /* OMCMainMenuController.mm in Sources */,
-				E2C84D8B0DA9D2600056DBC2 /* OMCSingleCommand.m in Sources */,
 				E2C84DAD0DA9D4CD0056DBC2 /* OMCCommandExecutor.mm in Sources */,
 				1D0A1B2C2F6D000000000104 /* OMCCommandRunner.cpp in Sources */,
 				1D0A1B2C2F6D000000000105 /* OMCLog.mm in Sources */,
