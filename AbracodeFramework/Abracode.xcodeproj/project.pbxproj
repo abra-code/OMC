@@ -529,8 +529,8 @@
 		E234FA200D0FCB28001A7780 /* app.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = app.icns; path = Resources/app.icns; sourceTree = "<group>"; };
 		E234FA9E0D0FD084001A7780 /* omc_dialog_control */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = omc_dialog_control; sourceTree = "<group>"; };
 		E234FAA30D0FD114001A7780 /* omc_next_command */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = omc_next_command; sourceTree = "<group>"; };
-		E23AAC8B12F55FE0004C867B /* OMCService.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCService.h; sourceTree = "<group>"; };
-		E23AAC8C12F55FE0004C867B /* OMCService.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMCService.m; sourceTree = "<group>"; };
+		E23AAC8B12F55FE0004C867B /* OMCService.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OMCService.h; path = EntryPoints/Apple/OMCService.h; sourceTree = "<group>"; };
+		E23AAC8C12F55FE0004C867B /* OMCService.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = OMCService.m; path = EntryPoints/Apple/OMCService.m; sourceTree = "<group>"; };
 		E23DC95C0D9A2616009D2AD8 /* OMCPDFView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMCPDFView.m; sourceTree = "<group>"; };
 		E23DC95E0D9A2616009D2AD8 /* OMCPDFView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCPDFView.h; sourceTree = "<group>"; };
 		E23DC9600D9A2616009D2AD8 /* OMCIKImageView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMCIKImageView.m; sourceTree = "<group>"; };
@@ -699,10 +699,8 @@
 		0867D691FE84028FC02AAC07 /* Abracode */ = {
 			isa = PBXGroup;
 			children = (
-				E29ED1710D09525700C9D5E8 /* CMUtils */,
 				E29ED1B10D09531300C9D5E8 /* Common */,
 				1D0A1B2C2F6A000000000109 /* yyjson */,
-				E29ED19E0D09528600C9D5E8 /* MoreAppleEvents */,
 				E29ED2390D09FEF800C9D5E8 /* OMC */,
 				1D0A1B2C2F6A000000000002 /* Platform */,
 				32C88DFF0371C24200C91783 /* Other Sources */,
@@ -925,6 +923,8 @@
 				E29ED1750D09525700C9D5E8 /* OMCClipboard.cp */,
 				1DBCC43222CE209300A1DD8F /* OMCHostInfo.mm */,
 				1D0A1B2C2F6A000000000001 /* NibDialogs */,
+				E29ED1710D09525700C9D5E8 /* CMUtils */,
+				E29ED19E0D09528600C9D5E8 /* MoreAppleEvents */,
 			);
 			path = Apple;
 			sourceTree = "<group>";
@@ -1014,7 +1014,7 @@
 				1DED8E562222B65500A2CAF7 /* MoreAppleEvents.h */,
 			);
 			path = MoreAppleEvents;
-			sourceTree = SOURCE_ROOT;
+			sourceTree = "<group>";
 		};
 		E29ED1B10D09531300C9D5E8 /* Common */ = {
 			isa = PBXGroup;
