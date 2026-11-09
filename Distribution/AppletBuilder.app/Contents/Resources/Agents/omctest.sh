@@ -894,16 +894,51 @@ if [ $# -lt 1 ]; then
     exit 255
 fi
 omctest_pb_dir="$OMCTEST_UI/pb"
-/bin/mkdir -p "$omctest_pb_dir" || exit 70
+[ -d "$omctest_pb_dir" ] || /bin/mkdir -p "$omctest_pb_dir" || exit 70
 # A board name is a token to the real tool and an arbitrary string here, so it is
 # MAPPED rather than trusted as a filename: everything outside [A-Za-z0-9._-]
 # becomes "_", which keeps the name readable in a kept scratch, and a checksum of
 # the ORIGINAL name is appended so two names that flatten alike still get two
 # files. This is also what makes a name containing "/" or a newline harmless,
 # where the old wrapper had to refuse one outright.
-omctest_pb_safe=$(printf '%s' "$1" | LC_ALL=C /usr/bin/tr -c 'A-Za-z0-9._-' '_' | /usr/bin/cut -c1-96)
-omctest_pb_sum=$(printf '%s' "$1" | /usr/bin/cksum | /usr/bin/awk '{print $1}')
-omctest_pb_file="$omctest_pb_dir/$omctest_pb_safe.$omctest_pb_sum"
+#
+# A name that is already all [A-Za-z0-9._-], and 96 characters or fewer, is its
+# own file name with ".plain" appended, with no tr, cut, cksum or awk: an applet
+# keeps per-window state in boards and reads them dozens of times a handler, and
+# those four processes made every call about 9 ms instead of 3.6. The two forms
+# cannot meet: a mapped name always ends in "." and digits, a plain one in ".plain".
+# The characters are listed, not given as ranges: a range follows the locale's
+# collation, and in a UTF-8 locale A-Z can take in accented letters, whose two
+# Unicode spellings APFS treats as one file name.
+case "$1" in
+    ''|*[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._-]*) omctest_pb_plain=0 ;;
+    *) if [ "${#1}" -le 96 ]; then omctest_pb_plain=1; else omctest_pb_plain=0; fi ;;
+esac
+if [ "$omctest_pb_plain" = "1" ]; then
+    # APFS folds case and the real tool does not: "Foo" and "foo" are two boards
+    # there. Each capital letter gets a "^" before it, a character no plain name
+    # holds, so names that differ only in case still get two files.
+    case "$1" in
+        *[ABCDEFGHIJKLMNOPQRSTUVWXYZ]*)
+            omctest_pb_rest=$1
+            omctest_pb_name=''
+            while [ -n "$omctest_pb_rest" ]; do
+                omctest_pb_char=${omctest_pb_rest%"${omctest_pb_rest#?}"}
+                omctest_pb_rest=${omctest_pb_rest#?}
+                case "$omctest_pb_char" in
+                    [ABCDEFGHIJKLMNOPQRSTUVWXYZ]) omctest_pb_name="$omctest_pb_name^$omctest_pb_char" ;;
+                    *) omctest_pb_name="$omctest_pb_name$omctest_pb_char" ;;
+                esac
+            done
+            ;;
+        *) omctest_pb_name=$1 ;;
+    esac
+    omctest_pb_file="$omctest_pb_dir/$omctest_pb_name.plain"
+else
+    omctest_pb_safe=$(printf '%s' "$1" | LC_ALL=C /usr/bin/tr -c 'A-Za-z0-9._-' '_' | /usr/bin/cut -c1-96)
+    omctest_pb_sum=$(printf '%s' "$1" | /usr/bin/cksum | /usr/bin/awk '{print $1}')
+    omctest_pb_file="$omctest_pb_dir/$omctest_pb_safe.$omctest_pb_sum"
+fi
 shift
 case "${1:-}" in
     put|set)
@@ -990,14 +1025,28 @@ if [ $# -lt 3 ]; then
 fi
 shift 2
 win="$OMCTEST_UI/win-$uuid"
-/bin/mkdir -p "$win"
+# The test, then mkdir only for a window's first write: this stub runs for every
+# write a handler makes, and each process it starts costs about 2 ms.
+[ -d "$win" ] || /bin/mkdir -p "$win"
 
 # 1. Journal every call. A single printf >> is one O_APPEND write, so concurrent
 #    handlers interleave whole lines and order IS line order - no counter to
 #    race on. Tabs and newlines inside arguments are flattened here; the row
-#    files below keep them intact.
-printf '%s\t%s\t%s\n' "$uuid" "$target" \
-    "$(printf '%s\t' "$@" | /usr/bin/tr '\t\n' '  ')" >> "$OMCTEST_UI/journal.tsv"
+#    files below keep them intact. Each argument is followed by a space, and only
+#    one holding a tab or a newline goes through tr - in the C locale, where a
+#    byte that is not UTF-8 does not stop it ("Illegal byte sequence") and cut
+#    the line short, as the old tr over the whole line did.
+tab=$(printf '\t')
+nl='
+'
+journaled=''
+for arg; do
+    case "$arg" in
+        *"$tab"*|*"$nl"*) arg=$(printf '%s' "$arg" | LC_ALL=C /usr/bin/tr '\t\n' '  ') ;;
+    esac
+    journaled="$journaled$arg "
+done
+printf '%s\t%s\t%s\n' "$uuid" "$target" "$journaled" >> "$OMCTEST_UI/journal.tsv"
 
 # 2. Resolve the target to a file prefix; flag writes to undeclared view ids.
 case "$target" in
@@ -1437,10 +1486,96 @@ omctest_extract_control_defaults() { # <document-path> -> prints shell assignmen
 # omc_run - dispatching a handler the way the engine would
 # =============================================================================
 
+# The applet's handler scripts, one line each, "<stem><TAB><path>", in glob order:
+# what omctest_resolve_script searches. Scanning the folder for every dispatch cost
+# three processes per file it passed (basename, the stem, tr), about 0.4 s a
+# dispatch for an applet of 185 handlers and 2 s for a command with none; the
+# index is built with shell built-ins only and searched with one awk.
+#
+# Built in the CALLING shell: omc_run reads the resolver through a command
+# substitution, a subshell, where an index it built would be lost. It is built
+# again whenever the folder's modification time moves, which every add, remove and
+# rename of a file in it does (to the nanosecond), so a test that adds a handler
+# sees it. A name with a tab or a newline cannot be one line of the index; such a
+# file is left out and noted, and while one is there every lookup scans the folder
+# instead (omctest_resolve_script_scan).
+omctest_index_tab=$(printf '\t')
+omctest_index_newline='
+'
+omctest_script_index() {
+    local scripts_dir="$OMC_APP_BUNDLE_PATH/Contents/Resources/Scripts"
+    # Its status is not checked: a folder stat cannot read (none yet) gets an empty
+    # stamp, which is a key like any other and moves once the folder appears.
+    local stamp="$(/usr/bin/stat -f '%Fm' "$scripts_dir" 2>/dev/null)"
+    if [ "${OMCTEST_SCRIPT_INDEX_KEY:-}" = "$scripts_dir|$stamp" ]; then
+        return 0
+    fi
+    local listing=''
+    local odd=0
+    local candidate base stem
+    for candidate in "$scripts_dir"/*; do
+        [ -f "$candidate" ] || continue
+        base=${candidate##*/}
+        case "$base" in
+            *"$omctest_index_tab"*|*"$omctest_index_newline"*) odd=1; continue ;;
+        esac
+        # The rule of omctest_stem_of, inline so the loop starts no subshell: a
+        # leading dot does not start an extension, so ".zshrc" is its own stem.
+        case "$base" in
+            *.*) stem=${base%.*}; [ -n "$stem" ] || stem=$base ;;
+            *) stem=$base ;;
+        esac
+        listing="$listing$stem$omctest_index_tab$candidate$omctest_index_newline"
+    done
+    OMCTEST_SCRIPT_INDEX=$listing
+    OMCTEST_SCRIPT_INDEX_ODD=$odd
+    OMCTEST_SCRIPT_INDEX_KEY="$scripts_dir|$stamp"
+}
+
 # Resolve Scripts/<command-id>.<ext> case-insensitively, as the engine does.
 # When several extensions share a stem the engine's answer is undefined (see the
-# contract block); the harness commits to .sh, .py, .zsh, .bash.
+# contract block); the harness commits to .sh, .py, .zsh, .bash, then any other
+# extension, each in glob order - the order omctest_resolve_script_scan tries them.
 omctest_resolve_script() { # <command-id>
+    [ -n "${OMCTEST_SCRIPT_INDEX_KEY:-}" ] || omctest_script_index
+    # A file the index left out can match an ordinary id (the tab or newline may
+    # sit in its extension) and can come first in glob order, so while one is
+    # present only the scan gives the scan's answer.
+    if [ "${OMCTEST_SCRIPT_INDEX_ODD:-0}" = "1" ]; then
+        omctest_resolve_script_scan "$1"
+        return
+    fi
+    # The id through the environment, not awk -v, which would read its backslashes
+    # as escapes. tolower in the C locale is tr 'A-Z' 'a-z': ASCII letters only.
+    local matches="$(printf '%s' "$OMCTEST_SCRIPT_INDEX" \
+        | OMCTEST_WANTED_ID="$1" LC_ALL=C /usr/bin/awk -F '\t' 'tolower($1) == tolower(ENVIRON["OMCTEST_WANTED_ID"]) { print substr($0, length($1) + 2) }')"
+    local found_sh='' found_py='' found_zsh='' found_bash='' found_other=''
+    local path base
+    while IFS= read -r path; do
+        [ -n "$path" ] || continue
+        base=${path##*/}
+        case "$base" in
+            *.sh) [ -n "$found_sh" ] || found_sh=$path ;;
+            *.py) [ -n "$found_py" ] || found_py=$path ;;
+            *.zsh) [ -n "$found_zsh" ] || found_zsh=$path ;;
+            *.bash) [ -n "$found_bash" ] || found_bash=$path ;;
+            *) [ -n "$found_other" ] || found_other=$path ;;
+        esac
+    done <<MATCHES
+$matches
+MATCHES
+    for path in "$found_sh" "$found_py" "$found_zsh" "$found_bash" "$found_other"; do
+        if [ -n "$path" ]; then
+            printf '%s' "$path"
+            return 0
+        fi
+    done
+    return 1
+}
+
+# The same answer by scanning the folder: three processes per file it passes. Kept
+# for the names the index cannot hold.
+omctest_resolve_script_scan() { # <command-id>
     local command_id="$1" scripts_dir wanted ext candidate stem base
     scripts_dir="$OMC_APP_BUNDLE_PATH/Contents/Resources/Scripts"
     wanted=$(printf '%s' "$command_id" | LC_ALL=C /usr/bin/tr 'A-Z' 'a-z')
@@ -1529,6 +1664,8 @@ omc_run() { # <command-id>
         return 127
     fi
 
+    # Here, not in the resolver: it runs in the command substitution below.
+    omctest_script_index
     script_path=$(omctest_resolve_script "$command_id")
     if [ -z "$script_path" ]; then
         printf 'omctest: no script for command id [%s] in %s\n' \
