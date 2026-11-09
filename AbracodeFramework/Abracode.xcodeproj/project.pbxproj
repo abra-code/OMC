@@ -121,7 +121,7 @@
 		E2517C5A0D1BCC2700180C68 /* OMCTextField.m in Sources */ = {isa = PBXBuildFile; fileRef = E2517C4A0D1BCC2700180C68 /* OMCTextField.m */; };
 		E2517C5B0D1BCC2700180C68 /* OMCTextView.h in Headers */ = {isa = PBXBuildFile; fileRef = E2517C4B0D1BCC2700180C68 /* OMCTextView.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E2517C5C0D1BCC2700180C68 /* OMCTextView.m in Sources */ = {isa = PBXBuildFile; fileRef = E2517C4C0D1BCC2700180C68 /* OMCTextView.m */; };
-		E258B2110E46E37C00926F10 /* OMCDeferredProgress.mm in Sources */ = {isa = PBXBuildFile; fileRef = E258B20F0E46E37C00926F10 /* OMCDeferredProgress.mm */; };
+		E258B2110E46E37C00926F10 /* OMCDeferredProgress.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E258B20F0E46E37C00926F10 /* OMCDeferredProgress.cpp */; };
 		E25D78990DBB24800065C7A3 /* OMCDropletController.h in Headers */ = {isa = PBXBuildFile; fileRef = E25D78950DBB24800065C7A3 /* OMCDropletController.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E26B2796109C174D00DBA8CE /* OMCTableView.h in Headers */ = {isa = PBXBuildFile; fileRef = E26B2792109C174D00DBA8CE /* OMCTableView.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E26B2797109C174D00DBA8CE /* OMCTableView.m in Sources */ = {isa = PBXBuildFile; fileRef = E26B2793109C174D00DBA8CE /* OMCTableView.m */; };
@@ -551,7 +551,7 @@
 		E2517C4A0D1BCC2700180C68 /* OMCTextField.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMCTextField.m; sourceTree = "<group>"; };
 		E2517C4B0D1BCC2700180C68 /* OMCTextView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCTextView.h; sourceTree = "<group>"; };
 		E2517C4C0D1BCC2700180C68 /* OMCTextView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMCTextView.m; sourceTree = "<group>"; };
-		E258B20F0E46E37C00926F10 /* OMCDeferredProgress.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCDeferredProgress.mm; sourceTree = "<group>"; };
+		E258B20F0E46E37C00926F10 /* OMCDeferredProgress.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCDeferredProgress.cpp; sourceTree = "<group>"; };
 		E25D78950DBB24800065C7A3 /* OMCDropletController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCDropletController.h; sourceTree = "<group>"; };
 		E26B2792109C174D00DBA8CE /* OMCTableView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCTableView.h; sourceTree = "<group>"; };
 		E26B2793109C174D00DBA8CE /* OMCTableView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMCTableView.m; sourceTree = "<group>"; };
@@ -1053,7 +1053,7 @@
 				1DA51CB42EACC95B00BFF670 /* OMCAppLifetimeEvents.mm */,
 				E2D92E8D1043E0E3003DC96B /* OMCInputDialog.cpp */,
 				E2D92E871043E0C2003DC96B /* OMCInputDialog.h */,
-				E258B20F0E46E37C00926F10 /* OMCDeferredProgress.mm */,
+				E258B20F0E46E37C00926F10 /* OMCDeferredProgress.cpp */,
 				1D0A1B2C2F6E000000000100 /* OMCProgressParsing.h */,
 				1D0A1B2C2F6E000000000101 /* OMCProgressParsing.cpp */,
 				E2C10C5A0E45783200454DB1 /* OMCDeferredProgress.h */,
@@ -1563,7 +1563,7 @@
 				E2C433480DEE72F700E976D2 /* PlistPreferences.cp in Sources */,
 				E2C433620DEE751300E976D2 /* OMCDropletController.mm in Sources */,
 				1D9B1F6521FF191D004704A7 /* SubmenuTree.cp in Sources */,
-				E258B2110E46E37C00926F10 /* OMCDeferredProgress.mm in Sources */,
+				E258B2110E46E37C00926F10 /* OMCDeferredProgress.cpp in Sources */,
 				1D0A1B2C2F6E000000000103 /* OMCProgressParsing.cpp in Sources */,
 				E2BB1E480E6F886200D2DDE5 /* OMCView.m in Sources */,
 				1D9B1F5D21FF1572004704A7 /* OnMyCommand.cp in Sources */,

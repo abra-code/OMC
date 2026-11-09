@@ -5,46 +5,20 @@
 //  Created by Tomasz Kukielka on 8/2/08.
 //  Copyright 2008 Abracode Inc. All rights reserved.
 //
+//  A command's PROGRESS (Command.plist): parses the tasks' output into a total progress (steps,
+//  counter, task count, or indeterminate) and shows it in the progress window
+//  (OMCProgressWindow.h), at once or after DELAY seconds. Stop in the window stops the tasks'
+//  processes. Portable C++ (OMCDeferredProgress.cpp). Main thread only.
+//
 
 #pragma once
-#include "OMCProgressParsing.h"
-
-#ifdef __OBJC__
-
-#import <Cocoa/Cocoa.h>
-
-#include "OMCProgressWindow.h"
-#include <memory>
-
-@interface OMCDeferredProgress : NSObject
-{
-	CFObj<CFDictionaryRef> mProgressParams;
-	UInt32			mProgressType;
-	StepsParams		mStepsParams;
-	CounterParams	mCounterParams;
-	CFIndex			mTaskCount;
-	OMCTaskProgress *mTasks;
-	CFObj<CFRunLoopTimerRef> mDeferTimer;
-	CFObj<CFStringRef> mTitleString;
-	std::unique_ptr<OMCProgressWindow> mWindow;
-
-	CFObj<CFStringRef> mLastLineStr;
-	CFObj<CFStringRef> mLastPartialLineStr;		
-}
-
-- (id)initWithParams:(CFDictionaryRef)inParams forCommand:(CFStringRef)inCommandName taskCount:(CFIndex)inTaskCount locTable:(CFStringRef)inLocTable locBundle:(CFBundleRef)inLocBundle;
-- (Boolean)advanceProgressForTask:(CFIndex)inTaskIndex childPid:(pid_t)inChildPID withOutputString:(NSString *)inOutputStr taskEnded:(Boolean)isTaskEnded;
-- (void)showProgressWindow;
-- (void)calculateOneTaskProgress:(CFIndex)inTaskIndex childPid:(pid_t)inChildPID withLines:(CFArrayRef)inLines taskEnded:(Boolean)isTaskEnded;
-- (void)cancelAllChildProcesses;
-
-@end
-
-#endif //__OBJC__
-
+#include <CoreFoundation/CoreFoundation.h>
+#include <unistd.h>
 
 typedef void *OMCDeferredProgressRef;
 
 OMCDeferredProgressRef OMCDeferredProgressCreate(CFDictionaryRef inProgressParams, CFStringRef inCommandName, CFIndex inTaskCount, CFStringRef inLocTable, CFBundleRef inLocBundle);
 void OMCDeferredProgressRelease(OMCDeferredProgressRef inProgressRef);
+
+// Returns true when the user pressed Stop: the tasks' processes have been sent SIGTERM
 Boolean OMCDeferredProgressAdvanceProgress(OMCDeferredProgressRef inProgressRef, CFIndex inTaskIndex, pid_t inChildPID, CFStringRef inOutputStr, Boolean isTaskEnded);

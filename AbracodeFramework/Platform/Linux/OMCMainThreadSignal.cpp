@@ -173,6 +173,52 @@ OMCMainThreadSignal::RunAfter(double inDelaySeconds, Callback inCallback, void *
 	return true;
 }
 
+namespace
+{
+
+// The scheduled call is the state's owner: destroying it marks the state invalid, so a due call that
+// was not yet run is dropped, like a signal destroyed before its callback ran
+class QueueScheduledCall : public OMCScheduledCall
+{
+public:
+	explicit				QueueScheduledCall(const std::shared_ptr<SignalState> &inState)
+								: mState(inState)
+							{
+							}
+
+							~QueueScheduledCall() override
+							{
+								std::lock_guard<std::mutex> guard(sLock);
+								mState->valid = false;
+								sPending.erase(std::remove(sPending.begin(), sPending.end(), mState), sPending.end());
+							}
+
+private:
+	std::shared_ptr<SignalState>	mState;
+};
+
+// On a background queue when the delay has passed: joins the signaled callbacks, as RunAfter does
+void ScheduledCallDue(void *inContext)
+{
+	std::shared_ptr<SignalState> *state = static_cast< std::shared_ptr<SignalState> * >(inContext);
+	EnqueueSignaled(*state); // nothing when the scheduled call was destroyed meanwhile
+	delete state;
+}
+
+} // namespace
+
+std::unique_ptr<OMCScheduledCall>
+OMCMainThreadSignal::ScheduleAfter(double inDelaySeconds, Callback inCallback, void *inContext)
+{
+	std::shared_ptr<SignalState> state = std::make_shared<SignalState>();
+	state->callback = inCallback;
+	state->context = inContext; // the caller's: no release
+	dispatch_after_f(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(inDelaySeconds * NSEC_PER_SEC)),
+					dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0),
+					new std::shared_ptr<SignalState>(state), ScheduledCallDue);
+	return std::unique_ptr<OMCScheduledCall>( new QueueScheduledCall(state) );
+}
+
 void
 OMCMainThreadSignal::RunReadyWork()
 {

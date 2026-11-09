@@ -14,6 +14,7 @@
 
 #include "OutputWindowHandler.h"
 #include "OMCWindowHost.h"
+#include "OMCMainThreadSignal.h"
 #include "CFObj.h"
 #include "ACFDict.h"
 #include "ACFJSON.h"
@@ -68,9 +69,7 @@ OutputWindowHandler::~OutputWindowHandler()
 	if(mTaskObserver != NULL)
 		mTaskObserver->SetOwner(NULL);//observer may outlive us so it is very important to tell that we died
 
-	if(mDeleteTimer != nullptr)
-		CFRunLoopTimerInvalidate(mDeleteTimer);
-
+	mDeleteCall.reset(); // a pending delete never runs on a deleted handler
 	mWindow.reset(); // closes the window
 
 	TRACE_CSTR("Exiting OutputWindowHandler destructor\n");
@@ -239,21 +238,16 @@ OutputWindowHandler::CommandEnded(Boolean inSuccess)
 void
 OutputWindowHandler::DeleteAfter(CFTimeInterval inDelay)
 {
-	if(mDeleteTimer != nullptr)
-		CFRunLoopTimerInvalidate(mDeleteTimer);
-
-	CFRunLoopTimerContext context = { 0, this, nullptr, nullptr, nullptr };
-	mDeleteTimer.Adopt( CFRunLoopTimerCreate(kCFAllocatorDefault, CFAbsoluteTimeGetCurrent() + inDelay, 0, 0, 0, DeleteTimerFired, &context) );
-	if(mDeleteTimer != nullptr)
-		CFRunLoopAddTimer(CFRunLoopGetMain(), mDeleteTimer, kCFRunLoopCommonModes);
+	// replaces a pending one (a user close replaces a pending AUTO_CLOSE_TIMEOUT)
+	mDeleteCall = OMCMainThreadSignal::ScheduleAfter(inDelay, DeleteDue, this);
 }
 
 //static
 void
-OutputWindowHandler::DeleteTimerFired(CFRunLoopTimerRef inTimer, void *inInfo)
+OutputWindowHandler::DeleteDue(void *inContext)
 {
-	// the run loop keeps the timer while it calls this, so the destructor may release it
-	OutputWindowHandler *handler = (OutputWindowHandler *)inInfo;
+	// the scheduled call may be destroyed from inside its own callback (OMCMainThreadSignal.h)
+	OutputWindowHandler *handler = (OutputWindowHandler *)inContext;
 	delete handler;
 }
 

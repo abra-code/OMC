@@ -132,6 +132,55 @@ OMCMainThreadSignal::RunAfter(double inDelaySeconds, Callback inCallback, void *
 	return true;
 }
 
+namespace
+{
+
+// The callback and its context, owned by the scheduled call; the timer only points at it
+struct ScheduledCallTarget
+{
+	OMCMainThreadSignal::Callback	callback;
+	void *							context;
+};
+
+void ScheduledCallFired(CFRunLoopTimerRef, void *inInfo)
+{
+	// Copied before the call: the callback may destroy the scheduled call, and the target with it
+	ScheduledCallTarget target = *static_cast<ScheduledCallTarget *>(inInfo);
+	target.callback(target.context);
+}
+
+class TimerScheduledCall : public OMCScheduledCall
+{
+public:
+							~TimerScheduledCall() override
+							{
+								if(mTimer != nullptr)
+									::CFRunLoopTimerInvalidate(mTimer); // nothing happens if it already fired
+							}
+
+	ScheduledCallTarget		mTarget {};
+	CFObj<CFRunLoopTimerRef> mTimer;
+};
+
+} // namespace
+
+std::unique_ptr<OMCScheduledCall>
+OMCMainThreadSignal::ScheduleAfter(double inDelaySeconds, Callback inCallback, void *inContext)
+{
+	// A one-shot CFRunLoopTimer in the common modes, like RunAfter's, with no release callback: the
+	// target belongs to the scheduled call, so invalidating the timer early is the whole cancel
+	std::unique_ptr<TimerScheduledCall> call( new TimerScheduledCall() );
+	call->mTarget = { inCallback, inContext };
+	CFRunLoopTimerContext timerContext = {};
+	timerContext.info = &call->mTarget;
+	call->mTimer.Adopt( ::CFRunLoopTimerCreate(kCFAllocatorDefault, ::CFAbsoluteTimeGetCurrent() + inDelaySeconds,
+												0 /*interval*/, 0 /*flags*/, 0 /*order*/, ScheduledCallFired, &timerContext) );
+	if(call->mTimer == nullptr)
+		return nullptr;
+	::CFRunLoopAddTimer(::CFRunLoopGetCurrent(), call->mTimer, kCFRunLoopCommonModes);
+	return std::unique_ptr<OMCScheduledCall>(call.release());
+}
+
 void
 OMCMainThreadSignal::RunReadyWork()
 {

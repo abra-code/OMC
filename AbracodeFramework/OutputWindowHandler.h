@@ -27,6 +27,7 @@
 #include "CFObj.h"
 
 class OMCHostedWindow;
+class OMCScheduledCall; // OMCMainThreadSignal.h is not included here: OnMyCommandCM includes this header without Platform/ in its search paths
 
 typedef enum
 {
@@ -95,14 +96,14 @@ protected:
 	void					OpenWindow(CFDictionaryRef inSettingsDict, CFArrayRef inCommandName, CFStringRef inDynamicName,
 										CFBundleRef inExternBundleRef, CFStringRef inLocalizationTableName);
 	void					CommandEnded(Boolean inSuccess);
-	// Deletes this handler (and so closes the window) after inDelay seconds, from the main run loop
+	// Deletes this handler (and so closes the window) after inDelay seconds, from the main thread
 	void					DeleteAfter(CFTimeInterval inDelay);
-	static void				DeleteTimerFired(CFRunLoopTimerRef inTimer, void *inInfo);
+	static void				DeleteDue(void *inContext);
 
 	ARefCountedObj< AObserver<OutputWindowHandler> > mTaskObserver;
 	std::unique_ptr<OMCHostedWindow> mWindow;
 	std::string				mWindowUUID;
-	CFObj<CFRunLoopTimerRef> mDeleteTimer;
+	std::unique_ptr<OMCScheduledCall> mDeleteCall;
 
 	CFTimeInterval			mAutoCloseTimeout {-1.0};
 	Boolean					mAutoCloseOnSuccessOnly {true};

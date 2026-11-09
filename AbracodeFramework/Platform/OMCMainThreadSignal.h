@@ -14,6 +14,14 @@
 
 #include <memory>
 
+// A call OMCMainThreadSignal::ScheduleAfter scheduled: destroying it before the callback starts cancels
+// the call. Main thread. A top-level class so that headers can declare it without including this one.
+class OMCScheduledCall
+{
+public:
+	virtual					~OMCScheduledCall() = default;
+};
+
 class OMCMainThreadSignal
 {
 public:
@@ -43,4 +51,9 @@ public:
 	// nested wait (WaitPass) on both platforms. Returns
 	// false when it cannot be scheduled; then nothing runs, and the caller still owns inContext.
 	static bool				RunAfter(double inDelaySeconds, Callback inCallback, void *inContext);
+
+	// Main thread: like RunAfter, but the call is canceled when the returned object is destroyed first,
+	// and inContext stays the caller's (it must outlive the returned object). The callback may destroy
+	// the returned object. nullptr when the call cannot be scheduled; then nothing runs.
+	static std::unique_ptr<OMCScheduledCall> ScheduleAfter(double inDelaySeconds, Callback inCallback, void *inContext);
 };
