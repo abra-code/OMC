@@ -7,66 +7,12 @@
 //
 
 #import "OMCActionUIDialog.h"
-#import "OMCActionUIWindowController.h"
-#import "OMCControlAccessor.h"
 #include "OnMyCommand.h"
 #include "CommandRuntimeData.h"
 #include "OMCDialogControlHelpers.h"
 #include "ACFType.h"
 #include "OMCStrings.h"
 #include "OMCActionUIControls.h"
-
-ARefCountedObj<OMCDialog> RunActionUIDialog(OnMyCommand *inPlugin, CommandRuntimeData *commandRuntimeData)
-{
-	ARefCountedObj<OMCDialog> outDialog;
-
-#if CURRENT_OMC_VERSION >= 50000
-    if(inPlugin == nullptr)
-		return outDialog;
-
-	assert(commandRuntimeData != nullptr);
-	CommandDescription &currCommand = inPlugin->GetCurrentCommand();
-
-	@autoreleasepool
-	{
-		@try
-		{
-			OMCActionUIWindowController *windowController = [[OMCActionUIWindowController alloc] initWithOmc:inPlugin
-																		  commandRuntimeData:commandRuntimeData];
-			if(windowController != nullptr)
-			{
-				outDialog.Adopt( [windowController getOMCDialog], kARefCountRetain );
-
-				[windowController run];
-				if( [windowController isModal] )
-				{
-					if( [windowController isOkeyed] )
-					{
-						if(outDialog != nullptr)
-						{
-							// The window is closed but its controller lives until this function
-							// returns, so collect the requested special values (all rows) now, as
-							// the nib dialog does: afterwards the engine can no longer read them.
-							outDialog->CopyAllControlValues(currCommand.specialRequestedNibControls, nullptr);
-						}
-					}
-					else
-					{
-						outDialog.Adopt(nullptr);
-					}
-				}
-			}
-		}
-		@catch (NSException *localException)
-		{
-			NSLog(@"RunActionUIDialog received exception: %@", localException);
-			outDialog.Adopt(nullptr);
-		}
-	}
-#endif // CURRENT_OMC_VERSION >= 50000
-
-	return outDialog;
-}
 
 #pragma mark -
 

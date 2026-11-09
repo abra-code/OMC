@@ -174,6 +174,11 @@ public:
 								if(mClosed || mInModal)
 									return;
 								Show();
+								// Showing makes the window key, and its key callback (an activation subcommand
+								// that waits for its task) may close it: a modal run would then show it again
+								// with nothing left to end the run
+								if(mClosed)
+									return;
 								mInModal = true;
 								mModalEnded = false;
 								[NSApp runModalForWindow:mWindow];
@@ -265,6 +270,19 @@ private:
 							{
 								EndModal();
 								mClosed = true;
+								// The frame stays saved under the window's name, but the name goes with the
+								// close: AppKit gives a name to one window at a time, and the closed window
+								// lives on until its owner lets it go, which may be after the same window is
+								// opened again (the next command run), which would then open without it
+								NSString *autosaveName = mWindow.frameAutosaveName;
+								if(autosaveName.length > 0)
+								{
+									// Not in full screen: the saved frame is the window's own, which AppKit
+									// keeps saved as it moves and resizes, not the screen's
+									if((mWindow.styleMask & NSWindowStyleMaskFullScreen) == 0)
+										[mWindow saveFrameUsingName:autosaveName];
+									[mWindow setFrameAutosaveName:@""];
+								}
 								if(mShown)
 								{
 									mShown = false;

@@ -15,7 +15,7 @@
 //
 //  Not pinned: toasts (ActionUI has no getter for the current toast); the per-control omc_move,
 //  omc_resize, omc_scroll, omc_select and omc_set_command_id, which only log for an ActionUI window
-//  (OMCActionUIWindowController.mm).
+//  (OMCActionUIWindow.cpp).
 //
 
 #import <AppKit/AppKit.h>

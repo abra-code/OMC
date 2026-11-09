@@ -50,6 +50,7 @@
 	#include "OMCNibDialog.h"
 #endif
 #include "OMCActionUIDialog.h"
+#include "OMCActionUIWindow.h"
 #include "OMCInputDialog.h"
 #include "SelectionIterator.h"
 #include "ACFPropertyList.h"
@@ -1525,7 +1526,7 @@ static const CFStringRef sAppLifecycleCommandIDs[] =
 };
 
 // Keys of NIB_DIALOG / ACTIONUI_WINDOW naming the commands a window runs for its own events
-// (OMCNibWindowController.mm, OMCActionUIWindowController.mm).
+// (OMCNibWindowController.mm, OMCActionUIWindow.cpp).
 static const CFStringRef sDialogSubcommandKeys[] =
 {
 	CFSTR("INIT_SUBCOMMAND_ID"),

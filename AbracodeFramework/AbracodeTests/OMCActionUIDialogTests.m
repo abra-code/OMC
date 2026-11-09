@@ -177,7 +177,7 @@
 
     // The init script exercises omc_dialog_control calls:
     // - set control value: "$dialog_tool" UUID 2 "Papa Smurf"
-    //   (exercises setControlStringValue:forControlID: in OMCActionUIWindowController)
+    //   (exercises setControlStringValue:forControlID: in OMCActionUIControls.cpp)
     // - enable, show, select calls exercise base class setControlValues: code paths
     // If any call crashes, the diagnostic file won't be written
     NSString *initPath = [NSString stringWithFormat:@"/tmp/OMC_test_actionui_init_%@", uuid];

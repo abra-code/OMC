@@ -384,7 +384,7 @@
 - (void)testActionUISelectRowByContentSpecificColumn {
     // table.select.row.content.column runs: omc_select_row_with_content "Hide" 2
     // Matches "Hide" only in column 2 (1-based) -> Jill / Hide; exercises the 1-based->0-based
-    // column conversion in OMCActionUIWindowController.
+    // column conversion in OMCActionUIControls.cpp.
     NSURL *bundleURL = [OMCBundleTestHelper testBundleURL:@"ActionUI-Table"];
     if (bundleURL == nil) {
         NSLog(@"Skipping - ActionUI-Table.omc not found in test resources");

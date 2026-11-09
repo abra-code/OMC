@@ -2,8 +2,9 @@
 //  OMCActionUIWindowTests.m
 //  AbracodeTests
 //
-//  Pin tests for the window an ActionUI command opens (OMCActionUIWindowController.mm), before its
-//  logic moves to C++ (Phase 5 step 8, Private/phase5-step8a-pin-test-gaps.md, gaps 6 and 7): where
+//  Pin tests for the window an ActionUI command opens (OMCActionUIWindow.cpp and the window host),
+//  written before its logic moved to C++ (Phase 5 step 8, Private/phase5-step8a-pin-test-gaps.md,
+//  gaps 6 and 7): where
 //  the title comes from, the size limits taken from the content, a fixed-size window, a floating
 //  panel, and the frame: centered the first time, restored from its autosave name after that.
 //

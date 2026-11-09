@@ -35,8 +35,7 @@
 		1D690CA12F444FAC006FECE8 /* OMCWindowController.mm in Sources */ = {isa = PBXBuildFile; fileRef = AAAAAAAA2D4346BB0065C23A /* OMCWindowController.mm */; };
 		1D690DDE2F45096A006FECE8 /* OMCActionUIDialog.h in Headers */ = {isa = PBXBuildFile; fileRef = 1D690DDC2F45096A006FECE8 /* OMCActionUIDialog.h */; };
 		1D690DDF2F45096A006FECE8 /* OMCActionUIDialog.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1D690DDD2F45096A006FECE8 /* OMCActionUIDialog.mm */; };
-		1D690DE32F450991006FECE8 /* OMCActionUIWindowController.h in Headers */ = {isa = PBXBuildFile; fileRef = 1D690DE12F450991006FECE8 /* OMCActionUIWindowController.h */; };
-		1D690DE42F450991006FECE8 /* OMCActionUIWindowController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1D690DE22F450991006FECE8 /* OMCActionUIWindowController.mm */; };
+		1D560A1B2F80000000000036 /* OMCActionUIWindow.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1D560A1B2F80000000000035 /* OMCActionUIWindow.cpp */; };
 		1D71F337220702EA009FAF91 /* notify in Copy Support Executables */ = {isa = PBXBuildFile; fileRef = 1D71F336220702D7009FAF91 /* notify */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		1D742DC5193882BB005DFF97 /* pasteboard in Copy Support Executables */ = {isa = PBXBuildFile; fileRef = 1D742DC219388292005DFF97 /* pasteboard */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		1D80B9BA22E447E800CF1AF5 /* OMCiTermExecutor.cp in Sources */ = {isa = PBXBuildFile; fileRef = 1D80B9B822E447E800CF1AF5 /* OMCiTermExecutor.cp */; };
@@ -428,8 +427,8 @@
 		1D690D302F44F299006FECE8 /* OMCControlAccessor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OMCControlAccessor.h; sourceTree = "<group>"; };
 		1D690DDC2F45096A006FECE8 /* OMCActionUIDialog.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OMCActionUIDialog.h; sourceTree = "<group>"; };
 		1D690DDD2F45096A006FECE8 /* OMCActionUIDialog.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCActionUIDialog.mm; sourceTree = "<group>"; };
-		1D690DE12F450991006FECE8 /* OMCActionUIWindowController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OMCActionUIWindowController.h; sourceTree = "<group>"; };
-		1D690DE22F450991006FECE8 /* OMCActionUIWindowController.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCActionUIWindowController.mm; sourceTree = "<group>"; };
+		1D560A1B2F80000000000034 /* OMCActionUIWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCActionUIWindow.h; sourceTree = "<group>"; };
+		1D560A1B2F80000000000035 /* OMCActionUIWindow.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCActionUIWindow.cpp; sourceTree = "<group>"; };
 		1D71F3292206F116009FAF91 /* DebugSettings.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DebugSettings.h; sourceTree = "<group>"; };
 		1D71F32A2206F1A1009FAF91 /* ACMPlugin.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ACMPlugin.h; sourceTree = "<group>"; };
 		1D71F32B2206F1D8009FAF91 /* CMUtils.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CMUtils.h; sourceTree = "<group>"; };
@@ -1106,8 +1105,8 @@
 				1DF2B4552F4932E90069BD26 /* OMCWindowControlProtocol.h */,
 				AAAAAAAA2D4346BB0065C23A /* OMCWindowController.mm */,
 				AAAAAAAA1D4346BB0065C23A /* OMCWindowController.h */,
-				1D690DE12F450991006FECE8 /* OMCActionUIWindowController.h */,
-				1D690DE22F450991006FECE8 /* OMCActionUIWindowController.mm */,
+				1D560A1B2F80000000000034 /* OMCActionUIWindow.h */,
+				1D560A1B2F80000000000035 /* OMCActionUIWindow.cpp */,
 				1DAB10052FFD0001009FD073 /* OMCActionUIRemoteHost.h */,
 				1DAB10062FFD0001009FD073 /* OMCActionUIRemoteHost.cpp */,
 				1D0A1B2C2F72000000000105 /* OMCTestHost.h */,
@@ -1225,7 +1224,6 @@
 				E2C84DAC0DA9D4CD0056DBC2 /* OMCCommandExecutor.h in Headers */,
 				1D690DDE2F45096A006FECE8 /* OMCActionUIDialog.h in Headers */,
 				E25D78990DBB24800065C7A3 /* OMCDropletController.h in Headers */,
-				1D690DE32F450991006FECE8 /* OMCActionUIWindowController.h in Headers */,
 				1DAB10042FFD0001009FD073 /* OMCActionUIRemoteHost.h in Headers */,
 				E24B18180DE96F6D00E44A45 /* OMCFilePanels.h in Headers */,
 				E2C433470DEE72F700E976D2 /* PlistPreferences.h in Headers */,
@@ -1539,7 +1537,7 @@
 				E2ED3BAE0D0B288400481D8F /* OmcTaskManager.cpp in Sources */,
 				E2ED3BB00D0B288400481D8F /* OmcExecutor.cp in Sources */,
 				E2ED3BB20D0B288400481D8F /* omc_popen.c in Sources */,
-				1D690DE42F450991006FECE8 /* OMCActionUIWindowController.mm in Sources */,
+				1D560A1B2F80000000000036 /* OMCActionUIWindow.cpp in Sources */,
 				1DAB10032FFD0001009FD073 /* OMCActionUIRemoteHost.cpp in Sources */,
 				1D0A1B2C2F72000000000110 /* OMCTestHost.cpp in Sources */,
 				1D0A1B2C2F72000000000111 /* OMCTestPlatform.mm in Sources */,

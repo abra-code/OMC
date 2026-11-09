@@ -26,4 +26,4 @@ public:
 };
 
 
-ARefCountedObj<OMCDialog> RunActionUIDialog(OnMyCommand *inPlugin, CommandRuntimeData *commandRuntimeData);
+// RunActionUIDialog, which opens the window around this dialog, is in OMCActionUIWindow.h
