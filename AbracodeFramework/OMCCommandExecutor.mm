@@ -15,6 +15,7 @@
 #include "OMCActionUIWindow.h"
 #include "OMC.h"
 #include "OMCCommandRunner.h"
+#include "OMCURLParse.h"
 #include "OMCTestHost.h"
 #import "OMCObserverDelegate.h"
 
@@ -126,18 +127,12 @@ static OMCRunHooks MakeHooks(OMCExecutorHookContext *inHookContext)
     OMCExecutorHookContext hookContext = { delegate };
     OMCRunHooks hooks = MakeHooks(&hookContext);
 
-    // The URL is parsed here, by NSURLComponents, so applets keep its exact rules; the decisions
-    // about what the URL may run are OMCRunCommandForURL's.
-    NSURLComponents *components = ([inURLString length] > 0) ? [NSURLComponents componentsWithString:inURLString] : nil;
-    NSMutableArray *queryItems = [NSMutableArray array];
-    for (NSURLQueryItem *oneItem in [components queryItems])
-    {
-        // queryItems removes the percent-encoding of names and values; nil where it does not decode
-        [queryItems addObject:@[ oneItem.name ?: (id)[NSNull null], oneItem.value ?: (id)[NSNull null] ]];
-    }
-
-    return OMCRunCommandForURL((__bridge CFStringRef)inURLString, (components != nil), (__bridge CFStringRef)[components host],
-                               (__bridge CFArrayRef)queryItems, (__bridge CFStringRef)inFileName, &hooks);
+    // The URL is parsed by OMCParseURL, which keeps NSURLComponents' rules (OMCURLParse.h); the
+    // decisions about what the URL may run are OMCRunCommandForURL's
+    CFObj<CFStringRef> host;
+    CFObj<CFArrayRef> queryItems;
+    bool isValidURL = ([inURLString length] > 0) && OMCParseURL((__bridge CFStringRef)inURLString, host, queryItems);
+    return OMCRunCommandForURL((__bridge CFStringRef)inURLString, isValidURL, host, queryItems, (__bridge CFStringRef)inFileName, &hooks);
 }
 
 @end
