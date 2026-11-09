@@ -27,6 +27,7 @@
       "END_NOTIFICATION": { "TITLE": "Fixture Done", "MESSAGE": "The fixture finished." } },
     { "NAME": "ITestFixture", "COMMAND_ID": "fixture.greet", "EXECUTION_MODE": "exe_script_file", "NEXT_COMMAND_ID": "fixture.after" },
     { "NAME": "ITestFixture", "COMMAND_ID": "fixture.after", "EXECUTION_MODE": "exe_script_file" },
+    { "NAME": "ITestFixture", "COMMAND_ID": "fixture.trigger", "EXECUTION_MODE": "exe_script_file" },
     { "NAME": "ITestFixture", "COMMAND_ID": "fixture.echo", "ACTIVATION_MODE": "act_always", "EXECUTION_MODE": "exe_script_file" },
     { "NAME": "ITestFixture", "COMMAND_ID": "fixture.slow", "ACTIVATION_MODE": "act_always", "EXECUTION_MODE": "exe_script_file" },
     { "NAME": "ITestFixture", "COMMAND_ID": "fixture.save", "ACTIVATION_MODE": "act_always", "EXECUTION_MODE": "exe_script_file",

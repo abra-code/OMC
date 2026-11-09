@@ -38,6 +38,38 @@ check_contains "and fails, as from the menu" '"status": -128' "$log"
 check_contains "an unknown window is refused" "-32602" "$(itest_run fixture.greet --window NOT-A-WINDOW 2>&1)"
 check_contains "and so is --window with --key-window" "-32602" "$(itest_run fixture.greet --window "$window" --key-window 2>&1)"
 
+section "What a window's action hands its handler: the trigger variables"
+# The Trigger button's handler (fixture.trigger.sh) records OMC_ACTIONUI_TRIGGER_VIEW_ID, _PART_ID
+# and _CONTEXT as id|part|context. actionui.performAction hands the action handler a context as a
+# view would (a Toggle's Bool, a Picker's tag, a row's dictionary), so each form is fired here.
+# These are OMC 5.5's forms, which the C++ window logic keeps: a string as it is, a number as its
+# decimal text, a boolean as 1 or 0, an array or dictionary as compact JSON, and no variable at all
+# when the action has no context.
+fire_trigger() { # <context JSON, or "" for none> [view part]
+    local _params="{\"window\": \"$window\", \"viewID\": 6"
+    if [ -n "${2:-}" ]; then
+        _params="$_params, \"viewPartID\": $2"
+    fi
+    if [ -n "$1" ]; then
+        _params="$_params, \"context\": $1"
+    fi
+    itest_call actionui.performAction "$_params}" > /dev/null
+    itest_wait_idle
+    /usr/bin/tail -n 1 "$ITEST_WORK/trigger.txt" 2>/dev/null
+}
+check "the button's actionID" "fixture.trigger" "$(itest_click "$window" 6)"
+itest_wait_idle
+check "a click: the button, part 0, no context variable" "6|0|<unset>" "$(/usr/bin/tail -n 1 "$ITEST_WORK/trigger.txt" 2>/dev/null)"
+check "a string context, as it is" "6|0|Ada Lovelace" "$(fire_trigger '"Ada Lovelace"')"
+check "true as 1" "6|0|1" "$(fire_trigger true)"
+check "false as 0" "6|0|0" "$(fire_trigger false)"
+check "an integer" "6|0|42" "$(fire_trigger 42)"
+check "a fraction" "6|0|2.5" "$(fire_trigger 2.5)"
+check "a dictionary as compact JSON" '6|0|{"row":2}' "$(fire_trigger '{"row": 2}')"
+check "an array as compact JSON" '6|0|["x",2]' "$(fire_trigger '["x", 2]')"
+check "the view part as given" "6|3|cell" "$(fire_trigger '"cell"' 3)"
+check "an explicit null is no context" "6|0|<unset>" "$(fire_trigger null)"
+
 section "Closing the window as its close button does"
 # The end command also reads the closed window through the ActionUI remote bridge, with the shell
 # client AppletBuilder ships (fixture.closed.sh): a window's model lasts until the last command
