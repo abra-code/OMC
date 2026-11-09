@@ -47,33 +47,6 @@ static NSString *SerializeActionContext(id context)
     return [context description];
 }
 
-/// Parses an array of "title:role:actionID" button spec strings into ActionUIObjCDialogButton objects.
-/// Role field: "cancel": cancel, "destructive": destructive, anything else: default.
-/// actionID field: empty string or missing = nil (no action fired on tap).
-static NSArray<ActionUIObjCDialogButton *> *OMCParseButtonSpecs(NSArray *specs)
-{
-    NSMutableArray<ActionUIObjCDialogButton *> *buttons = [NSMutableArray array];
-    for (NSString *spec in specs) {
-        if (![spec isKindOfClass:[NSString class]]) continue;
-        NSArray<NSString *> *parts = [spec componentsSeparatedByString:@":"];
-        NSString *btnTitle = (parts.count >= 1) ? parts[0] : @"";
-        if (btnTitle.length == 0) continue;
-        NSString *roleStr  = (parts.count >= 2) ? parts[1] : @"";
-        NSString *actionID = (parts.count >= 3 && parts[2].length > 0) ? parts[2] : nil;
-        ActionUIObjCButtonRole role;
-        if ([roleStr isEqualToString:@"cancel"])
-            role = ActionUIObjCButtonRoleCancel;
-        else if ([roleStr isEqualToString:@"destructive"])
-            role = ActionUIObjCButtonRoleDestructive;
-        else
-            role = ActionUIObjCButtonRoleDefault;
-        [buttons addObject:[[ActionUIObjCDialogButton alloc] initWithTitle:(NSString *)btnTitle
-                                                                      role:role
-                                                                  actionID:(NSString *)actionID]];
-    }
-    return buttons;
-}
-
 @implementation OMCActionUIWindowController
 {
     // The window, made by the window host (Platform/OMCWindowHost.h); nullptr when the command names
@@ -525,163 +498,66 @@ static NSArray<ActionUIObjCDialogButton *> *OMCParseButtonSpecs(NSArray *specs)
                                                                  mExternBundleRef, mPlugin->GetBundleRef()));
 }
 
-#pragma mark - Modal presentation (ActionUI)
+#pragma mark - Modal presentation, toasts, alerts and confirmations (OMCActionUIControls.h)
 
 - (void)presentModalWithResourceNameOrPath:(NSString *)resourceNameOrPath onDismissActionID:(NSString *)onDismissActionID
 {
-    NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
-    if (windowUUID == nil || resourceNameOrPath.length == 0)
+    if (resourceNameOrPath.length == 0)
         return;
-
     NSURL *jsonURL = [self resolveJSONURL:resourceNameOrPath];
     if (jsonURL == nil) {
         NSLog(@"[OMCActionUIWindowController] presentModal: cannot find JSON: %@", resourceNameOrPath);
         return;
     }
-    NSData *data = [NSData dataWithContentsOfURL:jsonURL];
-    if (data == nil) {
-        NSLog(@"[OMCActionUIWindowController] presentModal: cannot read JSON at: %@", jsonURL);
-        return;
-    }
-
-    NSError *error = nil;
-    BOOL success = [ActionUIObjC presentModalWithWindowUUID:windowUUID
-                                        data:(NSData *)data
-                                      format:@"json"
-                                       style:ActionUIObjCModalStyleSheet
-                          onDismissActionID:onDismissActionID
-                                       error:&error];
-    if (!success && (error != nil))
-        NSLog(@"[OMCActionUIWindowController] presentModal error: %@", error);
+    OMCActionUIPresentModal(mOMCDialogProxy->GetDialogUUID(), (__bridge CFURLRef)jsonURL, (__bridge CFStringRef)onDismissActionID);
 }
 
 - (void)dismissModal
 {
-    NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
-    if (windowUUID != nil)
-        [ActionUIObjC dismissModalWithWindowUUID:windowUUID];
+    OMCActionUIDismissModal(mOMCDialogProxy->GetDialogUUID());
 }
 
 - (void)presentToastWithMessage:(NSString *)message duration:(NSTimeInterval)duration actionTitle:(NSString *)actionTitle actionID:(NSString *)actionID
 {
-    NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
-    if (windowUUID == nil || message.length == 0)
-        return;
-    if (duration <= 0)
-        duration = 4.0;
-    NSString *aTitle = (actionTitle.length > 0) ? actionTitle : nil;
-    NSString *aID = (actionID.length > 0) ? actionID : nil;
-    [ActionUIObjC presentToastWithWindowUUID:windowUUID
-                                     message:message
-                                    duration:duration
-                                 actionTitle:aTitle
-                                    actionID:aID];
+    OMCActionUIPresentToast(mOMCDialogProxy->GetDialogUUID(), (__bridge CFStringRef)message, duration,
+                            (__bridge CFStringRef)actionTitle, (__bridge CFStringRef)actionID);
 }
 
 - (void)dismissToast
 {
-    NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
-    if (windowUUID != nil)
-        [ActionUIObjC dismissToastWithWindowUUID:windowUUID];
+    OMCActionUIDismissToast(mOMCDialogProxy->GetDialogUUID());
 }
 
 - (void)presentAlertWithTitle:(NSString *)title message:(NSString *)message buttonSpecs:(NSArray *)buttonSpecs
 {
-    NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
-    if (windowUUID == nil || title.length == 0)
-        return;
-    NSArray<ActionUIObjCDialogButton *> *buttons = OMCParseButtonSpecs(buttonSpecs);
-    NSString *msg = (message.length > 0) ? message : nil;
-    if (buttons.count > 0)
-        [ActionUIObjC presentAlertWithWindowUUID:windowUUID title:title message:msg buttons:buttons];
-    else
-        [ActionUIObjC presentAlertWithWindowUUID:windowUUID title:title message:msg buttons:nil];
+    OMCActionUIPresentAlert(mOMCDialogProxy->GetDialogUUID(), (__bridge CFStringRef)title, (__bridge CFStringRef)message, (__bridge CFArrayRef)buttonSpecs);
 }
 
 - (void)presentConfirmationDialogWithTitle:(NSString *)title message:(NSString *)message buttonSpecs:(NSArray *)buttonSpecs
 {
-    NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
-    if (windowUUID == nil || title.length == 0)
-        return;
-    NSArray<ActionUIObjCDialogButton *> *buttons = OMCParseButtonSpecs(buttonSpecs);
-    NSString *msg = (message.length > 0) ? message : nil;
-    [ActionUIObjC presentConfirmationDialogWithWindowUUID:windowUUID title:title message:msg buttons:(NSArray *)buttons];
+    OMCActionUIPresentConfirmationDialog(mOMCDialogProxy->GetDialogUUID(), (__bridge CFStringRef)title, (__bridge CFStringRef)message, (__bridge CFArrayRef)buttonSpecs);
 }
 
 - (void)dismissDialog
 {
-    NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
-    if (windowUUID != nil)
-        [ActionUIObjC dismissDialogWithWindowUUID:windowUUID];
+    OMCActionUIDismissDialog(mOMCDialogProxy->GetDialogUUID());
 }
 
-#pragma mark - Runtime Structural Mutations (ActionUI)
-
-/// Parses "append" | "prepend" | "at:<index>" | "before:<siblingID>" | "after:<siblingID>" into position + param.
-static void OMCParsePositionString(NSString *positionStr, ActionUIObjCInsertPosition *outPosition, NSInteger *outParam)
-{
-    *outPosition = ActionUIObjCInsertPositionAppend;
-    *outParam = 0;
-    if (positionStr.length == 0) return;
-    if ([positionStr isEqualToString:@"prepend"])
-        { *outPosition = ActionUIObjCInsertPositionPrepend; return; }
-    if ([positionStr hasPrefix:@"at:"])
-        { *outPosition = ActionUIObjCInsertPositionAt; *outParam = [[positionStr substringFromIndex:3] integerValue]; return; }
-    if ([positionStr hasPrefix:@"before:"])
-        { *outPosition = ActionUIObjCInsertPositionBefore; *outParam = [[positionStr substringFromIndex:7] integerValue]; return; }
-    if ([positionStr hasPrefix:@"after:"])
-        { *outPosition = ActionUIObjCInsertPositionAfter; *outParam = [[positionStr substringFromIndex:6] integerValue]; return; }
-}
+#pragma mark - Runtime Structural Mutations (OMCActionUIControls.h)
 
 - (void)insertElementWithParentID:(NSInteger)parentID json:(NSString *)json container:(NSString *)container positionString:(NSString *)positionStr
 {
-    NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
-    if (windowUUID == nil || json.length == 0)
-        return;
-    ActionUIObjCInsertPosition position;
-    NSInteger positionParam;
-    OMCParsePositionString(positionStr, &position, &positionParam);
-    NSError *error = nil;
-    NSInteger insertedID = [ActionUIObjC insertElementIntoWindowUUID:windowUUID
-                                                            parentID:parentID
-                                                                json:(NSString *)json
-                                                           container:(NSString *)container
-                                                            position:position
-                                                      positionParam:positionParam
-                                                              error:&error];
-    if (insertedID < 0 && error != nil)
-        NSLog(@"[OMCActionUIWindowController] insertElement error: %@", error);
+    OMCActionUIInsertElement(mOMCDialogProxy->GetDialogUUID(), parentID, (__bridge CFStringRef)json, (__bridge CFStringRef)container, (__bridge CFStringRef)positionStr);
 }
 
 - (void)insertElementRowWithParentID:(NSInteger)parentID json:(NSString *)json container:(NSString *)container positionString:(NSString *)positionStr
 {
-    NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
-    if (windowUUID == nil || json.length == 0)
-        return;
-    ActionUIObjCInsertPosition position;
-    NSInteger positionIndex;
-    OMCParsePositionString(positionStr, &position, &positionIndex);
-    NSError *error = nil;
-    NSArray *insertedIDs = [ActionUIObjC insertRowIntoWindowUUID:windowUUID
-                                                        parentID:parentID
-                                                            json:(NSString *)json
-                                                       container:(NSString *)container
-                                                        position:position
-                                                   positionIndex:positionIndex
-                                                          error:&error];
-    if (insertedIDs == nil && error != nil)
-        NSLog(@"[OMCActionUIWindowController] insertElementRow error: %@", error);
+    OMCActionUIInsertElementRow(mOMCDialogProxy->GetDialogUUID(), parentID, (__bridge CFStringRef)json, (__bridge CFStringRef)container, (__bridge CFStringRef)positionStr);
 }
 
 - (void)removeElementWithViewID:(NSInteger)viewID
 {
-    NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
-    if (windowUUID == nil)
-        return;
-    NSError *error = nil;
-    BOOL success = [ActionUIObjC removeElementFromWindowUUID:windowUUID viewID:viewID error:&error];
-    if (!success && error != nil)
-        NSLog(@"[OMCActionUIWindowController] removeElement error: %@", error);
+    OMCActionUIRemoveElement(mOMCDialogProxy->GetDialogUUID(), viewID);
 }
 
 - (void)setTableColumnWidths:(CFArrayRef)widths forControlID:(NSString *)inControlID

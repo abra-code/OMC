@@ -53,6 +53,32 @@ void OMCActionUISelectControlRowWithContent(CFStringRef inWindowUUID, CFStringRe
 
 void OMCActionUIDeselectControlRow(CFStringRef inWindowUUID, CFStringRef inControlID) noexcept;
 
+// The window's modal sheet, from a document file (OMCCopyActionUIDocumentURL finds it); inOnDismissActionID
+// may be NULL
+void OMCActionUIPresentModal(CFStringRef inWindowUUID, CFURLRef inDocumentURL, CFStringRef inOnDismissActionID) noexcept;
+void OMCActionUIDismissModal(CFStringRef inWindowUUID) noexcept;
+
+// A toast; nothing for an empty message. A duration of 0 or less is 4 seconds; an empty action title
+// or id is none.
+void OMCActionUIPresentToast(CFStringRef inWindowUUID, CFStringRef inMessage, double inDuration, CFStringRef inActionTitle, CFStringRef inActionID) noexcept;
+void OMCActionUIDismissToast(CFStringRef inWindowUUID) noexcept;
+
+// An alert or a confirmation dialog; nothing for an empty title, and an empty message is none.
+// inButtonSpecs: strings "title:role:actionID", role "cancel", "destructive" or anything else for the
+// default, an empty action id for none; specs with no title are skipped. An alert with no buttons
+// gets ActionUI's own OK button.
+void OMCActionUIPresentAlert(CFStringRef inWindowUUID, CFStringRef inTitle, CFStringRef inMessage, CFArrayRef inButtonSpecs) noexcept;
+void OMCActionUIPresentConfirmationDialog(CFStringRef inWindowUUID, CFStringRef inTitle, CFStringRef inMessage, CFArrayRef inButtonSpecs) noexcept;
+void OMCActionUIDismissDialog(CFStringRef inWindowUUID) noexcept;
+
+// omc_insert_element and omc_insert_element_row: an element (or a row of them) from JSON into a
+// container of the parent; inContainer may be NULL for the parent's default one. inPosition is
+// "append" (also when NULL or anything else), "prepend", "at:<index>", "before:<sibling id>" or
+// "after:<sibling id>". Failures are logged.
+void OMCActionUIInsertElement(CFStringRef inWindowUUID, CFIndex inParentID, CFStringRef inJSON, CFStringRef inContainer, CFStringRef inPosition) noexcept;
+void OMCActionUIInsertElementRow(CFStringRef inWindowUUID, CFIndex inParentID, CFStringRef inJSON, CFStringRef inContainer, CFStringRef inPosition) noexcept;
+void OMCActionUIRemoveElement(CFStringRef inWindowUUID, CFIndex inViewID) noexcept;
+
 // The JSON ActionUI is given for a value omc_dialog_control passed as text: when the text starts as
 // a JSON fragment does ({, [, ", t, f, n, a digit or -) and parses as JSON (as NSJSONSerialization
 // did, ACFJSON.h), that value, written out again; otherwise the text as a JSON string. Empty when
