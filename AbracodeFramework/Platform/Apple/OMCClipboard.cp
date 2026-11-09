@@ -10,6 +10,7 @@
 //**************************************************************************************
 
 #include <ApplicationServices/ApplicationServices.h>
+#include "OMCLog.h"
 #include "OMCClipboard.h"
 #include "CMUtils.h" // CMUtils::PutCFStringToClipboard*, exported, and the character helpers
 #include "OMCConstants.h"
@@ -322,11 +323,44 @@ CMUtils::PutCFStringToClipboardAsMacEncodedText(PasteboardRef inPasteboardRef, P
 }
 
 
+// Whether this process may post key events to other apps. macOS drops them without an error for a
+// process the user has not allowed under Privacy & Security > Accessibility, so this is asked first.
+// The first time in a process that is not allowed, macOS is asked to show its prompt, which offers to
+// open the Accessibility settings with this app listed.
+static bool
+MayPostKeyEvents()
+{
+	if(AXIsProcessTrusted())
+		return true;
+
+	static bool sPrompted = false;
+	if(!sPrompted)
+	{
+		sPrompted = true;
+		const void *keys[] = { kAXTrustedCheckOptionPrompt };
+		const void *values[] = { kCFBooleanTrue };
+		CFObj<CFDictionaryRef> options( CFDictionaryCreate(kCFAllocatorDefault, keys, values, 1,
+														&kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks) );
+		if(AXIsProcessTrustedWithOptions(options))
+			return true;
+	}
+
+	CFBundleRef mainBundle = CFBundleGetMainBundle();
+	CFStringRef bundleID = (mainBundle != nullptr) ? CFBundleGetIdentifier(mainBundle) : nullptr;
+	OMCLogMessage("OMC: PASTE_AFTER_EXECUTION did not paste: macOS lets an app send keystrokes to other apps only when "
+				"it is allowed in System Settings > Privacy & Security > Accessibility. Allow this app there (%s).",
+				OMCLogCString(bundleID).c_str());
+	return false;
+}
+
 // Pastes the clipboard into the app in front: the system clipboard is synchronized, then Command-V
 // is posted as four key events
-void
+bool
 OMCPasteIntoFrontApp()
 {
+	if(!MayPostKeyEvents())
+		return false;
+
 	//synchronize pasteboard before simulating cmd+v
 	{
 		CFObj<PasteboardRef> thePasteboard;
@@ -351,4 +385,5 @@ OMCPasteIntoFrontApp()
 
 	CFObj<CGEventRef> cmdUp = CGEventCreateKeyboardEvent(nullptr, (CGKeyCode)55, false);
 	CGEventPost(kCGHIDEventTap, cmdUp);
+	return true;
 }

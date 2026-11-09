@@ -1432,6 +1432,32 @@ Unconditionally chains to another command on success (no cancel).
 
 ---
 
+### `PASTE_AFTER_EXECUTION` - Paste the Result into the Front App
+
+After the command ends successfully, OMC presses Command-V for the user, so whatever the command put on the clipboard is pasted into the app in front. It was made for text selections: a command that transforms the selected text copies its result to the clipboard, and the paste replaces the selection.
+
+| Key | Type | Default | Description & Best Practices |
+|-----|------|---------|------------------------------|
+| `PASTE_AFTER_EXECUTION` | Boolean | `false` | Press Command-V 50 ms after the command ends without an error. |
+
+**Example**:
+```xml
+<key>COMMAND</key>
+<array>
+  <string>/usr/bin/printf '%s' __OBJ_TEXT__ | /usr/bin/tr a-z A-Z | /usr/bin/pbcopy</string>
+</array>
+<key>PASTE_AFTER_EXECUTION</key>
+<true/>
+```
+
+**Notes**:
+- OMC does not copy the command's output: the command puts the text on the clipboard itself (`pbcopy`, `pasteboard`).
+- The paste goes to the app in front. That is another app only when OMC works in the background: a Service, or the contextual menu plugin loaded by Shortcuts.app. From an applet's own menu the applet is in front, so the paste goes to the applet.
+- macOS sends the keystroke only for an app the user allowed in **System Settings > Privacy & Security > Accessibility**: Shortcuts.app for the contextual menu plugin, the OMC Services app for a Service, the applet itself otherwise. The first time it is not allowed, OMC asks macOS to show its permission prompt; until it is allowed, nothing is pasted and the reason is logged (Console, `OMC: PASTE_AFTER_EXECUTION did not paste`).
+- Integration test launches never paste (`omcitest_guide.md`).
+
+---
+
 ### `ESCAPE_SPECIAL_CHARS` – Special Char Escaping
 
 Escapes inserted objects (paths/text) for safe execution. Applies only to inline objects in form of `__FOO__`. Not applied when exporting `OMC_FOO` environment variables.

@@ -69,7 +69,7 @@
     "NIB_CONTROL_MULTIPLE_SELECTION_ITERATION": { "types": ["dict"], "subschema": "NIB_CONTROL_MULTIPLE_SELECTION_ITERATION", "description": "Legacy; iterator is a stub in the base controller." },
 
     "REFRESH_PATH": { "oneOf": [ { "types": ["string"] }, { "types": ["array"], "itemTypes": ["string"] } ], "description": "Finder path(s) to refresh after execution." },
-    "PASTE_AFTER_EXECUTION": { "types": ["boolean"], "description": "Simulate paste of the command output." },
+    "PASTE_AFTER_EXECUTION": { "types": ["boolean"], "description": "Press Command-V in the front app after the command succeeds; the command puts the text on the clipboard itself. Needs the Accessibility permission for the host app (Shortcuts.app for the contextual menu plugin)." },
     "NEXT_COMMAND_ID": { "types": ["string"], "description": "Static chain to another command on success (subcommand id reference)." },
     "LOCALIZATION_TABLE_NAME": { "types": ["string"], "description": "Strings table for droplets / extern modules." },
 

@@ -23,5 +23,9 @@ bool OMCIsTextInClipboard();
 // OMCConstants.h); NULL when there is none. The caller releases it.
 CFStringRef OMCCopyClipboardText(long inReplaceOption);
 
-// Pastes the clipboard into the app in front, as Command-V would (SIMULATE_PASTE)
-void OMCPasteIntoFrontApp();
+// Pastes the clipboard into the app in front, as Command-V would (PASTE_AFTER_EXECUTION). macOS
+// sends the keystroke only for a process the user allowed under Privacy & Security > Accessibility
+// (for the contextual menu plugin that is its host, Shortcuts.app): without it nothing is sent, the
+// reason is logged, and the first time in a process macOS is asked to show its permission prompt.
+// Returns whether the keystroke was sent.
+bool OMCPasteIntoFrontApp();
