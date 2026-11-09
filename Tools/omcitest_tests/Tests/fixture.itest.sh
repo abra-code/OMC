@@ -18,6 +18,7 @@ itest_wait_idle
 window="$(itest_new_window "$before")"
 check "the main command opened a window" "yes" "$([ -n "$window" ] && printf yes || printf no)"
 check "INIT_SUBCOMMAND_ID wrote the label" "ready" "$(itest_value "$window" 4)"
+check "the command ran at once, with the window's initial values" "main:Preset:$window" "$(/usr/bin/grep -x -- "main:Preset:$window" "$ITEST_WORK/main.txt" 2>/dev/null)"
 itest_set_value "$window" 2 "Tom"
 check "the button's actionID" "fixture.greet" "$(itest_click "$window" 3)"
 itest_wait_idle
@@ -107,7 +108,7 @@ check "the command saw the field" "field:Ada" "$(/usr/bin/sed -n 1p "$ITEST_WORK
 check "and all rows of the table" "rows:alpha|beta|" "$(/usr/bin/sed -n 2p "$ITEST_WORK/modal.txt" 2>/dev/null)"
 check "and could read the closed window through the bridge" "bridge:0:Ada" "$(/usr/bin/sed -n 3p "$ITEST_WORK/modal.txt" 2>/dev/null)"
 check "once it ended, the window is gone, its ActionUI model too" "" "$(itest_windows | /usr/bin/grep -x -- "$modal")"
-check "with no END_OK_SUBCOMMAND_ID its end command is omc.dialog.terminate.ok, run with the window's field" "terminate.ok:Ada" "$(/usr/bin/sed -n 1p "$ITEST_WORK/modal.end.txt" 2>/dev/null)"
+check "with no END_OK_SUBCOMMAND_ID its end command is omc.dialog.terminate.ok, run with the window's field" "terminate.ok:Ada" "$(/usr/bin/sed -n 1p "$ITEST_WORK/end.txt" 2>/dev/null)"
 
 # A blocking window shows up a moment after its command is run: prints its UUID once the window is
 # listed and, when a table is named, that table's rows hold <text>; nothing after 20 seconds.
@@ -141,7 +142,7 @@ check "the blocking window opened again" "yes" "$([ -n "$modal" ] && printf yes 
 itest_set_value "$modal" 2 "Bob"
 check "Cancel fires omc.dialog.cancel" "omc.dialog.cancel" "$(itest_click "$modal" 8)"
 itest_wait_idle
-check "with no END_CANCEL_SUBCOMMAND_ID its end command is omc.dialog.terminate.cancel, run with the window's field" "terminate.cancel:Bob" "$(/usr/bin/sed -n 2p "$ITEST_WORK/modal.end.txt" 2>/dev/null)"
+check "with no END_CANCEL_SUBCOMMAND_ID its end command is omc.dialog.terminate.cancel, run with the window's field" "terminate.cancel:Bob" "$(/usr/bin/sed -n 2p "$ITEST_WORK/end.txt" 2>/dev/null)"
 check "the command itself did not run" "3" "$(/usr/bin/wc -l < "$ITEST_WORK/modal.txt" | /usr/bin/tr -d ' ')"
 # The engine keeps the cancel to itself: ExecuteCommand returns no error, as for a canceled WARNING.
 check_contains "and the run ends with no error" '"status": 0' "$(itest_call omc.test.log "{\"run\": $run}")"
@@ -175,6 +176,44 @@ check "the command itself did not run" "1" "$(/usr/bin/wc -l < "$ITEST_WORK/cust
 # The engine keeps the cancel to itself: ExecuteCommand returns no error, as for a canceled WARNING.
 check_contains "and the run ends with no error" '"status": 0' "$(itest_call omc.test.log "{\"run\": $run}")"
 check "the window is gone" "" "$(itest_windows | /usr/bin/grep -x -- "$custom")"
+
+section "omc_dialog_control closes a modeless window as OK'd"
+before="$(itest_windows)"
+itest_run ITestFixture > /dev/null
+itest_wait_idle
+done_window="$(itest_new_window "$before")"
+check "another window opened" "yes" "$([ -n "$done_window" ] && printf yes || printf no)"
+check "its command ran, with the initial values" "main:Preset:$done_window" "$(/usr/bin/grep -x -- "main:Preset:$done_window" "$ITEST_WORK/main.txt" 2>/dev/null)"
+itest_set_value "$done_window" 2 "Eve"
+check "the Done button" "fixture.done" "$(itest_click "$done_window" 9)"
+itest_wait_idle
+check "its handler's omc_terminate_ok closes the window" "" "$(itest_windows | /usr/bin/grep -x -- "$done_window")"
+check "and the end command is the OK one, omc.dialog.terminate.ok, with the field" "terminate.ok:Eve" "$(/usr/bin/tail -n 1 "$ITEST_WORK/end.txt" 2>/dev/null)"
+check "not the window's END_CANCEL_SUBCOMMAND_ID" "2" "$(/usr/bin/wc -l < "$ITEST_WORK/closed.txt" | /usr/bin/tr -d ' ')"
+
+section "omc_dialog_control ends a blocking window while it runs modally"
+# The handler's message reaches the window through its port while the window runs modally; the
+# window must close and the modal run end, so the command runs, or not, as with the buttons.
+before="$(itest_windows)"
+itest_run fixture.modal > /dev/null
+modal="$(wait_blocking_window "$before" 7 beta)"
+check "the blocking window opened" "yes" "$([ -n "$modal" ] && printf yes || printf no)"
+itest_set_value "$modal" 2 "Fay"
+check "the Finish button" "fixture.modal.finish" "$(itest_click "$modal" 9)"
+itest_wait_idle
+check "omc_terminate_ok closes it" "" "$(itest_windows | /usr/bin/grep -x -- "$modal")"
+check "its end command is the OK one, with the field" "terminate.ok:Fay" "$(/usr/bin/tail -n 1 "$ITEST_WORK/end.txt" 2>/dev/null)"
+check "and the command ran with the values the window had" "field:Fay" "$(/usr/bin/sed -n 4p "$ITEST_WORK/modal.txt" 2>/dev/null)"
+check "all rows too" "rows:alpha|beta|" "$(/usr/bin/sed -n 5p "$ITEST_WORK/modal.txt" 2>/dev/null)"
+before="$(itest_windows)"
+itest_run fixture.modal > /dev/null
+modal="$(wait_blocking_window "$before" 7 beta)"
+itest_set_value "$modal" 2 "Gus"
+check "the Abandon button" "fixture.modal.abandon" "$(itest_click "$modal" 10)"
+itest_wait_idle
+check "omc_terminate_cancel closes it" "" "$(itest_windows | /usr/bin/grep -x -- "$modal")"
+check "its end command is the cancel one, with the field" "terminate.cancel:Gus" "$(/usr/bin/tail -n 1 "$ITEST_WORK/end.txt" 2>/dev/null)"
+check "and the command did not run" "6" "$(/usr/bin/wc -l < "$ITEST_WORK/modal.txt" | /usr/bin/tr -d ' ')"
 
 section "A private home and the applet under test"
 run="$(itest_run fixture.env)"

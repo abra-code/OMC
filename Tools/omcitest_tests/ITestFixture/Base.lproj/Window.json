@@ -2,10 +2,11 @@
   "type": "VStack",
   "properties": { "spacing": 10.0, "padding": "default", "frame": { "minWidth": 360.0, "minHeight": 200.0 } },
   "children": [
-    { "type": "TextField", "id": 2, "properties": { "placeholder": "Name" } },
+    { "type": "TextField", "id": 2, "properties": { "placeholder": "Name", "text": "Preset" } },
     { "type": "Button", "id": 3, "properties": { "title": "Greet", "actionID": "fixture.greet" } },
     { "type": "Text", "id": 4, "properties": { "text": "" } },
     { "type": "Text", "id": 5, "properties": { "text": "" } },
-    { "type": "Button", "id": 6, "properties": { "title": "Trigger", "actionID": "fixture.trigger" } }
+    { "type": "Button", "id": 6, "properties": { "title": "Trigger", "actionID": "fixture.trigger" } },
+    { "type": "Button", "id": 9, "properties": { "title": "Done", "actionID": "fixture.done" } }
   ]
 }
