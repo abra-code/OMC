@@ -380,11 +380,6 @@ OnMyCommandCM::CommonContextCheck( CFTypeRef inContext, const OMCHostSelection *
             mHostApp = kOMCHostApp_Shortcuts;
             runningInEditorApp = true;
         }
-        else if(kCFCompareEqualTo == ::CFStringCompare(hostAppBundleID, CFSTR("de.MacDisk.Knut.OMCEdit"), 0))
-        {
-            mHostApp = kOMCHostApp_OMCEdit;
-            runningInEditorApp = true;
-        }
 	}
 	
     if((mHostApp == kOMCHostApp_OMCService) || (mHostApp == kOMCHostApp_ShortcutsObserver))

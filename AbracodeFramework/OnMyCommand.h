@@ -28,8 +28,7 @@ typedef enum
     kOMCHostApp_Unknown = 0,
     kOMCHostApp_OMCService,
     kOMCHostApp_Shortcuts,
-    kOMCHostApp_ShortcutsObserver,
-    kOMCHostApp_OMCEdit
+    kOMCHostApp_ShortcutsObserver
 } OMCHostApp;
 
 class OnMyCommandCM : public ACMPlugin
