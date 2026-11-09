@@ -107,25 +107,25 @@ CachedPlistForURL(CFURLRef inURL)
 CFPropertyListRef
 CachedPlistForCommandFile(CFStringRef inFileName)
 {
-	CFObj<CFURLRef> commandURL;
-	if(inFileName != nullptr)
-	{
-		CFObj<CFStringRef> expandedName( CreatePathByExpandingTilde(inFileName) );
-		if(IsAbsolutePath(expandedName))
-		{
-			commandURL.Adopt( CreateFileURL(expandedName) );
-		}
-		else
-		{
-			// Relative name resolved in the app bundle; prefer Command.json over Command.plist.
-			commandURL.Adopt( CopyCommandFileURLInBundle(::CFBundleGetMainBundle(), inFileName) );
-		}
-	}
-
+	CFObj<CFURLRef> commandURL( OMCCopyCommandFileURL(inFileName) );
 	return CachedPlistForURL(commandURL);
 }
 
 } // namespace
+
+CFURLRef
+OMCCopyCommandFileURL(CFStringRef inFileName)
+{
+	if(inFileName == nullptr)
+		return nullptr;
+
+	CFObj<CFStringRef> expandedName( CreatePathByExpandingTilde(inFileName) );
+	if(IsAbsolutePath(expandedName))
+		return CreateFileURL(expandedName);
+
+	// Relative name resolved in the app bundle; prefer Command.json over Command.plist.
+	return CopyCommandFileURLInBundle(::CFBundleGetMainBundle(), inFileName);
+}
 
 //when inAllowNavDialog = true, missing file context is obtained from nav dialog
 //otherwise when the file context is missing the command is not executed

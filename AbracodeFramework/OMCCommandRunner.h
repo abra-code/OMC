@@ -28,6 +28,12 @@ struct OMCRunHooks
 	void *context;
 };
 
+// The command file a name stands for (+1, or NULL): an absolute or "~" path as it is, else a
+// Command.json or Command.plist of that base name in the main bundle (JSON preferred). What the
+// runner reads for a name other than an .omc bundle, and what the app's Commands menu shows (for
+// the menu an absolute path to an .omc bundle is a command file too: OnMyCommand reads a bundle).
+CFURLRef OMCCopyCommandFileURL(CFStringRef inFileName);
+
 // Runs a command of a command file (a Command.json/.plist name or path, or an .omc bundle).
 // inContext: text (CFString), a file (CFURL), files (CFArray of CFURL), or NULL.
 // With inAllowNavDialog, a command that needs files and got none asks for them in the open panel.

@@ -7,183 +7,35 @@
 //
 
 #import "OMCCommandMenu.h"
-#include "OnMyCommand.h"
-#import "OMCCommandExecutor.h"
 #import "OMCMenuItem.h"
-#include "ARefCounted.h"
+#include "OMCMenuModel.h"
+#include "OMCCommandRunner.h"
 #include "CFObj.h"
-#include "ACFPropertyList.h"
+#import "OMCCommandExecutor.h"
 
-typedef struct OneSubmenuName
+// The model's rules are portable (OMCMenuModel.h); this builds an NSMenu from them.
+
+// The submenu of inMenu with this title, made at the end when there is none
+static NSMenu *
+FindOrAddSubmenu(NSMenu *inMenu, CFStringRef inName)
 {
-	OneSubmenuName(CFStringRef inName, OneSubmenuName *inNext)
-		: name(inName, kCFObjRetain), next(inNext)
-	{
-	}
-	
-	~OneSubmenuName(void)
-	{}
-
-	CFObj<CFStringRef> name;
-	AUniquePtr<OneSubmenuName> next;
-	
-} OneSubmenuName;
-
-OneSubmenuName *
-CreateSubmenuNameChain(CFURLRef submenuPath, OneSubmenuName *inChild)
-{
-	CFObj<CFStringRef> menuName( ::CFURLCopyLastPathComponent(submenuPath) );
-	if(	(menuName == NULL) || (::CFStringGetLength(menuName) == 0) || 
-		(kCFCompareEqualTo == ::CFStringCompare( menuName, CFSTR("/"), 0)) )
-	{
-		return inChild;
-	}
-	
-	OneSubmenuName *newHead = new OneSubmenuName(menuName, inChild);
-	CFObj<CFURLRef> parentPath( ::CFURLCreateCopyDeletingLastPathComponent( kCFAllocatorDefault, submenuPath ) );
-	return CreateSubmenuNameChain(parentPath, newHead);
-}
-
-NSMenu *
-FindOrAddSubmenu(NSMenu * inMenu, OneSubmenuName *inSubmenu)
-{
-	if( inMenu == NULL )
-		return NULL;
-	
-	if( (inSubmenu == NULL) || (inSubmenu->name == NULL) )
-		return inMenu;
-
-	NSMenu * subMenu = NULL;
 	NSInteger itemCount = [inMenu numberOfItems];
-	NSInteger i;
-
-	for(i = 0; i < itemCount; i++)
+	for(NSInteger i = 0; i < itemCount; i++)
 	{
-		NSMenuItem *oneItem =  [inMenu itemAtIndex:i];
-		if( (oneItem != NULL) && [oneItem hasSubmenu] )
+		NSMenuItem *oneItem = [inMenu itemAtIndex:i];
+		if( (oneItem != nil) && [oneItem hasSubmenu] )
 		{
 			NSString *menuName = [oneItem title];
-			if( (menuName != NULL) && (kCFCompareEqualTo == ::CFStringCompare( (CFStringRef)menuName, inSubmenu->name, 0)) )
-			{
-				subMenu = [oneItem submenu];
-				break;
-			}
-		}		
+			if( (menuName != nil) && (kCFCompareEqualTo == ::CFStringCompare((__bridge CFStringRef)menuName, inName, 0)) )
+				return [oneItem submenu];
+		}
 	}
 
-	if(subMenu == NULL)
-	{//create a new one
-		NSMenuItem *newMenuItem = [[NSMenuItem alloc] initWithTitle:(__bridge NSString *)(CFStringRef)inSubmenu->name action:NULL keyEquivalent:@""];
-		[inMenu addItem:newMenuItem];
-
-		subMenu = [[NSMenu alloc] initWithTitle:(__bridge NSString *)(CFStringRef)inSubmenu->name];
-		[inMenu setSubmenu:subMenu forItem:newMenuItem];
-	}
-	
-	if(inSubmenu->next != nullptr)//recursively dig deeper
-		subMenu = FindOrAddSubmenu(subMenu, inSubmenu->next);
-
+	NSMenuItem *newMenuItem = [[NSMenuItem alloc] initWithTitle:(__bridge NSString *)inName action:NULL keyEquivalent:@""];
+	[inMenu addItem:newMenuItem];
+	NSMenu *subMenu = [[NSMenu alloc] initWithTitle:(__bridge NSString *)inName];
+	[inMenu setSubmenu:subMenu forItem:newMenuItem];
 	return subMenu;
-}
-
-
-OSStatus
-PopulateCommandsMenu(OnMyCommand *inPlugin, NSMenu *topMenu)
-{
-	if( (inPlugin == NULL) || (topMenu == NULL) )
-		return paramErr;
-	
-	CFStringRef defaultMenuName = CFSTR("/");
-	CFStringRef rootMenuName = defaultMenuName;
-
-	CommandDescription *commandList = inPlugin->GetCommandList();
-	UInt32 commandCount = inPlugin->GetCommandCount();
-	if( commandList == NULL )
-		return NULL;
-
-	UInt32 oldCommandIndex = inPlugin->GetCurrentCommandIndex();
-
-	for(UInt32 i = 0; i < commandCount; i++)
-	{
-		if( commandList[i].isSubcommand ) //it is a subcommand, do not add to menu
-			continue;
-
-		if( commandList[i].disabled )
-			continue;//disabled item, don't add it
-		
-		inPlugin->SetCurrentCommandIndex(i);
-		
-		CFBundleRef localizationBundle = NULL;
-		if(commandList[i].localizationTableName != NULL)//client wants to be localized
-		{
-			localizationBundle = inPlugin->GetCurrentCommandExternBundle();
-			if(localizationBundle == NULL)
-				localizationBundle = CFBundleGetMainBundle();
-		}
-
-		CFObj<CFStringRef> submenuPathStr;
-		if( commandList[i].submenuName == NULL)
-		{
-			submenuPathStr.Adopt(defaultMenuName, kCFObjRetain);
-		}
-		else
-		{
-			submenuPathStr.Adopt(commandList[i].submenuName, kCFObjRetain);
-			CFIndex subLen = ::CFStringGetLength(submenuPathStr);
-			UniChar firstChar = 0;
-			if(subLen > 0)
-				firstChar = ::CFStringGetCharacterAtIndex(submenuPathStr, 0);
-			
-			//check for ".." which means root level
-			if( firstChar == (UniChar)'.' )
-			{
-				CFIndex theLen = CFStringGetLength(submenuPathStr);
-				if( (theLen == 2) && (CFStringGetCharacterAtIndex(submenuPathStr, 1) == (UniChar)'.') )
-				{
-					submenuPathStr.Adopt(rootMenuName, kCFObjRetain);
-					firstChar = (UniChar)'/';
-				}
-			}
-			
-			if(firstChar != (UniChar)'/')
-			{
-				CFMutableStringRef newName = ::CFStringCreateMutable(kCFAllocatorDefault, 0);
-				if(newName != NULL)
-				{
-					::CFStringAppend( newName, CFSTR("/") );
-					::CFStringAppend( newName, submenuPathStr );
-					submenuPathStr.Adopt(newName);
-				}
-			}
-		}
-		
-		CFObj<CFURLRef> submenuPath(::CFURLCreateWithFileSystemPath(kCFAllocatorDefault, submenuPathStr, kCFURLPOSIXPathStyle, true));
-		AUniquePtr<OneSubmenuName> menuChain( CreateSubmenuNameChain(submenuPath, NULL) );
-		NSMenu * subMenu = FindOrAddSubmenu(topMenu, menuChain);
-		if( (subMenu != NULL) && (commandList[i].name != NULL) )
-		{
-            NSString *__strong localizedName = (NSString *)CFBridgingRelease( ::CFStringCreateByCombiningStrings(kCFAllocatorDefault, commandList[i].name, CFSTR("")) );
-			if(commandList[i].localizationTableName != NULL)
-			{
-                localizedName = (NSString*)CFBridgingRelease(::CFCopyLocalizedStringFromTableInBundle((CFStringRef)localizedName, commandList[i].localizationTableName, localizationBundle, ""));
-			}
-
-			OMCMenuItem *newItem = [[OMCMenuItem alloc] initWithTitle:localizedName action:@selector(executeCommand:) keyEquivalent:@""];
-			if(newItem != NULL)
-			{
-				[newItem setTarget:topMenu];
-                [newItem setCommandID:(__bridge NSString *)(commandList[i].commandID.Get())];
-				//CFIndex retCount = CFGetRetainCount((CFStringRef)staticName);
-                [newItem setRepresentedObject: localizedName];//the original non-localized name stuffed here. retained object
-				//retCount = CFGetRetainCount((CFStringRef)staticName);
-				[subMenu addItem:newItem];
-			}
-		}
-	}
-	
-	inPlugin->SetCurrentCommandIndex(oldCommandIndex);
-
-	return noErr;
 }
 
 @implementation OMCCommandMenu
@@ -236,23 +88,32 @@ PopulateCommandsMenu(OnMyCommand *inPlugin, NSMenu *topMenu)
 		[self removeItemAtIndex:i];
 	}
 
-	//populate menu and register commands
-
-	OSStatus error = noErr;
-	// Resolve the command description file in the app bundle, preferring Command.json over Command.plist.
-	CFURLRef resolvedURL = CopyCommandFileURLInBundle(CFBundleGetMainBundle(), (__bridge CFStringRef)self.commandFilePath);
-	if(resolvedURL == nil)
+	// The command file as the runner reads it for the same name (OMCCommandRunner.h)
+	CFObj<CFURLRef> commandURL( OMCCopyCommandFileURL((__bridge CFStringRef)self.commandFilePath) );
+	OMCMenuModel model;
+	if( !OMCBuildCommandsMenuModel(commandURL, model) )
 		return;
 
-	NSURL *commandURL = CFBridgingRelease(resolvedURL);
-
-    ARefCountedObj<OnMyCommand> omcPlugin( new OnMyCommand( (__bridge CFURLRef)commandURL ), kARefCountDontRetain );
-	omcPlugin->Init();
-	error = omcPlugin->ExamineContext((CFTypeRef)NULL, kOmcUnspecifiedCommand);//no context, all commands
-	if( error == noErr )
+	for(const OMCMenuItemEntry &entry : model.items)
 	{
-		PopulateCommandsMenu(omcPlugin, self);
-		omcPlugin->PostMenuCleanup();//currently doing nothing, just for completeness
+		NSMenu *subMenu = self;
+		for(const CFObj<CFStringRef> &oneName : OMCCopySubmenuNames(entry.submenuPath))
+			subMenu = FindOrAddSubmenu(subMenu, oneName);
+
+		if(entry.name == nullptr)
+			continue;
+
+		NSString *title = (__bridge NSString *)entry.name.Get();
+		OMCMenuItem *newItem = [[OMCMenuItem alloc] initWithTitle:title action:@selector(executeCommand:) keyEquivalent:@""];
+		if(newItem != nil)
+		{
+			[newItem setTarget:self];
+			[newItem setCommandID:(__bridge NSString *)entry.commandID.Get()];
+			// The name the command is run by when it has no id of its own: the title, localized
+			// as it is (OMCCommandsMenuItemCommandToRun)
+			[newItem setRepresentedObject:title];
+			[subMenu addItem:newItem];
+		}
 	}
 }
 
@@ -278,7 +139,7 @@ PopulateCommandsMenu(OnMyCommand *inPlugin, NSMenu *topMenu)
 	
 	if( [sender respondsToSelector:@selector(representedObject)] )
 	{
-		myName = [sender representedObject];//the original non-localized name is here
+		myName = [sender representedObject];//the item's title, localized when the command is (populateFromCommandFile)
 		if(	![myName isKindOfClass:[NSString class]] )
 			myName = nil;
 	}
@@ -286,29 +147,11 @@ PopulateCommandsMenu(OnMyCommand *inPlugin, NSMenu *topMenu)
 	if( [sender respondsToSelector:@selector(commandID)] )
 		myCommandID = [sender commandID];
 	
-	if( (myCommandID == nil) && (myName == nil) )
+	NSString *commandToRun = (__bridge NSString *)OMCCommandsMenuItemCommandToRun((__bridge CFStringRef)myCommandID, (__bridge CFStringRef)myName);
+	if( commandToRun == nil )
 		return;
 
-	if(myCommandID == nil)
-		myCommandID = myName;
-	else
-	{
-		NSUInteger commandIDLength = [myCommandID length];
-		if(commandIDLength == 0)
-		{
-			myCommandID = myName;
-		}
-        else if( (commandIDLength == 4) && [myCommandID isEqualToString:(__bridge NSString *)kOMCTopCommandID] )//not interesting ID
-		{
-			myCommandID = myName;
-		}
-		//else: unique ID for top command, let's use it instead of the name
-	}
-
-	if( myCommandID == nil )
-		return;
-
-	/*OSStatus err = */[OMCCommandExecutor runCommand:myCommandID forCommandFile:self.commandFilePath withContext:NULL useNavDialog:YES allowKeyWindowSubcommand:YES delegate:self];
+	/*OSStatus err = */[OMCCommandExecutor runCommand:commandToRun forCommandFile:self.commandFilePath withContext:NULL useNavDialog:YES allowKeyWindowSubcommand:YES delegate:self];
 }
 
 @end
