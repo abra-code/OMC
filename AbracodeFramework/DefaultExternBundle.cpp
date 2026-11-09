@@ -8,7 +8,6 @@
  */
 
 #include "DefaultExternBundle.h"
-#include "CMUtils.h"
 #include "CFObj.h"
 #include "StandardDirectories.h"
 
@@ -50,7 +49,7 @@ CreateDefaultExternBundleRef(CFArrayRef inCommandName)
 	if(externBundleURL == NULL)
 		return NULL;
 
-	return CMUtils::CFBundleCreate(externBundleURL);//may be NULL if bundle does not exist, it is fine.
+	return CreateBundleFromURL(externBundleURL);//may be NULL if bundle does not exist, it is fine.
 }
 
 
@@ -65,3 +64,16 @@ CreateDefaultExternBundleString(CFArrayRef inCommandName)
 }
 
 };//extern "C"
+
+CFBundleRef
+CreateBundleFromURL(CFURLRef inBundleURL)
+{
+	if(inBundleURL == nullptr)
+		return nullptr;
+
+	CFObj<CFURLRef> absoluteBundleURL( CFURLCopyAbsoluteURL(inBundleURL) );
+	if(absoluteBundleURL == nullptr)
+		return nullptr;
+
+	return ::CFBundleCreate(kCFAllocatorDefault, absoluteBundleURL);
+}

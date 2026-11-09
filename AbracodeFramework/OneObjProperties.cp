@@ -69,23 +69,8 @@ CheckFileType(OneObjProperties *inObj, void *inData)
 	if(inData == NULL) return false;
 	CommandDescription *commDesc = (CommandDescription *)inData;
 
-	if( commDesc->activationTypes == NULL )
-		return true;
-
-	if( commDesc->activationTypeCount == 0)
-		return true;
-	
-	/* we don't support file type match anymore
-	for(UInt32 i = 0; i < commDesc->activationTypeCount; i++)
-	{
-		if( commDesc->activationTypes[i] == inObj->mType )
-		{
-			return true;//a match was found
-		}
-	}
-	*/
-
-	return false;
+	// four-character file types are no longer matched: a command that lists any matches no file by type
+	return (commDesc->activationTypeCount == 0);
 }
 
 Boolean

@@ -8,6 +8,7 @@
  */
 
 #include "OmcExecutor.h"
+#include "ACFString.h"
 #include <stdio.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -109,7 +110,7 @@ OmcExecutor::ExecuteCFString( CFStringRef inCommand, CFStringRef inInputPipe )
 
 	if(inCommand != nullptr)
 	{
-	    std::string theString = CMUtils::CreateUTF8StringFromCFString(inCommand);
+	    std::string theString = ACFStringToUTF8(inCommand);
         endedSynchronously = Execute( theString.c_str(), resultErr );
 	}
 	else
@@ -591,7 +592,7 @@ POpenExecutor::Execute( const char *inCommand, OSStatus &outError )
 				CFStringRef theValue = ACFType<CFStringRef>::DynamicCast( ::CFArrayGetValueAtIndex(mCustomShell, i) );
 				if(theValue != nullptr)
 				{
-                    customShellStrings[currItemIndex] = CMUtils::CreateUTF8StringFromCFString(theValue);
+                    customShellStrings[currItemIndex] = ACFStringToUTF8(theValue);
                     shellArgs[currItemIndex] = (char*)customShellStrings[currItemIndex].c_str();
 					if(shellArgs[currItemIndex] != nullptr)
 						currItemIndex++;
@@ -620,7 +621,7 @@ POpenExecutor::Execute( const char *inCommand, OSStatus &outError )
 		CFStringRef commandGUID = ACFType<CFStringRef>::DynamicCast(
 								::CFDictionaryGetValue(mEnvironmentVariables, CFSTR("OMC_CURRENT_COMMAND_GUID")) );
 		if(commandGUID != nullptr)
-			tokenLabel = CMUtils::CreateUTF8StringFromCFString(commandGUID);
+			tokenLabel = ACFStringToUTF8(commandGUID);
 	}
 
 	char tokenBuffer[kOMCActionUIRemoteTokenBufferSize];
@@ -878,7 +879,7 @@ POpenExecutor::Finish(bool wasSynchronous, bool sendNotification, OSStatus inErr
 void
 POpenExecutor::SetInputString( CFStringRef inInputPipe )
 {
-	mInputString = CMUtils::CreateUTF8StringFromCFString(inInputPipe);
+	mInputString = ACFStringToUTF8(inInputPipe);
 }
 
 #pragma mark -
@@ -1216,7 +1217,7 @@ static std::string CreateScriptPathAndShell(
 		CFArrayAppendValue(newShellArray, (const void *)shellPath);
 	}
 
-	return CMUtils::CreateUTF8StringFromCFString(scriptFilePath); //null-safe
+	return ACFStringToUTF8(scriptFilePath); //null-safe
 }
 
 POpenScriptFileExecutor::POpenScriptFileExecutor(
@@ -1445,11 +1446,11 @@ CreateEnvironmentList(CFDictionaryRef inEnviron)
 
 		if( (theKey != nullptr) && (theValue != nullptr) )
 		{
-			keyStrings[currItemIndex] = CMUtils::CreateUTF8StringFromCFString(theKey);
+			keyStrings[currItemIndex] = ACFStringToUTF8(theKey);
             if(keyStrings[currItemIndex].length() > 0)
             {
                 keyList[currItemIndex] = (void *)keyStrings[currItemIndex].c_str();
-                valueStrings[currItemIndex] = CMUtils::CreateUTF8StringFromCFString(theValue);
+                valueStrings[currItemIndex] = ACFStringToUTF8(theValue);
                 valueList[currItemIndex] = (void *)valueStrings[currItemIndex].c_str();
                 currItemIndex++;
             }

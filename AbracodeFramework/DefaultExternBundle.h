@@ -14,4 +14,7 @@ CFURLRef CreateDefaultExternBundleURL(CFArrayRef inCommandName);
 CFStringRef CreateDefaultExternBundleString(CFArrayRef inCommandName);
 CFBundleRef CreateDefaultExternBundleRef(CFArrayRef inCommandName);
 
+// The bundle at inBundleURL, made absolute first; NULL when there is none
+CFBundleRef CreateBundleFromURL(CFURLRef inBundleURL);
+
 }; //extern "C"

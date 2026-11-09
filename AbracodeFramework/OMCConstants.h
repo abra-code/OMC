@@ -62,3 +62,11 @@ enum
 	kMatchFileName = 0,
 	kMatchFilePath
 };
+
+// TEXT_REPLACE_OPTION: line endings in text taken from the context or the clipboard
+enum
+{
+	kTextReplaceNothing = 0,
+	kTextReplaceLFsWithCRs,
+	kTextReplaceCRsWithLFs
+};

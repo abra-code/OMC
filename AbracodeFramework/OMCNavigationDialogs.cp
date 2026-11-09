@@ -14,7 +14,7 @@
 #include "OMCFilePanels.h"
 #include "OMCHostInfo.h"
 #include "ACFDict.h"
-#include "CMUtils.h"
+#include "OMCObjectList.h"
 
 // Command.plist SCHEMA SOURCE OF TRUTH — the SHARED navigation-dialog keys (MESSAGE,
 // DEFAULT_FILE_NAME (array), DEFAULT_LOCATION (array), DIALOG_IDENTIFIER, BUTTON_PROMPT,
@@ -175,7 +175,7 @@ PresentChooseFileDialog(OnMyCommandCM *inPlugin,
         { // if command is executed without context, the chosen objects become the file/folder context
             contextData.objectList.resize(0);
             UInt32 theFlags = kListClear;
-            size_t validObjectCount = CMUtils::ProcessObjectList(contextData.chooseFilePaths.Get(), theFlags, CFURLCheckFileOrFolder, &contextData.objectList);
+            size_t validObjectCount = OMCProcessObjectList(contextData.chooseFilePaths.Get(), theFlags, CFURLCheckFileOrFolder, &contextData.objectList);
             if(validObjectCount > 0)
             {
                 contextData.isNullContext = false;
@@ -246,7 +246,7 @@ PresentChooseFolderDialog(OnMyCommandCM *inPlugin,
         { // if command is executed without context, the chosen objects become the file/folder context
             contextData.objectList.resize(0);
             UInt32 theFlags = kListClear;
-            size_t validObjectCount = CMUtils::ProcessObjectList(contextData.chooseFolderPaths.Get(), theFlags, CFURLCheckFileOrFolder, &contextData.objectList);
+            size_t validObjectCount = OMCProcessObjectList(contextData.chooseFolderPaths.Get(), theFlags, CFURLCheckFileOrFolder, &contextData.objectList);
             if(validObjectCount > 0)
             {
                 contextData.isNullContext = false;
@@ -315,7 +315,7 @@ PresentChooseObjectDialog(OnMyCommandCM *inPlugin,
         { // if command is executed without context, the chosen objects become the file/folder context
             contextData.objectList.resize(0);
             UInt32 theFlags = kListClear;
-            size_t validObjectCount = CMUtils::ProcessObjectList(contextData.chooseObjectPaths.Get(), theFlags, CFURLCheckFileOrFolder, &contextData.objectList);
+            size_t validObjectCount = OMCProcessObjectList(contextData.chooseObjectPaths.Get(), theFlags, CFURLCheckFileOrFolder, &contextData.objectList);
             if(validObjectCount > 0)
             {
                 contextData.isNullContext = false;

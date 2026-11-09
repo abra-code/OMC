@@ -41,6 +41,8 @@ extern "C" const char *OMCGetActionUIRemoteEndpoint(void);
 #include "OMCHostInfo.h"
 #include "OMCTestHost.h"
 #include "DefaultExternBundle.h"
+#include "OMCObjectList.h"
+#include "ACFString.h"
 #include "OmcTaskManager.h"
 #include "ACFDict.h"
 #include "ACFArr.h"
@@ -128,7 +130,7 @@ OnMyCommandCM::OnMyCommandCM(CFPropertyListRef inPlistRef)
 				if( kCFCompareEqualTo == ::CFStringCompare( CFSTR("omc"), theExt, kCFCompareCaseInsensitive) )
 				{//it is an extern .omc bundle
 					mExternBundleOverrideURL.Adopt( mPlistURL, kCFObjRetain );//it is a bundle URL actually
-					CFObj<CFBundleRef> externBundle( CMUtils::CFBundleCreate(mPlistURL), kCFObjDontRetain );
+					CFObj<CFBundleRef> externBundle( CreateBundleFromURL(mPlistURL), kCFObjDontRetain );
 					if(externBundle != NULL)
 						mPlistURL.Adopt( CopyCommandFileURLInBundle( externBundle, CFSTR("Command") ), kCFObjDontRetain );
 				}
@@ -466,7 +468,7 @@ OnMyCommandCM::CommonContextCheck( const AEDesc *inAEContext, CFTypeRef inContex
 		}
         
 		if( contextFiles != nullptr )
-            validObjectCount = CMUtils::ProcessObjectList( contextFiles, theFlags, CFURLCheckFileOrFolder, &contextData.objectList);
+            validObjectCount = OMCProcessObjectList( contextFiles, theFlags, CFURLCheckFileOrFolder, &contextData.objectList);
 		else if(inAEContext != nullptr)
             validObjectCount = CMUtils::ProcessObjectList( inAEContext, theFlags, CFURLCheckFileOrFolder, &contextData.objectList );
         
@@ -1836,8 +1838,7 @@ OnMyCommandCM::IsCommandEnabled(CommandDescription &currCommand,
 			
 			if(doActivate)
 			{
-				Boolean needsFileTypeCheck = (( currCommand.activationTypes != NULL ) &&
-										( currCommand.activationTypeCount != 0) );
+				Boolean needsFileTypeCheck = (currCommand.activationTypeCount != 0);
 				Boolean needsExtensionCheck = (currCommand.activationExtensions != NULL);
 				if(needsExtensionCheck)
 				{
@@ -1909,8 +1910,7 @@ OnMyCommandCM::IsCommandEnabled(CommandDescription &currCommand,
 			doActivate = CheckAllObjects(contextData.objectList, CheckIfFileOrFolder, NULL);
 			if(doActivate)
 			{
-				Boolean needsFileTypeCheck = (( currCommand.activationTypes != NULL ) &&
-										( currCommand.activationTypeCount != 0) );
+				Boolean needsFileTypeCheck = (currCommand.activationTypeCount != 0);
 				Boolean needsExtensionCheck = (currCommand.activationExtensions != NULL);
 				if(needsExtensionCheck)
 				{
@@ -1946,8 +1946,7 @@ OnMyCommandCM::IsCommandEnabled(CommandDescription &currCommand,
 
 			if(doActivate)
 			{
-				Boolean needsFileTypeCheck = (( currCommand.activationTypes != NULL ) &&
-										( currCommand.activationTypeCount != 0) );
+				Boolean needsFileTypeCheck = (currCommand.activationTypeCount != 0);
 				Boolean needsExtensionCheck = (currCommand.activationExtensions != NULL);
 				if(needsExtensionCheck)
 				{
@@ -2081,7 +2080,7 @@ DoStringsMatch(CFStringRef inMatchString, CFStringRef inSearchedString, UInt8 ma
 		case kMatchRegularExpression:
 		{
 			regex_t regular_expression;
-			std::string matchString = CMUtils::CreateUTF8StringFromCFString(inMatchString);
+			std::string matchString = ACFStringToUTF8(inMatchString);
 			if(matchString.size() == 0)
 				return false;
 
@@ -2092,7 +2091,7 @@ DoStringsMatch(CFStringRef inMatchString, CFStringRef inSearchedString, UInt8 ma
 			if( ::regcomp(&regular_expression, matchString.c_str(), regFlags) == 0)
 			{
 				int result = -1;
-				std::string searchedString = CMUtils::CreateUTF8StringFromCFString(inSearchedString);
+				std::string searchedString = ACFStringToUTF8(inSearchedString);
 				if(searchedString.size() > 0)
 					result = ::regexec( &regular_expression, searchedString.c_str(), 0, NULL, 0);
 
@@ -2272,7 +2271,7 @@ OnMyCommandCM::CreateAugmentedCommandArray(CFArrayRef existingCommands)
 	CFBundleRef hostBundle = nullptr;
 	if(mExternBundleOverrideURL != nullptr)
 	{
-		ownedBundle.Adopt( CMUtils::CFBundleCreate(mExternBundleOverrideURL), kCFObjDontRetain );
+		ownedBundle.Adopt( CreateBundleFromURL(mExternBundleOverrideURL), kCFObjDontRetain );
 		hostBundle = ownedBundle;
 	}
 	if(hostBundle == nullptr)
@@ -3702,7 +3701,7 @@ OnMyCommandCM::GetCurrentCommandExternBundle()
 		CFObj<CFURLRef> bundleURL( ::CFURLCreateWithFileSystemPath(kCFAllocatorDefault, currCommand.externalBundlePath, kCFURLPOSIXPathStyle, true) );
 		if(bundleURL != nullptr)
 		{
-			currCommand.externBundle.Adopt( CMUtils::CFBundleCreate(bundleURL) );
+			currCommand.externBundle.Adopt( CreateBundleFromURL(bundleURL) );
 			if(currCommand.externBundle != nullptr)
 				return currCommand.externBundle;
 		}

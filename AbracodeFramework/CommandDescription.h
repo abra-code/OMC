@@ -85,8 +85,7 @@ typedef struct CommandDescription
     CFObj<CFArrayRef>		command;//array of CFStrings
     CFObj<CFArrayRef>		inputPipe;//array of CFStrings
     CFObj<CFArrayRef>      activationExtensions;//array of CFStrings
-    OSType *		activationTypes {NULL};
-    UInt32			activationTypeCount {0};
+    UInt32			activationTypeCount {0}; // ACTIVATION_FILE_TYPES given: file types are no longer matched, so no file passes
     UInt32          prescannedCommandInfo {kOmcCommandNoSpecialObjects};
     UInt8			executionMode {kExecSilentPOpen};
     UInt8			executionOptions {kExecutionOption_None};
@@ -153,10 +152,10 @@ typedef struct CommandDescription
     CFObj<CFDictionaryRef> multipleSelectionIteratorParams; //control id and forward/reverse flag
     CFObj<CFStringRef>		localizationTableName;
 
-    // The CF members are owned and released by their CFObj; activationTypes is owned too.
+    // The CF members are owned and released by their CFObj.
     // Commands are never copied: OnMyCommandCM keeps them in one array and hands out references.
     CommandDescription() = default;
-    ~CommandDescription() { delete [] activationTypes; }
+    ~CommandDescription() = default;
     CommandDescription(const CommandDescription &) = delete;
     CommandDescription &operator=(const CommandDescription &) = delete;
 } CommandDescription;

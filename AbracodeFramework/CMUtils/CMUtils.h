@@ -23,26 +23,9 @@
 
 #pragma export off
 
-typedef OSStatus (*CFURLHandlerProc)( CFURLRef inURLRef, size_t index, void *ioData );
+#include "OMCObjectList.h" // CFURLHandlerProc and the kList/kProc flags
 
-enum
-{
-	kListClear					= 0x00000000,
-
-	kProcDirectiveMask			= 0x00FF0000,
-	kProcBreakOnFirst			= 0x00010000,
-	
-	kListOutFlagsMask			= 0xFF000000,
-	kListOutMultipleObjects		= 0x01000000,
-	kListOutErrorsOccurred		= 0x02000000
-};
-
-enum
-{
-	kTextReplaceNothing = 0,
-	kTextReplaceLFsWithCRs,
-	kTextReplaceCRsWithLFs
-};
+#include "OMCConstants.h" // kTextReplace*
 
 class CMUtils
 {
@@ -75,14 +58,12 @@ public:
 
 	static size_t		ProcessObjectList( const AEDescList *fileList, UInt32 &ioFlags, CFURLHandlerProc inProcPtr, void *inProcData = NULL );
 
-	static size_t		ProcessObjectList( CFArrayRef fileList, UInt32 &ioFlags, CFURLHandlerProc inProcPtr, void *inProcData = NULL );
 
 	static CFMutableArrayRef	CollectObjectNames( const AEDescList *fileList);
 	static OSStatus				AESortFileList(const AEDescList *inFileList, AEDescList *outSortedList, CFOptionFlags compareOptions);
 
     static CFURLRef     CopyURL(const AEDesc &inDesc);
 
-	static CFBundleRef	CFBundleCreate(CFURLRef inBundleURL);
 
 	static OSErr		SendAppleEventToRunningApplication( FourCharCode appSig, AEEventClass theAEEventClass,
 															AEEventID theAEEventID, const AEDesc &directObjectDesc, Boolean waitForReply = false);

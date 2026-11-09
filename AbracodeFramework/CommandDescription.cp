@@ -1,6 +1,5 @@
 #include "CommandDescription.h"
 #include "OMCStrings.h"
-#include "CMUtils.h"
 #include "ACFDict.h"
 #include "ACFArr.h"
 #include "DebugSettings.h"
@@ -743,26 +742,13 @@ GetOneCommandParams(CommandDescription &outDesc, CFDictionaryRef inOneCommand, C
     }
 
 //file types
+    // Four-character file types are no longer matched (OneObjProperties.cp CheckFileType); only
+    // whether there are any counts, so such a command still matches no file by type
     if( oneCmd.GetValue(CFSTR("ACTIVATION_FILE_TYPES"), theArr) )
     {
-        ACFArr fileTypes(theArr);
-        CFIndex theCount = fileTypes.GetCount();
+        CFIndex theCount = ::CFArrayGetCount(theArr);
         assert(theCount <= UINT_MAX);
-        if(theCount > 0)
-        {
-            outDesc.activationTypes = new OSType[theCount];
-            memset( outDesc.activationTypes, 0, theCount*sizeof(OSType) );
-            outDesc.activationTypeCount = (UInt32)theCount;
-            CFStringRef typeStrRef;
-            for(CFIndex i = 0; i < theCount; i++)
-            {
-                outDesc.activationTypes[i] = 0;
-                if( fileTypes.GetValueAtIndex(i, typeStrRef) )
-                {
-                    outDesc.activationTypes[i] = UTGetOSTypeFromString(typeStrRef);
-                }
-            }
-        }
+        outDesc.activationTypeCount = (UInt32)theCount;
     }
 
 //extensions

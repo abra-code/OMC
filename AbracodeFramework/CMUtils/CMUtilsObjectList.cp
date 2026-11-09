@@ -87,54 +87,6 @@ CMUtils::ProcessObjectList( const AEDescList *fileList, UInt32 &ioFlags, CFURLHa
 	return counter;
 }
 
-size_t
-CMUtils::ProcessObjectList( CFArrayRef fileList, UInt32 &ioFlags, CFURLHandlerProc inProcPtr, void *inProcData /*=NULL*/)
-{
-	ioFlags &= ~kListOutFlagsMask;
-    size_t counter = 0; // the count of objects which passed the test
-    
-	if((fileList == NULL) || (inProcPtr == NULL))
-		return counter;
-
-	OSStatus err = noErr;
-
-	CFIndex listItemsCount = ::CFArrayGetCount( fileList );
-	if(listItemsCount > 1)
-		ioFlags |= kListOutMultipleObjects;
-
-	for( CFIndex i = 0; i < listItemsCount; i++ )
-	{
-		// Get ith item in the object list
-		CFTypeRef oneItem = ::CFArrayGetValueAtIndex(fileList, i);
-		if(oneItem != NULL)
-		{
-			CFTypeID itemType = ::CFGetTypeID( oneItem );
-			if( itemType == ACFType<CFURLRef>::GetTypeID() )
-			{
-				err = (*inProcPtr)((CFURLRef)oneItem, counter, inProcData);
-			
-				if(err == noErr)
-				{
-                    counter++;
-					if( (ioFlags & kProcBreakOnFirst) != 0)
-						break;
-				}
-				else if(err == userCanceledErr)
-				{
-					break;
-				}
-				else
-				{
-					ioFlags |= kListOutErrorsOccurred;
-				}
-			}
-		}
-	}
-	
-	return counter;
-}
-
-
 class FileNameAndAEDesc
 {
 public:
