@@ -239,3 +239,22 @@ check "the main command opened a window on the file" "yes" "$([ -n "$window" ] &
 check_contains "the file was not added, and counted" '"skippedRecentDocuments": 1' "$(itest_call omc.test.status)"
 itest_close "$window" > /dev/null
 itest_wait_idle
+
+section "A command with an OPEN_OBJECT_DIALOG is never a window's"
+# OMCCommandRunner exempts it from the key-window and named-window routes, so that it shows its
+# own open panel. Last in the file: its file counts as a skipped recent document. (The key-window
+# route itself is not tested here: the applet under test is not the active app, so it has no key
+# window.)
+before="$(itest_windows)"
+itest_run ITestFixture > /dev/null
+itest_wait_idle
+window="$(itest_new_window "$before")"
+check "a window opened" "yes" "$([ -n "$window" ] && printf yes || printf no)"
+printf 'picked\n' > "$ITEST_WORK/picked.txt"
+itest_answer_open "$ITEST_WORK/picked.txt"
+run="$(itest_run fixture.files --window "$window" --open-panel)"
+itest_wait_idle
+check_contains "the window did not take it" '"dispatchedToWindow": false' "$(itest_call omc.test.log "{\"run\": $run}")"
+check "it ran on its own, on the answered file" "files:$ITEST_WORK/picked.txt" "$(itest_output "$run")"
+itest_close "$window" > /dev/null
+itest_wait_idle
