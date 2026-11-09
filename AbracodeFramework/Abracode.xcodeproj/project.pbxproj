@@ -61,6 +61,10 @@
 		1D560A1B2F80000000000005 /* OMCWindowHost.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1D560A1B2F80000000000004 /* OMCWindowHost.mm */; };
 		1D560A1B2F80000000000008 /* OMCProgressWindow.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1D560A1B2F80000000000007 /* OMCProgressWindow.cpp */; };
 		1D560A1B2F8000000000000B /* omc_progress.json in Resources */ = {isa = PBXBuildFile; fileRef = 1D560A1B2F8000000000000A /* omc_progress.json */; };
+		1D560A1B2F8000000000000F /* omc_input_text.json in Resources */ = {isa = PBXBuildFile; fileRef = 1D560A1B2F8000000000000E /* omc_input_text.json */; };
+		1D560A1B2F80000000000011 /* omc_input_password.json in Resources */ = {isa = PBXBuildFile; fileRef = 1D560A1B2F80000000000010 /* omc_input_password.json */; };
+		1D560A1B2F80000000000013 /* omc_input_popup.json in Resources */ = {isa = PBXBuildFile; fileRef = 1D560A1B2F80000000000012 /* omc_input_popup.json */; };
+		1D560A1B2F80000000000015 /* omc_input_combo.json in Resources */ = {isa = PBXBuildFile; fileRef = 1D560A1B2F80000000000014 /* omc_input_combo.json */; };
 		1D560A1B2F8000000000000D /* omc_output.json in Resources */ = {isa = PBXBuildFile; fileRef = 1D560A1B2F8000000000000C /* omc_output.json */; };
 		1D0A1B2C2F74000000000105 /* OMCAlerts.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1D0A1B2C2F74000000000104 /* OMCAlerts.mm */; };
 		1DAB10032FFD0001009FD073 /* OMCActionUIRemoteHost.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1DAB10062FFD0001009FD073 /* OMCActionUIRemoteHost.mm */; };
@@ -165,14 +169,8 @@
 		E2C84DAC0DA9D4CD0056DBC2 /* OMCCommandExecutor.h in Headers */ = {isa = PBXBuildFile; fileRef = E2C84DA80DA9D4CD0056DBC2 /* OMCCommandExecutor.h */; };
 		E2C84DAD0DA9D4CD0056DBC2 /* OMCCommandExecutor.mm in Sources */ = {isa = PBXBuildFile; fileRef = E2C84DA90DA9D4CD0056DBC2 /* OMCCommandExecutor.mm */; };
 		E2C84DEB0DA9F30F0056DBC2 /* OMCCommandMenu.mm in Sources */ = {isa = PBXBuildFile; fileRef = E2C84DE90DA9F30F0056DBC2 /* OMCCommandMenu.mm */; };
-		E2D92E551043D74E003DC96B /* OMCInputDialogController.h in Headers */ = {isa = PBXBuildFile; fileRef = E2D92E531043D74E003DC96B /* OMCInputDialogController.h */; };
-		E2D92E561043D74E003DC96B /* OMCInputDialogController.m in Sources */ = {isa = PBXBuildFile; fileRef = E2D92E541043D74E003DC96B /* OMCInputDialogController.m */; };
-		E2D92E6A1043D9F8003DC96B /* input_clear.xib in Resources */ = {isa = PBXBuildFile; fileRef = E2D92E621043D9F8003DC96B /* input_clear.xib */; };
-		E2D92E6B1043D9F8003DC96B /* input_combo.xib in Resources */ = {isa = PBXBuildFile; fileRef = E2D92E641043D9F8003DC96B /* input_combo.xib */; };
-		E2D92E6C1043D9F8003DC96B /* input_password.xib in Resources */ = {isa = PBXBuildFile; fileRef = E2D92E661043D9F8003DC96B /* input_password.xib */; };
-		E2D92E6D1043D9F8003DC96B /* input_popup.xib in Resources */ = {isa = PBXBuildFile; fileRef = E2D92E681043D9F8003DC96B /* input_popup.xib */; };
 		E2D92E891043E0C2003DC96B /* OMCInputDialog.h in Headers */ = {isa = PBXBuildFile; fileRef = E2D92E871043E0C2003DC96B /* OMCInputDialog.h */; };
-		E2D92E8E1043E0E3003DC96B /* OMCInputDialog.mm in Sources */ = {isa = PBXBuildFile; fileRef = E2D92E8D1043E0E3003DC96B /* OMCInputDialog.mm */; };
+		E2D92E8E1043E0E3003DC96B /* OMCInputDialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E2D92E8D1043E0E3003DC96B /* OMCInputDialog.cpp */; };
 		E2E407000D8A5B00009AD8CA /* OMCSecureTextField.m in Sources */ = {isa = PBXBuildFile; fileRef = E2E406FE0D8A5B00009AD8CA /* OMCSecureTextField.m */; };
 		E2E407010D8A5B00009AD8CA /* OMCSecureTextField.h in Headers */ = {isa = PBXBuildFile; fileRef = E2E406FF0D8A5B00009AD8CA /* OMCSecureTextField.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E2E4072A0D8AD1E3009AD8CA /* OMCSearchField.m in Sources */ = {isa = PBXBuildFile; fileRef = E2E407280D8AD1E3009AD8CA /* OMCSearchField.m */; };
@@ -471,6 +469,10 @@
 		1D560A1B2F80000000000006 /* OMCProgressWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCProgressWindow.h; sourceTree = "<group>"; };
 		1D560A1B2F80000000000007 /* OMCProgressWindow.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCProgressWindow.cpp; sourceTree = "<group>"; };
 		1D560A1B2F8000000000000A /* omc_progress.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = BuiltInDocuments/omc_progress.json; sourceTree = "<group>"; };
+		1D560A1B2F8000000000000E /* omc_input_text.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = BuiltInDocuments/omc_input_text.json; sourceTree = "<group>"; };
+		1D560A1B2F80000000000010 /* omc_input_password.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = BuiltInDocuments/omc_input_password.json; sourceTree = "<group>"; };
+		1D560A1B2F80000000000012 /* omc_input_popup.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = BuiltInDocuments/omc_input_popup.json; sourceTree = "<group>"; };
+		1D560A1B2F80000000000014 /* omc_input_combo.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = BuiltInDocuments/omc_input_combo.json; sourceTree = "<group>"; };
 		1D560A1B2F8000000000000C /* omc_output.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = BuiltInDocuments/omc_output.json; sourceTree = "<group>"; };
 		1D0A1B2C2F72000000000107 /* OMCEngineActivity.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCEngineActivity.h; sourceTree = "<group>"; };
 		1D0A1B2C2F72000000000108 /* OMCTestPlatform.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCTestPlatform.h; sourceTree = "<group>"; };
@@ -488,16 +490,8 @@
 		1DCBC16F2F181B090002B8AB /* OMCObserverDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OMCObserverDelegate.h; sourceTree = "<group>"; };
 		1DCFB234231FAAB200D1C62E /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/Private.strings; sourceTree = "<group>"; };
 		1DCFB235231FAAB500D1C62E /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/Private.strings; sourceTree = "<group>"; };
-		1DCFB236231FAABB00D1C62E /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/input_clear.xib; sourceTree = "<group>"; };
-		1DCFB237231FAABB00D1C62E /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/input_combo.xib; sourceTree = "<group>"; };
-		1DCFB238231FAABB00D1C62E /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/input_password.xib; sourceTree = "<group>"; };
-		1DCFB239231FAABB00D1C62E /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/input_popup.xib; sourceTree = "<group>"; };
 		1DCFB23C231FAABF00D1C62E /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Private.strings; sourceTree = "<group>"; };
 		1DCFB23D231FAAC300D1C62E /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/Private.strings; sourceTree = "<group>"; };
-		1DCFB23E231FAAC300D1C62E /* de */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = de; path = de.lproj/input_clear.xib; sourceTree = "<group>"; };
-		1DCFB23F231FAAC300D1C62E /* de */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = de; path = de.lproj/input_combo.xib; sourceTree = "<group>"; };
-		1DCFB240231FAAC300D1C62E /* de */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = de; path = de.lproj/input_password.xib; sourceTree = "<group>"; };
-		1DCFB241231FAAC300D1C62E /* de */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = de; path = de.lproj/input_popup.xib; sourceTree = "<group>"; };
 		1DD21114259F42CE0041BB8F /* OmcVersion.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcVersion.xcconfig; path = ../Common/OmcVersion.xcconfig; sourceTree = "<group>"; };
 		1DDC44152F34284600604C66 /* AbracodeTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = AbracodeTests.xctestplan; sourceTree = "<group>"; };
 		1DE10DFB23C9D0EE003FCCDA /* OMCWebKitSupport.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; path = OMCWebKitSupport.js; sourceTree = "<group>"; };
@@ -608,10 +602,8 @@
 		E2C84DA80DA9D4CD0056DBC2 /* OMCCommandExecutor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCCommandExecutor.h; sourceTree = "<group>"; };
 		E2C84DA90DA9D4CD0056DBC2 /* OMCCommandExecutor.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCCommandExecutor.mm; sourceTree = "<group>"; };
 		E2C84DE90DA9F30F0056DBC2 /* OMCCommandMenu.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCCommandMenu.mm; sourceTree = "<group>"; };
-		E2D92E531043D74E003DC96B /* OMCInputDialogController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCInputDialogController.h; sourceTree = "<group>"; };
-		E2D92E541043D74E003DC96B /* OMCInputDialogController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMCInputDialogController.m; sourceTree = "<group>"; };
 		E2D92E871043E0C2003DC96B /* OMCInputDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCInputDialog.h; sourceTree = "<group>"; };
-		E2D92E8D1043E0E3003DC96B /* OMCInputDialog.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCInputDialog.mm; sourceTree = "<group>"; };
+		E2D92E8D1043E0E3003DC96B /* OMCInputDialog.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCInputDialog.cpp; sourceTree = "<group>"; };
 		E2E1892D1075BEBC001B7591 /* SelectionIterator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SelectionIterator.h; sourceTree = "<group>"; };
 		E2E406FE0D8A5B00009AD8CA /* OMCSecureTextField.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMCSecureTextField.m; sourceTree = "<group>"; };
 		E2E406FF0D8A5B00009AD8CA /* OMCSecureTextField.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCSecureTextField.h; sourceTree = "<group>"; };
@@ -741,10 +733,6 @@
 			children = (
 				8DC2EF5A0486A6940098B216 /* Info.plist */,
 				E234F9F80D0FC431001A7780 /* Private.strings */,
-				E2D92E621043D9F8003DC96B /* input_clear.xib */,
-				E2D92E641043D9F8003DC96B /* input_combo.xib */,
-				E2D92E661043D9F8003DC96B /* input_password.xib */,
-				E2D92E681043D9F8003DC96B /* input_popup.xib */,
 				E234FA1F0D0FCB28001A7780 /* stop.icns */,
 				E234FA200D0FCB28001A7780 /* app.icns */,
 			);
@@ -1059,10 +1047,8 @@
 				1DA51CB42EACC95B00BFF670 /* OMCAppLifetimeEvents.mm */,
 				1DBCC43122CE209200A1DD8F /* OMCHelpers.h */,
 				1DBCC43222CE209300A1DD8F /* OMCHelpers.mm */,
-				E2D92E8D1043E0E3003DC96B /* OMCInputDialog.mm */,
+				E2D92E8D1043E0E3003DC96B /* OMCInputDialog.cpp */,
 				E2D92E871043E0C2003DC96B /* OMCInputDialog.h */,
-				E2D92E541043D74E003DC96B /* OMCInputDialogController.m */,
-				E2D92E531043D74E003DC96B /* OMCInputDialogController.h */,
 				E258B20F0E46E37C00926F10 /* OMCDeferredProgress.mm */,
 				1D0A1B2C2F6E000000000100 /* OMCProgressParsing.h */,
 				1D0A1B2C2F6E000000000101 /* OMCProgressParsing.cpp */,
@@ -1104,6 +1090,10 @@
 				1D560A1B2F80000000000006 /* OMCProgressWindow.h */,
 				1D560A1B2F80000000000007 /* OMCProgressWindow.cpp */,
 				1D560A1B2F8000000000000A /* omc_progress.json */,
+				1D560A1B2F8000000000000E /* omc_input_text.json */,
+				1D560A1B2F80000000000010 /* omc_input_password.json */,
+				1D560A1B2F80000000000012 /* omc_input_popup.json */,
+				1D560A1B2F80000000000014 /* omc_input_combo.json */,
 				1D560A1B2F8000000000000C /* omc_output.json */,
 				E2E1892D1075BEBC001B7591 /* SelectionIterator.h */,
 				E2FB111E0D185A2C005EB1E8 /* OMC.cpp */,
@@ -1204,7 +1194,6 @@
 				E2C10C5E0E45783200454DB1 /* OMCDeferredProgress.h in Headers */,
 				E2BB1E490E6F886200D2DDE5 /* OMCView.h in Headers */,
 				1D8189EA23B45FAF00A13449 /* OMCGridView.h in Headers */,
-				E2D92E551043D74E003DC96B /* OMCInputDialogController.h in Headers */,
 				E2D92E891043E0C2003DC96B /* OMCInputDialog.h in Headers */,
 				E2A2947A105E02B500C732A3 /* OMCTableViewController.h in Headers */,
 				E26B2796109C174D00DBA8CE /* OMCTableView.h in Headers */,
@@ -1428,13 +1417,13 @@
 			files = (
 				E234F9FA0D0FC431001A7780 /* Private.strings in Resources */,
 				1D560A1B2F8000000000000B /* omc_progress.json in Resources */,
+				1D560A1B2F8000000000000F /* omc_input_text.json in Resources */,
+				1D560A1B2F80000000000011 /* omc_input_password.json in Resources */,
+				1D560A1B2F80000000000013 /* omc_input_popup.json in Resources */,
+				1D560A1B2F80000000000015 /* omc_input_combo.json in Resources */,
 				1D560A1B2F8000000000000D /* omc_output.json in Resources */,
 				E234FA290D0FCB28001A7780 /* stop.icns in Resources */,
 				E234FA2A0D0FCB28001A7780 /* app.icns in Resources */,
-				E2D92E6A1043D9F8003DC96B /* input_clear.xib in Resources */,
-				E2D92E6B1043D9F8003DC96B /* input_combo.xib in Resources */,
-				E2D92E6C1043D9F8003DC96B /* input_password.xib in Resources */,
-				E2D92E6D1043D9F8003DC96B /* input_popup.xib in Resources */,
 				1DE10DFC23C9D0EE003FCCDA /* OMCWebKitSupport.js in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1576,8 +1565,7 @@
 				1D0A1B2C2F6E000000000103 /* OMCProgressParsing.cpp in Sources */,
 				E2BB1E480E6F886200D2DDE5 /* OMCView.m in Sources */,
 				1D9B1F5D21FF1572004704A7 /* OnMyCommand.cp in Sources */,
-				E2D92E561043D74E003DC96B /* OMCInputDialogController.m in Sources */,
-				E2D92E8E1043E0E3003DC96B /* OMCInputDialog.mm in Sources */,
+				E2D92E8E1043E0E3003DC96B /* OMCInputDialog.cpp in Sources */,
 				1D3EA06A2E40A00B0064354E /* CommandDescription.cp in Sources */,
 				1D690DDF2F45096A006FECE8 /* OMCActionUIDialog.mm in Sources */,
 				E26B2797109C174D00DBA8CE /* OMCTableView.m in Sources */,
@@ -1653,42 +1641,6 @@
 				1DCFB23D231FAAC300D1C62E /* de */,
 			);
 			name = Private.strings;
-			sourceTree = "<group>";
-		};
-		E2D92E621043D9F8003DC96B /* input_clear.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				1DCFB236231FAABB00D1C62E /* Base */,
-				1DCFB23E231FAAC300D1C62E /* de */,
-			);
-			name = input_clear.xib;
-			sourceTree = "<group>";
-		};
-		E2D92E641043D9F8003DC96B /* input_combo.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				1DCFB237231FAABB00D1C62E /* Base */,
-				1DCFB23F231FAAC300D1C62E /* de */,
-			);
-			name = input_combo.xib;
-			sourceTree = "<group>";
-		};
-		E2D92E661043D9F8003DC96B /* input_password.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				1DCFB238231FAABB00D1C62E /* Base */,
-				1DCFB240231FAAC300D1C62E /* de */,
-			);
-			name = input_password.xib;
-			sourceTree = "<group>";
-		};
-		E2D92E681043D9F8003DC96B /* input_popup.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				1DCFB239231FAABB00D1C62E /* Base */,
-				1DCFB241231FAAC300D1C62E /* de */,
-			);
-			name = input_popup.xib;
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */

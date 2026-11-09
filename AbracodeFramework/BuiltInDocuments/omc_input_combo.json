@@ -1,0 +1,92 @@
+{
+  "type": "VStack",
+  "properties": {
+    "alignment": "leading",
+    "spacing": 12,
+    "padding": 20,
+    "frame": {
+      "width": 426
+    }
+  },
+  "children": [
+    {
+      "type": "Text",
+      "id": 2,
+      "properties": {
+        "text": "",
+        "frame": {
+          "maxWidth": "infinity",
+          "alignment": "leading"
+        }
+      }
+    },
+    {
+      "type": "HStack",
+      "properties": {
+        "spacing": 4
+      },
+      "children": [
+        {
+          "type": "TextField",
+          "id": 3,
+          "properties": {
+            "text": "",
+            "labelsHidden": true,
+            "frame": {
+              "maxWidth": "infinity"
+            }
+          }
+        },
+        {
+          "type": "Menu",
+          "id": 4,
+          "properties": {
+            "title": "",
+            "frame": {
+              "width": 44
+            }
+          },
+          "children": []
+        }
+      ]
+    },
+    {
+      "type": "HStack",
+      "properties": {
+        "spacing": 8,
+        "padding": {
+          "top": 8
+        }
+      },
+      "children": [
+        {
+          "type": "Spacer"
+        },
+        {
+          "type": "Button",
+          "id": 5,
+          "properties": {
+            "title": "",
+            "actionID": "omc.builtin.input.cancel",
+            "keyboardShortcut": {
+              "key": "escape",
+              "modifiers": []
+            }
+          }
+        },
+        {
+          "type": "Button",
+          "id": 6,
+          "properties": {
+            "title": "",
+            "actionID": "omc.builtin.input.ok",
+            "keyboardShortcut": {
+              "key": "return",
+              "modifiers": []
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

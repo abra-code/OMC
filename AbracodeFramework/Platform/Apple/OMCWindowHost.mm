@@ -15,6 +15,7 @@
 @import ActionUIObjCAdapter;
 
 class OMCAppleHostedWindow;
+static void PlaceWindow(NSWindow *inWindow, const OMCHostedWindowSpec &inSpec);
 
 @interface OMCHostedWindowDelegate : NSObject <NSWindowDelegate>
 @property (nonatomic, assign) OMCAppleHostedWindow *owner; // cleared by the owner before it goes away
@@ -58,10 +59,14 @@ class OMCAppleHostedWindow : public OMCHostedWindow
 {
 public:
 							OMCAppleHostedWindow(NSWindow *inWindow, NSViewController *inController, CFStringRef inWindowUUID,
-												std::function<void()> inOnClosedByUser)
+												const OMCHostedWindowSpec &inSpec, std::function<void()> inOnClosedByUser)
 								: mWindow(inWindow), mController(inController), mWindowUUID(inWindowUUID, kCFObjRetain),
-								mOnClosedByUser(std::move(inOnClosedByUser))
+								mOnClosedByUser(std::move(inOnClosedByUser)), mPlacement(inSpec)
 							{
+								// only the size and placement are kept: the strings are not retained
+								mPlacement.documentName = nullptr;
+								mPlacement.title = nullptr;
+								mPlacement.frameAutosaveName = nullptr;
 								mDelegate = [OMCHostedWindowDelegate new];
 								mDelegate.owner = this;
 								mWindow.delegate = mDelegate;
@@ -92,12 +97,52 @@ public:
 								[mWindow makeKeyAndOrderFront:nil];
 							}
 
+	virtual void			SizeToContent() override
+							{
+								if(mClosed || mShown)
+									return;
+								[mController.view layoutSubtreeIfNeeded];
+								NSSize fitting = mController.view.fittingSize;
+								NSSize contentSize = [mWindow contentRectForFrameRect:mWindow.frame].size;
+								if(mPlacement.contentWidth <= 0)
+									contentSize.width = fitting.width;
+								if(mPlacement.contentHeight <= 0)
+									contentSize.height = fitting.height;
+								[mWindow setContentSize:contentSize];
+								if(mPlacement.placement != OMCHostedWindowPlacement::cascade) // it would step on again
+									PlaceWindow(mWindow, mPlacement);
+							}
+
 	virtual void			Close() override
 							{
 								if(mClosed)
 									return;
 								MarkClosed(); // before close: windowWillClose then knows it was not the user
 								[mWindow close];
+							}
+
+	virtual void			RunModal() override
+							{
+								if(mClosed || mInModal)
+									return;
+								Show();
+								mInModal = true;
+								mModalEnded = false;
+								[NSApp runModalForWindow:mWindow];
+								mInModal = false;
+							}
+
+	virtual void			EndModal() override
+							{
+								if(!mInModal || mModalEnded)
+									return;
+								mModalEnded = true;
+								[NSApp stopModal];
+								// stopModal takes effect when the modal loop handles its next event: when this
+								// runs outside of an event (a timer), that event has to be sent
+								NSEvent *wakeUp = [NSEvent otherEventWithType:NSEventTypeApplicationDefined location:NSZeroPoint
+																modifierFlags:0 timestamp:0 windowNumber:0 context:nil subtype:0 data1:0 data2:0];
+								[NSApp postEvent:wakeUp atStart:NO];
 							}
 
 	// From the window's delegate
@@ -113,6 +158,7 @@ public:
 private:
 	void					MarkClosed()
 							{
+								EndModal();
 								mClosed = true;
 								if(mShown)
 								{
@@ -126,8 +172,11 @@ private:
 	OMCHostedWindowDelegate *mDelegate;
 	CFObj<CFStringRef>		mWindowUUID;
 	std::function<void()>	mOnClosedByUser;
+	OMCHostedWindowSpec		mPlacement;
 	bool					mShown {false};
 	bool					mClosed {false};
+	bool					mInModal {false};
+	bool					mModalEnded {false};
 };
 
 @implementation OMCHostedWindowDelegate
@@ -303,5 +352,5 @@ OMCCreateHostedWindow(const OMCHostedWindowSpec &inSpec, std::function<void()> i
 	if(inSpec.frameAutosaveName != nullptr)
 		[window setFrameAutosaveName:(__bridge NSString *)inSpec.frameAutosaveName]; // restores a saved frame
 
-	return std::unique_ptr<OMCHostedWindow>(new OMCAppleHostedWindow(window, controller, (__bridge CFStringRef)windowUUID, std::move(inOnClosedByUser)));
+	return std::unique_ptr<OMCHostedWindow>(new OMCAppleHostedWindow(window, controller, (__bridge CFStringRef)windowUUID, inSpec, std::move(inOnClosedByUser)));
 }

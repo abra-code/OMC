@@ -3,8 +3,8 @@
 //  Abracode
 //
 //  A window around one of the framework's built-in ActionUI documents (BuiltInDocuments/): the
-//  progress window and the output window now, the input dialog next (Private/phase2-builtin-
-//  actionui-windows-design.md). Each window's logic is portable C++ over ActionUI's C interface
+//  progress window, the output window and the input dialog (Private/phase2-builtin-actionui-
+//  windows-design.md). Each window's logic is portable C++ over ActionUI's C interface
 //  (ActionUIC.h), addressing the document by its window UUID; the host only makes the platform's
 //  window around it, places it, shows it and closes it. The command dialogs move onto the same
 //  host in Phase 5.
@@ -69,8 +69,20 @@ public:
 
 	virtual void			Show() = 0;
 
+	// Before Show: sizes the window to its document again, in each dimension the spec left at 0,
+	// and places it again; for values that change the document's size (a long message)
+	virtual void			SizeToContent() = 0;
+
 	// Closes the window; the closed-by-user callback does not run
 	virtual void			Close() = 0;
+
+	// Shows the window and runs it modally: returns after EndModal(), Close(), or the user closing
+	// the window. Its actions still arrive while it runs. The closed-by-user callback of a window
+	// run this way must not delete it.
+	virtual void			RunModal() = 0;
+
+	// Makes RunModal return; nothing when it is not running
+	virtual void			EndModal() = 0;
 };
 
 // Loads the document and makes its window, not shown yet. inOnClosedByUser runs when the user

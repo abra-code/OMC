@@ -312,7 +312,7 @@ static OMCService *sOMCService = NULL;
 
 	if( !hasVisibleWindows ) //we don't trust hasVisibleWindows value, it probably only applies to document windows
 	{
-		if( OMCOpenHostedWindowCount() > 0 ) // output and progress windows; hasVisibleWindows misses panels
+		if( OMCOpenHostedWindowCount() > 0 ) // the framework's hosted windows; hasVisibleWindows misses panels
 			return NO;
 
 		NSApplication *myApp = [NSApplication sharedApplication];

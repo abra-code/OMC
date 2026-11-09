@@ -732,7 +732,7 @@ OnMyCommandCM::ExecuteCommand(AEDesc *inAEContext, SInt32 inCommandIndex, const 
 			StSwitchToFront switcher;
 
 			//if( ShowInputDialog( currCommand, mInputText.GetReference() ) == false )
-			if( RunCocoaInputDialog( this, *commandRuntimeData) == false )
+			if( RunInputDialog( this, *commandRuntimeData) == false )
 			{
 				throw OSStatus(userCanceledErr);
 			}
