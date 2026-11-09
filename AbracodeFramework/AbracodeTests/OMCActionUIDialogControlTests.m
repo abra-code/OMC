@@ -350,10 +350,11 @@ static id ActionUIObjCClass(void)
 
 #pragma mark - Elements
 
-// Removal is read through the element's property: ActionUI's element info walks the window's
-// original element tree, so it still lists an element removed from it
+// Read through ActionUI's element info (the window's live elements, as ActionUI lists them since
+// its getElementInfo fix of 2026-11-09) and the elements' properties
 - (void)testInsertElementAndRemoveElementChangeTheWindowsElements {
-    XCTAssertEqualObjects([self property:@"text" ofView:kRemovableTextID], @"Removable", @"the element to remove is there to begin with");
+    XCTAssertEqualObjects([self elementInfo][@(kRemovableTextID)], @"Text", @"the element to remove is there to begin with");
+    XCTAssertEqualObjects([self property:@"text" ofView:kRemovableTextID], @"Removable");
 
     [self control:[NSString stringWithFormat:@"%ld omc_insert_element '{\"id\":30,\"type\":\"Text\",\"properties\":{\"text\":\"Inserted\"}}'", (long)kContainerID]];
     XCTAssertEqualObjects([self waitFor:@"Text" read:^id{ return [self elementInfo][@30]; }], @"Text",
@@ -361,9 +362,11 @@ static id ActionUIObjCClass(void)
     XCTAssertEqualObjects([self property:@"text" ofView:30], @"Inserted");
 
     [self control:[NSString stringWithFormat:@"%ld omc_remove_element", (long)kRemovableTextID]];
-    [self spinUntil:^BOOL{ return [self property:@"text" ofView:kRemovableTextID] == nil; } timeout:5.0];
-    XCTAssertNil([self property:@"text" ofView:kRemovableTextID], @"omc_remove_element removes the element");
-    XCTAssertEqualObjects([self property:@"text" ofView:30], @"Inserted", @"and leaves the others");
+    [self spinUntil:^BOOL{ return [self elementInfo][@(kRemovableTextID)] == nil; } timeout:5.0];
+    XCTAssertNil([self elementInfo][@(kRemovableTextID)], @"omc_remove_element removes the element from the window's elements");
+    XCTAssertNil([self property:@"text" ofView:kRemovableTextID], @"and its properties");
+    XCTAssertEqualObjects([self elementInfo][@30], @"Text", @"and leaves the others");
+    XCTAssertEqualObjects([self property:@"text" ofView:30], @"Inserted");
 }
 
 #pragma mark - The window's move and resize
