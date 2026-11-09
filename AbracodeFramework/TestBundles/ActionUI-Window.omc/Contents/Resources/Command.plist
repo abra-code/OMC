@@ -121,6 +121,46 @@ fi
 			<string>Takes the window UUID as its text context</string>
 		</dict>
 		<dict>
+			<key>ACTIVATION_MODE</key>
+			<string>act_selected_text</string>
+			<key>COMMAND</key>
+			<array>
+				<string>WINDOW_UUID="${OMC_OBJ_TEXT}"
+if [ -n "${WINDOW_UUID}" ]; then
+    "$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$WINDOW_UUID" omc_application omc_invoke omcTestRecordInvoke: from-application
+fi
+</string>
+			</array>
+			<key>COMMAND_ID</key>
+			<string>window.invoke.application</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_shell_script</string>
+			<key>NAME</key>
+			<string>Window Tests</string>
+			<key>NOTES</key>
+			<string>Takes the window UUID as its text context</string>
+		</dict>
+		<dict>
+			<key>ACTIVATION_MODE</key>
+			<string>act_selected_text</string>
+			<key>COMMAND</key>
+			<array>
+				<string>WINDOW_UUID="${OMC_OBJ_TEXT}"
+if [ -n "${WINDOW_UUID}" ]; then
+    "$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$WINDOW_UUID" omc_workspace omc_invoke omcTestRecordInvoke: from-workspace
+fi
+</string>
+			</array>
+			<key>COMMAND_ID</key>
+			<string>window.invoke.workspace</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_shell_script</string>
+			<key>NAME</key>
+			<string>Window Tests</string>
+			<key>NOTES</key>
+			<string>Takes the window UUID as its text context</string>
+		</dict>
+		<dict>
 			<key>ACTIONUI_WINDOW</key>
 			<dict>
 				<key>IS_BLOCKING</key>

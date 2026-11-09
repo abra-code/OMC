@@ -29,6 +29,9 @@ static NSString * const kFixedAutosaveName = @"OMC.WindowFixed";
 static NSString * const kFlexibleAutosaveName = @"OMC.WindowFlexible";
 static NSString * const kFloatingAutosaveName = @"OMC.WindowFloating";
 
+// What the INVOKE test's messages recorded (see the categories at the end of the file)
+static NSMutableArray<NSString *> *sRecordedInvokes = nil;
+
 static BOOL OMCWindowNearlyEqual(CGFloat a, CGFloat b) {
     return fabs(a - b) < 0.5;
 }
@@ -269,6 +272,44 @@ static CGFloat TitlebarHeight(NSWindow *window) {
     [[NSUserDefaults standardUserDefaults] removeObjectForKey:FrameDefaultsKey(@"OMC.WindowActivation")];
 }
 
+#pragma mark - INVOKE on the application and the workspace
+
+- (void)testInvokeReachesTheApplicationAndTheWorkspace {
+    NSString *uuid = nil;
+    (void)[self openWindowWithCommand:@"Named By Its Command" autosaveName:kFlexibleAutosaveName uuid:&uuid];
+    sRecordedInvokes = [NSMutableArray array];
+
+    (void)[self runCommand:@"window.invoke.application" context:uuid];
+    [self spinUntil:^BOOL{ return sRecordedInvokes.count >= 1; } timeout:5.0];
+    (void)[self runCommand:@"window.invoke.workspace" context:uuid];
+    [self spinUntil:^BOOL{ return sRecordedInvokes.count >= 2; } timeout:5.0];
+
+    NSArray *expected = @[@"NSApplication:from-application", @"NSWorkspace:from-workspace"];
+    XCTAssertEqualObjects(sRecordedInvokes, expected,
+                          @"omc_application is NSApp, omc_workspace the shared workspace, and the word after the selector arrives as a string");
+    sRecordedInvokes = nil;
+    [self closeWindowWithUUID:uuid autosaveName:kFlexibleAutosaveName];
+}
+
+@end
+
+// The messages the INVOKE test sends: each records its receiver's class and its argument. A test
+// method rather than a real one, so the test has no effect on the system.
+
+static void RecordInvoke(id receiver, id argument) {
+    NSString *className = [receiver isKindOfClass:[NSApplication class]] ? @"NSApplication"
+                        : [receiver isKindOfClass:[NSWorkspace class]] ? @"NSWorkspace"
+                        : NSStringFromClass([receiver class]);
+    NSString *text = [argument isKindOfClass:[NSString class]] ? argument : [argument description];
+    [sRecordedInvokes addObject:[NSString stringWithFormat:@"%@:%@", className, text]];
+}
+
+@implementation NSApplication (OMCActionUIWindowTests)
+- (void)omcTestRecordInvoke:(id)argument { RecordInvoke(self, argument); }
+@end
+
+@implementation NSWorkspace (OMCActionUIWindowTests)
+- (void)omcTestRecordInvoke:(id)argument { RecordInvoke(self, argument); }
 @end
 
 #endif // CURRENT_OMC_VERSION >= 50000
