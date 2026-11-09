@@ -304,6 +304,50 @@ static id ActionUIObjCClass(void)
                    @"and keeps the columns");
 }
 
+- (NSString *)valueOfView:(NSInteger)viewID part:(NSInteger)part {
+    return [ActionUIObjCClass() getElementValueAsStringWithWindowUUID:self.uuid viewID:viewID viewPartID:part contentType:nil];
+}
+
+- (void)testTableColumnsWidthsAddedRowsAndRowSelection {
+    NSString *table = [NSString stringWithFormat:@"%ld", (long)kTableID];
+    [self control:[table stringByAppendingString:@" omc_table_set_columns First Second"]];
+    NSArray *columns = @[@"First", @"Second"];
+    XCTAssertEqualObjects([self waitFor:columns read:^id{ return [self property:@"columns" ofView:kTableID]; }], columns,
+                          @"omc_table_set_columns sets the columns property");
+
+    [self control:[table stringByAppendingString:@" omc_table_set_column_widths 120 80.5"]];
+    NSArray *widths = @[@120, @80.5];
+    XCTAssertEqualObjects([self waitFor:widths read:^id{ return [self property:@"widths" ofView:kTableID]; }], widths,
+                          @"omc_table_set_column_widths sets the widths property, as numbers");
+    NSArray *storedWidths = [self property:@"widths" ofView:kTableID];
+    if (storedWidths.count == 2) {
+        XCTAssertEqualObjects([NSString stringWithUTF8String:[storedWidths[0] objCType]], @"q", @"an integral width is an integer");
+        XCTAssertEqualObjects([NSString stringWithUTF8String:[storedWidths[1] objCType]], @"d", @"another a double");
+    }
+
+    [self control:[table stringByAppendingString:@" omc_table_set_rows \"$(printf 'a1\\tb1')\""]];
+    [self control:[table stringByAppendingString:@" omc_table_add_rows \"$(printf 'a2\\tb2')\" \"$(printf 'a3\\tb3')\""]];
+    NSArray *rows = @[@[@"a1", @"b1"], @[@"a2", @"b2"], @[@"a3", @"b3"]];
+    XCTAssertEqualObjects([self waitFor:rows read:^id{ return [self rowsOfView:kTableID]; }], rows,
+                          @"omc_table_add_rows appends rows split at their tabs");
+
+    [self control:[table stringByAppendingString:@" omc_select_row 1"]];
+    XCTAssertEqualObjects([self waitFor:@"b2" read:^id{ return [self valueOfView:kTableID part:2]; }], @"b2",
+                          @"omc_select_row selects the row at a 0-based index");
+
+    [self control:[table stringByAppendingString:@" omc_select_row_with_content b3 2"]];
+    XCTAssertEqualObjects([self waitFor:@"a3" read:^id{ return [self valueOfView:kTableID part:1]; }], @"a3",
+                          @"omc_select_row_with_content finds the text in the 1-based column");
+
+    [self control:[table stringByAppendingString:@" omc_select_row_with_content b1"]];
+    XCTAssertEqualObjects([self waitFor:@"a1" read:^id{ return [self valueOfView:kTableID part:1]; }], @"a1",
+                          @"without a column it finds the text in any column");
+
+    [self control:[table stringByAppendingString:@" omc_deselect"]];
+    XCTAssertEqualObjects([self waitFor:@"" read:^id{ return [self valueOfView:kTableID part:1] ?: @""; }], @"",
+                          @"omc_deselect clears the selection");
+}
+
 #pragma mark - Elements
 
 // Removal is read through the element's property: ActionUI's element info walks the window's

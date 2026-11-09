@@ -26,6 +26,33 @@ void OMCActionUISetControlVisible(CFStringRef inWindowUUID, CFStringRef inContro
 void OMCActionUISetControlProperty(CFStringRef inWindowUUID, CFStringRef inControlID, CFStringRef inPropertyName, CFStringRef inValue) noexcept;
 void OMCActionUISetControlState(CFStringRef inWindowUUID, CFStringRef inControlID, CFStringRef inStateKey, CFStringRef inValue) noexcept;
 
+// Lists and tables keep their items as rows of strings (a list's rows have one column each)
+
+// Removes every row: omc_list_remove_all, omc_table_remove_all_rows and omc_table_prepare_empty
+void OMCActionUIClearControlRows(CFStringRef inWindowUUID, CFStringRef inControlID) noexcept;
+
+// A list's items, one row each (strings); set replaces them all, even with none, and append adds
+// nothing for none
+void OMCActionUISetControlListItems(CFStringRef inWindowUUID, CFStringRef inControlID, CFArrayRef inItems) noexcept;
+void OMCActionUIAppendControlListItems(CFStringRef inWindowUUID, CFStringRef inControlID, CFArrayRef inItems) noexcept;
+
+// A table's rows, each a string with its cells separated by tabs; set and append as for list items
+void OMCActionUISetControlTableRows(CFStringRef inWindowUUID, CFStringRef inControlID, CFArrayRef inTabSeparatedRows) noexcept;
+void OMCActionUIAppendControlTableRows(CFStringRef inWindowUUID, CFStringRef inControlID, CFArrayRef inTabSeparatedRows) noexcept;
+
+// The table's "columns" property (names) and "widths" property (numbers, or strings read as numbers)
+void OMCActionUISetControlTableColumns(CFStringRef inWindowUUID, CFStringRef inControlID, CFArrayRef inColumnNames) noexcept;
+void OMCActionUISetControlTableColumnWidths(CFStringRef inWindowUUID, CFStringRef inControlID, CFArrayRef inWidths) noexcept;
+
+// Selects the row at a 0-based index
+void OMCActionUISelectControlRow(CFStringRef inWindowUUID, CFStringRef inControlID, CFIndex inRowIndex) noexcept;
+
+// Selects the first row with a cell that is exactly inText, in the 1-based column inColumnNumber
+// (OMC's column numbers, as in OMC_ACTIONUI_TABLE_<ID>_COLUMN_<M>_VALUE), or in any column for 0
+void OMCActionUISelectControlRowWithContent(CFStringRef inWindowUUID, CFStringRef inControlID, CFStringRef inText, CFIndex inColumnNumber) noexcept;
+
+void OMCActionUIDeselectControlRow(CFStringRef inWindowUUID, CFStringRef inControlID) noexcept;
+
 // The JSON ActionUI is given for a value omc_dialog_control passed as text: when the text starts as
 // a JSON fragment does ({, [, ", t, f, n, a digit or -) and parses as JSON (as NSJSONSerialization
 // did, ACFJSON.h), that value, written out again; otherwise the text as a JSON string. Empty when

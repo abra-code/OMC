@@ -369,42 +369,17 @@ static NSArray<ActionUIObjCDialogButton *> *OMCParseButtonSpecs(NSArray *specs)
 
 - (void)removeAllListItemsForControlID:(NSString *)inControlID
 {
-    // List items are stored as single-column rows in states["content"]
-    NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
-    if (windowUUID == nil || inControlID == nil) return;
-    NSInteger viewID = [inControlID integerValue];
-    [ActionUIObjC clearElementRowsWithWindowUUID:windowUUID viewID:viewID];
+    OMCActionUIClearControlRows(mOMCDialogProxy->GetDialogUUID(), (__bridge CFStringRef)inControlID);
 }
 
 - (void)setListItems:(CFArrayRef)items forControlID:(NSString *)inControlID
 {
-    NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
-    if (windowUUID == nil || inControlID == nil) return;
-    NSInteger viewID = [inControlID integerValue];
-    CFIndex count = (items != NULL) ? CFArrayGetCount(items) : 0;
-    NSMutableArray<NSArray<NSString*>*> *rows = [NSMutableArray arrayWithCapacity:count];
-    for (CFIndex i = 0; i < count; i++) {
-        CFStringRef item = (CFStringRef)CFArrayGetValueAtIndex(items, i);
-        if (item != NULL)
-            [rows addObject:@[(__bridge NSString *)item]];
-    }
-    [ActionUIObjC setElementRowsWithWindowUUID:windowUUID viewID:viewID rows:rows];
+    OMCActionUISetControlListItems(mOMCDialogProxy->GetDialogUUID(), (__bridge CFStringRef)inControlID, items);
 }
 
 - (void)appendListItems:(CFArrayRef)items forControlID:(NSString *)inControlID
 {
-    NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
-    if (windowUUID == nil || inControlID == nil) return;
-    NSInteger viewID = [inControlID integerValue];
-    CFIndex count = (items != NULL) ? CFArrayGetCount(items) : 0;
-    NSMutableArray<NSArray<NSString*>*> *rows = [NSMutableArray arrayWithCapacity:count];
-    for (CFIndex i = 0; i < count; i++) {
-        CFStringRef item = (CFStringRef)CFArrayGetValueAtIndex(items, i);
-        if (item != NULL)
-            [rows addObject:@[(__bridge NSString *)item]];
-    }
-    if (rows.count > 0)
-        [ActionUIObjC appendElementRowsWithWindowUUID:windowUUID viewID:viewID rows:rows];
+    OMCActionUIAppendControlListItems(mOMCDialogProxy->GetDialogUUID(), (__bridge CFStringRef)inControlID, items);
 }
 
 #pragma mark - Control layout and focus (not applicable to declarative SwiftUI layout)
@@ -499,97 +474,47 @@ static NSArray<ActionUIObjCDialogButton *> *OMCParseButtonSpecs(NSArray *specs)
 
 #pragma mark - Table setters
 
-/// Converts a CFArrayRef of tab-separated row strings into NSArray<NSArray<NSString*>*>.
-static NSArray<NSArray<NSString*>*> *OMCParseTabSeparatedRows(CFArrayRef cfRows)
-{
-    CFIndex count = (cfRows != NULL) ? CFArrayGetCount(cfRows) : 0;
-    NSMutableArray<NSArray<NSString*>*> *result = [NSMutableArray arrayWithCapacity:count];
-    for (CFIndex i = 0; i < count; i++) {
-        CFStringRef rowCFStr = (CFStringRef)CFArrayGetValueAtIndex(cfRows, i);
-        NSString *rowStr = (__bridge NSString *)rowCFStr;
-        [result addObject:[rowStr componentsSeparatedByString:@"\t"]];
-    }
-    return result;
-}
-
 - (void)emptyTableForControlID:(NSString *)inControlID
 {
-    NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
-    if (windowUUID == nil || inControlID == nil) return;
-    NSInteger viewID = [inControlID integerValue];
-    [ActionUIObjC clearElementRowsWithWindowUUID:windowUUID viewID:viewID];
+    OMCActionUIClearControlRows(mOMCDialogProxy->GetDialogUUID(), (__bridge CFStringRef)inControlID);
 }
 
 - (void)removeTableRowsForControlID:(NSString *)inControlID
 {
     // Same as emptyTable for ActionUI (no separate "remove without reload" distinction)
-    NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
-    if (windowUUID == nil || inControlID == nil) return;
-    NSInteger viewID = [inControlID integerValue];
-    [ActionUIObjC clearElementRowsWithWindowUUID:windowUUID viewID:viewID];
+    OMCActionUIClearControlRows(mOMCDialogProxy->GetDialogUUID(), (__bridge CFStringRef)inControlID);
 }
 
 - (void)setTableRows:(CFArrayRef)rows forControlID:(NSString *)inControlID
 {
-    NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
-    if (windowUUID == nil || inControlID == nil) return;
-    NSInteger viewID = [inControlID integerValue];
-    NSArray<NSArray<NSString*>*> *parsedRows = OMCParseTabSeparatedRows(rows);
-    [ActionUIObjC setElementRowsWithWindowUUID:windowUUID viewID:viewID rows:parsedRows ?: @[]];
+    OMCActionUISetControlTableRows(mOMCDialogProxy->GetDialogUUID(), (__bridge CFStringRef)inControlID, rows);
 }
 
 - (void)addTableRows:(CFArrayRef)rows forControlID:(NSString *)inControlID
 {
-    NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
-    if (windowUUID == nil || inControlID == nil) return;
-    NSInteger viewID = [inControlID integerValue];
-    NSArray<NSArray<NSString*>*> *parsedRows = OMCParseTabSeparatedRows(rows);
-    if (parsedRows.count > 0)
-        [ActionUIObjC appendElementRowsWithWindowUUID:windowUUID viewID:viewID rows:parsedRows];
+    OMCActionUIAppendControlTableRows(mOMCDialogProxy->GetDialogUUID(), (__bridge CFStringRef)inControlID, rows);
 }
 
 - (void)setTableColumns:(CFArrayRef)columns forControlID:(NSString *)inControlID
 {
-    NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
-    if (windowUUID == nil || inControlID == nil) return;
-    NSInteger viewID = [inControlID integerValue];
-    CFIndex count = (columns != NULL) ? CFArrayGetCount(columns) : 0;
-    NSMutableArray<NSString*> *names = [NSMutableArray arrayWithCapacity:count];
-    for (CFIndex i = 0; i < count; i++) {
-        CFStringRef name = (CFStringRef)CFArrayGetValueAtIndex(columns, i);
-        [names addObject:(__bridge NSString *)name];
-    }
-    [ActionUIObjC setElementPropertyWithWindowUUID:windowUUID viewID:viewID propertyName:@"columns" value:names];
+    OMCActionUISetControlTableColumns(mOMCDialogProxy->GetDialogUUID(), (__bridge CFStringRef)inControlID, columns);
 }
 
 #pragma mark - Table / List row selection
 
 - (void)selectRow:(NSInteger)rowIndex forControlID:(NSString *)inControlID
 {
-    NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
-    if (windowUUID == nil || inControlID == nil) return;
-    NSInteger viewID = [inControlID integerValue];
-    [ActionUIObjC selectElementRowWithWindowUUID:windowUUID viewID:viewID index:rowIndex];
+    OMCActionUISelectControlRow(mOMCDialogProxy->GetDialogUUID(), (__bridge CFStringRef)inControlID, rowIndex);
 }
 
 - (void)selectRowWithContent:(NSString *)text column:(NSInteger)columnNumber forControlID:(NSString *)inControlID
 {
-    NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
-    if (windowUUID == nil || inControlID == nil || text == nil) return;
-    NSInteger viewID = [inControlID integerValue];
-    // OMC exposes table columns 1-based ($OMC_ACTIONUI_TABLE_<ID>_COLUMN_<M>_VALUE), with 0 meaning
-    // "any column". ActionUI's column index is 0-based and uses a negative value to mean "any column".
-    NSInteger zeroBasedColumn = (columnNumber > 0) ? (columnNumber - 1) : -1;
-    NSInteger selectedRow = [ActionUIObjC selectElementRowWithWindowUUID:windowUUID viewID:viewID matchingText:text column:zeroBasedColumn];
-    (void)selectedRow; // matched-row index is best-effort; a non-match is non-fatal here
+    OMCActionUISelectControlRowWithContent(mOMCDialogProxy->GetDialogUUID(), (__bridge CFStringRef)inControlID, (__bridge CFStringRef)text, columnNumber);
 }
 
 - (void)deselectRowForControlID:(NSString *)inControlID
 {
-    NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
-    if (windowUUID == nil || inControlID == nil) return;
-    NSInteger viewID = [inControlID integerValue];
-    [ActionUIObjC clearElementSelectionWithWindowUUID:windowUUID viewID:viewID];
+    OMCActionUIDeselectControlRow(mOMCDialogProxy->GetDialogUUID(), (__bridge CFStringRef)inControlID);
 }
 
 /// Where the document named by JSON_NAME or omc_present_modal is (OMCActionUIDocumentLookup.h): an
@@ -761,24 +686,7 @@ static void OMCParsePositionString(NSString *positionStr, ActionUIObjCInsertPosi
 
 - (void)setTableColumnWidths:(CFArrayRef)widths forControlID:(NSString *)inControlID
 {
-    NSString *windowUUID = (__bridge NSString *)mOMCDialogProxy->GetDialogUUID();
-    if (windowUUID == nil || inControlID == nil)
-        return;
-    NSInteger viewID = [inControlID integerValue];
-    CFIndex count = (widths != NULL) ? CFArrayGetCount(widths) : 0;
-    NSMutableArray<NSNumber*> *widthNumbers = [NSMutableArray arrayWithCapacity:count];
-    for (CFIndex i = 0; i < count; i++) {
-        CFTypeRef item = CFArrayGetValueAtIndex(widths, i);
-        if (CFGetTypeID(item) == CFNumberGetTypeID()) {
-            double val = 0;
-            CFNumberGetValue((CFNumberRef)item, kCFNumberDoubleType, &val);
-            [widthNumbers addObject:@(val)];
-        } else if (CFGetTypeID(item) == CFStringGetTypeID()) {
-            double val = [(__bridge NSString *)item doubleValue];
-            [widthNumbers addObject:@(val)];
-        }
-    }
-    [ActionUIObjC setElementPropertyWithWindowUUID:windowUUID viewID:viewID propertyName:@"widths" value:widthNumbers];
+    OMCActionUISetControlTableColumnWidths(mOMCDialogProxy->GetDialogUUID(), (__bridge CFStringRef)inControlID, widths);
 }
 
 @end
