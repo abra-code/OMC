@@ -2,11 +2,14 @@
 //  OMCOutputWindowTests.m
 //  AbracodeTests
 //
-//  OMC 5.6, Phase 2 (Private/phase2-builtin-actionui-windows-design.md, step 2): tests that pin
-//  what an output window (EXECUTION_MODE *_with_output_window, OUTPUT_WINDOW_SETTINGS) shows today,
-//  before the nib windows are replaced by a built-in ActionUI document. The tests read the window
-//  the user sees, through the probe methods at the top (OutputWindow...). When the window becomes
-//  an ActionUI document, only the probe changes; the expectations stay.
+//  OMC 5.6, Phase 2 (Private/phase2-builtin-actionui-windows-design.md, steps 2 and 4): what an
+//  output window (EXECUTION_MODE *_with_output_window, OUTPUT_WINDOW_SETTINGS) shows. Written
+//  against the 5.5 nib windows and kept for the built-in ActionUI document that replaced them
+//  (BuiltInDocuments/omc_output.json): the tests read the window the user sees, through the probe
+//  methods at the top. Changed with the document, by the owner's decisions: the default font is
+//  Monaco 12 (was 10, and the nib's Helvetica 12 without OUTPUT_WINDOW_SETTINGS), and without
+//  TEXT_COLOR and BACKGROUND_COLOR the window follows the system's light or dark appearance (was
+//  black on white).
 //
 //  Not pinned: cascade placement (it restarts with every command run, so it only shows across the
 //  objects of one run), WINDOW_ALPHA, the fades and custom PNG windows (all dropped in 5.6), and
@@ -19,6 +22,16 @@
 #import "OMCBundleTestHelper.h"
 #import "OMCTestExecutionObserver.h"
 #import "OMCTestCase.h"
+
+// The adapter is linked into Abracode.framework, not into this bundle: look the class up
+static id ActionUIObjCClass(void)
+{
+    return NSClassFromString(@"_TtC19ActionUIObjCAdapter12ActionUIObjC");
+}
+
+@interface NSObject (OMCOutputWindowTestsActionUI)
++ (nullable id)getElementPropertyWithWindowUUID:(NSString *)windowUUID viewID:(NSInteger)viewID propertyName:(NSString *)propertyName;
+@end
 
 static const NSTimeInterval kOutputWindowTestTimeout = 30.0;
 
@@ -40,7 +53,7 @@ static const NSTimeInterval kOutputWindowTestTimeout = 30.0;
 {
     for (NSString *title in self.windowTitles)
         [[self outputWindowWithTitle:title] close];
-    // the handler is deleted from a run loop block after the window closes
+    // the handler is deleted from a run loop timer after the window closes
     [self spinUntil:^BOOL{ return NO; } timeout:0.2];
     for (NSURL *bundleURL in self.bundlesToCleanup)
         [OMCBundleTestHelper removeTestBundle:bundleURL];
@@ -84,6 +97,27 @@ static NSTextView *FindTextView(NSView *view)
 - (NSSize)outputWindowContentSize:(NSWindow *)window
 {
     return [window contentRectForFrameRect:window.frame].size;
+}
+
+static NSColor *ColorFromHex(NSString *hex)
+{
+    if (![hex hasPrefix:@"#"] || hex.length != 7)
+        return nil;
+    unsigned int rgb = 0;
+    if (![[NSScanner scannerWithString:[hex substringFromIndex:1]] scanHexInt:&rgb])
+        return nil;
+    return [NSColor colorWithSRGBRed:((rgb >> 16) & 0xFF) / 255.0 green:((rgb >> 8) & 0xFF) / 255.0 blue:(rgb & 0xFF) / 255.0 alpha:1];
+}
+
+/// The color behind the text: the text view's own background, or, when it draws none, the
+/// document's background color for it (BACKGROUND_COLOR).
+- (NSColor *)outputWindowBackground:(NSWindow *)window
+{
+    NSTextView *textView = [self textViewOfWindow:window];
+    if (textView.drawsBackground)
+        return textView.backgroundColor;
+    id background = [ActionUIObjCClass() getElementPropertyWithWindowUUID:window.identifier viewID:1 propertyName:@"background"];
+    return [background isKindOfClass:[NSString class]] ? ColorFromHex(background) : nil;
 }
 
 #pragma mark - Helpers
@@ -163,7 +197,7 @@ static void AssertColor(OMCOutputWindowTests *test, NSColor *color, CGFloat red,
         rgb = [color colorUsingColorSpace:[NSColorSpace deviceRGBColorSpace]];
     }];
     XCTAssertNotNil(rgb, @"%@ should be an RGB color", what);
-    // the engine divides by 256, not 255: FF is 0.996
+    // the 5.5 engine divided by 256, not 255: FF was 0.996
     XCTAssertEqualWithAccuracy(rgb.redComponent, red, 0.01, @"%@ red", what);
     XCTAssertEqualWithAccuracy(rgb.greenComponent, green, 0.01, @"%@ green", what);
     XCTAssertEqualWithAccuracy(rgb.blueComponent, blue, 0.01, @"%@ blue", what);
@@ -182,21 +216,50 @@ static void AssertColor(OMCOutputWindowTests *test, NSColor *color, CGFloat red,
     XCTAssertEqualObjects([self outputWindowText:window], @"one\ntwo\nZa\u017C\u00F3\u0142\u0107 \u20AC\n");
 }
 
-/// Without WINDOW_TITLE the window takes the command's name.
-- (void)testWindowWithoutATitleTakesTheCommandName
+/// Without OUTPUT_WINDOW_SETTINGS the window takes the command's name, and the default font.
+- (void)testWindowWithoutSettingsTakesTheCommandNameAndTheDefaultFont
 {
     NSString *name = [self uniqueTitle:@"untitled"];
     NSWindow *window = [self runScript:@"#!/bin/sh\necho named\n" label:@"untitled" windowTitle:name settings:nil];
     XCTAssertNotNil(window, @"The window should be titled with the command's NAME");
     XCTAssertEqualObjects([self outputWindowText:window], @"named\n");
+    NSTextView *textView = [self textViewOfWindow:window];
+    XCTAssertEqualObjects(textView.font.fontName, @"Monaco");
+    XCTAssertEqualWithAccuracy(textView.font.pointSize, 12, 0.01);
+}
+
+/// Output that is not UTF-8 shows replacement characters instead of being dropped.
+- (void)testBytesThatAreNotUTF8ShowAsReplacementCharacters
+{
+    NSWindow *window = [self runScript:@"#!/bin/sh\n/usr/bin/printf 'a\\377b\\n'\n" label:@"invalid" settings:nil];
+    XCTAssertNotNil(window);
+    NSString *expected = [NSString stringWithFormat:@"a%Cb\n", (unichar)0xFFFD];
+    XCTAssertEqualObjects([self outputWindowText:window], expected);
+}
+
+/// A NUL byte in the output is left out; the rest of the piece still shows.
+- (void)testANulByteDoesNotCutTheOutput
+{
+    NSWindow *window = [self runScript:@"#!/bin/sh\n/usr/bin/printf 'a\\000b\\n'\n" label:@"nul" settings:nil];
+    XCTAssertNotNil(window);
+    XCTAssertEqualObjects([self outputWindowText:window], @"ab\n");
+}
+
+/// Megabytes of output arrive in thousands of pieces; each is appended at the cost of the piece, so
+/// the command ends long before the timeout (setting the whole text for every piece took minutes).
+- (void)testLargeOutputIsAllShown
+{
+    NSString *script = @"#!/bin/sh\n/usr/bin/yes 0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789 | /usr/bin/head -n 20000\n";
+    NSWindow *window = [self runScript:script label:@"large" settings:nil];
+    XCTAssertNotNil(window);
+    XCTAssertEqual([self outputWindowText:window].length, (NSUInteger)(20000 * 101), @"All 20000 lines of 101 characters should show");
 }
 
 #pragma mark - Size, position and level
 
 /// With OUTPUT_WINDOW_SETTINGS that set only WINDOW_TITLE: a 400 x 200 content area, a floating
 /// window (the utility level, staying visible when the app is not active, for a process that is
-/// not a regular app), Monaco 10, black on opaque white. (Without OUTPUT_WINDOW_SETTINGS at all the
-/// engine skips the font and the nib's Helvetica 12 shows; not pinned.)
+/// not a regular app), Monaco 12, read-only, in the system's text colors.
 - (void)testDefaultSettings
 {
     NSWindow *window = [self runScript:@"#!/bin/sh\necho defaults\n" label:@"defaults" settings:nil];
@@ -214,10 +277,11 @@ static void AssertColor(OMCOutputWindowTests *test, NSColor *color, CGFloat red,
 
     NSTextView *textView = [self textViewOfWindow:window];
     XCTAssertEqualObjects(textView.font.fontName, @"Monaco");
-    XCTAssertEqualWithAccuracy(textView.font.pointSize, 10, 0.01);
+    XCTAssertEqualWithAccuracy(textView.font.pointSize, 12, 0.01);
     XCTAssertFalse(textView.isEditable, @"The output is read-only");
-    AssertColor(self, textView.textColor, 0, 0, 0, @"The default text color");
-    AssertColor(self, textView.backgroundColor, 1, 1, 1, @"The default background");
+    XCTAssertTrue(textView.isSelectable, @"The output can be selected and copied");
+    XCTAssertEqualObjects(textView.textColor, [NSColor textColor], @"The default text color follows the appearance");
+    XCTAssertEqualObjects([self outputWindowBackground:window], [NSColor textBackgroundColor], @"The default background follows the appearance");
 }
 
 - (void)testWidthAndHeight
@@ -298,7 +362,7 @@ static void AssertColor(OMCOutputWindowTests *test, NSColor *color, CGFloat red,
     XCTAssertEqualObjects(textView.font.fontName, @"Menlo-Regular");
     XCTAssertEqualWithAccuracy(textView.font.pointSize, 13, 0.01);
     AssertColor(self, textView.textColor, 1, 0, 0, @"TEXT_COLOR");
-    AssertColor(self, textView.backgroundColor, 0, 0, 1, @"BACKGROUND_COLOR");
+    AssertColor(self, [self outputWindowBackground:window], 0, 0, 1, @"BACKGROUND_COLOR");
 }
 
 #pragma mark - Closing by itself

@@ -2,8 +2,9 @@
 //  OMCWindowHost.mm
 //  Abracode
 //
-//  The macOS host of the built-in ActionUI documents (Platform/OMCWindowHost.h): an NSWindow whose
-//  content view controller is the ObjC adapter's hosting controller for the document.
+//  The macOS host of the built-in ActionUI documents (Platform/OMCWindowHost.h): an NSWindow, or a
+//  utility NSPanel for the floating levels, whose content view controller is the ObjC adapter's
+//  hosting controller for the document.
 //
 
 #import <Cocoa/Cocoa.h>
@@ -18,6 +19,40 @@ class OMCAppleHostedWindow;
 @interface OMCHostedWindowDelegate : NSObject <NSWindowDelegate>
 @property (nonatomic, assign) OMCAppleHostedWindow *owner; // cleared by the owner before it goes away
 @end
+
+// Command-W closes a closable window, also in a process with no menu bar (a background app)
+static BOOL HandleCloseKey(NSWindow *inWindow, NSEvent *inEvent)
+{
+	NSEventModifierFlags modifiers = inEvent.modifierFlags & NSEventModifierFlagDeviceIndependentFlagsMask;
+	if( (modifiers != NSEventModifierFlagCommand) || ![inEvent.charactersIgnoringModifiers isEqualToString:@"w"] )
+		return NO;
+	if( (inWindow.styleMask & NSWindowStyleMaskClosable) == 0 )
+		return NO;
+	[inWindow performClose:nil];
+	return YES;
+}
+
+@interface OMCHostedNSWindow : NSWindow
+@end
+
+@implementation OMCHostedNSWindow
+- (BOOL)performKeyEquivalent:(NSEvent *)event
+{
+	return HandleCloseKey(self, event) || [super performKeyEquivalent:event];
+}
+@end
+
+@interface OMCHostedNSPanel : NSPanel
+@end
+
+@implementation OMCHostedNSPanel
+- (BOOL)performKeyEquivalent:(NSEvent *)event
+{
+	return HandleCloseKey(self, event) || [super performKeyEquivalent:event];
+}
+@end
+
+static int sOpenHostedWindowCount = 0;
 
 class OMCAppleHostedWindow : public OMCHostedWindow
 {
@@ -47,15 +82,21 @@ public:
 
 	virtual void			Show() override
 							{
-								if(!mClosed)
-									[mWindow makeKeyAndOrderFront:nil];
+								if(mClosed)
+									return;
+								if(!mShown)
+								{
+									mShown = true;
+									sOpenHostedWindowCount++;
+								}
+								[mWindow makeKeyAndOrderFront:nil];
 							}
 
 	virtual void			Close() override
 							{
 								if(mClosed)
 									return;
-								mClosed = true; // before close: windowWillClose then knows it was not the user
+								MarkClosed(); // before close: windowWillClose then knows it was not the user
 								[mWindow close];
 							}
 
@@ -64,17 +105,28 @@ public:
 							{
 								if(mClosed)
 									return;
-								mClosed = true;
+								MarkClosed();
 								if(mOnClosedByUser)
 									mOnClosedByUser(); // may delete this
 							}
 
 private:
+	void					MarkClosed()
+							{
+								mClosed = true;
+								if(mShown)
+								{
+									mShown = false;
+									sOpenHostedWindowCount--;
+								}
+							}
+
 	NSWindow *				mWindow;
 	NSViewController *		mController;
 	OMCHostedWindowDelegate *mDelegate;
 	CFObj<CFStringRef>		mWindowUUID;
 	std::function<void()>	mOnClosedByUser;
+	bool					mShown {false};
 	bool					mClosed {false};
 };
 
@@ -88,6 +140,95 @@ private:
 }
 
 @end
+
+static NSPoint sCascadePoint = NSZeroPoint;
+
+void
+OMCResetHostedWindowCascading()
+{
+	sCascadePoint = NSZeroPoint;
+}
+
+int
+OMCOpenHostedWindowCount()
+{
+	return sOpenHostedWindowCount;
+}
+
+// The placement rules of OMC's output window, unchanged from the nib window's controller (5.5)
+static void PlaceWindow(NSWindow *inWindow, const OMCHostedWindowSpec &inSpec)
+{
+	NSScreen *mainScreen = [NSScreen mainScreen];
+	if( (inSpec.placement == OMCHostedWindowPlacement::standard) || (mainScreen == nil) )
+	{
+		[inWindow center];
+		return;
+	}
+
+	NSRect screenRect = mainScreen.visibleFrame;
+	NSRect windowFrame = inWindow.frame;
+	NSPoint fraction = NSMakePoint(-1.0, -1.0);
+	NSPoint origin = NSZeroPoint; // the window's bottom-left corner
+
+	switch(inSpec.placement)
+	{
+		case OMCHostedWindowPlacement::alert:
+			fraction.x = 0.5;
+			origin.y = NSMinY(screenRect) + NSHeight(screenRect) * 4.0 / 5.0 - NSHeight(windowFrame);
+		break;
+
+		case OMCHostedWindowPlacement::screenCenter:
+			fraction = NSMakePoint(0.5, 0.5);
+		break;
+
+		case OMCHostedWindowPlacement::cascade:
+		{
+			if( NSEqualPoints(sCascadePoint, NSZeroPoint) )
+			{ // the first one: the screen's top-left corner
+				origin.x = NSMinX(screenRect);
+				origin.y = NSMaxY(screenRect) - NSHeight(windowFrame);
+				if( (origin.y + NSHeight(windowFrame)) < NSMinY(screenRect) )
+					origin.y = NSMinY(screenRect) - NSHeight(windowFrame) + 20; // the top visible at the bottom of the screen
+				[inWindow setFrameOrigin:origin];
+			}
+			sCascadePoint = [inWindow cascadeTopLeftFromPoint:sCascadePoint];
+			return;
+		}
+
+		case OMCHostedWindowPlacement::absolute:
+		default:
+			fraction = NSMakePoint(inSpec.fractionLeft, inSpec.fractionTop);
+			origin.x = NSMinX(screenRect) + inSpec.absoluteLeft;
+			origin.y = NSMaxY(screenRect) - inSpec.absoluteTop - NSHeight(windowFrame);
+			if( (origin.y + NSHeight(windowFrame)) < NSMinY(screenRect) )
+				origin.y = NSMinY(screenRect) - NSHeight(windowFrame) + 20; // the top visible at the bottom of the screen
+		break;
+	}
+
+	if(fraction.y >= 0.0)
+	{ // the window's middle at the fraction, from the top
+		if(fraction.y > 1.0)
+			fraction.y = 1.0;
+		origin.y = NSMinY(screenRect) + NSHeight(screenRect) * (1.0 - fraction.y) - NSHeight(windowFrame) / 2.0;
+		if(origin.y < NSMinY(screenRect))
+			origin.y = NSMinY(screenRect);
+		if( (origin.y + NSHeight(windowFrame)) > NSMaxY(screenRect) )
+			origin.y = NSMaxY(screenRect) - NSHeight(windowFrame);
+	}
+
+	if(fraction.x >= 0.0)
+	{ // the window's middle at the fraction, from the left
+		if(fraction.x > 1.0)
+			fraction.x = 1.0;
+		origin.x = NSMinX(screenRect) + NSWidth(screenRect) * fraction.x - NSWidth(windowFrame) / 2.0;
+		if( (origin.x + NSWidth(windowFrame)) > NSMaxX(screenRect) )
+			origin.x = NSMaxX(screenRect) - NSWidth(windowFrame);
+		if(origin.x < NSMinX(screenRect))
+			origin.x = NSMinX(screenRect);
+	}
+
+	[inWindow setFrameOrigin:origin];
+}
 
 std::unique_ptr<OMCHostedWindow>
 OMCCreateHostedWindow(const OMCHostedWindowSpec &inSpec, std::function<void()> inOnClosedByUser)
@@ -111,7 +252,12 @@ OMCCreateHostedWindow(const OMCHostedWindowSpec &inSpec, std::function<void()> i
 		return nullptr;
 	}
 
-	NSWindowStyleMask style = NSWindowStyleMaskTitled | NSWindowStyleMaskMiniaturizable;
+	bool isPanel = (inSpec.level != OMCHostedWindowLevel::normal);
+	NSWindowStyleMask style = NSWindowStyleMaskTitled;
+	if(isPanel)
+		style |= NSWindowStyleMaskUtilityWindow;
+	else
+		style |= NSWindowStyleMaskMiniaturizable;
 	if(inSpec.closable)
 		style |= NSWindowStyleMaskClosable;
 	if(inSpec.resizable)
@@ -123,8 +269,12 @@ OMCCreateHostedWindow(const OMCHostedWindowSpec &inSpec, std::function<void()> i
 	if(inSpec.contentHeight > 0)
 		contentSize.height = inSpec.contentHeight;
 
-	NSWindow *window = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, contentSize.width, contentSize.height)
-												   styleMask:style backing:NSBackingStoreBuffered defer:YES];
+	NSRect contentRect = NSMakeRect(0, 0, contentSize.width, contentSize.height);
+	NSWindow *window = nil;
+	if(isPanel)
+		window = [[OMCHostedNSPanel alloc] initWithContentRect:contentRect styleMask:style backing:NSBackingStoreBuffered defer:YES];
+	else
+		window = [[OMCHostedNSWindow alloc] initWithContentRect:contentRect styleMask:style backing:NSBackingStoreBuffered defer:YES];
 	window.releasedWhenClosed = NO;
 	window.identifier = windowUUID; // the document's window UUID: tests read the document through it
 	window.contentViewController = controller;
@@ -132,10 +282,24 @@ OMCCreateHostedWindow(const OMCHostedWindowSpec &inSpec, std::function<void()> i
 	// after the hosting controller is installed: it resets the title (NSHostingView)
 	if(inSpec.title != nullptr)
 		window.title = (__bridge NSString *)inSpec.title;
-	if(inSpec.level == OMCHostedWindowLevel::floating)
-		window.level = NSFloatingWindowLevel;
 
-	[window center];
+	switch(inSpec.level)
+	{
+		case OMCHostedWindowLevel::normal:
+		break;
+
+		case OMCHostedWindowLevel::floating:
+			window.level = NSFloatingWindowLevel;
+			window.hidesOnDeactivate = YES;
+		break;
+
+		case OMCHostedWindowLevel::utility:
+			window.level = kCGUtilityWindowLevel;
+			window.hidesOnDeactivate = NO;
+		break;
+	}
+
+	PlaceWindow(window, inSpec);
 	if(inSpec.frameAutosaveName != nullptr)
 		[window setFrameAutosaveName:(__bridge NSString *)inSpec.frameAutosaveName]; // restores a saved frame
 

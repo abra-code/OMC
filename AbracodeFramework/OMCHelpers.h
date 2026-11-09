@@ -1,5 +1,8 @@
 
 #pragma once
+#include <CoreFoundation/CoreFoundation.h>
+#include <CoreGraphics/CoreGraphics.h> // CGEventFlags
+#include <unistd.h>
 
 #ifdef __cplusplus
 extern "C" {

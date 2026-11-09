@@ -1,27 +1,38 @@
 //**************************************************************************************
 // Filename:	OutputWindowHandler.h
-// Copyright � 2004 Abracode, Inc.  All rights reserved.
+// Copyright (c) 2004 Abracode, Inc.  All rights reserved.
 //
-// Description:	
+// Description:	A command's OUTPUT window (EXECUTION_MODE *_with_output_window,
+//				OUTPUT_WINDOW_SETTINGS): a built-in ActionUI document
+//				(BuiltInDocuments/omc_output.json, a read-only text view) in a window of the
+//				window host (Platform/OMCWindowHost.h). Portable: the text and the look go to the
+//				document through ActionUI's C interface.
+//
+//				The handler owns itself: it is deleted when its window closes, by the user or
+//				AUTO_CLOSE_TIMEOUT after the command ends, and right away (from the run loop)
+//				when the window cannot be made.
 //
 //**************************************************************************************
 // Revision History:
 // Wednesday, July 9, 2003 - Original
+// 2026-11-09 - The window is a built-in ActionUI document (OMC 5.6)
 //**************************************************************************************
 
 #pragma once
 
-#include <CoreGraphics/CoreGraphics.h>
+#include <CoreFoundation/CoreFoundation.h>
+#include <memory>
+#include <string>
 #include "AObserver.h"
 #include "CFObj.h"
-#include "OMCOutputWindowController.h"
+
+class OMCHostedWindow;
 
 typedef enum
 {
 	kOMCWindowRegular,
 	kOMCWindowFloating,
-	kOMCWindowGlobalFloating,
-	kOMCWindowCustom
+	kOMCWindowGlobalFloating
 } OMCWindowType;
 
 typedef enum
@@ -32,62 +43,27 @@ typedef enum
     kOMCWindowCascadeOnMainScreen
 } OMCWindowPosition;
 
-typedef struct OMCColor
-{
-	CGFloat red;
-	CGFloat green;
-	CGFloat blue;
-	CGFloat alpha;
-} OMCColor;
-
 struct OutputWindowSettings
 {
-	OutputWindowSettings()
-		: alpha(1.0f), positionMethod(kOMCWindowAlertPositionOnMainScreen),
-		width(400), height(200), fontSize(10.0),
-		textBox(CGRectZero), closeBox(CGRectZero), resizeBox(CGRectZero),
-		useFadeIn(false), useFadeOut(false)
-	{
-		topLeftPosition.x = topLeftPosition.y = 50.0;
-		specialPosition.x = specialPosition.y = -1.0f;
-
-		backColor.red = 1.0;
-		backColor.green = 1.0;
-		backColor.blue = 1.0;
-		backColor.alpha = 1.0;
-		
-		textColor.red = 0.0;
-		textColor.green = 0.0;
-		textColor.blue = 0.0;
-		textColor.alpha = 1.0;
-	}
-
-	CFObj<CFStringRef> title;
-	float		alpha;
-	OMCWindowType windowType;
-    OMCWindowPosition positionMethod;
-	CGPoint		topLeftPosition;//for absolute position only
-	CGPoint		specialPosition;//in range 0.0 - 1.0 for min/max of screen rect, negative: no special position
-	short		width;
-	short		height;
-	OMCColor	backColor;
-	OMCColor	textColor;
-	CFObj<CGImageRef> backgroundImage;
-	CFObj<CFStringRef> fontName;
-	CGFloat		fontSize;
-	CGRect		textBox;
-	CGRect		closeBox;
-	CGRect		resizeBox;
-	Boolean		useFadeIn;
-	Boolean		useFadeOut;
+	CFObj<CFStringRef>	title;
+	OMCWindowType		windowType {kOMCWindowFloating};
+	OMCWindowPosition	positionMethod {kOMCWindowAlertPositionOnMainScreen};
+	double				absoluteLeft {50.0};	// absolute position only
+	double				absoluteTop {50.0};
+	double				fractionLeft {-1.0};	// 0 to 1 of the screen, for the window's middle; negative: not used
+	double				fractionTop {-1.0};
+	double				width {400.0};			// content size
+	double				height {200.0};
+	CFObj<CFStringRef>	textColor;				// "#RRGGBB"; NULL: the system's text color
+	CFObj<CFStringRef>	backgroundColor;		// "#RRGGBB"; NULL: the system's text background
+	CFObj<CFStringRef>	fontName;
+	double				fontSize {12.0};
 };
-
-class OmcExecutor;
 
 class OutputWindowHandler
 {
 public:
-							OutputWindowHandler( CFDictionaryRef inSettingsDict, CFArrayRef inCommandName, CFStringRef inDynamicName, 
+							OutputWindowHandler( CFDictionaryRef inSettingsDict, CFArrayRef inCommandName, CFStringRef inDynamicName,
 												CFBundleRef inExternBundleRef, CFStringRef inLocalizationTableName);
 							OutputWindowHandler(CFArrayRef inCommandName, CFStringRef inDynamicName, CFStringRef inTextToDisplay, CFDictionaryRef inSettingsDict,
 												CFBundleRef inExternBundleRef, CFStringRef inLocalizationTableName);
@@ -101,12 +77,9 @@ public:
 	void					ReceiveNotification(void *ioData);//local message
 
 	void					SetText(CFStringRef inText, Boolean inLastPart, Boolean inSuccess);
-	OSStatus				AppendText(const UInt8 *inCStr, long theLen = -1);
-	
-	Boolean					ShouldCloseWindow() { return mShouldCloseWindow; }
-	
+	void					AppendText(const UInt8 *inCStr, long theLen = -1);
+
 	void					AppendOutputData( const UInt8 *inData, size_t inSize, Boolean inSuccess );
-	CGImageRef				CreateImage(CFBundleRef inBundle, CFStringRef inBackgroundPictureName);
 
 	void					GetOutputWindowSettings(CFArrayRef inCommandName,
 													CFDictionaryRef inSettingsDict,
@@ -114,17 +87,25 @@ public:
 													CFStringRef inLocalizationTableName,
 													OutputWindowSettings &outSettings);
 
-	static Boolean			HexStringToColor(CFStringRef inString, OMCColor &outColor);
+	// "#RRGGBB" for a color of six hex digits, as OUTPUT_WINDOW_SETTINGS gives them; NULL for anything else
+	static CFStringRef		CreateColorString(CFStringRef inHexDigits);
 
 protected:
+	void					OpenWindow(CFDictionaryRef inSettingsDict, CFArrayRef inCommandName, CFStringRef inDynamicName,
+										CFBundleRef inExternBundleRef, CFStringRef inLocalizationTableName);
+	void					CommandEnded(Boolean inSuccess);
+	// Deletes this handler (and so closes the window) after inDelay seconds, from the main run loop
+	void					DeleteAfter(CFTimeInterval inDelay);
+	static void				DeleteTimerFired(CFRunLoopTimerRef inTimer, void *inInfo);
+
 	ARefCountedObj< AObserver<OutputWindowHandler> > mTaskObserver;
-	OMCOutputWindowControllerRef mOutputWindowController;
+	std::unique_ptr<OMCHostedWindow> mWindow;
+	std::string				mWindowUUID;
+	CFObj<CFRunLoopTimerRef> mDeleteTimer;
 
-	CFTimeInterval			mAutoCloseTimeout;
-
-	Boolean					mShouldCloseWindow;
-	Boolean					mAutoCloseOnSuccessOnly;
-	Boolean					mUseFadeOut;
+	CFTimeInterval			mAutoCloseTimeout {-1.0};
+	Boolean					mAutoCloseOnSuccessOnly {true};
+	bool					mClosedByUser {false};
 
 private:
 							OutputWindowHandler(const OutputWindowHandler& inOutputWindowHandler);

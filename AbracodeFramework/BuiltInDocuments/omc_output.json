@@ -1,0 +1,10 @@
+{
+  "type": "TextEditor",
+  "id": 1,
+  "properties": {
+    "readOnly": true,
+    "implementation": "native",
+    "font": { "name": "Monaco", "size": 12, "design": "monospaced" },
+    "frame": { "minWidth": 100, "maxWidth": "infinity", "minHeight": 40, "maxHeight": "infinity" }
+  }
+}

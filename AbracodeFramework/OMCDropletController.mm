@@ -8,7 +8,7 @@
 
 #import "OMCDropletController.h"
 #import "OMCCommandExecutor.h"
-#import "OMCWindow.h"
+#include "OMCWindowHost.h"
 #include "CFObj.h"
 #include "OMCFilePanels.h"
 #include "OMC.h"
@@ -312,7 +312,7 @@ static OMCService *sOMCService = NULL;
 
 	if( !hasVisibleWindows ) //we don't trust hasVisibleWindows value, it probably only applies to document windows
 	{
-		if( [OMCWindow getWindowCount] > 0 )
+		if( OMCOpenHostedWindowCount() > 0 ) // output and progress windows; hasVisibleWindows misses panels
 			return NO;
 
 		NSApplication *myApp = [NSApplication sharedApplication];

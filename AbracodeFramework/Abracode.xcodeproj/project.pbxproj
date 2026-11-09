@@ -61,6 +61,7 @@
 		1D560A1B2F80000000000005 /* OMCWindowHost.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1D560A1B2F80000000000004 /* OMCWindowHost.mm */; };
 		1D560A1B2F80000000000008 /* OMCProgressWindow.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1D560A1B2F80000000000007 /* OMCProgressWindow.cpp */; };
 		1D560A1B2F8000000000000B /* omc_progress.json in Resources */ = {isa = PBXBuildFile; fileRef = 1D560A1B2F8000000000000A /* omc_progress.json */; };
+		1D560A1B2F8000000000000D /* omc_output.json in Resources */ = {isa = PBXBuildFile; fileRef = 1D560A1B2F8000000000000C /* omc_output.json */; };
 		1D0A1B2C2F74000000000105 /* OMCAlerts.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1D0A1B2C2F74000000000104 /* OMCAlerts.mm */; };
 		1DAB10032FFD0001009FD073 /* OMCActionUIRemoteHost.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1DAB10062FFD0001009FD073 /* OMCActionUIRemoteHost.mm */; };
 		1DAB10042FFD0001009FD073 /* OMCActionUIRemoteHost.h in Headers */ = {isa = PBXBuildFile; fileRef = 1DAB10052FFD0001009FD073 /* OMCActionUIRemoteHost.h */; };
@@ -69,8 +70,6 @@
 		1DBCC43522CE209300A1DD8F /* OMCHelpers.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1DBCC43222CE209300A1DD8F /* OMCHelpers.mm */; };
 		1DCBC0D92F15FCE40002B8AB /* Abracode.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8DC2EF5B0486A6940098B216 /* Abracode.framework */; };
 		1DCBC16E2F176A9D0002B8AB /* TestBundles in CopyFiles */ = {isa = PBXBuildFile; fileRef = 1DCBC16D2F176A9D0002B8AB /* TestBundles */; };
-		1DCFB242231FAC1100D1C62E /* OMCOutputWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1DCFB244231FAC1100D1C62E /* OMCOutputWindow.xib */; };
-		1DCFB245231FAC1600D1C62E /* OMCOutputPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1DCFB247231FAC1600D1C62E /* OMCOutputPanel.xib */; };
 		1DE10DFC23C9D0EE003FCCDA /* OMCWebKitSupport.js in Resources */ = {isa = PBXBuildFile; fileRef = 1DE10DFB23C9D0EE003FCCDA /* OMCWebKitSupport.js */; };
 		1DED3637232258A40086266F /* OMCScriptsManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1DED3635232258A40086266F /* OMCScriptsManager.cpp */; };
 		1DED8E572222BD8E00A2CAF7 /* MoreAppleEvents.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED19F0D09528600C9D5E8 /* MoreAppleEvents.cp */; };
@@ -79,7 +78,6 @@
 		1DF2B4052F45A6CE0069BD26 /* ActionUIObjCAdapter in Frameworks */ = {isa = PBXBuildFile; productRef = 1DF2B4042F45A6CE0069BD26 /* ActionUIObjCAdapter */; };
 		8DC2EF570486A6940098B216 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7B1FEA5585E11CA2CBB /* Cocoa.framework */; };
 		AAAAAA01D4346BB0065C23A /* OMCWindowController.h in Headers */ = {isa = PBXBuildFile; fileRef = AAAAAAAA1D4346BB0065C23A /* OMCWindowController.h */; };
-		E20026D710B68F3200D5388F /* OMCCustomWindow.mm in Sources */ = {isa = PBXBuildFile; fileRef = E20026D510B68F3200D5388F /* OMCCustomWindow.mm */; };
 		E204EB7F0D7FD8A900595D15 /* OMCConstants.h in Headers */ = {isa = PBXBuildFile; fileRef = E204EB7E0D7FD8A900595D15 /* OMCConstants.h */; };
 		E20F1F69130BBE6300882872 /* alert in Copy Support Executables */ = {isa = PBXBuildFile; fileRef = E20F1F68130BBE5100882872 /* alert */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		E211D3C50D3F51010065C23A /* OMCCocoaNib.h in Headers */ = {isa = PBXBuildFile; fileRef = E211D3C30D3F51010065C23A /* OMCCocoaNib.h */; };
@@ -99,12 +97,6 @@
 		E23DC9680D9A2616009D2AD8 /* OMCIKImageView.m in Sources */ = {isa = PBXBuildFile; fileRef = E23DC9600D9A2616009D2AD8 /* OMCIKImageView.m */; };
 		E23DC96A0D9A2616009D2AD8 /* OMCIKImageView.h in Headers */ = {isa = PBXBuildFile; fileRef = E23DC9620D9A2616009D2AD8 /* OMCIKImageView.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E23DC9F60D9A289E009D2AD8 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E23DC9F50D9A289E009D2AD8 /* WebKit.framework */; };
-		E24243570DDC140F0002BF9E /* OMCOutputWindowController.h in Headers */ = {isa = PBXBuildFile; fileRef = E24243550DDC140F0002BF9E /* OMCOutputWindowController.h */; };
-		E24243580DDC140F0002BF9E /* OMCOutputWindowController.mm in Sources */ = {isa = PBXBuildFile; fileRef = E24243560DDC140F0002BF9E /* OMCOutputWindowController.mm */; };
-		E24B168B0DE934CC00E44A45 /* OMCWindow.h in Headers */ = {isa = PBXBuildFile; fileRef = E24B16870DE934CC00E44A45 /* OMCWindow.h */; };
-		E24B168C0DE934CC00E44A45 /* OMCWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = E24B16880DE934CC00E44A45 /* OMCWindow.m */; };
-		E24B17270DE94DB800E44A45 /* OMCPanel.h in Headers */ = {isa = PBXBuildFile; fileRef = E24B17230DE94DB800E44A45 /* OMCPanel.h */; };
-		E24B17280DE94DB800E44A45 /* OMCPanel.m in Sources */ = {isa = PBXBuildFile; fileRef = E24B17240DE94DB800E44A45 /* OMCPanel.m */; };
 		E24B18180DE96F6D00E44A45 /* OMCFilePanels.h in Headers */ = {isa = PBXBuildFile; fileRef = E24B18140DE96F6D00E44A45 /* OMCFilePanels.h */; };
 		E24B18190DE96F6D00E44A45 /* OMCFilePanels.mm in Sources */ = {isa = PBXBuildFile; fileRef = E24B18150DE96F6D00E44A45 /* OMCFilePanels.mm */; };
 		E2517C4D0D1BCC2700180C68 /* OMCButton.h in Headers */ = {isa = PBXBuildFile; fileRef = E2517C3D0D1BCC2700180C68 /* OMCButton.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -479,6 +471,7 @@
 		1D560A1B2F80000000000006 /* OMCProgressWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCProgressWindow.h; sourceTree = "<group>"; };
 		1D560A1B2F80000000000007 /* OMCProgressWindow.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCProgressWindow.cpp; sourceTree = "<group>"; };
 		1D560A1B2F8000000000000A /* omc_progress.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = BuiltInDocuments/omc_progress.json; sourceTree = "<group>"; };
+		1D560A1B2F8000000000000C /* omc_output.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = BuiltInDocuments/omc_output.json; sourceTree = "<group>"; };
 		1D0A1B2C2F72000000000107 /* OMCEngineActivity.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCEngineActivity.h; sourceTree = "<group>"; };
 		1D0A1B2C2F72000000000108 /* OMCTestPlatform.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCTestPlatform.h; sourceTree = "<group>"; };
 		1D0A1B2C2F72000000000109 /* OMCTestPlatform.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCTestPlatform.mm; sourceTree = "<group>"; };
@@ -505,8 +498,6 @@
 		1DCFB23F231FAAC300D1C62E /* de */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = de; path = de.lproj/input_combo.xib; sourceTree = "<group>"; };
 		1DCFB240231FAAC300D1C62E /* de */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = de; path = de.lproj/input_password.xib; sourceTree = "<group>"; };
 		1DCFB241231FAAC300D1C62E /* de */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = de; path = de.lproj/input_popup.xib; sourceTree = "<group>"; };
-		1DCFB243231FAC1100D1C62E /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/OMCOutputWindow.xib; sourceTree = "<group>"; };
-		1DCFB246231FAC1600D1C62E /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/OMCOutputPanel.xib; sourceTree = "<group>"; };
 		1DD21114259F42CE0041BB8F /* OmcVersion.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcVersion.xcconfig; path = ../Common/OmcVersion.xcconfig; sourceTree = "<group>"; };
 		1DDC44152F34284600604C66 /* AbracodeTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = AbracodeTests.xctestplan; sourceTree = "<group>"; };
 		1DE10DFB23C9D0EE003FCCDA /* OMCWebKitSupport.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; path = OMCWebKitSupport.js; sourceTree = "<group>"; };
@@ -523,7 +514,6 @@
 		AAAAAAAA1D4346BB0065C23A /* OMCWindowController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCWindowController.h; sourceTree = SOURCE_ROOT; };
 		AAAAAAAA2D4346BB0065C23A /* OMCWindowController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCWindowController.mm; sourceTree = SOURCE_ROOT; };
 		D2F7E79907B2D74100F64583 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = /System/Library/Frameworks/CoreData.framework; sourceTree = "<absolute>"; };
-		E20026D510B68F3200D5388F /* OMCCustomWindow.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCCustomWindow.mm; sourceTree = "<group>"; };
 		E204EB7E0D7FD8A900595D15 /* OMCConstants.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCConstants.h; sourceTree = "<group>"; };
 		E20F1F68130BBE5100882872 /* alert */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = alert; sourceTree = "<group>"; };
 		E211D3C30D3F51010065C23A /* OMCCocoaNib.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCCocoaNib.h; sourceTree = "<group>"; };
@@ -545,13 +535,7 @@
 		E23DC9620D9A2616009D2AD8 /* OMCIKImageView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCIKImageView.h; sourceTree = "<group>"; };
 		E23DC9CB0D9A2870009D2AD8 /* QTKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QTKit.framework; path = /System/Library/Frameworks/QTKit.framework; sourceTree = "<absolute>"; };
 		E23DC9F50D9A289E009D2AD8 /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = /System/Library/Frameworks/WebKit.framework; sourceTree = "<absolute>"; };
-		E24243550DDC140F0002BF9E /* OMCOutputWindowController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCOutputWindowController.h; sourceTree = "<group>"; };
-		E24243560DDC140F0002BF9E /* OMCOutputWindowController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCOutputWindowController.mm; sourceTree = "<group>"; };
 		E24243FA0DDD6A350002BF9E /* OutputWindowHandler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OutputWindowHandler.h; sourceTree = "<group>"; };
-		E24B16870DE934CC00E44A45 /* OMCWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCWindow.h; sourceTree = "<group>"; };
-		E24B16880DE934CC00E44A45 /* OMCWindow.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMCWindow.m; sourceTree = "<group>"; };
-		E24B17230DE94DB800E44A45 /* OMCPanel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCPanel.h; sourceTree = "<group>"; };
-		E24B17240DE94DB800E44A45 /* OMCPanel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMCPanel.m; sourceTree = "<group>"; };
 		E24B18140DE96F6D00E44A45 /* OMCFilePanels.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCFilePanels.h; sourceTree = "<group>"; };
 		E24B18150DE96F6D00E44A45 /* OMCFilePanels.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCFilePanels.mm; sourceTree = "<group>"; };
 		E2517C3D0D1BCC2700180C68 /* OMCButton.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCButton.h; sourceTree = "<group>"; };
@@ -761,8 +745,6 @@
 				E2D92E641043D9F8003DC96B /* input_combo.xib */,
 				E2D92E661043D9F8003DC96B /* input_password.xib */,
 				E2D92E681043D9F8003DC96B /* input_popup.xib */,
-				1DCFB244231FAC1100D1C62E /* OMCOutputWindow.xib */,
-				1DCFB247231FAC1600D1C62E /* OMCOutputPanel.xib */,
 				E234FA1F0D0FCB28001A7780 /* stop.icns */,
 				E234FA200D0FCB28001A7780 /* app.icns */,
 			);
@@ -1085,13 +1067,6 @@
 				1D0A1B2C2F6E000000000100 /* OMCProgressParsing.h */,
 				1D0A1B2C2F6E000000000101 /* OMCProgressParsing.cpp */,
 				E2C10C5A0E45783200454DB1 /* OMCDeferredProgress.h */,
-				E20026D510B68F3200D5388F /* OMCCustomWindow.mm */,
-				E24B17230DE94DB800E44A45 /* OMCPanel.h */,
-				E24B17240DE94DB800E44A45 /* OMCPanel.m */,
-				E24B16870DE934CC00E44A45 /* OMCWindow.h */,
-				E24B16880DE934CC00E44A45 /* OMCWindow.m */,
-				E24243550DDC140F0002BF9E /* OMCOutputWindowController.h */,
-				E24243560DDC140F0002BF9E /* OMCOutputWindowController.mm */,
 				E2C433600DEE751300E976D2 /* OMCDropletController.mm */,
 				E25D78950DBB24800065C7A3 /* OMCDropletController.h */,
 				E23AAC8B12F55FE0004C867B /* OMCService.h */,
@@ -1129,6 +1104,7 @@
 				1D560A1B2F80000000000006 /* OMCProgressWindow.h */,
 				1D560A1B2F80000000000007 /* OMCProgressWindow.cpp */,
 				1D560A1B2F8000000000000A /* omc_progress.json */,
+				1D560A1B2F8000000000000C /* omc_output.json */,
 				E2E1892D1075BEBC001B7591 /* SelectionIterator.h */,
 				E2FB111E0D185A2C005EB1E8 /* OMC.cpp */,
 				E2FB111D0D185A2C005EB1E8 /* OMC.h */,
@@ -1221,11 +1197,8 @@
 				E2C84DAC0DA9D4CD0056DBC2 /* OMCCommandExecutor.h in Headers */,
 				1D690DDE2F45096A006FECE8 /* OMCActionUIDialog.h in Headers */,
 				E25D78990DBB24800065C7A3 /* OMCDropletController.h in Headers */,
-				E24243570DDC140F0002BF9E /* OMCOutputWindowController.h in Headers */,
 				1D690DE32F450991006FECE8 /* OMCActionUIWindowController.h in Headers */,
 				1DAB10042FFD0001009FD073 /* OMCActionUIRemoteHost.h in Headers */,
-				E24B168B0DE934CC00E44A45 /* OMCWindow.h in Headers */,
-				E24B17270DE94DB800E44A45 /* OMCPanel.h in Headers */,
 				E24B18180DE96F6D00E44A45 /* OMCFilePanels.h in Headers */,
 				E2C433470DEE72F700E976D2 /* PlistPreferences.h in Headers */,
 				E2C10C5E0E45783200454DB1 /* OMCDeferredProgress.h in Headers */,
@@ -1455,10 +1428,9 @@
 			files = (
 				E234F9FA0D0FC431001A7780 /* Private.strings in Resources */,
 				1D560A1B2F8000000000000B /* omc_progress.json in Resources */,
+				1D560A1B2F8000000000000D /* omc_output.json in Resources */,
 				E234FA290D0FCB28001A7780 /* stop.icns in Resources */,
 				E234FA2A0D0FCB28001A7780 /* app.icns in Resources */,
-				1DCFB242231FAC1100D1C62E /* OMCOutputWindow.xib in Resources */,
-				1DCFB245231FAC1600D1C62E /* OMCOutputPanel.xib in Resources */,
 				E2D92E6A1043D9F8003DC96B /* input_clear.xib in Resources */,
 				E2D92E6B1043D9F8003DC96B /* input_combo.xib in Resources */,
 				E2D92E6C1043D9F8003DC96B /* input_password.xib in Resources */,
@@ -1596,9 +1568,6 @@
 				1D0A1B2C2F72000000000104 /* OMCTestability.mm in Sources */,
 				E2C84DEB0DA9F30F0056DBC2 /* OMCCommandMenu.mm in Sources */,
 				1D80B9BA22E447E800CF1AF5 /* OMCiTermExecutor.cp in Sources */,
-				E24243580DDC140F0002BF9E /* OMCOutputWindowController.mm in Sources */,
-				E24B168C0DE934CC00E44A45 /* OMCWindow.m in Sources */,
-				E24B17280DE94DB800E44A45 /* OMCPanel.m in Sources */,
 				E24B18190DE96F6D00E44A45 /* OMCFilePanels.mm in Sources */,
 				E2C433480DEE72F700E976D2 /* PlistPreferences.cp in Sources */,
 				E2C433620DEE751300E976D2 /* OMCDropletController.mm in Sources */,
@@ -1613,7 +1582,6 @@
 				1D690DDF2F45096A006FECE8 /* OMCActionUIDialog.mm in Sources */,
 				E26B2797109C174D00DBA8CE /* OMCTableView.m in Sources */,
 				E28D660210A039C500882DDE /* OMCTableViewController.mm in Sources */,
-				E20026D710B68F3200D5388F /* OMCCustomWindow.mm in Sources */,
 				E2C8486210D61C33002DFDB5 /* OMCBox.m in Sources */,
 				E29407BF12796077004CDB05 /* OMCComboBox.m in Sources */,
 				E23AAC9012F55FE0004C867B /* OMCService.m in Sources */,
@@ -1676,22 +1644,6 @@
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
-		1DCFB244231FAC1100D1C62E /* OMCOutputWindow.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				1DCFB243231FAC1100D1C62E /* Base */,
-			);
-			name = OMCOutputWindow.xib;
-			sourceTree = "<group>";
-		};
-		1DCFB247231FAC1600D1C62E /* OMCOutputPanel.xib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				1DCFB246231FAC1600D1C62E /* Base */,
-			);
-			name = OMCOutputPanel.xib;
-			sourceTree = "<group>";
-		};
 		E234F9F80D0FC431001A7780 /* Private.strings */ = {
 			isa = PBXVariantGroup;
 			children = (

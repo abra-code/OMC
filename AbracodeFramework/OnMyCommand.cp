@@ -58,6 +58,7 @@ extern "C" const char *OMCGetActionUIRemoteEndpoint(void);
 #include "ACFPropertyList.h"
 #include "StandardDirectories.h"
 #include "OMCHelpers.h"
+#include "OMCWindowHost.h"
 #include "OMCStrings.h"
 #include "OMCTerminalExecutor.h"
 #include "OMCScriptsManager.h"
@@ -313,7 +314,7 @@ OnMyCommandCM::CommonContextCheck( const AEDesc *inAEContext, CFTypeRef inContex
 	}
 #endif
 
-	ResetOutputWindowCascading();
+	OMCResetHostedWindowCascading();
 	
 	//from now on we assume that PostMenuCleanup will be called so we own the data
 
