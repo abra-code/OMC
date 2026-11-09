@@ -66,11 +66,11 @@ static id ActionUIObjCClass(void)
     return nil;
 }
 
-/// The bar's value, or nil while it is indeterminate.
+/// The bar's value, or nil while it is indeterminate (no progress set, or a negative one).
 - (NSNumber *)progressOfWindow:(NSWindow *)window
 {
     id value = [ActionUIObjCClass() getElementStateWithWindowUUID:window.identifier viewID:kProgressBarID key:@"progress"];
-    return [value isKindOfClass:[NSNumber class]] ? value : nil;
+    return ([value isKindOfClass:[NSNumber class]] && ([value doubleValue] >= 0.0)) ? value : nil;
 }
 
 - (NSString *)statusOfWindow:(NSWindow *)window
@@ -168,8 +168,8 @@ static void ClickStop(NSWindow *window)
     XCTAssertTrue(closed, @"The window should close when the command ends");
 }
 
-/// A step with a negative VALUE takes the bar back to indeterminate, and the next step's value shows
-/// again (needs ActionUI's null state, which replaces a number).
+/// A step with a negative VALUE takes the bar back to indeterminate (its progress state is set to -1,
+/// which an ActionUI ProgressView shows as indeterminate), and the next step's value shows again.
 - (void)testANegativeStepMakesTheBarIndeterminateAgain
 {
     NSString *title = [self uniqueTitle:@"negative"];

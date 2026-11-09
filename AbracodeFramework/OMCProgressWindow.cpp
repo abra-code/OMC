@@ -104,7 +104,7 @@ OMCProgressWindow::SetProgress(double inProgress, CFStringRef inText)
 	if( (mLastValue == INT_MIN) || (wantsDeterminate != mIsDeterminate) )
 	{
 		if(!wantsDeterminate)
-			actionUISetElementStateJSON(uuid, kProgressBarID, "progress", "null"); // indeterminate
+			actionUISetElementStateJSON(uuid, kProgressBarID, "progress", "-1"); // a negative progress is indeterminate
 		mIsDeterminate = wantsDeterminate;
 	}
 
