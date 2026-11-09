@@ -107,6 +107,74 @@ check "the command saw the field" "field:Ada" "$(/usr/bin/sed -n 1p "$ITEST_WORK
 check "and all rows of the table" "rows:alpha|beta|" "$(/usr/bin/sed -n 2p "$ITEST_WORK/modal.txt" 2>/dev/null)"
 check "and could read the closed window through the bridge" "bridge:0:Ada" "$(/usr/bin/sed -n 3p "$ITEST_WORK/modal.txt" 2>/dev/null)"
 check "once it ended, the window is gone, its ActionUI model too" "" "$(itest_windows | /usr/bin/grep -x -- "$modal")"
+check "with no END_OK_SUBCOMMAND_ID its end command is omc.dialog.terminate.ok, run with the window's field" "terminate.ok:Ada" "$(/usr/bin/sed -n 1p "$ITEST_WORK/modal.end.txt" 2>/dev/null)"
+
+# A blocking window shows up a moment after its command is run: prints its UUID once the window is
+# listed and, when a table is named, that table's rows hold <text>; nothing after 20 seconds.
+wait_blocking_window() { # <windows before> [<table view id> <text>]
+    local _window=""
+    local _rows=""
+    local _n=0
+    while [ "$_n" -lt 80 ]; do
+        if [ -z "$_window" ]; then
+            _window="$(itest_new_window "$1")"
+        fi
+        if [ -n "$_window" ] && [ -z "${2:-}" ]; then
+            printf '%s\n' "$_window"
+            return 0
+        fi
+        if [ -n "$_window" ]; then
+            _rows="$(itest_call actionui.getRows "{\"window\": \"$_window\", \"viewID\": $2}" 2>/dev/null)"
+            case "$_rows" in (*"$3"*) printf '%s\n' "$_window"; return 0 ;; esac
+        fi
+        /bin/sleep 0.25
+        _n=$((_n + 1))
+    done
+    return 1
+}
+
+section "A blocking window canceled: no command, the default end command"
+before="$(itest_windows)"
+run="$(itest_run fixture.modal)"
+modal="$(wait_blocking_window "$before" 7 beta)"
+check "the blocking window opened again" "yes" "$([ -n "$modal" ] && printf yes || printf no)"
+itest_set_value "$modal" 2 "Bob"
+check "Cancel fires omc.dialog.cancel" "omc.dialog.cancel" "$(itest_click "$modal" 8)"
+itest_wait_idle
+check "with no END_CANCEL_SUBCOMMAND_ID its end command is omc.dialog.terminate.cancel, run with the window's field" "terminate.cancel:Bob" "$(/usr/bin/sed -n 2p "$ITEST_WORK/modal.end.txt" 2>/dev/null)"
+check "the command itself did not run" "3" "$(/usr/bin/wc -l < "$ITEST_WORK/modal.txt" | /usr/bin/tr -d ' ')"
+# The engine keeps the cancel to itself: ExecuteCommand returns no error, as for a canceled WARNING.
+check_contains "and the run ends with no error" '"status": 0' "$(itest_call omc.test.log "{\"run\": $run}")"
+check "the window is gone" "" "$(itest_windows | /usr/bin/grep -x -- "$modal")"
+
+section "A blocking window with its own END_OK and END_CANCEL subcommands"
+# fixture.modal.custom names fixture.custom.ok and fixture.custom.cancel; omc.dialog.ok is then an
+# ordinary action that does not close the window.
+before="$(itest_windows)"
+run="$(itest_run fixture.modal.custom)"
+custom="$(wait_blocking_window "$before")"
+check "the window opened" "yes" "$([ -n "$custom" ] && printf yes || printf no)"
+itest_set_value "$custom" 2 "Cy"
+check "a button firing omc.dialog.ok" "omc.dialog.ok" "$(itest_click "$custom" 8)"
+check "does not close it" "$custom" "$(itest_windows | /usr/bin/grep -x -- "$custom")"
+check "the END_OK_SUBCOMMAND_ID button" "fixture.custom.ok" "$(itest_click "$custom" 3)"
+itest_wait_idle
+check "closes it and runs that subcommand as its end command, with the field" "ok:Cy" "$(/usr/bin/sed -n 1p "$ITEST_WORK/custom.end.txt" 2>/dev/null)"
+check "once, not also as an action" "1" "$(/usr/bin/wc -l < "$ITEST_WORK/custom.end.txt" | /usr/bin/tr -d ' ')"
+check "then the command runs with the field" "main:Cy" "$(/usr/bin/sed -n 1p "$ITEST_WORK/custom.txt" 2>/dev/null)"
+check_contains "and the run ended well" '"status": 0' "$(itest_call omc.test.log "{\"run\": $run}")"
+check "the window is gone" "" "$(itest_windows | /usr/bin/grep -x -- "$custom")"
+before="$(itest_windows)"
+run="$(itest_run fixture.modal.custom)"
+custom="$(wait_blocking_window "$before")"
+itest_set_value "$custom" 2 "Di"
+check "the END_CANCEL_SUBCOMMAND_ID button" "fixture.custom.cancel" "$(itest_click "$custom" 9)"
+itest_wait_idle
+check "closes it and runs that subcommand as its end command, with the field" "cancel:Di" "$(/usr/bin/sed -n 2p "$ITEST_WORK/custom.end.txt" 2>/dev/null)"
+check "the command itself did not run" "1" "$(/usr/bin/wc -l < "$ITEST_WORK/custom.txt" | /usr/bin/tr -d ' ')"
+# The engine keeps the cancel to itself: ExecuteCommand returns no error, as for a canceled WARNING.
+check_contains "and the run ends with no error" '"status": 0' "$(itest_call omc.test.log "{\"run\": $run}")"
+check "the window is gone" "" "$(itest_windows | /usr/bin/grep -x -- "$custom")"
 
 section "A private home and the applet under test"
 run="$(itest_run fixture.env)"

@@ -1,0 +1,10 @@
+{
+  "type": "VStack",
+  "properties": { "spacing": 10.0, "padding": "default", "frame": { "minWidth": 360.0, "minHeight": 160.0 } },
+  "children": [
+    { "type": "TextField", "id": 2, "properties": { "placeholder": "Name" } },
+    { "type": "Button", "id": 3, "properties": { "title": "Accept", "actionID": "fixture.custom.ok" } },
+    { "type": "Button", "id": 8, "properties": { "title": "Default OK", "actionID": "omc.dialog.ok" } },
+    { "type": "Button", "id": 9, "properties": { "title": "Dismiss", "actionID": "fixture.custom.cancel" } }
+  ]
+}
