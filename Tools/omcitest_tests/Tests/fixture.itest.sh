@@ -258,3 +258,17 @@ check_contains "the window did not take it" '"dispatchedToWindow": false' "$(ite
 check "it ran on its own, on the answered file" "files:$ITEST_WORK/picked.txt" "$(itest_output "$run")"
 itest_close "$window" > /dev/null
 itest_wait_idle
+
+section "Quit"
+# Last: the applet does not come back. app.will.terminate's script is a child of the applet that
+# may outlive it, so its line is waited for (up to 5 seconds).
+itest_quit
+terminated=""
+for _ in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50; do
+    terminated="$(/usr/bin/grep -x "will.terminate" "$ITEST_WORK/lifetime.txt" 2>/dev/null)"
+    if [ -n "$terminated" ]; then
+        break
+    fi
+    /bin/sleep 0.1
+done
+check "app.will.terminate ran when the applet quit" "will.terminate" "$terminated"

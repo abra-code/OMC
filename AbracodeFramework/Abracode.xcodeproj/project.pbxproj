@@ -49,7 +49,7 @@
 		1D9BCB8822CCA65A00F4EAB6 /* StandardDirectories.m in Sources */ = {isa = PBXBuildFile; fileRef = 1D9BCB8722CCA65A00F4EAB6 /* StandardDirectories.m */; };
 		1D0A1B2C2F6A000000000006 /* ACFURL.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1D0A1B2C2F6A000000000005 /* ACFURL.cpp */; };
 		1D9BCB8C22CCAB4F00F4EAB6 /* OMCStrings.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1D9BCB8B22CCAB4F00F4EAB6 /* OMCStrings.cpp */; };
-		1DA51CB62EACCD1B00BFF670 /* OMCAppLifetimeEvents.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1DA51CB42EACC95B00BFF670 /* OMCAppLifetimeEvents.mm */; };
+		1DA51CB62EACCD1B00BFF670 /* OMCAppLifecycleObserver.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1DA51CB42EACC95B00BFF670 /* OMCAppLifecycleObserver.mm */; };
 		1DAACE122FDE9A0100C0FFEE /* ActionUIMenuBar in Frameworks */ = {isa = PBXBuildFile; productRef = 1DAACE112FDE9A0100C0FFEE /* ActionUIMenuBar */; };
 		1DAB10022FFD0001009FD073 /* ActionUIRemote in Frameworks */ = {isa = PBXBuildFile; productRef = 1DAB10012FFD0001009FD073 /* ActionUIRemote */; };
 		1D0A1B2C2F72000000000110 /* OMCTestHost.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1D0A1B2C2F72000000000106 /* OMCTestHost.cpp */; };
@@ -60,6 +60,7 @@
 		1D560A1B2F80000000000030 /* OMCActionUIControls.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1D560A1B2F8000000000002E /* OMCActionUIControls.cpp */; };
 		1D560A1B2F80000000000033 /* OMCDialogControlDispatch.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1D560A1B2F80000000000031 /* OMCDialogControlDispatch.cpp */; };
 		1D560A1B2F80000000000039 /* OMCURLParse.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1D560A1B2F80000000000037 /* OMCURLParse.cpp */; };
+		1D560A1B2F8000000000003C /* OMCAppLifecycle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1D560A1B2F8000000000003A /* OMCAppLifecycle.cpp */; };
 		1D0A1B2C2F75000000000106 /* OMCActionUIModels.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1D0A1B2C2F75000000000105 /* OMCActionUIModels.mm */; };
 		1D0A1B2C2F74000000000102 /* OMCAlerts.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1D0A1B2C2F74000000000101 /* OMCAlerts.cpp */; };
 		1D560A1B2F80000000000002 /* ActionUICAdapter in Frameworks */ = {isa = PBXBuildFile; productRef = 1D560A1B2F80000000000001 /* ActionUICAdapter */; };
@@ -460,7 +461,7 @@
 		1D0A1B2C2F6A000000000005 /* ACFURL.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ACFURL.cpp; sourceTree = "<group>"; };
 		1D9BCB8A22CCA66500F4EAB6 /* ACFURL.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ACFURL.h; sourceTree = "<group>"; };
 		1D9BCB8B22CCAB4F00F4EAB6 /* OMCStrings.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCStrings.cpp; sourceTree = "<group>"; };
-		1DA51CB42EACC95B00BFF670 /* OMCAppLifetimeEvents.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCAppLifetimeEvents.mm; sourceTree = "<group>"; };
+		1DA51CB42EACC95B00BFF670 /* OMCAppLifecycleObserver.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCAppLifecycleObserver.mm; sourceTree = "<group>"; };
 		1D0A1B2C2F72000000000105 /* OMCTestHost.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCTestHost.h; sourceTree = "<group>"; };
 		1D0A1B2C2F72000000000106 /* OMCTestHost.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCTestHost.cpp; sourceTree = "<group>"; };
 		1D0A1B2C2F73000000000101 /* OMCFilePanels.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCFilePanels.cpp; sourceTree = "<group>"; };
@@ -474,6 +475,8 @@
 		1D560A1B2F80000000000032 /* OMCDialogControlDispatch.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCDialogControlDispatch.h; sourceTree = "<group>"; };
 		1D560A1B2F80000000000037 /* OMCURLParse.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCURLParse.cpp; sourceTree = "<group>"; };
 		1D560A1B2F80000000000038 /* OMCURLParse.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCURLParse.h; sourceTree = "<group>"; };
+		1D560A1B2F8000000000003A /* OMCAppLifecycle.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCAppLifecycle.cpp; sourceTree = "<group>"; };
+		1D560A1B2F8000000000003B /* OMCAppLifecycle.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCAppLifecycle.h; sourceTree = "<group>"; };
 		1D0A1B2C2F75000000000104 /* OMCActionUIModels.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCActionUIModels.h; sourceTree = "<group>"; };
 		1D0A1B2C2F75000000000105 /* OMCActionUIModels.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCActionUIModels.mm; sourceTree = "<group>"; };
 		1D0A1B2C2F74000000000101 /* OMCAlerts.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCAlerts.cpp; sourceTree = "<group>"; };
@@ -941,6 +944,7 @@
 				1D560A1B2F80000000000025 /* OMCActionUIAddOns.cpp */,
 				E29ED1750D09525700C9D5E8 /* OMCClipboard.cp */,
 				1DBCC43222CE209300A1DD8F /* OMCHostInfo.mm */,
+				1DA51CB42EACC95B00BFF670 /* OMCAppLifecycleObserver.mm */,
 				1D0A1B2C2F6A000000000001 /* NibDialogs */,
 				E29ED1710D09525700C9D5E8 /* CMUtils */,
 				E29ED19E0D09528600C9D5E8 /* MoreAppleEvents */,
@@ -1074,7 +1078,6 @@
 			children = (
 				E2517C410D1BCC2700180C68 /* OMCMenuItem.h */,
 				E2517C420D1BCC2700180C68 /* OMCMenuItem.m */,
-				1DA51CB42EACC95B00BFF670 /* OMCAppLifetimeEvents.mm */,
 				E2D92E8D1043E0E3003DC96B /* OMCInputDialog.cpp */,
 				E2D92E871043E0C2003DC96B /* OMCInputDialog.h */,
 				E258B20F0E46E37C00926F10 /* OMCDeferredProgress.cpp */,
@@ -1120,6 +1123,8 @@
 				1D560A1B2F80000000000032 /* OMCDialogControlDispatch.h */,
 				1D560A1B2F80000000000037 /* OMCURLParse.cpp */,
 				1D560A1B2F80000000000038 /* OMCURLParse.h */,
+				1D560A1B2F8000000000003A /* OMCAppLifecycle.cpp */,
+				1D560A1B2F8000000000003B /* OMCAppLifecycle.h */,
 				1D0A1B2C2F74000000000101 /* OMCAlerts.cpp */,
 				1D560A1B2F80000000000006 /* OMCProgressWindow.h */,
 				1D560A1B2F80000000000007 /* OMCProgressWindow.cpp */,
@@ -1530,7 +1535,7 @@
 				E2ED3AF20D0B27F700481D8F /* OMCDialogControlHelpers.cp in Sources */,
 				1DB9D8C62324F01E003F6849 /* OMCEnvironmentExportScript.cpp in Sources */,
 				1D9BCB8C22CCAB4F00F4EAB6 /* OMCStrings.cpp in Sources */,
-				1DA51CB62EACCD1B00BFF670 /* OMCAppLifetimeEvents.mm in Sources */,
+				1DA51CB62EACCD1B00BFF670 /* OMCAppLifecycleObserver.mm in Sources */,
 				E2ED3BA60D0B287000481D8F /* OutputWindowHandler.cp in Sources */,
 				E2ED3BAE0D0B288400481D8F /* OmcTaskManager.cpp in Sources */,
 				E2ED3BB00D0B288400481D8F /* OmcExecutor.cp in Sources */,
@@ -1545,6 +1550,7 @@
 				1D560A1B2F80000000000030 /* OMCActionUIControls.cpp in Sources */,
 				1D560A1B2F80000000000033 /* OMCDialogControlDispatch.cpp in Sources */,
 				1D560A1B2F80000000000039 /* OMCURLParse.cpp in Sources */,
+				1D560A1B2F8000000000003C /* OMCAppLifecycle.cpp in Sources */,
 				1D0A1B2C2F75000000000106 /* OMCActionUIModels.mm in Sources */,
 				1D0A1B2C2F74000000000102 /* OMCAlerts.cpp in Sources */,
 				1D560A1B2F80000000000005 /* OMCWindowHost.mm in Sources */,

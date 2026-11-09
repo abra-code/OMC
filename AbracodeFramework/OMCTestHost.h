@@ -140,7 +140,7 @@
 extern "C" {
 #endif //__cplusplus
 
-// Called once, early in launch (OMCAppLifetimeEvents, before app.will.launch). Does nothing for a
+// Called once, early in launch (OMCAppLifecycle.cpp, before app.will.launch). Does nothing for a
 // normal launch.
 void OMCTestHostStartIfRequested(void);
 

@@ -118,7 +118,7 @@ REL_SCAN = "Contents"          # app-authored text to scan for entry points
 # RUNTIME_KEEP once held "compileall", because the OMC runtime ran
 # `python3 -m compileall Contents/Resources/Scripts` on every applet launch from compiled framework
 # code, where no scan of the app's own text can see it. That call is disabled as of 2026-08-23
-# (AbracodeFramework/OMCAppLifetimeEvents.mm documents why and how it was measured: it cost 23.7 ms
+# (AbracodeFramework/Platform/Apple/OMCAppLifecycleObserver.mm documents why and how it was measured: it cost 23.7 ms
 # of synchronous launch time per start to save 2.1 ms once, and the top-level .pyc it wrote were
 # never read, because CPython does not consult a bytecode cache for __main__). With no caller left,
 # compileall is an ordinary removal candidate again and the set is empty.

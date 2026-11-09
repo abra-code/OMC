@@ -1514,7 +1514,7 @@ OnMyCommand::GetCommandInfo(SInt32 inCommandRef, OMCInfoType infoType, void *out
 	return err;
 }
 
-// Ids the application lifecycle runs (OMCAppLifetimeEvents.mm). A link must never run them:
+// Ids the application lifecycle runs (OMCAppLifecycle.cpp). A link must never run them:
 // app.will.terminate, for one, tears the applet's state down while the applet keeps running.
 static const CFStringRef sAppLifecycleCommandIDs[] =
 {
