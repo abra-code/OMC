@@ -1,8 +1,8 @@
 //
 //  ACFJSON.cpp
 //
-//  See ACFJSON.h. The rules below reproduce NSJSONSerialization as measured on macOS
-//  (Private/json-port-design.md); OMCJSONFoundationParityTests compares both directions with it.
+//  See ACFJSON.h. The rules below reproduce NSJSONSerialization as measured on macOS;
+//  OMCJSONFoundationParityTests compares both directions with it.
 //
 
 #include "ACFJSON.h"
