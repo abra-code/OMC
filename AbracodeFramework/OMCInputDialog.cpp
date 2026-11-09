@@ -304,7 +304,7 @@ static CFStringRef CopyLocalizedString(CFStringRef inString, CFBundleRef inBundl
 }
 
 Boolean
-RunInputDialog(OnMyCommandCM *inPlugin, CommandRuntimeData &commandRuntimeData)
+RunInputDialog(OnMyCommand *inPlugin, CommandRuntimeData &commandRuntimeData)
 {
 	if(inPlugin == nullptr)
 		return false;

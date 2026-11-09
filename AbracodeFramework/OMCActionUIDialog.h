@@ -6,7 +6,7 @@
 //  Copyright 2026 Abracode. All rights reserved.
 //
 
-class OnMyCommandCM;
+class OnMyCommand;
 #include "OMCDialog.h"
 
 class CommandRuntimeData;
@@ -26,4 +26,4 @@ public:
 };
 
 
-ARefCountedObj<OMCDialog> RunActionUIDialog(OnMyCommandCM *inPlugin, CommandRuntimeData *commandRuntimeData);
+ARefCountedObj<OMCDialog> RunActionUIDialog(OnMyCommand *inPlugin, CommandRuntimeData *commandRuntimeData);

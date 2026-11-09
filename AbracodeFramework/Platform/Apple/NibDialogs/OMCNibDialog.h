@@ -6,7 +6,7 @@
 //  Copyright 2008 Abracode. All rights reserved.
 //
 
-class OnMyCommandCM;
+class OnMyCommand;
 #include "OMCDialog.h"
 
 class CommandRuntimeData;
@@ -27,4 +27,4 @@ public:
 };
 
 
-ARefCountedObj<OMCDialog> RunNibDialog(OnMyCommandCM *inPlugin, CommandRuntimeData *commandRuntimeData);
+ARefCountedObj<OMCDialog> RunNibDialog(OnMyCommand *inPlugin, CommandRuntimeData *commandRuntimeData);

@@ -1,6 +1,6 @@
 /*
  *  OmcTaskNotification.h
- *  OnMyCommandCM
+ *  OnMyCommand
  *
  *  Created by Tomasz Kukielka on Fri Dec 1 2006.
  *  Copyright (c) 2006 Abracode, Inc. All rights reserved.

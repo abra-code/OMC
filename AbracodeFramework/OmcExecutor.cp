@@ -1,6 +1,6 @@
 /*
  *  OmcExecutor.cp
- *  OnMyCommandCM
+ *  OnMyCommand
  *  Mach-O only
  *  Created by Tomasz Kukielka on Thu Aug 21 2003.
  *  Copyright (c) 2003  Abracode, Inc. All rights reserved.

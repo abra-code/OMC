@@ -179,7 +179,7 @@ GetAllDialogControllers()
     return nil;
 }
 
-- (id)initWithOmc:(OnMyCommandCM *)inOmc commandRuntimeData:(CommandRuntimeData *)inCommandRuntimeData
+- (id)initWithOmc:(OnMyCommand *)inOmc commandRuntimeData:(CommandRuntimeData *)inCommandRuntimeData
 {
    self = [super init];
 	if(self == nil)

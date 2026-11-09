@@ -15,7 +15,7 @@
 #include <memory>
 
 class SelectionIterator;
-class OnMyCommandCM;
+class OnMyCommand;
 
 enum
 {
@@ -40,7 +40,7 @@ class OMCDialog : public ARefCounted
 {
 
 public:
-	friend class OnMyCommandCM;
+	friend class OnMyCommand;
 
 							OMCDialog();
 	virtual					~OMCDialog();

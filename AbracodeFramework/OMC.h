@@ -55,7 +55,7 @@ OSStatus OMCRunCommandAE(CFTypeRef inPlistRef, CFStringRef inCommandNameOrID, AE
 // http://developer.apple.com/cgi-bin/search.pl?&q=CMPluginExamineContext
 
 
-typedef struct OnMyCommandCM * OMCExecutorRef;
+typedef struct OnMyCommand * OMCExecutorRef;
 
 typedef SInt32 OMCCommandRef;
 enum

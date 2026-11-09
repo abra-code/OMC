@@ -120,7 +120,7 @@
 
 // kExecSilentSystem runs a bare system() and the AppleScript modes hand their text to OSA.
 // Neither takes an environ, so neither ever sees the dictionary PopulateEnvironList builds.
-// OMC_APP_PROCESS_ID reaches them only because OnMyCommandCM::Init() setenv()s it into the
+// OMC_APP_PROCESS_ID reaches them only because OnMyCommand::Init() setenv()s it into the
 // framework's own process environment, which a child inherits. These two tests are what keep
 // the "Always" in the documentation honest for those modes.
 

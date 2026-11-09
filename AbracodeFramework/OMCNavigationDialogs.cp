@@ -65,7 +65,7 @@ CopyNavDialogParams(CFDictionaryRef inParams, CFStringRef *outMessage, CFArrayRe
 }
 
 void
-PresentSaveAsDialog(OnMyCommandCM *inPlugin,
+PresentSaveAsDialog(OnMyCommand *inPlugin,
                     CommandRuntimeData &commandRuntimeData,
                     CFStringRef commandName,
                     CFBundleRef localizationBundle)
@@ -85,7 +85,7 @@ PresentSaveAsDialog(OnMyCommandCM *inPlugin,
 
     if( ((additionalFlags & kOMCFilePanelUseCachedPath) == 0) || (commandRuntimeData.cachedSaveAsPath == nullptr) )
     {
-        TRACE_CSTR("OnMyCommandCM About to display save as dialog\n" );
+        TRACE_CSTR("OnMyCommand About to display save as dialog\n" );
         CFObj<CFMutableStringRef> defaultName( inPlugin->CreateCombinedStringWithObjects(defaultFileName,
                                                                                commandRuntimeData,
                                                                                currCommand.localizationTableName,
@@ -123,7 +123,7 @@ PresentSaveAsDialog(OnMyCommandCM *inPlugin,
 }
 
 void
-PresentChooseFileDialog(OnMyCommandCM *inPlugin,
+PresentChooseFileDialog(OnMyCommand *inPlugin,
                          CommandRuntimeData &commandRuntimeData,
                          CFStringRef commandName,
                          CFBundleRef localizationBundle)
@@ -143,7 +143,7 @@ PresentChooseFileDialog(OnMyCommandCM *inPlugin,
 
     if( ((additionalFlags & kOMCFilePanelUseCachedPath) == 0) || (commandRuntimeData.cachedChooseFilePaths == nullptr) )
     {
-        TRACE_CSTR("OnMyCommandCM About to display choose file dialog\n" );
+        TRACE_CSTR("OnMyCommand About to display choose file dialog\n" );
         CFObj<CFMutableStringRef> defaultName( inPlugin->CreateCombinedStringWithObjects(defaultFileName,
                                                                                commandRuntimeData,
                                                                                currCommand.localizationTableName,
@@ -194,7 +194,7 @@ PresentChooseFileDialog(OnMyCommandCM *inPlugin,
 }
 
 void
-PresentChooseFolderDialog(OnMyCommandCM *inPlugin,
+PresentChooseFolderDialog(OnMyCommand *inPlugin,
                           CommandRuntimeData &commandRuntimeData,
                           CFStringRef commandName,
                           CFBundleRef localizationBundle)
@@ -214,7 +214,7 @@ PresentChooseFolderDialog(OnMyCommandCM *inPlugin,
 
     if( ((additionalFlags & kOMCFilePanelUseCachedPath) == 0) || (commandRuntimeData.cachedChooseFolderPaths == nullptr) )
     {
-        TRACE_CSTR("OnMyCommandCM About to display choose folder dialog\n" );
+        TRACE_CSTR("OnMyCommand About to display choose folder dialog\n" );
         CFObj<CFMutableStringRef> defaultName( inPlugin->CreateCombinedStringWithObjects(defaultFileName,
                                                                                commandRuntimeData,
                                                                                currCommand.localizationTableName,
@@ -265,7 +265,7 @@ PresentChooseFolderDialog(OnMyCommandCM *inPlugin,
 }
 
 void
-PresentChooseObjectDialog(OnMyCommandCM *inPlugin,
+PresentChooseObjectDialog(OnMyCommand *inPlugin,
                           CommandRuntimeData &commandRuntimeData,
                           CFStringRef commandName,
                           CFBundleRef localizationBundle)
@@ -285,7 +285,7 @@ PresentChooseObjectDialog(OnMyCommandCM *inPlugin,
 
     if( ((additionalFlags & kOMCFilePanelUseCachedPath) == 0) || (commandRuntimeData.cachedChooseObjectPaths == nullptr) )
     {
-        TRACE_CSTR("OnMyCommandCM About to display choose object dialog\n" );
+        TRACE_CSTR("OnMyCommand About to display choose object dialog\n" );
         CFObj<CFMutableStringRef> defaultName( inPlugin->CreateCombinedStringWithObjects(defaultFileName,
                                                                                commandRuntimeData,
                                                                                currCommand.localizationTableName,

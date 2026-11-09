@@ -76,7 +76,7 @@ CheckFileType(OneObjProperties *inObj, void *inData)
 Boolean
 CheckExtension(OneObjProperties *inObj, void *inData)
 {
-//	TRACE_CSTR("OnMyCommandCM. CheckExtension\n" );
+//	TRACE_CSTR("OnMyCommand. CheckExtension\n" );
 
 	if(inData == NULL) return false;
 	CommandDescription *commDesc = (CommandDescription *)inData;

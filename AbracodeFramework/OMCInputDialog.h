@@ -17,12 +17,12 @@
 #include <vector>
 #include "CFObj.h"
 
-class OnMyCommandCM;
+class OnMyCommand;
 class CommandRuntimeData;
 
 // Runs the current command's input dialog. Returns true when the user pressed OK, with
 // commandRuntimeData.inputText set to the choice.
-Boolean RunInputDialog(OnMyCommandCM *inPlugin, CommandRuntimeData &commandRuntimeData);
+Boolean RunInputDialog(OnMyCommand *inPlugin, CommandRuntimeData &commandRuntimeData);
 
 struct OMCInputMenuItem
 {

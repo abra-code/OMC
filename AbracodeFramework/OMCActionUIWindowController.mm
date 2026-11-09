@@ -123,7 +123,7 @@ static NSArray<ActionUIObjCDialogButton *> *OMCParseButtonSpecs(NSArray *specs)
 // the matching verifier schema and rebuilding the skill, else the Command.plist verifier drifts:
 //   verifier schema: Distribution/AppletBuilder.app/Contents/Library/command_verifier/schemas/ACTIONUI_WINDOW.json
 //   rebuild skill:   python3 Skill/build_skill.py
-- (id)initWithOmc:(OnMyCommandCM *)inOmc commandRuntimeData:(CommandRuntimeData *)inCommandRuntimeData
+- (id)initWithOmc:(OnMyCommand *)inOmc commandRuntimeData:(CommandRuntimeData *)inCommandRuntimeData
 {
    self = [super initWithOmc:inOmc commandRuntimeData:inCommandRuntimeData];
 	if(self == nil)

@@ -4,14 +4,14 @@
 //
 //  The contextual menu plugin's object (OnMyCommandCM.plugin, loaded by Shortcuts.app): the Menu
 //  Manager's ExamineContext, HandleSelection and PostMenuCleanup over Apple event descriptors, on an
-//  engine (OnMyCommandCM) of its own. The plugin creates it in CreateNewCMPlugin(), once per menu.
+//  engine (OnMyCommand) of its own. The plugin creates it in CreateNewCMPlugin(), once per menu.
 //  macOS only. Phase 5 step 6 (Private/phase5-interfaces-design.md).
 //
 
 #pragma once
 #include "ACMPlugin.h"
 
-class OnMyCommandCM;
+class OnMyCommand;
 
 class OnMyCommandCMPlugin : public ACMPlugin
 {
@@ -25,5 +25,5 @@ public:
 	CFBundleRef			GetBundleRef() const override; // Abracode.framework, the engine's
 
 private:
-	ARefCountedObj<OnMyCommandCM>	mEngine;
+	ARefCountedObj<OnMyCommand>	mEngine;
 };

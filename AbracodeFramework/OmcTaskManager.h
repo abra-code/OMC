@@ -38,13 +38,13 @@ protected:
 	virtual void	RunNext() = 0;    
 };
 
-class OnMyCommandCM;
+class OnMyCommand;
 class CommandDescription;
 
 class OmcHostTaskManager : public OmcTaskManager
 {
 public:
-					OmcHostTaskManager(OnMyCommandCM *inPlugin, const CommandDescription &currCommand,
+					OmcHostTaskManager(OnMyCommand *inPlugin, const CommandDescription &currCommand,
 										CFStringRef inCommandName, CFBundleRef inBundle, CFIndex inMaxTaskCount);
 	virtual			~OmcHostTaskManager();
 
@@ -80,7 +80,7 @@ private:
 	void			Finalize();
 
 protected:
-	ARefCountedObj<OnMyCommandCM> mPlugin; //the plugin is retained and released when we finish
+	ARefCountedObj<OnMyCommand> mPlugin; //the plugin is retained and released when we finish
 	const CommandDescription &	mCurrCommand;
 	CFObj<CFStringRef>			mCommandName;
 	CFObj<CFDictionaryRef>		mEndNotificationParams;

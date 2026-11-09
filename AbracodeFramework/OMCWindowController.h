@@ -15,7 +15,7 @@
 #include "AUniquePtr.h"
 #include "SelectionIterator.h"
 
-class OnMyCommandCM;
+class OnMyCommand;
 class OMCDialog;
 class CommandRuntimeData;
 
@@ -24,7 +24,7 @@ class CommandRuntimeData;
 	// we compile ObjC with the flag to invoke C++ constructors and destructor
 	// so we can use smart pointers as member variables
 
-	ARefCountedObj<OnMyCommandCM>	mPlugin;
+	ARefCountedObj<OnMyCommand>	mPlugin;
 	ARefCountedObj<OMCDialog>		mOMCDialogProxy;
     ARefCountedObj<CommandRuntimeData> mCommandRuntimeData;
 	CFObj<CFBundleRef>				mExternBundleRef;
@@ -45,7 +45,7 @@ class CommandRuntimeData;
 + (instancetype)findControllerByUUID:(NSString *)uuid;
 + (instancetype)findControllerForKeyWindow;
 
-- (id)initWithOmc:(OnMyCommandCM *)inOmc commandRuntimeData:(CommandRuntimeData *)inCommandRuntimeData;
+- (id)initWithOmc:(OnMyCommand *)inOmc commandRuntimeData:(CommandRuntimeData *)inCommandRuntimeData;
 - (OMCDialog *)getOMCDialog;
 - (Boolean)isModal;
 - (void)run;

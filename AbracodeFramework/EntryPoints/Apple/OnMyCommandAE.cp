@@ -4,7 +4,7 @@
 //
 //  The Apple event face of the engine: the contextual menu plugin's object (OnMyCommandCMPlugin,
 //  loaded by Shortcuts.app) and OMC.h's Apple event functions (OMCRunCommandAE, OMCExamineContextAE,
-//  OMCExecuteCommandAE) reach OnMyCommandCM here. The Apple event descriptor of the selection is
+//  OMCExecuteCommandAE) reach OnMyCommand here. The Apple event descriptor of the selection is
 //  turned into an OMCHostSelection (CF) and the engine's menu model into the Menu Manager's
 //  AEDescList; the engine itself takes no Apple event types.
 //  macOS only. Phase 5 step 6 (Private/phase5-interfaces-design.md).
@@ -78,7 +78,7 @@ AddMenuToAEList(const OMCMenuModel &inMenu, AEDescList *ioRootMenu)
 // them (below kCMCommandStart); the menu is built whenever a list is given, also when the check then
 // refuses the command
 static OSStatus
-ExamineAEContext(OnMyCommandCM &inEngine, const AEDesc *inAEContext, SInt32 inCommandRef, AEDescList *outCommandPairs)
+ExamineAEContext(OnMyCommand &inEngine, const AEDesc *inAEContext, SInt32 inCommandRef, AEDescList *outCommandPairs)
 {
 	OMCHostSelection selection;
 	MakeHostSelection(inAEContext, selection);
@@ -93,7 +93,7 @@ ExamineAEContext(OnMyCommandCM &inEngine, const AEDesc *inAEContext, SInt32 inCo
 
 OnMyCommandCMPlugin::OnMyCommandCMPlugin()
 	: ACMPlugin(nullptr) // the bundle is the engine's
-	, mEngine(new OnMyCommandCM(nullptr), kARefCountDontRetain)
+	, mEngine(new OnMyCommand(nullptr), kARefCountDontRetain)
 {
 }
 
@@ -139,7 +139,7 @@ extern "C" OSStatus OMCRunCommandAE(CFTypeRef inPlistRef, CFStringRef inCommandN
 
 	try
 	{
-		ARefCountedObj<OnMyCommandCM> omcPlugin(new OnMyCommandCM(inPlistRef), kARefCountDontRetain);
+		ARefCountedObj<OnMyCommand> omcPlugin(new OnMyCommand(inPlistRef), kARefCountDontRetain);
 		omcPlugin->Init();
 		SInt32 commandIndex = omcPlugin->FindCommandIndex(inCommandNameOrID);
 		if(commandIndex < 0)

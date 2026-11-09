@@ -27,7 +27,7 @@
 #include "CFObj.h"
 
 class OMCHostedWindow;
-class OMCScheduledCall; // OMCMainThreadSignal.h is not included here: OnMyCommandCM includes this header without Platform/ in its search paths
+class OMCScheduledCall; // OMCMainThreadSignal.h is not included here: OnMyCommand includes this header without Platform/ in its search paths
 
 typedef enum
 {

@@ -2,7 +2,7 @@
 
 #include "CFObj.h"
 
-class OnMyCommandCM;
+class OnMyCommand;
 class CommandRuntimeData;
 
 UInt32 GetNavDialogParams(CFDictionaryRef inFileDialogDict,
@@ -22,25 +22,25 @@ UInt32 CopyNavDialogParams(CFDictionaryRef inParams, CFStringRef *outMessage, CF
                            CFArrayRef *outAllowedContentTypes);
 
 void
-PresentSaveAsDialog(OnMyCommandCM *inPlugin,
+PresentSaveAsDialog(OnMyCommand *inPlugin,
                     CommandRuntimeData &commandRuntimeData,
                     CFStringRef commandName,
                     CFBundleRef localizationBundle);
 
 void
-PresentChooseFileDialog(OnMyCommandCM *inPlugin,
+PresentChooseFileDialog(OnMyCommand *inPlugin,
                         CommandRuntimeData &commandRuntimeData,
                         CFStringRef commandName,
                         CFBundleRef localizationBundle);
 
 void
-PresentChooseFolderDialog(OnMyCommandCM *inPlugin,
+PresentChooseFolderDialog(OnMyCommand *inPlugin,
                           CommandRuntimeData &commandRuntimeData,
                           CFStringRef commandName,
                           CFBundleRef localizationBundle);
 
 void
-PresentChooseObjectDialog(OnMyCommandCM *inPlugin,
+PresentChooseObjectDialog(OnMyCommand *inPlugin,
                           CommandRuntimeData &commandRuntimeData,
                           CFStringRef commandName,
                           CFBundleRef localizationBundle);

@@ -191,7 +191,7 @@ OMCNoteEngineActivity(void)
 	sEngineActivity++;
 }
 
-OmcHostTaskManager::OmcHostTaskManager(OnMyCommandCM *inPlugin, const CommandDescription &currCommand,
+OmcHostTaskManager::OmcHostTaskManager(OnMyCommand *inPlugin, const CommandDescription &currCommand,
 										CFStringRef inCommandName, CFBundleRef inBundle, CFIndex inMaxTaskCount)
 	: mPlugin(inPlugin, kARefCountRetain), mCurrCommand(currCommand),
 	mCommandName(inCommandName, kCFObjRetain), mEndNotificationParams(currCommand.endNotification, kCFObjRetain),
@@ -266,10 +266,10 @@ OmcHostTaskManager::Finalize()
     }
     else if(mCurrCommand.simulatePaste && (mPlugin->GetError() == noErr))
     {
-        TRACE_CSTR( "OnMyCommandCM::Finalize: simulate paste\n" );
+        TRACE_CSTR( "OnMyCommand::Finalize: simulate paste\n" );
         if( OMCMainThreadSignal::RunAfter(0.05, KeyPressSimulationCallBack, nullptr) )
         {
-            TRACE_CSTR( "OnMyCommandCM:Finalize: scheduled paste simulation\n" );
+            TRACE_CSTR( "OnMyCommand:Finalize: scheduled paste simulation\n" );
         }
         else
         {

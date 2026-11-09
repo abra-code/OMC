@@ -20,7 +20,7 @@
 @import ActionUIObjCAdapter;
 #endif
 
-ARefCountedObj<OMCDialog> RunActionUIDialog(OnMyCommandCM *inPlugin, CommandRuntimeData *commandRuntimeData)
+ARefCountedObj<OMCDialog> RunActionUIDialog(OnMyCommand *inPlugin, CommandRuntimeData *commandRuntimeData)
 {
 	ARefCountedObj<OMCDialog> outDialog;
 

@@ -3,7 +3,7 @@
 //  Abracode
 //
 //  The commands a context check offers, as a menu: what the contextual menu shows. The engine fills
-//  it (OnMyCommandCM::PopulateItemsMenu); a host builds its own menu from it (macOS: the contextual
+//  it (OnMyCommand::PopulateItemsMenu); a host builds its own menu from it (macOS: the contextual
 //  menu plugin's Apple event list, EntryPoints/Apple/OnMyCommandAE.cp). Portable.
 //
 

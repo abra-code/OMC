@@ -153,7 +153,7 @@ typedef struct CommandDescription
     CFObj<CFStringRef>		localizationTableName;
 
     // The CF members are owned and released by their CFObj.
-    // Commands are never copied: OnMyCommandCM keeps them in one array and hands out references.
+    // Commands are never copied: OnMyCommand keeps them in one array and hands out references.
     CommandDescription() = default;
     ~CommandDescription() = default;
     CommandDescription(const CommandDescription &) = delete;

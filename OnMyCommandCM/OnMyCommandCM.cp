@@ -20,7 +20,7 @@ CFUUIDRef kCMPluginFactoryID = ::CFUUIDGetConstantUUIDWithBytes( NULL,
 
 ACMPlugin *CreateNewCMPlugin()
 {
-//	TRACE_CSTR( "CreateNewCMPlugin for OnMyCommandCM\n" );
+//	TRACE_CSTR( "CreateNewCMPlugin for OnMyCommand\n" );
 	return new OnMyCommandCMPlugin();
 }
 

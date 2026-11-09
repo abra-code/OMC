@@ -15,7 +15,7 @@
 #include "OmcTaskNotification.h"
 #include "OMCDialogControlHelpers.h"
 
-ARefCountedObj<OMCDialog> RunNibDialog(OnMyCommandCM *inPlugin, CommandRuntimeData *commandRuntimeData)
+ARefCountedObj<OMCDialog> RunNibDialog(OnMyCommand *inPlugin, CommandRuntimeData *commandRuntimeData)
 {
 	ARefCountedObj<OMCDialog > outDialog;
 	if(inPlugin == nullptr)

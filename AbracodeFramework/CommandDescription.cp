@@ -219,7 +219,7 @@ SpecialWordID
 GetSpecialWordID(CFStringRef inStr)
 {
 #if 0
-    TRACE_CSTR( "OnMyCommandCM->GetSpecialWordID\n" );
+    TRACE_CSTR( "OnMyCommand->GetSpecialWordID\n" );
 #endif
 
     if(inStr == NULL)
@@ -288,7 +288,7 @@ SpecialWordID
 GetSpecialEnvironWordID(CFStringRef inStr)
 {
 #if 0
-    TRACE_CSTR( "OnMyCommandCM->GetSpecialEnvironWordID\n" );
+    TRACE_CSTR( "OnMyCommand->GetSpecialEnvironWordID\n" );
 #endif
 
     if(inStr == NULL)
@@ -527,7 +527,7 @@ GetContextMatchingParams(CommandDescription &outDesc, CFDictionaryRef inParams)
 void
 GetOneCommandParams(CommandDescription &outDesc, CFDictionaryRef inOneCommand, CFURLRef externBundleOverrideURL)
 {
-//    TRACE_CSTR("OnMyCommandCM. GetOneCommandParams\n" );
+//    TRACE_CSTR("OnMyCommand. GetOneCommandParams\n" );
 
     CFStringRef theStr;
     CFDictionaryRef theDict;
@@ -1200,7 +1200,7 @@ PrescanCommandDescription( CommandDescription &currCommand )
     if( currCommand.isPrescanned )
         return;
 
-//    TRACE_CSTR("OnMyCommandCM->PrescanCommandDescription\n" );
+//    TRACE_CSTR("OnMyCommand->PrescanCommandDescription\n" );
     if(currCommand.command != nullptr)
     {
         PrescanArrayOfObjects( currCommand, currCommand.command );
@@ -1223,7 +1223,7 @@ ScanDynamicName(CommandDescription &currCommand)
     if( currCommand.name == nullptr )
         return;
 
-//    TRACE_CSTR("OnMyCommandCM->ScanDynamicName\n" );
+//    TRACE_CSTR("OnMyCommand->ScanDynamicName\n" );
 
     ACFArr command(currCommand.name);
     CFIndex theCount = command.GetCount();

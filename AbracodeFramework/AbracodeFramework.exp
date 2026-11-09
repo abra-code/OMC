@@ -31,7 +31,6 @@ _OBJC_CLASS_$_OMCMainMenuController
 # The nib dialog controls are in Platform/Apple/NibDialogs/NibDialogs.exp.
 
 
-__ZN13OnMyCommandCMC1EPKv
 __ZN19OnMyCommandCMPluginC1Ev
 
 _CreateDefaultExternBundleRef

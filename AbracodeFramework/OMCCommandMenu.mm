@@ -88,7 +88,7 @@ FindOrAddSubmenu(NSMenu * inMenu, OneSubmenuName *inSubmenu)
 
 
 OSStatus
-PopulateCommandsMenu(OnMyCommandCM *inPlugin, NSMenu *topMenu)
+PopulateCommandsMenu(OnMyCommand *inPlugin, NSMenu *topMenu)
 {
 	if( (inPlugin == NULL) || (topMenu == NULL) )
 		return paramErr;
@@ -246,7 +246,7 @@ PopulateCommandsMenu(OnMyCommandCM *inPlugin, NSMenu *topMenu)
 
 	NSURL *commandURL = CFBridgingRelease(resolvedURL);
 
-    ARefCountedObj<OnMyCommandCM> omcPlugin( new OnMyCommandCM( (__bridge CFURLRef)commandURL ), kARefCountDontRetain );
+    ARefCountedObj<OnMyCommand> omcPlugin( new OnMyCommand( (__bridge CFURLRef)commandURL ), kARefCountDontRetain );
 	omcPlugin->Init();
 	error = omcPlugin->ExamineContext((CFTypeRef)NULL, kOmcUnspecifiedCommand);//no context, all commands
 	if( error == noErr )

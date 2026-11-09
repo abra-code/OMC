@@ -1,5 +1,5 @@
 //**************************************************************************************
-// Filename:	OnMyCommandCM.cp
+// Filename:	OnMyCommand.cp
 //
 // Description:	Main OnMyCommand enigne methods
 //
@@ -77,7 +77,7 @@ enum
 // use instead, and no dialog, so the caller cancels the command as it does for a nib dialog that
 // failed to open.
 static ARefCountedObj<OMCDialog>
-RunNibDialogOrRefuse(OnMyCommandCM *inPlugin, CFBundleRef inFrameworkBundle, const CommandDescription &inCommand,
+RunNibDialogOrRefuse(OnMyCommand *inPlugin, CFBundleRef inFrameworkBundle, const CommandDescription &inCommand,
 					CommandRuntimeData *inRuntimeData, CFBundleRef inLocalizationBundle)
 {
 #if OMC_NIB_DIALOGS
@@ -109,12 +109,12 @@ RunNibDialogOrRefuse(OnMyCommandCM *inPlugin, CFBundleRef inFrameworkBundle, con
 
 CFStringRef kBundleIDString = CFSTR("com.abracode.AbracodeFramework");
 
-SInt32 OnMyCommandCM::sMacOSVersion = 140600;
+SInt32 OnMyCommand::sMacOSVersion = 140600;
 
-OnMyCommandCM::OnMyCommandCM(CFPropertyListRef inPlistRef)
+OnMyCommand::OnMyCommand(CFPropertyListRef inPlistRef)
 {
 	mBundleRef.Adopt( ::CFBundleGetBundleWithIdentifier(kBundleIDString), kCFObjRetain ); //Abracode.framework
-	TRACE_CSTR( "OnMyCommandCM::OnMyCommandCM\n" );
+	TRACE_CSTR( "OnMyCommand::OnMyCommand\n" );
 
 	if(inPlistRef != NULL)
 	{
@@ -142,21 +142,21 @@ OnMyCommandCM::OnMyCommandCM(CFPropertyListRef inPlistRef)
 }
 
 
-OnMyCommandCM::~OnMyCommandCM()
+OnMyCommand::~OnMyCommand()
 {
-	TRACE_CSTR( "OnMyCommandCM::~OnMyCommandCM this=%p\n", (void*)this );
+	TRACE_CSTR( "OnMyCommand::~OnMyCommand this=%p\n", (void*)this );
 	try
 	{
 		DeleteCommandList();
 	}
 	catch(...)
 	{
-		LOG_CSTR( "OnMyCommandCM::~OnMyCommandCM: unknown exception has been caught\n" );
+		LOG_CSTR( "OnMyCommand::~OnMyCommand: unknown exception has been caught\n" );
 	}
 }
 
 OSStatus
-OnMyCommandCM::Init()
+OnMyCommand::Init()
 {
 	static dispatch_once_t onceToken;
 	dispatch_once(&onceToken, ^{
@@ -226,7 +226,7 @@ OnMyCommandCM::Init()
 }
 
 void
-OnMyCommandCM::InitOmcBundlePaths()
+OnMyCommand::InitOmcBundlePaths()
 {
 	CFObj<CFURLRef> abracodeFrameworkBundleURL = CFBundleCopyBundleURL(mBundleRef);
 	if(abracodeFrameworkBundleURL != nullptr)
@@ -254,7 +254,7 @@ OnMyCommandCM::InitOmcBundlePaths()
 
 //new API for OMC.h
 OSStatus
-OnMyCommandCM::ExamineContext( CFTypeRef inContext, SInt32 inCommandRef, bool inEnforceActivationMatch )
+OnMyCommand::ExamineContext( CFTypeRef inContext, SInt32 inCommandRef, bool inEnforceActivationMatch )
 {
 	SInt32 cmdIndex = -1;
 	if(inCommandRef >= kCMCommandStart)
@@ -268,7 +268,7 @@ OnMyCommandCM::ExamineContext( CFTypeRef inContext, SInt32 inCommandRef, bool in
 // The host's files come in as the CF context, the same path as a CF caller's; the selection, the
 // selected text and the Finder open-folder check come from inSelection
 OSStatus
-OnMyCommandCM::ExamineHostSelection( const OMCHostSelection &inSelection, SInt32 inCommandRef, OMCMenuModel *outMenu )
+OnMyCommand::ExamineHostSelection( const OMCHostSelection &inSelection, SInt32 inCommandRef, OMCMenuModel *outMenu )
 {
 	SInt32 cmdIndex = -1;
 	if(inCommandRef >= kCMCommandStart)
@@ -283,14 +283,14 @@ OnMyCommandCM::ExamineHostSelection( const OMCHostSelection &inSelection, SInt32
 // inHostSelection: a contextual menu host's selection (its files come in inContext), or NULL.
 
 OSStatus
-OnMyCommandCM::CommonContextCheck( CFTypeRef inContext, const OMCHostSelection *inHostSelection, const OMCContextData *inParentContextData, OMCMenuModel *outMenu, SInt32 inCmdIndex, bool inEnforceActivationMatch )
+OnMyCommand::CommonContextCheck( CFTypeRef inContext, const OMCHostSelection *inHostSelection, const OMCContextData *inParentContextData, OMCMenuModel *outMenu, SInt32 inCmdIndex, bool inEnforceActivationMatch )
 {
-	TRACE_CSTR( "OnMyCommandCM::CommonContextCheck\n" );
+	TRACE_CSTR( "OnMyCommand::CommonContextCheck\n" );
 	OSStatus err = noErr;
 
     // Create new command runtime data, temporarily stored in mInitialRuntimeData
     // mInitialRuntimeData should be emptied in ExecuteCommand() and
-    // CommandRuntimeData should live on idependently of OnMyCommandCM object
+    // CommandRuntimeData should live on idependently of OnMyCommand object
     // Make sure we don't have any previous runtime data when we start a new command context check and execution
     // mInitialRuntimeData should be valid for ExecuteCommand() only if CommonContextCheck() returns noErr
     
@@ -423,7 +423,7 @@ OnMyCommandCM::CommonContextCheck( CFTypeRef inContext, const OMCHostSelection *
     size_t validObjectCount = 0;
 	if( !contextData.isNullContext && !contextData.isTextContext ) //we have some context that is not text
 	{
-		TRACE_CSTR( "OnMyCommandCM->CMPluginExamineContext: not null context descriptor\n" );
+		TRACE_CSTR( "OnMyCommand->CMPluginExamineContext: not null context descriptor\n" );
 		//pre-allocate space for all object properties
 		long listItemsCount = 0;
 		err = paramErr;
@@ -435,7 +435,7 @@ OnMyCommandCM::CommonContextCheck( CFTypeRef inContext, const OMCHostSelection *
 		
 		if(err  == noErr )
 		{
-			TRACE_CSTR( "OnMyCommandCM->CMPluginExamineContext: count of items in context: %d\n", (int)listItemsCount );
+			TRACE_CSTR( "OnMyCommand->CMPluginExamineContext: count of items in context: %d\n", (int)listItemsCount );
 
 			if(listItemsCount > 0)
 			{
@@ -524,7 +524,7 @@ OnMyCommandCM::CommonContextCheck( CFTypeRef inContext, const OMCHostSelection *
 // Runs the command a command reference names (kCMCommandStart + index) with the context the last
 // context check examined; the portable form of HandleSelection (EntryPoints/Apple/OnMyCommandAE.cp)
 OSStatus
-OnMyCommandCM::ExecuteCommandRef( SInt32 inCommandRef )
+OnMyCommand::ExecuteCommandRef( SInt32 inCommandRef )
 {
     if(inCommandRef < kCMCommandStart)
     {
@@ -540,9 +540,9 @@ OnMyCommandCM::ExecuteCommandRef( SInt32 inCommandRef )
 // NO RETURNS IN THE MIDDLE!
 
 OSStatus
-OnMyCommandCM::ExecuteCommand(SInt32 inCommandIndex, const CommandRuntimeData *parentCommandRuntimeData)
+OnMyCommand::ExecuteCommand(SInt32 inCommandIndex, const CommandRuntimeData *parentCommandRuntimeData)
 {
-	TRACE_CSTR( "OnMyCommandCM::ExecuteCommand\n" );
+	TRACE_CSTR( "OnMyCommand::ExecuteCommand\n" );
 
     ARefCountedObj<CommandRuntimeData> commandRuntimeData = mInitialRuntimeData;
     assert(commandRuntimeData != nullptr);
@@ -554,7 +554,7 @@ OnMyCommandCM::ExecuteCommand(SInt32 inCommandIndex, const CommandRuntimeData *p
     }
     
     // retain self here to ensure the safety of all operations in scope
-    ARefCountedObj<OnMyCommandCM> localRetain(this, kARefCountRetain);
+    ARefCountedObj<OnMyCommand> localRetain(this, kARefCountRetain);
 
 	try
 	{
@@ -686,7 +686,7 @@ OnMyCommandCM::ExecuteCommand(SInt32 inCommandIndex, const CommandRuntimeData *p
 		
 		if( currCommand.warningStr != NULL )
 		{
-			TRACE_CSTR("OnMyCommandCM About to display warning\n" );
+			TRACE_CSTR("OnMyCommand About to display warning\n" );
 			StSwitchToFront switcher;
 			if( DisplayWarning(currCommand, *commandRuntimeData) == false )
 			{
@@ -696,7 +696,7 @@ OnMyCommandCM::ExecuteCommand(SInt32 inCommandIndex, const CommandRuntimeData *p
 		
 		if(((currCommand.prescannedCommandInfo & kOmcCommandContainsInputText) != 0) && (commandRuntimeData->inputText == nullptr))
 		{
-			TRACE_CSTR( "OnMyCommandCM About to ask for input text\n" );
+			TRACE_CSTR( "OnMyCommand About to ask for input text\n" );
 			StSwitchToFront switcher;
 
 			//if( ShowInputDialog( currCommand, mInputText.GetReference() ) == false )
@@ -740,30 +740,30 @@ OnMyCommandCM::ExecuteCommand(SInt32 inCommandIndex, const CommandRuntimeData *p
         
 		if( objListEmpty || contextData.isTextContext )//text context
 		{
-			TRACE_CSTR("OnMyCommandCM->ExecuteCommand: about to process command with text selection\n" );
+			TRACE_CSTR("OnMyCommand->ExecuteCommand: about to process command with text selection\n" );
 			ExecuteCommandWithText(currCommand, contextData.contextText, commandRuntimeData);
 		}
 		else //file context
 		{
-			TRACE_CSTR("OnMyCommandCM About to proces file list\n" );
+			TRACE_CSTR("OnMyCommand About to proces file list\n" );
 			ExecuteCommandWithObjects(commandRuntimeData);
 		}
 		
 		//we used to do some post-processing here but now most commands are async so we need to call Finalize when task ends
 
-		TRACE_CSTR("OnMyCommandCM->ExecuteCommand: finished successfully\n" );
+		TRACE_CSTR("OnMyCommand->ExecuteCommand: finished successfully\n" );
 	}
 	catch(OSStatus &thrownError)
 	{
 		if(thrownError == userCanceledErr)
 		{
 			mError = userCanceledErr;
-			TRACE_CSTR("OnMyCommandCM->ExecuteCommand: user cancelled\n" );
+			TRACE_CSTR("OnMyCommand->ExecuteCommand: user cancelled\n" );
 		}
 	}
 	catch(...)
 	{
-		LOG_CSTR( "OnMyCommandCM->ExecuteCommand: unknown error ocurred\n" );
+		LOG_CSTR( "OnMyCommand->ExecuteCommand: unknown error ocurred\n" );
 		mError = -1;
 	}
 
@@ -772,16 +772,16 @@ OnMyCommandCM::ExecuteCommand(SInt32 inCommandIndex, const CommandRuntimeData *p
 
 
 void
-OnMyCommandCM::PostMenuCleanup()
+OnMyCommand::PostMenuCleanup()
 {
-	TRACE_CSTR( "OnMyCommandCM::PostMenuCleanup\n" );
+	TRACE_CSTR( "OnMyCommand::PostMenuCleanup\n" );
     // sometimes context check is not followed by ExecuteCommand() - discard runtime data
     mInitialRuntimeData = nullptr;
 }
 
 
 void
-OnMyCommandCM::DeleteCommandList()
+OnMyCommand::DeleteCommandList()
 {
 	if( mCommandList != NULL )
 	{
@@ -800,7 +800,7 @@ OnMyCommandCM::DeleteCommandList()
 // NEXT_COMMAND_ID — target the main command by that conventional id instead of the
 // legacy 'top!'. Returns -1 if inID is not such an implicit main-command id.
 SInt32
-OnMyCommandCM::FindMainCommandByImplicitID( CFStringRef inID )
+OnMyCommand::FindMainCommandByImplicitID( CFStringRef inID )
 {
 	if( (inID == NULL) || (mCommandList == NULL) )
 		return -1;
@@ -832,7 +832,7 @@ OnMyCommandCM::FindMainCommandByImplicitID( CFStringRef inID )
 
 //external API, needs to load commands if needed
 SInt32
-OnMyCommandCM::FindCommandIndex( CFStringRef inNameOrId )
+OnMyCommand::FindCommandIndex( CFStringRef inNameOrId )
 {
 	if(mCommandList == NULL)
 	{//not loaded yet?
@@ -921,7 +921,7 @@ CreateTerminalCommandWithEnvironmentSetup(CFStringRef inCommand,
 
 
 OSStatus
-OnMyCommandCM::ExecuteCommandWithObjects(CommandRuntimeData *initialCommandRuntimeData)
+OnMyCommand::ExecuteCommandWithObjects(CommandRuntimeData *initialCommandRuntimeData)
 {
     assert(initialCommandRuntimeData != nil);
     OMCContextData &initialContextData = initialCommandRuntimeData->GetContextData();
@@ -942,7 +942,7 @@ OnMyCommandCM::ExecuteCommandWithObjects(CommandRuntimeData *initialCommandRunti
 			localizationBundle = CFBundleGetMainBundle();
 	}
 
-	TRACE_CSTR("OnMyCommandCM. ExecuteCommandWithObjects\n" );
+	TRACE_CSTR("OnMyCommand. ExecuteCommandWithObjects\n" );
 	
 	CFObj<CFStringRef> dynamicCommandName( CreateDynamicCommandName(currCommand,
                                                                     *initialCommandRuntimeData,
@@ -994,7 +994,7 @@ OnMyCommandCM::ExecuteCommandWithObjects(CommandRuntimeData *initialCommandRunti
 	{//refreshing needed - compose array of paths before performing any action
 		for(CFIndex i = 0; i < initialContextData.objectList.size(); i++)
 		{
-			TRACE_CSTR("OnMyCommandCM. create refresh path\n" );
+			TRACE_CSTR("OnMyCommand. create refresh path\n" );
             initialContextData.currObjectIndex = i;
 			CFObj<CFMutableStringRef> onePath( CreateCombinedStringWithObjects(currCommand.refresh,
                                                                                *initialCommandRuntimeData,
@@ -1178,7 +1178,7 @@ OnMyCommandCM::ExecuteCommandWithObjects(CommandRuntimeData *initialCommandRunti
 
 
 OSStatus
-OnMyCommandCM::ExecuteCommandWithText(CommandDescription &currCommand, CFStringRef inStrRef, CommandRuntimeData *commandRuntimeData)
+OnMyCommand::ExecuteCommandWithText(CommandDescription &currCommand, CFStringRef inStrRef, CommandRuntimeData *commandRuntimeData)
 {
     assert(commandRuntimeData != nullptr);
 
@@ -1353,7 +1353,7 @@ OnMyCommandCM::ExecuteCommandWithText(CommandDescription &currCommand, CFStringR
 //2. if still null, get localized default
 
 Boolean
-OnMyCommandCM::DisplayWarning(CommandDescription &currCommand, CommandRuntimeData &commandRuntimeData)
+OnMyCommand::DisplayWarning(CommandDescription &currCommand, CommandRuntimeData &commandRuntimeData)
 {
 	if(currCommand.warningStr == NULL)
 		return true;
@@ -1457,7 +1457,7 @@ DisplayAlert(CFBundleRef inBundleRef, CFStringRef dynamicCommandName, CFStringRe
 UInt32 outFlags = kOmcCommandNoSpecialObjects;
 
 OSStatus
-OnMyCommandCM::GetCommandInfo(SInt32 inCommandRef, OMCInfoType infoType, void *outInfo)
+OnMyCommand::GetCommandInfo(SInt32 inCommandRef, OMCInfoType infoType, void *outInfo)
 {
 //FindCommandIndex loads all commands
 
@@ -1544,7 +1544,7 @@ static const CFStringRef sDialogSubcommandKeys[] =
 // without the window. Matched by id across all command groups: stricter than the per-group
 // dispatch, which is the safe direction for a refusal.
 bool
-OnMyCommandCM::IsDialogSubcommandID(CFStringRef inCommandID) const
+OnMyCommand::IsDialogSubcommandID(CFStringRef inCommandID) const
 {
 	if(inCommandID == nullptr)
 		return false;
@@ -1579,7 +1579,7 @@ OnMyCommandCM::IsDialogSubcommandID(CFStringRef inCommandID) const
 // The refusals that no key can lift are checked first, so an author who sets URL_INVOCABLE
 // on a lifecycle or dialog handler is told the real reason.
 UInt32
-OnMyCommandCM::GetURLInvocationStatus(const CommandDescription &inCommand) const
+OnMyCommand::GetURLInvocationStatus(const CommandDescription &inCommand) const
 {
 	// The lifecycle dispatch finds its command by id or by NAME (FindCommandIndex), so a command
 	// NAMEd "app.will.terminate" is a lifecycle command too, whatever its id is.
@@ -1629,12 +1629,12 @@ OnMyCommandCM::GetURLInvocationStatus(const CommandDescription &inCommand) const
 //if we run in ShortcutsObserver, runningInSpecialApp = true, inFrontAppName != NULL
 
 Boolean
-OnMyCommandCM::PopulateItemsMenu( CommandRuntimeData &commandRuntimeData,
+OnMyCommand::PopulateItemsMenu( CommandRuntimeData &commandRuntimeData,
                                  OMCMenuModel &ioMenu,
                                  Boolean runningInSpecialApp,
                                  CFStringRef inFrontAppName)
 {
-	TRACE_CSTR("OnMyCommandCM. PopulateItemsMenu\n" );
+	TRACE_CSTR("OnMyCommand. PopulateItemsMenu\n" );
 
 	if( mCommandList == nullptr )
 		return false;
@@ -1743,7 +1743,7 @@ OnMyCommandCM::PopulateItemsMenu( CommandRuntimeData &commandRuntimeData,
 }
 
 bool
-OnMyCommandCM::IsCommandEnabled(CommandDescription &currCommand,
+OnMyCommand::IsCommandEnabled(CommandDescription &currCommand,
                                 OMCContextData &contextData,
                                 CFStringRef currAppName,
                                 bool skipFinderWindowCheck)
@@ -1987,7 +1987,7 @@ OnMyCommandCM::IsCommandEnabled(CommandDescription &currCommand,
 }
 
 bool
-OnMyCommandCM::IsCommandEnabled(SInt32 inCmdIndex,
+OnMyCommand::IsCommandEnabled(SInt32 inCmdIndex,
                                 OMCContextData &contextData,
                                 bool runningInSpecialApp,
                                 CFStringRef inFrontAppName)
@@ -2077,9 +2077,9 @@ CopyOMCPrefsURL()
 }
 
 void
-OnMyCommandCM::ReadPreferences()
+OnMyCommand::ReadPreferences()
 {
-	TRACE_CSTR("OnMyCommandCM. ReadPreferences\n" );
+	TRACE_CSTR("OnMyCommand. ReadPreferences\n" );
 
 	//load prefs directly by reading from URL, bypassing the CFPreferences
 	//Looks like agressive caching of CFPreferences (or a bug there) prevents us from seeing new changes saved in OMCEdit
@@ -2088,7 +2088,7 @@ OnMyCommandCM::ReadPreferences()
 }
 
 void
-OnMyCommandCM::LoadCommandsFromPlistFile(CFURLRef inPlistFileURL)
+OnMyCommand::LoadCommandsFromPlistFile(CFURLRef inPlistFileURL)
 {
 	if( mCommandList != NULL )
 	{
@@ -2116,7 +2116,7 @@ OnMyCommandCM::LoadCommandsFromPlistFile(CFURLRef inPlistFileURL)
 //             (synthesis: .../command_verifier/verifier/bundle_resolver.py)
 //   rebuild:  python3 Skill/build_skill.py
 void
-OnMyCommandCM::LoadCommandsFromPlistRef(CFPropertyListRef inPlistRef)
+OnMyCommand::LoadCommandsFromPlistRef(CFPropertyListRef inPlistRef)
 {
 	if( mCommandList != NULL )
 	{
@@ -2146,7 +2146,7 @@ OnMyCommandCM::LoadCommandsFromPlistRef(CFPropertyListRef inPlistRef)
 
 
 Boolean
-OnMyCommandCM::IsSubcommand(CFArrayRef inName, CFIndex inCommandIndex)
+OnMyCommand::IsSubcommand(CFArrayRef inName, CFIndex inCommandIndex)
 {
 	if((inName == NULL) || (mCommandList == NULL))
 		return false;
@@ -2173,7 +2173,7 @@ OnMyCommandCM::IsSubcommand(CFArrayRef inName, CFIndex inCommandIndex)
 }
 
 void
-OnMyCommandCM::ParseCommandList(CFArrayRef commandArrayRef)
+OnMyCommand::ParseCommandList(CFArrayRef commandArrayRef)
 {
 	if(commandArrayRef == NULL)
 		return;
@@ -2197,7 +2197,7 @@ OnMyCommandCM::ParseCommandList(CFArrayRef commandArrayRef)
 		}
 		else
 		{
-			LOG_CSTR( "OnMyCommandCM. ParseCommandList: wrong array item: null or not dict\n" );
+			LOG_CSTR( "OnMyCommand. ParseCommandList: wrong array item: null or not dict\n" );
 		}
 	}
 
@@ -2220,7 +2220,7 @@ OnMyCommandCM::ParseCommandList(CFArrayRef commandArrayRef)
 // the normal GetOneCommandParams path — ensuring customEnvironVariables, executionMode,
 // subcommand detection, etc. are all set consistently with declared commands.
 CFMutableArrayRef
-OnMyCommandCM::CreateAugmentedCommandArray(CFArrayRef existingCommands)
+OnMyCommand::CreateAugmentedCommandArray(CFArrayRef existingCommands)
 {
 	// Determine host bundle: prefer mExternBundleOverrideURL (.omc bundle), else main bundle.
 	CFObj<CFBundleRef> ownedBundle;
@@ -2388,7 +2388,7 @@ OnMyCommandCM::CreateAugmentedCommandArray(CFArrayRef existingCommands)
 
 
 CFMutableStringRef
-OnMyCommandCM::CreateCommandStringWithObjects(CFArrayRef inFragments,
+OnMyCommand::CreateCommandStringWithObjects(CFArrayRef inFragments,
                                               CommandRuntimeData &commandRuntimeData,
                                               UInt16 escSpecialCharsMode)
 {
@@ -2405,7 +2405,7 @@ OnMyCommandCM::CreateCommandStringWithObjects(CFArrayRef inFragments,
 	ARefCountedObj<OMCDialog> activeDialog;
     activeDialog = OMCDialog::FindDialogByUUID(commandRuntimeData.GetAssociatedDialogUUID());
 
-//	TRACE_CSTR("OnMyCommandCM. CreateCommandStringWithObjects\n" );
+//	TRACE_CSTR("OnMyCommand. CreateCommandStringWithObjects\n" );
 
 	if(currCommand.sortMethod == kSortMethodByName)
 	{
@@ -2444,7 +2444,7 @@ OnMyCommandCM::CreateCommandStringWithObjects(CFArrayRef inFragments,
 
 //normally command is not localized but this API is used to create dynamic comamnd name, which might be localized
 CFMutableStringRef
-OnMyCommandCM::CreateCommandStringWithText(CFArrayRef inFragments,
+OnMyCommand::CreateCommandStringWithText(CFArrayRef inFragments,
                                            CFStringRef inObjTextRef,
                                            CommandRuntimeData &commandRuntimeData,
                                            UInt16 escSpecialCharsMode,
@@ -2483,7 +2483,7 @@ OnMyCommandCM::CreateCommandStringWithText(CFArrayRef inFragments,
 }
 
 CFMutableDictionaryRef
-OnMyCommandCM::CreateEnvironmentVariablesDict(CFStringRef inObjTextRef, CommandRuntimeData &commandRuntimeData)
+OnMyCommand::CreateEnvironmentVariablesDict(CFStringRef inObjTextRef, CommandRuntimeData &commandRuntimeData)
 {
 	CommandDescription &currCommand = GetCurrentCommand();
 
@@ -2560,12 +2560,12 @@ OnMyCommandCM::CreateEnvironmentVariablesDict(CFStringRef inObjTextRef, CommandR
 }
 
 CFMutableStringRef
-OnMyCommandCM::CreateCombinedStringWithObjects(CFArrayRef inArray,
+OnMyCommand::CreateCombinedStringWithObjects(CFArrayRef inArray,
                                                CommandRuntimeData &commandRuntimeData,
                                                CFStringRef inLocTableName,
                                                CFBundleRef inLocBundleRef)
 {
-//	TRACE_CSTR("OnMyCommandCM. beginning of CreateCombinedStringWithObject\n" );
+//	TRACE_CSTR("OnMyCommand. beginning of CreateCombinedStringWithObject\n" );
 
 //this may be called without object too
 //	if( mContextData.objectList == NULL )
@@ -2609,7 +2609,7 @@ OnMyCommandCM::CreateCombinedStringWithObjects(CFArrayRef inArray,
 
 
 void
-OnMyCommandCM::AppendTextToCommand(CFMutableStringRef inCommandRef, CFStringRef inStrRef,
+OnMyCommand::AppendTextToCommand(CFMutableStringRef inCommandRef, CFStringRef inStrRef,
 					OneObjProperties *inObjList, CFIndex inObjCount, CFIndex inCurrIndex,
 					CFStringRef inObjTextRef, CommandDescription &currCommand,
                     CommandRuntimeData &commandRuntimeData, OMCDialog *activeDialog,
@@ -2974,7 +2974,7 @@ OnMyCommandCM::AppendTextToCommand(CFMutableStringRef inCommandRef, CFStringRef 
 
 
 void
-OnMyCommandCM::PopulateEnvironList(CFMutableDictionaryRef ioEnvironList, CommandRuntimeData &commandRuntimeData,
+OnMyCommand::PopulateEnvironList(CFMutableDictionaryRef ioEnvironList, CommandRuntimeData &commandRuntimeData,
 					OneObjProperties *inObjList, CFIndex inObjCount, CFIndex inCurrIndex,
 					CFStringRef inObjTextRef, CommandDescription &currCommand,
 					CFStringRef inMultiSeparator, CFStringRef inMultiPrefix, CFStringRef inMultiSuffix)
@@ -3397,7 +3397,7 @@ OnMyCommandCM::PopulateEnvironList(CFMutableDictionaryRef ioEnvironList, Command
 
 
 CFStringRef
-OnMyCommandCM::CreateDynamicCommandName(const CommandDescription &currCommand,
+OnMyCommand::CreateDynamicCommandName(const CommandDescription &currCommand,
                                         CommandRuntimeData &commandRuntimeData,
                                         CFStringRef inLocTableName,
                                         CFBundleRef inLocBundleRef)
@@ -3500,7 +3500,7 @@ OnMyCommandCM::CreateDynamicCommandName(const CommandDescription &currCommand,
 //0 is not a valid subcommand number
 
 SInt32
-OnMyCommandCM::FindSubcommandIndex(CFArrayRef inName, CFStringRef inCommandID)
+OnMyCommand::FindSubcommandIndex(CFArrayRef inName, CFStringRef inCommandID)
 {
 	if( (mCommandList == NULL) || (inCommandID == NULL) )
 		return -1;
@@ -3527,7 +3527,7 @@ OnMyCommandCM::FindSubcommandIndex(CFArrayRef inName, CFStringRef inCommandID)
 //this allows finding by id or by name. It is used by find by next command where ID may point to a command with different name
 
 SInt32
-OnMyCommandCM::FindCommandIndex(CFArrayRef inName, CFStringRef inCommandID)
+OnMyCommand::FindCommandIndex(CFArrayRef inName, CFStringRef inCommandID)
 {
 	if( mCommandList == NULL )
 		return -1;
@@ -3575,7 +3575,7 @@ OnMyCommandCM::FindCommandIndex(CFArrayRef inName, CFStringRef inCommandID)
 //inCommandName is needed to find the subcommand with the same name
 
 OSStatus
-OnMyCommandCM::ExecuteSubcommand(CFArrayRef inCommandName, CFStringRef inCommandID, CommandRuntimeData *parentCommandRuntimeData, CFTypeRef inContext)
+OnMyCommand::ExecuteSubcommand(CFArrayRef inCommandName, CFStringRef inCommandID, CommandRuntimeData *parentCommandRuntimeData, CFTypeRef inContext)
 {
     CFStringRef dialogUUID = nullptr;
     if(parentCommandRuntimeData != nullptr)
@@ -3596,7 +3596,7 @@ OnMyCommandCM::ExecuteSubcommand(CFArrayRef inCommandName, CFStringRef inCommand
 static const OSStatus kSubcommandNotHandledErr = -9874;
 
 OSStatus
-OnMyCommandCM::ExecuteSubcommand(SInt32 commandIndex, CommandRuntimeData *parentCommandRuntimeData, CFTypeRef inContext)
+OnMyCommand::ExecuteSubcommand(SInt32 commandIndex, CommandRuntimeData *parentCommandRuntimeData, CFTypeRef inContext)
 {
     if(commandIndex < 0)
     {
@@ -3646,7 +3646,7 @@ OnMyCommandCM::ExecuteSubcommand(SInt32 commandIndex, CommandRuntimeData *parent
 
 
 CFBundleRef
-OnMyCommandCM::GetCurrentCommandExternBundle()
+OnMyCommand::GetCurrentCommandExternBundle()
 {
 	CommandDescription &currCommand = GetCurrentCommand();
 

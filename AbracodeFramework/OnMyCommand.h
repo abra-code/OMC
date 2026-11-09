@@ -34,12 +34,12 @@ typedef enum
 
 // The engine: one command file, its context checks and command runs. Portable. The contextual menu
 // plugin's Apple event face is OnMyCommandCMPlugin (EntryPoints/Apple/OnMyCommandAE.h).
-class OnMyCommandCM : public ARefCounted
+class OnMyCommand : public ARefCounted
 {
 public:
 
-						OnMyCommandCM(CFTypeRef inPlistRef = NULL);
-	virtual				~OnMyCommandCM();
+						OnMyCommand(CFTypeRef inPlistRef = NULL);
+	virtual				~OnMyCommand();
 	
 	virtual OSStatus	Init();
 
@@ -190,7 +190,7 @@ protected:
     UInt32						mCommandCount {0};
     UInt32						mCurrCommandIndex {0};
     
-    // Command execution runtime data should be separate from the OnMyCommandCM engine instance.
+    // Command execution runtime data should be separate from the OnMyCommand engine instance.
     // However, the constraints of original contextual menu APIs contract (ExamineContext() then
     // HandleSelection(), which the context check and ExecuteCommandRef() follow) prevent us from creating
     // a new CommandRuntimeData and passing it from one call to the other.
@@ -198,7 +198,7 @@ protected:
     // then immediately consume it when the command runs and empty the temporary mInitialRuntimeData storage
     // this way a context check always starts with empty runtime data
     // This is not multithreading safe of course: we cannot run a context check and a command run concurrently
-    // using the same OnMyCommandCM object (the engine was never designed for multithreading anyway)
+    // using the same OnMyCommand object (the engine was never designed for multithreading anyway)
     
     ARefCountedObj<CommandRuntimeData> mInitialRuntimeData;
 
