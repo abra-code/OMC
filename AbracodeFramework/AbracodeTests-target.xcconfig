@@ -5,7 +5,7 @@ PRODUCT_NAME = $(TARGET_NAME)
 // Common/ holds shared header-only code (e.g. OMCEngineTempDir.h) that unit tests compile
 // directly. It is not on the test target's default header map, so add it explicitly.
 // ThirdParty/yyjson: the JSON parity tests compile Common/ACFJSON.cpp, which includes yyjson.h.
-USER_HEADER_SEARCH_PATHS = $(inherited) $(SRCROOT)/../Common $(SRCROOT)/../ThirdParty/yyjson
+USER_HEADER_SEARCH_PATHS = $(inherited) $(SRCROOT)/../Common $(SRCROOT)/../Common/Apple $(SRCROOT)/../ThirdParty/yyjson
 
 ENABLE_TESTABILITY[config=Debug] = YES
 GENERATE_INFOPLIST_FILE = YES

@@ -33,6 +33,7 @@
 #include "OMCHostInfo.h"
 #include "OMCClipboard.h"
 #include "OMCTestHost.h"
+#include "OMCLog.h"
 #include "DefaultExternBundle.h"
 #include "OMCObjectList.h"
 #include "OMCHostSelection.h"
@@ -910,8 +911,15 @@ CreateTerminalCommandWithEnvironmentSetup(CFStringRef inCommand,
                                           bool isSh)
 {
 	CFStringRef commandUUID = commandRuntimeData.GetCommandUUID();
-	WriteEnvironmentSetupScriptToTmp(environList, commandUUID, isSh);
-	CFObj<CFStringRef> envSetupCommand = CreateEnvironmentSetupCommandForShell(commandUUID, isSh);
+	bool written = WriteEnvironmentSetupScriptToTmp(environList, commandUUID, isSh);
+	CFObj<CFStringRef> envSetupCommand( written ? CreateEnvironmentSetupCommandForShell(commandUUID, isSh) : nullptr );
+	if(envSetupCommand == nullptr)
+	{
+		// No private per-user temporary folder to put the script in (OMCEngineTempDir.h): the
+		// command runs in the terminal without OMC's environment variables
+		OMCLogMessage("OMC: the terminal environment setup script could not be written; the command runs without it");
+		return ::CFStringCreateCopy(kCFAllocatorDefault, inCommand);
+	}
 	CFObj<CFMutableStringRef> commandWithEnvSetup = CFStringCreateMutableCopy(kCFAllocatorDefault, 0, envSetupCommand);
 	CFStringAppend(commandWithEnvSetup, inCommand);
 	return commandWithEnvSetup.Detach();

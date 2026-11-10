@@ -199,4 +199,66 @@
     XCTAssertFalse(ok, @"Must refuse rather than truncate when the result does not fit");
 }
 
+// MARK: - The private OMC folder (decided 2026-11-09, linux_port_plan_review.md D5)
+
+// A folder at sandbox/<name> with the given mode (after the umask, set exactly with chmod)
+- (NSString *)makeFolder:(NSString *)name mode:(mode_t)mode {
+    NSString *path = [self.sandboxDir stringByAppendingPathComponent:name];
+    XCTAssertEqual(mkdir(path.fileSystemRepresentation, S_IRWXU), 0);
+    XCTAssertEqual(chmod(path.fileSystemRepresentation, mode), 0);
+    return path;
+}
+
+- (void)testPrivateDirectoryCheck {
+    XCTAssertTrue(OMCIsPrivateDirectory(self.sandboxDir.fileSystemRepresentation), @"mkdtemp's 0700 folder is private");
+    XCTAssertFalse(OMCIsPrivateDirectory([self makeFolder:@"group" mode:0750].fileSystemRepresentation), @"group may enter");
+    XCTAssertFalse(OMCIsPrivateDirectory([self makeFolder:@"others" mode:0701].fileSystemRepresentation), @"others may enter");
+    NSString *file = [self.sandboxDir stringByAppendingPathComponent:@"file"];
+    [@"x" writeToFile:file atomically:NO encoding:NSUTF8StringEncoding error:nil];
+    XCTAssertEqual(chmod(file.fileSystemRepresentation, 0600), 0);
+    XCTAssertFalse(OMCIsPrivateDirectory(file.fileSystemRepresentation), @"a file is not a folder");
+    XCTAssertFalse(OMCIsPrivateDirectory([self.sandboxDir stringByAppendingPathComponent:@"missing"].fileSystemRepresentation));
+    NSString *link = [self.sandboxDir stringByAppendingPathComponent:@"link"];
+    XCTAssertEqual(symlink(self.sandboxDir.fileSystemRepresentation, link.fileSystemRepresentation), 0);
+    XCTAssertFalse(OMCIsPrivateDirectory(link.fileSystemRepresentation), @"a link to a private folder is not one");
+    XCTAssertFalse(OMCIsPrivateDirectory([link stringByAppendingString:@"/"].UTF8String), @"nor with a trailing slash, which lstat would follow");
+    XCTAssertTrue(OMCIsPrivateDirectory([self.sandboxDir stringByAppendingString:@"/"].UTF8String), @"a private folder with a trailing slash (as confstr gives it) is one");
+}
+
+- (void)testAnOMCFolderOthersCanEnterIsRefused {
+    setenv("TMPDIR", self.sandboxDir.UTF8String, 1);
+    [self makeFolder:@"OMC" mode:0755];
+
+    char path[PATH_MAX] = {0};
+    XCTAssertFalse(OMCGetEngineTempFilePath("w.id", true /*writer*/, path, sizeof(path)), @"a writer must not use it");
+    XCTAssertFalse(OMCGetEngineTempFilePath("r.plist", false /*reader*/, path, sizeof(path)), @"a reader must not use it");
+}
+
+- (void)testAnOMCSymbolicLinkIsRefused {
+    setenv("TMPDIR", self.sandboxDir.UTF8String, 1);
+    NSString *elsewhere = [self makeFolder:@"elsewhere" mode:0700];
+    NSString *link = [self.sandboxDir stringByAppendingPathComponent:@"OMC"];
+    XCTAssertEqual(symlink(elsewhere.fileSystemRepresentation, link.fileSystemRepresentation), 0);
+
+    char path[PATH_MAX] = {0};
+    XCTAssertFalse(OMCGetEngineTempFilePath("w.id", true /*writer*/, path, sizeof(path)), @"a writer must not follow the link");
+    XCTAssertFalse(OMCGetEngineTempFilePath("r.plist", false /*reader*/, path, sizeof(path)), @"a reader must not follow the link");
+}
+
+- (void)testTheTwoMacOSOrders {
+    // Engine files: $TMPDIR first (children inherit it; a sandboxed app's container temp).
+    // Files another app reads (Terminal's environment script): the user's own temp folder first.
+    setenv("TMPDIR", self.sandboxDir.UTF8String, 1);
+    char engineDir[PATH_MAX] = {0};
+    char otherAppsDir[PATH_MAX] = {0};
+    XCTAssertTrue(OMCPlatformUserTempDir(engineDir, sizeof(engineDir)));
+    XCTAssertTrue(OMCPlatformUserTempDirForOtherApps(otherAppsDir, sizeof(otherAppsDir)));
+    XCTAssertEqualObjects(@(engineDir), self.sandboxDir);
+
+    char confBuf[PATH_MAX] = {0};
+    size_t n = confstr(_CS_DARWIN_USER_TEMP_DIR, confBuf, sizeof(confBuf));
+    XCTAssertTrue((n > 0) && (n <= sizeof(confBuf)));
+    XCTAssertEqualObjects(@(otherAppsDir), @(confBuf));
+}
+
 @end

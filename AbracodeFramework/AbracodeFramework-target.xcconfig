@@ -13,7 +13,7 @@ EXPORTED_SYMBOLS_FILE = AbracodeFramework.exp
 FRAMEWORK_VERSION = A
 // GENERATED_MODULEMAP_DIR holds the Swift packages' generated headers: OMCActionUIRemoteHost.cpp
 // includes ActionUIRemote-Swift.h by name, as C++ cannot @import the module.
-USER_HEADER_SEARCH_PATHS = $(inherited) $(BUILT_PRODUCTS_DIR)/generated $(SRCROOT)/../Common $(SRCROOT)/../ThirdParty/yyjson $(GENERATED_MODULEMAP_DIR)
+USER_HEADER_SEARCH_PATHS = $(inherited) $(BUILT_PRODUCTS_DIR)/generated $(SRCROOT)/../Common $(SRCROOT)/../Common/Apple $(SRCROOT)/../ThirdParty/yyjson $(GENERATED_MODULEMAP_DIR)
 
 OTHER_CODE_SIGN_FLAGS = --deep --verbose
 

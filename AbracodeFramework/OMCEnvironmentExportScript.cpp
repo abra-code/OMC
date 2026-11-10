@@ -7,10 +7,11 @@
 #include "OMCStrings.h"
 #include "CFObj.h"
 #include "ACFType.h"
+#include "OMCEngineTempDir.h"
 #include <vector>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>   // confstr
+#include <unistd.h>   // write, close
 #include <fcntl.h>    // open, O_NOFOLLOW
 #include <errno.h>
 #include <limits.h>   // PATH_MAX
@@ -67,23 +68,18 @@ static inline CFStringRef CreateEnvironmentExportScript(CFDictionaryRef inEnviro
 	return scriptContent.Detach();
 }
 
-// Returns the per-user temporary directory (mode 0700, e.g. /var/folders/.../T/), which
-// is private to the current user - unlike the world-accessible /tmp. Falls back to
-// $TMPDIR then /tmp/ if the platform call is unavailable. The result always ends with '/'.
+// Returns the per-user temporary directory another app of the user can read (macOS: the user's
+// own temporary folder, e.g. /var/folders/.../T/, else $TMPDIR; OMCUserTempDirPlatform.h),
+// private to the current user - unlike the world-accessible /tmp, which is never used. NULL when
+// there is none, or when it is not private (OMCIsPrivateDirectory).
 static CFStringRef CreatePerUserTempDir()
 {
 	char buf[PATH_MAX];
-	size_t n = confstr(_CS_DARWIN_USER_TEMP_DIR, buf, sizeof(buf));
-	const char *dir = nullptr;
-	if((n > 0) && (n <= sizeof(buf)))
-		dir = buf; // confstr guarantees a trailing '/'
-	else
-	{
-		dir = getenv("TMPDIR");
-		if((dir == nullptr) || (dir[0] == '\0'))
-			dir = "/tmp/";
-	}
-	return CFStringCreateWithCString(kCFAllocatorDefault, dir, kCFStringEncodingUTF8);
+	if(!OMCPlatformUserTempDirForOtherApps(buf, sizeof(buf)))
+		return nullptr;
+	if(!OMCIsPrivateDirectory(buf))
+		return nullptr;
+	return CFStringCreateWithCString(kCFAllocatorDefault, buf, kCFStringEncodingUTF8);
 }
 
 // Builds the path of the environment-setup script. Both the writer
@@ -93,6 +89,8 @@ static CFStringRef CreateEnvironmentSetupScriptPath(CFStringRef inCommandGUID, b
 {
 	CFStringRef ext = isSh ? CFSTR("sh") : CFSTR("csh");
 	CFObj<CFStringRef> tempDir(CreatePerUserTempDir());
+	if(tempDir == nullptr)
+		return nullptr;
 	Boolean hasSlash = (tempDir != nullptr) && CFStringHasSuffix(tempDir, CFSTR("/"));
 	return CFStringCreateWithFormat(kCFAllocatorDefault, nullptr,
 									hasSlash ? CFSTR("%@omc_environment_setup_%@.%@")
@@ -151,6 +149,8 @@ bool
 WriteEnvironmentSetupScriptToTmp(CFDictionaryRef inEnvironmentDict, CFStringRef inCommandGUID, bool isSh)
 {
 	CFObj<CFStringRef> scriptPath(CreateEnvironmentSetupScriptPath(inCommandGUID, isSh));
+	if(scriptPath == nullptr)
+		return false;
 
 	CFObj<CFStringRef> scriptContent = CreateEnvironmentExportScript(inEnvironmentDict, scriptPath, isSh);
 	return WriteScriptFileSecurely(scriptContent, scriptPath);
@@ -173,6 +173,8 @@ CFStringRef CreateEnvironmentSetupCommandForShell(CFStringRef inCommandGUID, boo
 	CFStringRef sourceCmd = isSh ? CFSTR(".") : CFSTR("source");
 	// Must match the path used by WriteEnvironmentSetupScriptToTmp exactly.
 	CFObj<CFStringRef> scriptPath(CreateEnvironmentSetupScriptPath(inCommandGUID, isSh));
+	if(scriptPath == nullptr)
+		return nullptr;
 	return CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("%@ \"%@\"\n"), sourceCmd, (CFStringRef)scriptPath);
 }
 

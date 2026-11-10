@@ -138,7 +138,7 @@ StartAtSocketPath(const char *socketPath)
 	// Deliberately no second, /tmp-based location when this one is too long. OMCEngineTempDir.h
 	// exists precisely because the shared /tmp/OMC directory was replaceable by any local user,
 	// and a private path that does not fit is a better outcome than a reachable one that does.
-	// OMCGetUserTempDir already falls back as far as is safe.
+	// OMCGetUserTempDir has no fallback beyond the platform's private per-user folder.
 	size_t pathLength = strlen(socketPath);
 	if(pathLength > kMaxUnixSocketPathLength)
 	{
