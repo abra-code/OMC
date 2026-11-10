@@ -16,6 +16,7 @@
 #include <cstdlib>
 #include <climits>
 #include <unistd.h>
+#include "OMCAppletSupportURL.h"
 
 namespace
 {
@@ -48,14 +49,7 @@ namespace
 // with OMCGetPythonPycachePrefix in Platform/Apple/OMCAppLifecycleObserver.mm.
 void SetPythonPycachePrefixIfEmbedded()
 {
-	CFBundleRef mainBundle = ::CFBundleGetMainBundle();
-	if(mainBundle == nullptr)
-		return;
-	CFObj<CFURLRef> bundleURL( ::CFBundleCopyBundleURL(mainBundle) );
-	if(bundleURL == nullptr)
-		return;
-	CFObj<CFURLRef> pythonURL( ::CFURLCreateCopyAppendingPathComponent(kCFAllocatorDefault, bundleURL,
-														CFSTR("Contents/Library/Python/bin/python3"), false) );
+	CFObj<CFURLRef> pythonURL( OMCCopyAppletSupportURL(CFSTR("Library/Python/bin/python3"), false) );
 	char pythonPath[PATH_MAX];
 	if( (pythonURL == nullptr) || !::CFURLGetFileSystemRepresentation(pythonURL, true, (UInt8 *)pythonPath, sizeof(pythonPath)) )
 		return;

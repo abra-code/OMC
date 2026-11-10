@@ -26,6 +26,7 @@
 #include "OMCMainThreadSignal.h"
 #include <dispatch/dispatch.h>
 #include "OMCDispatchPlatform.h"
+#include "OMCAppletSupportURL.h"
 #include <mutex>
 #include <algorithm>
 #include <iterator>
@@ -982,7 +983,8 @@ DefaultShell()
 }
 
 // Returns the path to the embedded python3 binary if present, nullptr otherwise.
-// the expected location for bundled Python is OMCApplet.app/Contents/Library/Python/
+// the expected location for bundled Python is Library/Python/ in the applet's support files folder
+// (OMCApplet.app/Contents/Library/Python/ on macOS; OMCAppletSupportURL.h)
 // A relocatable Python 3 distribution suitable for embeddeding in the applets can be produced with this infra:
 // https://github.com/abra-code/Python-Embedding
 static CFStringRef GetEmbeddedPythonPath()
@@ -990,17 +992,9 @@ static CFStringRef GetEmbeddedPythonPath()
     static CFStringRef sEmbeddedPythonPath = nullptr;
     static dispatch_once_t sOnce;
     dispatch_once_f(&sOnce, nullptr, [](void *) {
-        CFObj<CFURLRef> bundleURL = ::CFBundleCopyBundleURL(::CFBundleGetMainBundle());
-        if(bundleURL != nullptr)
-        {
-            CFObj<CFURLRef> pythonURL(::CFURLCreateCopyAppendingPathComponent(
-                                         kCFAllocatorDefault,
-                                         bundleURL,
-                                         CFSTR("Contents/Library/Python/bin/python3"),
-                                         false));
-            if((pythonURL != nullptr) && IsFileExecutable(pythonURL))
-                sEmbeddedPythonPath = CreatePathFromCFURL(pythonURL, kEscapeNone);
-        }
+        CFObj<CFURLRef> pythonURL( OMCCopyAppletSupportURL(CFSTR("Library/Python/bin/python3"), false) );
+        if((pythonURL != nullptr) && IsFileExecutable(pythonURL))
+            sEmbeddedPythonPath = CreatePathFromCFURL(pythonURL, kEscapeNone);
     });
     return sEmbeddedPythonPath;
 }
@@ -1069,15 +1063,7 @@ PrependPythonBinDirToEnvironmentPATH(CFStringRef pythonPath)
 static CFStringRef
 PrependBundlePackagesToEnvironmentPYTHONPATH()
 {
-    CFObj<CFURLRef> bundleURL = ::CFBundleCopyBundleURL(::CFBundleGetMainBundle());
-    if (bundleURL == nullptr)
-        return nullptr;
-
-    CFObj<CFURLRef> packagesURL(::CFURLCreateCopyAppendingPathComponent(
-                                    kCFAllocatorDefault,
-                                    bundleURL,
-                                    CFSTR("Contents/Library/Packages"),
-                                    true));
+    CFObj<CFURLRef> packagesURL( OMCCopyAppletSupportURL(CFSTR("Library/Packages"), true) );
     if (packagesURL == nullptr)
         return nullptr;
 
