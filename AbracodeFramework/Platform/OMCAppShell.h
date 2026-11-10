@@ -8,10 +8,10 @@
 //  - lifecycle: report launch, activation, deactivation and quit to OMCHandleAppLifecycleEvent
 //    (OMCAppLifecycle.h);
 //  - opened and dropped files, New and Open, the untitled launch, URLs and reopen: report them to
-//    an OMCDroplet and supply its OMCDropletActions (OMCDroplet.h);
+//    an OMCApplet and supply its OMCAppletActions (OMCApplet.h);
 //  - the Commands menu: draw OMCBuildCommandsMenuModel's model and run what
 //    OMCCommandsMenuItemCommandToRun answers for a chosen item (OMCMenuModel.h);
-//  - Open Recent: keep the documents OMCNoteRecentDocument adds, and open a chosen one as the droplet's
+//  - Open Recent: keep the documents OMCNoteRecentDocument adds, and open a chosen one as the applet's
 //    OpenFile;
 //  - and the three calls below, which the engine makes of the shell.
 //  The macOS shell is EntryPoints/Apple (OMCDropletController, OMCMainMenuController,

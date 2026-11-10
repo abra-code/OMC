@@ -14,29 +14,29 @@
 #include "OMC.h"
 #import "OMCService.h"
 #include "OMCHostInfo.h"
-#include "OMCDroplet.h"
+#include "OMCApplet.h"
 #include <memory>
 
 
 static OMCService *sOMCService = NULL;
 
-// The droplet's decisions are portable (OMCDroplet.h); these are what only macOS does for them.
-// inActionContext is the controller, which owns the OMCDroplet and so outlives every call.
+// The applet's decisions are portable (OMCApplet.h); these are what only macOS does for them.
+// inActionContext is the controller, which owns the OMCApplet and so outlives every call.
 
-static OSStatus DropletRunMainCommand(void *inActionContext, CFTypeRef inContext)
+static OSStatus AppletRunMainCommand(void *inActionContext, CFTypeRef inContext)
 {
 	OMCDropletController *controller = (__bridge OMCDropletController *)inActionContext;
 	return [OMCCommandExecutor runCommand:controller.commandID forCommandFile:controller.commandFilePath withContext:(__bridge id)inContext useNavDialog:YES allowKeyWindowSubcommand:NO delegate:controller];
 }
 
-static void DropletRunURL(void *inActionContext, CFStringRef inURL)
+static void AppletRunURL(void *inActionContext, CFStringRef inURL)
 {
 	OMCDropletController *controller = (__bridge OMCDropletController *)inActionContext;
 	OSStatus err = [OMCCommandExecutor runCommandForURL:(__bridge NSString *)inURL forCommandFile:controller.commandFilePath delegate:controller];
 	(void)err;
 }
 
-static void DropletNoteRecentDocument(void *inActionContext, CFURLRef inFileURL)
+static void AppletNoteRecentDocument(void *inActionContext, CFURLRef inFileURL)
 {
 	(void)inActionContext;
 	OMCNoteRecentDocumentURL((__bridge NSURL *)inFileURL);
@@ -44,28 +44,28 @@ static void DropletNoteRecentDocument(void *inActionContext, CFURLRef inFileURL)
 
 @interface OMCDropletController ()
 {
-	std::unique_ptr<OMCDroplet> _droplet;
+	std::unique_ptr<OMCApplet> _applet;
 }
 // The application that last asked to open files: told when they were opened
 @property (nonatomic, strong) NSApplication *openingApplication;
 - (void)didOpenGatheredFiles;
 @end
 
-static void DropletDidOpenGatheredFiles(void *inActionContext)
+static void AppletDidOpenGatheredFiles(void *inActionContext)
 {
 	OMCDropletController *controller = (__bridge OMCDropletController *)inActionContext;
 	[controller didOpenGatheredFiles];
 }
 
-static std::unique_ptr<OMCDroplet> CreateDroplet(OMCDropletController *inController)
+static std::unique_ptr<OMCApplet> CreateApplet(OMCDropletController *inController)
 {
-	OMCDropletActions actions;
-	actions.runMainCommand = DropletRunMainCommand;
-	actions.runURL = DropletRunURL;
-	actions.noteRecentDocument = DropletNoteRecentDocument;
-	actions.didOpenGatheredFiles = DropletDidOpenGatheredFiles;
+	OMCAppletActions actions;
+	actions.runMainCommand = AppletRunMainCommand;
+	actions.runURL = AppletRunURL;
+	actions.noteRecentDocument = AppletNoteRecentDocument;
+	actions.didOpenGatheredFiles = AppletDidOpenGatheredFiles;
 	actions.context = (__bridge void *)inController;
-	return std::unique_ptr<OMCDroplet>(new OMCDroplet(actions));
+	return std::unique_ptr<OMCApplet>(new OMCApplet(actions));
 }
 
 @implementation OMCDropletController
@@ -77,7 +77,7 @@ static std::unique_ptr<OMCDroplet> CreateDroplet(OMCDropletController *inControl
 		return nil;
 
 	_commandFilePath = @"Command.plist";
-	_droplet = CreateDroplet(self);
+	_applet = CreateApplet(self);
 	
 	NSAppleEventManager *eventManager = [NSAppleEventManager sharedAppleEventManager];
 	[eventManager setEventHandler:self
@@ -95,7 +95,7 @@ static std::unique_ptr<OMCDroplet> CreateDroplet(OMCDropletController *inControl
 		return nil;
 
 	_commandFilePath = @"Command.plist";
-	_droplet = CreateDroplet(self);
+	_applet = CreateApplet(self);
 	
 	NSAppleEventManager *eventManager = [NSAppleEventManager sharedAppleEventManager];
 	[eventManager setEventHandler:self
@@ -119,30 +119,30 @@ static std::unique_ptr<OMCDroplet> CreateDroplet(OMCDropletController *inControl
 		//	_startupModifiers = [currEvent modifierFlags];
 	}
 
-	_droplet->SetStartupModifiers(OMCGetKeyboardModifiers());
+	_applet->SetStartupModifiers(OMCGetKeyboardModifiers());
 }
 
 - (void)openDocumentWithContentsOfURL:(NSURL *)absoluteURL display:(BOOL)displayDocument completionHandler:(void (^)(NSDocument * _Nullable document, BOOL documentWasAlreadyOpen, NSError * _Nullable error))completionHandler
 {
-	_droplet->OpenFile((__bridge CFURLRef)absoluteURL);
+	_applet->OpenFile((__bridge CFURLRef)absoluteURL);
 	completionHandler(NULL, NO, NULL);
 }
 
 
 -(void)openFiles:(NSArray *)absoluteURLArray
 {
-	_droplet->OpenFiles((__bridge CFArrayRef)absoluteURLArray);
+	_applet->OpenFiles((__bridge CFArrayRef)absoluteURLArray);
 }
 
 
 - (IBAction)newDocument:(id)sender
 {
-	_droplet->RunMainCommand();
+	_applet->RunMainCommand();
 }
 
 - (IBAction)openDocument:(id)sender
 {
-	_droplet->RunMainCommand();
+	_applet->RunMainCommand();
 }
 
 
@@ -262,7 +262,7 @@ static std::unique_ptr<OMCDroplet> CreateDroplet(OMCDropletController *inControl
 - (void)application:(NSApplication *)sender openURLs:(NSArray<NSURL *> *)urls
 {
 	self.openingApplication = sender;
-	_droplet->OpenURLs((__bridge CFArrayRef)urls);
+	_applet->OpenURLs((__bridge CFArrayRef)urls);
 }
 
 - (void)didOpenGatheredFiles
@@ -273,12 +273,12 @@ static std::unique_ptr<OMCDroplet> CreateDroplet(OMCDropletController *inControl
 - (BOOL)applicationShouldHandleReopen:(NSApplication *)theApplication hasVisibleWindows:(BOOL)hasVisibleWindows
 {
 	long appWindowCount = (long)[[[NSApplication sharedApplication] windows] count];
-	return _droplet->ShouldHandleReopen(hasVisibleWindows, OMCOpenHostedWindowCount(), appWindowCount);
+	return _applet->ShouldHandleReopen(hasVisibleWindows, OMCOpenHostedWindowCount(), appWindowCount);
 }
 
 - (BOOL)applicationOpenUntitledFile:(NSApplication *)theApplication
 {
-	return _droplet->OpenUntitled();
+	return _applet->OpenUntitled();
 }
 
 //Apple docs state:
@@ -286,7 +286,7 @@ static std::unique_ptr<OMCDroplet> CreateDroplet(OMCDropletController *inControl
 // the delegate receives the application:openFile: message before receiving applicationDidFinishLaunching:
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
 {
-	_droplet->DidFinishLaunching();
+	_applet->DidFinishLaunching();
 	
 	if(sOMCService == NULL)
 	{
@@ -310,7 +310,7 @@ static std::unique_ptr<OMCDroplet> CreateDroplet(OMCDropletController *inControl
 	 if(urlString == NULL)
 		return;
 
-	_droplet->HandleURL((__bridge CFStringRef)urlString);
+	_applet->HandleURL((__bridge CFStringRef)urlString);
 }
 
 #pragma mark --- OMC support ---
@@ -396,7 +396,7 @@ static std::unique_ptr<OMCDroplet> CreateDroplet(OMCDropletController *inControl
 
 - (void)reopenDocumentForURL:(NSURL *)absoluteDocumentURL withContentsOfURL:(NSURL *)absoluteDocumentContentsURL display:(BOOL)displayDocument completionHandler:(void (^)(NSDocument * _Nullable document, BOOL documentWasAlreadyOpen, NSError * _Nullable error))completionHandler
 {
-	// OMC droplets do not reopen documents. Override the modern (completion-handler) variant the same
+	// OMC applets do not reopen documents. Override the modern (completion-handler) variant the same
 	// way the deprecated reopenDocumentForURL:withContentsOfURL:error: override used to neutralize it,
 	// so reopen/state-restoration never routes back into openDocument... and re-runs the command.
 	NSError *notImplementedError = [NSError errorWithDomain:@"Not implemented" code:-1 userInfo:NULL];

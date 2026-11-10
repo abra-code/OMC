@@ -2,12 +2,12 @@
 //  OMCDropletControllerTests.m
 //  AbracodeTests
 //
-//  What the applet's droplet controller does when the app is asked to open files, a URL, a new
+//  What the applet's controller does when the app is asked to open files, a URL, a new
 //  or untitled document, or to reopen: which command runs, with which context, and what is noted
 //  as recent. The controller is exported and driven directly; its command file is a test file
 //  given by absolute path, and each command writes its context into a marker file.
 //
-//  The droplet allows the open panel for a command that needs files and got none; the test command
+//  The applet allows the open panel for a command that needs files and got none; the test command
 //  turns that off (USE_NAV_DIALOG_FOR_MISSING_FILE_CONTEXT), since a modal panel would wait for
 //  ever here, so that choice is not exercised.
 //
@@ -30,12 +30,12 @@ static void RecordRecentDocumentURL(id self, SEL _cmd, NSURL *inURL)
 }
 
 // Stands in for NSApp as the sender of application:openURLs:, to see the reply
-@interface OMCDropletTestApplication : NSObject
+@interface OMCAppletTestApplication : NSObject
 @property (nonatomic, strong) NSMutableArray<NSNumber *> *replies;
 - (void)replyToOpenOrPrint:(NSApplicationDelegateReply)inReply;
 @end
 
-@implementation OMCDropletTestApplication
+@implementation OMCAppletTestApplication
 - (instancetype)init
 {
 	self = [super init];
@@ -58,13 +58,13 @@ static void RecordRecentDocumentURL(id self, SEL _cmd, NSURL *inURL)
 
 // NSDocumentController's init returns the shared document controller once there is one, and AppKit
 // makes a plain one when another test in the same process uses it first: then every test here got
-// an NSDocumentController ("unrecognized selector setCommandID:"). The droplet controller is made
+// an NSDocumentController ("unrecognized selector setCommandID:"). The applet controller is made
 // before any test runs, so it is the shared one, as in an applet (OMCApplet's main.m), and each
-// makeDroplet gets it back with a new OMCDroplet.
+// makeApplet gets it back with a new OMCApplet.
 + (void)load
 {
-	static OMCDropletController *sSharedDroplet = nil;
-	sSharedDroplet = [[OMCDropletController alloc] init];
+	static OMCDropletController *sSharedApplet = nil;
+	sSharedApplet = [[OMCDropletController alloc] init];
 }
 
 - (void)setUp
@@ -130,12 +130,12 @@ static void RecordRecentDocumentURL(id self, SEL _cmd, NSURL *inURL)
 	return fileURL.path;
 }
 
-- (OMCDropletController *)makeDroplet
+- (OMCDropletController *)makeApplet
 {
-	OMCDropletController *droplet = [[OMCDropletController alloc] init];
-	droplet.commandID = @"main";
-	droplet.commandFilePath = [self writeCommandFile];
-	return droplet;
+	OMCDropletController *applet = [[OMCDropletController alloc] init];
+	applet.commandID = @"main";
+	applet.commandFilePath = [self writeCommandFile];
+	return applet;
 }
 
 - (NSURL *)makeFile:(NSString *)inName
@@ -159,8 +159,8 @@ static void RecordRecentDocumentURL(id self, SEL _cmd, NSURL *inURL)
 
 - (void)testUntitledLaunchRunsTheMainCommandWithNoContext
 {
-	OMCDropletController *droplet = [self makeDroplet];
-	BOOL opened = [droplet applicationOpenUntitledFile:NSApp];
+	OMCDropletController *applet = [self makeApplet];
+	BOOL opened = [applet applicationOpenUntitledFile:NSApp];
 	XCTAssertTrue(opened);
 	XCTAssertEqualObjects([self markerLinesAfter:1.0], (@[ @"main:" ]));
 	XCTAssertEqual(sNotedRecentURLs.count, 0u);
@@ -168,21 +168,21 @@ static void RecordRecentDocumentURL(id self, SEL _cmd, NSURL *inURL)
 
 - (void)testNewAndOpenDocumentRunTheMainCommandWithNoContext
 {
-	OMCDropletController *droplet = [self makeDroplet];
-	[droplet newDocument:nil];
-	[droplet openDocument:nil];
+	OMCDropletController *applet = [self makeApplet];
+	[applet newDocument:nil];
+	[applet openDocument:nil];
 	XCTAssertEqualObjects([self markerLinesAfter:1.0], (@[ @"main:", @"main:" ]));
 }
 
 - (void)testOpenedFilesAreGatheredIntoOneRunAndNotedAsRecent
 {
-	OMCDropletController *droplet = [self makeDroplet];
-	OMCDropletTestApplication *application = [[OMCDropletTestApplication alloc] init];
+	OMCDropletController *applet = [self makeApplet];
+	OMCAppletTestApplication *application = [[OMCAppletTestApplication alloc] init];
 	NSURL *first = [self makeFile:@"first.txt"];
 	NSURL *second = [self makeFile:@"second.txt"];
 	// Two calls in quick succession, as Finder sends a drop; the web URL is not a file and is left out
-	[droplet application:(NSApplication *)application openURLs:@[ first ]];
-	[droplet application:(NSApplication *)application openURLs:@[ second, [NSURL URLWithString:@"https://example.com/x"] ]];
+	[applet application:(NSApplication *)application openURLs:@[ first ]];
+	[applet application:(NSApplication *)application openURLs:@[ second, [NSURL URLWithString:@"https://example.com/x"] ]];
 	XCTAssertEqualObjects([self markerLinesAfter:0.1], (@[]), @"nothing runs before the files are gathered");
 
 	NSArray<NSString *> *lines = [self markerLinesAfter:1.5];
@@ -194,9 +194,9 @@ static void RecordRecentDocumentURL(id self, SEL _cmd, NSURL *inURL)
 
 - (void)testOpeningOnlyURLsThatAreNotFilesRunsNothing
 {
-	OMCDropletController *droplet = [self makeDroplet];
-	OMCDropletTestApplication *application = [[OMCDropletTestApplication alloc] init];
-	[droplet application:(NSApplication *)application openURLs:@[ [NSURL URLWithString:@"https://example.com/x"] ]];
+	OMCDropletController *applet = [self makeApplet];
+	OMCAppletTestApplication *application = [[OMCAppletTestApplication alloc] init];
+	[applet application:(NSApplication *)application openURLs:@[ [NSURL URLWithString:@"https://example.com/x"] ]];
 	XCTAssertEqualObjects([self markerLinesAfter:1.0], (@[]));
 	XCTAssertEqual(application.replies.count, 0u);
 	XCTAssertEqual(sNotedRecentURLs.count, 0u);
@@ -204,10 +204,10 @@ static void RecordRecentDocumentURL(id self, SEL _cmd, NSURL *inURL)
 
 - (void)testOpenDocumentWithAURLRunsTheMainCommandWithItAndNotesIt
 {
-	OMCDropletController *droplet = [self makeDroplet];
+	OMCDropletController *applet = [self makeApplet];
 	NSURL *file = [self makeFile:@"recent.txt"];
 	__block BOOL completed = NO;
-	[droplet openDocumentWithContentsOfURL:file display:YES completionHandler:^(NSDocument *document, BOOL alreadyOpen, NSError *error) {
+	[applet openDocumentWithContentsOfURL:file display:YES completionHandler:^(NSDocument *document, BOOL alreadyOpen, NSError *error) {
 		XCTAssertNil(document);
 		XCTAssertFalse(alreadyOpen);
 		XCTAssertNil(error);
@@ -220,10 +220,10 @@ static void RecordRecentDocumentURL(id self, SEL _cmd, NSURL *inURL)
 
 - (void)testOpenFilesRunsTheMainCommandWithThemAtOnce
 {
-	OMCDropletController *droplet = [self makeDroplet];
+	OMCDropletController *applet = [self makeApplet];
 	NSURL *first = [self makeFile:@"a.txt"];
 	NSURL *second = [self makeFile:@"b.txt"];
-	[droplet openFiles:@[ first, second ]];
+	[applet openFiles:@[ first, second ]];
 	NSString *expected = [NSString stringWithFormat:@"main:%@,%@", first.path, second.path];
 	XCTAssertEqualObjects([self markerLinesAfter:1.0], (@[ expected ]));
 	XCTAssertEqualObjects(sNotedRecentURLs, (@[ first, second ]));
@@ -242,11 +242,11 @@ static void RecordRecentDocumentURL(id self, SEL _cmd, NSURL *inURL)
 
 - (void)testAURLEventRunsWhatTheURLAsksFor
 {
-	OMCDropletController *droplet = [self makeDroplet];
-	[droplet handleGetURLEvent:[self getURLEvent:@"omc://exe?commandID=link&text=hello"] withReplyEvent:[NSAppleEventDescriptor nullDescriptor]];
-	[droplet handleGetURLEvent:[self getURLEvent:@"omc://other/path"] withReplyEvent:[NSAppleEventDescriptor nullDescriptor]];
+	OMCDropletController *applet = [self makeApplet];
+	[applet handleGetURLEvent:[self getURLEvent:@"omc://exe?commandID=link&text=hello"] withReplyEvent:[NSAppleEventDescriptor nullDescriptor]];
+	[applet handleGetURLEvent:[self getURLEvent:@"omc://other/path"] withReplyEvent:[NSAppleEventDescriptor nullDescriptor]];
 	// The main command is not URL_INVOCABLE: refused
-	[droplet handleGetURLEvent:[self getURLEvent:@"omc://exe?commandID=main"] withReplyEvent:[NSAppleEventDescriptor nullDescriptor]];
+	[applet handleGetURLEvent:[self getURLEvent:@"omc://exe?commandID=main"] withReplyEvent:[NSAppleEventDescriptor nullDescriptor]];
 	// The two commands run at once, so their lines can land in either order
 	NSArray<NSString *> *lines = [[self markerLinesAfter:1.0] sortedArrayUsingSelector:@selector(compare:)];
 	XCTAssertEqualObjects(lines, (@[ @"link:hello", @"url:omc://other/path" ]));
@@ -255,20 +255,20 @@ static void RecordRecentDocumentURL(id self, SEL _cmd, NSURL *inURL)
 
 - (void)testAURLEventWithoutAURLRunsNothing
 {
-	OMCDropletController *droplet = [self makeDroplet];
+	OMCDropletController *applet = [self makeApplet];
 	NSAppleEventDescriptor *event = [NSAppleEventDescriptor appleEventWithEventClass:kInternetEventClass
 																			  eventID:kAEGetURL
 																	 targetDescriptor:nil
 																			 returnID:kAutoGenerateReturnID
 																		transactionID:kAnyTransactionID];
-	[droplet handleGetURLEvent:event withReplyEvent:[NSAppleEventDescriptor nullDescriptor]];
+	[applet handleGetURLEvent:event withReplyEvent:[NSAppleEventDescriptor nullDescriptor]];
 	XCTAssertEqualObjects([self markerLinesAfter:0.5], (@[]));
 }
 
 - (void)testReopenWithVisibleWindowsDoesNothing
 {
-	OMCDropletController *droplet = [self makeDroplet];
-	XCTAssertFalse([droplet applicationShouldHandleReopen:NSApp hasVisibleWindows:YES]);
+	OMCDropletController *applet = [self makeApplet];
+	XCTAssertFalse([applet applicationShouldHandleReopen:NSApp hasVisibleWindows:YES]);
 	XCTAssertEqualObjects([self markerLinesAfter:0.3], (@[]));
 }
 

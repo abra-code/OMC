@@ -5,7 +5,7 @@
 //  Created by Tomasz Kukielka on 4/6/08.
 //  Copyright 2008 Abracode. All rights reserved.
 //
-//  The Objective-C entry for running commands (menus, the droplet, lifetime events, services).
+//  The Objective-C entry for running commands (menus, the applet, lifetime events, services).
 //  The rules live in the portable OMCCommandRunner; this class adds what only macOS has: the key
 //  window's controller, Open Recent, the delegate as an observer, and NSURLComponents for URLs.
 //

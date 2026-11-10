@@ -40,9 +40,9 @@ int main(int argc, char *argv[])
 			// Without it those items have no responder and appear disabled.
 			// NSApplication.delegate is weak, so hold a strong reference for the
 			// app's lifetime.
-			static OMCDropletController *sDropletController = nil;
-			sDropletController = [[OMCDropletController alloc] init];
-			[app setDelegate:sDropletController];
+			static OMCDropletController *sAppletController = nil;
+			sAppletController = [[OMCDropletController alloc] init];
+			[app setDelegate:sAppletController];
 
 			// OMCMainMenuController owns the JSON menu bar and the Commands menu.
 			// NSMenuItem holds a weak reference to its target, so the controller
@@ -53,8 +53,8 @@ int main(int argc, char *argv[])
 
 			// AppKit does not auto-manage a programmatically built Open Recent
 			// menu (only nib menus tagged systemMenu="recentDocuments"), so the
-			// droplet controller populates it from the recent documents itself.
-			[sDropletController installOpenRecentMenu];
+			// applet controller populates it from the recent documents itself.
+			[sAppletController installOpenRecentMenu];
 
 			[app run];
 			return 0;

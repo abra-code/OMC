@@ -49,7 +49,7 @@ typedef enum SpecialWordID
     DLG_CHOOSE_OBJECT_NAME_NO_EXTENSION,
     DLG_CHOOSE_OBJECT_EXTENSION_ONLY,
     
-    MY_BUNDLE_PATH, //new paths for droplets mostly
+    MY_BUNDLE_PATH, //new paths for applets mostly
     OMC_RESOURCES_PATH,
     OMC_SUPPORT_PATH,
     APP_BUNDLE_PATH, //as of OMC 4.0 the preferred way to access applet bundle path - exported byy default

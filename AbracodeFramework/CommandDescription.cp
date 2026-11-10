@@ -93,7 +93,7 @@ SpecialWordAndIDList()
 	    { sizeof("__SAVE_AS_PATH__")-1,                            CFSTR("__SAVE_AS_PATH__"), CFSTR("OMC_SAVE_AS_PATH"),  DLG_SAVE_AS_PATH, false },
 	    { sizeof("__SAVE_AS_PARENT_PATH__")-1,                    CFSTR("__SAVE_AS_PARENT_PATH__"), CFSTR("OMC_SAVE_AS_PARENT_PATH"),  DLG_SAVE_AS_PARENT_PATH, false },
 	    { sizeof("__SAVE_AS_FILE_NAME__")-1,                    CFSTR("__SAVE_AS_FILE_NAME__"), CFSTR("OMC_SAVE_AS_FILE_NAME"),  DLG_SAVE_AS_NAME, false },
-	    { sizeof("__MY_BUNDLE_PATH__")-1,                        CFSTR("__MY_BUNDLE_PATH__"), CFSTR("OMC_MY_BUNDLE_PATH"),  MY_BUNDLE_PATH, false }//added for droplets, not very useful for CM
+	    { sizeof("__MY_BUNDLE_PATH__")-1,                        CFSTR("__MY_BUNDLE_PATH__"), CFSTR("OMC_MY_BUNDLE_PATH"),  MY_BUNDLE_PATH, false }//added for applets, not very useful for CM
 	};
 	return sList;
 }
@@ -946,7 +946,7 @@ GetOneCommandParams(CommandDescription &outDesc, CFDictionaryRef inOneCommand, C
     
     oneCmd.CopyValue(CFSTR("NIB_CONTROL_MULTIPLE_SELECTION_ITERATION"), outDesc.multipleSelectionIteratorParams);
 
-//table name for localization - for droplets or external modules only
+//table name for localization - for applets or external modules only
     oneCmd.CopyValue(CFSTR("LOCALIZATION_TABLE_NAME"), outDesc.localizationTableName);
     
 //version requirements

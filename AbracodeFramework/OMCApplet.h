@@ -1,11 +1,11 @@
 //
-//  OMCDroplet.h
+//  OMCApplet.h
 //  Abracode
 //
 //  What an applet does when the app is asked to open files, a URL, a new or untitled document,
-//  or to reopen: the decisions of the applet's droplet, portable C++ on CF. The platform's app
+//  or to reopen: the applet's decisions, portable C++ on CF. The platform's app
 //  delegate reports each request (on macOS, EntryPoints/Apple/OMCDropletController.mm) and supplies what only it
-//  can do through OMCDropletActions: run the applet's main command or a URL, note a recent
+//  can do through OMCAppletActions: run the applet's main command or a URL, note a recent
 //  document, and answer the system once gathered files are open. Main thread.
 //
 
@@ -16,7 +16,7 @@
 
 class OMCScheduledCall;
 
-struct OMCDropletActions
+struct OMCAppletActions
 {
 	// Runs the applet's main command with inContext (NULL, a file URL, or a CFArray of them), the
 	// open panel allowed for a command that needs files and got none, no key-window routing.
@@ -35,11 +35,11 @@ struct OMCDropletActions
 	void *context;
 };
 
-class OMCDroplet
+class OMCApplet
 {
 public:
-	explicit			OMCDroplet(const OMCDropletActions &inActions);
-						~OMCDroplet();
+	explicit			OMCApplet(const OMCAppletActions &inActions);
+						~OMCApplet();
 
 	// The modifier keys held when the app started (an OMCModifierKeys mask). Option held at
 	// startup means: open nothing, neither the files the app was started with nor an untitled
@@ -81,7 +81,7 @@ private:
 	static void			OpenGatheredFiles(void *inContext);
 	bool				IsOpeningSuppressed() const;
 
-	OMCDropletActions					mActions;
+	OMCAppletActions					mActions;
 	bool								mStartingUp {true};
 	uint32_t							mStartupModifiers {0};
 	int									mRunningCommandCount {0}; // > 0 while a command call is in progress

@@ -8,8 +8,8 @@
 #import <Cocoa/Cocoa.h>
 
 IB_DESIGNABLE
-// The macOS side of OMCDroplet.h: the app delegate and document controller of an applet, which
-// hands each request to the portable OMCDroplet and keeps what only AppKit does.
+// The macOS side of OMCApplet.h: the app delegate and document controller of an applet, which
+// hands each request to the portable OMCApplet and keeps what only AppKit does.
 @interface OMCDropletController : NSDocumentController<NSApplicationDelegate, NSMenuDelegate>
 
 @property (nonatomic, strong) IBInspectable NSString * commandID; // main/startup command name/id

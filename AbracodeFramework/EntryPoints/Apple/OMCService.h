@@ -9,7 +9,7 @@
 #import <Cocoa/Cocoa.h>
 #import "OMCObserverDelegate.h"
 
-//responds to applicationDidFinishLaunching: but in case of OMC droplet it is not the app delegate - OMCDropletController is and forwards applicationDidFinishLaunching:
+//responds to applicationDidFinishLaunching: but in case of OMC applet it is not the app delegate - OMCDropletController is and forwards applicationDidFinishLaunching:
 //in case of standalone service OMCService is an app controller and receives the applicationDidFinishLaunching: directly
 @interface OMCService : NSObject <NSApplicationDelegate, OMCObserverDelegate>
 {

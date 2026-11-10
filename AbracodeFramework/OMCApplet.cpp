@@ -1,13 +1,13 @@
 //
-//  OMCDroplet.cpp
+//  OMCApplet.cpp
 //  Abracode
 //
-//  See OMCDroplet.h. The decisions were OMCDropletController.mm's, moved statement for
+//  See OMCApplet.h. The decisions were OMCDropletController.mm's, moved statement for
 //  statement; the 0.25 s gathering of opened files uses OMCMainThreadSignal::ScheduleAfter (a
 //  newer call cancels the pending one) instead of dispatch_after with a token.
 //
 
-#include "OMCDroplet.h"
+#include "OMCApplet.h"
 #include "OMCMainThreadSignal.h"
 #include "OMCHostInfo.h"
 #include "OMCPlatformTypes.h" // noErr
@@ -39,28 +39,28 @@ IsFileURL(CFTypeRef inValue)
 
 } // namespace
 
-OMCDroplet::OMCDroplet(const OMCDropletActions &inActions)
+OMCApplet::OMCApplet(const OMCAppletActions &inActions)
 	: mActions(inActions)
 {
 }
 
-OMCDroplet::~OMCDroplet() = default;
+OMCApplet::~OMCApplet() = default;
 
 bool
-OMCDroplet::IsOpeningSuppressed() const
+OMCApplet::IsOpeningSuppressed() const
 {
 	return mStartingUp && ((mStartupModifiers & kOMCModifierOption) != 0);
 }
 
 void
-OMCDroplet::DidFinishLaunching()
+OMCApplet::DidFinishLaunching()
 {
 	mStartingUp = false;
 	mStartupModifiers = 0;
 }
 
 bool
-OMCDroplet::OpenUntitled()
+OMCApplet::OpenUntitled()
 {
 	if(IsOpeningSuppressed())
 		return false;
@@ -71,14 +71,14 @@ OMCDroplet::OpenUntitled()
 }
 
 void
-OMCDroplet::RunMainCommand()
+OMCApplet::RunMainCommand()
 {
 	RunningCommand running(mRunningCommandCount);
 	(void)mActions.runMainCommand(mActions.context, nullptr);
 }
 
 void
-OMCDroplet::OpenFile(CFURLRef inFileURL)
+OMCApplet::OpenFile(CFURLRef inFileURL)
 {
 	if(inFileURL != nullptr)
 		mActions.noteRecentDocument(mActions.context, inFileURL);
@@ -88,7 +88,7 @@ OMCDroplet::OpenFile(CFURLRef inFileURL)
 }
 
 void
-OMCDroplet::OpenFiles(CFArrayRef inFileURLs)
+OMCApplet::OpenFiles(CFArrayRef inFileURLs)
 {
 	if(inFileURLs == nullptr)
 		return;
@@ -106,7 +106,7 @@ OMCDroplet::OpenFiles(CFArrayRef inFileURLs)
 }
 
 void
-OMCDroplet::OpenURLs(CFArrayRef inURLs)
+OMCApplet::OpenURLs(CFArrayRef inURLs)
 {
 	if(IsOpeningSuppressed() || (inURLs == nullptr))
 		return;
@@ -135,9 +135,9 @@ OMCDroplet::OpenURLs(CFArrayRef inURLs)
 }
 
 void
-OMCDroplet::OpenGatheredFiles(void *inContext)
+OMCApplet::OpenGatheredFiles(void *inContext)
 {
-	OMCDroplet *self = (OMCDroplet *)inContext;
+	OMCApplet *self = (OMCApplet *)inContext;
 	std::unique_ptr<OMCScheduledCall> finishedCall( std::move(self->mGatherCall) ); // ends with this call
 
 	// The timer also fires in a nested run loop of the command a previous gathering is running (a
@@ -173,7 +173,7 @@ OMCDroplet::OpenGatheredFiles(void *inContext)
 }
 
 void
-OMCDroplet::HandleURL(CFStringRef inURL)
+OMCApplet::HandleURL(CFStringRef inURL)
 {
 	if(inURL == nullptr)
 		return;
@@ -185,7 +185,7 @@ OMCDroplet::HandleURL(CFStringRef inURL)
 }
 
 bool
-OMCDroplet::ShouldHandleReopen(bool inHasVisibleWindows, int inHostedWindowCount, long inAppWindowCount) const
+OMCApplet::ShouldHandleReopen(bool inHasVisibleWindows, int inHostedWindowCount, long inAppWindowCount) const
 {
 	if(mRunningCommandCount > 0) //some command is running, do not reopen
 		return false;
