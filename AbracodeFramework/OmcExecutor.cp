@@ -1283,6 +1283,10 @@ SystemExecutor::Execute( const char *inCommand, OSStatus &outError )
 		ProcessOutputString(nullptr); //send one progress notification before we start non-stoppable execution
 
 		TRACE_CSTR("SystemExecutor. Executing silently now\n" );
+		// Known limit, accepted (exe_system is not worth reimplementing): system() passes this
+		// process's signal dispositions on, so after any command that wrote a child's standard
+		// input (the engine then ignores SIGPIPE, see POpenExecutor::Execute) the command runs with
+		// SIGPIPE ignored, where omc_popen gives every other command's child the default.
 		outError = (OSStatus) system(inCommand);
 		if(outError != noErr)
 		{
