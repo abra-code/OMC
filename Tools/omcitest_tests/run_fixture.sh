@@ -152,6 +152,12 @@ if [ "$status" -ne 0 ]; then
     exit 1
 fi
 
+# A framework from `xcodebuild test` is built with code coverage (the test plan gathers it), and
+# so are its helper tools. With no LLVM_PROFILE_FILE, an instrumented tool a test script runs
+# writes default.profraw into its working folder, which is the caller's: the repository root, say.
+# Their counters go to the work folder instead, removed with it.
+export LLVM_PROFILE_FILE="$work/profraw/%p.profraw"
+
 # shellcheck disable=SC2086
 if [ -n "$filter" ]; then
     "$appletbuilder" itest "$app" --tests "$tests" --filter "$filter" $itest_options
