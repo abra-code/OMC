@@ -7,21 +7,26 @@
 template <typename T> class ACFDictBase : public CFObj<T>
 {
 public:
+	ACFDictBase() noexcept
+		: CFObj<T>()
+	{
+	}
+
     //note: reverse retain default than CFObj!
 	ACFDictBase(T inObj, CFObjRetainType inRetainType = kCFObjRetain) noexcept
         : CFObj<T>(inObj, inRetainType)
 	{
 	}
 
+	// False, with outValue unchanged, when the key is absent or its value is of another type
 	template< typename CFT >
 	bool GetValue( CFStringRef inKey, CFT &outValue ) const noexcept
 	{
 		if(this->mRef != NULL)
 		{
 			CFTypeRef resultRef = NULL;
-			Boolean keyExists = ::CFDictionaryGetValueIfPresent( this->mRef, inKey, &resultRef );
-			if( keyExists && ACFType<CFT>::DynamicCast(resultRef, outValue) )
-				return true;
+			if( ::CFDictionaryGetValueIfPresent(this->mRef, inKey, &resultRef) )
+				return ACFType<CFT>::DynamicCast(resultRef, outValue);
 		}
 		return false;
 	}
@@ -56,6 +61,16 @@ public:
 			return ::CFNumberGetValue( theNum, kCFNumberCFIndexType, &outValue );
 		return false;
 	}
+
+#if defined(__APPLE__) // on 64-bit Linux int64_t and CFIndex are the same type (long)
+	bool GetValue( CFStringRef inKey, int64_t &outValue ) const noexcept
+	{
+		CFNumberRef theNum = NULL;
+		if( GetValue(inKey, theNum) )
+			return ::CFNumberGetValue( theNum, kCFNumberSInt64Type, &outValue );
+		return false;
+	}
+#endif
 
 	bool GetValue( CFStringRef inKey, short &outValue ) const noexcept
 	{
@@ -102,14 +117,21 @@ public:
 		if(this->mRef != NULL)
 		{
 			CFTypeRef resultRef = NULL;
-			Boolean keyExists = ::CFDictionaryGetValueIfPresent( this->mRef, inKey, &resultRef );
-			if( keyExists && (resultRef != NULL) )
+			if( ::CFDictionaryGetValueIfPresent(this->mRef, inKey, &resultRef) && (resultRef != NULL) )
 			{
 				outValue = resultRef;
 				return true;
 			}
 		}
 		return false;
+	}
+
+	// The value under the key, of any type; NULL when the key is absent
+	CFTypeRef operator[]( CFStringRef inKey ) const noexcept
+	{
+		if(this->mRef == NULL)
+			return NULL;
+		return ::CFDictionaryGetValue(this->mRef, inKey);
 	}
 };
 	
@@ -143,7 +165,15 @@ public:
 		CFObj<CFNumberRef> cfNumber( ::CFNumberCreate( kCFAllocatorDefault, kCFNumberCFIndexType, &inValue) );
 		::CFDictionarySetValue( mRef, inKey, (CFNumberRef)cfNumber );
 	}
-	
+
+#if defined(__APPLE__) // on 64-bit Linux int64_t and CFIndex are the same type (long)
+	void SetValue( CFStringRef inKey, int64_t inValue) noexcept
+	{
+		CFObj<CFNumberRef> cfNumber( ::CFNumberCreate( kCFAllocatorDefault, kCFNumberSInt64Type, &inValue) );
+		::CFDictionarySetValue( mRef, inKey, (CFNumberRef)cfNumber );
+	}
+#endif
+
 	void SetValue( CFStringRef inKey, float inValue) noexcept
 	{
 		CFObj<CFNumberRef> cfNumber( ::CFNumberCreate( kCFAllocatorDefault, kCFNumberFloatType, &inValue) );
@@ -171,6 +201,11 @@ public:
 			::CFDictionarySetValue(mRef, inKey, inValue);
 		else
 			::CFDictionaryRemoveValue(mRef, inKey);
+	}
+
+	void RemoveValue( CFStringRef inKey ) noexcept
+	{
+		::CFDictionaryRemoveValue(mRef, inKey);
 	}
 };
 	
