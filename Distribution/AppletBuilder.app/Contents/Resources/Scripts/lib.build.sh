@@ -436,6 +436,13 @@ copy_executable() {
     local src_exe_name="$(plist_read "${OMC_APP_BUNDLE_PATH}/Contents/Info.plist" CFBundleExecutable)"
     local dst_exe_name="$(plist_read "$target_path/Contents/Info.plist" CFBundleExecutable)"
     /bin/mkdir -p "$target_path/Contents/MacOS"
+    # Remove the old executable first, so the copy is a new file. Copied over, the file is rewritten
+    # in place: a running copy of the applet then fails its code signature checks, and macOS kills
+    # every process that maps the file afterwards (lipo, codesign), so the build fails at thinning.
+    # A running applet keeps the removed file until it quits.
+    if [ -n "$dst_exe_name" ]; then
+        /bin/rm -f "$target_path/Contents/MacOS/$dst_exe_name"
+    fi
     /bin/cp -p "${OMC_APP_BUNDLE_PATH}/Contents/MacOS/$src_exe_name" \
                "$target_path/Contents/MacOS/$dst_exe_name"
     ab_log "Executable updated: $dst_exe_name"
