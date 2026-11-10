@@ -159,7 +159,8 @@ CreateTableIDAndColumnFromString(CFStringRef inControlIDString, CFObj<CFStringRe
 	return controlID;
 }
 
-CFStringRef kControlModifierString_AllRows = CFSTR("|ALL_ROWS");
+// A macro, not a global: on Linux CFSTR cannot initialize anything outside a function
+#define kControlModifierString_AllRows CFSTR("|ALL_ROWS")
 
 CFStringRef
 CreateControlIDByStrippingModifiers(CFStringRef inControlIDWithModifiers, UInt32 &outModifiers)

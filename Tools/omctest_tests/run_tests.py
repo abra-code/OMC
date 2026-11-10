@@ -1692,7 +1692,7 @@ omctest_end
 
 def test_interpreter_map() -> None:
     print("Interpreter map:")
-    # The engine's whole sExtensionToShellMap (OmcExecutor.cp), matched
+    # The engine's whole ExtensionToShellMap() (OmcExecutor.cp), matched
     # case-insensitively. A missing arm ran the handler under /bin/sh.
     jsc = "/System/Library/Frameworks/JavaScriptCore.framework/Versions/Current/Helpers/jsc"
     py = "/fake/python3"

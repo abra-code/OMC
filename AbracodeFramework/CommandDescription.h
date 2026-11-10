@@ -4,7 +4,8 @@
 #include "OMCConstants.h"
 #include "CFObj.h"
 
-extern CFStringRef kOMCTopCommandID;
+// The id of the top-level commands. A macro, not a global: on Linux CFSTR cannot initialize anything outside a function
+#define kOMCTopCommandID CFSTR("top!")
 
 typedef enum SpecialWordID
 {

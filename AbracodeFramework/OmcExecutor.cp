@@ -27,6 +27,7 @@
 #include <dispatch/dispatch.h>
 #include <mutex>
 #include <algorithm>
+#include <iterator>
 
 void
 AddBundlePathToDict(ACFMutableDict &ioDict, CFStringRef inKey, CFBundleRef inBundle)
@@ -930,25 +931,6 @@ typedef struct ExtensionAndShell
 	CFStringRef shell;
 } ExtensionAndShell;
 
-// The locations of script interpreters in macOS are:
-
-static ExtensionAndShell sExtensionToShellMap[] =
-{
-	{ CFSTR("sh"), CFSTR("/bin/sh") },
-    { CFSTR("py"), CFSTR("/usr/bin/python3") }, // placholder - will be dynamically resolved with GetPythonToolPath
-	{ CFSTR("pl"), CFSTR("/usr/bin/perl") },
-	{ CFSTR("applescript"), CFSTR("/usr/bin/osascript") },
-	{ CFSTR("scpt"), CFSTR("/usr/bin/osascript") },
-	{ CFSTR("zsh"), CFSTR("/bin/zsh") }, // new default shell since 10.15
-	{ CFSTR("bash"), CFSTR("/bin/bash") },
-	{ CFSTR("csh"), CFSTR("/bin/csh") },
-	{ CFSTR("tcsh"), CFSTR("/bin/tcsh") },
-	{ CFSTR("dash"), CFSTR("/bin/dash") },
-	{ CFSTR("rb"), CFSTR("/usr/bin/ruby") },
-	{ CFSTR("js"), CFSTR("/System/Library/Frameworks/JavaScriptCore.framework/Versions/Current/Helpers/jsc") }, // in macOS >= 10.15, OMC min is 11
-    { CFSTR("mjs"), CFSTR("/System/Library/Frameworks/JavaScriptCore.framework/Versions/Current/Helpers/jsc") }
-};
-
 enum
 {
 	kScriptExtSh = 0,
@@ -967,10 +949,37 @@ enum
 	kScriptExtCount
 };
 
-static_assert(kScriptExtCount == sizeof(sExtensionToShellMap)/sizeof(ExtensionAndShell), "Script extension map must match the enum");
+// The locations of script interpreters, by extension (in the order of the enum above), in a
+// function: on Linux CFSTR cannot initialize anything outside a function
+static auto &
+ExtensionToShellMap()
+{
+	static const ExtensionAndShell sMap[] =
+	{
+		{ CFSTR("sh"), CFSTR("/bin/sh") },
+	    { CFSTR("py"), CFSTR("/usr/bin/python3") }, // placholder - will be dynamically resolved with GetPythonToolPath
+		{ CFSTR("pl"), CFSTR("/usr/bin/perl") },
+		{ CFSTR("applescript"), CFSTR("/usr/bin/osascript") },
+		{ CFSTR("scpt"), CFSTR("/usr/bin/osascript") },
+		{ CFSTR("zsh"), CFSTR("/bin/zsh") }, // new default shell since 10.15
+		{ CFSTR("bash"), CFSTR("/bin/bash") },
+		{ CFSTR("csh"), CFSTR("/bin/csh") },
+		{ CFSTR("tcsh"), CFSTR("/bin/tcsh") },
+		{ CFSTR("dash"), CFSTR("/bin/dash") },
+		{ CFSTR("rb"), CFSTR("/usr/bin/ruby") },
+		{ CFSTR("js"), CFSTR("/System/Library/Frameworks/JavaScriptCore.framework/Versions/Current/Helpers/jsc") }, // in macOS >= 10.15, OMC min is 11
+	    { CFSTR("mjs"), CFSTR("/System/Library/Frameworks/JavaScriptCore.framework/Versions/Current/Helpers/jsc") }
+	};
+	static_assert(kScriptExtCount == sizeof(sMap)/sizeof(sMap[0]), "Script extension map must match the enum");
+	return sMap;
+}
 
 // sh is the default fallback for any script with no extension
-CFStringRef kDefaultShell = sExtensionToShellMap[0].shell;
+static CFStringRef
+DefaultShell()
+{
+	return ExtensionToShellMap()[0].shell;
+}
 
 // Returns the path to the embedded python3 binary if present, nullptr otherwise.
 // the expected location for bundled Python is OMCApplet.app/Contents/Library/Python/
@@ -1099,7 +1108,7 @@ static inline
 CFStringRef GetShellFromScriptExtension(CFStringRef inExt, CFMutableDictionaryRef envVariables)
 {
 	if(inExt == nullptr)
-		return kDefaultShell;
+		return DefaultShell();
 
     // Export Python env vars whenever the app bundles its own Python distribution,
     // regardless of the script type being executed (e.g. a .sh script calling python3).
@@ -1126,10 +1135,10 @@ CFStringRef GetShellFromScriptExtension(CFStringRef inExt, CFMutableDictionaryRe
             ::CFDictionaryAddValue(envVariables, CFSTR("PYTHONPATH"), newPythonPath);
     }
 
-	size_t mapElementsCount = sizeof(sExtensionToShellMap)/sizeof(ExtensionAndShell);
+	size_t mapElementsCount = std::size(ExtensionToShellMap());
 	for(size_t i = 0; i < mapElementsCount; i++)
 	{
-		if(kCFCompareEqualTo == ::CFStringCompare( inExt, sExtensionToShellMap[i].extension, kCFCompareCaseInsensitive))
+		if(kCFCompareEqualTo == ::CFStringCompare( inExt, ExtensionToShellMap()[i].extension, kCFCompareCaseInsensitive))
 		{
             if(i == kScriptExtPy)
             {
@@ -1143,11 +1152,11 @@ CFStringRef GetShellFromScriptExtension(CFStringRef inExt, CFMutableDictionaryRe
                 }
                 return GetPythonToolPath();
             }
-			return sExtensionToShellMap[i].shell;
+			return ExtensionToShellMap()[i].shell;
 		}
 	}
 
-	return kDefaultShell;
+	return DefaultShell();
 }
 
 static std::string CreateScriptPathAndShell(

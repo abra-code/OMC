@@ -29,7 +29,7 @@
     [super tearDown];
 }
 
-#pragma mark - Always Exported Variables (from sSpecialWordAndIDList with alwaysExport=true)
+#pragma mark - Always Exported Variables (from SpecialWordAndIDList() with alwaysExport=true)
 
 - (void)testAlwaysExportedVariables {
     // These are always exported according to CommandDescription.cp:

@@ -46,18 +46,24 @@ typedef enum PropertyType
 } PropertyType;
 
 //real types only, mostly for get type and set value
-CFStringRef kCFTypesList[kCFType_last+1] = 
+// The type names, in a function: on Linux CFSTR cannot initialize anything outside a function
+static auto &
+CFTypesList()
 {
-	CFSTR("invalid"),
-	CFSTR("string"),
-	CFSTR("dict"),
-	CFSTR("array"),
-	CFSTR("integer"),
-	CFSTR("real"),
-	CFSTR("bool"),
-	CFSTR("date"),
-	CFSTR("data")
-};
+	static const CFStringRef sNames[kCFType_last+1] =
+	{
+		CFSTR("invalid"),
+		CFSTR("string"),
+		CFSTR("dict"),
+		CFSTR("array"),
+		CFSTR("integer"),
+		CFSTR("real"),
+		CFSTR("bool"),
+		CFSTR("date"),
+		CFSTR("data")
+	};
+	return sNames;
+}
 
 //actual values filled in main()
 CFTypeID kCFTypeIDs[kCFType_last+1] = 
@@ -90,10 +96,6 @@ typedef struct CFObjSpec
 	
 } CFObjSpec;
 
-CFStringRef kNumber0Str = CFSTR("0");
-CFStringRef kNumber1Str = CFSTR("1");
-CFStringRef kTrueStr = CFSTR("true");
-CFStringRef kFalseStr = CFSTR("false");
 
 typedef struct ContainerOptions
 {
@@ -1436,7 +1438,7 @@ OSStatus CreateCFItemType( CFTypeRef inItem, CFStringRef *outResult, ContainerOp
 		
 		if(outResult != NULL)
 		{
-			*outResult = kCFTypesList[i];
+			*outResult = CFTypesList()[i];
 			::CFRetain( *outResult );
 		}
 	}
@@ -1497,7 +1499,7 @@ OSStatus CreateCFItemString( CFTypeRef inItem, CFStringRef *outResult, Container
 	}
 	else if( itemType == kCFTypeIDs[kCFType_bool] )
 	{
-		*outResult = (::CFBooleanGetValue((CFBooleanRef)inItem) ? kTrueStr : kFalseStr);
+		*outResult = (::CFBooleanGetValue((CFBooleanRef)inItem) ? CFSTR("true") : CFSTR("false"));
 		::CFRetain(*outResult);
 	}
 	else if( itemType == kCFTypeIDs[kCFType_date] )

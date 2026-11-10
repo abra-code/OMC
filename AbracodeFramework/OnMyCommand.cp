@@ -13,6 +13,7 @@
 #include "CFObj.h"
 #include <string>
 #include <vector>
+#include <iterator>
 
 #include "DebugSettings.h"
 //#include "NavDialogs.h"
@@ -1525,25 +1526,36 @@ OnMyCommand::GetCommandInfo(SInt32 inCommandRef, OMCInfoType infoType, void *out
 
 // Ids the application lifecycle runs (OMCAppLifecycle.cpp). A link must never run them:
 // app.will.terminate, for one, tears the applet's state down while the applet keeps running.
-static const CFStringRef sAppLifecycleCommandIDs[] =
+// In a function: on Linux CFSTR cannot initialize anything outside a function.
+static auto &
+AppLifecycleCommandIDs()
 {
-	CFSTR("app.will.launch"),
-	CFSTR("app.did.launch"),
-	CFSTR("app.did.activate"),
-	CFSTR("app.did.deactivate"),
-	CFSTR("app.will.terminate")
-};
+	static const CFStringRef sIDs[] =
+	{
+		CFSTR("app.will.launch"),
+		CFSTR("app.did.launch"),
+		CFSTR("app.did.activate"),
+		CFSTR("app.did.deactivate"),
+		CFSTR("app.will.terminate")
+	};
+	return sIDs;
+}
 
 // Keys of NIB_DIALOG / ACTIONUI_WINDOW naming the commands a window runs for its own events
 // (OMCNibWindowController.mm, OMCActionUIWindow.cpp).
-static const CFStringRef sDialogSubcommandKeys[] =
+static auto &
+DialogSubcommandKeys()
 {
-	CFSTR("INIT_SUBCOMMAND_ID"),
-	CFSTR("END_OK_SUBCOMMAND_ID"),
-	CFSTR("END_CANCEL_SUBCOMMAND_ID"),
-	CFSTR("WINDOW_DID_ACTIVATE_SUBCOMMAND_ID"),
-	CFSTR("WINDOW_DID_DEACTIVATE_SUBCOMMAND_ID")
-};
+	static const CFStringRef sKeys[] =
+	{
+		CFSTR("INIT_SUBCOMMAND_ID"),
+		CFSTR("END_OK_SUBCOMMAND_ID"),
+		CFSTR("END_CANCEL_SUBCOMMAND_ID"),
+		CFSTR("WINDOW_DID_ACTIVATE_SUBCOMMAND_ID"),
+		CFSTR("WINDOW_DID_DEACTIVATE_SUBCOMMAND_ID")
+	};
+	return sKeys;
+}
 
 // Whether any command's dialog names inCommandID as one of its event handlers, or it is one of
 // the predefined dialog ids. Such a command reads its window's control values and has no meaning
@@ -1561,7 +1573,7 @@ OnMyCommand::IsDialogSubcommandID(CFStringRef inCommandID) const
 	if(mCommandList == nullptr)
 		return false;
 
-	const size_t keyCount = sizeof(sDialogSubcommandKeys)/sizeof(sDialogSubcommandKeys[0]);
+	const size_t keyCount = std::size(DialogSubcommandKeys());
 	for(UInt32 i = 0; i < mCommandCount; i++)
 	{
 		const CFDictionaryRef dialogDicts[] = { mCommandList[i].nibDialog, mCommandList[i].actionUIWindow };
@@ -1572,7 +1584,7 @@ OnMyCommand::IsDialogSubcommandID(CFStringRef inCommandID) const
 
 			for(size_t k = 0; k < keyCount; k++)
 			{
-				CFStringRef oneID = ACFType<CFStringRef>::DynamicCast( ::CFDictionaryGetValue(oneDialogDict, sDialogSubcommandKeys[k]) );
+				CFStringRef oneID = ACFType<CFStringRef>::DynamicCast( ::CFDictionaryGetValue(oneDialogDict, DialogSubcommandKeys()[k]) );
 				if( (oneID != nullptr) && ::CFEqual(oneID, inCommandID) )
 					return true;
 			}
@@ -1593,13 +1605,13 @@ OnMyCommand::GetURLInvocationStatus(const CommandDescription &inCommand) const
 	if(inCommand.name != nullptr)
 		combinedName.Adopt( ::CFStringCreateByCombiningStrings(kCFAllocatorDefault, inCommand.name, CFSTR("")) );
 
-	const size_t lifecycleCount = sizeof(sAppLifecycleCommandIDs)/sizeof(sAppLifecycleCommandIDs[0]);
+	const size_t lifecycleCount = std::size(AppLifecycleCommandIDs());
 	for(size_t i = 0; i < lifecycleCount; i++)
 	{
-		if( (inCommand.commandID != nullptr) && ::CFEqual(inCommand.commandID, sAppLifecycleCommandIDs[i]) )
+		if( (inCommand.commandID != nullptr) && ::CFEqual(inCommand.commandID, AppLifecycleCommandIDs()[i]) )
 			return kOmcURLInvocation_RefusedLifecycleCommand;
 
-		if( (combinedName != nullptr) && ::CFEqual((CFStringRef)combinedName, sAppLifecycleCommandIDs[i]) )
+		if( (combinedName != nullptr) && ::CFEqual((CFStringRef)combinedName, AppLifecycleCommandIDs()[i]) )
 			return kOmcURLInvocation_RefusedLifecycleCommand;
 	}
 
@@ -3363,7 +3375,7 @@ OnMyCommand::PopulateEnvironList(CFMutableDictionaryRef ioEnvironList, CommandRu
 			}
 			break;
 
-			// WARNING for whoever adds the next alwaysExport=true row to sSpecialWordAndIDList:
+			// WARNING for whoever adds the next alwaysExport=true row to SpecialWordAndIDList (CommandDescription.cp):
 			// this default is what makes -Wswitch silent HERE, so the compiler will NOT tell you
 			// that you forgot a case, and the failure is silent AND destructive rather than merely
 			// an empty value: newStrRef stays NULL with keepExistingKeyValue false, so the loop

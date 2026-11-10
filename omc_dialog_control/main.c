@@ -1,6 +1,7 @@
 
 #include <CoreFoundation/CoreFoundation.h>
 #include <unistd.h>
+#include <string.h>
 #include <sys/stat.h>
 #include "ACFPropertyList.h"
 #include "AppGroupIdentifier.h"
@@ -59,11 +60,13 @@ typedef enum InstructionID
 } InstructionID;
 
 
+// The words and keys are C strings, not CFSTR: on Linux CFSTR cannot initialize a table outside a
+// function (InstructionKey makes a key's CFString when it is needed)
 typedef struct InstructionWord
 {
 	size_t len;
-	CFStringRef word;
-	CFStringRef key;
+	const char *word;
+	const char *key;
 	bool boolValue;//only used for boolean switches
 	bool appendable;
 	int32_t argumentCount;
@@ -79,52 +82,52 @@ enum
 static InstructionWord sInstructionWordList[] =
 {
 	// len													word											key							boolValue appendable argumentCount
-	{ 0,													CFSTR(""),										CFSTR("VALUES"),				false, false,	0 },
-	{ sizeof("omc_set_value_from_stdin")-1,					CFSTR("omc_set_value_from_stdin"),				CFSTR("VALUES"),				false, false,	kArgumentCount_FromStdin },
-	{ sizeof("omc_enable")-1,								CFSTR("omc_enable"),							CFSTR("ENABLE_DISABLE"),		true, false,	0 },
-	{ sizeof("omc_disable")-1,								CFSTR("omc_disable"),							CFSTR("ENABLE_DISABLE"),		false, false,	0 },
-	{ sizeof("omc_show")-1,									CFSTR("omc_show"),								CFSTR("SHOW_HIDE"),				true, false,	0 },
-	{ sizeof("omc_hide")-1,									CFSTR("omc_hide"),								CFSTR("SHOW_HIDE"),				false, false,	0 },
-	{ sizeof("omc_list_remove_all")-1,						CFSTR("omc_list_remove_all"),					CFSTR("REMOVE_LIST_ITEMS"),		false, false,	0 },
-	{ sizeof("omc_list_append_items")-1,					CFSTR("omc_list_append_items"),					CFSTR("APPEND_LIST_ITEMS"),		false, true,	kArgumentCount_Variable },
-	{ sizeof("omc_list_append_items_from_file")-1,			CFSTR("omc_list_append_items_from_file"),		CFSTR("APPEND_LIST_ITEMS"),		false, true,	kArgumentCount_FromFile },
-	{ sizeof("omc_list_append_items_from_stdin")-1,			CFSTR("omc_list_append_items_from_stdin"),		CFSTR("APPEND_LIST_ITEMS"),		false, true,	kArgumentCount_FromStdin },
-	{ sizeof("omc_list_set_items")-1,						CFSTR("omc_list_set_items"),					CFSTR("SET_LIST_ITEMS"),		false, false,	kArgumentCount_Variable },
-	{ sizeof("omc_list_set_items_from_file")-1,				CFSTR("omc_list_set_items_from_file"),			CFSTR("SET_LIST_ITEMS"),		false, false,	kArgumentCount_FromFile },
-	{ sizeof("omc_list_set_items_from_stdin")-1,			CFSTR("omc_list_set_items_from_stdin"),			CFSTR("SET_LIST_ITEMS"),		false, false,	kArgumentCount_FromStdin },
-	{ sizeof("omc_table_remove_all_rows")-1,				CFSTR("omc_table_remove_all_rows"),				CFSTR("REMOVE_TABLE_ROWS"),		false, false,	0 },
-	{ sizeof("omc_table_prepare_empty")-1,					CFSTR("omc_table_prepare_empty"),				CFSTR("PREPARE_TABLE_EMPTY"),	false, false,	0 },
-	{ sizeof("omc_table_add_rows")-1,						CFSTR("omc_table_add_rows"),					CFSTR("ADD_TABLE_ROWS"),		false, true,	kArgumentCount_Variable },
-	{ sizeof("omc_table_add_rows_from_file")-1,				CFSTR("omc_table_add_rows_from_file"),			CFSTR("ADD_TABLE_ROWS"),		false, true,	kArgumentCount_FromFile },
-	{ sizeof("omc_table_add_rows_from_stdin")-1,			CFSTR("omc_table_add_rows_from_stdin"),			CFSTR("ADD_TABLE_ROWS"),		false, true,	kArgumentCount_FromStdin },
-	{ sizeof("omc_table_set_rows")-1,						CFSTR("omc_table_set_rows"),					CFSTR("SET_TABLE_ROWS"),		false, false,	kArgumentCount_Variable },
-	{ sizeof("omc_table_set_rows_from_file")-1,				CFSTR("omc_table_set_rows_from_file"),			CFSTR("SET_TABLE_ROWS"),		false, false,	kArgumentCount_FromFile },
-	{ sizeof("omc_table_set_rows_from_stdin")-1,			CFSTR("omc_table_set_rows_from_stdin"),			CFSTR("SET_TABLE_ROWS"),		false, false,	kArgumentCount_FromStdin },
-	{ sizeof("omc_table_set_columns")-1,					CFSTR("omc_table_set_columns"),					CFSTR("SET_TABLE_COLUMNS"),		false, false,	kArgumentCount_Variable },
-	{ sizeof("omc_table_set_column_widths")-1,				CFSTR("omc_table_set_column_widths"),			CFSTR("SET_TABLE_WIDTHS"),		false, false,	kArgumentCount_Variable },
-	{ sizeof("omc_set_property")-1,							CFSTR("omc_set_property"),						CFSTR("SET_PROPERTY"),			false, false,	2 },
-	{ sizeof("omc_set_state")-1,							CFSTR("omc_set_state"),							CFSTR("SET_STATE"),				false, false,	2 },
-	{ sizeof("omc_set_command_id")-1,						CFSTR("omc_set_command_id"),					CFSTR("COMMAND_IDS"),			false, false,	1 },
-	{ sizeof("omc_resize")-1,								CFSTR("omc_resize"),							CFSTR("RESIZE"),				false, false,	2 },
-	{ sizeof("omc_move")-1,									CFSTR("omc_move"),								CFSTR("MOVE"),					false, false,	2 },
-	{ sizeof("omc_scroll")-1,								CFSTR("omc_scroll"),							CFSTR("SCROLL"),				false, false,	2 },
-	{ sizeof("omc_select")-1,								CFSTR("omc_select"),							CFSTR("SELECT"),				true, false,	0 },
-	{ sizeof("omc_terminate_ok")-1,							CFSTR("omc_terminate_ok"),						CFSTR("TERMINATE"),				true, false,	0 },
-	{ sizeof("omc_terminate_cancel")-1,						CFSTR("omc_terminate_cancel"),					CFSTR("TERMINATE"),				false, false,	0 },
-	{ sizeof("omc_invoke")-1,								CFSTR("omc_invoke"),							CFSTR("INVOKE"),				false, false,	kArgumentCount_Variable },
-	{ sizeof("omc_present_modal")-1,						CFSTR("omc_present_modal"),						CFSTR("PRESENT_MODAL"),			false, false,	kArgumentCount_Variable },
-	{ sizeof("omc_dismiss_modal")-1,						CFSTR("omc_dismiss_modal"),						CFSTR("DISMISS_MODAL"),			true,  false,	0 },
-	{ sizeof("omc_present_toast")-1,						CFSTR("omc_present_toast"),						CFSTR("PRESENT_TOAST"),			false, false,	kArgumentCount_Variable },
-	{ sizeof("omc_dismiss_toast")-1,						CFSTR("omc_dismiss_toast"),						CFSTR("DISMISS_TOAST"),			true,  false,	0 },
-	{ sizeof("omc_present_alert")-1,						CFSTR("omc_present_alert"),						CFSTR("PRESENT_ALERT"),			false, false,	kArgumentCount_Variable },
-	{ sizeof("omc_present_confirmation_dialog")-1,			CFSTR("omc_present_confirmation_dialog"),		CFSTR("PRESENT_CONFIRMATION_DIALOG"), false, false, kArgumentCount_Variable },
-	{ sizeof("omc_dismiss_dialog")-1,						CFSTR("omc_dismiss_dialog"),					CFSTR("DISMISS_DIALOG"),		true,  false,	0 },
-	{ sizeof("omc_insert_element")-1,						CFSTR("omc_insert_element"),					CFSTR("INSERT_ELEMENT"),		false, false,	kArgumentCount_Variable },
-	{ sizeof("omc_insert_element_row")-1,					CFSTR("omc_insert_element_row"),				CFSTR("INSERT_ELEMENT_ROW"),	false, false,	kArgumentCount_Variable },
-	{ sizeof("omc_remove_element")-1,						CFSTR("omc_remove_element"),					CFSTR("REMOVE_ELEMENT"),		true,  false,	0 },
-	{ sizeof("omc_select_row")-1,							CFSTR("omc_select_row"),						CFSTR("SELECT_ROW"),			false, false,	1 },
-	{ sizeof("omc_select_row_with_content")-1,				CFSTR("omc_select_row_with_content"),			CFSTR("SELECT_ROW_CONTENT"),	false, false,	kArgumentCount_Variable },
-	{ sizeof("omc_deselect")-1,								CFSTR("omc_deselect"),							CFSTR("DESELECT_ROW"),			true,  false,	0 }
+	{ 0,													"",										"VALUES",				false, false,	0 },
+	{ sizeof("omc_set_value_from_stdin")-1,					"omc_set_value_from_stdin",				"VALUES",				false, false,	kArgumentCount_FromStdin },
+	{ sizeof("omc_enable")-1,								"omc_enable",							"ENABLE_DISABLE",		true, false,	0 },
+	{ sizeof("omc_disable")-1,								"omc_disable",							"ENABLE_DISABLE",		false, false,	0 },
+	{ sizeof("omc_show")-1,									"omc_show",								"SHOW_HIDE",				true, false,	0 },
+	{ sizeof("omc_hide")-1,									"omc_hide",								"SHOW_HIDE",				false, false,	0 },
+	{ sizeof("omc_list_remove_all")-1,						"omc_list_remove_all",					"REMOVE_LIST_ITEMS",		false, false,	0 },
+	{ sizeof("omc_list_append_items")-1,					"omc_list_append_items",					"APPEND_LIST_ITEMS",		false, true,	kArgumentCount_Variable },
+	{ sizeof("omc_list_append_items_from_file")-1,			"omc_list_append_items_from_file",		"APPEND_LIST_ITEMS",		false, true,	kArgumentCount_FromFile },
+	{ sizeof("omc_list_append_items_from_stdin")-1,			"omc_list_append_items_from_stdin",		"APPEND_LIST_ITEMS",		false, true,	kArgumentCount_FromStdin },
+	{ sizeof("omc_list_set_items")-1,						"omc_list_set_items",					"SET_LIST_ITEMS",		false, false,	kArgumentCount_Variable },
+	{ sizeof("omc_list_set_items_from_file")-1,				"omc_list_set_items_from_file",			"SET_LIST_ITEMS",		false, false,	kArgumentCount_FromFile },
+	{ sizeof("omc_list_set_items_from_stdin")-1,			"omc_list_set_items_from_stdin",			"SET_LIST_ITEMS",		false, false,	kArgumentCount_FromStdin },
+	{ sizeof("omc_table_remove_all_rows")-1,				"omc_table_remove_all_rows",				"REMOVE_TABLE_ROWS",		false, false,	0 },
+	{ sizeof("omc_table_prepare_empty")-1,					"omc_table_prepare_empty",				"PREPARE_TABLE_EMPTY",	false, false,	0 },
+	{ sizeof("omc_table_add_rows")-1,						"omc_table_add_rows",					"ADD_TABLE_ROWS",		false, true,	kArgumentCount_Variable },
+	{ sizeof("omc_table_add_rows_from_file")-1,				"omc_table_add_rows_from_file",			"ADD_TABLE_ROWS",		false, true,	kArgumentCount_FromFile },
+	{ sizeof("omc_table_add_rows_from_stdin")-1,			"omc_table_add_rows_from_stdin",			"ADD_TABLE_ROWS",		false, true,	kArgumentCount_FromStdin },
+	{ sizeof("omc_table_set_rows")-1,						"omc_table_set_rows",					"SET_TABLE_ROWS",		false, false,	kArgumentCount_Variable },
+	{ sizeof("omc_table_set_rows_from_file")-1,				"omc_table_set_rows_from_file",			"SET_TABLE_ROWS",		false, false,	kArgumentCount_FromFile },
+	{ sizeof("omc_table_set_rows_from_stdin")-1,			"omc_table_set_rows_from_stdin",			"SET_TABLE_ROWS",		false, false,	kArgumentCount_FromStdin },
+	{ sizeof("omc_table_set_columns")-1,					"omc_table_set_columns",					"SET_TABLE_COLUMNS",		false, false,	kArgumentCount_Variable },
+	{ sizeof("omc_table_set_column_widths")-1,				"omc_table_set_column_widths",			"SET_TABLE_WIDTHS",		false, false,	kArgumentCount_Variable },
+	{ sizeof("omc_set_property")-1,							"omc_set_property",						"SET_PROPERTY",			false, false,	2 },
+	{ sizeof("omc_set_state")-1,							"omc_set_state",							"SET_STATE",				false, false,	2 },
+	{ sizeof("omc_set_command_id")-1,						"omc_set_command_id",					"COMMAND_IDS",			false, false,	1 },
+	{ sizeof("omc_resize")-1,								"omc_resize",							"RESIZE",				false, false,	2 },
+	{ sizeof("omc_move")-1,									"omc_move",								"MOVE",					false, false,	2 },
+	{ sizeof("omc_scroll")-1,								"omc_scroll",							"SCROLL",				false, false,	2 },
+	{ sizeof("omc_select")-1,								"omc_select",							"SELECT",				true, false,	0 },
+	{ sizeof("omc_terminate_ok")-1,							"omc_terminate_ok",						"TERMINATE",				true, false,	0 },
+	{ sizeof("omc_terminate_cancel")-1,						"omc_terminate_cancel",					"TERMINATE",				false, false,	0 },
+	{ sizeof("omc_invoke")-1,								"omc_invoke",							"INVOKE",				false, false,	kArgumentCount_Variable },
+	{ sizeof("omc_present_modal")-1,						"omc_present_modal",						"PRESENT_MODAL",			false, false,	kArgumentCount_Variable },
+	{ sizeof("omc_dismiss_modal")-1,						"omc_dismiss_modal",						"DISMISS_MODAL",			true,  false,	0 },
+	{ sizeof("omc_present_toast")-1,						"omc_present_toast",						"PRESENT_TOAST",			false, false,	kArgumentCount_Variable },
+	{ sizeof("omc_dismiss_toast")-1,						"omc_dismiss_toast",						"DISMISS_TOAST",			true,  false,	0 },
+	{ sizeof("omc_present_alert")-1,						"omc_present_alert",						"PRESENT_ALERT",			false, false,	kArgumentCount_Variable },
+	{ sizeof("omc_present_confirmation_dialog")-1,			"omc_present_confirmation_dialog",		"PRESENT_CONFIRMATION_DIALOG", false, false, kArgumentCount_Variable },
+	{ sizeof("omc_dismiss_dialog")-1,						"omc_dismiss_dialog",					"DISMISS_DIALOG",		true,  false,	0 },
+	{ sizeof("omc_insert_element")-1,						"omc_insert_element",					"INSERT_ELEMENT",		false, false,	kArgumentCount_Variable },
+	{ sizeof("omc_insert_element_row")-1,					"omc_insert_element_row",				"INSERT_ELEMENT_ROW",	false, false,	kArgumentCount_Variable },
+	{ sizeof("omc_remove_element")-1,						"omc_remove_element",					"REMOVE_ELEMENT",		true,  false,	0 },
+	{ sizeof("omc_select_row")-1,							"omc_select_row",						"SELECT_ROW",			false, false,	1 },
+	{ sizeof("omc_select_row_with_content")-1,				"omc_select_row_with_content",			"SELECT_ROW_CONTENT",	false, false,	kArgumentCount_Variable },
+	{ sizeof("omc_deselect")-1,								"omc_deselect",							"DESELECT_ROW",			true,  false,	0 }
 
 };
 
@@ -143,12 +146,17 @@ GetInstructionID(CFStringRef inStr)
 	if(oneChar != 'o')
 		return omc_set_control_value; //special word must start with omc
 
+	// The words are ASCII and short: a string that does not fit is none of them
+	char text[128];
+	if(!CFStringGetCString(inStr, text, sizeof(text), kCFStringEncodingUTF8))
+		return omc_set_control_value;
+
 	size_t instructionCount = sizeof(sInstructionWordList)/sizeof(InstructionWord);
 	for(size_t i = 0; i < instructionCount; i++)
 	{
 		if(sInstructionWordList[i].len == strLen)
 		{
-			if( kCFCompareEqualTo == CFStringCompare( inStr, sInstructionWordList[i].word, 0) )
+			if( strcmp(text, sInstructionWordList[i].word) == 0 )
 			{
 				return (InstructionID)i;
 			}
@@ -156,6 +164,17 @@ GetInstructionID(CFStringRef inStr)
 	}
 
 	return omc_set_control_value;
+}
+
+// An instruction's key as a CFString, made the first time it is asked for and kept until the tool
+// exits (a short-lived, single-threaded process)
+static CFStringRef
+InstructionKey(InstructionID inInstruction)
+{
+	static CFStringRef sKeys[sizeof(sInstructionWordList)/sizeof(InstructionWord)];
+	if(sKeys[inInstruction] == NULL)
+		sKeys[inInstruction] = CFStringCreateWithCString(kCFAllocatorDefault, sInstructionWordList[inInstruction].key, kCFStringEncodingUTF8);
+	return sKeys[inInstruction];
 }
 
 
@@ -309,7 +328,7 @@ int main (int argc, const char * argv[])
 
 	CFStringRef valueStr = CFStringCreateWithCString(kCFAllocatorDefault, argv[3], kCFStringEncodingUTF8);
 	InstructionID instruction = GetInstructionID(valueStr);//must return valid index
-	key = sInstructionWordList[instruction].key;
+	key = InstructionKey(instruction);
 
 	// When argv[3] is not a recognized instruction and a 4th argument is present,
 	// treat argv[3] as a contentType hint and argv[4] as the actual value.
@@ -516,9 +535,9 @@ int main (int argc, const char * argv[])
 //now check if there were any pending "append" items for this control id and remove them as well
 			CFStringRef arrayKey = NULL;
 			if(instruction == omc_list_remove_all)
-				arrayKey =  sInstructionWordList[omc_list_append_items].key;
+				arrayKey = InstructionKey(omc_list_append_items);
 			else // if((instruction == omc_table_remove_all_rows) || (instruction == omc_table_prepare_empty))
-				arrayKey = sInstructionWordList[omc_table_add_rows].key;
+				arrayKey = InstructionKey(omc_table_add_rows);
 
 			theResult = CFDictionaryGetValue(plistDict, (const void *)arrayKey);
 			if( (theResult != NULL) && (CFDictionaryGetTypeID() == CFGetTypeID(theResult)) )

@@ -4,8 +4,7 @@
 #include "ACFArr.h"
 #include "DebugSettings.h"
 #include <vector>
-
-CFStringRef kOMCTopCommandID = CFSTR("top!");
+#include <iterator>
 
 typedef struct SpecialWordAndID
 {
@@ -18,74 +17,80 @@ typedef struct SpecialWordAndID
 
 //we take advantage of the fact that __XXX__ word has the same length as OMC_XXX
 
-static const SpecialWordAndID sSpecialWordAndIDList[] =
+// The special words, in a function: on Linux CFSTR cannot initialize anything outside a function
+static auto &
+SpecialWordAndIDList()
 {
-    //wordLen                                                // specialWord         //environName           //id            //always_export
-    { sizeof("__OBJ_TEXT__")-1,                                CFSTR("__OBJ_TEXT__"), CFSTR("OMC_OBJ_TEXT"),  OBJ_TEXT, true },
-    { sizeof("__OBJ_PATH__")-1,                                CFSTR("__OBJ_PATH__"), CFSTR("OMC_OBJ_PATH"),  OBJ_PATH, true },
-    { sizeof("__OBJ_PARENT_PATH__")-1,                        CFSTR("__OBJ_PARENT_PATH__"), CFSTR("OMC_OBJ_PARENT_PATH"),  OBJ_PARENT_PATH, false },
-    { sizeof("__OBJ_NAME__")-1,                                CFSTR("__OBJ_NAME__"), CFSTR("OMC_OBJ_NAME"),  OBJ_NAME, false },
-    { sizeof("__OBJ_NAME_NO_EXTENSION__")-1,                CFSTR("__OBJ_NAME_NO_EXTENSION__"), CFSTR("OMC_OBJ_NAME_NO_EXTENSION"),  OBJ_NAME_NO_EXTENSION, false },
-    { sizeof("__OBJ_EXTENSION_ONLY__")-1,                    CFSTR("__OBJ_EXTENSION_ONLY__"), CFSTR("OMC_OBJ_EXTENSION_ONLY"),  OBJ_EXTENSION_ONLY, false },
-    { sizeof("__OBJ_DISPLAY_NAME__")-1,                        CFSTR("__OBJ_DISPLAY_NAME__"), CFSTR("OMC_OBJ_DISPLAY_NAME"),  OBJ_DISPLAY_NAME, false },
-    { sizeof("__OBJ_COMMON_PARENT_PATH__")-1,                CFSTR("__OBJ_COMMON_PARENT_PATH__"), CFSTR("OMC_OBJ_COMMON_PARENT_PATH"),  OBJ_COMMON_PARENT_PATH, false },
-    { sizeof("__OBJ_PATH_RELATIVE_TO_COMMON_PARENT__")-1,    CFSTR("__OBJ_PATH_RELATIVE_TO_COMMON_PARENT__"), CFSTR("OMC_OBJ_PATH_RELATIVE_TO_COMMON_PARENT"),  OBJ_PATH_RELATIVE_TO_COMMON_PARENT, false },
-
-    { sizeof("__DLG_INPUT_TEXT__")-1,                        CFSTR("__DLG_INPUT_TEXT__"), CFSTR("OMC_DLG_INPUT_TEXT"),  DLG_INPUT_TEXT, false },
-
-    { sizeof("__DLG_SAVE_AS_PATH__")-1,                        CFSTR("__DLG_SAVE_AS_PATH__"), CFSTR("OMC_DLG_SAVE_AS_PATH"),  DLG_SAVE_AS_PATH, false },
-    { sizeof("__DLG_SAVE_AS_PARENT_PATH__")-1,                CFSTR("__DLG_SAVE_AS_PARENT_PATH__"), CFSTR("OMC_DLG_SAVE_AS_PARENT_PATH"),  DLG_SAVE_AS_PARENT_PATH, false },
-    { sizeof("__DLG_SAVE_AS_NAME__")-1,                        CFSTR("__DLG_SAVE_AS_NAME__"), CFSTR("OMC_DLG_SAVE_AS_NAME"),  DLG_SAVE_AS_NAME, false },
-    { sizeof("__DLG_SAVE_AS_NAME_NO_EXTENSION__")-1,        CFSTR("__DLG_SAVE_AS_NAME_NO_EXTENSION__"), CFSTR("OMC_DLG_SAVE_AS_NAME_NO_EXTENSION"),  DLG_SAVE_AS_NAME_NO_EXTENSION, false },
-    { sizeof("__DLG_SAVE_AS_EXTENSION_ONLY__")-1,            CFSTR("__DLG_SAVE_AS_EXTENSION_ONLY__"), CFSTR("OMC_DLG_SAVE_AS_EXTENSION_ONLY"),  DLG_SAVE_AS_EXTENSION_ONLY, false },
-
-    { sizeof("__DLG_CHOOSE_FILE_PATH__")-1,                    CFSTR("__DLG_CHOOSE_FILE_PATH__"), CFSTR("OMC_DLG_CHOOSE_FILE_PATH"),  DLG_CHOOSE_FILE_PATH, false },
-    { sizeof("__DLG_CHOOSE_FILE_PARENT_PATH__")-1,            CFSTR("__DLG_CHOOSE_FILE_PARENT_PATH__"), CFSTR("OMC_DLG_CHOOSE_FILE_PARENT_PATH"),  DLG_CHOOSE_FILE_PARENT_PATH, false },
-    { sizeof("__DLG_CHOOSE_FILE_NAME__")-1,                    CFSTR("__DLG_CHOOSE_FILE_NAME__"), CFSTR("OMC_DLG_CHOOSE_FILE_NAME"),  DLG_CHOOSE_FILE_NAME, false },
-    { sizeof("__DLG_CHOOSE_FILE_NAME_NO_EXTENSION__")-1,    CFSTR("__DLG_CHOOSE_FILE_NAME_NO_EXTENSION__"), CFSTR("OMC_DLG_CHOOSE_FILE_NAME_NO_EXTENSION"),  DLG_CHOOSE_FILE_NAME_NO_EXTENSION, false },
-    { sizeof("__DLG_CHOOSE_FILE_EXTENSION_ONLY__")-1,        CFSTR("__DLG_CHOOSE_FILE_EXTENSION_ONLY__"), CFSTR("OMC_DLG_CHOOSE_FILE_EXTENSION_ONLY"),  DLG_CHOOSE_FILE_EXTENSION_ONLY, false },
-
-    { sizeof("__DLG_CHOOSE_FOLDER_PATH__")-1,                CFSTR("__DLG_CHOOSE_FOLDER_PATH__"), CFSTR("OMC_DLG_CHOOSE_FOLDER_PATH"),  DLG_CHOOSE_FOLDER_PATH, false },
-    { sizeof("__DLG_CHOOSE_FOLDER_PARENT_PATH__")-1,        CFSTR("__DLG_CHOOSE_FOLDER_PARENT_PATH__"), CFSTR("OMC_DLG_CHOOSE_FOLDER_PARENT_PATH"),  DLG_CHOOSE_FOLDER_PARENT_PATH, false },
-    { sizeof("__DLG_CHOOSE_FOLDER_NAME__")-1,                CFSTR("__DLG_CHOOSE_FOLDER_NAME__"), CFSTR("OMC_DLG_CHOOSE_FOLDER_NAME"),  DLG_CHOOSE_FOLDER_NAME, false },
-    { sizeof("__DLG_CHOOSE_FOLDER_NAME_NO_EXTENSION__")-1,    CFSTR("__DLG_CHOOSE_FOLDER_NAME_NO_EXTENSION__"), CFSTR("OMC_DLG_CHOOSE_FOLDER_NAME_NO_EXTENSION"),  DLG_CHOOSE_FOLDER_NAME_NO_EXTENSION, false },
-    { sizeof("__DLG_CHOOSE_FOLDER_EXTENSION_ONLY__")-1,        CFSTR("__DLG_CHOOSE_FOLDER_EXTENSION_ONLY__"), CFSTR("OMC_DLG_CHOOSE_FOLDER_EXTENSION_ONLY"),  DLG_CHOOSE_FOLDER_EXTENSION_ONLY, false },
-
-    { sizeof("__DLG_CHOOSE_OBJECT_PATH__")-1,                CFSTR("__DLG_CHOOSE_OBJECT_PATH__"), CFSTR("OMC_DLG_CHOOSE_OBJECT_PATH"),  DLG_CHOOSE_OBJECT_PATH, false },
-    { sizeof("__DLG_CHOOSE_OBJECT_PARENT_PATH__")-1,        CFSTR("__DLG_CHOOSE_OBJECT_PARENT_PATH__"), CFSTR("OMC_DLG_CHOOSE_OBJECT_PARENT_PATH"),  DLG_CHOOSE_OBJECT_PARENT_PATH, false },
-    { sizeof("__DLG_CHOOSE_OBJECT_NAME__")-1,                CFSTR("__DLG_CHOOSE_OBJECT_NAME__"), CFSTR("OMC_DLG_CHOOSE_OBJECT_NAME"),  DLG_CHOOSE_OBJECT_NAME, false },
-    { sizeof("__DLG_CHOOSE_OBJECT_NAME_NO_EXTENSION__")-1,    CFSTR("__DLG_CHOOSE_OBJECT_NAME_NO_EXTENSION__"), CFSTR("OMC_DLG_CHOOSE_OBJECT_NAME_NO_EXTENSION"),  DLG_CHOOSE_OBJECT_NAME_NO_EXTENSION, false },
-    { sizeof("__DLG_CHOOSE_OBJECT_EXTENSION_ONLY__")-1,        CFSTR("__DLG_CHOOSE_OBJECT_EXTENSION_ONLY__"), CFSTR("OMC_DLG_CHOOSE_OBJECT_EXTENSION_ONLY"),  DLG_CHOOSE_OBJECT_EXTENSION_ONLY, false },
-
-    { sizeof("__OMC_RESOURCES_PATH__")-1,                    CFSTR("__OMC_RESOURCES_PATH__"), CFSTR("OMC_OMC_RESOURCES_PATH"),  OMC_RESOURCES_PATH, true },//framework path
-    { sizeof("__OMC_SUPPORT_PATH__")-1,                        CFSTR("__OMC_SUPPORT_PATH__"), CFSTR("OMC_OMC_SUPPORT_PATH"),  OMC_SUPPORT_PATH, true },//framework path
-    { sizeof("__APP_BUNDLE_PATH__")-1,                        CFSTR("__APP_BUNDLE_PATH__"), CFSTR("OMC_APP_BUNDLE_PATH"),  APP_BUNDLE_PATH, true },//preferred for applets
-    { sizeof("__APP_PROCESS_ID__")-1,                         CFSTR("__APP_PROCESS_ID__"), CFSTR("OMC_APP_PROCESS_ID"),  APP_PROCESS_ID, true },//pid of the applet/host app itself
-    { sizeof("__MY_EXTERNAL_BUNDLE_PATH__")-1,                CFSTR("__MY_EXTERNAL_BUNDLE_PATH__"), CFSTR("OMC_MY_EXTERNAL_BUNDLE_PATH"),  MY_EXTERNAL_BUNDLE_PATH, false },//external bundle location
-    { sizeof("__NIB_DLG_GUID__")-1,                            CFSTR("__NIB_DLG_GUID__"), CFSTR("OMC_NIB_DLG_GUID"),  NIB_DLG_GUID, true },
-    { sizeof("__ACTIONUI_WINDOW_UUID__")-1,                    CFSTR("__ACTIONUI_WINDOW_UUID__"), CFSTR("OMC_ACTIONUI_WINDOW_UUID"),  ACTIONUI_WINDOW_UUID, true },
-    { sizeof("__ACTIONUI_TRIGGER_VIEW_ID__")-1,               CFSTR("__ACTIONUI_TRIGGER_VIEW_ID__"), CFSTR("OMC_ACTIONUI_TRIGGER_VIEW_ID"),  ACTIONUI_TRIGGER_VIEW_ID, true },
-    { sizeof("__ACTIONUI_TRIGGER_VIEW_PART_ID__")-1,          CFSTR("__ACTIONUI_TRIGGER_VIEW_PART_ID__"), CFSTR("OMC_ACTIONUI_TRIGGER_VIEW_PART_ID"),  ACTIONUI_TRIGGER_VIEW_PART_ID, true },
-    { sizeof("__ACTIONUI_TRIGGER_CONTEXT__")-1,               CFSTR("__ACTIONUI_TRIGGER_CONTEXT__"), CFSTR("OMC_ACTIONUI_TRIGGER_CONTEXT"),  ACTIONUI_TRIGGER_CONTEXT, true },
-    { sizeof("__ACTIONUI_REMOTE_ENDPOINT__")-1,              CFSTR("__ACTIONUI_REMOTE_ENDPOINT__"), CFSTR("OMC_ACTIONUI_REMOTE_ENDPOINT"),  ACTIONUI_REMOTE_ENDPOINT, true },
-    { sizeof("__CURRENT_COMMAND_GUID__")-1,                    CFSTR("__CURRENT_COMMAND_GUID__"), CFSTR("OMC_CURRENT_COMMAND_GUID"),  CURRENT_COMMAND_GUID, true },
-    { sizeof("__PARENT_COMMAND_GUID__")-1,                    CFSTR("__PARENT_COMMAND_GUID__"), CFSTR("OMC_PARENT_COMMAND_GUID"),  PARENT_COMMAND_GUID, true },
-    { sizeof("__PARENT_DIALOG_GUID__")-1,                     CFSTR("__PARENT_DIALOG_GUID__"), CFSTR("OMC_PARENT_DIALOG_GUID"),  PARENT_DIALOG_GUID, true },
-    { sizeof("__TRIGGER_URL__")-1,                            CFSTR("__TRIGGER_URL__"), CFSTR("OMC_TRIGGER_URL"),  TRIGGER_URL, true },
-
-    { sizeof("__FRONT_PROCESS_ID__")-1,                        CFSTR("__FRONT_PROCESS_ID__"), CFSTR("OMC_FRONT_PROCESS_ID"),  FRONT_PROCESS_ID, false },
-    { sizeof("__FRONT_APPLICATION_NAME__")-1,                CFSTR("__FRONT_APPLICATION_NAME__"), CFSTR("OMC_FRONT_APPLICATION_NAME"),  FRONT_APPLICATION_NAME, false },
-    
-//deprecated synonyms, still supported but should not appear in OMCEdit choices
-    { sizeof("__MY_HOST_BUNDLE_PATH__")-1,                    CFSTR("__MY_HOST_BUNDLE_PATH__"), CFSTR("OMC_MY_HOST_BUNDLE_PATH"),  MY_HOST_BUNDLE_PATH, false },//deprecated as of OMC 4.0
-    { sizeof("__INPUT_TEXT__")-1,                            CFSTR("__INPUT_TEXT__"), CFSTR("OMC_INPUT_TEXT"),  DLG_INPUT_TEXT, false },
-    { sizeof("__OBJ_PATH_NO_EXTENSION__")-1,                CFSTR("__OBJ_PATH_NO_EXTENSION__"), CFSTR("OMC_OBJ_PATH_NO_EXTENSION"),  OBJ_PATH_NO_EXTENSION, false },//not needed since = OBJ_PARENT_PATH + OBJ_NAME_NO_EXTENSION
-    { sizeof("__PASSWORD__")-1,                                CFSTR("__PASSWORD__"), CFSTR("OMC_PASSWORD"),  DLG_PASSWORD, false },
-    { sizeof("__SAVE_AS_PATH__")-1,                            CFSTR("__SAVE_AS_PATH__"), CFSTR("OMC_SAVE_AS_PATH"),  DLG_SAVE_AS_PATH, false },
-    { sizeof("__SAVE_AS_PARENT_PATH__")-1,                    CFSTR("__SAVE_AS_PARENT_PATH__"), CFSTR("OMC_SAVE_AS_PARENT_PATH"),  DLG_SAVE_AS_PARENT_PATH, false },
-    { sizeof("__SAVE_AS_FILE_NAME__")-1,                    CFSTR("__SAVE_AS_FILE_NAME__"), CFSTR("OMC_SAVE_AS_FILE_NAME"),  DLG_SAVE_AS_NAME, false },
-    { sizeof("__MY_BUNDLE_PATH__")-1,                        CFSTR("__MY_BUNDLE_PATH__"), CFSTR("OMC_MY_BUNDLE_PATH"),  MY_BUNDLE_PATH, false }//added for droplets, not very useful for CM
-};
+	static const SpecialWordAndID sList[] =
+	{
+	    //wordLen                                                // specialWord         //environName           //id            //always_export
+	    { sizeof("__OBJ_TEXT__")-1,                                CFSTR("__OBJ_TEXT__"), CFSTR("OMC_OBJ_TEXT"),  OBJ_TEXT, true },
+	    { sizeof("__OBJ_PATH__")-1,                                CFSTR("__OBJ_PATH__"), CFSTR("OMC_OBJ_PATH"),  OBJ_PATH, true },
+	    { sizeof("__OBJ_PARENT_PATH__")-1,                        CFSTR("__OBJ_PARENT_PATH__"), CFSTR("OMC_OBJ_PARENT_PATH"),  OBJ_PARENT_PATH, false },
+	    { sizeof("__OBJ_NAME__")-1,                                CFSTR("__OBJ_NAME__"), CFSTR("OMC_OBJ_NAME"),  OBJ_NAME, false },
+	    { sizeof("__OBJ_NAME_NO_EXTENSION__")-1,                CFSTR("__OBJ_NAME_NO_EXTENSION__"), CFSTR("OMC_OBJ_NAME_NO_EXTENSION"),  OBJ_NAME_NO_EXTENSION, false },
+	    { sizeof("__OBJ_EXTENSION_ONLY__")-1,                    CFSTR("__OBJ_EXTENSION_ONLY__"), CFSTR("OMC_OBJ_EXTENSION_ONLY"),  OBJ_EXTENSION_ONLY, false },
+	    { sizeof("__OBJ_DISPLAY_NAME__")-1,                        CFSTR("__OBJ_DISPLAY_NAME__"), CFSTR("OMC_OBJ_DISPLAY_NAME"),  OBJ_DISPLAY_NAME, false },
+	    { sizeof("__OBJ_COMMON_PARENT_PATH__")-1,                CFSTR("__OBJ_COMMON_PARENT_PATH__"), CFSTR("OMC_OBJ_COMMON_PARENT_PATH"),  OBJ_COMMON_PARENT_PATH, false },
+	    { sizeof("__OBJ_PATH_RELATIVE_TO_COMMON_PARENT__")-1,    CFSTR("__OBJ_PATH_RELATIVE_TO_COMMON_PARENT__"), CFSTR("OMC_OBJ_PATH_RELATIVE_TO_COMMON_PARENT"),  OBJ_PATH_RELATIVE_TO_COMMON_PARENT, false },
+	
+	    { sizeof("__DLG_INPUT_TEXT__")-1,                        CFSTR("__DLG_INPUT_TEXT__"), CFSTR("OMC_DLG_INPUT_TEXT"),  DLG_INPUT_TEXT, false },
+	
+	    { sizeof("__DLG_SAVE_AS_PATH__")-1,                        CFSTR("__DLG_SAVE_AS_PATH__"), CFSTR("OMC_DLG_SAVE_AS_PATH"),  DLG_SAVE_AS_PATH, false },
+	    { sizeof("__DLG_SAVE_AS_PARENT_PATH__")-1,                CFSTR("__DLG_SAVE_AS_PARENT_PATH__"), CFSTR("OMC_DLG_SAVE_AS_PARENT_PATH"),  DLG_SAVE_AS_PARENT_PATH, false },
+	    { sizeof("__DLG_SAVE_AS_NAME__")-1,                        CFSTR("__DLG_SAVE_AS_NAME__"), CFSTR("OMC_DLG_SAVE_AS_NAME"),  DLG_SAVE_AS_NAME, false },
+	    { sizeof("__DLG_SAVE_AS_NAME_NO_EXTENSION__")-1,        CFSTR("__DLG_SAVE_AS_NAME_NO_EXTENSION__"), CFSTR("OMC_DLG_SAVE_AS_NAME_NO_EXTENSION"),  DLG_SAVE_AS_NAME_NO_EXTENSION, false },
+	    { sizeof("__DLG_SAVE_AS_EXTENSION_ONLY__")-1,            CFSTR("__DLG_SAVE_AS_EXTENSION_ONLY__"), CFSTR("OMC_DLG_SAVE_AS_EXTENSION_ONLY"),  DLG_SAVE_AS_EXTENSION_ONLY, false },
+	
+	    { sizeof("__DLG_CHOOSE_FILE_PATH__")-1,                    CFSTR("__DLG_CHOOSE_FILE_PATH__"), CFSTR("OMC_DLG_CHOOSE_FILE_PATH"),  DLG_CHOOSE_FILE_PATH, false },
+	    { sizeof("__DLG_CHOOSE_FILE_PARENT_PATH__")-1,            CFSTR("__DLG_CHOOSE_FILE_PARENT_PATH__"), CFSTR("OMC_DLG_CHOOSE_FILE_PARENT_PATH"),  DLG_CHOOSE_FILE_PARENT_PATH, false },
+	    { sizeof("__DLG_CHOOSE_FILE_NAME__")-1,                    CFSTR("__DLG_CHOOSE_FILE_NAME__"), CFSTR("OMC_DLG_CHOOSE_FILE_NAME"),  DLG_CHOOSE_FILE_NAME, false },
+	    { sizeof("__DLG_CHOOSE_FILE_NAME_NO_EXTENSION__")-1,    CFSTR("__DLG_CHOOSE_FILE_NAME_NO_EXTENSION__"), CFSTR("OMC_DLG_CHOOSE_FILE_NAME_NO_EXTENSION"),  DLG_CHOOSE_FILE_NAME_NO_EXTENSION, false },
+	    { sizeof("__DLG_CHOOSE_FILE_EXTENSION_ONLY__")-1,        CFSTR("__DLG_CHOOSE_FILE_EXTENSION_ONLY__"), CFSTR("OMC_DLG_CHOOSE_FILE_EXTENSION_ONLY"),  DLG_CHOOSE_FILE_EXTENSION_ONLY, false },
+	
+	    { sizeof("__DLG_CHOOSE_FOLDER_PATH__")-1,                CFSTR("__DLG_CHOOSE_FOLDER_PATH__"), CFSTR("OMC_DLG_CHOOSE_FOLDER_PATH"),  DLG_CHOOSE_FOLDER_PATH, false },
+	    { sizeof("__DLG_CHOOSE_FOLDER_PARENT_PATH__")-1,        CFSTR("__DLG_CHOOSE_FOLDER_PARENT_PATH__"), CFSTR("OMC_DLG_CHOOSE_FOLDER_PARENT_PATH"),  DLG_CHOOSE_FOLDER_PARENT_PATH, false },
+	    { sizeof("__DLG_CHOOSE_FOLDER_NAME__")-1,                CFSTR("__DLG_CHOOSE_FOLDER_NAME__"), CFSTR("OMC_DLG_CHOOSE_FOLDER_NAME"),  DLG_CHOOSE_FOLDER_NAME, false },
+	    { sizeof("__DLG_CHOOSE_FOLDER_NAME_NO_EXTENSION__")-1,    CFSTR("__DLG_CHOOSE_FOLDER_NAME_NO_EXTENSION__"), CFSTR("OMC_DLG_CHOOSE_FOLDER_NAME_NO_EXTENSION"),  DLG_CHOOSE_FOLDER_NAME_NO_EXTENSION, false },
+	    { sizeof("__DLG_CHOOSE_FOLDER_EXTENSION_ONLY__")-1,        CFSTR("__DLG_CHOOSE_FOLDER_EXTENSION_ONLY__"), CFSTR("OMC_DLG_CHOOSE_FOLDER_EXTENSION_ONLY"),  DLG_CHOOSE_FOLDER_EXTENSION_ONLY, false },
+	
+	    { sizeof("__DLG_CHOOSE_OBJECT_PATH__")-1,                CFSTR("__DLG_CHOOSE_OBJECT_PATH__"), CFSTR("OMC_DLG_CHOOSE_OBJECT_PATH"),  DLG_CHOOSE_OBJECT_PATH, false },
+	    { sizeof("__DLG_CHOOSE_OBJECT_PARENT_PATH__")-1,        CFSTR("__DLG_CHOOSE_OBJECT_PARENT_PATH__"), CFSTR("OMC_DLG_CHOOSE_OBJECT_PARENT_PATH"),  DLG_CHOOSE_OBJECT_PARENT_PATH, false },
+	    { sizeof("__DLG_CHOOSE_OBJECT_NAME__")-1,                CFSTR("__DLG_CHOOSE_OBJECT_NAME__"), CFSTR("OMC_DLG_CHOOSE_OBJECT_NAME"),  DLG_CHOOSE_OBJECT_NAME, false },
+	    { sizeof("__DLG_CHOOSE_OBJECT_NAME_NO_EXTENSION__")-1,    CFSTR("__DLG_CHOOSE_OBJECT_NAME_NO_EXTENSION__"), CFSTR("OMC_DLG_CHOOSE_OBJECT_NAME_NO_EXTENSION"),  DLG_CHOOSE_OBJECT_NAME_NO_EXTENSION, false },
+	    { sizeof("__DLG_CHOOSE_OBJECT_EXTENSION_ONLY__")-1,        CFSTR("__DLG_CHOOSE_OBJECT_EXTENSION_ONLY__"), CFSTR("OMC_DLG_CHOOSE_OBJECT_EXTENSION_ONLY"),  DLG_CHOOSE_OBJECT_EXTENSION_ONLY, false },
+	
+	    { sizeof("__OMC_RESOURCES_PATH__")-1,                    CFSTR("__OMC_RESOURCES_PATH__"), CFSTR("OMC_OMC_RESOURCES_PATH"),  OMC_RESOURCES_PATH, true },//framework path
+	    { sizeof("__OMC_SUPPORT_PATH__")-1,                        CFSTR("__OMC_SUPPORT_PATH__"), CFSTR("OMC_OMC_SUPPORT_PATH"),  OMC_SUPPORT_PATH, true },//framework path
+	    { sizeof("__APP_BUNDLE_PATH__")-1,                        CFSTR("__APP_BUNDLE_PATH__"), CFSTR("OMC_APP_BUNDLE_PATH"),  APP_BUNDLE_PATH, true },//preferred for applets
+	    { sizeof("__APP_PROCESS_ID__")-1,                         CFSTR("__APP_PROCESS_ID__"), CFSTR("OMC_APP_PROCESS_ID"),  APP_PROCESS_ID, true },//pid of the applet/host app itself
+	    { sizeof("__MY_EXTERNAL_BUNDLE_PATH__")-1,                CFSTR("__MY_EXTERNAL_BUNDLE_PATH__"), CFSTR("OMC_MY_EXTERNAL_BUNDLE_PATH"),  MY_EXTERNAL_BUNDLE_PATH, false },//external bundle location
+	    { sizeof("__NIB_DLG_GUID__")-1,                            CFSTR("__NIB_DLG_GUID__"), CFSTR("OMC_NIB_DLG_GUID"),  NIB_DLG_GUID, true },
+	    { sizeof("__ACTIONUI_WINDOW_UUID__")-1,                    CFSTR("__ACTIONUI_WINDOW_UUID__"), CFSTR("OMC_ACTIONUI_WINDOW_UUID"),  ACTIONUI_WINDOW_UUID, true },
+	    { sizeof("__ACTIONUI_TRIGGER_VIEW_ID__")-1,               CFSTR("__ACTIONUI_TRIGGER_VIEW_ID__"), CFSTR("OMC_ACTIONUI_TRIGGER_VIEW_ID"),  ACTIONUI_TRIGGER_VIEW_ID, true },
+	    { sizeof("__ACTIONUI_TRIGGER_VIEW_PART_ID__")-1,          CFSTR("__ACTIONUI_TRIGGER_VIEW_PART_ID__"), CFSTR("OMC_ACTIONUI_TRIGGER_VIEW_PART_ID"),  ACTIONUI_TRIGGER_VIEW_PART_ID, true },
+	    { sizeof("__ACTIONUI_TRIGGER_CONTEXT__")-1,               CFSTR("__ACTIONUI_TRIGGER_CONTEXT__"), CFSTR("OMC_ACTIONUI_TRIGGER_CONTEXT"),  ACTIONUI_TRIGGER_CONTEXT, true },
+	    { sizeof("__ACTIONUI_REMOTE_ENDPOINT__")-1,              CFSTR("__ACTIONUI_REMOTE_ENDPOINT__"), CFSTR("OMC_ACTIONUI_REMOTE_ENDPOINT"),  ACTIONUI_REMOTE_ENDPOINT, true },
+	    { sizeof("__CURRENT_COMMAND_GUID__")-1,                    CFSTR("__CURRENT_COMMAND_GUID__"), CFSTR("OMC_CURRENT_COMMAND_GUID"),  CURRENT_COMMAND_GUID, true },
+	    { sizeof("__PARENT_COMMAND_GUID__")-1,                    CFSTR("__PARENT_COMMAND_GUID__"), CFSTR("OMC_PARENT_COMMAND_GUID"),  PARENT_COMMAND_GUID, true },
+	    { sizeof("__PARENT_DIALOG_GUID__")-1,                     CFSTR("__PARENT_DIALOG_GUID__"), CFSTR("OMC_PARENT_DIALOG_GUID"),  PARENT_DIALOG_GUID, true },
+	    { sizeof("__TRIGGER_URL__")-1,                            CFSTR("__TRIGGER_URL__"), CFSTR("OMC_TRIGGER_URL"),  TRIGGER_URL, true },
+	
+	    { sizeof("__FRONT_PROCESS_ID__")-1,                        CFSTR("__FRONT_PROCESS_ID__"), CFSTR("OMC_FRONT_PROCESS_ID"),  FRONT_PROCESS_ID, false },
+	    { sizeof("__FRONT_APPLICATION_NAME__")-1,                CFSTR("__FRONT_APPLICATION_NAME__"), CFSTR("OMC_FRONT_APPLICATION_NAME"),  FRONT_APPLICATION_NAME, false },
+	    
+	//deprecated synonyms, still supported but should not appear in OMCEdit choices
+	    { sizeof("__MY_HOST_BUNDLE_PATH__")-1,                    CFSTR("__MY_HOST_BUNDLE_PATH__"), CFSTR("OMC_MY_HOST_BUNDLE_PATH"),  MY_HOST_BUNDLE_PATH, false },//deprecated as of OMC 4.0
+	    { sizeof("__INPUT_TEXT__")-1,                            CFSTR("__INPUT_TEXT__"), CFSTR("OMC_INPUT_TEXT"),  DLG_INPUT_TEXT, false },
+	    { sizeof("__OBJ_PATH_NO_EXTENSION__")-1,                CFSTR("__OBJ_PATH_NO_EXTENSION__"), CFSTR("OMC_OBJ_PATH_NO_EXTENSION"),  OBJ_PATH_NO_EXTENSION, false },//not needed since = OBJ_PARENT_PATH + OBJ_NAME_NO_EXTENSION
+	    { sizeof("__PASSWORD__")-1,                                CFSTR("__PASSWORD__"), CFSTR("OMC_PASSWORD"),  DLG_PASSWORD, false },
+	    { sizeof("__SAVE_AS_PATH__")-1,                            CFSTR("__SAVE_AS_PATH__"), CFSTR("OMC_SAVE_AS_PATH"),  DLG_SAVE_AS_PATH, false },
+	    { sizeof("__SAVE_AS_PARENT_PATH__")-1,                    CFSTR("__SAVE_AS_PARENT_PATH__"), CFSTR("OMC_SAVE_AS_PARENT_PATH"),  DLG_SAVE_AS_PARENT_PATH, false },
+	    { sizeof("__SAVE_AS_FILE_NAME__")-1,                    CFSTR("__SAVE_AS_FILE_NAME__"), CFSTR("OMC_SAVE_AS_FILE_NAME"),  DLG_SAVE_AS_NAME, false },
+	    { sizeof("__MY_BUNDLE_PATH__")-1,                        CFSTR("__MY_BUNDLE_PATH__"), CFSTR("OMC_MY_BUNDLE_PATH"),  MY_BUNDLE_PATH, false }//added for droplets, not very useful for CM
+	};
+	return sList;
+}
 
 //min and max len defined for slight optimization in resolving special words
 //the shortest is __OBJ_TEXT__
@@ -233,14 +238,14 @@ GetSpecialWordID(CFStringRef inStr)
     if(oneChar != '_')
         return NO_SPECIAL_WORD; //special word must start with underscore
 
-    UInt32 theCount = sizeof(sSpecialWordAndIDList)/sizeof(SpecialWordAndID);
+    UInt32 theCount = std::size(SpecialWordAndIDList());
     for(UInt32 i = 0; i< theCount; i++)
     {
-        if(sSpecialWordAndIDList[i].wordLen == strLen)
+        if(SpecialWordAndIDList()[i].wordLen == strLen)
         {
-            if(kCFCompareEqualTo == ::CFStringCompare( inStr, sSpecialWordAndIDList[i].specialWord, 0 ))
+            if(kCFCompareEqualTo == ::CFStringCompare( inStr, SpecialWordAndIDList()[i].specialWord, 0 ))
             {
-                return sSpecialWordAndIDList[i].id;
+                return SpecialWordAndIDList()[i].id;
             }
         }
     }
@@ -303,14 +308,14 @@ GetSpecialEnvironWordID(CFStringRef inStr)
     if( (firstChars[0] != 'O') || (firstChars[1] != 'M') || (firstChars[2] != 'C') || (firstChars[3] != '_') )
         return NO_SPECIAL_WORD; //special environ word must start with OMC_
 
-    UInt32 theCount = sizeof(sSpecialWordAndIDList)/sizeof(SpecialWordAndID);
+    UInt32 theCount = std::size(SpecialWordAndIDList());
     for(UInt32 i = 0; i< theCount; i++)
     {
-        if(sSpecialWordAndIDList[i].wordLen == strLen)
+        if(SpecialWordAndIDList()[i].wordLen == strLen)
         {
-            if(kCFCompareEqualTo == ::CFStringCompare( inStr, sSpecialWordAndIDList[i].environName, 0 ))
+            if(kCFCompareEqualTo == ::CFStringCompare( inStr, SpecialWordAndIDList()[i].environName, 0 ))
             {
-                return sSpecialWordAndIDList[i].id;
+                return SpecialWordAndIDList()[i].id;
             }
         }
     }
@@ -416,12 +421,12 @@ static CFMutableDictionaryRef
 CreateAllCoreEnvironmentVariablePlaceholders()
 {
     CFMutableDictionaryRef outDict = ::CFDictionaryCreateMutable(kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
-    size_t theCount = sizeof(sSpecialWordAndIDList)/sizeof(SpecialWordAndID);
+    size_t theCount = std::size(SpecialWordAndIDList());
     for(size_t i = 0; i< theCount; i++)
     {
-        if(sSpecialWordAndIDList[i].alwaysExport)
+        if(SpecialWordAndIDList()[i].alwaysExport)
         {
-            CFDictionaryAddValue(outDict, sSpecialWordAndIDList[i].environName, kCFBooleanFalse /*placeholder*/);
+            CFDictionaryAddValue(outDict, SpecialWordAndIDList()[i].environName, kCFBooleanFalse /*placeholder*/);
         }
     }
 
@@ -949,15 +954,21 @@ GetOneCommandParams(CommandDescription &outDesc, CFDictionaryRef inOneCommand, C
         outDesc.requiredMacOSMaxVersion = StringToVersion(theStr);
 }
 
-CFStringRef sEscapeModes[] =
+// The escaping modes' names, in a function: on Linux CFSTR cannot initialize anything outside a function
+static auto &
+EscapeModes()
 {
-    CFSTR("esc_none"), //kEscapeNone
-    CFSTR("esc_with_backslash"), //kEscapeWithBackslash
-    CFSTR("esc_with_percent"), //kEscapeWithPercent
-    CFSTR("esc_with_percent_all"), //kEscapeWithPercentAll
-    CFSTR("esc_for_applescript"), //kEscapeForAppleScript
-    CFSTR("esc_wrap_with_single_quotes_for_shell") //kEscapeWrapWithSingleQuotesForShell
-};
+	static const CFStringRef sModes[] =
+	{
+	    CFSTR("esc_none"), //kEscapeNone
+	    CFSTR("esc_with_backslash"), //kEscapeWithBackslash
+	    CFSTR("esc_with_percent"), //kEscapeWithPercent
+	    CFSTR("esc_with_percent_all"), //kEscapeWithPercentAll
+	    CFSTR("esc_for_applescript"), //kEscapeForAppleScript
+	    CFSTR("esc_wrap_with_single_quotes_for_shell") //kEscapeWrapWithSingleQuotesForShell
+	};
+	return sModes;
+}
 
 UInt8
 GetEscapingMode(CFStringRef theStr)
@@ -966,7 +977,7 @@ GetEscapingMode(CFStringRef theStr)
 
     for(UInt8 i = kEscapeModeFirst; i <= kEscapeModeLast; i++)
     {
-        if( kCFCompareEqualTo == ::CFStringCompare( theStr, sEscapeModes[i], 0 ) )
+        if( kCFCompareEqualTo == ::CFStringCompare( theStr, EscapeModes()[i], 0 ) )
         {
             escapeSpecialCharsMode = i;
             break;
