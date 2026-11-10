@@ -10,14 +10,14 @@
 #include "OMCHostInfo.h"
 #include "CFObj.h"
 
-CFStringRef CopyFrontAppName()
+CFStringRef OMCCopyFrontAppName()
 {
     NSRunningApplication *frontmostApplication = [[NSWorkspace sharedWorkspace] frontmostApplication];
     NSString *appName = [frontmostApplication localizedName];
     return (CFStringRef)CFBridgingRetain(appName);
 }
 
-CFStringRef CopyHostAppName()
+CFStringRef OMCCopyHostAppName()
 {
     NSBundle *mainBundle = [NSBundle mainBundle];
     NSString *appName = [mainBundle objectForInfoDictionaryKey:@"CFBundleDisplayName"];
@@ -26,20 +26,20 @@ CFStringRef CopyHostAppName()
     return (CFStringRef)CFBridgingRetain(appName);
 }
 
-CFStringRef CopyFrontAppBundleIdentifier()
+CFStringRef OMCCopyFrontAppBundleIdentifier()
 {
     NSRunningApplication *frontmostApplication = [[NSWorkspace sharedWorkspace] frontmostApplication];
     NSString *appBundleID = [frontmostApplication bundleIdentifier];
     return (CFStringRef)CFBridgingRetain(appBundleID);
 }
 
-pid_t GetFrontAppPID()
+pid_t OMCGetFrontAppPID()
 {
     NSRunningApplication *frontmostApplication = [[NSWorkspace sharedWorkspace] frontmostApplication];
     return [frontmostApplication processIdentifier];
 }
 
-CFStringRef CopyAppNameForPID(pid_t pid)
+CFStringRef OMCCopyAppNameForPID(pid_t pid)
 {
     NSRunningApplication *pidApplication = [NSRunningApplication runningApplicationWithProcessIdentifier:pid];
     if(pidApplication != nil)
@@ -51,14 +51,14 @@ CFStringRef CopyAppNameForPID(pid_t pid)
     return nullptr;
 }
 
-bool RunningInRegularGUIApp()
+bool OMCRunningInRegularGUIApp()
 {
     NSRunningApplication *currentApp = [NSRunningApplication currentApplication];
     NSApplicationActivationPolicy appPolicy = [currentApp activationPolicy];
     return (appPolicy == NSApplicationActivationPolicyRegular);
 }
 
-void RefreshFileInFinder(CFStringRef filePath)
+void OMCRefreshFileInFinder(CFStringRef filePath)
 {
     //Apple docs say the usage of this API is "discouraged" but it is not formally deprecated (?)
     //let's give it a shot - if it works: great; if not, not a big deal, this is not critical
@@ -69,7 +69,7 @@ void RefreshFileInFinder(CFStringRef filePath)
 }
 
 void
-GetOperatingSystemVersion(long* outMajorVersion, long* outMinorVersion, long* outPatchVersion)
+OMCGetOperatingSystemVersion(long* outMajorVersion, long* outMinorVersion, long* outPatchVersion)
 {
     NSOperatingSystemVersion osVersion = [[NSProcessInfo processInfo] operatingSystemVersion];
     *outMajorVersion = osVersion.majorVersion;
@@ -78,7 +78,7 @@ GetOperatingSystemVersion(long* outMajorVersion, long* outMinorVersion, long* ou
 }
 
 OMCModifierKeys
-GetKeyboardModifiers()
+OMCGetKeyboardModifiers()
 {
 	CGEventFlags flags = 0;
 	CFObj<CGEventRef> eventRef( CGEventCreate(nullptr /*default event source*/) );

@@ -17,7 +17,7 @@
 static OSErr SendEventToTerminal(const AEDesc &inCommandDesc, bool openInNewWindow, bool bringToFront);
 
 void
-ExecuteInTerminal(CFStringRef inCommand, bool openInNewWindow, bool bringToFront)
+OMCExecuteInTerminal(CFStringRef inCommand, bool openInNewWindow, bool bringToFront)
 {
 	if(inCommand == nullptr)
 		return;
@@ -131,7 +131,7 @@ SendEventToTerminal(const AEDesc &inCommandDesc, bool openInNewWindow, bool brin
 // to cover the corner case which has an easy workaround (restart the darn app)
 // Save the cycles, save the energy, save the Earth...
 
-bool IsShDefaultInTerminal()
+bool OMCIsShDefaultInTerminal()
 {
 	static bool sIsShDefault = true;
 	static dispatch_once_t onceToken;

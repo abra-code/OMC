@@ -329,7 +329,7 @@ OMCActionUIWindow::SetUpTitle(CFStringRef inWindowTitle)
 		if(fileURL != nullptr)
 		{
 			mHostedWindow->SetRepresentedFile(fileURL);
-			NoteRecentDocument(fileURL);
+			OMCNoteRecentDocument(fileURL);
 		}
 		return;
 	}
@@ -606,8 +606,8 @@ OMCActionUIWindow::BringWindowToFront()
 		mHostedWindow->Show();
 }
 
-void OMCActionUIWindow::ActivateApplication() { ActivateThisApp(); }
-void OMCActionUIWindow::QuitApplication() { QuitThisApp(); }
+void OMCActionUIWindow::ActivateApplication() { OMCActivateThisApp(); }
+void OMCActionUIWindow::QuitApplication() { OMCQuitThisApp(); }
 
 // TERMINATE: closes the window as its OK or Cancel would
 void

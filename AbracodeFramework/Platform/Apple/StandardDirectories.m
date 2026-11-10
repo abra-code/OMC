@@ -9,7 +9,7 @@
 #include "StandardDirectories.h"
 #import <Foundation/Foundation.h>
 
-CFURLRef CopyPreferencesDirURL(void)
+CFURLRef OMCCopyPreferencesDirURL(void)
 {
     NSFileManager *fileManager = [NSFileManager defaultManager];
     NSURL *userLibraryDirURL = [fileManager
@@ -25,7 +25,7 @@ CFURLRef CopyPreferencesDirURL(void)
     return (CFURLRef)CFBridgingRetain(prefsURL);
 }
 
-CFURLRef CopyApplicationSupportDirURL(void)
+CFURLRef OMCCopyApplicationSupportDirURL(void)
 {
     NSFileManager *fileManager = [NSFileManager defaultManager];
     NSURL *userAppSupportDirURL = [fileManager

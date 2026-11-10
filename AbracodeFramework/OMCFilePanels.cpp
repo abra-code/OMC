@@ -11,7 +11,7 @@
 #include "OMCTestHost.h"
 
 CFURLRef
-CreateCFURLFromSaveAsDialog( CFStringRef inClientName, CFStringRef inMessage, CFStringRef inDefaultName, CFStringRef inDefaultDirPath, CFStringRef inIdentifier, CFStringRef inPrompt, CFArrayRef inAllowedContentTypes, UInt32 inAdditonalFlags )
+OMCCreateCFURLFromSaveAsDialog( CFStringRef inClientName, CFStringRef inMessage, CFStringRef inDefaultName, CFStringRef inDefaultDirPath, CFStringRef inIdentifier, CFStringRef inPrompt, CFArrayRef inAllowedContentTypes, UInt32 inAdditonalFlags )
 {
 	if(OMCTestHostIsActive())
 		return OMCTestHostAnswerSavePanel(inClientName, inMessage, inDefaultName, inDefaultDirPath, inIdentifier, inPrompt, inAllowedContentTypes, inAdditonalFlags);
@@ -19,7 +19,7 @@ CreateCFURLFromSaveAsDialog( CFStringRef inClientName, CFStringRef inMessage, CF
 }
 
 CFArrayRef
-CreateCFURLsFromOpenDialog( CFStringRef inClientName, CFStringRef inMessage, CFStringRef inDefaultName, CFStringRef inDefaultDirPath, CFStringRef inIdentifier, CFStringRef inPrompt, CFArrayRef inAllowedContentTypes, UInt32 inAdditonalFlags )
+OMCCreateCFURLsFromOpenDialog( CFStringRef inClientName, CFStringRef inMessage, CFStringRef inDefaultName, CFStringRef inDefaultDirPath, CFStringRef inIdentifier, CFStringRef inPrompt, CFArrayRef inAllowedContentTypes, UInt32 inAdditonalFlags )
 {
 	if(OMCTestHostIsActive())
 		return OMCTestHostAnswerOpenPanel(inClientName, inMessage, inDefaultName, inDefaultDirPath, inIdentifier, inPrompt, inAllowedContentTypes, inAdditonalFlags);

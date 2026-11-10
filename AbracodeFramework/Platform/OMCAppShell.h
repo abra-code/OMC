@@ -11,7 +11,7 @@
 //    an OMCDroplet and supply its OMCDropletActions (OMCDroplet.h);
 //  - the Commands menu: draw OMCBuildCommandsMenuModel's model and run what
 //    OMCCommandsMenuItemCommandToRun answers for a chosen item (OMCMenuModel.h);
-//  - Open Recent: keep the documents NoteRecentDocument adds, and open a chosen one as the droplet's
+//  - Open Recent: keep the documents OMCNoteRecentDocument adds, and open a chosen one as the droplet's
 //    OpenFile;
 //  - and the three calls below, which the engine makes of the shell.
 //  The macOS shell is EntryPoints/Apple (OMCDropletController, OMCMainMenuController,
@@ -27,12 +27,12 @@ extern "C" {
 
 // This app as omc_dialog_control's omc_application targets it: makes it the active app (omc_select),
 // or quits it as its Quit menu item would (omc_terminate_ok)
-void ActivateThisApp(void);
-void QuitThisApp(void);
+void OMCActivateThisApp(void);
+void OMCQuitThisApp(void);
 
 // Adds a file to this app's recent documents (Open Recent); nothing during a test launch or where
 // unsupported
-void NoteRecentDocument(CFURLRef fileURL);
+void OMCNoteRecentDocument(CFURLRef fileURL);
 
 #ifdef __cplusplus
 }

@@ -14,10 +14,10 @@
 #pragma once
 #include <CoreFoundation/CoreFoundation.h>
 
-void ExecuteInTerminal(CFStringRef inCommand, bool openInNewWindow, bool bringToFront);
-void ExecuteInITerm(CFStringRef inCommand, CFStringRef inShellPath, bool openInNewWindow, bool bringToFront);
+void OMCExecuteInTerminal(CFStringRef inCommand, bool openInNewWindow, bool bringToFront);
+void OMCExecuteInITerm(CFStringRef inCommand, CFStringRef inShellPath, bool openInNewWindow, bool bringToFront);
 
 // Whether the terminal's default shell takes sh syntax (export), not csh or tcsh (setenv). Read once
 // per process.
-bool IsShDefaultInTerminal();
-bool IsShDefaultInITerm();
+bool OMCIsShDefaultInTerminal();
+bool OMCIsShDefaultInITerm();

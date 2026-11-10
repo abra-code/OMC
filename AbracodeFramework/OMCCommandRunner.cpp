@@ -291,7 +291,7 @@ OMCRunCommandFromFile(CFStringRef inCommandNameOrId, CFStringRef inCommandFile, 
 				{
 					case kActiveFile:
 					{
-						selectedFiles.Adopt( CreateCFURLsFromOpenDialog( appName, dialogMessage, nullptr, dialogDefaultDir, dialogIdentifier, dialogPrompt, dialogAllowedContentTypes, dialogFlags | kOMCFilePanelCanChooseFiles ) );
+						selectedFiles.Adopt( OMCCreateCFURLsFromOpenDialog( appName, dialogMessage, nullptr, dialogDefaultDir, dialogIdentifier, dialogPrompt, dialogAllowedContentTypes, dialogFlags | kOMCFilePanelCanChooseFiles ) );
 					}
 					break;
 
@@ -299,13 +299,13 @@ OMCRunCommandFromFile(CFStringRef inCommandNameOrId, CFStringRef inCommandFile, 
 					case kActiveFinderWindow:
 					case kActiveFolderExcludeFinderWindow:
 					{
-						selectedFiles.Adopt( CreateCFURLsFromOpenDialog( appName, dialogMessage, nullptr, dialogDefaultDir, dialogIdentifier, dialogPrompt, dialogAllowedContentTypes, dialogFlags | kOMCFilePanelCanChooseDirectories ) );
+						selectedFiles.Adopt( OMCCreateCFURLsFromOpenDialog( appName, dialogMessage, nullptr, dialogDefaultDir, dialogIdentifier, dialogPrompt, dialogAllowedContentTypes, dialogFlags | kOMCFilePanelCanChooseDirectories ) );
 					}
 					break;
 
 					default:
 					{
-						selectedFiles.Adopt( CreateCFURLsFromOpenDialog( appName, dialogMessage, nullptr, dialogDefaultDir, dialogIdentifier, dialogPrompt, dialogAllowedContentTypes, dialogFlags | kOMCFilePanelCanChooseFiles | kOMCFilePanelCanChooseDirectories ) );
+						selectedFiles.Adopt( OMCCreateCFURLsFromOpenDialog( appName, dialogMessage, nullptr, dialogDefaultDir, dialogIdentifier, dialogPrompt, dialogAllowedContentTypes, dialogFlags | kOMCFilePanelCanChooseFiles | kOMCFilePanelCanChooseDirectories ) );
 					}
 					break;
 				}

@@ -28,7 +28,7 @@ CreateDefaultExternBundleURL(CFArrayRef inCommandName)
 		
 	::CFStringAppend( bundleName, CFSTR(".omc") );
 
-	CFObj<CFURLRef> appSupportURL( CopyApplicationSupportDirURL() );
+	CFObj<CFURLRef> appSupportURL( OMCCopyApplicationSupportDirURL() );
 	if(appSupportURL == NULL)
 		return NULL;
 

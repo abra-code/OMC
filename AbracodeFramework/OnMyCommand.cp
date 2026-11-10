@@ -164,7 +164,7 @@ OnMyCommand::Init()
 		long sysVerMinor = 13;
 		long sysVerBugFix = 0;
 
-		GetOperatingSystemVersion(&sysVerMajor, &sysVerMinor, &sysVerBugFix);
+		OMCGetOperatingSystemVersion(&sysVerMajor, &sysVerMinor, &sysVerBugFix);
 		
 		//eg. 101405 max 999999
 		sMacOSVersion = 10000 * (SInt32)sysVerMajor + 100 * (SInt32)sysVerMinor + (SInt32)sysVerBugFix;
@@ -214,7 +214,7 @@ OnMyCommand::Init()
 
 	CFObj<CFURLRef> myHostBundleURL = CFBundleCopyBundleURL(CFBundleGetMainBundle());
 	mMyHostBundlePath.Adopt(CreatePathFromCFURL(myHostBundleURL, kEscapeNone), kCFObjDontRetain);
-	mMyHostAppName.Adopt(CopyHostAppName(), kCFObjDontRetain);
+	mMyHostAppName.Adopt(OMCCopyHostAppName(), kCFObjDontRetain);
 
 	InitOmcBundlePaths();
 
@@ -404,9 +404,9 @@ OnMyCommand::CommonContextCheck( CFTypeRef inContext, const OMCHostSelection *in
     {
         //remember front process pid at the moment of context check
         //in case it gets changed later, we need to keep it
-        mFrontProcessPID = GetFrontAppPID();
+        mFrontProcessPID = OMCGetFrontAppPID();
         
-        CFObj<CFStringRef> frontProcessBundleID = CopyFrontAppBundleIdentifier();
+        CFObj<CFStringRef> frontProcessBundleID = OMCCopyFrontAppBundleIdentifier();
         if(frontProcessBundleID != nullptr)
         {
             if( kCFCompareEqualTo == ::CFStringCompare( frontProcessBundleID, CFSTR("com.apple.finder"), 0 ) )
@@ -491,7 +491,7 @@ OnMyCommand::CommonContextCheck( CFTypeRef inContext, const OMCHostSelection *in
 
 	err = noErr;
 
-	CFObj<CFStringRef> frontProcessName = CopyFrontAppName();
+	CFObj<CFStringRef> frontProcessName = OMCCopyFrontAppName();
 
 	//menu population requested
 	if(outMenu != nullptr)
@@ -621,7 +621,7 @@ OnMyCommand::ExecuteCommand(SInt32 inCommandIndex, const CommandRuntimeData *par
         }
 
 
-		OMCModifierKeys keyboardModifiers = GetKeyboardModifiers();
+		OMCModifierKeys keyboardModifiers = OMCGetKeyboardModifiers();
 		//only if lone control key is pressed we consider it a debug request
 		currCommand.debugging = ((keyboardModifiers &
 								(kOMCModifierCapsLock | kOMCModifierShift | kOMCModifierOption | kOMCModifierCommand)) == 0)
@@ -1108,25 +1108,25 @@ OnMyCommand::ExecuteCommandWithObjects(CommandRuntimeData *initialCommandRuntime
 		{
 			case kExecTerminal:
 			{
-				bool isSh = IsShDefaultInTerminal();
+				bool isSh = OMCIsShDefaultInTerminal();
 				CFObj<CFStringRef> commandWithEnvSetup = CreateTerminalCommandWithEnvironmentSetup(theCommand,
                                                                                                    currCommand,
                                                                                                    *commandRuntimeData,
                                                                                                    environList,
                                                                                                    isSh);
-				ExecuteInTerminal( commandWithEnvSetup, currCommand.openNewTerminalSession, currCommand.bringTerminalToFront);
+				OMCExecuteInTerminal( commandWithEnvSetup, currCommand.openNewTerminalSession, currCommand.bringTerminalToFront);
 			}
 			break;
 			
 			case kExecITerm:
 			{
-				bool isSh = IsShDefaultInITerm();
+				bool isSh = OMCIsShDefaultInITerm();
 				CFObj<CFStringRef> commandWithEnvSetup = CreateTerminalCommandWithEnvironmentSetup(theCommand,
                                                                                                    currCommand,
                                                                                                    *commandRuntimeData,
                                                                                                    environList,
                                                                                                    isSh);
-				ExecuteInITerm( commandWithEnvSetup, currCommand.iTermShellPath, currCommand.openNewTerminalSession, currCommand.bringTerminalToFront);
+				OMCExecuteInITerm( commandWithEnvSetup, currCommand.iTermShellPath, currCommand.openNewTerminalSession, currCommand.bringTerminalToFront);
 			}
 			break;
 
@@ -1283,25 +1283,25 @@ OnMyCommand::ExecuteCommandWithText(CommandDescription &currCommand, CFStringRef
 	{
 		case kExecTerminal:
 		{
-			bool isSh = IsShDefaultInTerminal();
+			bool isSh = OMCIsShDefaultInTerminal();
 			CFObj<CFStringRef> commandWithEnvSetup = CreateTerminalCommandWithEnvironmentSetup(theCommand,
                                                                                                currCommand,
                                                                                                *commandRuntimeData,
                                                                                                environList,
                                                                                                isSh);
-			ExecuteInTerminal( commandWithEnvSetup, currCommand.openNewTerminalSession, currCommand.bringTerminalToFront );
+			OMCExecuteInTerminal( commandWithEnvSetup, currCommand.openNewTerminalSession, currCommand.bringTerminalToFront );
 		}
 		break;
 		
 		case kExecITerm:
 		{
-			bool isSh = IsShDefaultInITerm();
+			bool isSh = OMCIsShDefaultInITerm();
 			CFObj<CFStringRef> commandWithEnvSetup = CreateTerminalCommandWithEnvironmentSetup(theCommand,
                                                                                                currCommand,
                                                                                                *commandRuntimeData,
                                                                                                environList,
                                                                                                isSh);
-			ExecuteInITerm( commandWithEnvSetup, currCommand.iTermShellPath, currCommand.openNewTerminalSession, currCommand.bringTerminalToFront );
+			OMCExecuteInITerm( commandWithEnvSetup, currCommand.iTermShellPath, currCommand.openNewTerminalSession, currCommand.bringTerminalToFront );
 		}
 		break;
 
@@ -2090,7 +2090,7 @@ DoStringsMatch(CFStringRef inMatchString, CFStringRef inSearchedString, UInt8 ma
 CFURLRef
 CopyOMCPrefsURL()
 {
-	CFObj<CFURLRef> prefsFolderURL( CopyPreferencesDirURL() );
+	CFObj<CFURLRef> prefsFolderURL( OMCCopyPreferencesDirURL() );
 	if(prefsFolderURL == NULL)
 		return NULL;
 	
@@ -2891,7 +2891,7 @@ OnMyCommand::AppendTextToCommand(CFMutableStringRef inCommandRef, CFStringRef in
 			if((mHostApp == kOMCHostApp_ShortcutsObserver) && (mFrontProcessPID != 0))
 				frontPID = mFrontProcessPID;
 			else
-				frontPID = GetFrontAppPID();
+				frontPID = OMCGetFrontAppPID();
 
 			newStrRef = CFStringCreateWithFormat( kCFAllocatorDefault, nullptr, CFSTR("%d"), frontPID );
 		}
@@ -2901,10 +2901,10 @@ OnMyCommand::AppendTextToCommand(CFMutableStringRef inCommandRef, CFStringRef in
 		{
 			CFObj<CFStringRef> frontAppStr;
 			if((mHostApp == kOMCHostApp_ShortcutsObserver) && (mFrontProcessPID != 0))
-				frontAppStr.Adopt(CopyAppNameForPID(mFrontProcessPID) );
+				frontAppStr.Adopt(OMCCopyAppNameForPID(mFrontProcessPID) );
 
 			if(frontAppStr == nullptr)
-				frontAppStr.Adopt(CopyFrontAppName());
+				frontAppStr.Adopt(OMCCopyFrontAppName());
 			
 			if(frontAppStr != nullptr)
 				newStrRef = CreateEscapedStringCopy(frontAppStr, escSpecialCharsMode);
@@ -3270,7 +3270,7 @@ OnMyCommand::PopulateEnvironList(CFMutableDictionaryRef ioEnvironList, CommandRu
 				if((mHostApp == kOMCHostApp_ShortcutsObserver) && (mFrontProcessPID != 0))
 					frontPID = mFrontProcessPID;
 				else
-					frontPID = GetFrontAppPID();
+					frontPID = OMCGetFrontAppPID();
 				
 				newStrRef = CFStringCreateWithFormat( kCFAllocatorDefault, nullptr, CFSTR("%d"), frontPID );
 			}
@@ -3280,10 +3280,10 @@ OnMyCommand::PopulateEnvironList(CFMutableDictionaryRef ioEnvironList, CommandRu
 			{
 				CFObj<CFStringRef> frontAppStr;
 				if((mHostApp == kOMCHostApp_ShortcutsObserver) && (mFrontProcessPID != 0))
-					frontAppStr.Adopt(CopyAppNameForPID(mFrontProcessPID) );
+					frontAppStr.Adopt(OMCCopyAppNameForPID(mFrontProcessPID) );
 				
 				if(frontAppStr == nullptr)
-					frontAppStr.Adopt(CopyFrontAppName());
+					frontAppStr.Adopt(OMCCopyFrontAppName());
 				
 				newStrRef = frontAppStr.Detach();
 			}

@@ -105,7 +105,7 @@ PresentSaveAsDialog(OnMyCommand *inPlugin,
             message.Adopt( ::CFCopyLocalizedStringFromTableInBundle( message, currCommand.localizationTableName, localizationBundle, "") );
 
         StSwitchToFront switcher;
-        contextData.saveAsPath.Adopt(CreateCFURLFromSaveAsDialog( commandName, message, defaultName, expandedDirStr, identifier, prompt, allowedContentTypes, additionalFlags));
+        contextData.saveAsPath.Adopt(OMCCreateCFURLFromSaveAsDialog( commandName, message, defaultName, expandedDirStr, identifier, prompt, allowedContentTypes, additionalFlags));
         if(contextData.saveAsPath == nullptr)
         {
             throw OSStatus(userCanceledErr);
@@ -165,7 +165,7 @@ PresentChooseFileDialog(OnMyCommand *inPlugin,
         }
 
         StSwitchToFront switcher;
-        contextData.chooseFilePaths.Adopt(CreateCFURLsFromOpenDialog(commandName, message, defaultName, expandedDirStr, identifier, prompt, allowedContentTypes, additionalFlags | kOMCFilePanelCanChooseFiles));
+        contextData.chooseFilePaths.Adopt(OMCCreateCFURLsFromOpenDialog(commandName, message, defaultName, expandedDirStr, identifier, prompt, allowedContentTypes, additionalFlags | kOMCFilePanelCanChooseFiles));
         if(contextData.chooseFilePaths == NULL || CFArrayGetCount(contextData.chooseFilePaths) == 0)
         {
             throw OSStatus(userCanceledErr);
@@ -236,7 +236,7 @@ PresentChooseFolderDialog(OnMyCommand *inPlugin,
         }
 
         StSwitchToFront switcher;
-        contextData.chooseFolderPaths.Adopt(CreateCFURLsFromOpenDialog( commandName, message, defaultName, expandedDirStr, identifier, prompt, allowedContentTypes, additionalFlags | kOMCFilePanelCanChooseDirectories));
+        contextData.chooseFolderPaths.Adopt(OMCCreateCFURLsFromOpenDialog( commandName, message, defaultName, expandedDirStr, identifier, prompt, allowedContentTypes, additionalFlags | kOMCFilePanelCanChooseDirectories));
         if(contextData.chooseFolderPaths == NULL || CFArrayGetCount(contextData.chooseFolderPaths) == 0)
         {
             throw OSStatus(userCanceledErr);
@@ -305,7 +305,7 @@ PresentChooseObjectDialog(OnMyCommand *inPlugin,
             message.Adopt( ::CFCopyLocalizedStringFromTableInBundle( message, currCommand.localizationTableName, localizationBundle, "") );
 
         StSwitchToFront switcher;
-        contextData.chooseObjectPaths.Adopt(CreateCFURLsFromOpenDialog( commandName, message, defaultName, expandedDirStr, identifier, prompt, allowedContentTypes, additionalFlags | kOMCFilePanelCanChooseFiles | kOMCFilePanelCanChooseDirectories));
+        contextData.chooseObjectPaths.Adopt(OMCCreateCFURLsFromOpenDialog( commandName, message, defaultName, expandedDirStr, identifier, prompt, allowedContentTypes, additionalFlags | kOMCFilePanelCanChooseFiles | kOMCFilePanelCanChooseDirectories));
         if(contextData.chooseObjectPaths == NULL || CFArrayGetCount(contextData.chooseObjectPaths) == 0)
         {
             throw OSStatus(userCanceledErr);

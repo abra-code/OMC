@@ -20,22 +20,22 @@ extern "C" {
 #endif
 
 // The host app's display name (CFBundleDisplayName, else CFBundleName); NULL when unknown
-CFStringRef CopyHostAppName();
+CFStringRef OMCCopyHostAppName();
 
 // The front app's name, bundle identifier and process ID; NULL or 0 when unknown
-CFStringRef CopyFrontAppName();
-CFStringRef CopyFrontAppBundleIdentifier();
-pid_t GetFrontAppPID();
-CFStringRef CopyAppNameForPID(pid_t pid);
+CFStringRef OMCCopyFrontAppName();
+CFStringRef OMCCopyFrontAppBundleIdentifier();
+pid_t OMCGetFrontAppPID();
+CFStringRef OMCCopyAppNameForPID(pid_t pid);
 
 // Whether this process is a regular app with a menu bar and Dock icon (not a background agent),
 // which decides whether a floating window can show
-bool RunningInRegularGUIApp();
+bool OMCRunningInRegularGUIApp();
 
 // Tells the file manager a file changed, so a window showing it updates; nothing where unsupported
-void RefreshFileInFinder(CFStringRef filePath);
+void OMCRefreshFileInFinder(CFStringRef filePath);
 
-void GetOperatingSystemVersion(long* outMajorVersion, long* outMinorVersion, long* outPatchVersion);
+void OMCGetOperatingSystemVersion(long* outMajorVersion, long* outMinorVersion, long* outPatchVersion);
 
 // The modifier keys held down now, as a mask of kOMCModifier* values
 typedef uint32_t OMCModifierKeys;
@@ -47,9 +47,9 @@ enum
 	kOMCModifierOption		= 1u << 3,
 	kOMCModifierCommand		= 1u << 4
 };
-OMCModifierKeys GetKeyboardModifiers();
+OMCModifierKeys OMCGetKeyboardModifiers();
 
-// ActivateThisApp, QuitThisApp and NoteRecentDocument are the app shell's: Platform/OMCAppShell.h
+// OMCActivateThisApp, OMCQuitThisApp and OMCNoteRecentDocument are the app shell's: Platform/OMCAppShell.h
 
 #ifdef __cplusplus
 }

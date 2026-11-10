@@ -119,7 +119,7 @@ static std::unique_ptr<OMCDroplet> CreateDroplet(OMCDropletController *inControl
 		//	_startupModifiers = [currEvent modifierFlags];
 	}
 
-	_droplet->SetStartupModifiers(GetKeyboardModifiers());
+	_droplet->SetStartupModifiers(OMCGetKeyboardModifiers());
 }
 
 - (void)openDocumentWithContentsOfURL:(NSURL *)absoluteURL display:(BOOL)displayDocument completionHandler:(void (^)(NSDocument * _Nullable document, BOOL documentWasAlreadyOpen, NSError * _Nullable error))completionHandler

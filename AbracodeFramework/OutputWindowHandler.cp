@@ -273,7 +273,7 @@ OutputWindowHandler::GetOutputWindowSettings(CFArrayRef inCommandName,
 	CFStringRef theStr;
 	//we need to check if the process is background only - in this case we cannot use floating
 	//because it will never show
-    bool regularGUIApp = RunningInRegularGUIApp();
+    bool regularGUIApp = OMCRunningInRegularGUIApp();
     outSettings.windowType = regularGUIApp ? kOMCWindowFloating : kOMCWindowGlobalFloating;
 	outSettings.fontName.Adopt(CFSTR("Monaco"), kCFObjRetain);
 

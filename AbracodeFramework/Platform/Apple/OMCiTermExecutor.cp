@@ -78,7 +78,7 @@ static OSErr SendEventToITerm(AEDesc &inCommandDesc, CFStringRef inShellPath, bo
 }
 
 void
-ExecuteInITerm(CFStringRef inCommand, CFStringRef inShellPath, bool openInNewWindow, bool bringToFront)
+OMCExecuteInITerm(CFStringRef inCommand, CFStringRef inShellPath, bool openInNewWindow, bool bringToFront)
 {
 	if(inCommand == NULL)
 		return;
@@ -176,7 +176,7 @@ ExecuteInITerm(CFStringRef inCommand, CFStringRef inShellPath, bool openInNewWin
 
 */
 
-bool IsShDefaultInITerm()
+bool OMCIsShDefaultInITerm()
 {
 	static bool sIsShDefault = true;
 	static dispatch_once_t onceToken;

@@ -10,17 +10,17 @@
 #include "OMCAppShell.h"
 #import "OMCCommandExecutor.h" // OMCNoteRecentDocumentURL
 
-void ActivateThisApp(void)
+void OMCActivateThisApp(void)
 {
     [[NSApplication sharedApplication] activateIgnoringOtherApps:YES];
 }
 
-void QuitThisApp(void)
+void OMCQuitThisApp(void)
 {
     [[NSApplication sharedApplication] terminate:nil];
 }
 
-void NoteRecentDocument(CFURLRef fileURL)
+void OMCNoteRecentDocument(CFURLRef fileURL)
 {
     OMCNoteRecentDocumentURL((__bridge NSURL *)fileURL);
 }

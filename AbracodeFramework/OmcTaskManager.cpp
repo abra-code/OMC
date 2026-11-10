@@ -52,7 +52,7 @@ RefreshObjectsInFinder(CommandRuntimeData &commandRuntimeData)
         if(objectList[i].refreshPath != nullptr)
         {
             DEBUG_CFSTR( objectList[i].refreshPath );
-            RefreshFileInFinder(objectList[i].refreshPath);
+            OMCRefreshFileInFinder(objectList[i].refreshPath);
         }
     }
 }

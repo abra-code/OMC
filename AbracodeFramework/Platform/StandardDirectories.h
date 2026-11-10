@@ -16,11 +16,11 @@ extern "C" {
 
 // The folder of per-user preference files (macOS: ~/Library/Preferences).
 // Caller releases the result; NULL when the folder cannot be found.
-CFURLRef CopyPreferencesDirURL(void);
+CFURLRef OMCCopyPreferencesDirURL(void);
 
 // The folder of per-user application support data (macOS: ~/Library/Application Support),
 // created if it does not exist. Caller releases the result; NULL when it cannot be found.
-CFURLRef CopyApplicationSupportDirURL(void);
+CFURLRef OMCCopyApplicationSupportDirURL(void);
 
 #ifdef __cplusplus
 }
