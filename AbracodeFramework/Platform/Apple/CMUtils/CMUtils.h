@@ -59,9 +59,6 @@ public:
 	static size_t		ProcessObjectList( const AEDescList *fileList, UInt32 &ioFlags, CFURLHandlerProc inProcPtr, void *inProcData = NULL );
 
 
-	static CFMutableArrayRef	CollectObjectNames( const AEDescList *fileList);
-	static OSStatus				AESortFileList(const AEDescList *inFileList, AEDescList *outSortedList, CFOptionFlags compareOptions);
-
     static CFURLRef     CopyURL(const AEDesc &inDesc);
 
 
