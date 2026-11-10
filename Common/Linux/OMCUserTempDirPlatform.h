@@ -30,6 +30,57 @@ static inline bool OMCPlatformMakeDir(const char *inPath)
     return (errno == EEXIST);
 }
 
+// The path of the user's cache folder: $XDG_CACHE_HOME when it is absolute, else ~/.cache.
+// Neither made nor checked here. False when there is no absolute home or the path does not fit.
+static inline bool OMCPlatformUserCacheDirPath(char *outBuf, size_t bufSize)
+{
+    if((outBuf == NULL) || (bufSize == 0))
+        return false;
+    outBuf[0] = '\0';
+
+    const char *cacheHome = getenv("XDG_CACHE_HOME");
+    int n;
+    if((cacheHome != NULL) && (cacheHome[0] == '/'))
+    {
+        n = snprintf(outBuf, bufSize, "%s", cacheHome);
+    }
+    else
+    {
+        const char *home = getenv("HOME");
+        if((home == NULL) || (home[0] != '/'))
+            return false;
+        n = snprintf(outBuf, bufSize, "%s/.cache", home);
+    }
+    if((n < 0) || ((size_t)n >= bufSize))
+    {
+        outBuf[0] = '\0';
+        return false;
+    }
+    return true;
+}
+
+// The engine's own folder in the user's cache folder, <cache>/omc, made with mode 0700 (and
+// <cache> too, when missing) and used only when private and on a path no other user can change
+// (OMCResolvePrivateDirectoryOnSafePath). outBuf gets the resolved path, the one checked.
+static inline bool OMCPlatformEngineCacheDir(char *outBuf, size_t bufSize)
+{
+    if((outBuf == NULL) || (bufSize == 0))
+        return false;
+    outBuf[0] = '\0';
+
+    char cacheDir[PATH_MAX];
+    if(!OMCPlatformUserCacheDirPath(cacheDir, sizeof(cacheDir)))
+        return false;
+    char omcDir[PATH_MAX];
+    int n = snprintf(omcDir, sizeof(omcDir), "%s/omc", cacheDir);
+    if((n < 0) || ((size_t)n >= sizeof(omcDir)))
+        return false;
+
+    if(!OMCPlatformMakeDir(cacheDir) || !OMCPlatformMakeDir(omcDir))
+        return false;
+    return OMCResolvePrivateDirectoryOnSafePath(omcDir, outBuf, bufSize);
+}
+
 // The per-user temporary folder the engine and the tools it spawns share: $XDG_RUNTIME_DIR
 // (per user, mode 0700, made by the login manager and removed at logout), else
 // <cache>/omc/tmp, made with mode 0700, where <cache> is $XDG_CACHE_HOME or ~/.cache. Either is
@@ -48,24 +99,11 @@ static inline bool OMCPlatformUserTempDir(char *outBuf, size_t bufSize)
         return true;
 
     char cacheDir[PATH_MAX];
-    const char *cacheHome = getenv("XDG_CACHE_HOME");
-    int n;
-    if((cacheHome != NULL) && (cacheHome[0] == '/'))
-    {
-        n = snprintf(cacheDir, sizeof(cacheDir), "%s", cacheHome);
-    }
-    else
-    {
-        const char *home = getenv("HOME");
-        if((home == NULL) || (home[0] != '/'))
-            return false;
-        n = snprintf(cacheDir, sizeof(cacheDir), "%s/.cache", home);
-    }
-    if((n < 0) || ((size_t)n >= sizeof(cacheDir)))
+    if(!OMCPlatformUserCacheDirPath(cacheDir, sizeof(cacheDir)))
         return false;
 
     char omcDir[PATH_MAX];
-    n = snprintf(omcDir, sizeof(omcDir), "%s/omc", cacheDir);
+    int n = snprintf(omcDir, sizeof(omcDir), "%s/omc", cacheDir);
     if((n < 0) || ((size_t)n >= sizeof(omcDir)))
         return false;
     char tmpDir[PATH_MAX];

@@ -1102,10 +1102,10 @@ CFStringRef GetShellFromScriptExtension(CFStringRef inExt, CFMutableDictionaryRe
     if(embeddedPythonPath != nullptr)
     {
         // add pyc cache location to env vars.
-        // Per-user (/var/folders/<...>/T/Pyc, mode 0700) rather than the fixed /tmp/Pyc this used
-        // to be, so one account's bytecode cache is no longer a directory another account can
-        // create first. For a sandboxed host it lands in that container's tmp, writable where
-        // /tmp was not.
+        // Per-user (macOS: /var/folders/<...>/T/Pyc, mode 0700; Linux: <cache>/omc/Pyc in a 0700
+        // folder) rather than the fixed /tmp/Pyc this used to be, so one account's bytecode cache
+        // is no longer a directory another account can create first. For a sandboxed macOS host
+        // it lands in that container's tmp, writable where /tmp was not.
         const char *pycachePrefix = OMCGetPythonPycachePrefix();
         if(pycachePrefix != nullptr)
         {
