@@ -14,15 +14,60 @@
 #include "OMC.h"
 #import "OMCService.h"
 #include "OMCHostInfo.h"
+#include "OMCDroplet.h"
+#include <memory>
 
 
 extern CFStringRef kBundleIDString;
 static OMCService *sOMCService = NULL;
 
+// The droplet's decisions are portable (OMCDroplet.h); these are what only macOS does for them.
+// inActionContext is the controller, which owns the OMCDroplet and so outlives every call.
+
+static OSStatus DropletRunMainCommand(void *inActionContext, CFTypeRef inContext)
+{
+	OMCDropletController *controller = (__bridge OMCDropletController *)inActionContext;
+	return [OMCCommandExecutor runCommand:controller.commandID forCommandFile:controller.commandFilePath withContext:(__bridge id)inContext useNavDialog:YES allowKeyWindowSubcommand:NO delegate:controller];
+}
+
+static void DropletRunURL(void *inActionContext, CFStringRef inURL)
+{
+	OMCDropletController *controller = (__bridge OMCDropletController *)inActionContext;
+	OSStatus err = [OMCCommandExecutor runCommandForURL:(__bridge NSString *)inURL forCommandFile:controller.commandFilePath delegate:controller];
+	(void)err;
+}
+
+static void DropletNoteRecentDocument(void *inActionContext, CFURLRef inFileURL)
+{
+	(void)inActionContext;
+	OMCNoteRecentDocumentURL((__bridge NSURL *)inFileURL);
+}
+
 @interface OMCDropletController ()
-@property (nonatomic, strong) NSMutableArray<NSURL *> *pendingFiles;
-@property (nonatomic, assign) NSInteger debounceCounter;
+{
+	std::unique_ptr<OMCDroplet> _droplet;
+}
+// The application that last asked to open files: told when they were opened
+@property (nonatomic, strong) NSApplication *openingApplication;
+- (void)didOpenGatheredFiles;
 @end
+
+static void DropletDidOpenGatheredFiles(void *inActionContext)
+{
+	OMCDropletController *controller = (__bridge OMCDropletController *)inActionContext;
+	[controller didOpenGatheredFiles];
+}
+
+static std::unique_ptr<OMCDroplet> CreateDroplet(OMCDropletController *inController)
+{
+	OMCDropletActions actions;
+	actions.runMainCommand = DropletRunMainCommand;
+	actions.runURL = DropletRunURL;
+	actions.noteRecentDocument = DropletNoteRecentDocument;
+	actions.didOpenGatheredFiles = DropletDidOpenGatheredFiles;
+	actions.context = (__bridge void *)inController;
+	return std::unique_ptr<OMCDroplet>(new OMCDroplet(actions));
+}
 
 @implementation OMCDropletController
 
@@ -33,11 +78,7 @@ static OMCService *sOMCService = NULL;
 		return nil;
 
 	_commandFilePath = @"Command.plist";
-	_startingUp = YES;
-	_startupModifiers = 0;
-	_runningCommandCount = 0;
-	_pendingFiles = nil;
-	_debounceCounter = 0;
+	_droplet = CreateDroplet(self);
 	
 	NSAppleEventManager *eventManager = [NSAppleEventManager sharedAppleEventManager];
 	[eventManager setEventHandler:self
@@ -55,11 +96,7 @@ static OMCService *sOMCService = NULL;
 		return nil;
 
 	_commandFilePath = @"Command.plist";
-	_startingUp = YES;
-	_startupModifiers = 0;
-	_runningCommandCount = 0;
-	_pendingFiles = nil;
-	_debounceCounter = 0;
+	_droplet = CreateDroplet(self);
 	
 	NSAppleEventManager *eventManager = [NSAppleEventManager sharedAppleEventManager];
 	[eventManager setEventHandler:self
@@ -83,54 +120,30 @@ static OMCService *sOMCService = NULL;
 		//	_startupModifiers = [currEvent modifierFlags];
 	}
 
-	_startupModifiers = GetKeyboardModifiers();
+	_droplet->SetStartupModifiers(GetKeyboardModifiers());
 }
 
 - (void)openDocumentWithContentsOfURL:(NSURL *)absoluteURL display:(BOOL)displayDocument completionHandler:(void (^)(NSDocument * _Nullable document, BOOL documentWasAlreadyOpen, NSError * _Nullable error))completionHandler
 {
-    if(absoluteURL != NULL)
-        OMCNoteRecentDocumentURL(absoluteURL);
-    
-    _runningCommandCount++;
-    /*OSStatus err = */[OMCCommandExecutor runCommand:self.commandID forCommandFile:self.commandFilePath withContext:absoluteURL useNavDialog:YES allowKeyWindowSubcommand:NO delegate:self];
-    _runningCommandCount--;
-
-    completionHandler(NULL, NO, NULL);
+	_droplet->OpenFile((__bridge CFURLRef)absoluteURL);
+	completionHandler(NULL, NO, NULL);
 }
 
 
 -(void)openFiles:(NSArray *)absoluteURLArray
 {
-	if(absoluteURLArray == NULL)
-		return;
-	
-	NSUInteger fileCount = [absoluteURLArray count];
-	NSUInteger i;
-	for( i = 0; i < fileCount; i++ )
-	{
-		id oneFileURL = [absoluteURLArray objectAtIndex:i];
-		OMCNoteRecentDocumentURL(oneFileURL);
-	}
-	
-	_runningCommandCount++;
-	/*OSStatus err = */[OMCCommandExecutor runCommand:self.commandID forCommandFile:self.commandFilePath withContext:absoluteURLArray useNavDialog:YES allowKeyWindowSubcommand:NO delegate:self];
-	_runningCommandCount--;
+	_droplet->OpenFiles((__bridge CFArrayRef)absoluteURLArray);
 }
 
 
 - (IBAction)newDocument:(id)sender
 {
-	_runningCommandCount++;
-	/*OSStatus err = */[OMCCommandExecutor runCommand:self.commandID forCommandFile:self.commandFilePath withContext:NULL useNavDialog:YES allowKeyWindowSubcommand:NO delegate:self];
-	_runningCommandCount--;
-	
+	_droplet->RunMainCommand();
 }
 
 - (IBAction)openDocument:(id)sender
 {
-	_runningCommandCount++;
-	/*OSStatus err = */[OMCCommandExecutor runCommand:self.commandID forCommandFile:self.commandFilePath withContext:NULL useNavDialog:YES allowKeyWindowSubcommand:NO delegate:self];
-	_runningCommandCount--;
+	_droplet->RunMainCommand();
 }
 
 
@@ -249,77 +262,24 @@ static OMCService *sOMCService = NULL;
 
 - (void)application:(NSApplication *)sender openURLs:(NSArray<NSURL *> *)urls
 {
-	if( _startingUp && ((_startupModifiers & kOMCModifierOption) != 0) )
-		return;
-	
-	// Only files are opened here. A URL on the applet's own scheme belongs to handleGetURLEvent
-	// and its rules, and must not become the main command's file context by another route.
-	NSArray<NSURL *> *fileURLs = [urls filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"isFileURL == YES"]];
-	if([fileURLs count] == 0)
-		return;
-
-	if(_pendingFiles == nil)
-		_pendingFiles = [NSMutableArray array];
-	[_pendingFiles addObjectsFromArray:fileURLs];
-
-	_debounceCounter++;
-	NSInteger currentToken = _debounceCounter;
-
-	__weak __typeof(self) weakSelf = self;
-	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.25 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-		__strong __typeof(weakSelf) strongSelf = weakSelf;
-		if(strongSelf == nil)
-			return;
-		if(currentToken == strongSelf->_debounceCounter)
-		{
-			[strongSelf processAllGatheredFiles:sender];
-		}
-	});
+	self.openingApplication = sender;
+	_droplet->OpenURLs((__bridge CFArrayRef)urls);
 }
 
-- (void)processAllGatheredFiles:(NSApplication *)sender
+- (void)didOpenGatheredFiles
 {
-	NSArray *filesToProcess = [_pendingFiles copy];
-	[_pendingFiles removeAllObjects];
-	
-	if([filesToProcess count] > 0)
-	{
-		[self openFiles:filesToProcess];
-		[sender replyToOpenOrPrint:NSApplicationDelegateReplySuccess];
-	}
+	[self.openingApplication replyToOpenOrPrint:NSApplicationDelegateReplySuccess];
 }
 
 - (BOOL)applicationShouldHandleReopen:(NSApplication *)theApplication hasVisibleWindows:(BOOL)hasVisibleWindows
 {
-	if(_runningCommandCount > 0) //some command is running, do not reopen
-		return NO;
-
-	if( !hasVisibleWindows ) //we don't trust hasVisibleWindows value, it probably only applies to document windows
-	{
-		if( OMCOpenHostedWindowCount() > 0 ) // the framework's hosted windows; hasVisibleWindows misses panels
-			return NO;
-
-		NSApplication *myApp = [NSApplication sharedApplication];
-		if(myApp != NULL)
-		{
-			NSUInteger windowCount = [[myApp windows] count];
-			if(windowCount == 0)
-				return YES;
-		}
-	}
-	return NO;
+	long appWindowCount = (long)[[[NSApplication sharedApplication] windows] count];
+	return _droplet->ShouldHandleReopen(hasVisibleWindows, OMCOpenHostedWindowCount(), appWindowCount);
 }
 
 - (BOOL)applicationOpenUntitledFile:(NSApplication *)theApplication
 {
-	if( _startingUp && ((_startupModifiers & kOMCModifierOption) != 0) )
-		return FALSE;
-		
-	_runningCommandCount++;
-	OSStatus err = [OMCCommandExecutor runCommand:self.commandID forCommandFile:self.commandFilePath withContext:NULL useNavDialog:YES allowKeyWindowSubcommand:NO delegate:self];
-	_runningCommandCount--;
-	
-	return (err == noErr);
+	return _droplet->OpenUntitled();
 }
 
 //Apple docs state:
@@ -327,8 +287,7 @@ static OMCService *sOMCService = NULL;
 // the delegate receives the application:openFile: message before receiving applicationDidFinishLaunching:
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
 {
-	_startingUp = NO;
-	_startupModifiers = 0;
+	_droplet->DidFinishLaunching();
 	
 	if(sOMCService == NULL)
 	{
@@ -352,12 +311,7 @@ static OMCService *sOMCService = NULL;
 	 if(urlString == NULL)
 		return;
 
-	// A URL is untrusted input - any web page, document or application can send one.
-	// OMCCommandExecutor applies the rules: which commands a URL may run and with what context.
-	_runningCommandCount++;
-	OSStatus err = [OMCCommandExecutor runCommandForURL:urlString forCommandFile:_commandFilePath delegate:self];
-	(void)err;
-	_runningCommandCount--;
+	_droplet->HandleURL((__bridge CFStringRef)urlString);
 }
 
 #pragma mark --- OMC support ---
