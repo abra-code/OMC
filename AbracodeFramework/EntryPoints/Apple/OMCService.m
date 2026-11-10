@@ -39,7 +39,7 @@ void OMCServiceObserverCallback( OmcObserverMessage inMessage, CFIndex inTaskID,
 		return nil;
 
     mObserver = NULL;
-	mRunLoopStarted = NO;
+	mAllTasksFinished = NO;
     return self;
 }
 
@@ -48,12 +48,6 @@ void OMCServiceObserverCallback( OmcObserverMessage inMessage, CFIndex inTaskID,
     OMCUnregisterObserver( mObserver ); // we don't want to listen anymore
     OMCReleaseObserver( mObserver ); // release the observer
     mObserver = NULL;
-    
-	if(mRunLoopStarted)
-	{
-		//CFRunLoopStop( CFRunLoopGetCurrent() );
-		mRunLoopStarted = NO;
-	}
 }
 
 
@@ -197,6 +191,7 @@ void OMCServiceObserverCallback( OmcObserverMessage inMessage, CFIndex inTaskID,
 				self.resultString = [[NSMutableString alloc] init];
 			}
 			
+			mAllTasksFinished = NO;
 			OSStatus osError = OMCExecuteCommand( omcExec, commandRef );
 			if(osError != noErr)
 			{
@@ -206,15 +201,7 @@ void OMCServiceObserverCallback( OmcObserverMessage inMessage, CFIndex inTaskID,
 			else if(wantsToReturnText)
 			{
 				//we need to wait here for the result and assemble the text
-				//NSLog( @"Starting runloop...");
-				mRunLoopStarted = YES;
-				//CFRunLoopRun();
-				//[[NSRunLoop currentRunLoop] run];
-				NSRunLoop *theRL = [NSRunLoop currentRunLoop];
-				while (mRunLoopStarted && [theRL runMode:NSDefaultRunLoopMode beforeDate:[NSDate distantFuture]])
-				{
-					;
-				}
+				[self waitForAllTasksFinished];
 
 				if(self.resultString != NULL)
 				{
@@ -233,6 +220,17 @@ void OMCServiceObserverCallback( OmcObserverMessage inMessage, CFIndex inTaskID,
 	}
 
 	OMCReleaseExecutor( omcExec );//safe to release here. task lives on if execution is asynchronous
+}
+
+- (void)waitForAllTasksFinished
+{
+	// mAllTasksFinished is set by the observer callback whenever the message arrives: before this runs
+	// for a synchronous command (AppleScript, system), which sends it inside OMCExecuteCommand
+	NSRunLoop *theRL = [NSRunLoop currentRunLoop];
+	while (!mAllTasksFinished && [theRL runMode:NSDefaultRunLoopMode beforeDate:[NSDate distantFuture]])
+	{
+		;
+	}
 }
 
 - (void)setObserver:(OMCObserverRef)observer
@@ -277,13 +275,7 @@ void OMCServiceObserverCallback( OmcObserverMessage inMessage, CFIndex inTaskID,
 		{
 			//messageString = @"<<all tasks finished>>";
             [self setObserver:nil];
-			
-			if(mRunLoopStarted)
-			{
-				//NSLog( @"Stopping runloop...");
-				//CFRunLoopStop( CFRunLoopGetCurrent() );
-				mRunLoopStarted = NO;
-			}
+			mAllTasksFinished = YES;
 		}
 		break;
 		

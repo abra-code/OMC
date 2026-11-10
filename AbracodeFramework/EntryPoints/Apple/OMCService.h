@@ -14,12 +14,16 @@
 @interface OMCService : NSObject <NSApplicationDelegate, OMCObserverDelegate>
 {
 	OMCObserverRef	mObserver;
-	BOOL mRunLoopStarted;
+	BOOL mAllTasksFinished; // the command's "all tasks finished" arrived (it may arrive during OMCExecuteCommand)
 }
 
 @property (nonatomic, strong) NSMutableString *resultString;
 
 - (void)runOMCService:(NSPasteboard *)pboard userData:(NSString *)userData error:(NSString **)error;
+
+// Runs the run loop until the command's "all tasks finished" has arrived, at once if it already has
+// (a synchronous command sends it inside OMCExecuteCommand). Used by runOMCService:, and by tests.
+- (void)waitForAllTasksFinished;
 
 // OMCObserverDelegate:
 - (void)receiveObserverMessage:(OmcObserverMessage)inMessage forTaskId:(CFIndex)inTaskID withData:(CFTypeRef)inResult;
