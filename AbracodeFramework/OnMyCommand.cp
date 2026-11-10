@@ -60,6 +60,7 @@
 #include "OMCTerminalLauncher.h"
 #include "OMCScriptsManager.h"
 #include "OMCEnvironmentExportScript.h"
+#include <dispatch/dispatch.h>
 
 enum
 {
@@ -155,8 +156,8 @@ OnMyCommand::~OnMyCommand()
 OSStatus
 OnMyCommand::Init()
 {
-	static dispatch_once_t onceToken;
-	dispatch_once(&onceToken, ^{
+	static dispatch_once_t sOnce;
+	dispatch_once_f(&sOnce, nullptr, [](void *) {
 		long sysVerMajor = 10;
 		long sysVerMinor = 13;
 		long sysVerBugFix = 0;
@@ -959,9 +960,9 @@ OnMyCommand::ExecuteCommandWithObjects(CommandRuntimeData *initialCommandRuntime
 	{
 		if(objectCount > 1)
 		{
-			host_basic_info *hostInfo = GetHostBasicInfo();
-			if(hostInfo != nullptr)
-				maxTaskCount = (2 * hostInfo->avail_cpus /*logical_cpu*/);
+			long cpuCount = GetAvailableCPUCount();
+			if(cpuCount > 0)
+				maxTaskCount = (2 * cpuCount);
 		}
 		else
         {

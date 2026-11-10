@@ -12,12 +12,10 @@
 #include <string.h>
 #include <paths.h>
 #include <pthread.h>
-#include <crt_externs.h>
 #include <spawn.h>
 
 #include "omc_popen.h"
-
-//extern char **environ;
+#include "OMCProcessEnvironment.h"
 
 typedef struct ChildProcessInfoLink
 {
@@ -29,8 +27,10 @@ static ChildProcessInfoLink *sChildProcessInfoList = NULL;
 
 static pthread_mutex_t pidlist_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-#define	THREAD_LOCK()		if( pthread_is_threaded_np() ) pthread_mutex_lock(&pidlist_mutex)
-#define	THREAD_UNLOCK()		if( pthread_is_threaded_np() ) pthread_mutex_unlock(&pidlist_mutex)
+// Always taken: pthread_is_threaded_np (lock only once a second thread exists) is macOS-only, and an
+// app has other threads from its start, so it was taken in practice anyway
+#define	THREAD_LOCK()		pthread_mutex_lock(&pidlist_mutex)
+#define	THREAD_UNLOCK()		pthread_mutex_unlock(&pidlist_mutex)
 
 enum
 {
@@ -47,8 +47,7 @@ if( (_fd) >= 0 ) { \
 #if 0
 void PrintEnv(void)
 {
-	char*** envPtr = _NSGetEnviron();	// pointer to the real 'environ'
-	char** environ = *envPtr;
+	char** environ = OMCGetProcessEnviron();
 	while (*environ != NULL)
 	{
 		printf("%s\n", *environ);
@@ -61,8 +60,7 @@ void PrintEnv(void)
 char **
 CreateEnviron(char* const* inKeys, char * const* inValues, size_t inCount)
 {
-	char*** envPtr = _NSGetEnviron();	// pointer to the real 'environ'
-	char** oldEnviron = *envPtr;
+	char** oldEnviron = OMCGetProcessEnviron();
 	char** newEnviron = NULL;
 	size_t oldCount = 0;
 	size_t newCount = 0;
@@ -440,8 +438,10 @@ omc_popen_with_token(const char *command, char * const *inShell, char * const *i
         shellArguments = default_argv;
     }
     
-    posix_spawnattr_t attr = NULL;
-    posix_spawn_file_actions_t file_actions = NULL;
+    // No initializers: each is a pointer on macOS but a struct on glibc; the two flags below
+    // say which were initialized, and only those are destroyed
+    posix_spawnattr_t attr;
+    posix_spawn_file_actions_t file_actions;
     bool attributes_initialized = false;
     bool file_actions_initialized = false;
     char **tokenEnviron = NULL;
@@ -551,14 +551,17 @@ omc_popen_with_token(const char *command, char * const *inShell, char * const *i
     int spawn_result = posix_spawn(&pid, shellPath, &file_actions, &attr,
                                    shellArguments, use_environ);
     
-    // Clean up attributes
+    // Clean up attributes. The flags are cleared so the spawn_error path below does not destroy
+    // them a second time: harmless on macOS (EINVAL), a double free of the actions on glibc
     if (file_actions_initialized) {
         posix_spawn_file_actions_destroy(&file_actions);
+        file_actions_initialized = false;
     }
     if (attributes_initialized) {
         posix_spawnattr_destroy(&attr);
+        attributes_initialized = false;
     }
-    
+
     if (spawn_result != 0) {
         goto spawn_error;
     }

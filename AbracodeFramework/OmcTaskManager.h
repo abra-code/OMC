@@ -10,13 +10,13 @@
 #include "CFObj.h"
 #include "AObserver.h"
 #include "OMCDeferredProgress.h"
-#include <mach/host_info.h>
 
 class OmcExecutor;
 class OmcTask;
 class CommandRuntimeData;
 
-host_basic_info * GetHostBasicInfo();
+// The number of CPUs available now (logical cores, as host_info's avail_cpus gave), or 0 when unknown
+long GetAvailableCPUCount();
 
 class OmcTaskManager : public ARefCounted
 {

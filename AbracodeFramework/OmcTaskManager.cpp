@@ -33,8 +33,7 @@
 #include "OMCTestHost.h"
 #include <atomic>
 
-#include <mach/host_info.h>
-#include <mach/mach_host.h>
+#include <unistd.h>
 
 void KeyPressSimulationCallBack(void *context);
 
@@ -768,21 +767,11 @@ OmcHostTaskManager::ReceiveNotification(void *ioData)
 
 #pragma mark -
 
-host_basic_info *
-GetHostBasicInfo()
+long
+GetAvailableCPUCount()
 {
-	static bool sInfoValid = false;
-	static host_basic_info sHostBasicInfo;
-
-	if(sInfoValid)
-		return &sHostBasicInfo;
-
-	unsigned int i = HOST_BASIC_INFO_COUNT;
-	if( host_info(mach_host_self(), HOST_BASIC_INFO, (host_info_t)(&sHostBasicInfo), &i) != KERN_SUCCESS )
-		return NULL;
-
-	sInfoValid = true;
-	return &sHostBasicInfo;
+	long count = ::sysconf(_SC_NPROCESSORS_ONLN);
+	return (count > 0) ? count : 0;
 }
 
 

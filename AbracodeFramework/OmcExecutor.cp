@@ -979,8 +979,8 @@ CFStringRef kDefaultShell = sExtensionToShellMap[0].shell;
 static CFStringRef GetEmbeddedPythonPath()
 {
     static CFStringRef sEmbeddedPythonPath = nullptr;
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
+    static dispatch_once_t sOnce;
+    dispatch_once_f(&sOnce, nullptr, [](void *) {
         CFObj<CFURLRef> bundleURL = ::CFBundleCopyBundleURL(::CFBundleGetMainBundle());
         if(bundleURL != nullptr)
         {
@@ -1000,8 +1000,8 @@ static CFStringRef GetPythonToolPath()
 {
     static CFStringRef sPythonPath = nullptr;
 
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
+    static dispatch_once_t sOnce;
+    dispatch_once_f(&sOnce, nullptr, [](void *) {
         sPythonPath = GetEmbeddedPythonPath();
 
         // Embedded Python 3 distribution not found
