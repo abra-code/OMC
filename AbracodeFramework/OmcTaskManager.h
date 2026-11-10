@@ -61,6 +61,11 @@ public:
 						return (AObserver<OmcHostTaskManager> *)mTaskObserver;
 					}
 
+	// False for a command the client's command started (a window's init or action, a NEXT_COMMAND_ID
+	// command): its end is not the end of what the client is waiting for, so it sends no
+	// kOmcAllTasksFinished. Each task's kOmcTaskFinished and the output still go to every observer.
+	void			SetSendsAllTasksFinished(bool inSends) { mSendsAllTasksFinished = inSends; }
+
 	void			AddObserver(AObserverBase *inObserver)//task manager as notifier
 					{
 						mNotifier->AddObserver( inObserver );
@@ -99,4 +104,5 @@ protected:
 	CFObj<CFStringRef>			mLastStatusLine;
     bool						mUserCanceled {false};
     bool                        mHasFinalized {false};
+    bool                        mSendsAllTasksFinished {true};
 };

@@ -30,9 +30,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (BOOL)waitForCompletionWithTimeout:(NSTimeInterval)timeout;
 
 /// Waits until the captured output holds a complete first line, and returns it without its newline.
-/// Use it to read what a command printed, such as a window's UUID: the observer is added to every
-/// task manager of the command (OnMyCommand.cp), so "all tasks finished" can come from another one,
-/// such as a window's init command, before this command's output arrives.
+/// Use it to read what a command printed, such as a window's UUID, as a whole line. (The observer
+/// hears every command the run starts, such as a window's init command; since 2026-11-10 only the
+/// command that was run sends "all tasks finished", so its output is there by then.)
 /// @return The first line, or nil after the timeout
 - (nullable NSString *)waitForFirstOutputLineWithTimeout:(NSTimeInterval)timeout;
 

@@ -249,7 +249,8 @@ OmcHostTaskManager::Finalize()
     notificationData.dataSize = 0;
     notificationData.data.ptr = NULL;
     
-    mNotifier->NotifyObservers( &notificationData );
+    if(mSendsAllTasksFinished)
+        mNotifier->NotifyObservers( &notificationData );
     
     if(mProgress != NULL)
     {

@@ -112,9 +112,9 @@
                 
             case kOmcObserverAllTasksFinished:
                 self.allTasksFinished = YES;
-                // Stay registered (dealloc unregisters): every task manager of the command reports to this
-                // observer, and another one, such as a window's init command, may finish before this command
-                // has delivered its output
+                // Stay registered (dealloc unregisters): the commands this one starts, such as a window's
+                // init and action commands, keep reporting their output and each task's end to this
+                // observer after it (only the command that was run sends "all tasks finished")
                 break;
                 
             default:

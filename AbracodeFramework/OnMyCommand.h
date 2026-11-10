@@ -63,9 +63,13 @@ public:
     // them out: the portable form of HandleSelection
     OSStatus            ExecuteCommandRef( SInt32 inCommandRef );
 
+	// The client's observer: it hears every command this executor runs (their output and each task's
+	// end), and "all tasks finished" from the first one only, the command the client asked for
 	void				AddObserver(AObserverBase *inObserver)
 						{
 							mObserver.Adopt(inObserver, kARefCountRetain);
+							mClientCommandStarted = false;
+							mClientTasksStarted = false;
 						}
 
 	void				RemoveObserver(AObserverBase *inObserver)
@@ -78,8 +82,9 @@ public:
 
 	void				DeleteCommandList();
 
-	OSStatus			ExecuteCommandWithObjects(CommandRuntimeData *commandRuntimeData);
-	OSStatus			ExecuteCommandWithText(CommandDescription &currCommand, CFStringRef inStrRef, CommandRuntimeData *commandRuntimeData);
+	OSStatus			ExecuteCommandWithObjects(CommandRuntimeData *commandRuntimeData, bool inIsClientCommand);
+	OSStatus			ExecuteCommandWithText(CommandDescription &currCommand, CFStringRef inStrRef, CommandRuntimeData *commandRuntimeData, bool inIsClientCommand);
+	void				NotifyObserverAllTasksFinished();
 	Boolean				DisplayWarning(CommandDescription &currCommand, CommandRuntimeData &commandRuntimeData);
 	Boolean				PopulateItemsMenu( CommandRuntimeData &commandRuntimeData,
                                           OMCMenuModel &ioMenu,
@@ -211,6 +216,8 @@ protected:
 	CFObj<CFStringRef>			mOmcSupportPath;
 	CFObj<CFStringRef>			mOmcResourcesPath;
 	ARefCountedObj<AObserverBase> mObserver;
+	bool						mClientCommandStarted {false}; // a command ran since AddObserver: the client's
+	bool						mClientTasksStarted {false}; // the client's command started its task manager
     OSStatus					mError {noErr};
     OMCHostApp					mHostApp {kOMCHostApp_Unknown};
     pid_t			            mFrontProcessPID {0};//if running in observer we don't want to return observer as front process if it happens to come up

@@ -375,6 +375,111 @@ static NSString *Run(NSString *letter, NSUInteger count)
     return bundleURL;
 }
 
+/// The client's observer hears "all tasks finished" from the command it ran, not from the commands
+/// that one starts: here the window's init command, which finishes long before the window command
+/// prints. A service (OMCService) that returns a command's output stops at that message, so it used
+/// to return without the output whenever an init command finished first. Both execute paths: a file
+/// context (ExecuteCommandWithObjects) and a text context (ExecuteCommandWithText, which opens the
+/// window before it makes the command's task manager).
+- (void)testAllTasksFinishedComesFromTheCommandThatWasRun
+{
+    [self checkAllTasksFinishedComesFromTheCommandThatWasRunWithContext:[NSURL fileURLWithPath:NSHomeDirectory()]];
+}
+
+- (void)testAllTasksFinishedComesFromTheCommandThatWasRunWithText
+{
+    [self checkAllTasksFinishedComesFromTheCommandThatWasRunWithContext:@"some text"];
+}
+
+- (void)checkAllTasksFinishedComesFromTheCommandThatWasRunWithContext:(id)context
+{
+    NSArray *commands = @[
+        @{ @"NAME": @"RunLoopAllFinished", @"ACTIVATION_MODE": @"act_always", @"EXECUTION_MODE": @"exe_shell_script",
+           @"COMMAND": @[@"sleep 0.5\necho \"${OMC_ACTIONUI_WINDOW_UUID}\"\n"],
+           @"ACTIONUI_WINDOW": @{ @"JSON_NAME": @"AllFinished", @"INIT_SUBCOMMAND_ID": @"allfinished.init",
+                                  @"END_CANCEL_SUBCOMMAND_ID": @"allfinished.cancel", @"IS_BLOCKING": @NO } },
+        @{ @"NAME": @"RunLoopAllFinished", @"COMMAND_ID": @"allfinished.init", @"EXECUTION_MODE": @"exe_shell_script",
+           @"COMMAND": @[@"true\n"] },
+        @{ @"NAME": @"RunLoopAllFinished", @"COMMAND_ID": @"allfinished.cancel", @"EXECUTION_MODE": @"exe_shell_script",
+           @"COMMAND": @[@"true\n"] },
+        @{ @"NAME": @"RunLoopAllFinished", @"COMMAND_ID": @"close_window", @"ACTIVATION_MODE": @"act_selected_text",
+           @"EXECUTION_MODE": @"exe_shell_script",
+           @"COMMAND": @[@"\"$OMC_OMC_SUPPORT_PATH/omc_dialog_control\" \"$OMC_OBJ_TEXT\" omc_window omc_terminate_cancel\n"] },
+    ];
+    NSURL *bundleURL = [OMCBundleTestHelper createTestBundle:@"RunLoopAllFinished" withCommands:commands scripts:@{}];
+    XCTAssertNotNil(bundleURL);
+    if (bundleURL == nil)
+        return;
+    [self.bundlesToCleanup addObject:bundleURL];
+    NSString *json = @"{\"type\": \"VStack\", \"id\": 1, \"children\": [{\"type\": \"Text\", \"id\": 2, \"properties\": {\"text\": \"All finished\"}}]}";
+    NSString *lproj = [[bundleURL path] stringByAppendingPathComponent:@"Contents/Resources/Base.lproj"];
+    [[NSFileManager defaultManager] createDirectoryAtPath:lproj withIntermediateDirectories:YES attributes:nil error:nil];
+    XCTAssertTrue([json writeToFile:[lproj stringByAppendingPathComponent:@"AllFinished.json"] atomically:YES encoding:NSUTF8StringEncoding error:nil]);
+
+    OMCTestExecutionObserver *observer = [OMCTestExecutionObserver new];
+    OSStatus err = [OMCCommandExecutor runCommand:@"RunLoopAllFinished" forCommandFile:[bundleURL path]
+                                      withContext:context
+                                     useNavDialog:NO allowKeyWindowSubcommand:NO delegate:observer];
+    XCTAssertEqual(err, noErr);
+    XCTAssertTrue([observer waitForCompletionWithTimeout:kRunLoopTestTimeout]);
+    NSString *outputAtFinish = observer.capturedOutput;
+    XCTAssertTrue([outputAtFinish rangeOfCharacterFromSet:NSCharacterSet.newlineCharacterSet].location != NSNotFound,
+                  @"When all tasks finished, the window command should already have printed its UUID. Got: '%@'", outputAtFinish);
+
+    NSString *uuid = [[observer waitForFirstOutputLineWithTimeout:kRunLoopTestTimeout] stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceCharacterSet] ?: @"";
+    if (uuid.length > 0)
+    {
+        OMCTestExecutionObserver *closeObserver = [OMCTestExecutionObserver new];
+        [OMCCommandExecutor runCommand:@"close_window" forCommandFile:[bundleURL path] withContext:uuid
+                          useNavDialog:NO allowKeyWindowSubcommand:NO delegate:closeObserver];
+        XCTAssertTrue([closeObserver waitForCompletionWithTimeout:kRunLoopTestTimeout]);
+    }
+}
+
+/// A blocking window canceled before the command runs (here by its own init command): the command
+/// never makes or starts its tasks, and the client still hears "all tasks finished", as it did from
+/// the window's init and end commands before only the command that was run sent it.
+- (void)testAllTasksFinishedWhenABlockingWindowIsCanceled
+{
+    [self checkAllTasksFinishedWhenABlockingWindowIsCanceledWithContext:[NSURL fileURLWithPath:NSHomeDirectory()]];
+}
+
+- (void)testAllTasksFinishedWhenABlockingWindowIsCanceledWithText
+{
+    [self checkAllTasksFinishedWhenABlockingWindowIsCanceledWithContext:@"some text"];
+}
+
+- (void)checkAllTasksFinishedWhenABlockingWindowIsCanceledWithContext:(id)context
+{
+    NSArray *commands = @[
+        @{ @"NAME": @"RunLoopModalCanceled", @"ACTIVATION_MODE": @"act_always", @"EXECUTION_MODE": @"exe_shell_script",
+           @"COMMAND": @[@"echo never\n"],
+           @"ACTIONUI_WINDOW": @{ @"JSON_NAME": @"ModalCanceled", @"INIT_SUBCOMMAND_ID": @"modalcanceled.init",
+                                  @"END_CANCEL_SUBCOMMAND_ID": @"modalcanceled.cancel", @"IS_BLOCKING": @YES } },
+        @{ @"NAME": @"RunLoopModalCanceled", @"COMMAND_ID": @"modalcanceled.init", @"EXECUTION_MODE": @"exe_shell_script",
+           @"COMMAND": @[@"\"$OMC_OMC_SUPPORT_PATH/omc_dialog_control\" \"$OMC_ACTIONUI_WINDOW_UUID\" omc_window omc_terminate_cancel\n"] },
+        @{ @"NAME": @"RunLoopModalCanceled", @"COMMAND_ID": @"modalcanceled.cancel", @"EXECUTION_MODE": @"exe_shell_script",
+           @"COMMAND": @[@"true\n"] },
+    ];
+    NSURL *bundleURL = [OMCBundleTestHelper createTestBundle:@"RunLoopModalCanceled" withCommands:commands scripts:@{}];
+    XCTAssertNotNil(bundleURL);
+    if (bundleURL == nil)
+        return;
+    [self.bundlesToCleanup addObject:bundleURL];
+    NSString *json = @"{\"type\": \"VStack\", \"id\": 1, \"children\": [{\"type\": \"Text\", \"id\": 2, \"properties\": {\"text\": \"Canceled\"}}]}";
+    NSString *lproj = [[bundleURL path] stringByAppendingPathComponent:@"Contents/Resources/Base.lproj"];
+    [[NSFileManager defaultManager] createDirectoryAtPath:lproj withIntermediateDirectories:YES attributes:nil error:nil];
+    XCTAssertTrue([json writeToFile:[lproj stringByAppendingPathComponent:@"ModalCanceled.json"] atomically:YES encoding:NSUTF8StringEncoding error:nil]);
+
+    OMCTestExecutionObserver *observer = [OMCTestExecutionObserver new];
+    OSStatus err = [OMCCommandExecutor runCommand:@"RunLoopModalCanceled" forCommandFile:[bundleURL path]
+                                      withContext:context
+                                     useNavDialog:NO allowKeyWindowSubcommand:NO delegate:observer];
+    XCTAssertEqual(err, noErr);
+    XCTAssertTrue([observer waitForCompletionWithTimeout:10.0], @"The client never heard all tasks finished");
+    XCTAssertFalse([observer.capturedOutput containsString:@"never"], @"The canceled command must not run");
+}
+
 /// Before it starts a NEXT_COMMAND_ID command, the engine handles the omc_dialog_control messages the
 /// finished script sent, so the next command reads the values that script set. omc_dialog_control
 /// does not wait for its message to be handled, so the message is still queued when the script

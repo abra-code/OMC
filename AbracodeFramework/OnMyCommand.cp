@@ -41,6 +41,7 @@
 #include "OMCMenuModel.h"
 #include "ACFString.h"
 #include "OmcTaskManager.h"
+#include "OmcTaskNotification.h"
 #include "ACFDict.h"
 #include "ACFArr.h"
 // Nib dialogs are an optional macOS-only module (Platform/Apple/NibDialogs), on in OMC 5.x.
@@ -559,6 +560,14 @@ OnMyCommand::ExecuteCommand(SInt32 inCommandIndex, const CommandRuntimeData *par
     // retain self here to ensure the safety of all operations in scope
     ARefCountedObj<OnMyCommand> localRetain(this, kARefCountRetain);
 
+	// The first command since the client's observer was added is the client's: only its task manager
+	// tells that observer "all tasks finished". Decided here, before this command can start another:
+	// ExecuteCommandWithText opens the command's window, which runs its init command (and, when it
+	// blocks, every command of the window), before it makes the task manager.
+	bool isClientCommand = !mClientCommandStarted;
+	mClientCommandStarted = true;
+	bool reachedTasks = false; // past the warning and the dialogs before it: its window, if any, opens next
+
 	try
 	{
 		if( inCommandIndex < 0 || inCommandIndex >= mCommandCount )
@@ -744,12 +753,14 @@ OnMyCommand::ExecuteCommand(SInt32 inCommandIndex, const CommandRuntimeData *par
 		if( objListEmpty || contextData.isTextContext )//text context
 		{
 			TRACE_CSTR("OnMyCommand->ExecuteCommand: about to process command with text selection\n" );
-			ExecuteCommandWithText(currCommand, contextData.contextText, commandRuntimeData);
+			reachedTasks = true;
+			ExecuteCommandWithText(currCommand, contextData.contextText, commandRuntimeData, isClientCommand);
 		}
 		else //file context
 		{
 			TRACE_CSTR("OnMyCommand About to proces file list\n" );
-			ExecuteCommandWithObjects(commandRuntimeData);
+			reachedTasks = true;
+			ExecuteCommandWithObjects(commandRuntimeData, isClientCommand);
 		}
 		
 		//we used to do some post-processing here but now most commands are async so we need to call Finalize when task ends
@@ -770,7 +781,29 @@ OnMyCommand::ExecuteCommand(SInt32 inCommandIndex, const CommandRuntimeData *par
 		mError = -1;
 	}
 
+	// The client's command ended before its tasks started, after its window could run commands (a
+	// blocking window canceled): none of their task managers tells the client, so tell it here. A
+	// command canceled earlier (its warning, its input dialog) stays silent, as before.
+	if(isClientCommand && reachedTasks && !mClientTasksStarted)
+		NotifyObserverAllTasksFinished();
+
     return noErr;
+}
+
+void
+OnMyCommand::NotifyObserverAllTasksFinished()
+{
+	if(mObserver == nullptr)
+		return;
+
+	OmcTaskData notificationData;
+	memset( &notificationData, 0, sizeof(notificationData) );
+	notificationData.messageID = kOmcAllTasksFinished;
+	notificationData.error = noErr;
+	notificationData.dataType = kOMCDataTypeNone;
+
+	ARefCountedObj<AObserverBase> observer(mObserver.Get(), kARefCountRetain); // the callback may remove it
+	observer->ReceiveNotification(&notificationData);
 }
 
 
@@ -931,7 +964,7 @@ CreateTerminalCommandWithEnvironmentSetup(CFStringRef inCommand,
 
 
 OSStatus
-OnMyCommand::ExecuteCommandWithObjects(CommandRuntimeData *initialCommandRuntimeData)
+OnMyCommand::ExecuteCommandWithObjects(CommandRuntimeData *initialCommandRuntimeData, bool inIsClientCommand)
 {
     assert(initialCommandRuntimeData != nullptr);
     OMCContextData &initialContextData = initialCommandRuntimeData->GetContextData();
@@ -990,6 +1023,8 @@ OnMyCommand::ExecuteCommandWithObjects(CommandRuntimeData *initialCommandRuntime
 	// The reference is handed off to the asynchronous task lifecycle via Detach() right
 	// before Start() - see the comment there.
 	ARefCountedObj<OmcHostTaskManager> taskManager( new OmcHostTaskManager( this, currCommand, dynamicCommandName, mBundleRef, maxTaskCount ) );
+	// Only the client's command tells the client's observer "all tasks finished" (ExecuteCommand)
+	taskManager->SetSendsAllTasksFinished(inIsClientCommand);
 
     ARefCountedObj<OMCDialog> initalActiveDialog;
     // is this a subcommand triggered from already active dialog?
@@ -1181,6 +1216,8 @@ OnMyCommand::ExecuteCommandWithObjects(CommandRuntimeData *initialCommandRuntime
 	// the tasks and reach Finalize() - which deletes the object - synchronously (when a
 	// task finishes inline or when there are no tasks). Detaching first prevents the smart
 	// pointer from releasing an already-deleted object.
+	if(inIsClientCommand)
+		mClientTasksStarted = true; // its Finalize tells the client
 	taskManager.Detach()->Start();
 
 	return noErr;
@@ -1188,7 +1225,7 @@ OnMyCommand::ExecuteCommandWithObjects(CommandRuntimeData *initialCommandRuntime
 
 
 OSStatus
-OnMyCommand::ExecuteCommandWithText(CommandDescription &currCommand, CFStringRef inStrRef, CommandRuntimeData *commandRuntimeData)
+OnMyCommand::ExecuteCommandWithText(CommandDescription &currCommand, CFStringRef inStrRef, CommandRuntimeData *commandRuntimeData, bool inIsClientCommand)
 {
     assert(commandRuntimeData != nullptr);
 
@@ -1276,6 +1313,8 @@ OnMyCommand::ExecuteCommandWithText(CommandDescription &currCommand, CFStringRef
 	// leaking it. The reference is handed off to the async lifecycle via Detach() before
 	// Start() - see the comment there.
 	ARefCountedObj<OmcHostTaskManager> taskManager( new OmcHostTaskManager( this, currCommand, dynamicCommandName, mBundleRef, maxTaskCount ) );
+	// Only the client's command tells the client's observer "all tasks finished" (ExecuteCommand)
+	taskManager->SetSendsAllTasksFinished(inIsClientCommand);
 
 	ARefCountedObj<OmcExecutor> theExec;
 
@@ -1347,6 +1386,8 @@ OnMyCommand::ExecuteCommandWithText(CommandDescription &currCommand, CFStringRef
 	// Hand the creation reference off to the asynchronous task lifecycle (Finalize() now
 	// owns and releases it). Detach() must happen BEFORE Start() because Start() can reach
 	// Finalize() - which deletes the object - synchronously.
+	if(inIsClientCommand)
+		mClientTasksStarted = true; // its Finalize tells the client
 	taskManager.Detach()->Start();
 
 	return noErr;
