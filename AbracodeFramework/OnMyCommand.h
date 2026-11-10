@@ -64,13 +64,23 @@ public:
     OSStatus            ExecuteCommandRef( SInt32 inCommandRef );
 
 	// The client's observer: it hears every command this executor runs (their output and each task's
-	// end), and "all tasks finished" from the first one only, the command the client asked for
+	// end), and "all tasks finished" once, when the command the client asked for has ended, with the
+	// NEXT_COMMAND_ID commands it leads to, or was canceled
 	void				AddObserver(AObserverBase *inObserver)
 						{
 							mObserver.Adopt(inObserver, kARefCountRetain);
 							mClientCommandStarted = false;
-							mClientTasksStarted = false;
+							mNextCommandContinuesClient = false;
+							mClientTaskManagers = 0;
+							mClientEndSent = false;
 						}
+
+	// Called by the task managers doing the client's work (OmcTaskManager.cpp). A task manager also
+	// counts itself again while its NEXT_COMMAND_ID command sets up: the command's warning, dialogs
+	// or blocking window can run the run loop, where the task manager's last task can end.
+	void				ClientTaskManagerStarted() { mClientTaskManagers++; }
+	void				ClientTaskManagerEnded();
+	void				SetNextCommandContinuesClient(bool inContinues) { mNextCommandContinuesClient = inContinues; }
 
 	void				RemoveObserver(AObserverBase *inObserver)
 						{
@@ -84,7 +94,7 @@ public:
 
 	OSStatus			ExecuteCommandWithObjects(CommandRuntimeData *commandRuntimeData, bool inIsClientCommand);
 	OSStatus			ExecuteCommandWithText(CommandDescription &currCommand, CFStringRef inStrRef, CommandRuntimeData *commandRuntimeData, bool inIsClientCommand);
-	void				NotifyObserverAllTasksFinished();
+	void				NotifyClientEnded();
 	Boolean				DisplayWarning(CommandDescription &currCommand, CommandRuntimeData &commandRuntimeData);
 	Boolean				PopulateItemsMenu( CommandRuntimeData &commandRuntimeData,
                                           OMCMenuModel &ioMenu,
@@ -217,7 +227,9 @@ protected:
 	CFObj<CFStringRef>			mOmcResourcesPath;
 	ARefCountedObj<AObserverBase> mObserver;
 	bool						mClientCommandStarted {false}; // a command ran since AddObserver: the client's
-	bool						mClientTasksStarted {false}; // the client's command started its task manager
+	bool						mNextCommandContinuesClient {false}; // the next ExecuteCommand is a NEXT_COMMAND_ID of the client's work
+	int							mClientTaskManagers {0}; // task managers doing the client's work, not ended yet
+	bool						mClientEndSent {false}; // the client was told "all tasks finished"
     OSStatus					mError {noErr};
     OMCHostApp					mHostApp {kOMCHostApp_Unknown};
     pid_t			            mFrontProcessPID {0};//if running in observer we don't want to return observer as front process if it happens to come up

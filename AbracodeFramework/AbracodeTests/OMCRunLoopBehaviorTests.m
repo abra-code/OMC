@@ -480,6 +480,79 @@ static NSString *Run(NSString *letter, NSUInteger count)
     XCTAssertFalse([observer.capturedOutput containsString:@"never"], @"The canceled command must not run");
 }
 
+/// A NEXT_COMMAND_ID chain is the client's work too: "all tasks finished" comes after the chain's last
+/// command, so a service returns the whole chain's text (it used to come when the first one ended).
+- (void)testAllTasksFinishedComesAfterTheNextCommand
+{
+    NSArray *commands = @[
+        @{ @"NAME": @"RunLoopChain", @"ACTIVATION_MODE": @"act_always", @"EXECUTION_MODE": @"exe_shell_script",
+           @"COMMAND": @[@"echo first\n"], @"NEXT_COMMAND_ID": @"chain.next" },
+        @{ @"NAME": @"RunLoopChain", @"COMMAND_ID": @"chain.next", @"EXECUTION_MODE": @"exe_shell_script",
+           @"COMMAND": @[@"sleep 0.3\necho last\n"] },
+    ];
+    NSURL *bundleURL = [OMCBundleTestHelper createTestBundle:@"RunLoopChain" withCommands:commands scripts:@{}];
+    XCTAssertNotNil(bundleURL);
+    if (bundleURL == nil)
+        return;
+    [self.bundlesToCleanup addObject:bundleURL];
+
+    OMCTestExecutionObserver *observer = [OMCTestExecutionObserver new];
+    OSStatus err = [OMCCommandExecutor runCommand:@"RunLoopChain" forCommandFile:[bundleURL path]
+                                      withContext:@"some text"
+                                     useNavDialog:NO allowKeyWindowSubcommand:NO delegate:observer];
+    XCTAssertEqual(err, noErr);
+    XCTAssertTrue([observer waitForCompletionWithTimeout:kRunLoopTestTimeout]);
+    NSString *outputAtFinish = observer.capturedOutput;
+    XCTAssertTrue([outputAtFinish containsString:@"first"], @"Got: '%@'", outputAtFinish);
+    XCTAssertTrue([outputAtFinish containsString:@"last"], @"When all tasks finished, the chain's last command should have printed. Got: '%@'", outputAtFinish);
+}
+
+/// Two files processed in parallel: the fast one's NEXT_COMMAND_ID command opens a blocking window
+/// (its init command closes it with OK 2 s later), and the slow one's task ends while that window
+/// runs, which ends the first command's task manager. The chained command has not started its own
+/// task manager yet, so "all tasks finished" must still wait for it.
+- (void)testAllTasksFinishedWaitsForANextCommandInItsWindowWhenTheParentEnds
+{
+    NSString *fastFile = [self markerPath:@"fast"];
+    NSString *slowFile = [self markerPath:@"slow"];
+    XCTAssertTrue([@"" writeToFile:fastFile atomically:YES encoding:NSUTF8StringEncoding error:nil]);
+    XCTAssertTrue([@"" writeToFile:slowFile atomically:YES encoding:NSUTF8StringEncoding error:nil]);
+    NSString *script = @"case \"$OMC_OBJ_PATH\" in\n"
+                        "*fast*) \"$OMC_OMC_SUPPORT_PATH/omc_next_command\" \"$OMC_CURRENT_COMMAND_GUID\" parchain.next; echo fast;;\n"
+                        "*) sleep 1; echo slow;;\n"
+                        "esac\n";
+    NSArray *commands = @[
+        @{ @"NAME": @"RunLoopParallelChain", @"ACTIVATION_MODE": @"act_always", @"EXECUTION_MODE": @"exe_shell_script",
+           @"MULTIPLE_OBJECT_SETTINGS": @{ @"PROCESSING_MODE": @"proc_separately" }, @"MAX_PARALLEL_TASK_COUNT": @2,
+           @"COMMAND": @[script] },
+        @{ @"NAME": @"RunLoopParallelChain", @"COMMAND_ID": @"parchain.next", @"EXECUTION_MODE": @"exe_shell_script",
+           @"COMMAND": @[@"echo chained\n"],
+           @"ACTIONUI_WINDOW": @{ @"JSON_NAME": @"ParallelChain", @"INIT_SUBCOMMAND_ID": @"parchain.init", @"IS_BLOCKING": @YES } },
+        @{ @"NAME": @"RunLoopParallelChain", @"COMMAND_ID": @"parchain.init", @"EXECUTION_MODE": @"exe_shell_script",
+           @"COMMAND": @[@"sleep 2\n\"$OMC_OMC_SUPPORT_PATH/omc_dialog_control\" \"$OMC_ACTIONUI_WINDOW_UUID\" omc_window omc_terminate_ok\n"] },
+    ];
+    NSURL *bundleURL = [OMCBundleTestHelper createTestBundle:@"RunLoopParallelChain" withCommands:commands scripts:@{}];
+    XCTAssertNotNil(bundleURL);
+    if (bundleURL == nil)
+        return;
+    [self.bundlesToCleanup addObject:bundleURL];
+    NSString *json = @"{\"type\": \"VStack\", \"id\": 1, \"children\": [{\"type\": \"Text\", \"id\": 2, \"properties\": {\"text\": \"Parallel chain\"}}]}";
+    NSString *lproj = [[bundleURL path] stringByAppendingPathComponent:@"Contents/Resources/Base.lproj"];
+    [[NSFileManager defaultManager] createDirectoryAtPath:lproj withIntermediateDirectories:YES attributes:nil error:nil];
+    XCTAssertTrue([json writeToFile:[lproj stringByAppendingPathComponent:@"ParallelChain.json"] atomically:YES encoding:NSUTF8StringEncoding error:nil]);
+
+    OMCTestExecutionObserver *observer = [OMCTestExecutionObserver new];
+    NSArray *files = @[[NSURL fileURLWithPath:fastFile], [NSURL fileURLWithPath:slowFile]];
+    OSStatus err = [OMCCommandExecutor runCommand:@"RunLoopParallelChain" forCommandFile:[bundleURL path]
+                                      withContext:files
+                                     useNavDialog:NO allowKeyWindowSubcommand:NO delegate:observer];
+    XCTAssertEqual(err, noErr);
+    XCTAssertTrue([observer waitForCompletionWithTimeout:kRunLoopTestTimeout]);
+    NSString *outputAtFinish = observer.capturedOutput;
+    XCTAssertTrue([outputAtFinish containsString:@"slow"], @"Got: '%@'", outputAtFinish);
+    XCTAssertTrue([outputAtFinish containsString:@"chained"], @"When all tasks finished, the next command run from its window should have printed. Got: '%@'", outputAtFinish);
+}
+
 /// Before it starts a NEXT_COMMAND_ID command, the engine handles the omc_dialog_control messages the
 /// finished script sent, so the next command reads the values that script set. omc_dialog_control
 /// does not wait for its message to be handled, so the message is still queued when the script

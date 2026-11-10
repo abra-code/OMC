@@ -61,10 +61,11 @@ public:
 						return (AObserver<OmcHostTaskManager> *)mTaskObserver;
 					}
 
-	// False for a command the client's command started (a window's init or action, a NEXT_COMMAND_ID
-	// command): its end is not the end of what the client is waiting for, so it sends no
-	// kOmcAllTasksFinished. Each task's kOmcTaskFinished and the output still go to every observer.
-	void			SetSendsAllTasksFinished(bool inSends) { mSendsAllTasksFinished = inSends; }
+	// True for the client's command and the NEXT_COMMAND_ID commands it leads to: its end counts
+	// toward the end the client waits for, and the plugin tells the client "all tasks finished" when
+	// the last such task manager ends (OnMyCommand::ClientTaskManagerEnded). The task manager itself
+	// sends no kOmcAllTasksFinished; each task's kOmcTaskFinished and the output go to every observer.
+	void			SetDoesClientWork(bool inDoes) { mDoesClientWork = inDoes; }
 
 	void			AddObserver(AObserverBase *inObserver)//task manager as notifier
 					{
@@ -104,5 +105,5 @@ protected:
 	CFObj<CFStringRef>			mLastStatusLine;
     bool						mUserCanceled {false};
     bool                        mHasFinalized {false};
-    bool                        mSendsAllTasksFinished {true};
+    bool                        mDoesClientWork {false};
 };

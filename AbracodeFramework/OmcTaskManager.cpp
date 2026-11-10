@@ -239,18 +239,10 @@ OmcHostTaskManager::Finalize()
     sUnfinishedTaskManagers--;
     OMCNoteEngineActivity();
     
-    OmcTaskData notificationData;
-    memset( &notificationData, 0, sizeof(notificationData) );
-    notificationData.messageID = kOmcAllTasksFinished;
-    notificationData.taskID = 0;
-    notificationData.childProcessID = 0;
-    notificationData.error = noErr;
-    notificationData.dataType = kOMCDataTypeNone;
-    notificationData.dataSize = 0;
-    notificationData.data.ptr = NULL;
-    
-    if(mSendsAllTasksFinished)
-        mNotifier->NotifyObservers( &notificationData );
+    // The client hears "all tasks finished" from the plugin, once, when the last task manager doing
+    // its work ends (a NEXT_COMMAND_ID chain included)
+    if(mDoesClientWork)
+        mPlugin->ClientTaskManagerEnded();
     
     if(mProgress != NULL)
     {
@@ -413,7 +405,16 @@ OmcHostTaskManager::NoteTaskEnded(CFIndex finishedExecutorIndex, bool wasSynchro
                 OMCMainThreadSignal::RunReadyWork();
                 OMCDialog::ServicePendingMessages();
 
+                // The next command of the client's command is the client's work too: the client waits for the chain.
+                // Counted until it has started its task manager or ended: this task manager can end meanwhile,
+                // when its other tasks end in the run loop the next command's warning, dialogs or blocking window run.
+                if(mDoesClientWork)
+                    mPlugin->ClientTaskManagerStarted();
+                mPlugin->SetNextCommandContinuesClient(mDoesClientWork);
                 OSStatus err = mPlugin->ExecuteSubcommand(mCurrCommand.name, nextCommandID, finishedTask->commandRuntimeData, nullptr);
+                mPlugin->SetNextCommandContinuesClient(false);
+                if(mDoesClientWork)
+                    mPlugin->ClientTaskManagerEnded();
                 (void)err; // not acted on here (__unused is a BSD attribute glibc does not define)
             }
             break;

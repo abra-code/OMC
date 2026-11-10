@@ -107,8 +107,9 @@ static BOOL PressEscape(NSWindow *dialog) { return PressKey(dialog, [NSString st
 
 /// Runs a command whose input dialog is inputDialog and which echoes "input=" and the input text.
 /// While the dialog runs, answer gets its window once; a dialog still open after kGiveUpOnDialog
-/// is closed. Returns the command's output, or nil when the command did not run (canceled: a
-/// canceled command reports nothing, so a call that expects no output only waits a second).
+/// is closed. Returns the command's output: "" when it was canceled (a canceled run still ends, at
+/// once, with no output), or nil when the run did not end (a call that expects no output waits a
+/// second for that).
 - (NSString *)runInputDialog:(NSDictionary *)inputDialog label:(NSString *)label answer:(void (^)(NSWindow *dialog))answer
 {
     return [self runInputDialog:inputDialog label:label expectOutput:YES answer:answer];
@@ -186,7 +187,7 @@ static BOOL PressEscape(NSWindow *dialog) { return PressKey(dialog, [NSString st
         SetFieldValue(dialog, @"never used");
         XCTAssertTrue(PressEscape(dialog), @"Escape should press Cancel");
     }];
-    XCTAssertNil(output, @"A canceled input dialog should cancel the command");
+    XCTAssertEqualObjects(output, @"", @"A canceled input dialog should cancel the command, and the run should still end");
 }
 
 /// Closing the window is Cancel too.
@@ -195,7 +196,7 @@ static BOOL PressEscape(NSWindow *dialog) { return PressKey(dialog, [NSString st
     NSString *output = [self runInputDialog:@{@"INPUT_TYPE": @"input_clear_text"} label:@"close" expectOutput:NO answer:^(NSWindow *dialog) {
         [dialog performClose:nil];
     }];
-    XCTAssertNil(output, @"Closing the input dialog should cancel the command");
+    XCTAssertEqualObjects(output, @"", @"Closing the input dialog should cancel the command, and the run should still end");
 }
 
 /// OK_BUTTON_NAME and CANCEL_BUTTON_NAME title the buttons; without a MESSAGE the message is hidden.

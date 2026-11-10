@@ -560,13 +560,14 @@ OnMyCommand::ExecuteCommand(SInt32 inCommandIndex, const CommandRuntimeData *par
     // retain self here to ensure the safety of all operations in scope
     ARefCountedObj<OnMyCommand> localRetain(this, kARefCountRetain);
 
-	// The first command since the client's observer was added is the client's: only its task manager
-	// tells that observer "all tasks finished". Decided here, before this command can start another:
-	// ExecuteCommandWithText opens the command's window, which runs its init command (and, when it
-	// blocks, every command of the window), before it makes the task manager.
-	bool isClientCommand = !mClientCommandStarted;
+	// The first command since the client's observer was added is the client's, and so is each
+	// NEXT_COMMAND_ID command its task managers start: the client waits for all of them. Decided here,
+	// before this command can start another: ExecuteCommandWithText opens the command's window, which
+	// runs its init command (and, when it blocks, every command of the window), before it makes the
+	// task manager.
+	bool isClientCommand = !mClientCommandStarted || mNextCommandContinuesClient;
 	mClientCommandStarted = true;
-	bool reachedTasks = false; // past the warning and the dialogs before it: its window, if any, opens next
+	mNextCommandContinuesClient = false;
 
 	try
 	{
@@ -753,13 +754,11 @@ OnMyCommand::ExecuteCommand(SInt32 inCommandIndex, const CommandRuntimeData *par
 		if( objListEmpty || contextData.isTextContext )//text context
 		{
 			TRACE_CSTR("OnMyCommand->ExecuteCommand: about to process command with text selection\n" );
-			reachedTasks = true;
 			ExecuteCommandWithText(currCommand, contextData.contextText, commandRuntimeData, isClientCommand);
 		}
 		else //file context
 		{
 			TRACE_CSTR("OnMyCommand About to proces file list\n" );
-			reachedTasks = true;
 			ExecuteCommandWithObjects(commandRuntimeData, isClientCommand);
 		}
 		
@@ -781,20 +780,32 @@ OnMyCommand::ExecuteCommand(SInt32 inCommandIndex, const CommandRuntimeData *par
 		mError = -1;
 	}
 
-	// The client's command ended before its tasks started, after its window could run commands (a
-	// blocking window canceled): none of their task managers tells the client, so tell it here. A
-	// command canceled earlier (its warning, its input dialog) stays silent, as before.
-	if(isClientCommand && reachedTasks && !mClientTasksStarted)
-		NotifyObserverAllTasksFinished();
+	// No task manager is doing the client's work: the client's command started none (canceled at its
+	// warning, its input dialog or its blocking window, or failed), or all have ended already. A
+	// NEXT_COMMAND_ID command that starts none leaves the count to the task manager that ran it.
+	if(isClientCommand && (mClientTaskManagers == 0))
+		NotifyClientEnded();
 
     return noErr;
 }
 
 void
-OnMyCommand::NotifyObserverAllTasksFinished()
+OnMyCommand::ClientTaskManagerEnded()
 {
-	if(mObserver == nullptr)
+	if(mClientTaskManagers <= 0)
+		return; // AddObserver started over while this task manager ran
+	mClientTaskManagers--;
+	if(mClientTaskManagers == 0)
+		NotifyClientEnded();
+}
+
+// "All tasks finished" to the client's observer, once per AddObserver
+void
+OnMyCommand::NotifyClientEnded()
+{
+	if( mClientEndSent || (mObserver == nullptr) )
 		return;
+	mClientEndSent = true;
 
 	OmcTaskData notificationData;
 	memset( &notificationData, 0, sizeof(notificationData) );
@@ -1023,8 +1034,8 @@ OnMyCommand::ExecuteCommandWithObjects(CommandRuntimeData *initialCommandRuntime
 	// The reference is handed off to the asynchronous task lifecycle via Detach() right
 	// before Start() - see the comment there.
 	ARefCountedObj<OmcHostTaskManager> taskManager( new OmcHostTaskManager( this, currCommand, dynamicCommandName, mBundleRef, maxTaskCount ) );
-	// Only the client's command tells the client's observer "all tasks finished" (ExecuteCommand)
-	taskManager->SetSendsAllTasksFinished(inIsClientCommand);
+	// The client's work counts until its task managers end (ExecuteCommand, ClientTaskManagerEnded)
+	taskManager->SetDoesClientWork(inIsClientCommand);
 
     ARefCountedObj<OMCDialog> initalActiveDialog;
     // is this a subcommand triggered from already active dialog?
@@ -1217,7 +1228,7 @@ OnMyCommand::ExecuteCommandWithObjects(CommandRuntimeData *initialCommandRuntime
 	// task finishes inline or when there are no tasks). Detaching first prevents the smart
 	// pointer from releasing an already-deleted object.
 	if(inIsClientCommand)
-		mClientTasksStarted = true; // its Finalize tells the client
+		mClientTaskManagers++; // its Finalize counts it down (ClientTaskManagerEnded)
 	taskManager.Detach()->Start();
 
 	return noErr;
@@ -1313,8 +1324,8 @@ OnMyCommand::ExecuteCommandWithText(CommandDescription &currCommand, CFStringRef
 	// leaking it. The reference is handed off to the async lifecycle via Detach() before
 	// Start() - see the comment there.
 	ARefCountedObj<OmcHostTaskManager> taskManager( new OmcHostTaskManager( this, currCommand, dynamicCommandName, mBundleRef, maxTaskCount ) );
-	// Only the client's command tells the client's observer "all tasks finished" (ExecuteCommand)
-	taskManager->SetSendsAllTasksFinished(inIsClientCommand);
+	// The client's work counts until its task managers end (ExecuteCommand, ClientTaskManagerEnded)
+	taskManager->SetDoesClientWork(inIsClientCommand);
 
 	ARefCountedObj<OmcExecutor> theExec;
 
@@ -1387,7 +1398,7 @@ OnMyCommand::ExecuteCommandWithText(CommandDescription &currCommand, CFStringRef
 	// owns and releases it). Detach() must happen BEFORE Start() because Start() can reach
 	// Finalize() - which deletes the object - synchronously.
 	if(inIsClientCommand)
-		mClientTasksStarted = true; // its Finalize tells the client
+		mClientTaskManagers++; // its Finalize counts it down (ClientTaskManagerEnded)
 	taskManager.Detach()->Start();
 
 	return noErr;
