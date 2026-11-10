@@ -14,7 +14,7 @@ public:
 	}
 
 	template< typename CFT >
-	Boolean GetValue( CFStringRef inKey, CFT &outValue ) const noexcept
+	bool GetValue( CFStringRef inKey, CFT &outValue ) const noexcept
 	{
 		if(this->mRef != NULL)
 		{
@@ -27,7 +27,7 @@ public:
 	}
 	
 	template< typename CFT >
-	Boolean CopyValue( CFStringRef inKey, CFT &outValue ) const noexcept
+	bool CopyValue( CFStringRef inKey, CFT &outValue ) const noexcept
 	{
 		if( GetValue(inKey, outValue) )
 		{
@@ -38,7 +38,7 @@ public:
 	}
 
 	template< typename CFT >
-	Boolean CopyValue( CFStringRef inKey, CFObj<CFT> &outValue ) const noexcept
+	bool CopyValue( CFStringRef inKey, CFObj<CFT> &outValue ) const noexcept
 	{
 		CFT valueRef = NULL;
 		if( GetValue(inKey, valueRef) )
@@ -49,7 +49,7 @@ public:
 		return false;
 	}
 
-	Boolean GetValue( CFStringRef inKey, CFIndex &outValue ) const noexcept
+	bool GetValue( CFStringRef inKey, CFIndex &outValue ) const noexcept
 	{
 		CFNumberRef theNum = NULL;
 		if( GetValue(inKey, theNum) )
@@ -57,7 +57,7 @@ public:
 		return false;
 	}
 
-	Boolean GetValue( CFStringRef inKey, short &outValue ) const noexcept
+	bool GetValue( CFStringRef inKey, short &outValue ) const noexcept
 	{
 		CFNumberRef theNum = NULL;
 		if( GetValue(inKey, theNum) )
@@ -65,7 +65,7 @@ public:
 		return false;
 	}
 	
-	Boolean GetValue( CFStringRef inKey, float &outValue ) const noexcept
+	bool GetValue( CFStringRef inKey, float &outValue ) const noexcept
 	{
 		CFNumberRef theNum = NULL;
 		if( GetValue(inKey, theNum) )
@@ -73,7 +73,7 @@ public:
 		return false;
 	}
 	
-	Boolean GetValue( CFStringRef inKey, double &outValue ) const noexcept
+	bool GetValue( CFStringRef inKey, double &outValue ) const noexcept
 	{
 		CFNumberRef theNum = NULL;
 		if( GetValue(inKey, theNum) )
@@ -82,7 +82,11 @@ public:
 	}
 	
 	
-	Boolean GetValue( CFStringRef inKey, Boolean &outValue ) const noexcept
+	// A CFBoolean is read into a bool. Not into an unsigned char, which is macOS's Boolean (on Linux CF
+	// makes Boolean a bool): deleted, so that a Boolean or UInt8 is not read through the template GetValue
+	bool GetValue( CFStringRef inKey, unsigned char &outValue ) const noexcept = delete;
+
+	bool GetValue( CFStringRef inKey, bool &outValue ) const noexcept
 	{
 		CFBooleanRef theBool = NULL;
 		if( GetValue(inKey, theBool) )
@@ -93,7 +97,7 @@ public:
 		return false;
 	}
 	
-	Boolean GetValue( CFStringRef inKey, CFTypeRef &outValue ) const noexcept
+	bool GetValue( CFStringRef inKey, CFTypeRef &outValue ) const noexcept
 	{
 		if(this->mRef != NULL)
 		{
@@ -152,10 +156,9 @@ public:
 		::CFDictionarySetValue(mRef, inKey, (CFNumberRef)cfNumber );
 	}
 	
-	void SetValue( CFStringRef inKey, Boolean inValue) noexcept
-	{
-		::CFDictionarySetValue(mRef, inKey, inValue ? kCFBooleanTrue : kCFBooleanFalse );
-	}
+	// A CFBoolean is set from a bool. Not from an unsigned char (macOS's Boolean): deleted, so that such
+	// a call is reported as a deleted call rather than as an ambiguous one
+	void SetValue( CFStringRef inKey, unsigned char inValue) noexcept = delete;
 	
 	void SetValue( CFStringRef inKey, bool inValue) noexcept
 	{

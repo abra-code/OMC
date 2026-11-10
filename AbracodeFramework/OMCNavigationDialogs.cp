@@ -39,7 +39,7 @@ GetNavDialogParams(CFDictionaryRef inParams, CFStringRef &outMessage, CFArrayRef
     params.CopyValue( CFSTR("ALLOWED_CONTENT_TYPES"), outAllowedContentTypes );
 
     UInt32 outAdditionalNavServiesFlags = 0;
-    Boolean boolValue;
+    bool boolValue;
     if( params.GetValue(CFSTR("SHOW_INVISIBLE_ITEMS"), boolValue) && boolValue )
         outAdditionalNavServiesFlags |= kOMCFilePanelAllowInvisibleItems;
 

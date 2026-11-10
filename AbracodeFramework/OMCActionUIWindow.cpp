@@ -236,7 +236,7 @@ OMCActionUIWindow::Init()
 	params.CopyValue( CFSTR("WINDOW_DID_ACTIVATE_SUBCOMMAND_ID"), mDidActivateSubcommandID );
 	params.CopyValue( CFSTR("WINDOW_DID_DEACTIVATE_SUBCOMMAND_ID"), mDidDeactivateSubcommandID );
 
-	Boolean isBlocking = true; // a blocking window when not given
+	bool isBlocking = true; // a blocking window when not given
 	params.GetValue( CFSTR("IS_BLOCKING"), isBlocking );
 	mIsModal = isBlocking;
 

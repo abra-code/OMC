@@ -22,7 +22,7 @@ public:
 	}
 
 	template< typename CFT >
-	Boolean GetValueAtIndex( CFIndex idx, CFT &outValue ) const noexcept
+	bool GetValueAtIndex( CFIndex idx, CFT &outValue ) const noexcept
 	{
 		if(this->mRef != NULL)
 		{
@@ -33,7 +33,7 @@ public:
 	}
 
 	template< typename CFT >
-	Boolean CopyValueAtIndex( CFIndex idx, CFT &outValue ) const noexcept
+	bool CopyValueAtIndex( CFIndex idx, CFT &outValue ) const noexcept
 	{
 		if( GetValueAtIndex(idx, outValue) )
 		{

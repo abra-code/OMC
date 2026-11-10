@@ -8,6 +8,7 @@
 #pragma once
 
 #include <CoreFoundation/CoreFoundation.h>
+#include <cstddef>
 #include "DebugSettings.h"
 
 //inherit from ARefCounted and always alocate with operator new
@@ -215,11 +216,11 @@ private:
 	T*					mRef;
 };
 
-template< class T > bool operator==( ARefCountedObj<T>& inObj, nullptr_t ) noexcept
+template< class T > bool operator==( ARefCountedObj<T>& inObj, std::nullptr_t ) noexcept
 {
    return ( (T*)inObj == nullptr );
 }
-template< class T > bool operator!=( ARefCountedObj<T>& inObj, nullptr_t ) noexcept
+template< class T > bool operator!=( ARefCountedObj<T>& inObj, std::nullptr_t ) noexcept
 {
    return ( (T*)inObj != nullptr );
 }

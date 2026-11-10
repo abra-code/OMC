@@ -203,7 +203,7 @@ GetMultiCommandParams(CommandDescription &outDesc, CFDictionaryRef inParams)
             ACFDict sortOptions(optionsDict);
             sortOptions.GetValue( CFSTR("SORT_ASCENDING"), outDesc.sortAscending );
             
-            Boolean boolValue;
+            bool boolValue;
             if( sortOptions.GetValue(CFSTR("COMPARE_CASE_INSENSITIVE"), boolValue) && boolValue )
                 outDesc.sortOptions |= kCFCompareCaseInsensitive;
                 
@@ -506,7 +506,7 @@ GetContextMatchingParams(CommandDescription &outDesc, CFDictionaryRef inParams)
         }
     }
     
-    Boolean boolValue;
+    bool boolValue;
     if( params.GetValue(CFSTR("COMPARE_CASE_INSENSITIVE"), boolValue) && boolValue )
         outDesc.matchCompareOptions |= kCFCompareCaseInsensitive;
 
@@ -915,14 +915,14 @@ GetOneCommandParams(CommandDescription &outDesc, CFDictionaryRef inOneCommand, C
 
     oneCmd.GetValue(CFSTR("MAX_PARALLEL_TASK_COUNT"), outDesc.maxTaskCount);
 
-    Boolean useNavDialogForMissingFileContext = true;
+    bool useNavDialogForMissingFileContext = true;
     oneCmd.GetValue(CFSTR("USE_NAV_DIALOG_FOR_MISSING_FILE_CONTEXT"), useNavDialogForMissingFileContext);
     if(useNavDialogForMissingFileContext)
     {
         outDesc.executionOptions |= kExecutionOption_UseNavDialogForMissingFileContext;
     }
     
-    Boolean waitForTaskCompletion = false;
+    bool waitForTaskCompletion = false;
     oneCmd.GetValue(CFSTR("WAIT_FOR_TASK_COMPLETION"), waitForTaskCompletion);
     if(waitForTaskCompletion)
     {

@@ -86,8 +86,8 @@ struct CounterParams
 	CFIndex rangeStartIndex;
 	double rangeStartValue;
 	double rangeEndValue;
-	Boolean isCountdown;
-	Boolean suppressNonMatchingText;
+	bool isCountdown;
+	bool suppressNonMatchingText;
 	Boolean regExprValid;
 };
 
@@ -117,7 +117,7 @@ struct StepsParams
 	OneStep			*steps;
 	UInt8			matchMethod;
 	UInt8			matchCompareOptions;//currently only kCFCompareCaseInsensitive
-	Boolean			suppressNonMatchingText;
+	bool			suppressNonMatchingText;
 
 };
 

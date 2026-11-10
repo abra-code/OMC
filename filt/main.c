@@ -205,10 +205,16 @@ int main (int argc, const char * argv[])
 
 	char *inputLine = NULL;
 	size_t lineLen = 0;
+	// getline (POSIX) reads into one buffer it grows; fgetln, used before, is BSD only
+	char *lineBuffer = NULL;
+	size_t lineCapacity = 0;
 	do
 	{
 		lineLen = 0;
-		inputLine = fgetln(stdin, &lineLen);//string not terminated with null char
+		ssize_t readLen = getline(&lineBuffer, &lineCapacity, stdin);
+		inputLine = (readLen > 0) ? lineBuffer : NULL;
+		if(readLen > 0)
+			lineLen = (size_t)readLen; // the line with its newline, if it had one
 		if((inputLine != NULL) && (lineLen > 0))//lineLen > 0 guards the inputLine[lineLen-1] accesses below
 		{
 			if(matches != NULL)
@@ -285,6 +291,7 @@ int main (int argc, const char * argv[])
 		}
 	}
 	while (inputLine != NULL);
+	free(lineBuffer);
 
 //don't nother relasing anything - we are dying now
 //	if(regExprErr == 0)

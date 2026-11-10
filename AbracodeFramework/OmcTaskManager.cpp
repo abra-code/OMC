@@ -412,7 +412,8 @@ OmcHostTaskManager::NoteTaskEnded(CFIndex finishedExecutorIndex, bool wasSynchro
                 OMCMainThreadSignal::RunReadyWork();
                 OMCDialog::ServicePendingMessages();
 
-                OSStatus __unused err = mPlugin->ExecuteSubcommand(mCurrCommand.name, nextCommandID, finishedTask->commandRuntimeData, nullptr);
+                OSStatus err = mPlugin->ExecuteSubcommand(mCurrCommand.name, nextCommandID, finishedTask->commandRuntimeData, nullptr);
+                (void)err; // not acted on here (__unused is a BSD attribute glibc does not define)
             }
             break;
 		}

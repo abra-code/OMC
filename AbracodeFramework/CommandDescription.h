@@ -94,7 +94,7 @@ typedef struct CommandDescription
     UInt8			escapeSpecialCharsMode {kEscapeWithBackslash};
     UInt8			multipleObjectProcessing {kMulObjProcessUnspecified};
     UInt8			sortMethod {kSortMethodNone};
-    UInt8			sortAscending {true};
+    bool			sortAscending {true};
     UInt8			sortOptions {0};
     CFObj<CFStringRef>		mulObjPrefix;
     CFObj<CFStringRef>		mulObjSuffix;
@@ -104,9 +104,9 @@ typedef struct CommandDescription
     CFObj<CFStringRef>		warningCancelStr;
     CFObj<CFStringRef>		submenuName;
     Boolean			isPrescanned {false};
-    Boolean			bringTerminalToFront {true};
-    Boolean			openNewTerminalSession {true};
-    Boolean			simulatePaste {false};
+    bool			bringTerminalToFront {true};
+    bool			openNewTerminalSession {true};
+    bool			simulatePaste {false};
     Boolean			nameIsDynamic {false};
     Boolean			nameContainsDynamicText {false};
     UInt16			inputDialogType {kInputNone};
@@ -134,9 +134,9 @@ typedef struct CommandDescription
     CFObj<CFMutableSetRef> specialRequestedNibControls; //set of special words to export
     Boolean			actOnlyInListedApps {false};//if true - activate only in those listed, if false - exclude those listed
     Boolean			debugging {false}; //set to true when control keyboard modifier is held
-    Boolean			disabled {false};
+    bool			disabled {false};
     Boolean			isSubcommand {false};
-    Boolean			urlInvocable {false}; //URL_INVOCABLE: the applet's "exe" URL may run this command
+    bool			urlInvocable {false}; //URL_INVOCABLE: the applet's "exe" URL may run this command
     SInt32			requiredOMCVersion {MIN_OMC_VERSION};
     SInt32			requiredMacOSMinVersion {MIN_MAC_OS_VERSION};
     SInt32			requiredMacOSMaxVersion {MAX_MAC_OS_VERSION};

@@ -333,7 +333,7 @@ CounterParams::Init(CFDictionaryRef counterDict, CFStringRef inLocTable, CFBundl
 {
 	ACFDict counterParams(counterDict);
 
-	Boolean caseInsensitive = false;
+	bool caseInsensitive = false;
 	counterParams.GetValue(CFSTR("COMPARE_CASE_INSENSITIVE"), caseInsensitive);
 
 	CFStringRef regExStr = NULL;
@@ -592,7 +592,7 @@ StepsParams::Init(CFDictionaryRef stepsDict, CFStringRef inLocTable, CFBundleRef
 		}
 	}
 
-	Boolean boolValue = false;
+	bool boolValue = false;
 	if( stepsParams.GetValue(CFSTR("COMPARE_CASE_INSENSITIVE"), boolValue) && boolValue )
 		matchCompareOptions |= kCFCompareCaseInsensitive;						
 

@@ -8,10 +8,10 @@ typedef struct OneObjProperties
 	CFObj<CFURLRef> url;
 	CFObj<CFStringRef> extension;
     CFObj<CFStringRef> refreshPath;//refresh path is associated with object. this is one-to-one relationship
-    Boolean isRegularFile { false };
-    Boolean isDirectory { false };
-    Boolean isPackage { false };
-    Boolean reserved { false };
+    bool isRegularFile { false };
+    bool isDirectory { false };
+    bool isPackage { false };
+    bool reserved { false };
 } OneObjProperties;
 
 

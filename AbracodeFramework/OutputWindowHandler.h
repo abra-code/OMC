@@ -106,7 +106,7 @@ protected:
 	std::unique_ptr<OMCScheduledCall> mDeleteCall;
 
 	CFTimeInterval			mAutoCloseTimeout {-1.0};
-	Boolean					mAutoCloseOnSuccessOnly {true};
+	bool					mAutoCloseOnSuccessOnly {true};
 	bool					mClosedByUser {false};
 
 private:

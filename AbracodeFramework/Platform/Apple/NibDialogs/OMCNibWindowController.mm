@@ -83,7 +83,7 @@
 	params.CopyValue( CFSTR("WINDOW_DID_DEACTIVATE_SUBCOMMAND_ID"), windowDidDeactivateID );
     self.windowDidDeactivateSubcommandID = (NSString *)CFBridgingRelease(windowDidDeactivateID.Detach());
 
-	Boolean isBlocking = true;//default is modal
+	bool isBlocking = true;//default is modal
 	params.GetValue( CFSTR("IS_BLOCKING"), isBlocking );
 	mIsModal = isBlocking;
 
@@ -1124,7 +1124,7 @@
 				NSUInteger *selectedRows = (NSUInteger *)calloc(selectedRowsCount, sizeof(NSUInteger));//sel iterator takes ownership
 				[indexSet getIndexes:selectedRows maxCount:selectedRowsCount inIndexRange:NULL];
 			
-				Boolean isReverseIter = false;
+				bool isReverseIter = false;
 				params.GetValue( CFSTR("IS_REVERSE"), isReverseIter );
 				if( isReverseIter && (selectedRowsCount > 1) )
 				{
