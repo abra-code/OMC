@@ -32,24 +32,6 @@ void OMCServiceObserverCallback( OmcObserverMessage inMessage, CFIndex inTaskID,
 
 @implementation OMCService
 
-- (id)init
-{
-    self = [super init];
-	if(self == nil)
-		return nil;
-
-    mObserver = NULL;
-	mAllTasksFinished = NO;
-    return self;
-}
-
-- (void)dealloc
-{
-    OMCUnregisterObserver( mObserver ); // we don't want to listen anymore
-    OMCReleaseObserver( mObserver ); // release the observer
-    mObserver = NULL;
-}
-
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
 {
@@ -178,20 +160,10 @@ void OMCServiceObserverCallback( OmcObserverMessage inMessage, CFIndex inTaskID,
 	{
         if( noErr == OMCExamineContext(omcExec, commandRef, (__bridge CFTypeRef)(contextObj), kOMCExamineContextDefault) )
 		{
-			if(mObserver == NULL)
-			{
-                OMCObserverRef observer = OMCCreateObserver( kOmcObserverAllMessages, OMCServiceObserverCallback, (__bridge void *)self );
-				OMCAddObserver( omcExec, observer );
-                [self setObserver:observer]; // retaining and taking ownership
-                OMCReleaseObserver(observer); // release local ref
-			}
-			
-			if(wantsToReturnText)
-			{
-				self.resultString = [[NSMutableString alloc] init];
-			}
-			
-			mAllTasksFinished = NO;
+			// This request's own observer, text and end: another request may arrive while this one waits
+			OMCServiceRequest *request = [[OMCServiceRequest alloc] initReturningText:wantsToReturnText];
+			[request observeExecutor:omcExec];
+
 			OSStatus osError = OMCExecuteCommand( omcExec, commandRef );
 			if(osError != noErr)
 			{
@@ -201,14 +173,13 @@ void OMCServiceObserverCallback( OmcObserverMessage inMessage, CFIndex inTaskID,
 			else if(wantsToReturnText)
 			{
 				//we need to wait here for the result and assemble the text
-				[self waitForAllTasksFinished];
+				[request waitForAllTasksFinished];
 
-				if(self.resultString != NULL)
+				if(request.resultString != NULL)
 				{
-					//NSLog(@"Setting pasteboard text to: %@", mResultString);
 					NSArray<NSPasteboardType> *supportedTextTypes = @[NSPasteboardTypeString];
 					[pboard declareTypes:supportedTextTypes owner:NULL];
-					[pboard setString:self.resultString forType:NSPasteboardTypeString];
+					[pboard setString:request.resultString forType:NSPasteboardTypeString];
 				}
 			}
 		}
@@ -220,6 +191,44 @@ void OMCServiceObserverCallback( OmcObserverMessage inMessage, CFIndex inTaskID,
 	}
 
 	OMCReleaseExecutor( omcExec );//safe to release here. task lives on if execution is asynchronous
+}
+
+
+@end
+
+@implementation OMCServiceRequest
+
+- (instancetype)initReturningText:(BOOL)inReturnsText
+{
+	self = [super init];
+	if(self == nil)
+		return nil;
+	mObserver = NULL;
+	mAllTasksFinished = NO;
+	_resultString = inReturnsText ? [[NSMutableString alloc] init] : nil;
+	return self;
+}
+
+- (instancetype)init
+{
+	return [self initReturningText:NO];
+}
+
+- (void)dealloc
+{
+	OMCUnregisterObserver( mObserver ); // we don't want to listen anymore
+	OMCReleaseObserver( mObserver ); // release the observer
+	mObserver = NULL;
+}
+
+- (void)observeExecutor:(OMCExecutorRef)inExecutor
+{
+	OMCObserverRef observer = OMCCreateObserver( kOmcObserverAllMessages, OMCServiceObserverCallback, (__bridge void *)self );
+	if(observer == NULL)
+		return;
+	OMCAddObserver( inExecutor, observer );
+	[self setObserver:observer]; // retaining and taking ownership
+	OMCReleaseObserver(observer); // release local ref
 }
 
 - (void)waitForAllTasksFinished
@@ -260,7 +269,7 @@ void OMCServiceObserverCallback( OmcObserverMessage inMessage, CFIndex inTaskID,
             id __weak objcObject = (__bridge id)inResult;
 			if([objcObject isKindOfClass:[NSString class]])
 			{
-                [self.resultString appendString:(NSString *)objcObject];
+                [_resultString appendString:(NSString *)objcObject];
 			}
 		}
 		break;
