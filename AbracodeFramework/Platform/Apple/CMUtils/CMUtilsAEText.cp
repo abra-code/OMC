@@ -82,7 +82,7 @@ CMUtils::CreateCFStringFromAEDesc(const AEDesc &inDesc, long inReplaceOption)
 	}
 #endif
 
-	CFStringRef outString = NULL;
+	CFObj<CFStringRef> outString;
 
 	if( (inDesc.descriptorType == typeUnicodeText) && (inDesc.dataHandle != NULL) )
 	{
@@ -102,7 +102,7 @@ CMUtils::CreateCFStringFromAEDesc(const AEDesc &inDesc, long inReplaceOption)
             else if(inReplaceOption == kTextReplaceCRsWithLFs)
                 ReplaceUnicodeCharacters(newBuffer, byteCount/sizeof(UniChar), 0x000D, 0x000A);
         
-            outString = ::CFStringCreateWithCharacters(kCFAllocatorDefault, newBuffer, byteCount/sizeof(UniChar) );
+            outString.Adopt( ::CFStringCreateWithCharacters(kCFAllocatorDefault, newBuffer, byteCount/sizeof(UniChar) ) );
         }
 	}
 	else if( (inDesc.descriptorType == typeChar) && (inDesc.dataHandle != NULL) )
@@ -116,7 +116,7 @@ CMUtils::CreateCFStringFromAEDesc(const AEDesc &inDesc, long inReplaceOption)
             else if(inReplaceOption == kTextReplaceCRsWithLFs)
                 ReplaceCharacters(newBuffer.data(), byteCount, 0x0D, 0x0A);
 
-            outString = ::CFStringCreateWithBytes(kCFAllocatorDefault, (const UInt8*)newBuffer.data(), byteCount, CFStringGetSystemEncoding(), true);
+            outString.Adopt( ::CFStringCreateWithBytes(kCFAllocatorDefault, (const UInt8*)newBuffer.data(), byteCount, CFStringGetSystemEncoding(), true) );
         }
 	}
 	else if( (inDesc.descriptorType != typeNull) && (inDesc.dataHandle != NULL) ) 
@@ -144,7 +144,7 @@ CMUtils::CreateCFStringFromAEDesc(const AEDesc &inDesc, long inReplaceOption)
                         else if(inReplaceOption == kTextReplaceCRsWithLFs)
                             ReplaceUnicodeCharacters(newBuffer, byteCount/sizeof(UniChar), 0x000D, 0x000A);
 
-                        outString = ::CFStringCreateWithCharacters(kCFAllocatorDefault, newBuffer, byteCount/sizeof(UniChar) );
+                        outString.Adopt( ::CFStringCreateWithCharacters(kCFAllocatorDefault, newBuffer, byteCount/sizeof(UniChar) ) );
                     }
 				}
 		}
@@ -162,7 +162,7 @@ CMUtils::CreateCFStringFromAEDesc(const AEDesc &inDesc, long inReplaceOption)
                         else if(inReplaceOption == kTextReplaceCRsWithLFs)
                             ReplaceCharacters(newBuffer.data(), byteCount, 0x0D, 0x0A);
 
-                        outString = ::CFStringCreateWithBytes(kCFAllocatorDefault, (const UInt8*)newBuffer.data(), byteCount, CFStringGetSystemEncoding(), true);
+                        outString.Adopt( ::CFStringCreateWithBytes(kCFAllocatorDefault, (const UInt8*)newBuffer.data(), byteCount, CFStringGetSystemEncoding(), true) );
                     }
 				}
 		}
@@ -173,7 +173,7 @@ CMUtils::CreateCFStringFromAEDesc(const AEDesc &inDesc, long inReplaceOption)
 		DEBUG_CSTR( "CMUtils::CreateCFStringFromAEDesc: NULL string returned\n" );
 	}
 
-	return outString;
+	return outString.Detach();
 }
 
 OSStatus

@@ -92,13 +92,13 @@ CreateTextWithReplacedLineEndings(CFStringRef inText, long inReplaceOption)
 	if( (inReplaceOption != kTextReplaceLFsWithCRs) && (inReplaceOption != kTextReplaceCRsWithLFs) )
 		return (CFStringRef)CFRetain(inText);
 
-	CFMutableStringRef outText = CFStringCreateMutableCopy(kCFAllocatorDefault, 0, inText);
+	CFObj<CFMutableStringRef> outText( CFStringCreateMutableCopy(kCFAllocatorDefault, 0, inText) );
 	if(outText == NULL)
 		return NULL;
 	CFStringRef from = (inReplaceOption == kTextReplaceLFsWithCRs) ? CFSTR("\n") : CFSTR("\r");
 	CFStringRef to = (inReplaceOption == kTextReplaceLFsWithCRs) ? CFSTR("\r") : CFSTR("\n");
 	CFStringFindAndReplace(outText, from, to, CFRangeMake(0, CFStringGetLength(outText)), 0);
-	return outText;
+	return outText.Detach();
 }
 
 void

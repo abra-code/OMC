@@ -500,11 +500,11 @@ ACFJSONCreatePropertyList(CFDataRef inData, CFPropertyListMutabilityOptions inMu
 	}
 
 	bool mutableContainers = (inMutability != kCFPropertyListImmutable);
-	CFTypeRef result = CreateCFValue(yyjson_doc_get_root(doc), 0, mutableContainers);
+	CFObj<CFTypeRef> result( CreateCFValue(yyjson_doc_get_root(doc), 0, mutableContainers) );
 	yyjson_doc_free(doc);
 	if(result == nullptr)
 		SetError(outError, ::CFStringCreateCopy(kCFAllocatorDefault, CFSTR("JSON text is nested in more than 512 arrays and objects")));
-	return result;
+	return result.Detach();
 }
 
 CFDataRef

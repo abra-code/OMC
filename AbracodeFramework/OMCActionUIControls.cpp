@@ -153,7 +153,7 @@ static CFArrayRef
 CreateListRows(CFArrayRef inItems) noexcept
 {
 	CFIndex count = (inItems != nullptr) ? ::CFArrayGetCount(inItems) : 0;
-	CFMutableArrayRef rows = ::CFArrayCreateMutable(kCFAllocatorDefault, count, &kCFTypeArrayCallBacks);
+	CFObj<CFMutableArrayRef> rows( ::CFArrayCreateMutable(kCFAllocatorDefault, count, &kCFTypeArrayCallBacks) );
 	for(CFIndex i = 0; i < count; i++)
 	{
 		CFTypeRef item = ::CFArrayGetValueAtIndex(inItems, i);
@@ -162,7 +162,7 @@ CreateListRows(CFArrayRef inItems) noexcept
 		CFObj<CFArrayRef> row( ::CFArrayCreate(kCFAllocatorDefault, &item, 1, &kCFTypeArrayCallBacks) );
 		::CFArrayAppendValue(rows, row);
 	}
-	return rows;
+	return rows.Detach();
 }
 
 // Each string split into cells at its tabs; items that are not strings are left out
@@ -170,7 +170,7 @@ static CFArrayRef
 CreateTableRows(CFArrayRef inTabSeparatedRows) noexcept
 {
 	CFIndex count = (inTabSeparatedRows != nullptr) ? ::CFArrayGetCount(inTabSeparatedRows) : 0;
-	CFMutableArrayRef rows = ::CFArrayCreateMutable(kCFAllocatorDefault, count, &kCFTypeArrayCallBacks);
+	CFObj<CFMutableArrayRef> rows( ::CFArrayCreateMutable(kCFAllocatorDefault, count, &kCFTypeArrayCallBacks) );
 	for(CFIndex i = 0; i < count; i++)
 	{
 		CFTypeRef item = ::CFArrayGetValueAtIndex(inTabSeparatedRows, i);
@@ -180,7 +180,7 @@ CreateTableRows(CFArrayRef inTabSeparatedRows) noexcept
 		if(cells != nullptr)
 			::CFArrayAppendValue(rows, cells);
 	}
-	return rows;
+	return rows.Detach();
 }
 
 void
@@ -367,7 +367,7 @@ static CFArrayRef
 CreateButtonDescriptors(CFArrayRef inButtonSpecs) noexcept
 {
 	CFIndex count = (inButtonSpecs != nullptr) ? ::CFArrayGetCount(inButtonSpecs) : 0;
-	CFMutableArrayRef buttons = ::CFArrayCreateMutable(kCFAllocatorDefault, count, &kCFTypeArrayCallBacks);
+	CFObj<CFMutableArrayRef> buttons( ::CFArrayCreateMutable(kCFAllocatorDefault, count, &kCFTypeArrayCallBacks) );
 	for(CFIndex i = 0; i < count; i++)
 	{
 		CFTypeRef spec = ::CFArrayGetValueAtIndex(inButtonSpecs, i);
@@ -390,7 +390,7 @@ CreateButtonDescriptors(CFArrayRef inButtonSpecs) noexcept
 			::CFDictionarySetValue(button, CFSTR("actionID"), actionID);
 		::CFArrayAppendValue(buttons, button);
 	}
-	return buttons;
+	return buttons.Detach();
 }
 
 void
@@ -513,9 +513,9 @@ CreateStringAndFree(char *inText) noexcept
 {
 	if(inText == nullptr)
 		return nullptr;
-	CFStringRef outString = ::CFStringCreateWithCString(kCFAllocatorDefault, inText, kCFStringEncodingUTF8);
+	CFObj<CFStringRef> outString( ::CFStringCreateWithCString(kCFAllocatorDefault, inText, kCFStringEncodingUTF8) );
 	actionUIFreeString(inText);
-	return outString;
+	return outString.Detach();
 }
 
 // ActionUI's JSON as a property list (the caller releases it), or NULL; frees inJSON

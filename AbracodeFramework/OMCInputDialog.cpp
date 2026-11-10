@@ -58,20 +58,20 @@ static CFStringRef CopyValueString(const char *inWindowUUID, int64_t inViewID)
 	char *value = actionUIGetElementValueString(inWindowUUID, inViewID, 0, nullptr);
 	if(value == nullptr)
 		return nullptr;
-	CFStringRef outString = CFStringCreateWithCString(kCFAllocatorDefault, value, kCFStringEncodingUTF8);
+	CFObj<CFStringRef> outString( CFStringCreateWithCString(kCFAllocatorDefault, value, kCFStringEncodingUTF8) );
 	actionUIFreeString(value);
-	return outString;
+	return outString.Detach();
 }
 
 static CFStringRef CopyFrameworkString(CFStringRef inKey)
 {
 	CFBundleRef frameworkBundle = OMCGetEngineBundle();
-	CFStringRef outString = nullptr;
+	CFObj<CFStringRef> outString;
 	if(frameworkBundle != nullptr)
-		outString = CFCopyLocalizedStringFromTableInBundle(inKey, CFSTR("Private"), frameworkBundle, "");
+		outString.Adopt( CFCopyLocalizedStringFromTableInBundle(inKey, CFSTR("Private"), frameworkBundle, "") );
 	if(outString == nullptr)
-		outString = (CFStringRef)CFRetain(inKey);
-	return outString;
+		outString.Adopt( inKey, kCFObjRetain );
+	return outString.Detach();
 }
 
 static bool StringsEqual(CFStringRef inA, CFStringRef inB)

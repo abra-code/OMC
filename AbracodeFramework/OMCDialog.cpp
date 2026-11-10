@@ -143,7 +143,7 @@ OMCDialog::FindDialogByUUID(CFStringRef inUUID)
 CFStringRef
 OMCDialog::CreateControlValueString(CFTypeRef controlValue, CFDictionaryRef customProperties, UInt16 escSpecialCharsMode, bool isEnvStyle) noexcept
 {
-	CFStringRef newStrRef = nullptr;
+	CFObj<CFStringRef> newStrRef;
 	if(controlValue == nullptr)
 		return nullptr;
 	
@@ -161,7 +161,7 @@ OMCDialog::CreateControlValueString(CFTypeRef controlValue, CFDictionaryRef cust
 	CFTypeID valType = ::CFGetTypeID( (CFTypeRef)controlValue );
 	if( valType == ACFType<CFStringRef>::sTypeID )//regular string
 	{
-		newStrRef = CreateEscapedStringCopy( (CFStringRef)(CFTypeRef)controlValue, escSpecialCharsMode);
+		newStrRef.Adopt( CreateEscapedStringCopy( (CFStringRef)(CFTypeRef)controlValue, escSpecialCharsMode) );
 	}
 	else if( valType == ACFType<CFArrayRef>::sTypeID )
 	{
@@ -184,10 +184,10 @@ OMCDialog::CreateControlValueString(CFTypeRef controlValue, CFDictionaryRef cust
 				separator = oneProperty;
 
 		}
-		newStrRef = CreateCombinedString( (CFArrayRef)(CFTypeRef)controlValue, separator, prefix, suffix, escSpecialCharsMode );
+		newStrRef.Adopt( CreateCombinedString( (CFArrayRef)(CFTypeRef)controlValue, separator, prefix, suffix, escSpecialCharsMode ) );
 	}
 
-	return newStrRef;
+	return newStrRef.Detach();
 }
 
 Boolean

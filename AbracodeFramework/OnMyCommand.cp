@@ -2458,7 +2458,7 @@ OnMyCommand::CreateCommandStringWithObjects(CFArrayRef inFragments,
 	if( (inFragments == nullptr) || (mCommandList == nullptr) || (mCommandCount == 0) || (contextData.objectList.size() == 0) || (mCurrCommandIndex >= mCommandCount) )
 		return nullptr;
 
-	CFMutableStringRef theCommand = CFStringCreateMutable(kCFAllocatorDefault, 0);
+	CFObj<CFMutableStringRef> theCommand( CFStringCreateMutable(kCFAllocatorDefault, 0) );
 	if(theCommand == nullptr)
 		return nullptr;
 
@@ -2501,7 +2501,7 @@ OnMyCommand::CreateCommandStringWithObjects(CFArrayRef inFragments,
 		}
 	}
 	
-	return theCommand;
+	return theCommand.Detach();
 }
 
 //normally command is not localized but this API is used to create dynamic comamnd name, which might be localized
@@ -2516,7 +2516,7 @@ OnMyCommand::CreateCommandStringWithText(CFArrayRef inFragments,
 	if( (inFragments == nullptr) || (mCommandList == nullptr) || (mCommandCount == 0) || (mCurrCommandIndex >= mCommandCount) )
 		return NULL;
 
-	CFMutableStringRef theCommand = ::CFStringCreateMutable( kCFAllocatorDefault, 0 );
+	CFObj<CFMutableStringRef> theCommand( ::CFStringCreateMutable( kCFAllocatorDefault, 0 ) );
 	if(theCommand == nullptr)
 		return nullptr;
 
@@ -2541,7 +2541,7 @@ OnMyCommand::CreateCommandStringWithText(CFArrayRef inFragments,
 		}
 	}
 	
-	return theCommand;
+	return theCommand.Detach();
 }
 
 CFMutableDictionaryRef
@@ -2646,7 +2646,7 @@ OnMyCommand::CreateCombinedStringWithObjects(CFArrayRef inArray,
 
 	ARefCountedObj<OMCDialog> activeDialog = OMCDialog::FindDialogByUUID(commandRuntimeData.GetAssociatedDialogUUID());
     
-	CFMutableStringRef thePath = CFStringCreateMutable(kCFAllocatorDefault, 0);
+	CFObj<CFMutableStringRef> thePath( CFStringCreateMutable(kCFAllocatorDefault, 0) );
 	if(thePath == nullptr)
 		return nullptr;
 
@@ -2665,7 +2665,7 @@ OnMyCommand::CreateCombinedStringWithObjects(CFArrayRef inArray,
 		}
 	}
 	
-	return thePath;
+	return thePath.Detach();
 }
 
 
@@ -3466,14 +3466,13 @@ OnMyCommand::CreateDynamicCommandName(const CommandDescription &currCommand,
 {
     OMCContextData &contextData = commandRuntimeData.GetContextData();
     
-	CFStringRef commandName = NULL;
+	CFObj<CFStringRef> commandName;
 	if( (contextData.objectList.size() > 1) && (currCommand.namePlural != NULL) )
 	{
-		commandName = currCommand.namePlural;
 		if(inLocTableName != NULL)
-			commandName = ::CFCopyLocalizedStringFromTableInBundle( commandName, inLocTableName, inLocBundleRef, "");
+			commandName.Adopt( ::CFCopyLocalizedStringFromTableInBundle( currCommand.namePlural, inLocTableName, inLocBundleRef, "") );
 		else
-			::CFRetain(commandName);
+			commandName.Adopt( currCommand.namePlural, kCFObjRetain );
 	}
 	else if( currCommand.nameIsDynamic && currCommand.nameContainsDynamicText && (contextData.contextText != NULL) )
 	{
@@ -3529,32 +3528,32 @@ OnMyCommand::CreateDynamicCommandName(const CommandDescription &currCommand,
 		{
 			CFObj<CFMutableStringRef> shortenedString( ::CFStringCreateMutableCopy(kCFAllocatorDefault, kMaxCharCount + 4, subString) );
 			::CFStringAppend(shortenedString, CFSTR("...") );
-			commandName = CreateCommandStringWithText(currCommand.name,
+			commandName.Adopt( CreateCommandStringWithText(currCommand.name,
                                                       shortenedString,
                                                       commandRuntimeData,
                                                       kEscapeNone,
                                                       inLocTableName,
-                                                      inLocBundleRef);
+                                                      inLocBundleRef) );
 		}
 		else
 		{//short enough and no newlines to use the whole string
-			commandName = CreateCommandStringWithText(currCommand.name,
+			commandName.Adopt( CreateCommandStringWithText(currCommand.name,
                                                       newString,
                                                       commandRuntimeData,
                                                       kEscapeNone,
                                                       inLocTableName,
-                                                      inLocBundleRef);
+                                                      inLocBundleRef) );
 		}
 	}
 	else
 	{
-		commandName = CreateCombinedStringWithObjects(currCommand.name,
+		commandName.Adopt( CreateCombinedStringWithObjects(currCommand.name,
                                                       commandRuntimeData,
                                                       inLocTableName,
-                                                      inLocBundleRef);
+                                                      inLocBundleRef) );
 	}
 
-	return commandName;
+	return commandName.Detach();
 }
 
 

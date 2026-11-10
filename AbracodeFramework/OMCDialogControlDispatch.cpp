@@ -94,14 +94,14 @@ bool HasWindowEntry(ACFDict &inMessage, CFStringRef inKey)
 CFArrayRef CreateButtonSpecs(CFArrayRef inArguments)
 {
 	CFIndex count = ::CFArrayGetCount(inArguments);
-	CFMutableArrayRef specs = ::CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
+	CFObj<CFMutableArrayRef> specs( ::CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks) );
 	for(CFIndex i = 2; i < count; i++)
 	{
 		CFStringRef spec = StringAt(inArguments, i);
 		if(spec != nullptr)
 			::CFArrayAppendValue(specs, spec);
 	}
-	return specs;
+	return specs.Detach();
 }
 
 // MOVE, SCROLL and RESIZE's two numbers, as integers, 0 when missing

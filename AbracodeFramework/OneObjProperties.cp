@@ -238,9 +238,9 @@ CreateObjPathRelativeToBase(OneObjProperties *inObj, void *ioParam) noexcept
 			theRange.length = ::CFStringGetLength(commonParentPath);
 
 			//relative path will not be longer than full path
-			CFMutableStringRef	relPath = ::CFStringCreateMutableCopy(kCFAllocatorDefault, ::CFStringGetLength(fullPath), fullPath);
+			CFObj<CFMutableStringRef> relPath( ::CFStringCreateMutableCopy(kCFAllocatorDefault, ::CFStringGetLength(fullPath), fullPath) );
  			::CFStringDelete(relPath, theRange);//delete the first part of the path which we assume is the same as base path
- 			return relPath;
+ 			return relPath.Detach();
  		}
  	}
  	return nullptr;
@@ -261,7 +261,7 @@ CreateStringFromListOrSingleObject( OneObjProperties *inObjList, CFIndex inObjCo
 
 	if(inCurrIndex == -1)//process all together
 	{
-		CFMutableStringRef mutableStr = ::CFStringCreateMutable(kCFAllocatorDefault, 0);
+		CFObj<CFMutableStringRef> mutableStr( ::CFStringCreateMutable(kCFAllocatorDefault, 0) );
 		for(CFIndex i = 0; i < inObjCount; i++)
 		{
 			oneObj = inObjList + i;
@@ -269,11 +269,11 @@ CreateStringFromListOrSingleObject( OneObjProperties *inObjList, CFIndex inObjCo
 			
 			if(newStrRef != NULL)
 			{
-				CFStringRef  cpyStrRef = CreateEscapedStringCopy(newStrRef, escSpecialCharsMode);
+				CFObj<CFStringRef> cpyStrRef( CreateEscapedStringCopy(newStrRef, escSpecialCharsMode) );
 				if(cpyStrRef != NULL)
 				{
 					CFObj<CFStringRef> strDel(newStrRef);//we have a copy, we may dispose of the original
-					newStrRef = cpyStrRef;
+					newStrRef = cpyStrRef.Detach();
 				}
 				
 				CFObj<CFStringRef> newDel(newStrRef);
@@ -296,7 +296,7 @@ CreateStringFromListOrSingleObject( OneObjProperties *inObjList, CFIndex inObjCo
 				}
 			}
 		}
-		newStrRef = mutableStr;//assign new string to our main variable
+		newStrRef = mutableStr.Detach();//assign new string to our main variable
 	}
 	else if(inCurrIndex < inObjCount)
 	{//process just one
@@ -305,11 +305,11 @@ CreateStringFromListOrSingleObject( OneObjProperties *inObjList, CFIndex inObjCo
 
 		if( newStrRef != NULL )
   		{
-  			CFStringRef  cpyStrRef = CreateEscapedStringCopy(newStrRef, escSpecialCharsMode);
+  			CFObj<CFStringRef> cpyStrRef( CreateEscapedStringCopy(newStrRef, escSpecialCharsMode) );
 			if(cpyStrRef != NULL)
 			{
 				CFObj<CFStringRef> strDel(newStrRef);//we have a copy, we may dispose of the original
-				newStrRef = cpyStrRef;
+				newStrRef = cpyStrRef.Detach();
 			}
 		}
 	}

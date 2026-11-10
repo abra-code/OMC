@@ -20,8 +20,7 @@ CFURLRef CopyURLFromFileURLAEDesc(const AEDesc &inDesc)
     std::vector<char> newBuffer(byteCount);
     if( ::AEGetDescData(&inDesc, newBuffer.data(), byteCount) != noErr)
         return nullptr;
-    CFURLRef outURL = CFURLCreateWithBytes(kCFAllocatorDefault, (const UInt8 *)newBuffer.data(), newBuffer.size(), kCFStringEncodingUTF8, nullptr);
-    return outURL;
+    return CFURLCreateWithBytes(kCFAllocatorDefault, (const UInt8 *)newBuffer.data(), newBuffer.size(), kCFStringEncodingUTF8, nullptr);
 }
 
 CFURLRef

@@ -276,11 +276,11 @@ CFPropertyListRef CreatePropertyListAndFormat(CFURLRef plistURL, CFPropertyListM
     else if ((extFormat == kACFPropertyListFormat_xml) && (contentFormat == kACFPropertyListFormat_binary))
         format = kACFPropertyListFormat_binary;
 
-    CFPropertyListRef result = NULL;
+    CFObj<CFPropertyListRef> result;
     if (format == kACFPropertyListFormat_json)
     {
         CFObj<CFStringRef> jsonError;
-        result = ACFJSONCreatePropertyList(data, mutabilityOptions, &jsonError);
+        result.Adopt( ACFJSONCreatePropertyList(data, mutabilityOptions, &jsonError) );
         if (result == NULL)
         {
             if (extFormat == kACFPropertyListFormat_json)
@@ -289,7 +289,7 @@ CFPropertyListRef CreatePropertyListAndFormat(CFURLRef plistURL, CFPropertyListM
             }
             else
             {//it only looked like JSON - an old-style plist dictionary opens with '{' as well
-                result = CreateFromPlistData(data, mutabilityOptions);
+                result.Adopt( CreateFromPlistData(data, mutabilityOptions) );
                 if (result != NULL)
                     format = kACFPropertyListFormat_xml;
                 else
@@ -299,7 +299,7 @@ CFPropertyListRef CreatePropertyListAndFormat(CFURLRef plistURL, CFPropertyListM
     }
     else
     {
-        result = CreateFromPlistData(data, mutabilityOptions);
+        result.Adopt( CreateFromPlistData(data, mutabilityOptions) );
         if (result != NULL)
         {
             if (format != kACFPropertyListFormat_binary)
@@ -307,7 +307,7 @@ CFPropertyListRef CreatePropertyListAndFormat(CFURLRef plistURL, CFPropertyListM
         }
         else if (extFormat == kACFPropertyListFormat_unknown)
         {//unknown extension and unrecognizable content: JSON is the remaining candidate
-            result = ACFJSONCreatePropertyList(data, mutabilityOptions, NULL);
+            result.Adopt( ACFJSONCreatePropertyList(data, mutabilityOptions, NULL) );
             if (result != NULL)
                 format = kACFPropertyListFormat_json;
         }
@@ -319,7 +319,7 @@ CFPropertyListRef CreatePropertyListAndFormat(CFURLRef plistURL, CFPropertyListM
     if (outFormat != NULL)
         *outFormat = format;
 
-    return result;
+    return result.Detach();
 }
 
 CFPropertyListRef CreatePropertyList(CFURLRef plistURL, CFPropertyListMutabilityOptions mutabilityOptions)
@@ -343,9 +343,9 @@ CFURLRef CopyCommandFileURLInBundle(CFBundleRef inBundle, CFStringRef inFileName
     const CFStringRef kExtensions[] = { CFSTR("json"), CFSTR("plist") };
     for (CFStringRef ext : kExtensions)
     {
-        CFURLRef url = CFBundleCopyResourceURL(inBundle, baseName, ext, NULL);
+        CFObj<CFURLRef> url( CFBundleCopyResourceURL(inBundle, baseName, ext, NULL) );
         if (url != NULL)
-            return url; // +1, caller releases
+            return url.Detach(); // +1, caller releases
     }
     return NULL;
 }

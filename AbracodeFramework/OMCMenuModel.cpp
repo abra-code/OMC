@@ -35,12 +35,12 @@ CreateCommandsMenuSubmenuPath(CFStringRef inSubmenuName)
 
 	if(firstChar != (UniChar)'/')
 	{
-		CFMutableStringRef newName = ::CFStringCreateMutable(kCFAllocatorDefault, 0);
+		CFObj<CFMutableStringRef> newName( ::CFStringCreateMutable(kCFAllocatorDefault, 0) );
 		if(newName != nullptr)
 		{
 			::CFStringAppend(newName, CFSTR("/"));
 			::CFStringAppend(newName, inSubmenuName);
-			return newName;
+			return newName.Detach();
 		}
 	}
 	return (CFStringRef)::CFRetain(inSubmenuName);

@@ -426,7 +426,7 @@ GetInputDialogParams(CommandDescription &outDesc, CFDictionaryRef inParams)
 static CFMutableDictionaryRef
 CreateAllCoreEnvironmentVariablePlaceholders()
 {
-    CFMutableDictionaryRef outDict = ::CFDictionaryCreateMutable(kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+    CFObj<CFMutableDictionaryRef> outDict( ::CFDictionaryCreateMutable(kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks) );
     size_t theCount = std::size(SpecialWordAndIDList());
     for(size_t i = 0; i< theCount; i++)
     {
@@ -436,7 +436,7 @@ CreateAllCoreEnvironmentVariablePlaceholders()
         }
     }
 
-    return outDict;
+    return outDict.Detach();
 }
 
 //this applier replaces key-values in destination mutable dictionary

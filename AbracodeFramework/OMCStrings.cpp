@@ -166,10 +166,10 @@ CFStringRef CreateLowercaseString(CFStringRef inStr)
 	if(inStr == nullptr)
 		return nullptr;
 
-	CFMutableStringRef lowercaseStr = ::CFStringCreateMutableCopy(kCFAllocatorDefault, 0, inStr);
+	CFObj<CFMutableStringRef> lowercaseStr( ::CFStringCreateMutableCopy(kCFAllocatorDefault, 0, inStr) );
 	if(lowercaseStr != nullptr)
 		::CFStringLowercase(lowercaseStr, nullptr);
-	return lowercaseStr;
+	return lowercaseStr.Detach();
 }
 
 UInt32 StringToVersion(CFStringRef inString)
@@ -232,7 +232,7 @@ CFStringRef CreateVersionString(UInt32 inVersion)
     if(veryMinorVersion != 0)
         veryMinorStr.Adopt( CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR(".%d"), veryMinorVersion) );
     
-    CFMutableStringRef wholeStr = ::CFStringCreateMutable( kCFAllocatorDefault, 0);
+    CFObj<CFMutableStringRef> wholeStr( ::CFStringCreateMutable( kCFAllocatorDefault, 0) );
     
     if(mainStr != NULL)
         ::CFStringAppend( wholeStr, mainStr );
@@ -240,7 +240,7 @@ CFStringRef CreateVersionString(UInt32 inVersion)
     if(veryMinorStr != NULL)
         ::CFStringAppend( wholeStr, veryMinorStr );
     
-    return wholeStr;
+    return wholeStr.Detach();
 }
 
 // As NSString's stringByAddingPercentEncodingWithAllowedCharacters with URLQueryAllowedCharacterSet
@@ -512,9 +512,9 @@ CreateEscapedStringCopy(CFStringRef inStrRef, UInt16 escSpecialCharsMode)
 	{
 		case kEscapeWithBackslash:
 		{
-			CFMutableStringRef escapedStr = ::CFStringCreateMutableCopy(kCFAllocatorDefault, 0, inStrRef);
+			CFObj<CFMutableStringRef> escapedStr( ::CFStringCreateMutableCopy(kCFAllocatorDefault, 0, inStrRef) );
 			ReplaceSpecialCharsWithBackslashEscapes(escapedStr);
-			return escapedStr;
+			return escapedStr.Detach();
 		}
 
 		case kEscapeWithPercent:
@@ -531,16 +531,16 @@ CreateEscapedStringCopy(CFStringRef inStrRef, UInt16 escSpecialCharsMode)
 		
 		case kEscapeForAppleScript:
 		{
-			CFMutableStringRef escapedStr = ::CFStringCreateMutableCopy(kCFAllocatorDefault, 0, inStrRef);
+			CFObj<CFMutableStringRef> escapedStr( ::CFStringCreateMutableCopy(kCFAllocatorDefault, 0, inStrRef) );
 			ReplaceSpecialCharsWithEscapesForAppleScript(escapedStr);
-			return escapedStr;
+			return escapedStr.Detach();
 		}
 
 		case kEscapeWrapWithSingleQuotesForShell:
 		{
-			CFMutableStringRef escapedStr = ::CFStringCreateMutableCopy(kCFAllocatorDefault, 0, inStrRef);
+			CFObj<CFMutableStringRef> escapedStr( ::CFStringCreateMutableCopy(kCFAllocatorDefault, 0, inStrRef) );
 			WrapWithSingleQuotesForShell(escapedStr);
-			return escapedStr;
+			return escapedStr.Detach();
 		}
 	
 		case kEscapeNone:
@@ -561,7 +561,7 @@ CreateCombinedString( CFArrayRef inStringsArray, CFStringRef inSeparator, CFStri
 
     CFIndex itemCount = ::CFArrayGetCount(inStringsArray);
 
-    CFMutableStringRef mutableStr = ::CFStringCreateMutable(kCFAllocatorDefault, 0);
+    CFObj<CFMutableStringRef> mutableStr( ::CFStringCreateMutable(kCFAllocatorDefault, 0) );
     for(CFIndex i = 0; i < itemCount; i++)
     {
         CFTypeRef oneItem = ::CFArrayGetValueAtIndex(inStringsArray,i);
@@ -588,7 +588,7 @@ CreateCombinedString( CFArrayRef inStringsArray, CFStringRef inSeparator, CFStri
             }
         }
     }
-    return mutableStr;
+    return mutableStr.Detach();
 }
 
 CFStringRef

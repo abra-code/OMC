@@ -104,10 +104,10 @@ CreateJoinedString(CFStringRef inLeftOver, CFStringRef inMore)
 	if(inMore != NULL)
 		newLen += ::CFStringGetLength(inMore);
 
-	CFMutableStringRef combinedStrings = ::CFStringCreateMutableCopy(kCFAllocatorDefault, newLen, inLeftOver);
+	CFObj<CFMutableStringRef> combinedStrings( ::CFStringCreateMutableCopy(kCFAllocatorDefault, newLen, inLeftOver) );
 	if((combinedStrings != NULL) && (inMore != NULL))
 		::CFStringAppend(combinedStrings, inMore);
-	return combinedStrings;
+	return combinedStrings.Detach();
 }
 
 CFArrayRef SplitStringIntoLines(CFStringRef inString, CFObj<CFStringRef> &ioLeftPartialString)

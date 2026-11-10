@@ -140,13 +140,13 @@ CreateTableIDAndColumnFromString(CFStringRef inControlIDString, CFObj<CFStringRe
 	if(columnStrRange.length != columnLen)
 		return NULL;
 
-	CFStringRef controlID = NULL;
+	CFObj<CFStringRef> controlID;
 	CFRange idStrRange;
 	idStrRange.location = prefixLen;
 	idStrRange.length = columnStrRange.location - prefixLen;
 	if( idStrRange.length > 0)
 	{
-		controlID = ::CFStringCreateWithSubstring(kCFAllocatorDefault, inControlIDString, idStrRange);
+		controlID.Adopt( ::CFStringCreateWithSubstring(kCFAllocatorDefault, inControlIDString, idStrRange) );
 	}
 
 	CFRange numberStrRange;
@@ -156,7 +156,7 @@ CreateTableIDAndColumnFromString(CFStringRef inControlIDString, CFObj<CFStringRe
 	{
 		outColumnIndexStr = CFStringCreateWithSubstring(kCFAllocatorDefault, inControlIDString, numberStrRange);
 	}
-	return controlID;
+	return controlID.Detach();
 }
 
 // A macro, not a global: on Linux CFSTR cannot initialize anything outside a function
@@ -271,13 +271,13 @@ CreateActionUITableIDAndColumnFromString(CFStringRef inControlIDString, CFObj<CF
 	if(columnStrRange.length != columnLen)
 		return NULL;
 
-	CFStringRef controlID = NULL;
+	CFObj<CFStringRef> controlID;
 	CFRange idStrRange;
 	idStrRange.location = prefixLen;
 	idStrRange.length = columnStrRange.location - prefixLen;
 	if(idStrRange.length > 0)
 	{
-		controlID = ::CFStringCreateWithSubstring(kCFAllocatorDefault, inControlIDString, idStrRange);
+		controlID.Adopt( ::CFStringCreateWithSubstring(kCFAllocatorDefault, inControlIDString, idStrRange) );
 	}
 
 	CFRange numberStrRange;
@@ -287,7 +287,7 @@ CreateActionUITableIDAndColumnFromString(CFStringRef inControlIDString, CFObj<CF
 	{
 		outColumnIndexStr = CFStringCreateWithSubstring(kCFAllocatorDefault, inControlIDString, numberStrRange);
 	}
-	return controlID;
+	return controlID.Detach();
 }
 
 // Extract control ID XXX and HTML element ID YYYY from string: OMC_NIB_WEBVIEW_XXX_ELEMENT_YYY_VALUE or __NIB_WEBVIEW_XXX_ELEMENT_YYY_VALUE__
@@ -324,13 +324,13 @@ CreateWebViewIDAndElementIDFromString(CFStringRef inControlIDAndElementIDString,
 	if(elementStrRange.length != elementLen)
 		return NULL;
 
-	CFStringRef controlID = NULL;
+	CFObj<CFStringRef> controlID;
 	CFRange idStrRange;
 	idStrRange.location = prefixLen;
 	idStrRange.length = elementStrRange.location - prefixLen;
 	if( idStrRange.length > 0)
 	{
-		controlID = ::CFStringCreateWithSubstring(kCFAllocatorDefault, inControlIDAndElementIDString, idStrRange);
+		controlID.Adopt( ::CFStringCreateWithSubstring(kCFAllocatorDefault, inControlIDAndElementIDString, idStrRange) );
 	}
 
 	CFRange elementIDStrRange;
@@ -340,5 +340,5 @@ CreateWebViewIDAndElementIDFromString(CFStringRef inControlIDAndElementIDString,
 	{
 		outElementIDString = CFStringCreateWithSubstring(kCFAllocatorDefault, inControlIDAndElementIDString, elementIDStrRange);
 	}
-	return controlID;
+	return controlID.Detach();
 }

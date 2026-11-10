@@ -1005,7 +1005,7 @@ PrependPythonBinDirToEnvironmentPATH(CFStringRef pythonPath)
             return NULL; // not UTF-8: leave PATH as it is rather than drop the rest of it
     }
 
-    CFMutableStringRef newPath = ::CFStringCreateMutable(kCFAllocatorDefault, 0);
+    CFObj<CFMutableStringRef> newPath( ::CFStringCreateMutable(kCFAllocatorDefault, 0) );
     ::CFStringAppend(newPath, binDir);
     if (currentPath != nullptr)
     {
@@ -1013,7 +1013,7 @@ PrependPythonBinDirToEnvironmentPATH(CFStringRef pythonPath)
         ::CFStringAppend(newPath, currentPath);
     }
     
-    return newPath;
+    return newPath.Detach();
 }
 
 static CFStringRef
@@ -1041,14 +1041,14 @@ PrependBundlePackagesToEnvironmentPYTHONPATH()
         existing.Adopt( ::CFStringCreateWithCString(kCFAllocatorDefault, existingPythonPath, kCFStringEncodingUTF8) );
     }
 
-    CFMutableStringRef newPythonPath = ::CFStringCreateMutable(kCFAllocatorDefault, 0);
+    CFObj<CFMutableStringRef> newPythonPath( ::CFStringCreateMutable(kCFAllocatorDefault, 0) );
     ::CFStringAppend(newPythonPath, packagesPath);
     if (existing != nullptr)
     {
         ::CFStringAppend(newPythonPath, CFSTR(":"));
         ::CFStringAppend(newPythonPath, existing);
     }
-    return newPythonPath;
+    return newPythonPath.Detach();
 }
 
 static inline

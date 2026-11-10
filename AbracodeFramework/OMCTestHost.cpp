@@ -489,7 +489,7 @@ CFMutableDictionaryRef
 CreatePanelRecord(bool inIsSave, CFStringRef inClientName, CFStringRef inMessage, CFStringRef inDefaultName, CFStringRef inDefaultDirPath,
 					CFStringRef inIdentifier, CFStringRef inPrompt, CFArrayRef inAllowedContentTypes, UInt32 inFlags)
 {
-	CFMutableDictionaryRef record = CreateMutableDict();
+	CFObj<CFMutableDictionaryRef> record( CreateMutableDict() );
 	::CFDictionarySetValue(record, CFSTR("kind"), inIsSave ? CFSTR("save") : CFSTR("open"));
 	SetStringIfAny(record, CFSTR("title"), inClientName);
 	SetStringIfAny(record, CFSTR("message"), inMessage);
@@ -505,7 +505,7 @@ CreatePanelRecord(bool inIsSave, CFStringRef inClientName, CFStringRef inMessage
 		SetBool(record, CFSTR("canChooseDirectories"), (inFlags & kOMCFilePanelCanChooseDirectories) != 0);
 		SetBool(record, CFSTR("allowsMultiple"), (inFlags & kOMCFilePanelAllowMultipleItems) != 0);
 	}
-	return record;
+	return record.Detach();
 }
 
 // Whether a path names something, and whether that is a directory (following symlinks, as a panel does).
@@ -900,7 +900,7 @@ HandleRunCommand(CFDictionaryRef inParams)
 CFDictionaryRef
 CreateRunRecord(const TestRun &inRun)
 {
-	CFMutableDictionaryRef record = CreateMutableDict();
+	CFObj<CFMutableDictionaryRef> record( CreateMutableDict() );
 	SetNumber(record, CFSTR("run"), inRun.number);
 	::CFDictionarySetValue(record, CFSTR("commandID"), inRun.commandID);
 	SetBool(record, CFSTR("started"), inRun.started);
@@ -909,7 +909,7 @@ CreateRunRecord(const TestRun &inRun)
 	SetBool(record, CFSTR("dispatchedToWindow"), inRun.dispatchedToWindow);
 	SetNumber(record, CFSTR("status"), (long)inRun.status);
 	::CFDictionarySetValue(record, CFSTR("output"), (inRun.output != nullptr) ? (CFStringRef)inRun.output : CFSTR(""));
-	return record;
+	return record.Detach();
 }
 
 char *

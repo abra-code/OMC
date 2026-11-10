@@ -39,10 +39,10 @@ OMCCopyActionUIDocumentURL(CFStringRef inNameOrPath, CFBundleRef inExternBundle,
 		baseName.Adopt( ::CFStringCreateWithSubstring(kCFAllocatorDefault, inNameOrPath, CFRangeMake(0, length - 5)) );
 	}
 
-	CFURLRef documentURL = CopyBundleDocumentURL(inExternBundle, baseName);
+	CFObj<CFURLRef> documentURL( CopyBundleDocumentURL(inExternBundle, baseName) );
 	if(documentURL == nullptr)
-		documentURL = CopyBundleDocumentURL(::CFBundleGetMainBundle(), baseName);
+		documentURL.Adopt( CopyBundleDocumentURL(::CFBundleGetMainBundle(), baseName) );
 	if(documentURL == nullptr)
-		documentURL = CopyBundleDocumentURL(inFrameworkBundle, baseName);
-	return documentURL;
+		documentURL.Adopt( CopyBundleDocumentURL(inFrameworkBundle, baseName) );
+	return documentURL.Detach();
 }
