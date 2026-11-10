@@ -14,6 +14,7 @@
 enum
 {
 	noErr = 0,
+	unimpErr = -4,		// not available on this platform (AppleScript on Linux)
 	readErr = -19,
 	ioErr = -36,
 	fnfErr = -43,
