@@ -8,6 +8,7 @@
 
 #include "OMCInputDialog.h"
 #include "OMCWindowHost.h"
+#include "OMCEngineBundle.h"
 #include "OMCConstants.h"
 #include "OnMyCommand.h"
 #include "CommandRuntimeData.h"
@@ -30,7 +31,6 @@ static const char *const kOKActionID = "omc.builtin.input.ok";
 static const char *const kCancelActionID = "omc.builtin.input.cancel";
 static const char *const kMenuItemActionID = "omc.builtin.input.menu";
 
-extern CFStringRef kBundleIDString; // OnMyCommand.cp: Abracode.framework's bundle identifier
 
 static std::string JSONText(CFPropertyListRef inValue)
 {
@@ -65,7 +65,7 @@ static CFStringRef CopyValueString(const char *inWindowUUID, int64_t inViewID)
 
 static CFStringRef CopyFrameworkString(CFStringRef inKey)
 {
-	CFBundleRef frameworkBundle = CFBundleGetBundleWithIdentifier(kBundleIDString);
+	CFBundleRef frameworkBundle = OMCGetEngineBundle();
 	CFStringRef outString = nullptr;
 	if(frameworkBundle != nullptr)
 		outString = CFCopyLocalizedStringFromTableInBundle(inKey, CFSTR("Private"), frameworkBundle, "");

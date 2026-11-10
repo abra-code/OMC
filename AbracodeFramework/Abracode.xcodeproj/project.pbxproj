@@ -83,6 +83,7 @@
 		1DBCC43522CE209300A1DD8F /* OMCHostInfo.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1DBCC43222CE209300A1DD8F /* OMCHostInfo.mm */; };
 		1D560A1B2F80000000000044 /* OMCAppShell.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1D560A1B2F80000000000043 /* OMCAppShell.mm */; };
 		1D560A1B2F80000000000047 /* OMCProcessEnvironment.c in Sources */ = {isa = PBXBuildFile; fileRef = 1D560A1B2F80000000000046 /* OMCProcessEnvironment.c */; };
+		1D560A1B2F8000000000004A /* OMCEngineBundle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1D560A1B2F80000000000049 /* OMCEngineBundle.cpp */; };
 		1DCBC0D92F15FCE40002B8AB /* Abracode.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8DC2EF5B0486A6940098B216 /* Abracode.framework */; };
 		1DCBC16E2F176A9D0002B8AB /* TestBundles in CopyFiles */ = {isa = PBXBuildFile; fileRef = 1DCBC16D2F176A9D0002B8AB /* TestBundles */; };
 		1DE10DFC23C9D0EE003FCCDA /* OMCWebKitSupport.js in Resources */ = {isa = PBXBuildFile; fileRef = 1DE10DFB23C9D0EE003FCCDA /* OMCWebKitSupport.js */; };
@@ -522,6 +523,8 @@
 		1D560A1B2F80000000000043 /* OMCAppShell.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCAppShell.mm; sourceTree = "<group>"; };
 		1D560A1B2F80000000000045 /* OMCProcessEnvironment.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCProcessEnvironment.h; sourceTree = "<group>"; };
 		1D560A1B2F80000000000046 /* OMCProcessEnvironment.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = OMCProcessEnvironment.c; sourceTree = "<group>"; };
+		1D560A1B2F80000000000048 /* OMCEngineBundle.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCEngineBundle.h; sourceTree = "<group>"; };
+		1D560A1B2F80000000000049 /* OMCEngineBundle.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCEngineBundle.cpp; sourceTree = "<group>"; };
 		1DCBC0D52F15FCE40002B8AB /* AbracodeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AbracodeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		1DCBC0E02F15FD220002B8AB /* AbracodeTests-target.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "AbracodeTests-target.xcconfig"; sourceTree = "<group>"; };
 		1DCBC16D2F176A9D0002B8AB /* TestBundles */ = {isa = PBXFileReference; lastKnownFileType = folder; path = TestBundles; sourceTree = "<group>"; };
@@ -928,6 +931,7 @@
 				1DBCC43122CE209200A1DD8F /* OMCHostInfo.h */,
 				1D560A1B2F80000000000042 /* OMCAppShell.h */,
 				1D560A1B2F80000000000045 /* OMCProcessEnvironment.h */,
+				1D560A1B2F80000000000048 /* OMCEngineBundle.h */,
 				1D0A1B2C2F6A000000000003 /* Apple */,
 			);
 			path = Platform;
@@ -959,6 +963,7 @@
 				1DBCC43222CE209300A1DD8F /* OMCHostInfo.mm */,
 				1D560A1B2F80000000000043 /* OMCAppShell.mm */,
 				1D560A1B2F80000000000046 /* OMCProcessEnvironment.c */,
+				1D560A1B2F80000000000049 /* OMCEngineBundle.cpp */,
 				1DA51CB42EACC95B00BFF670 /* OMCAppLifecycleObserver.mm */,
 				1D0A1B2C2F6A000000000001 /* NibDialogs */,
 				E29ED1710D09525700C9D5E8 /* CMUtils */,
@@ -1601,6 +1606,7 @@
 				1DBCC43522CE209300A1DD8F /* OMCHostInfo.mm in Sources */,
 				1D560A1B2F80000000000044 /* OMCAppShell.mm in Sources */,
 				1D560A1B2F80000000000047 /* OMCProcessEnvironment.c in Sources */,
+				1D560A1B2F8000000000004A /* OMCEngineBundle.cpp in Sources */,
 				E2E407000D8A5B00009AD8CA /* OMCSecureTextField.m in Sources */,
 				E2E4072A0D8AD1E3009AD8CA /* OMCSearchField.m in Sources */,
 				1D80B9C222E447F900CF1AF5 /* OMCTerminalExecutor.cp in Sources */,

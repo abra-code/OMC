@@ -8,6 +8,7 @@
 
 #include "OMCProgressWindow.h"
 #include "OMCWindowHost.h"
+#include "OMCEngineBundle.h"
 #include "ACFString.h"
 #include "ActionUIC.h"
 #include "ACFJSON.h"
@@ -19,7 +20,6 @@ static const int64_t kStatusTextID = 2;
 static const int64_t kProgressBarID = 3;
 static const int64_t kStopButtonID = 4;
 
-extern CFStringRef kBundleIDString; // OnMyCommand.cp: Abracode.framework's bundle identifier
 
 const char *const OMCProgressWindow::kStopActionID = "omc.builtin.progress.stop";
 
@@ -36,7 +36,7 @@ static std::map<std::string, OMCProgressWindow *> &OpenProgressWindows()
 static void SetStopButtonLabel(const char *inWindowUUID)
 {
 	CFObj<CFStringRef> stop;
-	CFBundleRef frameworkBundle = CFBundleGetBundleWithIdentifier(kBundleIDString);
+	CFBundleRef frameworkBundle = OMCGetEngineBundle();
 	if(frameworkBundle != nullptr)
 		stop.Adopt( CFCopyLocalizedStringFromTableInBundle(CFSTR("Stop"), CFSTR("Private"), frameworkBundle, "") );
 	if(stop == nullptr)

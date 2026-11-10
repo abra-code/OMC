@@ -18,7 +18,6 @@
 #include <memory>
 
 
-extern CFStringRef kBundleIDString;
 static OMCService *sOMCService = NULL;
 
 // The droplet's decisions are portable (OMCDroplet.h); these are what only macOS does for them.

@@ -61,6 +61,7 @@
 #include "OMCTerminalLauncher.h"
 #include "OMCScriptsManager.h"
 #include "OMCEnvironmentExportScript.h"
+#include "OMCEngineBundle.h"
 #include <dispatch/dispatch.h>
 
 enum
@@ -106,13 +107,12 @@ RunNibDialogOrRefuse(OnMyCommand *inPlugin, CFBundleRef inFrameworkBundle, const
 #pragma mark -
 #pragma mark **** IMPLEMENTATION ****
 
-CFStringRef kBundleIDString = CFSTR("com.abracode.AbracodeFramework");
 
 SInt32 OnMyCommand::sMacOSVersion = 140600;
 
 OnMyCommand::OnMyCommand(CFPropertyListRef inPlistRef)
 {
-	mBundleRef.Adopt( ::CFBundleGetBundleWithIdentifier(kBundleIDString), kCFObjRetain ); //Abracode.framework
+	mBundleRef.Adopt( OMCGetEngineBundle(), kCFObjRetain ); //Abracode.framework
 	TRACE_CSTR( "OnMyCommand::OnMyCommand\n" );
 
 	if(inPlistRef != NULL)

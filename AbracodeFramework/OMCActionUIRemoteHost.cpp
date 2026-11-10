@@ -11,6 +11,7 @@
 #include "DebugSettings.h"
 #include "OMCEngineTempDir.h"
 #include "OMCLog.h"
+#include "OMCEngineBundle.h"
 
 #include <CoreFoundation/CoreFoundation.h>
 #include <algorithm>
@@ -29,7 +30,6 @@
 // behavior at run time.
 #include "ActionUIRemote-Swift.h"
 
-extern CFStringRef kBundleIDString; // OnMyCommand.cp: Abracode.framework's bundle identifier
 
 static const char kOMCActionUIRemoteEndpointVariable[] = "OMC_ACTIONUI_REMOTE_ENDPOINT";
 
@@ -115,7 +115,7 @@ CopyHostName()
 static std::string
 CopyHostVersion()
 {
-	CFBundleRef frameworkBundle = CFBundleGetBundleWithIdentifier(kBundleIDString);
+	CFBundleRef frameworkBundle = OMCGetEngineBundle();
 	if(frameworkBundle != nullptr)
 	{
 		CFTypeRef versionValue = CFBundleGetValueForInfoDictionaryKey(frameworkBundle, kCFBundleVersionKey);
