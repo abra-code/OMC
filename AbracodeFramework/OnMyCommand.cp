@@ -228,14 +228,17 @@ OnMyCommand::Init()
 void
 OnMyCommand::InitOmcBundlePaths()
 {
-	CFObj<CFURLRef> abracodeFrameworkBundleURL = CFBundleCopyBundleURL(mBundleRef);
-	if(abracodeFrameworkBundleURL != nullptr)
+	// The helper tools' folder, "Support" in the framework's support files folder: on macOS the
+	// framework's top folder, so "Abracode.framework/Support" (a link to the current version's, as
+	// "Resources" is); on Linux wherever the bundle's layout puts it. Scripts get it as
+	// OMC_OMC_SUPPORT_PATH and assume nothing about where it is.
+	CFObj<CFURLRef> supportFilesURL( ::CFBundleCopySupportFilesDirectoryURL(mBundleRef) );
+	CFObj<CFURLRef> absoluteSupportFilesURL;
+	if(supportFilesURL != nullptr)
+		absoluteSupportFilesURL.Adopt( ::CFURLCopyAbsoluteURL(supportFilesURL) );
+	if(absoluteSupportFilesURL != nullptr)
 	{
-		CFObj<CFURLRef> supportPathURL(CFURLCreateCopyAppendingPathComponent(
-									kCFAllocatorDefault,
-									abracodeFrameworkBundleURL,
-									CFSTR("Versions/Current/Support"),
-									true));
+		CFObj<CFURLRef> supportPathURL( ::CFURLCreateCopyAppendingPathComponent(kCFAllocatorDefault, absoluteSupportFilesURL, CFSTR("Support"), true) );
 		mOmcSupportPath.Adopt(CreatePathFromCFURL(supportPathURL, kEscapeNone), kCFObjDontRetain);
 	}
 
