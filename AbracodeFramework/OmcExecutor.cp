@@ -991,15 +991,24 @@ PrependPythonBinDirToEnvironmentPATH(CFStringRef pythonPath)
         return NULL;
     }
     
-    // Create the new PATH by prepending binDir
+    // Create the new PATH by prepending binDir. With no PATH, or an empty one, binDir alone: "binDir:"
+    // would end in an empty entry, which the shell takes as the current folder.
+    CFObj<CFStringRef> currentPath;
+    const char *currentPathText = ::getenv("PATH");
+    if ((currentPathText != nullptr) && (currentPathText[0] != '\0'))
+    {
+        currentPath.Adopt( ::CFStringCreateWithCString(kCFAllocatorDefault, currentPathText, kCFStringEncodingUTF8) );
+        if (currentPath == nullptr)
+            return NULL; // not UTF-8: leave PATH as it is rather than drop the rest of it
+    }
+
     CFMutableStringRef newPath = ::CFStringCreateMutable(kCFAllocatorDefault, 0);
     ::CFStringAppend(newPath, binDir);
-    ::CFStringAppend(newPath, CFSTR(":"));
-    CFObj<CFStringRef> currentPath = ::CFStringCreateWithCString(kCFAllocatorDefault,
-                                                                ::getenv("PATH"),
-                                                                kCFStringEncodingUTF8);
-
-    ::CFStringAppend(newPath, currentPath);
+    if (currentPath != nullptr)
+    {
+        ::CFStringAppend(newPath, CFSTR(":"));
+        ::CFStringAppend(newPath, currentPath);
+    }
     
     return newPath;
 }
@@ -1020,15 +1029,20 @@ PrependBundlePackagesToEnvironmentPYTHONPATH()
     if (packagesPath == nullptr)
         return nullptr;
 
-    CFMutableStringRef newPythonPath = ::CFStringCreateMutable(kCFAllocatorDefault, 0);
-    ::CFStringAppend(newPythonPath, packagesPath);
+    CFObj<CFStringRef> existing;
     const char *existingPythonPath = ::getenv("PYTHONPATH");
     if (existingPythonPath != nullptr && existingPythonPath[0] != '\0')
     {
+        // Not UTF-8 (existing stays NULL): the applet's packages alone. Unlike PATH, whose other
+        // folders everything the script runs needs, what the applet's Python needs is its packages.
+        existing.Adopt( ::CFStringCreateWithCString(kCFAllocatorDefault, existingPythonPath, kCFStringEncodingUTF8) );
+    }
+
+    CFMutableStringRef newPythonPath = ::CFStringCreateMutable(kCFAllocatorDefault, 0);
+    ::CFStringAppend(newPythonPath, packagesPath);
+    if (existing != nullptr)
+    {
         ::CFStringAppend(newPythonPath, CFSTR(":"));
-        CFObj<CFStringRef> existing = ::CFStringCreateWithCString(kCFAllocatorDefault,
-                                                                  existingPythonPath,
-                                                                  kCFStringEncodingUTF8);
         ::CFStringAppend(newPythonPath, existing);
     }
     return newPythonPath;

@@ -103,6 +103,72 @@
                   @"Output should contain expected text. Got: %@", capturedOutput);
 }
 
+/// Runs a Python script file (an installed Python: the test bundle embeds none, so the engine puts
+/// that Python's folder in front of PATH) with the process's PATH set to inPATH, or unset when it
+/// is NULL, and returns what the script printed: the PATH it got. The process's PATH is restored.
+- (NSString *)pythonScriptPATHWithProcessPATH:(const char *)inPATH label:(NSString *)label {
+    NSString *commandID = [NSString stringWithFormat:@"python_path_%@", label];
+    NSDictionary *command = @{
+        @"NAME": @"Python PATH Test",
+        @"COMMAND_ID": commandID,
+        @"EXECUTION_MODE": @"exe_script_file",
+        @"WAIT_FOR_TASK_COMPLETION": @YES
+    };
+    // Bytes that are not UTF-8 printed as \xNN, so the output is a string the observer can take
+    NSString *script = @"import os\nprint(os.fsencode(os.environ.get('PATH', '<none>')).decode('ascii', 'backslashreplace'))\n";
+    NSURL *bundleURL = [OMCBundleTestHelper createTestBundle:[NSString stringWithFormat:@"PythonPATH_%@", label]
+                                                 withCommands:@[command]
+                                                      scripts:@{[commandID stringByAppendingString:@".py"]: script}];
+    XCTAssertNotNil(bundleURL);
+    if (bundleURL == nil)
+        return nil;
+    [self.bundlesToCleanup addObject:bundleURL];
+
+    const char *savedPATH = getenv("PATH");
+    char *savedCopy = (savedPATH != NULL) ? strdup(savedPATH) : NULL;
+    if (inPATH != NULL)
+        setenv("PATH", inPATH, 1);
+    else
+        unsetenv("PATH");
+
+    OMCTestExecutionObserver *executionObserver = OMCTestExecutionObserver.new;
+    OSStatus err = [OMCCommandExecutor runCommand:commandID
+                                   forCommandFile:[bundleURL path]
+                                      withContext:nil
+                                     useNavDialog:NO
+                         allowKeyWindowSubcommand:NO
+                                         delegate:executionObserver];
+
+    if (savedCopy != NULL)
+    {
+        setenv("PATH", savedCopy, 1);
+        free(savedCopy);
+    }
+    else
+    {
+        unsetenv("PATH");
+    }
+
+    XCTAssertEqual(err, noErr, @"Should execute the Python script (%@)", label);
+    XCTAssertTrue([executionObserver waitForCompletionWithTimeout:kDefaultExecutionTimeout], @"Task should complete (%@)", label);
+    return [executionObserver.capturedOutput stringByTrimmingCharactersInSet:[NSCharacterSet newlineCharacterSet]];
+}
+
+/// No PATH in the app's environment: the script gets the Python's folder alone. Crashed before
+/// (getenv's NULL made into a string), and "folder:" would have put the current folder in PATH.
+- (void)testPythonScriptWithNoPATH {
+    NSString *childPATH = [self pythonScriptPATHWithProcessPATH:NULL label:@"unset"];
+    XCTAssertTrue(childPATH.length > 0 && ![childPATH isEqualToString:@"<none>"], @"The script should get a PATH. Got: %@", childPATH);
+    XCTAssertFalse([[childPATH componentsSeparatedByString:@":"] containsObject:@""],
+                   @"PATH should have no empty entry, which means the current folder. Got: %@", childPATH);
+}
+
+/// A PATH that is not UTF-8: left as it is, not dropped and not a crash (a NULL string before).
+- (void)testPythonScriptWithANonUTF8PATH {
+    NSString *childPATH = [self pythonScriptPATHWithProcessPATH:"/usr/bin:/bin:/not\xffutf8" label:@"nonutf8"];
+    XCTAssertEqualObjects(childPATH, @"/usr/bin:/bin:/not\\xffutf8", @"The script should get the app's PATH as it was");
+}
+
 - (void)testScriptFileWithPerl {
     NSDictionary *command = @{
         @"NAME": @"Perl Test",
