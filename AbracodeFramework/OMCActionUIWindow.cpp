@@ -14,7 +14,7 @@
 #include "OMCActionUIModelLifetime.h"
 #include "OMCActionUIRemoteHost.h"
 #include "OMCDialogControlAccessor.h"
-#include "OMCHostInfo.h"
+#include "OMCAppShell.h"
 #include "OMCLog.h"
 #include "OMCMainThreadSignal.h"
 #include "OnMyCommand.h"

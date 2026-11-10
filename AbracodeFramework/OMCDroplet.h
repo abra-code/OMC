@@ -4,7 +4,7 @@
 //
 //  What an applet does when the app is asked to open files, a URL, a new or untitled document,
 //  or to reopen: the decisions of the applet's droplet, portable C++ on CF. The platform's app
-//  delegate reports each request (on macOS, OMCDropletController.mm) and supplies what only it
+//  delegate reports each request (on macOS, EntryPoints/Apple/OMCDropletController.mm) and supplies what only it
 //  can do through OMCDropletActions: run the applet's main command or a URL, note a recent
 //  document, and answer the system once gathered files are open. Main thread.
 //

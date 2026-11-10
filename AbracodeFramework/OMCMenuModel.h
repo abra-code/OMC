@@ -7,7 +7,7 @@
 //    (OnMyCommand::PopulateItemsMenu); macOS builds the contextual menu plugin's Apple event list
 //    from it (EntryPoints/Apple/OnMyCommandAE.cp);
 //  - the app's Commands menu: every command of the applet's command file, with no context check
-//    (OMCBuildCommandsMenuModel); macOS builds an NSMenu from it (OMCCommandMenu.mm).
+//    (OMCBuildCommandsMenuModel); macOS builds an NSMenu from it (EntryPoints/Apple/OMCCommandMenu.mm).
 //  Portable.
 //
 

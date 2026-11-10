@@ -9,7 +9,6 @@
 #import <Cocoa/Cocoa.h>
 #include "OMCHostInfo.h"
 #include "CFObj.h"
-#import "OMCCommandExecutor.h" // OMCNoteRecentDocumentURL
 
 CFStringRef CopyFrontAppName()
 {
@@ -133,19 +132,4 @@ StSwitchToFront::~StSwitchToFront(void) noexcept
             }
         }
     }
-}
-
-void ActivateThisApp()
-{
-    [[NSApplication sharedApplication] activateIgnoringOtherApps:YES];
-}
-
-void QuitThisApp()
-{
-    [[NSApplication sharedApplication] terminate:nil];
-}
-
-void NoteRecentDocument(CFURLRef fileURL)
-{
-    OMCNoteRecentDocumentURL((__bridge NSURL *)fileURL);
 }

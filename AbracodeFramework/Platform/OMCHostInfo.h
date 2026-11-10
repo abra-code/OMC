@@ -49,14 +49,7 @@ enum
 };
 OMCModifierKeys GetKeyboardModifiers();
 
-// This app as omc_dialog_control's omc_application targets it: makes it the active app (omc_select),
-// or quits it as its Quit menu item would (omc_terminate_ok); the app shell's later (Phase 5 step 9)
-void ActivateThisApp();
-void QuitThisApp();
-
-// Adds a file to this app's recent documents (Open Recent); nothing during a test launch or where
-// unsupported. The app shell's later (Phase 5 step 9).
-void NoteRecentDocument(CFURLRef fileURL);
+// ActivateThisApp, QuitThisApp and NoteRecentDocument are the app shell's: Platform/OMCAppShell.h
 
 #ifdef __cplusplus
 }
