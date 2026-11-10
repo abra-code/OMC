@@ -866,7 +866,10 @@ POpenExecutor::Finish(bool wasSynchronous, bool sendNotification, OSStatus inErr
         // so we keep wasSynchronous = false
     }
 
-	OmcExecutor::Finish(wasSynchronous, sendNotification, (OSStatus)pipeResult );
+	// The engine's own failure (a read error on the output, the pipe I/O not starting, the spawn
+	// failing) is the task's error: the child's exit status cannot tell it. Otherwise the exit status.
+	OSStatus finishError = (inError != noErr) ? inError : (OSStatus)pipeResult;
+	OmcExecutor::Finish(wasSynchronous, sendNotification, finishError );
 }
 
 void
