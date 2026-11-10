@@ -41,9 +41,14 @@ static inline bool OMCIsPrivateDirectory(const char *inPath)
 // can change: after resolving every symbolic link (realpath), each folder above it is owned by
 // the current user or by root and is not writable by group or others. Otherwise whoever owns or
 // may write a folder above could rename the private folder after it was checked and put their
-// own in its place.
-static inline bool OMCIsPrivateDirectoryOnSafePath(const char *inPath)
+// own in its place. outResolved gets the resolved path, the one checked: use it, not inPath,
+// whose links sit in folders the check never looked at and could be changed after it (set to ""
+// when false).
+static inline bool OMCResolvePrivateDirectoryOnSafePath(const char *inPath, char *outResolved, size_t outSize)
 {
+    if((outResolved == NULL) || (outSize == 0))
+        return false;
+    outResolved[0] = '\0';
     if((inPath == NULL) || (inPath[0] == '\0'))
         return false;
     char resolved[PATH_MAX];
@@ -80,5 +85,9 @@ static inline bool OMCIsPrivateDirectoryOnSafePath(const char *inPath)
             break;
         end = parentLen;
     }
+
+    if(len + 1 > outSize)
+        return false;
+    memcpy(outResolved, resolved, len + 1);
     return true;
 }

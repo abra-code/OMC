@@ -225,6 +225,42 @@
     XCTAssertTrue(OMCIsPrivateDirectory([self.sandboxDir stringByAppendingString:@"/"].UTF8String), @"a private folder with a trailing slash (as confstr gives it) is one");
 }
 
+// The Linux temporary folder's check (the call is plain POSIX, so it runs here): the path it gives
+// back is the resolved one it checked, never the one asked about with its links
+- (void)testResolvePrivateDirectoryOnSafePath {
+    char expected[PATH_MAX] = {0};
+    XCTAssertTrue(realpath(self.sandboxDir.fileSystemRepresentation, expected) != NULL);
+    char resolved[PATH_MAX] = {0};
+    XCTAssertTrue(OMCResolvePrivateDirectoryOnSafePath(self.sandboxDir.fileSystemRepresentation, resolved, sizeof(resolved)),
+                  @"the test folder (0700, under the user's temporary folder) is private on a safe path");
+    XCTAssertEqual(strcmp(resolved, expected), 0, @"the resolved path comes back: %s, not %s", resolved, expected);
+    if ([self.sandboxDir hasPrefix:@"/var/"])
+        XCTAssertTrue(strncmp(resolved, "/private/var/", 13) == 0, @"/var is a link to private/var; it is resolved: %s", resolved);
+
+    // Through a link of our own: the folder linked to comes back
+    NSString *target = [self makeFolder:@"target" mode:0700];
+    NSString *link = [self.sandboxDir stringByAppendingPathComponent:@"tolink"];
+    XCTAssertEqual(symlink(target.fileSystemRepresentation, link.fileSystemRepresentation), 0);
+    char targetResolved[PATH_MAX] = {0};
+    XCTAssertTrue(realpath(target.fileSystemRepresentation, targetResolved) != NULL);
+    XCTAssertTrue(OMCResolvePrivateDirectoryOnSafePath(link.fileSystemRepresentation, resolved, sizeof(resolved)));
+    XCTAssertEqual(strcmp(resolved, targetResolved), 0, @"a link gives back the folder it leads to: %s", resolved);
+
+    // Refused, with "" given back: not private; under a folder others may write; no room
+    XCTAssertFalse(OMCResolvePrivateDirectoryOnSafePath([self makeFolder:@"open" mode:0750].fileSystemRepresentation, resolved, sizeof(resolved)));
+    XCTAssertEqual(resolved[0], '\0');
+    NSString *shared = [self makeFolder:@"shared" mode:0777];
+    NSString *inner = [shared stringByAppendingPathComponent:@"inner"];
+    XCTAssertEqual(mkdir(inner.fileSystemRepresentation, S_IRWXU), 0);
+    XCTAssertTrue(OMCIsPrivateDirectory(inner.fileSystemRepresentation), @"the inner folder itself is private");
+    XCTAssertFalse(OMCResolvePrivateDirectoryOnSafePath(inner.fileSystemRepresentation, resolved, sizeof(resolved)),
+                   @"but anyone may replace it through the folder above");
+    XCTAssertEqual(resolved[0], '\0');
+    char tiny[4] = {'x', 'x', 'x', 0};
+    XCTAssertFalse(OMCResolvePrivateDirectoryOnSafePath(self.sandboxDir.fileSystemRepresentation, tiny, sizeof(tiny)), @"no room: refused, not cut short");
+    XCTAssertEqual(tiny[0], '\0');
+}
+
 - (void)testAnOMCFolderOthersCanEnterIsRefused {
     setenv("TMPDIR", self.sandboxDir.UTF8String, 1);
     [self makeFolder:@"OMC" mode:0755];

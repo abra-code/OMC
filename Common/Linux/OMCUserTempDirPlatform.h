@@ -16,20 +16,10 @@
 #include <stddef.h>
 #include <stdio.h>    // snprintf
 #include <stdlib.h>   // getenv
-#include <string.h>   // strlen, memcpy
 #include <errno.h>
 #include <sys/stat.h> // mkdir
 #include <limits.h>   // PATH_MAX
 #include "OMCPrivateDirectory.h"
-
-static inline bool OMCPlatformCopyPath(const char *inPath, char *outBuf, size_t bufSize)
-{
-    size_t len = strlen(inPath);
-    if((len == 0) || (len + 1 > bufSize))
-        return false;
-    memcpy(outBuf, inPath, len + 1);
-    return true;
-}
 
 // Makes the folder with mode 0700 unless it exists. True when it exists afterwards (as anything:
 // the caller checks the folder it ends up using).
@@ -44,8 +34,9 @@ static inline bool OMCPlatformMakeDir(const char *inPath)
 // (per user, mode 0700, made by the login manager and removed at logout), else
 // <cache>/omc/tmp, made with mode 0700, where <cache> is $XDG_CACHE_HOME or ~/.cache. Either is
 // used only when it is private and on a path no other user can change
-// (OMCIsPrivateDirectoryOnSafePath): <cache> may be a link into a folder another user owns, who
-// could otherwise replace our folders after they were checked.
+// (OMCResolvePrivateDirectoryOnSafePath): <cache> may be a link into a folder another user owns,
+// who could otherwise replace our folders after they were checked. The path given back is the
+// resolved one, the path that was checked, with no links left in it.
 static inline bool OMCPlatformUserTempDir(char *outBuf, size_t bufSize)
 {
     if((outBuf == NULL) || (bufSize == 0))
@@ -53,8 +44,8 @@ static inline bool OMCPlatformUserTempDir(char *outBuf, size_t bufSize)
     outBuf[0] = '\0';
 
     const char *runtimeDir = getenv("XDG_RUNTIME_DIR");
-    if((runtimeDir != NULL) && (runtimeDir[0] == '/') && OMCIsPrivateDirectoryOnSafePath(runtimeDir))
-        return OMCPlatformCopyPath(runtimeDir, outBuf, bufSize);
+    if((runtimeDir != NULL) && (runtimeDir[0] == '/') && OMCResolvePrivateDirectoryOnSafePath(runtimeDir, outBuf, bufSize))
+        return true;
 
     char cacheDir[PATH_MAX];
     const char *cacheHome = getenv("XDG_CACHE_HOME");
@@ -84,9 +75,7 @@ static inline bool OMCPlatformUserTempDir(char *outBuf, size_t bufSize)
 
     if(!OMCPlatformMakeDir(cacheDir) || !OMCPlatformMakeDir(omcDir) || !OMCPlatformMakeDir(tmpDir))
         return false;
-    if(!OMCIsPrivateDirectoryOnSafePath(tmpDir))
-        return false;
-    return OMCPlatformCopyPath(tmpDir, outBuf, bufSize);
+    return OMCResolvePrivateDirectoryOnSafePath(tmpDir, outBuf, bufSize);
 }
 
 // A per-user temporary folder another app of the same user can read: on Linux every app of the
