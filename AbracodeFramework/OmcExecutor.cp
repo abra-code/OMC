@@ -27,9 +27,9 @@
 #include <dispatch/dispatch.h>
 #include "OMCDispatchPlatform.h"
 #include "OMCAppletSupportURL.h"
+#include "OMCPlatformInterpreters.h"
 #include <mutex>
 #include <algorithm>
-#include <iterator>
 
 void
 AddBundlePathToDict(ACFMutableDict &ioDict, CFStringRef inKey, CFBundleRef inBundle)
@@ -60,21 +60,13 @@ Boolean IsFileExecutable(CFURLRef inFileURL)
     return false;
 }
 
+// The first executable python3 of the platform's candidates (OMCPlatformInterpreters.h), else
+// the platform's default one
 static inline
 const char* FindInstalledPython(void)
 {
-    // Relative to your app bundle
-    const char* candidates[] =
-    {
-        "/Library/Frameworks/Python.framework/Versions/Current/bin/python3", // official Python installer
-        "/opt/homebrew/bin/python3", // symlink for homebrew arm64 installation
-        "/usr/local/bin/python3", // symlink for homebrew x86_64 or official Python installation
-        "/opt/local/bin/python3", // MacPorts
-        // pyenv or conda installed python requires respective init/activation so not usable in GUI apps
-        NULL
-    };
-    
-    for (int i = 0; candidates[i] != NULL; i++)
+    const char * const *candidates = OMCPlatformInstalledPythonCandidates();
+    for (size_t i = 0; candidates[i] != NULL; i++)
     {
         if (::access(candidates[i], X_OK) == 0)
         {
@@ -82,7 +74,7 @@ const char* FindInstalledPython(void)
         }
     }
     
-    return "/usr/bin/python3"; // older Python 3.9.x redirecting to Xcode bundle
+    return OMCPlatformDefaultPython();
 }
 
 
@@ -926,60 +918,12 @@ POpenWithOutputExecutor::Finish(bool wasSynchronous, bool sendNotification, OSSt
 
 #pragma mark -
 
-typedef struct ExtensionAndShell
-{
-	CFStringRef extension;
-	CFStringRef shell;
-} ExtensionAndShell;
-
-enum
-{
-	kScriptExtSh = 0,
-	kScriptExtPy,
-	kScriptExtPl,
-	kScriptExtAppleScript,
-	kScriptExtScpt,
-	kScriptExtZsh,
-	kScriptExtBash,
-	kScriptExtCsh,
-	kScriptExtTcsh,
-	kScriptExtDash,
-	kScriptExtRb,
-	kScriptExtJs,
-    kScriptExtMjs,
-	kScriptExtCount
-};
-
-// The locations of script interpreters, by extension (in the order of the enum above), in a
-// function: on Linux CFSTR cannot initialize anything outside a function
-static auto &
-ExtensionToShellMap()
-{
-	static const ExtensionAndShell sMap[] =
-	{
-		{ CFSTR("sh"), CFSTR("/bin/sh") },
-	    { CFSTR("py"), CFSTR("/usr/bin/python3") }, // placholder - will be dynamically resolved with GetPythonToolPath
-		{ CFSTR("pl"), CFSTR("/usr/bin/perl") },
-		{ CFSTR("applescript"), CFSTR("/usr/bin/osascript") },
-		{ CFSTR("scpt"), CFSTR("/usr/bin/osascript") },
-		{ CFSTR("zsh"), CFSTR("/bin/zsh") }, // new default shell since 10.15
-		{ CFSTR("bash"), CFSTR("/bin/bash") },
-		{ CFSTR("csh"), CFSTR("/bin/csh") },
-		{ CFSTR("tcsh"), CFSTR("/bin/tcsh") },
-		{ CFSTR("dash"), CFSTR("/bin/dash") },
-		{ CFSTR("rb"), CFSTR("/usr/bin/ruby") },
-		{ CFSTR("js"), CFSTR("/System/Library/Frameworks/JavaScriptCore.framework/Versions/Current/Helpers/jsc") }, // in macOS >= 10.15, OMC min is 11
-	    { CFSTR("mjs"), CFSTR("/System/Library/Frameworks/JavaScriptCore.framework/Versions/Current/Helpers/jsc") }
-	};
-	static_assert(kScriptExtCount == sizeof(sMap)/sizeof(sMap[0]), "Script extension map must match the enum");
-	return sMap;
-}
-
-// sh is the default fallback for any script with no extension
+// sh is the default fallback for any script with no extension, or one the platform has no
+// interpreter for (OMCPlatformInterpreters.h)
 static CFStringRef
 DefaultShell()
 {
-	return ExtensionToShellMap()[0].shell;
+	return CFSTR("/bin/sh");
 }
 
 // Returns the path to the embedded python3 binary if present, nullptr otherwise.
@@ -1121,25 +1065,25 @@ CFStringRef GetShellFromScriptExtension(CFStringRef inExt, CFMutableDictionaryRe
             ::CFDictionaryAddValue(envVariables, CFSTR("PYTHONPATH"), newPythonPath);
     }
 
-	size_t mapElementsCount = std::size(ExtensionToShellMap());
-	for(size_t i = 0; i < mapElementsCount; i++)
+	if(kCFCompareEqualTo == ::CFStringCompare(inExt, CFSTR("py"), kCFCompareCaseInsensitive))
 	{
-		if(kCFCompareEqualTo == ::CFStringCompare( inExt, ExtensionToShellMap()[i].extension, kCFCompareCaseInsensitive))
+		if(embeddedPythonPath == nullptr)
 		{
-            if(i == kScriptExtPy)
-            {
-                if(embeddedPythonPath == nullptr)
-                {
-                    // external Python: only prepend its bin dir to PATH so the right python3 is found
-                    CFStringRef pythonToolPath = GetPythonToolPath();
-                    CFObj<CFStringRef> newPaths = PrependPythonBinDirToEnvironmentPATH(pythonToolPath);
-                    if (newPaths != NULL)
-                        ::CFDictionaryAddValue(envVariables, CFSTR("PATH"), newPaths);
-                }
-                return GetPythonToolPath();
-            }
-			return ExtensionToShellMap()[i].shell;
+			// external Python: only prepend its bin dir to PATH so the right python3 is found
+			CFStringRef pythonToolPath = GetPythonToolPath();
+			CFObj<CFStringRef> newPaths = PrependPythonBinDirToEnvironmentPATH(pythonToolPath);
+			if (newPaths != NULL)
+				::CFDictionaryAddValue(envVariables, CFSTR("PATH"), newPaths);
 		}
+		return GetPythonToolPath();
+	}
+
+	size_t interpreterCount = 0;
+	const OMCExtensionAndInterpreter *interpreters = OMCPlatformInterpreters(&interpreterCount);
+	for(size_t i = 0; i < interpreterCount; i++)
+	{
+		if(kCFCompareEqualTo == ::CFStringCompare(inExt, interpreters[i].extension, kCFCompareCaseInsensitive))
+			return interpreters[i].interpreter;
 	}
 
 	return DefaultShell();
