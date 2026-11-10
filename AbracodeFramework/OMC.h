@@ -10,7 +10,16 @@
 #define _OMC_H_ 
 
 #include <CoreFoundation/CoreFoundation.h>
-#include <CoreServices/CoreServices.h>
+
+// The platform's part of this header, one per platform, chosen by the header search path (Common/Apple,
+// Common/Linux): its error codes here, its own entry points at the end. Inside Abracode.framework (where
+// the Apple ones are public headers beside this one) a framework header includes them by the framework's
+// name; elsewhere (the Linux build) by their own.
+#if __has_include(<Abracode/OMCPlatformTypes.h>)
+	#include <Abracode/OMCPlatformTypes.h>
+#else
+	#include "OMCPlatformTypes.h"
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -36,16 +45,8 @@ UInt32 OMCGetCurrentVersion(void);
 
 OSStatus OMCRunCommand(CFTypeRef inPlistRef, CFStringRef inCommandNameOrID, CFTypeRef inContext);
 
-
-
-// ******** Simple command execution with AE context ******** 
-
-//the same as OMCRunCommand() but takes AEDesc which may be text, file/alias or a list of files/aliases
-//inContext should be treated as const (currently not modified by OMC)
-//for some reason Carbon Menu Manager headers for CM plugins defined HandleSelection() with non-const AEDesc
-//as if a return value was allowed (text selection replacement?). Not sure if there are apps using the return value though
-
-OSStatus OMCRunCommandAE(CFTypeRef inPlistRef, CFStringRef inCommandNameOrID, AEDesc *inAEContext);
+// The Apple event forms (OMCRunCommandAE, OMCExamineContextAE, OMCExecuteCommandAE) are Apple only:
+// in OMCPlatformAPI.h, included at the end of this header.
 
 
 
@@ -78,10 +79,6 @@ OMCCommandRef	OMCFindCommand( OMCExecutorRef inOMCExecutor, CFStringRef inNameOr
 	#define OMCIsValidCommandRef(inCommandRef) ((inCommandRef) > kOmcUnspecifiedCommand)
 #endif //!__cplusplus
 
-//pass kOmcUnspecifiedCommand in inCommandRef for all commands or valid command Ref for one command
-//outCommandPairs may be NULL
-//proceed only when this function returns noErr
-OSStatus		OMCExamineContextAE( OMCExecutorRef inOMCExecutor, OMCCommandRef inCommandRef, const AEDesc *inAEContext, AEDescList *outCommandPairs );
 //Options for OMCExamineContext() inOptions
 enum
 {
@@ -94,6 +91,8 @@ enum
 	kOMCAllowContextMismatch	= 0x01
 };
 
+//pass kOmcUnspecifiedCommand in inCommandRef for all commands or valid command Ref for one command
+//proceed only when this function returns noErr
 OSStatus		OMCExamineContext( OMCExecutorRef inOMCExecutor, OMCCommandRef inCommandRef, CFTypeRef inContext, UInt32 inOptions );
 
 //Mark everything this executor runs as started by a URL sent to the applet. The URL is exported
@@ -166,8 +165,7 @@ enum
 //Must call FindCommandIndex() to obtain valid OMCCommandRef before calling OMCGetCommandInfo()
 OSStatus		OMCGetCommandInfo(OMCExecutorRef inOMCExecutor, OMCCommandRef inCommandRef, OMCInfoType infoType, void *outInfo);
 	
-//OMCExamineContext[AE]() must be called before calling OMCExecuteCommand[AE]()
-OSStatus		OMCExecuteCommandAE( OMCExecutorRef inOMCExecutor, AEDesc *inAEContext, OMCCommandRef inCommandRef );
+//OMCExamineContext() must be called before calling OMCExecuteCommand()
 OSStatus		OMCExecuteCommand( OMCExecutorRef inOMCExecutor, OMCCommandRef inCommandRef );
 
 typedef enum OmcObserverMessage
@@ -192,5 +190,12 @@ void			OMCUnregisterObserver( OMCObserverRef inObserver );
 #ifdef __cplusplus
 }
 #endif //__cplusplus
+
+// The entry points one platform has (Common/Apple: the Apple event forms; Common/Linux: none yet)
+#if __has_include(<Abracode/OMCPlatformAPI.h>)
+	#include <Abracode/OMCPlatformAPI.h>
+#else
+	#include "OMCPlatformAPI.h"
+#endif
 
 #endif //_OMC_H_

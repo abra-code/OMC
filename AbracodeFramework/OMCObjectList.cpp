@@ -8,6 +8,7 @@
 
 #include "OMCObjectList.h"
 #include "ACFType.h"
+#include "OMCPlatformTypes.h" // noErr
 
 static const OSStatus kUserCanceled = -128; // userCanceledErr, which the handlers return to stop the walk
 

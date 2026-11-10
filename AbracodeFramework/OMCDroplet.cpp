@@ -10,6 +10,7 @@
 #include "OMCDroplet.h"
 #include "OMCMainThreadSignal.h"
 #include "OMCHostInfo.h"
+#include "OMCPlatformTypes.h" // noErr
 #include <utility>
 
 namespace

@@ -4,4 +4,4 @@ PRODUCT_BUNDLE_IDENTIFIER = com.abracode.${TARGET_NAME}
 PRODUCT_NAME = ${TARGET_NAME}
 
 // ACFPropertyList (Common) uses ACFJSON, which includes the vendored yyjson.h.
-USER_HEADER_SEARCH_PATHS = $(inherited) $(SRCROOT)/../Common $(SRCROOT)/../ThirdParty/yyjson
+USER_HEADER_SEARCH_PATHS = $(inherited) $(SRCROOT)/../Common $(SRCROOT)/../Common/Apple $(SRCROOT)/../ThirdParty/yyjson

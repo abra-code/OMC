@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <sys/stat.h>//stat(), to tell a missing or empty file from an unreadable one
 #include "CFObj.h"
+#include "OMCPlatformTypes.h" // noErr
 #include "AUniquePtr.h"
 #include "ABase64.h"
 #include "ACFPropertyList.h"

@@ -23,6 +23,7 @@
 #include "DebugSettings.h"
 #include "OmcTaskNotification.h"
 #include "OMCHostInfo.h"
+#include "OMCPlatformTypes.h" // noErr
 #include <algorithm>
 
 // The document's text view (BuiltInDocuments/omc_output.json)

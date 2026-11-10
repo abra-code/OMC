@@ -8,6 +8,7 @@
  */
 
 #include <CoreFoundation/CoreFoundation.h>
+#include "OMCPlatformTypes.h" // noErr
 
 #include "DebugSettings.h"
 #include "CFObj.h"
