@@ -440,10 +440,10 @@
 		1D560A1B2F80000000000034 /* OMCActionUIWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCActionUIWindow.h; sourceTree = "<group>"; };
 		1D560A1B2F80000000000035 /* OMCActionUIWindow.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCActionUIWindow.cpp; sourceTree = "<group>"; };
 		1D71F3292206F116009FAF91 /* DebugSettings.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DebugSettings.h; sourceTree = "<group>"; };
-		1D71F32A2206F1A1009FAF91 /* ACMPlugin.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ACMPlugin.h; sourceTree = "<group>"; };
+		1D71F32A2206F1A1009FAF91 /* ACMPlugin.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ACMPlugin.h; path = Apple/ACMPlugin.h; sourceTree = "<group>"; };
 		1D71F32B2206F1D8009FAF91 /* CMUtils.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CMUtils.h; sourceTree = "<group>"; };
 		1D71F32C2206F214009FAF91 /* ACFDict.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ACFDict.h; sourceTree = "<group>"; };
-		1D71F32E2206F353009FAF91 /* StAEDesc.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StAEDesc.h; sourceTree = "<group>"; };
+		1D71F32E2206F353009FAF91 /* StAEDesc.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = StAEDesc.h; path = Apple/StAEDesc.h; sourceTree = "<group>"; };
 		1D71F336220702D7009FAF91 /* notify */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = notify; sourceTree = "<group>"; };
 		1D742DC219388292005DFF97 /* pasteboard */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = pasteboard; sourceTree = "<group>"; };
 		1D80B9B822E447E800CF1AF5 /* OMCiTermExecutor.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCiTermExecutor.cp; sourceTree = "<group>"; };
@@ -662,7 +662,7 @@
 		E2ED3BAC0D0B288400481D8F /* omc_popen.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = omc_popen.c; sourceTree = "<group>"; };
 		E2ED3BAD0D0B288400481D8F /* omc_popen.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = omc_popen.h; sourceTree = "<group>"; };
 		E2ED3BB50D0B289B00481D8F /* OnMyCommand.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OnMyCommand.h; sourceTree = "<group>"; };
-		E2ED3BC00D0B293E00481D8F /* ACMPlugin.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ACMPlugin.cp; sourceTree = "<group>"; };
+		E2ED3BC00D0B293E00481D8F /* ACMPlugin.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ACMPlugin.cp; path = Apple/ACMPlugin.cp; sourceTree = "<group>"; };
 		E2EE07050D3C9704007DBAF4 /* ANotifier.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ANotifier.h; sourceTree = "<group>"; };
 		E2F5C9020DD10F5300B4D4EC /* AbracodeFramework.exp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.exports; path = AbracodeFramework.exp; sourceTree = "<group>"; };
 		E2FB111D0D185A2C005EB1E8 /* OMC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMC.h; sourceTree = "<group>"; };
