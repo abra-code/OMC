@@ -464,7 +464,19 @@ omc_popen_with_token(const char *command, char * const *inShell, char * const *i
         goto spawn_error;
     }
     
-    if (posix_spawnattr_setflags(&attr, POSIX_SPAWN_SETPGROUP) != 0) {
+    // SIGPIPE at its default in the child. The engine ignores it for the whole process once it
+    // writes a child's standard input (OmcExecutor), and an ignored signal is inherited through
+    // exec, so every script started afterwards would run with it ignored: in "producer | head"
+    // the producer would get write errors instead of ending quietly, depending on what ran before.
+    // (The signal mask needs no reset: the engine spawns on the main thread, whose mask is clear.)
+    sigset_t defaultSignals;
+    sigemptyset(&defaultSignals);
+    sigaddset(&defaultSignals, SIGPIPE);
+    if (posix_spawnattr_setsigdefault(&attr, &defaultSignals) != 0) {
+        goto spawn_error;
+    }
+
+    if (posix_spawnattr_setflags(&attr, POSIX_SPAWN_SETPGROUP | POSIX_SPAWN_SETSIGDEF) != 0) {
         goto spawn_error;
     }
     
