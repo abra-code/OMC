@@ -6,6 +6,12 @@
 #include <vector>
 #include <iterator>
 
+// The flags in CommandDescription, OneObjProperties, OMCProgressParsing's CounterParams and StepsParams,
+// and OutputWindowHandler are bool, grouped next to each other for alignment, where they were 1-byte
+// Boolean or UInt8. bool is 1 byte on every platform OMC builds for (64-bit macOS and Linux); if a
+// platform makes it larger, those structures grow and their grouping needs another look.
+static_assert(sizeof(bool) == 1, "bool is not 1 byte: check the bool flags grouped in OMC's structures");
+
 typedef struct SpecialWordAndID
 {
     CFIndex        wordLen;
