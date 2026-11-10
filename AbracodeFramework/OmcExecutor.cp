@@ -25,6 +25,7 @@
 #include "OMCDialog.h"
 #include "OMCMainThreadSignal.h"
 #include <dispatch/dispatch.h>
+#include "OMCDispatchPlatform.h"
 #include <mutex>
 #include <algorithm>
 #include <iterator>
@@ -709,10 +710,9 @@ POpenExecutor::StartPipeIO(bool inWritesInput)
 	if( (io->outputFD < 0) || (inWritesInput && (io->inputFD < 0)) )
 		return false;
 
-	// User-interactive, the main thread's class: StopPipeIO waits on the main thread for this queue's
-	// cancel handlers, and waiting on a lower class is a priority inversion. The queue only moves bytes.
-	dispatch_queue_attr_t queueAttributes = dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_SERIAL, QOS_CLASS_USER_INTERACTIVE, 0);
-	io->queue = dispatch_queue_create("com.abracode.OMC.POpenExecutor.io", queueAttributes);
+	// StopPipeIO waits on the main thread for this queue's cancel handlers, so the queue runs at the main
+	// thread's class where the platform has classes (OMCDispatchPlatform.h). The queue only moves bytes.
+	io->queue = OMCCreateSerialQueueForMainThreadWaits("com.abracode.OMC.POpenExecutor.io");
 	io->descriptorsClosed = dispatch_group_create();
 	if( (io->queue == nullptr) || (io->descriptorsClosed == nullptr) )
 		return false;
