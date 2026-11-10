@@ -5,7 +5,7 @@
   "inheritsViewProperties": true,
   "topLevelKeys": [],
   "ownProperties": {
-    "text":     { "types": ["string"], "required": false, "description": "Plain text; defaults to empty string" },
+    "text":     { "types": ["string"], "required": false, "description": "Plain text, the first content; defaults to empty string. At run time set the value (setElementValue), not this property" },
     "markdown": { "types": ["string"], "required": false, "description": "Markdown string; takes precedence over 'text'" }
   },
   "observable": {

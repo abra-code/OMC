@@ -746,6 +746,11 @@ class Window:
     def append_rows(self, view_id, rows):
         return self._connection.call("actionui.appendRows", self._params({"rows": _rows(rows)}, view_id))
 
+    def append_text(self, view_id, text):
+        """Append text to the value of a TextEditor, TextField or SecureField; no action fires.
+        Returns False when the view is missing or its value is not text."""
+        return self._connection.call("actionui.appendText", self._params({"text": str(text)}, view_id))
+
     def clear_rows(self, view_id):
         return self._connection.call("actionui.clearRows", self._params(view_id=view_id))
 

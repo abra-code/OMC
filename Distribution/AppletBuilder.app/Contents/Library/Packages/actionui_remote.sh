@@ -1068,6 +1068,13 @@ actionui_append_rows() {
     _aui_element_set "actionui.appendRows" "$1" "" "\"rows\":$2"
 }
 
+# actionui_append_text VIEWID TEXT   - prints true, or false when the value is not text
+actionui_append_text() {
+    if [ "$#" -lt 2 ]; then _aui_need 0 "actionui_append_text VIEWID TEXT"; return $?; fi
+    _aui_json_string "$2"
+    _aui_element_set "actionui.appendText" "$1" "" "\"text\":$_aui_json"
+}
+
 actionui_clear_rows() {
     _aui_need "$#" "actionui_clear_rows VIEWID" || return $?
     _aui_element_set "actionui.clearRows" "$1" ""

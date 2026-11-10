@@ -497,6 +497,16 @@ class FakeServer:
         window["rows"].setdefault(view_id, []).extend(p.rows("rows"))
         return True
 
+    def _m_actionui_appendText(self, p):
+        window, view_id = p.window_and_view()
+        text = p.string("text")
+        existing = window["values"].get(view_id)
+        if existing is not None and not isinstance(existing, str):
+            return False
+        window["values"][view_id] = (existing or "") + text
+        window["strings"][view_id] = window["values"][view_id]
+        return True
+
     def _m_actionui_clearRows(self, p):
         window, view_id = p.window_and_view()
         window["rows"][view_id] = []

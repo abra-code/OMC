@@ -11,6 +11,6 @@
     "progressViewStyle": { "types": ["string"], "required": false, "enum": ["automatic", "linear", "circular"], "description": "Indicator shape, overriding the platform default: 'linear' is a bar in either state (the only way to get an indeterminate linear bar), 'circular' a spinner or ring gauge" }
   },
   "observable": {
-    "states.progress": { "types": ["number"], "description": "Override progress at runtime (0.0–total); set to null to revert to indeterminate" }
+    "states.progress": { "types": ["number"], "description": "Override progress at runtime (0.0 to total); set to a negative number (-1) for indeterminate, even over the value property" }
   }
 }

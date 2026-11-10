@@ -14,7 +14,7 @@ JSON schema and usage documentation for `Table`.
      "columnTypes": [                       // Optional: Per-column type config array. Defaults to all Text.
        { "viewType": "Text" },              // Each entry: { "viewType": "Text"|"Button"|"Image"|"AsyncImage"|"Toggle"
        { "viewType": "Button",              // Columns without an entry default to Text.
-         "actionContext": "rowIndex",       // "actionContext": "title"|"rowIndex"|"columnIndex"|"rowColumnIndex" (Button only)
+         "actionContext": "rowIndex",       // "actionContext": "title"|"rowIndex"|"columnIndex"|"rowColumnIndex" (Button only); the action's context: the cell's text, the row index, the column index, or {"row": R, "column": C}
          "actionID": "row.action" },        // "actionID": "..." (Button only — fires on button click) }
        { "viewType": "Image",
          "dataInterpretation": "systemName" }, // "dataInterpretation": "path"|"systemName"|"assetName"|"resourceName"|"mixed" (Image & Button)

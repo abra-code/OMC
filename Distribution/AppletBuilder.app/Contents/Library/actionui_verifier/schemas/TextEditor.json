@@ -8,7 +8,8 @@
     "text":        { "types": ["string"],  "required": false, "description": "Initial plain-text content; default empty" },
     "markdown":    { "types": ["string"],  "required": false, "description": "Initial content as a markdown string (macOS 26 / iOS 26+); takes precedence over 'text'" },
     "placeholder": { "types": ["string"],  "required": false, "description": "Placeholder text shown when the editor is empty" },
-    "readOnly":    { "types": ["boolean"], "required": false, "description": "When true, text is selectable and scrollable but not editable; default false" }
+    "readOnly":    { "types": ["boolean"], "required": false, "description": "When true, text is selectable and scrollable but not editable; default false" },
+    "implementation": { "types": ["string"], "required": false, "enum": ["swiftUI", "native"], "description": "'native' draws the editor with the platform's own text view (macOS: NSTextView), which appends text that extends the value (appendElementText) at the new text's cost: for logs and large output. Plain text only (with 'markdown' the default editor is used); font and text color come from the element's own 'font' and 'foregroundStyle'. iOS and Linux use their default editor. Default 'swiftUI'" }
   },
   "observable": {
     "value": { "types": ["string"], "description": "Current plain-text content; set via setElementValue" }

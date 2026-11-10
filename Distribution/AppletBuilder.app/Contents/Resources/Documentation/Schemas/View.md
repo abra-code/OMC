@@ -108,7 +108,7 @@ JSON schema and usage documentation for `View`.
                               //   the property is read by the element itself (Button, Toggle, ...) - except on the
                               //   web, where any element carrying an actionID has always been clickable.
      "valueChangeActionID": "view.valueChanged", // Optional: String for action triggered on any value change initiated by user
-     "openURLActionID": "view.openURL", // Optional: String for action identifier triggered on open URL (via .onOpenURL modifier)
+     "openURLActionID": "view.openURL", // Optional: String for action identifier triggered on open URL (via .onOpenURL modifier); the action's context is the URL (its text in the C, remote and JavaScript bindings)
      "onAppearActionID": "view.onAppear", // Optional: String for action identifier triggered on view appear (via .onAppear modifier)
      "onDisappearActionID": "view.onDisappear", // Optional: String for action identifier triggered on view disappear (via .onDisappear modifier)
      "onHoverActionID": "view.hovered", // Optional: String for action identifier triggered when the pointer enters or exits this view (via .onHover modifier).
