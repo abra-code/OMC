@@ -7,7 +7,10 @@
 //  - macOS: a run loop source in the common modes, so the callback is a run loop callout, as the
 //    CFSocket callbacks were. A nested run loop inside it (the drain before the next command, a
 //    WAIT_FOR_TASK_COMPLETION wait) then also runs main-queue work, as in released versions.
-//  - Linux: the main queue, which ActionUI drains from the GLib loop.
+//  - Linux: a GLib idle source on the default main context, so the callback is a GLib callout. A
+//    nested GLib loop inside it (an alert, a file panel, a modal window) then also runs main-queue
+//    work, which ActionUI's drawing and remote bridge use; from a main-queue callback it would not
+//    (libdispatch does not run the main queue inside its own callout).
 //
 
 #pragma once

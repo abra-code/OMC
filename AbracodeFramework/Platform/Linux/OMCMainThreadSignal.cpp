@@ -2,13 +2,19 @@
 //  OMCMainThreadSignal.cpp
 //  Abracode
 //
-//  Linux: the main queue, which ActionUI drains from the GLib loop. Not built yet: the Linux port has
-//  no build. A nested wait (WaitPass) blocks the main thread, so the main queue cannot run during it;
-//  WaitPass runs the signaled callbacks itself, and a main-queue drain that comes later finds none.
+//  Linux: a GLib idle source on the default main context (GTK's), not the libdispatch main queue: a
+//  callback run from the main queue would hold it, and libdispatch does not run the main queue inside
+//  its own callout, so an alert, panel or modal window opened from the callback (a nested GLib loop)
+//  would stall ActionUI's drawing and remote bridge, which go through the main queue, until it closed
+//  (probed: ~/git/AppleCoreLibrariesForLinux/build/probe/host-app/REPORT.md, check 6). A GLib callout
+//  does not, as a run loop callout does not on macOS. Not built yet: the Linux port has no build.
+//  A nested wait (WaitPass) blocks the main thread; it runs the signaled callbacks itself, and an idle
+//  source that comes later finds none.
 //
 
 #include "OMCMainThreadSignal.h"
 #include <dispatch/dispatch.h>
+#include <glib.h>
 #include <mutex>
 #include <vector>
 #include <algorithm>
@@ -33,6 +39,7 @@ struct SignalState
 
 std::mutex sLock;
 std::vector< std::shared_ptr<SignalState> > sPending; // guarded by sLock
+bool sIdleScheduled = false; // an idle source is queued and has not started; guarded by sLock
 
 dispatch_semaphore_t WakeSemaphore()
 {
@@ -40,35 +47,54 @@ dispatch_semaphore_t WakeSemaphore()
 	return sWake;
 }
 
-// Main thread
+gboolean RunPendingCallbacksFromIdle(gpointer);
+
+// Main thread. A state stays queued and signaled until just before its call, as a CFRunLoopSource does:
+// a signal that arrives earlier in the pass joins that call, and a nested pass (a GLib loop or WaitPass
+// inside a callback) runs it, so this pass then skips it.
 void RunPendingCallbacks()
 {
 	std::vector< std::shared_ptr<SignalState> > pending;
 	{
 		std::lock_guard<std::mutex> guard(sLock);
-		pending.swap(sPending);
-		for(const std::shared_ptr<SignalState> &state : pending)
-			state->signaled = false;
+		pending = sPending;
 	}
 
 	for(const std::shared_ptr<SignalState> &state : pending)
 	{
-		bool valid = false;
+		bool run = false;
+		bool scheduleIdle = false;
 		{
 			std::lock_guard<std::mutex> guard(sLock);
-			valid = state->valid;
+			run = state->valid && state->signaled;
+			if(run)
+			{
+				state->signaled = false;
+				sPending.erase(std::find(sPending.begin(), sPending.end(), state));
+				scheduleIdle = !sPending.empty() && !sIdleScheduled; // for a GLib loop inside this call
+				if(scheduleIdle)
+					sIdleScheduled = true;
+			}
 		}
-		if(valid)
+		if(scheduleIdle)
+			g_idle_add_full(G_PRIORITY_DEFAULT, RunPendingCallbacksFromIdle, nullptr, nullptr);
+		if(run)
 			state->callback(state->context); // may destroy its signal: this copy keeps the state alive
 	}
 }
 
-void RunPendingCallbacksOnMainQueue(void *)
+// The idle source's callout, on the main thread, in the default main context
+gboolean RunPendingCallbacksFromIdle(gpointer)
 {
+	{
+		std::lock_guard<std::mutex> guard(sLock);
+		sIdleScheduled = false; // a state queued from now on, also during this pass, gets a new idle source
+	}
 	RunPendingCallbacks();
+	return G_SOURCE_REMOVE;
 }
 
-// Any thread. Queues a signaled state for the main thread: the main queue runs it, or a nested wait does.
+// Any thread. Queues a signaled state for the main thread: an idle source runs it, or a nested wait does.
 void EnqueueSignaled(const std::shared_ptr<SignalState> &inState)
 {
 	bool scheduleDrain = false;
@@ -77,12 +103,13 @@ void EnqueueSignaled(const std::shared_ptr<SignalState> &inState)
 		if(inState->valid && !inState->signaled)
 		{
 			inState->signaled = true;
-			scheduleDrain = sPending.empty();
 			sPending.push_back(inState);
+			scheduleDrain = !sIdleScheduled;
+			sIdleScheduled = true;
 		}
 	}
-	if(scheduleDrain)
-		dispatch_async_f(dispatch_get_main_queue(), nullptr, RunPendingCallbacksOnMainQueue);
+	if(scheduleDrain) // g_idle_add_full may be called from any thread; it wakes the main context
+		g_idle_add_full(G_PRIORITY_DEFAULT, RunPendingCallbacksFromIdle, nullptr, nullptr);
 	dispatch_semaphore_signal(WakeSemaphore());
 }
 
@@ -168,7 +195,7 @@ bool
 OMCMainThreadSignal::RunAfter(double inDelaySeconds, Callback inCallback, void *inContext)
 {
 	dispatch_after_f(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(inDelaySeconds * NSEC_PER_SEC)),
-					dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0),
+					dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0),
 					new DelayedCall { inCallback, inContext }, DelayedCallDue);
 	return true;
 }
@@ -214,7 +241,7 @@ OMCMainThreadSignal::ScheduleAfter(double inDelaySeconds, Callback inCallback, v
 	state->callback = inCallback;
 	state->context = inContext; // the caller's: no release
 	dispatch_after_f(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(inDelaySeconds * NSEC_PER_SEC)),
-					dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0),
+					dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0),
 					new std::shared_ptr<SignalState>(state), ScheduledCallDue);
 	return std::unique_ptr<OMCScheduledCall>( new QueueScheduledCall(state) );
 }
