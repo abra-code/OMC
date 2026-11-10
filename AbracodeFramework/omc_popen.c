@@ -76,7 +76,13 @@ CreateEnviron(char* const* inKeys, char * const* inValues, size_t inCount)
 		}
 	}
 
-	newCount = oldCount + inCount;
+	// The platform's defaults, added at the end unless the old or the new list names them
+	size_t defaultCount = 0;
+	const OMCChildEnvironmentDefault *defaults = OMCGetChildEnvironmentDefaults(&defaultCount);
+	if(defaults == NULL)
+		defaultCount = 0;
+
+	newCount = oldCount + inCount + defaultCount;
 	newEnviron = (char**)calloc( newCount + 1, sizeof(char *) );
 	
 //now make sure we are not duplicating any values:
@@ -155,6 +161,34 @@ CreateEnviron(char* const* inKeys, char * const* inValues, size_t inCount)
 		if(valueLen > 0)
 			memcpy(newKeyValue + keyLen + 1, oneNewValue, valueLen);
 		newKeyValue[keyLen + 1 + valueLen] = 0;
+
+		newEnviron[newIndex] = newKeyValue;
+		newIndex++;
+	}
+
+//and the platform's defaults no one has set (a user's or a command's own value wins)
+
+	for(i = 0; i < defaultCount; i++)
+	{
+		const char *defaultName = defaults[i].name;
+		const char *defaultValue = defaults[i].value;
+		if( (defaultName == NULL) || (defaultValue == NULL) )
+			continue;
+
+		size_t nameLen = strlen(defaultName);
+		bool isSet = false;
+		for(j = 0; (j < oldCount) && !isSet; j++)
+			isSet = (strncmp(oldEnviron[j], defaultName, nameLen) == 0) && (oldEnviron[j][nameLen] == '=');
+		for(j = 0; (j < inCount) && !isSet; j++)
+			isSet = (inKeys[j] != NULL) && (strcmp(inKeys[j], defaultName) == 0);
+		if(isSet)
+			continue;
+
+		size_t valueLen = strlen(defaultValue);
+		newKeyValue = malloc(nameLen + 1 + valueLen + 1); // "key=value\0"
+		memcpy(newKeyValue, defaultName, nameLen);
+		newKeyValue[nameLen] = '=';
+		memcpy(newKeyValue + nameLen + 1, defaultValue, valueLen + 1);
 
 		newEnviron[newIndex] = newKeyValue;
 		newIndex++;

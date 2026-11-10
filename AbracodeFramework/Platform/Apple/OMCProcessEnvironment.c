@@ -16,3 +16,12 @@ OMCGetProcessEnviron(void)
 	char ***envPtr = _NSGetEnviron(); // pointer to the real 'environ'
 	return (envPtr != NULL) ? *envPtr : NULL;
 }
+
+// None on macOS: a child's environment is the engine's own plus the command's variables
+const OMCChildEnvironmentDefault *
+OMCGetChildEnvironmentDefaults(size_t *outCount)
+{
+	if(outCount != NULL)
+		*outCount = 0;
+	return NULL;
+}
