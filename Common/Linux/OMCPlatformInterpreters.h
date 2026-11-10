@@ -13,7 +13,9 @@
 //  The shells keep their /bin paths: where /bin is merged into /usr/bin (Debian 12 and later,
 //  Fedora, Ubuntu, Arch) both work, and Debian put them in /bin before. No AppleScript
 //  (osascript) and no JavaScriptCore shell (jsc): Linux has neither, so .applescript, .scpt, .js
-//  and .mjs scripts run with /bin/sh, as any extension not listed does.
+//  and .mjs scripts run with /bin/sh, as any extension not listed does. JavaScript is not supported
+//  on Linux: OMC never ran node, and complete JavaScript applets can be built with 
+//  ActionUI's Node.js language adapter, without OMC.
 //
 
 #pragma once
