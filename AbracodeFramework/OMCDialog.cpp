@@ -9,7 +9,8 @@
 
 #include "OMCDialog.h"
 #include "OMCDialogControlHelpers.h"
-#include "AppGroupIdentifier.h"
+#include "OMCDialogControlPortName.h"
+#include "ACFString.h"
 #include "OnMyCommand.h"
 #include "OMCDialogControlHelpers.h"
 #include "ACFType.h"
@@ -89,7 +90,7 @@ OMCDialog::GetDialogUUID()
 void
 OMCDialog::StartListening()
 {
-	CFObj<CFStringRef> portName( ::CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("%s.OMCDialogControlPort-%@"), GetAppGroupIdentifier(), GetDialogUUID()) );
+	CFObj<CFStringRef> portName( OMCCreateDialogControlPortName(ACFStringToUTF8(GetDialogUUID()).c_str(), true /*listener*/) );
 	mListener.reset(); // a second start replaces the first port
 	mListener = OMCMessagePortListener::Create(portName, [](void *inContext, CFDataRef inData)
 	{

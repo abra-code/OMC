@@ -4,7 +4,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include "ACFPropertyList.h"
-#include "AppGroupIdentifier.h"
+#include "OMCDialogControlPortName.h"
 #include "OMCEngineTempDir.h"
 
 static char sFilePath[1024];
@@ -339,7 +339,7 @@ int main (int argc, const char * argv[])
 		valueStr = CFStringCreateWithCString(kCFAllocatorDefault, argv[4], kCFStringEncodingUTF8);
 	}
 
-	CFStringRef portName = CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("%s.OMCDialogControlPort-%s"), GetAppGroupIdentifier(), argv[1]);
+	CFStringRef portName = OMCCreateDialogControlPortName(argv[1], false /*sender*/);
 	if(portName != NULL)
 	{
 		remotePort = CFMessagePortCreateRemote(kCFAllocatorDefault, portName);//should return non-null if listener port created
