@@ -96,7 +96,7 @@ RunNibDialogOrRefuse(OnMyCommand *inPlugin, CFBundleRef inFrameworkBundle, const
 	if(isSubcommand)
 		alertString.Adopt( ::CFStringCreateWithFormat(kCFAllocatorDefault, nullptr,
 			CFSTR("The command \"%@\" uses NIB_DIALOG, which this version of OMC no longer supports. Use ACTIONUI_WINDOW instead."),
-			inCommand.commandID) );
+			(CFStringRef)inCommand.commandID) );
 	else
 		alertString.Adopt( CFSTR("This command uses NIB_DIALOG, which this version of OMC no longer supports. Use ACTIONUI_WINDOW instead."), kCFObjRetain );
 	LOG_CFSTR(alertString);
@@ -930,7 +930,7 @@ CreateTerminalCommandWithEnvironmentSetup(CFStringRef inCommand,
 OSStatus
 OnMyCommand::ExecuteCommandWithObjects(CommandRuntimeData *initialCommandRuntimeData)
 {
-    assert(initialCommandRuntimeData != nil);
+    assert(initialCommandRuntimeData != nullptr);
     OMCContextData &initialContextData = initialCommandRuntimeData->GetContextData();
     
 	if( (mCommandList == nullptr) || (mCommandCount == 0) || (initialContextData.objectList.size() == 0) )
