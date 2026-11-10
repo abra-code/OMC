@@ -163,6 +163,42 @@ static const NSTimeInterval kRunLoopTestTimeout = 30.0;
     XCTAssertTrue([observer.capturedOutput containsString:@"wait output"], @"Got: %@", observer.capturedOutput);
 }
 
+/// A CFRunLoopStop that lands on a pass of the wait, meant for another level of the run loop (here a
+/// timer's; in the full suite a test helper's, once), does not end the wait. It used to, and the
+/// command was then finished with its output still unread: the output was lost and the script's pipes
+/// closed under it (an intermittent empty output in OMCStandardInputTests and OMCProgressTests).
+- (void)testWaitCommandOutlastsARunLoopStop
+{
+    NSString *marker = [self markerPath:@"wait_stopped"];
+    NSURL *bundleURL = [self bundleNamed:@"RunLoopWaitStopped" commandID:@"wait_stopped"
+                                  script:[self waitScriptWritingMarker:marker] wait:YES extraKeys:nil];
+
+    __block BOOL stopped = NO;
+    __block BOOL markerAtStop = YES;
+    CFRunLoopTimerRef stopTimer = CFRunLoopTimerCreateWithHandler(kCFAllocatorDefault, CFAbsoluteTimeGetCurrent() + 0.1, 0, 0, 0,
+                                                                 ^(CFRunLoopTimerRef timer) {
+        (void)timer;
+        stopped = YES;
+        markerAtStop = [[NSFileManager defaultManager] fileExistsAtPath:marker];
+        CFRunLoopStop(CFRunLoopGetMain());
+    });
+    CFRunLoopAddTimer(CFRunLoopGetMain(), stopTimer, kCFRunLoopDefaultMode);
+
+    OMCTestExecutionObserver *observer = [OMCTestExecutionObserver new];
+    OSStatus err = [self runCommand:@"wait_stopped" inBundle:bundleURL observer:observer];
+    BOOL markerAtReturn = [[NSFileManager defaultManager] fileExistsAtPath:marker];
+
+    CFRunLoopTimerInvalidate(stopTimer);
+    CFRelease(stopTimer);
+
+    XCTAssertEqual(err, noErr);
+    XCTAssertTrue(stopped, @"The stop should have come");
+    XCTAssertFalse(markerAtStop, @"The stop should have come while the script still ran, during the wait");
+    XCTAssertTrue(markerAtReturn, @"runCommand should return only after the script ended, stop or not");
+    XCTAssertTrue([observer waitForCompletionWithTimeout:kRunLoopTestTimeout]);
+    XCTAssertTrue([observer.capturedOutput containsString:@"wait output"], @"The output should not be lost. Got: %@", observer.capturedOutput);
+}
+
 /// The ordinary case: started from a run loop callout (menus, timers, Apple events).
 - (void)testWaitCommandStartedFromATimer
 {

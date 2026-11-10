@@ -680,8 +680,8 @@ POpenExecutor::Execute( const char *inCommand, OSStatus &outError )
             // Even if we were waiting here, we don't consider this case
             // a blocking execution for the purpose of OmcHostTaskManager::RunNext()
             // With popen async execution the OMCHostTaskManager should receive NoteTaskEnded() and call RunNext()
-            // returning true here indicates the call was blocking and had no chance to call Finish()
-            // calling Finish() too many times causes overrelease and crash
+            // The wait returns only once the executor has finished, so this is false: true would make the
+            // caller call Finish() again, which over-releases and crashes
             return !mHasFinished;
         }
 
@@ -817,13 +817,13 @@ POpenExecutor::WaitForTaskCompletion()
 	// What a pass runs is platform code (OMCMainThreadSignal::WaitPass): on macOS the run loop's default
 	// mode, as released (owner, 2026-11-06), on Linux only the engine's own work. Neither spins: a pass
 	// sleeps until something arrives, at most 0.1 s.
+	// Until the executor finishes, which it does after the last of the output: ending earlier would
+	// leave the output unread, and Execute's caller would then finish the command without it.
 	while(!mHasFinished)
 	{
-		bool keepWaiting = OMCMainThreadSignal::WaitPass(0.1);
+		OMCMainThreadSignal::WaitPass(0.1);
 		DeliverPendingOutput(io); // usually done by the delivery signal during the pass already
 		OMCDialog::ServicePendingMessages(); // what the script sends its dialog lands during the wait
-		if(!keepWaiting)
-			break;
 	}
 }
 

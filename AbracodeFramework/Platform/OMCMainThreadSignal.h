@@ -43,8 +43,9 @@ public:
 	virtual void			Signal() = 0;
 
 	// Main thread: one pass of a nested wait. Returns after a signaled callback or other work ran, or
-	// after inTimeoutSeconds. Returns false when the wait must end early (the run loop was stopped).
-	static bool				WaitPass(double inTimeoutSeconds);
+	// after inTimeoutSeconds. The caller loops until what it waits for is done: nothing ends a wait
+	// early (a run loop stop that lands on a pass was meant for another level, see the macOS file).
+	static void				WaitPass(double inTimeoutSeconds);
 
 	// Main thread: runs the work that is ready now, without waiting. Used before a NEXT_COMMAND_ID
 	// command starts, so other commands' output and events triggered meanwhile land first.

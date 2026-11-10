@@ -8,6 +8,7 @@
 #include "OMCMainThreadSignal.h"
 #include <CoreFoundation/CoreFoundation.h>
 #include "CFObj.h"
+#include <unistd.h>
 
 namespace
 {
@@ -82,13 +83,24 @@ OMCMainThreadSignal::Create(Callback inCallback, void *inContext, ContextRelease
 	return std::unique_ptr<OMCMainThreadSignal>( new RunLoopSourceSignal(source, runLoop) );
 }
 
-bool
+void
 OMCMainThreadSignal::WaitPass(double inTimeoutSeconds)
 {
 	// The default mode, so bridge calls, timers, dialog messages and other commands' output keep running
 	// during a wait, as in released versions (owner, 2026-11-06). Not a spin: it sleeps until a source fires.
+	//
+	// A stop does not end the wait. CFRunLoopStop stops the innermost run of the run loop, so one meant
+	// for another level (a timer's, a host's, a test helper's) lands on a pass here instead; it is used
+	// up by this pass whatever the wait does next, so ending the wait would not deliver it either. Ending
+	// it finished the command with its output unread: the output was lost and the script's pipes closed
+	// under it (released since v4.3, whose wait ended on a stop too).
 	CFRunLoopRunResult runLoopResult = ::CFRunLoopRunInMode(kCFRunLoopDefaultMode, inTimeoutSeconds, true /*returnAfterSourceHandled*/);
-	return (runLoopResult != kCFRunLoopRunStopped) && (runLoopResult != kCFRunLoopRunFinished);
+	if(runLoopResult == kCFRunLoopRunFinished)
+	{
+		// The mode has no sources or timers, so the run returned at once: sleep out the pass rather than
+		// spin. Not expected in a command's wait, whose output delivery source is in the common modes.
+		(void)::usleep((useconds_t)(inTimeoutSeconds * 1000000.0));
+	}
 }
 
 namespace

@@ -149,13 +149,12 @@ OMCMainThreadSignal::Create(Callback inCallback, void *inContext, ContextRelease
 	return std::unique_ptr<OMCMainThreadSignal>( new MainQueueSignal(state) );
 }
 
-bool
+void
 OMCMainThreadSignal::WaitPass(double inTimeoutSeconds)
 {
 	// Only the engine's own work (option A): the signaled callbacks. The caller services dialog messages.
 	(void)dispatch_semaphore_wait(WakeSemaphore(), dispatch_time(DISPATCH_TIME_NOW, (int64_t)(inTimeoutSeconds * NSEC_PER_SEC)));
 	RunPendingCallbacks();
-	return true;
 }
 
 namespace
