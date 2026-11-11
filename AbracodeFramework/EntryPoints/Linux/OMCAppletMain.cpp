@@ -266,9 +266,8 @@ CheckIdle(gpointer inApp)
 gboolean
 OnQuitSignal(gpointer)
 {
-	GApplication *app = g_application_get_default();
-	if(app != nullptr)
-		g_application_quit(app);
+	// As OMCQuitThisApp: ends a blocking window's modal run too
+	OMCQuitThisApp();
 	return G_SOURCE_CONTINUE;
 }
 

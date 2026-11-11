@@ -160,6 +160,31 @@ check "and the applet quits once idle" "$([ "$result" = "0" ] && echo 1 || echo 
 mains="$(/usr/bin/grep -c '^main:' "$LAUNCHTEST_LOG")"
 check "without running the main command" "$([ "$mains" = "0" ] && echo 1 || echo 0)" "$(log_text)"
 
+printf '== a command'"'"'s ActionUI window: init, a value set with omc_dialog_control, OK ==\n'
+: > "$LAUNCHTEST_LOG"
+"$bundle/LaunchTest" 'launchtest://exe?commandID=lt.window' &
+pid=$!
+command_ran="$(wait_for_line 'window.command' 10)"
+check "the window command runs" "$([ "$command_ran" = "yes" ] && echo 1 || echo 0)" "$(log_text)"
+inits="$(/usr/bin/grep -c '^window.init:[0-9A-F-]\{36\}$' "$LAUNCHTEST_LOG")"
+check "its window opens and runs INIT_SUBCOMMAND_ID with the window's UUID" "$([ "$inits" = "1" ] && echo 1 || echo 0)" "$(log_text)"
+set_status="$(wait_for_line 'window.set:0' 10)"
+check "omc_dialog_control sets a value in the window" "$([ "$set_status" = "yes" ] && echo 1 || echo 0)" "$(log_text)"
+ok_value="$(wait_for_line 'window.ok:set by omc_dialog_control' 10)"
+check "omc_terminate_ok closes it and END_OK_SUBCOMMAND_ID reads that value" "$([ "$ok_value" = "yes" ] && echo 1 || echo 0)" "$(log_text)"
+wait_for_exit "$pid" 20
+check "then, with no window left, the applet quits by itself" "$([ "$result" = "0" ] && echo 1 || echo 0)" "exit: $result"
+
+printf '== a quit ends a blocking window'"'"'s modal run ==\n'
+: > "$LAUNCHTEST_LOG"
+"$bundle/LaunchTest" 'launchtest://exe?commandID=lt.modal' &
+pid=$!
+modal_open="$(wait_for_line 'modal.init' 10)"
+check "a blocking window opens (its init ran)" "$([ "$modal_open" = "yes" ] && echo 1 || echo 0)" "$(log_text)"
+kill -TERM "$pid"
+wait_for_exit "$pid" 10
+check "SIGTERM ends the applet while the window's modal run goes on" "$([ "$result" = "0" ] && echo 1 || echo 0)" "exit: $result"
+
 printf '== SIGTERM quits as Quit does ==\n'
 : > "$LAUNCHTEST_LOG"
 export LAUNCHTEST_MAIN_SECONDS=30

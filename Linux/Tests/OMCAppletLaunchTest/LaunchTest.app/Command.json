@@ -4,6 +4,17 @@
     { "NAME": "LaunchTest", "ACTIVATION_MODE": "act_always", "EXECUTION_MODE": "exe_script_file" },
     { "NAME": "LaunchTest", "COMMAND_ID": "app.did.launch", "EXECUTION_MODE": "exe_script_file" },
     { "NAME": "LaunchTest", "COMMAND_ID": "app.will.terminate", "EXECUTION_MODE": "exe_script_file" },
-    { "NAME": "LaunchTest", "COMMAND_ID": "omc.app.handle-url", "EXECUTION_MODE": "exe_script_file" }
+    { "NAME": "LaunchTest", "COMMAND_ID": "omc.app.handle-url", "EXECUTION_MODE": "exe_script_file" },
+    { "NAME": "LaunchTest", "COMMAND_ID": "lt.window", "ACTIVATION_MODE": "act_always", "EXECUTION_MODE": "exe_script_file",
+      "URL_INVOCABLE": true,
+      "ACTIONUI_WINDOW": { "JSON_NAME": "Window", "IS_BLOCKING": false,
+                           "INIT_SUBCOMMAND_ID": "lt.window.init", "END_OK_SUBCOMMAND_ID": "lt.window.ok" } },
+    { "NAME": "LaunchTest", "COMMAND_ID": "lt.window.init", "EXECUTION_MODE": "exe_script_file" },
+    { "NAME": "LaunchTest", "COMMAND_ID": "lt.modal", "ACTIVATION_MODE": "act_always", "EXECUTION_MODE": "exe_script_file",
+      "URL_INVOCABLE": true,
+      "ACTIONUI_WINDOW": { "JSON_NAME": "Window", "IS_BLOCKING": true, "INIT_SUBCOMMAND_ID": "lt.modal.init" } },
+    { "NAME": "LaunchTest", "COMMAND_ID": "lt.modal.init", "EXECUTION_MODE": "exe_script_file" },
+    { "NAME": "LaunchTest", "COMMAND_ID": "lt.window.ok", "EXECUTION_MODE": "exe_script_file",
+      "ENVIRONMENT_VARIABLES": { "OMC_ACTIONUI_VIEW_2_VALUE": "" } }
   ]
 }

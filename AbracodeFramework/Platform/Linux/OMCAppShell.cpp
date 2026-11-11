@@ -7,6 +7,7 @@
 //
 
 #include "OMCAppShell.h"
+#include "Linux/OMCWindowHostLinux.h"
 #include "OMCTestHost.h"
 #include "ACFString.h"
 #include "OMCLog.h"
@@ -28,10 +29,12 @@ OMCActivateThisApp(void)
 void
 OMCQuitThisApp(void)
 {
-	// As the app's Quit: the shutdown signal runs app.will.terminate
+	// As the app's Quit: the shutdown signal runs app.will.terminate; a blocking window's modal run
+	// ends first, or the application's loop would never get control back
 	GApplication *app = g_application_get_default();
 	if(app != nullptr)
 		g_application_quit(app);
+	OMCEndHostedWindowModalRuns();
 }
 
 void

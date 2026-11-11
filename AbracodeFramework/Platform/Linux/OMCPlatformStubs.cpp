@@ -20,7 +20,6 @@
 #include "OMCFilePanels.h"
 #include "OMCActionUIModels.h"
 #include "OMCAlerts.h"
-#include "OMCWindowHost.h"
 #include "OMCLog.h"
 #include <atomic>
 #include <unistd.h>
@@ -149,17 +148,3 @@ OMCPlatformShowNotice(CFStringRef inHeader, CFStringRef inMessage, CFStringRef i
 	OMC_LINUX_NOT_YET("OMCPlatformShowNotice");
 	OMCLogMessage("notice not shown: %s: %s", OMCLogCString(inHeader).c_str(), OMCLogCString(inMessage).c_str());
 }
-
-#pragma mark - Window host (Platform/OMCWindowHost.h): no window, as a document that cannot load
-
-std::unique_ptr<OMCHostedWindow>
-OMCCreateHostedWindow(const OMCHostedWindowSpec &inSpec, std::function<void()> inOnClosedByUser)
-{
-	(void)inSpec;
-	(void)inOnClosedByUser;
-	OMC_LINUX_NOT_YET("OMCCreateHostedWindow");
-	return nullptr;
-}
-
-void OMCResetHostedWindowCascading() { }
-int OMCOpenHostedWindowCount() { return 0; } // true while OMCCreateHostedWindow makes none
