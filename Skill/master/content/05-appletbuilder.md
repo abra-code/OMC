@@ -51,8 +51,6 @@ Full reference: `Distribution/AppletBuilder.app/Contents/Resources/Agents/README
 | `Empty` | Minimal bundle; no dialog |
 | `ActionUI Window` | ActionUI JSON dialog (recommended for OMC 5.0+) |
 | `ActionUI Web` | ActionUI dialog with embedded WebView |
-| `Nib Window` | NIB (Interface Builder) dialog |
-| `Nib Web` | NIB dialog with embedded WebView |
 
 The **Name** also becomes the executable name and script prefix. New applets are
 created with a `Command.json` manifest. Humans can do the same from the GUI's New
@@ -63,7 +61,7 @@ Applet panel.
 Edit the bundle's files directly:
 - `Contents/Resources/Command.json` (or `Command.plist` — OMC reads either, preferring `Command.json` when both exist)
 - `Contents/Resources/Scripts/*`
-- `Contents/Resources/Base.lproj/*.json` (ActionUI) or `*.nib` (NIB — edit in Xcode)
+- `Contents/Resources/Base.lproj/*.json` (ActionUI windows and `MainMenu.json`)
 
 After editing, run `appletbuilder validate <App.app>` to catch problems.
 

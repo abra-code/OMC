@@ -16,7 +16,7 @@ Set via `EXECUTION_MODE` in a command dictionary.
 
 Other modes exist for special cases — `exe_shell_script_with_output_window`, `exe_system`, `exe_applescript[_with_output_window]`, `exe_terminal`, `exe_iterm` — see `docs/omc_command_reference.md`.
 
-The main command (no `COMMAND_ID`) attaches `ACTIONUI_WINDOW` or `NIB_DIALOG` and opens the window on launch.
+The main command (no `COMMAND_ID`) attaches `ACTIONUI_WINDOW` and opens the window on launch.
 
 ## Activation Modes
 
@@ -53,11 +53,9 @@ Attach a dialog to a command by adding one of these keys to the command dict:
 
 The JSON file `Contents/Resources/Base.lproj/MainWindow.json` defines the UI (see ActionUI skill).
 
-### NIB_DIALOG (legacy)
+`INIT_SUBCOMMAND_ID` fires when the window opens — use it to populate initial data. `END_OK_SUBCOMMAND_ID` / `END_CANCEL_SUBCOMMAND_ID` fire on confirm / cancel; `IS_BLOCKING` (false = modeless) chooses a modal window.
 
-Same shape with `NIB_NAME` instead of `JSON_NAME`, plus `IS_BLOCKING` (false = modeless), `END_OK_SUBCOMMAND_ID`, `END_CANCEL_SUBCOMMAND_ID`. See `docs/Nib-Guide.md`.
-
-`INIT_SUBCOMMAND_ID` fires when the window opens — use it to populate initial data. `END_OK_SUBCOMMAND_ID` / `END_CANCEL_SUBCOMMAND_ID` fire on confirm / cancel (these and `IS_BLOCKING` work for `ACTIONUI_WINDOW` too).
+`NIB_DIALOG` (Interface Builder windows) was removed in 6.0: the engine refuses such a command with an alert. To convert one, see `docs/nib_to_actionui_migration.md`.
 
 ## Other Useful Command Keys
 

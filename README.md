@@ -25,7 +25,7 @@ OMC started life as a **contextual menu plug-in** allowing users to add menu ite
 ### (Basic concepts under 5 minutes)
 
 ### **UI Entry Points**
-OMC engine handles the UI entry points. It could be a contextual menu item, could be an app start, a menu item in your applet, could be a button in a dialog. You provide a handler script (or command, if you will), which will be called by the engine when user initiates some action. Commands have assigned IDs (just unique strings) and you make the connection between UI element and the handler by command ID. In most cases the command ID can be assigned to a control or menu item in nibs/xibs in Xcode via "User Defined Runtime Attributes". That way a click on button can invoke an action in your script and say `echo "Hello World"`.
+OMC engine handles the UI entry points. It could be a contextual menu item, could be an app start, a menu item in your applet, could be a button in a dialog. You provide a handler script (or command, if you will), which will be called by the engine when user initiates some action. Commands have assigned IDs (just unique strings) and you make the connection between UI element and the handler by command ID. A control in an ActionUI JSON window names it as its `actionID`, and a menu item in `MainMenu.json` the same way. That way a click on button can invoke an action in your script and say `echo "Hello World"`.
 
 ### **Environment Variables**
 When your command handler is executed, the engine provides the relevant context information as environment variables, which your script can access and act upon.
@@ -39,12 +39,11 @@ Similar with selected or clipboard text:
 
 The same context information is available in applets, for example `$OMC_OBJ_PATH` holds the path for a file dropped on the app.
 
-At some point OMC added support for nib-based windows with controls and your command handler can access control values from the parent dialog with:  
-`$OMC_NIB_DIALOG_CONTROL_N_VALUE`  
-or:  
-`$OMC_NIB_TABLE_NNN_COLUMN_MMM_VALUE`  
-or WebView control:  
-`$OMC_NIB_WEBVIEW_XXX_ELEMENT_YYY_VALUE`
+Applets show windows described in ActionUI JSON, and your command handler can access control values from the parent window with:  
+`$OMC_ACTIONUI_VIEW_N_VALUE`  
+or, for a table:  
+`$OMC_ACTIONUI_TABLE_NNN_COLUMN_MMM_VALUE`  
+(Nib-based windows, the older way, were removed in 6.0.)
 
 Several other contextual or static environment variables are exported by the engine and the easiest way to find out what is available is to list them all in your script with:  
 `env | grep "OMC" | sort`

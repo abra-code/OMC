@@ -27,7 +27,7 @@ MyApp.app/
 │   │   └── MyApp                    ← executable (renamed copy of OMC binary)
 │   ├── Resources/
 │   │   ├── Base.lproj/
-│   │   │   ├── MainMenu.nib         ← app menu (from template; do not remove)
+│   │   │   ├── MainMenu.json        ← optional menu bar additions (the standard bar is built in code)
 │   │   │   └── MyDialog.json        ← optional ActionUI JSON dialog
 │   │   ├── Scripts/
 │   │   │   ├── lib.myapp.sh         ← shared library: tool paths + control IDs
@@ -125,15 +125,14 @@ OMC exports these variables into every script's environment:
 | Variable | Description |
 |----------|-------------|
 | `$OMC_ACTIONUI_WINDOW_UUID` | Window UUID for ActionUI dialog scripts |
-| `$OMC_NIB_DLG_GUID` | Window UUID for NIB dialog scripts |
+| `$OMC_NIB_DLG_GUID` | The same window UUID under its older name (kept for scripts) |
 
 ### Control Values
 
 | Variable | Description |
 |----------|-------------|
 | `$OMC_ACTIONUI_VIEW_<N>_VALUE` | Current value of ActionUI element with `id` N |
-| `$OMC_NIB_DIALOG_CONTROL_<N>_VALUE` | Value of NIB control with tag N |
-| `$OMC_NIB_TABLE_<N>_COLUMN_<M>_VALUE` | Selected row value from NIB table tag N, column M (1-based; column 0 = all columns tab-joined) |
+| `$OMC_ACTIONUI_TABLE_<N>_COLUMN_<M>_VALUE` | Selected row value from table `id` N, column M (1-based; column 0 = all columns tab-joined) |
 
 ### ActionUI Trigger Context
 
@@ -320,7 +319,7 @@ Set via `EXECUTION_MODE` in a command dictionary.
 
 Other modes exist for special cases — `exe_shell_script_with_output_window`, `exe_system`, `exe_applescript[_with_output_window]`, `exe_terminal`, `exe_iterm` — see `docs/omc_command_reference.md`.
 
-The main command (no `COMMAND_ID`) attaches `ACTIONUI_WINDOW` or `NIB_DIALOG` and opens the window on launch.
+The main command (no `COMMAND_ID`) attaches `ACTIONUI_WINDOW` and opens the window on launch.
 
 ## Activation Modes
 
@@ -357,11 +356,9 @@ Attach a dialog to a command by adding one of these keys to the command dict:
 
 The JSON file `Contents/Resources/Base.lproj/MainWindow.json` defines the UI (see ActionUI skill).
 
-### NIB_DIALOG (legacy)
+`INIT_SUBCOMMAND_ID` fires when the window opens — use it to populate initial data. `END_OK_SUBCOMMAND_ID` / `END_CANCEL_SUBCOMMAND_ID` fire on confirm / cancel; `IS_BLOCKING` (false = modeless) chooses a modal window.
 
-Same shape with `NIB_NAME` instead of `JSON_NAME`, plus `IS_BLOCKING` (false = modeless), `END_OK_SUBCOMMAND_ID`, `END_CANCEL_SUBCOMMAND_ID`. See `docs/Nib-Guide.md`.
-
-`INIT_SUBCOMMAND_ID` fires when the window opens — use it to populate initial data. `END_OK_SUBCOMMAND_ID` / `END_CANCEL_SUBCOMMAND_ID` fire on confirm / cancel (these and `IS_BLOCKING` work for `ACTIONUI_WINDOW` too).
+`NIB_DIALOG` (Interface Builder windows) was removed in 6.0: the engine refuses such a command with an alert. To convert one, see `docs/nib_to_actionui_migration.md`.
 
 ## Other Useful Command Keys
 
@@ -431,9 +428,9 @@ source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.myapp.sh"
 "$dialog_tool" "$OMC_ACTIONUI_WINDOW_UUID" 10 omc_enable
 ```
 
-### NIB Dialogs (legacy — do not use for new applets)
+### NIB Dialogs (removed in 6.0)
 
-Nib (Interface Builder) dialogs predate ActionUI. `.nib` files can only be edited in Xcode, so agents cannot work on them directly. When maintaining an *existing* NIB applet: the window UUID is `$OMC_NIB_DLG_GUID`, control values arrive as `$OMC_NIB_DIALOG_CONTROL_<tag>_VALUE`, and the dialog attaches via a `NIB_DIALOG` dict in the command manifest. Full reference: `docs/Nib-Guide.md` and `docs/omc_controls_user_defined_runtime_attributes.md`. If the ask is to *replace* the nib rather than maintain it, that port is an agent-doable job with its own guide: `docs/nib_to_actionui_migration.md`.
+Nib (Interface Builder) dialogs predate ActionUI and no longer run: since 6.0 the engine refuses a `NIB_DIALOG` command with an alert, and an applet's `MainMenu.nib` is ignored. An existing NIB applet has to be converted before it works with a 6.0 engine; that port is an agent-doable job with its own guide, `docs/nib_to_actionui_migration.md`. `docs/Nib-Guide.md` and `docs/omc_controls_user_defined_runtime_attributes.md` describe the old format for that purpose only.
 
 
 
@@ -484,8 +481,6 @@ Full reference: `Distribution/AppletBuilder.app/Contents/Resources/Agents/README
 | `Empty` | Minimal bundle; no dialog |
 | `ActionUI Window` | ActionUI JSON dialog (recommended for OMC 5.0+) |
 | `ActionUI Web` | ActionUI dialog with embedded WebView |
-| `Nib Window` | NIB (Interface Builder) dialog |
-| `Nib Web` | NIB dialog with embedded WebView |
 
 The **Name** also becomes the executable name and script prefix. New applets are
 created with a `Command.json` manifest. Humans can do the same from the GUI's New
@@ -496,7 +491,7 @@ Applet panel.
 Edit the bundle's files directly:
 - `Contents/Resources/Command.json` (or `Command.plist` — OMC reads either, preferring `Command.json` when both exist)
 - `Contents/Resources/Scripts/*`
-- `Contents/Resources/Base.lproj/*.json` (ActionUI) or `*.nib` (NIB — edit in Xcode)
+- `Contents/Resources/Base.lproj/*.json` (ActionUI windows and `MainMenu.json`)
 
 After editing, run `appletbuilder validate <App.app>` to catch problems.
 
@@ -522,11 +517,10 @@ alert_tool="$OMC_OMC_SUPPORT_PATH/alert"
 pasteboard_tool="$OMC_OMC_SUPPORT_PATH/pasteboard"
 notify_tool="$OMC_OMC_SUPPORT_PATH/notify"
 
-# Works for both ActionUI and NIB windows
-window_uuid="${OMC_ACTIONUI_WINDOW_UUID:-$OMC_NIB_DLG_GUID}"
+window_uuid="$OMC_ACTIONUI_WINDOW_UUID"
 cmd_guid="$OMC_CURRENT_COMMAND_GUID"
 
-# Control IDs — match id values in ActionUI JSON or tag values in NIB
+# Control IDs — match id values in the ActionUI JSON
 STATUS_LABEL_ID=100
 RESULTS_TABLE_ID=101
 SAVE_BTN_ID=110
@@ -828,7 +822,7 @@ assert absence, pair it with a positive control in the same section.
 
 No rendering or layout. No synthesized UI events, so a typo'd `actionID` is
 silent here — `appletbuilder validate` is what catches that, so read its
-warnings. No NIB dialogs. A green `omctest` plus a green `validate` means the
+warnings. A green `omctest` plus a green `validate` means the
 handler logic is correct *given the documented engine contract*. What the
 engine itself does (launch chains, the order and overlap of view handlers,
 panels, close handlers) is what the integration tests below are for; a human
@@ -892,7 +886,7 @@ After creating or editing a command manifest, validate it before building. The v
 python3 Skill/scripts/validate_command_plist.py <App.app | Command.plist | Command.json>
 ```
 
-Pass the **applet bundle** (`.app` / `.omc`) rather than the bare file to also run bundle cross-checks (Layer 2); for a bundle the verifier resolves the command file itself, preferring `Command.json` when both exist (as OMC does): every `exe_script_file` command has a matching `Scripts/<COMMAND_ID>.*`, the `ACTIONUI_WINDOW` JSON / `NIB_DIALOG` nib resources exist, subcommand IDs (`INIT_SUBCOMMAND_ID`, `END_OK_SUBCOMMAND_ID`, `NEXT_COMMAND_ID`, …) resolve, and every `actionID` in the bundle's JSON UI documents points at a command that exists.
+Pass the **applet bundle** (`.app` / `.omc`) rather than the bare file to also run bundle cross-checks (Layer 2); for a bundle the verifier resolves the command file itself, preferring `Command.json` when both exist (as OMC does): every `exe_script_file` command has a matching `Scripts/<COMMAND_ID>.*`, the `ACTIONUI_WINDOW` JSON resources exist, subcommand IDs (`INIT_SUBCOMMAND_ID`, `END_OK_SUBCOMMAND_ID`, `NEXT_COMMAND_ID`, …) resolve, and every `actionID` in the bundle's JSON UI documents points at a command that exists.
 
 Exit codes: `0` clean · `2` warnings only · `1` errors (`[INFO]` lines are advisory and never affect the exit code). Fix every `[ERROR]` before building; investigate each `[WARNING]` (usually a typo, a wrong value type, or a key with no effect in its context); `[INFO]` lines are just FYI.
 
@@ -903,7 +897,7 @@ Common findings:
 - **"is removed and ignored by the engine"** - the engine no longer reads the key: drop it. OMC 5.6 dropped the output window's `WINDOW_ALPHA`, fades and custom PNG windows (`CUSTOM_*` keys; `WINDOW_TYPE` `custom` is read as `floating`).
 - **`VERSION` not `2`** — the engine loads nothing unless the root `VERSION` is `2`.
 - **"has no effect unless …"** — the key is ignored in this context (e.g. `FRACT_POSITION_*` without `WINDOW_POSITION=absolute`; `OUTPUT_WINDOW_SETTINGS` / `PROGRESS` without a popen / `*_with_output_window` mode; `INPUT_MENU` without a popup/combo `INPUT_TYPE`).
-- **Dangling subcommand ID / missing dialog resource** — a referenced `COMMAND_ID` (`INIT_SUBCOMMAND_ID`, `NEXT_COMMAND_ID`, …) or a `JSON_NAME` / `NIB_NAME` resource doesn't exist in the bundle. These are errors.
+- **Dangling subcommand ID / missing dialog resource** — a referenced `COMMAND_ID` (`INIT_SUBCOMMAND_ID`, `NEXT_COMMAND_ID`, …) or a `JSON_NAME` resource doesn't exist in the bundle. These are errors. (A `NIB_DIALOG` is a warning: removed in 6.0, the engine refuses the command.)
 - **Unresolvable `actionID` (warning)** - a control in a JSON UI document names a command that no `COMMAND_ID`, synthesized script, or engine-reserved id (`omc.dialog.ok`, `omc.dialog.cancel`, ...) provides, so clicking it does nothing. Scanned documents are `Resources/*.json` and `Resources/*.lproj/*.json` (where the engine looks one up by `JSON_NAME`), including `MainMenu.json`; every key that is exactly `actionID` or ends in `ActionID` (`onDropActionID`, `valueChangeActionID`, `viewDidLoadActionID`, ...) is checked. Nothing else statically checks this hop, so read these warnings.
 - **`actionID` matching "only case-insensitively" (warning)** - the command exists but is spelled with different case. The engine dispatches case-sensitively, so this control is just as dead as a typo. Match the `COMMAND_ID` exactly, and remember a script-only command's id is its filename's case (`MyApp.Save.sh` -> `MyApp.Save`).
 - **"no executable body" (info)** — a command has no inline `COMMAND` and no matching script file. This is a *valid, common* pattern when the command presents a dialog (its subcommands do the work) or chains via `NEXT_COMMAND_ID`, so it is only flagged at `[INFO]` level — and not at all when a dialog/chain is present. If the command was meant to run a script, the info note also catches a typo'd `COMMAND_ID`.
@@ -920,7 +914,7 @@ Full OMC reference is in the `docs/` folder (also bundled in `AppletBuilder.app/
 |------|----------|
 | `docs/omc_agent_tips_and_troubleshooting.md` | **For AI agents**: sh-vs-bash fatal syntax, script test harness, init/LoadableView lifecycle, table & picker runtime semantics, debug-logging workflow, pre-flight checklist — with real failure case studies |
 | `docs/building_omc_applet.md` | Step-by-step applet creation guide with all details |
-| `docs/omc_applet_catalog.md` | **Before building a new applet**: a classified inventory of every working applet in the collection - which one to clone for a batch converter, document editor, inspector, query builder, pipeline, or local-AI app, which are NIB-based (not agent-editable), and where to find each UI technique |
+| `docs/omc_applet_catalog.md` | **Before building a new applet**: a classified inventory of every working applet in the collection - which one to clone for a batch converter, document editor, inspector, query builder, pipeline, or local-AI app, which are NIB-based (they need converting to run on 6.0), and where to find each UI technique |
 | `docs/appletbuilder_user_guide.md` | UI navigation reference for the AppletBuilder GUI app (for human users) |
 | `docs/omc_command_reference.md` | Complete `Command.plist` key reference — all execution modes, dialog keys, output window settings, progress dialogs, input dialogs, services |
 | `docs/omc_runtime_context_reference.md` | Every `$OMC_*` environment variable and `__SPECIAL_WORD__` substitution |
@@ -936,12 +930,12 @@ Full OMC reference is in the `docs/` folder (also bundled in `AppletBuilder.app/
 | `docs/notify--help.md` | `notify` tool reference |
 | `docs/plister--help.md` | `plister` plist tool reference |
 | `docs/omc_services_reference.md` | macOS Services integration via `NSServices` in `Info.plist` |
-| `docs/Nib-Guide.md` | Nib dialog creation: editing in Xcode, control classes, connecting to OMC |
+| `docs/Nib-Guide.md` | The old nib dialog format (removed in 6.0), kept for converting applets |
 | `docs/nib_to_actionui_migration.md` | **Porting a NIB applet off Interface Builder**: eleven ordered steps, each with a check to verify before moving on - assessing whether the nib can be transcribed or must be reconstructed, reusing nib tags as ActionUI ids, the value-representation traps (empty `Picker` tags, Bool toggles, no initial selection, migrating old config files), layout, replacing an editable combo box, drop targets, manifest rewiring, the `eval`-quoting bug the port exposes, tests, and what only a human can confirm. Ends in a symptom index |
-| `docs/omc_controls_user_defined_runtime_attributes.md` | All OMC control classes in Nibs and their settable properties |
+| `docs/omc_controls_user_defined_runtime_attributes.md` | The old nib control classes and their properties, kept for converting applets |
 | `docs/MenuBar-Guide.md` | Menu bar JSON (`MainMenu.json`) in 5.1 applets: `actionID` command wiring, the `autoPopulate` Commands menu, deletion via `replacing`, Open Recent — the base array-root format is in the ActionUI skill (`ActionUI-MenuBar-JSON-Guide.md`) |
 
-When you need the exact keys for `NIB_DIALOG`, the complete list of `omc_dialog_control` operations, or the full env-var table, read the relevant `docs/` file directly.
+When you need the exact keys for `ACTIONUI_WINDOW`, the complete list of `omc_dialog_control` operations, or the full env-var table, read the relevant `docs/` file directly.
 
 For ActionUI JSON UI (element types, properties, validation, patterns): read the **ActionUI skill** (`../ActionUI/Skill/SKILL.md`). The OMC skill only covers how ActionUI connects to OMC — the JSON format itself is entirely in the ActionUI skill.
 

@@ -42,6 +42,6 @@ source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.myapp.sh"
 "$dialog_tool" "$OMC_ACTIONUI_WINDOW_UUID" 10 omc_enable
 ```
 
-### NIB Dialogs (legacy — do not use for new applets)
+### NIB Dialogs (removed in 6.0)
 
-Nib (Interface Builder) dialogs predate ActionUI. `.nib` files can only be edited in Xcode, so agents cannot work on them directly. When maintaining an *existing* NIB applet: the window UUID is `$OMC_NIB_DLG_GUID`, control values arrive as `$OMC_NIB_DIALOG_CONTROL_<tag>_VALUE`, and the dialog attaches via a `NIB_DIALOG` dict in the command manifest. Full reference: `docs/Nib-Guide.md` and `docs/omc_controls_user_defined_runtime_attributes.md`. If the ask is to *replace* the nib rather than maintain it, that port is an agent-doable job with its own guide: `docs/nib_to_actionui_migration.md`.
+Nib (Interface Builder) dialogs predate ActionUI and no longer run: since 6.0 the engine refuses a `NIB_DIALOG` command with an alert, and an applet's `MainMenu.nib` is ignored. An existing NIB applet has to be converted before it works with a 6.0 engine; that port is an agent-doable job with its own guide, `docs/nib_to_actionui_migration.md`. `docs/Nib-Guide.md` and `docs/omc_controls_user_defined_runtime_attributes.md` describe the old format for that purpose only.

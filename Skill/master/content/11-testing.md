@@ -186,7 +186,7 @@ assert absence, pair it with a positive control in the same section.
 
 No rendering or layout. No synthesized UI events, so a typo'd `actionID` is
 silent here — `appletbuilder validate` is what catches that, so read its
-warnings. No NIB dialogs. A green `omctest` plus a green `validate` means the
+warnings. A green `omctest` plus a green `validate` means the
 handler logic is correct *given the documented engine contract*. What the
 engine itself does (launch chains, the order and overlap of view handlers,
 panels, close handlers) is what the integration tests below are for; a human

@@ -1,3 +1,5 @@
+> **Removed in 6.0.** Nib dialogs no longer run. This list of the old nib controls' properties is kept for converting applets made before 6.0; see [nib_to_actionui_migration.md](nib_to_actionui_migration.md).
+
 OMC Controls Custom Properties in Nibs  
 The following custom properties are supported by OMC controls to put in “User Defined Runtime Attributes” in “Identity” inspector in Xcode when editing Nibs.
 

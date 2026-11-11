@@ -9,7 +9,7 @@ OMC (OnMyCommand) is a low-code macOS app development engine that lets you creat
 - **Applet**: A standalone mini-app (`.app` bundle) built on Abracode.framework
 - **Command**: An action handler defined in `Command.plist` that executes a script
 - **Command Group**: Multiple commands sharing the same `NAME` with unique `COMMAND_ID`s
-- **NIB**: Interface Builder file containing window/layout definitions
+- **ActionUI window**: a JSON document (in `Base.lproj`) describing a window's views
 - **Subcommand**: A command triggered by UI events (button click, dialog init, table selection)
 
 ---
@@ -17,7 +17,7 @@ OMC (OnMyCommand) is a low-code macOS app development engine that lets you creat
 ## Prerequisites
 
 1. **AppletBuilder**: Download OMC 5.0+ from https://github.com/abra-code/OMC/releases — `AppletBuilder.app` is the integrated development studio for building OMC applets
-2. **Xcode**: Required for editing NIBs and compiling/installing `.icon` documents into apps
+2. **Xcode**: Required for compiling/installing `.icon` documents into apps
 3. **Git**: For version control (recommended)
 
 > **For AI Agents**: To check the latest OMC release:
@@ -48,14 +48,12 @@ OMC (OnMyCommand) is a low-code macOS app development engine that lets you creat
 | `Empty` | Bare-bones applet — only Command.plist and a main script |
 | `ActionUI Window` | Pre-wired with an ActionUI JSON window (requires macOS 14.6+) |
 | `ActionUI Web` | ActionUI window with an embedded WebView for web-based UI |
-| `Nib Window` | Pre-wired with a NIB-based window |
-| `Nib Web` | NIB window with an embedded WebView |
 
 **Python**: Check "Include Python" in the New Applet dialog to embed a Python 3 runtime — there is no separate Python template.
 
 > **For AI Agents**: When assisting with applet development:
 > - **New applet**: Ask the user to create it via `AppletBuilder.app` (GUI-only workflow). You then edit the generated `Command.plist`, scripts, and UI files.
-> - **Existing applet**: Edit `Command.plist`, `Scripts/`, NIB, and ActionUI files in place.
+> - **Existing applet**: Edit `Command.plist`, `Scripts/`, and ActionUI JSON files in place.
 > - **After editing**: Ask the user to click Build in AppletBuilder's Build & Run pane — it updates the runtime and re-signs. Do NOT manually copy runtime binaries or Abracode.framework.
 
 ### Codesign for Local Execution
@@ -78,7 +76,7 @@ MyApp.app/
 │   │   ├── Command.plist              (command definitions)
 │   │   ├── Scripts/                   (action handler scripts)
 │   │   └── Base.lproj/
-│   │       └── *.nib                  (window definitions)
+│   │       └── *.json                 (ActionUI window definitions)
 │   └── _CodeSignature/                (codesigning)
 └── Library/                           (Python runtime, if Python was enabled)
 ```
@@ -190,7 +188,7 @@ Scripts for `exe_script_file` execution mode live in `MyApp.app/Contents/Resourc
 | `$OMC_APP_BUNDLE_PATH` | Applet bundle path |
 | `$OMC_APP_PROCESS_ID` | PID of the OMC host process (the applet itself here, not the frontmost app) |
 | `$OMC_OMC_SUPPORT_PATH` | OMC support tools |
-| `$OMC_NIB_DLG_GUID` | Dialog instance ID |
+| `$OMC_ACTIONUI_WINDOW_UUID` | Window instance ID (`$OMC_NIB_DLG_GUID` is the same value under its older name) |
 | `$OMC_CURRENT_COMMAND_GUID` | Command execution ID |
 
 ### Example Script (Scripts/MyApp.main.sh)
@@ -225,153 +223,11 @@ For `exe_script_file`, environment variables that are not auto-exported must be 
 
 ---
 
-## Step 4: Create Custom UI with NIBs
+## Step 4: Create Custom UI with ActionUI JSON Windows
 
-### NIB Formats
+Windows are defined with **ActionUI**, a declarative JSON format for SwiftUI-based views. Requires macOS 14.6+.
 
-| Format | Editable | Loadable | Notes |
-|--------|----------|----------|-------|
-| `.xib` | Yes | No | Xcode format, needs compilation |
-| `.nib` (flat) | No | Yes | Compiled by Xcode |
-| `.nib` (bundled) | Yes | Yes | Contains `designable.nib` + `keyedobjects.nib` |
-
-**Recommendation**: Use bundled `.nib` format for in-place editing.
-
-> **For AI Agents**: Prefer editing existing NIB files rather than creating new ones. Use [Browser.nib](../AbracodeFramework/TestBundles/Browser.omc/Contents/Resources/Base.lproj/Browser.nib/designable.nib) (an `OMCTextField`, an `OMCButton` and an `OMCTableView`) as a reference. Key patterns:
->
-> **Adding OMC properties** via `userDefinedRuntimeAttributes`:
-> ```xml
-> <userDefinedRuntimeAttributes>
->     <userDefinedRuntimeAttribute type="string" keyPath="commandID" value="browser.path.changed"/>
->     <userDefinedRuntimeAttribute type="string" keyPath="doubleClickCommandID" value="browser.open.selection"/>
-> </userDefinedRuntimeAttributes>
-> ```
->
-> **Tags**: Most controls use direct `tag="123"` attribute. Only add `tag` to `userDefinedRuntimeAttributes` for OMC controls without native tag support (OMCBox, OMCIKImageView, OMCPDFView, OMCProgressIndicator, OMCTextView, OMCView, OMCWebView). See [omc_controls_user_defined_runtime_attributes.md](omc_controls_user_defined_runtime_attributes.md) for full property list.
->
-> **Special chars**: base64-encoded in `base64-UTF8="YES"` (e.g., `\n` = `Cg==`, `\t` = `JQ==`)
-
-### Create Window
-
-1. Open Xcode
-2. File → New → File → macOS → User Interface → Window
-3. Save as `MyDialog.xib`
-
-### Compile to Bundled NIB
-
-```bash
-/usr/bin/xcrun ibtool --compile MyDialog.nib --flatten NO MyDialog.xib
-```
-
-Result:
-```
-MyDialog.nib/
-    designable.nib    <- Editable XML
-    keyedobjects.nib   <- Loadable binary
-```
-
-### Place in Applet
-
-```
-MyApp.app/Contents/Resources/Base.lproj/MyDialog.nib
-```
-
-### Connect NIB to Command
-
-```xml
-<dict>
-    <key>NAME</key>
-    <string>MyApp</string>
-    <key>COMMAND_ID</key>
-    <string>myapp.show.window</string>
-    <key>EXECUTION_MODE</key>
-    <string>exe_script_file</string>
-    <key>NIB_DIALOG</key>
-    <dict>
-        <key>NIB_NAME</key>
-        <string>MyDialog</string>
-        <key>IS_BLOCKING</key>
-        <false/>                      <!-- Non-modal -->
-        <key>INIT_SUBCOMMAND_ID</key>
-        <string>myapp.window.init</string>
-        <key>END_CANCEL_SUBCOMMAND_ID</key>
-        <string>myapp.window.close</string>
-    </dict>
-</dict>
-```
-
-### NIB Dialog Keys
-
-| Key | Description |
-|-----|-------------|
-| `NIB_NAME` | NIB filename without extension |
-| `IS_BLOCKING` | `true`=modal, `false`=non-modal |
-| `INIT_SUBCOMMAND_ID` | Command on window open |
-| `END_OK_SUBCOMMAND_ID` | Command on OK button |
-| `END_CANCEL_SUBCOMMAND_ID` | Command on Cancel/close |
-
----
-
-## Step 5: Add Controls to NIB
-
-### OMC-Specific Controls
-
-| Control | Class in Xcode | Purpose |
-|---------|----------------|---------|
-| Button | OMCButton | Triggers command on click |
-| TextField | OMCTextField | Text input |
-| TableView | OMCTableView | Data display |
-| PopUpButton | OMCPopUpButton | Dropdown menu |
-| Slider | OMCSlider | Value selection |
-| SearchField | OMCSearchField | Search input |
-| ProgressIndicator | OMCProgressIndicator | Progress display |
-
-### Control Properties (User Defined Runtime Attributes)
-
-#### OMCButton
-| Property | Type | Description |
-|----------|------|-------------|
-| `commandID` | String | Command to trigger on click |
-| `mappedOnValue` | String | Value when checked (checkbox) |
-| `mappedOffValue` | String | Value when unchecked |
-| `acceptFileDrop` | Boolean | Accept file drops |
-| `acceptTextDrop` | Boolean | Accept text drops |
-
-#### OMCTableView
-| Property | Type | Description |
-|----------|------|-------------|
-| `selectionCommandID` | String | Command on selection change |
-| `doubleClickCommandID` | String | Command on double-click |
-| `combinedSelectionSeparator` | String | Separator for multi-select |
-| `multipleColumnSeparator` | String | Column separator |
-
-#### OMCTextField
-| Property | Type | Description |
-|----------|------|-------------|
-| `commandID` | String | Command on return/confirm |
-| `escapingMode` | String | Text escaping mode |
-
-### Control Tags
-
-- **Tag = 0**: Control not findable by OMC (use for buttons that only trigger commands)
-- **Tag > 0**: Control findable via `OMC_NIB_DIALOG_CONTROL_<TAG>_VALUE`
-
-Example: TextField with tag=4 → value available as `$OMC_NIB_DIALOG_CONTROL_4_VALUE`
-
-### Configure Table View
-
-1. Add NSTableView inside NSScrollView
-2. Set `customClass="OMCTableView"`
-3. Add columns with header cells
-4. Set `tag="1"` directly as attribute on the table view
-
-> **Tip**: Copy from Browser.nib and modify for your needs.
-
----
-
-## Step 5b: Alternative — ActionUI JSON Dialogs (OMC 5.0+)
-
-Instead of NIBs, you can define windows using **ActionUI** — a declarative JSON format for SwiftUI-based views. Requires macOS 14.6+.
+> Nib (Interface Builder) windows are no longer supported since 6.0. To convert an older applet, see [nib_to_actionui_migration.md](nib_to_actionui_migration.md).
 
 ### Connect JSON to Command
 
@@ -436,7 +292,7 @@ window_uuid="$OMC_ACTIONUI_WINDOW_UUID"
 
 ---
 
-## Step 6: Communicate with UI
+## Step 5: Communicate with UI
 
 ### omc_dialog_control Tool
 
@@ -444,7 +300,7 @@ Located at `$OMC_OMC_SUPPORT_PATH/omc_dialog_control`
 
 ```bash
 dialog_tool="$OMC_OMC_SUPPORT_PATH/omc_dialog_control"
-dlg_guid="$OMC_NIB_DLG_GUID"
+dlg_guid="$OMC_ACTIONUI_WINDOW_UUID"
 ```
 
 ### Common Operations
@@ -478,17 +334,17 @@ echo -e "row1\tdata1\tdata2" | "${dialog_tool}" "${dlg_guid}" "1" "omc_table_add
 Values are available as environment variables:
 
 ```bash
-# TextField with tag 4
-PATTERN="${OMC_NIB_DIALOG_CONTROL_4_VALUE}"
+# TextField with id 4
+PATTERN="${OMC_ACTIONUI_VIEW_4_VALUE}"
 
-# Checkbox (1=on, 0=off)
-IS_RECURSIVE="${OMC_NIB_DIALOG_CONTROL_2_VALUE}"
+# Toggle with id 2
+IS_RECURSIVE="${OMC_ACTIONUI_VIEW_2_VALUE}"
 
-# Table column 4 of selected row
-FILE_PATH="${OMC_NIB_TABLE_1_COLUMN_4_VALUE}"
+# Table with id 1: column 4 of the selected row
+FILE_PATH="${OMC_ACTIONUI_TABLE_1_COLUMN_4_VALUE}"
 
 # All rows, column 0 (special: all columns combined)
-ALL_DATA="${OMC_NIB_TABLE_1_COLUMN_0_ALL_ROWS}"
+ALL_DATA="${OMC_ACTIONUI_TABLE_1_COLUMN_0_ALL_ROWS}"
 ```
 
 ### Table Column Indexing
@@ -498,7 +354,7 @@ ALL_DATA="${OMC_NIB_TABLE_1_COLUMN_0_ALL_ROWS}"
 
 ---
 
-## Step 7: Dialogs and User Input
+## Step 6: Dialogs and User Input
 
 ### Save As Dialog
 
@@ -552,7 +408,7 @@ Result: `$OMC_DLG_INPUT_TEXT` contains user input.
 
 ---
 
-## Step 8: Chaining Commands
+## Step 7: Chaining Commands
 
 ### Static Chaining
 
@@ -572,7 +428,7 @@ next_command_tool="$OMC_OMC_SUPPORT_PATH/omc_next_command"
 
 ---
 
-## Step 8b: Opening the Applet with a URL
+## Step 7b: Opening the Applet with a URL
 
 Applets created by AppletBuilder declare a URL scheme derived from the applet name (`CFBundleURLSchemes` in `Info.plist`). macOS starts the applet, if needed, and hands it any URL on that scheme.
 
@@ -623,7 +479,7 @@ Any web page, email, document or application can send a URL, and the sender choo
 
 ---
 
-## Step 9: Long-Running Processes
+## Step 8: Long-Running Processes
 
 Background processes started by scripts can outlive the parent applet. Handle cleanup properly.
 
@@ -639,7 +495,7 @@ OMC dispatches commands for app lifecycle events when a matching `COMMAND_ID` is
 | `app.did.deactivate` | App went to background (e.g., user switched to another app) |
 | `app.will.terminate` | App is about to quit |
 
-`app.did.activate` is useful for detecting external changes made while the app was in the background. For per-window activation, use `WINDOW_DID_ACTIVATE_SUBCOMMAND_ID` in `ACTIONUI_WINDOW` or `NIB_DIALOG` (see [Command Reference](omc_command_reference.md)).
+`app.did.activate` is useful for detecting external changes made while the app was in the background. For per-window activation, use `WINDOW_DID_ACTIVATE_SUBCOMMAND_ID` in `ACTIONUI_WINDOW` (see [Command Reference](omc_command_reference.md)).
 
 ### Termination Handler
 
@@ -690,7 +546,7 @@ See [AIChatApp](https://github.com/abra-code/AIChatApp) for full example.
 
 ---
 
-## Step 10: Output Windows
+## Step 9: Output Windows
 
 For commands that show results:
 
@@ -735,7 +591,7 @@ MyApp.app/
     │   │   ├── MyApp.window.close  <- Window close handler
     │   │   └── MyApp.app.will.terminate  <- App quit handler
     │   ├── Base.lproj/
-    │   │   └── MyDialog.nib         <- Window definition
+    │   │   └── MyDialog.json        <- Window definition
     │   └── *.lproj/                 <- Localizations
     └── _CodeSignature/
 ```
@@ -755,10 +611,7 @@ MyApp.app/
 3. **Control-click to show output**:
    Hold Control when starting command to see stdout (stdout only: add `exec 2>&1` to the script to see its errors there too)
 
-4. **Test nib loading**:
-   ```bash
-   omc_dialog_control <GUID> omc_window omc_show
-   ```
+4. **Check a window's JSON**: AppletBuilder's UI Files pane validates and previews it; `appletbuilder validate` does the same from Terminal
 
 ---
 
@@ -767,7 +620,7 @@ MyApp.app/
 ### OMC Documentation
 - [Command Reference](omc_command_reference.md)
 - [Runtime Context Reference](omc_runtime_context_reference.md)
-- [Controls Reference](omc_controls_user_defined_runtime_attributes.md)
+- [Nib to ActionUI Migration](nib_to_actionui_migration.md) (for applets made before 6.0)
 
 ### Example Applets
 - [WatchdogApp](https://github.com/abra-code/WatchdogApp) - File system monitoring in an ActionUI window with Python handlers (OMC 5.3). Its original NIB-era step-by-step guide, `building_watchdog.md`, is kept unmaintained under `Archive/`

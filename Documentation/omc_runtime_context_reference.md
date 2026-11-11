@@ -6,7 +6,7 @@ This document lists **all special words** (`__FOO__`) and their corresponding **
 The list is derived **directly** from the source files:
 
 * `AbracodeFramework/CommandDescription.cp` – core substitution and export logic  
-* `AbracodeFramework/NibDialogControl.cp` – NIB / WebView parsing  
+* `AbracodeFramework/OMCDialogControlHelpers.cp` – parsing of the dynamic ActionUI control words  
 
 ### How the engine works
 
@@ -60,7 +60,7 @@ The list is derived **directly** from the source files:
 | **System** | `__APP_BUNDLE_PATH__` | `$OMC_APP_BUNDLE_PATH` | Applet bundle path (preferred). | **Always** |
 | **System** | `__APP_PROCESS_ID__` | `$OMC_APP_PROCESS_ID` | PID of the applet/host app itself, not the frontmost app. | **Always** |
 | **System** | `__MY_EXTERNAL_BUNDLE_PATH__` | `$OMC_MY_EXTERNAL_BUNDLE_PATH` | External `.omc` bundle path. | Scanned |
-| **Dialog** | `__NIB_DLG_GUID__` | `$OMC_NIB_DLG_GUID` | Unique NIB dialog instance GUID. | **Always** |
+| **Dialog** | `__NIB_DLG_GUID__` | `$OMC_NIB_DLG_GUID` | The window's UUID, the same value as `OMC_ACTIONUI_WINDOW_UUID` (named after the nib dialogs, removed in 6.0, and kept for scripts). | **Always** |
 | **Dialog** | `__ACTIONUI_WINDOW_UUID__` | `$OMC_ACTIONUI_WINDOW_UUID` | Unique ActionUI window UUID. OMC 5.0 | **Always** |
 | **ActionUI Trigger** | `__ACTIONUI_TRIGGER_VIEW_ID__` | `$OMC_ACTIONUI_TRIGGER_VIEW_ID` | ViewID of the ActionUI control that fired an action. Available only when subcommand is dispatched from a control action. | **Always (when set)** |
 | **ActionUI Trigger** | `__ACTIONUI_TRIGGER_VIEW_PART_ID__` | `$OMC_ACTIONUI_TRIGGER_VIEW_PART_ID` | ViewPartID of the control event (e.g. row index for table row tap). Available only when subcommand is dispatched from a control action. | **Always (when set)** |
@@ -133,16 +133,9 @@ echo "Input: ${OMC_DLG_INPUT_TEXT}"
 
 ## Dynamic Control Access
 
-### NIB Dialog Controls
+### NIB Dialog Controls (removed in 6.0)
 
-Access NIB dialog control values using dynamic special words:
-
-| Special Word | Environment Variable | Description |
-|--------------|---------------------|-------------|
-| `__NIB_DIALOG_CONTROL_<ID>_VALUE__` | `OMC_NIB_DIALOG_CONTROL_<ID>_VALUE` | Value of NIB control with given tag. |
-| `__NIB_TABLE_<ID>_COLUMN_<COL>_VALUE__` | `OMC_NIB_TABLE_<ID>_COLUMN_<COL>_VALUE` | Table selected cell value. |
-| `__NIB_TABLE_<ID>_COLUMN_<COL>_ALL_ROWS__` | `OMC_NIB_TABLE_<ID>_COLUMN_<COL>_ALL_ROWS` | All rows in table column (expensive). |
-| `__NIB_WEBVIEW_<ID>_ELEMENT_<ELEM>_VALUE__` | `OMC_NIB_WEBVIEW_<ID>_ELEMENT_<ELEM>_VALUE` | WebView element value. |
+The nib dialogs' control words (`__NIB_DIALOG_CONTROL_<ID>_VALUE__`, `__NIB_TABLE_<ID>_COLUMN_<COL>_VALUE__`, `__NIB_TABLE_<ID>_COLUMN_<COL>_ALL_ROWS__`, `__NIB_WEBVIEW_<ID>_ELEMENT_<ELEM>_VALUE__` and their `OMC_NIB_...` variables) went with the nib dialogs in 6.0. The engine no longer recognizes them: the `__...__` form stays in the command as written, and such a name in `ENVIRONMENT_VARIABLES` is an ordinary custom variable. ActionUI windows use the `ACTIONUI_VIEW` and `ACTIONUI_TABLE` words below; [nib_to_actionui_migration.md](nib_to_actionui_migration.md) maps one to the other.
 
 ### ActionUI Views (OMC 5.0 or higher)
 

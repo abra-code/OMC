@@ -98,7 +98,7 @@ appletbuilder create --template "ActionUI Window" --name MyTool --dest ~/Develop
 ```
 
 Templates live in `OMC/Distribution/AppletBuilder.app/Contents/Resources/Templates/`:
-`ActionUI Window.applet`, `ActionUI Web.applet`, `Nib Window.applet`, `Nib Web.applet`, `Empty.applet`.
+`ActionUI Window.applet`, `ActionUI Web.applet`, `Empty.applet` (the two Nib templates went in 6.0).
 
 **Decision rule:** clone a real applet when the new app shares an interaction model with one
 of the families below (that is almost always true). Fall back to `ActionUI Window` only for a
@@ -106,97 +106,56 @@ genuinely novel shape.
 
 ---
 
-## 2. Read this before you pick: the NIB constraint
+## 2. Read this before you pick: NIB applets do not run on 6.0
 
-Two UI generations exist in this collection.
+Two UI generations exist in this collection, and only one runs on 6.0 (Command Workshop).
 
-| Generation | Marker in the manifest | Marker on disk | Agent-editable? |
+| Generation | Marker in the manifest | Marker on disk | On 6.0 |
 |---|---|---|---|
-| **ActionUI JSON** (current) | `ACTIONUI_WINDOW` | `Base.lproj/*.json` | **Yes** - plain text, schema-validated, previewable |
-| **Cocoa NIB** (legacy) | `NIB_DIALOG` | `Base.lproj/*.nib` | **In principle yes, in practice no** - see below |
+| **ActionUI JSON** (current) | `ACTIONUI_WINDOW` | `Base.lproj/*.json` | **Runs** - plain text, schema-validated, previewable |
+| **Cocoa NIB** (removed in 6.0) | `NIB_DIALOG` | `Base.lproj/*.nib` | **Does not run until converted** - see below |
 
-A `.nib` in these applets is not a single opaque file. It is a bundle directory holding both a
+Since 6.0 the engine refuses a `NIB_DIALOG` command (an alert, the command canceled), the
+applet's executable no longer loads a `MainMenu.nib` (`NSMainNibFile` is ignored; the menu bar
+is built in code), and an applet's old executable does not launch with a 6.0 framework, so a
+NIB applet must be rebuilt with AppletBuilder 6.0 *and* have its windows converted to ActionUI
+JSON. `nib_to_actionui_migration.md` is the step-by-step guide.
+
+**Reading a nib to convert it.** A `.nib` in these applets is a bundle directory holding both a
 source and a build product:
 
 ```
 Base.lproj/<Name>.nib/
     designable.nib          <- Interface Builder XIB, XML, human-readable
-    keyedobjects.nib        <- compiled binary, this is what loads at runtime
+    keyedobjects.nib        <- compiled binary
 ```
 
-Every app-owned nib across the four NIB applets has this shape, and every one carries a
-`designable.nib`. No `.xib` file exists anywhere in these projects, so the in-bundle
-`designable.nib` is the source of record. The compiled member is `NIBArchive` in most cases
-(Xattr, Enoch, AIChat) and an Apple binary plist in Delta - do not assume either.
-`Xattr.nib` is the only one shipping per-deployment-target variants
-(`keyedobjects-101300.nib` and `keyedobjects-110000.nib`); every other nib ships a single
-`keyedobjects.nib`.
+Every app-owned nib across the four NIB applets carries a `designable.nib`, and no `.xib`
+exists anywhere in these projects, so `designable.nib` is the source of record to read. Three
+couplings have to be carried over, none of them visible to a schema check:
 
-So the XML *is* editable text and `ibtool` *can* regenerate the binary. The constraint is not
-the file format - it is that **an agent cannot author or substantially restructure an XIB with
-any confidence.** Three specific traps, none of them visible to a schema check:
-
-1. **Controls must be OMC subclasses.** A control has to be reclassed to its OMC subclass to
-   talk to OMC at all - add a stock `NSButton` and it compiles cleanly and is completely inert.
-   `Nib-Guide.md` carries the mapping table (`OMCButton`, `OMCTextField`, `OMCComboBox`,
-   `OMCPopUpButton`, `OMCTableView`, `OMCBox`, and the rest); menu items are `OMCMenuItem`,
-   documented in `MenuBar-Guide.md` rather than in `Nib-Guide.md`. Watchdog 1.0's
-   `WatchdogMonitor.nib` (tag `v1.0` in WatchdogApp; the current app has no nib), for
-   instance, was `OMCButton`s, `OMCTextField`s and one `OMCTableView`; the only stock AppKit views
-   left in it are the static labels and the table's scroll view, which is exactly what
-   `Nib-Guide.md` permits - "purely decorational controls do not need to be renamed".
-2. **Two independent couplings, both by hand-maintained identifier.** A `commandID` user-defined
-   runtime attribute binds the control to a `COMMAND_ID` in the manifest, one per actionable
-   control; tables use `selectionCommandID` / `doubleClickCommandID` instead. Separately, the
-   integer NSView `tag` binds it to the scripts: the script reads
-   `$OMC_NIB_DIALOG_CONTROL_<tag>_VALUE` and writes back with `omc_dialog_control ... <tag>`.
-   Note the manifest itself contains no control identifiers - grep `Command.plist` for
-   `CONTROL_ID` and you get zero hits. Get either identifier wrong and the window still builds.
+1. **Controls are OMC subclasses** (`OMCButton`, `OMCTextField`, `OMCComboBox`, `OMCPopUpButton`,
+   `OMCTableView`, `OMCBox`, ...; `Nib-Guide.md` keeps the table). Each becomes the ActionUI element
+   of the same role; stock AppKit views in the nib are decoration (labels, scroll views).
+2. **Two identifiers per control.** A `commandID` user-defined runtime attribute binds the control
+   to a `COMMAND_ID` (tables use `selectionCommandID` / `doubleClickCommandID`); in ActionUI that is
+   the element's `actionID`. The integer NSView `tag` binds it to the scripts, which read
+   `$OMC_NIB_DIALOG_CONTROL_<tag>_VALUE` and write with `omc_dialog_control ... <tag>`; reuse the tag
+   as the ActionUI `id` and the scripts change only from `OMC_NIB_DIALOG_CONTROL_<tag>_VALUE` to
+   `OMC_ACTIONUI_VIEW_<tag>_VALUE` (and `OMC_NIB_TABLE_` to `OMC_ACTIONUI_TABLE_`).
 3. **Menu items carry `mappedValue`** runtime attributes mapping a selection to the string the
-   script receives, one per item. These are pure convention; nothing checks them.
+   script receives, one per item: in ActionUI, the option's `tag`.
 
-These are springs-and-struts layouts, not autolayout - there are no `<constraint>` elements in
-the applet nibs at all - so the usual "you will break the constraint graph" worry does not apply
-here. The real failure mode is quieter: a nib that compiles, loads,
-and does nothing.
+**Never choose a NIB applet as the starting point for a new applet.** If the user hands you one
+to extend, the first job is the conversion; the scripts are shell or Python text and carry over
+with the variable renames above.
 
-**Recompiling, if you must.** Plain `ibtool --compile` emits a *flat file* and would replace the
-nib directory with one. The bundle shape only survives with:
+The `AIChat.nib` in AIChat and Enoch is a thin shell around a single `OMCWebKitView` with zero
+tags and zero commandIDs; the UI lives in the JavaScript, not the nib, so their conversion is one
+ActionUI `WebView` element.
 
-```
-ibtool --flatten NO --compile Out.nib designable.nib
-```
-
-Three caveats. The round trip rewrites `designable.nib` itself (the toolsVersion is bumped), so
-the source no longer matches what shipped. The versioned `keyedobjects-NNNNNN.nib` names come
-from an Xcode build and are not reproducible this way, so Xattr cannot be round-tripped
-faithfully. And the recompiled binary is not byte-identical to the shipped one, so an in-place
-recompile breaks the code signature seal and the applet must be re-signed. `ibtool` also needs
-full Xcode, and under a sandbox it fails *silently* - exit 0, no output file.
-
-The practical rule:
-
-- A **cosmetic, single-attribute** change to an existing element (a label string, a title, a
-  frame number) is feasible with the recipe above, followed by a re-sign and a user check that
-  the window still loads.
-- **Adding a control, changing a layout, or rewiring a command** is not. That needs Xcode and a
-  human.
-
-**Never choose a NIB applet as the starting point for a new applet.** Never choose the
-`Nib Window` / `Nib Web` templates. If the user hands you a NIB applet to extend, say plainly
-that anything beyond a trivial attribute tweak needs Xcode, and scope your work to the scripts -
-those are shell or Python text and fully editable.
-
-Two footnotes. The dialog nibs inside `Abracode.framework`
-(`Versions/A/Resources/Base.lproj/input_combo.nib`, `OMCOutputWindow.nib`, and
-the rest) really *are* flat, sourceless compiled files - the "opaque binary" description is
-accurate for those, and they are framework internals you should not touch regardless. And the
-`AIChat.nib` in AIChat and Enoch is a thin shell around a single `OMCWebKitView` with zero
-tags and zero commandIDs; the UI lives in the JavaScript, not the nib, which makes those two far
-less constrained than Xattr or Delta.
-
-NIB applets in this collection (reference only, not clone sources): Xattr, Delta, Enoch, and
-AIChat (hybrid: NIB main window + ActionUI dialogs).
+NIB applets in this collection (reference only, not clone sources; they need converting to run
+on 6.0): Xattr, Delta, Enoch, and AIChat (hybrid: NIB main window + ActionUI dialogs).
 
 **Find.app and Watchdog.app are the worked examples of the migration out**, and the reason this
 list is shorter than it used to be. Find.app is the larger one. Through 1.x it was the richest NIB applet here - 2.0 is nibless -
@@ -215,7 +174,7 @@ dropping the menu nib entirely. `WatchdogMonitor.nib` became `Base.lproj/Watchdo
 nib's tags reused as ActionUI ids, `Command.plist` became `Command.json` requiring OMC 5.3, and
 the shell handlers were rewritten in Python (the shell originals sit unmaintained under
 `Archive/`). `MainMenu.nib` went with no `MainMenu.json` in its place: dropping `NSMainNibFile`
-from `Info.plist` makes the engine build the standard menu bar itself. Read WatchdogApp's
+from `Info.plist` made the engine build the standard menu bar itself (since 6.0 it always does). Read WatchdogApp's
 history from `6fe9216` ("Port Watchdog from a nib dialog to an ActionUI JSON window") through
 `21d9160` ("Widen the window's checkbox column and drop the last nib"). What did not survive:
 multi-row selection (ActionUI's `Table` selects one row, so Copy, File info, Reveal and
@@ -229,7 +188,7 @@ Match a new applet against these six axes, then read the quick-pick table in sec
 
 | Axis | Values seen in this collection |
 |---|---|
-| **A. UI generation** | ActionUI JSON (current, most apps) / Cocoa NIB (legacy) / hybrid |
+| **A. UI generation** | ActionUI JSON (current, most apps) / Cocoa NIB (removed in 6.0) / hybrid |
 | **B. Script language** | pure shell / pure embedded Python / shell + Python helpers / shell + JS (WebKit bridge) |
 | **C. Interaction model** | batch converter queue / document editor (open-save-dirty) / inspector-viewer / query builder (compose a command, run it) / linear pipeline-wizard / chat / live monitor / meta dev tool |
 | **D. Input routing** | `act_always` (launch into a window) / `act_file_or_folder`, `act_file`, `act_folder` (drop and open-with) / in-window drop targets / macOS Services / declared document types + UTI |
@@ -522,8 +481,6 @@ is always higher.
 - [`ChatView`](https://github.com/abra-code/ChatView), [`DiffView`](https://github.com/abra-code/DiffView), [`RichText`](https://github.com/abra-code/RichText), [`AsyncImageCache`](https://github.com/abra-code/AsyncImageCache) - Swift packages consumed by ActionUI.
 - [`PillowUI`](https://github.com/abra-code/PillowUI) - a Python + ActionUI JSON demo, not a bundle.
 - [`Shortcuts`](https://github.com/abra-code/Shortcuts) (Abracode Shortcuts) - a conventional Cocoa app, no OMC manifest.
-- [`OMC/OMCTestApp/`](https://github.com/abra-code/omc/tree/master/OMCTestApp) - has a `Command.plist`, but it is the engine's own NIB-based test harness
-  for OMC features rather than a shippable applet. Not a clone source.
 
 **Gaps - no applet demonstrates these yet.** If the user asks for one, there is no template to
 copy and you are writing it from the guides:

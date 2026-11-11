@@ -23,15 +23,14 @@ OMC exports these variables into every script's environment:
 | Variable | Description |
 |----------|-------------|
 | `$OMC_ACTIONUI_WINDOW_UUID` | Window UUID for ActionUI dialog scripts |
-| `$OMC_NIB_DLG_GUID` | Window UUID for NIB dialog scripts |
+| `$OMC_NIB_DLG_GUID` | The same window UUID under its older name (kept for scripts) |
 
 ### Control Values
 
 | Variable | Description |
 |----------|-------------|
 | `$OMC_ACTIONUI_VIEW_<N>_VALUE` | Current value of ActionUI element with `id` N |
-| `$OMC_NIB_DIALOG_CONTROL_<N>_VALUE` | Value of NIB control with tag N |
-| `$OMC_NIB_TABLE_<N>_COLUMN_<M>_VALUE` | Selected row value from NIB table tag N, column M (1-based; column 0 = all columns tab-joined) |
+| `$OMC_ACTIONUI_TABLE_<N>_COLUMN_<M>_VALUE` | Selected row value from table `id` N, column M (1-based; column 0 = all columns tab-joined) |
 
 ### ActionUI Trigger Context
 

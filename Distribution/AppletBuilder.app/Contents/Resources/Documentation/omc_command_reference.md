@@ -265,119 +265,15 @@ See the full **[OMC Runtime Context Reference](omc_runtime_context_reference.md)
 ---
 
 
-## 6. NIB_DIALOG – Custom User Interfaces
+## 6. NIB_DIALOG (removed in 6.0)
 
-`NIB_DIALOG` allows an **action handler** to present a **custom Interface Builder (.nib) dialog** instead of using built-in input prompts. The nib is loaded from the applet bundle, and OMC bridges controls to command execution via **subcommands** and **runtime tools**.
-
----
-
-### `NIB_DIALOG` Dictionary Keys
-
-| Key | Type | Required | Description & Best Practices | Example |
-|-----|------|----------|------------------------------|---------|
-| `NIB_NAME` | String | Yes | Name of the `.nib` file **without extension** in `Resources/Nibs/`. Case-sensitive. | `"MySettingsDialog"` |
-| `IS_BLOCKING` | Boolean | No (default: `true`) | If `<false/>`, dialog is non-modal (async). Use for background tasks with live updates. | `<false/>` |
-| `INIT_SUBCOMMAND_ID` | String | No | `COMMAND_ID` to run **before** dialog appears (e.g., populate table). | `"init_table"` |
-| `END_OK_SUBCOMMAND_ID` | String | No | `COMMAND_ID` to run on **OK / Confirm** button. | `"apply_changes"` |
-| `END_CANCEL_SUBCOMMAND_ID` | String | No | `COMMAND_ID` to run on **Cancel**. | `"cleanup"` |
-| `WINDOW_DID_ACTIVATE_SUBCOMMAND_ID` | String | No | `COMMAND_ID` to run when the window becomes key (gains focus). Use to detect external changes. | `"myapp.window.activated"` |
-| `WINDOW_DID_DEACTIVATE_SUBCOMMAND_ID` | String | No | `COMMAND_ID` to run when the window resigns key (loses focus). | `"myapp.window.deactivated"` |
-
-> **Note**: `IS_COCOA` is **removed** in recent OMC versions.
-
----
-
-### Example: Full NIB_DIALOG Definition
-
-```xml
-<dict>
-  <key>NAME</key>
-  <string>Edit Metadata</string>
-  <key>COMMAND_ID</key>
-  <string>show_metadata_editor</string>
-  <key>EXECUTION_MODE</key>
-  <string>exe_script_file</string>
-  <key>NIB_DIALOG</key>
-  <dict>
-    <key>NIB_NAME</key>
-    <string>MetadataEditor</string>
-    <key>IS_BLOCKING</key>
-    <true/>
-    <key>INIT_SUBCOMMAND_ID</key>
-    <string>populate_metadata</string>
-    <key>END_OK_SUBCOMMAND_ID</key>
-    <string>save_metadata</string>
-    <key>END_CANCEL_SUBCOMMAND_ID</key>
-    <string>discard_changes</string>
-  </dict>
-</dict>
-```
-
----
-
-### Subcommand Flow Example
-
-```xml
-<!-- Init: Populate table -->
-<dict>
-  <key>NAME</key>
-  <string>Edit Metadata</string>
-  <key>COMMAND_ID</key>
-  <string>populate_metadata</string>
-  <key>EXECUTION_MODE</key>
-  <string>exe_script_file</string>
-</dict>
-
-<!-- OK: Save changes -->
-<dict>
-  <key>NAME</key>
-  <string>Edit Metadata</string>
-  <key>COMMAND_ID</key>
-  <string>save_metadata</string>
-  <key>EXECUTION_MODE</key>
-  <string>exe_script_file</string>
-</dict>
-```
-
-**Script** (`Scripts/populate_metadata.sh`):
-```bash
-#!/bin/bash
-# Read file metadata
-tags=$(/usr/bin/mdls -name kMDItemKeywords "${OMC_OBJ_PATH}" | grep -o '"[^"]*"')
-# Populate table ID 101
-echo "Tag\tValue" > /tmp/table_data
-for tag in $tags; do
-  echo "${tag}\tEditable" >> /tmp/table_data
-done
-omc_dialog_control "${OMC_NIB_DLG_GUID}" 101 add_rows "$(cat /tmp/table_data)"
-```
-
----
-
-### Runtime Control Tools (in scripts)
-
-| Tool | Purpose |
-|------|--------|
-| `omc_dialog_control "$OMC_NIB_DLG_GUID" <ID> <value>` | Set/get control value. |
-| `omc_dialog_control "$OMC_NIB_DLG_GUID" <tableID> add_rows "<tab-sep data>"` | Populate table. |
-| `omc_next_command <COMMAND_ID>` | Chain to another action handler. |
-
----
-
-### Best Practices
-
-- **Prefer `IS_BLOCKING=false`** unless you have a specific need for a modal dialog disallowing user interaction with other UI elements of the applet.
-- **Prefer `exe_script_file`** for subcommands/action handlers.
-
----
-
-*See [OMC Runtime Context Reference](omc_runtime_context_reference.md) for nib-related special words and env vars.
+Nib (Interface Builder) dialogs are no longer supported: since 6.0 a command with `NIB_DIALOG` shows an alert naming the command and saying to use `ACTIONUI_WINDOW`, and is canceled. AppletBuilder's verifier reports the key as a warning. Convert each nib dialog to an ActionUI JSON window (section 6.1); [nib_to_actionui_migration.md](nib_to_actionui_migration.md) walks through it, and [Nib-Guide.md](Nib-Guide.md) keeps the description of the old format for reference. `OMC_NIB_DLG_GUID` remains: it is the window's UUID, the same value as `OMC_ACTIONUI_WINDOW_UUID`.
 
 ---
 
 ## 6.1. ACTIONUI_WINDOW – ActionUI JSON Dialogs (OMC 5.0 or higher)
 
-`ACTIONUI_WINDOW` allows an **action handler** to present a **custom dialog** defined by a JSON content view description using the [ActionUI library](https://github.com/abra-code/ActionUI). The JSON file is loaded from the applet bundle, and OMC bridges controls to command execution via **subcommands** and **runtime tools**, similar to `NIB_DIALOG`.
+`ACTIONUI_WINDOW` allows an **action handler** to present a **custom dialog** defined by a JSON content view description using the [ActionUI library](https://github.com/abra-code/ActionUI). The JSON file is loaded from the applet bundle, and OMC bridges controls to command execution via **subcommands** and **runtime tools**.
 
 > **Note**: ActionUI is supported in OMC 5.0 or higher and required macOS 14.6 or higher. The ActionUI library provides SwiftUI-like declarative UI definitions in JSON format.
 
@@ -397,7 +293,7 @@ omc_dialog_control "${OMC_NIB_DLG_GUID}" 101 add_rows "$(cat /tmp/table_data)"
 | `WINDOW_TITLE` | String | No | Static window title. Overrides the default title derived from the associated file or command name. |
 | `WINDOW_TYPE` | String | No | Window type: `floating` (utility panel, stays above normal windows), `global_floating` (utility panel, stays above all windows including from other apps). Default is a regular window. |
 
-> **Note**: Unlike `NIB_DIALOG` which uses commandIDs for controls, `ACTIONUI_WINDOW` uses **actionIDs** defined in the JSON. Buttons in the JSON should have an `actionID` property that matches the `COMMAND_ID` of the handler you want to execute.
+> **Note**: `ACTIONUI_WINDOW` uses **actionIDs** defined in the JSON. Buttons in the JSON should have an `actionID` property that matches the `COMMAND_ID` of the handler you want to execute.
 >
 > **Window types**: `floating` and `global_floating` create an `NSPanel` with the utility window appearance (small title bar). `floating` uses `NSFloatingWindowLevel` and hides when the app is deactivated. `global_floating` uses `kCGUtilityWindowLevel` and remains visible even when the app is not active. These match the behavior of `OUTPUT_WINDOW_SETTINGS` window types.
 
@@ -514,7 +410,7 @@ omc_dialog_control "${OMC_ACTIONUI_WINDOW_UUID}" 1 set_value "Default Value"
 
 ### ActionUI View Access
 
-View values are accessed via environment variables and special words similar to NIB_DIALOG:
+View values are accessed via environment variables and special words:
 
 | Special Word | Environment Variable | Description |
 |--------------|---------------------|-------------|
@@ -785,10 +681,6 @@ omc_dialog_control "$OMC_ACTIONUI_WINDOW_UUID" 11 omc_remove_element
 - Every element passed to `omc_insert_element` or `omc_insert_element_row` must have a unique `"id"` field (non-zero integer). If `"id"` is `0` or omitted, ActionUI assigns a synthetic ID automatically.
 - IDs must not conflict with any element already present in the live window — ActionUI checks before inserting and returns an error on conflict.
 
-#### Nib Windows
-
-These three commands are not supported by legacy Nib-based windows. Sending them to a Nib window logs a warning and returns without effect.
-
 ---
 
 ### Best Practices
@@ -952,7 +844,7 @@ The dialog type (files only, folders only, or both) is automatically determined 
 
 The `OUTPUT_WINDOW_SETTINGS` dictionary controls the **output window** shown when using execution modes that support user-visible feedback (`exe_shell_script_with_output_window`, `exe_script_file_with_output_window`, `exe_applescript_with_output_window`).
 
-This provides a lightweight alternative to full NIB dialogs for displaying command results or logs.
+This provides a lightweight alternative to a full `ACTIONUI_WINDOW` for displaying command results or logs.
 
 The window shows the command's **standard output only**; standard error is not captured. A command that wants its errors shown there redirects them to stdout: `2>&1` on a command, or `exec 2>&1` at the top of a shell script (`sys.stderr = sys.stdout` in Python).
 
@@ -1228,7 +1120,7 @@ Extracts numeric counter from output via regex (e.g., "Task 3 of 10") and maps t
 > - **Async Only**: Pair with async modes + `WAIT_FOR_TASK_COMPLETION=false`.
 > - **Output Design**: Scripts should print exact match strings for reliable progress.
 > - **User-Friendly**: Use `STATUS` for polished messages; suppress noise with `SUPPRESS_NON_MATCHING_TEXT=true`.
-> - **NIB Alternative**: For interactive progress, use `omc_dialog_control` in custom NIBs
+> - **Window Alternative**: For interactive progress, use `omc_dialog_control` on a `ProgressView` in an `ACTIONUI_WINDOW`
 
 ---
 
@@ -1523,7 +1415,7 @@ These fire once for the entire application, regardless of how many windows are o
 
 ### Window-Level Events
 
-These fire per-window and run in the window's command context (with access to the window's UUID and controls). Configure them in `ACTIONUI_WINDOW` or `NIB_DIALOG`:
+These fire per-window and run in the window's command context (with access to the window's UUID and controls). Configure them in `ACTIONUI_WINDOW`:
 
 | Key | Trigger | Typical Use |
 |-----|---------|-------------|
@@ -1556,7 +1448,7 @@ The OMC project includes additional help files in the same directory as this ref
 
 | File | Description |
 |------|-------------|
-| [`omc_controls_user_defined_runtime_attributes.md`](omc_controls_user_defined_runtime_attributes.md) | Guide to setting user-defined runtime attributes for OMC controls in Interface Builder. |
+| [`omc_controls_user_defined_runtime_attributes.md`](omc_controls_user_defined_runtime_attributes.md) | The user-defined runtime attributes of the old nib controls, kept for converting applets made before 6.0. |
 | [`plister--help.md`](plister--help.md) | Help for `plister`, a tool for reading and writing property lists. |
 | [`pasteboard--help.md`](pasteboard--help.md) | Help for `pasteboard`, a command-line interface to the macOS pasteboard (clipboard). |
 | [`omc_next_command--help.md`](omc_next_command--help.md) | Help for `omc_next_command`, used to chain execution to another action handler. |

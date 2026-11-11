@@ -12,7 +12,7 @@ Full OMC reference is in the `docs/` folder (also bundled in `AppletBuilder.app/
 |------|----------|
 | `docs/omc_agent_tips_and_troubleshooting.md` | **For AI agents**: sh-vs-bash fatal syntax, script test harness, init/LoadableView lifecycle, table & picker runtime semantics, debug-logging workflow, pre-flight checklist — with real failure case studies |
 | `docs/building_omc_applet.md` | Step-by-step applet creation guide with all details |
-| `docs/omc_applet_catalog.md` | **Before building a new applet**: a classified inventory of every working applet in the collection - which one to clone for a batch converter, document editor, inspector, query builder, pipeline, or local-AI app, which are NIB-based (not agent-editable), and where to find each UI technique |
+| `docs/omc_applet_catalog.md` | **Before building a new applet**: a classified inventory of every working applet in the collection - which one to clone for a batch converter, document editor, inspector, query builder, pipeline, or local-AI app, which are NIB-based (they need converting to run on 6.0), and where to find each UI technique |
 | `docs/appletbuilder_user_guide.md` | UI navigation reference for the AppletBuilder GUI app (for human users) |
 | `docs/omc_command_reference.md` | Complete `Command.plist` key reference — all execution modes, dialog keys, output window settings, progress dialogs, input dialogs, services |
 | `docs/omc_runtime_context_reference.md` | Every `$OMC_*` environment variable and `__SPECIAL_WORD__` substitution |
@@ -28,11 +28,11 @@ Full OMC reference is in the `docs/` folder (also bundled in `AppletBuilder.app/
 | `docs/notify--help.md` | `notify` tool reference |
 | `docs/plister--help.md` | `plister` plist tool reference |
 | `docs/omc_services_reference.md` | macOS Services integration via `NSServices` in `Info.plist` |
-| `docs/Nib-Guide.md` | Nib dialog creation: editing in Xcode, control classes, connecting to OMC |
+| `docs/Nib-Guide.md` | The old nib dialog format (removed in 6.0), kept for converting applets |
 | `docs/nib_to_actionui_migration.md` | **Porting a NIB applet off Interface Builder**: eleven ordered steps, each with a check to verify before moving on - assessing whether the nib can be transcribed or must be reconstructed, reusing nib tags as ActionUI ids, the value-representation traps (empty `Picker` tags, Bool toggles, no initial selection, migrating old config files), layout, replacing an editable combo box, drop targets, manifest rewiring, the `eval`-quoting bug the port exposes, tests, and what only a human can confirm. Ends in a symptom index |
-| `docs/omc_controls_user_defined_runtime_attributes.md` | All OMC control classes in Nibs and their settable properties |
+| `docs/omc_controls_user_defined_runtime_attributes.md` | The old nib control classes and their properties, kept for converting applets |
 | `docs/MenuBar-Guide.md` | Menu bar JSON (`MainMenu.json`) in 5.1 applets: `actionID` command wiring, the `autoPopulate` Commands menu, deletion via `replacing`, Open Recent — the base array-root format is in the ActionUI skill (`ActionUI-MenuBar-JSON-Guide.md`) |
 
-When you need the exact keys for `NIB_DIALOG`, the complete list of `omc_dialog_control` operations, or the full env-var table, read the relevant `docs/` file directly.
+When you need the exact keys for `ACTIONUI_WINDOW`, the complete list of `omc_dialog_control` operations, or the full env-var table, read the relevant `docs/` file directly.
 
 For ActionUI JSON UI (element types, properties, validation, patterns): read the **ActionUI skill** (`../ActionUI/Skill/SKILL.md`). The OMC skill only covers how ActionUI connects to OMC — the JSON format itself is entirely in the ActionUI skill.

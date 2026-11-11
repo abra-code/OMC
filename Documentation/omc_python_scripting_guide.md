@@ -28,7 +28,7 @@ next_cmd = os.path.join(omc_support, "omc_next_command")
 alert_tool = os.path.join(omc_support, "alert")
 
 # Window context
-dlg_guid = os.environ.get("OMC_NIB_DLG_GUID", "")
+dlg_guid = os.environ.get("OMC_ACTIONUI_WINDOW_UUID", "")
 cmd_guid = os.environ.get("OMC_CURRENT_COMMAND_GUID", "")
 
 # Read inputs
@@ -137,17 +137,17 @@ This is useful for defining tool paths, control IDs, and reusable helper functio
 OMC exports control values as environment variables. The same patterns from the [Shell Scripting Guide](omc_scripting_guide.md) apply — `os.environ.get()` is the Python equivalent:
 
 ```python
-# Nib text field (tag 4)
-watch_pattern = os.environ.get("OMC_NIB_DIALOG_CONTROL_4_VALUE", "")
+# Text field (id 4)
+watch_pattern = os.environ.get("OMC_ACTIONUI_VIEW_4_VALUE", "")
 
-# Nib checkbox (tag 2) — "1" for on, "0" for off
-recursive = os.environ.get("OMC_NIB_DIALOG_CONTROL_2_VALUE", "0") == "1"
+# Toggle (id 2) — "true" for on, "false" for off
+recursive = os.environ.get("OMC_ACTIONUI_VIEW_2_VALUE", "false") == "true"
 
-# ActionUI text field (id 101)
+# Text field (id 101)
 name = os.environ.get("OMC_ACTIONUI_VIEW_101_VALUE", "")
 
-# Table column value (selected row)
-selected_path = os.environ.get("OMC_NIB_TABLE_1_COLUMN_4_VALUE", "")
+# Table (id 1) column value (selected row)
+selected_path = os.environ.get("OMC_ACTIONUI_TABLE_1_COLUMN_4_VALUE", "")
 
 # File/folder chooser result
 chosen = os.environ.get("OMC_DLG_CHOOSE_OBJECT_PATH", "")
@@ -206,7 +206,7 @@ subprocess.run([dialog_tool, dlg_guid, "1", "omc_table_add_rows_from_stdin"],
 A common pattern is enabling or disabling action buttons based on whether a row is selected:
 
 ```python
-has_selection = os.environ.get("OMC_NIB_TABLE_1_COLUMN_1_VALUE", "") != ""
+has_selection = os.environ.get("OMC_ACTIONUI_TABLE_1_COLUMN_1_VALUE", "") != ""
 enable_cmd = "omc_enable" if has_selection else "omc_disable"
 
 for button_id in [REVEAL_BTN, INFO_BTN, COPY_BTN]:
@@ -219,10 +219,10 @@ Column 0 is special — it returns all columns combined as a tab-separated strin
 
 ```python
 # All columns for selected row(s)
-selected_text = os.environ.get("OMC_NIB_TABLE_1_COLUMN_0_VALUE", "")
+selected_text = os.environ.get("OMC_ACTIONUI_TABLE_1_COLUMN_0_VALUE", "")
 
 # A specific column for selected row(s)
-file_paths = os.environ.get("OMC_NIB_TABLE_1_COLUMN_4_VALUE", "")
+file_paths = os.environ.get("OMC_ACTIONUI_TABLE_1_COLUMN_4_VALUE", "")
 
 # Iterate over selected rows
 for path in file_paths.strip().split('\n'):
@@ -235,7 +235,7 @@ for path in file_paths.strip().split('\n'):
 ## Clipboard Operations
 
 ```python
-text = os.environ.get("OMC_NIB_TABLE_1_COLUMN_0_VALUE", "")
+text = os.environ.get("OMC_ACTIONUI_TABLE_1_COLUMN_0_VALUE", "")
 env = os.environ.copy()
 env["LANG"] = "en_US.UTF-8"
 subprocess.run(["/usr/bin/pbcopy", "-pboard", "general"],

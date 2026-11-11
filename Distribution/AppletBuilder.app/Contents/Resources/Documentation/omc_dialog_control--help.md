@@ -1,13 +1,13 @@
 ./omc_dialog_control --help
 
 ```
-Usage: omc_dialog_control __NIB_DLG_GUID__ <controlID> <value>
-       omc_dialog_control __NIB_DLG_GUID__ <controlID> <contentType> <value>
+Usage: omc_dialog_control __ACTIONUI_WINDOW_UUID__ <controlID> <value>
+       omc_dialog_control __ACTIONUI_WINDOW_UUID__ <controlID> <contentType> <value>
 
-<contentType> is an optional hint for parsing rich content (ActionUI only):
+<contentType> is an optional hint for parsing rich content:
 	"plain", "markdown", "html", "rtf", "json"
 
-<controlID> is an integer for control tag or special values:
+<controlID> is an integer view id or special values:
 	"omc_window" to specify that the target is dialog window
 	"omc_application" to specify that the target is host application
 	"omc_workspace" to specify that the target is shared NSWorkspace
@@ -15,7 +15,7 @@ Special values:
 	omc_enable, omc_disable
 	omc_show, omc_hide
 	omc_set_value_from_stdin [contentType] (read from stdin or pipe)
-	omc_set_command_id [followed by command id string]
+	omc_set_command_id [followed by command id string] (nib controls only; ignored since 6.0)
 	omc_list_remove_all
 	omc_list_append_items [followed by variable number of arguments]
 	omc_list_append_items_from_file [followed by file name]
@@ -36,57 +36,54 @@ Special values:
 	omc_select_row [0-based row index] (selects a Table/List row; out-of-range clears selection)
 	omc_select_row_with_content <text> [1-based column] (selects first row whose column matches text; omit column or 0 = any column)
 	omc_deselect (clears the Table/List selection)
-	omc_select (brings dialog window or app to front, sets control focus)
+	omc_select (brings dialog window or app to front; focusing a control is ignored since 6.0)
 	omc_terminate_ok (close dialog with OK message)
 	omc_terminate_cancel (close dialog with Cancel message)
-	omc_resize [followed by 2 space separated numbers] (for dialog window or controls)
-	omc_move [followed by 2 space separated numbers] (for dialog window or controls)
-	omc_scroll [followed by 2 space separated numbers] (for view within NSScrollerView)
-	omc_invoke [followed by space separated ObjC message] (may be sent to control or window; a range, point, size or rect argument is comma-separated numbers: location,length / x,y / width,height / x,y,width,height)
-	omc_set_property <property_key> <value> (ActionUI only; value is a string or a JSON fragment)
-	omc_set_state <state_key> <value> (ActionUI only; value is a string or JSON fragment)
-	omc_present_modal <resource_name_or_path> [dismiss_action_id] (ActionUI only)
-	omc_dismiss_modal (ActionUI only)
-	omc_present_toast <message> [duration_seconds] [action_title] [action_id] (ActionUI only)
-	omc_dismiss_toast (ActionUI only)
-	omc_present_alert <title> [message] ["button_title:role:action_id" ...] (ActionUI only; role: cancel|destructive|omit for default)
-	omc_present_confirmation_dialog <title> [message] ["button_title:role:action_id" ...] (ActionUI only)
-	omc_dismiss_dialog (ActionUI only)
-	omc_insert_element <json> [container] [position] (ActionUI only; position: append|prepend|at:<index>|before:<siblingID>|after:<siblingID>)
-	omc_insert_element_row <json> [container] [position] (ActionUI only; position for grid rows: append|prepend|at:<index>)
-	omc_remove_element (ActionUI only; use integer controlID as the target viewID)
+	omc_resize [followed by 2 space separated numbers] (for dialog window; controls ignore it since 6.0)
+	omc_move [followed by 2 space separated numbers] (for dialog window; controls ignore it since 6.0)
+	omc_scroll [followed by 2 space separated numbers] (nib controls only; ignored since 6.0)
+	omc_invoke [followed by space separated ObjC message] (sent to the window, application or workspace; controls ignore it since 6.0; a range, point, size or rect argument is comma-separated numbers: location,length / x,y / width,height / x,y,width,height)
+	omc_set_property <property_key> <value> (value is a string or a JSON fragment)
+	omc_set_state <state_key> <value> (value is a string or JSON fragment)
+	omc_present_modal <resource_name_or_path> [dismiss_action_id]
+	omc_dismiss_modal
+	omc_present_toast <message> [duration_seconds] [action_title] [action_id]
+	omc_dismiss_toast
+	omc_present_alert <title> [message] ["button_title:role:action_id" ...] (role: cancel|destructive|omit for default)
+	omc_present_confirmation_dialog <title> [message] ["button_title:role:action_id" ...]
+	omc_dismiss_dialog
+	omc_insert_element <json> [container] [position] (position: append|prepend|at:<index>|before:<siblingID>|after:<siblingID>)
+	omc_insert_element_row <json> [container] [position] (position for grid rows: append|prepend|at:<index>)
+	omc_remove_element (use integer controlID as the target viewID)
 
 Modal button spec format: "title:role:actionID"
 	role: cancel | destructive | (omit for default)
 	actionID: COMMAND_ID to dispatch as subcommand when button is tapped; omit for no callback
 
 Examples:
-omc_dialog_control __NIB_DLG_GUID__ 4 "hello world!"
+omc_dialog_control __ACTIONUI_WINDOW_UUID__ 4 "hello world!"
 omc_dialog_control __ACTIONUI_WINDOW_UUID__ 4 markdown "# Hello"
 echo "# Hello" | omc_dialog_control __ACTIONUI_WINDOW_UUID__ 4 omc_set_value_from_stdin markdown
-omc_dialog_control __NIB_DLG_GUID__ 2 omc_disable
-omc_dialog_control __NIB_DLG_GUID__ 1 omc_set_command_id "Exec"
-omc_dialog_control __NIB_DLG_GUID__ 3 omc_list_remove_all
-omc_dialog_control __NIB_DLG_GUID__ 3 omc_list_append_items "Item 1" "Item 2"
-omc_dialog_control __NIB_DLG_GUID__ 3 omc_list_append_items_from_file items.txt
-ls | omc_dialog_control __NIB_DLG_GUID__ 3 omc_list_append_items_from_stdin
+omc_dialog_control __ACTIONUI_WINDOW_UUID__ 2 omc_disable
+omc_dialog_control __ACTIONUI_WINDOW_UUID__ 3 omc_list_remove_all
+omc_dialog_control __ACTIONUI_WINDOW_UUID__ 3 omc_list_append_items "Item 1" "Item 2"
+omc_dialog_control __ACTIONUI_WINDOW_UUID__ 3 omc_list_append_items_from_file items.txt
+ls | omc_dialog_control __ACTIONUI_WINDOW_UUID__ 3 omc_list_append_items_from_stdin
 
-omc_dialog_control __NIB_DLG_GUID__ 5 omc_table_set_columns "A" omc_hidden_column "B" "C"
-omc_dialog_control __NIB_DLG_GUID__ 5 omc_table_set_column_widths 90 0 50 80
-omc_dialog_control __NIB_DLG_GUID__ 5 omc_table_remove_all_rows
-omc_dialog_control __NIB_DLG_GUID__ 5 omc_table_add_rows "11	Hidden1	12	13" "21	Hidden2	22	23"
-omc_dialog_control __NIB_DLG_GUID__ 5 omc_table_add_rows_from_file mydata.tsv
-cat mydata.tsv | omc_dialog_control __NIB_DLG_GUID__ 5 omc_table_add_rows_from_stdin
+omc_dialog_control __ACTIONUI_WINDOW_UUID__ 5 omc_table_set_columns "A" omc_hidden_column "B" "C"
+omc_dialog_control __ACTIONUI_WINDOW_UUID__ 5 omc_table_set_column_widths 90 0 50 80
+omc_dialog_control __ACTIONUI_WINDOW_UUID__ 5 omc_table_remove_all_rows
+omc_dialog_control __ACTIONUI_WINDOW_UUID__ 5 omc_table_add_rows "11	Hidden1	12	13" "21	Hidden2	22	23"
+omc_dialog_control __ACTIONUI_WINDOW_UUID__ 5 omc_table_add_rows_from_file mydata.tsv
+cat mydata.tsv | omc_dialog_control __ACTIONUI_WINDOW_UUID__ 5 omc_table_add_rows_from_stdin
 omc_dialog_control __ACTIONUI_WINDOW_UUID__ 5 omc_select_row 3
 omc_dialog_control __ACTIONUI_WINDOW_UUID__ 5 omc_select_row_with_content "Report.pdf"
 omc_dialog_control __ACTIONUI_WINDOW_UUID__ 5 omc_select_row_with_content "42" 1
 omc_dialog_control __ACTIONUI_WINDOW_UUID__ 5 omc_deselect
-omc_dialog_control __NIB_DLG_GUID__ omc_window omc_resize 600 200
-omc_dialog_control __NIB_DLG_GUID__ 2 omc_move 20 20
-omc_dialog_control __NIB_DLG_GUID__ 4 omc_scroll 0 0
-omc_dialog_control __NIB_DLG_GUID__ omc_window "My Window Title"
-omc_dialog_control __NIB_DLG_GUID__ omc_window omc_terminate_cancel
-omc_dialog_control __NIB_DLG_GUID__ 2 omc_invoke setAlignment: 2
+omc_dialog_control __ACTIONUI_WINDOW_UUID__ omc_window omc_resize 600 200
+omc_dialog_control __ACTIONUI_WINDOW_UUID__ omc_window "My Window Title"
+omc_dialog_control __ACTIONUI_WINDOW_UUID__ omc_window omc_terminate_cancel
+omc_dialog_control __ACTIONUI_WINDOW_UUID__ omc_window omc_invoke setAlphaValue: 0.9
 omc_dialog_control __ACTIONUI_WINDOW_UUID__ omc_window omc_invoke setFrame: 100,100,600,400 display: YES
 omc_dialog_control __ACTIONUI_WINDOW_UUID__ 1 omc_set_property "columns" '["Name","Action"]'
 omc_dialog_control __ACTIONUI_WINDOW_UUID__ 2 omc_set_property "disabled" true
@@ -107,7 +104,7 @@ omc_dialog_control __ACTIONUI_WINDOW_UUID__ 20 omc_remove_element
 
 Additional examples:  
 ```
-# Runtime structural mutations (ActionUI only; controlID is the target viewID)
+# Runtime structural mutations (controlID is the target viewID)
 omc_dialog_control __ACTIONUI_WINDOW_UUID__ 10 omc_insert_element '{"id":30,"type":"Text","properties":{"text":"Appended"}}'
 omc_dialog_control __ACTIONUI_WINDOW_UUID__ 10 omc_insert_element '{"id":31,"type":"Text","properties":{"text":"Prepended"}}' children prepend
 omc_dialog_control __ACTIONUI_WINDOW_UUID__ 10 omc_insert_element '{"id":32,"type":"Text","properties":{"text":"After B"}}' children after:12
@@ -123,7 +120,7 @@ omc_dialog_control __ACTIONUI_WINDOW_UUID__ 5 omc_list_set_items "Apple" "Banana
 omc_dialog_control __ACTIONUI_WINDOW_UUID__ 6 omc_table_set_rows "star.fill	Favorites" "heart.fill	Liked"
 
 
-# Transient toast (ActionUI only) — a top-pinned snackbar that fades in, stays
+# Transient toast — a top-pinned snackbar that fades in, stays
 # for a few seconds, then auto-dismisses. Always target the window with the
 # omc_window selector. Args: <message> [duration_seconds] [action_title] [action_id]
 #   duration_seconds : seconds the toast stays up; omitted or <= 0 means the

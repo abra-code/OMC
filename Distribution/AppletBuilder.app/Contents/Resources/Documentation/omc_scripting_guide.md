@@ -49,7 +49,6 @@ When a script runs, OMC exports control values as environment variables. The nam
 |---------|--------|
 | `$OMC_ACTIONUI_VIEW_{ID}_VALUE` | ActionUI text field, picker, toggle, etc. |
 | `$OMC_ACTIONUI_TABLE_{ID}_COLUMN_{N}_VALUE` | ActionUI table column (1-based; column 0 = all columns combined) |
-| `$OMC_NIB_DIALOG_CONTROL_{ID}_VALUE` | Nib dialog control by tag |
 | `$OMC_DLG_CHOOSE_OBJECT_PATH` | File/folder chooser dialog result |
 | `$OMC_DLG_SAVE_AS_PATH` | Save-as dialog result |
 | `$OMC_OBJ_PATH` | Input object path (file drop, contextual menu) |
@@ -61,8 +60,8 @@ name="${OMC_ACTIONUI_VIEW_101_VALUE}"
 # ActionUI table — hidden column with file path
 selected_path="$OMC_ACTIONUI_TABLE_110_COLUMN_2_VALUE"
 
-# Nib checkbox (1=on, 0=off)
-is_recursive="${OMC_NIB_DIALOG_CONTROL_2_VALUE}"
+# ActionUI toggle ("true" or "false")
+is_recursive="${OMC_ACTIONUI_VIEW_2_VALUE}"
 
 # File chooser result
 chosen_file="$OMC_DLG_CHOOSE_OBJECT_PATH"

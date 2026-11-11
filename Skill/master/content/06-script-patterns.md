@@ -18,11 +18,10 @@ alert_tool="$OMC_OMC_SUPPORT_PATH/alert"
 pasteboard_tool="$OMC_OMC_SUPPORT_PATH/pasteboard"
 notify_tool="$OMC_OMC_SUPPORT_PATH/notify"
 
-# Works for both ActionUI and NIB windows
-window_uuid="${OMC_ACTIONUI_WINDOW_UUID:-$OMC_NIB_DLG_GUID}"
+window_uuid="$OMC_ACTIONUI_WINDOW_UUID"
 cmd_guid="$OMC_CURRENT_COMMAND_GUID"
 
-# Control IDs — match id values in ActionUI JSON or tag values in NIB
+# Control IDs — match id values in the ActionUI JSON
 STATUS_LABEL_ID=100
 RESULTS_TABLE_ID=101
 SAVE_BTN_ID=110

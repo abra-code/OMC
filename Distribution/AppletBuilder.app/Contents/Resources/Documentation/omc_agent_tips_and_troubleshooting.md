@@ -87,7 +87,7 @@ Simulate control events by exporting the env vars a handler reads
 
 ## 3. Where initialization code belongs
 
-- **`INIT_SUBCOMMAND_ID`** (in `ACTIONUI_WINDOW` / `NIB_DIALOG`) runs **before
+- **`INIT_SUBCOMMAND_ID`** (in `ACTIONUI_WINDOW`) runs **before
   the window appears**. This is the place for discovery, state seeding, and
   populating controls that exist in the top-level JSON.
 - **The main command's own script** (`MyApp.main.sh`) must contain **no code**

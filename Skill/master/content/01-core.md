@@ -23,7 +23,7 @@ MyApp.app/
 │   │   └── MyApp                    ← executable (renamed copy of OMC binary)
 │   ├── Resources/
 │   │   ├── Base.lproj/
-│   │   │   ├── MainMenu.nib         ← app menu (from template; do not remove)
+│   │   │   ├── MainMenu.json        ← optional menu bar additions (the standard bar is built in code)
 │   │   │   └── MyDialog.json        ← optional ActionUI JSON dialog
 │   │   ├── Scripts/
 │   │   │   ├── lib.myapp.sh         ← shared library: tool paths + control IDs

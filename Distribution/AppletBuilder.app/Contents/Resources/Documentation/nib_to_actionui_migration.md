@@ -1,6 +1,6 @@
 # Porting a Nib Applet to ActionUI - for AI Agents
 
-Companion docs: `Nib-Guide.md` (the format you are leaving),
+Companion docs: `Nib-Guide.md` (the format you are leaving, kept for reference),
 `omc_agent_tips_and_troubleshooting.md` (its section 1, on `/bin/sh`, applies to
 every script you write here), `omctest_guide.md` (section 10 below).
 
@@ -12,7 +12,11 @@ every script you write here), `omctest_guide.md` (section 10 below).
 
 Replace a compiled Interface Builder dialog with an ActionUI JSON window, so the
 UI becomes a plain text file that can be validated, previewed, diffed and edited
-without Xcode. The handler scripts survive largely intact; what changes is how
+without Xcode. Since 6.0 (Command Workshop) this is required, not optional: the
+engine refuses a `NIB_DIALOG` command with an alert, the applet's executable no
+longer loads a `MainMenu.nib` (see `MenuBar-Guide.md` for its custom items), and
+the applet must be rebuilt with AppletBuilder 6.0, whose verifier warns on every
+`NIB_DIALOG` left. The handler scripts survive largely intact; what changes is how
 they are addressed and how control values are spelled.
 
 Work the sections in order. Each is one porting task, and each ends in a state

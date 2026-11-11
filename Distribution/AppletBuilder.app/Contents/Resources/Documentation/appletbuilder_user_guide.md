@@ -13,8 +13,6 @@ Drop an existing `.app` onto AppletBuilder to open it for editing, or launch App
 | `Empty` | Minimal bundle; shell main script; no dialog |
 | `ActionUI Window` | ActionUI JSON dialog + init script; `ACTIONUI_WINDOW` in Command.plist |
 | `ActionUI Web` | ActionUI dialog with embedded WebView |
-| `Nib Window` | NIB (Interface Builder) dialog |
-| `Nib Web` | NIB dialog with embedded WebView |
 
 Fields: **Name** (becomes the executable name, COMMAND_ID prefix, and script prefix), **Bundle ID**, optional icon, Python toggle (installs embedded Python distribution).
 
@@ -39,7 +37,7 @@ The whole group is disabled, with a note saying so, for an applet that bundles n
 The usual flow is to write and review the plan against your development copy - planning cannot damage it - commit the plan beside the applet, then open the release copy and apply. An apply with no plan beside the bundle falls back to the last plan AppletBuilder wrote for that applet - matched on its bundle identifier, so another applet of the same name cannot lend you its plan - and says so in the log; since verification only re-runs what that plan recorded, launch the applet once after applying a plan written against a different build. AppletBuilder will not apply a plan to itself - the thinning runs under its own interpreter - nor one whose `Packages` section names a directory in another bundle. The "Thin Universal Executables" choice is carried into the plan, so an applet sliced to one architecture gets an interpreter sliced the same way. Thinning is deliberately not part of Build. The CLI equivalent is `appletbuilder thin-python plan|apply|plan-apply <App.app>`; `Documentation/omc_python_scripting_guide.md` has the full workflow, including the optional `<App>.thinning-keep.txt` force-keep list.
 
 **Commands** — Table of `Command.plist` entries. Right panel: Plist editor for the selected command. Buttons:
-- **Validate** — runs `plutil -lint` (syntax) then the Python Command.plist verifier (`Contents/Library/command_verifier/validate_command_plist.py`): key/type/enum/required checks, conditional rules (e.g. `CUSTOM_*` need `WINDOW_TYPE=custom`), deprecated/removed keys, and Layer-2 bundle cross-references (script files, `JSON_NAME`/`NIB_NAME` resources, subcommand IDs, duplicate `COMMAND_ID`s, and every `actionID` in the bundle's JSON UI documents).
+- **Validate** — runs `plutil -lint` (syntax) then the Python Command.plist verifier (`Contents/Library/command_verifier/validate_command_plist.py`): key/type/enum/required checks, conditional rules (e.g. `CUSTOM_*` need `WINDOW_TYPE=custom`), deprecated/removed keys (`NIB_DIALOG` is reported as no longer supported, a warning), and Layer-2 bundle cross-references (script files, `JSON_NAME` resources, subcommand IDs, duplicate `COMMAND_ID`s, and every `actionID` in the bundle's JSON UI documents).
 - **Save** — writes to `Command.plist`
 - external editor
 
