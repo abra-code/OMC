@@ -67,7 +67,7 @@ Supporting repositories referenced later in this document:
 
 | Repository | What it is |
 |---|---|
-| [abra-code/omc](https://github.com/abra-code/omc) | the Command Workshop engine, AppletBuilder, templates, and this documentation |
+| [abra-code/omc](https://github.com/abra-code/omc) | the Command Engine, AppletBuilder, templates, and this documentation |
 | [abra-code/ActionUI](https://github.com/abra-code/ActionUI) | the ActionUI framework, plus `Examples/` - the UI JSON pattern library |
 | [abra-code/pdfutil](https://github.com/abra-code/pdfutil) | Swift PDFKit + Vision helper used by PDFUtil, QuickPDF, Interpreter |
 | [abra-code/replay](https://github.com/abra-code/replay) | parallel execution tool bundled by Delta and Cadabra |

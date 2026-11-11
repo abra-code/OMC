@@ -15,7 +15,7 @@ of these bites or when behavior can't be explained from the code.
    is no bash 4/5 on macOS. Process substitution (`done < <(cmd)`),
    `mapfile`, `declare -A`, and `${var,,}` are fatal parse errors that kill
    the script mid-file with no UI feedback. **Validate with `sh -n`, never
-   `bash -n`** — `bash -n` passes scripts that die under Command Workshop.
+   `bash -n`** — `bash -n` passes scripts that die under the Command Engine.
 2. **Window init code goes in `INIT_SUBCOMMAND_ID`** (runs before the window
    appears). A non-blocking window's main command script runs at an
    unpredictable time — keep it `exit 0`.
@@ -42,7 +42,7 @@ of these bites or when behavior can't be explained from the code.
    `$OMC_ACTIONUI_TRIGGER_VIEW_ID/_PART_ID/_CONTEXT` in every handler, ask
    the user to perform the UI operation once, read the log back. Don't guess.
 7. **Handlers are testable headlessly — do not hand-roll a stub directory.**
-   `appletbuilder test <App.app>` runs `Tests/*.test.sh` against a mock Command Workshop
+   `appletbuilder test <App.app>` runs `Tests/*.test.sh` against a mock Command Engine
    environment: real handlers, real `plister` and `pasteboard`, a stubbed
    app-modal `alert` with scripted answers, and a recording
    `omc_dialog_control` so you can assert on what a handler pushed toward the

@@ -208,7 +208,7 @@ OMCGetTestSurfaceStatusDescription(OMCTestSurfaceStatus inStatus)
 		case kOMCTestSurface_Hardened:
 			return "refused: the applet is signed with the hardened runtime, library validation or restrict, and without com.apple.security.get-task-allow";
 		case kOMCTestSurface_NotInThisBuild:
-			return "refused: this build of Command Workshop leaves the test surface out";
+			return "refused: this build of the Command Engine leaves the test surface out";
 	}
 	return "refused: unknown status";
 }

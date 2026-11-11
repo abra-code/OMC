@@ -43,7 +43,7 @@ TABLE_ID=110
 
 ## Reading Control Values
 
-When a script runs, Command Workshop exports control values as environment variables. The naming pattern depends on the UI type:
+When a script runs, the Command Engine exports control values as environment variables. The naming pattern depends on the UI type:
 
 | Pattern | Source |
 |---------|--------|
@@ -139,7 +139,7 @@ echo "${row_data}" | "$dialog_tool" "$window_uuid" "$TABLE_ID" omc_table_add_row
 
 ## State Management
 
-Scripts in Command Workshop are short-lived processes — each invocation starts fresh. If you need to share state between scripts (e.g. remembering which file is selected), a simple approach is to write to files in a temp directory keyed by window UUID:
+Scripts in the Command Engine are short-lived processes — each invocation starts fresh. If you need to share state between scripts (e.g. remembering which file is selected), a simple approach is to write to files in a temp directory keyed by window UUID:
 
 ```bash
 state_dir="/tmp/myapp_${OMC_ACTIONUI_WINDOW_UUID}"
@@ -244,7 +244,7 @@ set_value "$DETAIL_ID" "$content"
 
 ## Initialization Scripts
 
-When a dialog opens, Command Workshop runs the command specified by `INIT_SUBCOMMAND_ID`. This is a good place to populate fields, set up table columns, and load initial data:
+When a dialog opens, the Command Engine runs the command specified by `INIT_SUBCOMMAND_ID`. This is a good place to populate fields, set up table columns, and load initial data:
 
 ```bash
 #!/bin/bash
@@ -312,7 +312,7 @@ Script files follow the pattern `AppName.area.action.sh`, matching the `COMMAND_
 
 A few approaches that can help when things aren't working as expected:
 
-- **Dump environment**: `env | sort > /tmp/debug_env.txt` — shows all variables Command Workshop exports for your script
+- **Dump environment**: `env | sort > /tmp/debug_env.txt` — shows all variables the Command Engine exports for your script
 - **Output window**: temporarily change `EXECUTION_MODE` to `exe_script_file_with_output_window` to see the script's stdout. Or hold the Control key when triggering the command. The window shows stdout only; to see error messages there as well, add `exec 2>&1` near the top of the script, or `2>&1` to the one command whose errors you want.
 - **Manual testing**: run `omc_dialog_control` from Terminal with the window UUID to test commands interactively
 - **Log file**: `echo "checkpoint reached" >> /tmp/myapp_debug.log`

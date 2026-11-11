@@ -1,7 +1,7 @@
 /* Version warning strings */
 "Cancel" = "Abbrechen";
 "Try Anyway" = "Trotzdem probieren";
-"TOO_LOW_OMC" = "Dieses Kommando benötigt mindestens Command Workshop %@. Die installierte Version ist %@.";
+"TOO_LOW_OMC" = "Dieses Kommando benötigt mindestens Command Engine %@. Die installierte Version ist %@.";
 "TOO_LOW_MAC_OS" = "Dieses Kommando benötigt mindestens Mac OS %@. Es läuft Mac OS X Version %@.";
 "TOO_HIGH_MAC_OS" = "Dieses Kommando wurde für ältere Mac OS X Versionen entworfen, es funktioniert bis Version %@. Es läuft Mac OS X Version %@.";
 

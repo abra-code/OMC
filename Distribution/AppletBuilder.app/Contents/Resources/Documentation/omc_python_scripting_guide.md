@@ -4,12 +4,12 @@ Python scripts are a natural alternative to shell scripts for implementing actio
 
 ## Python Environment
 
-When an applet bundles its own Python at `Contents/Library/Python/`, Command Workshop sets up the environment automatically for **every** command it runs — including `.sh` handlers that shell out to `python3`:
+When an applet bundles its own Python at `Contents/Library/Python/`, the Command Engine sets up the environment automatically for **every** command it runs — including `.sh` handlers that shell out to `python3`:
 
 - **PATH** is prepended with the embedded interpreter's `bin/` directory (`YourApp.app/Contents/Library/Python/bin/`), so `python3` and any console scripts installed next to it resolve without full paths.
 - **PYTHONPATH** is prepended with `Contents/Library/Packages/` whenever that directory exists, so third-party modules installed there are importable. This is the recommended home for dependencies — see [Installing Python Packages](#installing-python-packages).
 - **PYTHONPYCACHEPREFIX** is set to `Pyc` inside the per-user temporary directory macOS creates for your uid (`/var/folders/.../T/Pyc`), so `.pyc` files are written there instead of polluting (or being blocked from) the app bundle. Note this is the directory `NSTemporaryDirectory()` returns, which on macOS is not `$TMPDIR` - redirecting `TMPDIR` does not move the engine's cache.
-- No shebang line is needed — Command Workshop determines the interpreter from the file extension.
+- No shebang line is needed — the Command Engine determines the interpreter from the file extension.
 
 These variables are exported regardless of the handler's language, so a shell handler that invokes the embedded `python3` gets the same module resolution as a `.py` handler.
 
@@ -134,7 +134,7 @@ This is useful for defining tool paths, control IDs, and reusable helper functio
 
 ## Reading Control Values
 
-Command Workshop exports control values as environment variables. The same patterns from the [Shell Scripting Guide](omc_scripting_guide.md) apply — `os.environ.get()` is the Python equivalent:
+The Command Engine exports control values as environment variables. The same patterns from the [Shell Scripting Guide](omc_scripting_guide.md) apply — `os.environ.get()` is the Python equivalent:
 
 ```python
 # Text field (id 4)
@@ -341,7 +341,7 @@ arch -x86_64 "$PY" -m pip install --target "$APP/Contents/Library/Packages" \
     --force-reinstall --no-binary :all: package_name
 ```
 
-`import package_name` then works directly, because Command Workshop puts `Packages/` on `PYTHONPATH`. A package that ships a command-line entry point (e.g. `watchmedo` from `watchdog`) installs its launcher into `Packages/bin/`, but you can also invoke it as a module — `"$PY" -m watchdog.watchmedo …` — which avoids depending on the launcher's location.
+`import package_name` then works directly, because the Command Engine puts `Packages/` on `PYTHONPATH`. A package that ships a command-line entry point (e.g. `watchmedo` from `watchdog`) installs its launcher into `Packages/bin/`, but you can also invoke it as a module — `"$PY" -m watchdog.watchmedo …` — which avoids depending on the launcher's location.
 
 ### Legacy: install into the embedded Python
 
@@ -450,7 +450,7 @@ Script files follow the same pattern as shell scripts — `AppName.area.action.p
 | `MyApp.export.events.py` | `MyApp.export.events` |
 | `lib_myapp.py` | *(shared module, not a command)* |
 
-Command Workshop determines the interpreter from the file extension, so a command can be implemented as either `.sh` or `.py` — just provide one file with the matching name.
+The Command Engine determines the interpreter from the file extension, so a command can be implemented as either `.sh` or `.py` — just provide one file with the matching name.
 
 ## Debugging
 

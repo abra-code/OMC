@@ -14,7 +14,7 @@ clicking — and the error paths, which are the ones that destroy user data, are
 the least likely to be walked by hand.
 
 `appletbuilder test <App.app>` runs the applet's real handlers against a
-simulated Command Workshop environment. **Read `docs/omctest_guide.md` before writing tests**
+simulated Command Engine environment. **Read `docs/omctest_guide.md` before writing tests**
 — it is the full API reference. This section is the shape and the traps.
 
 ### Layout and the run
@@ -85,7 +85,7 @@ usually the same string — except for the primary command, which typically has 
 
 ### The seam contract — the thing most applets have to change
 
-The harness intercepts Command Workshop support tools by rebuilding `$OMC_OMC_SUPPORT_PATH`.
+The harness intercepts Command Engine support tools by rebuilding `$OMC_OMC_SUPPORT_PATH`.
 It **cannot** reach anything named by an absolute path or a bundle-relative one.
 So anything an applet must not really do under test has to be named through an
 overridable variable in its shared lib:

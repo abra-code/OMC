@@ -24,7 +24,7 @@ Command Workshop started life as a **contextual menu plug-in** allowing users to
 ### (Basic concepts under 5 minutes)
 
 ### **UI Entry Points**
-Command Workshop engine handles the UI entry points. It could be a contextual menu item, could be an app start, a menu item in your applet, could be a button in a dialog. You provide a handler script (or command, if you will), which will be called by the engine when user initiates some action. Commands have assigned IDs (just unique strings) and you make the connection between UI element and the handler by command ID. A control in an ActionUI JSON window names it as its `actionID`, and a menu item in `MainMenu.json` the same way. That way a click on button can invoke an action in your script and say `echo "Hello World"`.
+The Command Engine handles the UI entry points. It could be a contextual menu item, could be an app start, a menu item in your applet, could be a button in a dialog. You provide a handler script (or command, if you will), which will be called by the engine when user initiates some action. Commands have assigned IDs (just unique strings) and you make the connection between UI element and the handler by command ID. A control in an ActionUI JSON window names it as its `actionID`, and a menu item in `MainMenu.json` the same way. That way a click on button can invoke an action in your script and say `echo "Hello World"`.
 
 ### **Environment Variables**
 When your command handler is executed, the engine provides the relevant context information as environment variables, which your script can access and act upon.
@@ -48,11 +48,11 @@ Several other contextual or static environment variables are exported by the eng
 `env | grep "OMC" | sort`
 
 ### **Out Of Process**
-Command Workshop engine runs your handler scripts in separate child processes. This has several implications:
+The Command Engine runs your handler scripts in separate child processes. This has several implications:
 - you cannot crash the host app - the stability of parent process is unaffected even by misbehaving code,
 - the execution is mostly asynchronous (depends on execution mode if you are curious to look into details),
-- since it is an out of process execution, the communication back to the host app from your script must be handled in special way. Command Workshop provides two command line tools to facilitate that: `omc_dialog_control` and `omc_next_command`,
-- communication with other commands within the same app is limited but information can be shared through files or via private pasteboard. Command Workshop provides a `pasteboard` tool to help with this.
+- since it is an out of process execution, the communication back to the host app from your script must be handled in special way. The Command Engine provides two command line tools to facilitate that: `omc_dialog_control` and `omc_next_command`,
+- communication with other commands within the same app is limited but information can be shared through files or via private pasteboard. The Command Engine provides a `pasteboard` tool to help with this.
 
 
 ## Documentation

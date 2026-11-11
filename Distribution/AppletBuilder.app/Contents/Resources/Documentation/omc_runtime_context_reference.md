@@ -55,8 +55,8 @@ The list is derived **directly** from the source files:
 | **Choose Object** | `__DLG_CHOOSE_OBJECT_NAME__` | `$OMC_DLG_CHOOSE_OBJECT_NAME` | Chosen object name. | Scanned |
 | **Choose Object** | `__DLG_CHOOSE_OBJECT_NAME_NO_EXTENSION__` | `$OMC_DLG_CHOOSE_OBJECT_NAME_NO_EXTENSION` | Chosen object name without extension. | Scanned |
 | **Choose Object** | `__DLG_CHOOSE_OBJECT_EXTENSION_ONLY__` | `$OMC_DLG_CHOOSE_OBJECT_EXTENSION_ONLY` | Chosen object extension only. | Scanned |
-| **System** | `__OMC_RESOURCES_PATH__` | `$OMC_OMC_RESOURCES_PATH` | Path to Command Workshop framework Resources. | **Always** |
-| **System** | `__OMC_SUPPORT_PATH__` | `$OMC_OMC_SUPPORT_PATH` | Path to Command Workshop support files. | **Always** |
+| **System** | `__OMC_RESOURCES_PATH__` | `$OMC_OMC_RESOURCES_PATH` | Path to Command Engine framework Resources. | **Always** |
+| **System** | `__OMC_SUPPORT_PATH__` | `$OMC_OMC_SUPPORT_PATH` | Path to Command Engine support files. | **Always** |
 | **System** | `__APP_BUNDLE_PATH__` | `$OMC_APP_BUNDLE_PATH` | Applet bundle path (preferred). | **Always** |
 | **System** | `__APP_PROCESS_ID__` | `$OMC_APP_PROCESS_ID` | PID of the applet/host app itself, not the frontmost app. | **Always** |
 | **System** | `__MY_EXTERNAL_BUNDLE_PATH__` | `$OMC_MY_EXTERNAL_BUNDLE_PATH` | External `.omc` bundle path. | Scanned |
@@ -210,9 +210,9 @@ An applet with an ActionUI window also serves a small JSON-RPC bridge over a Uni
 
 | Variable | Set from | Notes |
 | --- | --- | --- |
-| `$OMC_ACTIONUI_REMOTE_ENDPOINT` | special word `__ACTIONUI_REMOTE_ENDPOINT__` | Command Workshop's own spelling, consistent with every other engine variable. |
+| `$OMC_ACTIONUI_REMOTE_ENDPOINT` | special word `__ACTIONUI_REMOTE_ENDPOINT__` | The Command Engine's own spelling, consistent with every other engine variable. |
 | `$ACTIONUI_REMOTE_ENDPOINT` | the process environment, and the environment dictionary | The name the ActionUI protocol defines. Descendant processes inherit it directly; it is also placed in the command's environment dictionary so the Terminal and iTerm modes, which hand an export script to an app that is not a descendant, carry it too. |
-| `$ACTIONUI_WINDOW_UUID` | the environment dictionary | The unprefixed alias of `$OMC_ACTIONUI_WINDOW_UUID`, so a client need not know it is talking to Command Workshop. |
+| `$ACTIONUI_WINDOW_UUID` | the environment dictionary | The unprefixed alias of `$OMC_ACTIONUI_WINDOW_UUID`, so a client need not know it is talking to the Command Engine. |
 
 Both endpoint names carry the same value; the unprefixed pair is what a plain ActionUI client expects, so a script written against the protocol runs unchanged whether its host is a Command Workshop applet or any other ActionUI application:
 

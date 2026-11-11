@@ -186,8 +186,8 @@ Scripts for `exe_script_file` execution mode live in `MyApp.app/Contents/Resourc
 | `$OMC_OBJ_PATH` | Selected file/folder path |
 | `$OMC_OBJ_NAME` | Base name |
 | `$OMC_APP_BUNDLE_PATH` | Applet bundle path |
-| `$OMC_APP_PROCESS_ID` | PID of the Command Workshop host process (the applet itself here, not the frontmost app) |
-| `$OMC_OMC_SUPPORT_PATH` | Command Workshop support tools |
+| `$OMC_APP_PROCESS_ID` | PID of the Command Engine host process (the applet itself here, not the frontmost app) |
+| `$OMC_OMC_SUPPORT_PATH` | Command Engine support tools |
 | `$OMC_ACTIONUI_WINDOW_UUID` | Window instance ID (`$OMC_NIB_DLG_GUID` is the same value under its older name) |
 | `$OMC_CURRENT_COMMAND_GUID` | Command execution ID |
 
@@ -485,7 +485,7 @@ Background processes started by scripts can outlive the parent applet. Handle cl
 
 ### App Lifetime Events
 
-Command Workshop dispatches commands for app lifecycle events when a matching `COMMAND_ID` is defined in `COMMAND_LIST`:
+The Command Engine dispatches commands for app lifecycle events when a matching `COMMAND_ID` is defined in `COMMAND_LIST`:
 
 | `COMMAND_ID` | When it fires |
 |--------------|---------------|

@@ -26,7 +26,7 @@ OMCGetTestSurfaceStatusDescription(OMCTestSurfaceStatus inStatus)
 	switch(inStatus)
 	{
 		case kOMCTestSurface_Allowed:
-			return "allowed: this build of Command Workshop includes the test surface";
+			return "allowed: this build of the Command Engine includes the test surface";
 		case kOMCTestSurface_NoValidSignature:
 			return "refused: the applet has no valid code signature, or it could not be read";
 		case kOMCTestSurface_DistributionSigned:
@@ -34,7 +34,7 @@ OMCGetTestSurfaceStatusDescription(OMCTestSurfaceStatus inStatus)
 		case kOMCTestSurface_Hardened:
 			return "refused: the applet is hardened against code injection";
 		case kOMCTestSurface_NotInThisBuild:
-			return "refused: this build of Command Workshop leaves the test surface out (build with OMC_TEST_SURFACE=1)";
+			return "refused: this build of the Command Engine leaves the test surface out (build with OMC_TEST_SURFACE=1)";
 	}
 	return "refused: unknown status";
 }

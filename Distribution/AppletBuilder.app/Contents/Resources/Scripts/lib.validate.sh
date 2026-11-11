@@ -63,7 +63,7 @@ validate_script_file() {
             if [ $rc -ne 0 ] && /bin/bash -n "$path" >/dev/null 2>&1; then
                 SCRIPT_VALIDATE_OUTPUT="${SCRIPT_VALIDATE_OUTPUT}
 
-note: this script parses under bash but Command Workshop runs .sh files with /bin/sh
+note: this script parses under bash but the Command Engine runs .sh files with /bin/sh
 (bash 3.2 in POSIX mode), where bash-only syntax such as process
 substitution \`< <(cmd)\` is a fatal error. Rewrite the offending line
 POSIX-compatible, or rename the script to .zsh to get a modern shell."

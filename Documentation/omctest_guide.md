@@ -286,7 +286,7 @@ An empty view id is accepted - what `omc_control` and `omc_trigger` refuse is an
 | `omc_run` | `<script-stem>` | resolves `Scripts/<stem>.<ext>` case-insensitively, runs it under the right interpreter with `$OMCTEST_WORK` as cwd, appends output to `handlers.log`, records the exit code in `$OMCTEST_STATUS`, then clears the one-shot variables. Returns the handler's exit code, or `127` when no script matches. |
 | `omc_fire` | `<command-id> <view-id> [value]` | `omc_control` (when a value is given) + `omc_trigger` + `omc_run`. The common three-liner. |
 
-When several scripts share a stem, the harness picks `.sh`, `.py`, `.zsh`, `.bash`, then any other extension or none, in directory order. The engine leaves that case undefined, so this order is the harness's own choice: give each command one script. Each script runs under the interpreter the engine's table gives its extension, matched case-insensitively (`.PY` runs under Python, `.js` under JavaScriptCore's `jsc`). No shebang is honored, exactly like Command Workshop.
+When several scripts share a stem, the harness picks `.sh`, `.py`, `.zsh`, `.bash`, then any other extension or none, in directory order. The engine leaves that case undefined, so this order is the harness's own choice: give each command one script. Each script runs under the interpreter the engine's table gives its extension, matched case-insensitively (`.PY` runs under Python, `.js` under JavaScriptCore's `jsc`). No shebang is honored, exactly like the Command Engine.
 
 **What `omc_run` takes is the script's file stem, not the manifest's `COMMAND_ID`.** For most commands these are the same string, which is why it is easy to believe otherwise - and why the distinction only bites on the one command that matters most.
 

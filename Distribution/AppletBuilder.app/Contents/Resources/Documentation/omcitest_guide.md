@@ -44,7 +44,7 @@ In AppletBuilder, the **Integration Test** button in the Build & Run pane runs t
 
 **The button tests the applet in place.** `ITEST_APP` is then the bundle in your repository, not a copy. A test must never write into `ITEST_APP` (no signing, no stapling, no copying into it).
 
-For Command Workshop engine development, `Tools/omcitest_tests/run_fixture.sh` runs the same tests against a copy of an applet, optionally with an engine you just built:
+For Command Engine development, `Tools/omcitest_tests/run_fixture.sh` runs the same tests against a copy of an applet, optionally with an engine you just built:
 
 ```bash
 Tools/omcitest_tests/run_fixture.sh --app ~/git/MyAppApp/MyApp.app \
@@ -131,7 +131,7 @@ To find the folder the test file sits in (to run a fixture builder beside it): `
 **Isolated for you:**
 
 - `$HOME` and `$TMPDIR`, for everything the handlers do through them. An applet that keeps its settings under `$HOME/Library/Application Support/<App>` starts every file with none.
-- Pasteboards that go through Command Workshop (`pasteboard`, and the engine's own clipboard reads).
+- Pasteboards that go through the Command Engine (`pasteboard`, and the engine's own clipboard reads).
 - `alert` and `notify` in handlers: stand-ins that record and answer, never show anything.
 - The engine's own panels and alerts: answered from a queue (section 6), never shown.
 - `PASTE_AFTER_EXECUTION`: no keystrokes are sent; `omc.test.status` counts them as `skippedPastes`.

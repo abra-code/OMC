@@ -12,7 +12,7 @@ version: "1.0"
 
 Command Workshop (formerly OMC) is a macOS low-code app builder engine. Command Workshop **applets** are GUI `.app` bundles, with optional macOS Services menu items. Each applet combines a declarative command manifest (`Command.plist`) with shell scripts, Python scripts, or AppleScript files that implement the actions.
 
-The Command Workshop engine (`Abracode.framework`) handles app runtime, input routing, UI presentation, and script execution. A developer writes only the application-specific logic.
+The Command Engine (`Abracode.framework`) handles app runtime, input routing, UI presentation, and script execution. A developer writes only the application-specific logic.
 
 **User should start a new applet using AppletBuilder** (`Distribution/AppletBuilder.app`) — it creates the correct bundle structure, installs the framework, and generates the initial `Command.plist` and starter scripts.
 
@@ -38,7 +38,7 @@ MyApp.app/
 
 ## Command.plist
 
-The command manifest lives at `Contents/Resources/Command.plist` (XML/binary plist) **or** `Contents/Resources/Command.json` (JSON). Command Workshop reads either, preferring `Command.json` when both are present; AppletBuilder creates new applets with `Command.json`. The two formats are structurally identical — the same keys, value types, and `VERSION == 2` rule apply (a JSON number `2` for `VERSION`, JSON `true`/`false` for booleans). This guide shows plist XML, but every example maps directly to JSON.
+The command manifest lives at `Contents/Resources/Command.plist` (XML/binary plist) **or** `Contents/Resources/Command.json` (JSON). The Command Engine reads either, preferring `Command.json` when both are present; AppletBuilder creates new applets with `Command.json`. The two formats are structurally identical — the same keys, value types, and `VERSION == 2` rule apply (a JSON number `2` for `VERSION`, JSON `true`/`false` for booleans). This guide shows plist XML, but every example maps directly to JSON.
 
 **Root structure (plist):**
 ```xml
@@ -98,25 +98,25 @@ Script files live in `Contents/Resources/Scripts/`. The filename maps directly t
 | `MyApp.settings.save.sh` | `MyApp.settings.save` |
 | `lib.myapp.sh` | *(shared library — sourced by other scripts, not a command handler)* |
 
-Command Workshop resolves the interpreter from the extension: `.sh` / `.bash` / `.zsh` → corresponding shell, `.py` → Python, `.applescript` → AppleScript, `.js` → JSC.
+The Command Engine resolves the interpreter from the extension: `.sh` / `.bash` / `.zsh` → corresponding shell, `.py` → Python, `.applescript` → AppleScript, `.js` → JSC.
 
-**No shebang line is needed.** Command Workshop supplies the interpreter path automatically.
+**No shebang line is needed.** The Command Engine supplies the interpreter path automatically.
 
-For Python applets, the embedded Python at `Contents/Library/Python/bin/python3` is used when present — no system Python dependency. When a bundle has embedded Python, Command Workshop exports — for every handler, shell or Python — `PATH` (prepended with the interpreter's `bin/`), `PYTHONPYCACHEPREFIX` (the per-user `/var/folders/.../T/Pyc`, not `$TMPDIR`), and `PYTHONPATH` (prepended with `Contents/Library/Packages/` when it exists). Install third-party modules into `Contents/Library/Packages/` (e.g. `python3 -m pip install --target .../Contents/Library/Packages pkg`) rather than the runtime's own `site-packages`: the `Packages/` dir survives a Python runtime upgrade/rebuild, whereas `Contents/Library/Python/` is replaced wholesale. See `docs/omc_python_scripting_guide.md`.
+For Python applets, the embedded Python at `Contents/Library/Python/bin/python3` is used when present — no system Python dependency. When a bundle has embedded Python, the Command Engine exports — for every handler, shell or Python — `PATH` (prepended with the interpreter's `bin/`), `PYTHONPYCACHEPREFIX` (the per-user `/var/folders/.../T/Pyc`, not `$TMPDIR`), and `PYTHONPATH` (prepended with `Contents/Library/Packages/` when it exists). Install third-party modules into `Contents/Library/Packages/` (e.g. `python3 -m pip install --target .../Contents/Library/Packages pkg`) rather than the runtime's own `site-packages`: the `Packages/` dir survives a Python runtime upgrade/rebuild, whereas `Contents/Library/Python/` is replaced wholesale. See `docs/omc_python_scripting_guide.md`.
 
 
 
 ## Environment Variables
 
-Command Workshop exports these variables into every script's environment:
+The Command Engine exports these variables into every script's environment:
 
 ### Always Available
 
 | Variable | Description |
 |----------|-------------|
 | `$OMC_APP_BUNDLE_PATH` | Full path to the running applet's `.app` bundle |
-| `$OMC_APP_PROCESS_ID` | PID of the host process running Command Workshop, which for an applet is the applet itself - use it to tell whether the instance that owns some state is still alive (not the frontmost app, that is `$OMC_FRONT_PROCESS_ID`) |
-| `$OMC_OMC_SUPPORT_PATH` | Path to Command Workshop's support directory — all runtime tools live here |
+| `$OMC_APP_PROCESS_ID` | PID of the host process running the Command Engine, which for an applet is the applet itself - use it to tell whether the instance that owns some state is still alive (not the frontmost app, that is `$OMC_FRONT_PROCESS_ID`) |
+| `$OMC_OMC_SUPPORT_PATH` | Path to the Command Engine's support directory — all runtime tools live here |
 | `$OMC_CURRENT_COMMAND_GUID` | GUID of the current command invocation (pass to `omc_next_command`) |
 | `$OMC_OBJ_PATH` | Path of the file/folder that triggered the command (drag & drop / open panel / service) |
 
@@ -254,7 +254,7 @@ of these bites or when behavior can't be explained from the code.
    is no bash 4/5 on macOS. Process substitution (`done < <(cmd)`),
    `mapfile`, `declare -A`, and `${var,,}` are fatal parse errors that kill
    the script mid-file with no UI feedback. **Validate with `sh -n`, never
-   `bash -n`** — `bash -n` passes scripts that die under Command Workshop.
+   `bash -n`** — `bash -n` passes scripts that die under the Command Engine.
 2. **Window init code goes in `INIT_SUBCOMMAND_ID`** (runs before the window
    appears). A non-blocking window's main command script runs at an
    unpredictable time — keep it `exit 0`.
@@ -281,7 +281,7 @@ of these bites or when behavior can't be explained from the code.
    `$OMC_ACTIONUI_TRIGGER_VIEW_ID/_PART_ID/_CONTEXT` in every handler, ask
    the user to perform the UI operation once, read the log back. Don't guess.
 7. **Handlers are testable headlessly — do not hand-roll a stub directory.**
-   `appletbuilder test <App.app>` runs `Tests/*.test.sh` against a mock Command Workshop
+   `appletbuilder test <App.app>` runs `Tests/*.test.sh` against a mock Command Engine
    environment: real handlers, real `plister` and `pasteboard`, a stubbed
    app-modal `alert` with scripted answers, and a recording
    `omc_dialog_control` so you can assert on what a handler pushed toward the
@@ -457,7 +457,7 @@ Exit codes: `0` ok · `2` warnings · `1` errors.
 | `create (--template <name|path> \| --clone <App.app>) --name <N> --dest <dir> [--bundle-id <id>] [--python] [--icon <name|path>]` | Copy a template (or clone an applet), rename it, install the framework/executable (and Python if `--python`), set the icon, and codesign. Prints the new `.app` path. |
 | `validate <App.app \| Command.json \| UI.json \| script>` | Auto-detects the target and runs the matching validator(s). For a bundle: `Info.plist` + command manifest (Layer 1/2) + every script + every ActionUI JSON. |
 | `build <App.app> [--identity <id>] [--thin arm64\|x86_64\|none] [--test] [--warnings-as-errors] [--update-python] [--force]` | Full validation, then refresh framework/executable (newer version auto-copies; `--force` re-copies even when unchanged), thin, and codesign. Halts before signing on validation errors, and on a failed architecture slice when `--thin` was asked for (the bundle is then modified and unsigned). Independently, a working embedded Python is left untouched unless `--update-python` is given; a missing/broken runtime is always installed. Replacing the runtime wipes anything pip-installed into its `site-packages` — install deps into `Contents/Library/Packages` (on `PYTHONPATH`) so they survive. `--test` runs the applet's test suite after the refresh and before signing, halting on failure. |
-| `test <App.app> [--tests <dir>] [--filter <glob>] [--verbose] [--keep-scratch] [--list]` | Run the applet's `Tests/*.test.sh` against a mock Command Workshop environment: real handlers, stubbed `alert`, a recording `omc_dialog_control` you can assert against. Validates the bundle first. Detail to stderr, `omctest: N passed, M failed, K files` to stdout. See `docs/omctest_guide.md`. |
+| `test <App.app> [--tests <dir>] [--filter <glob>] [--verbose] [--keep-scratch] [--list]` | Run the applet's `Tests/*.test.sh` against a mock Command Engine environment: real handlers, stubbed `alert`, a recording `omc_dialog_control` you can assert against. Validates the bundle first. Detail to stderr, `omctest: N passed, M failed, K files` to stdout. See `docs/omctest_guide.md`. |
 | `thin-python plan\|apply\|plan-apply <App.app> [--plan <file>] [--dry-run] [--skip-verify] [--thin arm64\|x86_64\|none]` | Closure-thin the applet's embedded Python. `plan` analyzes the applet on a clone and writes a committable `<App>.thinning-plan.json` beside the bundle, modifying nothing; `apply` removes what the plan names from the real interpreter and verifies, restoring on failure (`--dry-run` previews, on `apply` and `plan-apply`). Without `--plan`: beside the bundle, else the last plan written for that applet (matched on its bundle identifier). An optional `<App>.thinning-keep.txt` force-keep list is picked up automatically. GUI equivalent: the Embedded Python Thinning group in Build & Run (Write Thinning Plan / Apply Plan / Dry Run, then Execute), disabled for an applet that bundles no Python. See `docs/omc_python_scripting_guide.md`. |
 | `prettify <file.json> [--stdout]` | Reformat JSON in place (or to stdout). |
 | `preview <UI.json> [--screenshot <out.png>] [--show-window]` | Render an ActionUI view to a PNG and print its path (read the PNG to inspect the layout); a `MainMenu.json` menu-bar doc prints a text summary instead. Renders off screen by default, so no window appears and a locked screen is fine; `--show-window` asks for the old on-screen capture. Still needs a logged-in GUI session. |
@@ -489,7 +489,7 @@ Applet panel.
 ### For an existing applet
 
 Edit the bundle's files directly:
-- `Contents/Resources/Command.json` (or `Command.plist` — Command Workshop reads either, preferring `Command.json` when both exist)
+- `Contents/Resources/Command.json` (or `Command.plist` — the Command Engine reads either, preferring `Command.json` when both exist)
 - `Contents/Resources/Scripts/*`
 - `Contents/Resources/Base.lproj/*.json` (ActionUI windows and `MainMenu.json`)
 
@@ -650,7 +650,7 @@ clicking — and the error paths, which are the ones that destroy user data, are
 the least likely to be walked by hand.
 
 `appletbuilder test <App.app>` runs the applet's real handlers against a
-simulated Command Workshop environment. **Read `docs/omctest_guide.md` before writing tests**
+simulated Command Engine environment. **Read `docs/omctest_guide.md` before writing tests**
 — it is the full API reference. This section is the shape and the traps.
 
 ### Layout and the run
@@ -721,7 +721,7 @@ usually the same string — except for the primary command, which typically has 
 
 ### The seam contract — the thing most applets have to change
 
-The harness intercepts Command Workshop support tools by rebuilding `$OMC_OMC_SUPPORT_PATH`.
+The harness intercepts Command Engine support tools by rebuilding `$OMC_OMC_SUPPORT_PATH`.
 It **cannot** reach anything named by an absolute path or a bundle-relative one.
 So anything an applet must not really do under test has to be named through an
 overridable variable in its shared lib:
@@ -886,7 +886,7 @@ After creating or editing a command manifest, validate it before building. The v
 python3 Skill/scripts/validate_command_plist.py <App.app | Command.plist | Command.json>
 ```
 
-Pass the **applet bundle** (`.app` / `.omc`) rather than the bare file to also run bundle cross-checks (Layer 2); for a bundle the verifier resolves the command file itself, preferring `Command.json` when both exist (as Command Workshop does): every `exe_script_file` command has a matching `Scripts/<COMMAND_ID>.*`, the `ACTIONUI_WINDOW` JSON resources exist, subcommand IDs (`INIT_SUBCOMMAND_ID`, `END_OK_SUBCOMMAND_ID`, `NEXT_COMMAND_ID`, …) resolve, and every `actionID` in the bundle's JSON UI documents points at a command that exists.
+Pass the **applet bundle** (`.app` / `.omc`) rather than the bare file to also run bundle cross-checks (Layer 2); for a bundle the verifier resolves the command file itself, preferring `Command.json` when both exist (as the Command Engine does): every `exe_script_file` command has a matching `Scripts/<COMMAND_ID>.*`, the `ACTIONUI_WINDOW` JSON resources exist, subcommand IDs (`INIT_SUBCOMMAND_ID`, `END_OK_SUBCOMMAND_ID`, `NEXT_COMMAND_ID`, …) resolve, and every `actionID` in the bundle's JSON UI documents points at a command that exists.
 
 Exit codes: `0` clean · `2` warnings only · `1` errors (`[INFO]` lines are advisory and never affect the exit code). Fix every `[ERROR]` before building; investigate each `[WARNING]` (usually a typo, a wrong value type, or a key with no effect in its context); `[INFO]` lines are just FYI.
 

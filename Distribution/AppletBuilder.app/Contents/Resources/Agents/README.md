@@ -68,7 +68,7 @@ Auto-detects the target:
 - **Command.json / Command.plist** — the command verifier.
 - **`.json`** — the ActionUI verifier (also accepts `MainMenu.json` menu-bar docs).
 - **script** (`.sh` `.bash` `.zsh` `.py` `.js` `.applescript` `.scpt`) — a syntax
-  check using the same interpreter Command Workshop will use (`.sh` → `/bin/sh`, i.e. bash 3.2),
+  check using the same interpreter the Command Engine will use (`.sh` → `/bin/sh`, i.e. bash 3.2),
   plus the bash-4+ portability scan for shell scripts.
 
 Single-file results exit `0`/`2`/`1`. This is the same validation the GUI runs on its
@@ -117,7 +117,7 @@ appletbuilder test <App.app> [--tests <dir>] [--filter <glob>] [--verbose] \
 ```
 
 Runs the applet's `Tests/*.test.sh` files against its real handler scripts inside a
-simulated Command Workshop environment: a scratch mock of the engine's variable surface, an
+simulated Command Engine environment: a scratch mock of the engine's variable surface, an
 interposition directory holding the applet's own runtime tools with `alert`,
 `notify`, `omc_dialog_control` and `omc_next_command` replaced by recording stubs,
 and a per-file `TMPDIR` so state directories are isolated and cleanup is total.

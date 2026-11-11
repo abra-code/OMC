@@ -53,7 +53,7 @@ placement by what the nib item was:
   `before` / `after` an anchor (an item id, or a SwiftUI group placement such as
   `appSettings` / `saveItem`). Give it a `systemImage` if you want an icon.
 
-**3. Place `MainMenu.json` in `Base.lproj/`** (where the nib was). Command Workshop resolves it
+**3. Place `MainMenu.json` in `Base.lproj/`** (where the nib was). The Command Engine resolves it
 as a localized resource.
 
 **4. Remove `NSMainNibFile` from `Info.plist`.** Since 6.0 the applet's
@@ -66,8 +66,8 @@ while it is there. Leave `NSPrincipalClass` (`NSApplication`) in place.
 executable and embedded `Abracode.framework`, which must come from the same
 release. An applet last built before 6.0 must update both: its old executable
 does not launch with a 6.0 framework. In **AppletBuilder ▸ Build & Run**,
-use **Force Update Binaries** — required when the Command Workshop version string is unchanged
-(e.g. when the Command Workshop version string is the same in both builds, the normal
+use **Force Update Binaries** — required when the Command Engine version string is unchanged
+(e.g. when the Command Engine version string is the same in both builds, the normal
 version-based update check won't trigger a refresh).
 
 **7. Re-codesign** the bundle after editing it (`codesign_applet.sh YourApp.app -`)
@@ -87,7 +87,7 @@ The standard applet template ships exactly one menu addition:
 ]
 ```
 
-`autoPopulate` is a Command Workshop extension. When `true`, Command Workshop fills the menu's items from
+`autoPopulate` is a Command Workshop extension. When `true`, the Command Engine fills the menu's items from
 the applet's `Command.json` at launch — one item per top-level command — so the
 menu always mirrors the applet's commands without listing them by hand. Omit
 `children` when `autoPopulate` is set.
@@ -95,7 +95,7 @@ menu always mirrors the applet's commands without listing them by hand. Omit
 ## Wiring a menu item to a command (`actionID`)
 
 Hand-authored menu items use ActionUI's native **`actionID`** — no Command Workshop-specific
-property. In a Command Workshop applet the `actionID` **is** the command id to run: Command Workshop builds
+property. In a Command Workshop applet the `actionID` **is** the command id to run: the Command Engine builds
 the item as an `OMCMenuItem` wired to `executeCommand:`, the same path the old nib
 menu used.
 
@@ -137,7 +137,7 @@ is in [ActionUI-MenuBar-JSON-Guide.md](ActionUI-MenuBar-JSON-Guide.md).
 
 ## Open Recent
 
-Command Workshop adds and maintains the **File ▸ Open Recent** submenu itself — the standard
+The Command Engine adds and maintains the **File ▸ Open Recent** submenu itself — the standard
 programmatic bar does not include one, because AppKit only auto-populates Open
 Recent for nib menus. The applet's document controller (`OMCAppletController`,
 named `OMCDropletController` before 6.0)

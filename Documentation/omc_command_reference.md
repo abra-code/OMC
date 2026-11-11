@@ -21,12 +21,12 @@ This document reorganizes and updates the legacy [Command Description Manual](ht
 
 ## 0. Plist Root Structure
 
-The starting point for Command Workshop engine is a `Command.plist` file in applet's bundle in `MyApp.app/Contents/Resources/` or a file in `/Users/<username>/Library/Preferences/com.abracode.OnMyCommandCMPrefs.plist` for `OnMyCommandCM.plugin`. The file is a **property list** containing a root dictionary with two required keys:
+The starting point for the Command Engine is a `Command.plist` file in applet's bundle in `MyApp.app/Contents/Resources/` or a file in `/Users/<username>/Library/Preferences/com.abracode.OnMyCommandCMPrefs.plist` for `OnMyCommandCM.plugin`. The file is a **property list** containing a root dictionary with two required keys:
 
 | Key | Type | Required | Description |
 |-----|------|----------|-------------|
 | `COMMAND_LIST` | Array of Dictionaries | Yes | Contains all **action handlers** (commands). Each dictionary follows the format described in subsequent sections. |
-| `VERSION` | Integer | Yes | **Command format version** – indicates the plist schema version understood by Command Workshop. **Current value: `2`**. This is **not** the same as the optional `VERSION` inside individual commands (which is ignored by the Command Workshop engine). |
+| `VERSION` | Integer | Yes | **Command format version** – indicates the plist schema version understood by the Command Engine. **Current value: `2`**. This is **not** the same as the optional `VERSION` inside individual commands (which is ignored by the Command Engine). |
 
 ### Command Plist Root Structure
 
@@ -49,7 +49,7 @@ The starting point for Command Workshop engine is a `Command.plist` file in appl
 ```
 
 > **Best Practice**:
-> - Always set `<key>VERSION</key><integer>2</integer>` at the root level for the latest Command Workshop engine.
+> - Always set `<key>VERSION</key><integer>2</integer>` at the root level for the latest Command Engine.
 
 ---
 
@@ -60,10 +60,10 @@ The starting point for Command Workshop engine is a `Command.plist` file in appl
 |-----|------|----------|-------------------------------|----------|
 | `NAME` | String or Array<String> | Yes | Visible label in menus. Use array for dynamic labels. Shared across a **command group**. | `["Set Xattr: ", "__OBJ_NAME__"]` (only `__FOO__` form works here) |
 | `COMMAND_ID` | String | Recommended | **Unique identifier** for the action handler. **Unique readable strings are recommended**. Used to name script files and for subcommand chaining. If omitted, the engine assigns the internal ID `top!` (valid only for a single top-level command per group). The **main command** may instead set this explicitly to `<NAME>.main` (or bare `main`); the engine normalizes either form to the same `top!` sentinel, so it behaves identically to omitting `COMMAND_ID`. References to the main command — launch, `NEXT_COMMAND_ID`, `omc_next_command`, subcommand chaining — resolve it by `<NAME>.main`, `main`, or `top!`. For `exe_script_file` action handlers, a matching script file in `Scripts/` without a plist entry is auto-synthesized — see note below. | `"my.action.handler"` |
-| `VERSION` | Integer or String | No | Semantic version for your reference (ignored by Command Workshop). | `"1.0"` |
-| `NOTES` | String | No | Developer comments (ignored by Command Workshop). | `"Removes quarantine bit"` |
+| `VERSION` | Integer or String | No | Semantic version for your reference (ignored by the Command Engine). | `"1.0"` |
+| `NOTES` | String | No | Developer comments (ignored by the Command Engine). | `"Removes quarantine bit"` |
 | `DISABLED` | Boolean | No | `<true/>` disables the action handler. | — |
-| `CATEGORIES` | Array<String> | No | For organization of commands in a catalog (ignored by Command Workshop). | `["File", "Extended Attributes"]` |
+| `CATEGORIES` | Array<String> | No | For organization of commands in a catalog (ignored by the Command Engine). | `["File", "Extended Attributes"]` |
 | `SUBMENU_NAME` | String | No | Menu nesting path in contextual menus for managing many items. Use `"/"` for root. | `"/File Commands"` |
 
 > **Best Practices**:
@@ -72,7 +72,7 @@ The starting point for Command Workshop engine is a `Command.plist` file in appl
 
 > **Automatic synthesis of undeclared `exe_script_file` action handlers (applets only)**
 >
-> When Command Workshop loads `Command.plist` for an applet, it scans the bundle's `Scripts/` directory and automatically creates command entries for any script file whose name-without-extension has no matching `COMMAND_ID` in the plist. This means an ActionUI `actionID` (e.g. `onDropActionID: "MyApp.layer.drop"`) will dispatch correctly even if the corresponding `Command.plist` entry was accidentally omitted, as long as the script file exists.
+> When the Command Engine loads `Command.plist` for an applet, it scans the bundle's `Scripts/` directory and automatically creates command entries for any script file whose name-without-extension has no matching `COMMAND_ID` in the plist. This means an ActionUI `actionID` (e.g. `onDropActionID: "MyApp.layer.drop"`) will dispatch correctly even if the corresponding `Command.plist` entry was accidentally omitted, as long as the script file exists.
 >
 > **Naming convention for group assignment.** The synthesized command is assigned to the command group whose `NAME` matches the prefix of the script filename — the segment before the first `.` or `_`. For example, `MyApp.layer.drop.py` is assigned to the group named `MyApp`. If no group name matches the prefix, the first command group is used as a fallback.
 >
@@ -273,7 +273,7 @@ Nib (Interface Builder) dialogs are no longer supported: since 6.0 a command wit
 
 ## 6.1. ACTIONUI_WINDOW – ActionUI JSON Dialogs (version 5.0 or higher)
 
-`ACTIONUI_WINDOW` allows an **action handler** to present a **custom dialog** defined by a JSON content view description using the [ActionUI library](https://github.com/abra-code/ActionUI). The JSON file is loaded from the applet bundle, and Command Workshop bridges controls to command execution via **subcommands** and **runtime tools**.
+`ACTIONUI_WINDOW` allows an **action handler** to present a **custom dialog** defined by a JSON content view description using the [ActionUI library](https://github.com/abra-code/ActionUI). The JSON file is loaded from the applet bundle, and the Command Engine bridges controls to command execution via **subcommands** and **runtime tools**.
 
 > **Note**: ActionUI is supported in version 5.0 or higher and required macOS 14.6 or higher. The ActionUI library provides SwiftUI-like declarative UI definitions in JSON format.
 
@@ -477,7 +477,7 @@ omc_dialog_control "$OMC_ACTIONUI_WINDOW_UUID" omc_window omc_terminate_cancel
 
 ### ActionUI Template Containers
 
-Any ActionUI container view (VStack, HStack, ZStack, List, DisclosureGroup, Group, GroupBox, LazyHStack, LazyVStack, Section) can render **data-driven repeated content** from a row dataset when its JSON uses a `"template"` key instead of `"children"`. The same `omc_dialog_control` commands used for List and Table — `omc_list_*` and `omc_table_*` — work for any container with a non-zero `id`. Command Workshop does not restrict row operations to List/Table views.
+Any ActionUI container view (VStack, HStack, ZStack, List, DisclosureGroup, Group, GroupBox, LazyHStack, LazyVStack, Section) can render **data-driven repeated content** from a row dataset when its JSON uses a `"template"` key instead of `"children"`. The same `omc_dialog_control` commands used for List and Table — `omc_list_*` and `omc_table_*` — work for any container with a non-zero `id`. The Command Engine does not restrict row operations to List/Table views.
 
 #### Template JSON
 
@@ -582,7 +582,7 @@ Examples:
 
 #### Modal Subcommand Callback
 
-When a modal button fires an actionID or `omc_dismiss_modal` fires an `onDismissActionID`, Command Workshop dispatches the matching `COMMAND_ID` as a subcommand. The subcommand runs with the full ActionUI window context, including `$OMC_ACTIONUI_WINDOW_UUID`, so it can read control values or send further `omc_dialog_control` messages:
+When a modal button fires an actionID or `omc_dismiss_modal` fires an `onDismissActionID`, the Command Engine dispatches the matching `COMMAND_ID` as a subcommand. The subcommand runs with the full ActionUI window context, including `$OMC_ACTIONUI_WINDOW_UUID`, so it can read control values or send further `omc_dialog_control` messages:
 
 ```bash
 # Command handler for "delete.confirmed"
@@ -730,7 +730,7 @@ All four dialogs share **most options**. Only `DEFAULT_FILE_NAME` option is excl
 
 ### Remembering the last-used folder
 
-macOS persists each save/open panel's last-used directory (along with its size and position) in the app's preferences, keyed by the panel's identifier — `DIALOG_IDENTIFIER`, or the `COMMAND_ID` when that is not set (so panels are already remembered per command by default). The directory is stored under `<identifier> - NSOSPLastRootDirectory`. The panel restores that directory the next time it opens — **unless Command Workshop forces a starting directory from `DEFAULT_LOCATION`, which overrides it**. So:
+macOS persists each save/open panel's last-used directory (along with its size and position) in the app's preferences, keyed by the panel's identifier — `DIALOG_IDENTIFIER`, or the `COMMAND_ID` when that is not set (so panels are already remembered per command by default). The directory is stored under `<identifier> - NSOSPLastRootDirectory`. The panel restores that directory the next time it opens — **unless the Command Engine forces a starting directory from `DEFAULT_LOCATION`, which overrides it**. So:
 
 - **Want the panel to reopen at the last-used folder?** Omit `DEFAULT_LOCATION`; the panel restores the remembered directory on its own. Give several commands the **same** `DIALOG_IDENTIFIER` to make them remember one shared location.
 - **Want the panel to always start at a fixed folder?** Set `DEFAULT_LOCATION`; the panel opens there every time and the remembered directory is not used.
@@ -1285,7 +1285,7 @@ Overrides default shell (`/bin/sh -c <command>`) for popen modes like `exe_shell
 
 | Key | Type | Default | Description & Best Practices | Example |
 |-----|------|---------|------------------------------|---------|
-| `POPEN_SHELL` | Array<String> | `["/bin/sh", "-c"]` | Shell path + flags (command appended by Command Workshop). | `["/bin/zsh", "-c"]` for zsh. |
+| `POPEN_SHELL` | Array<String> | `["/bin/sh", "-c"]` | Shell path + flags (command appended by the Command Engine). | `["/bin/zsh", "-c"]` for zsh. |
 
 **Example** (Use tcsh):
 ```xml
@@ -1326,7 +1326,7 @@ Unconditionally chains to another command on success (no cancel).
 
 ### `PASTE_AFTER_EXECUTION` - Paste the Result into the Front App
 
-After the command ends successfully, Command Workshop presses Command-V for the user, so whatever the command put on the clipboard is pasted into the app in front. It was made for text selections: a command that transforms the selected text copies its result to the clipboard, and the paste replaces the selection.
+After the command ends successfully, the Command Engine presses Command-V for the user, so whatever the command put on the clipboard is pasted into the app in front. It was made for text selections: a command that transforms the selected text copies its result to the clipboard, and the paste replaces the selection.
 
 | Key | Type | Default | Description & Best Practices |
 |-----|------|---------|------------------------------|
@@ -1343,9 +1343,9 @@ After the command ends successfully, Command Workshop presses Command-V for the 
 ```
 
 **Notes**:
-- Command Workshop does not copy the command's output: the command puts the text on the clipboard itself (`pbcopy`, `pasteboard`).
-- The paste goes to the app in front. That is another app only when Command Workshop works in the background: a Service, or the contextual menu plugin loaded by Shortcuts.app. From an applet's own menu the applet is in front, so the paste goes to the applet.
-- macOS sends the keystroke only for an app the user allowed in **System Settings > Privacy & Security > Accessibility**: Shortcuts.app for the contextual menu plugin, the Command Workshop Services app for a Service, the applet itself otherwise. The first time it is not allowed, Command Workshop asks macOS to show its permission prompt; until it is allowed, nothing is pasted and the reason is logged (Console, `OMC: PASTE_AFTER_EXECUTION did not paste`).
+- The Command Engine does not copy the command's output: the command puts the text on the clipboard itself (`pbcopy`, `pasteboard`).
+- The paste goes to the app in front. That is another app only when the Command Engine works in the background: a Service, or the contextual menu plugin loaded by Shortcuts.app. From an applet's own menu the applet is in front, so the paste goes to the applet.
+- macOS sends the keystroke only for an app the user allowed in **System Settings > Privacy & Security > Accessibility**: Shortcuts.app for the contextual menu plugin, the Command Workshop Services app for a Service, the applet itself otherwise. The first time it is not allowed, the Command Engine asks macOS to show its permission prompt; until it is allowed, nothing is pasted and the reason is logged (Console, `OMC: PASTE_AFTER_EXECUTION did not paste`).
 - Integration test launches never paste (`omcitest_guide.md`).
 
 ---
@@ -1384,7 +1384,7 @@ Escapes inserted objects (paths/text) for safe execution. Applies only to inline
 
 ## App Lifetime Events
 
-Command Workshop automatically dispatches commands for application and window lifecycle events. These are triggered by matching `COMMAND_ID` values — no special configuration is needed beyond defining the command in `COMMAND_LIST`.
+The Command Engine automatically dispatches commands for application and window lifecycle events. These are triggered by matching `COMMAND_ID` values — no special configuration is needed beyond defining the command in `COMMAND_LIST`.
 
 ### App-Level Events
 
