@@ -37,8 +37,6 @@
 	<string>OMCp</string>
 	<key>CFBundleVersion</key>
 	<string>${OMC_BUNDLE_VERSION}</string>
-	<key>NSMainNibFile</key>
-	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 	<key>LSMinimumSystemVersion</key>

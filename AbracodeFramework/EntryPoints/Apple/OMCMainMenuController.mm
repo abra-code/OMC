@@ -33,21 +33,6 @@ static NSString *OMCMenuStringValue(NSDictionary *properties, NSString *key)
     return self;
 }
 
-- (void)awakeFromNib
-{
-	NSApplication *myApp = [NSApplication sharedApplication];
-	if(myApp == NULL)
-		return;
-
-	NSMenu *myMenu = [myApp mainMenu];
-	
-	if(myMenu == NULL)
-		return;
-		
-	[self connectOMCMenuItems:myMenu];
-	
-}
-
 - (void)setCommandFilePath:(NSString *)inPath
 {
 	if((inPath != nil) && ([inPath length] > 0))
@@ -60,32 +45,6 @@ static NSString *OMCMenuStringValue(NSDictionary *properties, NSString *key)
 	}
 }
 
-
-- (void) connectOMCMenuItems:(NSMenu *)inMenu
-{
-	NSInteger i;
-	NSInteger itemCount = [inMenu numberOfItems];
-	for(i = 0; i < itemCount; i++)
-	{
-		NSMenuItem *oneItem =  [inMenu itemAtIndex:i];
-		if(oneItem != NULL)
-		{
-			if( [oneItem isKindOfClass:[OMCMenuItem class]] )
-			{
-				if( [oneItem target] == NULL )//don't override targets preset in IB
-				{
-					[oneItem setTarget:self];
-					[oneItem setAction:@selector(executeCommand:)];
-				}
-			}
-
-			if( [oneItem hasSubmenu] )
-			{
-				[self connectOMCMenuItems:[oneItem submenu]];
-			}
-		}
-	}
-}
 
 - (void)executeCommand:(id)sender
 {
@@ -124,8 +83,8 @@ static NSString *OMCMenuStringValue(NSDictionary *properties, NSString *key)
 	}
 	NSArray *elements = (NSArray *)parsed;
 
-	// Partition elements: auto-populated Commands menus are handled here (the
-	// same dynamic behavior as the nib's OMCCommandMenu); everything else is a
+	// Partition elements: auto-populated Commands menus are handled here (a
+	// dynamic OMCCommandMenu); everything else is a
 	// static element delegated to the shared ActionUIMenuBar engine.
 	NSMutableArray *staticElements = [NSMutableArray array];
 	NSMutableArray<NSDictionary *> *autoPopulateMenus = [NSMutableArray array];
@@ -148,7 +107,7 @@ static NSString *OMCMenuStringValue(NSDictionary *properties, NSString *key)
 
 	// Static elements (explicit command Buttons / CommandGroups) → shared engine.
 	// Each Button's native actionID is the command id; it becomes an OMCMenuItem
-	// wired to executeCommand: — the same dispatch path the nib uses.  NSMenuItem keeps a
+	// wired to executeCommand:.  NSMenuItem keeps a
 	// weak reference to its target, so self must outlive the menu (see
 	// OMCApplet/main.m).
 	if(staticElements.count > 0)

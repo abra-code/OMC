@@ -8,12 +8,10 @@
 
 #import <Cocoa/Cocoa.h>
 
-IB_DESIGNABLE
 @interface OMCMainMenuController : NSObject
 
-@property (nonatomic, strong) IBInspectable NSString * commandFilePath;
+@property (nonatomic, strong) NSString * commandFilePath;
 
-- (void)connectOMCMenuItems:(NSMenu *)inMenu;
 - (void)executeCommand:(id)sender;
 
 // Builds the main menu bar programmatically using the shared ActionUIMenuBar

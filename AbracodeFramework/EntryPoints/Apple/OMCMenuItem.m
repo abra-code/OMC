@@ -17,17 +17,6 @@
 	return self;
 }
 
-- (id)initWithCoder:(NSCoder *)coder
-{
-    self = [super initWithCoder:coder];
-	if(self == nil)
-		return nil;
-
-	self.escapingMode = @"esc_none";
-
-    return self;
-}
-
 - (id)initWithTitle:(NSString *)itemName action:(SEL)anAction keyEquivalent:(NSString *)charCode
 {
 	self = [super initWithTitle:itemName action:anAction keyEquivalent:charCode];

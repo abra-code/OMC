@@ -100,7 +100,7 @@
 		E2517C510D1BCC2700180C68 /* OMCMenuItem.h in Headers */ = {isa = PBXBuildFile; fileRef = E2517C410D1BCC2700180C68 /* OMCMenuItem.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E2517C520D1BCC2700180C68 /* OMCMenuItem.m in Sources */ = {isa = PBXBuildFile; fileRef = E2517C420D1BCC2700180C68 /* OMCMenuItem.m */; };
 		E258B2110E46E37C00926F10 /* OMCDeferredProgress.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E258B20F0E46E37C00926F10 /* OMCDeferredProgress.cpp */; };
-		E25D78990DBB24800065C7A3 /* OMCDropletController.h in Headers */ = {isa = PBXBuildFile; fileRef = E25D78950DBB24800065C7A3 /* OMCDropletController.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		E25D78990DBB24800065C7A3 /* OMCAppletController.h in Headers */ = {isa = PBXBuildFile; fileRef = E25D78950DBB24800065C7A3 /* OMCAppletController.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E27103CE0D8142DF0097D83E /* Quartz.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E27103CD0D8142DF0097D83E /* Quartz.framework */; };
 		E2735F370D7B9576004D81CE /* OMCDialog.h in Headers */ = {isa = PBXBuildFile; fileRef = E2735F360D7B9576004D81CE /* OMCDialog.h */; };
 		E2735F830D7BC89F004D81CE /* OMCDialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E2735F820D7BC89F004D81CE /* OMCDialog.cpp */; };
@@ -128,7 +128,7 @@
 		E2C32CF70D2E1F6C0023DA03 /* OmcTaskNotification.h in Headers */ = {isa = PBXBuildFile; fileRef = E2C32CF50D2E1F6C0023DA03 /* OmcTaskNotification.h */; };
 		E2C433470DEE72F700E976D2 /* PlistPreferences.h in Headers */ = {isa = PBXBuildFile; fileRef = E2C433430DEE72F600E976D2 /* PlistPreferences.h */; };
 		E2C433480DEE72F700E976D2 /* PlistPreferences.cp in Sources */ = {isa = PBXBuildFile; fileRef = E2C433440DEE72F700E976D2 /* PlistPreferences.cp */; };
-		E2C433620DEE751300E976D2 /* OMCDropletController.mm in Sources */ = {isa = PBXBuildFile; fileRef = E2C433600DEE751300E976D2 /* OMCDropletController.mm */; };
+		E2C433620DEE751300E976D2 /* OMCAppletController.mm in Sources */ = {isa = PBXBuildFile; fileRef = E2C433600DEE751300E976D2 /* OMCAppletController.mm */; };
 		E2C7781212FFDC6300A7E6D2 /* filt in Copy Support Executables */ = {isa = PBXBuildFile; fileRef = E2C7780F12FFDC4D00A7E6D2 /* filt */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		E2C84D750DA9AC090056DBC2 /* OMCCommandMenu.h in Headers */ = {isa = PBXBuildFile; fileRef = E2C84D710DA9AC090056DBC2 /* OMCCommandMenu.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E2C84DAC0DA9D4CD0056DBC2 /* OMCCommandExecutor.h in Headers */ = {isa = PBXBuildFile; fileRef = E2C84DA80DA9D4CD0056DBC2 /* OMCCommandExecutor.h */; };
@@ -506,7 +506,7 @@
 		E2517C410D1BCC2700180C68 /* OMCMenuItem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OMCMenuItem.h; path = EntryPoints/Apple/OMCMenuItem.h; sourceTree = "<group>"; };
 		E2517C420D1BCC2700180C68 /* OMCMenuItem.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = OMCMenuItem.m; path = EntryPoints/Apple/OMCMenuItem.m; sourceTree = "<group>"; };
 		E258B20F0E46E37C00926F10 /* OMCDeferredProgress.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCDeferredProgress.cpp; sourceTree = "<group>"; };
-		E25D78950DBB24800065C7A3 /* OMCDropletController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OMCDropletController.h; path = EntryPoints/Apple/OMCDropletController.h; sourceTree = "<group>"; };
+		E25D78950DBB24800065C7A3 /* OMCAppletController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OMCAppletController.h; path = EntryPoints/Apple/OMCAppletController.h; sourceTree = "<group>"; };
 		E27103CD0D8142DF0097D83E /* Quartz.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Quartz.framework; path = /System/Library/Frameworks/Quartz.framework; sourceTree = "<absolute>"; };
 		E2735F360D7B9576004D81CE /* OMCDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCDialog.h; sourceTree = "<group>"; };
 		E2735F820D7BC89F004D81CE /* OMCDialog.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCDialog.cpp; sourceTree = "<group>"; };
@@ -538,7 +538,7 @@
 		E2C32CF50D2E1F6C0023DA03 /* OmcTaskNotification.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OmcTaskNotification.h; sourceTree = "<group>"; };
 		E2C433430DEE72F600E976D2 /* PlistPreferences.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PlistPreferences.h; sourceTree = "<group>"; };
 		E2C433440DEE72F700E976D2 /* PlistPreferences.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PlistPreferences.cp; sourceTree = "<group>"; };
-		E2C433600DEE751300E976D2 /* OMCDropletController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = OMCDropletController.mm; path = EntryPoints/Apple/OMCDropletController.mm; sourceTree = "<group>"; };
+		E2C433600DEE751300E976D2 /* OMCAppletController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = OMCAppletController.mm; path = EntryPoints/Apple/OMCAppletController.mm; sourceTree = "<group>"; };
 		E2C7780F12FFDC4D00A7E6D2 /* filt */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = filt; sourceTree = "<group>"; };
 		E2C84D710DA9AC090056DBC2 /* OMCCommandMenu.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OMCCommandMenu.h; path = EntryPoints/Apple/OMCCommandMenu.h; sourceTree = "<group>"; };
 		E2C84DA80DA9D4CD0056DBC2 /* OMCCommandExecutor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCCommandExecutor.h; sourceTree = "<group>"; };
@@ -940,8 +940,8 @@
 				1D0A1B2C2F6E000000000100 /* OMCProgressParsing.h */,
 				1D0A1B2C2F6E000000000101 /* OMCProgressParsing.cpp */,
 				E2C10C5A0E45783200454DB1 /* OMCDeferredProgress.h */,
-				E2C433600DEE751300E976D2 /* OMCDropletController.mm */,
-				E25D78950DBB24800065C7A3 /* OMCDropletController.h */,
+				E2C433600DEE751300E976D2 /* OMCAppletController.mm */,
+				E25D78950DBB24800065C7A3 /* OMCAppletController.h */,
 				E23AAC8B12F55FE0004C867B /* OMCService.h */,
 				E23AAC8C12F55FE0004C867B /* OMCService.m */,
 				E2735F820D7BC89F004D81CE /* OMCDialog.cpp */,
@@ -1064,7 +1064,7 @@
 				E2C84D750DA9AC090056DBC2 /* OMCCommandMenu.h in Headers */,
 				E2C84DAC0DA9D4CD0056DBC2 /* OMCCommandExecutor.h in Headers */,
 				1D690DDE2F45096A006FECE8 /* OMCActionUIDialog.h in Headers */,
-				E25D78990DBB24800065C7A3 /* OMCDropletController.h in Headers */,
+				E25D78990DBB24800065C7A3 /* OMCAppletController.h in Headers */,
 				1DAB10042FFD0001009FD073 /* OMCActionUIRemoteHost.h in Headers */,
 				E24B18180DE96F6D00E44A45 /* OMCFilePanels.h in Headers */,
 				E2C433470DEE72F700E976D2 /* PlistPreferences.h in Headers */,
@@ -1422,7 +1422,7 @@
 				1D80B9BA22E447E800CF1AF5 /* OMCiTermExecutor.cp in Sources */,
 				E24B18190DE96F6D00E44A45 /* OMCFilePanels.mm in Sources */,
 				E2C433480DEE72F700E976D2 /* PlistPreferences.cp in Sources */,
-				E2C433620DEE751300E976D2 /* OMCDropletController.mm in Sources */,
+				E2C433620DEE751300E976D2 /* OMCAppletController.mm in Sources */,
 				1D9B1F6521FF191D004704A7 /* SubmenuTree.cp in Sources */,
 				E258B2110E46E37C00926F10 /* OMCDeferredProgress.cpp in Sources */,
 				1D0A1B2C2F6E000000000103 /* OMCProgressParsing.cpp in Sources */,

@@ -1,5 +1,5 @@
 //
-//  OMCDropletControllerTests.m
+//  OMCAppletControllerTests.m
 //  AbracodeTests
 //
 //  What the applet's controller does when the app is asked to open files, a URL, a new
@@ -17,7 +17,7 @@
 
 #import <XCTest/XCTest.h>
 #import <objc/runtime.h>
-#import "OMCDropletController.h"
+#import "OMCAppletController.h"
 
 static NSMutableArray<NSURL *> *sNotedRecentURLs = nil;
 
@@ -49,12 +49,12 @@ static void RecordRecentDocumentURL(id self, SEL _cmd, NSURL *inURL)
 }
 @end
 
-@interface OMCDropletControllerTests : XCTestCase
+@interface OMCAppletControllerTests : XCTestCase
 @property (nonatomic, strong) NSURL *workFolder;
 @property (nonatomic, assign) IMP originalNoteRecent;
 @end
 
-@implementation OMCDropletControllerTests
+@implementation OMCAppletControllerTests
 
 // NSDocumentController's init returns the shared document controller once there is one, and AppKit
 // makes a plain one when another test in the same process uses it first: then every test here got
@@ -63,14 +63,14 @@ static void RecordRecentDocumentURL(id self, SEL _cmd, NSURL *inURL)
 // makeApplet gets it back with a new OMCApplet.
 + (void)load
 {
-	static OMCDropletController *sSharedApplet = nil;
-	sSharedApplet = [[OMCDropletController alloc] init];
+	static OMCAppletController *sSharedApplet = nil;
+	sSharedApplet = [[OMCAppletController alloc] init];
 }
 
 - (void)setUp
 {
 	[super setUp];
-	NSString *name = [NSString stringWithFormat:@"OMCDropletControllerTests-%@", [NSUUID UUID].UUIDString];
+	NSString *name = [NSString stringWithFormat:@"OMCAppletControllerTests-%@", [NSUUID UUID].UUIDString];
 	self.workFolder = [NSURL fileURLWithPath:[NSTemporaryDirectory() stringByAppendingPathComponent:name] isDirectory:YES];
 	[[NSFileManager defaultManager] createDirectoryAtURL:self.workFolder withIntermediateDirectories:YES attributes:nil error:NULL];
 
@@ -130,9 +130,9 @@ static void RecordRecentDocumentURL(id self, SEL _cmd, NSURL *inURL)
 	return fileURL.path;
 }
 
-- (OMCDropletController *)makeApplet
+- (OMCAppletController *)makeApplet
 {
-	OMCDropletController *applet = [[OMCDropletController alloc] init];
+	OMCAppletController *applet = [[OMCAppletController alloc] init];
 	applet.commandID = @"main";
 	applet.commandFilePath = [self writeCommandFile];
 	return applet;
@@ -159,7 +159,7 @@ static void RecordRecentDocumentURL(id self, SEL _cmd, NSURL *inURL)
 
 - (void)testUntitledLaunchRunsTheMainCommandWithNoContext
 {
-	OMCDropletController *applet = [self makeApplet];
+	OMCAppletController *applet = [self makeApplet];
 	BOOL opened = [applet applicationOpenUntitledFile:NSApp];
 	XCTAssertTrue(opened);
 	XCTAssertEqualObjects([self markerLinesAfter:1.0], (@[ @"main:" ]));
@@ -168,7 +168,7 @@ static void RecordRecentDocumentURL(id self, SEL _cmd, NSURL *inURL)
 
 - (void)testNewAndOpenDocumentRunTheMainCommandWithNoContext
 {
-	OMCDropletController *applet = [self makeApplet];
+	OMCAppletController *applet = [self makeApplet];
 	[applet newDocument:nil];
 	[applet openDocument:nil];
 	XCTAssertEqualObjects([self markerLinesAfter:1.0], (@[ @"main:", @"main:" ]));
@@ -176,7 +176,7 @@ static void RecordRecentDocumentURL(id self, SEL _cmd, NSURL *inURL)
 
 - (void)testOpenedFilesAreGatheredIntoOneRunAndNotedAsRecent
 {
-	OMCDropletController *applet = [self makeApplet];
+	OMCAppletController *applet = [self makeApplet];
 	OMCAppletTestApplication *application = [[OMCAppletTestApplication alloc] init];
 	NSURL *first = [self makeFile:@"first.txt"];
 	NSURL *second = [self makeFile:@"second.txt"];
@@ -194,7 +194,7 @@ static void RecordRecentDocumentURL(id self, SEL _cmd, NSURL *inURL)
 
 - (void)testOpeningOnlyURLsThatAreNotFilesRunsNothing
 {
-	OMCDropletController *applet = [self makeApplet];
+	OMCAppletController *applet = [self makeApplet];
 	OMCAppletTestApplication *application = [[OMCAppletTestApplication alloc] init];
 	[applet application:(NSApplication *)application openURLs:@[ [NSURL URLWithString:@"https://example.com/x"] ]];
 	XCTAssertEqualObjects([self markerLinesAfter:1.0], (@[]));
@@ -204,7 +204,7 @@ static void RecordRecentDocumentURL(id self, SEL _cmd, NSURL *inURL)
 
 - (void)testOpenDocumentWithAURLRunsTheMainCommandWithItAndNotesIt
 {
-	OMCDropletController *applet = [self makeApplet];
+	OMCAppletController *applet = [self makeApplet];
 	NSURL *file = [self makeFile:@"recent.txt"];
 	__block BOOL completed = NO;
 	[applet openDocumentWithContentsOfURL:file display:YES completionHandler:^(NSDocument *document, BOOL alreadyOpen, NSError *error) {
@@ -220,7 +220,7 @@ static void RecordRecentDocumentURL(id self, SEL _cmd, NSURL *inURL)
 
 - (void)testOpenFilesRunsTheMainCommandWithThemAtOnce
 {
-	OMCDropletController *applet = [self makeApplet];
+	OMCAppletController *applet = [self makeApplet];
 	NSURL *first = [self makeFile:@"a.txt"];
 	NSURL *second = [self makeFile:@"b.txt"];
 	[applet openFiles:@[ first, second ]];
@@ -242,7 +242,7 @@ static void RecordRecentDocumentURL(id self, SEL _cmd, NSURL *inURL)
 
 - (void)testAURLEventRunsWhatTheURLAsksFor
 {
-	OMCDropletController *applet = [self makeApplet];
+	OMCAppletController *applet = [self makeApplet];
 	[applet handleGetURLEvent:[self getURLEvent:@"omc://exe?commandID=link&text=hello"] withReplyEvent:[NSAppleEventDescriptor nullDescriptor]];
 	[applet handleGetURLEvent:[self getURLEvent:@"omc://other/path"] withReplyEvent:[NSAppleEventDescriptor nullDescriptor]];
 	// The main command is not URL_INVOCABLE: refused
@@ -255,7 +255,7 @@ static void RecordRecentDocumentURL(id self, SEL _cmd, NSURL *inURL)
 
 - (void)testAURLEventWithoutAURLRunsNothing
 {
-	OMCDropletController *applet = [self makeApplet];
+	OMCAppletController *applet = [self makeApplet];
 	NSAppleEventDescriptor *event = [NSAppleEventDescriptor appleEventWithEventClass:kInternetEventClass
 																			  eventID:kAEGetURL
 																	 targetDescriptor:nil
@@ -267,7 +267,7 @@ static void RecordRecentDocumentURL(id self, SEL _cmd, NSURL *inURL)
 
 - (void)testReopenWithVisibleWindowsDoesNothing
 {
-	OMCDropletController *applet = [self makeApplet];
+	OMCAppletController *applet = [self makeApplet];
 	XCTAssertFalse([applet applicationShouldHandleReopen:NSApp hasVisibleWindows:YES]);
 	XCTAssertEqualObjects([self markerLinesAfter:0.3], (@[]));
 }

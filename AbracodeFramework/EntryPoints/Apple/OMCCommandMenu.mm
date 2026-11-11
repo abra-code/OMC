@@ -51,17 +51,6 @@ FindOrAddSubmenu(NSMenu *inMenu, CFStringRef inName)
     return self;
 }
 
-- (id)initWithCoder:(NSCoder *)coder
-{
-	self = [super initWithCoder:coder];
-	if(self == nil)
-		return nil;
-
-	_commandFilePath = @"Command.plist";
-
-    return self;
-}
-
 - (id)initWithTitle:(NSString *)aTitle
 {
 	self = [super initWithTitle:aTitle];
@@ -71,11 +60,6 @@ FindOrAddSubmenu(NSMenu *inMenu, CFStringRef inName)
 	_commandFilePath = @"Command.plist";
 
     return self;
-}
-
-- (void)awakeFromNib
-{
-	[self populateFromCommandFile];
 }
 
 - (void)populateFromCommandFile

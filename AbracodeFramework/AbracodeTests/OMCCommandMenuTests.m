@@ -222,7 +222,7 @@ static OMCMenuItem *FindItem(NSMenu *inMenu, NSString *inTitle)
 	XCTAssertEqualObjects([self waitForMarker], @"beta", @"\"top!\" is no id of its own: the name is used");
 }
 
-- (void)testANibItemWithAnEmptyIdRunsByItsRepresentedName
+- (void)testAnItemWithAnEmptyIdRunsByItsRepresentedName
 {
 	NSString *path = [self writeCommandFile:@[
 		[self command:@"Alpha" marker:@"alpha" extra:@{ @"COMMAND_ID": @"alpha.id" }],

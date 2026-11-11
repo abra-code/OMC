@@ -8,7 +8,7 @@
 
 #import <Cocoa/Cocoa.h>
 #import <Abracode/OMCMainMenuController.h>
-#import <Abracode/OMCDropletController.h>
+#import <Abracode/OMCAppletController.h>
 
 UInt32 GetAbracodeFrameworkVersion(void);
 
@@ -21,46 +21,35 @@ int main(int argc, char *argv[])
 
 	@autoreleasepool
 	{
-		// Menu bar bootstrap.  Legacy applets name a MainMenu.nib via the
-		// NSMainNibFile Info.plist key and let NSApplicationMain load it.
-		// Nibless applets (OMC 5.1+) omit NSMainNibFile and build the menu bar
-		// programmatically: the standard macOS bar always, plus optional
-		// additions/mutations from a MainMenu.json resource when one is present.
-		NSString *mainNibName = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"NSMainNibFile"];
-		if(mainNibName.length == 0)
-		{
-			NSApplication *app = [NSApplication sharedApplication];
+		// The menu bar is built in code: the standard macOS bar always, plus optional
+		// additions from a MainMenu.json resource. A MainMenu.nib (NSMainNibFile), which
+		// applets before 5.1 used, is no longer loaded (removed in 6.0).
+		NSApplication *app = [NSApplication sharedApplication];
 
-			// OMCDropletController is the app delegate and the shared
-			// NSDocumentController — the same role the nib's instance filled via
-			// awakeFromNib.  It runs the applet's default command for New ("Run")
-			// and Open…, accepts dropped files and URLs, drives the Open Recent
-			// menu, and validates those File items as enabled (its
-			// -validateUserInterfaceItem: returns YES for newDocument:/openDocument:).
-			// Without it those items have no responder and appear disabled.
-			// NSApplication.delegate is weak, so hold a strong reference for the
-			// app's lifetime.
-			static OMCDropletController *sAppletController = nil;
-			sAppletController = [[OMCDropletController alloc] init];
-			[app setDelegate:sAppletController];
+		// OMCAppletController is the app delegate and the shared NSDocumentController.
+		// It runs the applet's default command for New ("Run") and Open..., accepts dropped
+		// files and URLs, drives the Open Recent menu, and validates those File items as
+		// enabled (its -validateUserInterfaceItem: returns YES for newDocument:/openDocument:).
+		// Without it those items have no responder and appear disabled.
+		// NSApplication.delegate is weak, so hold a strong reference for the
+		// app's lifetime.
+		static OMCAppletController *sAppletController = nil;
+		sAppletController = [[OMCAppletController alloc] init];
+		[app setDelegate:sAppletController];
 
-			// OMCMainMenuController owns the JSON menu bar and the Commands menu.
-			// NSMenuItem holds a weak reference to its target, so the controller
-			// must outlive the menu — keep a strong reference for the app's lifetime.
-			static OMCMainMenuController *sMenuController = nil;
-			sMenuController = [[OMCMainMenuController alloc] init];
-			[sMenuController installMenuBar];
+		// OMCMainMenuController owns the JSON menu bar and the Commands menu.
+		// NSMenuItem holds a weak reference to its target, so the controller
+		// must outlive the menu - keep a strong reference for the app's lifetime.
+		static OMCMainMenuController *sMenuController = nil;
+		sMenuController = [[OMCMainMenuController alloc] init];
+		[sMenuController installMenuBar];
 
-			// AppKit does not auto-manage a programmatically built Open Recent
-			// menu (only nib menus tagged systemMenu="recentDocuments"), so the
-			// applet controller populates it from the recent documents itself.
-			[sAppletController installOpenRecentMenu];
+		// AppKit does not auto-manage a programmatically built Open Recent
+		// menu (only nib menus tagged systemMenu="recentDocuments"), so the
+		// applet controller populates it from the recent documents itself.
+		[sAppletController installOpenRecentMenu];
 
-			[app run];
-			return 0;
-		}
+		[app run];
 	}
-
-	// Legacy path: NSApplicationMain loads MainMenu.nib named by NSMainNibFile.
-	return NSApplicationMain(argc, (const char **) argv);
+	return 0;
 }

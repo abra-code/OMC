@@ -1,12 +1,12 @@
 //
-//  OMCDropletController.m
-//  CocoaApp
+//  OMCAppletController.mm
+//  Abracode
 //
-//  Created by Tomasz Kukielka on 4/17/08.
+//  Created by Tomasz Kukielka on 4/17/08 as OMCDropletController; renamed in 6.0.
 //  Copyright 2008 Abracode Inc. All rights reserved.
 //
 
-#import "OMCDropletController.h"
+#import "OMCAppletController.h"
 #import "OMCCommandExecutor.h"
 #include "OMCWindowHost.h"
 #include "CFObj.h"
@@ -25,13 +25,13 @@ static OMCService *sOMCService = NULL;
 
 static OSStatus AppletRunMainCommand(void *inActionContext, CFTypeRef inContext)
 {
-	OMCDropletController *controller = (__bridge OMCDropletController *)inActionContext;
+	OMCAppletController *controller = (__bridge OMCAppletController *)inActionContext;
 	return [OMCCommandExecutor runCommand:controller.commandID forCommandFile:controller.commandFilePath withContext:(__bridge id)inContext useNavDialog:YES allowKeyWindowSubcommand:NO delegate:controller];
 }
 
 static void AppletRunURL(void *inActionContext, CFStringRef inURL)
 {
-	OMCDropletController *controller = (__bridge OMCDropletController *)inActionContext;
+	OMCAppletController *controller = (__bridge OMCAppletController *)inActionContext;
 	OSStatus err = [OMCCommandExecutor runCommandForURL:(__bridge NSString *)inURL forCommandFile:controller.commandFilePath delegate:controller];
 	(void)err;
 }
@@ -42,7 +42,7 @@ static void AppletNoteRecentDocument(void *inActionContext, CFURLRef inFileURL)
 	OMCNoteRecentDocumentURL((__bridge NSURL *)inFileURL);
 }
 
-@interface OMCDropletController ()
+@interface OMCAppletController ()
 {
 	std::unique_ptr<OMCApplet> _applet;
 }
@@ -53,11 +53,11 @@ static void AppletNoteRecentDocument(void *inActionContext, CFURLRef inFileURL)
 
 static void AppletDidOpenGatheredFiles(void *inActionContext)
 {
-	OMCDropletController *controller = (__bridge OMCDropletController *)inActionContext;
+	OMCAppletController *controller = (__bridge OMCAppletController *)inActionContext;
 	[controller didOpenGatheredFiles];
 }
 
-static std::unique_ptr<OMCApplet> CreateApplet(OMCDropletController *inController)
+static std::unique_ptr<OMCApplet> CreateApplet(OMCAppletController *inController)
 {
 	OMCAppletActions actions;
 	actions.runMainCommand = AppletRunMainCommand;
@@ -68,7 +68,7 @@ static std::unique_ptr<OMCApplet> CreateApplet(OMCDropletController *inControlle
 	return std::unique_ptr<OMCApplet>(new OMCApplet(actions));
 }
 
-@implementation OMCDropletController
+@implementation OMCAppletController
 
 - (id)init
 {
@@ -78,7 +78,12 @@ static std::unique_ptr<OMCApplet> CreateApplet(OMCDropletController *inControlle
 
 	_commandFilePath = @"Command.plist";
 	_applet = CreateApplet(self);
-	
+
+	// The applet's stub makes this controller at launch, before the application runs
+	// (OMCApplet/main.m), so the keys held now are the ones held while it was launched:
+	// Option suppresses opening the main command (OMCApplet::IsOpeningSuppressed).
+	_applet->SetStartupModifiers(OMCGetKeyboardModifiers());
+
 	NSAppleEventManager *eventManager = [NSAppleEventManager sharedAppleEventManager];
 	[eventManager setEventHandler:self
 					andSelector:@selector(handleGetURLEvent:withReplyEvent:)
@@ -86,40 +91,6 @@ static std::unique_ptr<OMCApplet> CreateApplet(OMCDropletController *inControlle
 					andEventID:kAEGetURL];
 
 	return self;
-}
-
-- (id)initWithCoder:(NSCoder *)coder
-{
-    self = [super initWithCoder:coder];
-	if(self == nil)
-		return nil;
-
-	_commandFilePath = @"Command.plist";
-	_applet = CreateApplet(self);
-	
-	NSAppleEventManager *eventManager = [NSAppleEventManager sharedAppleEventManager];
-	[eventManager setEventHandler:self
-					andSelector:@selector(handleGetURLEvent:withReplyEvent:)
-					forEventClass:kInternetEventClass
-					andEventID:kAEGetURL];
-
-    return self;
-}
-
-- (void)awakeFromNib
-{
-//	NSLog( @"OMCDropletController awakeFromNib " );
-
-	NSApplication *myApp = [NSApplication sharedApplication];
-	if(myApp != NULL)
-	{
-		[myApp setDelegate:self];
-		//NSEvent *currEvent = [myApp currentEvent];
-		//if(currEvent)
-		//	_startupModifiers = [currEvent modifierFlags];
-	}
-
-	_applet->SetStartupModifiers(OMCGetKeyboardModifiers());
 }
 
 - (void)openDocumentWithContentsOfURL:(NSURL *)absoluteURL display:(BOOL)displayDocument completionHandler:(void (^)(NSDocument * _Nullable document, BOOL documentWasAlreadyOpen, NSError * _Nullable error))completionHandler
@@ -181,7 +152,7 @@ static std::unique_ptr<OMCApplet> CreateApplet(OMCDropletController *inControlle
 	// The shared programmatic menu bar (ActionUIMenuBar) does not include an
 	// "Open Recent" submenu, because AppKit only auto-populates Open Recent for
 	// nib-based menus. OMC builds it here and drives it manually via
-	// -menuNeedsUpdate:. Locate the File menu by its "Open…" item and insert the
+	// -menuNeedsUpdate:. Locate the File menu by its "Open..." item and insert the
 	// submenu just after it.
 	for(NSMenuItem *topItem in mainMenu.itemArray)
 	{
@@ -236,7 +207,7 @@ static std::unique_ptr<OMCApplet> CreateApplet(OMCDropletController *inControlle
 	if(recentURLs.count > 0)
 		[menu addItem:[NSMenuItem separatorItem]];
 
-	// "Clear Menu" targets the first responder → the shared NSDocumentController.
+	// "Clear Menu" targets the first responder (that is, the shared NSDocumentController).
 	[menu addItemWithTitle:@"Clear Menu"
 					action:@selector(clearRecentDocuments:)
 			 keyEquivalent:@""];
@@ -248,9 +219,9 @@ static std::unique_ptr<OMCApplet> CreateApplet(OMCDropletController *inControlle
 	if(![url isKindOfClass:[NSURL class]])
 		return;
 
-	// OMCDropletController overrides -openDocumentWithContentsOfURL:display:completionHandler:
-	// to run the applet's command with the file — the same path used for drops
-	// and File ▸ Open….
+	// OMCAppletController overrides -openDocumentWithContentsOfURL:display:completionHandler:
+	// to run the applet's command with the file - the same path used for drops
+	// and File > Open...
 	[NSDocumentController.sharedDocumentController
 		openDocumentWithContentsOfURL:url
 							  display:YES

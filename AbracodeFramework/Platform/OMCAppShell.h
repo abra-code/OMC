@@ -14,7 +14,7 @@
 //  - Open Recent: keep the documents OMCNoteRecentDocument adds, and open a chosen one as the applet's
 //    OpenFile;
 //  - and the three calls below, which the engine makes of the shell.
-//  The macOS shell is EntryPoints/Apple (OMCDropletController, OMCMainMenuController,
+//  The macOS shell is EntryPoints/Apple (OMCAppletController, OMCMainMenuController,
 //  OMCCommandMenu, OMCMenuItem) with these calls in Platform/Apple/OMCAppShell.mm.
 //
 

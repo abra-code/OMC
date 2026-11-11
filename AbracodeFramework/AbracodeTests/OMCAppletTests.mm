@@ -3,7 +3,7 @@
 //  AbracodeTests
 //
 //  The applet's decisions (OMCApplet.h) with recorded actions: what runs, when, with what, and
-//  what is suppressed. OMCDropletControllerTests drives the macOS controller around it; this file
+//  what is suppressed. OMCAppletControllerTests drives the macOS controller around it; this file
 //  covers what that one cannot reach, such as Option held at startup.
 //
 //  OMCApplet is not exported from Abracode.framework, so it compiles into this bundle. Its

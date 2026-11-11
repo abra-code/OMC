@@ -2,7 +2,7 @@
 //  OMCApplet.cpp
 //  Abracode
 //
-//  See OMCApplet.h. The decisions were OMCDropletController.mm's, moved statement for
+//  See OMCApplet.h. The decisions were OMCAppletController.mm's, moved statement for
 //  statement; the 0.25 s gathering of opened files uses OMCMainThreadSignal::ScheduleAfter (a
 //  newer call cancels the pending one) instead of dispatch_after with a token.
 //

@@ -23,7 +23,7 @@ _OMCUnregisterObserver
 
 _OBJC_CLASS_$_OMCCommandMenu
 _OBJC_CLASS_$_OMCMenuItem
-_OBJC_CLASS_$_OMCDropletController
+_OBJC_CLASS_$_OMCAppletController
 _OBJC_CLASS_$_OMCService
 _OBJC_CLASS_$_OMCServiceRequest
 _OBJC_CLASS_$_OMCMainMenuController

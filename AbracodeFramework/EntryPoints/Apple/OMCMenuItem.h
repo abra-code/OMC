@@ -4,12 +4,11 @@
 
 #import <Cocoa/Cocoa.h>
 
-IB_DESIGNABLE
 @interface OMCMenuItem : NSMenuItem
 
-@property (nonatomic, strong) IBInspectable NSString * commandID;
-@property (nonatomic, strong) IBInspectable NSString * mappedValue;
-@property (nonatomic, strong) IBInspectable NSString * escapingMode;
+@property (nonatomic, strong) NSString * commandID;
+@property (nonatomic, strong) NSString * mappedValue;
+@property (nonatomic, strong) NSString * escapingMode;
 
 @end
 
