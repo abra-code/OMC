@@ -1,0 +1,9 @@
+{
+  "VERSION": 2,
+  "COMMAND_LIST": [
+    { "NAME": "LaunchTest", "ACTIVATION_MODE": "act_always", "EXECUTION_MODE": "exe_script_file" },
+    { "NAME": "LaunchTest", "COMMAND_ID": "app.did.launch", "EXECUTION_MODE": "exe_script_file" },
+    { "NAME": "LaunchTest", "COMMAND_ID": "app.will.terminate", "EXECUTION_MODE": "exe_script_file" },
+    { "NAME": "LaunchTest", "COMMAND_ID": "omc.app.handle-url", "EXECUTION_MODE": "exe_script_file" }
+  ]
+}

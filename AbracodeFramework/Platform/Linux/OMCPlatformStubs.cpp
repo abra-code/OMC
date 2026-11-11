@@ -20,7 +20,6 @@
 #include "OMCFilePanels.h"
 #include "OMCActionUIModels.h"
 #include "OMCAlerts.h"
-#include "OMCAppShell.h"
 #include "OMCWindowHost.h"
 #include "OMCLog.h"
 #include <atomic>
@@ -151,12 +150,6 @@ OMCPlatformShowNotice(CFStringRef inHeader, CFStringRef inMessage, CFStringRef i
 	OMCLogMessage("notice not shown: %s: %s", OMCLogCString(inHeader).c_str(), OMCLogCString(inMessage).c_str());
 }
 
-#pragma mark - App shell (Platform/OMCAppShell.h)
-
-void OMCActivateThisApp(void) { OMC_LINUX_NOT_YET("OMCActivateThisApp"); }
-void OMCQuitThisApp(void) { OMC_LINUX_NOT_YET("OMCQuitThisApp"); }
-void OMCNoteRecentDocument(CFURLRef fileURL) { (void)fileURL; } // no recent documents on Linux yet
-
 #pragma mark - Window host (Platform/OMCWindowHost.h): no window, as a document that cannot load
 
 std::unique_ptr<OMCHostedWindow>
@@ -169,3 +162,4 @@ OMCCreateHostedWindow(const OMCHostedWindowSpec &inSpec, std::function<void()> i
 }
 
 void OMCResetHostedWindowCascading() { }
+int OMCOpenHostedWindowCount() { return 0; } // true while OMCCreateHostedWindow makes none

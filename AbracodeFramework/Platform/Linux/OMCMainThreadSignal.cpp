@@ -38,7 +38,10 @@ struct SignalState
 };
 
 std::mutex sLock;
-std::vector< std::shared_ptr<SignalState> > sPending; // guarded by sLock
+// guarded by sLock. Never destroyed: a command still running when the process exits (the applet's
+// app.will.terminate) signals from a libdispatch thread while exit() runs the static destructors,
+// and a destroyed vector there corrupted the heap (SIGABRT in malloc).
+std::vector< std::shared_ptr<SignalState> > &sPending = *new std::vector< std::shared_ptr<SignalState> >();
 bool sIdleScheduled = false; // an idle source is queued and has not started; guarded by sLock
 
 dispatch_semaphore_t WakeSemaphore()

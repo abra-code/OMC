@@ -17,6 +17,7 @@ import Foundation
 let headerFolders = [
     "../../../AbracodeFramework",
     "../../../AbracodeFramework/Platform",
+    "../../../AbracodeFramework/EntryPoints/Linux",
     "../../../Common",
     "../../../Common/Linux",
     "../../../ThirdParty/yyjson",
@@ -26,7 +27,7 @@ let headerFolders = [
 let version: [CSetting] = [
     .define("CURRENT_OMC_VERSION", to: "50600"),
     .define("MIN_OMC_VERSION", to: "30200"),
-    .define("MIN_MAC_OS_VERSION", to: "140600"),
+    .define("MIN_MAC_OS_VERSION", to: "0"), // no macOS to require by default on Linux (macOS: 140600, OmcVersion.xcconfig)
     .define("MAX_MAC_OS_VERSION", to: "999999"),
     .define("_DEBUG_", to: "1", .when(configuration: .debug)),
     .define("_TRACE_", to: "1", .when(configuration: .debug)),
@@ -41,7 +42,7 @@ let cSettings: [CSetting] = headerFolders.map { .headerSearchPath($0) } + versio
 let cxxSettings: [CXXSetting] = headerFolders.map { .headerSearchPath($0) } + [
     .define("CURRENT_OMC_VERSION", to: "50600"),
     .define("MIN_OMC_VERSION", to: "30200"),
-    .define("MIN_MAC_OS_VERSION", to: "140600"),
+    .define("MIN_MAC_OS_VERSION", to: "0"), // no macOS to require by default on Linux (macOS: 140600, OmcVersion.xcconfig)
     .define("MAX_MAC_OS_VERSION", to: "999999"),
     .define("_DEBUG_", to: "1", .when(configuration: .debug)),
     .define("_TRACE_", to: "1", .when(configuration: .debug)),
@@ -86,6 +87,8 @@ let package = Package(
         .executable(name: "loco", targets: ["loco"]),
         .executable(name: "omc_next_command", targets: ["omc_next_command"]),
         .executable(name: "omc_dialog_control", targets: ["omc_dialog_control"]),
+        // The applet executable: copied into an applet bundle as its CFBundleExecutable
+        .executable(name: "OMCApplet", targets: ["OMCApplet"]),
     ],
     dependencies: [
         .package(path: "../ActionUI"),
@@ -115,6 +118,10 @@ let package = Package(
             cxxSettings: cxxSettings,
             linkerSettings: foundationLibraries + [
                 .linkedLibrary("glib-2.0"),
+                .linkedLibrary("gobject-2.0"),
+                .linkedLibrary("gio-2.0"),
+                .linkedLibrary("gtk-4"),
+                .linkedLibrary("adwaita-1"),
                 .unsafeFlags(["-Xlinker", "-z", "-Xlinker", "defs"]),
             ]
         ),
@@ -124,6 +131,7 @@ let package = Package(
         tool("loco", []),
         tool("omc_next_command", ["OMCCommon"]),
         tool("omc_dialog_control", ["OMCCommon"]),
+        tool("OMCApplet", ["Abracode"]),
 
         // Linux checks of what macOS covers with the XCTest suite: run each with its arguments
         // (build-linux.sh does not run them). Not shims: these exist only for Linux.

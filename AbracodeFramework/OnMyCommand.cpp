@@ -216,6 +216,13 @@ OnMyCommand::InitOmcBundlePaths()
 	// framework's top folder, so "Abracode.framework/Support" (a link to the current version's, as
 	// "Resources" is); on Linux wherever the bundle's layout puts it. Scripts get it as
 	// OMC_OMC_SUPPORT_PATH and assume nothing about where it is.
+	// No engine bundle (on Linux an applet without Frameworks/Abracode.framework,
+	// Platform/Linux/OMCEngineBundle.cpp): no support or resources path, rather than a crash in CF
+	if(mBundleRef == nullptr)
+	{
+		OMCLogMessage("the engine's bundle (Abracode.framework) was not found: no support tools or engine resources");
+		return;
+	}
 	CFObj<CFURLRef> supportFilesURL( ::CFBundleCopySupportFilesDirectoryURL(mBundleRef) );
 	CFObj<CFURLRef> absoluteSupportFilesURL;
 	if(supportFilesURL != nullptr)
