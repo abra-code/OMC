@@ -143,6 +143,14 @@ let package = Package(
             cxxSettings: cxxSettings,
             linkerSettings: foundationLibraries + [.linkedLibrary("glib-2.0")]
         ),
+        .executableTarget(
+            name: "OMCLinuxUITests",
+            dependencies: ["Abracode"],
+            path: "Linux/Tests/OMCLinuxUITests",
+            cSettings: cSettings,
+            cxxSettings: cxxSettings,
+            linkerSettings: foundationLibraries + [.linkedLibrary("glib-2.0"), .linkedLibrary("gobject-2.0"), .linkedLibrary("gtk-4"), .linkedLibrary("adwaita-1")]
+        ),
     ],
     cLanguageStandard: .gnu11,
     cxxLanguageStandard: .gnucxx17

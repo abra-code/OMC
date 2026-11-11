@@ -19,7 +19,6 @@
 #include "OMCActionUIAddOns.h"
 #include "OMCFilePanels.h"
 #include "OMCActionUIModels.h"
-#include "OMCAlerts.h"
 #include "OMCLog.h"
 #include <atomic>
 #include <unistd.h>
@@ -127,24 +126,4 @@ OMCPlatformRunOpenPanel(CFStringRef inClientName, CFStringRef inMessage, CFStrin
 	(void)inIdentifier; (void)inPrompt; (void)inAllowedContentTypes; (void)inAdditonalFlags;
 	OMC_LINUX_NOT_YET("OMCPlatformRunOpenPanel");
 	return nullptr;
-}
-
-#pragma mark - Alerts (Platform/OMCAlerts.h): the text goes to the log, so it is not lost
-
-OMCAlertResponse
-OMCPlatformShowAlert(OMCAlertLevel inLevel, CFStringRef inHeader, CFStringRef inMessage,
-					CFStringRef inDefaultButton, CFStringRef inAlternateButton, CFStringRef inOtherButton)
-{
-	(void)inLevel; (void)inDefaultButton; (void)inAlternateButton; (void)inOtherButton;
-	OMC_LINUX_NOT_YET("OMCPlatformShowAlert");
-	OMCLogMessage("alert not shown: %s: %s", OMCLogCString(inHeader).c_str(), OMCLogCString(inMessage).c_str());
-	return kOMCAlertNoResponse;
-}
-
-void
-OMCPlatformShowNotice(CFStringRef inHeader, CFStringRef inMessage, CFStringRef inButton, CFURLRef inIconURL)
-{
-	(void)inButton; (void)inIconURL;
-	OMC_LINUX_NOT_YET("OMCPlatformShowNotice");
-	OMCLogMessage("notice not shown: %s: %s", OMCLogCString(inHeader).c_str(), OMCLogCString(inMessage).c_str());
 }

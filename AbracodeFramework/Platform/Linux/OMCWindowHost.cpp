@@ -21,25 +21,19 @@
 //
 
 #include "OMCWindowHost.h"
-#include "Linux/OMCWindowHostLinux.h"
+#include "Linux/OMCModalLoop.h"
 #include "OMCEngineBundle.h"
 #include "OMCLog.h"
 #include "ACFString.h"
 #include "CFObj.h"
 #include "ActionUIC.h"
 #include <adwaita.h>
-#include <algorithm>
 #include <string>
-#include <vector>
 
 namespace
 {
 
 int sOpenHostedWindowCount = 0;
-
-class OMCLinuxHostedWindow;
-// The windows whose RunModal is on the stack, innermost last (OMCEndHostedWindowModalRuns)
-std::vector<OMCLinuxHostedWindow *> sModalWindows;
 
 // The height of the bars ActionUI put above the layout area (its header bar, a subtitle line), as
 // it measured them when it filled the window: what a size below the bars adds to make the window's
@@ -178,9 +172,7 @@ public:
 								if(mClosed)
 									return;
 								mModalLoop = g_main_loop_new(nullptr, FALSE);
-								sModalWindows.push_back(this);
-								g_main_loop_run(mModalLoop);
-								sModalWindows.erase(std::remove(sModalWindows.begin(), sModalWindows.end(), this), sModalWindows.end());
+								OMCRunModalLoop(mModalLoop); // a quit ends it too (OMCModalLoop.h)
 								g_main_loop_unref(mModalLoop);
 								mModalLoop = nullptr;
 								if(!mClosed)
@@ -378,13 +370,4 @@ int
 OMCOpenHostedWindowCount()
 {
 	return sOpenHostedWindowCount;
-}
-
-void
-OMCEndHostedWindowModalRuns()
-{
-	// A copy: each EndModal makes its loop return once control gets back to it, not now
-	std::vector<OMCLinuxHostedWindow *> running = sModalWindows;
-	for(OMCLinuxHostedWindow *window : running)
-		window->EndModal();
 }

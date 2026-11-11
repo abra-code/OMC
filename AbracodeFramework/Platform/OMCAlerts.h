@@ -8,8 +8,8 @@
 //  an alert from the answers a test queued (OMCTestHost.h), so it never waits for a person who is
 //  not there, and only records a notice; otherwise the platform shows them through
 //  OMCPlatformShowAlert and OMCPlatformShowNotice, implemented per platform:
-//  Platform/Apple/OMCAlerts.mm (CFUserNotification); a Linux implementation can use ActionUI's
-//  alert. An alert blocks until it is answered; a notice does not wait.
+//  Platform/Apple/OMCAlerts.mm (CFUserNotification), Platform/Linux/OMCPlatformAlerts.cpp
+//  (libadwaita's AdwAlertDialog). An alert blocks until it is answered; a notice does not wait.
 //
 //  Not these: the alert tool a handler runs (Support/alert), which a test launch replaces with a
 //  stand-in of its own, and the panels (OMCFilePanels.h).
