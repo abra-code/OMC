@@ -5,7 +5,8 @@
 //  Linux checks of omc_dialog_control's port: the engine's listener (Platform/Linux/
 //  OMCMessagePortListener.cpp) and the real omc_dialog_control tool sending to it
 //  (Common/Linux/OMCDialogControlSender.c), with the cases of the probe
-//  ~/git/AppleCoreLibrariesForLinux/build/probe/dialog-control-socket/REPORT.md.
+//  ~/git/AppleCoreLibrariesForLinux/build/probe/dialog-control-socket/REPORT.md; and the Linux
+//  half of ACFPropertyList's atomic write (Common/Linux/OMCFileModePlatform.h).
 //
 //  Usage: OMCLinuxPortTests <path to the Linux omc_dialog_control>
 //  Exit status: 0 all passed, 1 a check failed, 2 bad arguments.
@@ -15,8 +16,10 @@
 #include "OMCDialogControlPortName.h"
 #include "OMCEngineTempDir.h"
 #include "CFObj.h"
+#include "ACFPropertyList.h"
 #include <glib.h>
 #include <fcntl.h>
+#include <ftw.h>
 #include <spawn.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
@@ -53,6 +56,19 @@ Check(const char *inName, bool inOK, const std::string &inDetail = std::string()
 		printf("FAIL %s%s%s\n", inName, inDetail.empty() ? "" : ": ", inDetail.c_str());
 	}
 	fflush(stdout);
+}
+
+// Removes a folder and what is in it, without following symbolic links
+int
+RemoveEntry(const char *inPath, const struct stat *, int, struct FTW *)
+{
+	return remove(inPath);
+}
+
+void
+RemoveTree(const std::string &inPath)
+{
+	(void)nftw(inPath.c_str(), RemoveEntry, 16, FTW_DEPTH | FTW_PHYS);
 }
 
 std::string
@@ -317,6 +333,69 @@ main(int argc, char **argv)
 		PumpUntil([&]{ return inbox.values.size() >= 1; }, 3000);
 		Check("and omc_dialog_control reaches it", Joined(inbox.values) == "3=long", Joined(inbox.values));
 	}
+
+	{
+		// ACFPropertyList's atomic write through a symbolic link: on Linux a link's own mode is 0777,
+		// which must not become the new file's; the target's read and write bits do, never looser
+		// than 0666 less the umask (Common/Linux/OMCFileModePlatform.h)
+		std::string folder = std::string(g_get_home_dir()) + "/.omc-port-test-" + std::to_string(getpid()) + "/write";
+		g_mkdir_with_parents(folder.c_str(), 0700);
+		auto MakeFile = [](const std::string &inPath, mode_t inMode) {
+			int fd = open(inPath.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0600);
+			if(fd >= 0)
+				(void)close(fd);
+			(void)chmod(inPath.c_str(), inMode);
+		};
+		auto ModeOf = [](const std::string &inPath, struct stat &outInfo) -> std::string {
+			if(lstat(inPath.c_str(), &outInfo) != 0)
+				return "missing";
+			char mode[16];
+			snprintf(mode, sizeof(mode), "%o", (unsigned)(outInfo.st_mode & 07777));
+			return mode;
+		};
+		std::string privateTarget = folder + "/private.plist";	// 0600: a link to it gives a private file
+		std::string openTarget = folder + "/open.plist";		// 0666: a link to it gives 0644 under umask 022
+		std::string privateLink = folder + "/private-link.plist";
+		std::string openLink = folder + "/open-link.plist";
+		std::string danglingLink = folder + "/dangling-link.plist";
+		std::string kept = folder + "/kept.plist";
+		MakeFile(privateTarget, 0600);
+		MakeFile(openTarget, 0666);
+		MakeFile(kept, 0640);
+		(void)symlink(privateTarget.c_str(), privateLink.c_str());
+		(void)symlink(openTarget.c_str(), openLink.c_str());
+		(void)symlink((folder + "/nothing.plist").c_str(), danglingLink.c_str());
+
+		mode_t oldMask = umask(022);
+		CFObj<CFMutableDictionaryRef> plist(CFDictionaryCreateMutable(kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks));
+		CFDictionarySetValue(plist, CFSTR("key"), CFSTR("value"));
+		auto WriteTo = [&](const std::string &inPath) {
+			CFObj<CFURLRef> url(CFURLCreateFromFileSystemRepresentation(kCFAllocatorDefault, (const UInt8 *)inPath.c_str(), (CFIndex)inPath.size(), false));
+			return WritePropertyList(plist, url, kACFPropertyListFormat_xml);
+		};
+		bool wrotePrivate = WriteTo(privateLink);
+		bool wroteOpen = WriteTo(openLink);
+		bool wroteDangling = WriteTo(danglingLink);
+		bool wroteKept = WriteTo(kept);
+		(void)umask(oldMask);
+
+		struct stat info;
+		std::string mode = ModeOf(privateLink, info);
+		Check("an atomic write through a symbolic link succeeds", wrotePrivate);
+		Check("and replaces the link with a file", (mode != "missing") && S_ISREG(info.st_mode));
+		Check("a link to a 0600 file gives a 0600 file, not the link's 0777", mode == "600", mode);
+		mode = ModeOf(privateTarget, info);
+		Check("and the link's target is left alone", (mode == "600") && (info.st_size == 0), mode);
+		mode = ModeOf(openLink, info);
+		Check("a link to a 0666 file gives no more than 0666 less the umask", wroteOpen && (mode == "644"), mode);
+		mode = ModeOf(danglingLink, info);
+		Check("a dangling link gives 0666 less the umask", wroteDangling && (mode == "644") && S_ISREG(info.st_mode), mode);
+		mode = ModeOf(kept, info);
+		Check("an existing file keeps its mode", wroteKept && (mode == "640"), mode);
+	}
+
+	// The folder the last two blocks made in the home folder
+	RemoveTree(std::string(g_get_home_dir()) + "/.omc-port-test-" + std::to_string(getpid()));
 
 	printf("%d passed, %d failed\n", sPassed, sFailed);
 	return (sFailed == 0) ? 0 : 1;
