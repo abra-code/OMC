@@ -12,7 +12,7 @@ static const unsigned char base64AllChars[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefg
 
 typedef struct Base64CharType
 {
-	char			index;//0-63 is valid index
+	signed char		index;//0-63 is valid index, -1 invalid (signed: plain char is unsigned on aarch64 Linux)
 	unsigned char	isWhitespace;
 } Base64CharType;
 
