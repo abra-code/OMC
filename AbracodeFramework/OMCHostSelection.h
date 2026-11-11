@@ -3,7 +3,7 @@
 //  Abracode
 //
 //  What a contextual menu host handed over with a menu request, already converted to CoreFoundation
-//  by its entry point (macOS: EntryPoints/Apple/OnMyCommandAE.cp, from the Apple event descriptor
+//  by its entry point (macOS: EntryPoints/Apple/OnMyCommandAE.cpp, from the Apple event descriptor
 //  Shortcuts.app passes to the contextual menu plugin). The engine's context check reads only this,
 //  never the host's own types. Portable.
 //

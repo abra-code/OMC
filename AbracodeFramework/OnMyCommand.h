@@ -49,7 +49,7 @@ public:
 	// and runtime data prepared, but a mismatch (e.g. act_file with empty file context) does not
 	// reject the command - the command designer is responsible for handling missing context.
 	virtual OSStatus	ExamineContext( CFTypeRef inContext, SInt32 inCommandRef, bool inEnforceActivationMatch = true );
-	// A contextual menu host's selection (macOS: EntryPoints/Apple/OnMyCommandAE.cp), checked as a
+	// A contextual menu host's selection (macOS: EntryPoints/Apple/OnMyCommandAE.cpp), checked as a
 	// menu: one command (inCommandRef = kCMCommandStart + index) or all of them (below kCMCommandStart).
 	// Fills outMenu when it is not NULL; activation is always enforced.
 	OSStatus			ExamineHostSelection( const OMCHostSelection &inSelection, SInt32 inCommandRef, OMCMenuModel *outMenu );

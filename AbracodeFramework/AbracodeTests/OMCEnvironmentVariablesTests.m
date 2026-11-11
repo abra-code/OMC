@@ -32,7 +32,7 @@
 #pragma mark - Always Exported Variables (from SpecialWordAndIDList() with alwaysExport=true)
 
 - (void)testAlwaysExportedVariables {
-    // These are always exported according to CommandDescription.cp:
+    // These are always exported according to CommandDescription.cpp:
     // OMC_OBJ_TEXT, OMC_OBJ_PATH, OMC_OMC_RESOURCES_PATH, OMC_OMC_SUPPORT_PATH,
     // OMC_APP_BUNDLE_PATH, OMC_APP_PROCESS_ID, OMC_NIB_DLG_GUID, OMC_CURRENT_COMMAND_GUID
     

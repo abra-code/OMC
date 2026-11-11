@@ -1,5 +1,5 @@
 /*
- *  OmcExecutor.cp
+ *  OmcExecutor.cpp
  *  OnMyCommand
  *  Mach-O only
  *  Created by Tomasz Kukielka on Thu Aug 21 2003.

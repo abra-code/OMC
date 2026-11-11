@@ -1,5 +1,5 @@
 //
-//  OnMyCommandAE.cp
+//  OnMyCommandAE.cpp
 //  Abracode
 //
 //  The Apple event face of the engine: the contextual menu plugin's object (OnMyCommandCMPlugin,

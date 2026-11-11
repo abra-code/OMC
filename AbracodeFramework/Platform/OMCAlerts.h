@@ -3,7 +3,7 @@
 //  Abracode
 //
 //  The engine's own alerts: a command's WARNING confirmation, the version warnings and error alerts
-//  (OnMyCommand.cp), and the END_NOTIFICATION notice (OmcTaskManager.cpp). The engine calls
+//  (OnMyCommand.cpp), and the END_NOTIFICATION notice (OmcTaskManager.cpp). The engine calls
 //  OMCShowAlert and OMCShowNotice (OMCAlerts.cpp, portable): in a test launch the test host answers
 //  an alert from the answers a test queued (OMCTestHost.h), so it never waits for a person who is
 //  not there, and only records a notice; otherwise the platform shows them through

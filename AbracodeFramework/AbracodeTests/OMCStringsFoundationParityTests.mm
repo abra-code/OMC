@@ -19,7 +19,7 @@
 #include <vector>
 
 #include "../OMCStrings.cpp"
-#include "ACFType.cp"
+#include "ACFType.cpp"
 #include "ACFPath.h"//compiled by OMCTestsACFPath.cpp
 
 @interface OMCStringsFoundationParityTests : XCTestCase

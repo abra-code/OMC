@@ -1,5 +1,5 @@
 //**************************************************************************************
-// Filename:	OutputWindowHandler.cp
+// Filename:	OutputWindowHandler.cpp
 // Copyright (c) 2004 Abracode, Inc.  All rights reserved.
 //
 // Description:	A command's OUTPUT window (OutputWindowHandler.h). Portable: the window comes
@@ -164,7 +164,7 @@ OutputWindowHandler::SetText(CFStringRef inText, Boolean inLastPart, Boolean inS
 		CommandEnded(inSuccess);
 }
 
-// The executor delivers whole UTF-8 characters (OmcExecutor.cp); bytes that are not UTF-8 show
+// The executor delivers whole UTF-8 characters (OmcExecutor.cpp); bytes that are not UTF-8 show
 // as replacement characters
 void
 OutputWindowHandler::AppendText(const UInt8 *inCStr, long theLen /*=-1*/)

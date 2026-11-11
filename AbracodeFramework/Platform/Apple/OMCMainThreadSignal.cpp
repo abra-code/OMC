@@ -1,5 +1,5 @@
 //
-//  OMCMainThreadSignal.cp
+//  OMCMainThreadSignal.cpp
 //  Abracode
 //
 //  macOS: a version 0 run loop source in the common modes of the main run loop.

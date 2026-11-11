@@ -1,5 +1,5 @@
 //**************************************************************************************
-// Filename:	OMCClipboard.cp
+// Filename:	OMCClipboard.cpp
 //				(was CMUtils/CMUtilsClipboard.cp, part of Contextual Menu Workshop by Abracode Inc.)
 //
 // Copyright (c) 2002-2026 Abracode, Inc.  All rights reserved.

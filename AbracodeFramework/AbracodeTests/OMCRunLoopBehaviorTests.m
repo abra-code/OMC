@@ -282,7 +282,7 @@ static NSString *ExpectedSequence(NSInteger count)
 
 #pragma mark - Characters cut between pieces of output
 
-// Observers get the output in pieces (kOutputDeliveryPieceSize, 512 bytes, in OmcExecutor.cp) and
+// Observers get the output in pieces (kOutputDeliveryPieceSize, 512 bytes, in OmcExecutor.cpp) and
 // make each into a string from UTF-8. A piece that ended inside a multi-byte character was not valid
 // UTF-8, so the string was NULL and the observers dropped the whole piece (every release through 5.5).
 

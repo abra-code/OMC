@@ -1,5 +1,5 @@
 //**************************************************************************************
-// Filename:	CMUtilsSendAE.cp
+// Filename:	CMUtilsSendAE.cpp
 //				Part of Contextual Menu Workshop by Abracode Inc.
 //				http://free.abracode.com/cmworkshop/
 //

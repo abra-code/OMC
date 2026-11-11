@@ -5,8 +5,8 @@
 This document lists **all special words** (`__FOO__`) and their corresponding **environment variables** (`$OMC_FOO`) that the Command Workshop (formerly OMC) engine resolves at runtime.  
 The list is derived **directly** from the source files:
 
-* `AbracodeFramework/CommandDescription.cp` – core substitution and export logic  
-* `AbracodeFramework/OMCDialogControlHelpers.cp` – parsing of the dynamic ActionUI control words  
+* `AbracodeFramework/CommandDescription.cpp` – core substitution and export logic  
+* `AbracodeFramework/OMCDialogControlHelpers.cpp` – parsing of the dynamic ActionUI control words  
 
 ### How the engine works
 

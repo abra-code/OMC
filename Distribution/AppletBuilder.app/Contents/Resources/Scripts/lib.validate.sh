@@ -39,7 +39,7 @@ scan_bash4_isms() {
 }
 
 # Syntax-check a single script file based on its extension, using the same
-# interpreter the OMC engine uses to run it (OmcExecutor.cp: .sh → /bin/sh,
+# interpreter the OMC engine uses to run it (OmcExecutor.cpp: .sh → /bin/sh,
 # .bash → /bin/bash, .zsh → /bin/zsh). Checking .sh with bash would miss
 # fatal POSIX-mode parse errors such as process substitution `< <(cmd)`.
 # Sets SCRIPT_VALIDATE_OUTPUT to any validator output (errors).

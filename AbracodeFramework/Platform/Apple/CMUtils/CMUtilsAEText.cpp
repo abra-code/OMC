@@ -1,5 +1,5 @@
 //**************************************************************************************
-// Filename:	CMUtilsAEText.cp
+// Filename:	CMUtilsAEText.cpp
 //				Part of Contextual Menu Workshop by Abracode Inc.
 //				http://free.abracode.com/cmworkshop/
 //

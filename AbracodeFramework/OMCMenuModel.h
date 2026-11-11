@@ -5,7 +5,7 @@
 //  Commands as a menu, for a host to build its own menu from. Two menus use it:
 //  - the contextual menu: the commands a context check offers. The engine fills it
 //    (OnMyCommand::PopulateItemsMenu); macOS builds the contextual menu plugin's Apple event list
-//    from it (EntryPoints/Apple/OnMyCommandAE.cp);
+//    from it (EntryPoints/Apple/OnMyCommandAE.cpp);
 //  - the app's Commands menu: every command of the applet's command file, with no context check
 //    (OMCBuildCommandsMenuModel); macOS builds an NSMenu from it (EntryPoints/Apple/OMCCommandMenu.mm).
 //  Portable.

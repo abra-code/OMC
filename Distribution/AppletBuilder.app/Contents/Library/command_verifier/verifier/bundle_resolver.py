@@ -14,7 +14,7 @@ references actually exists / resolves:
                       must every *ActionID in the bundle's JSON UI documents.
 
 Synthesizable IDs mirror the engine's CreateAugmentedCommandArray filter
-(OnMyCommand.cp): scripts whose lowercase name is not lib_/lib.-prefixed, not
+(OnMyCommand.cpp): scripts whose lowercase name is not lib_/lib.-prefixed, not
 top!/main, not *.main, and not already declared become commands automatically.
 """
 from __future__ import annotations
@@ -168,7 +168,7 @@ class BundleResolver:
     def _scan_scripts(self) -> None:
         """Index Scripts/ once, keeping both spellings of every stem: lowercase for
         the engine's script-file lookup, original case because a synthesized
-        COMMAND_ID keeps the filesystem case on purpose (OnMyCommand.cp recovers the
+        COMMAND_ID keeps the filesystem case on purpose (OnMyCommand.cpp recovers the
         original name so the id 'is usable as a case-sensitive lookup key in
         FindCommandIndex')."""
         if self._scripts_lc is not None:
@@ -579,7 +579,7 @@ class BundleResolver:
 
         It normalizes an explicit COMMAND_ID to the 'top!' sentinel only on an exact
         match - CFStringCompare(id, "main", 0) with no flags, or CFEqual against
-        "<NAME as written>.main" (CommandDescription.cp, GetOneCommandParams). A
+        "<NAME as written>.main" (CommandDescription.cpp, GetOneCommandParams). A
         near-miss like COMMAND_ID='myapp.main' under NAME='MyApp' is therefore NOT
         the main command: it keeps its literal id, is dispatched by that id, and
         answers to none of 'top!' / 'main' / 'MyApp.main'. Matching case-insensitively

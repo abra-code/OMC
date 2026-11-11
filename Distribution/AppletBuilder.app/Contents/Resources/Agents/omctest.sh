@@ -93,12 +93,12 @@ OMCTEST_DEFAULT_STUBS="alert notify omc_dialog_control omc_next_command pasteboa
 # read out of the source rather than remembered. Recorded here with sources so a
 # future reader can re-verify rather than re-guess:
 #
-#   Interpreter map          AbracodeFramework/OmcExecutor.cp:881-896
+#   Interpreter map          AbracodeFramework/OmcExecutor.cpp:881-896
 #                            (sExtensionToShellMap). .sh -> /bin/sh, .zsh ->
 #                            /bin/zsh, .bash -> /bin/bash, .py -> see below.
 #                            An unknown or absent extension gets kDefaultShell,
 #                            /bin/sh.
-#   Python resolution        OmcExecutor.cp:925-964. The map's /usr/bin/python3
+#   Python resolution        OmcExecutor.cpp:925-964. The map's /usr/bin/python3
 #                            for .py is a placeholder that is always overridden.
 #                            GetEmbeddedPythonPath() accepts
 #                            <bundle>/Contents/Library/Python/bin/python3 only
@@ -111,7 +111,7 @@ OMCTEST_DEFAULT_STUBS="alert notify omc_dialog_control omc_next_command pasteboa
 #                              /usr/local/bin/python3
 #                              /opt/local/bin/python3
 #                            and falls back to /usr/bin/python3 untested.
-#   Python environment       OmcExecutor.cp:1043-1097. Exported whenever the app
+#   Python environment       OmcExecutor.cpp:1043-1097. Exported whenever the app
 #                            bundles its own Python, whatever the handler's
 #                            language (the engine's own comment at :1050-1051).
 #                            Embedded: PATH gets the embedded bin/,
@@ -579,7 +579,7 @@ omctest_setup_python() { # <app>
 
     # Only the EMBEDDED branch prepends PATH for every handler language. With no
     # embedded Python the engine prepends it only for a .py handler
-    # (OmcExecutor.cp:1082-1089), so doing it here would put the developer's
+    # (OmcExecutor.cpp:1082-1089), so doing it here would put the developer's
     # framework Python in front of a plain .sh handler's PATH - which live would
     # see the stock one. A shell handler calling bare "python3" would then be
     # tested against an interpreter it will never get, and the machine's Python
@@ -1619,7 +1619,7 @@ omctest_resolve_script_scan() { # <command-id>
     return 1
 }
 
-# The engine's whole table (sExtensionToShellMap, OmcExecutor.cp:881-896),
+# The engine's whole table (sExtensionToShellMap, OmcExecutor.cpp:881-896),
 # matched case-insensitively as GetShellFromScriptExtension does, so "X.PY" runs
 # under Python there and must here. Every extension the table lists is mapped:
 # omctest_resolve_script finds a handler of any extension, so a missing arm ran
@@ -1826,7 +1826,7 @@ omc_drain_chain() { # [max-depth, default 25]
 omc_window_switch() { # <name>
     OMC_ACTIONUI_WINDOW_UUID="OMCTEST-$(omctest_slug "$1")-$$"
     # The unprefixed alias moves with it. The engine copies one from the other on every
-    # dispatch (OnMyCommand.cp, CreateEnvironmentVariablesDict) precisely so the two
+    # dispatch (OnMyCommand.cpp, CreateEnvironmentVariablesDict) precisely so the two
     # cannot disagree, and the bridge client prefers the unprefixed name - so leaving it
     # behind pointed omc.window() at the window the test had just switched away from.
     ACTIONUI_WINDOW_UUID="$OMC_ACTIONUI_WINDOW_UUID"

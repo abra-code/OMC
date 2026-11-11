@@ -40,7 +40,7 @@ OMCTEST = AB / "Contents" / "Resources" / "Agents" / "omctest.sh"
 AB_SUPPORT = AB / "Contents" / "Frameworks" / "Abracode.framework" / "Versions" / "A" / "Support"
 AB_PACKAGES = AB / "Contents" / "Library" / "Packages"
 
-# The engine's installed-python candidate chain, in order (OmcExecutor.cp:55-78).
+# The engine's installed-python candidate chain, in order (OmcExecutor.cpp:55-78).
 # Used to compute what omc_run SHOULD resolve to on this machine rather than
 # hardcoding /usr/bin/python3, which is the last resort and rarely the answer.
 PYTHON_CANDIDATES = [
@@ -1704,7 +1704,7 @@ omctest_end
 
 def test_interpreter_map() -> None:
     print("Interpreter map:")
-    # The engine's whole ExtensionToShellMap() (OmcExecutor.cp), matched
+    # The engine's whole ExtensionToShellMap() (OmcExecutor.cpp), matched
     # case-insensitively. A missing arm ran the handler under /bin/sh.
     jsc = "/System/Library/Frameworks/JavaScriptCore.framework/Versions/Current/Helpers/jsc"
     py = "/fake/python3"

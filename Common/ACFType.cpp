@@ -1,5 +1,5 @@
 //**************************************************************************************
-// Filename:	ACFType.cp
+// Filename:	ACFType.cpp
 //				Part of Contextual Menu Workshop by Abracode Inc.
 //				http://free.abracode.com/cmworkshop/
 //

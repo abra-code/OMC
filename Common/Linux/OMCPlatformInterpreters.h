@@ -2,7 +2,7 @@
 //  OMCPlatformInterpreters.h (Linux)
 //
 //  Which interpreter runs a command's script file, by the file's extension, and where an
-//  installed Python may be: the platform half of the lookup in AbracodeFramework/OmcExecutor.cp.
+//  installed Python may be: the platform half of the lookup in AbracodeFramework/OmcExecutor.cpp.
 //  Header-only C++, as the macOS file of the same name in Common/Apple. Not built yet:
 //  the Linux port has no build.
 //

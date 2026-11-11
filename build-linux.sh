@@ -100,7 +100,7 @@ fi
 # On Linux a CFSTR with non-ASCII text produces a broken string: its length is the UTF-8 byte count
 # (replay's plan, fact 20). Reject such literals in the sources this build compiles.
 NON_ASCII_CFSTR="$(LC_ALL=C /usr/bin/grep -rnE \
-    --include='*.c' --include='*.cp' --include='*.cpp' --include='*.h' --include='*.mm' \
+    --include='*.c' --include='*.cpp' --include='*.h' --include='*.mm' \
     --exclude-dir=Apple --exclude-dir=AbracodeTests --exclude-dir=.build --exclude-dir=.build-linux \
     'CFSTR\("([^"\\]|\\[^uUx])*([^ -~]|\\[uUx])' \
     "$SCRIPT_DIR/AbracodeFramework" "$SCRIPT_DIR/Common" "$SCRIPT_DIR/plister" "$SCRIPT_DIR/b64" \

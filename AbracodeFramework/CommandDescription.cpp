@@ -692,7 +692,7 @@ GetOneCommandParams(CommandDescription &outDesc, CFDictionaryRef inOneCommand, C
     }
 
 //file types
-    // Four-character file types are no longer matched (OneObjProperties.cp CheckFileType); only
+    // Four-character file types are no longer matched (OneObjProperties.cpp CheckFileType); only
     // whether there are any counts, so such a command still matches no file by type
     if( oneCmd.GetValue(CFSTR("ACTIVATION_FILE_TYPES"), theArr) )
     {

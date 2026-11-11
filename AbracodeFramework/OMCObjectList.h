@@ -4,7 +4,7 @@
 //
 //  Walking a list of file URLs (the context files, a file dialog's choice) with a handler per URL.
 //  Portable: CoreFoundation only. The Apple event form of the same walk is CMUtils::ProcessObjectList
-//  (CMUtils/CMUtilsObjectList.cp), macOS only, with the same flags.
+//  (CMUtils/CMUtilsObjectList.cpp), macOS only, with the same flags.
 //
 
 #pragma once

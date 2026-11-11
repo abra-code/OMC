@@ -1,9 +1,9 @@
 //
-//  OMCAppleScriptRunner.cp
+//  OMCAppleScriptRunner.cpp
 //  Abracode
 //
 //  The macOS implementation of Platform/OMCAppleScriptRunner.h: the default OSA scripting component,
-//  as AppleScriptExecutor used it (moved from OmcExecutor.cp).
+//  as AppleScriptExecutor used it (moved from OmcExecutor.cpp).
 //
 
 #include "OMCAppleScriptRunner.h"

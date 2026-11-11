@@ -1,5 +1,5 @@
 //**************************************************************************************
-// Filename:	SubmenuTree.cp
+// Filename:	SubmenuTree.cpp
 // Copyright © 2005 <YourNameHere>.  All rights reserved.
 //
 // Description:	

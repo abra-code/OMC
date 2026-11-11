@@ -1,5 +1,5 @@
 //**************************************************************************************
-// Filename:	OnMyCommandCM.cp
+// Filename:	OnMyCommandCM.cpp
 //				Part of Contextual Menu Workshop by Abracode Inc.
 //				http://free.abracode.com/cmworkshop/
 // Copyright � 2002-2005 Abracode, Inc.  All rights reserved.

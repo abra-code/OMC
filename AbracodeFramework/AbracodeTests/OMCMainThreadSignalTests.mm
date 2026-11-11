@@ -13,7 +13,7 @@
 #import <XCTest/XCTest.h>
 #import <Foundation/Foundation.h>
 #include "OMCMainThreadSignal.h"
-#include "../Platform/Apple/OMCMainThreadSignal.cp"
+#include "../Platform/Apple/OMCMainThreadSignal.cpp"
 #include <atomic>
 
 namespace

@@ -166,7 +166,7 @@ class PlistValidator:
         props = schema.get("properties", {})
 
         # VERSION — absent defaults to 2 (fine); present must equal 2 or the engine
-        # loads nothing (OnMyCommand.cp: `if(verNum != 2) return;`).
+        # loads nothing (OnMyCommand.cpp: `if(verNum != 2) return;`).
         if "VERSION" in root:
             v = root["VERSION"]
             if isinstance(v, bool) or not isinstance(v, int):

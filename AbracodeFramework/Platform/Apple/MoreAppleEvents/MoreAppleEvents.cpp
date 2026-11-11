@@ -1,5 +1,5 @@
 /*
-	File:		MoreAppleEvents.cp
+	File:		MoreAppleEvents.cpp
 
 	Contains:	Apple Event Manager utilities.
 

@@ -112,7 +112,7 @@ const char *OMCGetPythonPycachePrefix(void)
 //
 // What the call really did was precompile the modules the handlers IMPORT - which, as its own
 // comment said, Python already does by itself. It also lands in the right place without help:
-// SetPythonPycachePrefixIfEmbedded (OMCAppLifecycle.cpp) and OmcExecutor.cp both export
+// SetPythonPycachePrefixIfEmbedded (OMCAppLifecycle.cpp) and OmcExecutor.cpp both export
 // PYTHONPYCACHEPREFIX, so a lazily written .pyc goes to the cache prefix and never into the
 // signed bundle.
 //

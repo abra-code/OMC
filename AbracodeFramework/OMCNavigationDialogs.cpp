@@ -1,5 +1,5 @@
 //**************************************************************************************
-// Filename:	OMCNavigationDialogs.cp
+// Filename:	OMCNavigationDialogs.cpp
 //
 // Description:	
 //

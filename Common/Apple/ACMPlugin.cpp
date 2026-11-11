@@ -1,5 +1,5 @@
 //**************************************************************************************
-// Filename:	ACMPlugin.cp
+// Filename:	ACMPlugin.cpp
 //				Part of Abracode Workshop.
 //
 // Description:	Base code for CM plugin taking care of COM interface and communication with a host.

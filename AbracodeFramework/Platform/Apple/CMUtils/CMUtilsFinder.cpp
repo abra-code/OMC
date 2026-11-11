@@ -1,5 +1,5 @@
 //**************************************************************************************
-// Filename:	CMUtilsFinder.cp
+// Filename:	CMUtilsFinder.cpp
 //				Part of Contextual Menu Workshop by Abracode Inc.
 //				http://free.abracode.com/cmworkshop/
 //

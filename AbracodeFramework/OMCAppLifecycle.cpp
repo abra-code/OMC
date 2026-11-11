@@ -23,7 +23,7 @@ namespace
 
 // Python writes bytecode caches next to the source by default, which for an embedded interpreter
 // means INSIDE the app bundle - files we did not sign, breaking the code signature seal.
-// OmcExecutor exports PYTHONPYCACHEPREFIX (OmcExecutor.cp) for the script handlers IT spawns, but
+// OmcExecutor exports PYTHONPYCACHEPREFIX (OmcExecutor.cpp) for the script handlers IT spawns, but
 // that only covers its own children. Anything spawned from inside the app process inherits the
 // APP's environment, which never carried the variable - most visibly ActionUIChat's ACP agent,
 // which in turn spawns MCP stdio servers off the bundled python and had them cache into the

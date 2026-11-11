@@ -148,7 +148,7 @@ private:
 	bool								mClosed { false };
 };
 
-// Runs the current command's ActionUI window (OnMyCommand.cp): returns its dialog for the command
+// Runs the current command's ActionUI window (OnMyCommand.cpp): returns its dialog for the command
 // to read its values, or nullptr when it was canceled. A blocking window returns after it closed
 // (with its values copied while the window still lived), a non-blocking one right after it opened.
 ARefCountedObj<OMCDialog> RunActionUIDialog(OnMyCommand *inPlugin, CommandRuntimeData *commandRuntimeData);

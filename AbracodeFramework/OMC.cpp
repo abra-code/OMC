@@ -63,7 +63,7 @@ extern "C" OSStatus OMCRunCommand(CFTypeRef inPlistRef, CFStringRef inCommandNam
 }
 
 // OMC.h's Apple event functions (OMCRunCommandAE, OMCExamineContextAE, OMCExecuteCommandAE) are in
-// EntryPoints/Apple/OnMyCommandAE.cp
+// EntryPoints/Apple/OnMyCommandAE.cpp
 
 extern "C" OMCExecutorRef OMCCreateExecutor(CFTypeRef inPlistRef)
 {

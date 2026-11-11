@@ -1,5 +1,5 @@
 //**************************************************************************************
-// Filename:	OMCDialogControlHelpers.cp
+// Filename:	OMCDialogControlHelpers.cpp
 //				Part of Contextual Menu Workshop by Abracode Inc.
 //				http://free.abracode.com/cmworkshop/
 // Copyright � 2002-2004 Abracode, Inc.  All rights reserved.

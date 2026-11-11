@@ -3,10 +3,10 @@
 # build's targets (Package.swift), from Linux/sources.txt.
 #
 # Each line of sources.txt names a target and a source file (path from the repository root). The
-# script writes Linux/Targets/<target>/<file name>.c (for a .c source) or .cpp (for .cpp, .cp and
+# script writes Linux/Targets/<target>/<file name>.c (for a .c source) or .cpp (for .cpp and
 # the C++-only .mm), holding one #include of the real file. SwiftPM then compiles every source in
-# place under a name it recognizes: it does not know the .cp extension, and it would build .mm as
-# Objective-C++. The real files stay where the Xcode projects have them.
+# place under a name it recognizes (it would build .mm as Objective-C++). The real files stay
+# where the Xcode projects have them.
 #
 # Usage: Linux/make-shims.sh            (run from anywhere; no arguments)
 # Exit status: 0 done, 1 an error (named on stderr).
@@ -63,7 +63,6 @@ while IFS= read -r line || [ -n "$line" ]; do
     case "$source" in
         *.c) shim="${name%.c}.c" ;;
         *.cpp) shim="$name" ;;
-        *.cp) shim="${name%.cp}.cpp" ;;
         *.mm) shim="${name%.mm}.cpp" ;;
         *)
             printf 'make-shims: %s:%s: not a C or C++ source: %s\n' "$list" "$line_number" "$source" >&2

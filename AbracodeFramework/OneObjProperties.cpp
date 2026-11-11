@@ -1,5 +1,5 @@
 //**************************************************************************************
-// Filename:	OneObjProperties.cp
+// Filename:	OneObjProperties.cpp
 //
 // Description:	Analyzing file properties
 //

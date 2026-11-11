@@ -1,5 +1,5 @@
 //**************************************************************************************
-// Filename:	OnMyCommand.cp
+// Filename:	OnMyCommand.cpp
 //
 // Description:	Main OnMyCommand enigne methods
 //
@@ -237,7 +237,7 @@ OnMyCommand::InitOmcBundlePaths()
 }
 
 // The Apple event face (the contextual menu plugin's OnMyCommandCMPlugin and OMC.h's Apple event
-// functions) is EntryPoints/Apple/OnMyCommandAE.cp; it calls ExamineHostSelection and ExecuteCommandRef
+// functions) is EntryPoints/Apple/OnMyCommandAE.cpp; it calls ExamineHostSelection and ExecuteCommandRef
 
 //new API for OMC.h
 OSStatus
@@ -509,7 +509,7 @@ OnMyCommand::CommonContextCheck( CFTypeRef inContext, const OMCHostSelection *in
 }
 
 // Runs the command a command reference names (kCMCommandStart + index) with the context the last
-// context check examined; the portable form of HandleSelection (EntryPoints/Apple/OnMyCommandAE.cp)
+// context check examined; the portable form of HandleSelection (EntryPoints/Apple/OnMyCommandAE.cpp)
 OSStatus
 OnMyCommand::ExecuteCommandRef( SInt32 inCommandRef )
 {
@@ -3384,7 +3384,7 @@ OnMyCommand::PopulateEnvironList(CFMutableDictionaryRef ioEnvironList, CommandRu
 			}
 			break;
 
-			// WARNING for whoever adds the next alwaysExport=true row to SpecialWordAndIDList (CommandDescription.cp):
+			// WARNING for whoever adds the next alwaysExport=true row to SpecialWordAndIDList (CommandDescription.cpp):
 			// this default is what makes -Wswitch silent HERE, so the compiler will NOT tell you
 			// that you forgot a case, and the failure is silent AND destructive rather than merely
 			// an empty value: newStrRef stays NULL with keepExistingKeyValue false, so the loop

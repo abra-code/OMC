@@ -1,5 +1,5 @@
 /*
- *  OMCTerminalExecutor.cp
+ *  OMCTerminalExecutor.cpp
  *
  */
 

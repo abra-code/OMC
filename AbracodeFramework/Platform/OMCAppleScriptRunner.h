@@ -3,7 +3,7 @@
 //  Abracode
 //
 //  EXECUTION_MODE exe_applescript (and with an output window): running an AppleScript and getting
-//  its result as text. macOS: the Open Scripting Architecture (Platform/Apple/OMCAppleScriptRunner.cp).
+//  its result as text. macOS: the Open Scripting Architecture (Platform/Apple/OMCAppleScriptRunner.cpp).
 //  Linux (later): not available; the run fails with an error.
 //
 //  Main thread only. The run is synchronous.
