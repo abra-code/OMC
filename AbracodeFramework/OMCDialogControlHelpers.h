@@ -19,7 +19,6 @@ CFDictionaryRef ReadControlValuesFromPlist(CFStringRef inDialogUniqueID);
 
 CFStringRef CreateActionUITableIDAndColumnFromString(CFStringRef inTableIDAndColumnString, CFObj<CFStringRef> &outColumnIndexStr, bool useAllRows, bool isEnvStyle);
 
-CFStringRef CreateControlIDByStrippingModifiers(CFStringRef inControlIDWithModifiers, UInt32 &outModifiers);
 CFStringRef CreateControlIDByAddingModifiers(CFStringRef inControlID, UInt32 inModifiers);
 
 CFStringRef CreateActionUIViewIDFromString(CFStringRef inActionUIViewIDString, bool isEnvStyle);
