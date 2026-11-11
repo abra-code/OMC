@@ -163,28 +163,6 @@ CreateTableIDAndColumnFromString(CFStringRef inControlIDString, CFObj<CFStringRe
 #define kControlModifierString_AllRows CFSTR("|ALL_ROWS")
 
 CFStringRef
-CreateControlIDByStrippingModifiers(CFStringRef inControlIDWithModifiers, UInt32 &outModifiers)
-{
-	if(inControlIDWithModifiers == NULL)
-		return NULL;
-
-	outModifiers = 0;
-	Boolean hasAllRows = CFStringHasSuffix(inControlIDWithModifiers, kControlModifierString_AllRows);
-	if(hasAllRows)
-	{
-		outModifiers |= kControlModifier_AllRows;
-	
-		CFIndex totalLen = CFStringGetLength(inControlIDWithModifiers);
-		CFIndex modifierLen = CFStringGetLength(kControlModifierString_AllRows);
-		CFRange mainControlIDRange = CFRangeMake(0, totalLen - modifierLen);
-		return CFStringCreateWithSubstring(kCFAllocatorDefault, inControlIDWithModifiers, mainControlIDRange);
-	}
-		
-	CFRetain(inControlIDWithModifiers);
-	return inControlIDWithModifiers;
-}
-
-CFStringRef
 CreateControlIDByAddingModifiers(CFStringRef inControlID, UInt32 inModifiers)
 {
 	if(inControlID == NULL)

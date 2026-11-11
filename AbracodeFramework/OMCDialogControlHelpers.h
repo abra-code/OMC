@@ -21,7 +21,6 @@ CFStringRef CreateControlIDFromString(CFStringRef inControlIDString, bool isEnvS
 CFStringRef CreateTableIDAndColumnFromString(CFStringRef inTableIDAndColumnString, CFObj<CFStringRef> &outColumnIndexStr, bool useAllRows, bool isEnvStyle);
 CFStringRef CreateActionUITableIDAndColumnFromString(CFStringRef inTableIDAndColumnString, CFObj<CFStringRef> &outColumnIndexStr, bool useAllRows, bool isEnvStyle);
 
-CFStringRef CreateControlIDByStrippingModifiers(CFStringRef inControlIDWithModifiers, UInt32 &outModifiers);
 CFStringRef CreateControlIDByAddingModifiers(CFStringRef inControlID, UInt32 inModifiers);
 
 CFStringRef CreateWebViewIDAndElementIDFromString(CFStringRef inControlIDAndElementIDString, CFObj<CFStringRef> &outElementIDString, bool isEnvStyle);

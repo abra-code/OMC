@@ -244,8 +244,8 @@ GetSpecialWordID(CFStringRef inStr)
     if(oneChar != '_')
         return NO_SPECIAL_WORD; //special word must start with underscore
 
-    UInt32 theCount = std::size(SpecialWordAndIDList());
-    for(UInt32 i = 0; i< theCount; i++)
+    size_t theCount = std::size(SpecialWordAndIDList());
+    for(size_t i = 0; i < theCount; i++)
     {
         if(SpecialWordAndIDList()[i].wordLen == strLen)
         {
@@ -314,8 +314,8 @@ GetSpecialEnvironWordID(CFStringRef inStr)
     if( (firstChars[0] != 'O') || (firstChars[1] != 'M') || (firstChars[2] != 'C') || (firstChars[3] != '_') )
         return NO_SPECIAL_WORD; //special environ word must start with OMC_
 
-    UInt32 theCount = std::size(SpecialWordAndIDList());
-    for(UInt32 i = 0; i< theCount; i++)
+    size_t theCount = std::size(SpecialWordAndIDList());
+    for(size_t i = 0; i < theCount; i++)
     {
         if(SpecialWordAndIDList()[i].wordLen == strLen)
         {
