@@ -28,6 +28,7 @@
 #include "OMCDispatchPlatform.h"
 #include "OMCAppletSupportURL.h"
 #include "OMCPlatformInterpreters.h"
+#include "OMCFilePropertiesPlatform.h"
 #include <mutex>
 #include <algorithm>
 
@@ -50,14 +51,7 @@ Boolean IsFileExecutable(CFURLRef inFileURL)
     {
         return false;
     }
-    
-    CFObj<CFErrorRef> error;
-    CFObj<CFBooleanRef> isExecutableRef;
-    if(::CFURLCopyResourcePropertyForKey(inFileURL, kCFURLIsExecutableKey, &isExecutableRef, &error))
-    {
-        return ((isExecutableRef != nullptr) && ::CFBooleanGetValue(isExecutableRef));
-    }
-    return false;
+    return OMCPlatformIsExecutable(inFileURL);
 }
 
 // The first executable python3 of the platform's candidates (OMCPlatformInterpreters.h), else
@@ -1023,9 +1017,7 @@ PrependBundlePackagesToEnvironmentPYTHONPATH()
     if (packagesURL == nullptr)
         return nullptr;
 
-    CFObj<CFBooleanRef> isDir;
-    if (!::CFURLCopyResourcePropertyForKey(packagesURL, kCFURLIsDirectoryKey, &isDir, nullptr)
-        || (isDir == nullptr) || !::CFBooleanGetValue(isDir))
+    if (!OMCPlatformIsDirectory(packagesURL))
         return nullptr;
 
     CFObj<CFStringRef> packagesPath = ::CFURLCopyFileSystemPath(packagesURL, kCFURLPOSIXPathStyle);

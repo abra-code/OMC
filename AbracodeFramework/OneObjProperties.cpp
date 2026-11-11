@@ -12,6 +12,7 @@
 #include "ACFArr.h"
 #include "ACFDict.h"
 #include "DebugSettings.h"
+#include "OMCFilePropertiesPlatform.h"
 
 
 // all objects must meet the condition checked by procedure: logical AND
@@ -207,12 +208,7 @@ CFStringRef
 CreateObjDisplayName(OneObjProperties *inObj, void *) noexcept
 {
 	if((inObj != nullptr) && (inObj->url != nullptr))
-	{
-		CFStringRef displayName = nullptr;
-		Boolean isOK = CFURLCopyResourcePropertyForKey(inObj->url, kCFURLLocalizedNameKey, &displayName, nullptr);
-		if(isOK)
-			return displayName;
-	}
+		return OMCPlatformCopyFileDisplayName(inObj->url);
 	return nullptr;
 }
 
@@ -452,14 +448,7 @@ CFURLCheckFileOrFolder(CFURLRef inURLRef, size_t index, void *ioData)
         objProperties.url.Adopt(inURLRef, kCFObjRetain);
         objProperties.extension.Adopt(CFURLCopyPathExtension(inURLRef));
         
-        const void* keys[] = { kCFURLIsRegularFileKey, kCFURLIsDirectoryKey, kCFURLIsPackageKey };
-        CFObj<CFArrayRef> propertyKeys(CFArrayCreate(kCFAllocatorDefault, keys, sizeof(keys)/sizeof(const void*), &kCFTypeArrayCallBacks));
-        CFObj<CFDictionaryRef> fileProperties(CFURLCopyResourcePropertiesForKeys(inURLRef, propertyKeys, nullptr));
-
-        ACFDict propertyDict(fileProperties);
-        propertyDict.GetValue(kCFURLIsRegularFileKey, objProperties.isRegularFile);
-        propertyDict.GetValue(kCFURLIsDirectoryKey, objProperties.isDirectory);
-        propertyDict.GetValue(kCFURLIsPackageKey, objProperties.isPackage);
+        OMCPlatformGetFileKinds(inURLRef, objProperties.isRegularFile, objProperties.isDirectory, objProperties.isPackage);
 
         return noErr;
     }
