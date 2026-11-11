@@ -503,19 +503,19 @@
 }
 
 - (void)testMissingNibDialogEnvironmentVariables {
-    // Command without a nib dialog will not be able to populate OMC_NIB_ variables
+    // A command without a window cannot populate OMC_NIB_DLG_GUID (the window's UUID), so it is not
+    // exported. The nib dialogs' control words (OMC_NIB_DIALOG_CONTROL_*, OMC_NIB_TABLE_*,
+    // OMC_NIB_WEBVIEW_*) are no longer special since 6.0: requested here they are ordinary custom
+    // variables, exported with the value given.
     NSDictionary *command = @{
         @"NAME": @"Missing Dialog Env Test",
         @"COMMAND_ID": @"missing_dialog_env",
         @"EXECUTION_MODE": @"exe_script_file",
         @"ENVIRONMENT_VARIABLES": @{
             @"OMC_NIB_DLG_GUID": @"",
-            @"OMC_NIB_DIALOG_CONTROL_2_VALUE": @"",
-            @"OMC_NIB_TABLE_1_COLUMN_1_VALUE": @"",
-            @"OMC_NIB_TABLE_1_COLUMN_0_VALUE": @"",
-            @"OMC_NIB_TABLE_1_COLUMN_1_ALL_ROWS": @"",
-            @"OMC_NIB_TABLE_1_COLUMN_0_ALL_ROWS": @"",
-            @"OMC_NIB_WEBVIEW_3_ELEMENT_1_VALUE": @""
+            @"OMC_NIB_DIALOG_CONTROL_2_VALUE": @"custom",
+            @"OMC_NIB_TABLE_1_COLUMN_1_ALL_ROWS": @"custom",
+            @"OMC_NIB_WEBVIEW_3_ELEMENT_1_VALUE": @"custom"
         }
     };
     
@@ -543,8 +543,14 @@
     XCTAssertTrue(completed, @"Task should complete");
     
     NSString *output = executionObserver.capturedOutput;
-    XCTAssertFalse([output containsString:@"OMC_NIB"],
-                  @"No OMC_NIB_XXX env vars should be exported without an active nib dialog. Output: %@", output);
+    XCTAssertFalse([output containsString:@"OMC_NIB_DLG_GUID"],
+                  @"OMC_NIB_DLG_GUID should not be exported without a window. Output: %@", output);
+    XCTAssertTrue([output containsString:@"OMC_NIB_DIALOG_CONTROL_2_VALUE=custom\n"],
+                  @"A former nib control word is a custom variable now. Output: %@", output);
+    XCTAssertTrue([output containsString:@"OMC_NIB_TABLE_1_COLUMN_1_ALL_ROWS=custom\n"],
+                  @"A former nib table word is a custom variable now. Output: %@", output);
+    XCTAssertTrue([output containsString:@"OMC_NIB_WEBVIEW_3_ELEMENT_1_VALUE=custom\n"],
+                  @"A former nib web view word is a custom variable now. Output: %@", output);
 }
 
 @end

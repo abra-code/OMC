@@ -2924,10 +2924,6 @@ OnMyCommand::AppendTextToCommand(CFMutableStringRef inCommandRef, CFStringRef in
 		}
 		break;
 
-		case NIB_DLG_CONTROL_VALUE:
-		case NIB_TABLE_VALUE:
-		case NIB_TABLE_ALL_ROWS:
-		case NIB_WEB_VIEW_VALUE:
 		case ACTIONUI_VIEW_VALUE:
         case ACTIONUI_TABLE_VALUE:
         case ACTIONUI_TABLE_ALL_ROWS:
@@ -3303,11 +3299,8 @@ OnMyCommand::PopulateEnvironList(CFMutableDictionaryRef ioEnvironList, CommandRu
 			break;
 
 			//regular control values are always exported with AddEnvironmentVariablesForAllControls below
-			//case NIB_DLG_CONTROL_VALUE:
-			//case NIB_TABLE_VALUE:
-			
+
 			//special on-demand value, which is costly to obtain
-			case NIB_TABLE_ALL_ROWS:
 			case ACTIONUI_TABLE_ALL_ROWS:
 			{
 				if(activeDialog != nullptr)
@@ -3399,16 +3392,14 @@ OnMyCommand::PopulateEnvironList(CFMutableDictionaryRef ioEnvironList, CommandRu
 			// the command. The sibling switch in AppendTextToCommand has no default and DOES catch
 			// a missing case as a build warning - do not "fix" that one by adding a default to it.
 			//
-			// Only three IDs legitimately land here, all of them dynamic control words that
+			// Only two IDs legitimately land here, both of them dynamic control words that
 			// AddEnvironmentVariablesForAllControls supplies below instead of this switch:
-			// NIB_WEB_VIEW_VALUE, ACTIONUI_VIEW_VALUE, ACTIONUI_TABLE_VALUE. Spelling those out
-			// as explicit cases would restore -Wswitch here with no behavior change at all -
-			// see the commit note for the proposal.
+			// ACTIONUI_VIEW_VALUE, ACTIONUI_TABLE_VALUE (the nib dialogs' words went in 6.0).
+			// Spelling those out as explicit cases would restore -Wswitch here with no
+			// behavior change at all.
 			//
-			// COUNT THEM, do not guess: an earlier draft of this comment said five and named
-			// NIB_DLG_CONTROL_VALUE and NIB_TABLE_VALUE, both of which are handled above. The
-			// set is (enumerators in SpecialWordID) minus (cases in THIS switch), and the two
-			// switches over this enum do not handle the same set.
+			// COUNT THEM, do not guess: the set is (enumerators in SpecialWordID) minus (cases
+			// in THIS switch), and the two switches over this enum do not handle the same set.
 			default:
 			break;
 		}

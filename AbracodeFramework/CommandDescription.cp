@@ -104,11 +104,8 @@ const CFIndex kMinSpecialWordLen = sizeof("__OBJ_TEXT__") - 1;
 //the longest is __DLG_CHOOSE_FOLDER_NAME_NO_EXTENSION__
 const CFIndex kMaxSpecialWordLen = sizeof("__DLG_CHOOSE_FOLDER_NAME_NO_EXTENSION__") - 1;
 
-//there are also dynamic names:
-//                 __NIB_DIALOG_CONTROL_NNN_VALUE__            OMC_NIB_DIALOG_CONTROL_NNN_VALUE
-//                 __NIB_TABLE_NNN_COLUMN_MMM_VALUE__          OMC_NIB_TABLE_NNN_COLUMN_MMM_VALUE
-//                 __NIB_TABLE_NNN_COLUMN_MMM_ALL_ROWS_VALUE__ OMC_NIB_TABLE_NNN_COLUMN_MMM_ALL_ROWS_VALUE
-//                 __NIB_WEBVIEW_NNN_ELEMENT_MMM_VALUE__       OMC_NIB_WEBVIEW_NNN_ELEMENT_MMM_VALUE
+//there are also dynamic names (the nib dialogs' __NIB_DIALOG_CONTROL_, __NIB_TABLE_ and
+//__NIB_WEBVIEW_ families went with them in 6.0):
 //                 __ACTIONUI_VIEW_N_VALUE__                   OMC_ACTIONUI_VIEW_N_VALUE
 //                 __ACTIONUI_TABLE_NNN_COLUMN_MMM_VALUE__     OMC_ACTIONUI_TABLE_NNN_COLUMN_MMM_VALUE
 //                 __ACTIONUI_TABLE_NNN_COLUMN_MMM_ALL_ROWS__  OMC_ACTIONUI_TABLE_NNN_COLUMN_MMM_ALL_ROWS
@@ -256,27 +253,7 @@ GetSpecialWordID(CFStringRef inStr)
         }
     }
     
-    if( ::CFStringHasPrefix(inStr, CFSTR("__NIB_DIALOG_CONTROL_")) &&
-        ::CFStringHasSuffix(inStr, CFSTR("_VALUE__")) )
-    {
-        return NIB_DLG_CONTROL_VALUE;
-    }
-    else if( ::CFStringHasPrefix(inStr, CFSTR("__NIB_TABLE_")) &&
-            ::CFStringHasSuffix(inStr, CFSTR("_VALUE__")) )
-    {
-        return NIB_TABLE_VALUE;
-    }
-    else if( ::CFStringHasPrefix(inStr, CFSTR("__NIB_TABLE_")) &&
-            ::CFStringHasSuffix(inStr, CFSTR("_ALL_ROWS__")) )
-    {
-        return NIB_TABLE_ALL_ROWS;
-    }
-    else if( ::CFStringHasPrefix(inStr, CFSTR("__NIB_WEBVIEW_")) &&
-            ::CFStringHasSuffix(inStr, CFSTR("_VALUE__")) )
-    {
-        return NIB_WEB_VIEW_VALUE;
-    }
-    else if( ::CFStringHasPrefix(inStr, CFSTR("__ACTIONUI_VIEW_")) &&
+    if( ::CFStringHasPrefix(inStr, CFSTR("__ACTIONUI_VIEW_")) &&
             ::CFStringHasSuffix(inStr, CFSTR("_VALUE__")) )
     {
         return ACTIONUI_VIEW_VALUE;
@@ -326,27 +303,7 @@ GetSpecialEnvironWordID(CFStringRef inStr)
         }
     }
     
-    if( ::CFStringHasPrefix(inStr, CFSTR("OMC_NIB_DIALOG_CONTROL_")) &&
-        ::CFStringHasSuffix(inStr, CFSTR("_VALUE")) )
-    {
-        return NIB_DLG_CONTROL_VALUE;
-    }
-    else if( ::CFStringHasPrefix(inStr, CFSTR("OMC_NIB_TABLE_")) &&
-            ::CFStringHasSuffix(inStr, CFSTR("_VALUE")) )
-    {
-        return NIB_TABLE_VALUE;
-    }
-    else if( ::CFStringHasPrefix(inStr, CFSTR("OMC_NIB_TABLE_")) &&
-            ::CFStringHasSuffix(inStr, CFSTR("_ALL_ROWS")) )
-    {
-        return NIB_TABLE_ALL_ROWS;
-    }
-    else if( ::CFStringHasPrefix(inStr, CFSTR("OMC_NIB_WEBVIEW_")) &&
-            ::CFStringHasSuffix(inStr, CFSTR("_VALUE")) )
-    {
-        return NIB_WEB_VIEW_VALUE;
-    }
-    else if( ::CFStringHasPrefix(inStr, CFSTR("OMC_ACTIONUI_VIEW_")) &&
+    if( ::CFStringHasPrefix(inStr, CFSTR("OMC_ACTIONUI_VIEW_")) &&
             ::CFStringHasSuffix(inStr, CFSTR("_VALUE")) )
     {
         return ACTIONUI_VIEW_VALUE;
@@ -446,24 +403,6 @@ static void SetKeyValueInMutableDict(const void *key, const void *value, void *c
     CFMutableDictionaryRef destDict = reinterpret_cast<CFMutableDictionaryRef>(context);
     CFDictionarySetValue(destDict, key, value);
 }
-
-static void AddRequestedSpecialNibDialogValuesToMutableSet(const void *key, const void *value, void *context)
-{
-    assert(ACFType<CFMutableSetRef>::DynamicCast(context) != nullptr); //only assert in debug, don't incur the cost in release
-    CFMutableSetRef destSet = reinterpret_cast<CFMutableSetRef>(context);
-    
-    assert(ACFType<CFStringRef>::DynamicCast(key) != nullptr);
-    CFStringRef requestedKey = reinterpret_cast<CFStringRef>(key);
-    
-    SpecialWordID specialWordID = GetSpecialEnvironWordID(requestedKey);
-    // currently only NIB_TABLE_ALL_ROWS is special because it is expensive
-    // and not exported by default unless:
-    // A. explicitly used in the command body in the plist
-    // B. specifically requested in must export dictionary
-    if( specialWordID == NIB_TABLE_ALL_ROWS )
-        CFSetAddValue(destSet, requestedKey);
-}
-
 
 // Command.plist SCHEMA SOURCE OF TRUTH — ACTIVATION_OBJECT_STRING_MATCH (MATCH_STRING,
 // MATCH_METHOD enum [match_exact, match_contains, match_regular_expression],
@@ -875,14 +814,9 @@ GetOneCommandParams(CommandDescription &outDesc, CFDictionaryRef inOneCommand, C
     oneCmd.GetValue(CFSTR("ENVIRONMENT_VARIABLES"), commandMustExportEnvironVariables);
     if(commandMustExportEnvironVariables != nullptr)
     {
+        // A requested table's all-rows value, expensive and so collected only on demand, is added
+        // to specialRequestedNibControls when these keys are prescanned (PrescanEnvironmentVariables)
         CFDictionaryApplyFunction(commandMustExportEnvironVariables, SetKeyValueInMutableDict, (void *)outDesc.customEnvironVariables);
-
-        outDesc.specialRequestedNibControls.Adopt( CFSetCreateMutable(kCFAllocatorDefault, 0, &kCFTypeSetCallBacks) );
-        CFDictionaryApplyFunction(commandMustExportEnvironVariables, AddRequestedSpecialNibDialogValuesToMutableSet, (void *)outDesc.specialRequestedNibControls);
-        if(CFSetGetCount(outDesc.specialRequestedNibControls) == 0)
-        {
-            outDesc.specialRequestedNibControls.Release();
-        }
     }
 
 // The presence of dialog settings is a trigger for showing given dialog and exporting its path variable
@@ -1068,16 +1002,11 @@ ProcessOnePrescannedWord(CommandDescription &currCommand, SInt32 specialWordID, 
             currCommand.prescannedCommandInfo |= kOmcCommandContainsInputText;
         break;
         
-        case NIB_DLG_CONTROL_VALUE:
-        case NIB_TABLE_VALUE:
-        case NIB_WEB_VIEW_VALUE:
         case ACTIONUI_VIEW_VALUE:
         break;
 
-        case NIB_TABLE_ALL_ROWS: //special expensive case not always exported, only on demand
-        case ACTIONUI_TABLE_ALL_ROWS:
+        case ACTIONUI_TABLE_ALL_ROWS: //special expensive case not always exported, only on demand
         {
-//            TRACE_CSTR("NIB_TABLE_VALUE\n" );
             if( currCommand.specialRequestedNibControls == nullptr)
                 currCommand.specialRequestedNibControls.Adopt( CFSetCreateMutable(kCFAllocatorDefault, 0, &kCFTypeSetCallBacks) );
 

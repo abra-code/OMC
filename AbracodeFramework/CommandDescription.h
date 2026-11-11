@@ -57,11 +57,7 @@ typedef enum SpecialWordID
                     //unlike FRONT_PROCESS_ID / FRONT_APPLICATION_NAME it deliberately does not consult mHostApp: getpid() is the right answer in every host
     MY_HOST_BUNDLE_PATH, //deprecated but supported as of OMC 4.0 - not exported by default though
     MY_EXTERNAL_BUNDLE_PATH, //points to EXTERNAL_BUNDLE_PATH defined in description. redundant but needed for portability
-    NIB_DLG_GUID,
-    NIB_DLG_CONTROL_VALUE,
-    NIB_TABLE_VALUE,
-    NIB_TABLE_ALL_ROWS,
-    NIB_WEB_VIEW_VALUE,
+    NIB_DLG_GUID, // the window's UUID, under its pre-ActionUI name (scripts still use it)
     ACTIONUI_WINDOW_UUID,
     ACTIONUI_VIEW_VALUE,
     ACTIONUI_TABLE_VALUE,
