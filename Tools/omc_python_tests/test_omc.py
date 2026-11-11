@@ -416,12 +416,14 @@ class OMCVerbTests(OMCTestBase):
                          [[self.window_uuid, "omc_window", "Results for 2026"]])
 
     def test_control_verbs_target_the_control_not_the_window(self):
-        self.win.set_command_id(101, "MyApp.next")
         self.win.select_control(101)
         self.assertEqual(self.recorded_argv(self.record), [
-            [self.window_uuid, "101", "omc_set_command_id", "MyApp.next"],
             [self.window_uuid, "101", "omc_select"],
         ])
+
+    def test_removed_set_command_id_is_gone(self):
+        # omc_set_command_id was removed in 6.0 (the tool refuses it); its wrapper went with it.
+        self.assertFalse(hasattr(self.win, "set_command_id"))
 
     def test_omc_verbs_never_reach_the_bridge(self):
         self.win.terminate_ok()

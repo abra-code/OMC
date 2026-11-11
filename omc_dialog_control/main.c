@@ -36,10 +36,8 @@ typedef enum InstructionID
 	omc_table_set_column_widths,
 	omc_set_property,
 	omc_set_state,
-	omc_set_command_id,
 	omc_resize, //for window or control
 	omc_move, //for window or control
-	omc_scroll, //for NSScrollView or view within scroll view
 	omc_select, //bring window to front, maybe for some controls too (tab control?)
 	omc_terminate_ok, //for dialog
 	omc_terminate_cancel, //for dialog
@@ -107,10 +105,8 @@ static InstructionWord sInstructionWordList[] =
 	{ sizeof("omc_table_set_column_widths")-1,				"omc_table_set_column_widths",			"SET_TABLE_WIDTHS",		false, false,	kArgumentCount_Variable },
 	{ sizeof("omc_set_property")-1,							"omc_set_property",						"SET_PROPERTY",			false, false,	2 },
 	{ sizeof("omc_set_state")-1,							"omc_set_state",							"SET_STATE",				false, false,	2 },
-	{ sizeof("omc_set_command_id")-1,						"omc_set_command_id",					"COMMAND_IDS",			false, false,	1 },
 	{ sizeof("omc_resize")-1,								"omc_resize",							"RESIZE",				false, false,	2 },
 	{ sizeof("omc_move")-1,									"omc_move",								"MOVE",					false, false,	2 },
-	{ sizeof("omc_scroll")-1,								"omc_scroll",							"SCROLL",				false, false,	2 },
 	{ sizeof("omc_select")-1,								"omc_select",							"SELECT",				true, false,	0 },
 	{ sizeof("omc_terminate_ok")-1,							"omc_terminate_ok",						"TERMINATE",				true, false,	0 },
 	{ sizeof("omc_terminate_cancel")-1,						"omc_terminate_cancel",					"TERMINATE",				false, false,	0 },
@@ -166,6 +162,23 @@ GetInstructionID(CFStringRef inStr)
 	return omc_set_control_value;
 }
 
+// Words removed in 6.0 with nib dialogs, where they retargeted a control's command and scrolled a
+// view; an ActionUI window ignored them. They are refused rather than forgotten: an unknown word is
+// a control's new value, so a script that still sends one would otherwise overwrite the control.
+static bool
+IsRemovedInstructionWord(const char *inWord)
+{
+	static const char *sRemovedWordList[] = { "omc_set_command_id", "omc_scroll" };
+	if(inWord == NULL)
+		return false;
+	for(size_t i = 0; i < sizeof(sRemovedWordList)/sizeof(sRemovedWordList[0]); i++)
+	{
+		if(strcmp(inWord, sRemovedWordList[i]) == 0)
+			return true;
+	}
+	return false;
+}
+
 // An instruction's key as a CFString, made the first time it is asked for and kept until the tool
 // exits (a short-lived, single-threaded process)
 static CFStringRef
@@ -201,7 +214,6 @@ int main (int argc, const char * argv[])
 		fprintf(stdout, "\t\"omc_workspace\" to specify that the target is shared NSWorkspace\n");
 		fprintf(stdout, "Special values:\n\tomc_enable, omc_disable\n\tomc_show, omc_hide\n");
 		fprintf(stdout, "\tomc_set_value_from_stdin [contentType] (read from stdin or pipe)\n");
-		fprintf(stdout, "\tomc_set_command_id [followed by command id string] (nib controls only; ignored since 6.0)\n");
 		fprintf(stdout, "\tomc_list_remove_all\n");
 		fprintf(stdout, "\tomc_list_append_items [followed by variable number of arguments]\n");
 		fprintf(stdout, "\tomc_list_append_items_from_file [followed by file name]\n");
@@ -227,7 +239,6 @@ int main (int argc, const char * argv[])
 		fprintf(stdout, "\tomc_terminate_cancel (close dialog with Cancel message)\n");
 		fprintf(stdout, "\tomc_resize [followed by 2 space separated numbers] (for dialog window; controls ignore it since 6.0)\n");
 		fprintf(stdout, "\tomc_move [followed by 2 space separated numbers] (for dialog window; controls ignore it since 6.0)\n");
-		fprintf(stdout, "\tomc_scroll [followed by 2 space separated numbers] (nib controls only; ignored since 6.0)\n");
 		fprintf(stdout, "\tomc_invoke [followed by space separated ObjC message] (sent to the window, application or workspace; controls ignore it since 6.0; a range, point, size or rect argument is comma-separated numbers: location,length / x,y / width,height / x,y,width,height)\n");
 		fprintf(stdout, "\tomc_set_property <property_key> <value> (value is a string or a JSON fragment)\n");
 		fprintf(stdout, "\tomc_set_state <state_key> <value> (value is a string or JSON fragment)\n");
@@ -319,6 +330,13 @@ int main (int argc, const char * argv[])
 	{
 		//fprintf(stderr, "Invalid control ID number provided. It must be between 1 and 9999.\n");
 		fprintf(stderr, "Invalid control ID provided\n");
+		result = -1;
+		goto error_exit;
+	}
+
+	if( IsRemovedInstructionWord(argv[3]) )
+	{
+		fprintf(stderr, "%s is no longer supported: it was removed in 6.0 with nib dialogs\n", argv[3]);
 		result = -1;
 		goto error_exit;
 	}

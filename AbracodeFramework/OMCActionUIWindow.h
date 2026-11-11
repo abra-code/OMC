@@ -96,7 +96,6 @@ public:
 	void SetControlValue(CFStringRef inControlID, CFStringRef inValue, CFStringRef inContentType) override;
 	void SetControlEnabled(CFStringRef inControlID, bool inEnabled) override;
 	void SetControlVisible(CFStringRef inControlID, bool inVisible) override;
-	void SetCommandID(CFStringRef inControlID, CFStringRef inCommandID) override;
 	void BringWindowToFront() override;
 	void ActivateApplication() override;
 	void SelectControl(CFStringRef inControlID) override;
@@ -104,7 +103,6 @@ public:
 	void QuitApplication() override;
 	void SetWindowTopLeftPosition(double inLeft, double inTop) override;
 	void MoveControl(CFStringRef inControlID, double inLeft, double inTop) override;
-	void ScrollControl(CFStringRef inControlID, double inLeft, double inTop) override;
 	void SetWindowLayoutSize(double inWidth, double inHeight) override;
 	void ResizeControl(CFStringRef inControlID, double inWidth, double inHeight) override;
 	void InvokeMessages(OMCInvokeTarget inTarget, CFArrayRef inMessages) override;

@@ -1023,6 +1023,15 @@ if [ $# -lt 3 ]; then
     printf 'usage (argc<4) [%s] [%s]\n' "$uuid" "$target" >> "$OMCTEST_UI/errors.log"
     exit 255
 fi
+# The two words removed in 6.0 with nib dialogs: the real tool refuses them with
+# exit -1 (255) and writes nothing (IsRemovedInstructionWord in main.c). Without
+# this they would fall through to the bare-value arm below and be written into
+# the control as its value, which the real tool no longer does.
+case "$3" in
+    omc_set_command_id|omc_scroll)
+        printf 'removed verb [%s] [%s]\n' "$3" "$target" >> "$OMCTEST_UI/errors.log"
+        exit 255 ;;
+esac
 shift 2
 win="$OMCTEST_UI/win-$uuid"
 # The test, then mkdir only for a window's first write: this stub runs for every
@@ -1155,9 +1164,10 @@ case "$verb" in
     # a value, destroying a table's rows on the way. A glob here would swallow
     # that and let the test pass while the app misbehaves. Anything not named in
     # this list or replayed above therefore falls through to the bare-value arm,
-    # exactly as the real tool does. The roster is the full 46 from main.c:82-127
-    # (28 replayed above, the 17 below, and one empty entry that can never match).
-    omc_table_set_column_widths|omc_set_command_id|omc_resize|omc_move|omc_scroll|\
+    # exactly as the real tool does. The roster is the full 44 of main.c's
+    # sInstructionWordList (28 replayed above, the 15 below, and one empty entry
+    # that can never match); the two removed words are refused near the top.
+    omc_table_set_column_widths|omc_resize|omc_move|\
     omc_select|omc_terminate_ok|omc_terminate_cancel|omc_invoke|omc_present_modal|\
     omc_dismiss_modal|omc_present_toast|omc_dismiss_toast|omc_dismiss_dialog|\
     omc_insert_element|omc_insert_element_row|omc_remove_element) : ;;

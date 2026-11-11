@@ -583,10 +583,8 @@ LogUnsupported(const char *inWhat, CFStringRef inControlID)
 	OMCLogMessage("[OMCActionUIWindow] %s: %s - not supported in an ActionUI window", inWhat, controlID.c_str());
 }
 
-void OMCActionUIWindow::SetCommandID(CFStringRef inControlID, CFStringRef inCommandID) { (void)inCommandID; LogUnsupported("setCommandID", inControlID); }
 void OMCActionUIWindow::SelectControl(CFStringRef inControlID) { LogUnsupported("selectControl", inControlID); }
 void OMCActionUIWindow::MoveControl(CFStringRef inControlID, double, double) { LogUnsupported("moveControl", inControlID); }
-void OMCActionUIWindow::ScrollControl(CFStringRef inControlID, double, double) { LogUnsupported("scrollControl", inControlID); }
 void OMCActionUIWindow::ResizeControl(CFStringRef inControlID, double, double) { LogUnsupported("resizeControl", inControlID); }
 void OMCActionUIWindow::InvokeMessagesOnControl(CFStringRef inControlID, CFArrayRef) { LogUnsupported("invokeMessages", inControlID); }
 

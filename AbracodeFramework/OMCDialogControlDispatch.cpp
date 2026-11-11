@@ -105,7 +105,7 @@ CFArrayRef CreateButtonSpecs(CFArrayRef inArguments)
 	return specs.Detach();
 }
 
-// MOVE, SCROLL and RESIZE's two numbers, as integers, 0 when missing
+// MOVE and RESIZE's two numbers, as integers, 0 when missing
 void TwoNumbers(CFArrayRef inArguments, double &outFirst, double &outSecond)
 {
 	CFStringRef first = StringAt(inArguments, 0);
@@ -277,20 +277,6 @@ OMCDispatchDialogControlMessage(CFDictionaryRef inMessage, OMCDialogControlTarge
 		}
 	}
 
-	// Command ids: a string per control
-	{
-		CFDictionaryRef commandIDsDict = nullptr;
-		if( message.GetValue(CFSTR("COMMAND_IDS"), commandIDsDict) )
-		{
-			ForEachEntry(commandIDsDict, [&](CFTypeRef inKey, CFTypeRef inValue) {
-				CFStringRef controlID = ACFType<CFStringRef>::DynamicCast(inKey);
-				CFStringRef commandID = ACFType<CFStringRef>::DynamicCast(inValue);
-				if( (controlID != nullptr) && (commandID != nullptr) )
-					inTarget.SetCommandID(controlID, commandID);
-			});
-		}
-	}
-
 	// SELECT: the window to the front, the application active, or a control
 	ForEachControl(message, CFSTR("SELECT"), [&](CFStringRef inID) {
 		if( IsControl(inID, CFSTR("omc_window")) )
@@ -302,7 +288,7 @@ OMCDispatchDialogControlMessage(CFDictionaryRef inMessage, OMCDialogControlTarge
 	});
 
 	// TERMINATE ends the handling when it closes the window or quits the application: the rest of
-	// the message (MOVE, SCROLL, RESIZE, INVOKE) is skipped
+	// the message (MOVE, RESIZE, INVOKE) is skipped
 	{
 		CFDictionaryRef terminateDict = nullptr;
 		if( message.GetValue(CFSTR("TERMINATE"), terminateDict) )
@@ -331,7 +317,7 @@ OMCDispatchDialogControlMessage(CFDictionaryRef inMessage, OMCDialogControlTarge
 		}
 	}
 
-	// MOVE, SCROLL, RESIZE: [x, y] and [width, height], as integers
+	// MOVE, RESIZE: [x, y] and [width, height], as integers
 	ForEachControlArray(message, CFSTR("MOVE"), [&](CFStringRef inID, CFArrayRef inArguments) {
 		double left = 0, top = 0;
 		TwoNumbers(inArguments, left, top);
@@ -339,11 +325,6 @@ OMCDispatchDialogControlMessage(CFDictionaryRef inMessage, OMCDialogControlTarge
 			inTarget.SetWindowTopLeftPosition(left, top);
 		else
 			inTarget.MoveControl(inID, left, top);
-	});
-	ForEachControlArray(message, CFSTR("SCROLL"), [&](CFStringRef inID, CFArrayRef inArguments) {
-		double left = 0, top = 0;
-		TwoNumbers(inArguments, left, top);
-		inTarget.ScrollControl(inID, left, top);
 	});
 	ForEachControlArray(message, CFSTR("RESIZE"), [&](CFStringRef inID, CFArrayRef inArguments) {
 		double width = 0, height = 0;

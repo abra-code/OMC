@@ -14,8 +14,8 @@
 //  context, passing any further lines to its standard input.
 //
 //  Not pinned: toasts (ActionUI has no getter for the current toast); the per-control omc_move,
-//  omc_resize, omc_scroll, omc_select and omc_set_command_id, which only log for an ActionUI window
-//  (OMCActionUIWindow.cpp).
+//  omc_resize and omc_select, which only log for an ActionUI window (OMCActionUIWindow.cpp).
+//  omc_scroll and omc_set_command_id, removed in 6.0, are pinned as refused.
 //
 
 #import <AppKit/AppKit.h>
@@ -251,6 +251,23 @@ static id ActionUIObjCClass(void)
         return [ActionUIObjCClass() getElementValueAsStringWithWindowUUID:self.uuid viewID:kFieldID viewPartID:0 contentType:nil];
     }];
     XCTAssertEqualObjects(value, @"from standard input\n");
+}
+
+// omc_set_command_id and omc_scroll were removed in 6.0: the tool refuses them and sends nothing,
+// rather than taking the unknown word for the control's new value (with argc 5 the word would even
+// become a content type and the next argument the value)
+- (void)testRemovedVerbsAreRefusedAndLeaveTheControlAlone {
+    NSString *field = [NSString stringWithFormat:@"%ld", (long)kFieldID];
+    [self control:[field stringByAppendingString:@" before"]];
+    XCTAssertEqualObjects([self waitFor:@"before" read:^id{ return [self valueOfView:kFieldID part:0]; }], @"before");
+
+    [self control:[field stringByAppendingString:@" omc_scroll 10 20"]];
+    [self control:[field stringByAppendingString:@" omc_scroll 10"]];
+    [self control:[field stringByAppendingString:@" omc_set_command_id my.command"]];
+    // Messages arrive in order: once this one is in, any earlier one would be too
+    [self control:[field stringByAppendingString:@" omc_set_state marker done"]];
+    XCTAssertEqualObjects([self waitFor:@"done" read:^id{ return [self state:@"marker" ofView:kFieldID]; }], @"done");
+    XCTAssertEqualObjects([self valueOfView:kFieldID part:0], @"before", @"a removed verb must not become the control's value");
 }
 
 - (void)testListVerbsSetAppendAndRemoveItems {

@@ -9,9 +9,9 @@
 //
 //  The keys are handled in a fixed order, which is behavior: list and table contents first, then row
 //  selection (so one message can fill a table and select in it), properties and states, sheets and
-//  dialogs, inserted and removed elements, values, enabled and visible, command ids, SELECT, then
-//  TERMINATE, which ends the handling when it closes the window or quits the application, so MOVE,
-//  SCROLL, RESIZE and INVOKE in the same message are skipped. Within one key the control IDs come in
+//  dialogs, inserted and removed elements, values, enabled and visible, SELECT, then TERMINATE,
+//  which ends the handling when it closes the window or quits the application, so MOVE, RESIZE
+//  and INVOKE in the same message are skipped. Within one key the control IDs come in
 //  the dictionary's order.
 //
 //  Control IDs are strings; the special IDs "omc_window", "omc_application" and "omc_workspace" name
@@ -65,7 +65,6 @@ public:
 	virtual void			SetControlValue(CFStringRef inControlID, CFStringRef inValue, CFStringRef inContentType) = 0;
 	virtual void			SetControlEnabled(CFStringRef inControlID, bool inEnabled) = 0;
 	virtual void			SetControlVisible(CFStringRef inControlID, bool inVisible) = 0;
-	virtual void			SetCommandID(CFStringRef inControlID, CFStringRef inCommandID) = 0;
 
 	// SELECT
 	virtual void			BringWindowToFront() = 0;
@@ -76,11 +75,10 @@ public:
 	virtual void			CloseWindow(bool inOK) = 0;
 	virtual void			QuitApplication() = 0;
 
-	// MOVE, SCROLL, RESIZE: the window's top-left corner from the top-left corner of the main
+	// MOVE, RESIZE: the window's top-left corner from the top-left corner of the main
 	// screen's visible area, and the size of its layout area; a control's position and size
 	virtual void			SetWindowTopLeftPosition(double inLeft, double inTop) = 0;
 	virtual void			MoveControl(CFStringRef inControlID, double inLeft, double inTop) = 0;
-	virtual void			ScrollControl(CFStringRef inControlID, double inLeft, double inTop) = 0;
 	virtual void			SetWindowLayoutSize(double inWidth, double inHeight) = 0;
 	virtual void			ResizeControl(CFStringRef inControlID, double inWidth, double inHeight) = 0;
 

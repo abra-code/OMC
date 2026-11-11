@@ -973,6 +973,18 @@ section "a window uuid is a token, not a path"
 check "a traversal uuid is refused"      "1" "$(printf '%s' "$(ui_errors)" | /usr/bin/grep -c 'bad window uuid')"
 check "and nothing was written outside"  "no" "$([ -e "$OMCTEST_SCRATCH/../OMCTEST_ESCAPED" ] && echo yes || echo no)"
 
+section "the verbs removed in 6.0 are refused, as the tool refuses them"
+ui_reset
+"$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$OMC_ACTIONUI_WINDOW_UUID" 10 "kept"
+"$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$OMC_ACTIONUI_WINDOW_UUID" 10 omc_scroll 1 2 2>/dev/null
+removed_status=$?
+"$OMC_OMC_SUPPORT_PATH/omc_dialog_control" "$OMC_ACTIONUI_WINDOW_UUID" 10 omc_set_command_id next 2>/dev/null
+check "omc_scroll exits 255"       "255"  "$removed_status"
+check "the value is untouched"     "kept" "$(ui_value 10)"
+check "both are reported"          "2"    "$(printf '%s' "$(ui_errors)" | /usr/bin/grep -c 'removed verb')"
+check "and neither is journaled"   "0"    "$(/usr/bin/grep -c 'omc_scroll\|omc_set_command_id' "$OMCTEST_UI/journal.tsv")"
+ui_reset_diagnostics
+
 section "writes to an undeclared id are flagged"
 ui_reset
 omc_run Fixture.unknownid
@@ -1320,7 +1332,7 @@ EXPECTED_COUNTS = {
     "40-alerts.test.sh": (16, 0),
     "50-chain.test.sh": (11, 0),
     "55-defaults.test.sh": (25, 0),
-    "60-window.test.sh": (58, 0),
+    "60-window.test.sh": (62, 0),
     "70-tools.test.sh": (51, 0),
     "75-bridge.test.sh": (22, 0),
     "85-noise.test.sh": (1, 0),

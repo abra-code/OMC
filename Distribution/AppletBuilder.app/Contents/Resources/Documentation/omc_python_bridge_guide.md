@@ -175,7 +175,6 @@ win.activate_app()
 win.set_title(title)
 win.resize(width, height)
 win.move(x, y)
-win.set_command_id(view_id, command_id)
 win.select_control(view_id)
 
 omc.next_command("MyApp.step2")     # chain, using OMC_CURRENT_COMMAND_GUID

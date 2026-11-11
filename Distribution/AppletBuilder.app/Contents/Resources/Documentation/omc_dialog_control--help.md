@@ -15,7 +15,6 @@ Special values:
 	omc_enable, omc_disable
 	omc_show, omc_hide
 	omc_set_value_from_stdin [contentType] (read from stdin or pipe)
-	omc_set_command_id [followed by command id string] (nib controls only; ignored since 6.0)
 	omc_list_remove_all
 	omc_list_append_items [followed by variable number of arguments]
 	omc_list_append_items_from_file [followed by file name]
@@ -41,7 +40,6 @@ Special values:
 	omc_terminate_cancel (close dialog with Cancel message)
 	omc_resize [followed by 2 space separated numbers] (for dialog window; controls ignore it since 6.0)
 	omc_move [followed by 2 space separated numbers] (for dialog window; controls ignore it since 6.0)
-	omc_scroll [followed by 2 space separated numbers] (nib controls only; ignored since 6.0)
 	omc_invoke [followed by space separated ObjC message] (sent to the window, application or workspace; controls ignore it since 6.0; a range, point, size or rect argument is comma-separated numbers: location,length / x,y / width,height / x,y,width,height)
 	omc_set_property <property_key> <value> (value is a string or a JSON fragment)
 	omc_set_state <state_key> <value> (value is a string or JSON fragment)

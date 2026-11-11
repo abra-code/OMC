@@ -283,12 +283,9 @@ class OMCWindow(actionui_remote.Window):
 
     # -- Controls ------------------------------------------------------------
 
-    def set_command_id(self, view_id, command_id):
-        """Retarget which command a control dispatches. `omc_set_command_id`."""
-        self._dialog_control(str(int(view_id)), "omc_set_command_id", str(command_id))
-
     def select_control(self, view_id):
-        """Give a control focus or selection. `omc_select` on the control."""
+        """Give a control focus or selection. `omc_select` on the control.
+        An ActionUI window does not focus controls: it logs the call and does nothing."""
         self._dialog_control(str(int(view_id)), "omc_select")
 
 

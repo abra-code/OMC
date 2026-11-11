@@ -66,7 +66,7 @@ the user changed afterwards was invisible. `win.get_value()`, `win.get_rows()`,
 The module uses two mechanisms behind one surface. Everything ActionUI defines - values, rows,
 properties, state, element insertion, modals, toasts - travels over the remote bridge, because
 that is the only way to read. Everything OMC defines on top of a window - `terminate_ok()`,
-`terminate_cancel()`, `set_command_id()`, `bring_to_front()`, `set_title()`, `resize()`,
+`terminate_cancel()`, `bring_to_front()`, `set_title()`, `resize()`,
 `move()`, and `omc.next_command()` - runs the same helper tool a shell handler would, so there is
 one implementation of each verb rather than two.
 

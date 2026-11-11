@@ -466,7 +466,7 @@ check "and the field was set" "1" "$(bridge_called actionui.setValue "$filter")"
 check "with the right text"   "ready" "$(bridge_value 101)"
 ```
 
-**There are two virtual windows, and this is the one that matters most often.** A Python handler using `omc` writes through two channels: everything ActionUI defines - values, rows, properties, elements - goes over the bridge, because that is the only channel that can *read*; OMC's own window verbs - `terminate_ok`, `set_title`, `resize`, `set_command_id` - shell out to `omc_dialog_control` and land in the stub's files. So `bridge_value` reads back a `win.set_value()`, and `ui_value` reads back a `win.set_title()`. They were deliberately not merged: `ui_value` would have to make a socket round trip on every call, and "empty means never touched" would stop being true.
+**There are two virtual windows, and this is the one that matters most often.** A Python handler using `omc` writes through two channels: everything ActionUI defines - values, rows, properties, elements - goes over the bridge, because that is the only channel that can *read*; OMC's own window verbs - `terminate_ok`, `set_title`, `resize`, `move` - shell out to `omc_dialog_control` and land in the stub's files. So `bridge_value` reads back a `win.set_value()`, and `ui_value` reads back a `win.set_title()`. They were deliberately not merged: `ui_value` would have to make a socket round trip on every call, and "empty means never touched" would stop being true.
 
 `bridge_value` is derived from the request log, not asked of the running host. A query would itself be a request, and then `bridge_called actionui.getValue` would count the harness's own reads alongside the applet's.
 
@@ -503,9 +503,9 @@ omc_insert_element_row             omc_remove_element
 
 Special targets `omc_window`, `omc_application` and `omc_workspace` are recognized; a window title set through `omc_window` is readable with `ui_title`.
 
-**Journaled only** - everything else, including `omc_resize`, `omc_move`, `omc_scroll` and `omc_invoke`. Assert on those with `ui_calls`.
+**Journaled only** - everything else, including `omc_resize`, `omc_move` and `omc_invoke`. Assert on those with `ui_calls`.
 
-The engine has 46 verbs and matches them **exactly and case-sensitively**; anything unrecognized falls back to setting the control's value. The stub reproduces that, and it reproduces the engine's silent no-ops deliberately - `omc_select_row` with no index or a non-numeric one stores nothing and says nothing, leaving the previous selection intact, and a `*_from_file` verb whose file cannot be opened leaves the rows alone. A handler relying on either is a live defect, and the harness must not paper over it.
+The engine has 43 verbs and matches them **exactly and case-sensitively**; anything unrecognized falls back to setting the control's value (the two verbs removed in 6.0 are refused instead, with exit 255). The stub reproduces that, and it reproduces the engine's silent no-ops deliberately - `omc_select_row` with no index or a non-numeric one stores nothing and says nothing, leaving the previous selection intact, and a `*_from_file` verb whose file cannot be opened leaves the rows alone. A handler relying on either is a live defect, and the harness must not paper over it.
 
 ---
 
