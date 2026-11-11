@@ -13,8 +13,8 @@
 //  Where Linux differs:
 //  - placement, cascading, levels: a Wayland desktop places windows itself; a floating window is
 //    kept above the app's active window (transient), nothing more;
-//  - sizes: the layout area is below ActionUI's header bar, whose height libadwaita gives once the
-//    window is laid out (AdwToolbarView's top bar), so a size set before that is the window's;
+//  - sizes: the layout area is below ActionUI's header bar, whose height ActionUI measured when it
+//    filled the window (actionUIGetWindowBarsHeight), added to a content or layout size;
 //  - the saved frame (frameAutosaveName) is not kept yet (the design note's question 3);
 //  - a modal run is a nested GLib main loop, with the window modal over the app's active window.
 //  Main thread only.
@@ -41,13 +41,14 @@ class OMCLinuxHostedWindow;
 // The windows whose RunModal is on the stack, innermost last (OMCEndHostedWindowModalRuns)
 std::vector<OMCLinuxHostedWindow *> sModalWindows;
 
-// The height of ActionUI's header bar above the layout area: its AdwToolbarView's top bars, known
-// once the window is laid out; 0 before that
+// The height of the bars ActionUI put above the layout area (its header bar, a subtitle line), as
+// it measured them when it filled the window: what a size below the bars adds to make the window's
 int
-TopBarHeight(GtkWindow *inWindow)
+BarsHeight(CFStringRef inWindowUUID)
 {
-	GtkWidget *content = ADW_IS_APPLICATION_WINDOW(inWindow) ? adw_application_window_get_content(ADW_APPLICATION_WINDOW(inWindow)) : nullptr;
-	return ((content != nullptr) && ADW_IS_TOOLBAR_VIEW(content)) ? adw_toolbar_view_get_top_bar_height(ADW_TOOLBAR_VIEW(content)) : 0;
+	std::string uuid = ACFStringToUTF8(inWindowUUID);
+	double height = actionUIGetWindowBarsHeight(uuid.c_str());
+	return (height > 0) ? (int)height : 0;
 }
 
 class OMCLinuxHostedWindow : public OMCHostedWindow
@@ -151,7 +152,7 @@ public:
 							{
 								if(mClosed || (inWidth <= 0) || (inHeight <= 0))
 									return;
-								gtk_window_set_default_size(mWindow, (int)inWidth, (int)inHeight + TopBarHeight(mWindow));
+								gtk_window_set_default_size(mWindow, (int)inWidth, (int)inHeight + BarsHeight(mWindowUUID));
 							}
 
 	virtual void			SetKeyChangeCallbacks(std::function<void()> inOnBecameKey, std::function<void()> inOnResignedKey) override
@@ -348,11 +349,12 @@ OMCCreateHostedWindow(const OMCHostedWindowSpec &inSpec, std::function<void()> i
 	gtk_window_set_resizable(GTK_WINDOW(window), inSpec.resizable);
 	if((inSpec.contentWidth > 0) || (inSpec.contentHeight > 0))
 	{
+		// The spec's content size is the layout area's, below the bars: the bars' height is added
 		int width = 0;
 		int height = 0;
 		gtk_window_get_default_size(GTK_WINDOW(window), &width, &height);
 		gtk_window_set_default_size(GTK_WINDOW(window), (inSpec.contentWidth > 0) ? (int)inSpec.contentWidth : width,
-									(inSpec.contentHeight > 0) ? (int)inSpec.contentHeight : height);
+									(inSpec.contentHeight > 0) ? (int)inSpec.contentHeight + BarsHeight(windowUUID) : height);
 	}
 	if(inSpec.level != OMCHostedWindowLevel::normal)
 	{

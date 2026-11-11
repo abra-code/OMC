@@ -31,6 +31,7 @@
 #include "OMCURLParse.h"
 #include "OMCEngineActivity.h"
 #include "OMCTestHost.h"
+#include "ActionUIC.h"
 #include "OMCWindowHost.h"
 #include "OMCLog.h"
 #include "ACFString.h"
@@ -116,6 +117,10 @@ void
 OnStartup(GApplication *inApp, gpointer)
 {
 	(void)inApp;
+	// ActionUI's main-actor work (its C calls from other threads, the remote bridge's answers) runs
+	// under GLib's loop from now, not only once the first window is filled: the launch commands and
+	// a Python handler may need it before any window
+	actionUIInstallMainLoopBridge();
 	OMCHandleAppLifecycleEvent(OMCAppLifecycleEvent::WillLaunch);
 	OMCAppletActions actions;
 	actions.runMainCommand = AppletRunMainCommand;
