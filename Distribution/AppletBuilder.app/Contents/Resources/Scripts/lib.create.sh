@@ -178,7 +178,7 @@ applet_create_from_template() {
     /bin/mv "$new_app_path/Contents/MacOS/$original_name" \
             "$new_app_path/Contents/MacOS/$applet_name" 2>/dev/null
 
-    # Full rename pipeline (plist, nibs, scripts, credits, URL scheme)
+    # Full rename pipeline (plist, scripts, credits, URL scheme)
     applet_rename_contents "$new_app_path" "$original_name" "$applet_name"
     if [ $? -ne 0 ]; then
         # The reason was already reported; a second ab_report would overwrite it in the

@@ -5,7 +5,8 @@
   "removedKeys": {
     "SEND_TASK_TO_BACKGROUND_APP": { "note": "background-app delegation is no longer supported" },
     "NS_SERVICE_ITEM": { "note": "macOS Services are declared via NSServices in Info.plist now" },
-    "IS_COCOA": { "note": "removed; delete it" }
+    "IS_COCOA": { "note": "removed; delete it" },
+    "NIB_DIALOG": { "refused": true, "replacement": "ACTIONUI_WINDOW", "note": "nib dialogs were removed in 6.0; the engine shows an alert and cancels the command" }
   },
   "mutuallyExclusiveGroups": [
     ["ACTIVATE_ONLY_IN"], ["NEVER_ACTIVATE_IN"]
@@ -64,7 +65,6 @@
     "OUTPUT_WINDOW_SETTINGS": { "types": ["dict"], "subschema": "OUTPUT_WINDOW_SETTINGS", "appliesWhen": "mode:output_window" },
     "PROGRESS": { "types": ["dict"], "subschema": "PROGRESS", "appliesWhen": "mode:popen", "description": "Progress dialog; created lazily for popen-based modes (incl. exe_script_file). Not just output-window modes." },
     "END_NOTIFICATION": { "types": ["dict"], "subschema": "END_NOTIFICATION", "appliesWhen": "mode:async", "appliesWhenSeverity": "info" },
-    "NIB_DIALOG": { "types": ["dict"], "subschema": "NIB_DIALOG" },
     "ACTIONUI_WINDOW": { "types": ["dict"], "subschema": "ACTIONUI_WINDOW" },
     "NIB_CONTROL_MULTIPLE_SELECTION_ITERATION": { "types": ["dict"], "subschema": "NIB_CONTROL_MULTIPLE_SELECTION_ITERATION", "description": "Legacy; iterator is a stub in the base controller." },
 

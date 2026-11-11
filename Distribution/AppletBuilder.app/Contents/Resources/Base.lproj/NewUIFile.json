@@ -21,17 +21,6 @@
             "title": "Name",
             "prompt": "Window"
           }
-        },
-        {
-          "type": "Picker",
-          "id": 842,
-          "properties": {
-            "title": "Type",
-            "options": [
-              {"title": "ActionUI (JSON)", "tag": "actionui"},
-              {"title": "Nib (Interface Builder)", "tag": "nib"}
-            ]
-          }
         }
       ]
     },

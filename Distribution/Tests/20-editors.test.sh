@@ -53,11 +53,13 @@ check "and the file is not dirty"      ""      "$(ab_pb_get PB_UIFILES_DIRTY)"
 
 section "3. selecting a nib offers only what applies to a nib"
 # A compiled nib is a directory, not text: the JSON tools would produce nonsense
-# and Save would write a directory's worth of nothing over it.
+# and Save would write a directory's worth of nothing over it. No template has a
+# nib since 6.0, so the fixture is a nib left in an applet made before it.
 
 ui_reset
-nibproject="$(ab_make_project Legacy Empty)"
-nib="$nibproject/Contents/Resources/Base.lproj/MainMenu.nib"
+nibproject="$(ab_make_project Legacy)"
+nib="$nibproject/Contents/Resources/Base.lproj/Legacy.nib"
+/bin/mkdir -p "$nib" && printf 'nib\n' > "$nib/keyedobjects.nib"
 check_exists "the fixture really has a nib" "$nib"
 omc_table_cell $UI_TABLE_ID 2 "$nib"
 omc_run AppletBuilder.uifiles.selected
@@ -67,7 +69,7 @@ check "Prettify is withdrawn"          "0"     "$(ui_enabled $UI_PRETTIFY_BTN_ID
 check "Preview is withdrawn"           "0"     "$(ui_enabled $UI_PREVIEW_BTN_ID)"
 check "Save is withdrawn"              "0"     "$(ui_enabled $UI_SAVE_BTN_ID)"
 check "Reveal still works on it"       "1"     "$(ui_enabled $UI_REVEAL_BTN_ID)"
-check "and the pane explains itself"   "1"     "$(ui_value $UI_DETAIL_ID | /usr/bin/grep -c 'Interface Builder Nib')"
+check "and the pane explains itself"   "1"     "$(ui_value $UI_DETAIL_ID | /usr/bin/grep -c 'not used since 6.0')"
 
 section "4. selecting nothing shuts the whole toolbar down"
 

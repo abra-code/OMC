@@ -14,4 +14,3 @@ if [ -z "$project_path" ] && [ -n "$OMC_PARENT_DIALOG_GUID" ]; then
 fi
 
 set_value "$NEWUI_NAME_ID" "NewDialog"
-set_value "$NEWUI_TYPE_ID" "actionui"

@@ -23,7 +23,7 @@ cannot reach cfprefsd - see section 4 - which skips two sections and says so).
 | 91 commands | `Resources/Command.json` | one per UI action, dispatched by `COMMAND_ID` |
 | 110 handler scripts | `Resources/Scripts/` | the actual logic, one file per command plus 9 shared libs |
 | 14 window documents | `Resources/Base.lproj/*.json` | ActionUI windows, sheets and the menu bar |
-| 5 applet templates | `Resources/Templates/*.applet` | what "New Applet" copies from |
+| 3 applet templates | `Resources/Templates/*.applet` | what "New Applet" copies from |
 | 2 verifiers | `Contents/Library/{command,actionui}_verifier/` | Python schema validators |
 | ActionUI verifier (Swift) | `Contents/Helpers/actionui-verify` | preferred over the Python ActionUI verifier, which is the fallback; reads its `schemas/` |
 | agent CLI | `Resources/Agents/appletbuilder` | `create`/`validate`/`build`/`test`/`prettify`/`preview` |
@@ -86,8 +86,8 @@ alert when the file changed underneath. All three branches of that alert are
 exercised, because that is where a wrong answer silently destroys a user's work:
 Save Anyway overwrites, Reload from Disk keeps the disk copy and does not write,
 Cancel leaves both copies alone and keeps the document dirty. Also: the UI Files
-table excludes the command manifest, a `.nib` gets only the buttons that apply to
-it, Prettify and Validate report through the error window, the Commands tab edits
+table excludes the command manifest, a `.nib` left from before 6.0 gets only the buttons that apply to
+it and says it is unused, Prettify and Validate report through the error window, the Commands tab edits
 one manifest entry in place, and invalid JSON never reaches the manifest. Two sections guard things a handler
 test cannot reach on its own: that a manifest save leaves the file's permissions
 alone, and that every `mktemp` template in the shipped bundle - handlers, agent

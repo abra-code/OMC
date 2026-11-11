@@ -1,5 +1,5 @@
 #!/bin/bash
-# AppletBuilder.uifiles.loaded - Populate UI Files table (nibs + ActionUI JSONs)
+# AppletBuilder.uifiles.loaded - Populate UI Files table (ActionUI JSONs, and nibs left from before 6.0)
 
 source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.tables.sh"
 

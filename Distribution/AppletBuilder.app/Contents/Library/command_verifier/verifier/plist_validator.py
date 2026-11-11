@@ -310,7 +310,10 @@ class PlistValidator:
     def _key_deprecation(self, path: str, key: str, info: dict) -> ValidationIssue:
         replacement = info.get("replacement")
         note = info.get("note")
-        if info.get("removed"):
+        if info.get("refused"):
+            # still recognized by the engine, which refuses the command rather than ignoring the key
+            msg = f"'{key}' is no longer supported"
+        elif info.get("removed"):
             msg = f"'{key}' is removed and ignored by the engine"
         else:
             msg = f"'{key}' is deprecated"

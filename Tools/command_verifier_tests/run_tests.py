@@ -101,6 +101,26 @@ _DIALOG_BUNDLE = """<?xml version="1.0" encoding="UTF-8"?>
 </dict></plist>
 """
 
+# A NIB_DIALOG command, as applets made before 6.0 have: the engine refuses it at run
+# time, so the verifier warns (the build goes on) rather than erroring, and no longer
+# looks for the nib named by NIB_NAME (which here does not exist).
+_NIB_BUNDLE = """<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+  <key>COMMAND_LIST</key><array>
+    <dict>
+      <key>NAME</key><string>MyApp</string>
+      <key>COMMAND_ID</key><string>myapp.legacy</string>
+      <key>EXECUTION_MODE</key><string>exe_shell_script</string>
+      <key>NIB_DIALOG</key><dict>
+        <key>NIB_NAME</key><string>Gone</string>
+      </dict>
+    </dict>
+  </array>
+  <key>VERSION</key><integer>2</integer>
+</dict></plist>
+"""
+
 # A command with no executable body and no dialog/chain — a no-op. Should be reported
 # at info level only (never error/warning), so the bundle still exits 0.
 _NOOP_BUNDLE = """<?xml version="1.0" encoding="UTF-8"?>
@@ -392,6 +412,14 @@ def test_layer2() -> None:
         check("dialog-only no-COMMAND → exit 0", rc == 0, f"got {rc}: {out.strip()}")
         check("dialog-only: no error/warning emitted",
               "[ERROR]" not in out and "[WARNING]" not in out, out.strip())
+
+        # NIB_DIALOG (removed in 6.0): a warning naming the replacement, no error.
+        legacy = _make_bundle(Path(d) / "Legacy.app", _NIB_BUNDLE, [])
+        rc, out = run(str(legacy))
+        check("NIB_DIALOG → exit 2 (warnings, no errors)", rc == 2, f"got {rc}: {out.strip()}")
+        check("NIB_DIALOG: said to be no longer supported, with its replacement",
+              "'NIB_DIALOG' is no longer supported; use 'ACTIONUI_WINDOW'" in out, out.strip())
+        check("NIB_DIALOG: its missing nib is not looked for", "NIB_NAME" not in out, out.strip())
 
         # No body, no dialog/chain → info only, still exit 0.
         noop = _make_bundle(Path(d) / "Noop.app", _NOOP_BUNDLE, [])

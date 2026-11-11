@@ -9,7 +9,7 @@ ensure_help_docs_converted
 selected_path=$(pb_get "$PB_UIFILES_SELECTED")
 
 # A menu-bar document (MainMenu.json) has a top-level JSON array; a view document
-# has an object root. Nib bundles are directories.
+# has an object root. Nib bundles are directories (unused since 6.0: the migration guide).
 is_menubar="no"
 if [ -f "$selected_path" ]; then
     if [ "$(/usr/bin/basename "$selected_path")" = "MainMenu.json" ]; then
@@ -20,7 +20,7 @@ if [ -f "$selected_path" ]; then
 fi
 
 if [ -d "$selected_path" ]; then
-    start_page="file://${HELP_HTML_DIR}/Nib-Guide.html"
+    start_page="file://${HELP_HTML_DIR}/nib_to_actionui_migration.html"
 elif [ "$is_menubar" = "yes" ]; then
     start_page="file://${HELP_HTML_DIR}/ActionUI-MenuBar-JSON-Guide.html"
 else

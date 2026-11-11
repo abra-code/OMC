@@ -97,28 +97,6 @@ applet_install_icon() {
     return $( [ $success -eq 1 ] && echo 0 || echo 1 )
 }
 
-# Recompile MainMenu.nib with new name
-applet_recompile_nib() {
-    local app_path="$1"
-    local old_name="$2"
-    local new_name="$3"
-
-    local nib_dir="$app_path/Contents/Resources/Base.lproj/MainMenu.nib"
-    local designable="$nib_dir/designable.nib"
-
-    if [ ! -f "$designable" ]; then
-        return 0
-    fi
-
-    /usr/bin/sed -i '' "s/$old_name/$new_name/g" "$designable"
-
-    local temp_nib="$app_path/Contents/Resources/Base.lproj/temp.nib"
-    /usr/bin/xcrun ibtool --compile "$temp_nib" --flatten NO "$nib_dir"
-
-    /bin/rm -rf "$nib_dir"
-    /bin/mv "$temp_nib" "$nib_dir"
-}
-
 # Finalize: touch + register with Launch Services
 applet_finalize() {
     local app_path="$1"
@@ -160,35 +138,6 @@ applet_rename_scripts() {
         /usr/bin/sed -i '' "s/${old_name}/${new_name}/g" "$script"
         if [ "$old_lower" != "$old_name" ]; then
             /usr/bin/sed -i '' "s/${old_lower}/${new_lower}/g" "$script"
-        fi
-    done
-}
-
-# Recompile all non-MainMenu nibs
-applet_recompile_other_nibs() {
-    local app_path="$1"
-    local old_name="$2"
-    local new_name="$3"
-
-    local lproj_dir="$app_path/Contents/Resources/Base.lproj"
-    # Declared, so it cannot leak into applet_recompile_nib, which reads a
-    # variable of this name and does "rm -rf" on it. That function declares its
-    # own, but a leaked path aimed at a recursive delete is not a risk to leave
-    # standing on the assumption every future reader will remember to.
-    local nib_dir
-    for nib_dir in "$lproj_dir"/*.nib; do
-        [ ! -d "$nib_dir" ] && continue
-        local nib_base=$(/usr/bin/basename "${nib_dir%.nib}")
-        [ "$nib_base" = "MainMenu" ] && continue
-        local designable="$nib_dir/designable.nib"
-        if [ -f "$designable" ]; then
-            /usr/bin/sed -i '' "s/$old_name/$new_name/g" "$designable"
-            local temp_nib="$lproj_dir/temp_recompile.nib"
-            /usr/bin/xcrun ibtool --compile "$temp_nib" --flatten NO "$nib_dir" 2>/dev/null
-            if [ -d "$temp_nib" ]; then
-                /bin/rm -rf "$nib_dir"
-                /bin/mv "$temp_nib" "$nib_dir"
-            fi
         fi
     done
 }
@@ -287,10 +236,6 @@ applet_rename_contents() {
         "$new_name sends AppleEvents to other apps to provide functionality unique to this applet."
     applet_update_url_scheme "$plist" "$new_name"
     local url_scheme_rc=$?
-
-    # Recompile nibs
-    applet_recompile_nib "$app_path" "$old_name" "$new_name"
-    applet_recompile_other_nibs "$app_path" "$old_name" "$new_name"
 
     # Update the command file: rename any string value equal to the old app name
     # (NAME, window titles, …). Done per-format so it works for Command.json too.
@@ -1130,8 +1075,8 @@ ${droppings}
 
 # Sanity-check Info.plist *content* against the on-disk bundle. Runs AFTER the
 # framework/executable are copied so CFBundleExecutable can be verified against
-# the real binary. Missing executable / nib are errors (halt); icon problems are
-# warnings (unless AB_WARNINGS_AS_ERRORS is on).
+# the real binary. A missing executable is an error (halt); an NSMainNibFile left from
+# before 6.0 and icon problems are warnings (unless AB_WARNINGS_AS_ERRORS is on).
 validate_info_content() {
     local target_path="$1"
     local contents_dir="$target_path/Contents"
@@ -1169,64 +1114,38 @@ validate_info_content() {
         ab_log "  CFBundleExecutable '${exe}': OK"
     fi
 
-    # NSMainNibFile → matching .nib must exist in Resources, Base.lproj, or any
-    # localized .lproj (English.lproj / en.lproj / …). Cocoa resolves the main nib
-    # through the bundle's localization search, so a nib living in the development
-    # region's .lproj is valid. Only checked when present (an app may use a
-    # storyboard or no main nib).
+    # NSMainNibFile: since 6.0 the applet's executable never loads a main nib; it builds the
+    # standard macOS menu bar (App/File/Edit/Format/Window/Help) in code, and an optional
+    # MainMenu.json layers additions/mutations/removals on top. An applet made before 6.0
+    # still has the key and a MainMenu.nib: a warning, as both are ignored.
     local nib
     nib=$(plist_read "$info_plist" NSMainNibFile)
     if [ -n "$nib" ]; then
-        local nib_base="${nib%.nib}"
-        local nib_found=""
-        if [ -e "$resources_dir/${nib_base}.nib" ] || [ -e "$resources_dir/Base.lproj/${nib_base}.nib" ]; then
-            nib_found="yes"
-        else
-            local lproj
-            for lproj in "$resources_dir"/*.lproj; do
-                [ -d "$lproj" ] || continue
-                if [ -e "$lproj/${nib_base}.nib" ]; then
-                    nib_found="yes"
-                    break
-                fi
-            done
-        fi
-        if [ -n "$nib_found" ]; then
-            ab_log "  NSMainNibFile '${nib}': OK"
-        else
-            ab_log "  NSMainNibFile '${nib}': MISSING"
-            error_count=$((error_count + 1))
-            report="${report}NSMainNibFile '${nib}': ${nib_base}.nib not found in Resources, Base.lproj, or any .lproj
+        ab_log "  NSMainNibFile '${nib}': ignored since 6.0"
+        warning_count=$((warning_count + 1))
+        report="${report}NSMainNibFile '${nib}' (warning): ignored since 6.0, which builds the menu bar in code (the standard bar plus an optional MainMenu.json). Remove the key from Info.plist and the ${nib%.nib}.nib file; see nib_to_actionui_migration.md.
 
 "
-        fi
     fi
 
-    # Menu source: a nib applet builds its bar from MainMenu.nib (NSMainNibFile,
-    # checked above).  A nibless applet (OMC 5.1+) builds the standard macOS menu
-    # bar (App/File/Edit/Format/Window/Help) programmatically; an optional
-    # MainMenu.json layers additions/mutations/removals on top.  So when
-    # NSMainNibFile is absent neither file is required — just note which menu
-    # source is in effect (informational, no warning either way).
-    if [ -z "$nib" ]; then
-        local menu_json_found=""
-        if [ -e "$resources_dir/MainMenu.json" ] || [ -e "$resources_dir/Base.lproj/MainMenu.json" ]; then
-            menu_json_found="yes"
-        else
-            local mlproj
-            for mlproj in "$resources_dir"/*.lproj; do
-                [ -d "$mlproj" ] || continue
-                if [ -e "$mlproj/MainMenu.json" ]; then
-                    menu_json_found="yes"
-                    break
-                fi
-            done
-        fi
-        if [ -n "$menu_json_found" ]; then
-            ab_log "  Menu source: standard bar + MainMenu.json overrides"
-        else
-            ab_log "  Menu source: standard bar (programmatic; no MainMenu.json overrides)"
-        fi
+    # Menu source: note which one is in effect (informational, no warning either way).
+    local menu_json_found=""
+    if [ -e "$resources_dir/MainMenu.json" ] || [ -e "$resources_dir/Base.lproj/MainMenu.json" ]; then
+        menu_json_found="yes"
+    else
+        local mlproj
+        for mlproj in "$resources_dir"/*.lproj; do
+            [ -d "$mlproj" ] || continue
+            if [ -e "$mlproj/MainMenu.json" ]; then
+                menu_json_found="yes"
+                break
+            fi
+        done
+    fi
+    if [ -n "$menu_json_found" ]; then
+        ab_log "  Menu source: standard bar + MainMenu.json overrides"
+    else
+        ab_log "  Menu source: standard bar (programmatic; no MainMenu.json overrides)"
     fi
 
     # CFBundleIconFile → Resources/<icon>.icns should exist (warning only).

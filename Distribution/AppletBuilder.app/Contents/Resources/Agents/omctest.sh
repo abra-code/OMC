@@ -685,7 +685,7 @@ omctest_prepare_env() { # <app> <label>
     OMC_ACTIONUI_WINDOW_UUID="OMCTEST-$label-$$"
     OMC_PARENT_DIALOG_GUID=""
     OMC_CURRENT_COMMAND_GUID="OMCTEST-CMD"
-    # In the engine's always-exported set. NIB dialogs are out of scope for v1,
+    # In the engine's always-exported set (nib dialogs are gone since 6.0),
     # so handlers see it present and empty rather than absent.
     OMC_NIB_DLG_GUID=""
     OMC_OBJ_PATH=""

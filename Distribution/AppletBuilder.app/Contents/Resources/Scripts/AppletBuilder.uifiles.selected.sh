@@ -29,14 +29,15 @@ set_enabled "$UI_REVEAL_BTN_ID" true
 set_enabled "$UI_EXT_EDIT_BTN_ID" true
 
 if [ -d "$selected_path" ]; then
-    # It's a .nib bundle — hide JSON-specific buttons, show placeholder in editor
+    # It's a .nib bundle, left from an applet made before 6.0 - hide JSON-specific buttons, explain
     set_enabled "$UI_VALIDATE_BTN_ID" false
     set_enabled "$UI_PRETTIFY_BTN_ID" false
     set_enabled "$UI_PREVIEW_BTN_ID" false
     set_enabled "$UI_SAVE_BTN_ID" false
     set_visible "$UI_TEMPLATE_PICKER_ID" false
-    set_value "$UI_DETAIL_ID" "Interface Builder Nib — use 'Edit' to open in Xcode
-Use Help button to learn about OMC nib controls"
+    set_value "$UI_DETAIL_ID" "Interface Builder nib - not used since 6.0, which shows only ActionUI windows.
+Convert it to an ActionUI JSON window, then remove it. 'Edit' opens it in Xcode for reference;
+the Help button explains the conversion."
     set_value "$UI_EDITED_LABEL_ID" ""
 elif [ -f "$selected_path" ]; then
     # JSON or other text file — enable all toolbar buttons

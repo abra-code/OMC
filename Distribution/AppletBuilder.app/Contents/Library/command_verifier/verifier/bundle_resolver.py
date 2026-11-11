@@ -6,7 +6,7 @@ references actually exists / resolves:
 
   * script map      — Contents/Resources/Scripts/* keyed by lowercase name-sans-ext
                       (the engine resolves exe_script_file by lowercase COMMAND_ID).
-  * resource index  — *.json and *.nib basenames (for JSON_NAME / NIB_NAME).
+  * resource index  — *.json basenames (for JSON_NAME).
   * command graph   — declared COMMAND_IDs (+ group) ∪ synthesizable script IDs.
                       The no-COMMAND_ID main command also contributes its implicit
                       '<NAME>.main' / 'main' / 'top!' ids so references resolve.
@@ -26,7 +26,8 @@ from pathlib import Path
 from .errors import ValidationIssue
 from .exec_modes import effective_execution_mode, SCRIPT_FILE_MODES, INLINE_COMMAND_MODES
 
-# Subcommand-ID reference keys inside NIB_DIALOG / ACTIONUI_WINDOW.
+# Subcommand-ID reference keys inside ACTIONUI_WINDOW (and NIB_DIALOG, which the engine
+# refuses since 6.0 but still reads for these keys).
 _SUBCOMMAND_REF_KEYS = (
     "INIT_SUBCOMMAND_ID", "END_OK_SUBCOMMAND_ID", "END_CANCEL_SUBCOMMAND_ID",
     "WINDOW_DID_ACTIVATE_SUBCOMMAND_ID", "WINDOW_DID_DEACTIVATE_SUBCOMMAND_ID",
@@ -51,8 +52,8 @@ _NO_BODY_OK_KEYS = (
 # "ActionID": actionID, onDropActionID, valueChangeActionID, viewDidLoadActionID,
 # doubleClickActionID, sheetOnDismissActionID, ... (25+ across the ActionUI schemas,
 # all declared "types": ["string"]). Every one of them names a command the engine
-# dispatches verbatim: ActionUI's default action handler calls
-# OMCWindowController's dispatchCommand:, which resolves the string through
+# dispatches verbatim: ActionUI's default action handler calls the window's
+# DispatchCommand (OMCActionUIWindow.cpp), which resolves the string through
 # FindCommandIndex the same way NEXT_COMMAND_ID is resolved. A typo there is a
 # control that silently does nothing, so cross-check them like subcommand refs.
 # Match on the suffix rather than a fixed key list so ActionUI can add handler
@@ -63,12 +64,12 @@ _NO_BODY_OK_KEYS = (
 _ACTION_ID_SUFFIX = "ActionID"
 
 # Ids the engine answers without a COMMAND_LIST entry. These are the five dotted
-# members of OMCDialog::IsPredefinedDialogCommandID's set (OMCDialog.mm), which
+# members of OMCDialog::IsPredefinedDialogCommandID's set (OMCDialog.cpp), which
 # also holds the Carbon-legacy 4-char ids "ok  " / "cncl" / "ini!" / "end!" /
 # "cnc!" - deliberately NOT whitelisted, since those run only when declared as a
 # same-NAME subcommand (FindSubcommandIndex is strict), so an undeclared one is
 # genuinely dead wiring. Of the five below, only omc.dialog.ok / .cancel are
-# answered natively (OMCWindowController's isOkeyed / isCanceled close path); the
+# answered natively (the window's OK / cancel close path, OMCActionUIWindow.cpp); the
 # other three likewise need a declaration to do anything, and are whitelisted only
 # because flagging a conventional id is more noise than help.
 _RESERVED_ACTION_IDS = frozenset({
@@ -162,7 +163,6 @@ class BundleResolver:
         self._scripts_lc: set[str] | None = None
         self._scripts_orig: set[str] | None = None
         self._json_lc: set[str] | None = None
-        self._nib_lc: set[str] | None = None
 
     # ── index builders (lazy) ─────────────────────────────────────────────────
     def _scan_scripts(self) -> None:
@@ -222,12 +222,6 @@ class BundleResolver:
         if self._json_lc is None:
             self._json_lc = {p.stem.lower() for p in self.resources.rglob("*.json")} if self.resources.is_dir() else set()
         return self._json_lc
-
-    def _nib_names(self) -> set[str]:
-        if self._nib_lc is None:
-            # .nib can be a directory or a file; rglob matches both as path entries.
-            self._nib_lc = {p.stem.lower() for p in self.resources.rglob("*.nib")} if self.resources.is_dir() else set()
-        return self._nib_lc
 
     # ── entry point ───────────────────────────────────────────────────────────
     def cross_reference(self, data: dict, plist_path: str) -> list[ValidationIssue]:
@@ -309,14 +303,6 @@ class BundleResolver:
                 issues.append(ValidationIssue(
                     "error", f"{path}.ACTIONUI_WINDOW.JSON_NAME",
                     f"no JSON resource named '{name}.json' found in the bundle"
-                ))
-        nib = cmd.get("NIB_DIALOG")
-        if isinstance(nib, dict):
-            name = nib.get("NIB_NAME")
-            if isinstance(name, str) and name and name.lower() not in self._nib_names():
-                issues.append(ValidationIssue(
-                    "error", f"{path}.NIB_DIALOG.NIB_NAME",
-                    f"no nib named '{name}.nib' found in the bundle"
                 ))
         return issues
 

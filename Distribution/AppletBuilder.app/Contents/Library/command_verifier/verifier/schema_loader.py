@@ -11,7 +11,7 @@ class SchemaLoader:
     Schemas live in schemas/:
       Root.json     — COMMAND_LIST + VERSION
       Command.json  — all top-level command keys
-      <SUBDICT>.json — one per nested sub-dictionary (NIB_DIALOG, PROGRESS, …)
+      <SUBDICT>.json — one per nested sub-dictionary (ACTIONUI_WINDOW, PROGRESS, …)
       _shared/*.json — reusable fragments referenced via "subschema"
     """
 
@@ -26,7 +26,7 @@ class SchemaLoader:
         return self._load("Command")
 
     def subdict_schema(self, name: str) -> dict | None:
-        """Load a sub-dictionary schema by name (e.g. 'NIB_DIALOG' or '_shared/NavDialog')."""
+        """Load a sub-dictionary schema by name (e.g. 'ACTIONUI_WINDOW' or '_shared/NavDialog')."""
         return self._load(name)
 
     def _load(self, name: str) -> dict | None:

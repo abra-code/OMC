@@ -51,7 +51,7 @@ if [ -n "$new_name" ] && [ "$new_name" != "$old_name" ]; then
     /bin/mv "$project_path/Contents/MacOS/$old_exe" \
             "$project_path/Contents/MacOS/$new_name" 2>/dev/null
 
-    # Full rename pipeline (plist, nibs, scripts, credits, URL scheme)
+    # Full rename pipeline (plist, scripts, credits, URL scheme)
     applet_rename_contents "$project_path" "$old_exe" "$new_name"
 
     # Update bundle ID to match new name
