@@ -4,7 +4,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include "ACFPropertyList.h"
-#include "OMCDialogControlPortName.h"
+#include "OMCDialogControlSender.h"
 #include "OMCEngineTempDir.h"
 
 static char sFilePath[1024];
@@ -187,7 +187,7 @@ int main (int argc, const char * argv[])
 	CFTypeRef theResult = NULL;
 	CFMutableDictionaryRef plistDict = NULL;
 	CFMutableDictionaryRef appendListItemsDict = NULL;
-	CFMessagePortRef remotePort = NULL;
+	OMCDialogControlSender *dialogPort = NULL;
 
 	if(argc < 4)
 	{
@@ -336,13 +336,16 @@ int main (int argc, const char * argv[])
 		valueStr = CFStringCreateWithCString(kCFAllocatorDefault, argv[4], kCFStringEncodingUTF8);
 	}
 
-	CFStringRef portName = OMCCreateDialogControlPortName(argv[1], false /*sender*/);
-	if(portName != NULL)
+	int openError = 0;
+	dialogPort = OMCDialogControlSenderOpen(argv[1], &openError); // NULL unless the dialog is listening
+	if((dialogPort == NULL) && (openError != 0))
 	{
-		remotePort = CFMessagePortCreateRemote(kCFAllocatorDefault, portName);//should return non-null if listener port created
+		fprintf(stderr, "An error occurred when sending request to dialog port: %d\n", openError);
+		result = openError;
+		goto error_exit;
 	}
 
-	if(remotePort == NULL)
+	if(dialogPort == NULL)
 	{//not communicating through port - write to file
 		//fprintf(stderr, "Could not create a communication port with dialog. Saving params to plist file\n");
 
@@ -777,21 +780,21 @@ int main (int argc, const char * argv[])
         if(!success)
             fprintf(stderr, "An error occurred when writing property list to %s\n", sFilePath);
     }
-    else if(remotePort != NULL)
+    else if(dialogPort != NULL)
     {
         CFDataRef plistData = CFPropertyListCreateData(kCFAllocatorDefault, plistDict, kCFPropertyListBinaryFormat_v1_0, 0, NULL);
         if(plistData != NULL)
         {
-            result = CFMessagePortSendRequest(remotePort, 0/*msgid*/, plistData, 5/*send timeout*/, 0/*rcv timout*/, NULL/*kCFRunLoopDefaultMode*/, NULL/*replyData*/);
+            result = OMCDialogControlSenderSend(dialogPort, plistData);
             if(result != 0)
                 fprintf(stderr, "An error occurred when sending request to dialog port: %d\n", result);
+            CFRelease(plistData);
         }
     }
 
 error_exit:
 
-	if(remotePort != NULL)
-		CFRelease(remotePort);
+	OMCDialogControlSenderClose(dialogPort);
 
     return result;
 }

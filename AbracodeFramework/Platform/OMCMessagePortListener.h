@@ -4,7 +4,7 @@
 //
 //  A named local port that receives omc_dialog_control's messages for one dialog. Platform code:
 //  - macOS: a CFMessagePort, whose run loop source is in the common modes of the main run loop;
-//  - Linux: to be written with the Linux port (a Unix domain socket; see the port plan).
+//  - Linux: a Unix domain socket watched from GLib's main context (Platform/Linux/OMCMessagePortListener.cpp).
 //
 
 #pragma once

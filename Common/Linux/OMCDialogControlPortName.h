@@ -4,10 +4,9 @@
 //  The name of the port a dialog receives omc_dialog_control's messages on, the counterpart of the
 //  Apple header of this name. Linux: the path of a Unix domain socket in the engine's private
 //  per-user folder (OMCEngineTempDir.h), which the dialog and the tool find the same way; no app
-//  group. The socket backend itself is still to be written (the port plan's Phase 7); the probe
-//  ~/git/AppleCoreLibrariesForLinux/build/probe/dialog-control-socket/REPORT.md lists what it must
-//  take care of, among them the 107-byte limit on a socket's path, which this name can exceed when
-//  the folder is under a long home path (no $XDG_RUNTIME_DIR).
+//  group. This path can exceed the 107-byte limit on a socket's path when the folder is under a long
+//  home path (no $XDG_RUNTIME_DIR), so both ends reach the socket through the folder's descriptor
+//  (OMCUnixSocketAddress.h).
 //
 
 #pragma once

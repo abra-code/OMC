@@ -22,7 +22,6 @@
 #include "OMCAlerts.h"
 #include "OMCAppShell.h"
 #include "OMCWindowHost.h"
-#include "OMCMessagePortListener.h"
 #include "OMCLog.h"
 #include <atomic>
 #include <unistd.h>
@@ -170,15 +169,3 @@ OMCCreateHostedWindow(const OMCHostedWindowSpec &inSpec, std::function<void()> i
 }
 
 void OMCResetHostedWindowCascading() { }
-
-#pragma mark - omc_dialog_control's port (Platform/OMCMessagePortListener.h): Unix socket in Phase 7
-
-std::unique_ptr<OMCMessagePortListener>
-OMCMessagePortListener::Create(CFStringRef inPortName, Receive inReceive, void *inContext)
-{
-	(void)inPortName;
-	(void)inReceive;
-	(void)inContext;
-	OMC_LINUX_NOT_YET("OMCMessagePortListener::Create");
-	return nullptr;
-}

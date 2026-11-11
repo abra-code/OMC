@@ -23,6 +23,7 @@
 /* Begin PBXBuildFile section */
 		1D0A1B2C2F6C000000000106 /* ACFJSON.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1D0A1B2C2F6C000000000101 /* ACFJSON.cpp */; };
 		1D0A1B2C2F6C000000000107 /* ACFPath.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1D0A1B2C2F6C000000000103 /* ACFPath.cpp */; };
+		1D0A1B2C2F6C000000000111 /* OMCDialogControlSender.c in Sources */ = {isa = PBXBuildFile; fileRef = 1D0A1B2C2F6C000000000110 /* OMCDialogControlSender.c */; };
 		1D0A1B2C2F6C000000000108 /* yyjson.c in Sources */ = {isa = PBXBuildFile; fileRef = 1D0A1B2C2F6C000000000105 /* yyjson.c */; settings = {COMPILER_FLAGS = "-w"; }; };
 		1D9BCB8222CC98D100F4EAB6 /* ACFPropertyList.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1D9BCB8122CC98D000F4EAB6 /* ACFPropertyList.cpp */; };
 		8DD76F790486A8DE00D96B5E /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 09AB6884FE841BABC02AAC07 /* CoreFoundation.framework */; };
@@ -57,6 +58,8 @@
 		1D0A1B2C2F6C000000000102 /* ACFPath.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ACFPath.h; path = ../Common/ACFPath.h; sourceTree = "<group>"; };
 		1D0A1B2C2F6C000000000103 /* ACFPath.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ACFPath.cpp; path = ../Common/ACFPath.cpp; sourceTree = "<group>"; };
 		1D0A1B2C2F6C000000000104 /* yyjson.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = yyjson.h; path = ../ThirdParty/yyjson/yyjson.h; sourceTree = "<group>"; };
+		1D0A1B2C2F6C000000000110 /* OMCDialogControlSender.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = OMCDialogControlSender.c; path = ../Common/Apple/OMCDialogControlSender.c; sourceTree = "<group>"; };
+		1D0A1B2C2F6C000000000112 /* OMCDialogControlSender.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OMCDialogControlSender.h; path = ../Common/OMCDialogControlSender.h; sourceTree = "<group>"; };
 		1D0A1B2C2F6C000000000105 /* yyjson.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = yyjson.c; path = ../ThirdParty/yyjson/yyjson.c; sourceTree = "<group>"; };
 		09AB6884FE841BABC02AAC07 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = /System/Library/Frameworks/CoreFoundation.framework; sourceTree = "<absolute>"; };
 		1D039D7F2E16872C00D4924A /* omc_dialog_control-target.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "omc_dialog_control-target.xcconfig"; sourceTree = "<group>"; };
@@ -104,6 +107,8 @@
 			isa = PBXGroup;
 			children = (
 				E25EBD56075DE53A005F994C /* main.c */,
+				1D0A1B2C2F6C000000000112 /* OMCDialogControlSender.h */,
+				1D0A1B2C2F6C000000000110 /* OMCDialogControlSender.c */,
 				1D9BCB8122CC98D000F4EAB6 /* ACFPropertyList.cpp */,
 				1D0A1B2C2F6C000000000100 /* ACFJSON.h */,
 				1D0A1B2C2F6C000000000101 /* ACFJSON.cpp */,
@@ -223,6 +228,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				E25EBD57075DE53A005F994C /* main.c in Sources */,
+				1D0A1B2C2F6C000000000111 /* OMCDialogControlSender.c in Sources */,
 				1D9BCB8222CC98D100F4EAB6 /* ACFPropertyList.cpp in Sources */,
 				1D0A1B2C2F6C000000000106 /* ACFJSON.cpp in Sources */,
 				1D0A1B2C2F6C000000000107 /* ACFPath.cpp in Sources */,

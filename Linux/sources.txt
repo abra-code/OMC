@@ -51,6 +51,7 @@ Abracode AbracodeFramework/Platform/Linux/OMCEngineBundle.cpp
 Abracode AbracodeFramework/Platform/Linux/OMCInvoke.cpp
 Abracode AbracodeFramework/Platform/Linux/OMCLog.cpp
 Abracode AbracodeFramework/Platform/Linux/OMCMainThreadSignal.cpp
+Abracode AbracodeFramework/Platform/Linux/OMCMessagePortListener.cpp
 Abracode AbracodeFramework/Platform/Linux/OMCPlatformStubs.cpp
 Abracode AbracodeFramework/Platform/Linux/OMCProcessEnvironment.c
 Abracode AbracodeFramework/Platform/Linux/OMCPythonCachePrefix.cpp
@@ -62,3 +63,5 @@ b64 b64/main.c
 filt filt/main.c
 loco loco/main.c
 omc_next_command omc_next_command/main.c
+omc_dialog_control omc_dialog_control/main.c
+omc_dialog_control Common/Linux/OMCDialogControlSender.c

@@ -85,6 +85,7 @@ let package = Package(
         .executable(name: "filt", targets: ["filt"]),
         .executable(name: "loco", targets: ["loco"]),
         .executable(name: "omc_next_command", targets: ["omc_next_command"]),
+        .executable(name: "omc_dialog_control", targets: ["omc_dialog_control"]),
     ],
     dependencies: [
         .package(path: "../ActionUI"),
@@ -122,8 +123,18 @@ let package = Package(
         tool("filt", []),
         tool("loco", []),
         tool("omc_next_command", ["OMCCommon"]),
-        // omc_dialog_control waits for its Linux sender (a Unix socket, Phase 7): it sends through
-        // CFMessagePort, which Linux's CoreFoundation does not have.
+        tool("omc_dialog_control", ["OMCCommon"]),
+
+        // Linux checks of what macOS covers with the XCTest suite: run each with its arguments
+        // (build-linux.sh does not run them). Not shims: these exist only for Linux.
+        .executableTarget(
+            name: "OMCLinuxPortTests",
+            dependencies: ["Abracode"],
+            path: "Linux/Tests/OMCLinuxPortTests",
+            cSettings: cSettings,
+            cxxSettings: cxxSettings,
+            linkerSettings: foundationLibraries + [.linkedLibrary("glib-2.0")]
+        ),
     ],
     cLanguageStandard: .gnu11,
     cxxLanguageStandard: .gnucxx17
