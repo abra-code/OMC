@@ -9,8 +9,8 @@
 //  OMCCreateCFURLsFromOpenDialog (OMCFilePanels.cpp, portable): in a test launch they are answered by
 //  the test host from the answers a test queued (OMCTestHost.h), otherwise they show the system's
 //  panels through the OMCPlatformRun* functions, implemented per platform: Platform/Apple/OMCFilePanels.mm
-//  (NSSavePanel, NSOpenPanel); a Linux implementation can use ActionUI's panels
-//  (actionUIAppRunSavePanel, actionUIAppRunOpenPanel). Each call blocks until the user answers.
+//  (NSSavePanel, NSOpenPanel), Platform/Linux/OMCPlatformFilePanels.cpp (GtkFileDialog). Each call
+//  blocks until the user answers.
 //  The dialog settings from Command.plist are parsed by GetNavDialogParams (OMCNavigationDialogs.h).
 //
 

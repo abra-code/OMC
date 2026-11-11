@@ -3,18 +3,26 @@
 //  Abracode
 //
 //  Linux checks of the platform UI that a person answers: the alerts and notices of
-//  Platform/Linux/OMCPlatformAlerts.cpp. The program runs its own AdwApplication in the desktop
-//  session and answers each alert itself, as a person would: it finds the dialog among the
-//  application's windows and clicks a button (or closes it), from a timer set before the alert,
-//  which blocks. It can save what the dialogs look like: OMCLinuxUITests [folder for PNG files].
+//  Platform/Linux/OMCPlatformAlerts.cpp and the file panels of OMCPlatformFilePanels.cpp. The
+//  program runs its own AdwApplication in the desktop session and answers each one itself, as a
+//  person would: it finds the dialog among the application's windows and clicks a button (or
+//  closes it, or picks files in GTK's file chooser), from a timer set before the call, which
+//  blocks. It can save what the dialogs look like: OMCLinuxUITests [folder for PNG files].
+//  The panels: GTK shows the desktop's file chooser through its portal, in another process, which
+//  no check can click. So the program turns the portals off for itself (GDK_DEBUG=no-portals, read
+//  when GTK starts) and drives GTK's own chooser. OMCLinuxUITests --portals keeps them and checks
+//  only that a quit ends a panel waiting in the portal.
 //
 //  Needs a desktop session (on the agent-vm box: XDG_RUNTIME_DIR, WAYLAND_DISPLAY,
 //  DBUS_SESSION_BUS_ADDRESS of its GNOME session). Exit status: 0 all passed, 1 a check failed.
 //
 
 #include "OMCAlerts.h"
+#include "OMCFilePanels.h"
+#include "CFObj.h"
 #include "Linux/OMCModalLoop.h"
 #include <adwaita.h>
+#include <glib/gstdio.h>
 #include <cstdio>
 #include <cstring>
 #include <functional>
@@ -306,17 +314,281 @@ RunChecks(GApplication *inApp)
 	}
 }
 
+#pragma mark - File panels
+
+// GtkFileDialog shows GTK's file chooser, GtkFileChooserDialog, which GTK 4.10 deprecated for
+// applications to make themselves; a test drives it through those calls
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+
+// The file chooser shown now, among the process's windows
+GtkWidget *
+FindFileChooser()
+{
+	GListModel *toplevels = gtk_window_get_toplevels();
+	guint count = g_list_model_get_n_items(toplevels);
+	GtkWidget *found = nullptr;
+	for(guint i = 0; (i < count) && (found == nullptr); i++)
+	{
+		GtkWidget *window = GTK_WIDGET(g_list_model_get_item(toplevels, i));
+		if(GTK_IS_FILE_CHOOSER(window) && gtk_widget_get_visible(window))
+			found = window;
+		g_object_unref(window);
+	}
+	return found;
+}
+
+void
+ChooseFile(GtkWidget *inChooser, const std::string &inPath)
+{
+	GFile *file = g_file_new_for_path(inPath.c_str());
+	(void)gtk_file_chooser_set_file(GTK_FILE_CHOOSER(inChooser), file, nullptr);
+	g_object_unref(file);
+}
+
+std::string
+ChooserFolder(GtkWidget *inChooser)
+{
+	GFile *folder = gtk_file_chooser_get_current_folder(GTK_FILE_CHOOSER(inChooser));
+	char *path = (folder != nullptr) ? g_file_get_path(folder) : nullptr;
+	std::string result = (path != nullptr) ? path : "";
+	g_free(path);
+	if(folder != nullptr)
+		g_object_unref(folder);
+	return result;
+}
+
+std::string
+URLPath(CFURLRef inURL)
+{
+	char path[4096];
+	if((inURL == nullptr) || !CFURLGetFileSystemRepresentation(inURL, true, (UInt8 *)path, sizeof(path)))
+		return "(none)";
+	return path;
+}
+
+CFStringRef
+CFString(const std::string &inText)
+{
+	return CFStringCreateWithCString(kCFAllocatorDefault, inText.c_str(), kCFStringEncodingUTF8);
+}
+
+void
+WriteFile(const std::string &inPath)
+{
+	(void)g_file_set_contents(inPath.c_str(), "x", 1, nullptr);
+}
+
+// The panel shows; at its timer the test looks at it, then answers after a while (the chooser
+// loads the folder asynchronously)
+void
+AnswerPanel(std::function<void(GtkWidget *)> inLook, std::function<void(GtkWidget *)> inAnswer)
+{
+	After(1000, [inLook, inAnswer] {
+		GtkWidget *chooser = FindFileChooser();
+		if(chooser == nullptr)
+		{
+			OMCEndModalLoops(); // not found: the panel would wait forever (the checks fail instead)
+			return;
+		}
+		inLook(chooser);
+		After(600, [chooser, inAnswer] {
+			if(FindFileChooser() != chooser)
+			{
+				OMCEndModalLoops();
+				return;
+			}
+			inAnswer(chooser);
+		});
+	});
+}
+
+void
+Respond(GtkWidget *inChooser, int inResponse)
+{
+	gtk_dialog_response(GTK_DIALOG(inChooser), inResponse);
+}
+
+void
+RunPanelChecks(GApplication *inApp)
+{
+	char *made = g_dir_make_tmp("omc-ui-test-XXXXXX", nullptr);
+	if(made == nullptr)
+	{
+		Check("a folder for the panels' files", false);
+		return;
+	}
+	std::string folder = made;
+	g_free(made);
+	std::string image = folder + "/picture.png";
+	std::string text = folder + "/notes.txt";
+	std::string subfolder = folder + "/Projects";
+	WriteFile(image);
+	WriteFile(text);
+	(void)g_mkdir(subfolder.c_str(), 0755);
+	CFObj<CFStringRef> folderString(CFString(folder));
+
+	GtkWidget *window = adw_application_window_new(GTK_APPLICATION(inApp));
+	gtk_window_set_title(GTK_WINDOW(window), "OMC Linux UI tests: panels");
+	gtk_window_set_default_size(GTK_WINDOW(window), 480, 320);
+	adw_application_window_set_content(ADW_APPLICATION_WINDOW(window), gtk_label_new("The applet's window"));
+	gtk_window_present(GTK_WINDOW(window));
+	Pump(500);
+
+	{
+		// Open one file: the message is the title, the prompt the accept button, the folder and the
+		// allowed types are set, over the window
+		std::string title, startFolder, filterName;
+		bool hasPrompt = false, overWindow = false, single = false;
+		AnswerPanel([&](GtkWidget *inChooser) {
+			const char *t = gtk_window_get_title(GTK_WINDOW(inChooser));
+			title = (t != nullptr) ? t : "";
+			hasPrompt = (FindButton(inChooser, "Convert") != nullptr);
+			overWindow = (gtk_window_get_transient_for(GTK_WINDOW(inChooser)) == GTK_WINDOW(window));
+			single = !gtk_file_chooser_get_select_multiple(GTK_FILE_CHOOSER(inChooser)) &&
+					(gtk_file_chooser_get_action(GTK_FILE_CHOOSER(inChooser)) == GTK_FILE_CHOOSER_ACTION_OPEN);
+			startFolder = ChooserFolder(inChooser);
+			GtkFileFilter *filter = gtk_file_chooser_get_filter(GTK_FILE_CHOOSER(inChooser));
+			const char *name = (filter != nullptr) ? gtk_file_filter_get_name(filter) : nullptr;
+			filterName = (name != nullptr) ? name : "(none)";
+			Capture(inChooser, "open-panel");
+			ChooseFile(inChooser, image);
+		}, [](GtkWidget *inChooser) { Respond(inChooser, GTK_RESPONSE_ACCEPT); });
+		const void *types[] = { CFSTR("public.image"), CFSTR("com.example.unknown"), CFSTR("public.png") };
+		CFObj<CFArrayRef> allowed(CFArrayCreate(kCFAllocatorDefault, types, 3, &kCFTypeArrayCallBacks));
+		CFObj<CFArrayRef> urls(OMCPlatformRunOpenPanel(CFSTR("Panel Applet"), CFSTR("Choose a picture to convert"), nullptr, folderString,
+														nullptr, CFSTR("Convert"), allowed, kOMCFilePanelCanChooseFiles));
+		Check("an open panel's title is the message", title == "Choose a picture to convert", title);
+		Check("its accept button is the prompt", hasPrompt);
+		Check("it shows over the window", overWindow);
+		Check("it chooses one file", single);
+		Check("it starts in the default folder", startFolder == folder, startFolder);
+		Check("the allowed types are its filter (an unknown one adds nothing)", filterName == "Images, PNG image", filterName);
+		bool one = (urls != nullptr) && (CFArrayGetCount(urls) == 1);
+		std::string path = one ? URLPath((CFURLRef)CFArrayGetValueAtIndex(urls, 0)) : "(none)";
+		Check("the chosen file comes back as its URL", path == image, path);
+		Pump(400);
+		Check("and the panel is gone", FindFileChooser() == nullptr);
+	}
+
+	{
+		// Several files allowed; canceled: no answer
+		bool multiple = false, noFilter = false;
+		AnswerPanel([&](GtkWidget *inChooser) {
+			multiple = gtk_file_chooser_get_select_multiple(GTK_FILE_CHOOSER(inChooser));
+			noFilter = (gtk_file_chooser_get_filter(GTK_FILE_CHOOSER(inChooser)) == nullptr);
+		}, [](GtkWidget *inChooser) { Respond(inChooser, GTK_RESPONSE_CANCEL); });
+		const void *types[] = { CFSTR("public.data") };
+		CFObj<CFArrayRef> allowed(CFArrayCreate(kCFAllocatorDefault, types, 1, &kCFTypeArrayCallBacks));
+		CFObj<CFArrayRef> urls(OMCPlatformRunOpenPanel(CFSTR("Panel Applet"), nullptr, nullptr, folderString, nullptr, nullptr, allowed,
+														kOMCFilePanelCanChooseFiles | kOMCFilePanelAllowMultipleItems));
+		Check("with multiple items allowed, the panel chooses several", multiple);
+		Check("a type that allows any file sets no filter", noFilter);
+		Check("canceling an open panel answers nothing", urls == nullptr);
+	}
+
+	{
+		// Folders only: a folder comes back as a directory URL
+		bool folderAction = false;
+		AnswerPanel([&](GtkWidget *inChooser) {
+			folderAction = (gtk_file_chooser_get_action(GTK_FILE_CHOOSER(inChooser)) == GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER);
+			ChooseFile(inChooser, subfolder);
+		}, [](GtkWidget *inChooser) { Respond(inChooser, GTK_RESPONSE_ACCEPT); });
+		CFObj<CFArrayRef> urls(OMCPlatformRunOpenPanel(CFSTR("Panel Applet"), CFSTR("Choose a folder"), nullptr, folderString, nullptr, nullptr,
+														nullptr, kOMCFilePanelCanChooseDirectories));
+		Check("with directories only, the panel chooses a folder", folderAction);
+		CFURLRef url = ((urls != nullptr) && (CFArrayGetCount(urls) == 1)) ? (CFURLRef)CFArrayGetValueAtIndex(urls, 0) : nullptr;
+		std::string path = URLPath(url);
+		Check("the chosen folder comes back as a directory URL", (path == subfolder) && (url != nullptr) && CFURLHasDirectoryPath(url), path);
+	}
+
+	{
+		// Save: the default name, the name typed, the folder
+		std::string startName;
+		bool saveAction = false;
+		AnswerPanel([&](GtkWidget *inChooser) {
+			saveAction = (gtk_file_chooser_get_action(GTK_FILE_CHOOSER(inChooser)) == GTK_FILE_CHOOSER_ACTION_SAVE);
+			char *name = gtk_file_chooser_get_current_name(GTK_FILE_CHOOSER(inChooser));
+			startName = (name != nullptr) ? name : "";
+			g_free(name);
+			Capture(inChooser, "save-panel");
+			gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(inChooser), "Report final.txt");
+		}, [](GtkWidget *inChooser) { Respond(inChooser, GTK_RESPONSE_ACCEPT); });
+		CFObj<CFURLRef> url(OMCPlatformRunSavePanel(CFSTR("Panel Applet"), CFSTR("Save the report"), CFSTR("Report.txt"), folderString,
+													nullptr, CFSTR("Save"), nullptr, 0));
+		Check("a save panel saves", saveAction);
+		Check("its name field starts with the default name", startName == "Report.txt", startName);
+		std::string path = URLPath(url);
+		Check("the saved file's URL is the folder and the name typed", path == folder + "/Report final.txt", path);
+	}
+
+	{
+		// A quit while a panel waits: no answer, and the panel goes
+		After(1000, [] { OMCEndModalLoops(); });
+		CFObj<CFURLRef> url(OMCPlatformRunSavePanel(CFSTR("Panel Applet"), nullptr, CFSTR("Quit.txt"), folderString, nullptr, nullptr, nullptr, 0));
+		Check("a quit while a panel waits ends it with no answer", url == nullptr);
+		Pump(600);
+		Check("and the panel is gone", FindFileChooser() == nullptr);
+	}
+
+	gtk_window_destroy(GTK_WINDOW(window));
+	Pump(200);
+	(void)remove(image.c_str());
+	(void)remove(text.c_str());
+	(void)g_rmdir(subfolder.c_str());
+	(void)g_rmdir(folder.c_str());
+}
+
+// With the portals: a panel shows in the desktop's chooser; a quit ends it
+void
+RunPortalChecks()
+{
+	bool inProcess = true;
+	After(1500, [&] {
+		inProcess = (FindFileChooser() != nullptr);
+		OMCEndModalLoops();
+	});
+	gint64 before = g_get_monotonic_time();
+	CFObj<CFURLRef> url(OMCPlatformRunSavePanel(CFSTR("Panel Applet"), CFSTR("Quit while the portal shows this"), CFSTR("Quit.txt"),
+												nullptr, nullptr, nullptr, nullptr, 0));
+	gint64 elapsed = (g_get_monotonic_time() - before) / 1000;
+	Check("a portal panel waits for its answer", elapsed >= 1400, std::to_string(elapsed) + " ms");
+	Check("in the portal's chooser, not GTK's own in this process", !inProcess);
+	Check("and a quit ends it with no answer", url == nullptr);
+}
+
+#pragma GCC diagnostic pop
+
 } // namespace
 
 int
 main(int argc, char *argv[])
 {
-	if(argc > 1)
-		sPNGFolder = argv[1];
+	static bool sPortals = false;
+	for(int i = 1; i < argc; i++)
+	{
+		if(strcmp(argv[i], "--portals") == 0)
+			sPortals = true;
+		else
+			sPNGFolder = argv[i];
+	}
+	if(!sPortals)
+	{
+		// Before GTK starts, which reads it: GTK's own file chooser, in this process
+		const char *debug = g_getenv("GDK_DEBUG");
+		std::string value = ((debug != nullptr) && (debug[0] != 0)) ? std::string(debug) + ",no-portals" : "no-portals";
+		g_setenv("GDK_DEBUG", value.c_str(), TRUE);
+	}
 	AdwApplication *app = adw_application_new("com.abracode.omc.linuxuitests", G_APPLICATION_NON_UNIQUE);
 	g_signal_connect(app, "activate", G_CALLBACK(+[](GApplication *inApp, gpointer) {
 		g_application_hold(inApp);
-		RunChecks(inApp);
+		if(sPortals)
+			RunPortalChecks();
+		else
+		{
+			RunChecks(inApp);
+			RunPanelChecks(inApp);
+		}
 		g_application_release(inApp);
 		g_application_quit(inApp);
 	}), nullptr);

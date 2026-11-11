@@ -33,27 +33,6 @@ const char *kDefaultResponse = "default";
 const char *kAlternateResponse = "alternate";
 const char *kOtherResponse = "other";
 
-// The window an alert or a notice shows over: the application's active window, or nothing (the
-// dialog is then a window of its own)
-GtkWidget *
-DialogParent()
-{
-	GApplication *app = g_application_get_default();
-	if(!GTK_IS_APPLICATION(app))
-		return nullptr;
-	GtkWindow *active = gtk_application_get_active_window(GTK_APPLICATION(app));
-	if(active == nullptr)
-	{
-		GList *windows = gtk_application_get_windows(GTK_APPLICATION(app));
-		for(GList *window = windows; (window != nullptr) && (active == nullptr); window = window->next)
-		{
-			if(gtk_widget_get_visible(GTK_WIDGET(window->data)))
-				active = GTK_WINDOW(window->data);
-		}
-	}
-	return GTK_WIDGET(active);
-}
-
 AdwDialog *
 MakeAlertDialog(CFStringRef inHeader, CFStringRef inMessage)
 {
@@ -127,7 +106,7 @@ OMCPlatformShowAlert(OMCAlertLevel inLevel, CFStringRef inHeader, CFStringRef in
 	wait.loop = g_main_loop_new(nullptr, FALSE);
 	gulong responseHandler = g_signal_connect(dialog, "response", G_CALLBACK(OnAlertResponse), &wait);
 	gulong parentHandler = g_signal_connect(dialog, "notify::parent", G_CALLBACK(OnAlertParentChanged), &wait);
-	adw_dialog_present(dialog, DialogParent());
+	adw_dialog_present(dialog, GTK_WIDGET(OMCModalParentWindow()));
 	OMCRunModalLoop(wait.loop); // returns at the answer, or with no response when its window goes or a quit ends it
 	g_signal_handler_disconnect(dialog, responseHandler);
 	g_signal_handler_disconnect(dialog, parentHandler);
@@ -158,5 +137,5 @@ OMCPlatformShowNotice(CFStringRef inHeader, CFStringRef inMessage, CFStringRef i
 	AddResponse(dialog, kDefaultResponse, (inButton != nullptr) ? inButton : CFSTR("OK"));
 	adw_alert_dialog_set_default_response(ADW_ALERT_DIALOG(dialog), kDefaultResponse);
 	adw_alert_dialog_set_close_response(ADW_ALERT_DIALOG(dialog), kDefaultResponse);
-	adw_dialog_present(dialog, DialogParent()); // shown and left: the dialog closes itself at its answer
+	adw_dialog_present(dialog, GTK_WIDGET(OMCModalParentWindow())); // shown and left: the dialog closes itself at its answer
 }

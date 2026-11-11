@@ -4,12 +4,13 @@
 //
 //  Every platform function the portable engine calls that has no Linux implementation yet (OMC 6.0
 //  Phase 6, Private/phase6-linux-build-design.md). Each logs once that it is missing and gives the
-//  answer that means "not available": no window, no panel answer, no clipboard text, the alert
-//  dismissed without a button. With them libAbracode.so links with -z defs, so a function that
-//  Linux lacks is a link error rather than a surprise when an applet runs.
+//  answer that means "not available": no window, no clipboard text. With them libAbracode.so links
+//  with -z defs, so a function that Linux lacks is a link error rather than a surprise when an
+//  applet runs.
 //
 //  This file is Phase 7's work list: a function that gets a real Linux implementation moves to its
-//  own file in Platform/Linux (named as its Platform/Apple counterpart) and leaves this one.
+//  own file in Platform/Linux (named as its Platform/Apple counterpart, or OMCPlatform<name> when the
+//  portable engine has a file of that name) and leaves this one.
 //
 
 #include "OMCHostInfo.h"
@@ -17,7 +18,6 @@
 #include "OMCTerminalLauncher.h"
 #include "OMCTestPlatform.h"
 #include "OMCActionUIAddOns.h"
-#include "OMCFilePanels.h"
 #include "OMCActionUIModels.h"
 #include "OMCLog.h"
 #include <atomic>
@@ -105,25 +105,3 @@ void OMCTestPlatformRequestQuit(void) { OMC_LINUX_NOT_YET("OMCTestPlatformReques
 
 void OMCRegisterActionUIAddOns(void) { OMC_LINUX_NOT_YET("OMCRegisterActionUIAddOns"); }
 void OMCPlatformForgetActionUIModel(CFStringRef inWindowUUID) { (void)inWindowUUID; OMC_LINUX_NOT_YET("OMCPlatformForgetActionUIModel"); }
-
-#pragma mark - File panels (Platform/OMCFilePanels.h): no answer, as a canceled panel
-
-CFURLRef
-OMCPlatformRunSavePanel(CFStringRef inClientName, CFStringRef inMessage, CFStringRef inDefaultName, CFStringRef inDefaultDirPath,
-						CFStringRef inIdentifier, CFStringRef inPrompt, CFArrayRef inAllowedContentTypes, UInt32 inAdditonalFlags)
-{
-	(void)inClientName; (void)inMessage; (void)inDefaultName; (void)inDefaultDirPath;
-	(void)inIdentifier; (void)inPrompt; (void)inAllowedContentTypes; (void)inAdditonalFlags;
-	OMC_LINUX_NOT_YET("OMCPlatformRunSavePanel");
-	return nullptr;
-}
-
-CFArrayRef
-OMCPlatformRunOpenPanel(CFStringRef inClientName, CFStringRef inMessage, CFStringRef inDefaultName, CFStringRef inDefaultDirPath,
-						CFStringRef inIdentifier, CFStringRef inPrompt, CFArrayRef inAllowedContentTypes, UInt32 inAdditonalFlags)
-{
-	(void)inClientName; (void)inMessage; (void)inDefaultName; (void)inDefaultDirPath;
-	(void)inIdentifier; (void)inPrompt; (void)inAllowedContentTypes; (void)inAdditonalFlags;
-	OMC_LINUX_NOT_YET("OMCPlatformRunOpenPanel");
-	return nullptr;
-}

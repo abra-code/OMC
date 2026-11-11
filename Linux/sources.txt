@@ -55,6 +55,7 @@ Abracode AbracodeFramework/Platform/Linux/OMCMessagePortListener.cpp
 Abracode AbracodeFramework/Platform/Linux/OMCPlatformStubs.cpp
 Abracode AbracodeFramework/Platform/Linux/OMCProcessEnvironment.c
 Abracode AbracodeFramework/Platform/Linux/OMCPlatformAlerts.cpp
+Abracode AbracodeFramework/Platform/Linux/OMCPlatformFilePanels.cpp
 Abracode AbracodeFramework/Platform/Linux/OMCAppShell.cpp
 Abracode AbracodeFramework/Platform/Linux/OMCModalLoop.cpp
 Abracode AbracodeFramework/Platform/Linux/OMCWindowHost.cpp
