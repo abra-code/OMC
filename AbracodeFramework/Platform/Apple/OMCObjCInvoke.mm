@@ -2,15 +2,13 @@
 //  OMCObjCInvoke.mm
 //  Abracode
 //
-//  omc_dialog_control's INVOKE on macOS (Platform/OMCInvoke.h, Platform/Apple/OMCObjCInvoke.h): each
-//  message is a selector and its arguments as strings, sent through NSInvocation with every argument
-//  converted to the type the method takes. Moved from OMCWindowController.mm (Phase 5, step 8c), so
-//  that the portable ActionUI window can reach it through the window host's native window.
+//  omc_dialog_control's INVOKE on macOS (Platform/OMCInvoke.h): each message is a selector and its
+//  arguments as strings, sent through NSInvocation with every argument converted to the type the
+//  method takes. The portable ActionUI window reaches it through the window host's native window.
 //
 
 #import <Cocoa/Cocoa.h>
 #include "OMCInvoke.h"
-#include "OMCObjCInvoke.h"
 #include "CFObj.h"
 #include "ACFType.h"
 #include <string>
@@ -472,8 +470,10 @@ static void SendObjCMessage(CFArrayRef oneObjCMessage, id messageTarget)
     }
 }
 
-void
-OMCSendObjCMessages(id inTarget, CFArrayRef inMessages) noexcept
+// Sends each message of inMessages (arrays of strings: the selector, then its arguments) to
+// inTarget. A message the target does not respond to, or one that raises, is logged and skipped.
+static void
+SendObjCMessages(id inTarget, CFArrayRef inMessages) noexcept
 {
 	if( (inTarget == nil) || (inMessages == NULL) )
 		return;
@@ -505,5 +505,5 @@ OMCInvokeMessages(OMCInvokeTarget inTarget, void *inNativeWindow, CFArrayRef inM
 			target = [NSWorkspace sharedWorkspace];
 		break;
 	}
-	OMCSendObjCMessages(target, inMessages);
+	SendObjCMessages(target, inMessages);
 }

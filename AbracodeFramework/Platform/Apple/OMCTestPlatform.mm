@@ -6,23 +6,17 @@
 //
 
 #import <Cocoa/Cocoa.h>
-#import "OMCWindowController.h"
 #include "OMCTestPlatform.h"
 #include "OMCActionUIWindow.h"
 
 bool
 OMCTestPlatformDispatchToKeyWindow(CFStringRef inCommandNameOrId, CFTypeRef inContext)
 {
-	// The same as the menu's hook in OMCCommandExecutor.mm: an ActionUI command window, else a nib dialog
-	if(std::shared_ptr<OMCActionUIWindow> keyWindow = OMCActionUIWindow::FindKeyWindow())
-	{
-		keyWindow->DispatchCommand(inCommandNameOrId, inContext);
-		return true;
-	}
-	OMCWindowController *keyWindowController = [OMCWindowController findControllerForKeyWindow];
-	if(keyWindowController == nil)
+	// The same as the menu's hook in OMCCommandExecutor.mm: the key window, when it is an ActionUI command window
+	std::shared_ptr<OMCActionUIWindow> keyWindow = OMCActionUIWindow::FindKeyWindow();
+	if(keyWindow == nullptr)
 		return false;
-	[keyWindowController dispatchCommand:(__bridge NSString *)inCommandNameOrId withContext:inContext];
+	keyWindow->DispatchCommand(inCommandNameOrId, inContext);
 	return true;
 }
 
@@ -31,8 +25,7 @@ OMCTestPlatformHasWindow(CFStringRef inWindowUUID)
 {
 	if(inWindowUUID == nullptr)
 		return false;
-	return (OMCActionUIWindow::Find(inWindowUUID) != nullptr) ||
-			([OMCWindowController findControllerByUUID:(__bridge NSString *)inWindowUUID] != nil);
+	return (OMCActionUIWindow::Find(inWindowUUID) != nullptr);
 }
 
 bool
@@ -40,15 +33,10 @@ OMCTestPlatformDispatchToWindow(CFStringRef inWindowUUID, CFStringRef inCommandN
 {
 	if(inWindowUUID == nullptr)
 		return false;
-	if(std::shared_ptr<OMCActionUIWindow> window = OMCActionUIWindow::Find(inWindowUUID))
-	{
-		window->DispatchCommand(inCommandNameOrId, inContext);
-		return true;
-	}
-	OMCWindowController *controller = [OMCWindowController findControllerByUUID:(__bridge NSString *)inWindowUUID];
-	if(controller == nil)
+	std::shared_ptr<OMCActionUIWindow> window = OMCActionUIWindow::Find(inWindowUUID);
+	if(window == nullptr)
 		return false;
-	[controller dispatchCommand:(__bridge NSString *)inCommandNameOrId withContext:inContext];
+	window->DispatchCommand(inCommandNameOrId, inContext);
 	return true;
 }
 
@@ -57,18 +45,10 @@ OMCTestPlatformCloseWindow(CFStringRef inWindowUUID)
 {
 	if(inWindowUUID == nullptr)
 		return false;
-	NSWindow *window = nil;
-	if(std::shared_ptr<OMCActionUIWindow> actionUIWindow = OMCActionUIWindow::Find(inWindowUUID))
-	{
-		window = (__bridge NSWindow *)actionUIWindow->GetNativeWindow();
-	}
-	else
-	{
-		OMCWindowController *controller = [OMCWindowController findControllerByUUID:(__bridge NSString *)inWindowUUID];
-		if(controller == nil)
-			return false;
-		window = controller.window;
-	}
+	std::shared_ptr<OMCActionUIWindow> actionUIWindow = OMCActionUIWindow::Find(inWindowUUID);
+	if(actionUIWindow == nullptr)
+		return false;
+	NSWindow *window = (__bridge NSWindow *)actionUIWindow->GetNativeWindow();
 	// The close button's way (windowShouldClose:, then windowWillClose: and the end command), without
 	// making the window key or activating the application.
 	[window performClose:nil]; // nothing when the command's window has no document

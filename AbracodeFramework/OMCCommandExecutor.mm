@@ -11,7 +11,6 @@
 //
 
 #import "OMCCommandExecutor.h"
-#import "OMCWindowController.h"
 #include "OMCActionUIWindow.h"
 #include "OMC.h"
 #include "OMCCommandRunner.h"
@@ -43,16 +42,11 @@ struct OMCExecutorHookContext
 static bool DispatchToKeyWindow(void *inHookContext, CFStringRef inCommandNameOrId, CFTypeRef inContext)
 {
     (void)inHookContext;
-    // An ActionUI command window, else a nib dialog
-    if(std::shared_ptr<OMCActionUIWindow> keyWindow = OMCActionUIWindow::FindKeyWindow())
-    {
-        keyWindow->DispatchCommand(inCommandNameOrId, inContext);
-        return true;
-    }
-    OMCWindowController *keyWindowController = [OMCWindowController findControllerForKeyWindow];
-    if (keyWindowController == nil)
+    // The key window, when it is an ActionUI command window
+    std::shared_ptr<OMCActionUIWindow> keyWindow = OMCActionUIWindow::FindKeyWindow();
+    if(keyWindow == nullptr)
         return false;
-    [keyWindowController dispatchCommand:(__bridge NSString *)inCommandNameOrId withContext:inContext];
+    keyWindow->DispatchCommand(inCommandNameOrId, inContext);
     return true;
 }
 

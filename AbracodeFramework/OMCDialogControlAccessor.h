@@ -3,8 +3,8 @@
 //  Abracode
 //
 //  How an OMCDialog reads and writes the controls of its window, in plain C++.
-//  The window layer provides one: on macOS, Platform/Apple/OMCControlAccessorBridge wraps a window
-//  controller that adopts the Objective-C OMCControlAccessor protocol. The dialog owns its accessor.
+//  The window layer provides one: the ActionUI command window's (OMCActionUIWindow.cpp). The dialog
+//  owns its accessor.
 //
 
 #pragma once

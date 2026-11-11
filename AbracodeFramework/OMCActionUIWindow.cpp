@@ -3,8 +3,8 @@
 //  Abracode
 //
 //  See OMCActionUIWindow.h. Replaces OMCActionUIWindowController.mm and the parts of its base class,
-//  OMCWindowController.mm, that ActionUI windows used: the window's lifecycle, its subcommands, the
-//  default action handler and the registry of open windows.
+//  the Objective-C OMCWindowController (removed in 6.0), that ActionUI windows used: the window's
+//  lifecycle, its subcommands, the default action handler and the registry of open windows.
 //
 
 #include "OMCActionUIWindow.h"

@@ -2,8 +2,9 @@
 //  OMCDialogControlDispatch.cpp
 //  Abracode
 //
-//  See OMCDialogControlDispatch.h. Moved from OMCWindowController.mm's setControlValues:, key by key
-//  and in the same order, as part of moving the ActionUI window's logic to portable C++.
+//  See OMCDialogControlDispatch.h. Moved from the Objective-C window controller's setControlValues:
+//  (removed in 6.0), key by key and in the same order, as part of moving the ActionUI window's logic
+//  to portable C++.
 //
 
 #include "OMCDialogControlDispatch.h"

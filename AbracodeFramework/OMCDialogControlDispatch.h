@@ -5,8 +5,7 @@
 //  An omc_dialog_control message, as a dialog receives it (a dictionary of keys such as VALUES,
 //  ENABLE_DISABLE or TERMINATE, each mapping control IDs to their arguments; omc_dialog_control/main.c
 //  writes it), turned into calls on the dialog's window. Portable C++: the window is any
-//  OMCDialogControlTarget, the nib and ActionUI window controllers today (OMCWindowController.mm),
-//  the portable ActionUI window later.
+//  OMCDialogControlTarget, the ActionUI command window (OMCActionUIWindow.cpp).
 //
 //  The keys are handled in a fixed order, which is behavior: list and table contents first, then row
 //  selection (so one message can fill a table and select in it), properties and states, sheets and
