@@ -7,7 +7,7 @@
 		<dict>
 			<key>COMMAND</key>
 			<array>
-				<string>echo &quot;Welcome to OMC&quot;</string>
+				<string>echo &quot;Welcome to Command Workshop&quot;</string>
 			</array>
 			<key>END_NOTIFICATION</key>
 			<dict/>

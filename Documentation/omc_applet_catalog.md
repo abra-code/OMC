@@ -1,8 +1,8 @@
-# OMC Applet Catalog
+# Command Workshop Applet Catalog
 
-A classified inventory of the public OMC applets, written for AI agents that are about to
+A classified inventory of the public Command Workshop (formerly OMC) applets, written for AI agents that are about to
 build a new applet. Every applet here has a public GitHub repository under `abra-code`.
-The OMC skill teaches the *format*; this catalog tells you *which existing app to copy from*.
+The Command Workshop skill teaches the *format*; this catalog tells you *which existing app to copy from*.
 
 **The single most useful thing you can do before writing a new applet is to open the closest
 existing one and read its `Command.json`, its `Base.lproj/*.json`, and its `Scripts/lib.*.sh`.**
@@ -67,7 +67,7 @@ Supporting repositories referenced later in this document:
 
 | Repository | What it is |
 |---|---|
-| [abra-code/omc](https://github.com/abra-code/omc) | the OMC engine, AppletBuilder, templates, and this documentation |
+| [abra-code/omc](https://github.com/abra-code/omc) | the Command Workshop engine, AppletBuilder, templates, and this documentation |
 | [abra-code/ActionUI](https://github.com/abra-code/ActionUI) | the ActionUI framework, plus `Examples/` - the UI JSON pattern library |
 | [abra-code/pdfutil](https://github.com/abra-code/pdfutil) | Swift PDFKit + Vision helper used by PDFUtil, QuickPDF, Interpreter |
 | [abra-code/replay](https://github.com/abra-code/replay) | parallel execution tool bundled by Delta and Cadabra |
@@ -171,7 +171,7 @@ Print / Preferences items, which had nothing wired to them.
 
 Watchdog's port is the smaller one, and the one to read for a **Python** applet and for
 dropping the menu nib entirely. `WatchdogMonitor.nib` became `Base.lproj/Watchdog.json` with the
-nib's tags reused as ActionUI ids, `Command.plist` became `Command.json` requiring OMC 5.3, and
+nib's tags reused as ActionUI ids, `Command.plist` became `Command.json` requiring version 5.3, and
 the shell handlers were rewritten in Python (the shell originals sit unmaintained under
 `Archive/`). `MainMenu.nib` went with no `MainMenu.json` in its place: dropping `NSMainNibFile`
 from `Info.plist` made the engine build the standard menu bar itself (since 6.0 it always does). Read WatchdogApp's
@@ -359,7 +359,7 @@ made - three states, enabled / disabled / untouched, not merely "not enabled" - 
 
 | Applet | Purpose | Manifest / UI | Complexity | Size | Tests | Notes |
 |---|---|---|---|---|---|---|
-| **[WatchdogApp/Watchdog.app](https://github.com/abra-code/WatchdogApp)** | live FSEvents folder monitor | Command.json / ActionUI | small | large | yes | **The live-monitor reference.** `act_folder` opens one `Watchdog.json` window per folder. `watchmedo` (from the embedded `watchdog` Python package, with its compiled `_watchdog_fsevents` extension in `Contents/Library/Packages`) runs `Scripts/event.sh` per event, which pipes a row into table id 1 with `omc_dialog_control ... omc_table_add_rows_from_stdin` - **event-driven, not polled**. Every other handler is Python, sharing `Scripts/lib_watchdog.py`. The eye button chains to a second window, `Preview.json`, holding one `QuickLook` element; the selected path travels to it on a pasteboard keyed by the parent window's uuid (`$OMC_PARENT_DIALOG_GUID`). `watchdog.export.events.py` reads the whole table back through the OMC 5.3 remote bridge (`import omc`). Nibless: no `NSMainNibFile`, no `MainMenu.json`. Requires OMC 5.3. |
+| **[WatchdogApp/Watchdog.app](https://github.com/abra-code/WatchdogApp)** | live FSEvents folder monitor | Command.json / ActionUI | small | large | yes | **The live-monitor reference.** `act_folder` opens one `Watchdog.json` window per folder. `watchmedo` (from the embedded `watchdog` Python package, with its compiled `_watchdog_fsevents` extension in `Contents/Library/Packages`) runs `Scripts/event.sh` per event, which pipes a row into table id 1 with `omc_dialog_control ... omc_table_add_rows_from_stdin` - **event-driven, not polled**. Every other handler is Python, sharing `Scripts/lib_watchdog.py`. The eye button chains to a second window, `Preview.json`, holding one `QuickLook` element; the selected path travels to it on a pasteboard keyed by the parent window's uuid (`$OMC_PARENT_DIALOG_GUID`). `watchdog.export.events.py` reads the whole table back through the version 5.3 remote bridge (`import omc`). Nibless: no `NSMainNibFile`, no `MainMenu.json`. Requires version 5.3. |
 | **[DeltaApp/Delta.app](https://github.com/abra-code/DeltaApp)** | TSV diff report between two directory trees | Command.plist / **NIB** | small | compact | none | NIB - reference only (section 2). Bundles the `replay` parallel-execution tool in `Contents/MacOS`. Read for the `replay` fan-out pattern. |
 
 ### 5.8 The meta tool
@@ -471,7 +471,7 @@ is always higher.
 - `AIChat.app` for new UI work - superseded by `Cadabra.app`.
 - `Enoch.app` as a bundle - it carries its model weights. Read its structure, start elsewhere.
 
-**Not OMC applets, despite living in the same tree:**
+**Not Command Workshop applets, despite living in the same tree:**
 
 - [`ActionUI/Examples/`](https://github.com/abra-code/ActionUI/tree/main/Examples) - native Swift / Compose / Web hosts for ActionUI JSON. Useful as a
   library of **UI JSON patterns only**; the applet structure does not apply. Note the local
@@ -480,7 +480,7 @@ is always higher.
   are public.
 - [`ChatView`](https://github.com/abra-code/ChatView), [`DiffView`](https://github.com/abra-code/DiffView), [`RichText`](https://github.com/abra-code/RichText), [`AsyncImageCache`](https://github.com/abra-code/AsyncImageCache) - Swift packages consumed by ActionUI.
 - [`PillowUI`](https://github.com/abra-code/PillowUI) - a Python + ActionUI JSON demo, not a bundle.
-- [`Shortcuts`](https://github.com/abra-code/Shortcuts) (Abracode Shortcuts) - a conventional Cocoa app, no OMC manifest.
+- [`Shortcuts`](https://github.com/abra-code/Shortcuts) (Abracode Shortcuts) - a conventional Cocoa app, no Command Workshop manifest.
 
 **Gaps - no applet demonstrates these yet.** If the user asks for one, there is no template to
 copy and you are writing it from the guides:

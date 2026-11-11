@@ -548,12 +548,12 @@ update_python_packages() {
     if [ ! -d "$target_path/Contents/Library/Python" ]; then
         # External-interpreter applet. The engine only puts Packages on PYTHONPATH for an embedded
         # runtime, so the modules would be unimportable; say so rather than skipping in silence.
-        ab_log "Python handlers but no embedded runtime - skipping OMC Python modules (they would not be importable)"
+        ab_log "Python handlers but no embedded runtime - skipping the Command Workshop Python modules (they would not be importable)"
         return 0
     fi
 
     if [ ! -d "$src_packages" ]; then
-        ab_report "Error: OMC Python modules not found at $src_packages"
+        ab_report "Error: Command Workshop Python modules not found at $src_packages"
         ab_report "       This AppletBuilder predates them; rerun update_appletbuilder.sh."
         return 1
     fi
@@ -587,7 +587,7 @@ update_python_packages() {
     done
 
     if [ "$copied" -gt 0 ]; then
-        ab_log "Installed $copied OMC Python module(s) into Contents/Library/Packages"
+        ab_log "Installed $copied Command Workshop Python module(s) into Contents/Library/Packages"
     fi
 
     if [ "$failed" -gt 0 ]; then
@@ -1304,7 +1304,7 @@ applet_build() {
     if [ "$packages_rc" -ne 0 ]; then
         local ts=$(/bin/date "+%Y-%m-%d %H:%M:%S")
         ab_log ""
-        ab_log "Build halted - the OMC Python modules could not be installed. (${ts})"
+        ab_log "Build halted - the Command Workshop Python modules could not be installed. (${ts})"
         return 1
     fi
 

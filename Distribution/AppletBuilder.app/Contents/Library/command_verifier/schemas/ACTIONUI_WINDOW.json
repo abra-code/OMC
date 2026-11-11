@@ -1,6 +1,6 @@
 {
   "name": "ACTIONUI_WINDOW",
-  "description": "ActionUI JSON dialog (OMC 5.0+). JSON_NAME resolves to a bundle resource <name>.json (Layer 2). Subcommand-ID keys reference COMMAND_IDs (Layer 2).",
+  "description": "ActionUI JSON dialog (5.0+). JSON_NAME resolves to a bundle resource <name>.json (Layer 2). Subcommand-ID keys reference COMMAND_IDs (Layer 2).",
   "properties": {
     "JSON_NAME": { "types": ["string"], "required": true, "description": "JSON resource name without extension; case-sensitive." },
     "IS_BLOCKING": { "types": ["boolean"], "description": "Default true (modal)." },

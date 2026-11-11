@@ -79,7 +79,7 @@ AB_THIN_SKIP_VERIFY=0
 
 usage() {
     cat >&2 <<'EOF'
-appletbuilder — create, validate, build, and preview OMC applets (agent CLI)
+appletbuilder — create, validate, build, and preview Command Workshop applets (agent CLI)
 
 Usage:
   appletbuilder create   (--template <name|path> | --clone <App.app>)

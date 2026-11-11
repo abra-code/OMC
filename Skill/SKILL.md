@@ -1,22 +1,22 @@
 ---
 name: omc
 description: >
-  Create, edit, debug, rebuild, or codesign OMC applets for macOS. Use when the user asks to build/rebuild or codesign an applet, add a command, write an action script, configure Command.plist or Command.json, use omc_dialog_control, chain commands, or work with AppletBuilder (incl. the appletbuilder CLI / Build & Run). For ActionUI JSON UI design, also activate the actionui skill.
+  Create, edit, debug, rebuild, or codesign Command Workshop (formerly OMC) applets for macOS. Use when the user asks to build/rebuild or codesign an applet, add a command, write an action script, configure Command.plist or Command.json, use omc_dialog_control, chain commands, or work with AppletBuilder (incl. the appletbuilder CLI / Build & Run). For ActionUI JSON UI design, also activate the actionui skill.
 version: "1.0"
 ---
 
 # OMC Skill
 
 
-## What is OMC
+## What is Command Workshop
 
-OMC (OnMyCommand) is a macOS low-code app builder engine. OMC **applets** are GUI `.app` bundles, with optional macOS Services menu items. Each applet combines a declarative command manifest (`Command.plist`) with shell scripts, Python scripts, or AppleScript files that implement the actions.
+Command Workshop (formerly OMC) is a macOS low-code app builder engine. Command Workshop **applets** are GUI `.app` bundles, with optional macOS Services menu items. Each applet combines a declarative command manifest (`Command.plist`) with shell scripts, Python scripts, or AppleScript files that implement the actions.
 
-The OMC engine (`Abracode.framework`) handles app runtime, input routing, UI presentation, and script execution. A developer writes only the application-specific logic.
+The Command Workshop engine (`Abracode.framework`) handles app runtime, input routing, UI presentation, and script execution. A developer writes only the application-specific logic.
 
 **User should start a new applet using AppletBuilder** (`Distribution/AppletBuilder.app`) — it creates the correct bundle structure, installs the framework, and generates the initial `Command.plist` and starter scripts.
 
-## OMC App Bundle Structure
+## Command Workshop App Bundle Structure
 
 ```
 MyApp.app/
@@ -38,7 +38,7 @@ MyApp.app/
 
 ## Command.plist
 
-The command manifest lives at `Contents/Resources/Command.plist` (XML/binary plist) **or** `Contents/Resources/Command.json` (JSON). OMC reads either, preferring `Command.json` when both are present; AppletBuilder creates new applets with `Command.json`. The two formats are structurally identical — the same keys, value types, and `VERSION == 2` rule apply (a JSON number `2` for `VERSION`, JSON `true`/`false` for booleans). This guide shows plist XML, but every example maps directly to JSON.
+The command manifest lives at `Contents/Resources/Command.plist` (XML/binary plist) **or** `Contents/Resources/Command.json` (JSON). Command Workshop reads either, preferring `Command.json` when both are present; AppletBuilder creates new applets with `Command.json`. The two formats are structurally identical — the same keys, value types, and `VERSION == 2` rule apply (a JSON number `2` for `VERSION`, JSON `true`/`false` for booleans). This guide shows plist XML, but every example maps directly to JSON.
 
 **Root structure (plist):**
 ```xml
@@ -98,25 +98,25 @@ Script files live in `Contents/Resources/Scripts/`. The filename maps directly t
 | `MyApp.settings.save.sh` | `MyApp.settings.save` |
 | `lib.myapp.sh` | *(shared library — sourced by other scripts, not a command handler)* |
 
-OMC resolves the interpreter from the extension: `.sh` / `.bash` / `.zsh` → corresponding shell, `.py` → Python, `.applescript` → AppleScript, `.js` → JSC.
+Command Workshop resolves the interpreter from the extension: `.sh` / `.bash` / `.zsh` → corresponding shell, `.py` → Python, `.applescript` → AppleScript, `.js` → JSC.
 
-**No shebang line is needed.** OMC supplies the interpreter path automatically.
+**No shebang line is needed.** Command Workshop supplies the interpreter path automatically.
 
-For Python applets, the embedded Python at `Contents/Library/Python/bin/python3` is used when present — no system Python dependency. When a bundle has embedded Python, OMC exports — for every handler, shell or Python — `PATH` (prepended with the interpreter's `bin/`), `PYTHONPYCACHEPREFIX` (the per-user `/var/folders/.../T/Pyc`, not `$TMPDIR`), and `PYTHONPATH` (prepended with `Contents/Library/Packages/` when it exists). Install third-party modules into `Contents/Library/Packages/` (e.g. `python3 -m pip install --target .../Contents/Library/Packages pkg`) rather than the runtime's own `site-packages`: the `Packages/` dir survives a Python runtime upgrade/rebuild, whereas `Contents/Library/Python/` is replaced wholesale. See `docs/omc_python_scripting_guide.md`.
+For Python applets, the embedded Python at `Contents/Library/Python/bin/python3` is used when present — no system Python dependency. When a bundle has embedded Python, Command Workshop exports — for every handler, shell or Python — `PATH` (prepended with the interpreter's `bin/`), `PYTHONPYCACHEPREFIX` (the per-user `/var/folders/.../T/Pyc`, not `$TMPDIR`), and `PYTHONPATH` (prepended with `Contents/Library/Packages/` when it exists). Install third-party modules into `Contents/Library/Packages/` (e.g. `python3 -m pip install --target .../Contents/Library/Packages pkg`) rather than the runtime's own `site-packages`: the `Packages/` dir survives a Python runtime upgrade/rebuild, whereas `Contents/Library/Python/` is replaced wholesale. See `docs/omc_python_scripting_guide.md`.
 
 
 
 ## Environment Variables
 
-OMC exports these variables into every script's environment:
+Command Workshop exports these variables into every script's environment:
 
 ### Always Available
 
 | Variable | Description |
 |----------|-------------|
 | `$OMC_APP_BUNDLE_PATH` | Full path to the running applet's `.app` bundle |
-| `$OMC_APP_PROCESS_ID` | PID of the host process running OMC, which for an applet is the applet itself - use it to tell whether the instance that owns some state is still alive (not the frontmost app, that is `$OMC_FRONT_PROCESS_ID`) |
-| `$OMC_OMC_SUPPORT_PATH` | Path to OMC's support directory — all runtime tools live here |
+| `$OMC_APP_PROCESS_ID` | PID of the host process running Command Workshop, which for an applet is the applet itself - use it to tell whether the instance that owns some state is still alive (not the frontmost app, that is `$OMC_FRONT_PROCESS_ID`) |
+| `$OMC_OMC_SUPPORT_PATH` | Path to Command Workshop's support directory — all runtime tools live here |
 | `$OMC_CURRENT_COMMAND_GUID` | GUID of the current command invocation (pass to `omc_next_command`) |
 | `$OMC_OBJ_PATH` | Path of the file/folder that triggered the command (drag & drop / open panel / service) |
 
@@ -144,7 +144,7 @@ Set when a script runs as the handler for an `actionID` or `valueChangeActionID`
 | `$OMC_ACTIONUI_TRIGGER_VIEW_PART_ID` | Part ID (e.g. column index for Table) |
 | `$OMC_ACTIONUI_TRIGGER_CONTEXT` | JSON string with full trigger context |
 
-**ActionUI remote bridge (OMC 5.3).** An applet with an ActionUI window also serves a JSON-RPC bridge on a Unix socket, so a **Python** handler can READ window state - which `omc_dialog_control` has never been able to do.
+**ActionUI remote bridge (version 5.3).** An applet with an ActionUI window also serves a JSON-RPC bridge on a Unix socket, so a **Python** handler can READ window state - which `omc_dialog_control` has never been able to do.
 
 | Variable | Description |
 |----------|-------------|
@@ -254,7 +254,7 @@ of these bites or when behavior can't be explained from the code.
    is no bash 4/5 on macOS. Process substitution (`done < <(cmd)`),
    `mapfile`, `declare -A`, and `${var,,}` are fatal parse errors that kill
    the script mid-file with no UI feedback. **Validate with `sh -n`, never
-   `bash -n`** — `bash -n` passes scripts that die under OMC.
+   `bash -n`** — `bash -n` passes scripts that die under Command Workshop.
 2. **Window init code goes in `INIT_SUBCOMMAND_ID`** (runs before the window
    appears). A non-blocking window's main command script runs at an
    unpredictable time — keep it `exit 0`.
@@ -281,7 +281,7 @@ of these bites or when behavior can't be explained from the code.
    `$OMC_ACTIONUI_TRIGGER_VIEW_ID/_PART_ID/_CONTEXT` in every handler, ask
    the user to perform the UI operation once, read the log back. Don't guess.
 7. **Handlers are testable headlessly — do not hand-roll a stub directory.**
-   `appletbuilder test <App.app>` runs `Tests/*.test.sh` against a mock OMC
+   `appletbuilder test <App.app>` runs `Tests/*.test.sh` against a mock Command Workshop
    environment: real handlers, real `plister` and `pasteboard`, a stubbed
    app-modal `alert` with scripted answers, and a recording
    `omc_dialog_control` so you can assert on what a handler pushed toward the
@@ -370,7 +370,7 @@ The JSON file `Contents/Resources/Base.lproj/MainWindow.json` defines the UI (se
 | `PROGRESS` | dict | Progress bar dialog (`TITLE`, `MODE`: `steps`/`counter`/`indeterminate`) |
 | `INPUT_DIALOG` | dict | Prompts for user input before running (`TYPE`: `text`/`password`/`popup`/`combo`) |
 | `SUBMENU_NAME` | string | Groups this command under a submenu in contextual menus |
-| `CATEGORIES` | array | Filter categories for OMC's command list UI |
+| `CATEGORIES` | array | Filter categories for Command Workshop's command list UI |
 
 ## App Lifetime Event COMMAND_IDs
 
@@ -392,9 +392,9 @@ Link content is untrusted: anyone can send a URL on the applet's scheme. `<schem
 
 ## UI Dialogs
 
-OMC applets have two dialog paradigms. Most new applets should use ActionUI JSON.
+Command Workshop applets have two dialog paradigms. Most new applets should use ActionUI JSON.
 
-### ActionUI JSON (recommended, OMC 5.0+, macOS 14.6+)
+### ActionUI JSON (recommended, version 5.0+, macOS 14.6+)
 
 A JSON file in `Contents/Resources/Base.lproj/` defines the UI using the ActionUI framework. Connect it to a command via `ACTIONUI_WINDOW` in `Command.plist`:
 
@@ -406,7 +406,7 @@ A JSON file in `Contents/Resources/Base.lproj/` defines the UI using the ActionU
 </dict>
 ```
 
-**For ActionUI JSON format** (element types, properties, layout patterns) — read the ActionUI skill. The OMC-specific concerns are:
+**For ActionUI JSON format** (element types, properties, layout patterns) — read the ActionUI skill. The Command Workshop-specific concerns are:
 
 - `actionID` property value on buttons/pickers/etc. is the `COMMAND_ID` of the handler script that runs on click
 - `valueChangeActionID` fires as the value changes (e.g., every keystroke in a TextField)
@@ -457,7 +457,7 @@ Exit codes: `0` ok · `2` warnings · `1` errors.
 | `create (--template <name|path> \| --clone <App.app>) --name <N> --dest <dir> [--bundle-id <id>] [--python] [--icon <name|path>]` | Copy a template (or clone an applet), rename it, install the framework/executable (and Python if `--python`), set the icon, and codesign. Prints the new `.app` path. |
 | `validate <App.app \| Command.json \| UI.json \| script>` | Auto-detects the target and runs the matching validator(s). For a bundle: `Info.plist` + command manifest (Layer 1/2) + every script + every ActionUI JSON. |
 | `build <App.app> [--identity <id>] [--thin arm64\|x86_64\|none] [--test] [--warnings-as-errors] [--update-python] [--force]` | Full validation, then refresh framework/executable (newer version auto-copies; `--force` re-copies even when unchanged), thin, and codesign. Halts before signing on validation errors, and on a failed architecture slice when `--thin` was asked for (the bundle is then modified and unsigned). Independently, a working embedded Python is left untouched unless `--update-python` is given; a missing/broken runtime is always installed. Replacing the runtime wipes anything pip-installed into its `site-packages` — install deps into `Contents/Library/Packages` (on `PYTHONPATH`) so they survive. `--test` runs the applet's test suite after the refresh and before signing, halting on failure. |
-| `test <App.app> [--tests <dir>] [--filter <glob>] [--verbose] [--keep-scratch] [--list]` | Run the applet's `Tests/*.test.sh` against a mock OMC environment: real handlers, stubbed `alert`, a recording `omc_dialog_control` you can assert against. Validates the bundle first. Detail to stderr, `omctest: N passed, M failed, K files` to stdout. See `docs/omctest_guide.md`. |
+| `test <App.app> [--tests <dir>] [--filter <glob>] [--verbose] [--keep-scratch] [--list]` | Run the applet's `Tests/*.test.sh` against a mock Command Workshop environment: real handlers, stubbed `alert`, a recording `omc_dialog_control` you can assert against. Validates the bundle first. Detail to stderr, `omctest: N passed, M failed, K files` to stdout. See `docs/omctest_guide.md`. |
 | `thin-python plan\|apply\|plan-apply <App.app> [--plan <file>] [--dry-run] [--skip-verify] [--thin arm64\|x86_64\|none]` | Closure-thin the applet's embedded Python. `plan` analyzes the applet on a clone and writes a committable `<App>.thinning-plan.json` beside the bundle, modifying nothing; `apply` removes what the plan names from the real interpreter and verifies, restoring on failure (`--dry-run` previews, on `apply` and `plan-apply`). Without `--plan`: beside the bundle, else the last plan written for that applet (matched on its bundle identifier). An optional `<App>.thinning-keep.txt` force-keep list is picked up automatically. GUI equivalent: the Embedded Python Thinning group in Build & Run (Write Thinning Plan / Apply Plan / Dry Run, then Execute), disabled for an applet that bundles no Python. See `docs/omc_python_scripting_guide.md`. |
 | `prettify <file.json> [--stdout]` | Reformat JSON in place (or to stdout). |
 | `preview <UI.json> [--screenshot <out.png>] [--show-window]` | Render an ActionUI view to a PNG and print its path (read the PNG to inspect the layout); a `MainMenu.json` menu-bar doc prints a text summary instead. Renders off screen by default, so no window appears and a locked screen is fine; `--show-window` asks for the old on-screen capture. Still needs a logged-in GUI session. |
@@ -479,7 +479,7 @@ Full reference: `Distribution/AppletBuilder.app/Contents/Resources/Agents/README
 | Template | Use when |
 |----------|----------|
 | `Empty` | Minimal bundle; no dialog |
-| `ActionUI Window` | ActionUI JSON dialog (recommended for OMC 5.0+) |
+| `ActionUI Window` | ActionUI JSON dialog (recommended for version 5.0+) |
 | `ActionUI Web` | ActionUI dialog with embedded WebView |
 
 The **Name** also becomes the executable name and script prefix. New applets are
@@ -489,7 +489,7 @@ Applet panel.
 ### For an existing applet
 
 Edit the bundle's files directly:
-- `Contents/Resources/Command.json` (or `Command.plist` — OMC reads either, preferring `Command.json` when both exist)
+- `Contents/Resources/Command.json` (or `Command.plist` — Command Workshop reads either, preferring `Command.json` when both exist)
 - `Contents/Resources/Scripts/*`
 - `Contents/Resources/Base.lproj/*.json` (ActionUI windows and `MainMenu.json`)
 
@@ -507,7 +507,7 @@ For full GUI-navigation help (Project Editor tabs, Commands editor, UI Files Val
 
 ### Shared Library Pattern
 
-Define tool paths and control IDs once in `lib.myapp.sh` and source it from every handler. This is the standard pattern in every OMC applet.
+Define tool paths and control IDs once in `lib.myapp.sh` and source it from every handler. This is the standard pattern in every Command Workshop applet.
 
 ```bash
 # lib.myapp.sh
@@ -650,7 +650,7 @@ clicking — and the error paths, which are the ones that destroy user data, are
 the least likely to be walked by hand.
 
 `appletbuilder test <App.app>` runs the applet's real handlers against a
-simulated OMC environment. **Read `docs/omctest_guide.md` before writing tests**
+simulated Command Workshop environment. **Read `docs/omctest_guide.md` before writing tests**
 — it is the full API reference. This section is the shape and the traps.
 
 ### Layout and the run
@@ -721,7 +721,7 @@ usually the same string — except for the primary command, which typically has 
 
 ### The seam contract — the thing most applets have to change
 
-The harness intercepts OMC support tools by rebuilding `$OMC_OMC_SUPPORT_PATH`.
+The harness intercepts Command Workshop support tools by rebuilding `$OMC_OMC_SUPPORT_PATH`.
 It **cannot** reach anything named by an absolute path or a bundle-relative one.
 So anything an applet must not really do under test has to be named through an
 overridable variable in its shared lib:
@@ -828,7 +828,7 @@ engine itself does (launch chains, the order and overlap of view handlers,
 panels, close handlers) is what the integration tests below are for; a human
 still looks at the window once per release.
 
-### Integration tests (omcitest, OMC 5.5)
+### Integration tests (omcitest, version 5.5)
 
 `appletbuilder itest <App.app>` runs the `*.itest.sh` files in `Tests/` against
 the **real applet through the real engine**: one fresh applet process per file,
@@ -886,7 +886,7 @@ After creating or editing a command manifest, validate it before building. The v
 python3 Skill/scripts/validate_command_plist.py <App.app | Command.plist | Command.json>
 ```
 
-Pass the **applet bundle** (`.app` / `.omc`) rather than the bare file to also run bundle cross-checks (Layer 2); for a bundle the verifier resolves the command file itself, preferring `Command.json` when both exist (as OMC does): every `exe_script_file` command has a matching `Scripts/<COMMAND_ID>.*`, the `ACTIONUI_WINDOW` JSON resources exist, subcommand IDs (`INIT_SUBCOMMAND_ID`, `END_OK_SUBCOMMAND_ID`, `NEXT_COMMAND_ID`, …) resolve, and every `actionID` in the bundle's JSON UI documents points at a command that exists.
+Pass the **applet bundle** (`.app` / `.omc`) rather than the bare file to also run bundle cross-checks (Layer 2); for a bundle the verifier resolves the command file itself, preferring `Command.json` when both exist (as Command Workshop does): every `exe_script_file` command has a matching `Scripts/<COMMAND_ID>.*`, the `ACTIONUI_WINDOW` JSON resources exist, subcommand IDs (`INIT_SUBCOMMAND_ID`, `END_OK_SUBCOMMAND_ID`, `NEXT_COMMAND_ID`, …) resolve, and every `actionID` in the bundle's JSON UI documents points at a command that exists.
 
 Exit codes: `0` clean · `2` warnings only · `1` errors (`[INFO]` lines are advisory and never affect the exit code). Fix every `[ERROR]` before building; investigate each `[WARNING]` (usually a typo, a wrong value type, or a key with no effect in its context); `[INFO]` lines are just FYI.
 
@@ -894,7 +894,7 @@ Common findings:
 - **Unknown key** — typo or hallucinated key; check the schema for that dictionary.
 - **Wrong value type** — e.g. `DEFAULT_LOCATION` / `DEFAULT_FILE_NAME` must be an *array*; a bare string is silently ignored by the engine.
 - **Deprecated `EXECUTION_MODE` alias** — use the modern name (`exe_popen` → `exe_shell_script`).
-- **"is removed and ignored by the engine"** - the engine no longer reads the key: drop it. OMC 5.6 dropped the output window's `WINDOW_ALPHA`, fades and custom PNG windows (`CUSTOM_*` keys; `WINDOW_TYPE` `custom` is read as `floating`).
+- **"is removed and ignored by the engine"** - the engine no longer reads the key: drop it. Version 5.6 dropped the output window's `WINDOW_ALPHA`, fades and custom PNG windows (`CUSTOM_*` keys; `WINDOW_TYPE` `custom` is read as `floating`).
 - **`VERSION` not `2`** — the engine loads nothing unless the root `VERSION` is `2`.
 - **"has no effect unless …"** — the key is ignored in this context (e.g. `FRACT_POSITION_*` without `WINDOW_POSITION=absolute`; `OUTPUT_WINDOW_SETTINGS` / `PROGRESS` without a popen / `*_with_output_window` mode; `INPUT_MENU` without a popup/combo `INPUT_TYPE`).
 - **Dangling subcommand ID / missing dialog resource** — a referenced `COMMAND_ID` (`INIT_SUBCOMMAND_ID`, `NEXT_COMMAND_ID`, …) or a `JSON_NAME` resource doesn't exist in the bundle. These are errors. (A `NIB_DIALOG` is a warning: removed in 6.0, the engine refuses the command.)
@@ -908,7 +908,7 @@ The verifier's key knowledge lives in `Skill/scripts/schemas/` (`Command.json` p
 
 ## Reference Documentation
 
-Full OMC reference is in the `docs/` folder (also bundled in `AppletBuilder.app/Contents/Resources/Documentation/`):
+Full Command Workshop reference is in the `docs/` folder (also bundled in `AppletBuilder.app/Contents/Resources/Documentation/`):
 
 | File | Contents |
 |------|----------|
@@ -919,7 +919,7 @@ Full OMC reference is in the `docs/` folder (also bundled in `AppletBuilder.app/
 | `docs/omc_command_reference.md` | Complete `Command.plist` key reference — all execution modes, dialog keys, output window settings, progress dialogs, input dialogs, services |
 | `docs/omc_runtime_context_reference.md` | Every `$OMC_*` environment variable and `__SPECIAL_WORD__` substitution |
 | `docs/omctest_guide.md` | **Writing tests**: the `Tests/` layout, the full helper API (driving the window, dispatching handlers, asserting on the virtual window), which `omc_dialog_control` verbs replay, the seam contract for binaries the harness cannot intercept, and how to write checks that can actually fail |
-| `docs/omcitest_guide.md` | **Writing integration tests** (`*.itest.sh`, OMC 5.5): the real applet through the real engine, its requirements (a 5.5 engine, a local signature, the sandbox off), the API for commands, windows, panels and alerts, what a test launch isolates and what it cannot, the patterns (launch, open, wait, tabs, guards) and the traps |
+| `docs/omcitest_guide.md` | **Writing integration tests** (`*.itest.sh`, version 5.5): the real applet through the real engine, its requirements (a 5.5 engine, a local signature, the sandbox off), the API for commands, windows, panels and alerts, what a test launch isolates and what it cannot, the patterns (launch, open, wait, tabs, guards) and the traps |
 | `docs/omc_scripting_guide.md` | Shell script patterns: reading controls, updating UI, tables, state, debugging |
 | `docs/omc_python_scripting_guide.md` | Python handlers: env (`PATH`/`PYTHONPATH`/`Packages`), equivalents of all shell patterns, installing deps into `Contents/Library/Packages`, and thinning the embedded Python (the plan/apply workflow behind AppletBuilder's Embedded Python Thinning group, `appletbuilder thin-python`, and `Distribution/Scripts/thin_applet_python.py`) |
 | `docs/omc_python_bridge_guide.md` | The `omc` module: reading an ActionUI window from a Python handler, the full method reference, batching, error handling, and when to keep using `omc_dialog_control` |
@@ -937,7 +937,7 @@ Full OMC reference is in the `docs/` folder (also bundled in `AppletBuilder.app/
 
 When you need the exact keys for `ACTIONUI_WINDOW`, the complete list of `omc_dialog_control` operations, or the full env-var table, read the relevant `docs/` file directly.
 
-For ActionUI JSON UI (element types, properties, validation, patterns): read the **ActionUI skill** (`../ActionUI/Skill/SKILL.md`). The OMC skill only covers how ActionUI connects to OMC — the JSON format itself is entirely in the ActionUI skill.
+For ActionUI JSON UI (element types, properties, validation, patterns): read the **ActionUI skill** (`../ActionUI/Skill/SKILL.md`). The Command Workshop skill only covers how ActionUI connects to Command Workshop — the JSON format itself is entirely in the ActionUI skill.
 
 
 

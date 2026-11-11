@@ -1,4 +1,4 @@
-# Porting a Nib Applet to ActionUI - for AI Agents
+# Porting a Command Workshop (formerly OMC) Nib Applet to ActionUI - for AI Agents
 
 Companion docs: `Nib-Guide.md` (the format you are leaving, kept for reference),
 `omc_agent_tips_and_troubleshooting.md` (its section 1, on `/bin/sh`, applies to
@@ -63,7 +63,7 @@ fact you need:
 
 | What you need | Where it is in the XIB |
 |---|---|
-| OMC control id | `tag=` attribute on the control |
+| Command Workshop control id | `tag=` attribute on the control |
 | Value a menu item delivers | `userDefinedRuntimeAttribute keyPath="mappedValue"` |
 | COMMAND_ID a control fires | `userDefinedRuntimeAttribute keyPath="commandID"` |
 | Placeholder | `placeholderString` on the cell |
@@ -322,7 +322,7 @@ config, say), remove the `actionID` and drive it from something explicit.
 
 ## 8. Fix the eval-quoting bug this port will expose
 
-If the applet builds a command string and `eval`s it - a common OMC shape -
+If the applet builds a command string and `eval`s it - a common Command Workshop shape -
 check how values are interpolated. `'$value'` is not escaping:
 
 | Control value | Result |

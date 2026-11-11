@@ -31,7 +31,7 @@
                         {
                             "type": "LabeledContent",
                             "properties": {
-                                "title": "OMC Engine:"
+                                "title": "Engine:"
                             },
                             "children": [
                                 {

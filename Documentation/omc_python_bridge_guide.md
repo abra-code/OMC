@@ -1,6 +1,6 @@
 # The Python Bridge to ActionUI Windows
 
-**OMC 5.3.** A Python command handler can read the ActionUI window it was dispatched from, not only write to it.
+**Version 5.3.** A Python command handler in a Command Workshop (formerly OMC) applet can read the ActionUI window it was dispatched from, not only write to it.
 
 That is the whole of what is new. `omc_dialog_control` has always been able to set a value, fill a table, enable a control; it has never been able to ask what is on screen. A handler's only view of the window was the snapshot the engine took when the command was dispatched - `$OMC_ACTIONUI_VIEW_101_VALUE` and its siblings - so anything the user changed after that was invisible, and any workflow that needed to *look* before deciding had to be restructured around it.
 
@@ -23,7 +23,7 @@ rows = win.get_rows(5)              # every row of the table, right now
 5. [Tables](#5-tables)
 6. [Adding and removing elements](#6-adding-and-removing-elements)
 7. [Modals, dialogs and toasts](#7-modals-dialogs-and-toasts)
-8. [OMC's own window verbs](#8-omcs-own-window-verbs)
+8. [Command Workshop's own window verbs](#8-command-workshops-own-window-verbs)
 9. [Batching](#9-batching)
 10. [Errors](#10-errors)
 11. [When to use omc_dialog_control instead](#11-when-to-use-omc_dialog_control-instead)
@@ -163,9 +163,9 @@ win.dismiss_toast()
 
 `present_modal` also accepts `element=` (a dict), `json_text=` and `path=` (a resource name the host resolves the same way `omc_present_modal` does).
 
-## 8. OMC's own window verbs
+## 8. Command Workshop's own window verbs
 
-These are not ActionUI's - they are OMC's, and they run the same helper tools a shell handler would. The split is invisible from here.
+These are not ActionUI's - they are Command Workshop's, and they run the same helper tools a shell handler would. The split is invisible from here.
 
 ```python
 win.terminate_ok()                  # close, run END_OK
@@ -254,9 +254,9 @@ The applet serves newline-delimited JSON-RPC 2.0 on a Unix domain socket, privat
 | `$ACTIONUI_REMOTE_ENDPOINT` | the socket path; `$OMC_ACTIONUI_REMOTE_ENDPOINT` is the same value |
 | `$ACTIONUI_WINDOW_UUID` | the window; `$OMC_ACTIONUI_WINDOW_UUID` is the same value |
 
-The unprefixed pair is what the protocol itself names, so a script written against it runs unchanged whether its host is an OMC applet or any other ActionUI application. `actionui_remote` can be used directly for that reason; `omc.window()` simply returns a subclass with OMC's own verbs added.
+The unprefixed pair is what the protocol itself names, so a script written against it runs unchanged whether its host is a Command Workshop applet or any other ActionUI application. `actionui_remote` can be used directly for that reason; `omc.window()` simply returns a subclass with Command Workshop's own verbs added.
 
-The wire format is normative in `ActionUIRemote/PROTOCOL.md` in the ActionUI repository. Nothing about it is OMC-specific.
+The wire format is normative in `ActionUIRemote/PROTOCOL.md` in the ActionUI repository. Nothing about it is Command Workshop-specific.
 
 ### The token, and why you never see it
 
@@ -294,6 +294,6 @@ Copying the client somewhere by hand means copying the set: the `.sh` reads `act
 ## Related Documentation
 
 - [Python Scripting Guide](omc_python_scripting_guide.md) - Python handlers generally, and where the modules live
-- [OMC Runtime Context Reference](omc_runtime_context_reference.md) - every environment variable and special word
+- [Command Workshop Runtime Context Reference](omc_runtime_context_reference.md) - every environment variable and special word
 - [omctest Guide](omctest_guide.md) - the applet test harness, and the bridge assertions
 - [omc_dialog_control](omc_dialog_control--help.md) - the write path, for shell handlers

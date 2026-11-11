@@ -856,7 +856,7 @@ HandleRunCommand(CFDictionaryRef inParams)
 	CFTypeRef windowValue = ::CFDictionaryGetValue(inParams, CFSTR("window"));
 	CFStringRef windowUUID = ACFType<CFStringRef>::DynamicCast(windowValue);
 	if((windowValue != nullptr) && ((windowUUID == nullptr) || !OMCTestPlatformHasWindow(windowUUID)))
-		return CreateErrorReply(kInvalidParams, CFSTR("window: the uuid of an open OMC window is required"));
+		return CreateErrorReply(kInvalidParams, CFSTR("window: the uuid of an open Command Workshop window is required"));
 	if((windowUUID != nullptr) && (keyWindow != nullptr) && ::CFBooleanGetValue(keyWindow))
 		return CreateErrorReply(kInvalidParams, CFSTR("window and keyWindow: give one or the other"));
 
@@ -956,7 +956,7 @@ HandleCloseWindow(CFDictionaryRef inParams)
 {
 	CFStringRef windowUUID = ACFType<CFStringRef>::DynamicCast(::CFDictionaryGetValue(inParams, CFSTR("window")));
 	if((windowUUID == nullptr) || !OMCTestPlatformHasWindow(windowUUID))
-		return CreateErrorReply(kInvalidParams, CFSTR("window: the uuid of an open OMC window is required"));
+		return CreateErrorReply(kInvalidParams, CFSTR("window: the uuid of an open Command Workshop window is required"));
 
 	CFObj<CFMutableDictionaryRef> result( CreateMutableDict() );
 	SetBool(result, CFSTR("closing"), true);

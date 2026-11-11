@@ -1,8 +1,8 @@
-# Building OMC Applets
+# Building Command Workshop Applets
 
 ## Overview
 
-OMC (OnMyCommand) is a low-code macOS app development engine that lets you create standalone applets with custom UI and shell/Python scripting. This guide covers the fundamentals of building an OMC applet from scratch.
+Command Workshop (formerly OMC) is a low-code macOS app development engine that lets you create standalone applets with custom UI and shell/Python scripting. This guide covers the fundamentals of building a Command Workshop applet from scratch.
 
 ### Key Concepts
 
@@ -16,18 +16,18 @@ OMC (OnMyCommand) is a low-code macOS app development engine that lets you creat
 
 ## Prerequisites
 
-1. **AppletBuilder**: Download OMC 5.0+ from https://github.com/abra-code/OMC/releases — `AppletBuilder.app` is the integrated development studio for building OMC applets
+1. **AppletBuilder**: Download version 5.0+ from https://github.com/abra-code/OMC/releases — `AppletBuilder.app` is the integrated development studio for building Command Workshop applets
 2. **Xcode**: Required for compiling/installing `.icon` documents into apps
 3. **Git**: For version control (recommended)
 
-> **For AI Agents**: To check the latest OMC release:
+> **For AI Agents**: To check the latest Command Workshop release:
 > ```bash
 > # Fetch latest releases from GitHub API
 > curl -s "https://api.github.com/repos/abra-code/OMC/releases?per_page=3"
 > # Filter for first non-draft, non-prerelease release
 > # Download URL: https://github.com/abra-code/OMC/releases/download/vX.X.X/OMC_X.X.X.zip
 > ```
-> Compare the latest version to local OMC version if given access to, e.g.:`~/Downloads/OMC_X.X.X/`
+> Compare the latest version to local Command Workshop version if given access to, e.g.:`~/Downloads/OMC_X.X.X/`
 
 ---
 
@@ -35,7 +35,7 @@ OMC (OnMyCommand) is a low-code macOS app development engine that lets you creat
 
 ### AppletBuilder.app
 
-`AppletBuilder.app` (included in the OMC 5.0+ release) is the integrated development studio for OMC applets. It handles creating new applets from templates, editing an existing applet's commands and scripts, managing services, and building (updating the runtime + codesigning).
+`AppletBuilder.app` (included in the 5.0+ release) is the integrated development studio for Command Workshop applets. It handles creating new applets from templates, editing an existing applet's commands and scripts, managing services, and building (updating the runtime + codesigning).
 
 **To create a new applet**: Launch `AppletBuilder.app` — the New Applet dialog opens automatically. Fill in the name, bundle ID, choose a template, optionally enable embedded Python, pick an icon, and select a destination folder.
 
@@ -186,8 +186,8 @@ Scripts for `exe_script_file` execution mode live in `MyApp.app/Contents/Resourc
 | `$OMC_OBJ_PATH` | Selected file/folder path |
 | `$OMC_OBJ_NAME` | Base name |
 | `$OMC_APP_BUNDLE_PATH` | Applet bundle path |
-| `$OMC_APP_PROCESS_ID` | PID of the OMC host process (the applet itself here, not the frontmost app) |
-| `$OMC_OMC_SUPPORT_PATH` | OMC support tools |
+| `$OMC_APP_PROCESS_ID` | PID of the Command Workshop host process (the applet itself here, not the frontmost app) |
+| `$OMC_OMC_SUPPORT_PATH` | Command Workshop support tools |
 | `$OMC_ACTIONUI_WINDOW_UUID` | Window instance ID (`$OMC_NIB_DLG_GUID` is the same value under its older name) |
 | `$OMC_CURRENT_COMMAND_GUID` | Command execution ID |
 
@@ -485,7 +485,7 @@ Background processes started by scripts can outlive the parent applet. Handle cl
 
 ### App Lifetime Events
 
-OMC dispatches commands for app lifecycle events when a matching `COMMAND_ID` is defined in `COMMAND_LIST`:
+Command Workshop dispatches commands for app lifecycle events when a matching `COMMAND_ID` is defined in `COMMAND_LIST`:
 
 | `COMMAND_ID` | When it fires |
 |--------------|---------------|
@@ -617,13 +617,13 @@ MyApp.app/
 
 ## Additional Resources
 
-### OMC Documentation
+### Command Workshop Documentation
 - [Command Reference](omc_command_reference.md)
 - [Runtime Context Reference](omc_runtime_context_reference.md)
 - [Nib to ActionUI Migration](nib_to_actionui_migration.md) (for applets made before 6.0)
 
 ### Example Applets
-- [WatchdogApp](https://github.com/abra-code/WatchdogApp) - File system monitoring in an ActionUI window with Python handlers (OMC 5.3). Its original NIB-era step-by-step guide, `building_watchdog.md`, is kept unmaintained under `Archive/`
+- [WatchdogApp](https://github.com/abra-code/WatchdogApp) - File system monitoring in an ActionUI window with Python handlers (version 5.3). Its original NIB-era step-by-step guide, `building_watchdog.md`, is kept unmaintained under `Archive/`
 - [FindApp](https://github.com/abra-code/FindApp)
 - [DeltaApp](https://github.com/abra-code/DeltaApp)
 - [XattrApp](https://github.com/abra-code/XattrApp)

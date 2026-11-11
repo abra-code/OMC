@@ -1,8 +1,8 @@
-# Nib UI Files in OMC Applets
+# Nib UI Files in Command Workshop Applets
 
 > **Removed in 6.0.** Nib dialogs (`NIB_DIALOG`) and `MainMenu.nib` no longer run: the engine refuses a `NIB_DIALOG` command with an alert, and applets build their menu bar in code. This page describes the old format only so that applets made before 6.0 can be converted; follow the [migration guide](nib_to_actionui_migration.md).
 
-Nib files (`.nib`) are Interface Builder documents used to define UI with AppKit controls. They were the way to build OMC applet dialogs before ActionUI JSON was introduced.
+Nib files (`.nib`) are Interface Builder documents used to define UI with AppKit controls. They were the way to build Command Workshop (formerly OMC) applet dialogs before ActionUI JSON was introduced.
 
 ## Editing
 
@@ -10,9 +10,9 @@ Nib files must be edited in **Xcode** using Interface Builder. Use the "Edit" bu
 
 **Recommended format:** Use bundled `.nib` (a directory containing `designable.nib` and `keyedobjects.nib`). This format allows in-place editing — Xcode can open and save directly without recompilation.
 
-## Making Controls Interactive with OMC
+## Making Controls Interactive with Command Workshop
 
-Standard AppKit controls (NSButton, NSTextField, etc.) inserted in Interface Builder are not connected to OMC commands. To make a control interactive, **rename its class** from the NS version to the corresponding OMC version in Xcode's Identity Inspector:
+Standard AppKit controls (NSButton, NSTextField, etc.) inserted in Interface Builder are not connected to Command Workshop commands. To make a control interactive, **rename its class** from the NS version to the corresponding OMC version in Xcode's Identity Inspector:
 
 | Standard Class | OMC Class | Purpose |
 |---------------|-----------|---------|
@@ -47,7 +47,7 @@ After renaming a control to its OMC class, add **User Defined Runtime Attributes
 
 For detailed property reference, see:
 
-- [OMC Controls — User Defined Runtime Attributes](omc_controls_user_defined_runtime_attributes.md)
+- [Command Workshop Controls — User Defined Runtime Attributes](omc_controls_user_defined_runtime_attributes.md)
 
 ## Accessing Control Values from Scripts
 

@@ -179,7 +179,7 @@ elif [ -n "$refused" ]; then
     ab_log "The applet's signature does not allow test launches. Build it with \"Sign to Run Locally (ad-hoc)\" (or a development certificate) and run the tests again. (${timestamp})"
     ab_status_result "xmark.octagon.fill" "red" "Its signature does not allow test launches - build it signed to run locally"
 elif [ -n "$no_launch" ]; then
-    ab_log "The applet did not come up for the test; its output is above. An OMC engine older than 5.5 has no test launch: Build updates the applet's engine to AppletBuilder's. (${timestamp})"
+    ab_log "The applet did not come up for the test; its output is above. An engine older than 5.5 has no test launch: Build updates the applet's engine to AppletBuilder's. (${timestamp})"
     ab_status_result "xmark.octagon.fill" "red" "Integration tests failed - the applet did not come up${summary:+ - ${summary}}"
 else
     ab_log "Integration tests FAILED (exit code: ${status}) (${timestamp})"

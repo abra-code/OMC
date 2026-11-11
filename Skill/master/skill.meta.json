@@ -1,7 +1,7 @@
 {
   "name": "omc",
   "version": "1.0",
-  "description": "Create, edit, debug, rebuild, or codesign OMC applets for macOS. Use when the user asks to build/rebuild or codesign an applet, add a command, write an action script, configure Command.plist or Command.json, use omc_dialog_control, chain commands, or work with AppletBuilder (incl. the appletbuilder CLI / Build & Run). For ActionUI JSON UI design, also activate the actionui skill.",
+  "description": "Create, edit, debug, rebuild, or codesign Command Workshop (formerly OMC) applets for macOS. Use when the user asks to build/rebuild or codesign an applet, add a command, write an action script, configure Command.plist or Command.json, use omc_dialog_control, chain commands, or work with AppletBuilder (incl. the appletbuilder CLI / Build & Run). For ActionUI JSON UI design, also activate the actionui skill.",
   "flavors": {
     "claude": {
       "label": "Claude (Anthropic Claude Code skill)",
@@ -58,7 +58,7 @@
         "capable",
         "lite"
       ],
-      "description": "What OMC is + applet bundle structure + Command.plist format + script naming"
+      "description": "What Command Workshop is + applet bundle structure + Command.plist format + script naming"
     },
     {
       "id": "env-tools",

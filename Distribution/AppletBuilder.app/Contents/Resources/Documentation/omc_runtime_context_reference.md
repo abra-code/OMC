@@ -1,8 +1,8 @@
-# OMC Runtime Context Reference
+# Command Workshop Runtime Context Reference
 
 ## Introduction
 
-This document lists **all special words** (`__FOO__`) and their corresponding **environment variables** (`$OMC_FOO`) that the OMC engine resolves at runtime.  
+This document lists **all special words** (`__FOO__`) and their corresponding **environment variables** (`$OMC_FOO`) that the Command Workshop (formerly OMC) engine resolves at runtime.  
 The list is derived **directly** from the source files:
 
 * `AbracodeFramework/CommandDescription.cp` – core substitution and export logic  
@@ -55,17 +55,17 @@ The list is derived **directly** from the source files:
 | **Choose Object** | `__DLG_CHOOSE_OBJECT_NAME__` | `$OMC_DLG_CHOOSE_OBJECT_NAME` | Chosen object name. | Scanned |
 | **Choose Object** | `__DLG_CHOOSE_OBJECT_NAME_NO_EXTENSION__` | `$OMC_DLG_CHOOSE_OBJECT_NAME_NO_EXTENSION` | Chosen object name without extension. | Scanned |
 | **Choose Object** | `__DLG_CHOOSE_OBJECT_EXTENSION_ONLY__` | `$OMC_DLG_CHOOSE_OBJECT_EXTENSION_ONLY` | Chosen object extension only. | Scanned |
-| **System** | `__OMC_RESOURCES_PATH__` | `$OMC_OMC_RESOURCES_PATH` | Path to OMC framework Resources. | **Always** |
-| **System** | `__OMC_SUPPORT_PATH__` | `$OMC_OMC_SUPPORT_PATH` | Path to OMC support files. | **Always** |
+| **System** | `__OMC_RESOURCES_PATH__` | `$OMC_OMC_RESOURCES_PATH` | Path to Command Workshop framework Resources. | **Always** |
+| **System** | `__OMC_SUPPORT_PATH__` | `$OMC_OMC_SUPPORT_PATH` | Path to Command Workshop support files. | **Always** |
 | **System** | `__APP_BUNDLE_PATH__` | `$OMC_APP_BUNDLE_PATH` | Applet bundle path (preferred). | **Always** |
 | **System** | `__APP_PROCESS_ID__` | `$OMC_APP_PROCESS_ID` | PID of the applet/host app itself, not the frontmost app. | **Always** |
 | **System** | `__MY_EXTERNAL_BUNDLE_PATH__` | `$OMC_MY_EXTERNAL_BUNDLE_PATH` | External `.omc` bundle path. | Scanned |
 | **Dialog** | `__NIB_DLG_GUID__` | `$OMC_NIB_DLG_GUID` | The window's UUID, the same value as `OMC_ACTIONUI_WINDOW_UUID` (named after the nib dialogs, removed in 6.0, and kept for scripts). | **Always** |
-| **Dialog** | `__ACTIONUI_WINDOW_UUID__` | `$OMC_ACTIONUI_WINDOW_UUID` | Unique ActionUI window UUID. OMC 5.0 | **Always** |
+| **Dialog** | `__ACTIONUI_WINDOW_UUID__` | `$OMC_ACTIONUI_WINDOW_UUID` | Unique ActionUI window UUID. Version 5.0 | **Always** |
 | **ActionUI Trigger** | `__ACTIONUI_TRIGGER_VIEW_ID__` | `$OMC_ACTIONUI_TRIGGER_VIEW_ID` | ViewID of the ActionUI control that fired an action. Available only when subcommand is dispatched from a control action. | **Always (when set)** |
 | **ActionUI Trigger** | `__ACTIONUI_TRIGGER_VIEW_PART_ID__` | `$OMC_ACTIONUI_TRIGGER_VIEW_PART_ID` | ViewPartID of the control event (e.g. row index for table row tap). Available only when subcommand is dispatched from a control action. | **Always (when set)** |
 | **ActionUI Trigger** | `__ACTIONUI_TRIGGER_CONTEXT__` | `$OMC_ACTIONUI_TRIGGER_CONTEXT` | Opaque context payload from the ActionUI control event (string, JSON, or number). Available only when subcommand is dispatched from a control action AND the control provided context data. | **Always (when set)** |
-| **ActionUI Bridge** | `__ACTIONUI_REMOTE_ENDPOINT__` | `$OMC_ACTIONUI_REMOTE_ENDPOINT` | Unix socket path of this host's ActionUI remote bridge, for reading and driving its windows out of process. Set once the first ActionUI window opens, and for the rest of the process. Also exported unprefixed as `$ACTIONUI_REMOTE_ENDPOINT`, which is the name the protocol itself uses. OMC 5.3 | **Always (when set)** |
+| **ActionUI Bridge** | `__ACTIONUI_REMOTE_ENDPOINT__` | `$OMC_ACTIONUI_REMOTE_ENDPOINT` | Unix socket path of this host's ActionUI remote bridge, for reading and driving its windows out of process. Set once the first ActionUI window opens, and for the rest of the process. Also exported unprefixed as `$ACTIONUI_REMOTE_ENDPOINT`, which is the name the protocol itself uses. version 5.3 | **Always (when set)** |
 | **System** | `__CURRENT_COMMAND_GUID__` | `$OMC_CURRENT_COMMAND_GUID` | Unique command execution GUID. | **Always** |
 | **URL Trigger** | (none) | `$OMC_TRIGGER_URL` | The URL that started this run, when it was started by a URL sent to the applet (the `exe` form or `omc.app.handle-url`). Absent for every other run. Also set for chained commands and for the handlers of a window the run opened. Environment variable only: there is no text substitution, because the URL is written by the sender of the link. See `URL_INVOCABLE` in the [Command Reference](omc_command_reference.md). | **Always (when set)** |
 | **Frontmost** | `__FRONT_PROCESS_ID__` | `$OMC_FRONT_PROCESS_ID` | PID of frontmost app. | Scanned |
@@ -137,7 +137,7 @@ echo "Input: ${OMC_DLG_INPUT_TEXT}"
 
 The nib dialogs' control words (`__NIB_DIALOG_CONTROL_<ID>_VALUE__`, `__NIB_TABLE_<ID>_COLUMN_<COL>_VALUE__`, `__NIB_TABLE_<ID>_COLUMN_<COL>_ALL_ROWS__`, `__NIB_WEBVIEW_<ID>_ELEMENT_<ELEM>_VALUE__` and their `OMC_NIB_...` variables) went with the nib dialogs in 6.0. The engine no longer recognizes them: the `__...__` form stays in the command as written, and such a name in `ENVIRONMENT_VARIABLES` is an ordinary custom variable. ActionUI windows use the `ACTIONUI_VIEW` and `ACTIONUI_TABLE` words below; [nib_to_actionui_migration.md](nib_to_actionui_migration.md) maps one to the other.
 
-### ActionUI Views (OMC 5.0 or higher)
+### ActionUI Views (version 5.0 or higher)
 
 Access ActionUI view values using dynamic special words:
 
@@ -150,7 +150,7 @@ Access ActionUI view values using dynamic special words:
 
 > **Note**: Table column indexes are **1-based** (column 1, 2, 3, ...). Column 0 is special - it returns all columns combined as a tab-separated string.
 
-### ActionUI Control Trigger Context (OMC 5.0+)
+### ActionUI Control Trigger Context (version 5.0+)
 
 When a subcommand is dispatched by tapping / clicking an ActionUI control (button, table row, picker option, etc.), three context variables become available in the child process environment:
 
@@ -210,11 +210,11 @@ An applet with an ActionUI window also serves a small JSON-RPC bridge over a Uni
 
 | Variable | Set from | Notes |
 | --- | --- | --- |
-| `$OMC_ACTIONUI_REMOTE_ENDPOINT` | special word `__ACTIONUI_REMOTE_ENDPOINT__` | OMC's own spelling, consistent with every other engine variable. |
+| `$OMC_ACTIONUI_REMOTE_ENDPOINT` | special word `__ACTIONUI_REMOTE_ENDPOINT__` | Command Workshop's own spelling, consistent with every other engine variable. |
 | `$ACTIONUI_REMOTE_ENDPOINT` | the process environment, and the environment dictionary | The name the ActionUI protocol defines. Descendant processes inherit it directly; it is also placed in the command's environment dictionary so the Terminal and iTerm modes, which hand an export script to an app that is not a descendant, carry it too. |
-| `$ACTIONUI_WINDOW_UUID` | the environment dictionary | The unprefixed alias of `$OMC_ACTIONUI_WINDOW_UUID`, so a client need not know it is talking to OMC. |
+| `$ACTIONUI_WINDOW_UUID` | the environment dictionary | The unprefixed alias of `$OMC_ACTIONUI_WINDOW_UUID`, so a client need not know it is talking to Command Workshop. |
 
-Both endpoint names carry the same value; the unprefixed pair is what a plain ActionUI client expects, so a script written against the protocol runs unchanged whether its host is an OMC applet or any other ActionUI application:
+Both endpoint names carry the same value; the unprefixed pair is what a plain ActionUI client expects, so a script written against the protocol runs unchanged whether its host is a Command Workshop applet or any other ActionUI application:
 
 ```python
 import actionui_remote

@@ -1,6 +1,6 @@
-# omcitest - integration tests for an OMC applet
+# omcitest - integration tests for a Command Workshop applet
 
-`appletbuilder itest <App.app>` runs the `*.itest.sh` files beside an applet against the **real applet, launched by the real OMC engine**, and drives its windows over the ActionUI bridge. This guide is for writing those files, by a person or by an agent that has never seen the applet.
+`appletbuilder itest <App.app>` runs the `*.itest.sh` files beside an applet against the **real applet, launched by the real Command Workshop (formerly OMC) engine**, and drives its windows over the ActionUI bridge. This guide is for writing those files, by a person or by an agent that has never seen the applet.
 
 Read `omctest_guide.md` first if you have not: the unit suites (`*.test.sh`) and these integration tests share their words (`section`, `check`, `alert_answer`, ...), and most of an applet's coverage belongs in the unit suites.
 
@@ -22,7 +22,7 @@ Write the unit suites for the logic. Write one integration test file per applet 
 
 ## 2. Requirements
 
-- **The applet carries an OMC 5.5 engine.** An older engine has no test launch: the harness reports "the applet did not come up for the test". AppletBuilder's **Build** puts AppletBuilder's engine into the applet.
+- **The applet carries a version 5.5 engine.** An older engine has no test launch: the harness reports "the applet did not come up for the test". AppletBuilder's **Build** puts AppletBuilder's engine into the applet.
 - **The applet is signed for local use**: ad hoc, self-signed, or a development certificate (get-task-allow). A Developer ID, App Store, TestFlight or other distribution signature, or the hardened runtime without get-task-allow, refuses the test launch: the applet prints `OMC test launch refused: <reason>` and exits with status 78. Build with "Sign to Run Locally (ad-hoc)".
 - **A logged-in GUI session.** Real windows open and take the focus while a file runs.
 - **For an agent:** the harness talks to the applet over a Unix socket, which the agent sandbox blocks, so a run needs the sandbox off. Tools the applet runs through `xcrun` shims (`otool`, `nm`, `lipo`, `clang`) may print "couldn't create cache file" inside a sandbox; that is the sandbox, not the applet.
@@ -44,7 +44,7 @@ In AppletBuilder, the **Integration Test** button in the Build & Run pane runs t
 
 **The button tests the applet in place.** `ITEST_APP` is then the bundle in your repository, not a copy. A test must never write into `ITEST_APP` (no signing, no stapling, no copying into it).
 
-For OMC engine development, `Tools/omcitest_tests/run_fixture.sh` runs the same tests against a copy of an applet, optionally with an engine you just built:
+For Command Workshop engine development, `Tools/omcitest_tests/run_fixture.sh` runs the same tests against a copy of an applet, optionally with an engine you just built:
 
 ```bash
 Tools/omcitest_tests/run_fixture.sh --app ~/git/MyAppApp/MyApp.app \
@@ -131,7 +131,7 @@ To find the folder the test file sits in (to run a fixture builder beside it): `
 **Isolated for you:**
 
 - `$HOME` and `$TMPDIR`, for everything the handlers do through them. An applet that keeps its settings under `$HOME/Library/Application Support/<App>` starts every file with none.
-- Pasteboards that go through OMC (`pasteboard`, and the engine's own clipboard reads).
+- Pasteboards that go through Command Workshop (`pasteboard`, and the engine's own clipboard reads).
 - `alert` and `notify` in handlers: stand-ins that record and answer, never show anything.
 - The engine's own panels and alerts: answered from a queue (section 6), never shown.
 - `PASTE_AFTER_EXECUTION`: no keystrokes are sent; `omc.test.status` counts them as `skippedPastes`.

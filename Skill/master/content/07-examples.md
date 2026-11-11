@@ -27,7 +27,7 @@ echo "Path: $OMC_OBJ_PATH"
 /usr/bin/stat -x "$OMC_OBJ_PATH"
 ```
 
-OMC sets `$OMC_OBJ_PATH` to the right-clicked file's path. The output window shows stdout.
+Command Workshop sets `$OMC_OBJ_PATH` to the right-clicked file's path. The output window shows stdout.
 
 ---
 

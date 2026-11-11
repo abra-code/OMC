@@ -33,7 +33,7 @@ bashism="$OMCTEST_WORK/bashism.sh"
 printf '#!/bin/sh\nwhile read -r l; do echo "$l"; done < <(echo hi)\n' > "$bashism"
 check "it is rejected"                 "2"  "$(ab_call_rc $VALIDATE validate_script_file "$bashism")"
 check "and the report explains why it looked fine" "1" \
-    "$(ab_call_out $VALIDATE SCRIPT_VALIDATE_OUTPUT validate_script_file "$bashism" | /usr/bin/grep -c 'OMC runs .sh files with /bin/sh')"
+    "$(ab_call_out $VALIDATE SCRIPT_VALIDATE_OUTPUT validate_script_file "$bashism" | /usr/bin/grep -c 'Command Workshop runs .sh files with /bin/sh')"
 
 section "3. bash 4 constructs parse but never run, so they are warned about"
 # These are the ones a syntax check cannot catch: valid to the parser, absent

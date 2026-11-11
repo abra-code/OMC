@@ -1,4 +1,4 @@
-# OMC Tips & Troubleshooting for AI Agents
+# Command Workshop Tips & Troubleshooting for AI Agents
 
 Hard-won lessons from real applet builds by AI agents. Every item here caused a
 real failure or hours of confused debugging for at least one agent. Read §1
@@ -12,7 +12,7 @@ but doesn't".
 **This is the #1 cause of silent, unexplainable applet failures by AI agents.**
 
 macOS ships bash **3.2** (from 2007) and `/bin/sh` is that same bash running in
-POSIX mode. There is no bash 4 or 5 on a stock Mac. OMC executes `.sh` action
+POSIX mode. There is no bash 4 or 5 on a stock Mac. Command Workshop (formerly OMC) executes `.sh` action
 scripts with `/bin/sh` — the shebang line is ignored.
 
 Syntax you must never use in `.sh` scripts (these are **parse errors** under
@@ -30,7 +30,7 @@ Syntax you must never use in `.sh` scripts (these are **parse errors** under
 > **Real failure:** an agent collected discovery results with
 > `while read …; done < <(echo "$out")`. The script passed `bash -n`, worked
 > perfectly when the agent ran it manually in its (bash) terminal, and died
-> with a parse error every time OMC ran it — at the exact line, after the
+> with a parse error every time Command Workshop ran it — at the exact line, after the
 > early UI updates had already appeared. The agent spent several rounds adding
 > logging above the line that could never be reached below it, and never found
 > the bug. The sidebar table simply "would not populate".
@@ -54,7 +54,7 @@ Syntax you must never use in `.sh` scripts (these are **parse errors** under
 
 ---
 
-## 2. Test scripts the way OMC runs them
+## 2. Test scripts the way Command Workshop runs them
 
 **Use `appletbuilder test`.** Hand-rolling a stub directory is what `omctest`
 institutionalizes: it builds the mock environment, stubs the app-modal `alert`
@@ -217,7 +217,7 @@ Other live-debugging tools:
   appears in an output window. Only stdout: to see errors there too, send
   stderr to stdout (`exec 2>&1` at the top of a shell handler,
   `sys.stderr = sys.stdout` in a Python one).
-- `printenv | sort` inside a handler dumps the full OMC context.
+- `printenv | sort` inside a handler dumps the full Command Workshop context.
 
 ---
 

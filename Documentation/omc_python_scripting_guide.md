@@ -1,15 +1,15 @@
-# OMC Python Scripting Guide
+# Command Workshop Python Scripting Guide
 
-Python scripts are a natural alternative to shell scripts for implementing action handlers in OMC applets. Python applets come with an embedded relocatable Python distribution, so your scripts run without requiring any system-wide Python installation.
+Python scripts are a natural alternative to shell scripts for implementing action handlers in Command Workshop (formerly OMC) applets. Python applets come with an embedded relocatable Python distribution, so your scripts run without requiring any system-wide Python installation.
 
 ## Python Environment
 
-When an applet bundles its own Python at `Contents/Library/Python/`, OMC sets up the environment automatically for **every** command it runs — including `.sh` handlers that shell out to `python3`:
+When an applet bundles its own Python at `Contents/Library/Python/`, Command Workshop sets up the environment automatically for **every** command it runs — including `.sh` handlers that shell out to `python3`:
 
 - **PATH** is prepended with the embedded interpreter's `bin/` directory (`YourApp.app/Contents/Library/Python/bin/`), so `python3` and any console scripts installed next to it resolve without full paths.
 - **PYTHONPATH** is prepended with `Contents/Library/Packages/` whenever that directory exists, so third-party modules installed there are importable. This is the recommended home for dependencies — see [Installing Python Packages](#installing-python-packages).
 - **PYTHONPYCACHEPREFIX** is set to `Pyc` inside the per-user temporary directory macOS creates for your uid (`/var/folders/.../T/Pyc`), so `.pyc` files are written there instead of polluting (or being blocked from) the app bundle. Note this is the directory `NSTemporaryDirectory()` returns, which on macOS is not `$TMPDIR` - redirecting `TMPDIR` does not move the engine's cache.
-- No shebang line is needed — OMC determines the interpreter from the file extension.
+- No shebang line is needed — Command Workshop determines the interpreter from the file extension.
 
 These variables are exported regardless of the handler's language, so a shell handler that invokes the embedded `python3` gets the same module resolution as a `.py` handler.
 
@@ -39,7 +39,7 @@ cmd_guid = os.environ.get("OMC_CURRENT_COMMAND_GUID", "")
 
 ## The `omc` Module
 
-OMC ships two Python modules into every applet that embeds Python and has Python handlers:
+Command Workshop ships two Python modules into every applet that embeds Python and has Python handlers:
 `omc` and `actionui_remote`. They land in `Contents/Library/Packages/`, which is already on
 `PYTHONPATH`, so a handler just imports them - there is nothing to install.
 
@@ -65,7 +65,7 @@ the user changed afterwards was invisible. `win.get_value()`, `win.get_rows()`,
 
 The module uses two mechanisms behind one surface. Everything ActionUI defines - values, rows,
 properties, state, element insertion, modals, toasts - travels over the remote bridge, because
-that is the only way to read. Everything OMC defines on top of a window - `terminate_ok()`,
+that is the only way to read. Everything Command Workshop defines on top of a window - `terminate_ok()`,
 `terminate_cancel()`, `bring_to_front()`, `set_title()`, `resize()`,
 `move()`, and `omc.next_command()` - runs the same helper tool a shell handler would, so there is
 one implementation of each verb rather than two.
@@ -134,7 +134,7 @@ This is useful for defining tool paths, control IDs, and reusable helper functio
 
 ## Reading Control Values
 
-OMC exports control values as environment variables. The same patterns from the [Shell Scripting Guide](omc_scripting_guide.md) apply — `os.environ.get()` is the Python equivalent:
+Command Workshop exports control values as environment variables. The same patterns from the [Shell Scripting Guide](omc_scripting_guide.md) apply — `os.environ.get()` is the Python equivalent:
 
 ```python
 # Text field (id 4)
@@ -341,7 +341,7 @@ arch -x86_64 "$PY" -m pip install --target "$APP/Contents/Library/Packages" \
     --force-reinstall --no-binary :all: package_name
 ```
 
-`import package_name` then works directly, because OMC puts `Packages/` on `PYTHONPATH`. A package that ships a command-line entry point (e.g. `watchmedo` from `watchdog`) installs its launcher into `Packages/bin/`, but you can also invoke it as a module — `"$PY" -m watchdog.watchmedo …` — which avoids depending on the launcher's location.
+`import package_name` then works directly, because Command Workshop puts `Packages/` on `PYTHONPATH`. A package that ships a command-line entry point (e.g. `watchmedo` from `watchdog`) installs its launcher into `Packages/bin/`, but you can also invoke it as a module — `"$PY" -m watchdog.watchmedo …` — which avoids depending on the launcher's location.
 
 ### Legacy: install into the embedded Python
 
@@ -367,7 +367,7 @@ Three front doors, all running the same code - `thin_applet_python.py`, a front 
 - **`appletbuilder thin-python`** - the agent CLI.
 - **`Distribution/Scripts/thin_applet_python.py`** - the script itself, which is where the advanced options live.
 
-AppletBuilder vendors the whole toolkit into `Contents/Library/python_thinning`, so the button and the CLI work with no Python-Embedding checkout on the machine. The repo copy of the script uses a sibling Python-Embedding checkout next to the OMC repo, as it always has.
+AppletBuilder vendors the whole toolkit into `Contents/Library/python_thinning`, so the button and the CLI work with no Python-Embedding checkout on the machine. The repo copy of the script uses a sibling Python-Embedding checkout next to the Command Workshop repo, as it always has.
 
 ### In AppletBuilder
 
@@ -429,7 +429,7 @@ THIN="OMC/Distribution/Scripts/thin_applet_python.py"
 "$THIN" apply MyApp.app                            # add --dry-run to preview
 ```
 
-The wrapper knows the OMC layout, so it automatically thins `Contents/Library/Python`, uses `Contents/Resources/Scripts` as a coverage cross-check, and exports `PYTHONPATH=Contents/Library/Packages` while tracing and verifying - so modules you installed in `Packages/` import the same way they do at runtime. **`Packages/` is never thinned**: only the interpreter's own stdlib/`site-packages` are trimmed.
+The wrapper knows the Command Workshop layout, so it automatically thins `Contents/Library/Python`, uses `Contents/Resources/Scripts` as a coverage cross-check, and exports `PYTHONPATH=Contents/Library/Packages` while tracing and verifying - so modules you installed in `Packages/` import the same way they do at runtime. **`Packages/` is never thinned**: only the interpreter's own stdlib/`site-packages` are trimmed.
 
 Key points:
 
@@ -450,7 +450,7 @@ Script files follow the same pattern as shell scripts — `AppName.area.action.p
 | `MyApp.export.events.py` | `MyApp.export.events` |
 | `lib_myapp.py` | *(shared module, not a command)* |
 
-OMC determines the interpreter from the file extension, so a command can be implemented as either `.sh` or `.py` — just provide one file with the matching name.
+Command Workshop determines the interpreter from the file extension, so a command can be implemented as either `.sh` or `.py` — just provide one file with the matching name.
 
 ## Debugging
 
@@ -460,10 +460,10 @@ OMC determines the interpreter from the file extension, so a command can be impl
 
 ## Related Documentation
 
-- [Shell Scripting Guide](omc_scripting_guide.md) — Shell-specific patterns for OMC applets
-- [OMC Command Reference](omc_command_reference.md) — Command.plist format and all configuration keys
+- [Shell Scripting Guide](omc_scripting_guide.md) — Shell-specific patterns for Command Workshop applets
+- [Command Workshop Command Reference](omc_command_reference.md) — Command.plist format and all configuration keys
 - [Python Bridge Guide](omc_python_bridge_guide.md) — Reading an ActionUI window from a Python handler: the full `omc` module reference
-- [OMC Runtime Context Reference](omc_runtime_context_reference.md) — All environment variables and special words
+- [Command Workshop Runtime Context Reference](omc_runtime_context_reference.md) — All environment variables and special words
 - [omc_dialog_control](omc_dialog_control--help.md) — Full command reference for UI manipulation
 - [omc_next_command](omc_next_command--help.md) — Command chaining
 - [alert](alert--help.md) — Alert dialog tool

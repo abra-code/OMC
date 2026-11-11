@@ -1,6 +1,6 @@
-# Menu Bar JSON in OMC Applets (`MainMenu.json`)
+# Menu Bar JSON in Command Workshop Applets (`MainMenu.json`)
 
-Applets build their menu bar in code (since OMC 5.1; since 6.0 a
+Applets build their menu bar in code (since 5.1; since 6.0 a
 `MainMenu.nib` is no longer loaded at all). At
 launch the applet installs the standard macOS menu bar (App, File, Edit, Format,
 Window, Help) and then applies an optional **`MainMenu.json`** in the applet's
@@ -10,7 +10,7 @@ The base JSON format — the array root and the `CommandMenu` / `CommandGroup`
 elements (deletion is a `CommandGroup` with `placement: "replacing"` and no
 children) — is provided by ActionUI's menu-bar engine and is documented in
 **[ActionUI-MenuBar-JSON-Guide.md](ActionUI-MenuBar-JSON-Guide.md)**. This guide
-covers only what is specific to OMC applets.
+covers only what is specific to Command Workshop (formerly OMC) applets.
 
 If an applet ships **no** `MainMenu.json`, it launches with the standard bar
 unchanged. An applet made before 5.1 may still carry a `MainMenu.nib` and an
@@ -53,7 +53,7 @@ placement by what the nib item was:
   `before` / `after` an anchor (an item id, or a SwiftUI group placement such as
   `appSettings` / `saveItem`). Give it a `systemImage` if you want an icon.
 
-**3. Place `MainMenu.json` in `Base.lproj/`** (where the nib was). OMC resolves it
+**3. Place `MainMenu.json` in `Base.lproj/`** (where the nib was). Command Workshop resolves it
 as a localized resource.
 
 **4. Remove `NSMainNibFile` from `Info.plist`.** Since 6.0 the applet's
@@ -66,8 +66,8 @@ while it is there. Leave `NSPrincipalClass` (`NSApplication`) in place.
 executable and embedded `Abracode.framework`, which must come from the same
 release. An applet last built before 6.0 must update both: its old executable
 does not launch with a 6.0 framework. In **AppletBuilder ▸ Build & Run**,
-use **Force Update Binaries** — required when the OMC version string is unchanged
-(e.g. when the OMC version string is the same in both builds, the normal
+use **Force Update Binaries** — required when the Command Workshop version string is unchanged
+(e.g. when the Command Workshop version string is the same in both builds, the normal
 version-based update check won't trigger a refresh).
 
 **7. Re-codesign** the bundle after editing it (`codesign_applet.sh YourApp.app -`)
@@ -87,15 +87,15 @@ The standard applet template ships exactly one menu addition:
 ]
 ```
 
-`autoPopulate` is an OMC extension. When `true`, OMC fills the menu's items from
+`autoPopulate` is a Command Workshop extension. When `true`, Command Workshop fills the menu's items from
 the applet's `Command.json` at launch — one item per top-level command — so the
 menu always mirrors the applet's commands without listing them by hand. Omit
 `children` when `autoPopulate` is set.
 
 ## Wiring a menu item to a command (`actionID`)
 
-Hand-authored menu items use ActionUI's native **`actionID`** — no OMC-specific
-property. In an OMC applet the `actionID` **is** the command id to run: OMC builds
+Hand-authored menu items use ActionUI's native **`actionID`** — no Command Workshop-specific
+property. In a Command Workshop applet the `actionID` **is** the command id to run: Command Workshop builds
 the item as an `OMCMenuItem` wired to `executeCommand:`, the same path the old nib
 menu used.
 
@@ -137,7 +137,7 @@ is in [ActionUI-MenuBar-JSON-Guide.md](ActionUI-MenuBar-JSON-Guide.md).
 
 ## Open Recent
 
-OMC adds and maintains the **File ▸ Open Recent** submenu itself — the standard
+Command Workshop adds and maintains the **File ▸ Open Recent** submenu itself — the standard
 programmatic bar does not include one, because AppKit only auto-populates Open
 Recent for nib menus. The applet's document controller (`OMCAppletController`,
 named `OMCDropletController` before 6.0)

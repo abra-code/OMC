@@ -1,6 +1,6 @@
-# omctest - writing tests for an OMC applet
+# omctest - writing tests for a Command Workshop applet
 
-`omctest` runs an applet's real handler scripts inside a simulated OMC environment and lets you assert on everything they touch: files they wrote, exit codes, tools they invoked, and what they pushed toward the window.
+`omctest` runs an applet's real handler scripts inside a simulated Command Workshop (formerly OMC) environment and lets you assert on everything they touch: files they wrote, exit codes, tools they invoked, and what they pushed toward the window.
 
 You write plain POSIX `sh` files under `Tests/` next to the `.app`, and run them with:
 
@@ -8,7 +8,7 @@ You write plain POSIX `sh` files under `Tests/` next to the `.app`, and run them
 appletbuilder test MyApp.app
 ```
 
-This guide is the reference for writing those files. It assumes no prior context beyond the OMC scripting basics.
+This guide is the reference for writing those files. It assumes no prior context beyond the Command Workshop scripting basics.
 
 ---
 
@@ -32,7 +32,7 @@ omctest replaces the clicking for everything that leaves a trace.
 ### What is out of scope, stated plainly
 
 - **No rendering or layout testing.** The harness never creates a window. Spacing, truncation, dark mode, resizing, focus and tab order, drag feedback, animations: a human at the screen must confirm these.
-- **No testing of the engine.** The harness *simulates* the engine's contract as documented in `omc_runtime_context_reference.md`; it does not execute the engine. If the simulation and the engine disagree, your tests pass and your app misbehaves. When the engine's behavior is the question, write an integration test (`omcitest_guide.md`: the real applet through the real engine, OMC 5.5), or instrument the live app (see `omc_agent_tips_and_troubleshooting.md` section 6).
+- **No testing of the engine.** The harness *simulates* the engine's contract as documented in `omc_runtime_context_reference.md`; it does not execute the engine. If the simulation and the engine disagree, your tests pass and your app misbehaves. When the engine's behavior is the question, write an integration test (`omcitest_guide.md`: the real applet through the real engine, version 5.5), or instrument the live app (see `omc_agent_tips_and_troubleshooting.md` section 6).
 - **No synthesized UI events.** Handlers are dispatched directly, so the wiring from a control's `actionID` to the handler is never exercised by a test. A typo'd `actionID` is silent here - `validate` is what catches it, warning for any `*ActionID` in the bundle's JSON that resolves to no command.
 - **ActionUI windows only.** (Nib dialogs were removed from the engine in 6.0.)
 - **External-world effects are not faked.** Keychain, `notarytool`, `codesign`, network. Handlers call these by absolute path, which the harness cannot redirect. See section 8, the seam contract.
@@ -286,7 +286,7 @@ An empty view id is accepted - what `omc_control` and `omc_trigger` refuse is an
 | `omc_run` | `<script-stem>` | resolves `Scripts/<stem>.<ext>` case-insensitively, runs it under the right interpreter with `$OMCTEST_WORK` as cwd, appends output to `handlers.log`, records the exit code in `$OMCTEST_STATUS`, then clears the one-shot variables. Returns the handler's exit code, or `127` when no script matches. |
 | `omc_fire` | `<command-id> <view-id> [value]` | `omc_control` (when a value is given) + `omc_trigger` + `omc_run`. The common three-liner. |
 
-When several scripts share a stem, the harness picks `.sh`, `.py`, `.zsh`, `.bash`, then any other extension or none, in directory order. The engine leaves that case undefined, so this order is the harness's own choice: give each command one script. Each script runs under the interpreter the engine's table gives its extension, matched case-insensitively (`.PY` runs under Python, `.js` under JavaScriptCore's `jsc`). No shebang is honored, exactly like OMC.
+When several scripts share a stem, the harness picks `.sh`, `.py`, `.zsh`, `.bash`, then any other extension or none, in directory order. The engine leaves that case undefined, so this order is the harness's own choice: give each command one script. Each script runs under the interpreter the engine's table gives its extension, matched case-insensitively (`.PY` runs under Python, `.js` under JavaScriptCore's `jsc`). No shebang is honored, exactly like Command Workshop.
 
 **What `omc_run` takes is the script's file stem, not the manifest's `COMMAND_ID`.** For most commands these are the same string, which is why it is easy to believe otherwise - and why the distinction only bites on the one command that matters most.
 
@@ -466,7 +466,7 @@ check "and the field was set" "1" "$(bridge_called actionui.setValue "$filter")"
 check "with the right text"   "ready" "$(bridge_value 101)"
 ```
 
-**There are two virtual windows, and this is the one that matters most often.** A Python handler using `omc` writes through two channels: everything ActionUI defines - values, rows, properties, elements - goes over the bridge, because that is the only channel that can *read*; OMC's own window verbs - `terminate_ok`, `set_title`, `resize`, `move` - shell out to `omc_dialog_control` and land in the stub's files. So `bridge_value` reads back a `win.set_value()`, and `ui_value` reads back a `win.set_title()`. They were deliberately not merged: `ui_value` would have to make a socket round trip on every call, and "empty means never touched" would stop being true.
+**There are two virtual windows, and this is the one that matters most often.** A Python handler using `omc` writes through two channels: everything ActionUI defines - values, rows, properties, elements - goes over the bridge, because that is the only channel that can *read*; Command Workshop's own window verbs - `terminate_ok`, `set_title`, `resize`, `move` - shell out to `omc_dialog_control` and land in the stub's files. So `bridge_value` reads back a `win.set_value()`, and `ui_value` reads back a `win.set_title()`. They were deliberately not merged: `ui_value` would have to make a socket round trip on every call, and "empty means never touched" would stop being true.
 
 `bridge_value` is derived from the request log, not asked of the running host. A query would itself be a request, and then `bridge_called actionui.getValue` would count the harness's own reads alongside the applet's.
 
@@ -580,7 +580,7 @@ check "a tab is escaped"  "a\\tb"  "$(zip_eval 'lib_zip.escape(args[0])' "$(prin
 
 ## 8. The seam contract: what cannot be intercepted
 
-The interposition directory covers only tools reached through `$OMC_OMC_SUPPORT_PATH`. OMC convention calls system binaries by absolute path - `/usr/bin/codesign`, `/usr/bin/xcrun notarytool`, `/usr/bin/security` - and neither the support directory nor `$PATH` can redirect those.
+The interposition directory covers only tools reached through `$OMC_OMC_SUPPORT_PATH`. Command Workshop convention calls system binaries by absolute path - `/usr/bin/codesign`, `/usr/bin/xcrun notarytool`, `/usr/bin/security` - and neither the support directory nor `$PATH` can redirect those.
 
 So the harness cannot, by itself, make a notarization submit step or keychain access testable. The answer is a **convention in the applet**, not a mechanism in the harness. An applet that wants those paths under test routes external binaries through overridable variables in its shared lib:
 

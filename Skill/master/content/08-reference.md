@@ -6,7 +6,7 @@ flavors: [claude, capable]
 
 ## Reference Documentation
 
-Full OMC reference is in the `docs/` folder (also bundled in `AppletBuilder.app/Contents/Resources/Documentation/`):
+Full Command Workshop reference is in the `docs/` folder (also bundled in `AppletBuilder.app/Contents/Resources/Documentation/`):
 
 | File | Contents |
 |------|----------|
@@ -17,7 +17,7 @@ Full OMC reference is in the `docs/` folder (also bundled in `AppletBuilder.app/
 | `docs/omc_command_reference.md` | Complete `Command.plist` key reference — all execution modes, dialog keys, output window settings, progress dialogs, input dialogs, services |
 | `docs/omc_runtime_context_reference.md` | Every `$OMC_*` environment variable and `__SPECIAL_WORD__` substitution |
 | `docs/omctest_guide.md` | **Writing tests**: the `Tests/` layout, the full helper API (driving the window, dispatching handlers, asserting on the virtual window), which `omc_dialog_control` verbs replay, the seam contract for binaries the harness cannot intercept, and how to write checks that can actually fail |
-| `docs/omcitest_guide.md` | **Writing integration tests** (`*.itest.sh`, OMC 5.5): the real applet through the real engine, its requirements (a 5.5 engine, a local signature, the sandbox off), the API for commands, windows, panels and alerts, what a test launch isolates and what it cannot, the patterns (launch, open, wait, tabs, guards) and the traps |
+| `docs/omcitest_guide.md` | **Writing integration tests** (`*.itest.sh`, version 5.5): the real applet through the real engine, its requirements (a 5.5 engine, a local signature, the sandbox off), the API for commands, windows, panels and alerts, what a test launch isolates and what it cannot, the patterns (launch, open, wait, tabs, guards) and the traps |
 | `docs/omc_scripting_guide.md` | Shell script patterns: reading controls, updating UI, tables, state, debugging |
 | `docs/omc_python_scripting_guide.md` | Python handlers: env (`PATH`/`PYTHONPATH`/`Packages`), equivalents of all shell patterns, installing deps into `Contents/Library/Packages`, and thinning the embedded Python (the plan/apply workflow behind AppletBuilder's Embedded Python Thinning group, `appletbuilder thin-python`, and `Distribution/Scripts/thin_applet_python.py`) |
 | `docs/omc_python_bridge_guide.md` | The `omc` module: reading an ActionUI window from a Python handler, the full method reference, batching, error handling, and when to keep using `omc_dialog_control` |
@@ -35,4 +35,4 @@ Full OMC reference is in the `docs/` folder (also bundled in `AppletBuilder.app/
 
 When you need the exact keys for `ACTIONUI_WINDOW`, the complete list of `omc_dialog_control` operations, or the full env-var table, read the relevant `docs/` file directly.
 
-For ActionUI JSON UI (element types, properties, validation, patterns): read the **ActionUI skill** (`../ActionUI/Skill/SKILL.md`). The OMC skill only covers how ActionUI connects to OMC — the JSON format itself is entirely in the ActionUI skill.
+For ActionUI JSON UI (element types, properties, validation, patterns): read the **ActionUI skill** (`../ActionUI/Skill/SKILL.md`). The Command Workshop skill only covers how ActionUI connects to Command Workshop — the JSON format itself is entirely in the ActionUI skill.

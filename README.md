@@ -1,11 +1,10 @@
-# OMC
-## OnMyCommand
+# Command Workshop
 
-OnMyCommand is an engine to execute command line tools and shell scripts - but not by typing in some command line interface - the idea is to create GUI access points to the rich underlying Unix foundation of macOS. If the name of the engine may seem a bit strange, it is not random: it tries to convey the ease of accessibility to the command line environment.  
+Command Workshop (formerly OnMyCommand, or OMC) is an engine to execute command line tools and shell scripts - but not by typing in some command line interface - the idea is to create GUI access points to the rich underlying Unix foundation of macOS.  
 
-Most of the OMC development effort nowadays is directed towards **building apps** based on Abracode.framework and OMCApplet.app.  
-In contemporary terms you could describe OMC as low code or no code macOS app development environment.  
-One exemple of OMC app is [AppletBuilder](https://github.com/abra-code/OMC/tree/master/Distribution/AppletBuilder.app) itself in OMC 5 distribution. Other apps:  
+Most of the Command Workshop development effort nowadays is directed towards **building apps** based on Abracode.framework and OMCApplet.app.  
+In contemporary terms you could describe Command Workshop as low code or no code macOS app development environment.  
+One exemple of Command Workshop app is [AppletBuilder](https://github.com/abra-code/OMC/tree/master/Distribution/AppletBuilder.app) itself in version 5 distribution. Other apps:  
 
 [AIChat](https://github.com/abra-code/AIChatApp)  
 [ICEdit](https://github.com/abra-code/ICEditApp)  
@@ -18,14 +17,14 @@ One exemple of OMC app is [AppletBuilder](https://github.com/abra-code/OMC/tree/
 [Xattr](https://github.com/abra-code/XattrApp)  
 [Watchdog](https://github.com/abra-code/WatchdogApp)  
 
-OnMyCommand has been available for macOS for over 15 years. Some historical information and legacy documentation is available [here](http://www.abracode.com/free/cmworkshop/on_my_command.html).  
-OMC started life as a **contextual menu plug-in** allowing users to add menu items to execute custom mini scripts by editing the preference plist. This functionality is still available but as Apple made classic in-proc contextual menu plug-ins obsolete, the usage has decreased. With recent macOS versions you need to use a special host app to load CM plug-ins. For more information see [Abracode Shortcuts.app](https://github.com/abra-code/Shortcuts)
+Command Workshop has been available for macOS for over 15 years. Some historical information and legacy documentation is available [here](http://www.abracode.com/free/cmworkshop/on_my_command.html).  
+Command Workshop started life as a **contextual menu plug-in** allowing users to add menu items to execute custom mini scripts by editing the preference plist. This functionality is still available but as Apple made classic in-proc contextual menu plug-ins obsolete, the usage has decreased. With recent macOS versions you need to use a special host app to load CM plug-ins. For more information see [Abracode Shortcuts.app](https://github.com/abra-code/Shortcuts)
 
 ## Key Design Ideas
 ### (Basic concepts under 5 minutes)
 
 ### **UI Entry Points**
-OMC engine handles the UI entry points. It could be a contextual menu item, could be an app start, a menu item in your applet, could be a button in a dialog. You provide a handler script (or command, if you will), which will be called by the engine when user initiates some action. Commands have assigned IDs (just unique strings) and you make the connection between UI element and the handler by command ID. A control in an ActionUI JSON window names it as its `actionID`, and a menu item in `MainMenu.json` the same way. That way a click on button can invoke an action in your script and say `echo "Hello World"`.
+Command Workshop engine handles the UI entry points. It could be a contextual menu item, could be an app start, a menu item in your applet, could be a button in a dialog. You provide a handler script (or command, if you will), which will be called by the engine when user initiates some action. Commands have assigned IDs (just unique strings) and you make the connection between UI element and the handler by command ID. A control in an ActionUI JSON window names it as its `actionID`, and a menu item in `MainMenu.json` the same way. That way a click on button can invoke an action in your script and say `echo "Hello World"`.
 
 ### **Environment Variables**
 When your command handler is executed, the engine provides the relevant context information as environment variables, which your script can access and act upon.
@@ -49,21 +48,21 @@ Several other contextual or static environment variables are exported by the eng
 `env | grep "OMC" | sort`
 
 ### **Out Of Process**
-OMC engine runs your handler scripts in separate child processes. This has several implications:
+Command Workshop engine runs your handler scripts in separate child processes. This has several implications:
 - you cannot crash the host app - the stability of parent process is unaffected even by misbehaving code,
 - the execution is mostly asynchronous (depends on execution mode if you are curious to look into details),
-- since it is an out of process execution, the communication back to the host app from your script must be handled in special way. OMC provides two command line tools to facilitate that: `omc_dialog_control` and `omc_next_command`,
-- communication with other commands within the same app is limited but information can be shared through files or via private pasteboard. OMC provides a `pasteboard` tool to help with this.
+- since it is an out of process execution, the communication back to the host app from your script must be handled in special way. Command Workshop provides two command line tools to facilitate that: `omc_dialog_control` and `omc_next_command`,
+- communication with other commands within the same app is limited but information can be shared through files or via private pasteboard. Command Workshop provides a `pasteboard` tool to help with this.
 
 
 ## Documentation
 Ready to learn more? Start here:  
 
-[OMC Command Reference](Documentation/omc_command_reference.md)
+[Command Workshop Command Reference](Documentation/omc_command_reference.md)
 \
-[OMC Runtime Context Reference](Documentation/omc_runtime_context_reference.md)
+[Command Workshop Runtime Context Reference](Documentation/omc_runtime_context_reference.md)
 \
-[OMC Services Reference](Documentation/omc_services_reference.md)
+[Command Workshop Services Reference](Documentation/omc_services_reference.md)
 \
-[Building OMC Applets](Documentation/building_omc_applet.md)
+[Building Command Workshop Applets](Documentation/building_omc_applet.md)
 

@@ -12,7 +12,7 @@ After creating or editing a command manifest, validate it before building. The v
 python3 Skill/scripts/validate_command_plist.py <App.app | Command.plist | Command.json>
 ```
 
-Pass the **applet bundle** (`.app` / `.omc`) rather than the bare file to also run bundle cross-checks (Layer 2); for a bundle the verifier resolves the command file itself, preferring `Command.json` when both exist (as OMC does): every `exe_script_file` command has a matching `Scripts/<COMMAND_ID>.*`, the `ACTIONUI_WINDOW` JSON resources exist, subcommand IDs (`INIT_SUBCOMMAND_ID`, `END_OK_SUBCOMMAND_ID`, `NEXT_COMMAND_ID`, …) resolve, and every `actionID` in the bundle's JSON UI documents points at a command that exists.
+Pass the **applet bundle** (`.app` / `.omc`) rather than the bare file to also run bundle cross-checks (Layer 2); for a bundle the verifier resolves the command file itself, preferring `Command.json` when both exist (as Command Workshop does): every `exe_script_file` command has a matching `Scripts/<COMMAND_ID>.*`, the `ACTIONUI_WINDOW` JSON resources exist, subcommand IDs (`INIT_SUBCOMMAND_ID`, `END_OK_SUBCOMMAND_ID`, `NEXT_COMMAND_ID`, …) resolve, and every `actionID` in the bundle's JSON UI documents points at a command that exists.
 
 Exit codes: `0` clean · `2` warnings only · `1` errors (`[INFO]` lines are advisory and never affect the exit code). Fix every `[ERROR]` before building; investigate each `[WARNING]` (usually a typo, a wrong value type, or a key with no effect in its context); `[INFO]` lines are just FYI.
 
@@ -20,7 +20,7 @@ Common findings:
 - **Unknown key** — typo or hallucinated key; check the schema for that dictionary.
 - **Wrong value type** — e.g. `DEFAULT_LOCATION` / `DEFAULT_FILE_NAME` must be an *array*; a bare string is silently ignored by the engine.
 - **Deprecated `EXECUTION_MODE` alias** — use the modern name (`exe_popen` → `exe_shell_script`).
-- **"is removed and ignored by the engine"** - the engine no longer reads the key: drop it. OMC 5.6 dropped the output window's `WINDOW_ALPHA`, fades and custom PNG windows (`CUSTOM_*` keys; `WINDOW_TYPE` `custom` is read as `floating`).
+- **"is removed and ignored by the engine"** - the engine no longer reads the key: drop it. Version 5.6 dropped the output window's `WINDOW_ALPHA`, fades and custom PNG windows (`CUSTOM_*` keys; `WINDOW_TYPE` `custom` is read as `floating`).
 - **`VERSION` not `2`** — the engine loads nothing unless the root `VERSION` is `2`.
 - **"has no effect unless …"** — the key is ignored in this context (e.g. `FRACT_POSITION_*` without `WINDOW_POSITION=absolute`; `OUTPUT_WINDOW_SETTINGS` / `PROGRESS` without a popen / `*_with_output_window` mode; `INPUT_MENU` without a popup/combo `INPUT_TYPE`).
 - **Dangling subcommand ID / missing dialog resource** — a referenced `COMMAND_ID` (`INIT_SUBCOMMAND_ID`, `NEXT_COMMAND_ID`, …) or a `JSON_NAME` resource doesn't exist in the bundle. These are errors. (A `NIB_DIALOG` is a warning: removed in 6.0, the engine refuses the command.)

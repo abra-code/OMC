@@ -8,7 +8,7 @@ flavors: [claude, capable]
 
 ### Shared Library Pattern
 
-Define tool paths and control IDs once in `lib.myapp.sh` and source it from every handler. This is the standard pattern in every OMC applet.
+Define tool paths and control IDs once in `lib.myapp.sh` and source it from every handler. This is the standard pattern in every Command Workshop applet.
 
 ```bash
 # lib.myapp.sh

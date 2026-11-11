@@ -67,7 +67,7 @@ The JSON file `Contents/Resources/Base.lproj/MainWindow.json` defines the UI (se
 | `PROGRESS` | dict | Progress bar dialog (`TITLE`, `MODE`: `steps`/`counter`/`indeterminate`) |
 | `INPUT_DIALOG` | dict | Prompts for user input before running (`TYPE`: `text`/`password`/`popup`/`combo`) |
 | `SUBMENU_NAME` | string | Groups this command under a submenu in contextual menus |
-| `CATEGORIES` | array | Filter categories for OMC's command list UI |
+| `CATEGORIES` | array | Filter categories for Command Workshop's command list UI |
 
 ## App Lifetime Event COMMAND_IDs
 

@@ -1,18 +1,18 @@
-# OMC Services Reference
+# Command Workshop Services Reference
 
 ## Overview
 
-OMC applets integrate with macOS **Services** via the `NSServices` array in `Info.plist`. The OMC engine uses a centralized handler to process all service invocations, routing them to the appropriate command based on the `NSUserData` value.
+Command Workshop (formerly OMC) applets integrate with macOS **Services** via the `NSServices` array in `Info.plist`. The Command Workshop engine uses a centralized handler to process all service invocations, routing them to the appropriate command based on the `NSUserData` value.
 
-**Key OMC-Specific Requirements** (must be exact):
+**Key Command Workshop-Specific Requirements** (must be exact):
 
 | Key           | Value                     | Required | Description |
 |---------------|---------------------------|----------|-------------|
-| `NSMessage`   | `"runOMCService"`         | Yes      | Fixed selector recognized by the OMC engine |
+| `NSMessage`   | `"runOMCService"`         | Yes      | Fixed selector recognized by the Command Workshop engine |
 | `NSPortName`  | `"OMCService"`            | Yes      | Fixed Mach port name for service communication |
 | `NSUserData`  | Command identifier        | Yes      | Either `NAME` (command group) or `COMMAND_ID` (specific handler) |
 
-The OMC engine listens on the `OMCService` port upon applet launch. When a service is selected, macOS sends the `runOMCService` message. The engine extracts `NSUserData`, resolves it to a command, processes input from the pasteboard based on `NSSendTypes`, sets environment variables, and executes the command.
+The Command Workshop engine listens on the `OMCService` port upon applet launch. When a service is selected, macOS sends the `runOMCService` message. The engine extracts `NSUserData`, resolves it to a command, processes input from the pasteboard based on `NSSendTypes`, sets environment variables, and executes the command.
 
 ## `NSUserData` Resolution
 
@@ -81,7 +81,7 @@ The OMC engine listens on the `OMCService` port upon applet launch. When a servi
 
 
 **Summary**  
-All OMC services **must** include:
+All Command Workshop services **must** include:
 
 ```xml
 <key>NSMessage</key>

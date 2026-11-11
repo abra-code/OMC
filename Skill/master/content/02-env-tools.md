@@ -6,15 +6,15 @@ flavors: [claude, capable, lite]
 
 ## Environment Variables
 
-OMC exports these variables into every script's environment:
+Command Workshop exports these variables into every script's environment:
 
 ### Always Available
 
 | Variable | Description |
 |----------|-------------|
 | `$OMC_APP_BUNDLE_PATH` | Full path to the running applet's `.app` bundle |
-| `$OMC_APP_PROCESS_ID` | PID of the host process running OMC, which for an applet is the applet itself - use it to tell whether the instance that owns some state is still alive (not the frontmost app, that is `$OMC_FRONT_PROCESS_ID`) |
-| `$OMC_OMC_SUPPORT_PATH` | Path to OMC's support directory — all runtime tools live here |
+| `$OMC_APP_PROCESS_ID` | PID of the host process running Command Workshop, which for an applet is the applet itself - use it to tell whether the instance that owns some state is still alive (not the frontmost app, that is `$OMC_FRONT_PROCESS_ID`) |
+| `$OMC_OMC_SUPPORT_PATH` | Path to Command Workshop's support directory — all runtime tools live here |
 | `$OMC_CURRENT_COMMAND_GUID` | GUID of the current command invocation (pass to `omc_next_command`) |
 | `$OMC_OBJ_PATH` | Path of the file/folder that triggered the command (drag & drop / open panel / service) |
 
@@ -42,7 +42,7 @@ Set when a script runs as the handler for an `actionID` or `valueChangeActionID`
 | `$OMC_ACTIONUI_TRIGGER_VIEW_PART_ID` | Part ID (e.g. column index for Table) |
 | `$OMC_ACTIONUI_TRIGGER_CONTEXT` | JSON string with full trigger context |
 
-**ActionUI remote bridge (OMC 5.3).** An applet with an ActionUI window also serves a JSON-RPC bridge on a Unix socket, so a **Python** handler can READ window state - which `omc_dialog_control` has never been able to do.
+**ActionUI remote bridge (version 5.3).** An applet with an ActionUI window also serves a JSON-RPC bridge on a Unix socket, so a **Python** handler can READ window state - which `omc_dialog_control` has never been able to do.
 
 | Variable | Description |
 |----------|-------------|

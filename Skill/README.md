@@ -1,6 +1,6 @@
-# OMC Skill
+# Command Workshop Skill
 
-A multi-flavor AI agent skill that teaches a model how to build and debug OMC applets for macOS.
+A multi-flavor AI agent skill that teaches a model how to build and debug Command Workshop (formerly OMC) applets for macOS.
 
 `Skill/SKILL.md` is the committed `claude` flavor, generated from `master/`. Other flavors live under `dist/` and are gitignored — build them with `Skill/build_skill.py` before installing.
 
@@ -11,7 +11,7 @@ Skill/
 ├── master/                       canonical source of truth
 │   ├── skill.meta.json           flavor definitions + content manifest
 │   └── content/                  modular Markdown content pieces (level 1 = core, level 2 = reference)
-│       ├── 01-core.md            what OMC is + applet bundle structure + Command.plist format
+│       ├── 01-core.md            what Command Workshop is + applet bundle structure + Command.plist format
 │       ├── 02-env-tools.md       key environment variables + six runtime tools
 │       ├── 03-execution-modes.md all execution/activation modes, dialog keys, app lifetime events
 │       ├── 04-ui-dialog.md       NIB + ActionUI dialog integration overview
@@ -72,10 +72,10 @@ The installer auto-runs the build if the requested flavor isn't in `dist/` yet.
 
 - **claude** — installs as a Claude Code skill: `.claude/skills/omc/{SKILL.md,docs/}`. The frontmatter `description` and `name` in SKILL.md govern when the skill activates. The bundled docs are reachable from the agent via the relative paths referenced in SKILL.md.
 - **capable** — paste `SKILL.md` into the model's system prompt, or attach as a document for tools that support per-request context.
-- **lite** — same as capable, but prefer the trigger keywords in the frontmatter so the model only engages when the user explicitly mentions OMC. Tables are stripped from this flavor's SKILL.md to keep the token count low.
+- **lite** — same as capable, but prefer the trigger keywords in the frontmatter so the model only engages when the user explicitly mentions Command Workshop. Tables are stripped from this flavor's SKILL.md to keep the token count low.
 
 ## Editing rules
 
 - Edit only files under `master/`. Generated `SKILL.md` and `dist/` will be overwritten on the next build.
 - Each content piece has YAML frontmatter declaring its `id`, `level`, and `flavors`. The manifest entry in `skill.meta.json` is authoritative for build-time filtering.
-- `Documentation/` is the source of truth for OMC behavior. When updating reference tables in content files, cross-check against the docs there.
+- `Documentation/` is the source of truth for Command Workshop behavior. When updating reference tables in content files, cross-check against the docs there.

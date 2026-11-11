@@ -67,7 +67,7 @@ void OMCServiceObserverCallback( OmcObserverMessage inMessage, CFIndex inTaskID,
 	if(omcExec == NULL)
 	{
 		if(error != NULL)
-			*error = @"Could not create OMC Executor";
+			*error = @"Could not create the command executor";
 		return;
 	}
 

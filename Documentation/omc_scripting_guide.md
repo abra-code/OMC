@@ -1,6 +1,6 @@
-# OMC Shell Scripting Guide
+# Command Workshop Shell Scripting Guide
 
-Shell scripts are the most common way to implement action handlers in OMC applets. A script runs in response to a user interaction — a button click, table selection, dialog result, or file drop — and can read input, update UI controls, and chain to other commands.
+Shell scripts are the most common way to implement action handlers in Command Workshop (formerly OMC) applets. A script runs in response to a user interaction — a button click, table selection, dialog result, or file drop — and can read input, update UI controls, and chain to other commands.
 
 ## Typical Script Flow
 
@@ -43,7 +43,7 @@ TABLE_ID=110
 
 ## Reading Control Values
 
-When a script runs, OMC exports control values as environment variables. The naming pattern depends on the UI type:
+When a script runs, Command Workshop exports control values as environment variables. The naming pattern depends on the UI type:
 
 | Pattern | Source |
 |---------|--------|
@@ -139,7 +139,7 @@ echo "${row_data}" | "$dialog_tool" "$window_uuid" "$TABLE_ID" omc_table_add_row
 
 ## State Management
 
-Scripts in OMC are short-lived processes — each invocation starts fresh. If you need to share state between scripts (e.g. remembering which file is selected), a simple approach is to write to files in a temp directory keyed by window UUID:
+Scripts in Command Workshop are short-lived processes — each invocation starts fresh. If you need to share state between scripts (e.g. remembering which file is selected), a simple approach is to write to files in a temp directory keyed by window UUID:
 
 ```bash
 state_dir="/tmp/myapp_${OMC_ACTIONUI_WINDOW_UUID}"
@@ -244,7 +244,7 @@ set_value "$DETAIL_ID" "$content"
 
 ## Initialization Scripts
 
-When a dialog opens, OMC runs the command specified by `INIT_SUBCOMMAND_ID`. This is a good place to populate fields, set up table columns, and load initial data:
+When a dialog opens, Command Workshop runs the command specified by `INIT_SUBCOMMAND_ID`. This is a good place to populate fields, set up table columns, and load initial data:
 
 ```bash
 #!/bin/bash
@@ -267,7 +267,7 @@ refresh_table "$data_dir"
 
 ## Working with Plist Files
 
-`plutil` handles validation and simple reads. For deeper access, `plister` (bundled with OMC) can navigate plist paths:
+`plutil` handles validation and simple reads. For deeper access, `plister` (bundled with Command Workshop) can navigate plist paths:
 
 ```bash
 # Validate
@@ -312,16 +312,16 @@ Script files follow the pattern `AppName.area.action.sh`, matching the `COMMAND_
 
 A few approaches that can help when things aren't working as expected:
 
-- **Dump environment**: `env | sort > /tmp/debug_env.txt` — shows all variables OMC exports for your script
+- **Dump environment**: `env | sort > /tmp/debug_env.txt` — shows all variables Command Workshop exports for your script
 - **Output window**: temporarily change `EXECUTION_MODE` to `exe_script_file_with_output_window` to see the script's stdout. Or hold the Control key when triggering the command. The window shows stdout only; to see error messages there as well, add `exec 2>&1` near the top of the script, or `2>&1` to the one command whose errors you want.
 - **Manual testing**: run `omc_dialog_control` from Terminal with the window UUID to test commands interactively
 - **Log file**: `echo "checkpoint reached" >> /tmp/myapp_debug.log`
 
 ## Related Documentation
 
-- [Python Scripting Guide](omc_python_scripting_guide.md) — Python-specific patterns for OMC applets
-- [OMC Command Reference](omc_command_reference.md) — Command.plist format and all configuration keys
-- [OMC Runtime Context Reference](omc_runtime_context_reference.md) — All environment variables and special words
+- [Python Scripting Guide](omc_python_scripting_guide.md) — Python-specific patterns for Command Workshop applets
+- [Command Workshop Command Reference](omc_command_reference.md) — Command.plist format and all configuration keys
+- [Command Workshop Runtime Context Reference](omc_runtime_context_reference.md) — All environment variables and special words
 - [omc_dialog_control](omc_dialog_control--help.md) — Full command reference for UI manipulation
 - [omc_next_command](omc_next_command--help.md) — Command chaining
 - [pasteboard](pasteboard--help.md) — Pasteboard tool for data passing

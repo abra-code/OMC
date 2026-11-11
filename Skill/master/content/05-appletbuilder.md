@@ -27,7 +27,7 @@ Exit codes: `0` ok · `2` warnings · `1` errors.
 | `create (--template <name|path> \| --clone <App.app>) --name <N> --dest <dir> [--bundle-id <id>] [--python] [--icon <name|path>]` | Copy a template (or clone an applet), rename it, install the framework/executable (and Python if `--python`), set the icon, and codesign. Prints the new `.app` path. |
 | `validate <App.app \| Command.json \| UI.json \| script>` | Auto-detects the target and runs the matching validator(s). For a bundle: `Info.plist` + command manifest (Layer 1/2) + every script + every ActionUI JSON. |
 | `build <App.app> [--identity <id>] [--thin arm64\|x86_64\|none] [--test] [--warnings-as-errors] [--update-python] [--force]` | Full validation, then refresh framework/executable (newer version auto-copies; `--force` re-copies even when unchanged), thin, and codesign. Halts before signing on validation errors, and on a failed architecture slice when `--thin` was asked for (the bundle is then modified and unsigned). Independently, a working embedded Python is left untouched unless `--update-python` is given; a missing/broken runtime is always installed. Replacing the runtime wipes anything pip-installed into its `site-packages` — install deps into `Contents/Library/Packages` (on `PYTHONPATH`) so they survive. `--test` runs the applet's test suite after the refresh and before signing, halting on failure. |
-| `test <App.app> [--tests <dir>] [--filter <glob>] [--verbose] [--keep-scratch] [--list]` | Run the applet's `Tests/*.test.sh` against a mock OMC environment: real handlers, stubbed `alert`, a recording `omc_dialog_control` you can assert against. Validates the bundle first. Detail to stderr, `omctest: N passed, M failed, K files` to stdout. See `docs/omctest_guide.md`. |
+| `test <App.app> [--tests <dir>] [--filter <glob>] [--verbose] [--keep-scratch] [--list]` | Run the applet's `Tests/*.test.sh` against a mock Command Workshop environment: real handlers, stubbed `alert`, a recording `omc_dialog_control` you can assert against. Validates the bundle first. Detail to stderr, `omctest: N passed, M failed, K files` to stdout. See `docs/omctest_guide.md`. |
 | `thin-python plan\|apply\|plan-apply <App.app> [--plan <file>] [--dry-run] [--skip-verify] [--thin arm64\|x86_64\|none]` | Closure-thin the applet's embedded Python. `plan` analyzes the applet on a clone and writes a committable `<App>.thinning-plan.json` beside the bundle, modifying nothing; `apply` removes what the plan names from the real interpreter and verifies, restoring on failure (`--dry-run` previews, on `apply` and `plan-apply`). Without `--plan`: beside the bundle, else the last plan written for that applet (matched on its bundle identifier). An optional `<App>.thinning-keep.txt` force-keep list is picked up automatically. GUI equivalent: the Embedded Python Thinning group in Build & Run (Write Thinning Plan / Apply Plan / Dry Run, then Execute), disabled for an applet that bundles no Python. See `docs/omc_python_scripting_guide.md`. |
 | `prettify <file.json> [--stdout]` | Reformat JSON in place (or to stdout). |
 | `preview <UI.json> [--screenshot <out.png>] [--show-window]` | Render an ActionUI view to a PNG and print its path (read the PNG to inspect the layout); a `MainMenu.json` menu-bar doc prints a text summary instead. Renders off screen by default, so no window appears and a locked screen is fine; `--show-window` asks for the old on-screen capture. Still needs a logged-in GUI session. |
@@ -49,7 +49,7 @@ Full reference: `Distribution/AppletBuilder.app/Contents/Resources/Agents/README
 | Template | Use when |
 |----------|----------|
 | `Empty` | Minimal bundle; no dialog |
-| `ActionUI Window` | ActionUI JSON dialog (recommended for OMC 5.0+) |
+| `ActionUI Window` | ActionUI JSON dialog (recommended for version 5.0+) |
 | `ActionUI Web` | ActionUI dialog with embedded WebView |
 
 The **Name** also becomes the executable name and script prefix. New applets are
@@ -59,7 +59,7 @@ Applet panel.
 ### For an existing applet
 
 Edit the bundle's files directly:
-- `Contents/Resources/Command.json` (or `Command.plist` — OMC reads either, preferring `Command.json` when both exist)
+- `Contents/Resources/Command.json` (or `Command.plist` — Command Workshop reads either, preferring `Command.json` when both exist)
 - `Contents/Resources/Scripts/*`
 - `Contents/Resources/Base.lproj/*.json` (ActionUI windows and `MainMenu.json`)
 

@@ -1,7 +1,7 @@
 /* Version warning strings */
 "Cancel" = "Cancel";
 "Try Anyway" = "Try Anyway";
-"TOO_LOW_OMC" = "This command requires OnMyCommand %@ or higher. Your installed version is %@.";
+"TOO_LOW_OMC" = "This command requires Command Workshop %@ or higher. Your installed version is %@.";
 "TOO_LOW_MAC_OS" = "This command requires Mac OS %@ or higher. Your Mac OS X version is %@.";
 "TOO_HIGH_MAC_OS" = "This command is designed for older Mac OS X. It works up to version %@. Your Mac OS X version is %@.";
 

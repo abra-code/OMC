@@ -2181,7 +2181,7 @@ DisplayHelp()
 	std::cerr << "Now create new.plist and copy \"NewArray\" from example.plist:" << std::endl;
 	std::cerr << "plister set dict new.plist /" << std::endl;
 	std::cerr << "plister insert \"DuplicateArray\" copy example.plist /NewArray new.plist /" << std::endl << std::endl;
-	std::cerr << "Find a command named \"Touch File\" in COMMAND_LIST array in OMC plist:" << std::endl;
+	std::cerr << "Find a command named \"Touch File\" in COMMAND_LIST array in a Command.plist:" << std::endl;
 	std::cerr << "plister find string \"Touch File\" Command.plist /COMMAND_LIST /NAME" << std::endl << std::endl;
 	std::cerr << "plister iterate example.plist /NewArray get string /" << std::endl << std::endl;
 	std::cerr << "JSON examples (same commands work on .json files):" << std::endl;
