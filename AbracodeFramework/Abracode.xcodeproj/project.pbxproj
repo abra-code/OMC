@@ -22,8 +22,6 @@
 		1D011A492FFC5209009FD073 /* DiffView in Frameworks */ = {isa = PBXBuildFile; productRef = 1D011A482FFC5209009FD073 /* DiffView */; };
 		1D011A4C2FFC52A5009FD073 /* ActionUIChat in Frameworks */ = {isa = PBXBuildFile; productRef = 1D011A4B2FFC52A5009FD073 /* ActionUIChat */; };
 		1D011A522FFC5300009FD073 /* ActionUIHostSurface in Frameworks */ = {isa = PBXBuildFile; productRef = 1D011A512FFC5300009FD073 /* ActionUIHostSurface */; };
-		1D386DAB23BEED4B00A16967 /* OMCWebKitView.h in Headers */ = {isa = PBXBuildFile; fileRef = 1D386DA923BEED4A00A16967 /* OMCWebKitView.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		1D386DAC23BEED4B00A16967 /* OMCWebKitView.m in Sources */ = {isa = PBXBuildFile; fileRef = 1D386DAA23BEED4A00A16967 /* OMCWebKitView.m */; };
 		1D39A8932FF1E47900909493 /* ActionUIQuickLook in Frameworks */ = {isa = PBXBuildFile; productRef = 1D39A8922FF1E47900909493 /* ActionUIQuickLook */; };
 		1D3EA0602E38A1E00064354E /* OneObjProperties.cp in Sources */ = {isa = PBXBuildFile; fileRef = 1D3EA05F2E38A1E00064354E /* OneObjProperties.cp */; };
 		1D560A1B2F80000000000018 /* OMCObjectList.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1D560A1B2F80000000000017 /* OMCObjectList.cpp */; };
@@ -31,7 +29,6 @@
 		1D3EA0662E3E10910064354E /* OMCNavigationDialogs.cp in Sources */ = {isa = PBXBuildFile; fileRef = 1D3EA0642E3E10910064354E /* OMCNavigationDialogs.cp */; };
 		1D3EA0682E4095E60064354E /* OMCContextData.cp in Sources */ = {isa = PBXBuildFile; fileRef = 1D3EA0672E4095E60064354E /* OMCContextData.cp */; };
 		1D3EA06A2E40A00B0064354E /* CommandDescription.cp in Sources */ = {isa = PBXBuildFile; fileRef = 1D3EA0692E40A00B0064354E /* CommandDescription.cp */; };
-		1D3F8CBD2E0B7C8000B69493 /* OMCActionProtocol.h in Headers */ = {isa = PBXBuildFile; fileRef = 1D3F8CBC2E0B370A00B69493 /* OMCActionProtocol.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		1D690CA12F444FAC006FECE8 /* OMCWindowController.mm in Sources */ = {isa = PBXBuildFile; fileRef = AAAAAAAA2D4346BB0065C23A /* OMCWindowController.mm */; };
 		1D690DDE2F45096A006FECE8 /* OMCActionUIDialog.h in Headers */ = {isa = PBXBuildFile; fileRef = 1D690DDC2F45096A006FECE8 /* OMCActionUIDialog.h */; };
 		1D690DDF2F45096A006FECE8 /* OMCActionUIDialog.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1D690DDD2F45096A006FECE8 /* OMCActionUIDialog.mm */; };
@@ -40,8 +37,6 @@
 		1D742DC5193882BB005DFF97 /* pasteboard in Copy Support Executables */ = {isa = PBXBuildFile; fileRef = 1D742DC219388292005DFF97 /* pasteboard */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		1D80B9BA22E447E800CF1AF5 /* OMCiTermExecutor.cp in Sources */ = {isa = PBXBuildFile; fileRef = 1D80B9B822E447E800CF1AF5 /* OMCiTermExecutor.cp */; };
 		1D80B9C222E447F900CF1AF5 /* OMCTerminalExecutor.cp in Sources */ = {isa = PBXBuildFile; fileRef = 1D80B9BF22E447F900CF1AF5 /* OMCTerminalExecutor.cp */; };
-		1D8189E923B45FAF00A13449 /* OMCGridView.m in Sources */ = {isa = PBXBuildFile; fileRef = 1D8189E723B45FAF00A13449 /* OMCGridView.m */; };
-		1D8189EA23B45FAF00A13449 /* OMCGridView.h in Headers */ = {isa = PBXBuildFile; fileRef = 1D8189E823B45FAF00A13449 /* OMCGridView.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		1D984C2923321D3400FF6967 /* AbracodeFrameworkVersion.c in Copy AbracodeFrameworkVersion.c to generated */ = {isa = PBXBuildFile; fileRef = E2ACB25712EADCB000A8ACF6 /* AbracodeFrameworkVersion.c */; };
 		1D9B1F5D21FF1572004704A7 /* OnMyCommand.cp in Sources */ = {isa = PBXBuildFile; fileRef = 1D9B1F5C21FF1572004704A7 /* OnMyCommand.cp */; };
 		1D9B1F6521FF191D004704A7 /* SubmenuTree.cp in Sources */ = {isa = PBXBuildFile; fileRef = 1D9B1F6321FF191D004704A7 /* SubmenuTree.cp */; };
@@ -86,22 +81,14 @@
 		1D560A1B2F8000000000004A /* OMCEngineBundle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1D560A1B2F80000000000049 /* OMCEngineBundle.cpp */; };
 		1DCBC0D92F15FCE40002B8AB /* Abracode.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8DC2EF5B0486A6940098B216 /* Abracode.framework */; };
 		1DCBC16E2F176A9D0002B8AB /* TestBundles in CopyFiles */ = {isa = PBXBuildFile; fileRef = 1DCBC16D2F176A9D0002B8AB /* TestBundles */; };
-		1DE10DFC23C9D0EE003FCCDA /* OMCWebKitSupport.js in Resources */ = {isa = PBXBuildFile; fileRef = 1DE10DFB23C9D0EE003FCCDA /* OMCWebKitSupport.js */; };
 		1DED3637232258A40086266F /* OMCScriptsManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1DED3635232258A40086266F /* OMCScriptsManager.cpp */; };
 		1DED8E572222BD8E00A2CAF7 /* MoreAppleEvents.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED19F0D09528600C9D5E8 /* MoreAppleEvents.cp */; };
-		1DF2B2082F458F7D0069BD26 /* OMCViewSetupProtocol.h in Headers */ = {isa = PBXBuildFile; fileRef = 1DF2B2072F458F7D0069BD26 /* OMCViewSetupProtocol.h */; };
 		1DF2B4032F45A6CE0069BD26 /* ActionUI in Frameworks */ = {isa = PBXBuildFile; productRef = 1DF2B4022F45A6CE0069BD26 /* ActionUI */; };
 		1DF2B4052F45A6CE0069BD26 /* ActionUIObjCAdapter in Frameworks */ = {isa = PBXBuildFile; productRef = 1DF2B4042F45A6CE0069BD26 /* ActionUIObjCAdapter */; };
 		8DC2EF570486A6940098B216 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7B1FEA5585E11CA2CBB /* Cocoa.framework */; };
 		AAAAAA01D4346BB0065C23A /* OMCWindowController.h in Headers */ = {isa = PBXBuildFile; fileRef = AAAAAAAA1D4346BB0065C23A /* OMCWindowController.h */; };
 		E204EB7F0D7FD8A900595D15 /* OMCConstants.h in Headers */ = {isa = PBXBuildFile; fileRef = E204EB7E0D7FD8A900595D15 /* OMCConstants.h */; };
 		E20F1F69130BBE6300882872 /* alert in Copy Support Executables */ = {isa = PBXBuildFile; fileRef = E20F1F68130BBE5100882872 /* alert */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		E211D3C50D3F51010065C23A /* OMCCocoaNib.h in Headers */ = {isa = PBXBuildFile; fileRef = E211D3C30D3F51010065C23A /* OMCCocoaNib.h */; };
-		E211D3C60D3F51010065C23A /* OMCCocoaNib.m in Sources */ = {isa = PBXBuildFile; fileRef = E211D3C40D3F51010065C23A /* OMCCocoaNib.m */; };
-		E211D4F70D4346BB0065C23A /* OMCNibWindowController.h in Headers */ = {isa = PBXBuildFile; fileRef = E211D4F30D4346BA0065C23A /* OMCNibWindowController.h */; };
-		E211D4F80D4346BB0065C23A /* OMCNibWindowController.mm in Sources */ = {isa = PBXBuildFile; fileRef = E211D4F40D4346BB0065C23A /* OMCNibWindowController.mm */; };
-		E22FBAEE0D7A0D7700DC5BB4 /* OMCNibDialog.h in Headers */ = {isa = PBXBuildFile; fileRef = E22FBAEC0D7A0D7700DC5BB4 /* OMCNibDialog.h */; };
-		E22FBAEF0D7A0D7700DC5BB4 /* OMCNibDialog.mm in Sources */ = {isa = PBXBuildFile; fileRef = E22FBAED0D7A0D7700DC5BB4 /* OMCNibDialog.mm */; };
 		E234F9FA0D0FC431001A7780 /* Private.strings in Resources */ = {isa = PBXBuildFile; fileRef = E234F9F80D0FC431001A7780 /* Private.strings */; };
 		E234FA290D0FCB28001A7780 /* stop.icns in Resources */ = {isa = PBXBuildFile; fileRef = E234FA1F0D0FCB28001A7780 /* stop.icns */; };
 		E234FA2A0D0FCB28001A7780 /* app.icns in Resources */ = {isa = PBXBuildFile; fileRef = E234FA200D0FCB28001A7780 /* app.icns */; };
@@ -109,40 +96,18 @@
 		E234FAA40D0FD114001A7780 /* omc_next_command in Copy Support Executables */ = {isa = PBXBuildFile; fileRef = E234FAA30D0FD114001A7780 /* omc_next_command */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		E23AAC9012F55FE0004C867B /* OMCService.m in Sources */ = {isa = PBXBuildFile; fileRef = E23AAC8C12F55FE0004C867B /* OMCService.m */; };
 		E23AACC812F5684E004C867B /* OMCService.h in Headers */ = {isa = PBXBuildFile; fileRef = E23AAC8B12F55FE0004C867B /* OMCService.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		E23DC9640D9A2616009D2AD8 /* OMCPDFView.m in Sources */ = {isa = PBXBuildFile; fileRef = E23DC95C0D9A2616009D2AD8 /* OMCPDFView.m */; };
-		E23DC9680D9A2616009D2AD8 /* OMCIKImageView.m in Sources */ = {isa = PBXBuildFile; fileRef = E23DC9600D9A2616009D2AD8 /* OMCIKImageView.m */; };
-		E23DC96A0D9A2616009D2AD8 /* OMCIKImageView.h in Headers */ = {isa = PBXBuildFile; fileRef = E23DC9620D9A2616009D2AD8 /* OMCIKImageView.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E23DC9F60D9A289E009D2AD8 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E23DC9F50D9A289E009D2AD8 /* WebKit.framework */; };
 		E24B18180DE96F6D00E44A45 /* OMCFilePanels.h in Headers */ = {isa = PBXBuildFile; fileRef = E24B18140DE96F6D00E44A45 /* OMCFilePanels.h */; };
 		E24B18190DE96F6D00E44A45 /* OMCFilePanels.mm in Sources */ = {isa = PBXBuildFile; fileRef = E24B18150DE96F6D00E44A45 /* OMCFilePanels.mm */; };
-		E2517C4D0D1BCC2700180C68 /* OMCButton.h in Headers */ = {isa = PBXBuildFile; fileRef = E2517C3D0D1BCC2700180C68 /* OMCButton.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		E2517C4E0D1BCC2700180C68 /* OMCButton.m in Sources */ = {isa = PBXBuildFile; fileRef = E2517C3E0D1BCC2700180C68 /* OMCButton.m */; };
-		E2517C4F0D1BCC2700180C68 /* OMCButtonCell.h in Headers */ = {isa = PBXBuildFile; fileRef = E2517C3F0D1BCC2700180C68 /* OMCButtonCell.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		E2517C500D1BCC2700180C68 /* OMCButtonCell.m in Sources */ = {isa = PBXBuildFile; fileRef = E2517C400D1BCC2700180C68 /* OMCButtonCell.m */; };
 		E2517C510D1BCC2700180C68 /* OMCMenuItem.h in Headers */ = {isa = PBXBuildFile; fileRef = E2517C410D1BCC2700180C68 /* OMCMenuItem.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E2517C520D1BCC2700180C68 /* OMCMenuItem.m in Sources */ = {isa = PBXBuildFile; fileRef = E2517C420D1BCC2700180C68 /* OMCMenuItem.m */; };
-		E2517C530D1BCC2700180C68 /* OMCPopUpButton.h in Headers */ = {isa = PBXBuildFile; fileRef = E2517C430D1BCC2700180C68 /* OMCPopUpButton.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		E2517C540D1BCC2700180C68 /* OMCPopUpButton.m in Sources */ = {isa = PBXBuildFile; fileRef = E2517C440D1BCC2700180C68 /* OMCPopUpButton.m */; };
-		E2517C550D1BCC2700180C68 /* OMCProgressIndicator.h in Headers */ = {isa = PBXBuildFile; fileRef = E2517C450D1BCC2700180C68 /* OMCProgressIndicator.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		E2517C560D1BCC2700180C68 /* OMCProgressIndicator.m in Sources */ = {isa = PBXBuildFile; fileRef = E2517C460D1BCC2700180C68 /* OMCProgressIndicator.m */; };
-		E2517C570D1BCC2700180C68 /* OMCSlider.h in Headers */ = {isa = PBXBuildFile; fileRef = E2517C470D1BCC2700180C68 /* OMCSlider.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		E2517C580D1BCC2700180C68 /* OMCSlider.m in Sources */ = {isa = PBXBuildFile; fileRef = E2517C480D1BCC2700180C68 /* OMCSlider.m */; };
-		E2517C590D1BCC2700180C68 /* OMCTextField.h in Headers */ = {isa = PBXBuildFile; fileRef = E2517C490D1BCC2700180C68 /* OMCTextField.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		E2517C5A0D1BCC2700180C68 /* OMCTextField.m in Sources */ = {isa = PBXBuildFile; fileRef = E2517C4A0D1BCC2700180C68 /* OMCTextField.m */; };
-		E2517C5B0D1BCC2700180C68 /* OMCTextView.h in Headers */ = {isa = PBXBuildFile; fileRef = E2517C4B0D1BCC2700180C68 /* OMCTextView.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		E2517C5C0D1BCC2700180C68 /* OMCTextView.m in Sources */ = {isa = PBXBuildFile; fileRef = E2517C4C0D1BCC2700180C68 /* OMCTextView.m */; };
 		E258B2110E46E37C00926F10 /* OMCDeferredProgress.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E258B20F0E46E37C00926F10 /* OMCDeferredProgress.cpp */; };
 		E25D78990DBB24800065C7A3 /* OMCDropletController.h in Headers */ = {isa = PBXBuildFile; fileRef = E25D78950DBB24800065C7A3 /* OMCDropletController.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		E26B2796109C174D00DBA8CE /* OMCTableView.h in Headers */ = {isa = PBXBuildFile; fileRef = E26B2792109C174D00DBA8CE /* OMCTableView.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		E26B2797109C174D00DBA8CE /* OMCTableView.m in Sources */ = {isa = PBXBuildFile; fileRef = E26B2793109C174D00DBA8CE /* OMCTableView.m */; };
 		E27103CE0D8142DF0097D83E /* Quartz.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E27103CD0D8142DF0097D83E /* Quartz.framework */; };
 		E2735F370D7B9576004D81CE /* OMCDialog.h in Headers */ = {isa = PBXBuildFile; fileRef = E2735F360D7B9576004D81CE /* OMCDialog.h */; };
 		E2735F830D7BC89F004D81CE /* OMCDialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E2735F820D7BC89F004D81CE /* OMCDialog.cpp */; };
 		1D0A1B2C2F6A00000000000A /* OMCControlAccessorBridge.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1D0A1B2C2F6A000000000009 /* OMCControlAccessorBridge.mm */; };
 		E27F2D050D56F7410060D231 /* CFObj.h in Headers */ = {isa = PBXBuildFile; fileRef = E27F2D030D56F7410060D231 /* CFObj.h */; };
-		E28D660210A039C500882DDE /* OMCTableViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = E28D660010A039C500882DDE /* OMCTableViewController.mm */; };
-		E29407BE12796077004CDB05 /* OMCComboBox.h in Headers */ = {isa = PBXBuildFile; fileRef = E29407BA12796077004CDB05 /* OMCComboBox.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		E29407BF12796077004CDB05 /* OMCComboBox.m in Sources */ = {isa = PBXBuildFile; fileRef = E29407BB12796077004CDB05 /* OMCComboBox.m */; };
 		E29A6AB50D9F7A01006A97B0 /* OMCMainMenuController.h in Headers */ = {isa = PBXBuildFile; fileRef = E29A6AB10D9F7A00006A97B0 /* OMCMainMenuController.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E29A6AB60D9F7A01006A97B0 /* OMCMainMenuController.mm in Sources */ = {isa = PBXBuildFile; fileRef = E29A6AB20D9F7A01006A97B0 /* OMCMainMenuController.mm */; };
 		E29ED0720D094EB000C9D5E8 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E29ED0710D094EB000C9D5E8 /* Carbon.framework */; };
@@ -157,13 +122,9 @@
 		E29ED1B80D09532500C9D5E8 /* ACFType.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED1B60D09532500C9D5E8 /* ACFType.cp */; };
 		E29ED21A0D09FD8800C9D5E8 /* ARefCounted.cp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED2190D09FD8800C9D5E8 /* ARefCounted.cp */; };
 		E29ED21C0D09FD8D00C9D5E8 /* ARefCounted.h in Headers */ = {isa = PBXBuildFile; fileRef = E29ED21B0D09FD8D00C9D5E8 /* ARefCounted.h */; };
-		E2A2947A105E02B500C732A3 /* OMCTableViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = E2A29476105E02B500C732A3 /* OMCTableViewController.h */; };
 		E2A832570D147B4A00117643 /* b64 in Copy Support Executables */ = {isa = PBXBuildFile; fileRef = E2A832550D147B4A00117643 /* b64 */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		E2A832580D147B4A00117643 /* plister in Copy Support Executables */ = {isa = PBXBuildFile; fileRef = E2A832560D147B4A00117643 /* plister */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		E2ACB25A12EADCF500A8ACF6 /* AbracodeFrameworkVersion.c in Headers */ = {isa = PBXBuildFile; fileRef = E2ACB25712EADCB000A8ACF6 /* AbracodeFrameworkVersion.c */; settings = {ATTRIBUTES = (Public, ); }; };
-		E2B795870ECE9A1A00C8939E /* OMCPDFView.h in Headers */ = {isa = PBXBuildFile; fileRef = E23DC95E0D9A2616009D2AD8 /* OMCPDFView.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		E2BB1E480E6F886200D2DDE5 /* OMCView.m in Sources */ = {isa = PBXBuildFile; fileRef = E2BB1E440E6F886200D2DDE5 /* OMCView.m */; };
-		E2BB1E490E6F886200D2DDE5 /* OMCView.h in Headers */ = {isa = PBXBuildFile; fileRef = E2BB1E450E6F886200D2DDE5 /* OMCView.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E2C10C5E0E45783200454DB1 /* OMCDeferredProgress.h in Headers */ = {isa = PBXBuildFile; fileRef = E2C10C5A0E45783200454DB1 /* OMCDeferredProgress.h */; };
 		E2C32CB80D2DF99D0023DA03 /* OMCObserver.h in Headers */ = {isa = PBXBuildFile; fileRef = E2C32CB40D2DF99C0023DA03 /* OMCObserver.h */; };
 		E2C32CB90D2DF99D0023DA03 /* OMCObserver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E2C32CB50D2DF99C0023DA03 /* OMCObserver.cpp */; };
@@ -172,8 +133,6 @@
 		E2C433480DEE72F700E976D2 /* PlistPreferences.cp in Sources */ = {isa = PBXBuildFile; fileRef = E2C433440DEE72F700E976D2 /* PlistPreferences.cp */; };
 		E2C433620DEE751300E976D2 /* OMCDropletController.mm in Sources */ = {isa = PBXBuildFile; fileRef = E2C433600DEE751300E976D2 /* OMCDropletController.mm */; };
 		E2C7781212FFDC6300A7E6D2 /* filt in Copy Support Executables */ = {isa = PBXBuildFile; fileRef = E2C7780F12FFDC4D00A7E6D2 /* filt */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		E2C8486110D61C33002DFDB5 /* OMCBox.h in Headers */ = {isa = PBXBuildFile; fileRef = E2C8485D10D61C33002DFDB5 /* OMCBox.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		E2C8486210D61C33002DFDB5 /* OMCBox.m in Sources */ = {isa = PBXBuildFile; fileRef = E2C8485E10D61C33002DFDB5 /* OMCBox.m */; };
 		E2C84D750DA9AC090056DBC2 /* OMCCommandMenu.h in Headers */ = {isa = PBXBuildFile; fileRef = E2C84D710DA9AC090056DBC2 /* OMCCommandMenu.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E2C84DAC0DA9D4CD0056DBC2 /* OMCCommandExecutor.h in Headers */ = {isa = PBXBuildFile; fileRef = E2C84DA80DA9D4CD0056DBC2 /* OMCCommandExecutor.h */; };
 		E2C84DAD0DA9D4CD0056DBC2 /* OMCCommandExecutor.mm in Sources */ = {isa = PBXBuildFile; fileRef = E2C84DA90DA9D4CD0056DBC2 /* OMCCommandExecutor.mm */; };
@@ -182,12 +141,6 @@
 		1D560A1B2F80000000000041 /* OMCApplet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1D560A1B2F8000000000003F /* OMCApplet.cpp */; };
 		E2D92E891043E0C2003DC96B /* OMCInputDialog.h in Headers */ = {isa = PBXBuildFile; fileRef = E2D92E871043E0C2003DC96B /* OMCInputDialog.h */; };
 		E2D92E8E1043E0E3003DC96B /* OMCInputDialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E2D92E8D1043E0E3003DC96B /* OMCInputDialog.cpp */; };
-		E2E407000D8A5B00009AD8CA /* OMCSecureTextField.m in Sources */ = {isa = PBXBuildFile; fileRef = E2E406FE0D8A5B00009AD8CA /* OMCSecureTextField.m */; };
-		E2E407010D8A5B00009AD8CA /* OMCSecureTextField.h in Headers */ = {isa = PBXBuildFile; fileRef = E2E406FF0D8A5B00009AD8CA /* OMCSecureTextField.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		E2E4072A0D8AD1E3009AD8CA /* OMCSearchField.m in Sources */ = {isa = PBXBuildFile; fileRef = E2E407280D8AD1E3009AD8CA /* OMCSearchField.m */; };
-		E2E4072B0D8AD1E3009AD8CA /* OMCSearchField.h in Headers */ = {isa = PBXBuildFile; fileRef = E2E407290D8AD1E3009AD8CA /* OMCSearchField.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		E2E407860D8C3770009AD8CA /* OMCImageView.m in Sources */ = {isa = PBXBuildFile; fileRef = E2E407840D8C376F009AD8CA /* OMCImageView.m */; };
-		E2E407870D8C3770009AD8CA /* OMCImageView.h in Headers */ = {isa = PBXBuildFile; fileRef = E2E407850D8C376F009AD8CA /* OMCImageView.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E2ED3AEA0D0B27D300481D8F /* DefaultExternBundle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E2ED3AE80D0B27D300481D8F /* DefaultExternBundle.cpp */; };
 		E2ED3AEB0D0B27D300481D8F /* DefaultExternBundle.h in Headers */ = {isa = PBXBuildFile; fileRef = E2ED3AE90D0B27D300481D8F /* DefaultExternBundle.h */; };
 		E2ED3AF20D0B27F700481D8F /* OMCDialogControlHelpers.cp in Sources */ = {isa = PBXBuildFile; fileRef = E2ED3AEE0D0B27F700481D8F /* OMCDialogControlHelpers.cp */; };
@@ -410,8 +363,6 @@
 		0867D6A5FE840307C02AAC07 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		1058C7B1FEA5585E11CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		1D039D782E16823200D4924A /* AbracodeFramework-target.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "AbracodeFramework-target.xcconfig"; sourceTree = "<group>"; };
-		1D386DA923BEED4A00A16967 /* OMCWebKitView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCWebKitView.h; sourceTree = "<group>"; };
-		1D386DAA23BEED4A00A16967 /* OMCWebKitView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMCWebKitView.m; sourceTree = "<group>"; };
 		1D3BB165229BEB1D00542933 /* AUniquePtr.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AUniquePtr.h; sourceTree = "<group>"; };
 		1D3EA05D2E389F4B0064354E /* OMCContextData.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OMCContextData.h; sourceTree = "<group>"; };
 		1D3EA05E2E389FF10064354E /* OneObjProperties.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OneObjProperties.h; sourceTree = "<group>"; };
@@ -431,7 +382,6 @@
 		1D3EA0642E3E10910064354E /* OMCNavigationDialogs.cp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = OMCNavigationDialogs.cp; sourceTree = "<group>"; };
 		1D3EA0672E4095E60064354E /* OMCContextData.cp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = OMCContextData.cp; sourceTree = "<group>"; };
 		1D3EA0692E40A00B0064354E /* CommandDescription.cp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = CommandDescription.cp; sourceTree = "<group>"; };
-		1D3F8CBC2E0B370A00B69493 /* OMCActionProtocol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OMCActionProtocol.h; sourceTree = "<group>"; };
 		1D4971AC2575A69000F7131C /* OmcProjectDebug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectDebug.xcconfig; path = ../Common/OmcProjectDebug.xcconfig; sourceTree = "<group>"; };
 		1D4971AD2575A69000F7131C /* OmcProjectRelease.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectRelease.xcconfig; path = ../Common/OmcProjectRelease.xcconfig; sourceTree = "<group>"; };
 		1D690D302F44F299006FECE8 /* OMCControlAccessor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OMCControlAccessor.h; sourceTree = "<group>"; };
@@ -457,8 +407,6 @@
 		1D80D4802F12C73400E3B4FB /* pasteboard.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = pasteboard.xcodeproj; path = ../pasteboard/pasteboard.xcodeproj; sourceTree = SOURCE_ROOT; };
 		1D80D4832F12C73400E3B4FB /* plister.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = plister.xcodeproj; path = ../plister/plister.xcodeproj; sourceTree = SOURCE_ROOT; };
 		1D80D4D42F12D96200E3B4FB /* filt.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = filt.xcodeproj; path = ../filt/filt.xcodeproj; sourceTree = SOURCE_ROOT; };
-		1D8189E723B45FAF00A13449 /* OMCGridView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMCGridView.m; sourceTree = "<group>"; };
-		1D8189E823B45FAF00A13449 /* OMCGridView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCGridView.h; sourceTree = "<group>"; };
 		1D94F4132F37FEBE0009C4E2 /* OMCPrivateConstants.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OMCPrivateConstants.h; sourceTree = "<group>"; };
 		1D9B1F5821FF14AF004704A7 /* OMCStrings.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OMCStrings.h; sourceTree = "<group>"; };
 		1D9B1F5C21FF1572004704A7 /* OnMyCommand.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OnMyCommand.cp; sourceTree = "<group>"; };
@@ -537,12 +485,10 @@
 		1DCFB23D231FAAC300D1C62E /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/Private.strings; sourceTree = "<group>"; };
 		1DD21114259F42CE0041BB8F /* OmcVersion.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcVersion.xcconfig; path = ../Common/OmcVersion.xcconfig; sourceTree = "<group>"; };
 		1DDC44152F34284600604C66 /* AbracodeTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = AbracodeTests.xctestplan; sourceTree = "<group>"; };
-		1DE10DFB23C9D0EE003FCCDA /* OMCWebKitSupport.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; path = OMCWebKitSupport.js; sourceTree = "<group>"; };
 		1DED3634232258A40086266F /* OMCScriptsManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCScriptsManager.h; sourceTree = "<group>"; };
 		1DED3635232258A40086266F /* OMCScriptsManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCScriptsManager.cpp; sourceTree = "<group>"; };
 		1DED8E4C22229D1800A2CAF7 /* ACFArr.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ACFArr.h; sourceTree = "<group>"; };
 		1DED8E562222B65500A2CAF7 /* MoreAppleEvents.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MoreAppleEvents.h; sourceTree = "<group>"; };
-		1DF2B2072F458F7D0069BD26 /* OMCViewSetupProtocol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OMCViewSetupProtocol.h; sourceTree = "<group>"; };
 		1DF2B4002F45A2110069BD26 /* OmcProjectCommon.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectCommon.xcconfig; path = ../Common/OmcProjectCommon.xcconfig; sourceTree = SOURCE_ROOT; };
 		1DF2B4552F4932E90069BD26 /* OMCWindowControlProtocol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OMCWindowControlProtocol.h; sourceTree = "<group>"; };
 		32DBCF5E0370ADEE00C91783 /* Abracode_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Abracode_Prefix.pch; sourceTree = "<group>"; };
@@ -553,12 +499,6 @@
 		D2F7E79907B2D74100F64583 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = /System/Library/Frameworks/CoreData.framework; sourceTree = "<absolute>"; };
 		E204EB7E0D7FD8A900595D15 /* OMCConstants.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCConstants.h; sourceTree = "<group>"; };
 		E20F1F68130BBE5100882872 /* alert */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = alert; sourceTree = "<group>"; };
-		E211D3C30D3F51010065C23A /* OMCCocoaNib.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCCocoaNib.h; sourceTree = "<group>"; };
-		E211D3C40D3F51010065C23A /* OMCCocoaNib.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMCCocoaNib.m; sourceTree = "<group>"; };
-		E211D4F30D4346BA0065C23A /* OMCNibWindowController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCNibWindowController.h; sourceTree = "<group>"; };
-		E211D4F40D4346BB0065C23A /* OMCNibWindowController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCNibWindowController.mm; sourceTree = "<group>"; };
-		E22FBAEC0D7A0D7700DC5BB4 /* OMCNibDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCNibDialog.h; sourceTree = "<group>"; };
-		E22FBAED0D7A0D7700DC5BB4 /* OMCNibDialog.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCNibDialog.mm; sourceTree = "<group>"; };
 		E22FCB220F5514220062D589 /* OMCDialogControlHelpers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCDialogControlHelpers.h; sourceTree = "<group>"; };
 		E234FA1F0D0FCB28001A7780 /* stop.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = stop.icns; path = Resources/stop.icns; sourceTree = "<group>"; };
 		E234FA200D0FCB28001A7780 /* app.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = app.icns; path = Resources/app.icns; sourceTree = "<group>"; };
@@ -566,35 +506,15 @@
 		E234FAA30D0FD114001A7780 /* omc_next_command */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = omc_next_command; sourceTree = "<group>"; };
 		E23AAC8B12F55FE0004C867B /* OMCService.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OMCService.h; path = EntryPoints/Apple/OMCService.h; sourceTree = "<group>"; };
 		E23AAC8C12F55FE0004C867B /* OMCService.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = OMCService.m; path = EntryPoints/Apple/OMCService.m; sourceTree = "<group>"; };
-		E23DC95C0D9A2616009D2AD8 /* OMCPDFView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMCPDFView.m; sourceTree = "<group>"; };
-		E23DC95E0D9A2616009D2AD8 /* OMCPDFView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCPDFView.h; sourceTree = "<group>"; };
-		E23DC9600D9A2616009D2AD8 /* OMCIKImageView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMCIKImageView.m; sourceTree = "<group>"; };
-		E23DC9620D9A2616009D2AD8 /* OMCIKImageView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCIKImageView.h; sourceTree = "<group>"; };
 		E23DC9CB0D9A2870009D2AD8 /* QTKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QTKit.framework; path = /System/Library/Frameworks/QTKit.framework; sourceTree = "<absolute>"; };
 		E23DC9F50D9A289E009D2AD8 /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = /System/Library/Frameworks/WebKit.framework; sourceTree = "<absolute>"; };
 		E24243FA0DDD6A350002BF9E /* OutputWindowHandler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OutputWindowHandler.h; sourceTree = "<group>"; };
 		E24B18140DE96F6D00E44A45 /* OMCFilePanels.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCFilePanels.h; sourceTree = "<group>"; };
 		E24B18150DE96F6D00E44A45 /* OMCFilePanels.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCFilePanels.mm; sourceTree = "<group>"; };
-		E2517C3D0D1BCC2700180C68 /* OMCButton.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCButton.h; sourceTree = "<group>"; };
-		E2517C3E0D1BCC2700180C68 /* OMCButton.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMCButton.m; sourceTree = "<group>"; };
-		E2517C3F0D1BCC2700180C68 /* OMCButtonCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCButtonCell.h; sourceTree = "<group>"; };
-		E2517C400D1BCC2700180C68 /* OMCButtonCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMCButtonCell.m; sourceTree = "<group>"; };
 		E2517C410D1BCC2700180C68 /* OMCMenuItem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OMCMenuItem.h; path = EntryPoints/Apple/OMCMenuItem.h; sourceTree = "<group>"; };
 		E2517C420D1BCC2700180C68 /* OMCMenuItem.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = OMCMenuItem.m; path = EntryPoints/Apple/OMCMenuItem.m; sourceTree = "<group>"; };
-		E2517C430D1BCC2700180C68 /* OMCPopUpButton.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCPopUpButton.h; sourceTree = "<group>"; };
-		E2517C440D1BCC2700180C68 /* OMCPopUpButton.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMCPopUpButton.m; sourceTree = "<group>"; };
-		E2517C450D1BCC2700180C68 /* OMCProgressIndicator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCProgressIndicator.h; sourceTree = "<group>"; };
-		E2517C460D1BCC2700180C68 /* OMCProgressIndicator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMCProgressIndicator.m; sourceTree = "<group>"; };
-		E2517C470D1BCC2700180C68 /* OMCSlider.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCSlider.h; sourceTree = "<group>"; };
-		E2517C480D1BCC2700180C68 /* OMCSlider.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMCSlider.m; sourceTree = "<group>"; };
-		E2517C490D1BCC2700180C68 /* OMCTextField.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCTextField.h; sourceTree = "<group>"; };
-		E2517C4A0D1BCC2700180C68 /* OMCTextField.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMCTextField.m; sourceTree = "<group>"; };
-		E2517C4B0D1BCC2700180C68 /* OMCTextView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCTextView.h; sourceTree = "<group>"; };
-		E2517C4C0D1BCC2700180C68 /* OMCTextView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMCTextView.m; sourceTree = "<group>"; };
 		E258B20F0E46E37C00926F10 /* OMCDeferredProgress.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCDeferredProgress.cpp; sourceTree = "<group>"; };
 		E25D78950DBB24800065C7A3 /* OMCDropletController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OMCDropletController.h; path = EntryPoints/Apple/OMCDropletController.h; sourceTree = "<group>"; };
-		E26B2792109C174D00DBA8CE /* OMCTableView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCTableView.h; sourceTree = "<group>"; };
-		E26B2793109C174D00DBA8CE /* OMCTableView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMCTableView.m; sourceTree = "<group>"; };
 		E27103CD0D8142DF0097D83E /* Quartz.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Quartz.framework; path = /System/Library/Frameworks/Quartz.framework; sourceTree = "<absolute>"; };
 		E2735F360D7B9576004D81CE /* OMCDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCDialog.h; sourceTree = "<group>"; };
 		E2735F820D7BC89F004D81CE /* OMCDialog.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCDialog.cpp; sourceTree = "<group>"; };
@@ -604,9 +524,6 @@
 		E27F2D030D56F7410060D231 /* CFObj.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CFObj.h; sourceTree = "<group>"; };
 		E287F1F80D3C348F00BB1595 /* AObserver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AObserver.h; sourceTree = "<group>"; };
 		E287F1FA0D3C34B500BB1595 /* AObserverBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AObserverBase.h; sourceTree = "<group>"; };
-		E28D660010A039C500882DDE /* OMCTableViewController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCTableViewController.mm; sourceTree = "<group>"; };
-		E29407BA12796077004CDB05 /* OMCComboBox.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCComboBox.h; sourceTree = "<group>"; };
-		E29407BB12796077004CDB05 /* OMCComboBox.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMCComboBox.m; sourceTree = "<group>"; };
 		E29A6AB10D9F7A00006A97B0 /* OMCMainMenuController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OMCMainMenuController.h; path = EntryPoints/Apple/OMCMainMenuController.h; sourceTree = "<group>"; };
 		E29A6AB20D9F7A01006A97B0 /* OMCMainMenuController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = OMCMainMenuController.mm; path = EntryPoints/Apple/OMCMainMenuController.mm; sourceTree = "<group>"; };
 		E29ED0710D094EB000C9D5E8 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = /System/Library/Frameworks/Carbon.framework; sourceTree = "<absolute>"; };
@@ -622,12 +539,9 @@
 		E29ED1B60D09532500C9D5E8 /* ACFType.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ACFType.cp; sourceTree = "<group>"; };
 		E29ED2190D09FD8800C9D5E8 /* ARefCounted.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ARefCounted.cp; sourceTree = "<group>"; };
 		E29ED21B0D09FD8D00C9D5E8 /* ARefCounted.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ARefCounted.h; sourceTree = "<group>"; };
-		E2A29476105E02B500C732A3 /* OMCTableViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCTableViewController.h; sourceTree = "<group>"; };
 		E2A832550D147B4A00117643 /* b64 */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = b64; sourceTree = "<group>"; };
 		E2A832560D147B4A00117643 /* plister */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = plister; sourceTree = "<group>"; };
 		E2ACB25712EADCB000A8ACF6 /* AbracodeFrameworkVersion.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = AbracodeFrameworkVersion.c; sourceTree = "<group>"; };
-		E2BB1E440E6F886200D2DDE5 /* OMCView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMCView.m; sourceTree = "<group>"; };
-		E2BB1E450E6F886200D2DDE5 /* OMCView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCView.h; sourceTree = "<group>"; };
 		E2C10C5A0E45783200454DB1 /* OMCDeferredProgress.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCDeferredProgress.h; sourceTree = "<group>"; };
 		E2C32CB40D2DF99C0023DA03 /* OMCObserver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCObserver.h; sourceTree = "<group>"; };
 		E2C32CB50D2DF99C0023DA03 /* OMCObserver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCObserver.cpp; sourceTree = "<group>"; };
@@ -636,8 +550,6 @@
 		E2C433440DEE72F700E976D2 /* PlistPreferences.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PlistPreferences.cp; sourceTree = "<group>"; };
 		E2C433600DEE751300E976D2 /* OMCDropletController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = OMCDropletController.mm; path = EntryPoints/Apple/OMCDropletController.mm; sourceTree = "<group>"; };
 		E2C7780F12FFDC4D00A7E6D2 /* filt */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = filt; sourceTree = "<group>"; };
-		E2C8485D10D61C33002DFDB5 /* OMCBox.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCBox.h; sourceTree = "<group>"; };
-		E2C8485E10D61C33002DFDB5 /* OMCBox.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMCBox.m; sourceTree = "<group>"; };
 		E2C84D710DA9AC090056DBC2 /* OMCCommandMenu.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OMCCommandMenu.h; path = EntryPoints/Apple/OMCCommandMenu.h; sourceTree = "<group>"; };
 		E2C84DA80DA9D4CD0056DBC2 /* OMCCommandExecutor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCCommandExecutor.h; sourceTree = "<group>"; };
 		E2C84DA90DA9D4CD0056DBC2 /* OMCCommandExecutor.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCCommandExecutor.mm; sourceTree = "<group>"; };
@@ -645,12 +557,6 @@
 		E2D92E871043E0C2003DC96B /* OMCInputDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCInputDialog.h; sourceTree = "<group>"; };
 		E2D92E8D1043E0E3003DC96B /* OMCInputDialog.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCInputDialog.cpp; sourceTree = "<group>"; };
 		E2E1892D1075BEBC001B7591 /* SelectionIterator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SelectionIterator.h; sourceTree = "<group>"; };
-		E2E406FE0D8A5B00009AD8CA /* OMCSecureTextField.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMCSecureTextField.m; sourceTree = "<group>"; };
-		E2E406FF0D8A5B00009AD8CA /* OMCSecureTextField.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCSecureTextField.h; sourceTree = "<group>"; };
-		E2E407280D8AD1E3009AD8CA /* OMCSearchField.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMCSearchField.m; sourceTree = "<group>"; };
-		E2E407290D8AD1E3009AD8CA /* OMCSearchField.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCSearchField.h; sourceTree = "<group>"; };
-		E2E407840D8C376F009AD8CA /* OMCImageView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OMCImageView.m; sourceTree = "<group>"; };
-		E2E407850D8C376F009AD8CA /* OMCImageView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCImageView.h; sourceTree = "<group>"; };
 		E2ED3AE80D0B27D300481D8F /* DefaultExternBundle.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DefaultExternBundle.cpp; sourceTree = "<group>"; };
 		E2ED3AE90D0B27D300481D8F /* DefaultExternBundle.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DefaultExternBundle.h; sourceTree = "<group>"; };
 		E2ED3AEE0D0B27F700481D8F /* OMCDialogControlHelpers.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCDialogControlHelpers.cp; sourceTree = "<group>"; };
@@ -969,73 +875,10 @@
 				1D560A1B2F80000000000046 /* OMCProcessEnvironment.c */,
 				1D560A1B2F80000000000049 /* OMCEngineBundle.cpp */,
 				1DA51CB42EACC95B00BFF670 /* OMCAppLifecycleObserver.mm */,
-				1D0A1B2C2F6A000000000001 /* NibDialogs */,
 				E29ED1710D09525700C9D5E8 /* CMUtils */,
 				E29ED19E0D09528600C9D5E8 /* MoreAppleEvents */,
 			);
 			path = Apple;
-			sourceTree = "<group>";
-		};
-		1D0A1B2C2F6A000000000001 /* NibDialogs */ = {
-			isa = PBXGroup;
-			children = (
-				E22FBAED0D7A0D7700DC5BB4 /* OMCNibDialog.mm */,
-				E22FBAEC0D7A0D7700DC5BB4 /* OMCNibDialog.h */,
-				E211D4F40D4346BB0065C23A /* OMCNibWindowController.mm */,
-				E211D4F30D4346BA0065C23A /* OMCNibWindowController.h */,
-				E211D3C40D3F51010065C23A /* OMCCocoaNib.m */,
-				E211D3C30D3F51010065C23A /* OMCCocoaNib.h */,
-				E2A29476105E02B500C732A3 /* OMCTableViewController.h */,
-				E28D660010A039C500882DDE /* OMCTableViewController.mm */,
-				1DE10DFB23C9D0EE003FCCDA /* OMCWebKitSupport.js */,
-				E2517C3C0D1BCC2700180C68 /* CocoaControls */,
-			);
-			path = NibDialogs;
-			sourceTree = "<group>";
-		};
-		E2517C3C0D1BCC2700180C68 /* CocoaControls */ = {
-			isa = PBXGroup;
-			children = (
-				1D3F8CBC2E0B370A00B69493 /* OMCActionProtocol.h */,
-				E2517C3D0D1BCC2700180C68 /* OMCButton.h */,
-				E2517C3E0D1BCC2700180C68 /* OMCButton.m */,
-				E2517C3F0D1BCC2700180C68 /* OMCButtonCell.h */,
-				E2517C400D1BCC2700180C68 /* OMCButtonCell.m */,
-				E29407BA12796077004CDB05 /* OMCComboBox.h */,
-				E29407BB12796077004CDB05 /* OMCComboBox.m */,
-				E2517C430D1BCC2700180C68 /* OMCPopUpButton.h */,
-				E2517C440D1BCC2700180C68 /* OMCPopUpButton.m */,
-				E2517C450D1BCC2700180C68 /* OMCProgressIndicator.h */,
-				E2517C460D1BCC2700180C68 /* OMCProgressIndicator.m */,
-				E2517C470D1BCC2700180C68 /* OMCSlider.h */,
-				E2517C480D1BCC2700180C68 /* OMCSlider.m */,
-				E2517C490D1BCC2700180C68 /* OMCTextField.h */,
-				E2517C4A0D1BCC2700180C68 /* OMCTextField.m */,
-				E2E406FE0D8A5B00009AD8CA /* OMCSecureTextField.m */,
-				E2E406FF0D8A5B00009AD8CA /* OMCSecureTextField.h */,
-				E2E407280D8AD1E3009AD8CA /* OMCSearchField.m */,
-				E2E407290D8AD1E3009AD8CA /* OMCSearchField.h */,
-				E2517C4B0D1BCC2700180C68 /* OMCTextView.h */,
-				E2517C4C0D1BCC2700180C68 /* OMCTextView.m */,
-				E2E407840D8C376F009AD8CA /* OMCImageView.m */,
-				E2E407850D8C376F009AD8CA /* OMCImageView.h */,
-				E23DC95C0D9A2616009D2AD8 /* OMCPDFView.m */,
-				E23DC95E0D9A2616009D2AD8 /* OMCPDFView.h */,
-				E2BB1E440E6F886200D2DDE5 /* OMCView.m */,
-				E2BB1E450E6F886200D2DDE5 /* OMCView.h */,
-				E2C8485D10D61C33002DFDB5 /* OMCBox.h */,
-				E2C8485E10D61C33002DFDB5 /* OMCBox.m */,
-				1D8189E823B45FAF00A13449 /* OMCGridView.h */,
-				1D8189E723B45FAF00A13449 /* OMCGridView.m */,
-				1DF2B2072F458F7D0069BD26 /* OMCViewSetupProtocol.h */,
-				1D386DA923BEED4A00A16967 /* OMCWebKitView.h */,
-				1D386DAA23BEED4A00A16967 /* OMCWebKitView.m */,
-				E23DC9600D9A2616009D2AD8 /* OMCIKImageView.m */,
-				E23DC9620D9A2616009D2AD8 /* OMCIKImageView.h */,
-				E26B2792109C174D00DBA8CE /* OMCTableView.h */,
-				E26B2793109C174D00DBA8CE /* OMCTableView.m */,
-			);
-			path = CocoaControls;
 			sourceTree = "<group>";
 		};
 		E29ED1710D09525700C9D5E8 /* CMUtils */ = {
@@ -1219,8 +1062,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				E2ACB25A12EADCF500A8ACF6 /* AbracodeFrameworkVersion.c in Headers */,
-				1DF2B2082F458F7D0069BD26 /* OMCViewSetupProtocol.h in Headers */,
-				E2B795870ECE9A1A00C8939E /* OMCPDFView.h in Headers */,
 				E29ED1B70D09532500C9D5E8 /* ACFType.h in Headers */,
 				E29ED21C0D09FD8D00C9D5E8 /* ARefCounted.h in Headers */,
 				E2ED3AEB0D0B27D300481D8F /* DefaultExternBundle.h in Headers */,
@@ -1230,29 +1071,13 @@
 				E2FB111F0D185A2C005EB1E8 /* OMC.h in Headers */,
 				1D0A1B2C2F6F000000000203 /* OMCPlatformTypes.h in Headers */,
 				1D0A1B2C2F6F000000000204 /* OMCPlatformAPI.h in Headers */,
-				E2517C4D0D1BCC2700180C68 /* OMCButton.h in Headers */,
-				E2517C4F0D1BCC2700180C68 /* OMCButtonCell.h in Headers */,
-				1D3F8CBD2E0B7C8000B69493 /* OMCActionProtocol.h in Headers */,
 				E2517C510D1BCC2700180C68 /* OMCMenuItem.h in Headers */,
-				E2517C530D1BCC2700180C68 /* OMCPopUpButton.h in Headers */,
-				E2517C550D1BCC2700180C68 /* OMCProgressIndicator.h in Headers */,
-				E2517C570D1BCC2700180C68 /* OMCSlider.h in Headers */,
-				E2517C590D1BCC2700180C68 /* OMCTextField.h in Headers */,
-				E2517C5B0D1BCC2700180C68 /* OMCTextView.h in Headers */,
 				E2C32CB80D2DF99D0023DA03 /* OMCObserver.h in Headers */,
 				E2C32CF70D2E1F6C0023DA03 /* OmcTaskNotification.h in Headers */,
-				E211D3C50D3F51010065C23A /* OMCCocoaNib.h in Headers */,
-				E211D4F70D4346BB0065C23A /* OMCNibWindowController.h in Headers */,
 				AAAAAA01D4346BB0065C23A /* OMCWindowController.h in Headers */,
 				E27F2D050D56F7410060D231 /* CFObj.h in Headers */,
-				E22FBAEE0D7A0D7700DC5BB4 /* OMCNibDialog.h in Headers */,
 				E2735F370D7B9576004D81CE /* OMCDialog.h in Headers */,
 				E204EB7F0D7FD8A900595D15 /* OMCConstants.h in Headers */,
-				E2E407010D8A5B00009AD8CA /* OMCSecureTextField.h in Headers */,
-				E2E4072B0D8AD1E3009AD8CA /* OMCSearchField.h in Headers */,
-				E2E407870D8C3770009AD8CA /* OMCImageView.h in Headers */,
-				1D386DAB23BEED4B00A16967 /* OMCWebKitView.h in Headers */,
-				E23DC96A0D9A2616009D2AD8 /* OMCIKImageView.h in Headers */,
 				E29A6AB50D9F7A01006A97B0 /* OMCMainMenuController.h in Headers */,
 				E2C84D750DA9AC090056DBC2 /* OMCCommandMenu.h in Headers */,
 				E2C84DAC0DA9D4CD0056DBC2 /* OMCCommandExecutor.h in Headers */,
@@ -1262,13 +1087,7 @@
 				E24B18180DE96F6D00E44A45 /* OMCFilePanels.h in Headers */,
 				E2C433470DEE72F700E976D2 /* PlistPreferences.h in Headers */,
 				E2C10C5E0E45783200454DB1 /* OMCDeferredProgress.h in Headers */,
-				E2BB1E490E6F886200D2DDE5 /* OMCView.h in Headers */,
-				1D8189EA23B45FAF00A13449 /* OMCGridView.h in Headers */,
 				E2D92E891043E0C2003DC96B /* OMCInputDialog.h in Headers */,
-				E2A2947A105E02B500C732A3 /* OMCTableViewController.h in Headers */,
-				E26B2796109C174D00DBA8CE /* OMCTableView.h in Headers */,
-				E2C8486110D61C33002DFDB5 /* OMCBox.h in Headers */,
-				E29407BE12796077004CDB05 /* OMCComboBox.h in Headers */,
 				E23AACC812F5684E004C867B /* OMCService.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1494,7 +1313,6 @@
 				1D560A1B2F8000000000000D /* omc_output.json in Resources */,
 				E234FA290D0FCB28001A7780 /* stop.icns in Resources */,
 				E234FA2A0D0FCB28001A7780 /* app.icns in Resources */,
-				1DE10DFC23C9D0EE003FCCDA /* OMCWebKitSupport.js in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1593,33 +1411,17 @@
 				1DED8E572222BD8E00A2CAF7 /* MoreAppleEvents.cp in Sources */,
 				E2ED3BC10D0B293E00481D8F /* ACMPlugin.cp in Sources */,
 				E2FB11200D185A2C005EB1E8 /* OMC.cpp in Sources */,
-				E2517C4E0D1BCC2700180C68 /* OMCButton.m in Sources */,
 				1D3EA0682E4095E60064354E /* OMCContextData.cp in Sources */,
-				E2517C500D1BCC2700180C68 /* OMCButtonCell.m in Sources */,
-				1D386DAC23BEED4B00A16967 /* OMCWebKitView.m in Sources */,
 				E2517C520D1BCC2700180C68 /* OMCMenuItem.m in Sources */,
-				E2517C540D1BCC2700180C68 /* OMCPopUpButton.m in Sources */,
-				E2517C560D1BCC2700180C68 /* OMCProgressIndicator.m in Sources */,
-				E2517C580D1BCC2700180C68 /* OMCSlider.m in Sources */,
-				E2517C5A0D1BCC2700180C68 /* OMCTextField.m in Sources */,
-				E2517C5C0D1BCC2700180C68 /* OMCTextView.m in Sources */,
 				E2C32CB90D2DF99D0023DA03 /* OMCObserver.cpp in Sources */,
-				1D8189E923B45FAF00A13449 /* OMCGridView.m in Sources */,
-				E211D3C60D3F51010065C23A /* OMCCocoaNib.m in Sources */,
 				1DED3637232258A40086266F /* OMCScriptsManager.cpp in Sources */,
-				E211D4F80D4346BB0065C23A /* OMCNibWindowController.mm in Sources */,
-				E22FBAEF0D7A0D7700DC5BB4 /* OMCNibDialog.mm in Sources */,
 				E2735F830D7BC89F004D81CE /* OMCDialog.cpp in Sources */,
 				1D0A1B2C2F6A00000000000A /* OMCControlAccessorBridge.mm in Sources */,
 				1DBCC43522CE209300A1DD8F /* OMCHostInfo.mm in Sources */,
 				1D560A1B2F80000000000044 /* OMCAppShell.mm in Sources */,
 				1D560A1B2F80000000000047 /* OMCProcessEnvironment.c in Sources */,
 				1D560A1B2F8000000000004A /* OMCEngineBundle.cpp in Sources */,
-				E2E407000D8A5B00009AD8CA /* OMCSecureTextField.m in Sources */,
-				E2E4072A0D8AD1E3009AD8CA /* OMCSearchField.m in Sources */,
 				1D80B9C222E447F900CF1AF5 /* OMCTerminalExecutor.cp in Sources */,
-				E2E407860D8C3770009AD8CA /* OMCImageView.m in Sources */,
-				E23DC9640D9A2616009D2AD8 /* OMCPDFView.m in Sources */,
 				1D3EA0602E38A1E00064354E /* OneObjProperties.cp in Sources */,
 				1D560A1B2F80000000000018 /* OMCObjectList.cpp in Sources */,
 				1D560A1B2F80000000000020 /* OnMyCommandAE.cp in Sources */,
@@ -1627,7 +1429,6 @@
 				1D0A1B2C2F6A000000000106 /* ACFJSON.cpp in Sources */,
 				1D0A1B2C2F6A000000000107 /* ACFPath.cpp in Sources */,
 				1D0A1B2C2F6A000000000108 /* yyjson.c in Sources */,
-				E23DC9680D9A2616009D2AD8 /* OMCIKImageView.m in Sources */,
 				E29A6AB60D9F7A01006A97B0 /* OMCMainMenuController.mm in Sources */,
 				E2C84DAD0DA9D4CD0056DBC2 /* OMCCommandExecutor.mm in Sources */,
 				1D0A1B2C2F6D000000000104 /* OMCCommandRunner.cpp in Sources */,
@@ -1645,15 +1446,10 @@
 				1D9B1F6521FF191D004704A7 /* SubmenuTree.cp in Sources */,
 				E258B2110E46E37C00926F10 /* OMCDeferredProgress.cpp in Sources */,
 				1D0A1B2C2F6E000000000103 /* OMCProgressParsing.cpp in Sources */,
-				E2BB1E480E6F886200D2DDE5 /* OMCView.m in Sources */,
 				1D9B1F5D21FF1572004704A7 /* OnMyCommand.cp in Sources */,
 				E2D92E8E1043E0E3003DC96B /* OMCInputDialog.cpp in Sources */,
 				1D3EA06A2E40A00B0064354E /* CommandDescription.cp in Sources */,
 				1D690DDF2F45096A006FECE8 /* OMCActionUIDialog.mm in Sources */,
-				E26B2797109C174D00DBA8CE /* OMCTableView.m in Sources */,
-				E28D660210A039C500882DDE /* OMCTableViewController.mm in Sources */,
-				E2C8486210D61C33002DFDB5 /* OMCBox.m in Sources */,
-				E29407BF12796077004CDB05 /* OMCComboBox.m in Sources */,
 				E23AAC9012F55FE0004C867B /* OMCService.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

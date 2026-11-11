@@ -28,8 +28,6 @@ _OBJC_CLASS_$_OMCService
 _OBJC_CLASS_$_OMCServiceRequest
 _OBJC_CLASS_$_OMCMainMenuController
 
-# The nib dialog controls are in Platform/Apple/NibDialogs/NibDialogs.exp.
-
 
 __ZN19OnMyCommandCMPluginC1Ev
 

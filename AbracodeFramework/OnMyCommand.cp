@@ -44,14 +44,6 @@
 #include "OmcTaskNotification.h"
 #include "ACFDict.h"
 #include "ACFArr.h"
-// Nib dialogs are an optional macOS-only module (Platform/Apple/NibDialogs), on in OMC 5.x.
-// The build sets OMC_NIB_DIALOGS (OmcProjectCommon.xcconfig); a build that does not say keeps them.
-#ifndef OMC_NIB_DIALOGS
-	#define OMC_NIB_DIALOGS 1
-#endif
-#if OMC_NIB_DIALOGS
-	#include "OMCNibDialog.h"
-#endif
 #include "OMCActionUIDialog.h"
 #include "OMCActionUIWindow.h"
 #include "OMCInputDialog.h"
@@ -74,20 +66,13 @@ enum
 	kComboBoxDialogIndx			= 131
 };
 
-// The engine's only way into the nib dialog module. In a build without the module, a NIB_DIALOG
-// command gets an alert, headed with the command's name as other command alerts are, saying what to
-// use instead, and no dialog, so the caller cancels the command as it does for a nib dialog that
-// failed to open.
-static ARefCountedObj<OMCDialog>
-RunNibDialogOrRefuse(OnMyCommand *inPlugin, CFBundleRef inFrameworkBundle, const CommandDescription &inCommand,
-					CommandRuntimeData *inRuntimeData, CFBundleRef inLocalizationBundle)
+// NIB_DIALOG is no longer supported (nib dialogs were removed in 6.0). Such a command gets an
+// alert, headed with the command's name as other command alerts are, saying what to use instead;
+// the caller then cancels the command.
+static void
+RefuseNibDialog(OnMyCommand *inPlugin, CFBundleRef inFrameworkBundle, const CommandDescription &inCommand,
+				CommandRuntimeData *inRuntimeData, CFBundleRef inLocalizationBundle)
 {
-#if OMC_NIB_DIALOGS
-	(void)inFrameworkBundle;
-	(void)inCommand;
-	(void)inLocalizationBundle;
-	return RunNibDialog(inPlugin, inRuntimeData);
-#else
 	CFObj<CFStringRef> commandName( inPlugin->CreateDynamicCommandName(inCommand, *inRuntimeData,
 										inCommand.localizationTableName, inLocalizationBundle) );
 	// a subcommand is named by its COMMAND_ID too; the main command's ID is the internal "top!" marker
@@ -96,14 +81,12 @@ RunNibDialogOrRefuse(OnMyCommand *inPlugin, CFBundleRef inFrameworkBundle, const
 	CFObj<CFStringRef> alertString;
 	if(isSubcommand)
 		alertString.Adopt( ::CFStringCreateWithFormat(kCFAllocatorDefault, nullptr,
-			CFSTR("The command \"%@\" uses NIB_DIALOG, which this version of OMC no longer supports. Use ACTIONUI_WINDOW instead."),
+			CFSTR("The command \"%@\" uses NIB_DIALOG, which is no longer supported. Use ACTIONUI_WINDOW instead."),
 			(CFStringRef)inCommand.commandID) );
 	else
-		alertString.Adopt( CFSTR("This command uses NIB_DIALOG, which this version of OMC no longer supports. Use ACTIONUI_WINDOW instead."), kCFObjRetain );
+		alertString.Adopt( CFSTR("This command uses NIB_DIALOG, which is no longer supported. Use ACTIONUI_WINDOW instead."), kCFObjRetain );
 	LOG_CFSTR(alertString);
 	DisplayAlert(inFrameworkBundle, commandName, alertString);
-	return ARefCountedObj<OMCDialog>();
-#endif
 }
 
 #pragma mark -
@@ -1092,35 +1075,22 @@ OnMyCommand::ExecuteCommandWithObjects(CommandRuntimeData *initialCommandRuntime
             throw OSStatus(memFullErr);
         }
                 
-        ARefCountedObj<OMCDialog> activeDialog;
-        // is this command creating a new dialog?
-        // Before creating a new dialog, move the current dialogUUID into parentDialogUUID
-        // so that subcommands of the new dialog can reference the parent dialog
-        if( currCommand.nibDialog != nullptr || currCommand.actionUIWindow != nullptr )
-        {
-            commandRuntimeData->SetParentDialogUUID(commandRuntimeData->GetAssociatedDialogUUID());
-        }
-
         if( currCommand.nibDialog != nullptr )
         {
+			StSwitchToFront switcher; // as for the other command alerts
+			RefuseNibDialog(this, mBundleRef, currCommand, commandRuntimeData, localizationBundle);
+			throw OSStatus(userCanceledErr);
+        }
+
+        ARefCountedObj<OMCDialog> activeDialog;
+        if( currCommand.actionUIWindow != nullptr )
+        {
+			// This command creates a new dialog: move the current dialogUUID into parentDialogUUID
+			// so that subcommands of the new dialog can reference the parent dialog
+			commandRuntimeData->SetParentDialogUUID(commandRuntimeData->GetAssociatedDialogUUID());
+
 			// bring executing application to front. important when running within ShortcutsObserver
 			// don't restore because for non-modal dialogs this would bring executing app behind along with the dialog
-			StSwitchToFront switcher(false);
-
-			 // we create one dialog for all objects or we create for each object when processing separately
-			activeDialog = RunNibDialogOrRefuse(this, mBundleRef, currCommand, commandRuntimeData, localizationBundle);
-			if(activeDialog != nullptr)
-			{
-				SelectionIterator* selIterator = activeDialog->GetSelectionIterator();
-				activeDialog->CopyAllControlValues(currCommand.specialRequestedNibControls, selIterator);
-			}
-			else
-			{
-				throw OSStatus(userCanceledErr);
-			}
-        }
-        else if( currCommand.actionUIWindow != nullptr )
-        {
 			StSwitchToFront switcher(false);
 
 			activeDialog = RunActionUIDialog(this, commandRuntimeData);
@@ -1266,29 +1236,22 @@ OnMyCommand::ExecuteCommandWithText(CommandDescription &currCommand, CFStringRef
 			localizationBundle = CFBundleGetMainBundle();
 	}
     
-    ARefCountedObj<OMCDialog> activeDialog;
-    // is this command creating a new dialog?
-    // Before creating a new dialog, move the current dialogUUID into parentDialogUUID
-    // so that subcommands of the new dialog can reference the parent dialog
-    if( currCommand.nibDialog != nullptr || currCommand.actionUIWindow != nullptr )
-    {
-        commandRuntimeData->SetParentDialogUUID(commandRuntimeData->GetAssociatedDialogUUID());
-    }
-
     if(currCommand.nibDialog != nullptr)
     {
+        StSwitchToFront switcher; // as for the other command alerts
+        RefuseNibDialog(this, mBundleRef, currCommand, commandRuntimeData, localizationBundle);
+        throw OSStatus(userCanceledErr);
+    }
+
+    ARefCountedObj<OMCDialog> activeDialog;
+    if(currCommand.actionUIWindow != nullptr)
+    {
+        // This command creates a new dialog: move the current dialogUUID into parentDialogUUID
+        // so that subcommands of the new dialog can reference the parent dialog
+        commandRuntimeData->SetParentDialogUUID(commandRuntimeData->GetAssociatedDialogUUID());
+
         //bring executing application to front. important when running within ShortcutsObserver
         //don't restore because for non-modal dialogs this would bring executing app behind along with the dialog
-        StSwitchToFront switcher(false);
-
-        activeDialog = RunNibDialogOrRefuse(this, mBundleRef, currCommand, commandRuntimeData, localizationBundle);
-        if(activeDialog == nullptr)
-        {
-            throw OSStatus(userCanceledErr);
-        }
-    }
-    else if(currCommand.actionUIWindow != nullptr)
-    {
         StSwitchToFront switcher(false);
 
         activeDialog = RunActionUIDialog(this, commandRuntimeData);
@@ -1596,8 +1559,9 @@ AppLifecycleCommandIDs()
 	return sIDs;
 }
 
-// Keys of NIB_DIALOG / ACTIONUI_WINDOW naming the commands a window runs for its own events
-// (OMCNibWindowController.mm, OMCActionUIWindow.cpp).
+// Keys of ACTIONUI_WINDOW naming the commands a window runs for its own events (OMCActionUIWindow.cpp).
+// NIB_DIALOG had the same keys; a command that still has one is refused, but its handlers are
+// still recognized, so IsDialogSubcommandID keeps refusing them as before.
 static auto &
 DialogSubcommandKeys()
 {
@@ -2610,8 +2574,6 @@ OnMyCommand::CreateEnvironmentVariablesDict(CFStringRef inObjTextRef, CommandRun
 	//
 	// Copied rather than recomputed so the two spellings cannot disagree. PopulateEnvironList
 	// REMOVES the key when there is no associated dialog, so absence here is the correct signal.
-	// A NIB dialog also populates it, both names being backed by the same runtime value; a client
-	// that then asks the bridge about that UUID gets error 1001, which is the honest answer.
 	CFStringRef windowUUID = (CFStringRef)::CFDictionaryGetValue(outEnviron, CFSTR("OMC_ACTIONUI_WINDOW_UUID"));
 	if((windowUUID != nullptr) && (ACFType<CFStringRef>::DynamicCast(windowUUID) != nullptr))
 	{
@@ -2622,7 +2584,6 @@ OnMyCommand::CreateEnvironmentVariablesDict(CFStringRef inObjTextRef, CommandRun
 	// it for anything we spawn, but two modes spawn nothing: kExecTerminal and kExecITerm
 	// serialize this dictionary into an export script (OMCEnvironmentExportScript.cpp) that
 	// Terminal or iTerm runs, and Terminal is not our descendant - it inherits nothing from us.
-	// The NIB WebKit window's window.omc_env is built from this dictionary too.
 	CFStringRef endpoint = (CFStringRef)::CFDictionaryGetValue(outEnviron, CFSTR("OMC_ACTIONUI_REMOTE_ENDPOINT"));
 	if((endpoint != nullptr) && (ACFType<CFStringRef>::DynamicCast(endpoint) != nullptr))
 	{

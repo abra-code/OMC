@@ -2,8 +2,8 @@
 //  OMCObjCInvoke.h
 //  Abracode
 //
-//  INVOKE's Objective-C half, for Objective-C callers: the nib dialogs send messages to their
-//  controls too (OMCNibWindowController.mm). Portable callers use Platform/OMCInvoke.h.
+//  INVOKE's Objective-C half, for Objective-C callers (OMCWindowController.mm). Portable callers
+//  use Platform/OMCInvoke.h.
 //
 
 #pragma once

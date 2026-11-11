@@ -3,8 +3,7 @@
 //  Abracode
 //
 //  Protocol declaring the UI framework-specific control manipulation interface.
-//  Adopted by OMCWindowController (no-op defaults) and OMCNibWindowController (AppKit/Nib
-//  implementation). ActionUI windows (OMCActionUIWindow.cpp) implement the same operations in
+//  Adopted by OMCWindowController (no-op defaults); its nib subclass was removed in 6.0. ActionUI windows (OMCActionUIWindow.cpp) implement the same operations in
 //  portable C++, as an OMCDialogControlTarget (OMCDialogControlDispatch.h).
 //
 

@@ -88,6 +88,19 @@ itest_run fixture.version > /dev/null
 itest_wait_idle
 check "with no answer it does not run" "tried" "$(/bin/cat "$ITEST_WORK/version.txt" 2>/dev/null)"
 
+section "A NIB_DIALOG command is refused"
+# Nib dialogs were removed in 6.0: the engine says what to use instead and cancels the command.
+itest_panels_clear
+itest_run fixture.nib > /dev/null
+itest_wait_idle
+check "the command does not run" "no" "$(if [ -f "$ITEST_WORK/nib.txt" ]; then printf yes; else printf no; fi)"
+check "an alert was recorded" "alert" "$(itest_panel last kind)"
+check "a stop alert" "stop" "$(itest_panel last level)"
+check "headed with the command's name" "ITestFixture" "$(itest_panel last title)"
+check "naming the command and the replacement" 'The command "fixture.nib" uses NIB_DIALOG, which is no longer supported. Use ACTIONUI_WINDOW instead.' "$(itest_panel last message)"
+check "with only an OK button" "OK" "$(itest_panel last buttons)"
+itest_panels_clear
+
 section "An END_NOTIFICATION notice is recorded, not shown"
 itest_answer_alert default
 run="$(itest_run fixture.notice)"
