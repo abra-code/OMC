@@ -5,8 +5,8 @@
 //  Linux checks of the platform UI that a person answers: the alerts and notices of
 //  Platform/Linux/OMCPlatformAlerts.cpp and the file panels of OMCPlatformFilePanels.cpp, and the
 //  applet's menu (EntryPoints/Linux/OMCAppletMenu.cpp), chosen as a click would, and the
-//  clipboard and host info (OMCClipboard.cpp, OMCHostInfo.cpp), and forgetting a closed window's
-//  ActionUI model (OMCActionUIModels.cpp). The
+//  clipboard and host info (OMCClipboard.cpp, OMCHostInfo.cpp), forgetting a closed window's
+//  ActionUI model (OMCActionUIModels.cpp), and the ActionUI add-ons (OMCActionUIAddOns.cpp). The
 //  program runs its own AdwApplication in the desktop session and answers each one itself, as a
 //  person would: it finds the dialog among the application's windows and clicks a button (or
 //  closes it, or picks files in GTK's file chooser), from a timer set before the call, which
@@ -25,6 +25,7 @@
 #include "OMCAppletMenu.h"
 #include "OMCClipboard.h"
 #include "OMCActionUIModels.h"
+#include "OMCActionUIAddOns.h"
 #include "OMCHostInfo.h"
 #include "OMCConstants.h"
 #include "ACFString.h"
@@ -912,6 +913,73 @@ RunModelChecks(GApplication *inApp)
 	OMCPlatformForgetActionUIModel(nullptr);
 }
 
+#pragma mark - The ActionUI add-ons
+
+// The add-on element types ActionUI shows as "<type> is not available on Linux yet" in inWidget
+std::vector<std::string>
+PlaceholderTypes(GtkWidget *inWidget)
+{
+	std::vector<std::string> types;
+	if(GTK_IS_LABEL(inWidget))
+	{
+		const char *text = gtk_label_get_text(GTK_LABEL(inWidget));
+		std::string label = (text != nullptr) ? text : "";
+		size_t at = label.find(" is not available on Linux yet");
+		if(at != std::string::npos)
+			types.push_back(label.substr(0, at));
+	}
+	for(GtkWidget *child = gtk_widget_get_first_child(inWidget); child != nullptr; child = gtk_widget_get_next_sibling(child))
+	{
+		std::vector<std::string> more = PlaceholderTypes(child);
+		types.insert(types.end(), more.begin(), more.end());
+	}
+	return types;
+}
+
+// Fills a window with one element of each add-on and returns the types shown as placeholders;
+// outLoaded is false when the document was not loaded at all, which also shows no placeholder
+std::vector<std::string>
+ShowAddOnElements(GApplication *inApp, const char *inUUID, const char *inPNGName, bool &outLoaded)
+{
+	const char *document = R"({"type": "VStack", "children": [
+		{"type": "RichText", "id": 1, "properties": {"markdown": "**Rich** text"}},
+		{"type": "Diff", "id": 2, "properties": {"oldText": "one\ntwo\n", "newText": "one\nthree\n"}},
+		{"type": "CachedImage", "id": 3, "properties": {"intrinsicSize": {"width": 32, "height": 32}}},
+		{"type": "HostSurface", "id": 4, "properties": {"surfaceName": "omc.test.surface", "idealWidth": 64, "idealHeight": 32}}]})";
+	GtkWidget *window = adw_application_window_new(GTK_APPLICATION(inApp));
+	gtk_window_set_default_size(GTK_WINDOW(window), 480, 400);
+	outLoaded = actionUILoadIntoHostWindowFromJSON(window, document, inUUID, nullptr);
+	gtk_window_present(GTK_WINDOW(window));
+	Pump(600);
+	Capture(window, inPNGName);
+	std::vector<std::string> placeholders = PlaceholderTypes(window);
+	gtk_window_destroy(GTK_WINDOW(window));
+	actionUIRemoveWindow(inUUID);
+	Pump(200);
+	return placeholders;
+}
+
+std::string
+Joined(const std::vector<std::string> &inItems)
+{
+	std::string text;
+	for(const std::string &item : inItems)
+		text += (text.empty() ? "" : ", ") + item;
+	return text.empty() ? "(none)" : text;
+}
+
+void
+RunAddOnChecks(GApplication *inApp)
+{
+	bool loaded = false;
+	std::vector<std::string> before = ShowAddOnElements(inApp, "5B4C3D2E-0000-4000-8000-00000000AA03", "addons-before", loaded);
+	Check("before registration the add-on elements are placeholders",
+			loaded && (Joined(before) == "RichText, Diff, CachedImage, HostSurface"), loaded ? Joined(before) : "not loaded");
+	OMCRegisterActionUIAddOns();
+	std::vector<std::string> after = ShowAddOnElements(inApp, "5B4C3D2E-0000-4000-8000-00000000AA04", "addons-after", loaded);
+	Check("registered: RichText, Diff, CachedImage and HostSurface render", loaded && after.empty(), loaded ? Joined(after) : "not loaded");
+}
+
 } // namespace
 
 int
@@ -944,6 +1012,7 @@ main(int argc, char *argv[])
 			RunMenuChecks(inApp);
 			RunClipboardAndHostChecks(inApp);
 			RunModelChecks(inApp);
+			RunAddOnChecks(inApp);
 		}
 		g_application_release(inApp);
 		g_application_quit(inApp);

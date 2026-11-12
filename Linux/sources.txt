@@ -59,6 +59,7 @@ Abracode AbracodeFramework/Platform/Linux/OMCPlatformFilePanels.cpp
 Abracode AbracodeFramework/Platform/Linux/OMCHostInfo.cpp
 Abracode AbracodeFramework/Platform/Linux/OMCClipboard.cpp
 Abracode AbracodeFramework/Platform/Linux/OMCActionUIModels.cpp
+Abracode AbracodeFramework/Platform/Linux/OMCActionUIAddOns.cpp
 Abracode AbracodeFramework/Platform/Linux/OMCAppShell.cpp
 Abracode AbracodeFramework/Platform/Linux/OMCModalLoop.cpp
 Abracode AbracodeFramework/Platform/Linux/OMCWindowHost.cpp

@@ -92,6 +92,13 @@ let package = Package(
     ],
     dependencies: [
         .package(path: "../ActionUI"),
+        // ActionUI's add-ons with a Linux element (OMCRegisterActionUIAddOns): each links ActionUI's
+        // ActionUIStatic, the same ActionUI module as above, and most fetch a package from GitHub
+        // (RichText, AsyncImageCache, DiffView), so the first build needs the network
+        .package(path: "../ActionUI/Add-ons/ActionUIRichText"),
+        .package(path: "../ActionUI/Add-ons/ActionUICachedImage"),
+        .package(path: "../ActionUI/Add-ons/ActionUIDiff"),
+        .package(path: "../ActionUI/Add-ons/ActionUIHostSurface"),
     ],
     targets: [
         .target(name: "CYYJSON", path: "Linux/Targets/CYYJSON", publicHeadersPath: ".", cSettings: cSettings),
@@ -111,6 +118,10 @@ let package = Package(
                 "OMCCommon",
                 .product(name: "ActionUICAdapter", package: "ActionUI"),
                 .product(name: "ActionUIRemote", package: "ActionUI"),
+                .product(name: "ActionUIRichText", package: "ActionUIRichText"),
+                .product(name: "ActionUICachedImage", package: "ActionUICachedImage"),
+                .product(name: "ActionUIDiff", package: "ActionUIDiff"),
+                .product(name: "ActionUIHostSurface", package: "ActionUIHostSurface"),
             ],
             path: "Linux/Targets/Abracode",
             publicHeadersPath: ".",

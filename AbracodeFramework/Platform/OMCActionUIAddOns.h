@@ -4,7 +4,8 @@
 //
 //  The optional ActionUI add-ons an OMC host links: each registers extra element types, so that
 //  ActionUI dialogs can use them. Which add-ons exist is per platform (macOS:
-//  Platform/Apple/OMCActionUIAddOns.cpp); a Linux implementation registers the ones built there.
+//  Platform/Apple/OMCActionUIAddOns.cpp; Linux: Platform/Linux/OMCActionUIAddOns.cpp, the ones with
+//  a GTK element).
 //
 #pragma once
 
