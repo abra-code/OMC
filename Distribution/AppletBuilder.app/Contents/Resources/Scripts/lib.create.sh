@@ -43,13 +43,14 @@ applet_install_binaries() {
     local app_path="$1"
     local app_name="$2"
 
-    local builder_exe="${OMC_APP_BUNDLE_PATH}/Contents/MacOS/$(/usr/bin/basename "${OMC_APP_BUNDLE_PATH%.app}")"
+    local builder_exe="$(applet_executable_folder "$OMC_APP_BUNDLE_PATH")/$(/usr/bin/basename "${OMC_APP_BUNDLE_PATH%.app}")"
     local builder_fw="${OMC_APP_BUNDLE_PATH}/Contents/Frameworks/Abracode.framework"
 
     # Copy executable, renamed to match the applet
-    /bin/mkdir -p "$app_path/Contents/MacOS"
-    /bin/cp "$builder_exe" "$app_path/Contents/MacOS/$app_name"
-    /bin/chmod +x "$app_path/Contents/MacOS/$app_name"
+    local exe_folder="$(applet_executable_folder "$app_path")"
+    /bin/mkdir -p "$exe_folder"
+    /bin/cp "$builder_exe" "$exe_folder/$app_name"
+    /bin/chmod +x "$exe_folder/$app_name"
 
     # Copy framework if AppletBuilder's is newer or destination doesn't have one
     local dest_fw="$app_path/Contents/Frameworks/Abracode.framework"
@@ -58,8 +59,8 @@ applet_install_binaries() {
         if [ ! -d "$dest_fw" ]; then
             need_copy=1
         else
-            local src_ver=$("$plister_tool" get value "$builder_fw/Resources/Info.plist" /CFBundleVersion 2>/dev/null)
-            local dst_ver=$("$plister_tool" get value "$dest_fw/Resources/Info.plist" /CFBundleVersion 2>/dev/null)
+            local src_ver=$("$plister_tool" get value "$(framework_info_plist "$builder_fw")" /CFBundleVersion 2>/dev/null)
+            local dst_ver=$("$plister_tool" get value "$(framework_info_plist "$dest_fw")" /CFBundleVersion 2>/dev/null)
             if [ "$src_ver" != "$dst_ver" ]; then
                 need_copy=1
             fi
@@ -175,8 +176,8 @@ applet_create_from_template() {
     fi
 
     # Rename executable (may not exist in templates, but handle clones)
-    /bin/mv "$new_app_path/Contents/MacOS/$original_name" \
-            "$new_app_path/Contents/MacOS/$applet_name" 2>/dev/null
+    local new_exe_folder="$(applet_executable_folder "$new_app_path")"
+    /bin/mv "$new_exe_folder/$original_name" "$new_exe_folder/$applet_name" 2>/dev/null
 
     # Full rename pipeline (plist, scripts, credits, URL scheme)
     applet_rename_contents "$new_app_path" "$original_name" "$applet_name"

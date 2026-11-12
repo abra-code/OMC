@@ -258,6 +258,36 @@ command_file_path() {
     fi
 }
 
+# The folder of an applet bundle's executable: the bundle layout is the same on both systems,
+# the executable is in Contents/MacOS on macOS and in Contents/Linux on Linux (as omcitest.sh's
+# _omcitest_executable_folder)
+applet_executable_folder() { # <applet bundle>
+    case "${OSTYPE:-}" in
+        linux*) printf '%s\n' "$1/Contents/Linux" ;;
+        *) printf '%s\n' "$1/Contents/MacOS" ;;
+    esac
+}
+
+# Abracode.framework's Info.plist: Resources/Info.plist in the versioned macOS framework, at the
+# framework's top in the flat one on Linux
+framework_info_plist() { # <framework folder>
+    if [ -f "$1/Resources/Info.plist" ]; then
+        printf '%s\n' "$1/Resources/Info.plist"
+    else
+        printf '%s\n' "$1/Info.plist"
+    fi
+}
+
+# Edits a file in place with one sed expression. macOS's sed takes the backup suffix as a
+# separate argument (-i ''); GNU sed on Linux takes it attached, and reads '' as the name of a
+# file to edit (and fails).
+sed_in_place() { # <sed expression> <file>
+    case "${OSTYPE:-}" in
+        darwin*) /usr/bin/sed -i '' "$1" "$2" ;;
+        *) /usr/bin/sed -i "$1" "$2" ;;
+    esac
+}
+
 # True (rc 0) when the given command file is JSON (by extension).
 is_json_command_file() {
     case "$1" in

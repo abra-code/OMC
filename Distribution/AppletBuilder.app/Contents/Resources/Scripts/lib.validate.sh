@@ -39,9 +39,10 @@ scan_bash4_isms() {
 }
 
 # Syntax-check a single script file based on its extension, using the same
-# interpreter the OMC engine uses to run it (OmcExecutor.cpp: .sh → /bin/sh,
-# .bash → /bin/bash, .zsh → /bin/zsh). Checking .sh with bash would miss
-# fatal POSIX-mode parse errors such as process substitution `< <(cmd)`.
+# interpreter the OMC engine uses to run it (OmcExecutor.cpp: .sh → /bin/sh on
+# macOS and /bin/bash on Linux, .bash → /bin/bash, .zsh → /bin/zsh). On macOS,
+# checking .sh with bash would miss fatal POSIX-mode parse errors such as process
+# substitution `< <(cmd)`.
 # Sets SCRIPT_VALIDATE_OUTPUT to any validator output (errors).
 # Sets SCRIPT_VALIDATE_WARNINGS to bash-4+ heuristic findings (sh/bash only).
 # Returns: 0 = valid, 99 = no validator for this type, any other nonzero =
@@ -55,6 +56,16 @@ validate_script_file() {
     local filename ext rc
     filename=$(/usr/bin/basename "$path")
     ext=$(echo "${filename##*.}" | /usr/bin/tr '[:upper:]' '[:lower:]')
+
+    # On Linux the Command Engine runs .sh files with /bin/bash (its /bin/sh is dash), so they
+    # are checked as bash there
+    case "$ext" in
+        sh)
+            case "${OSTYPE:-}" in
+                linux*) ext="bash" ;;
+            esac
+            ;;
+    esac
 
     case "$ext" in
         sh)
@@ -76,6 +87,10 @@ POSIX-compatible, or rename the script to .zsh to get a modern shell."
             [ $rc -eq 0 ] && SCRIPT_VALIDATE_WARNINGS=$(scan_bash4_isms "$path")
             ;;
         zsh)
+            # Not every Linux system has zsh: then there is nothing to check with
+            if [ ! -x /bin/zsh ]; then
+                return 99
+            fi
             SCRIPT_VALIDATE_OUTPUT=$(/bin/zsh -n "$path" 2>&1)
             rc=$?
             ;;
@@ -96,6 +111,10 @@ POSIX-compatible, or rename the script to .zsh to get a modern shell."
             fi
             ;;
         applescript|scpt)
+            # AppleScript is macOS only
+            if [ ! -x /usr/bin/osacompile ]; then
+                return 99
+            fi
             local tmp
             tmp=$(/usr/bin/mktemp -d "${TMPDIR:-/tmp}/ab_validate_XXXXXX")
             SCRIPT_VALIDATE_OUTPUT=$(/usr/bin/osacompile -o "$tmp/out.scpt" "$path" 2>&1)

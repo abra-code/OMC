@@ -135,9 +135,9 @@ applet_rename_scripts() {
     # Update script contents
     for script in "$scripts_dir"/*; do
         [ ! -f "$script" ] && continue
-        /usr/bin/sed -i '' "s/${old_name}/${new_name}/g" "$script"
+        sed_in_place "s/${old_name}/${new_name}/g" "$script"
         if [ "$old_lower" != "$old_name" ]; then
-            /usr/bin/sed -i '' "s/${old_lower}/${new_lower}/g" "$script"
+            sed_in_place "s/${old_lower}/${new_lower}/g" "$script"
         fi
     done
 }
@@ -150,11 +150,11 @@ applet_update_credits() {
 
     local credits="$app_path/Contents/Resources/Credits.rtf"
     if [ -f "$credits" ]; then
-        /usr/bin/sed -i '' "s/${old_name}/${new_name}/g" "$credits"
+        sed_in_place "s/${old_name}/${new_name}/g" "$credits"
         local old_lower=$(echo "$old_name" | /usr/bin/tr '[:upper:]' '[:lower:]')
         local new_lower=$(echo "$new_name" | /usr/bin/tr '[:upper:]' '[:lower:]')
         if [ "$old_lower" != "$old_name" ]; then
-            /usr/bin/sed -i '' "s/${old_lower}/${new_lower}/g" "$credits"
+            sed_in_place "s/${old_lower}/${new_lower}/g" "$credits"
         fi
     fi
 }
@@ -255,7 +255,7 @@ applet_rename_contents() {
                 "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/json_rename_value.py" \
                 "$cmd_plist" "$old_name" "$new_name"
         else
-            /usr/bin/sed -i '' "s|<string>${old_name}</string>|<string>${new_name}</string>|" "$cmd_plist"
+            sed_in_place "s|<string>${old_name}</string>|<string>${new_name}</string>|" "$cmd_plist"
         fi
     fi
 
@@ -389,16 +389,17 @@ copy_executable() {
     local target_path="$1"
     local src_exe_name="$(plist_read "${OMC_APP_BUNDLE_PATH}/Contents/Info.plist" CFBundleExecutable)"
     local dst_exe_name="$(plist_read "$target_path/Contents/Info.plist" CFBundleExecutable)"
-    /bin/mkdir -p "$target_path/Contents/MacOS"
+    local exe_folder="$(applet_executable_folder "$target_path")"
+    /bin/mkdir -p "$exe_folder"
     # Remove the old executable first, so the copy is a new file. Copied over, the file is rewritten
     # in place: a running copy of the applet then fails its code signature checks, and macOS kills
     # every process that maps the file afterwards (lipo, codesign), so the build fails at thinning.
     # A running applet keeps the removed file until it quits.
     if [ -n "$dst_exe_name" ]; then
-        /bin/rm -f "$target_path/Contents/MacOS/$dst_exe_name"
+        /bin/rm -f "$exe_folder/$dst_exe_name"
     fi
-    /bin/cp -p "${OMC_APP_BUNDLE_PATH}/Contents/MacOS/$src_exe_name" \
-               "$target_path/Contents/MacOS/$dst_exe_name"
+    /bin/cp -p "$(applet_executable_folder "$OMC_APP_BUNDLE_PATH")/$src_exe_name" \
+               "$exe_folder/$dst_exe_name"
     ab_log "Executable updated: $dst_exe_name"
 }
 
@@ -407,7 +408,7 @@ update_framework() {
     local target_path="$1"
     local src_fw="${OMC_APP_BUNDLE_PATH}/Contents/Frameworks/Abracode.framework"
     local dst_fw="$target_path/Contents/Frameworks/Abracode.framework"
-    local src_version=$(plist_read "$src_fw/Resources/Info.plist" CFBundleVersion)
+    local src_version=$(plist_read "$(framework_info_plist "$src_fw")" CFBundleVersion)
 
     if [ ! -d "$dst_fw" ]; then
         ab_log "Abracode.framework missing — installing v${src_version}"
@@ -417,7 +418,7 @@ update_framework() {
         return
     fi
 
-    local dst_version=$(plist_read "$dst_fw/Resources/Info.plist" CFBundleVersion)
+    local dst_version=$(plist_read "$(framework_info_plist "$dst_fw")" CFBundleVersion)
     local force_update="$AB_FORCE_UPDATE"
 
     if [ "$force_update" = "1" ] || [ "$force_update" = "true" ]; then
@@ -1106,8 +1107,10 @@ validate_info_content() {
         return 0
     fi
 
-    # CFBundleExecutable → Contents/MacOS/<exe> must exist (checked post-copy).
+    # CFBundleExecutable: <executable folder>/<exe> must exist (checked post-copy); the folder is
+    # Contents/MacOS on macOS, Contents/Linux on Linux.
     local exe
+    local exe_folder="$(applet_executable_folder "$target_path")"
     exe=$(plist_read "$info_plist" CFBundleExecutable)
     if [ -z "$exe" ]; then
         ab_log "  CFBundleExecutable: NOT SET"
@@ -1115,10 +1118,10 @@ validate_info_content() {
         report="${report}CFBundleExecutable: not set in Info.plist
 
 "
-    elif [ ! -f "$contents_dir/MacOS/$exe" ]; then
+    elif [ ! -f "$exe_folder/$exe" ]; then
         ab_log "  CFBundleExecutable '${exe}': MISSING"
         error_count=$((error_count + 1))
-        report="${report}CFBundleExecutable '${exe}': Contents/MacOS/${exe} not found
+        report="${report}CFBundleExecutable '${exe}': Contents/${exe_folder##*/}/${exe} not found
 
 "
     else
@@ -2001,8 +2004,8 @@ ab_applet_versions() { # <project-path>
     fi
 
     local _ab_fw="$1/Contents/Frameworks/Abracode.framework"
-    local _ab_engine="$(plist_read "$_ab_fw/Resources/Info.plist" CFBundleVersion)"
-    local _ab_own_engine="$(plist_read "${OMC_APP_BUNDLE_PATH}/Contents/Frameworks/Abracode.framework/Resources/Info.plist" CFBundleVersion)"
+    local _ab_engine="$(plist_read "$(framework_info_plist "$_ab_fw")" CFBundleVersion)"
+    local _ab_own_engine="$(plist_read "$(framework_info_plist "${OMC_APP_BUNDLE_PATH}/Contents/Frameworks/Abracode.framework")" CFBundleVersion)"
     local _ab_engine_cmp="$(compare_versions "$_ab_own_engine" "$_ab_engine")"
     # update_framework's three outcomes: install when the folder is missing, update
     # when ours compares newer (which an unreadable version always does), else keep.

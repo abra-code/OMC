@@ -28,9 +28,15 @@ $content"
     exit 0
 fi
 
+# The paste shortcut named in the status line
+case "${OSTYPE:-}" in
+    darwin*) paste_keys="⌘V" ;;
+    *) paste_keys="Ctrl+V" ;;
+esac
+
 # If the template has an "id", replace it with a unique one based on the edited content
 has_id=$(echo "$content" | /usr/bin/grep -c '"id"')
-status_msg="${element_name} copied — paste with ⌘V"
+status_msg="${element_name} copied — paste with ${paste_keys}"
 
 if [ "$has_id" -gt 0 ]; then
     edited_content="${OMC_ACTIONUI_VIEW_702_VALUE}"
@@ -44,10 +50,12 @@ if [ "$has_id" -gt 0 ]; then
     if [ "$next_id" -ne 1 ]; then
         content=$(echo "$content" | /usr/bin/sed "s/\"id\": 1/\"id\": ${next_id}/")
     fi
-    status_msg="${element_name} (id: ${next_id}) copied — paste with ⌘V"
+    status_msg="${element_name} (id: ${next_id}) copied — paste with ${paste_keys}"
 fi
 
-export LANG="en_US.UTF-8"
-echo "$content" | /usr/bin/pbcopy -pboard general
+# The engine's pasteboard tool, not pbcopy: the same clipboard, and under omctest the test's own
+# (pbcopy wrote the real one during a test run)
+"$pasteboard_tool" general set "$content
+"
 
 set_value "$UI_EDITED_LABEL_ID" "$status_msg"

@@ -1576,8 +1576,16 @@ omctest_index_newline='
 omctest_script_index() {
     local scripts_dir="$OMC_APP_BUNDLE_PATH/Contents/Resources/Scripts"
     # Its status is not checked: a folder stat cannot read (none yet) gets an empty
-    # stamp, which is a key like any other and moves once the folder appears.
-    local stamp="$(/usr/bin/stat -f '%Fm' "$scripts_dir" 2>/dev/null)"
+    # stamp, which is a key like any other and moves once the folder appears. BSD stat
+    # on macOS, GNU stat on Linux (both to the nanosecond). GNU stat reads -f as "file
+    # system status" and printed the file system's free counts, a stamp that moved with
+    # any write anywhere and not with this folder. darwin* is tested first on purpose:
+    # under dash (Linux's /bin/sh) OSTYPE is empty, which must mean GNU stat.
+    local stamp
+    case "${OSTYPE:-}" in
+        darwin*) stamp="$(/usr/bin/stat -f '%Fm' "$scripts_dir" 2>/dev/null)" ;;
+        *) stamp="$(/usr/bin/stat -c '%y' "$scripts_dir" 2>/dev/null)" ;;
+    esac
     if [ "${OMCTEST_SCRIPT_INDEX_KEY:-}" = "$scripts_dir|$stamp" ]; then
         return 0
     fi

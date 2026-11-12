@@ -48,8 +48,8 @@ if [ -n "$new_name" ] && [ "$new_name" != "$old_name" ]; then
     set_status "$GEN_STATUS_ID" "Renaming applet..."
 
     # Rename executable
-    /bin/mv "$project_path/Contents/MacOS/$old_exe" \
-            "$project_path/Contents/MacOS/$new_name" 2>/dev/null
+    exe_folder="$(applet_executable_folder "$project_path")"
+    /bin/mv "$exe_folder/$old_exe" "$exe_folder/$new_name" 2>/dev/null
 
     # Full rename pipeline (plist, scripts, credits, URL scheme)
     applet_rename_contents "$project_path" "$old_exe" "$new_name"
