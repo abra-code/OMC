@@ -889,6 +889,19 @@ RunMenuChecks(GApplication *inApp)
 		return recentOutline.find("Open Recent>[Clear Menu]") != std::string::npos;
 	});
 	Check("Clear Menu empties it", cleared, recentOutline);
+	char *olderURI = g_filename_to_uri(older.c_str(), nullptr, nullptr);
+	char *newerURI = g_filename_to_uri(newer.c_str(), nullptr, nullptr);
+	Check("and leaves the desktop's recent list, which other apps share, as it was",
+			gtk_recent_manager_has_item(recentManager, olderURI) && gtk_recent_manager_has_item(recentManager, newerURI));
+	(void)gtk_recent_manager_add_item(recentManager, olderURI); // the applet uses it again
+	bool back = WaitUntil([&] {
+		recentOutline = MenuOutline(menu);
+		return recentOutline.find("Open Recent>[[older notes.txt], [Clear Menu]]") != std::string::npos;
+	});
+	Check("a file used after Clear Menu shows again", back, recentOutline);
+	g_free(olderURI);
+	g_free(newerURI);
+	ForgetOwnRecentFiles(); // the test's own files only
 	(void)remove(older.c_str());
 	(void)remove(newer.c_str());
 

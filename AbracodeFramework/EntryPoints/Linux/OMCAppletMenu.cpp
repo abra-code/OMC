@@ -16,6 +16,7 @@
 #include "CFObj.h"
 #include "ActionUIC.h"
 #include <gtk/gtk.h>
+#include <cerrno>
 #include <algorithm>
 #include <initializer_list>
 #include <map>
@@ -44,6 +45,7 @@ struct MenuState
 	bool hasOpenRecent {false};
 	std::vector<std::string> recentURIs; // the files Open Recent shows now, in its order
 	std::string recentJSON; // what Open Recent was last loaded from (see RebuildOpenRecent)
+	gint64 recentClearedAt {0}; // Clear Menu's time (microseconds since 1970), from the applet's state file
 };
 
 MenuState *sMenu = nullptr; // made once, for the life of the app
@@ -411,7 +413,9 @@ CopyRecentFiles()
 			if(!gtk_recent_info_get_application_info(info, appName, &exec, &count, &used) || (used == nullptr))
 				used = gtk_recent_info_get_modified(info);
 			file.modified = (used != nullptr) ? (g_date_time_to_unix(used) * G_USEC_PER_SEC + g_date_time_get_microsecond(used)) : 0;
-			files.push_back(std::move(file));
+			// Not the ones used before the applet's Clear Menu (see ClearRecentFiles)
+			if(file.modified > sMenu->recentClearedAt)
+				files.push_back(std::move(file));
 		}
 		gtk_recent_info_unref(info);
 	}
@@ -505,27 +509,68 @@ RebuildOpenRecent()
 	sMenu->recentJSON = text;
 }
 
-// Clear Menu: all the applet's files leave the desktop's recent list, not only the ones shown, as
-// macOS clears them all (the "changed" signal rebuilds)
+// The applet's own state file, where Clear Menu's time is kept: the user's state folder
+// ($XDG_STATE_HOME, else ~/.local/state), in a folder named by the applet's bundle identifier
+std::string
+AppletStatePath()
+{
+	CFBundleRef bundle = CFBundleGetMainBundle();
+	CFStringRef identifier = (bundle != nullptr) ? CFBundleGetIdentifier(bundle) : nullptr;
+	std::string name = (identifier != nullptr) ? ACFStringToUTF8(identifier) : "";
+	if(name.empty())
+	{
+		const char *programName = g_get_prgname();
+		name = (programName != nullptr) ? programName : "";
+	}
+	// One folder inside the state folder: not a path, nor "." or ".." (the state folder or its parent)
+	if(name.empty() || (name == ".") || (name == "..") || (name.find('/') != std::string::npos))
+		return "";
+	return std::string(g_get_user_state_dir()) + "/" + name + "/applet-state.ini";
+}
+
+const char *kStateGroup = "OpenRecent";
+const char *kClearedAtKey = "ClearedAt";
+
+gint64
+LoadRecentClearedAt()
+{
+	std::string path = AppletStatePath();
+	if(path.empty())
+		return 0;
+	GKeyFile *state = g_key_file_new();
+	gint64 clearedAt = 0;
+	if(g_key_file_load_from_file(state, path.c_str(), G_KEY_FILE_NONE, nullptr))
+		clearedAt = g_key_file_get_int64(state, kStateGroup, kClearedAtKey, nullptr);
+	g_key_file_free(state);
+	return clearedAt;
+}
+
+// Clear Menu, as macOS's clears the app's own list: the desktop's recent list is shared by every app
+// and GTK can only drop a whole entry from it, so it is not touched; the applet notes the time instead,
+// and Open Recent shows only files it used after that (one opened again comes back)
 void
 ClearRecentFiles()
 {
-	const char *appName = g_get_application_name();
-	if(appName == nullptr)
-		return;
-	GtkRecentManager *manager = gtk_recent_manager_get_default();
-	std::vector<std::string> uris;
-	GList *items = gtk_recent_manager_get_items(manager);
-	for(GList *item = items; item != nullptr; item = item->next)
+	sMenu->recentClearedAt = g_get_real_time();
+	std::string path = AppletStatePath();
+	if(!path.empty())
 	{
-		GtkRecentInfo *info = static_cast<GtkRecentInfo *>(item->data);
-		if(gtk_recent_info_has_application(info, appName))
-			uris.push_back(gtk_recent_info_get_uri(info));
-		gtk_recent_info_unref(info);
+		GKeyFile *state = g_key_file_new();
+		(void)g_key_file_load_from_file(state, path.c_str(), G_KEY_FILE_KEEP_COMMENTS, nullptr); // keeps the file's other keys
+		g_key_file_set_int64(state, kStateGroup, kClearedAtKey, sMenu->recentClearedAt);
+		char *folder = g_path_get_dirname(path.c_str());
+		GError *error = nullptr;
+		if((g_mkdir_with_parents(folder, 0700) != 0) || !g_key_file_save_to_file(state, path.c_str(), &error))
+			OMCLogMessage("Clear Menu could not be saved in %s: %s (Open Recent is cleared until the applet quits)",
+							path.c_str(), (error != nullptr) ? error->message : g_strerror(errno));
+		if(error != nullptr)
+			g_error_free(error);
+		g_free(folder);
+		g_key_file_free(state);
 	}
-	g_list_free(items);
-	for(const std::string &uri : uris)
-		(void)gtk_recent_manager_remove_item(manager, uri.c_str(), nullptr);
+	// After the item's action returns: the rebuild gives the menu buttons new popovers, and the
+	// clicked one is still delivering its event
+	g_idle_add_once([](gpointer) { RebuildOpenRecent(); }, nullptr);
 }
 
 // OMC's items, then the applet's elements with OMC's action ids
@@ -648,6 +693,7 @@ OMCInstallAppletMenu(CFArrayRef inMainMenuElements, CFStringRef inCommandFile, c
 	sMenu->hasOpenRecent = (sMenu->items.count(kOpenActionID) != 0) && gtk_is_initialized();
 	if(sMenu->hasOpenRecent)
 	{
+		sMenu->recentClearedAt = LoadRecentClearedAt();
 		for(size_t i = 0; i < kRecentLimit; i++)
 		{
 			MenuCommand recent;
