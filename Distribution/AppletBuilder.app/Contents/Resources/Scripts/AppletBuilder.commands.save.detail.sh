@@ -23,13 +23,7 @@ fi
 check_file_modified "$cmd_plist" "$PB_CMD_HASH"
 case $? in
     1)  # Reload from Disk — re-extract the command at the selected index
-        if is_json_command_file "$cmd_plist"; then
-            cmd_text=$(/usr/bin/plutil -extract "COMMAND_LIST.$cmd_index" json -o - "$cmd_plist" 2>/dev/null \
-                | "$python3" -m json.tool)
-        else
-            cmd_text=$(/usr/bin/plutil -extract "COMMAND_LIST.$cmd_index" xml1 -o - "$cmd_plist" 2>/dev/null \
-                | /usr/bin/sed '1,3d; $d')
-        fi
+        cmd_text=$(command_text "$cmd_plist" "$cmd_index")
         set_value "$CMD_DETAIL_ID" "$cmd_text
 "
         pb_set "$PB_CMD_HASH" "$(file_hash "$cmd_plist")"

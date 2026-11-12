@@ -1,7 +1,7 @@
 #!/bin/bash
 # AppletBuilder.commands.selected - Show selected command details and enable buttons
 
-source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.common.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.plist.sh"
 
 project_path=$(load_project_path)
 cmd_plist=$(command_file_path "$project_path")
@@ -43,12 +43,6 @@ pb_set "$PB_CMD_HASH" "$(file_hash "$cmd_plist")"
 # pretty-printed JSON object; for a plist we show the command dict as an XML
 # fragment, stripping the plist wrapper (xml declaration, DOCTYPE, <plist> header
 # and </plist> footer) so the user sees only the <dict>...</dict> content.
-if is_json_command_file "$cmd_plist"; then
-    cmd_text=$(/usr/bin/plutil -extract "COMMAND_LIST.$cmd_index" json -o - "$cmd_plist" 2>/dev/null \
-        | "$python3" -m json.tool)
-else
-    cmd_text=$(/usr/bin/plutil -extract "COMMAND_LIST.$cmd_index" xml1 -o - "$cmd_plist" 2>/dev/null \
-        | /usr/bin/sed '1,3d; $d')
-fi
+cmd_text=$(command_text "$cmd_plist" "$cmd_index")
 set_value "$CMD_DETAIL_ID" "$cmd_text
 "

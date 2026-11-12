@@ -94,8 +94,12 @@ plist_edit() {
         # every save - and nothing later in the build or codesign path puts it
         # back, so the applet stops being readable for anyone it is distributed
         # to. chmod-then-mv rather than `cat >` keeps the replace atomic.
+        # The mode in octal: BSD stat on macOS, GNU stat on Linux.
         local mode
-        mode=$(/usr/bin/stat -f '%Lp' "$plist" 2>/dev/null)
+        case "${OSTYPE:-}" in
+            darwin*) mode=$(/usr/bin/stat -f '%Lp' "$plist" 2>/dev/null) ;;
+            *) mode=$(/usr/bin/stat -c '%a' "$plist" 2>/dev/null) ;;
+        esac
         if [ -n "$mode" ]; then
             /bin/chmod "$mode" "$tmp"
         fi
@@ -103,10 +107,23 @@ plist_edit() {
         return $?
     fi
 
+    # A legacy Command.plist (macOS only: plutil)
     /usr/bin/plutil -convert json -o "$tmp" "$plist" || { /bin/rm -f "$tmp"; return 1; }
     "$python3" "$editor" "$tmp" "$operation" "$@" || { /bin/rm -f "$tmp"; return 1; }
     /usr/bin/plutil -convert xml1 -o "$plist" "$tmp"
     local rc=$?
     /bin/rm -f "$tmp"
     return $rc
+}
+
+# One command of a command file as the command editor shows it: indented JSON (keys in file
+# order) for a Command.json, read with Python, so it works on Linux too; the <dict> fragment of
+# the XML for a legacy Command.plist (macOS only: plutil). Nothing when the file or the command
+# is not there.
+command_text() { # <command file> <index>
+    if is_json_command_file "$1"; then
+        "$python3" "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/plist_edit.py" "$1" print_command "$2" 2>/dev/null
+        return $?
+    fi
+    /usr/bin/plutil -extract "COMMAND_LIST.$2" xml1 -o - "$1" 2>/dev/null | /usr/bin/sed '1,3d; $d'
 }
