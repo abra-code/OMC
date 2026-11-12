@@ -3,7 +3,8 @@
 //  Abracode
 //
 //  Linux checks of the platform UI that a person answers: the alerts and notices of
-//  Platform/Linux/OMCPlatformAlerts.cpp and the file panels of OMCPlatformFilePanels.cpp. The
+//  Platform/Linux/OMCPlatformAlerts.cpp and the file panels of OMCPlatformFilePanels.cpp, and the
+//  applet's menu (EntryPoints/Linux/OMCAppletMenu.cpp), chosen as a click would. The
 //  program runs its own AdwApplication in the desktop session and answers each one itself, as a
 //  person would: it finds the dialog among the application's windows and clicks a button (or
 //  closes it, or picks files in GTK's file chooser), from a timer set before the call, which
@@ -19,6 +20,9 @@
 
 #include "OMCAlerts.h"
 #include "OMCFilePanels.h"
+#include "OMCAppletMenu.h"
+#include "ACFJSON.h"
+#include "ActionUIC.h"
 #include "CFObj.h"
 #include "Linux/OMCModalLoop.h"
 #include <adwaita.h>
@@ -559,6 +563,229 @@ RunPortalChecks()
 
 #pragma GCC diagnostic pop
 
+#pragma mark - The applet's menu
+
+// The menu as text: a section as "[...]", a submenu as "Title>[...]", an item as its label
+std::string
+MenuOutline(GMenuModel *inModel)
+{
+	std::string text;
+	int count = g_menu_model_get_n_items(inModel);
+	for(int i = 0; i < count; i++)
+	{
+		if(!text.empty())
+			text += ", ";
+		char *label = nullptr;
+		(void)g_menu_model_get_item_attribute(inModel, i, "label", "s", &label);
+		GMenuModel *section = g_menu_model_get_item_link(inModel, i, "section");
+		GMenuModel *submenu = g_menu_model_get_item_link(inModel, i, "submenu");
+		if(section != nullptr)
+			text += "[" + MenuOutline(section) + "]";
+		else if(submenu != nullptr)
+			text += std::string((label != nullptr) ? label : "?") + ">[" + MenuOutline(submenu) + "]";
+		else
+			text += (label != nullptr) ? label : "?";
+		if(section != nullptr)
+			g_object_unref(section);
+		if(submenu != nullptr)
+			g_object_unref(submenu);
+		g_free(label);
+	}
+	return text;
+}
+
+// The action (without "app.") of the item a path of labels leads to, through sections and submenus
+std::string
+MenuItemAction(GMenuModel *inModel, std::vector<std::string> inPath)
+{
+	if(inPath.empty())
+		return "";
+	int count = g_menu_model_get_n_items(inModel);
+	for(int i = 0; i < count; i++)
+	{
+		std::string found;
+		GMenuModel *section = g_menu_model_get_item_link(inModel, i, "section");
+		if(section != nullptr)
+		{
+			found = MenuItemAction(section, inPath);
+			g_object_unref(section);
+			if(!found.empty())
+				return found;
+			continue;
+		}
+		char *label = nullptr;
+		(void)g_menu_model_get_item_attribute(inModel, i, "label", "s", &label);
+		bool matches = (label != nullptr) && (inPath.front() == label);
+		g_free(label);
+		if(!matches)
+			continue;
+		GMenuModel *submenu = g_menu_model_get_item_link(inModel, i, "submenu");
+		if(submenu != nullptr)
+		{
+			found = MenuItemAction(submenu, std::vector<std::string>(inPath.begin() + 1, inPath.end()));
+			g_object_unref(submenu);
+			return found;
+		}
+		if(inPath.size() != 1)
+			return "";
+		char *action = nullptr;
+		(void)g_menu_model_get_item_attribute(inModel, i, "action", "s", &action);
+		found = (action != nullptr) ? action : "";
+		g_free(action);
+		return (found.compare(0, 4, "app.") == 0) ? found.substr(4) : found;
+	}
+	return "";
+}
+
+std::string
+Accelerator(GApplication *inApp, const std::string &inAction)
+{
+	char **accels = gtk_application_get_accels_for_action(GTK_APPLICATION(inApp), ("app." + inAction).c_str());
+	std::string first = ((accels != nullptr) && (accels[0] != nullptr)) ? accels[0] : "(none)";
+	g_strfreev(accels);
+	return first;
+}
+
+// Waits (running the main loop) until inPath exists, at most 5 s
+bool
+WaitForFile(const std::string &inPath)
+{
+	gint64 end = g_get_monotonic_time() + 5 * G_USEC_PER_SEC;
+	while(g_get_monotonic_time() < end)
+	{
+		if(g_file_test(inPath.c_str(), G_FILE_TEST_EXISTS))
+			return true;
+		g_main_context_iteration(nullptr, FALSE);
+		g_usleep(10 * 1000);
+	}
+	return false;
+}
+
+int sMainCommandRuns = 0;
+int sQuits = 0;
+
+void
+RunMenuChecks(GApplication *inApp)
+{
+	char *made = g_dir_make_tmp("omc-menu-test-XXXXXX", nullptr);
+	if(made == nullptr)
+	{
+		Check("a folder for the menu's commands", false);
+		return;
+	}
+	std::string folder = made;
+	g_free(made);
+	auto command = [&folder](const char *inName, const char *inID, const char *inSubmenu, const char *inMark) {
+		std::string json = std::string("{\"NAME\": \"") + inName + "\", \"ACTIVATION_MODE\": \"act_always\", "
+							"\"EXECUTION_MODE\": \"exe_shell_script\", \"COMMAND\": [\"/usr/bin/touch '" + folder + "/" + inMark + "'\"]";
+		if(inID != nullptr)
+			json += std::string(", \"COMMAND_ID\": \"") + inID + "\"";
+		if(inSubmenu != nullptr)
+			json += std::string(", \"SUBMENU_NAME\": \"") + inSubmenu + "\"";
+		return json + "}";
+	};
+	std::string commandFile = folder + "/Command.json";
+	auto removeFolder = [&folder] {
+		for(const char *name : {"main.ran", "top.ran", "half.ran", "named.ran", "static.ran", "Command.json"})
+			(void)remove((folder + "/" + name).c_str());
+		(void)g_rmdir(folder.c_str());
+	};
+	std::string commands = "{\"VERSION\": 2, \"COMMAND_LIST\": [" +
+		command("Main", nullptr, nullptr, "main.ran") + ", " +
+		command("Top Command", "test.top", nullptr, "top.ran") + ", " +
+		command("Half", "test.half", "Images/Resize", "half.ran") + ", " +
+		command("Named", nullptr, nullptr, "named.ran") + ", " +
+		command("Static Target", "test.static", nullptr, "static.ran") + "]}";
+	(void)g_file_set_contents(commandFile.c_str(), commands.c_str(), -1, nullptr);
+
+	const char *mainMenuJSON = R"([
+		{"type": "CommandMenu", "properties": {"name": "Tools"}, "children": [
+			{"type": "Button", "properties": {"title": "Run Static", "actionID": "test.static"}},
+			{"type": "Menu", "properties": {"title": "More"}, "children": [
+				{"type": "Button", "properties": {"title": "Run Top", "actionID": "test.top"}}]}]},
+		{"type": "CommandMenu", "properties": {"autoPopulate": true}}])";
+	CFObj<CFDataRef> data(CFDataCreate(kCFAllocatorDefault, (const UInt8 *)mainMenuJSON, (CFIndex)strlen(mainMenuJSON)));
+	CFObj<CFArrayRef> mainMenu((CFArrayRef)ACFJSONCreatePropertyList(data, kCFPropertyListImmutable, nullptr));
+	OMCAppletMenuActions actions;
+	actions.runMainCommand = [](void *) { sMainCommandRuns++; };
+	actions.quit = [](void *) { sQuits++; };
+	actions.context = nullptr;
+	CFObj<CFStringRef> commandFileString(CFString(commandFile));
+	Check("the applet's menu loads", OMCInstallAppletMenu(mainMenu, commandFileString, actions));
+
+	// A window ActionUI fills has the menu button in its header bar
+	GtkWidget *window = adw_application_window_new(GTK_APPLICATION(inApp));
+	bool filled = actionUILoadIntoHostWindowFromJSON(window, R"({"type": "Text", "properties": {"text": "The applet's window"}})",
+														"5B4C3D2E-0000-4000-8000-00000000AA01", nullptr);
+	gtk_window_present(GTK_WINDOW(window));
+	Pump(500);
+	// ActionUI's primary menu: the menu button with a menu model (a header bar may hold others)
+	std::function<GtkWidget *(GtkWidget *)> findMenuButton = [&findMenuButton](GtkWidget *inWidget) -> GtkWidget * {
+		if(GTK_IS_MENU_BUTTON(inWidget) && (gtk_menu_button_get_menu_model(GTK_MENU_BUTTON(inWidget)) != nullptr))
+			return inWidget;
+		for(GtkWidget *child = gtk_widget_get_first_child(inWidget); child != nullptr; child = gtk_widget_get_next_sibling(child))
+		{
+			GtkWidget *found = findMenuButton(child);
+			if(found != nullptr)
+				return found;
+		}
+		return nullptr;
+	};
+	GtkWidget *button = filled ? findMenuButton(window) : nullptr;
+	GMenuModel *menu = (button != nullptr) ? gtk_menu_button_get_menu_model(GTK_MENU_BUTTON(button)) : nullptr;
+	std::string fillDetail = filled ? "no menu button with a menu" : "not filled";
+	if(!filled)
+	{
+		char *error = actionUIGetLastError();
+		fillDetail += std::string(": ") + ((error != nullptr) ? error : "?");
+		free(error);
+	}
+	Check("a filled window has the menu button", menu != nullptr, fillDetail);
+	if(menu == nullptr)
+	{
+		gtk_window_destroy(GTK_WINDOW(window));
+		removeFolder();
+		return;
+	}
+	std::string outline = MenuOutline(menu);
+	std::string expected = "[New, Open\xE2\x80\xA6], "
+		"[Tools>[Run Static, More>[Run Top]], Commands>[Main, Top Command, Images>[Resize>[Half]], Named, Static Target]], "
+		"[About OMCLinuxUITests], [Quit]";
+	Check("the menu: New and Open, the applet's menus with the Commands menu in submenus, About, Quit", outline == expected, outline);
+
+	struct Choice { std::vector<std::string> path; const char *mark; const char *name; };
+	for(const Choice &choice : {
+			Choice{{"Commands", "Images", "Resize", "Half"}, "half.ran", "a command in nested submenus runs"},
+			Choice{{"Commands", "Named"}, "named.ran", "a command without an id of its own runs by its name"},
+			Choice{{"Tools", "Run Static"}, "static.ran", "a MainMenu.json Button runs the command its actionID names"},
+			Choice{{"Tools", "More", "Run Top"}, "top.ran", "and one in a MainMenu.json Menu"} })
+	{
+		std::string action = MenuItemAction(menu, choice.path);
+		if(!action.empty())
+			g_action_group_activate_action(G_ACTION_GROUP(inApp), action.c_str(), nullptr);
+		Check(choice.name, !action.empty() && WaitForFile(folder + "/" + choice.mark), action.empty() ? "no such item" : action);
+	}
+
+	std::string newAction = MenuItemAction(menu, {"New"});
+	std::string openAction = MenuItemAction(menu, {"Open\xE2\x80\xA6"});
+	std::string quitAction = MenuItemAction(menu, {"Quit"});
+	for(const std::string &action : {newAction, openAction, quitAction})
+	{
+		if(!action.empty())
+			g_action_group_activate_action(G_ACTION_GROUP(inApp), action.c_str(), nullptr);
+	}
+	Check("New and Open run the main command", sMainCommandRuns == 2, std::to_string(sMainCommandRuns));
+	Check("Quit quits", sQuits == 1, std::to_string(sQuits));
+	Check("New is Ctrl+N", Accelerator(inApp, newAction) == "<Control>n", Accelerator(inApp, newAction));
+	Check("Open is Ctrl+O", Accelerator(inApp, openAction) == "<Control>o", Accelerator(inApp, openAction));
+	Check("Quit is Ctrl+Q", Accelerator(inApp, quitAction) == "<Control>q", Accelerator(inApp, quitAction));
+
+	gtk_window_destroy(GTK_WINDOW(window));
+	actionUIRemoveWindow("5B4C3D2E-0000-4000-8000-00000000AA01");
+	Pump(200);
+	removeFolder();
+}
+
 } // namespace
 
 int
@@ -588,6 +815,7 @@ main(int argc, char *argv[])
 		{
 			RunChecks(inApp);
 			RunPanelChecks(inApp);
+			RunMenuChecks(inApp);
 		}
 		g_application_release(inApp);
 		g_application_quit(inApp);

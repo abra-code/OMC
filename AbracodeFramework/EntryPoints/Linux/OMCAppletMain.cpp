@@ -5,7 +5,7 @@
 //  The Linux applet's app shell (Private/phase7-applet-host-design.md, piece 1): an AdwApplication
 //  that reports the app's events to the portable applet (OMCApplet.h) and lifecycle
 //  (OMCAppLifecycle.h), as EntryPoints/Apple/OMCAppletController.mm does on macOS.
-//  - startup: the app will launch (app.will.launch); the applet is made.
+//  - startup: the app will launch (app.will.launch); the applet and its menu are made (OMCAppletMenu.h).
 //  - command-line (the applet's own, or a second launch's handed over): no arguments is an
 //    activate; files go to OMCApplet::OpenURLs (gathered and run as one main command), URLs on
 //    another scheme (the applet's own) to OMCApplet::HandleURL exactly as given; the first one
@@ -24,6 +24,7 @@
 //
 
 #include "OMCAppletMain.h"
+#include "OMCAppletMenu.h"
 #include "OMCApplet.h"
 #include "OMCAppLifecycle.h"
 #include "OMCAppShell.h"
@@ -94,6 +95,24 @@ AppletDidOpenGatheredFiles(void *inActionContext)
 	(void)inActionContext; // a GApplication's open needs no answer
 }
 
+#pragma mark - The menu's actions
+
+void
+MenuRunMainCommand(void *inContext)
+{
+	(void)inContext;
+	// New and Open, as on macOS (OMCAppletController's newDocument: and openDocument:)
+	if((sHost != nullptr) && sHost->applet)
+		sHost->applet->RunMainCommand();
+}
+
+void
+MenuQuit(void *inContext)
+{
+	(void)inContext;
+	OMCQuitThisApp();
+}
+
 #pragma mark - The application's signals
 
 // The launch has finished: the startup modifiers no longer count, then app.did.launch
@@ -129,6 +148,13 @@ OnStartup(GApplication *inApp, gpointer)
 	actions.didOpenGatheredFiles = AppletDidOpenGatheredFiles;
 	actions.context = nullptr;
 	sHost->applet.reset(new OMCApplet(actions));
+	// The menu in every window's header bar: New, Open, the applet's MainMenu.json, Quit
+	OMCAppletMenuActions menuActions;
+	menuActions.runMainCommand = MenuRunMainCommand;
+	menuActions.quit = MenuQuit;
+	menuActions.context = nullptr;
+	CFObj<CFArrayRef> mainMenu(OMCCopyAppletMainMenuElements());
+	(void)OMCInstallAppletMenu(mainMenu, CommandFile(), menuActions);
 	// Released only by quitting: the idle check below decides when an applet with nothing to show is done
 	g_application_hold(inApp);
 }

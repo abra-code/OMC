@@ -64,6 +64,7 @@ Abracode AbracodeFramework/Platform/Linux/OMCTestability.cpp
 Abracode AbracodeFramework/Platform/Linux/StandardDirectories.cpp
 Abracode AbracodeFramework/omc_popen.c
 Abracode AbracodeFramework/EntryPoints/Linux/OMCAppletMain.cpp
+Abracode AbracodeFramework/EntryPoints/Linux/OMCAppletMenu.cpp
 plister plister/main.cpp
 b64 b64/main.c
 filt filt/main.c
