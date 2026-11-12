@@ -192,6 +192,16 @@ check "a .sh script runs with bash" "$([ "$script_bash" = "yes" ] && echo 1 || e
 wait_for_exit "$pid" 20
 check "and the applet quits once idle" "$([ "$result" = "0" ] && echo 1 || echo 0)" "exit: $result"
 
+printf '== the applets'"'"' settings tool, defaults, from the engine'"'"'s Support folder ==\n'
+: > "$LAUNCHTEST_LOG"
+XDG_CONFIG_HOME="$work/config" "$applet" 'launchtest://exe?commandID=lt.defaults' &
+pid=$!
+saved="$(wait_for_line 'defaults:0:hello there' 10)"
+check "a handler writes and reads a setting" "$([ "$saved" = "yes" ] && echo 1 || echo 0)" "$(log_text)"
+check "kept as JSON in XDG_CONFIG_HOME" "$([ -f "$work/config/com.abracode.launchtest.json" ] && echo 1 || echo 0)" "$(/bin/ls "$work/config" 2>&1 | /usr/bin/tr '\n' ' ')"
+wait_for_exit "$pid" 20
+check "and the applet quits once idle" "$([ "$result" = "0" ] && echo 1 || echo 0)" "exit: $result"
+
 printf '== the engine'"'"'s framework in the bundle: a built-in window opens ==\n'
 : > "$LAUNCHTEST_LOG"
 "$applet" 'launchtest://exe?commandID=lt.input' 2> "$work/input.err" &

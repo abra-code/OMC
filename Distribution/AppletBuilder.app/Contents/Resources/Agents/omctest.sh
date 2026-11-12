@@ -79,7 +79,12 @@
 # bridge is a SECOND virtual window, deliberately separate from the one ui_value
 # reads: writes through omc_dialog_control land in the stub's files, writes
 # through the bridge land in the fake host. bridge_value reads the latter.
-OMCTEST_API_VERSION=7
+# 8 exports OMC_DEFAULTS_PATH, the per-file home's Library/Preferences: the
+# applets' settings tool ($OMC_OMC_SUPPORT_PATH/defaults, OMC 6) keeps its
+# settings there, as JSON, instead of in the user's preferences, which cfprefsd
+# keys by uid and not by $HOME. A GUARANTEE a test file may assert. Settings a
+# handler writes with /usr/bin/defaults itself still reach the user's.
+OMCTEST_API_VERSION=8
 export OMCTEST_API_VERSION
 
 # The four tools this harness always replaces with recording stubs.
@@ -732,6 +737,10 @@ omctest_prepare_env() { # <app> <label>
                   "$OMCTEST_HOME/Library/Preferences" || return 1
     HOME="$OMCTEST_HOME"
     export HOME OMCTEST_HOME
+    # The applets' settings tool ($OMC_OMC_SUPPORT_PATH/defaults) keeps them here
+    # (API 8): on macOS it otherwise goes to cfprefsd, which ignores HOME
+    OMC_DEFAULTS_PATH="$OMCTEST_HOME/Library/Preferences"
+    export OMC_DEFAULTS_PATH
 
     # --- harness variables ---------------------------------------------------
     # Deliberately NOT 0. "check_status \"it worked\" 0" would otherwise pass

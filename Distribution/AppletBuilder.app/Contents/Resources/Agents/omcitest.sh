@@ -74,10 +74,13 @@
 #   ITEST_HOME                             the applet's $HOME for this file: a private folder with
 #                                          Library/Application Support, Preferences and Caches, so
 #                                          what shell and Python handlers keep under $HOME or ~
-#                                          is the test's, not the user's. Whatever asks the system
-#                                          for the home folder instead (NSHomeDirectory,
-#                                          CFPreferences, NSUserDefaults, a framework's own
-#                                          Application Support lookup) still gets the user's.
+#                                          is the test's, not the user's. The applets' settings
+#                                          tool ($OMC_OMC_SUPPORT_PATH/defaults) keeps its
+#                                          settings in its Library/Preferences (OMC_DEFAULTS_PATH).
+#                                          Whatever asks the system for the home folder instead
+#                                          (NSHomeDirectory, CFPreferences, NSUserDefaults,
+#                                          /usr/bin/defaults, a framework's own Application
+#                                          Support lookup) still gets the user's.
 #   ITEST_TMPDIR                           the applet's $TMPDIR for this file, private as omctest's:
 #                                          applets keep per-window state there and sweep it at quit
 #                                          (PackageBuilder deletes every packagebuilder-state-*), so
@@ -540,6 +543,7 @@ omcitest_launch() { # <App.app>
         -u PYTHONPATH \
         OMC_TEST_BRIDGE_PATH="$OMCITEST_SOCKET" OMC_TEST_TOKEN_FD=3 OMC_TEST_PASTEBOARD_PREFIX="$ITEST_PASTEBOARD_PREFIX" \
         OMC_TEST_SUPPORT_PATH="$_work/support" OMCTEST_UI="$OMCTEST_UI" HOME="$ITEST_HOME" TMPDIR="$ITEST_TMPDIR" \
+        OMC_DEFAULTS_PATH="$ITEST_HOME/Library/Preferences" \
         "$_exe" 3< "$OMCITEST_TOKEN_FILE" > "$_work/applet.log" 2>&1 &
     OMCITEST_PID=$!
 

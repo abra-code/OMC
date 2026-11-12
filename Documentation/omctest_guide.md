@@ -156,7 +156,7 @@ Variables a test file can read:
 | `OMCTEST_STATUS` | exit code of the last `omc_run`; the string `-` before any dispatch, so `check_status "..." 0` cannot pass vacuously |
 | `OMCTEST_ALERT_RC` | the alert stub's answer when the scripted queue is empty (default `0`) |
 | `OMCTEST_PYTHON`, `OMCTEST_PYTHON_EMBEDDED` | the resolved interpreter, and whether it is the bundle's own |
-| `OMCTEST_API_VERSION` | `7` - assert a minimum if you use something new. `2` added `omc_control_defaults`; `3` isolates `$HOME`; `4` isolates named pasteboards and stops `ui_reset` dropping the diagnostic logs; `5` exports `OMC_APP_PROCESS_ID`; `6` makes named pasteboards files in the scratch instead of boards in the pasteboard server, and drops `OMCTEST_PB_PREFIX`; `7` stands up the ActionUI remote bridge for a Python applet and adds `bridge_called` / `bridge_value`. |
+| `OMCTEST_API_VERSION` | `8` - assert a minimum if you use something new. `2` added `omc_control_defaults`; `3` isolates `$HOME`; `4` isolates named pasteboards and stops `ui_reset` dropping the diagnostic logs; `5` exports `OMC_APP_PROCESS_ID`; `6` makes named pasteboards files in the scratch instead of boards in the pasteboard server, and drops `OMCTEST_PB_PREFIX`; `7` stands up the ActionUI remote bridge for a Python applet and adds `bridge_called` / `bridge_value`; `8` exports `OMC_DEFAULTS_PATH` (the per-file home's `Library/Preferences`), where the applets' `defaults` tool then keeps its settings. |
 | `ACTIONUI_REMOTE_ENDPOINT`, `OMC_ACTIONUI_REMOTE_ENDPOINT`, `ACTIONUI_WINDOW_UUID` | the bridge's socket and window, when one is running - see 4.11 |
 
 What the harness exports into every handler:

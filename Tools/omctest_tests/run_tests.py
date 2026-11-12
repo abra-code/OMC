@@ -203,7 +203,7 @@ out="${TMPDIR}env.txt"
 for name in OMC_APP_BUNDLE_PATH OMC_APP_PROCESS_ID OMC_OMC_SUPPORT_PATH OMC_OMC_RESOURCES_PATH \
             OMC_ACTIONUI_WINDOW_UUID OMC_PARENT_DIALOG_GUID OMC_CURRENT_COMMAND_GUID \
             OMC_NIB_DLG_GUID TMPDIR OMCTEST_WORK OMCTEST_UI OMCTEST_FIXTURES \
-            OMC_ACTIONUI_VIEW_405_VALUE OMC_ACTIONUI_TRIGGER_VIEW_ID OMC_OBJ_NAME; do
+            OMC_ACTIONUI_VIEW_405_VALUE OMC_ACTIONUI_TRIGGER_VIEW_ID OMC_OBJ_NAME OMC_DEFAULTS_PATH; do
     eval "value=\${$name-<<UNSET>>}"
     printf '%s=%s\n' "$name" "$value" >> "$out"
 done
@@ -563,6 +563,14 @@ section "the app process id names a process that is actually alive"
 check "api is at least 5" "yes" \
     "$([ "${OMCTEST_API_VERSION:-0}" -ge 5 ] && echo yes || echo no)"
 check "it is alive"       "yes" "$(kill -0 "$OMC_APP_PROCESS_ID" 2>/dev/null && echo yes || echo no)"
+
+section "the applets' settings tool keeps its settings in the scratch"
+# API 8: $OMC_OMC_SUPPORT_PATH/defaults writes JSON into OMC_DEFAULTS_PATH when it is
+# set, instead of the user's preferences (cfprefsd ignores HOME on macOS).
+check "api is at least 8" "yes" \
+    "$([ "${OMCTEST_API_VERSION:-0}" -ge 8 ] && echo yes || echo no)"
+check "the handler gets OMC_DEFAULTS_PATH" "$OMCTEST_HOME/Library/Preferences" "$(field OMC_DEFAULTS_PATH)"
+check "a folder in the per-file home" "yes" "$([ -d "$OMC_DEFAULTS_PATH" ] && echo yes || echo no)"
 
 section "the window uuid is unique per run"
 check "it embeds a pid" "yes" "$(case "$OMC_ACTIONUI_WINDOW_UUID" in (OMCTEST-10-environment-*[0-9]) echo yes ;; (*) echo no ;; esac)"
@@ -1326,7 +1334,7 @@ omctest_end
 
 
 EXPECTED_COUNTS = {
-    "10-environment.test.sh": (19, 0),
+    "10-environment.test.sh": (22, 0),
     "20-lifetime.test.sh": (36, 0),
     "30-omcrun.test.sh": (16, 0),
     "40-alerts.test.sh": (16, 0),

@@ -1,0 +1,258 @@
+#!/bin/bash
+# defaults - user settings for applets' scripts: the part of macOS's `defaults` that applets use,
+# on macOS and Linux alike. It is in Abracode.framework's Support folder beside plister
+# ($OMC_OMC_SUPPORT_PATH/defaults), so every applet has it.
+#
+#   defaults read <domain> <key>
+#   defaults write <domain> <key> [-string | -bool | -int | -float] <value>
+#   defaults delete <domain> [<key>]
+#
+# Where the settings are kept:
+# - OMC_DEFAULTS_PATH set (a folder): one JSON file per domain there, <folder>/<domain>.json, on
+#   either system. Integration tests set it to the test's private home, so what a handler saves
+#   never reaches the user's settings (macOS's preferences daemon, cfprefsd, ignores $HOME).
+# - macOS otherwise: /usr/bin/defaults, with the same arguments: the user's preferences, as before.
+# - Linux otherwise: one JSON file per domain in ${XDG_CONFIG_HOME:-$HOME/.config}.
+# A domain with a "/" in it is a file path, as with macOS's defaults: <path>.json, or the path as
+# given when it ends in .json or .plist (plister keeps a .plist file as XML).
+#
+# The same subset is accepted on both systems, so a script that works on one works on the other:
+# a value written with no type is a string (macOS's defaults would parse it), a read needs a key,
+# and a key may not contain "/" (plister's path separator). A JSON file is read and written with
+# the plister beside this script. Values read back as macOS's defaults prints them: a string as
+# it is, an integer, a real, and a bool as 1 or 0.
+#
+# Exit status: 0 done; 1 no such domain or key (read, delete), or the settings could not be
+# written; 2 bad arguments.
+
+usage() {
+    printf 'Usage: defaults read <domain> <key>\n' >&2
+    printf '       defaults write <domain> <key> [-string | -bool | -int | -float] <value>\n' >&2
+    printf '       defaults delete <domain> [<key>]\n' >&2
+    exit 2
+}
+
+fail() { # <status> <message>
+    printf 'defaults: %s\n' "$2" >&2
+    exit "$1"
+}
+
+if [ $# -lt 2 ]; then
+    usage
+fi
+verb="$1"
+domain="$2"
+shift 2
+case "$verb" in
+    read|write|delete) ;;
+    *) usage ;;
+esac
+case "$domain" in
+    ""|.|..|-*) fail 2 "not a domain: \"$domain\"" ;;
+esac
+
+key=""
+value=""
+value_type="string"
+case "$verb" in
+    read)
+        if [ $# -ne 1 ]; then
+            usage
+        fi
+        key="$1"
+        ;;
+    delete)
+        if [ $# -gt 1 ]; then
+            usage
+        fi
+        key="${1:-}"
+        ;;
+    write)
+        if [ $# -eq 2 ]; then
+            key="$1"
+            value="$2"
+        elif [ $# -eq 3 ]; then
+            key="$1"
+            case "$2" in
+                -string) value_type="string" ;;
+                -bool|-boolean) value_type="bool" ;;
+                -int|-integer) value_type="integer" ;;
+                -float) value_type="real" ;;
+                *) fail 2 "not a type: $2 (-string, -bool, -int or -float)" ;;
+            esac
+            value="$3"
+        else
+            usage
+        fi
+        ;;
+esac
+if [ "$verb" != "delete" ] || [ -n "$key" ]; then
+    case "$key" in
+        "") fail 2 "an empty key" ;;
+        */*) fail 2 "a key may not contain \"/\": $key" ;;
+    esac
+fi
+
+# The value, checked for its type; a bool becomes true or false (plister's spelling)
+integer_pattern='^[-+]?[0-9]+$'
+real_pattern='^[-+]?([0-9]+[.]?[0-9]*|[.][0-9]+)([eE][-+]?[0-9]+)?$'
+case "$value_type" in
+    bool)
+        case "$value" in
+            [Tt][Rr][Uu][Ee]|[Yy][Ee][Ss]|1) value="true" ;;
+            [Ff][Aa][Ll][Ss][Ee]|[Nn][Oo]|0) value="false" ;;
+            *) fail 2 "not a bool: $value (true, false, yes, no, 1 or 0)" ;;
+        esac
+        ;;
+    integer)
+        if ! [[ "$value" =~ $integer_pattern ]]; then
+            fail 2 "not an integer: $value"
+        fi
+        # 64-bit only: plister refuses a larger one, macOS's defaults would clamp it
+        digits="${value#[-+]}"
+        while [ "${#digits}" -gt 1 ] && [ "${digits#0}" != "$digits" ]; do
+            digits="${digits#0}"
+        done
+        limit="9223372036854775807"
+        if [ "${value#-}" != "$value" ]; then
+            limit="9223372036854775808"
+        fi
+        if [ "${#digits}" -gt "${#limit}" ] || { [ "${#digits}" -eq "${#limit}" ] && [[ "$digits" > "$limit" ]]; }; then
+            fail 2 "not a 64-bit integer: $value"
+        fi
+        value="${value#+}" # plister refuses a leading "+"
+        ;;
+    real)
+        if ! [[ "$value" =~ $real_pattern ]]; then
+            fail 2 "not a number: $value"
+        fi
+        value="${value#+}" # plister refuses a leading "+"
+        ;;
+esac
+
+# macOS with no settings folder given: the system's defaults, with the arguments checked above
+if [ -z "${OMC_DEFAULTS_PATH:-}" ]; then
+    case "${OSTYPE:-}" in
+        darwin*)
+            case "$verb" in
+                read) exec /usr/bin/defaults read "$domain" "$key" ;;
+                delete)
+                    if [ -n "$key" ]; then
+                        exec /usr/bin/defaults delete "$domain" "$key"
+                    fi
+                    exec /usr/bin/defaults delete "$domain"
+                    ;;
+                write)
+                    case "$value_type" in
+                        string) exec /usr/bin/defaults write "$domain" "$key" -string "$value" ;;
+                        bool) exec /usr/bin/defaults write "$domain" "$key" -bool "$value" ;;
+                        integer) exec /usr/bin/defaults write "$domain" "$key" -int "$value" ;;
+                        real) exec /usr/bin/defaults write "$domain" "$key" -float "$value" ;;
+                    esac
+                    ;;
+            esac
+            ;;
+    esac
+fi
+
+# A JSON file: the domain's file, and the plister beside this script
+case "$0" in
+    */*) here="${0%/*}" ;;
+    *) here="." ;;
+esac
+plister="$here/plister"
+if [ ! -x "$plister" ]; then
+    fail 1 "no plister beside this script: $plister"
+fi
+case "$domain" in
+    */*.json|*/*.plist) file="$domain" ;;
+    */*) file="$domain.json" ;;
+    *)
+        folder="${OMC_DEFAULTS_PATH:-${XDG_CONFIG_HOME:-$HOME/.config}}"
+        if [ -z "$folder" ] || [ "$folder" = "/.config" ]; then
+            fail 1 "no folder for settings: set HOME, XDG_CONFIG_HOME or OMC_DEFAULTS_PATH"
+        fi
+        file="$folder/$domain.json"
+        ;;
+esac
+
+case "$verb" in
+    read)
+        if [ ! -f "$file" ]; then
+            fail 1 "the domain/default pair of ($domain, $key) does not exist"
+        fi
+        stored_type="$("$plister" get type "$file" "/$key" 2>/dev/null)"
+        case "$stored_type" in
+            "") fail 1 "the domain/default pair of ($domain, $key) does not exist" ;;
+            dict|array) fail 1 "($domain, $key) is a $stored_type, which this defaults does not read" ;;
+        esac
+        stored="$("$plister" get value "$file" "/$key" 2>/dev/null)"
+        status=$?
+        if [ "$status" -ne 0 ]; then
+            fail 1 "cannot read ($domain, $key) from $file"
+        fi
+        case "$stored_type" in
+            bool)
+                case "$stored" in
+                    true) stored=1 ;;
+                    *) stored=0 ;;
+                esac
+                ;;
+            real)
+                # plister prints six decimals (1.500000); macOS's defaults prints 1.5
+                case "$stored" in
+                    *.*)
+                        while [ "${stored%0}" != "$stored" ]; do
+                            stored="${stored%0}"
+                        done
+                        stored="${stored%.}"
+                        ;;
+                esac
+                ;;
+        esac
+        printf '%s\n' "$stored"
+        ;;
+    write)
+        if [ ! -f "$file" ]; then
+            /bin/mkdir -p -- "${file%/*}"
+            status=$?
+            if [ "$status" -ne 0 ]; then
+                fail 1 "cannot make the folder for $file"
+            fi
+            "$plister" set dict "$file" / > /dev/null
+            status=$?
+            if [ "$status" -ne 0 ] || [ ! -f "$file" ]; then
+                fail 1 "cannot create $file"
+            fi
+        fi
+        # insert replaces a key that is there, whatever its type
+        "$plister" insert "$key" "$value_type" "$value" "$file" / > /dev/null
+        status=$?
+        if [ "$status" -ne 0 ]; then
+            fail 1 "cannot write ($domain, $key) to $file"
+        fi
+        ;;
+    delete)
+        if [ ! -f "$file" ]; then
+            fail 1 "domain ($domain) not found"
+        fi
+        if [ -z "$key" ]; then
+            /bin/rm -f -- "$file"
+            status=$?
+            if [ "$status" -ne 0 ]; then
+                fail 1 "cannot remove $file"
+            fi
+            exit 0
+        fi
+        stored_type="$("$plister" get type "$file" "/$key" 2>/dev/null)"
+        if [ -z "$stored_type" ]; then
+            fail 1 "the domain/default pair of ($domain, $key) does not exist"
+        fi
+        "$plister" remove "$file" "/$key" > /dev/null
+        status=$?
+        if [ "$status" -ne 0 ]; then
+            fail 1 "cannot delete ($domain, $key) from $file"
+        fi
+        ;;
+esac
+exit 0

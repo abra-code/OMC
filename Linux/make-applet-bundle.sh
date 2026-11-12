@@ -15,7 +15,8 @@
 #       Info.plist                  Linux/AbracodeFramework-Info.plist
 #       omc_*.json                  the engine's built-in windows (AbracodeFramework/BuiltInDocuments)
 #       <lang>.lproj/Private.strings  the engine's own texts (AbracodeFramework/*.lproj)
-#       Support/                    the support tools (omc_dialog_control, omc_next_command, ...)
+#       Support/                    the support tools (omc_dialog_control, omc_next_command, ...,
+#                                   and the defaults script from defaults/)
 #
 # Usage: make-applet-bundle.sh <products folder> <applet sources> <output folder>/<Name>.app
 #   The products folder is the build's (build-linux.sh), holding CommandApplet and the tools.
@@ -240,4 +241,12 @@ for tool in $tools; do
         exit 1
     fi
 done
+# The applets' settings tool, a script (defaults/defaults), as on macOS
+/bin/cp -- "$omc_root/defaults/defaults" "$framework/Support/defaults"
+status=$?
+if [ "$status" -ne 0 ]; then
+    printf 'Cannot copy the defaults tool into the framework\n' >&2
+    exit 1
+fi
+/bin/chmod 755 "$framework/Support/defaults"
 exit 0

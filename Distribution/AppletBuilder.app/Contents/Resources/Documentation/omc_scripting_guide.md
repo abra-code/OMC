@@ -326,4 +326,5 @@ A few approaches that can help when things aren't working as expected:
 - [omc_next_command](omc_next_command--help.md) — Command chaining
 - [pasteboard](pasteboard--help.md) — Pasteboard tool for data passing
 - [plister](plister--help.md) — Plist reading/writing tool
+- [defaults](defaults--help.md) - An applet's own settings, the same on macOS and Linux
 - [alert](alert--help.md) — Alert dialog tool

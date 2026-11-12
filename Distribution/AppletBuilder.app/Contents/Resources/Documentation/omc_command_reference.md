@@ -1450,6 +1450,7 @@ The Command Workshop project includes additional help files in the same director
 |------|-------------|
 | [`omc_controls_user_defined_runtime_attributes.md`](omc_controls_user_defined_runtime_attributes.md) | The user-defined runtime attributes of the old nib controls, kept for converting applets made before 6.0. |
 | [`plister--help.md`](plister--help.md) | Help for `plister`, a tool for reading and writing property lists. |
+| [`defaults--help.md`](defaults--help.md) | Help for `defaults`, an applet's own settings on macOS and Linux, kept out of the user's settings under test. |
 | [`pasteboard--help.md`](pasteboard--help.md) | Help for `pasteboard`, a command-line interface to the macOS pasteboard (clipboard). |
 | [`omc_next_command--help.md`](omc_next_command--help.md) | Help for `omc_next_command`, used to chain execution to another action handler. |
 | [`omc_dialog_control--help.md`](omc_dialog_control--help.md) | Full command reference for `omc_dialog_control` – manipulate dialog controls, tables, progress, etc. |
