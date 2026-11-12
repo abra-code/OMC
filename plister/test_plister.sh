@@ -728,11 +728,13 @@ fi
 
 # --- A dot component in a pseudopath must not run forever --------------------
 #
-# CFURLCreateCopyDeletingLastPathComponent APPENDS for "." and "..": the parent
-# of "/.." is "/../..". The spec walk's only terminator is a last component of
-# "/" or "", which then never arrives, and every level allocates - so this did
-# not crash, it grew. 2.1 GB in four seconds, no output, no exit. A hang is
-# worse than a crash for an applet handler, because nothing reports it at all.
+# When the pseudopath was walked through a CFURL, CFURLCreateCopyDeletingLast-
+# PathComponent APPENDED for "." and "..": the parent of "/.." was "/../..". The
+# spec walk's only terminator was a last component of "/" or "", which then never
+# arrived, and every level allocated - so this did not crash, it grew. 2.1 GB in
+# four seconds, no output, no exit. A hang is worse than a crash for an applet
+# handler, because nothing reports it at all. The path is split on "/" by hand
+# now; these stay as the guard.
 #
 # Timed, not just status-checked: a plain nok_clean here would hang the suite
 # rather than fail it.
@@ -767,6 +769,45 @@ dot_path_terminates "a bare \"..\" terminates"       ".."
 dot_path_terminates "a leading \"/..\" terminates"   "/.."
 dot_path_terminates "\"/D/..\" terminates"           "/D/.."
 check "and an ordinary path still resolves" "v" get value "$TMP/utf8.json" /D/k
+
+# --- A key is matched as written, not as a file name -------------------------
+#
+# The pseudopath went through CFURLCreateWithFileSystemPath, which on macOS
+# decomposed it: a key with a composed accented letter ("e" with acute as one
+# character, as most keyboards and JSON files write it) was inserted but could
+# never be read or removed again. A doubled "/" made an empty component, which
+# ended the walk early, so "//arr//0" silently read nothing.
+
+echo
+echo "-- A key is matched as written, not as a file name --"
+
+composed_key="$(printf 'caf\303\251')"
+"$PLISTER" set dict "$TMP/keys.json" / >/dev/null 2>&1
+"$PLISTER" insert "$composed_key" string composed "$TMP/keys.json" / >/dev/null 2>&1
+check "a composed accented key reads back" "composed" get value "$TMP/keys.json" "/$composed_key"
+ok "and is removed" remove "$TMP/keys.json" "/$composed_key"
+check "and is gone" "" get keys "$TMP/keys.json" /
+# A file the old plister wrote through that path holds the decomposed key ("e"
+# plus a combining acute); the composed spelling still reaches it, and an exact
+# match wins when both keys exist.
+decomposed_key="$(printf 'cafe\314\201')"
+"$PLISTER" set dict "$TMP/old.json" / >/dev/null 2>&1
+"$PLISTER" insert "$decomposed_key" string old "$TMP/old.json" / >/dev/null 2>&1
+check "a decomposed key is read through the composed spelling" "old" get value "$TMP/old.json" "/$composed_key"
+ok "and set through it" set string updated "$TMP/old.json" "/$composed_key"
+check "which updates that key, not a second one" "1" get count "$TMP/old.json" /
+check "the decomposed key holds the new value" "updated" get value "$TMP/old.json" "/$decomposed_key"
+"$PLISTER" insert "$composed_key" string exact "$TMP/old.json" / >/dev/null 2>&1
+check "with both keys, the composed spelling reads its own" "exact" get value "$TMP/old.json" "/$composed_key"
+check "and the decomposed one its own" "updated" get value "$TMP/old.json" "/$decomposed_key"
+"$PLISTER" remove "$TMP/old.json" "/$composed_key" >/dev/null 2>&1
+ok "removed through the composed spelling" remove "$TMP/old.json" "/$composed_key"
+check "the decomposed key is gone too" "0" get count "$TMP/old.json" /
+"$PLISTER" insert arr array "$TMP/keys.json" / >/dev/null 2>&1
+"$PLISTER" add string zero "$TMP/keys.json" /arr >/dev/null 2>&1
+check "doubled and trailing slashes are skipped" "zero" get value "$TMP/keys.json" //arr//0/
+"$PLISTER" insert "a.b%20c" string v "$TMP/keys.json" / >/dev/null 2>&1
+check "a key with a dot and a percent sign is literal" "v" get value "$TMP/keys.json" "/a.b%20c"
 
 # --- batch says only that it is unimplemented --------------------------------
 #

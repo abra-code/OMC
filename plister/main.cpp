@@ -128,7 +128,7 @@ OSStatus ReadPlistFile(const char *srcPlistPath, CFObj<CFPropertyListRef> &outPr
 bool SavePropertiesToPlistFile(CFURLRef inPlistFileURL, CFPropertyListRef inProperties);
 
 CFObjSpec *CreatePropertySpecifier(const char *inPropertySpecifier);
-CFObjSpec *AddObjSpec(CFURLRef inPath, CFObjSpec *oldHead);
+CFStringRef CopyDictKey(CFDictionaryRef inDict, CFStringRef inKey);
 PropertyType GetPropertyType(const char *inTypeStr);
 CFIndex GetPositiveInteger(CFStringRef inString);
 CFTypeRef CreateCFItemFromArgumentString(PropertyType inCFObjType, const char *valueStr);
@@ -946,7 +946,8 @@ RunSetCommand(PlisterCommandContext &inContext, OnePlisterCommand &inCommand )
 		{
 			if(lastItemSpec->key != NULL)
 			{
-				::CFDictionarySetValue( (CFMutableDictionaryRef)lastContainer, (CFStringRef)lastItemSpec->key, inCommand.newValue );
+				CFObj<CFStringRef> dictKey( CopyDictKey((CFDictionaryRef)lastContainer, lastItemSpec->key) );
+				::CFDictionarySetValue( (CFMutableDictionaryRef)lastContainer, dictKey, inCommand.newValue );
 			}
 			else
 			{
@@ -1326,61 +1327,76 @@ CreatePropertySpecifier(const char *inPropertySpecifier)
 	}
 
 	//Same trap as the value and the file path: not valid UTF-8 means NULL, and
-	//unchecked it reached CFStringAppend or CFURLCreateWithFileSystemPath and
-	//killed the process silently. Four call sites reach here - the main
-	//pseudopath, a find subpath, and the copy source path.
+	//unchecked it reached CFStringAppend or the path split and killed the
+	//process silently. Five call sites reach here - the main pseudopath, a find
+	//subpath, and three copy source paths.
 	if(specStr == NULL)
 	{
 		std::cerr << "Plister error: the property path is not valid UTF-8" << std::endl;
 		return NULL;
 	}
 
-	CFObj<CFURLRef> propPath( ::CFURLCreateWithFileSystemPath(kCFAllocatorDefault, specStr, kCFURLPOSIXPathStyle, false) );
-	//needs to be a recursive digger to get the last element and then cut it and move on
-	return AddObjSpec(propPath, NULL);
-}
-
-CFObjSpec *
-AddObjSpec(CFURLRef propPath, CFObjSpec *oldHead)
-{
-	CFObjSpec *newHead = new CFObjSpec(oldHead);
-	CFObj<CFStringRef> oneComponent( ::CFURLCopyLastPathComponent(propPath) );
-	
-	if( (kCFCompareEqualTo == ::CFStringCompare(oneComponent, CFSTR("/"), 0)) ||
-		(kCFCompareEqualTo == ::CFStringCompare(oneComponent, CFSTR(""), 0)) )
-	{//reached the top. the key for root item is null
-		return newHead;
-	}
-	
-	newHead->key.Swap( oneComponent );
-	newHead->index = GetPositiveInteger(newHead->key);
-
-	CFObj<CFURLRef> parentPath( ::CFURLCreateCopyDeletingLastPathComponent( kCFAllocatorDefault, propPath ) );
-	//A "." or ".." component makes this walk grow instead of shrink:
-	//CFURLCreateCopyDeletingLastPathComponent APPENDS for those, so the parent of
-	//"/.." is "/../.." and the parent of "/." is "/./..". The only terminator
-	//below is a last component of "/" or "", which then never arrives, and every
-	//level allocates another CFObjSpec - "plister get value doc.json ." never
-	//returned and reached 2.1 GB in four seconds. A hang is worse than a crash
-	//for a handler, because nothing reports it at all. Stopping when the parent
-	//is no shorter than the child ends it without changing any path that
-	//genuinely shrinks.
-	if(parentPath != NULL)
+	//Split on "/" by hand. This went through CFURLCreateWithFileSystemPath, which
+	//treats the string as a file system path: on macOS it decomposed it, so a key
+	//with a composed accented letter (one "e with acute") was written but could
+	//never be read or removed again (CopyDictKey keeps keys written that way
+	//reachable), and its "." and ".." handling needed a guard against a walk that
+	//grew without end. Empty components are skipped: a leading or trailing "/" as
+	//before, and a doubled one, which used to end the walk early. "." and ".."
+	//are ordinary keys.
+	CFObj<CFArrayRef> components( ::CFStringCreateArrayBySeparatingStrings(kCFAllocatorDefault, specStr, CFSTR("/")) );
+	if(components == NULL)
 	{
-		CFObj<CFStringRef> childStr( ::CFURLCopyFileSystemPath(propPath, kCFURLPOSIXPathStyle) );
-		CFObj<CFStringRef> parentStr( ::CFURLCopyFileSystemPath(parentPath, kCFURLPOSIXPathStyle) );
-		bool makesProgress = true;
-		if( (childStr != NULL) && (parentStr != NULL) )
-		{
-			if( ::CFStringGetLength(parentStr) >= ::CFStringGetLength(childStr) )
-				makesProgress = false;
-		}
-		if(makesProgress)
-			newHead = AddObjSpec(parentPath, newHead);
+		std::cerr << "Plister error: the property path cannot be split" << std::endl;
+		return NULL;
 	}
-	return newHead;
+
+	//The chain: the root item (no key) first, then one link per component.
+	//Built from the last component back, each link pointing at the next.
+	CFObjSpec *head = NULL;
+	for(CFIndex i = ::CFArrayGetCount(components) - 1; i >= 0; i--)
+	{
+		CFStringRef oneComponent = (CFStringRef)::CFArrayGetValueAtIndex(components, i);
+		if( (oneComponent == NULL) || (::CFStringGetLength(oneComponent) == 0) )
+			continue;
+		CFObjSpec *newHead = new CFObjSpec(head);
+		newHead->key.Adopt(oneComponent, kCFObjRetain);
+		newHead->index = GetPositiveInteger(newHead->key);
+		head = newHead;
+	}
+	return new CFObjSpec(head);
 }
 
+
+//The key of inDict that inKey names, retained: inKey itself when the dictionary has it, else the
+//first key that is canonically equivalent to it (kCFCompareNonliteral: the same letters, composed
+//or decomposed), else inKey. Before the pseudopath was split by hand it went through a CFURL, which
+//decomposed it on macOS, so files plister wrote then may hold "e" plus a combining accent where
+//the user types one composed letter; the fallback keeps those keys reachable. Exact matches win, so
+//two keys that differ only in composition are still told apart when both exist.
+CFStringRef CopyDictKey(CFDictionaryRef inDict, CFStringRef inKey)
+{
+	if( (inDict == NULL) || (inKey == NULL) )
+		return NULL;
+	if( ::CFDictionaryContainsKey(inDict, inKey) )
+		return CFObj<CFStringRef>(inKey, kCFObjRetain).Detach();
+	CFIndex count = ::CFDictionaryGetCount(inDict);
+	if(count > 0)
+	{
+		std::vector<const void *> keys( (size_t)count );
+		::CFDictionaryGetKeysAndValues(inDict, keys.data(), NULL);
+		for(CFIndex i = 0; i < count; i++)
+		{
+			CFTypeRef oneItem = (CFTypeRef)keys[(size_t)i];
+			if( (oneItem == NULL) || (::CFGetTypeID(oneItem) != ::CFStringGetTypeID()) )
+				continue;
+			CFStringRef oneKey = (CFStringRef)oneItem;
+			if(kCFCompareEqualTo == ::CFStringCompare(oneKey, inKey, kCFCompareNonliteral))
+				return CFObj<CFStringRef>(oneKey, kCFObjRetain).Detach();
+		}
+	}
+	return CFObj<CFStringRef>(inKey, kCFObjRetain).Detach();
+}
 
 //returns -1 if it's not integer or is not positive
 CFIndex GetPositiveInteger(CFStringRef inString)
@@ -1618,10 +1634,10 @@ CreateChildProperty(CFObjSpec *inSpec, CFTypeRef inCurrLevelRef, CreateCFItemInf
 	{
 		if(inSpec->key != NULL)
 		{
-			//Boolean keyExists =
+			CFObj<CFStringRef> dictKey( CopyDictKey((CFDictionaryRef)inCurrLevelRef, inSpec->key) );
 			::CFDictionaryGetValueIfPresent (
 								(CFDictionaryRef)inCurrLevelRef,
-								(CFStringRef)inSpec->key,
+								dictKey,
 								&currItemRef);
 		}
 /*
@@ -1771,10 +1787,10 @@ CreateDictChildProperty(CFObjSpec *inSpec, CFTypeRef inCurrLevelRef, CreateCFDic
 	{
 		if(inSpec->key != NULL) 
 		{
-			//Boolean keyExists =
+			CFObj<CFStringRef> dictKey( CopyDictKey((CFDictionaryRef)inCurrLevelRef, inSpec->key) );
 			::CFDictionaryGetValueIfPresent (
 								(CFDictionaryRef)inCurrLevelRef,
-								(CFStringRef)inSpec->key,
+								dictKey,
 								&currItemRef);
 		}
 /*
@@ -1860,10 +1876,13 @@ ProcessGetItem(CFObjSpec *inSpec, CFTypeRef inCurrLevelRef, CFTypeRef *outResult
 	else if(itemType ==  kCFTypeIDs[kCFType_dict])
 	{
 		if(inSpec->key != NULL)
+		{
+			CFObj<CFStringRef> dictKey( CopyDictKey((CFDictionaryRef)inCurrLevelRef, inSpec->key) );
 			::CFDictionaryGetValueIfPresent (
 								(CFDictionaryRef)inCurrLevelRef,
-								(CFStringRef)inSpec->key,
+								dictKey,
 								&currItemRef);
+		}
 	}
 	else if(itemType  == kCFTypeIDs[kCFType_array] )
 	{
@@ -1919,10 +1938,13 @@ ProcessGetLastItemContainerAndSpec(CFObjSpec *inSpec, CFTypeRef inCurrLevelRef, 
 	else if(itemType ==  kCFTypeIDs[kCFType_dict])
 	{
 		if(inSpec->key != NULL)
+		{
+			CFObj<CFStringRef> dictKey( CopyDictKey((CFDictionaryRef)inCurrLevelRef, inSpec->key) );
 			::CFDictionaryGetValueIfPresent (
 								(CFDictionaryRef)inCurrLevelRef,
-								(CFStringRef)inSpec->key,
+								dictKey,
 								&currItemRef);
+		}
 	}
 	else if(itemType  == kCFTypeIDs[kCFType_array] )
 	{
@@ -1977,7 +1999,10 @@ ProcessDeleteItem(CFTypeRef inCurrLevelRef, CFObjSpec *inSpec )
 		else if( itemType == kCFTypeIDs[kCFType_dict] )
 		{
 			if(inSpec->key != NULL)
-				::CFDictionaryRemoveValue( (CFMutableDictionaryRef)inCurrLevelRef, (CFStringRef)inSpec->key );
+			{
+				CFObj<CFStringRef> dictKey( CopyDictKey((CFDictionaryRef)inCurrLevelRef, inSpec->key) );
+				::CFDictionaryRemoveValue( (CFMutableDictionaryRef)inCurrLevelRef, dictKey );
+			}
 		}
 		else if( itemType  == kCFTypeIDs[kCFType_array] )
 		{
@@ -1999,7 +2024,10 @@ ProcessDeleteItem(CFTypeRef inCurrLevelRef, CFObjSpec *inSpec )
 	else if( itemType ==  kCFTypeIDs[kCFType_dict] )
 	{
 		if(inSpec->key != NULL)
-			::CFDictionaryGetValueIfPresent( (CFDictionaryRef)inCurrLevelRef, (CFStringRef)inSpec->key, &currItemRef);
+		{
+			CFObj<CFStringRef> dictKey( CopyDictKey((CFDictionaryRef)inCurrLevelRef, inSpec->key) );
+			::CFDictionaryGetValueIfPresent( (CFDictionaryRef)inCurrLevelRef, dictKey, &currItemRef);
+		}
 	}
 	else if( itemType  == kCFTypeIDs[kCFType_array] )
 	{
