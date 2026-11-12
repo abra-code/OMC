@@ -320,7 +320,7 @@ done
 
 section "17. the Commands tab has its own conflict path, and it behaves the same"
 # Not the same code: commands.save.detail re-extracts one entry with
-# plutil + json.tool and chains commands.loaded, where uifiles.save.detail just
+# command_text and chains commands.loaded, where uifiles.save.detail just
 # cats the file. Sections 7-9 prove nothing about it.
 
 ui_reset
@@ -413,6 +413,53 @@ mode_plist="$mode_project/Contents/Info.plist"
 ab_call lib.plist.sh plist_edit "$mode_plist" set_keys CFBundleVersion "9.9" >/dev/null 2>&1
 check "the Info.plist keeps its mode too" "644" "$(/usr/bin/stat -f '%Lp' "$mode_plist")"
 check "and the edit really landed" "9.9" "$(ab_plist_read "$mode_project" CFBundleVersion)"
+
+section "20. a Command.json command is shown as the file has it, and saved that way"
+# The pane shows the command's own JSON: keys in file order (not sorted, the way
+# plutil's JSON output had them), non-ASCII as is, the selected entry only. A save
+# of that text keeps the order in the file, and the silent reload when the window
+# comes back after an external change shows the same JSON, never an XML <dict>.
+
+ui_reset
+alerts_reset
+alert_answers_reset
+chains_reset
+order_project="$(ab_make_project Ordered)"
+ab_reset_state
+ab_open_project "$order_project"
+order_cmd="$(ab_command_file "$order_project")"
+# Keys deliberately out of alphabetical order; \303\251 is a UTF-8 e-acute.
+printf '{"COMMAND_LIST":[{"NAME":"First","EXECUTION_MODE":"exe_script_file"},{"NAME":"Ordered","EXECUTION_MODE":"exe_shell_script","COMMAND":["echo caf\303\251"],"ACTIVATION_MODE":"act_always"}]}\n' > "$order_cmd"
+# The second command as the pane must show it, given its NAME.
+order_text() {
+    printf '{\n    "NAME": "%s",\n    "EXECUTION_MODE": "exe_shell_script",\n    "COMMAND": [\n        "echo caf\303\251"\n    ],\n    "ACTIVATION_MODE": "act_always"\n}' "$1"
+}
+order_keys='"COMMAND_LIST":"NAME":"EXECUTION_MODE":"NAME":"EXECUTION_MODE":"COMMAND":"ACTIVATION_MODE":'
+
+omc_table_cell $CMD_TABLE_ID 2 "1"
+omc_run AppletBuilder.commands.selected
+check_status "commands.selected succeeded"     0
+check "the pane shows the second command, keys in file order" \
+    "$(order_text Ordered)" "$(ui_value $CMD_DETAIL_ID)"
+
+ui_reset
+omc_fire AppletBuilder.commands.save.detail "$CMD_DETAIL_ID" \
+    "$(order_text Ordered | /usr/bin/sed 's/"Ordered"/"Renamed"/')"
+check_status "commands.save.detail succeeded"  0
+check "the pane confirms"      "✅ Saved"       "$(ui_value $CMD_EDITED_LABEL_ID)"
+check "the edit landed" "Renamed" "$("$AB_PLISTER" get value "$order_cmd" /COMMAND_LIST/1/NAME)"
+check "and the file keeps every key in its order" "$order_keys" \
+    "$(/usr/bin/grep -o '"[A-Z_]*":' "$order_cmd" | /usr/bin/tr -d '\n')"
+check "and the non-ASCII text as is" "1" "$(/usr/bin/grep -c "caf$(printf '\303\251')" "$order_cmd")"
+
+# Someone else rewrites the file while the window is in the background.
+ui_reset
+printf '{"COMMAND_LIST":[{"NAME":"First","EXECUTION_MODE":"exe_script_file"},{"NAME":"OnDisk","EXECUTION_MODE":"exe_shell_script","COMMAND":["echo caf\303\251"],"ACTIVATION_MODE":"act_always"}]}\n' > "$order_cmd"
+omc_run AppletBuilder.project.activated
+check_status "project.activated succeeded"     0
+check "the reload shows the disk copy as JSON" "$(order_text OnDisk)" "$(ui_value $CMD_DETAIL_ID)"
+check "not as an XML fragment" "0" "$(ui_value $CMD_DETAIL_ID | /usr/bin/grep -c '<dict>')"
+check "the pane says what happened" "Reloaded (changed externally)" "$(ui_value $CMD_EDITED_LABEL_ID)"
 
 section "cumulative: no handler wrote to a view id the window does not declare"
 check "no undeclared ids"      "" "$(ui_unknown_writes)"

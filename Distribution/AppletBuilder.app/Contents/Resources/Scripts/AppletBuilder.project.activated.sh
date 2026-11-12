@@ -90,9 +90,8 @@ if [ -f "$cmd_plist" ]; then
                 # Not dirty — silently reload the selected command
                 cmd_index=$(pb_get "$PB_CMD_SELECTED")
                 if [ -n "$cmd_index" ]; then
-                    cmd_xml=$(/usr/bin/plutil -extract "COMMAND_LIST.$cmd_index" xml1 -o - "$cmd_plist" 2>/dev/null \
-                        | /usr/bin/sed '1,3d; $d')
-                    set_value "$CMD_DETAIL_ID" "$cmd_xml
+                    cmd_text=$(command_text "$cmd_plist" "$cmd_index")
+                    set_value "$CMD_DETAIL_ID" "$cmd_text
 "
                 fi
                 pb_set "$PB_CMD_HASH" "$current"

@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
 """plist_edit.py - Edit plist data via JSON intermediate format.
 
-Called by plist_edit() shell function in lib.common.sh.
+Called by the plist_edit() shell function in lib.plist.sh.
 The shell function handles plist <-> JSON conversion.
 This script operates on the JSON file directly.
 
 Usage: plist_edit.py <json_file> <operation> [args...]
+
+Read-only operations (the file is not written; command_text() in lib.plist.sh):
+  print_command <index>   the command at <index> of COMMAND_LIST as indented JSON
+                          on stdout; exit 1 when there is no such command
 """
 
 import json
@@ -23,6 +27,13 @@ def main():
 
     with open(json_path) as f:
         data = json.load(f)
+
+    read_only_ops = {
+        'print_command': op_print_command,
+    }
+    read_only = read_only_ops.get(operation)
+    if read_only:
+        sys.exit(read_only(data, args))
 
     ops = {
         'set_keys': op_set_keys,
@@ -142,6 +153,17 @@ def op_append_command_full(data, args):
                 'echo "Hello from ' + name + '" > "${TMPDIR:-/tmp}/hello.txt"',
             ]
     data.setdefault('COMMAND_LIST', []).append(entry)
+
+
+def op_print_command(data, args):
+    """Print the command at index as indented JSON, keys in file order. Args: index.
+    Returns the exit status: 1 when the index names no command."""
+    idx = int(args[0])
+    cmds = data.get('COMMAND_LIST', [])
+    if not isinstance(cmds, list) or not 0 <= idx < len(cmds):
+        return 1
+    print(json.dumps(cmds[idx], ensure_ascii=False, indent=4))
+    return 0
 
 
 def op_remove_command(data, args):
