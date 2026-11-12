@@ -287,6 +287,12 @@ omctest_cleanup_scratch() {
 #                   behind cfprefsd's back where its write is lost or clobbers.
 #                   The path form - `defaults read "$HOME/..."` - is exempt, and
 #                   is the mechanical fix when a real macOS preference is meant.
+#                   So is the engine's own settings tool (OMC 6), which keeps its
+#                   settings in OMC_DEFAULTS_PATH under test (API 8): called as
+#                   "$OMC_OMC_SUPPORT_PATH/defaults", or through a variable whose
+#                   every assignment in Scripts/ is a "$<variable>/.../defaults" path
+#                   (so not /usr/bin/defaults). It is the fix for an applet's own
+#                   settings.
 #
 # A warning channel, never a failure: an applet may have a considered reason, and
 # a harness that refuses to run a suite over a style opinion is a harness people
@@ -299,6 +305,49 @@ omctest_lint_report() { # <line> <prefix>
         "$2"*) printf 'omctest:     %s\n' "$(printf '%s' "$1" | /usr/bin/cut -c $(( ${#2} + 1 ))-)" >&2 ;;
         *)     printf 'omctest:     %s\n' "$1" >&2 ;;
     esac
+}
+
+# Drops from the `defaults` hits on stdin (grep -rn lines) the calls of the engine's own defaults
+# tool, which OMC_DEFAULTS_PATH isolates under test: spelled "$OMC_OMC_SUPPORT_PATH/defaults", or
+# a variable whose every assignment in <scripts dir> is a "$<variable>/.../defaults" path. A
+# variable assigned /usr/bin/defaults anywhere, or never assigned there, stays reported.
+omctest_lint_drop_support_defaults() { # <scripts dir>
+    local line variable assignments other exempt rest
+    while IFS= read -r line; do
+        [ -z "$line" ] && continue
+        exempt=""
+        case "$line" in
+            *'OMC_OMC_SUPPORT_PATH/defaults'*|*'OMC_OMC_SUPPORT_PATH}/defaults'*)
+                exempt='"?\$\{?OMC_OMC_SUPPORT_PATH\}?/defaults"?' ;;
+        esac
+        if [ -z "$exempt" ]; then
+            # The variable the line calls `defaults` through, if any: "$name" read, ${name} write
+            variable=$(printf '%s\n' "$line" | /usr/bin/sed -nE 's/^.*(^|[^[:alnum:]_.-])"?\$\{?([A-Za-z_][A-Za-z0-9_]*)\}?"?[[:space:]]+(-[A-Za-z]+[[:space:]]+)*(read|read-type|write|delete|rename|export|import|find|domains)([[:space:]].*)?$/\2/p')
+            if [ -n "$variable" ]; then
+                # Its values, quotes removed: name="value", name='value', name=value, ${name:=value}
+                assignments=$(/usr/bin/grep -rhoE "(^|[^[:alnum:]_])${variable}:?=(\"[^\"]*\"|'[^']*'|[^[:space:];]+)" "$1" 2>/dev/null \
+                              | /usr/bin/sed -E "s/^[^=]*=//; s/^[\"']//; s/[\"']\$//")
+                if [ -n "$assignments" ]; then
+                    other=$(printf '%s\n' "$assignments" | /usr/bin/grep -vE '^\$[{]?[A-Za-z_][A-Za-z0-9_]*[}]?/(.*/)?defaults$')
+                    if [ -z "$other" ]; then
+                        exempt="\"?\\\$\\{?${variable}\\}?\"?([^[:alnum:]_]|\$)"
+                    fi
+                fi
+            fi
+        fi
+        if [ -n "$exempt" ]; then
+            # Dropped only when no other `defaults` call is left on the line once the exempt one is
+            # removed: `"$OMC_OMC_SUPPORT_PATH/defaults" read ... || /usr/bin/defaults read ...`
+            rest=$(printf '%s\n' "$line" | /usr/bin/sed -E "s#${exempt}# #g" \
+                   | /usr/bin/grep -E '(^|[^[:alnum:]_.-])(defaults|"?\$\{?[A-Za-z_][A-Za-z0-9_]*\}?"?)[[:space:]]+(-[A-Za-z]+[[:space:]]+)*(read|read-type|write|delete|rename|export|import|find|domains)([[:space:]]|$)' \
+                   | /usr/bin/grep -E 'defaults')
+            if [ -z "$rest" ]; then
+                continue
+            fi
+        fi
+        printf '%s\n' "$line"
+    done
+    return 0
 }
 
 omctest_isolation_lint() { # <app>
@@ -342,11 +391,13 @@ omctest_isolation_lint() { # <app>
                "$scripts_dir" 2>/dev/null \
            | /usr/bin/grep -vE ':[0-9]+:[[:space:]]*#[^#]*$' \
            | /usr/bin/grep -E 'defaults' \
-           | /usr/bin/grep -vE '(read|read-type|write|delete|rename|export|import|find)[[:space:]]+("?(/|~|\$HOME|\$\{HOME))')
+           | /usr/bin/grep -vE '(read|read-type|write|delete|rename|export|import|find)[[:space:]]+("?(/|~|\$HOME|\$\{HOME))' \
+           | omctest_lint_drop_support_defaults "$scripts_dir")
     if [ -n "$hits" ]; then
         printf 'omctest: ISOLATION - these look like `defaults` on a DOMAIN. cfprefsd keys the user domain by UID,\n' >&2
         printf 'omctest:   not by $HOME, so under test they read and write the real preferences anyway.\n' >&2
-        printf 'omctest:   (A path - "$HOME/...", ~/..., /... - is exempt and not listed.)\n' >&2
+        printf 'omctest:   (A path - "$HOME/...", ~/..., /... - is exempt and not listed, and so is the engine'"'"'s\n' >&2
+        printf 'omctest:   own "$OMC_OMC_SUPPORT_PATH/defaults", which keeps an applet'"'"'s settings apart under test.)\n' >&2
         printf '%s\n' "$hits" | while IFS= read -r line; do
             omctest_lint_report "$line" "$prefix"
         done

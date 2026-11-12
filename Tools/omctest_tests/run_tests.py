@@ -1347,6 +1347,55 @@ EXPECTED_COUNTS = {
 }
 
 
+def test_isolation_lint(root: Path) -> None:
+    """The `defaults` report names what reaches the real preferences, and only that.
+
+    The engine's own defaults tool keeps an applet's settings in OMC_DEFAULTS_PATH under
+    test (API 8), so a call through it is not reported: spelled out, or through a variable
+    every assignment of which is a "$<variable>/.../defaults" path. /usr/bin/defaults,
+    directly or through a variable assigned it anywhere, or through a variable with no
+    assignment in Scripts/, stays reported. Each line carries its own key, so the report
+    can be checked line by line.
+    """
+    print("Isolation lint:")
+    project = root / "lint"
+    project.mkdir(parents=True, exist_ok=True)
+    app = make_applet(project, name="LintFixture")
+    _write(app / "Contents" / "Resources" / "Scripts" / "lint_cases.sh", r'''#!/bin/bash
+/usr/bin/defaults read com.example.lint key_direct
+"$OMC_OMC_SUPPORT_PATH/defaults" write com.example.lint key_support value
+"${OMC_OMC_SUPPORT_PATH}/defaults" read com.example.lint key_braced
+support_defaults="$OMC_OMC_SUPPORT_PATH/defaults"
+"$support_defaults" read com.example.lint key_var_support
+nested_defaults="${tools_folder}/Support/defaults"
+${nested_defaults} read com.example.lint key_var_nested
+system_defaults=/usr/bin/defaults
+"$system_defaults" read com.example.lint key_var_system
+mixed_defaults="$OMC_OMC_SUPPORT_PATH/defaults"
+mixed_defaults=/usr/bin/defaults
+$mixed_defaults write com.example.lint key_var_mixed value
+"$unassigned_defaults" read com.example.lint key_var_unknown
+"$support_defaults" read com.example.lint key_or_system 2>/dev/null || /usr/bin/defaults read com.example.lint key_or_system
+/usr/bin/defaults read "$HOME/Library/Preferences/com.example.lint.plist" key_path
+''')
+    tests = project / "Tests"
+    tests.mkdir(parents=True, exist_ok=True)
+    _write(tests / "10-lint.test.sh", r'''#!/bin/sh
+. "${OMCTEST_LIB:?}"
+check "the suite runs" "1" "1"
+omctest_end
+''')
+    rc, out, err = run_cli("test", str(app))
+    check("the lint fixture's suite passes", rc == 0, err.strip()[-300:])
+    report = [l for l in err.splitlines() if "lint_cases.sh" in l]
+    for key in ("key_direct", "key_var_system", "key_var_mixed", "key_var_unknown", "key_or_system"):
+        check(f"{key} is reported", any(key in l for l in report), report)
+    for key in ("key_support", "key_braced", "key_var_support", "key_var_nested", "key_path"):
+        check(f"{key} is not reported", not any(key in l for l in report), report)
+    check("the report names the engine's tool as exempt",
+          '"$OMC_OMC_SUPPORT_PATH/defaults"' in err, err.strip()[:400])
+
+
 def write_tests(project: Path, names=None) -> Path:
     tests = project / "Tests"
     (tests / "fixtures").mkdir(parents=True, exist_ok=True)
@@ -1874,6 +1923,7 @@ def main() -> int:
         test_bridge_inherited_env(app)
         test_launcher_env(app)
         test_bridge_gate(Path(td))
+        test_isolation_lint(Path(td))
         test_regressions(app)
         test_build_integration(project, app)
 
