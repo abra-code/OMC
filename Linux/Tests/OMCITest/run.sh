@@ -9,7 +9,8 @@
 #   The products folder is a debug build's (build-linux.sh): only a debug build has the test
 #   surface (OMC_TEST_SURFACE). Needs python3 (the harness's bridge client) and a desktop session
 #   (on the agent-vm box: GNOME's Wayland socket, set up below when WAYLAND_DISPLAY is unset).
-#   The pasteboard tests are left out: Linux has no pasteboard tool for the harness to drive.
+#   The pasteboard tests drive the Linux pasteboard tool (pasteboard/linux/pasteboard, in the
+#   bundle's Support folder), with the run's pasteboard prefix.
 #   The fixture's end command reads its closed window with ActionUI's Linux shell client
 #   (actionui_remote_linux.bash, from the ActionUI checkout beside this repo, as Package.swift
 #   finds it), which needs OpenBSD netcat and coreutils timeout.
@@ -134,9 +135,6 @@ for test_file in "$tests"/*.itest.sh; do
         continue
     fi
     base="$(/usr/bin/basename "$test_file")"
-    case "$base" in
-        pasteboard.*) printf '\n## %s: left out (no pasteboard tool on Linux)\n' "$base" >&2; continue ;;
-    esac
     if [ -n "$filter" ]; then
         case "$base" in
             $filter) ;;

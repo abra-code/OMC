@@ -201,7 +201,7 @@ A panel with no answer queued is **canceled** and recorded. An answer the panel 
 | `alerts_count`, `alerts_mention <text>`, `alerts_reset`, `alert_answers_reset` | what handlers showed |
 | `notify_count`, `notify_mention <text>` | the same for `notify` |
 | `itest_pasteboard [name]` / `itest_set_pasteboard <text> [name]` | the run's own pasteboards (default `general`) |
-| `itest_has_pasteboard` | true when the applet has a pasteboard tool for those two; a Linux applet has none, so a test skips such checks there |
+| `itest_has_pasteboard` | true when the applet has a pasteboard tool for those two (every applet since OMC 6; on Linux it is a script keeping named pasteboards as files, and the run's general pasteboard is the one the engine reads as the clipboard) |
 
 ### Status
 

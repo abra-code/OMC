@@ -16,7 +16,8 @@
 #       omc_*.json                  the engine's built-in windows (AbracodeFramework/BuiltInDocuments)
 #       <lang>.lproj/Private.strings  the engine's own texts (AbracodeFramework/*.lproj)
 #       Support/                    the support tools (omc_dialog_control, omc_next_command, ...,
-#                                   and the defaults script from defaults/)
+#                                   the defaults script from defaults/, the pasteboard script
+#                                   from pasteboard/linux/)
 #
 # Usage: make-applet-bundle.sh <products folder> <applet sources> <output folder>/<Name>.app
 #   The products folder is the build's (build-linux.sh), holding CommandApplet and the tools.
@@ -249,4 +250,12 @@ if [ "$status" -ne 0 ]; then
     exit 1
 fi
 /bin/chmod 755 "$framework/Support/defaults"
+# The named pasteboards, a script on Linux (pasteboard/linux/pasteboard; macOS has the Objective-C tool)
+/bin/cp -- "$omc_root/pasteboard/linux/pasteboard" "$framework/Support/pasteboard"
+status=$?
+if [ "$status" -ne 0 ]; then
+    printf 'Cannot copy the pasteboard tool into the framework\n' >&2
+    exit 1
+fi
+/bin/chmod 755 "$framework/Support/pasteboard"
 exit 0

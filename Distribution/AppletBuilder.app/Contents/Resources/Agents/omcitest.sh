@@ -60,7 +60,7 @@
 #                                          engine as the clipboard, put there
 #   itest_set_pasteboard <text> [name]     puts <text> there, e.g. the clipboard a command reads
 #   itest_has_pasteboard                   true when the applet has a pasteboard tool for the two
-#                                          above (a Linux applet has none: skip such checks there)
+#                                          above (every applet since OMC 6, Linux ones included)
 #   alert_answer <rc> [rc ...]             answers for the next alerts, in order (0 OK, 1 Cancel,
 #                                          2 Other); with none queued an alert answers 0
 #   alerts_count, alerts_mention <text>    the alerts shown so far, and how many mention <text>
@@ -88,6 +88,8 @@
 #   ITEST_APP                              the applet under test
 #   ITEST_PASTEBOARD_PREFIX                the run's pasteboards are "<prefix>.<name>": the applet
 #                                          and its handlers never touch the user's pasteboards
+#   ITEST_PASTEBOARD_PATH                  the run's pasteboard folder (the applet's OMC_PASTEBOARD_PATH),
+#                                          where the Linux pasteboard tool keeps the boards as files
 #
 # bash 3.2, no set -e; every external tool by absolute path.
 
@@ -289,13 +291,15 @@ itest_run_finished() { # <run>
     esac
 }
 
-# The applet's own pasteboard tool, with the run's prefix, so it reads and writes the run's boards.
+# The applet's own pasteboard tool, with the run's prefix, so it reads and writes the run's boards,
+# and the run's pasteboard folder, as the applet has it (OMC_PASTEBOARD_PATH: the Linux tool keeps
+# the boards there; the macOS tool ignores it)
 _omcitest_pasteboard() { # <name> <get|put> [text]
     if [ -z "$OMCITEST_PASTEBOARD_TOOL" ] || [ -z "$ITEST_PASTEBOARD_PREFIX" ]; then
         printf 'omcitest: no pasteboard tool in the applet\n' >&2
         return 1
     fi
-    OMC_TEST_PASTEBOARD_PREFIX="$ITEST_PASTEBOARD_PREFIX" "$OMCITEST_PASTEBOARD_TOOL" "$@"
+    OMC_PASTEBOARD_PATH="$ITEST_PASTEBOARD_PATH" OMC_TEST_PASTEBOARD_PREFIX="$ITEST_PASTEBOARD_PREFIX" "$OMCITEST_PASTEBOARD_TOOL" "$@"
 }
 
 itest_has_pasteboard() {
@@ -505,6 +509,11 @@ omcitest_launch() { # <App.app>
     # The run's own pasteboards, unique to this launch: the folder's random name and this process.
     ITEST_PASTEBOARD_PREFIX="omcitest.$$.${_work##*/omcit.}"
     export ITEST_PASTEBOARD_PREFIX
+    # On Linux the boards are files, kept in the run's folder (OMC_PASTEBOARD_PATH), so they go with
+    # the run rather than staying in the user's runtime folder until logout
+    ITEST_PASTEBOARD_PATH="$_work/pasteboards"
+    /bin/mkdir -m 700 "$ITEST_PASTEBOARD_PATH" || return 1
+    export ITEST_PASTEBOARD_PATH
 
     # A private $HOME, as omctest gives every file: an applet's own state under $HOME (recents,
     # saved configurations, caches) is the test's, and the user's is never read or rewritten.
@@ -543,7 +552,7 @@ omcitest_launch() { # <App.app>
         -u PYTHONPATH \
         OMC_TEST_BRIDGE_PATH="$OMCITEST_SOCKET" OMC_TEST_TOKEN_FD=3 OMC_TEST_PASTEBOARD_PREFIX="$ITEST_PASTEBOARD_PREFIX" \
         OMC_TEST_SUPPORT_PATH="$_work/support" OMCTEST_UI="$OMCTEST_UI" HOME="$ITEST_HOME" TMPDIR="$ITEST_TMPDIR" \
-        OMC_DEFAULTS_PATH="$ITEST_HOME/Library/Preferences" \
+        OMC_DEFAULTS_PATH="$ITEST_HOME/Library/Preferences" OMC_PASTEBOARD_PATH="$ITEST_PASTEBOARD_PATH" \
         "$_exe" 3< "$OMCITEST_TOKEN_FILE" > "$_work/applet.log" 2>&1 &
     OMCITEST_PID=$!
 

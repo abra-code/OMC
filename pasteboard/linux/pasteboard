@@ -1,0 +1,140 @@
+#!/bin/sh
+# pasteboard (Linux) - set or get a named pasteboard string: the macOS tool's command line, for
+# the applets' scripts on Linux. It is in Abracode.framework's Support folder
+# ($OMC_OMC_SUPPORT_PATH/pasteboard), so every applet has it.
+#
+#   pasteboard <name> put|set [<string>]   store <string>, or stdin when there is none
+#   pasteboard <name> get                  print the stored string, as stored
+#
+# A named pasteboard is a file in a private folder of the user's: $XDG_RUNTIME_DIR/omc-pasteboards
+# (a per-user folder that lives as long as the login session, as macOS's pasteboard server does),
+# or ${TMPDIR:-/tmp}/omc-pasteboards-<uid> when XDG_RUNTIME_DIR is not set; OMC_PASTEBOARD_PATH, a
+# folder, takes their place (omcitest sets it to the run's own folder, so a test's pasteboards go
+# with the run). Applets use named pasteboards to keep state between handlers and to pass strings
+# between processes.
+#
+# The "general" and "find" pasteboards are the system clipboard on macOS. A command-line tool
+# cannot keep the clipboard on Wayland after it exits (the application that set it must serve
+# it), so on Linux they are refused for now, unless a test prefix is set (below).
+#
+# Semantics, as the macOS tool (and omctest's file-backed stub, which pins them):
+#   put|set <string>  store the argument, with no newline added
+#   put|set           store stdin verbatim, trailing newline and all
+#   get               print the value raw; a board never written prints nothing, status 0
+#   an empty string   empties the board
+#   anything else     a message on stderr, status 255: an unknown operation, a name with no
+#                     operation, no arguments at all
+# Arguments past the value are ignored.
+#
+# OMC_TEST_PASTEBOARD_PREFIX, set by the engine for the handlers of an OMC test launch: every
+# pasteboard, general and find included, is "<prefix>.<name>", so a test never reads or writes the
+# user's. It must be 1 to 100 characters of A-Z a-z 0-9 . _ - (status 255 otherwise, and nothing
+# is read or written).
+#
+# Differences from macOS: a name that merely starts with "general" or "find" ("findSelection") is
+# a named pasteboard here; on macOS it is the general or find pasteboard.
+
+pasteboard_usage() {
+    printf 'USAGE\n\tpasteboard "Pasteboard Name" put[set]|get "String To Set"\n' >&2
+}
+
+if [ $# -lt 2 ]; then
+    pasteboard_usage
+    exit 255
+fi
+case "$2" in
+    put|set|get) ;;
+    *)
+        printf "Unknown pasteboard operation. Allowed operations are 'put' and 'get'\n" >&2
+        exit 255
+        ;;
+esac
+
+pb_name="$1"
+if [ -n "${OMC_TEST_PASTEBOARD_PREFIX+set}" ]; then
+    case "$OMC_TEST_PASTEBOARD_PREFIX" in
+        ''|*[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._-]*) pb_prefix_ok=0 ;;
+        *) if [ "${#OMC_TEST_PASTEBOARD_PREFIX}" -le 100 ]; then pb_prefix_ok=1; else pb_prefix_ok=0; fi ;;
+    esac
+    if [ "$pb_prefix_ok" != "1" ]; then
+        printf 'pasteboard: OMC_TEST_PASTEBOARD_PREFIX must be 1 to 100 characters of A-Z a-z 0-9 . _ -\n' >&2
+        exit 255
+    fi
+    pb_name="$OMC_TEST_PASTEBOARD_PREFIX.$pb_name"
+else
+    case "$pb_name" in
+        general|find)
+            printf 'pasteboard: the "%s" pasteboard (the system clipboard) is not available on Linux yet\n' "$pb_name" >&2
+            exit 1
+            ;;
+    esac
+fi
+
+# The private folder. Created with mode 700; one that is already there must be a real folder
+# (not a link) owned by this user, or another user could have made it first to read the boards.
+if [ -n "${OMC_PASTEBOARD_PATH:-}" ]; then
+    pb_dir="${OMC_PASTEBOARD_PATH%/}"
+elif [ -n "${XDG_RUNTIME_DIR:-}" ] && [ -d "$XDG_RUNTIME_DIR" ]; then
+    pb_dir="$XDG_RUNTIME_DIR/omc-pasteboards"
+else
+    pb_uid=$(/usr/bin/id -u)
+    pb_dir="${TMPDIR:-/tmp}"
+    pb_dir="${pb_dir%/}/omc-pasteboards-$pb_uid"
+fi
+if [ ! -d "$pb_dir" ]; then
+    /bin/mkdir -m 700 "$pb_dir" 2>/dev/null
+fi
+if [ -L "$pb_dir" ] || [ ! -d "$pb_dir" ] || [ ! -O "$pb_dir" ]; then
+    printf 'pasteboard: %s is not a folder of this user'"'"'s; refusing to use it\n' "$pb_dir" >&2
+    exit 1
+fi
+
+# A name is an arbitrary string, so it is mapped to a file name rather than trusted: a name of
+# [A-Za-z0-9._-] only, 96 characters or fewer, is used as it is with ".plain" appended (no other
+# process: handlers read boards dozens of times); any other name has every other character made
+# "_" and a checksum of the original appended, so two names that map alike still get two files,
+# and "/", ".." or a newline cannot leave the folder. The two forms cannot meet: a mapped name ends
+# in "." and digits. The characters are listed, not given as ranges, which follow the locale.
+case "$pb_name" in
+    *[!ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._-]*) pb_plain=0 ;;
+    *) if [ "${#pb_name}" -le 96 ]; then pb_plain=1; else pb_plain=0; fi ;;
+esac
+if [ "$pb_plain" = "1" ]; then
+    pb_file="$pb_dir/$pb_name.plain"
+else
+    pb_safe=$(printf '%s' "$pb_name" | LC_ALL=C /usr/bin/tr -c 'A-Za-z0-9._-' '_' | /usr/bin/cut -c1-96)
+    pb_sum=$(printf '%s' "$pb_name" | /usr/bin/cksum | /usr/bin/cut -d' ' -f1)
+    pb_file="$pb_dir/$pb_safe.$pb_sum"
+fi
+
+case "$2" in
+    put|set)
+        # Written beside the board and renamed over it, so a reader never sees half a value and
+        # two writers leave one whole value
+        pb_temp="$pb_file.$$.tmp"
+        if [ $# -ge 3 ]; then
+            printf '%s' "$3" > "$pb_temp"
+        else
+            /bin/cat > "$pb_temp"
+        fi
+        pb_status=$?
+        if [ "$pb_status" -ne 0 ]; then
+            /bin/rm -f "$pb_temp"
+            printf 'pasteboard: cannot write %s\n' "$pb_file" >&2
+            exit 1
+        fi
+        /bin/mv -f "$pb_temp" "$pb_file"
+        pb_status=$?
+        if [ "$pb_status" -ne 0 ]; then
+            /bin/rm -f "$pb_temp"
+            printf 'pasteboard: cannot write %s\n' "$pb_file" >&2
+            exit 1
+        fi
+        ;;
+    get)
+        if [ -f "$pb_file" ]; then
+            /bin/cat "$pb_file"
+        fi
+        ;;
+esac
+exit 0

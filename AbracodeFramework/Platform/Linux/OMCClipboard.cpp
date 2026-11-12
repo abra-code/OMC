@@ -11,8 +11,10 @@
 //  - On Wayland an app gets the clipboard only while one of its windows has the keyboard focus:
 //    a command run from the applet's menu or window sees it; one started with no applet window in
 //    front (a file opened from the file manager) may see none.
-//  - In an OMC test launch nothing reads the desktop's clipboard (on macOS a test has a pasteboard
-//    of its own, OMCTestHost.h; Linux has no test host yet): no text.
+//  - In an OMC test launch nothing reads the desktop's clipboard: the run's own general pasteboard
+//    is read, as on macOS (OMCTestHost.h), through the framework's pasteboard tool
+//    (pasteboard/linux/pasteboard keeps named pasteboards as files; the engine's environment has
+//    OMC_TEST_PASTEBOARD_PREFIX, which makes the tool's "general" the run's board).
 //  - No paste into the front app: Wayland gives an app no way to send keystrokes to another.
 //  Main thread only.
 //
@@ -20,16 +22,87 @@
 #include "OMCClipboard.h"
 #include "OMCConstants.h"
 #include "OMCTestHost.h"
+#include "OMCEngineBundle.h"
+#include "CFObj.h"
 #include "Linux/OMCModalLoop.h"
 #include "OMCLog.h"
 #include <gtk/gtk.h>
 #include <atomic>
+#include <climits>
 #include <string>
 
 namespace
 {
 
 const guint kReadTimeoutMilliseconds = 2000;
+
+// In an OMC test launch: the text of the run's own general pasteboard, read with the framework's
+// pasteboard tool (Support/pasteboard; not the harness's support folder, which may hold recording
+// stubs). False when there is none, or the tool cannot be run.
+bool
+ReadTestClipboardText(std::string &outText)
+{
+	outText.clear();
+	CFBundleRef engineBundle = OMCGetEngineBundle();
+	if(engineBundle == nullptr)
+		return false;
+	CFObj<CFURLRef> supportFilesURL( ::CFBundleCopySupportFilesDirectoryURL(engineBundle) );
+	if(supportFilesURL == nullptr)
+		return false;
+	CFObj<CFURLRef> supportURL( ::CFURLCreateCopyAppendingPathComponent(kCFAllocatorDefault, supportFilesURL, CFSTR("Support"), true) );
+	if(supportURL == nullptr)
+		return false;
+	CFObj<CFURLRef> toolURL( ::CFURLCreateCopyAppendingPathComponent(kCFAllocatorDefault, supportURL, CFSTR("pasteboard"), false) );
+	char toolPath[PATH_MAX];
+	if((toolURL == nullptr) || !::CFURLGetFileSystemRepresentation(toolURL, true, (UInt8 *)toolPath, sizeof(toolPath)))
+		return false;
+
+	char generalName[] = "general";
+	char getOperation[] = "get";
+	char *arguments[] = { toolPath, generalName, getOperation, nullptr };
+	gchar *output = nullptr;
+	gint waitStatus = 0;
+	GError *error = nullptr;
+	gboolean ran = g_spawn_sync(nullptr, arguments, nullptr, G_SPAWN_STDERR_TO_DEV_NULL, nullptr, nullptr,
+								&output, nullptr, &waitStatus, &error);
+	if(!ran)
+	{
+		OMCLogMessage("the test's clipboard could not be read with %s: %s", toolPath, (error != nullptr) ? error->message : "unknown error");
+		if(error != nullptr)
+			g_error_free(error);
+		return false;
+	}
+	bool succeeded = g_spawn_check_wait_status(waitStatus, nullptr);
+	if(succeeded && (output != nullptr))
+		outText = output;
+	g_free(output);
+	if(!succeeded)
+		OMCLogMessage("the test's clipboard could not be read with %s: the tool failed", toolPath);
+	return succeeded && !outText.empty();
+}
+
+// The clipboard's text as a CFString, with the line ends a command asked for
+CFStringRef
+CreateClipboardString(std::string &ioText, long inReplaceOption)
+{
+	if(inReplaceOption == kTextReplaceLFsWithCRs)
+	{
+		for(char &character : ioText)
+		{
+			if(character == '\n')
+				character = '\r';
+		}
+	}
+	else if(inReplaceOption == kTextReplaceCRsWithLFs)
+	{
+		for(char &character : ioText)
+		{
+			if(character == '\r')
+				character = '\n';
+		}
+	}
+	return CFStringCreateWithBytes(kCFAllocatorDefault, (const UInt8 *)ioText.data(), (CFIndex)ioText.size(), kCFStringEncodingUTF8, false);
+}
 
 GdkClipboard *
 DesktopClipboard()
@@ -86,6 +159,11 @@ OnTextRead(GObject *inClipboard, GAsyncResult *inResult, gpointer inWait)
 bool
 OMCIsTextInClipboard()
 {
+	if(OMCTestHostIsActive())
+	{
+		std::string testText;
+		return ReadTestClipboardText(testText);
+	}
 	GdkClipboard *clipboard = DesktopClipboard();
 	if(clipboard == nullptr)
 		return false;
@@ -104,6 +182,13 @@ OMCIsTextInClipboard()
 CFStringRef
 OMCCopyClipboardText(long inReplaceOption)
 {
+	if(OMCTestHostIsActive())
+	{
+		std::string testText;
+		if(!ReadTestClipboardText(testText))
+			return nullptr;
+		return CreateClipboardString(testText, inReplaceOption);
+	}
 	GdkClipboard *clipboard = DesktopClipboard();
 	if((clipboard == nullptr) || !OMCIsTextInClipboard()) // no text: nothing to read (a read would fail)
 		return nullptr;
@@ -154,24 +239,7 @@ OMCCopyClipboardText(long inReplaceOption)
 	g_object_unref(cancellable);
 	if(!hasText)
 		return nullptr;
-
-	if(inReplaceOption == kTextReplaceLFsWithCRs)
-	{
-		for(char &character : text)
-		{
-			if(character == '\n')
-				character = '\r';
-		}
-	}
-	else if(inReplaceOption == kTextReplaceCRsWithLFs)
-	{
-		for(char &character : text)
-		{
-			if(character == '\r')
-				character = '\n';
-		}
-	}
-	return CFStringCreateWithBytes(kCFAllocatorDefault, (const UInt8 *)text.data(), (CFIndex)text.size(), kCFStringEncodingUTF8, false);
+	return CreateClipboardString(text, inReplaceOption);
 }
 
 bool
