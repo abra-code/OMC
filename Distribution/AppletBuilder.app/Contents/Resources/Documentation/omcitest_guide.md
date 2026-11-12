@@ -124,7 +124,7 @@ Each file gets a **fresh applet process**, launched with the applet's own execut
 | `ITEST_HOME` | the applet's `$HOME` for this file, with `Library/Application Support`, `Preferences` and `Caches` |
 | `ITEST_TMPDIR` | the applet's `$TMPDIR` for this file; per-window state folders appear here |
 | `ITEST_PASTEBOARD_PREFIX` | the run's pasteboards are `<prefix>.<name>`; the applet never touches the user's |
-| `OMCTEST_UI` | where the alert and notify stand-ins record (read through `alerts_count` and friends) |
+| `OMCTEST_UI` | where the alert, notify and open stand-ins record (read through `alerts_count` and friends) |
 
 To find the folder the test file sits in (to run a fixture builder beside it): `tests_dir="$(/usr/bin/dirname "${BASH_SOURCE[0]}")"`.
 
@@ -132,7 +132,7 @@ To find the folder the test file sits in (to run a fixture builder beside it): `
 
 - `$HOME` and `$TMPDIR`, for everything the handlers do through them. An applet that keeps its settings under `$HOME/Library/Application Support/<App>` starts every file with none.
 - Pasteboards that go through the Command Engine (`pasteboard`, and the engine's own clipboard reads).
-- `alert` and `notify` in handlers: stand-ins that record and answer, never show anything.
+- `alert`, `notify` and `open` in handlers: stand-ins that record (and answer), never show or open anything.
 - The engine's own panels and alerts: answered from a queue (section 6), never shown.
 - `PASTE_AFTER_EXECUTION`: no keystrokes are sent; `omc.test.status` counts them as `skippedPastes`.
 - Recent documents: a test launch adds nothing to the user's Open Recent or Recent Items; `omc.test.status` counts them as `skippedRecentDocuments`.
@@ -200,6 +200,7 @@ A panel with no answer queued is **canceled** and recorded. An answer the panel 
 | `alert_answer <rc>...` | answers for the next `alert` a handler runs (0 OK, 1 Cancel, 2 Other); with none queued an alert answers 0 |
 | `alerts_count`, `alerts_mention <text>`, `alerts_reset`, `alert_answers_reset` | what handlers showed |
 | `notify_count`, `notify_mention <text>` | the same for `notify` |
+| `opened_count`, `opened_mention <text>` | the same for `open`: each call's arguments, recorded; nothing opens, reveals or launches during a run |
 | `itest_pasteboard [name]` / `itest_set_pasteboard <text> [name]` | the run's own pasteboards (default `general`) |
 | `itest_has_pasteboard` | true when the applet has a pasteboard tool for those two (every applet since OMC 6; on Linux it is a script keeping named pasteboards as files, and the run's general pasteboard is the one the engine reads as the clipboard) |
 

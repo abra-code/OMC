@@ -26,6 +26,8 @@ itest_wait_idle
 check "the handler ran" "notified:0" "$(itest_output "$run")"
 check "one notification" "1" "$(notify_count)"
 check "with its text" "1" "$(notify_mention "Export finished")"
+check "and one open call, recorded rather than made" "1" "$(opened_count)"
+check "revealing the applet" "1" "$(opened_mention "^-R .*\.app$")"
 
 section "The other tools are the real ones"
 run="$(itest_run fixture.copy --text "through the support folder")"

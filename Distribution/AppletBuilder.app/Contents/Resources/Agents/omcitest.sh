@@ -65,8 +65,10 @@
 #                                          2 Other); with none queued an alert answers 0
 #   alerts_count, alerts_mention <text>    the alerts shown so far, and how many mention <text>
 #   notify_count, notify_mention <text>    the same for notifications
+#   opened_count, opened_mention <text>    the same for the open tool's calls (their arguments): nothing
+#                                          opens, reveals or launches during a run
 #   alerts_reset, alert_answers_reset      forget the alerts shown, or the answers not yet taken
-#                                          (alert and notify are omctest's recording stand-ins:
+#                                          (alert, notify and open are omctest's recording stand-ins:
 #                                          nothing is shown, the words are omctest's)
 #   itest_call <method> [params-json]      any bridge method; prints the result as JSON
 #   itest_quit                             quits now (normally the runner does this after the file)
@@ -316,7 +318,7 @@ itest_set_pasteboard() { # <text> [name]
 
 # -- Alerts and notifications ------------------------------------------------------------------
 #
-# The applet's handlers run omctest's alert and notify stand-ins from the run's support folder
+# The applet's handlers run omctest's alert, notify and open stand-ins from the run's support folder
 # (_omcitest_build_support), which log to and answer from $OMCTEST_UI. These are omctest's words over
 # the same files, so a ported omctest scenario keeps its alert answers and counts.
 
@@ -333,6 +335,8 @@ alerts_count() { /usr/bin/awk 'END { print NR }' "$OMCTEST_UI/alerts.log" 2>/dev
 alerts_mention() { /usr/bin/grep -c -- "$1" "$OMCTEST_UI/alerts.log" 2>/dev/null | /usr/bin/tr -d ' '; }
 notify_count() { /usr/bin/awk 'END { print NR }' "$OMCTEST_UI/notifications.log" 2>/dev/null; }
 notify_mention() { /usr/bin/grep -c -- "$1" "$OMCTEST_UI/notifications.log" 2>/dev/null | /usr/bin/tr -d ' '; }
+opened_count() { /usr/bin/awk 'END { print NR }' "$OMCTEST_UI/opened.log" 2>/dev/null; }
+opened_mention() { /usr/bin/grep -c -- "$1" "$OMCTEST_UI/opened.log" 2>/dev/null | /usr/bin/tr -d ' '; }
 
 itest_quit() {
     if [ -z "$OMCITEST_PID" ]; then
@@ -376,8 +380,8 @@ _omcitest_wait_exit() { # <seconds>
     return 0
 }
 
-# The run's support folder: a link to each of the applet's own Support tools, except alert and notify,
-# which are omctest's recording stand-ins (written by omctest.sh's own emitters, so both harnesses
+# The run's support folder: a link to each of the applet's own Support tools, except alert, notify
+# and open, which are omctest's recording stand-ins (written by omctest.sh's own emitters, so both harnesses
 # answer and log alike). The applet hands this folder to its handlers as OMC_OMC_SUPPORT_PATH.
 _omcitest_build_support() { # <App.app> <dest>
     local _real
@@ -396,12 +400,12 @@ _omcitest_build_support() { # <App.app> <dest>
     for _tool in "$_real"/*; do
         [ -e "$_tool" ] || continue
         case "${_tool##*/}" in
-            alert|notify) ;;
+            alert|notify|open) ;;
             *) /bin/ln -s "$_tool" "$2/${_tool##*/}" || return 1 ;;
         esac
     done
     local _name
-    for _name in alert notify; do
+    for _name in alert notify open; do
         # shellcheck disable=SC1090
         ( unset OMCTEST_PREPARED; OMCTEST_RUNNER=1; . "$_lib"; "omctest_emit_stub_$_name" ) > "$2/$_name" || return 1
         /bin/chmod 755 "$2/$_name" || return 1
@@ -529,11 +533,12 @@ omcitest_launch() { # <App.app>
     /bin/mkdir -p "$ITEST_TMPDIR" || return 1
     export ITEST_TMPDIR
 
-    # alert and notify record and answer instead of showing anything.
+    # alert, notify and open record (and answer) instead of showing anything.
     OMCTEST_UI="$_work/ui"
     /bin/mkdir -p "$OMCTEST_UI" || return 1
     : > "$OMCTEST_UI/alerts.log"
     : > "$OMCTEST_UI/notifications.log"
+    : > "$OMCTEST_UI/opened.log"
     : > "$OMCTEST_UI/alert_answers"
     _omcitest_build_support "$_app" "$_work/support"
     _status=$?
@@ -596,7 +601,7 @@ omcitest_launch() { # <App.app>
     case "$_status_reply" in
         *"\"supportPath\": \"$_work/support\""*) ;;
         *)
-            printf 'omcitest: the applet did not take the run'"'"'s support folder (an engine without it): its alert and notify would be the real ones\n' >&2
+            printf 'omcitest: the applet did not take the run'"'"'s support folder (an engine without it): its alert, notify and open would be the real ones\n' >&2
             itest_quit
             return 1
             ;;

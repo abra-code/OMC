@@ -131,6 +131,7 @@ $OMCTEST_SCRATCH/                mktemp -d, removed on exit
             win-<uuid>/          virtual window state, last write wins
             alerts.log           every alert raised
             notifications.log    every notify
+            opened.log           every open call (its arguments)
             chain.queue          the pending omc_next_command request
             chain.log            the full history of chain requests
             handlers.log         stdout+stderr of every handler dispatch
@@ -215,6 +216,7 @@ The tools come from the applet's *own* embedded framework, not AppletBuilder's -
 | `omc_dialog_control` | **recording stub** - the virtual window | the real tool is a harmless no-op with no window, which is why handlers can run at all; recording it turns the largest observable output of most handlers into something assertable. |
 | `omc_next_command` | recording stub - chain queue | headless there is no app to ask; recording lets you assert on chaining and drain it synchronously. |
 | `plister` | real | handlers depend on its exact read/write semantics; faking it would test the fake. |
+| `open` | stub, spy | the real tool (OMC 6) opens files and applications, reveals items and launches applets; under test nothing may open. Each call's arguments are recorded, one line per call, and it exits 0 without checking them. |
 | `pasteboard` | **stub, file-backed** | handlers must read back what they wrote, so the stub reproduces the real tool's behavior - an argument stored with no trailing newline, stdin stored verbatim, an unwritten board reading back empty and still exiting 0, and exit 255 for a bad invocation - over files in `$OMCTEST_UI/pb/` rather than the machine-global pasteboard server. |
 | `b64`, `filt`, `loco` | real | pure text and data filters, safe headless. |
 
@@ -309,6 +311,7 @@ If the applet declares an `INIT_SUBCOMMAND_ID` on its window, that is the handle
 | `alerts_count` | none | number of alerts raised. Counts an alert with empty text, because that is still an alert the user was shown. |
 | `alerts_mention` | `<pattern>` | how many alerts match. This is a **regex**, not a fixed string. |
 | `notify_count` / `notify_mention` | as above | the same, for `notify`. |
+| `opened_count` / `opened_mention` | as above | the same, for `open` (the engine's Support tool, OMC 6): each call's arguments, so a test checks what a handler opened, revealed or launched without anything opening |
 | `chain_requested` | `<command-id>` | `1` when that id is the **currently pending** chain request. The real `omc_next_command` truncates its file, so two requests in one handler leave only the last - this can read `0` for an id that was genuinely requested and then overwritten. |
 | `chain_asked` | `<command-id>` | how many times the id was requested across the whole history. This is the one that answers "did the handler ask". |
 | `chains_reset` | none | forgets every chain request, pending and historical. The counterpart of `alerts_reset`. |
@@ -443,7 +446,7 @@ omc_unstub plister
 
 `omc_stub` suits whole-tool failure ("plister is broken"). It is not a substitute for finer-grained surgery: to make one *write* fail while every *read* still succeeds, manipulate the state the tool acts on instead - delete the parent container, `chmod` the directory.
 
-**`omc_unstub` on `alert`, `notify`, `omc_dialog_control` or `omc_next_command` restores the recording stub, not the real tool.** Restoring the real `alert` would hang the suite.
+**`omc_unstub` on any of these stubbed tools (`alert`, `notify`, `omc_dialog_control`, `omc_next_command`, `pasteboard`, `open`) restores the harness's stub, not the real tool.** Restoring the real `alert` would hang the suite.
 
 ---
 

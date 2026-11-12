@@ -87,8 +87,8 @@
 OMCTEST_API_VERSION=8
 export OMCTEST_API_VERSION
 
-# The four tools this harness always replaces with recording stubs.
-OMCTEST_DEFAULT_STUBS="alert notify omc_dialog_control omc_next_command pasteboard"
+# The tools this harness always replaces with recording stubs.
+OMCTEST_DEFAULT_STUBS="alert notify omc_dialog_control omc_next_command pasteboard open"
 
 # =============================================================================
 # The engine contract, pinned
@@ -810,6 +810,7 @@ omctest_prepare_env() { # <app> <label>
     : > "$OMCTEST_UI/journal.tsv"
     : > "$OMCTEST_UI/alerts.log"
     : > "$OMCTEST_UI/notifications.log"
+    : > "$OMCTEST_UI/opened.log"
     : > "$OMCTEST_UI/alert_answers"
     : > "$OMCTEST_UI/chain.queue"
     : > "$OMCTEST_UI/chain.log"
@@ -833,7 +834,7 @@ omctest_prepare_env() { # <app> <label>
 }
 
 # The interposition directory: symlink the applet's own tools, then replace the
-# four that must not run for real. Interception at the filesystem path is what
+# ones that must not run for real. Interception at the filesystem path is what
 # makes this language-neutral - a Python handler building its tool paths from
 # $OMC_OMC_SUPPORT_PATH hits the same stubs as a shell handler.
 omctest_build_support() { # <app> <dest>
@@ -866,6 +867,7 @@ omctest_install_default_stub() { # <tool> <support-dir>
         omc_dialog_control) omctest_emit_stub_omc_dialog_control > "$dest_dir/$tool_name" ;;
         omc_next_command) omctest_emit_stub_omc_next_command > "$dest_dir/$tool_name" ;;
         pasteboard) omctest_emit_stub_pasteboard > "$dest_dir/$tool_name" ;;
+        open) omctest_emit_stub_open > "$dest_dir/$tool_name" ;;
         *) printf 'omctest: no default stub for %s\n' "$tool_name" >&2; return 1 ;;
     esac
     /bin/chmod +x "$dest_dir/$tool_name"
@@ -1021,6 +1023,17 @@ case "${1:-}" in
         exit 255
         ;;
 esac
+exit 0
+STUB
+}
+
+omctest_emit_stub_open() {
+    /bin/cat <<'STUB'
+#!/bin/sh
+# open (omctest stub). The real tool opens files and applications, shows files in the
+# Finder or file manager, and launches applets: under test none of that may happen.
+# Record the arguments, one call per line, and succeed.
+printf '%s\n' "$(printf '%s' "$*" | /usr/bin/tr '\n' ' ')" >> "$OMCTEST_UI/opened.log"
 exit 0
 STUB
 }
@@ -1283,7 +1296,7 @@ omc_stub() { # <tool>   (body on stdin)
     /bin/chmod +x "$OMC_OMC_SUPPORT_PATH/$tool_name"
 }
 
-# Undo omc_stub. For one of the four tools the harness always stubs, "restore"
+# Undo omc_stub. For one of the tools the harness always stubs, "restore"
 # means the default recording stub, not the real tool - running the real alert
 # would hang the suite.
 omc_unstub() { # <tool>
@@ -1833,6 +1846,8 @@ alerts_mention() { /usr/bin/grep -c -- "$1" "$OMCTEST_UI/alerts.log" 2>/dev/null
 # drifted apart - alerts_count was fixed in review and this was missed.
 notify_count() { /usr/bin/awk 'END { print NR }' "$OMCTEST_UI/notifications.log" 2>/dev/null; }
 notify_mention() { /usr/bin/grep -c -- "$1" "$OMCTEST_UI/notifications.log" 2>/dev/null | /usr/bin/tr -d ' '; }
+opened_count() { /usr/bin/awk 'END { print NR }' "$OMCTEST_UI/opened.log" 2>/dev/null; }
+opened_mention() { /usr/bin/grep -c -- "$1" "$OMCTEST_UI/opened.log" 2>/dev/null | /usr/bin/tr -d ' '; }
 
 # Was a chained command requested? Asserts on the queue without draining it.
 # -F, because a command id is a literal, not a pattern: every OMC command id

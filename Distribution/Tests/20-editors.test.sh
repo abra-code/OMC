@@ -463,6 +463,18 @@ check "the reload shows the disk copy as JSON" "$(order_text OnDisk)" "$(ui_valu
 check "not as an XML fragment" "0" "$(ui_value $CMD_DETAIL_ID | /usr/bin/grep -c '<dict>')"
 check "the pane says what happened" "Reloaded (changed externally)" "$(ui_value $CMD_EDITED_LABEL_ID)"
 
+section "reveal and edit go through the open tool, and nothing opens"
+# omctest's open stub records each call (opened_count / opened_mention) instead of
+# showing the Finder or starting an editor
+opened_before="$(opened_count)"
+omc_run AppletBuilder.reveal
+check_status "reveal succeeded" 0
+check "reveal asked open to show the project" "1" "$(opened_mention "^-R .*\.app")"
+omc_run AppletBuilder.commands.edit
+check_status "commands.edit succeeded" 0
+check "edit asked open for the command file in the editor" "1" "$(opened_mention "^-a .*Command.json")"
+check "two calls, nothing else" "$((${opened_before:-0} + 2))" "$(opened_count)"
+
 section "cumulative: no handler wrote to a view id the window does not declare"
 check "no undeclared ids"      "" "$(ui_unknown_writes)"
 check "no table was clobbered" "" "$(ui_suspect_writes)"
