@@ -160,6 +160,23 @@ thin_to_single_arch() {
     return 0
 }
 
+# Removes the extension module <name> from lib-dynload, whatever the interpreter's suffix
+# (name.cpython-315-darwin.so, name.cpython-315-aarch64-linux-gnu.so, name.abi3.so); prints what
+# it removed. Returns 0 when it removed something, 1 when there was nothing to remove.
+remove_dynload_module() { # <lib-dynload folder> <module name>
+    local found=1
+    local so_file
+    for so_file in "$1/$2".*.so; do
+        if [ ! -f "$so_file" ]; then
+            continue # the pattern matched nothing
+        fi
+        echo "  Removing: $so_file"
+        /bin/rm -f "$so_file"
+        found=0
+    done
+    return "$found"
+}
+
 remove_component() {
     local comp="$1"
     local lib_dir="$2"
@@ -216,12 +233,7 @@ remove_component() {
         local hashlib_removed=false
         local hashlib_so
         for hashlib_so in _blake2 _sha1 _sha2 _sha3 _md5 _hmac; do
-            local so_file="$dynload/${hashlib_so}.cpython-314-darwin.so"
-            if [ -f "$so_file" ]; then
-                echo "  Removing: $so_file"
-                /bin/rm -f "$so_file"
-                hashlib_removed=true
-            fi
+            remove_dynload_module "$dynload" "$hashlib_so" && hashlib_removed=true
         done
         if $hashlib_removed; then
             removed=true
@@ -231,37 +243,21 @@ remove_component() {
     # Remove xml-related .so files (elementtree, pyexpat)
     if [[ "$comp" == "xml" ]]; then
         local xml_removed=false
-        if [ -f "$dynload/_elementtree.cpython-314-darwin.so" ]; then
-            echo "  Removing: $dynload/_elementtree.cpython-314-darwin.so"
-            /bin/rm -f "$dynload/_elementtree.cpython-314-darwin.so"
-            xml_removed=true
-        fi
-        if [ -f "$dynload/pyexpat.cpython-314-darwin.so" ]; then
-            echo "  Removing: $dynload/pyexpat.cpython-314-darwin.so"
-            /bin/rm -f "$dynload/pyexpat.cpython-314-darwin.so"
-            xml_removed=true
-        fi
+        remove_dynload_module "$dynload" _elementtree && xml_removed=true
+        remove_dynload_module "$dynload" pyexpat && xml_removed=true
         if $xml_removed; then
             removed=true
         fi
     fi
 
-    # Remove _lsprof.cpython-314-darwin.so (profiling)
+    # Remove _lsprof (profiling)
     if [[ "$comp" == "lsprof" ]]; then
-        if [ -f "$dynload/_lsprof.cpython-314-darwin.so" ]; then
-            echo "  Removing: $dynload/_lsprof.cpython-314-darwin.so"
-            /bin/rm -f "$dynload/_lsprof.cpython-314-darwin.so"
-            removed=true
-        fi
+        remove_dynload_module "$dynload" _lsprof && removed=true
     fi
 
-    # Remove _statistics.cpython-314-darwin.so (statistics module)
+    # Remove _statistics (statistics module)
     if [[ "$comp" == "statistics" ]]; then
-        if [ -f "$dynload/_statistics.cpython-314-darwin.so" ]; then
-            echo "  Removing: $dynload/_statistics.cpython-314-darwin.so"
-            /bin/rm -f "$dynload/_statistics.cpython-314-darwin.so"
-            removed=true
-        fi
+        remove_dynload_module "$dynload" _statistics && removed=true
     fi
 
     # Remove East Asian codecs
