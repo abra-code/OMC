@@ -4,7 +4,8 @@
 //
 //  Linux checks of the platform UI that a person answers: the alerts and notices of
 //  Platform/Linux/OMCPlatformAlerts.cpp and the file panels of OMCPlatformFilePanels.cpp, and the
-//  applet's menu (EntryPoints/Linux/OMCAppletMenu.cpp), chosen as a click would. The
+//  applet's menu (EntryPoints/Linux/OMCAppletMenu.cpp), chosen as a click would, and the
+//  clipboard and host info (OMCClipboard.cpp, OMCHostInfo.cpp). The
 //  program runs its own AdwApplication in the desktop session and answers each one itself, as a
 //  person would: it finds the dialog among the application's windows and clicks a button (or
 //  closes it, or picks files in GTK's file chooser), from a timer set before the call, which
@@ -21,6 +22,10 @@
 #include "OMCAlerts.h"
 #include "OMCFilePanels.h"
 #include "OMCAppletMenu.h"
+#include "OMCClipboard.h"
+#include "OMCHostInfo.h"
+#include "OMCConstants.h"
+#include "ACFString.h"
 #include "ACFJSON.h"
 #include "ActionUIC.h"
 #include "CFObj.h"
@@ -786,6 +791,99 @@ RunMenuChecks(GApplication *inApp)
 	removeFolder();
 }
 
+#pragma mark - Clipboard and host info
+
+std::string
+TextOf(CFStringRef inString)
+{
+	return (inString != nullptr) ? ACFStringToUTF8(inString) : "(none)";
+}
+
+// A clipboard owner that offers text and never writes it, as an app that does not answer: GDK does
+// not end such a read when it is canceled, so only the engine's own time limit ends the wait
+struct SilentOwner { GdkContentProvider parent; };
+struct SilentOwnerClass { GdkContentProviderClass parent; };
+G_DEFINE_TYPE(SilentOwner, silent_owner, GDK_TYPE_CONTENT_PROVIDER)
+
+void
+silent_owner_init(SilentOwner *inOwner)
+{
+	(void)inOwner;
+}
+
+void
+silent_owner_class_init(SilentOwnerClass *inClass)
+{
+	GdkContentProviderClass *providerClass = GDK_CONTENT_PROVIDER_CLASS(inClass);
+	providerClass->ref_formats = [](GdkContentProvider *) -> GdkContentFormats * {
+		const char *mimeTypes[] = {"text/plain;charset=utf-8"};
+		return gdk_content_formats_new(mimeTypes, 1);
+	};
+	providerClass->write_mime_type_async = [](GdkContentProvider *inOwner, const char *, GOutputStream *, int, GCancellable *inCancellable,
+												GAsyncReadyCallback inCallback, gpointer inData) {
+		// Kept unanswered on the owner, freed with it
+		g_object_set_data_full(G_OBJECT(inOwner), "write", g_task_new(inOwner, inCancellable, inCallback, inData), g_object_unref);
+	};
+	providerClass->write_mime_type_finish = [](GdkContentProvider *, GAsyncResult *inResult, GError **outError) -> gboolean {
+		return g_task_propagate_boolean(G_TASK(inResult), outError);
+	};
+}
+
+void
+RunClipboardAndHostChecks(GApplication *inApp)
+{
+	(void)inApp;
+	GdkClipboard *clipboard = gdk_display_get_clipboard(gdk_display_get_default());
+
+	gdk_clipboard_set_text(clipboard, "one\ntwo\rthree");
+	Check("text on the clipboard is text", OMCIsTextInClipboard());
+	CFObj<CFStringRef> asIs(OMCCopyClipboardText(kTextReplaceNothing));
+	Check("the clipboard's text, as it is", TextOf(asIs) == "one\ntwo\rthree", TextOf(asIs));
+	CFObj<CFStringRef> crs(OMCCopyClipboardText(kTextReplaceLFsWithCRs));
+	Check("with line feeds made returns", TextOf(crs) == "one\rtwo\rthree", TextOf(crs));
+	CFObj<CFStringRef> lfs(OMCCopyClipboardText(kTextReplaceCRsWithLFs));
+	Check("with returns made line feeds", TextOf(lfs) == "one\ntwo\nthree", TextOf(lfs));
+
+	gdk_clipboard_set_text(clipboard, "\xC5\xBC\xC3\xB3\xC5\x82w"); // Polish "zolw" with its accents, in UTF-8
+	CFObj<CFStringRef> unicode(OMCCopyClipboardText(kTextReplaceNothing));
+	Check("text beyond ASCII comes back whole", (unicode != nullptr) && (CFStringGetLength(unicode) == 4), TextOf(unicode));
+
+	const guchar pixel[4] = {255, 0, 0, 255};
+	GBytes *bytes = g_bytes_new(pixel, sizeof(pixel));
+	GdkTexture *texture = gdk_memory_texture_new(1, 1, GDK_MEMORY_R8G8B8A8, bytes, 4);
+	gdk_clipboard_set_texture(clipboard, texture);
+	g_object_unref(texture);
+	g_bytes_unref(bytes);
+	Check("a picture on the clipboard is not text", !OMCIsTextInClipboard());
+	CFObj<CFStringRef> none(OMCCopyClipboardText(kTextReplaceNothing));
+	Check("and gives no text", none == nullptr, TextOf(none));
+	Check("pasting into another app is refused", !OMCPasteIntoFrontApp());
+
+	GdkContentProvider *silentOwner = GDK_CONTENT_PROVIDER(g_object_new(silent_owner_get_type(), nullptr));
+	gdk_clipboard_set_content(clipboard, silentOwner);
+	g_object_unref(silentOwner);
+	gint64 readStart = g_get_monotonic_time();
+	CFObj<CFStringRef> unanswered(OMCCopyClipboardText(kTextReplaceNothing));
+	double readSeconds = (double)(g_get_monotonic_time() - readStart) / G_USEC_PER_SEC;
+	Check("an owner that never answers gives no text, in about 2 seconds", (unanswered == nullptr) && (readSeconds < 4.0),
+			TextOf(unanswered) + " after " + std::to_string(readSeconds) + " s");
+	gdk_clipboard_set_text(clipboard, "");
+
+	CFObj<CFStringRef> hostName(OMCCopyHostAppName());
+	Check("the host app's name (no bundle here: GLib's application name)", TextOf(hostName) == "OMCLinuxUITests", TextOf(hostName));
+	CFObj<CFStringRef> ownName(OMCCopyAppNameForPID(getpid()));
+	Check("this process's name is the host app's", TextOf(ownName) == TextOf(hostName), TextOf(ownName));
+	CFObj<CFStringRef> initName(OMCCopyAppNameForPID(1));
+	Check("another process's name is its command name", (initName != nullptr) && (CFStringGetLength(initName) > 0), TextOf(initName));
+	// The box's windows started from a script never get the focus: the front app is not the applet
+	pid_t frontPID = OMCGetFrontAppPID();
+	CFObj<CFStringRef> frontName(OMCCopyFrontAppName());
+	CFObj<CFStringRef> frontID(OMCCopyFrontAppBundleIdentifier());
+	Check("with no focused applet window the front app is unknown", (frontPID == 0) && (frontName == nullptr) && (frontID == nullptr),
+			std::to_string((long)frontPID) + " " + TextOf(frontName));
+	Check("no modifier keys are held", OMCGetKeyboardModifiers() == 0, std::to_string(OMCGetKeyboardModifiers()));
+}
+
 } // namespace
 
 int
@@ -816,6 +914,7 @@ main(int argc, char *argv[])
 			RunChecks(inApp);
 			RunPanelChecks(inApp);
 			RunMenuChecks(inApp);
+			RunClipboardAndHostChecks(inApp);
 		}
 		g_application_release(inApp);
 		g_application_quit(inApp);

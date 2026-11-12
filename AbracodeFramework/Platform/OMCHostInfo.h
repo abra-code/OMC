@@ -4,8 +4,9 @@
 //
 //  What the engine asks about the process it runs in and the desktop around it: the host app, the
 //  front app, the OS version, the modifier keys held down, and bringing this process to the front.
-//  macOS: Platform/Apple/OMCHostInfo.mm (NSWorkspace, NSRunningApplication, CGEvent). Linux
-//  (later): most of these answer "not available" (NULL, 0, false), which callers handle.
+//  macOS: Platform/Apple/OMCHostInfo.mm (NSWorkspace, NSRunningApplication, CGEvent). Linux:
+//  Platform/Linux/OMCHostInfo.cpp, where the front app is known only while it is the applet, and
+//  other answers may be "not available" (NULL, 0, false), which callers handle.
 //
 //  Main thread only.
 //

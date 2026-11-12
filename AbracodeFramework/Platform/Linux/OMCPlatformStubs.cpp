@@ -14,7 +14,6 @@
 //
 
 #include "OMCHostInfo.h"
-#include "OMCClipboard.h"
 #include "OMCTerminalLauncher.h"
 #include "OMCTestPlatform.h"
 #include "OMCActionUIAddOns.h"
@@ -32,23 +31,12 @@
 			OMCLogMessage("%s is not implemented on Linux yet", inName); \
 	} while(0)
 
-#pragma mark - Host info (Platform/OMCHostInfo.h)
-
-CFStringRef OMCCopyHostAppName() { OMC_LINUX_NOT_YET("OMCCopyHostAppName"); return nullptr; }
-CFStringRef OMCCopyFrontAppName() { OMC_LINUX_NOT_YET("OMCCopyFrontAppName"); return nullptr; }
-CFStringRef OMCCopyFrontAppBundleIdentifier() { OMC_LINUX_NOT_YET("OMCCopyFrontAppBundleIdentifier"); return nullptr; }
-pid_t OMCGetFrontAppPID() { OMC_LINUX_NOT_YET("OMCGetFrontAppPID"); return 0; }
-CFStringRef OMCCopyAppNameForPID(pid_t pid) { (void)pid; OMC_LINUX_NOT_YET("OMCCopyAppNameForPID"); return nullptr; }
-
-// The engine runs only in applets on Linux (no contextual menu plugin, no Services host)
-bool OMCRunningInRegularGUIApp() { return true; }
-
-void OMCRefreshFileInFinder(CFStringRef filePath) { (void)filePath; } // no Finder to refresh
+#pragma mark - Host info (Platform/OMCHostInfo.h): the rest is in OMCHostInfo.cpp
 
 void
 OMCGetOperatingSystemVersion(long* outMajorVersion, long* outMinorVersion, long* outPatchVersion)
 {
-	// What REQUIRED_MAC_OS_MIN_VERSION means on Linux is a Phase 7 decision
+	// What REQUIRED_MAC_OS_MIN_VERSION means on Linux is a Phase 7 decision (the design note's question 4)
 	OMC_LINUX_NOT_YET("OMCGetOperatingSystemVersion");
 	if(outMajorVersion != nullptr)
 		*outMajorVersion = 0;
@@ -57,17 +45,6 @@ OMCGetOperatingSystemVersion(long* outMajorVersion, long* outMinorVersion, long*
 	if(outPatchVersion != nullptr)
 		*outPatchVersion = 0;
 }
-
-OMCModifierKeys OMCGetKeyboardModifiers() { OMC_LINUX_NOT_YET("OMCGetKeyboardModifiers"); return 0; }
-
-StSwitchToFront::StSwitchToFront(bool inRestore) noexcept { (void)inRestore; (void)mPreviousFrontAppPID; }
-StSwitchToFront::~StSwitchToFront() noexcept { }
-
-#pragma mark - Clipboard (Platform/OMCClipboard.h)
-
-bool OMCIsTextInClipboard() { OMC_LINUX_NOT_YET("OMCIsTextInClipboard"); return false; }
-CFStringRef OMCCopyClipboardText(long inReplaceOption) { (void)inReplaceOption; OMC_LINUX_NOT_YET("OMCCopyClipboardText"); return nullptr; }
-bool OMCPasteIntoFrontApp() { OMC_LINUX_NOT_YET("OMCPasteIntoFrontApp"); return false; }
 
 #pragma mark - Terminal (Platform/OMCTerminalLauncher.h)
 

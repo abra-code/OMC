@@ -7,8 +7,8 @@
 //  launch the clipboard is the run's own pasteboard (OMCTestHost.h), so a test never touches the
 //  user's clipboard.
 //
-//  macOS: Platform/Apple/OMCClipboard.cpp (Pasteboard Manager, CGEvent). Linux (later): the
-//  desktop's clipboard through ActionUI, and no paste into another app.
+//  macOS: Platform/Apple/OMCClipboard.cpp (Pasteboard Manager, CGEvent). Linux:
+//  Platform/Linux/OMCClipboard.cpp (GDK's clipboard; no paste into another app).
 //
 //  Main thread only.
 //
