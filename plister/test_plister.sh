@@ -693,6 +693,30 @@ check "and it holds an empty dict" "0" get count "$TMP/empty.json" /
 ok "an empty file takes an array root too" set array "$TMP/empty2.json" /
 : > "$TMP/empty3.plist"
 ok "and an empty .plist as well" set dict "$TMP/empty3.plist" /
+: > "$TMP/empty4.plist"
+: > "$TMP/empty5.json"
+empty_msg=$("$PLISTER" set dict "$TMP/empty4.plist" / 2>&1 >/dev/null)
+empty_msg="$empty_msg$("$PLISTER" set dict "$TMP/empty5.json" / 2>&1 >/dev/null)"
+if [ -z "$empty_msg" ]; then
+    echo "PASS: an empty .plist or .json says nothing about parsing it"; PASS=$((PASS + 1))
+else
+    echo "FAIL: an empty .plist or .json says nothing about parsing it"
+    printf '      got: %s\n' "$empty_msg"
+    FAIL=$((FAIL + 1))
+fi
+# A plist that does not parse says why, as a JSON file does: CoreFoundation's
+# description names the line and the problem (plutil -lint did; plister only said
+# the file "could not be read").
+printf '<?xml version="1.0" encoding="UTF-8"?>\n<plist version="1.0">\n<dict>\n<key>A</key>\n</dict>\n</plist>\n' > "$TMP/broken.plist"
+broken_msg=$("$PLISTER" get type "$TMP/broken.plist" / 2>&1 >/dev/null)
+case "$broken_msg" in
+    *"failed to parse property list: "?*"line"*)
+        echo "PASS: an unparsable plist's error says why"; PASS=$((PASS + 1)) ;;
+    *)
+        echo "FAIL: an unparsable plist's error says why"
+        printf '      got: %s\n' "$broken_msg"
+        FAIL=$((FAIL + 1)) ;;
+esac
 # Whitespace-only is NOT empty: it has bytes, so it stays refused.
 printf '   \n' > "$TMP/blank.json"
 nok_clean "but a whitespace-only file is refused" set dict "$TMP/blank.json" /

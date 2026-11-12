@@ -237,7 +237,7 @@ static bool WriteDataAtomically(CFDataRef data, CFURLRef url)
     return isOK;
 }
 
-static void PrintJSONError(const char *inPrefix, CFStringRef inError)
+static void PrintParseError(const char *inPrefix, CFStringRef inError)
 {
     char message[1024] = "unknown error";
     if (inError != NULL)
@@ -245,9 +245,27 @@ static void PrintJSONError(const char *inPrefix, CFStringRef inError)
     fprintf(stderr, "Error: %s: %s\n", inPrefix, message);
 }
 
-static CFPropertyListRef CreateFromPlistData(CFDataRef data, CFPropertyListMutabilityOptions mutabilityOptions)
+//outError, when given, receives CoreFoundation's description of a parse failure ("Value missing
+//for key inside <dict> at line 9"), as ACFJSONCreatePropertyList gives one for JSON
+static CFPropertyListRef CreateFromPlistData(CFDataRef data, CFPropertyListMutabilityOptions mutabilityOptions,
+                                             CFStringRef *outError = NULL)
 {
-    return ::CFPropertyListCreateWithData(kCFAllocatorDefault, data, mutabilityOptions, NULL, NULL);
+    CFObj<CFErrorRef> parseError;
+    CFPropertyListRef result = ::CFPropertyListCreateWithData(kCFAllocatorDefault, data, mutabilityOptions, NULL,
+                                                              (outError != NULL) ? &parseError : NULL);
+    if ((result == NULL) && (outError != NULL) && (parseError != NULL))
+    {
+        //The specific reason ("Value missing for key inside <dict> at line 4") is the debug
+        //description; the description proper only says the data is not in the right format.
+        //CoreFoundation exports no constant for the NSDebugDescription key, hence the literal
+        CFObj<CFDictionaryRef> userInfo( ::CFErrorCopyUserInfo(parseError) );
+        CFTypeRef debugDescription = (userInfo != NULL) ? ::CFDictionaryGetValue(userInfo, CFSTR("NSDebugDescription")) : NULL;
+        if ((debugDescription != NULL) && (::CFGetTypeID(debugDescription) == ::CFStringGetTypeID()))
+            *outError = CFObj<CFStringRef>((CFStringRef)debugDescription, kCFObjRetain).Detach();//+1, for the caller's CFObj
+        else
+            *outError = ::CFErrorCopyDescription(parseError);//+1, for the caller's CFObj
+    }
+    return result;
 }
 
 CFPropertyListRef CreatePropertyListAndFormat(CFURLRef plistURL, CFPropertyListMutabilityOptions mutabilityOptions,
@@ -269,6 +287,11 @@ CFPropertyListRef CreatePropertyListAndFormat(CFURLRef plistURL, CFPropertyListM
     if (data == NULL)
         return NULL;//nothing to sniff; the caller keeps the extension-derived format
 
+    //A file with no bytes has nothing to parse and nothing to report: plister creates into
+    //an empty file, in either format, and the engine treats it as missing
+    if (::CFDataGetLength(data) == 0)
+        return NULL;
+
     ACFPropertyListFormat contentFormat = FormatFromContent(data);
 
     //The extension decides the family whenever it says anything, so no existing .json or
@@ -289,7 +312,7 @@ CFPropertyListRef CreatePropertyListAndFormat(CFURLRef plistURL, CFPropertyListM
         {
             if (extFormat == kACFPropertyListFormat_json)
             {//the name promised JSON, so a parse failure is the whole answer
-                PrintJSONError("failed to parse JSON", jsonError);
+                PrintParseError("failed to parse JSON", jsonError);
             }
             else
             {//it only looked like JSON - an old-style plist dictionary opens with '{' as well
@@ -297,23 +320,31 @@ CFPropertyListRef CreatePropertyListAndFormat(CFURLRef plistURL, CFPropertyListM
                 if (result != NULL)
                     format = kACFPropertyListFormat_xml;
                 else
-                    PrintJSONError("failed to parse JSON", jsonError);
+                    PrintParseError("failed to parse JSON", jsonError);
             }
         }
     }
     else
     {
-        result.Adopt( CreateFromPlistData(data, mutabilityOptions) );
+        CFObj<CFStringRef> plistError;
+        result.Adopt( CreateFromPlistData(data, mutabilityOptions, &plistError) );
         if (result != NULL)
         {
             if (format != kACFPropertyListFormat_binary)
                 format = kACFPropertyListFormat_xml;//XML, old-style, or anything else CF understood
         }
-        else if (extFormat == kACFPropertyListFormat_unknown)
-        {//unknown extension and unrecognizable content: JSON is the remaining candidate
-            result.Adopt( ACFJSONCreatePropertyList(data, mutabilityOptions, NULL) );
-            if (result != NULL)
-                format = kACFPropertyListFormat_json;
+        else
+        {
+            if (extFormat == kACFPropertyListFormat_unknown)
+            {//unknown extension and unrecognizable content: JSON is the remaining candidate
+                result.Adopt( ACFJSONCreatePropertyList(data, mutabilityOptions, NULL) );
+                if (result != NULL)
+                    format = kACFPropertyListFormat_json;
+            }
+            //Why it did not parse, as for JSON above: without it a caller could only say that
+            //the file "could not be read" (plutil -lint named the line and the problem)
+            if (result == NULL)
+                PrintParseError("failed to parse property list", plistError);
         }
     }
 
