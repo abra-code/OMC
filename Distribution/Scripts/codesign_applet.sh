@@ -453,13 +453,14 @@ verbose_echo "Removing quarantine xattr"
 app_dir=$(/usr/bin/dirname "$app_to_sign")
 
 # Look for entitlements:
-# 1. CommandApplet.entitlements next to the applet being signed (OMCApplet.entitlements, its
-#    name before 6.0, in an older applet's folder)
-# 2. First *.entitlements file next to the applet
-# 3. Default fallback in directory next to this script (CommandApplet.entitlements, else
+# 1. The .entitlements file next to the applet being signed, whatever its name (one is
+#    expected: CommandApplet.entitlements, OMCApplet.entitlements in an applet folder made
+#    before 6.0, or one named for the applet). With more than one, the first in name order is
+#    used and the others are named in a warning.
+# 2. Default fallback in directory next to this script (CommandApplet.entitlements, else
 #    OMCApplet.entitlements beside an older copy of the script)
 #
-# Steps 2 and 3 are guesses about a bundle whose folder we do not control, so
+# Both steps are guesses about a bundle whose folder we do not control, so
 # --no-entitlements-search turns them off and makes the explicit argument the
 # only source. Callers that sign arbitrary bundles should pass it: re-signing
 # drops whatever entitlements the bundle already carried, and picking up an
@@ -475,13 +476,36 @@ if [ "$entitlements_search" = "no" ]; then
     fi
 elif [ -n "$entitlements_override" ] && [ -f "$entitlements_override" ]; then
     entitlements_file="$entitlements_override"
-elif [ -f "$app_dir/CommandApplet.entitlements" ]; then
-    entitlements_file="$app_dir/CommandApplet.entitlements"
-elif [ -f "$app_dir/OMCApplet.entitlements" ]; then
-    entitlements_file="$app_dir/OMCApplet.entitlements"
 else
-    first_ent=$(/bin/ls "$app_dir"/*.entitlements 2>/dev/null | /usr/bin/head -1)
-    if [ -n "$first_ent" ] && [ -f "$first_ent" ]; then
+    # The shell's glob is sorted by name; an unmatched pattern stays literal, which -f skips.
+    # The sort follows the locale (en_US puts alpha before Beta, C the reverse), and a
+    # terminal and an app that runs this script often differ, so the same folder could sign
+    # with different entitlements. LC_ALL=C for the glob makes it plain byte order everywhere;
+    # the caller's LC_ALL, or its absence, is put back after the loop.
+    saved_lc_all_set="${LC_ALL+set}"
+    saved_lc_all="$LC_ALL"
+    LC_ALL=C
+    first_ent=""
+    other_ents=""
+    for candidate_ent in "$app_dir"/*.entitlements; do
+        if [ ! -f "$candidate_ent" ]; then
+            continue
+        fi
+        if [ -z "$first_ent" ]; then
+            first_ent="$candidate_ent"
+        else
+            other_ents="$other_ents $(/usr/bin/basename "$candidate_ent")"
+        fi
+    done
+    if [ "$saved_lc_all_set" = "set" ]; then
+        LC_ALL="$saved_lc_all"
+    else
+        unset LC_ALL
+    fi
+    if [ -n "$other_ents" ]; then
+        echo "warning: more than one .entitlements file next to the applet; using $(/usr/bin/basename "$first_ent"), not:$other_ents" >&2
+    fi
+    if [ -n "$first_ent" ]; then
         entitlements_file="$first_ent"
     elif [ -f "$self_dir/CommandApplet.entitlements" ]; then
         entitlements_file="$self_dir/CommandApplet.entitlements"
