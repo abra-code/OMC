@@ -38,10 +38,14 @@ fi
 support_tools="${OMC_OMC_SUPPORT_PATH:-$own_support_tools}"
 plister_tool="$support_tools/plister"
 defaults_tool="$support_tools/defaults"
+open_tool="$support_tools/open"
 # The appletbuilder command line run from a handler of an applet built before OMC 6 inherits that
-# engine's support folder, which has no defaults tool: AppletBuilder's own then
+# engine's support folder, which has no defaults or open tool: AppletBuilder's own then
 if [ ! -x "$defaults_tool" ]; then
     defaults_tool="$own_support_tools/defaults"
+fi
+if [ ! -x "$open_tool" ]; then
+    open_tool="$own_support_tools/open"
 fi
 python3="${OMC_APP_BUNDLE_PATH}/Contents/Library/Python/bin/python3"
 window_uuid="${OMC_ACTIONUI_WINDOW_UUID:-$OMC_NIB_DLG_GUID}"

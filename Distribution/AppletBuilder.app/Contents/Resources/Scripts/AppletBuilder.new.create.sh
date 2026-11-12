@@ -48,4 +48,4 @@ applet_create_from_template \
 # ── Open the new applet for editing ──
 new_app_path="${dest_folder}/${applet_name}.app"
 "$dialog_tool" "$window_uuid" omc_window omc_terminate_cancel
-/usr/bin/open -a "$OMC_APP_BUNDLE_PATH" "$new_app_path"
+"$open_tool" -a "$OMC_APP_BUNDLE_PATH" "$new_app_path"

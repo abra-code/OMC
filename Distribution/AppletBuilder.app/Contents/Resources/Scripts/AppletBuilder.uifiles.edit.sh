@@ -12,8 +12,7 @@ fi
 
 if [ -d "$selected_path" ]; then
     # It's a .nib bundle (unused since 6.0) - open with Xcode, for reference while converting it
-    /usr/bin/open -a Xcode "$selected_path"
+    "$open_tool" -a Xcode "$selected_path"
 elif [ -f "$selected_path" ]; then
-    editor=$(get_external_editor)
-    /usr/bin/open -a "$editor" "$selected_path"
+    open_in_external_editor "$selected_path"
 fi

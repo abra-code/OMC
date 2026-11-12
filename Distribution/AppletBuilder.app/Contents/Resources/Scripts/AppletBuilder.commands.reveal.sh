@@ -7,5 +7,5 @@ project_path=$(load_project_path)
 cmd_plist=$(command_file_path "$project_path")
 
 if [ -f "$cmd_plist" ]; then
-    /usr/bin/open -R "$cmd_plist"
+    "$open_tool" -R "$cmd_plist"
 fi

@@ -17,7 +17,7 @@
 #       <lang>.lproj/Private.strings  the engine's own texts (AbracodeFramework/*.lproj)
 #       Support/                    the support tools (omc_dialog_control, omc_next_command, ...,
 #                                   the defaults script from defaults/, the pasteboard script
-#                                   from pasteboard/linux/)
+#                                   from pasteboard/linux/, the open script from open/)
 #
 # Usage: make-applet-bundle.sh <products folder> <applet sources> <output folder>/<Name>.app
 #   The products folder is the build's (build-linux.sh), holding CommandApplet and the tools.
@@ -258,4 +258,12 @@ if [ "$status" -ne 0 ]; then
     exit 1
 fi
 /bin/chmod 755 "$framework/Support/pasteboard"
+# Opening files, folders and applications, a script on both systems (open/open)
+/bin/cp -- "$omc_root/open/open" "$framework/Support/open"
+status=$?
+if [ "$status" -ne 0 ]; then
+    printf 'Cannot copy the open tool into the framework\n' >&2
+    exit 1
+fi
+/bin/chmod 755 "$framework/Support/open"
 exit 0

@@ -327,4 +327,5 @@ A few approaches that can help when things aren't working as expected:
 - [pasteboard](pasteboard--help.md) — Pasteboard tool for data passing
 - [plister](plister--help.md) — Plist reading/writing tool
 - [defaults](defaults--help.md) - An applet's own settings, the same on macOS and Linux
+- [open](open--help.md) - Opening files, folders, URLs and applications, the same on macOS and Linux
 - [alert](alert--help.md) — Alert dialog tool

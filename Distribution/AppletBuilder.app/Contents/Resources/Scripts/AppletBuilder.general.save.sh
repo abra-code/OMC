@@ -93,7 +93,7 @@ if [ "$name_changed" -eq 1 ]; then
 
     # Close current window and reopen with new path
     "$dialog_tool" "$window_uuid" omc_window omc_terminate_cancel
-    /usr/bin/open -a "$OMC_APP_BUNDLE_PATH" "$project_path"
+    "$open_tool" -a "$OMC_APP_BUNDLE_PATH" "$project_path"
 else
     set_status "$GEN_STATUS_ID" "Changes applied"
 fi

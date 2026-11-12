@@ -7,5 +7,5 @@ source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.common.sh"
 selected_path="$OMC_ACTIONUI_TABLE_701_COLUMN_2_VALUE"
 
 if [ -n "$selected_path" ] && [ -e "$selected_path" ]; then
-    /usr/bin/open -R "$selected_path"
+    "$open_tool" -R "$selected_path"
 fi

@@ -122,6 +122,7 @@
 		E2A832570D147B4A00117643 /* b64 in Copy Support Executables */ = {isa = PBXBuildFile; fileRef = E2A832550D147B4A00117643 /* b64 */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		E2A832580D147B4A00117643 /* plister in Copy Support Executables */ = {isa = PBXBuildFile; fileRef = E2A832560D147B4A00117643 /* plister */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		1DE0F00D2F90000000000002 /* defaults in Copy Support Executables */ = {isa = PBXBuildFile; fileRef = 1DE0F00D2F90000000000001 /* defaults */; };
+		1DE0F00E2F90000000000002 /* open in Copy Support Executables */ = {isa = PBXBuildFile; fileRef = 1DE0F00E2F90000000000001 /* open */; };
 		E2ACB25A12EADCF500A8ACF6 /* AbracodeFrameworkVersion.c in Headers */ = {isa = PBXBuildFile; fileRef = E2ACB25712EADCB000A8ACF6 /* AbracodeFrameworkVersion.c */; settings = {ATTRIBUTES = (Public, ); }; };
 		E2C10C5E0E45783200454DB1 /* OMCDeferredProgress.h in Headers */ = {isa = PBXBuildFile; fileRef = E2C10C5A0E45783200454DB1 /* OMCDeferredProgress.h */; };
 		E2C32CB80D2DF99D0023DA03 /* OMCObserver.h in Headers */ = {isa = PBXBuildFile; fileRef = E2C32CB40D2DF99C0023DA03 /* OMCObserver.h */; };
@@ -331,6 +332,7 @@
 				E20F1F69130BBE6300882872 /* alert in Copy Support Executables */,
 				1D742DC5193882BB005DFF97 /* pasteboard in Copy Support Executables */,
 				1DE0F00D2F90000000000002 /* defaults in Copy Support Executables */,
+				1DE0F00E2F90000000000002 /* open in Copy Support Executables */,
 			);
 			name = "Copy Support Executables";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -534,6 +536,7 @@
 		E2A832550D147B4A00117643 /* b64 */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = b64; sourceTree = "<group>"; };
 		E2A832560D147B4A00117643 /* plister */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = plister; sourceTree = "<group>"; };
 		1DE0F00D2F90000000000001 /* defaults */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; name = defaults; path = ../defaults/defaults; sourceTree = SOURCE_ROOT; };
+		1DE0F00E2F90000000000001 /* open */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; name = open; path = ../open/open; sourceTree = SOURCE_ROOT; };
 		E2ACB25712EADCB000A8ACF6 /* AbracodeFrameworkVersion.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = AbracodeFrameworkVersion.c; sourceTree = "<group>"; };
 		E2C10C5A0E45783200454DB1 /* OMCDeferredProgress.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCDeferredProgress.h; sourceTree = "<group>"; };
 		E2C32CB40D2DF99C0023DA03 /* OMCObserver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCObserver.h; sourceTree = "<group>"; };
@@ -810,6 +813,7 @@
 				1D742DC219388292005DFF97 /* pasteboard */,
 				E2A832560D147B4A00117643 /* plister */,
 				1DE0F00D2F90000000000001 /* defaults */,
+				1DE0F00E2F90000000000001 /* open */,
 			);
 			name = "Support Tools";
 			sourceTree = BUILT_PRODUCTS_DIR;

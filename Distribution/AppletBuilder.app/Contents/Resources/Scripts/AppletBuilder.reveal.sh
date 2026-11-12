@@ -11,4 +11,4 @@ if [ -z "$project_path" ] || [ ! -d "$project_path" ]; then
     exit 1
 fi
 
-/usr/bin/open -R "$project_path"
+"$open_tool" -R "$project_path"

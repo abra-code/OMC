@@ -1,0 +1,242 @@
+#!/bin/bash
+# open - opens files, folders, URLs and applications for applets' scripts: the part of macOS's
+# `open` that applets use, on macOS and Linux alike. It is in Abracode.framework's Support folder
+# beside plister ($OMC_OMC_SUPPORT_PATH/open), so every applet has it.
+#
+#   open <file, folder or URL>...        each in its default application (an applet bundle runs)
+#   open -R <file or folder>...          shows each in the file manager, selected
+#   open -a <application> [<file>...]    opens the files with that application, or just starts it
+#
+# The application of -a: an applet bundle (<name>.app, run from its executable), an executable's
+# path, or on Linux the name of a command on PATH (on macOS, an application name, as with
+# macOS's open).
+#
+# The same subset is accepted on both systems, so a script that works on one works on the other.
+# macOS: /usr/bin/open with the same arguments. Linux: `gio open`; -R through the file manager's
+# org.freedesktop.FileManager1 D-Bus service (`gdbus`), else the containing folder with `gio open`;
+# -a runs the application in a new session, detached, with the files' absolute paths as arguments.
+# An applet bundle runs its executable in Contents/Linux, named by CFBundleExecutable in its
+# Info.plist (read with the plister beside this script).
+#
+# Exit status: 0 done; 1 a file or application not found, or it could not be opened; 2 bad
+# arguments.
+
+usage() {
+    printf 'Usage: open <file, folder or URL>...\n' >&2
+    printf '       open -R <file or folder>...\n' >&2
+    printf '       open -a <application> [<file>...]\n' >&2
+    exit 2
+}
+
+fail() { # <status> <message>
+    printf 'open: %s\n' "$2" >&2
+    exit "$1"
+}
+
+mode="open"
+application=""
+case "${1:-}" in
+    -R)
+        mode="reveal"
+        shift
+        ;;
+    -a)
+        mode="application"
+        if [ $# -lt 2 ] || [ -z "$2" ]; then
+            usage
+        fi
+        application="$2"
+        shift 2
+        ;;
+    -*)
+        fail 2 "not an option this open takes: $1 (-R or -a)"
+        ;;
+esac
+if [ "$mode" != "application" ] && [ $# -eq 0 ]; then
+    usage
+fi
+
+# A URL: a scheme (a letter, then letters, digits, + - .) and a colon, as https://, mailto:
+is_url() { # <argument>
+    case "$1" in
+        [A-Za-z]*:*)
+            local scheme="${1%%:*}"
+            case "$scheme" in
+                *[!A-Za-z0-9+.-]*) return 1 ;;
+            esac
+            # One letter before the colon is not a scheme here
+            [ "${#scheme}" -gt 1 ]
+            return $?
+            ;;
+    esac
+    return 1
+}
+
+# Every file argument must exist, as macOS's open requires; an existing file is a file even when
+# its name looks like a URL ("ab:c"), as with macOS's open
+for item in "$@"; do
+    if [ -e "$item" ]; then
+        continue
+    fi
+    if [ "$mode" = "open" ] && is_url "$item"; then
+        continue
+    fi
+    fail 1 "The file $item does not exist."
+done
+
+# macOS: the system's open, with the arguments checked above ("--": a file named "-g" is a file,
+# not an option, as on Linux)
+case "${OSTYPE:-}" in
+    darwin*)
+        case "$mode" in
+            open) exec /usr/bin/open -- "$@" ;;
+            reveal) exec /usr/bin/open -R -- "$@" ;;
+            application) exec /usr/bin/open -a "$application" -- "$@" ;;
+        esac
+        ;;
+esac
+
+# --- Linux ---
+
+# What is started gets no OMC_ variable: on macOS an application opened this way starts from the
+# system's launcher with an environment of its own, so the caller's handler context (and an OMC
+# test launch's variables) never reaches it; on Linux it would be inherited
+for variable_name in $(compgen -e); do
+    case "$variable_name" in
+        OMC_*) unset "$variable_name" ;;
+    esac
+done
+
+absolute_path() { # <path>
+    case "$1" in
+        /*) printf '%s\n' "$1" ;;
+        *) printf '%s\n' "$PWD/$1" ;;
+    esac
+}
+
+# A file:// URL for an absolute path, every byte outside A-Z a-z 0-9 / . _ ~ - percent-encoded
+file_url() { # <absolute path>
+    local LC_ALL=C
+    local path="$1"
+    local encoded=""
+    local index=0
+    local character hex
+    while [ "$index" -lt "${#path}" ]; do
+        character="${path:$index:1}"
+        case "$character" in
+            [ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789/._~-]) encoded="$encoded$character" ;;
+            *)
+                # The byte's code; a bash that reads a byte above 127 as negative prints it
+                # as FFFF...C3, whose last two digits are still the byte
+                printf -v hex '%02X' "'$character"
+                encoded="$encoded%${hex: -2}"
+                ;;
+        esac
+        index=$((index + 1))
+    done
+    printf 'file://%s\n' "$encoded"
+}
+
+# The executable an applet bundle runs on Linux: Contents/Linux/<CFBundleExecutable>
+bundle_executable() { # <bundle>
+    local here="."
+    case "$0" in
+        */*) here="${0%/*}" ;;
+    esac
+    local plister="$here/plister"
+    if [ ! -x "$plister" ]; then
+        return 1
+    fi
+    local name
+    name="$("$plister" get value "$1/Contents/Info.plist" /CFBundleExecutable 2>/dev/null)"
+    if [ -z "$name" ] || [ ! -x "$1/Contents/Linux/$name" ]; then
+        return 1
+    fi
+    printf '%s\n' "$1/Contents/Linux/$name"
+}
+
+# Runs a program in a new session, detached from the caller (the applet waits for no one)
+start_detached() { # <program> [arguments...]
+    /usr/bin/setsid -f "$@" < /dev/null > /dev/null 2>&1
+    local status=$?
+    if [ "$status" -ne 0 ]; then
+        fail 1 "could not start $1"
+    fi
+}
+
+case "$mode" in
+    open)
+        for item in "$@"; do
+            if [ -e "$item" ] || ! is_url "$item"; then
+                item="$(absolute_path "$item")"
+                case "$item" in
+                    *.app|*.app/)
+                        executable="$(bundle_executable "${item%/}")"
+                        if [ -n "$executable" ]; then
+                            start_detached "$executable"
+                            continue
+                        fi
+                        ;;
+                esac
+            fi
+            /usr/bin/gio open "$item" > /dev/null 2>&1
+            status=$?
+            if [ "$status" -ne 0 ]; then
+                fail 1 "no application could open $item"
+            fi
+        done
+        ;;
+    reveal)
+        urls=""
+        for item in "$@"; do
+            url="$(file_url "$(absolute_path "$item")")"
+            urls="${urls:+$urls, }'$url'"
+        done
+        /usr/bin/gdbus call --session --dest org.freedesktop.FileManager1 \
+            --object-path /org/freedesktop/FileManager1 \
+            --method org.freedesktop.FileManager1.ShowItems "[$urls]" "" > /dev/null 2>&1
+        status=$?
+        if [ "$status" -ne 0 ]; then
+            # No file manager on the bus: the containing folders
+            for item in "$@"; do
+                folder="$(absolute_path "$item")"
+                folder="${folder%/}"
+                folder="${folder%/*}"
+                /usr/bin/gio open "${folder:-/}" > /dev/null 2>&1
+                status=$?
+                if [ "$status" -ne 0 ]; then
+                    fail 1 "could not show $item"
+                fi
+            done
+        fi
+        ;;
+    application)
+        case "$application" in
+            *.app|*.app/)
+                program="$(bundle_executable "$(absolute_path "${application%/}")")"
+                if [ -z "$program" ]; then
+                    fail 1 "Unable to find application named '$application' (no Contents/Linux executable)"
+                fi
+                ;;
+            */*)
+                program="$(absolute_path "$application")"
+                if [ ! -f "$program" ] || [ ! -x "$program" ]; then
+                    fail 1 "Unable to find application named '$application'"
+                fi
+                ;;
+            *)
+                # A file on PATH only (command -v would also name a builtin, keyword or function)
+                program="$(type -P -- "$application" 2>/dev/null)"
+                if [ -z "$program" ]; then
+                    fail 1 "Unable to find application named '$application'"
+                fi
+                ;;
+        esac
+        files=()
+        for item in "$@"; do
+            files+=("$(absolute_path "$item")")
+        done
+        start_detached "$program" ${files[@]+"${files[@]}"}
+        ;;
+esac
+exit 0

@@ -38,16 +38,39 @@ save_bundle_id_prefix() {
     "$defaults_tool" write "$prefs_domain" BundleIDPrefix "$prefix"
 }
 
+# The external editor the user chose; with none chosen TextEdit on macOS, and nothing on Linux,
+# where a file then opens in the system's default application for its type
 get_external_editor() {
     local editor=$("$defaults_tool" read "$prefs_domain" ExternalEditor 2>/dev/null)
     if [ -z "$editor" ]; then
-        editor="/System/Applications/TextEdit.app"
+        case "${OSTYPE:-}" in
+            darwin*) editor="/System/Applications/TextEdit.app" ;;
+        esac
     fi
     echo "$editor"
 }
 
 save_external_editor() {
     "$defaults_tool" write "$prefs_domain" ExternalEditor "$1"
+}
+
+# The editor's name as Settings shows it
+external_editor_name() { # <editor path, or empty>
+    if [ -z "$1" ]; then
+        echo "System default"
+    else
+        /usr/bin/basename "${1%.app}"
+    fi
+}
+
+# Opens a file in the external editor (the engine's open tool, the same on both systems)
+open_in_external_editor() { # <file>
+    local editor=$(get_external_editor)
+    if [ -n "$editor" ]; then
+        "$open_tool" -a "$editor" "$1"
+    else
+        "$open_tool" "$1"
+    fi
 }
 
 # ──────────────────────────────────────────────────────────────

@@ -20,4 +20,4 @@ done
 # echo "env vars after scrubbing:"
 # env | sort
 
-/usr/bin/open "$project_path"
+"$open_tool" "$project_path"
