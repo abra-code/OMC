@@ -87,8 +87,9 @@ let package = Package(
         .executable(name: "loco", targets: ["loco"]),
         .executable(name: "omc_next_command", targets: ["omc_next_command"]),
         .executable(name: "omc_dialog_control", targets: ["omc_dialog_control"]),
-        // The applet executable: copied into an applet bundle as its CFBundleExecutable
-        .executable(name: "OMCApplet", targets: ["OMCApplet"]),
+        // The applet executable: copied into an applet bundle as its CFBundleExecutable, renamed
+        // (Linux/make-applet-bundle.sh); build-linux.sh makes CommandApplet.app, the master applet
+        .executable(name: "CommandApplet", targets: ["CommandApplet"]),
     ],
     dependencies: [
         .package(path: "../ActionUI"),
@@ -142,7 +143,7 @@ let package = Package(
         tool("loco", []),
         tool("omc_next_command", ["OMCCommon"]),
         tool("omc_dialog_control", ["OMCCommon"]),
-        tool("OMCApplet", ["Abracode"]),
+        tool("CommandApplet", ["Abracode"]),
 
         // Linux checks of what macOS covers with the XCTest suite: run each with its arguments
         // (build-linux.sh does not run them). Not shims: these exist only for Linux.

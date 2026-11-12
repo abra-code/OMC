@@ -10,6 +10,9 @@
 #   --product        build one product (default: all)
 #   --print-command  print the swift build command and exit
 #   SWIFT=/path/to/swift overrides the toolchain (default /usr/bin/swift)
+# After a build of all products it makes the master applet, CommandApplet.app, in the build's
+# products folder (Linux/make-applet-bundle.sh); not after a build of one product, which may lack
+# the support tools the bundle carries.
 # Exit status: 0 built, 1 setup failure, 2 bad arguments; a failed swift build exits with its status.
 
 SCRIPT_DIR="$(CDPATH= cd -P -- "$(/usr/bin/dirname "$0")" && pwd)"
@@ -171,4 +174,24 @@ if [ "$status" -ne 0 ]; then
     echo "Error: swift build failed with status $status" >&2
     exit "$status"
 fi
+
+# The master applet, CommandApplet.app, beside the built products (Linux/make-applet-bundle.sh): the
+# newest engine in an applet bundle, as OMCApplet.app is on macOS. Not when one product was built:
+# the support tools it carries may not have been (CommandApplet alone does not build them).
+if [ -n "$PRODUCT" ]; then
+    exit 0
+fi
+PRODUCTS_PATH="$("$SWIFT" "${SWIFT_ARGS[@]}" --show-bin-path 2>/dev/null)"
+status=$?
+if [ "$status" -ne 0 ] || [ -z "$PRODUCTS_PATH" ] || [ ! -d "$PRODUCTS_PATH" ]; then
+    echo "Error: the build's products folder could not be found (swift build --show-bin-path status $status)." >&2
+    exit 1
+fi
+/bin/bash "$SCRIPT_DIR/Linux/make-applet-bundle.sh" "$PRODUCTS_PATH" "$SCRIPT_DIR/CommandApplet" "$PRODUCTS_PATH/CommandApplet.app"
+status=$?
+if [ "$status" -ne 0 ]; then
+    echo "Error: CommandApplet.app could not be made (make-applet-bundle.sh status $status)." >&2
+    exit 1
+fi
+echo "The master applet: $PRODUCTS_PATH/CommandApplet.app"
 exit 0

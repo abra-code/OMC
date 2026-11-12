@@ -1,0 +1,3 @@
+[
+  { "type": "CommandMenu", "properties": { "name": "Commands", "autoPopulate": true } }
+]

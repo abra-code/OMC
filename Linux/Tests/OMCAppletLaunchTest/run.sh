@@ -1,18 +1,18 @@
 #!/bin/bash
 # Linux/Tests/OMCAppletLaunchTest/run.sh - the Linux applet's app shell end to end
-# (AbracodeFramework/EntryPoints/Linux/OMCAppletMain.cpp): a flat bundle made of the fixture
-# LaunchTest.app, the built applet executable and a resource-only Frameworks/Abracode.framework
-# with the built support tools (the layout of Platform/Linux/OMCEngineBundle.cpp), launched in the
+# (AbracodeFramework/EntryPoints/Linux/OMCAppletMain.cpp): the fixture LaunchTest.app made into a
+# bundle as every Linux applet is (Linux/make-applet-bundle.sh: the built CommandApplet executable,
+# the engine's framework with its built-in windows, texts and support tools), launched in the
 # desktop session, with its commands logging what ran to a file.
 #
-# Usage: run.sh <the build's products folder, holding OMCApplet and the tools>
+# Usage: run.sh <the build's products folder, holding CommandApplet and the tools>
 # Needs a desktop session (on the agent-vm box: GNOME's Wayland socket, set up below when
 # WAYLAND_DISPLAY is unset). Exit status: 0 all passed, 1 a check failed, 2 bad arguments.
 
 products="$1"
-applet_executable="$products/OMCApplet"
+applet_executable="$products/CommandApplet"
 if [ -z "$products" ] || [ ! -x "$applet_executable" ]; then
-    printf 'Usage: %s <the build'"'"'s products folder, holding OMCApplet>\n' "$0" >&2
+    printf 'Usage: %s <the build'"'"'s products folder, holding CommandApplet>\n' "$0" >&2
     exit 2
 fi
 
@@ -46,27 +46,12 @@ if [ "$status" -ne 0 ]; then
     exit 1
 fi
 bundle="$work/LaunchTest.app"
-/bin/cp -R "$here/LaunchTest.app" "$bundle"
+/bin/bash "$here/../../make-applet-bundle.sh" "$products" "$here/LaunchTest.app" "$bundle"
 status=$?
 if [ "$status" -ne 0 ]; then
-    printf 'cannot copy the fixture\n' >&2
+    printf 'cannot make the applet bundle (make-applet-bundle.sh status %s)\n' "$status" >&2
     exit 1
 fi
-/bin/cp "$applet_executable" "$bundle/LaunchTest"
-status=$?
-if [ "$status" -ne 0 ]; then
-    printf 'cannot copy the applet executable\n' >&2
-    exit 1
-fi
-/bin/chmod +x "$bundle/LaunchTest" "$bundle/Scripts/"*.sh
-framework="$bundle/Frameworks/Abracode.framework"
-/bin/mkdir -p "$framework/Support"
-/bin/cp "$here/Abracode.framework/Info.plist" "$framework/Info.plist"
-for tool in omc_dialog_control omc_next_command plister b64 filt loco; do
-    if [ -x "$products/$tool" ]; then
-        /bin/cp "$products/$tool" "$framework/Support/$tool"
-    fi
-done
 export LAUNCHTEST_LOG="$work/log"
 # The desktop's recent files (recently-used.xbel) in the work folder, not the session's own list
 export XDG_DATA_HOME="$work/data"
@@ -193,6 +178,42 @@ macos_ran="$(wait_for_line 'macos.ran' 10)"
 check "a command that requires macOS 99 and at most 10.1 runs" "$([ "$macos_ran" = "yes" ] && echo 1 || echo 0)" "$(log_text)"
 wait_for_exit "$pid" 20
 check "and the applet quits once idle" "$([ "$result" = "0" ] && echo 1 || echo 0)" "exit: $result"
+
+printf '== the engine'"'"'s framework in the bundle: a built-in window opens ==\n'
+: > "$LAUNCHTEST_LOG"
+"$bundle/LaunchTest" 'launchtest://exe?commandID=lt.input' 2> "$work/input.err" &
+pid=$!
+/bin/sleep 4
+alive="no"
+if kill -0 "$pid" 2>/dev/null; then
+    alive="yes"
+fi
+missing="$(/usr/bin/grep -c 'missing from the engine' "$work/input.err")"
+check "the input dialog (omc_input_text, from the framework) is open and waits" \
+    "$([ "$alive" = "yes" ] && [ "$missing" = "0" ] && echo 1 || echo 0)" "running: $alive, $(/usr/bin/tr '\n' ' ' < "$work/input.err" | /usr/bin/cut -c1-300)"
+kill -TERM "$pid" 2>/dev/null
+wait_for_exit "$pid" 10
+check "and SIGTERM ends the applet while the dialog waits" "$([ "$result" = "0" ] && echo 1 || echo 0)" "exit: $result"
+
+printf '== the master applet, CommandApplet.app (made by build-linux.sh) ==\n'
+master="$products/CommandApplet.app"
+if [ -x "$master/CommandApplet" ]; then
+    "$master/CommandApplet" 2> "$work/master.err" &
+    pid=$!
+    /bin/sleep 4
+    alive="no"
+    if kill -0 "$pid" 2>/dev/null; then
+        alive="yes"
+    fi
+    problems="$(/usr/bin/grep -c -i 'missing from the engine\|not found\|Unable to create' "$work/master.err")"
+    check "CommandApplet starts and keeps running (its window open), with no document or tool missing" \
+        "$([ "$alive" = "yes" ] && [ "$problems" = "0" ] && echo 1 || echo 0)" "running: $alive, $(/usr/bin/tr '\n' ' ' < "$work/master.err" | /usr/bin/cut -c1-300)"
+    kill -TERM "$pid" 2>/dev/null
+    wait_for_exit "$pid" 10
+    check "and quits on SIGTERM" "$([ "$result" = "0" ] && echo 1 || echo 0)" "exit: $result"
+else
+    check "CommandApplet.app is in the products folder" 0 "not found: $master (build-linux.sh makes it)"
+fi
 
 printf '== SIGTERM quits as Quit does ==\n'
 : > "$LAUNCHTEST_LOG"

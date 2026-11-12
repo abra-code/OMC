@@ -1,0 +1,18 @@
+{
+  "type": "VStack",
+  "properties": {
+    "spacing": 12,
+    "padding": "default",
+    "frame": { "minWidth": 360, "minHeight": 200, "idealWidth": 420, "idealHeight": 240 }
+  },
+  "children": [
+    { "type": "Text", "id": 1, "properties": { "text": "Welcome to Command Workshop", "font": "title2" } },
+    { "type": "TextField", "id": 2, "properties": { "prompt": "Your name" } },
+    { "type": "Text", "id": 3, "properties": { "text": "" } },
+    { "type": "HStack", "children": [
+      { "type": "Spacer" },
+      { "type": "Button", "id": 4, "properties": { "title": "Say Hello", "actionID": "welcome.hello" } },
+      { "type": "Button", "id": 5, "properties": { "title": "Close", "actionID": "omc.dialog.ok", "buttonStyle": "borderedProminent" } }
+    ] }
+  ]
+}
