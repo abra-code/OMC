@@ -36,7 +36,10 @@ bool OMCRunningInRegularGUIApp();
 // Tells the file manager a file changed, so a window showing it updates; nothing where unsupported
 void OMCRefreshFileInFinder(CFStringRef filePath);
 
-void OMCGetOperatingSystemVersion(long* outMajorVersion, long* outMinorVersion, long* outPatchVersion);
+// The macOS version: true with it, or false, the outputs untouched, on a system that is not macOS,
+// where a command's macOS version requirements (REQUIRED_MAC_OS_MIN_VERSION, _MAX_VERSION) mean
+// nothing and are ignored
+bool OMCGetMacOSVersion(long* outMajorVersion, long* outMinorVersion, long* outPatchVersion);
 
 // The modifier keys held down now, as a mask of kOMCModifier* values
 typedef uint32_t OMCModifierKeys;

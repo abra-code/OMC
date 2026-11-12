@@ -185,6 +185,15 @@ kill -TERM "$pid"
 wait_for_exit "$pid" 10
 check "SIGTERM ends the applet while the window's modal run goes on" "$([ "$result" = "0" ] && echo 1 || echo 0)" "exit: $result"
 
+printf '== macOS version requirements are ignored on Linux ==\n'
+: > "$LAUNCHTEST_LOG"
+"$bundle/LaunchTest" 'launchtest://exe?commandID=lt.macos' &
+pid=$!
+macos_ran="$(wait_for_line 'macos.ran' 10)"
+check "a command that requires macOS 99 and at most 10.1 runs" "$([ "$macos_ran" = "yes" ] && echo 1 || echo 0)" "$(log_text)"
+wait_for_exit "$pid" 20
+check "and the applet quits once idle" "$([ "$result" = "0" ] && echo 1 || echo 0)" "exit: $result"
+
 printf '== SIGTERM quits as Quit does ==\n'
 : > "$LAUNCHTEST_LOG"
 export LAUNCHTEST_MAIN_SECONDS=30

@@ -27,7 +27,7 @@ let headerFolders = [
 let version: [CSetting] = [
     .define("CURRENT_OMC_VERSION", to: "50600"),
     .define("MIN_OMC_VERSION", to: "30200"),
-    .define("MIN_MAC_OS_VERSION", to: "0"), // no macOS to require by default on Linux (macOS: 140600, OmcVersion.xcconfig)
+    .define("MIN_MAC_OS_VERSION", to: "0"), // no effect on Linux: the macOS version checks do not run there (OMCGetMacOSVersion); macOS: 140600, OmcVersion.xcconfig
     .define("MAX_MAC_OS_VERSION", to: "999999"),
     .define("_DEBUG_", to: "1", .when(configuration: .debug)),
     .define("_TRACE_", to: "1", .when(configuration: .debug)),
@@ -42,7 +42,7 @@ let cSettings: [CSetting] = headerFolders.map { .headerSearchPath($0) } + versio
 let cxxSettings: [CXXSetting] = headerFolders.map { .headerSearchPath($0) } + [
     .define("CURRENT_OMC_VERSION", to: "50600"),
     .define("MIN_OMC_VERSION", to: "30200"),
-    .define("MIN_MAC_OS_VERSION", to: "0"), // no macOS to require by default on Linux (macOS: 140600, OmcVersion.xcconfig)
+    .define("MIN_MAC_OS_VERSION", to: "0"), // no effect on Linux: the macOS version checks do not run there (OMCGetMacOSVersion); macOS: 140600, OmcVersion.xcconfig
     .define("MAX_MAC_OS_VERSION", to: "999999"),
     .define("_DEBUG_", to: "1", .when(configuration: .debug)),
     .define("_TRACE_", to: "1", .when(configuration: .debug)),

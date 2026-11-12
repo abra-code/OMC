@@ -68,13 +68,14 @@ void OMCRefreshFileInFinder(CFStringRef filePath)
     }
 }
 
-void
-OMCGetOperatingSystemVersion(long* outMajorVersion, long* outMinorVersion, long* outPatchVersion)
+bool
+OMCGetMacOSVersion(long* outMajorVersion, long* outMinorVersion, long* outPatchVersion)
 {
     NSOperatingSystemVersion osVersion = [[NSProcessInfo processInfo] operatingSystemVersion];
     *outMajorVersion = osVersion.majorVersion;
     *outMinorVersion = osVersion.minorVersion;
     *outPatchVersion = osVersion.patchVersion;
+    return true;
 }
 
 OMCModifierKeys

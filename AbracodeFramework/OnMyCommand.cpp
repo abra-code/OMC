@@ -94,6 +94,7 @@ RefuseNibDialog(OnMyCommand *inPlugin, CFBundleRef inFrameworkBundle, const Comm
 
 
 SInt32 OnMyCommand::sMacOSVersion = 140600;
+bool OnMyCommand::sChecksMacOSVersion = true;
 
 OnMyCommand::OnMyCommand(CFPropertyListRef inPlistRef)
 {
@@ -148,10 +149,12 @@ OnMyCommand::Init()
 		long sysVerMinor = 13;
 		long sysVerBugFix = 0;
 
-		OMCGetOperatingSystemVersion(&sysVerMajor, &sysVerMinor, &sysVerBugFix);
+		// Not macOS (Linux): a command's macOS version requirements are ignored
+		sChecksMacOSVersion = OMCGetMacOSVersion(&sysVerMajor, &sysVerMinor, &sysVerBugFix);
 		
 		//eg. 101405 max 999999
-		sMacOSVersion = 10000 * (SInt32)sysVerMajor + 100 * (SInt32)sysVerMinor + (SInt32)sysVerBugFix;
+		if(sChecksMacOSVersion)
+			sMacOSVersion = 10000 * (SInt32)sysVerMajor + 100 * (SInt32)sysVerMinor + (SInt32)sysVerBugFix;
 
 		// OMC_APP_PROCESS_ID is published into our OWN environment as well, not only into the
 		// per-command dictionary PopulateEnvironList builds. Two execution modes never see that
@@ -663,7 +666,7 @@ OnMyCommand::ExecuteCommand(SInt32 inCommandIndex, const CommandRuntimeData *par
 			}
 		}
 		
-		if( sMacOSVersion < currCommand.requiredMacOSMinVersion)
+		if( sChecksMacOSVersion && (sMacOSVersion < currCommand.requiredMacOSMinVersion) )
 		{
 			StSwitchToFront switcher;
 			CFObj<CFStringRef> warningText( ::CFCopyLocalizedStringFromTableInBundle( CFSTR("TOO_LOW_MAC_OS"),
@@ -675,7 +678,7 @@ OnMyCommand::ExecuteCommand(SInt32 inCommandIndex, const CommandRuntimeData *par
 			}
 		}
 		
-		if(sMacOSVersion > currCommand.requiredMacOSMaxVersion)
+		if( sChecksMacOSVersion && (sMacOSVersion > currCommand.requiredMacOSMaxVersion) )
 		{
 			StSwitchToFront switcher;
 			CFObj<CFStringRef> warningText( ::CFCopyLocalizedStringFromTableInBundle( CFSTR("TOO_HIGH_MAC_OS"),

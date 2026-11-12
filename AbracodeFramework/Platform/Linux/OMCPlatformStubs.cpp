@@ -13,7 +13,6 @@
 //  portable engine has a file of that name) and leaves this one.
 //
 
-#include "OMCHostInfo.h"
 #include "OMCTerminalLauncher.h"
 #include "OMCTestPlatform.h"
 #include "OMCActionUIAddOns.h"
@@ -29,21 +28,6 @@
 		if(!sLogged.exchange(true)) \
 			OMCLogMessage("%s is not implemented on Linux yet", inName); \
 	} while(0)
-
-#pragma mark - Host info (Platform/OMCHostInfo.h): the rest is in OMCHostInfo.cpp
-
-void
-OMCGetOperatingSystemVersion(long* outMajorVersion, long* outMinorVersion, long* outPatchVersion)
-{
-	// What REQUIRED_MAC_OS_MIN_VERSION means on Linux is a Phase 7 decision (the design note's question 4)
-	OMC_LINUX_NOT_YET("OMCGetOperatingSystemVersion");
-	if(outMajorVersion != nullptr)
-		*outMajorVersion = 0;
-	if(outMinorVersion != nullptr)
-		*outMinorVersion = 0;
-	if(outPatchVersion != nullptr)
-		*outPatchVersion = 0;
-}
 
 #pragma mark - Terminal (Platform/OMCTerminalLauncher.h)
 

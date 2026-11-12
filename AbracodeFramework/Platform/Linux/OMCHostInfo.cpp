@@ -17,8 +17,8 @@
 //    held alone.
 //  - StSwitchToFront does nothing: a Wayland app cannot bring itself to the front unasked (a
 //    dialog shows over the applet's active window, OMCModalLoop.h).
-//  - The OS version stays in OMCPlatformStubs.cpp until what the macOS version keys mean on Linux
-//    is decided (the design note's question 4).
+//  - There is no macOS version: OMCGetMacOSVersion answers false, and a command's macOS version
+//    requirements are ignored (owner, 2026-11-11: a macOS version means nothing on Linux).
 //  Main thread only.
 //
 
@@ -125,6 +125,13 @@ void
 OMCRefreshFileInFinder(CFStringRef filePath)
 {
 	(void)filePath; // a Linux file manager watches its folders itself
+}
+
+bool
+OMCGetMacOSVersion(long* outMajorVersion, long* outMinorVersion, long* outPatchVersion)
+{
+	(void)outMajorVersion; (void)outMinorVersion; (void)outPatchVersion;
+	return false; // not macOS (see the header)
 }
 
 OMCModifierKeys

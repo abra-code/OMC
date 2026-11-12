@@ -14,6 +14,8 @@
       "URL_INVOCABLE": true,
       "ACTIONUI_WINDOW": { "JSON_NAME": "Window", "IS_BLOCKING": true, "INIT_SUBCOMMAND_ID": "lt.modal.init" } },
     { "NAME": "LaunchTest", "COMMAND_ID": "lt.modal.init", "EXECUTION_MODE": "exe_script_file" },
+    { "NAME": "LaunchTest", "COMMAND_ID": "lt.macos", "ACTIVATION_MODE": "act_always", "EXECUTION_MODE": "exe_script_file",
+      "URL_INVOCABLE": true, "REQUIRED_MAC_OS_MIN_VERSION": "99.0", "REQUIRED_MAC_OS_MAX_VERSION": "10.1" },
     { "NAME": "LaunchTest", "COMMAND_ID": "lt.window.ok", "EXECUTION_MODE": "exe_script_file",
       "ENVIRONMENT_VARIABLES": { "OMC_ACTIONUI_VIEW_2_VALUE": "" } }
   ]

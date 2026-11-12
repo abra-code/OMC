@@ -196,6 +196,7 @@ private:
 
 protected:
     static SInt32				sMacOSVersion;
+    static bool					sChecksMacOSVersion; // false where the system is not macOS (OMCGetMacOSVersion)
 
 	CFObj<CFBundleRef>			mBundleRef; // Abracode.framework
 
