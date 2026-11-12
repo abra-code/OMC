@@ -1377,6 +1377,9 @@ $mixed_defaults write com.example.lint key_var_mixed value
 "$unassigned_defaults" read com.example.lint key_var_unknown
 "$support_defaults" read com.example.lint key_or_system 2>/dev/null || /usr/bin/defaults read com.example.lint key_or_system
 /usr/bin/defaults read "$HOME/Library/Preferences/com.example.lint.plist" key_path
+/usr/bin/defaults read "$app_path/Contents/Info.plist" key_var_path
+/usr/bin/defaults read ${app_path}/Contents/Info.plist key_braced_path
+/usr/bin/defaults read "$PREFS_DOMAIN" key_var_domain
 ''')
     tests = project / "Tests"
     tests.mkdir(parents=True, exist_ok=True)
@@ -1388,9 +1391,10 @@ omctest_end
     rc, out, err = run_cli("test", str(app))
     check("the lint fixture's suite passes", rc == 0, err.strip()[-300:])
     report = [l for l in err.splitlines() if "lint_cases.sh" in l]
-    for key in ("key_direct", "key_var_system", "key_var_mixed", "key_var_unknown", "key_or_system"):
+    for key in ("key_direct", "key_var_system", "key_var_mixed", "key_var_unknown", "key_var_domain", "key_or_system"):
         check(f"{key} is reported", any(key in l for l in report), report)
-    for key in ("key_support", "key_braced", "key_var_support", "key_var_nested", "key_path"):
+    for key in ("key_support", "key_braced", "key_var_support", "key_var_nested", "key_path",
+                "key_var_path", "key_braced_path"):
         check(f"{key} is not reported", not any(key in l for l in report), report)
     check("the report names the engine's tool as exempt",
           '"$OMC_OMC_SUPPORT_PATH/defaults"' in err, err.strip()[:400])

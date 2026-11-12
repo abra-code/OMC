@@ -379,8 +379,9 @@ omctest_isolation_lint() { # <app>
     # `"$BUNDLE_ID"`, and the tool itself is often `"$defaults_tool"`. Both slipped
     # straight through.
     #
-    # A path, by contrast, has exactly four spellings, all of them recognizable at
-    # the first character: / ~ $HOME ${HOME. So: flag every `defaults <verb>` and
+    # A path, by contrast, has five spellings, all of them recognizable at the
+    # start: / ~ $HOME ${HOME, and any variable followed by a slash
+    # ("$app/Contents/Info.plist" - a domain never contains "/"). So: flag every `defaults <verb>` and
     # then subtract those. Anything the pattern cannot classify is REPORTED, which
     # is the right way round for a warning channel - a false positive costs one
     # line of output, a false negative costs the developer's real preferences.
@@ -391,12 +392,12 @@ omctest_isolation_lint() { # <app>
                "$scripts_dir" 2>/dev/null \
            | /usr/bin/grep -vE ':[0-9]+:[[:space:]]*#[^#]*$' \
            | /usr/bin/grep -E 'defaults' \
-           | /usr/bin/grep -vE '(read|read-type|write|delete|rename|export|import|find)[[:space:]]+("?(/|~|\$HOME|\$\{HOME))' \
+           | /usr/bin/grep -vE '(read|read-type|write|delete|rename|export|import|find)[[:space:]]+("?(/|~|\$HOME|\$\{HOME|\$\{?[A-Za-z_][A-Za-z0-9_]*\}?/))' \
            | omctest_lint_drop_support_defaults "$scripts_dir")
     if [ -n "$hits" ]; then
         printf 'omctest: ISOLATION - these look like `defaults` on a DOMAIN. cfprefsd keys the user domain by UID,\n' >&2
         printf 'omctest:   not by $HOME, so under test they read and write the real preferences anyway.\n' >&2
-        printf 'omctest:   (A path - "$HOME/...", ~/..., /... - is exempt and not listed, and so is the engine'"'"'s\n' >&2
+        printf 'omctest:   (A path - "$HOME/...", ~/..., /..., "$folder/..." - is exempt and not listed, and so is the engine'"'"'s\n' >&2
         printf 'omctest:   own "$OMC_OMC_SUPPORT_PATH/defaults", which keeps an applet'"'"'s settings apart under test.)\n' >&2
         printf '%s\n' "$hits" | while IFS= read -r line; do
             omctest_lint_report "$line" "$prefix"
