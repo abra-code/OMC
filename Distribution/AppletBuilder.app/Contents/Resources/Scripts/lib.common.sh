@@ -26,15 +26,22 @@ __LIB_COMMON_SH=1
 dialog_tool="$OMC_OMC_SUPPORT_PATH/omc_dialog_control"
 next_cmd="$OMC_OMC_SUPPORT_PATH/omc_next_command"
 pasteboard_tool="$OMC_OMC_SUPPORT_PATH/pasteboard"
-# plister reads and writes plists and JSON on macOS and Linux (Linux has no plutil): the run's
-# support folder's under the engine, else (the appletbuilder command line sets no support folder)
-# the one in AppletBuilder's own framework, versioned on macOS, not on Linux
-plister_tool="$OMC_OMC_SUPPORT_PATH/plister"
-if [ -z "${OMC_OMC_SUPPORT_PATH:-}" ]; then
-    plister_tool="${OMC_APP_BUNDLE_PATH}/Contents/Frameworks/Abracode.framework/Versions/A/Support/plister"
-    if [ ! -x "$plister_tool" ]; then
-        plister_tool="${OMC_APP_BUNDLE_PATH}/Contents/Frameworks/Abracode.framework/Support/plister"
-    fi
+# The engine's tools that work on macOS and Linux alike (Linux has no plutil, and its settings are
+# not macOS's defaults): the run's support folder under the engine, else (the appletbuilder command
+# line sets no support folder) the one in AppletBuilder's own framework, versioned on macOS, not on
+# Linux. plister reads and writes plists and JSON; defaults keeps settings (lib.prefs.sh), in the
+# test's private home when a test runner sets OMC_DEFAULTS_PATH.
+own_support_tools="${OMC_APP_BUNDLE_PATH}/Contents/Frameworks/Abracode.framework/Versions/A/Support"
+if [ ! -d "$own_support_tools" ]; then
+    own_support_tools="${OMC_APP_BUNDLE_PATH}/Contents/Frameworks/Abracode.framework/Support"
+fi
+support_tools="${OMC_OMC_SUPPORT_PATH:-$own_support_tools}"
+plister_tool="$support_tools/plister"
+defaults_tool="$support_tools/defaults"
+# The appletbuilder command line run from a handler of an applet built before OMC 6 inherits that
+# engine's support folder, which has no defaults tool: AppletBuilder's own then
+if [ ! -x "$defaults_tool" ]; then
+    defaults_tool="$own_support_tools/defaults"
 fi
 python3="${OMC_APP_BUNDLE_PATH}/Contents/Library/Python/bin/python3"
 window_uuid="${OMC_ACTIONUI_WINDOW_UUID:-$OMC_NIB_DLG_GUID}"

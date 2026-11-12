@@ -8,20 +8,23 @@ __LIB_PREFS_SH=1
 
 source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.common.sh"
 
-# The defaults domain holding AppletBuilder's own settings.
+# The defaults domain holding AppletBuilder's own settings, read and written with
+# the engine's defaults tool ($defaults_tool, lib.common.sh): on macOS the user's
+# preferences through /usr/bin/defaults, as before; on Linux a JSON file in
+# ~/.config; under a test runner that sets OMC_DEFAULTS_PATH (omctest API 8,
+# omcitest), a JSON file in the test's private home.
 #
-# Overridable because `defaults` on a DOMAIN cannot be isolated by a test run:
-# cfprefsd keys the user domain by uid, not by $HOME, so a handler that saves a
-# setting under test rewrites the real preferences of whoever ran the suite.
-# omctest reports the construct for exactly this reason. `defaults` also accepts
-# a PATH in place of a domain, so the suite points AB_PREFS_DOMAIN at a plist
-# inside its per-file fake home: the same code runs, against a file that dies
-# with the test scratch. Nothing in production sets it, so shipped behavior is
-# unchanged.
+# Overridable because /usr/bin/defaults on a DOMAIN cannot be isolated by a test
+# run: cfprefsd keys the user domain by uid, not by $HOME, so a handler that
+# saves a setting under test rewrites the real preferences of whoever ran the
+# suite. A PATH is accepted in place of a domain, so the suite points
+# AB_PREFS_DOMAIN at a plist inside its per-file fake home: the same code runs,
+# against a file that dies with the test scratch. Nothing in production sets
+# it, so shipped behavior is unchanged.
 prefs_domain="${AB_PREFS_DOMAIN:-com.abracode.applet-builder}"
 
 get_bundle_id_prefix() {
-    local prefix=$(/usr/bin/defaults read "$prefs_domain" BundleIDPrefix 2>/dev/null)
+    local prefix=$("$defaults_tool" read "$prefs_domain" BundleIDPrefix 2>/dev/null)
     if [ -z "$prefix" ]; then
         prefix="com.omc.applet."
     fi
@@ -32,11 +35,11 @@ save_bundle_id_prefix() {
     local bundle_id="$1"
     # Extract prefix: everything up to and including the last dot
     local prefix="${bundle_id%.*}."
-    /usr/bin/defaults write "$prefs_domain" BundleIDPrefix "$prefix"
+    "$defaults_tool" write "$prefs_domain" BundleIDPrefix "$prefix"
 }
 
 get_external_editor() {
-    local editor=$(/usr/bin/defaults read "$prefs_domain" ExternalEditor 2>/dev/null)
+    local editor=$("$defaults_tool" read "$prefs_domain" ExternalEditor 2>/dev/null)
     if [ -z "$editor" ]; then
         editor="/System/Applications/TextEdit.app"
     fi
@@ -44,7 +47,7 @@ get_external_editor() {
 }
 
 save_external_editor() {
-    /usr/bin/defaults write "$prefs_domain" ExternalEditor "$1"
+    "$defaults_tool" write "$prefs_domain" ExternalEditor "$1"
 }
 
 # ──────────────────────────────────────────────────────────────
@@ -60,7 +63,7 @@ save_external_editor() {
 # beside the bundle, and the run says in its log that it was.
 
 get_thinning_plan() { # <plan key, from applet_plan_key>
-    /usr/bin/defaults read "$prefs_domain" "ThinningPlan:$1" 2>/dev/null
+    "$defaults_tool" read "$prefs_domain" "ThinningPlan:$1" 2>/dev/null
 }
 
 save_thinning_plan() { # <plan key, from applet_plan_key> <plan path>
@@ -69,5 +72,5 @@ save_thinning_plan() { # <plan key, from applet_plan_key> <plan path>
     # something in the transcript explaining why.
     # -string: an untyped value is PARSED, and a plan path containing {, ( or "
     # fails with "Could not parse" rather than being stored.
-    /usr/bin/defaults write "$prefs_domain" "ThinningPlan:$1" -string "$2"
+    "$defaults_tool" write "$prefs_domain" "ThinningPlan:$1" -string "$2"
 }
