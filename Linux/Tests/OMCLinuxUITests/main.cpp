@@ -5,7 +5,8 @@
 //  Linux checks of the platform UI that a person answers: the alerts and notices of
 //  Platform/Linux/OMCPlatformAlerts.cpp and the file panels of OMCPlatformFilePanels.cpp, and the
 //  applet's menu (EntryPoints/Linux/OMCAppletMenu.cpp), chosen as a click would, and the
-//  clipboard and host info (OMCClipboard.cpp, OMCHostInfo.cpp). The
+//  clipboard and host info (OMCClipboard.cpp, OMCHostInfo.cpp), and forgetting a closed window's
+//  ActionUI model (OMCActionUIModels.cpp). The
 //  program runs its own AdwApplication in the desktop session and answers each one itself, as a
 //  person would: it finds the dialog among the application's windows and clicks a button (or
 //  closes it, or picks files in GTK's file chooser), from a timer set before the call, which
@@ -23,6 +24,7 @@
 #include "OMCFilePanels.h"
 #include "OMCAppletMenu.h"
 #include "OMCClipboard.h"
+#include "OMCActionUIModels.h"
 #include "OMCHostInfo.h"
 #include "OMCConstants.h"
 #include "ACFString.h"
@@ -884,6 +886,32 @@ RunClipboardAndHostChecks(GApplication *inApp)
 	Check("no modifier keys are held", OMCGetKeyboardModifiers() == 0, std::to_string(OMCGetKeyboardModifiers()));
 }
 
+#pragma mark - A closed window's model
+
+void
+RunModelChecks(GApplication *inApp)
+{
+	const char *uuid = "5B4C3D2E-0000-4000-8000-00000000AA02";
+	GtkWidget *window = adw_application_window_new(GTK_APPLICATION(inApp));
+	bool filled = actionUILoadIntoHostWindowFromJSON(window, R"({"type": "TextField", "id": 1, "properties": {"text": "kept"}})", uuid, nullptr);
+	gtk_window_present(GTK_WINDOW(window));
+	Pump(300);
+	gtk_window_destroy(GTK_WINDOW(window));
+	Pump(200);
+	auto hasModel = [uuid] {
+		char *info = actionUIGetElementInfoJSON(uuid);
+		bool has = (info != nullptr) && (strcmp(info, "{}") != 0) && (strcmp(info, "null") != 0);
+		free(info);
+		return has;
+	};
+	Check("a closed window keeps its ActionUI model", filled && hasModel());
+	CFObj<CFStringRef> uuidString(CFString(uuid));
+	OMCPlatformForgetActionUIModel(uuidString);
+	Check("until OMC forgets it", !hasModel());
+	OMCPlatformForgetActionUIModel(uuidString); // an unknown window is ignored
+	OMCPlatformForgetActionUIModel(nullptr);
+}
+
 } // namespace
 
 int
@@ -915,6 +943,7 @@ main(int argc, char *argv[])
 			RunPanelChecks(inApp);
 			RunMenuChecks(inApp);
 			RunClipboardAndHostChecks(inApp);
+			RunModelChecks(inApp);
 		}
 		g_application_release(inApp);
 		g_application_quit(inApp);

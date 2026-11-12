@@ -17,7 +17,6 @@
 #include "OMCTerminalLauncher.h"
 #include "OMCTestPlatform.h"
 #include "OMCActionUIAddOns.h"
-#include "OMCActionUIModels.h"
 #include "OMCLog.h"
 #include <atomic>
 #include <unistd.h>
@@ -78,7 +77,6 @@ bool OMCTestPlatformDispatchToWindow(CFStringRef inWindowUUID, CFStringRef inCom
 bool OMCTestPlatformCloseWindow(CFStringRef inWindowUUID) { (void)inWindowUUID; OMC_LINUX_NOT_YET("OMCTestPlatformCloseWindow"); return false; }
 void OMCTestPlatformRequestQuit(void) { OMC_LINUX_NOT_YET("OMCTestPlatformRequestQuit"); }
 
-#pragma mark - ActionUI add-ons and models (Platform/OMCActionUIAddOns.h, OMCActionUIModels.h)
+#pragma mark - ActionUI add-ons (Platform/OMCActionUIAddOns.h)
 
 void OMCRegisterActionUIAddOns(void) { OMC_LINUX_NOT_YET("OMCRegisterActionUIAddOns"); }
-void OMCPlatformForgetActionUIModel(CFStringRef inWindowUUID) { (void)inWindowUUID; OMC_LINUX_NOT_YET("OMCPlatformForgetActionUIModel"); }
