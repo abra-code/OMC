@@ -10,11 +10,11 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
-#include <paths.h>
 #include <pthread.h>
 #include <spawn.h>
 
 #include "omc_popen.h"
+#include "OMCPlatformShell.h" // OMC_PLATFORM_SHELL_PATH
 #include "OMCProcessEnvironment.h"
 
 typedef struct ChildProcessInfoLink
@@ -429,7 +429,7 @@ omc_popen_with_token(const char *command, char * const *inShell, char * const *i
     thisLink->info.outputFD = -1;
     thisLink->info.pid = 0;
     
-    char *shellPath = _PATH_BSHELL;
+    char *shellPath = OMC_PLATFORM_SHELL_PATH;
     char *default_argv[] = { "sh", "-c", (char *)command, NULL };
     char **shellArguments = NULL;
     char **newArgs = NULL;

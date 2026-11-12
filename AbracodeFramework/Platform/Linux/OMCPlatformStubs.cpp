@@ -14,7 +14,6 @@
 //
 
 #include "OMCTerminalLauncher.h"
-#include "OMCTestPlatform.h"
 #include "OMCLog.h"
 #include <atomic>
 #include <unistd.h>
@@ -51,11 +50,3 @@ OMCExecuteInITerm(CFStringRef inCommand, CFStringRef inShellPath, bool openInNew
 
 bool OMCIsShDefaultInTerminal() { return false; }
 bool OMCIsShDefaultInITerm() { return false; }
-
-#pragma mark - Test host's window access (Platform/OMCTestPlatform.h)
-
-bool OMCTestPlatformDispatchToKeyWindow(CFStringRef inCommandNameOrId, CFTypeRef inContext) { (void)inCommandNameOrId; (void)inContext; OMC_LINUX_NOT_YET("OMCTestPlatformDispatchToKeyWindow"); return false; }
-bool OMCTestPlatformHasWindow(CFStringRef inWindowUUID) { (void)inWindowUUID; OMC_LINUX_NOT_YET("OMCTestPlatformHasWindow"); return false; }
-bool OMCTestPlatformDispatchToWindow(CFStringRef inWindowUUID, CFStringRef inCommandNameOrId, CFTypeRef inContext) { (void)inWindowUUID; (void)inCommandNameOrId; (void)inContext; OMC_LINUX_NOT_YET("OMCTestPlatformDispatchToWindow"); return false; }
-bool OMCTestPlatformCloseWindow(CFStringRef inWindowUUID) { (void)inWindowUUID; OMC_LINUX_NOT_YET("OMCTestPlatformCloseWindow"); return false; }
-void OMCTestPlatformRequestQuit(void) { OMC_LINUX_NOT_YET("OMCTestPlatformRequestQuit"); }

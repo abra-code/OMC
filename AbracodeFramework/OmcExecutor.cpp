@@ -28,6 +28,7 @@
 #include "OMCDispatchPlatform.h"
 #include "OMCAppletSupportURL.h"
 #include "OMCPlatformInterpreters.h"
+#include "OMCPlatformShell.h"
 #include "OMCFilePropertiesPlatform.h"
 #include <mutex>
 #include <algorithm>
@@ -915,12 +916,13 @@ POpenWithOutputExecutor::Finish(bool wasSynchronous, bool sendNotification, OSSt
 
 #pragma mark -
 
-// sh is the default fallback for any script with no extension, or one the platform has no
-// interpreter for (OMCPlatformInterpreters.h)
+// The platform's shell (OMCPlatformShell.h: /bin/sh on macOS, bash on Linux) is the fallback for
+// any script with no extension, or one the platform has no interpreter for
+// (OMCPlatformInterpreters.h)
 static CFStringRef
 DefaultShell()
 {
-	return CFSTR("/bin/sh");
+	return CFSTR(OMC_PLATFORM_SHELL_PATH);
 }
 
 // Returns the path to the embedded python3 binary if present, nullptr otherwise.

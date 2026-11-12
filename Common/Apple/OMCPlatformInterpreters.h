@@ -18,6 +18,7 @@
 #endif
 
 #include <CoreFoundation/CoreFoundation.h>
+#include "OMCPlatformShell.h"
 #include <stddef.h>
 
 typedef struct OMCExtensionAndInterpreter
@@ -28,13 +29,13 @@ typedef struct OMCExtensionAndInterpreter
 
 // The interpreters by script extension. Python ("py") is not here: the engine runs the applet's
 // own Python when it has one, else an installed one (OMCPlatformInstalledPythonCandidates). An
-// extension not listed runs with /bin/sh. In a function: on Linux CFSTR cannot initialize
+// extension not listed runs with the platform's shell, /bin/sh (OMCPlatformShell.h). In a function: on Linux CFSTR cannot initialize
 // anything outside one.
 static inline const OMCExtensionAndInterpreter *OMCPlatformInterpreters(size_t *outCount)
 {
 	static const OMCExtensionAndInterpreter sInterpreters[] =
 	{
-		{ CFSTR("sh"), CFSTR("/bin/sh") },
+		{ CFSTR("sh"), CFSTR(OMC_PLATFORM_SHELL_PATH) }, // /bin/sh: OMCPlatformShell.h
 		{ CFSTR("pl"), CFSTR("/usr/bin/perl") },
 		{ CFSTR("applescript"), CFSTR("/usr/bin/osascript") },
 		{ CFSTR("scpt"), CFSTR("/usr/bin/osascript") },

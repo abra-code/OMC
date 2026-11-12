@@ -30,7 +30,12 @@ check "with its text" "1" "$(notify_mention "Export finished")"
 section "The other tools are the real ones"
 run="$(itest_run fixture.copy --text "through the support folder")"
 itest_wait_idle
-check "the pasteboard tool works through the link" "copied:through the support folder" "$(itest_pasteboard)"
+# Left out only for a flat Linux bundle, which has no pasteboard tool: on macOS a missing tool fails
+if itest_has_pasteboard || [ -d "$ITEST_APP/Contents" ]; then
+    check "the pasteboard tool works through the link" "copied:through the support folder" "$(itest_pasteboard)"
+else
+    printf '  (the pasteboard check is left out: a Linux applet has no pasteboard tool)\n' >&2
+fi
 
 section "The engine's own alerts: a WARNING confirmation"
 # Not the alert tool above: the engine asks before it runs a command with WARNING, and a test

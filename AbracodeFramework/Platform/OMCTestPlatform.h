@@ -3,7 +3,7 @@
 //  Abracode
 //
 //  The platform's part of the integration-test surface (OMCTestHost.h): the few operations that
-//  differ between platforms. Platform/Apple/OMCTestPlatform.mm; Linux to come with its build.
+//  differ between platforms. Platform/Apple/OMCTestPlatform.mm, Platform/Linux/OMCTestPlatform.cpp.
 //
 
 #pragma once

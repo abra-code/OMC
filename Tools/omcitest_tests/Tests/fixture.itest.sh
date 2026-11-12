@@ -74,8 +74,10 @@ check "an explicit null is no context" "6|0|<unset>" "$(fire_trigger null)"
 section "Closing the window as its close button does"
 # The end command also reads the closed window through the ActionUI remote bridge, with the shell
 # client AppletBuilder ships (fixture.closed.sh): a window's model lasts until the last command
-# started for it has ended.
-client="$(/usr/bin/dirname "$OMCITEST_RPC")/../../Library/Packages/actionui_remote.sh"
+# started for it has ended. A runner may name another client in ITEST_SHELL_CLIENT: on Linux
+# (Linux/Tests/OMCITest/run.sh) it is ActionUI's actionui_remote_linux.bash, which AppletBuilder
+# does not ship.
+client="${ITEST_SHELL_CLIENT:-$(/usr/bin/dirname "$OMCITEST_RPC")/../../Library/Packages/actionui_remote.sh}"
 check "the bridge's shell client is there" "yes" "$([ -f "$client" ] && printf yes || printf no)"
 printf '%s\n' "$client" > "$ITEST_WORK/actionui_remote.path"
 check_contains "an unknown window is refused" "-32602" "$(itest_close NOT-A-WINDOW 2>&1)"
@@ -222,7 +224,8 @@ output="$(itest_output "$run")"
 check "handlers get the file's private home" "home:$ITEST_HOME" "$(printf '%s\n' "$output" | /usr/bin/sed -n 1p)"
 check "and its private temporary folder" "tmp:$ITEST_TMPDIR" "$(printf '%s\n' "$output" | /usr/bin/sed -n 2p)"
 check "inside the test's folder" "yes" "$(case "$ITEST_HOME" in ("$ITEST_WORK"/*) printf yes ;; (*) printf no ;; esac)"
-check "ITEST_APP names the applet" "yes" "$([ -f "$ITEST_APP/Contents/Resources/Command.json" ] && printf yes || printf no)"
+# A macOS bundle has its resources in Contents/Resources, a flat Linux bundle at the top
+check "ITEST_APP names the applet" "yes" "$({ [ -f "$ITEST_APP/Contents/Resources/Command.json" ] || [ -f "$ITEST_APP/Command.json" ]; } && printf yes || printf no)"
 
 section "A window opened on a file stays out of the user's recent documents"
 # Open Recent and Recent Items are kept per user, not under the private home: a test's files,

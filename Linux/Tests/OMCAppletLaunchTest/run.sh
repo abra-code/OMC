@@ -179,6 +179,17 @@ check "a command that requires macOS 99 and at most 10.1 runs" "$([ "$macos_ran"
 wait_for_exit "$pid" 20
 check "and the applet quits once idle" "$([ "$result" = "0" ] && echo 1 || echo 0)" "exit: $result"
 
+printf '== shell commands and .sh scripts run with bash, as on macOS ==\n'
+: > "$LAUNCHTEST_LOG"
+"$bundle/LaunchTest" 'launchtest://exe?commandID=lt.shell' &
+pid=$!
+command_bash="$(wait_for_line 'shell.command.bash' 10)"
+check "a command line runs with bash" "$([ "$command_bash" = "yes" ] && echo 1 || echo 0)" "$(log_text)"
+script_bash="$(wait_for_line 'shell.script.bash' 10)"
+check "a .sh script runs with bash" "$([ "$script_bash" = "yes" ] && echo 1 || echo 0)" "$(log_text)"
+wait_for_exit "$pid" 20
+check "and the applet quits once idle" "$([ "$result" = "0" ] && echo 1 || echo 0)" "exit: $result"
+
 printf '== the engine'"'"'s framework in the bundle: a built-in window opens ==\n'
 : > "$LAUNCHTEST_LOG"
 "$bundle/LaunchTest" 'launchtest://exe?commandID=lt.input' 2> "$work/input.err" &

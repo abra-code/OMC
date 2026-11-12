@@ -30,6 +30,7 @@ let version: [CSetting] = [
     .define("MIN_MAC_OS_VERSION", to: "0"), // no effect on Linux: the macOS version checks do not run there (OMCGetMacOSVersion); macOS: 140600, OmcVersion.xcconfig
     .define("MAX_MAC_OS_VERSION", to: "999999"),
     .define("_DEBUG_", to: "1", .when(configuration: .debug)),
+    .define("OMC_TEST_SURFACE", to: "1", .when(configuration: .debug)), // the integration-test surface (Platform/Linux/OMCTestability.cpp): debug builds only
     .define("_TRACE_", to: "1", .when(configuration: .debug)),
     .define("_TRACE_", to: "0", .when(configuration: .release)),
     .define("DEBUG", to: "1", .when(configuration: .debug)),
@@ -45,6 +46,7 @@ let cxxSettings: [CXXSetting] = headerFolders.map { .headerSearchPath($0) } + [
     .define("MIN_MAC_OS_VERSION", to: "0"), // no effect on Linux: the macOS version checks do not run there (OMCGetMacOSVersion); macOS: 140600, OmcVersion.xcconfig
     .define("MAX_MAC_OS_VERSION", to: "999999"),
     .define("_DEBUG_", to: "1", .when(configuration: .debug)),
+    .define("OMC_TEST_SURFACE", to: "1", .when(configuration: .debug)), // the integration-test surface (Platform/Linux/OMCTestability.cpp): debug builds only
     .define("_TRACE_", to: "1", .when(configuration: .debug)),
     .define("_TRACE_", to: "0", .when(configuration: .release)),
     .define("DEBUG", to: "1", .when(configuration: .debug)),

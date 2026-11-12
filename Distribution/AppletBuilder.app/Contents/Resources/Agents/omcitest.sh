@@ -59,6 +59,8 @@
 #                                          general): what a handler's pasteboard tool, or the
 #                                          engine as the clipboard, put there
 #   itest_set_pasteboard <text> [name]     puts <text> there, e.g. the clipboard a command reads
+#   itest_has_pasteboard                   true when the applet has a pasteboard tool for the two
+#                                          above (a Linux applet has none: skip such checks there)
 #   alert_answer <rc> [rc ...]             answers for the next alerts, in order (0 OK, 1 Cancel,
 #                                          2 Other); with none queued an alert answers 0
 #   alerts_count, alerts_mention <text>    the alerts shown so far, and how many mention <text>
@@ -293,6 +295,10 @@ _omcitest_pasteboard() { # <name> <get|put> [text]
     OMC_TEST_PASTEBOARD_PREFIX="$ITEST_PASTEBOARD_PREFIX" "$OMCITEST_PASTEBOARD_TOOL" "$@"
 }
 
+itest_has_pasteboard() {
+    [ -n "$OMCITEST_PASTEBOARD_TOOL" ] && [ -n "$ITEST_PASTEBOARD_PREFIX" ]
+}
+
 itest_pasteboard() { # [name]
     _omcitest_pasteboard "${1:-general}" get
 }
@@ -372,6 +378,9 @@ _omcitest_build_support() { # <App.app> <dest>
         _real="$1/Contents/Frameworks/Abracode.framework/Support"
     fi
     if [ ! -d "$_real" ]; then
+        _real="$1/Frameworks/Abracode.framework/Support" # a flat Linux bundle (_omcitest_executable)
+    fi
+    if [ ! -d "$_real" ]; then
         printf 'omcitest: no Abracode.framework Support folder in %s\n' "$1" >&2
         return 1
     fi
@@ -397,7 +406,20 @@ _omcitest_build_support() { # <App.app> <dest>
     done
 }
 
+# The applet's executable: in a macOS bundle the one its Info.plist names in Contents/MacOS; a
+# Linux applet is a flat bundle (no Contents), its executable at the top named as the bundle
+# (Linux/make-applet-bundle.sh), as the layout tells, not the system.
 _omcitest_executable() { # <App.app>
+    if [ ! -d "$1/Contents" ]; then
+        local _bundle="${1%/}" # a path typed with a trailing slash names the same bundle
+        local _flat="$_bundle/${_bundle##*/}"
+        _flat="${_flat%.app}"
+        if [ ! -f "$_flat" ] || [ ! -x "$_flat" ]; then
+            return 1
+        fi
+        printf '%s\n' "$_flat"
+        return 0
+    fi
     local _name
     _name="$(/usr/bin/plutil -extract CFBundleExecutable raw -o - "$1/Contents/Info.plist" 2>/dev/null)"
     if [ -z "$_name" ]; then
@@ -531,6 +553,9 @@ omcitest_launch() { # <App.app>
             OMCITEST_PASTEBOARD_TOOL="$_app/Contents/Frameworks/Abracode.framework/Versions/A/Support/pasteboard"
             if [ ! -x "$OMCITEST_PASTEBOARD_TOOL" ]; then
                 OMCITEST_PASTEBOARD_TOOL="$_app/Contents/Frameworks/Abracode.framework/Support/pasteboard"
+            fi
+            if [ ! -x "$OMCITEST_PASTEBOARD_TOOL" ]; then
+                OMCITEST_PASTEBOARD_TOOL="$_app/Frameworks/Abracode.framework/Support/pasteboard"
             fi
             if [ ! -x "$OMCITEST_PASTEBOARD_TOOL" ]; then
                 OMCITEST_PASTEBOARD_TOOL=""

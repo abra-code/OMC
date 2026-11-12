@@ -2,7 +2,7 @@
 //  OMCTestability.cpp
 //  Abracode
 //
-//  Linux implementation of Platform/OMCTestability.h. Not built yet: the Linux port has no build.
+//  Linux implementation of Platform/OMCTestability.h.
 //  Linux has no code signing to read, and LD_PRELOAD already works on any process of the same user,
 //  so the choice is made when OMC is built: a debug build defines OMC_TEST_SURFACE to 1, and so may a
 //  special build made for testing. A release build leaves it out.
