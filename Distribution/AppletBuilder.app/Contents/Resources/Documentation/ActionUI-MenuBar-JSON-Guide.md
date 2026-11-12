@@ -48,7 +48,7 @@ A menu-bar document is a **JSON array** of *menu-bar elements*:
 
 ```json
 [
-  { "type": "CommandMenu", "properties": { "name": "Tools" }, "children": [ /* Button | Divider */ ] },
+  { "type": "CommandMenu", "properties": { "name": "Tools" }, "children": [ /* Button | Menu | Divider */ ] },
   { "type": "CommandGroup", "properties": { "placement": "replacing", "placementTarget": "new" } },
   { "type": "CommandGroup", "properties": { "placement": "after", "placementTarget": "newItem" }, "children": [ /* … */ ] },
   { "type": "CommandGroup", "properties": { "placement": "replacing", "placementTarget": "Format" } }
@@ -62,8 +62,8 @@ Elements are applied in array order. There are just two top-level element types:
 | [`CommandMenu`](#3-commandmenu) | Add a new top-level menu (inserted before Window). |
 | [`CommandGroup`](#4-commandgroup) | Insert, replace, or delete — targeting a single item (by id), a SwiftUI group, or a whole top-level menu. |
 
-`Button` and `Divider`/`Separator` are the only valid **children** of
-`CommandMenu` and `CommandGroup` (see [§5](#5-children-button--divider)).
+`Button`, `Menu` (a submenu) and `Divider`/`Separator` are the only valid
+**children** of `CommandMenu` and `CommandGroup` (see [§5](#5-children-button-menu--divider)).
 
 > **Deletion.** There is no separate "remove" element. To delete, use a
 > `CommandGroup` with `placement: "replacing"` and **no children** — it removes
@@ -207,9 +207,10 @@ See also [Schemas/CommandGroup.md](Schemas/CommandGroup.md).
 
 ---
 
-## 5. Children: Button & Divider
+## 5. Children: Button, Menu & Divider
 
-Only `CommandMenu` and `CommandGroup` take children, and only these two types:
+Only `CommandMenu` and `CommandGroup` take children, and only these three types
+(a `Menu` takes the same three):
 
 ### Button
 
@@ -248,6 +249,27 @@ identifier your host expects.
   Command-N. An explicit empty array `[]` is different: it binds the bare key with
   no modifier (plain Return or Escape), which is what a dialog's default and
   cancel buttons need. Menu items normally want a modifier.
+
+### Menu
+
+A submenu: an item titled with `title` that opens its own items, which are again
+`Button`, `Menu` and `Divider`, so submenus nest.
+
+```json
+{ "type": "Menu", "properties": { "title": "Export" }, "children": [
+    { "type": "Button", "properties": { "title": "PDF", "actionID": "file.export.pdf" } },
+    { "type": "Button", "properties": { "title": "PNG", "actionID": "file.export.png" } }
+] }
+```
+
+| Property | Type | Required | Notes |
+|----------|------|----------|-------|
+| `title` | string | yes | The submenu's title (without one the item shows no name). |
+
+It is the view element `Menu` placed in a menu: a SwiftUI `CommandMenu` shows it as
+a submenu too. Its view properties (a `label`, styling) do not apply in the menu bar. The web
+renderer (ActionUIWeb) does not show a `Menu` in its menu bar yet: it warns and leaves
+it out.
 
 ### Divider
 

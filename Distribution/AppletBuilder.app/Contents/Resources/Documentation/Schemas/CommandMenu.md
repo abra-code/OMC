@@ -19,7 +19,7 @@ JSON schema and usage documentation for `CommandMenu`.
                                               //   SF-to-Material map. Read only when "role:web" is "account"; defaults to a person glyph.
    },
    "children": [
-     // Array of child elements (Button, Divider)
+     // Array of child elements (Button, Menu, Divider); a Menu is a submenu: {"type": "Menu", "properties": {"title": "More"}, "children": [...]}, nested as deep as needed
      {
        "type": "Button",
        "id": 9,
