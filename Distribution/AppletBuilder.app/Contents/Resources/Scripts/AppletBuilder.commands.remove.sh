@@ -16,7 +16,7 @@ if [ -z "$cmd_index" ] || [ ! -f "$cmd_plist" ]; then
 fi
 
 # Check if this command uses a script file and if one exists
-plister="$OMC_OMC_SUPPORT_PATH/plister"
+plister="$plister_tool"
 exe_mode=$("$plister" get value "$cmd_plist" "/COMMAND_LIST/$cmd_index/EXECUTION_MODE" 2>/dev/null)
 cmd_id=$("$plister" get value "$cmd_plist" "/COMMAND_LIST/$cmd_index/COMMAND_ID" 2>/dev/null)
 

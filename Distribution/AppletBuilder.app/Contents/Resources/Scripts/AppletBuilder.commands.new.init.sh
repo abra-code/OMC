@@ -17,7 +17,7 @@ if [ -z "$project_path" ] && [ -n "$OMC_PARENT_DIALOG_GUID" ]; then
 fi
 
 cmd_plist=$(command_file_path "$project_path")
-plister="$OMC_OMC_SUPPORT_PATH/plister"
+plister="$plister_tool"
 
 # Check if COMMAND_LIST is empty — suggest a main command
 name=""

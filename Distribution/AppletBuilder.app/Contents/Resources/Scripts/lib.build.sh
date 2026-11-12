@@ -190,31 +190,40 @@ applet_update_url_scheme() {
     local plist="$1"
     local new_name="$2"
 
-    local plutil_out
-    plutil_out=$(/usr/bin/plutil -lint -s "$plist" 2>&1)
+    # plister, not plutil: the same on Linux, which has no plutil
+    local plister_out
+    plister_out=$("$plister_tool" get type "$plist" / 2>&1)
     if [ $? -ne 0 ]; then
-        ab_report "Cannot update the URL scheme, Info.plist is not readable: $plutil_out"
+        # plister says nothing for a missing or empty file
+        [ -n "$plister_out" ] || plister_out="$plist is missing, empty or not a property list"
+        ab_report "Cannot update the URL scheme, Info.plist is not readable: $plister_out"
         return 1
     fi
 
-    /usr/bin/plutil -extract "CFBundleURLTypes.0" xml1 -o /dev/null "$plist" > /dev/null 2>&1
-    if [ $? -ne 0 ]; then
+    local url_type
+    url_type=$("$plister_tool" get type "$plist" /CFBundleURLTypes/0 2>/dev/null)
+    if [ "$url_type" != "dict" ]; then
         return 0
     fi
 
-    plutil_out=$(/usr/bin/plutil -replace "CFBundleURLTypes.0.CFBundleURLName" -string "$new_name" "$plist" 2>&1)
+    plister_out=$("$plister_tool" insert CFBundleURLName string "$new_name" "$plist" /CFBundleURLTypes/0 2>&1)
     if [ $? -ne 0 ]; then
-        ab_report "Could not set the URL name in $plist: $plutil_out"
+        ab_report "Could not set the URL name in $plist: $plister_out"
         return 1
     fi
 
-    # Replace the whole array: on an array index, plutil -replace inserts before the
-    # existing element instead of overwriting it, which left the template's scheme behind.
-    # The scheme is limited to [a-z0-9-], so it is safe to splice into JSON.
+    # Replace the whole array, so the template's scheme does not stay behind: a new empty
+    # array (insert replaces the old one), then the one scheme
     local url_scheme=$(applet_url_scheme_for_name "$new_name")
-    plutil_out=$(/usr/bin/plutil -replace "CFBundleURLTypes.0.CFBundleURLSchemes" -json "[\"$url_scheme\"]" "$plist" 2>&1)
-    if [ $? -ne 0 ]; then
-        ab_report "Could not set the URL scheme \"$url_scheme\" in $plist: $plutil_out"
+    local plister_status
+    plister_out=$("$plister_tool" insert CFBundleURLSchemes array "$plist" /CFBundleURLTypes/0 2>&1)
+    plister_status=$?
+    if [ "$plister_status" -eq 0 ]; then
+        plister_out=$("$plister_tool" add string "$url_scheme" "$plist" /CFBundleURLTypes/0/CFBundleURLSchemes 2>&1)
+        plister_status=$?
+    fi
+    if [ "$plister_status" -ne 0 ]; then
+        ab_report "Could not set the URL scheme \"$url_scheme\" in $plist: $plister_out"
         return 1
     fi
     return 0
@@ -914,16 +923,18 @@ validate_project() {
     ab_log ""
     ab_log "Validating project..."
 
-    # Info.plist — plutil -lint
+    # Info.plist: it parses (plister, which Linux has too; plutil -lint is macOS's)
     local info_plist="$target_path/Contents/Info.plist"
     if [ -f "$info_plist" ]; then
         local info_out
-        info_out=$(/usr/bin/plutil -lint "$info_plist" 2>&1)
+        info_out=$("$plister_tool" get type "$info_plist" / 2>&1)
         if [ $? -eq 0 ]; then
             ab_log "  Info.plist: OK"
         else
             ab_log "  Info.plist: INVALID"
             error_count=$((error_count + 1))
+            # plister says nothing for an empty file
+            [ -n "$info_out" ] || info_out="empty or not a property list"
             report="${report}Info.plist:
 ${info_out}
 
@@ -1408,7 +1419,7 @@ applet_itest_files() { # <project-path>
 # launch, so a copy at another path counts too: it shares the preferences.
 applet_running_instances() { # <App.app>
     local bundle_id
-    bundle_id=$(/usr/bin/plutil -extract CFBundleIdentifier raw -o - "$1/Contents/Info.plist" 2>/dev/null)
+    bundle_id=$("$plister_tool" get value "$1/Contents/Info.plist" /CFBundleIdentifier 2>/dev/null)
     [ -n "$bundle_id" ] || return 0
     local found
     found=$(/usr/bin/lsappinfo find bundleid="$bundle_id" 2>/dev/null)

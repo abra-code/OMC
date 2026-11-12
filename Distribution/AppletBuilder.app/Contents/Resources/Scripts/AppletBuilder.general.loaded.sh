@@ -37,7 +37,7 @@ if [ -n "$project_path" ] && [ -f "$project_path/Contents/Info.plist" ]; then
 
     # Populate command ID picker from Command.plist
     cmd_plist=$(command_file_path "$project_path")
-    plister="$OMC_OMC_SUPPORT_PATH/plister"
+    plister="$plister_tool"
     cmd_options='['
     cmd_first=""
     if [ -f "$cmd_plist" ]; then
@@ -70,8 +70,8 @@ if [ -n "$project_path" ] && [ -f "$project_path/Contents/Info.plist" ]; then
         buffer=""
         i=0
         while [ "$i" -lt "$svc_count" ]; do
-            menu_title=$(/usr/bin/plutil -extract "NSServices.${i}.NSMenuItem.default" raw "$plist" 2>/dev/null)
-            user_data=$(/usr/bin/plutil -extract "NSServices.${i}.NSUserData" raw "$plist" 2>/dev/null)
+            menu_title=$("$plister_tool" get value "$plist" "/NSServices/${i}/NSMenuItem/default" 2>/dev/null)
+            user_data=$("$plister_tool" get value "$plist" "/NSServices/${i}/NSUserData" 2>/dev/null)
             [ -z "$menu_title" ] && menu_title="$user_data"
             [ -z "$menu_title" ] && menu_title="Service $i"
             buffer="${buffer}${menu_title}	${i}

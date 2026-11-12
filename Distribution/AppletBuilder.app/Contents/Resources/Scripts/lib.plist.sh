@@ -8,17 +8,20 @@ __LIB_PLIST_SH=1
 
 source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.common.sh"
 
+# A top-level key's value (a string, number or bool as text); nothing when the key or file is not there
 plist_read() {
     local plist="$1"
     local key="$2"
-    /usr/bin/plutil -extract "$key" raw "$plist" 2>/dev/null
+    "$plister_tool" get value "$plist" "/$key" 2>/dev/null
 }
 
+# Sets a top-level key to a string, adding it when it is not there (insert replaces an existing
+# key). The file keeps its format (XML, binary or JSON).
 plist_write() {
     local plist="$1"
     local key="$2"
     local value="$3"
-    /usr/bin/plutil -replace "$key" -string "$value" "$plist" 2>/dev/null
+    "$plister_tool" insert "$key" string "$value" "$plist" / > /dev/null 2>&1
 }
 
 # Generate a unique COMMAND_ID for a given prefix.
@@ -28,7 +31,7 @@ plist_write() {
 unique_command_id() {
     local cmd_plist="$1"
     local prefix="$2"
-    local plister="$OMC_OMC_SUPPORT_PATH/plister"
+    local plister="$plister_tool"
     local existing_ids=""
     if [ -f "$cmd_plist" ]; then
         local count=$("$plister" get count "$cmd_plist" /COMMAND_LIST 2>/dev/null)

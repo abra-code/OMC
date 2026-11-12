@@ -34,13 +34,13 @@ set_enabled "$SVC_INPUT_PICKER_ID" true
 set_value "$SVC_STATUS_ID" ""
 
 # Read service details
-menu_title=$(/usr/bin/plutil -extract "NSServices.${svc_index}.NSMenuItem.default" raw "$plist" 2>/dev/null)
-user_data=$(/usr/bin/plutil -extract "NSServices.${svc_index}.NSUserData" raw "$plist" 2>/dev/null)
-send_type=$(/usr/bin/plutil -extract "NSServices.${svc_index}.NSSendTypes.0" raw "$plist" 2>/dev/null)
+menu_title=$("$plister_tool" get value "$plist" "/NSServices/${svc_index}/NSMenuItem/default" 2>/dev/null)
+user_data=$("$plister_tool" get value "$plist" "/NSServices/${svc_index}/NSUserData" 2>/dev/null)
+send_type=$("$plister_tool" get value "$plist" "/NSServices/${svc_index}/NSSendTypes/0" 2>/dev/null)
 
 # Also check NSSendFileTypes (modern UTI-based format used by some applets)
 if [ -z "$send_type" ]; then
-    send_file_type=$(/usr/bin/plutil -extract "NSServices.${svc_index}.NSSendFileTypes.0" raw "$plist" 2>/dev/null)
+    send_file_type=$("$plister_tool" get value "$plist" "/NSServices/${svc_index}/NSSendFileTypes/0" 2>/dev/null)
 fi
 
 # Populate fields

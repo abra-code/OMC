@@ -28,7 +28,7 @@ if [ ! -f "$cmd_plist" ]; then
     exit 1
 fi
 
-plister="$OMC_OMC_SUPPORT_PATH/plister"
+plister="$plister_tool"
 alert_tool="$OMC_OMC_SUPPORT_PATH/alert"
 
 # Check for duplicate COMMAND_ID (only if command_id is set)

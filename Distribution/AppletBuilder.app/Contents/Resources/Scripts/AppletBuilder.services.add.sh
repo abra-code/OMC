@@ -13,7 +13,7 @@ fi
 
 # Get the first available command ID for default
 cmd_plist=$(command_file_path "$project_path")
-plister="$OMC_OMC_SUPPORT_PATH/plister"
+plister="$plister_tool"
 default_cmd=""
 if [ -f "$cmd_plist" ]; then
     default_cmd=$("$plister" get value "$cmd_plist" "/COMMAND_LIST/0/COMMAND_ID" 2>/dev/null)

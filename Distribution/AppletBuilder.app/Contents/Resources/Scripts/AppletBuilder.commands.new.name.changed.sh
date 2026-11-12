@@ -11,7 +11,7 @@ fi
 
 project_path=$(load_project_path)
 cmd_plist=$(command_file_path "$project_path")
-plister="$OMC_OMC_SUPPORT_PATH/plister"
+plister="$plister_tool"
 
 # If no commands exist yet, this will be a main command — leave Command ID empty
 count=$("$plister" get count "$cmd_plist" /COMMAND_LIST 2>/dev/null)

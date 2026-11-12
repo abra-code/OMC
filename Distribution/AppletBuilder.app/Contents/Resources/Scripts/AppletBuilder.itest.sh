@@ -94,8 +94,8 @@ fi
 # An applet that shares AppletBuilder's bundle identifier would find AppletBuilder
 # itself among its running copies, and "Quit and Test" would quit the host in the
 # middle of this handler.
-project_id=$(/usr/bin/plutil -extract CFBundleIdentifier raw -o - "$project_path/Contents/Info.plist" 2>/dev/null)
-host_id=$(/usr/bin/plutil -extract CFBundleIdentifier raw -o - "${OMC_APP_BUNDLE_PATH}/Contents/Info.plist" 2>/dev/null)
+project_id=$("$plister_tool" get value "$project_path/Contents/Info.plist" /CFBundleIdentifier 2>/dev/null)
+host_id=$("$plister_tool" get value "${OMC_APP_BUNDLE_PATH}/Contents/Info.plist" /CFBundleIdentifier 2>/dev/null)
 if [ -n "$project_id" ] && [ "$project_id" = "$host_id" ]; then
     ab_log ""
     ab_log "No tests were run - ${app_name} has AppletBuilder's own bundle identifier (${project_id}), so a test launch would run beside this AppletBuilder. Run \"appletbuilder itest\" from Terminal with AppletBuilder quit."

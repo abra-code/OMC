@@ -14,7 +14,7 @@ source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.common.sh"
 refresh_commands_table() {
     local cmd_plist="$1"
     local target="${2:-$window_uuid}"
-    local plister="$OMC_OMC_SUPPORT_PATH/plister"
+    local plister="$plister_tool"
     local count=$("$plister" get count "$cmd_plist" /COMMAND_LIST 2>/dev/null)
     local buffer=""
     if [ -n "$count" ] && [ "$count" -gt 0 ]; then

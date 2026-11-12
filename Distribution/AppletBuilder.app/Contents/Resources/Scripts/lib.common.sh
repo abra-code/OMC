@@ -26,6 +26,16 @@ __LIB_COMMON_SH=1
 dialog_tool="$OMC_OMC_SUPPORT_PATH/omc_dialog_control"
 next_cmd="$OMC_OMC_SUPPORT_PATH/omc_next_command"
 pasteboard_tool="$OMC_OMC_SUPPORT_PATH/pasteboard"
+# plister reads and writes plists and JSON on macOS and Linux (Linux has no plutil): the run's
+# support folder's under the engine, else (the appletbuilder command line sets no support folder)
+# the one in AppletBuilder's own framework, versioned on macOS, not on Linux
+plister_tool="$OMC_OMC_SUPPORT_PATH/plister"
+if [ -z "${OMC_OMC_SUPPORT_PATH:-}" ]; then
+    plister_tool="${OMC_APP_BUNDLE_PATH}/Contents/Frameworks/Abracode.framework/Versions/A/Support/plister"
+    if [ ! -x "$plister_tool" ]; then
+        plister_tool="${OMC_APP_BUNDLE_PATH}/Contents/Frameworks/Abracode.framework/Support/plister"
+    fi
+fi
 python3="${OMC_APP_BUNDLE_PATH}/Contents/Library/Python/bin/python3"
 window_uuid="${OMC_ACTIONUI_WINDOW_UUID:-$OMC_NIB_DLG_GUID}"
 cmd_guid="$OMC_CURRENT_COMMAND_GUID"

@@ -58,8 +58,8 @@ applet_install_binaries() {
         if [ ! -d "$dest_fw" ]; then
             need_copy=1
         else
-            local src_ver=$(/usr/bin/plutil -extract CFBundleVersion raw "$builder_fw/Resources/Info.plist" 2>/dev/null)
-            local dst_ver=$(/usr/bin/plutil -extract CFBundleVersion raw "$dest_fw/Resources/Info.plist" 2>/dev/null)
+            local src_ver=$("$plister_tool" get value "$builder_fw/Resources/Info.plist" /CFBundleVersion 2>/dev/null)
+            local dst_ver=$("$plister_tool" get value "$dest_fw/Resources/Info.plist" /CFBundleVersion 2>/dev/null)
             if [ "$src_ver" != "$dst_ver" ]; then
                 need_copy=1
             fi
