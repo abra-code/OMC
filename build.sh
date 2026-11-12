@@ -2,7 +2,7 @@
 #
 # Build OMC by building the "OMC Distribution" scheme of OMC.xcworkspace.
 #
-# This scheme builds Abracode.framework, OMCApplet, OMCService and OnMyCommandCM
+# This scheme builds Abracode.framework, CommandApplet, OMCService and OnMyCommandCM
 # together with their implicit dependencies, replacing the old loop that built
 # every sub-project individually (which had become hard to maintain).
 #
@@ -11,14 +11,14 @@
 
 WORKSPACE="OMC.xcworkspace"
 SCHEME="OMC Distribution"
-PYTHON_SCHEME="OMCPythonApplet"
+PYTHON_SCHEME="CommandPythonApplet"
 
 usage() {
 	cat <<'EOF'
 Usage: ./build.sh [debug|ship] [action] [--python]
 
 Builds the "OMC Distribution" scheme of OMC.xcworkspace (Abracode.framework,
-OMCApplet, OMCService and OnMyCommandCM, with their implicit dependencies).
+CommandApplet, OMCService and OnMyCommandCM, with their implicit dependencies).
 
 Arguments (positional, both optional):
   configuration   case-insensitive; "debug" -> Debug, "ship" or "release" ->
@@ -33,7 +33,7 @@ Arguments (positional, both optional):
                   (clean can be combined as a separate run, e.g. "clean" then "build")
 
 Options:
-  --python        also build the OMCPythonApplet scheme (in addition to the
+  --python        also build the CommandPythonApplet scheme (in addition to the
                   distribution). Gated behind a flag because it compiles the
                   embedded Python from scratch and is slow; the regular
                   distribution build does not need it.

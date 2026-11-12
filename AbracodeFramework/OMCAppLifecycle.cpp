@@ -65,7 +65,7 @@ void SetPythonPycachePrefixIfEmbedded()
 void RunLifecycleCommand(CFStringRef inCommandID)
 {
 	OMCRunHooks hooks = {};
-	(void)OMCRunCommandFromFile(inCommandID, CFSTR("Command.plist"), nullptr, false, false, nullptr, false, &hooks);
+	(void)OMCRunCommandFromFile(inCommandID, CFSTR("Command.json"), nullptr, false, false, nullptr, false, &hooks);
 }
 
 } // namespace

@@ -28,7 +28,7 @@ static NSString *OMCMenuStringValue(NSDictionary *properties, NSString *key)
 	if(self == nil)
 		return nil;
 
-	_commandFilePath = @"Command.plist";
+	_commandFilePath = @"Command.json";
 
     return self;
 }
@@ -41,7 +41,7 @@ static NSString *OMCMenuStringValue(NSDictionary *properties, NSString *key)
 	}
 	else
 	{
-		_commandFilePath = @"Command.plist";
+		_commandFilePath = @"Command.json";
 	}
 }
 
@@ -109,7 +109,7 @@ static NSString *OMCMenuStringValue(NSDictionary *properties, NSString *key)
 	// Each Button's native actionID is the command id; it becomes an OMCMenuItem
 	// wired to executeCommand:.  NSMenuItem keeps a
 	// weak reference to its target, so self must outlive the menu (see
-	// OMCApplet/main.m).
+	// CommandApplet/main.m).
 	if(staticElements.count > 0)
 	{
 		NSData *staticData = [NSJSONSerialization dataWithJSONObject:staticElements options:0 error:NULL];

@@ -10,9 +10,9 @@ icons_dir="${OMC_APP_BUNDLE_PATH}/Contents/Resources/Icons"
 # Only switch icon if a bundled icon is selected (not custom)
 if [ "$icon_selected" != "__custom__" ]; then
     if [ "$python_on" = "1" ] || [ "$python_on" = "true" ]; then
-        icon_name="OMCPythonApplet"
+        icon_name="CommandPythonApplet"
     else
-        icon_name="OMCApplet"
+        icon_name="CommandApplet"
     fi
     set_value "$NEW_ICON_PICKER_ID" "$icon_name"
 

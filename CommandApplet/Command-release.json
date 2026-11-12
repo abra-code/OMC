@@ -1,0 +1,15 @@
+{
+  "COMMAND_LIST": [
+    {
+      "COMMAND": [
+        "echo \"Welcome to Command Workshop\""
+      ],
+      "END_NOTIFICATION": {},
+      "NAME": "Welcome",
+      "REQUIRED_MAC_OS_MIN_VERSION": "14.6",
+      "REQUIRED_OMC_VERSION": "5.0",
+      "VERSION": 1
+    }
+  ],
+  "VERSION": 2
+}

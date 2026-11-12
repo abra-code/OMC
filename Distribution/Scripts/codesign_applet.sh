@@ -453,9 +453,11 @@ verbose_echo "Removing quarantine xattr"
 app_dir=$(/usr/bin/dirname "$app_to_sign")
 
 # Look for entitlements:
-# 1. OMCApplet.entitlements next to the applet being signed
+# 1. CommandApplet.entitlements next to the applet being signed (OMCApplet.entitlements, its
+#    name before 6.0, in an older applet's folder)
 # 2. First *.entitlements file next to the applet
-# 3. Default fallback in directory next to this script
+# 3. Default fallback in directory next to this script (CommandApplet.entitlements, else
+#    OMCApplet.entitlements beside an older copy of the script)
 #
 # Steps 2 and 3 are guesses about a bundle whose folder we do not control, so
 # --no-entitlements-search turns them off and makes the explicit argument the
@@ -473,12 +475,16 @@ if [ "$entitlements_search" = "no" ]; then
     fi
 elif [ -n "$entitlements_override" ] && [ -f "$entitlements_override" ]; then
     entitlements_file="$entitlements_override"
+elif [ -f "$app_dir/CommandApplet.entitlements" ]; then
+    entitlements_file="$app_dir/CommandApplet.entitlements"
 elif [ -f "$app_dir/OMCApplet.entitlements" ]; then
     entitlements_file="$app_dir/OMCApplet.entitlements"
 else
     first_ent=$(/bin/ls "$app_dir"/*.entitlements 2>/dev/null | /usr/bin/head -1)
     if [ -n "$first_ent" ] && [ -f "$first_ent" ]; then
         entitlements_file="$first_ent"
+    elif [ -f "$self_dir/CommandApplet.entitlements" ]; then
+        entitlements_file="$self_dir/CommandApplet.entitlements"
     elif [ -f "$self_dir/OMCApplet.entitlements" ]; then
         entitlements_file="$self_dir/OMCApplet.entitlements"
     fi

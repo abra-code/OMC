@@ -46,7 +46,7 @@ FindOrAddSubmenu(NSMenu *inMenu, CFStringRef inName)
 	if(self == nil)
 		return nil;
 
-	_commandFilePath = @"Command.plist";
+	_commandFilePath = @"Command.json";
 
     return self;
 }
@@ -57,7 +57,7 @@ FindOrAddSubmenu(NSMenu *inMenu, CFStringRef inName)
 	if(self == nil)
 		return nil;
 
-	_commandFilePath = @"Command.plist";
+	_commandFilePath = @"Command.json";
 
     return self;
 }
@@ -109,7 +109,7 @@ FindOrAddSubmenu(NSMenu *inMenu, CFStringRef inName)
 	}
 	else
 	{
-		_commandFilePath = @"Command.plist";
+		_commandFilePath = @"Command.json";
 	}
 }
 

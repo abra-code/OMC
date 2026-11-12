@@ -21,7 +21,7 @@
           "type": "TextField",
           "id": 2,
           "properties": {
-            "placeholder": "Enter your name",
+            "prompt": "Enter your name",
             "textContentType": "name",
             "actionID": "text.submit",
             "valueChangeActionID": "text.valueChanged"
@@ -31,7 +31,7 @@
           "type": "SecureField",
           "id": 3,
           "properties": {
-            "placeholder": "Enter password",
+            "prompt": "Enter password",
             "textContentType": "password",
             "actionID": "secure.submit"
           }

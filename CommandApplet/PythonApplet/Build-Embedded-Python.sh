@@ -1,4 +1,4 @@
-# Sourced by the "Build Embedded Python" phase of the OMCPythonApplet target.
+# Sourced by the "Build Embedded Python" phase of the CommandPythonApplet target.
 # The build options are set here, not passed in by the phase.
 
 PYTHON_EMBEDDING_DIR="${PROJECT_DIR}/../../Python-Embedding"

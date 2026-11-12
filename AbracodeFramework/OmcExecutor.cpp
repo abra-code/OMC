@@ -925,7 +925,7 @@ DefaultShell()
 
 // Returns the path to the embedded python3 binary if present, nullptr otherwise.
 // the expected location for bundled Python is Library/Python/ in the applet's support files folder
-// (OMCApplet.app/Contents/Library/Python/ on macOS; OMCAppletSupportURL.h)
+// (CommandApplet.app/Contents/Library/Python/ on macOS; OMCAppletSupportURL.h)
 // A relocatable Python 3 distribution suitable for embeddeding in the applets can be produced with this infra:
 // https://github.com/abra-code/Python-Embedding
 static CFStringRef GetEmbeddedPythonPath()

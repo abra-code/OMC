@@ -62,9 +62,9 @@ while it is there. Leave `NSPrincipalClass` (`NSApplication`) in place.
 
 **5. Delete `MainMenu.nib`** from `Base.lproj/`.
 
-**6. Refresh the binaries.** The bar is built by code in the applet's `OMCApplet`
-executable and embedded `Abracode.framework`, which must come from the same
-release. An applet last built before 6.0 must update both: its old executable
+**6. Refresh the binaries.** The bar is built by code in the applet's executable (a
+copy of the master applet's, CommandApplet; OMCApplet before 6.0) and its embedded
+`Abracode.framework`, which must come from the same release. An applet last built before 6.0 must update both: its old executable
 does not launch with a 6.0 framework. In **AppletBuilder ▸ Build & Run**,
 use **Force Update Binaries** — required when the Command Engine version string is unchanged
 (e.g. when the Command Engine version string is the same in both builds, the normal

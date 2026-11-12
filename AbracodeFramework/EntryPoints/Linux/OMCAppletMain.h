@@ -3,7 +3,7 @@
 //  Abracode
 //
 //  The Linux applet's entry: the applet executable's main is one call of this, as the macOS
-//  stub (OMCApplet/main.m) is one call into the framework's app shell. Linux only.
+//  stub (CommandApplet/main.m) is one call into the framework's app shell. Linux only.
 //
 
 #pragma once

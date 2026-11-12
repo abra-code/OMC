@@ -76,11 +76,11 @@ static std::unique_ptr<OMCApplet> CreateApplet(OMCAppletController *inController
 	if(self == nil)
 		return nil;
 
-	_commandFilePath = @"Command.plist";
+	_commandFilePath = @"Command.json";
 	_applet = CreateApplet(self);
 
 	// The applet's stub makes this controller at launch, before the application runs
-	// (OMCApplet/main.m), so the keys held now are the ones held while it was launched:
+	// (CommandApplet/main.m), so the keys held now are the ones held while it was launched:
 	// Option suppresses opening the main command (OMCApplet::IsOpeningSuppressed).
 	_applet->SetStartupModifiers(OMCGetKeyboardModifiers());
 
@@ -294,7 +294,7 @@ static std::unique_ptr<OMCApplet> CreateApplet(OMCAppletController *inController
 	}
 	else
 	{
-		_commandFilePath = @"Command.plist";
+		_commandFilePath = @"Command.json";
 	}
 }
 

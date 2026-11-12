@@ -59,7 +59,7 @@ static void RecordRecentDocumentURL(id self, SEL _cmd, NSURL *inURL)
 // NSDocumentController's init returns the shared document controller once there is one, and AppKit
 // makes a plain one when another test in the same process uses it first: then every test here got
 // an NSDocumentController ("unrecognized selector setCommandID:"). The applet controller is made
-// before any test runs, so it is the shared one, as in an applet (OMCApplet's main.m), and each
+// before any test runs, so it is the shared one, as in an applet (CommandApplet's main.m), and each
 // makeApplet gets it back with a new OMCApplet.
 + (void)load
 {

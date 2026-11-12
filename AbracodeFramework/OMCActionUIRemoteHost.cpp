@@ -78,7 +78,7 @@ CopyUTF8(CFStringRef inString)
 }
 
 // The applet's own name, so actionui.hello identifies the window's owner rather than saying
-// "OMCApplet" for every applet built from the same engine binary.
+// "CommandApplet" for every applet built from the same engine binary.
 static std::string
 CopyHostName()
 {

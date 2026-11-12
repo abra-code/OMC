@@ -117,7 +117,7 @@
                         "options": [
                             {
                                 "title": "Default",
-                                "tag": "OMCApplet"
+                                "tag": "CommandApplet"
                             }
                         ],
                         "actionID": "AppletBuilder.new.icon.changed"

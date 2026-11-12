@@ -253,7 +253,7 @@ OMCRunCommandFromFile(CFStringRef inCommandNameOrId, CFStringRef inCommandFile, 
 			{
 				CFStringRef appName = (CFStringRef)::CFBundleGetValueForInfoDictionaryKey(::CFBundleGetMainBundle(), kCFBundleNameKey);
 				if((appName == nullptr) || (::CFGetTypeID(appName) != ::CFStringGetTypeID()))
-					appName = CFSTR("OMCApplet");
+					appName = CFSTR("CommandApplet");
 
 				// Check if the command has OPEN_OBJECT_DIALOG customization
 				CFDictionaryRef openDialogParams = nullptr;

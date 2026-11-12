@@ -29,9 +29,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "8D1107260486CEB800E47090"
-               BuildableName = "OMCApplet.app"
-               BlueprintName = "OMCApplet"
-               ReferencedContainer = "container:OMCApplet/OMCApplet.xcodeproj">
+               BuildableName = "CommandApplet.app"
+               BlueprintName = "CommandApplet"
+               ReferencedContainer = "container:CommandApplet/CommandApplet.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
          <BuildActionEntry
@@ -89,9 +89,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "8D1107260486CEB800E47090"
-            BuildableName = "OMCApplet.app"
-            BlueprintName = "OMCApplet"
-            ReferencedContainer = "container:OMCApplet/OMCApplet.xcodeproj">
+            BuildableName = "CommandApplet.app"
+            BlueprintName = "CommandApplet"
+            ReferencedContainer = "container:CommandApplet/CommandApplet.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>

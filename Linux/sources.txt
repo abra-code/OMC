@@ -76,4 +76,4 @@ loco loco/main.c
 omc_next_command omc_next_command/main.c
 omc_dialog_control omc_dialog_control/main.c
 omc_dialog_control Common/Linux/OMCDialogControlSender.c
-CommandApplet CommandApplet/main.cpp
+CommandApplet CommandApplet/Linux/main.cpp

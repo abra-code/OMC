@@ -5,9 +5,9 @@
 #   0a. ActionUI checkout next to OMC (../ActionUI) - when missing, offers to clone the latest
 #      tagged release from GitHub; a checkout this script cloned is moved to a newer tag when one
 #      exists; any other checkout is used as is
-#   0. OMCApplet — builds universal (arm64 + x86_64) Release binary and Abracode.framework
+#   0. CommandApplet — builds universal (arm64 + x86_64) Release binary and Abracode.framework
 #   0b. Embedded Python - when Contents/Library/Python is missing (a fresh clone), offers to build
-#      the OMCPythonApplet target and copy its Python in; an existing Python is left as is
+#      the CommandPythonApplet target and copy its Python in; an existing Python is left as is
 #      unless --update-python is given
 #   1. ActionUIViewer — built from the Apps/ActionUIViewer aggregator package (links core + add-ons);
 #      that one SPM build also produces the core and add-on documentation bundles + the Python verifier
@@ -35,7 +35,7 @@ print_usage() {
     /bin/cat <<'USAGE'
 Usage: update_appletbuilder.sh [options] [OMC_ROOT]
 
-Builds OMCApplet and ActionUI's tools, syncs the resources and documentation
+Builds CommandApplet and ActionUI's tools, syncs the resources and documentation
 bundled in Distribution/AppletBuilder.app, and codesigns the app (ad-hoc).
 
 OMC_ROOT defaults to the folder that holds this script.
@@ -90,7 +90,7 @@ ACTIONUI_DOCS="$ACTIONUI_ROOT/Documentation"
 ACTIONUI_VIEWER_PKG="$ACTIONUI_ROOT/Apps/ActionUIViewer"
 OMC_DOCS="$OMC_ROOT/Documentation"
 OMC_WORKSPACE="$OMC_ROOT/OMC.xcworkspace"
-OMCAPPLET_BUILD="$OMC_ROOT/.build/OMCApplet"
+COMMANDAPPLET_BUILD="$OMC_ROOT/.build/CommandApplet"
 CODESIGN_SCRIPT="$OMC_ROOT/Distribution/Scripts/codesign_applet.sh"
 
 # ── Colors ──
@@ -336,10 +336,10 @@ fi
 echo ""
 
 # ════════════════════════════════════════════════════════════
-# 0. Build OMCApplet — Abracode.framework + binary (universal)
+# 0. Build CommandApplet — Abracode.framework + binary (universal)
 # ════════════════════════════════════════════════════════════
 
-echo "── Building OMCApplet (universal) ──"
+echo "── Building CommandApplet (universal) ──"
 
 if [ ! -d "$OMC_WORKSPACE" ]; then
     echo -e "  ${RED}OMC workspace not found at: $OMC_WORKSPACE${NC}"
@@ -352,31 +352,31 @@ build_log_file=$(/usr/bin/mktemp)
     -workspace "$OMC_WORKSPACE" \
     -scheme "OMC Distribution" \
     -configuration Release \
-    -derivedDataPath "$OMCAPPLET_BUILD" \
+    -derivedDataPath "$COMMANDAPPLET_BUILD" \
     ARCHS="arm64 x86_64" \
     ONLY_ACTIVE_ARCH=NO \
     build > "$build_log_file" 2>&1
 xcode_rc=$?
 
 if [ "$xcode_rc" -ne 0 ]; then
-    echo -e "  ${RED}OMCApplet build failed:${NC}"
+    echo -e "  ${RED}CommandApplet build failed:${NC}"
     /bin/cat "$build_log_file"
     /bin/rm -f "$build_log_file"
     exit 1
 fi
 /bin/rm -f "$build_log_file"
 
-OMCAPPLET_APP="$OMCAPPLET_BUILD/Build/Products/Release/OMCApplet.app"
-if [ ! -d "$OMCAPPLET_APP" ]; then
-    echo -e "  ${RED}Build succeeded but OMCApplet.app not found at: $OMCAPPLET_APP${NC}"
+COMMANDAPPLET_APP="$COMMANDAPPLET_BUILD/Build/Products/Release/CommandApplet.app"
+if [ ! -d "$COMMANDAPPLET_APP" ]; then
+    echo -e "  ${RED}Build succeeded but CommandApplet.app not found at: $COMMANDAPPLET_APP${NC}"
     exit 1
 fi
 
 # Copy Abracode.framework (built standalone alongside the app)
-src_fw="$OMCAPPLET_BUILD/Build/Products/Release/Abracode.framework"
+src_fw="$COMMANDAPPLET_BUILD/Build/Products/Release/Abracode.framework"
 # Fall back to the copy embedded inside the app if the standalone isn't present
 if [ ! -d "$src_fw" ]; then
-    src_fw="$OMCAPPLET_APP/Contents/Frameworks/Abracode.framework"
+    src_fw="$COMMANDAPPLET_APP/Contents/Frameworks/Abracode.framework"
 fi
 dst_fw="$APPLET_BUILDER/Contents/Frameworks/Abracode.framework"
 
@@ -396,12 +396,12 @@ fi
 echo -e "  ${GREEN}Updated: Abracode.framework${NC}"
 updated=1
 
-# Copy OMCApplet binary → AppletBuilder binary
-src_bin="$OMCAPPLET_APP/Contents/MacOS/OMCApplet"
+# Copy CommandApplet binary → AppletBuilder binary
+src_bin="$COMMANDAPPLET_APP/Contents/MacOS/CommandApplet"
 dst_bin="$APPLET_BUILDER/Contents/MacOS/AppletBuilder"
 
 if [ ! -f "$src_bin" ]; then
-    echo -e "  ${RED}OMCApplet binary not found: $src_bin${NC}"
+    echo -e "  ${RED}CommandApplet binary not found: $src_bin${NC}"
     exit 1
 fi
 
@@ -409,35 +409,35 @@ fi
 /bin/cp -p "$src_bin" "$dst_bin"
 cp_rc=$?
 if [ "$cp_rc" -ne 0 ]; then
-    echo -e "  ${RED}Failed to copy OMCApplet binary to: $dst_bin${NC}"
+    echo -e "  ${RED}Failed to copy CommandApplet binary to: $dst_bin${NC}"
     exit 1
 fi
-echo -e "  ${GREEN}Updated: MacOS/AppletBuilder (from OMCApplet binary)${NC}"
+echo -e "  ${GREEN}Updated: MacOS/AppletBuilder (from CommandApplet binary)${NC}"
 updated=1
 
 echo ""
 
 # ════════════════════════════════════════════════════════════
-# 0b. Embedded Python (from the OMCPythonApplet target)
+# 0b. Embedded Python (from the CommandPythonApplet target)
 # ════════════════════════════════════════════════════════════
 # Contents/Library/Python is not in git, so a fresh clone has none. Several AppletBuilder pieces
 # run on it, and so do the mistune install (2) and the thinning (6) below. An existing Python is
 # kept as is unless --update-python is given: building one compiles Python, OpenSSL and liblzma
 # from source and takes a long time, so without the option it is only offered, with a prompt,
-# when the bundle has none. The OMCPythonApplet target's "Build Embedded Python" phase owns the
+# when the bundle has none. The CommandPythonApplet target's "Build Embedded Python" phase owns the
 # build options (latest stable Python) and clones ../Python-Embedding if missing.
 
-# Builds the OMCPythonApplet target and copies its Python into $DEST_PYTHON, replacing any
+# Builds the CommandPythonApplet target and copies its Python into $DEST_PYTHON, replacing any
 # Python there. Exits the script on failure; the existing Python is kept unless the copy itself
 # fails. Sets the global 'updated' on success.
 build_embedded_python() {
-    local built_app="$OMCAPPLET_BUILD/Build/Products/Release/OMCPythonApplet.app"
+    local built_app="$COMMANDAPPLET_BUILD/Build/Products/Release/CommandPythonApplet.app"
     local built_python="$built_app/Contents/Library/Python"
-    local python_build_log="$OMCAPPLET_BUILD/OMCPythonApplet-build.log"
+    local python_build_log="$COMMANDAPPLET_BUILD/CommandPythonApplet-build.log"
     local staged_python="$DEST_PYTHON.new"
     local new_version
 
-    /bin/mkdir -p "$OMCAPPLET_BUILD"
+    /bin/mkdir -p "$COMMANDAPPLET_BUILD"
     # The build phase declares this folder as its output, so Xcode skips the phase while an
     # earlier build's Python is still there. Remove it to make the phase run and pick up the
     # latest Python release.
@@ -450,15 +450,15 @@ build_embedded_python() {
     echo "  Running xcodebuild (log: $python_build_log)..."
     /usr/bin/xcodebuild \
         -workspace "$OMC_WORKSPACE" \
-        -scheme "OMCPythonApplet" \
+        -scheme "CommandPythonApplet" \
         -configuration Release \
-        -derivedDataPath "$OMCAPPLET_BUILD" \
+        -derivedDataPath "$COMMANDAPPLET_BUILD" \
         ARCHS="arm64 x86_64" \
         ONLY_ACTIVE_ARCH=NO \
         build > "$python_build_log" 2>&1
     local xcode_rc=$?
     if [ "$xcode_rc" -ne 0 ]; then
-        echo -e "  ${RED}OMCPythonApplet build failed. Last lines of the log:${NC}"
+        echo -e "  ${RED}CommandPythonApplet build failed. Last lines of the log:${NC}"
         /usr/bin/tail -n 40 "$python_build_log"
         echo "  Full log: $python_build_log"
         exit 1
@@ -467,7 +467,7 @@ build_embedded_python() {
     # The phase only warns when Python-Embedding cannot be found or cloned, so the build can
     # succeed without a Python in it. Check before copying.
     if [ ! -x "$built_python/bin/python3" ]; then
-        echo -e "  ${RED}OMCPythonApplet built without an embedded Python: $built_python${NC}"
+        echo -e "  ${RED}CommandPythonApplet built without an embedded Python: $built_python${NC}"
         echo "  Check that ../Python-Embedding exists or can be cloned. Full log: $python_build_log"
         exit 1
     fi
@@ -534,7 +534,7 @@ else
         build_embedded_python
     else
         echo "  AppletBuilder needs it: several of its tools run on Python and will not work without it."
-        echo "  It is built from source by the OMCPythonApplet target (Python, OpenSSL, liblzma),"
+        echo "  It is built from source by the CommandPythonApplet target (Python, OpenSSL, liblzma),"
         echo "  which downloads the sources and takes a while."
         read -p "  Build the embedded Python now? [y/N] " answer
         if [ "$answer" = "y" ] || [ "$answer" = "Y" ]; then
@@ -542,7 +542,7 @@ else
         else
             echo -e "  ${YELLOW}Skipped. AppletBuilder.app will not work fully, and mistune cannot be installed.${NC}"
             echo "  Run this script again and answer y (or pass --update-python), or build the"
-            echo "  OMCPythonApplet scheme in OMC.xcworkspace and copy its Contents/Library/Python into:"
+            echo "  CommandPythonApplet scheme in OMC.xcworkspace and copy its Contents/Library/Python into:"
             echo "  $DEST_PYTHON"
         fi
     fi

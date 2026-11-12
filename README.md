@@ -2,7 +2,7 @@
 
 Command Workshop (formerly OnMyCommand, or OMC) is an engine to execute command line tools and shell scripts - but not by typing in some command line interface - the idea is to create GUI access points to the rich underlying Unix foundation of macOS.  
 
-Most of the Command Workshop development effort nowadays is directed towards **building apps** based on Abracode.framework and OMCApplet.app.  
+Most of the Command Workshop development effort nowadays is directed towards **building apps** based on Abracode.framework and CommandApplet.app (OMCApplet.app before 6.0).  
 In contemporary terms you could describe Command Workshop as low code or no code macOS app development environment.  
 One exemple of Command Workshop app is [AppletBuilder](https://github.com/abra-code/OMC/tree/master/Distribution/AppletBuilder.app) itself in version 5 distribution. Other apps:  
 

@@ -48,7 +48,7 @@ namespace
 {
 
 // The applet's command file in its bundle (Command.json preferred, OMCCopyCommandFileURL)
-CFStringRef CommandFile() { return CFSTR("Command.plist"); }
+CFStringRef CommandFile() { return CFSTR("Command.json"); }
 
 struct AppletHost
 {

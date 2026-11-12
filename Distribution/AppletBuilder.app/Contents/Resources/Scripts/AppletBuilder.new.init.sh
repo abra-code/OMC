@@ -56,7 +56,7 @@ icon_json="${icon_json},{\"title\": \"Custom\u2026\", \"tag\": \"__custom__\"}]"
 
 # ── Set default header icon ──
 
-default_icns="${icons_dir}/OMCApplet.icns"
+default_icns="${icons_dir}/CommandApplet.icns"
 if [ -f "$default_icns" ]; then
     set_value "$NEW_HEADER_IMAGE_ID" "$default_icns"
 fi

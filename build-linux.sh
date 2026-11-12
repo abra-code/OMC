@@ -176,7 +176,7 @@ if [ "$status" -ne 0 ]; then
 fi
 
 # The master applet, CommandApplet.app, beside the built products (Linux/make-applet-bundle.sh): the
-# newest engine in an applet bundle, as OMCApplet.app is on macOS. Not when one product was built:
+# newest engine in an applet bundle, as on macOS. Not when one product was built:
 # the support tools it carries may not have been (CommandApplet alone does not build them).
 if [ -n "$PRODUCT" ]; then
     exit 0
@@ -187,7 +187,7 @@ if [ "$status" -ne 0 ] || [ -z "$PRODUCTS_PATH" ] || [ ! -d "$PRODUCTS_PATH" ]; 
     echo "Error: the build's products folder could not be found (swift build --show-bin-path status $status)." >&2
     exit 1
 fi
-/bin/bash "$SCRIPT_DIR/Linux/make-applet-bundle.sh" "$PRODUCTS_PATH" "$SCRIPT_DIR/CommandApplet" "$PRODUCTS_PATH/CommandApplet.app"
+/bin/bash "$SCRIPT_DIR/Linux/make-applet-bundle.sh" "$PRODUCTS_PATH" "$SCRIPT_DIR/CommandApplet/Linux" "$PRODUCTS_PATH/CommandApplet.app"
 status=$?
 if [ "$status" -ne 0 ]; then
     echo "Error: CommandApplet.app could not be made (make-applet-bundle.sh status $status)." >&2

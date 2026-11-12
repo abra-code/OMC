@@ -25,7 +25,7 @@ Usage: $0 --arch arm64|x86_64 /path/to/AppOrDir
 Thin all universal/fat Mach-O binaries in the distribution to single architecture.
 
 Example:
-  $0 --arch=arm64 ./OMCApplet.app
+  $0 --arch=arm64 ./CommandApplet.app
 
 HELP
     exit 1

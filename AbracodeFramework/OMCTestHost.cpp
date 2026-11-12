@@ -442,7 +442,7 @@ StartRun(void *inContext)
 	// takes a queued answer like every panel here. With "window" the runner checks the command and
 	// hands it to that window as it would to the key window (not a command with OPEN_OBJECT_DIALOG).
 	bool toWindow = run->allowKeyWindow || (run->windowUUID != nullptr);
-	run->status = OMCRunCommandFromFile(run->commandID, CFSTR("Command.plist"), run->context,
+	run->status = OMCRunCommandFromFile(run->commandID, CFSTR("Command.json"), run->context,
 										run->allowOpenPanel, toWindow, nullptr, false, &hooks);
 	if(!run->observerCreated)
 		run->finished = true; // it never got as far as running anything

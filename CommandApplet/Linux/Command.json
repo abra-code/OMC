@@ -1,0 +1,16 @@
+{
+  "VERSION": 2,
+  "COMMAND_LIST": [
+    { "NAME": "Welcome", "ACTIVATION_MODE": "act_always", "EXECUTION_MODE": "exe_shell_script",
+      "COMMAND": ["echo \"Welcome to Command Workshop\""],
+      "ACTIONUI_WINDOW": { "JSON_NAME": "Welcome", "IS_BLOCKING": false, "INIT_SUBCOMMAND_ID": "welcome.init" } },
+    { "NAME": "Welcome", "COMMAND_ID": "welcome.init", "EXECUTION_MODE": "exe_shell_script",
+      "COMMAND": ["\"$OMC_OMC_SUPPORT_PATH/omc_dialog_control\" \"$OMC_ACTIONUI_WINDOW_UUID\" 3 \"Running on $(uname -s) $(uname -m)\""] },
+    { "NAME": "Welcome", "COMMAND_ID": "welcome.hello", "EXECUTION_MODE": "exe_shell_script",
+      "COMMAND": ["\"$OMC_OMC_SUPPORT_PATH/omc_dialog_control\" \"$OMC_ACTIONUI_WINDOW_UUID\" 3 \"Hello, ${OMC_ACTIONUI_VIEW_2_VALUE:-whoever you are}\""] },
+    { "NAME": "Ask for Text", "ACTIVATION_MODE": "act_always", "EXECUTION_MODE": "exe_shell_script",
+      "COMMAND": ["echo \"You wrote: __INPUT_TEXT__\""],
+      "INPUT_DIALOG": { "INPUT_TYPE": "input_clear_text", "MESSAGE": "Write something" },
+      "END_NOTIFICATION": {} }
+  ]
+}
