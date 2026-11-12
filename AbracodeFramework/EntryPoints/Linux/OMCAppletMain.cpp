@@ -107,6 +107,15 @@ MenuRunMainCommand(void *inContext)
 }
 
 void
+MenuOpenFile(void *inContext, CFURLRef inFileURL)
+{
+	(void)inContext;
+	// An Open Recent item, as on macOS: notes it as recent again and runs the main command with it
+	if((sHost != nullptr) && sHost->applet && (inFileURL != nullptr))
+		sHost->applet->OpenFile(inFileURL);
+}
+
+void
 MenuQuit(void *inContext)
 {
 	(void)inContext;
@@ -149,8 +158,9 @@ OnStartup(GApplication *inApp, gpointer)
 	actions.context = nullptr;
 	sHost->applet.reset(new OMCApplet(actions));
 	// The menu in every window's header bar: New, Open, the applet's MainMenu.json, Quit
-	OMCAppletMenuActions menuActions;
+	OMCAppletMenuActions menuActions {};
 	menuActions.runMainCommand = MenuRunMainCommand;
+	menuActions.openFile = MenuOpenFile;
 	menuActions.quit = MenuQuit;
 	menuActions.context = nullptr;
 	CFObj<CFArrayRef> mainMenu(OMCCopyAppletMainMenuElements());

@@ -669,8 +669,42 @@ WaitForFile(const std::string &inPath)
 	return false;
 }
 
+std::string Joined(const std::vector<std::string> &inItems); // below, with the add-on checks
+
 int sMainCommandRuns = 0;
 int sQuits = 0;
+std::vector<std::string> sOpenedRecentFiles;
+
+// Removes this program's files from the desktop's recent list (GTK's, which records the adding app)
+void
+ForgetOwnRecentFiles()
+{
+	GtkRecentManager *manager = gtk_recent_manager_get_default();
+	GList *items = gtk_recent_manager_get_items(manager);
+	for(GList *item = items; item != nullptr; item = item->next)
+	{
+		GtkRecentInfo *info = static_cast<GtkRecentInfo *>(item->data);
+		if(gtk_recent_info_has_application(info, g_get_application_name()))
+			(void)gtk_recent_manager_remove_item(manager, gtk_recent_info_get_uri(info), nullptr);
+		gtk_recent_info_unref(info);
+	}
+	g_list_free(items);
+}
+
+// Waits (running the main loop) until inCondition holds, at most 3 s
+bool
+WaitUntil(std::function<bool()> inCondition)
+{
+	gint64 end = g_get_monotonic_time() + 3 * G_USEC_PER_SEC;
+	while(g_get_monotonic_time() < end)
+	{
+		if(inCondition())
+			return true;
+		g_main_context_iteration(nullptr, FALSE);
+		g_usleep(10 * 1000);
+	}
+	return inCondition();
+}
 
 void
 RunMenuChecks(GApplication *inApp)
@@ -714,8 +748,11 @@ RunMenuChecks(GApplication *inApp)
 		{"type": "CommandMenu", "properties": {"autoPopulate": true}}])";
 	CFObj<CFDataRef> data(CFDataCreate(kCFAllocatorDefault, (const UInt8 *)mainMenuJSON, (CFIndex)strlen(mainMenuJSON)));
 	CFObj<CFArrayRef> mainMenu((CFArrayRef)ACFJSONCreatePropertyList(data, kCFPropertyListImmutable, nullptr));
-	OMCAppletMenuActions actions;
+	ForgetOwnRecentFiles();
+	Pump(300);
+	OMCAppletMenuActions actions {};
 	actions.runMainCommand = [](void *) { sMainCommandRuns++; };
+	actions.openFile = [](void *, CFURLRef inFileURL) { sOpenedRecentFiles.push_back(URLPath(inFileURL)); };
 	actions.quit = [](void *) { sQuits++; };
 	actions.context = nullptr;
 	CFObj<CFStringRef> commandFileString(CFString(commandFile));
@@ -756,7 +793,7 @@ RunMenuChecks(GApplication *inApp)
 		return;
 	}
 	std::string outline = MenuOutline(menu);
-	std::string expected = "[New, Open\xE2\x80\xA6], "
+	std::string expected = "[New, Open\xE2\x80\xA6, Open Recent>[Clear Menu]], "
 		"[Tools>[Run Static, More>[Run Top]], Commands>[Main, Top Command, Images>[Resize>[Half]], Named, Static Target]], "
 		"[About OMCLinuxUITests], [Quit]";
 	Check("the menu: New and Open, the applet's menus with the Commands menu in submenus, About, Quit", outline == expected, outline);
@@ -787,6 +824,73 @@ RunMenuChecks(GApplication *inApp)
 	Check("New is Ctrl+N", Accelerator(inApp, newAction) == "<Control>n", Accelerator(inApp, newAction));
 	Check("Open is Ctrl+O", Accelerator(inApp, openAction) == "<Control>o", Accelerator(inApp, openAction));
 	Check("Quit is Ctrl+Q", Accelerator(inApp, quitAction) == "<Control>q", Accelerator(inApp, quitAction));
+
+	// Open Recent follows the desktop's recent list: this program's files, newest first
+	std::string older = folder + "/older notes.txt";
+	std::string newer = folder + "/newer notes.txt";
+	(void)g_file_set_contents(older.c_str(), "x", 1, nullptr);
+	(void)g_file_set_contents(newer.c_str(), "x", 1, nullptr);
+	GtkRecentManager *recentManager = gtk_recent_manager_get_default();
+	for(const std::string &path : {older, newer})
+	{
+		char *uri = g_filename_to_uri(path.c_str(), nullptr, nullptr);
+		(void)gtk_recent_manager_add_item(recentManager, uri);
+		// One after the other: GTK adds a file once it has its type (asynchronously), noting the time
+		// to the microsecond, which the list orders by
+		(void)WaitUntil([&] { return gtk_recent_manager_has_item(recentManager, uri) != FALSE; });
+		g_free(uri);
+	}
+	std::string recentOutline;
+	bool updated = WaitUntil([&] {
+		recentOutline = MenuOutline(menu);
+		return recentOutline.find("Open Recent>[[newer notes.txt, older notes.txt], [Clear Menu]]") != std::string::npos;
+	});
+	Check("Open Recent lists the applet's recent files, newest first, then Clear Menu", updated, recentOutline);
+	// What the menu button shows: its popover keeps a page per submenu; there must be one Open Recent
+	// page, as the menu is now (ActionUI gives the button a new popover after each rebuild)
+	std::vector<std::string> recentPages;
+	GtkPopover *popover = gtk_menu_button_get_popover(GTK_MENU_BUTTON(button));
+	GtkWidget *stack = (popover != nullptr) ? FindWidget(GTK_WIDGET(popover), GTK_TYPE_STACK) : nullptr;
+	if(stack != nullptr)
+	{
+		GListModel *pages = G_LIST_MODEL(gtk_stack_get_pages(GTK_STACK(stack)));
+		for(guint i = 0; i < g_list_model_get_n_items(pages); i++)
+		{
+			GtkStackPage *page = GTK_STACK_PAGE(g_list_model_get_item(pages, i));
+			const char *name = gtk_stack_page_get_name(page);
+			if((name != nullptr) && (strcmp(name, "Open Recent") == 0))
+			{
+				std::string labels;
+				std::function<void(GtkWidget *)> collect = [&](GtkWidget *inWidget) {
+					if(GTK_IS_LABEL(inWidget) && (gtk_label_get_text(GTK_LABEL(inWidget))[0] != 0))
+						labels += (labels.empty() ? "" : ", ") + std::string(gtk_label_get_text(GTK_LABEL(inWidget)));
+					for(GtkWidget *child = gtk_widget_get_first_child(inWidget); child != nullptr; child = gtk_widget_get_next_sibling(child))
+						collect(child);
+				};
+				collect(gtk_stack_page_get_child(page));
+				recentPages.push_back(labels);
+			}
+			g_object_unref(page);
+		}
+		g_object_unref(pages);
+	}
+	Check("the menu button shows one Open Recent, as it is now",
+			(recentPages.size() == 1) && (recentPages[0] == "Open Recent, newer notes.txt, older notes.txt, Clear Menu"), Joined(recentPages));
+	std::string olderAction = MenuItemAction(menu, {"Open Recent", "older notes.txt"});
+	if(!olderAction.empty())
+		g_action_group_activate_action(G_ACTION_GROUP(inApp), olderAction.c_str(), nullptr);
+	Check("choosing one opens that file", (sOpenedRecentFiles.size() == 1) && (sOpenedRecentFiles[0] == older),
+			sOpenedRecentFiles.empty() ? "nothing opened" : sOpenedRecentFiles[0]);
+	std::string clearAction = MenuItemAction(menu, {"Open Recent", "Clear Menu"});
+	if(!clearAction.empty())
+		g_action_group_activate_action(G_ACTION_GROUP(inApp), clearAction.c_str(), nullptr);
+	bool cleared = WaitUntil([&] {
+		recentOutline = MenuOutline(menu);
+		return recentOutline.find("Open Recent>[Clear Menu]") != std::string::npos;
+	});
+	Check("Clear Menu empties it", cleared, recentOutline);
+	(void)remove(older.c_str());
+	(void)remove(newer.c_str());
 
 	gtk_window_destroy(GTK_WINDOW(window));
 	actionUIRemoveWindow("5B4C3D2E-0000-4000-8000-00000000AA01");

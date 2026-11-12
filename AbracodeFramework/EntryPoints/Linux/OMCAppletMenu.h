@@ -6,6 +6,9 @@
 //  OMCCommandMenu, the File menu's New and Open), in each window's primary menu in the header bar,
 //  which ActionUI makes from menu bar JSON (actionUILoadMenuBarJSON). OMC writes that JSON:
 //  - New (Ctrl+N) and Open... (Ctrl+O), which run the main command, as on macOS;
+//  - Open Recent: the applet's recent files from the desktop's list (GtkRecentManager, the files
+//    OMCNoteRecentDocument added), newest first, at most 10, and Clear Menu, as macOS's; kept
+//    current as the list changes (actionUIReplaceMenuBarJSON); gone with Open when Open is replaced;
 //  - the applet's MainMenu.json: its Buttons run the command their actionID names, a CommandMenu
 //    with "autoPopulate" is the Commands menu (every command of the command file, in submenus by
 //    SUBMENU_NAME, OMCMenuModel.h);
@@ -26,6 +29,7 @@
 struct OMCAppletMenuActions
 {
 	void (*runMainCommand)(void *inContext);	// New and Open
+	void (*openFile)(void *inContext, CFURLRef inFileURL);	// an Open Recent item
 	void (*quit)(void *inContext);
 	void *context;
 };
