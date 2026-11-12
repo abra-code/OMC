@@ -1,22 +1,34 @@
 #!/bin/bash
 # Linux/make-applet-bundle.sh - makes a Linux applet bundle from a build's products and an applet's
-# source folder, in the flat layout the Linux engine reads (Platform/Linux/OMCEngineBundle.cpp,
-# Private/linux-applet-packaging-analysis.md):
+# sources, in the same Contents layout as a macOS applet, which Linux CoreFoundation reads with the
+# executable in Contents/Linux (Platform/Linux/OMCEngineBundle.cpp, OMCAppletSupportURL.h). One
+# layout on both systems: an applet's scripts find their files at the same paths
+# ($OMC_APP_BUNDLE_PATH/Contents/Resources/...), and only the binaries differ (owner, 2026-11-12;
+# a flat macOS app cannot be stapled):
 #
-#   <Name>.app/
-#     <Name>                        the CommandApplet executable, renamed (the engine linked in)
-#     Info.plist, Command.json, MainMenu.json, Base.lproj/..., Scripts/...   the applet's own files
+#   <Name>.app/Contents/
+#     Info.plist                    the applet's
+#     Linux/<Name>                  the CommandApplet executable, renamed (the engine linked in)
+#     Resources/                    Command.json, MainMenu.json, Base.lproj/..., Scripts/..., ...
+#     Library/...                   an applet's own, as on macOS (not its macOS Python)
 #     Frameworks/Abracode.framework/
 #       Info.plist                  Linux/AbracodeFramework-Info.plist
 #       omc_*.json                  the engine's built-in windows (AbracodeFramework/BuiltInDocuments)
 #       <lang>.lproj/Private.strings  the engine's own texts (AbracodeFramework/*.lproj)
 #       Support/                    the support tools (omc_dialog_control, omc_next_command, ...)
 #
-# Usage: make-applet-bundle.sh <products folder> <applet source folder> <output folder>/<Name>.app
-#   The products folder is the build's (build-linux.sh), holding CommandApplet and the tools. Every
-#   file and folder in the source folder is copied, except C and C++ sources and a Frameworks
-#   folder; the applet's Info.plist must name <Name> as its CFBundleExecutable. An existing bundle
-#   at the output path is replaced.
+# Usage: make-applet-bundle.sh <products folder> <applet sources> <output folder>/<Name>.app
+#   The products folder is the build's (build-linux.sh), holding CommandApplet and the tools.
+#   The applet sources are either
+#   - a macOS applet bundle (a folder with Contents, e.g. one AppletBuilder made): everything in
+#     its Contents is copied except what is macOS's: MacOS, Frameworks, _CodeSignature,
+#     CodeResources, Library/Python (a macOS Python; a Linux one is not made yet) and a Linux
+#     folder from an earlier run;
+#   - or a source folder with no Contents: its Info.plist goes to Contents, a Library folder to
+#     Contents/Library, everything else to Contents/Resources, except C and C++ sources and a
+#     Frameworks folder.
+#   The applet's Info.plist must name <Name> as its CFBundleExecutable. An existing bundle at the
+#   output path is replaced.
 # Exit status: 0 made, 1 failed, 2 bad arguments.
 
 products="$1"
@@ -77,6 +89,27 @@ case "$source_physical/" in
     "$bundle_physical/"*) printf 'The applet source folder is in the output: %s\n' "$source_folder" >&2; exit 2 ;;
 esac
 
+# The applet's Info.plist must name the bundle's name as its executable, which CoreFoundation finds
+# by that name. Checked before anything is removed or made, and read with the build's plister
+# (Linux has no plutil).
+source_info="$source_folder/Info.plist"
+if [ -d "$source_folder/Contents" ]; then
+    source_info="$source_folder/Contents/Info.plist"
+fi
+if [ ! -f "$source_info" ]; then
+    printf 'The applet sources have no Info.plist: %s\n' "$source_info" >&2
+    exit 1
+fi
+executable_name="$("$products/plister" get string "$source_info" /CFBundleExecutable 2>/dev/null)"
+if [ -z "$executable_name" ]; then
+    printf 'The applet'"'"'s Info.plist has no CFBundleExecutable, or plister cannot read it: %s\n' "$source_info" >&2
+    exit 1
+fi
+if [ "$executable_name" != "$name" ]; then
+    printf 'The applet'"'"'s Info.plist names "%s" as its CFBundleExecutable, not "%s" (the bundle'"'"'s name)\n' "$executable_name" "$name" >&2
+    exit 1
+fi
+
 if [ -e "$bundle" ]; then
     /bin/rm -rf -- "$bundle"
     status=$?
@@ -85,45 +118,90 @@ if [ -e "$bundle" ]; then
         exit 1
     fi
 fi
-framework="$bundle/Frameworks/Abracode.framework"
-/bin/mkdir -p "$framework/Support"
+contents="$bundle/Contents"
+framework="$contents/Frameworks/Abracode.framework"
+/bin/mkdir -p "$framework/Support" "$contents/Linux" "$contents/Resources"
 status=$?
 if [ "$status" -ne 0 ]; then
     printf 'Cannot make the bundle at: %s\n' "$bundle" >&2
     exit 1
 fi
 
-# The applet's own files
-for item in "$source_folder"/* ; do
-    if [ ! -e "$item" ]; then
-        continue # an empty source folder
-    fi
-    item_name="$(/usr/bin/basename -- "$item")"
-    case "$item_name" in
-        *.c|*.cpp|*.h|Frameworks) continue ;;
-    esac
-    /bin/cp -R -- "$item" "$bundle/$item_name"
-    status=$?
-    if [ "$status" -ne 0 ]; then
-        printf 'Cannot copy %s into the bundle\n' "$item" >&2
+# Copies <item> to <destination>, or fails the script
+copy_item() { # <item> <destination>
+    /bin/cp -R -- "$1" "$2"
+    local copy_status=$?
+    if [ "$copy_status" -ne 0 ]; then
+        printf 'Cannot copy %s into the bundle\n' "$1" >&2
         exit 1
     fi
-done
-if [ ! -f "$bundle/Info.plist" ]; then
-    printf 'The applet source folder has no Info.plist: %s\n' "$source_folder" >&2
+}
+
+# The applet's own files
+if [ -d "$source_folder/Contents" ]; then
+    for item in "$source_folder/Contents"/* ; do
+        if [ ! -e "$item" ]; then
+            continue # an empty Contents
+        fi
+        item_name="$(/usr/bin/basename -- "$item")"
+        case "$item_name" in
+            MacOS|Frameworks|_CodeSignature|CodeResources|Linux) continue ;;
+            Resources)
+                for resource in "$item"/* ; do
+                    if [ -e "$resource" ]; then
+                        copy_item "$resource" "$contents/Resources/"
+                    fi
+                done
+                ;;
+            Library)
+                for library_item in "$item"/* ; do
+                    if [ ! -e "$library_item" ]; then
+                        continue
+                    fi
+                    case "$(/usr/bin/basename -- "$library_item")" in
+                        Python) continue ;; # a macOS Python
+                    esac
+                    /bin/mkdir -p "$contents/Library"
+                    status=$?
+                    if [ "$status" -ne 0 ]; then
+                        printf 'Cannot make %s\n' "$contents/Library" >&2
+                        exit 1
+                    fi
+                    copy_item "$library_item" "$contents/Library/"
+                done
+                ;;
+            *) copy_item "$item" "$contents/$item_name" ;;
+        esac
+    done
+else
+    for item in "$source_folder"/* ; do
+        if [ ! -e "$item" ]; then
+            continue # an empty source folder
+        fi
+        item_name="$(/usr/bin/basename -- "$item")"
+        case "$item_name" in
+            *.c|*.cpp|*.h|Frameworks) continue ;;
+            Info.plist) copy_item "$item" "$contents/Info.plist" ;;
+            Library) copy_item "$item" "$contents/Library" ;; # beside Resources, as on macOS
+            *) copy_item "$item" "$contents/Resources/$item_name" ;;
+        esac
+    done
+fi
+if [ ! -f "$contents/Info.plist" ]; then
+    printf 'The applet sources have no Info.plist: %s\n' "$source_folder" >&2
     exit 1
 fi
 
 # The executable, under the applet's name
-/bin/cp -- "$executable" "$bundle/$name"
+/bin/cp -- "$executable" "$contents/Linux/$name"
 status=$?
 if [ "$status" -ne 0 ]; then
     printf 'Cannot copy the executable into the bundle\n' >&2
     exit 1
 fi
-/bin/chmod 755 "$bundle/$name"
-if [ -d "$bundle/Scripts" ]; then
-    /usr/bin/find "$bundle/Scripts" -type f -exec /bin/chmod 755 {} +
+/bin/chmod 755 "$contents/Linux/$name"
+if [ -d "$contents/Resources/Scripts" ]; then
+    /usr/bin/find "$contents/Resources/Scripts" -type f -exec /bin/chmod 755 {} +
 fi
 
 # The engine's framework: its Info.plist, built-in windows, texts and support tools

@@ -52,6 +52,8 @@ if [ "$status" -ne 0 ]; then
     printf 'cannot make the applet bundle (make-applet-bundle.sh status %s)\n' "$status" >&2
     exit 1
 fi
+# The bundle's executable: the Contents layout, as on macOS (make-applet-bundle.sh)
+applet="$bundle/Contents/Linux/LaunchTest"
 export LAUNCHTEST_LOG="$work/log"
 # The desktop's recent files (recently-used.xbel) in the work folder, not the session's own list
 export XDG_DATA_HOME="$work/data"
@@ -102,7 +104,7 @@ log_text() { /bin/cat "$LAUNCHTEST_LOG" 2>/dev/null | /usr/bin/tr '\n' ' '; }
 printf '== launched with nothing: the main command, then launched, then it quits by itself ==\n'
 : > "$LAUNCHTEST_LOG"
 export LAUNCHTEST_MAIN_SECONDS=1
-"$bundle/LaunchTest" &
+"$applet" &
 pid=$!
 wait_for_exit "$pid" 20
 check "the applet quits by itself once idle" "$([ "$result" = "0" ] && echo 1 || echo 0)" "exit: $result"
@@ -113,12 +115,12 @@ check "the main command ran with no file, then app.did.launch, then app.will.ter
 printf '== a second launch with a file hands it to the running applet ==\n'
 : > "$LAUNCHTEST_LOG"
 export LAUNCHTEST_MAIN_SECONDS=4
-"$bundle/LaunchTest" &
+"$applet" &
 first=$!
 started="$(wait_for_line "did.launch" 10)"
 check "the first applet is running" "$([ "$started" = "yes" ] && echo 1 || echo 0)"
 : > "$work/dropped file.txt"
-"$bundle/LaunchTest" "$work/dropped file.txt" &
+"$applet" "$work/dropped file.txt" &
 second=$!
 wait_for_exit "$second" 10
 check "the second launch exits at once" "$([ "$result" = "0" ] && echo 1 || echo 0)" "exit: $result"
@@ -133,7 +135,7 @@ check "the file is in the recent files" "$([ "$recent" = "1" ] && echo 1 || echo
 
 printf '== a URL on the applet goes to omc.app.handle-url ==\n'
 : > "$LAUNCHTEST_LOG"
-"$bundle/LaunchTest" 'launchtest://hello?x=1&y=two%20words' 'launchtest://hello?q=100%' &
+"$applet" 'launchtest://hello?x=1&y=two%20words' 'launchtest://hello?q=100%' &
 pid=$!
 handled="$(wait_for_line 'url:launchtest://hello?x=1&y=two%20words' 10)"
 check "the URL reaches omc.app.handle-url" "$([ "$handled" = "yes" ] && echo 1 || echo 0)" "$(log_text)"
@@ -147,7 +149,7 @@ check "without running the main command" "$([ "$mains" = "0" ] && echo 1 || echo
 
 printf '== a command'"'"'s ActionUI window: init, a value set with omc_dialog_control, OK ==\n'
 : > "$LAUNCHTEST_LOG"
-"$bundle/LaunchTest" 'launchtest://exe?commandID=lt.window' &
+"$applet" 'launchtest://exe?commandID=lt.window' &
 pid=$!
 command_ran="$(wait_for_line 'window.command' 10)"
 check "the window command runs" "$([ "$command_ran" = "yes" ] && echo 1 || echo 0)" "$(log_text)"
@@ -162,7 +164,7 @@ check "then, with no window left, the applet quits by itself" "$([ "$result" = "
 
 printf '== a quit ends a blocking window'"'"'s modal run ==\n'
 : > "$LAUNCHTEST_LOG"
-"$bundle/LaunchTest" 'launchtest://exe?commandID=lt.modal' &
+"$applet" 'launchtest://exe?commandID=lt.modal' &
 pid=$!
 modal_open="$(wait_for_line 'modal.init' 10)"
 check "a blocking window opens (its init ran)" "$([ "$modal_open" = "yes" ] && echo 1 || echo 0)" "$(log_text)"
@@ -172,7 +174,7 @@ check "SIGTERM ends the applet while the window's modal run goes on" "$([ "$resu
 
 printf '== macOS version requirements are ignored on Linux ==\n'
 : > "$LAUNCHTEST_LOG"
-"$bundle/LaunchTest" 'launchtest://exe?commandID=lt.macos' &
+"$applet" 'launchtest://exe?commandID=lt.macos' &
 pid=$!
 macos_ran="$(wait_for_line 'macos.ran' 10)"
 check "a command that requires macOS 99 and at most 10.1 runs" "$([ "$macos_ran" = "yes" ] && echo 1 || echo 0)" "$(log_text)"
@@ -181,7 +183,7 @@ check "and the applet quits once idle" "$([ "$result" = "0" ] && echo 1 || echo 
 
 printf '== shell commands and .sh scripts run with bash, as on macOS ==\n'
 : > "$LAUNCHTEST_LOG"
-"$bundle/LaunchTest" 'launchtest://exe?commandID=lt.shell' &
+"$applet" 'launchtest://exe?commandID=lt.shell' &
 pid=$!
 command_bash="$(wait_for_line 'shell.command.bash' 10)"
 check "a command line runs with bash" "$([ "$command_bash" = "yes" ] && echo 1 || echo 0)" "$(log_text)"
@@ -192,7 +194,7 @@ check "and the applet quits once idle" "$([ "$result" = "0" ] && echo 1 || echo 
 
 printf '== the engine'"'"'s framework in the bundle: a built-in window opens ==\n'
 : > "$LAUNCHTEST_LOG"
-"$bundle/LaunchTest" 'launchtest://exe?commandID=lt.input' 2> "$work/input.err" &
+"$applet" 'launchtest://exe?commandID=lt.input' 2> "$work/input.err" &
 pid=$!
 /bin/sleep 4
 alive="no"
@@ -208,8 +210,8 @@ check "and SIGTERM ends the applet while the dialog waits" "$([ "$result" = "0" 
 
 printf '== the master applet, CommandApplet.app (made by build-linux.sh) ==\n'
 master="$products/CommandApplet.app"
-if [ -x "$master/CommandApplet" ]; then
-    "$master/CommandApplet" 2> "$work/master.err" &
+if [ -x "$master/Contents/Linux/CommandApplet" ]; then
+    "$master/Contents/Linux/CommandApplet" 2> "$work/master.err" &
     pid=$!
     /bin/sleep 4
     alive="no"
@@ -229,14 +231,14 @@ fi
 printf '== SIGTERM quits as Quit does ==\n'
 : > "$LAUNCHTEST_LOG"
 export LAUNCHTEST_MAIN_SECONDS=30
-"$bundle/LaunchTest" &
+"$applet" &
 pid=$!
 started="$(wait_for_line "did.launch" 10)"
 kill -TERM "$pid"
 wait_for_exit "$pid" 10
 check "the applet ends on SIGTERM" "$([ "$result" = "0" ] && echo 1 || echo 0)" "exit: $result"
 check "after app.will.terminate" "$(/usr/bin/grep -c -x 'will.terminate' "$LAUNCHTEST_LOG" | /usr/bin/grep -c -x 1)" "$(log_text)"
-/usr/bin/pkill -f "$bundle/Scripts/LaunchTest.main.sh" 2>/dev/null
+/usr/bin/pkill -f "$bundle/Contents/Resources/Scripts/LaunchTest.main.sh" 2>/dev/null
 
 /bin/rm -rf "$work"
 printf '%d passed, %d failed\n' "$passed" "$failed"

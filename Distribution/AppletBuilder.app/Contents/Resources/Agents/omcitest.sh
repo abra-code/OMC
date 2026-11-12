@@ -373,14 +373,9 @@ _omcitest_wait_exit() { # <seconds>
 # which are omctest's recording stand-ins (written by omctest.sh's own emitters, so both harnesses
 # answer and log alike). The applet hands this folder to its handlers as OMC_OMC_SUPPORT_PATH.
 _omcitest_build_support() { # <App.app> <dest>
-    local _real="$1/Contents/Frameworks/Abracode.framework/Versions/A/Support"
-    if [ ! -d "$_real" ]; then
-        _real="$1/Contents/Frameworks/Abracode.framework/Support"
-    fi
-    if [ ! -d "$_real" ]; then
-        _real="$1/Frameworks/Abracode.framework/Support" # a flat Linux bundle (_omcitest_executable)
-    fi
-    if [ ! -d "$_real" ]; then
+    local _real
+    _real="$(_omcitest_support_folder "$1")"
+    if [ -z "$_real" ]; then
         printf 'omcitest: no Abracode.framework Support folder in %s\n' "$1" >&2
         return 1
     fi
@@ -406,26 +401,46 @@ _omcitest_build_support() { # <App.app> <dest>
     done
 }
 
-# The applet's executable: in a macOS bundle the one its Info.plist names in Contents/MacOS; a
-# Linux applet is a flat bundle (no Contents), its executable at the top named as the bundle
-# (Linux/make-applet-bundle.sh), as the layout tells, not the system.
+# The applet's framework Support folder: Versions/A in macOS's versioned framework, the top of
+# Linux's (Linux/make-applet-bundle.sh). Prints nothing when there is none.
+_omcitest_support_folder() { # <App.app>
+    local _framework="$1/Contents/Frameworks/Abracode.framework"
+    if [ -d "$_framework/Versions/A/Support" ]; then
+        printf '%s\n' "$_framework/Versions/A/Support"
+    elif [ -d "$_framework/Support" ]; then
+        printf '%s\n' "$_framework/Support"
+    fi
+}
+
+# The executable folder of this system's applets: the same bundle layout on both, the executable in
+# Contents/MacOS on macOS and in Contents/Linux on Linux (Linux/make-applet-bundle.sh). OSTYPE is
+# the shell's own, no tool needed.
+_omcitest_executable_folder() {
+    case "${OSTYPE:-}" in
+        linux*) printf 'Linux\n' ;;
+        *) printf 'MacOS\n' ;;
+    esac
+}
+
+# The applet's executable: the one its Info.plist names, in this system's executable folder. The
+# name is read with the plister every applet carries in its framework (Linux has no plutil).
 _omcitest_executable() { # <App.app>
-    if [ ! -d "$1/Contents" ]; then
-        local _bundle="${1%/}" # a path typed with a trailing slash names the same bundle
-        local _flat="$_bundle/${_bundle##*/}"
-        _flat="${_flat%.app}"
-        if [ ! -f "$_flat" ] || [ ! -x "$_flat" ]; then
-            return 1
-        fi
-        printf '%s\n' "$_flat"
-        return 0
+    local _bundle="${1%/}" # a path typed with a trailing slash names the same bundle
+    local _support
+    _support="$(_omcitest_support_folder "$_bundle")"
+    if [ -z "$_support" ] || [ ! -x "$_support/plister" ]; then
+        return 1
     fi
     local _name
-    _name="$(/usr/bin/plutil -extract CFBundleExecutable raw -o - "$1/Contents/Info.plist" 2>/dev/null)"
+    _name="$("$_support/plister" get string "$_bundle/Contents/Info.plist" /CFBundleExecutable 2>/dev/null)"
     if [ -z "$_name" ]; then
         return 1
     fi
-    printf '%s\n' "$1/Contents/MacOS/$_name"
+    local _executable="$_bundle/Contents/$(_omcitest_executable_folder)/$_name"
+    if [ ! -f "$_executable" ] || [ ! -x "$_executable" ]; then
+        return 1
+    fi
+    printf '%s\n' "$_executable"
 }
 
 _omcitest_unset_matching() { # <ere-matching-the-whole-name>
@@ -550,14 +565,11 @@ omcitest_launch() { # <App.app>
     _status_reply="$(itest_call omc.test.status)"
     case "$_status_reply" in
         *"\"pasteboardPrefix\": \"$ITEST_PASTEBOARD_PREFIX\""*)
-            OMCITEST_PASTEBOARD_TOOL="$_app/Contents/Frameworks/Abracode.framework/Versions/A/Support/pasteboard"
-            if [ ! -x "$OMCITEST_PASTEBOARD_TOOL" ]; then
-                OMCITEST_PASTEBOARD_TOOL="$_app/Contents/Frameworks/Abracode.framework/Support/pasteboard"
+            OMCITEST_PASTEBOARD_TOOL="$(_omcitest_support_folder "$_app")"
+            if [ -n "$OMCITEST_PASTEBOARD_TOOL" ]; then
+                OMCITEST_PASTEBOARD_TOOL="$OMCITEST_PASTEBOARD_TOOL/pasteboard"
             fi
-            if [ ! -x "$OMCITEST_PASTEBOARD_TOOL" ]; then
-                OMCITEST_PASTEBOARD_TOOL="$_app/Frameworks/Abracode.framework/Support/pasteboard"
-            fi
-            if [ ! -x "$OMCITEST_PASTEBOARD_TOOL" ]; then
+            if [ -z "$OMCITEST_PASTEBOARD_TOOL" ] || [ ! -x "$OMCITEST_PASTEBOARD_TOOL" ]; then
                 OMCITEST_PASTEBOARD_TOOL=""
             fi
             ;;

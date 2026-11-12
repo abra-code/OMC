@@ -224,8 +224,7 @@ output="$(itest_output "$run")"
 check "handlers get the file's private home" "home:$ITEST_HOME" "$(printf '%s\n' "$output" | /usr/bin/sed -n 1p)"
 check "and its private temporary folder" "tmp:$ITEST_TMPDIR" "$(printf '%s\n' "$output" | /usr/bin/sed -n 2p)"
 check "inside the test's folder" "yes" "$(case "$ITEST_HOME" in ("$ITEST_WORK"/*) printf yes ;; (*) printf no ;; esac)"
-# A macOS bundle has its resources in Contents/Resources, a flat Linux bundle at the top
-check "ITEST_APP names the applet" "yes" "$({ [ -f "$ITEST_APP/Contents/Resources/Command.json" ] || [ -f "$ITEST_APP/Command.json" ]; } && printf yes || printf no)"
+check "ITEST_APP names the applet" "yes" "$([ -f "$ITEST_APP/Contents/Resources/Command.json" ] && printf yes || printf no)"
 
 section "A window opened on a file stays out of the user's recent documents"
 # Open Recent and Recent Items are kept per user, not under the private home: a test's files,
