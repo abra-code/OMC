@@ -113,6 +113,10 @@ class ElementValidator:
         # must be a known element type.
         type_variants = expanded.get("type", [])
         if not type_variants:
+            if had_type and not _is_root:
+                # The type is given only for other platforms: the runtime skips the element
+                # here (as it drops other platforms' properties), so there is nothing to check.
+                return issues
             if had_type:
                 issues.append(ValidationIssue(
                     "error", path,

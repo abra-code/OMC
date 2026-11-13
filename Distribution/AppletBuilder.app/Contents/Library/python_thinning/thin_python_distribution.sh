@@ -264,8 +264,7 @@ remove_component() {
     if [[ "$comp" == "codecs_east_asian" ]]; then
         local codec
         for codec in jp cn hk kr tw; do
-            local codec_files
-            codec_files=$(/usr/bin/find "$dynload" -maxdepth 1 -name "_codecs_${codec}*.so" 2>/dev/null || echo "")
+            local codec_files=$(/usr/bin/find "$dynload" -maxdepth 1 -name "_codecs_${codec}*.so" 2>/dev/null || echo "")
             
             if [ -n "$codec_files" ]; then
                 local codec_file
@@ -343,11 +342,24 @@ remove_component() {
 
     # Handle SSL-specific cleanup
     if [[ "$comp" == "ssl" ]]; then
-        if [ -f "$PYTHON_DIR/lib/libssl.dylib" ]; then
-            echo "  Removing libssl.dylib"
-            /bin/rm -f "$PYTHON_DIR/lib/libssl.dylib"
-            removed=true
-        fi
+        # The bundled libssl: libssl.dylib on macOS, libssl-pyembed.so.N on Linux
+        local ssl_lib
+        for ssl_lib in "$PYTHON_DIR/lib/libssl.dylib" "$PYTHON_DIR"/lib/libssl-pyembed.so.*; do
+            if [ -f "$ssl_lib" ]; then
+                echo "  Removing ${ssl_lib##*/}"
+                /bin/rm -f "$ssl_lib"
+                removed=true
+            fi
+        done
+        # Linux's certificate hook exists only for ssl (_pyembed_ca.py and its .pth and .start)
+        local ca_hook
+        for ca_hook in "$site_pkgs/_pyembed_ca.py" "$site_pkgs/_pyembed_ca.pth" "$site_pkgs/_pyembed_ca.start"; do
+            if [ -f "$ca_hook" ]; then
+                echo "  Removing ${ca_hook##*/}"
+                /bin/rm -f "$ca_hook"
+                removed=true
+            fi
+        done
     fi
 
     if ! $removed; then
@@ -437,11 +449,15 @@ check_and_remove_libcrypto() {
     
     # Only remove libcrypto if both ssl and hashlib are being removed
     if $removing_ssl && $removing_hashlib; then
-        if [ -f "$PYTHON_DIR/lib/libcrypto.dylib" ]; then
-            echo "Removing libcrypto.dylib (both ssl and hashlib removed)"
-            /bin/rm -f "$PYTHON_DIR/lib/libcrypto.dylib"
-            echo
-        fi
+        # libcrypto.dylib on macOS, libcrypto-pyembed.so.N on Linux
+        local crypto_lib
+        for crypto_lib in "$PYTHON_DIR/lib/libcrypto.dylib" "$PYTHON_DIR"/lib/libcrypto-pyembed.so.*; do
+            if [ -f "$crypto_lib" ]; then
+                echo "Removing ${crypto_lib##*/} (both ssl and hashlib removed)"
+                /bin/rm -f "$crypto_lib"
+                echo
+            fi
+        done
     fi
 }
 

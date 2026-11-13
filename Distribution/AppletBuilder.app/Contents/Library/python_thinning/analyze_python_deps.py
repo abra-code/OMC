@@ -209,10 +209,11 @@ class Isolation:
         for var in ("PYTHONPATH", "PYTHONHOME", "PYTHONSTARTUP", "PYTHONUSERBASE",
                     "_PYTHON_SYSCONFIGDATA_NAME", "PYTHON_LAZY_IMPORTS"):
             env.pop(var, None)
-        # DYLD_* too. The embedded interpreter is ad-hoc signed with no library
-        # validation, so an inherited DYLD_INSERT_LIBRARIES would load code from outside
-        # the bundle - and check() cannot see that, because it only inspects sys.path.
-        for var in [k for k in env if k.startswith("DYLD_")]:
+        # DYLD_* too (LD_* on Linux). The embedded interpreter is ad-hoc signed with no
+        # library validation, so an inherited DYLD_INSERT_LIBRARIES (LD_PRELOAD,
+        # LD_LIBRARY_PATH) would load code from outside the bundle - and check() cannot
+        # see that, because it only inspects sys.path.
+        for var in [k for k in env if k.startswith(("DYLD_", "LD_"))]:
             env.pop(var, None)
         env["PYTHONNOUSERSITE"] = "1"
         env["PYTHONDONTWRITEBYTECODE"] = "1"
@@ -1213,6 +1214,48 @@ def size(path):
     return total
 
 
+def libs_folder_owners(dirs):
+    """Map each "<name>.libs" folder a wheel installed (auditwheel's bundled libraries on
+    Linux) to the other top-level names its distribution installed, read from the
+    .dist-info RECORD files in dirs: {"pillow.libs": {"PIL"}}. A folder no RECORD lists
+    is not in the map. Also returns each folder's .dist-info name:
+    {"pillow.libs": "pillow-13.0.0.dist-info"}."""
+    owners = {}
+    dist_infos = {}
+    for container in dirs:
+        if not container or not os.path.isdir(container):
+            continue
+        for entry in os.listdir(container):
+            if not entry.endswith(".dist-info"):
+                continue
+            record = os.path.join(container, entry, "RECORD")
+            try:
+                with open(record, encoding="utf-8") as f:
+                    lines = f.read().splitlines()
+            except OSError:
+                continue
+            tops = set()
+            for line in lines:
+                # A path holding a comma is CSV-quoted ("PIL/a,b.py",...): the top-level
+                # part never holds one, so dropping the opening quote is enough here
+                path = line.split(",", 1)[0].strip().lstrip('"')
+                if not path or path.startswith(("/", "..")):
+                    continue
+                top = path.split("/", 1)[0]
+                if top.endswith((".dist-info", ".data")) or top == "__pycache__":
+                    continue
+                if top.endswith(".py"):
+                    top = top[:-3]
+                elif "/" not in path and top.endswith(".so"):
+                    top = top.split(".")[0]
+                tops.add(top)
+            for top in tops:
+                if top.endswith(".libs"):
+                    owners.setdefault(top, set()).update(t for t in tops if not t.endswith(".libs"))
+                    dist_infos.setdefault(top, entry)  # site-packages first, as dirs lists it
+    return owners, dist_infos
+
+
 def top_level_items(container, is_pkg_root=True):
     """Map top-level name -> path for a stdlib dir or a site-packages dir."""
     items = {}
@@ -1305,7 +1348,7 @@ print(json.dumps(sorted(n for n in found if n)))
     # makes the probe name a module that does not exist here - and because the answer is
     # non-empty, the pattern fallback below would not fire and nothing would warn. That
     # is the original bug with an extra step. Reproduced, hence the scrub.
-    env = {k: v for k, v in os.environ.items() if not k.startswith("DYLD_")}
+    env = {k: v for k, v in os.environ.items() if not k.startswith(("DYLD_", "LD_"))}
     for var in ("PYTHONPATH", "PYTHONHOME", "PYTHONSTARTUP", "PYTHONUSERBASE",
                 "_PYTHON_SYSCONFIGDATA_NAME"):
         env.pop(var, None)
@@ -1869,6 +1912,11 @@ def verify_plan(python_bin, plan, iso=None, root=None):
             _o, err = proc.communicate()
             timed_out = True
         errs = err.decode("utf-8", "replace")
+        # The error lines only: -X importtime logs every module imported, and a line ending in
+        # "| traceback" (the traceback module, which Pillow imports) matched the strict
+        # search for "Traceback" below, failing a run that had no error at all
+        error_text = "\n".join(line for line in errs.splitlines()
+                               if not line.startswith("import time:"))
         # The probe reports failures instead of raising, so collect both forms: a name it
         # could not import, and any ModuleNotFoundError that escaped normally.
         #
@@ -1908,7 +1956,7 @@ def verify_plan(python_bin, plan, iso=None, root=None):
                 print("      " + line, file=sys.stderr)
             continue
         if strict:
-            bad = bool(err_pat.search(errs)) or (not timed_out and proc.returncode not in (0, None))
+            bad = bool(err_pat.search(error_text)) or (not timed_out and proc.returncode not in (0, None))
         else:
             bad = bool(gone) or import_failed(errs)
         if bad:
@@ -1916,7 +1964,7 @@ def verify_plan(python_bin, plan, iso=None, root=None):
             regressions |= gone
             print("  [%d] FAILED: %s" % (i, cmd[:70]), file=sys.stderr)
             shown = 0
-            for line in errs.splitlines():
+            for line in error_text.splitlines():
                 if err_pat.search(line) or "Error:" in line or "SyntaxError" in line:
                     print("      " + line, file=sys.stderr)
                     shown += 1
@@ -2447,7 +2495,28 @@ def main(argv):
     for f in args.runtime_log:
         keep_log |= load_log(f)
     computed = computed_name_imports(python_bin, all_items)
-    keep = keep_trace | keep_log | extra | computed | set(sys.builtin_module_names)
+    # pth: what .pth and .start files import at every start-up (Linux's certificate hook,
+    # _pyembed_ca, for one); the trace does not always log them, and removing one breaks
+    # every run of the interpreter. Top-level names, as keep holds: a .start file names
+    # pkg.mod:callable, and "pkg.mod" would match no top-level item
+    keep = (keep_trace | keep_log | extra | computed | {n.split(".")[0] for n in pth}
+            | set(sys.builtin_module_names))
+    # A Linux wheel's own libraries are in <distribution>.libs beside the package (auditwheel; on
+    # macOS they are inside it, <package>/.dylibs): nothing imports that folder, but the
+    # package's extension modules load from it, so it stays whenever the package does. The
+    # folder is named after the distribution, which can differ from the import name (Pillow:
+    # PIL and pillow.libs), so the owner is the distribution whose RECORD lists the folder;
+    # with no RECORD, the folder whose name is the package's
+    owners, owner_dist_infos = libs_folder_owners([site] + ([args.packages] if args.packages else []))
+    kept_libs = {n for n in all_items if n.endswith(".libs")
+                 and (n[:-len(".libs")] in keep or owners.get(n, set()) & keep)}
+    keep |= kept_libs
+    # And, where the folder's name is not its package's (pillow.libs beside PIL), the owning
+    # .dist-info, so the RECORD that ties them is still there when the thinned tree is thinned
+    # again; a folder named after its package needs no RECORD, so its .dist-info can go
+    keep |= {owner_dist_infos[n] for n in kept_libs
+             if n[:-len(".libs")] not in keep and n in owner_dist_infos
+             and owner_dist_infos[n] in all_items}
     # Coverage cross-check: source names these top-level modules but the trace never
     # loaded them -> an unexercised path or a dynamic import. They WILL be removed
     # unless you trace that path or --keep them.
