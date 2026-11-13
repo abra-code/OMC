@@ -200,3 +200,32 @@ itest_close "$window" > /dev/null
 itest_wait_idle 60
 check "the window is gone" "" "$(itest_windows | /usr/bin/grep -x -- "$window")"
 check "the project itself is still there" "yes" "$([ -f "$FIXTURE/Contents/Info.plist" ] && printf yes || printf no)"
+
+section "Linux: opening a project from outside hands it to the running AppletBuilder"
+# What a create, or a save that renames the applet, does: open -a <AppletBuilder.app> <project>
+# (the Support folder's open, the real one here, not the run's recording stub). On Linux it starts
+# a second AppletBuilder process, which hands the project to the running one over the session
+# bus (the applet's single instance) and ends; a window it opened itself would not be this run's.
+# macOS gets the same from Launch Services.
+case "${OSTYPE:-}" in
+    linux*)
+        before="$(itest_windows)"
+        "$ITEST_APP/Contents/Frameworks/Abracode.framework/Support/open" -a "$ITEST_APP" "$FIXTURE"
+        check "open -a starts AppletBuilder with the project" "0" "$?"
+        reopened=""
+        tries=0
+        while [ -z "$reopened" ] && [ "$tries" -lt 60 ]; do
+            /bin/sleep 0.5
+            reopened="$(itest_new_window "$before")"
+            tries=$((tries + 1))
+        done
+        check "the running AppletBuilder opened the project window" "yes" "$([ -n "$reopened" ] && printf yes || printf no)"
+        if [ -n "$reopened" ]; then
+            wait_until 30 value_is_set "$reopened" "$GEN_NAME_ID"
+            itest_wait_idle 60
+            check "on the same project" "Fixture" "$(itest_value "$reopened" "$GEN_NAME_ID")"
+            itest_close "$reopened" > /dev/null
+            itest_wait_idle 60
+        fi
+        ;;
+esac
