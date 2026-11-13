@@ -81,6 +81,3 @@ if [ -n "$project_path" ] && [ -f "$project_path/Contents/Info.plist" ]; then
         printf "%s" "$buffer" | "$dialog_tool" "$window_uuid" "$SVC_TABLE_ID" omc_table_set_rows_from_stdin
     fi
 fi
-
-# Linux: no minimum macOS version and no Services menu (the keys stay in Info.plist untouched)
-ab_hide_macos_only_controls "$GEN_MIN_OS_ROW_ID" "$SVC_DIVIDER_ID" "$SVC_HEADER_ID" "$SVC_SPLIT_ID"

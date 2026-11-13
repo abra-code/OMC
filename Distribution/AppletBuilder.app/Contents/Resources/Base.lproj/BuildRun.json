@@ -45,7 +45,7 @@
                             ]
                         },
                         {
-                            "type": "LabeledContent",
+                            "type:apple": "LabeledContent",
                             "id": 421,
                             "properties": {
                                 "title": "Signing Identity:"
@@ -67,7 +67,7 @@
                             ]
                         },
                         {
-                            "type": "LabeledContent",
+                            "type:apple": "LabeledContent",
                             "id": 422,
                             "properties": {
                                 "title": "Thin Universal Executables:"

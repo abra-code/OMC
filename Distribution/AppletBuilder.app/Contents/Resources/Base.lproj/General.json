@@ -115,7 +115,7 @@
                   ]
                 },
                 {
-                  "type": "HStack",
+                  "type:apple": "HStack",
                   "id": 309,
                   "properties": { "spacing": 8 },
                   "children": [
@@ -173,14 +173,14 @@
       ]
     },
     {
-      "type": "Divider",
+      "type:apple": "Divider",
       "id": 339,
       "properties": {
         "padding": { "leading": 16, "trailing": 16, "top": 16 }
       }
     },
     {
-      "type": "VStack",
+      "type:apple": "VStack",
       "id": 340,
       "properties": {
         "spacing": 4,
@@ -217,7 +217,7 @@
       ]
     },
     {
-      "type": "HSplitView",
+      "type:apple": "HSplitView",
       "id": 341,
       "properties": {
         "frame": {

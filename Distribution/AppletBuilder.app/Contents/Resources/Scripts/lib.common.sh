@@ -107,7 +107,7 @@ GEN_NAME_ID=302
 GEN_BUNDLE_ID_ID=303
 GEN_VERSION_ID=305
 GEN_MIN_OS_ID=306
-# The Min macOS row, hidden on Linux (owner's Q6)
+# The Min macOS row, absent on Linux ("type:apple" in General.json; owner's Q6)
 GEN_MIN_OS_ROW_ID=309
 GEN_ICON_IMAGE_ID=307
 GEN_HEADER_NAME_ID=308
@@ -161,7 +161,7 @@ SVC_ADD_BTN_ID=334
 SVC_REMOVE_BTN_ID=335
 SVC_SAVE_BTN_ID=336
 SVC_STATUS_ID=337
-# The Services area's three parts (divider, header, split view), hidden on Linux: NSServices is
+# The Services area's three parts (divider, header, split view), absent on Linux ("type:apple"): NSServices is
 # macOS's (owner's Q6; the keys stay in Info.plist untouched)
 SVC_DIVIDER_ID=339
 SVC_HEADER_ID=340
@@ -199,7 +199,7 @@ HELP_WEBVIEW_ID=910
 # Build & Run
 BUILD_IDENTITY_PICKER_ID=402
 BUILD_THIN_PICKER_ID=404
-# The Signing Identity and Thin Universal Executables rows, hidden on Linux (owner's Q3, Q4)
+# The Signing Identity and Thin Universal Executables rows, absent on Linux ("type:apple" in BuildRun.json; owner's Q3, Q4)
 BUILD_IDENTITY_ROW_ID=421
 BUILD_THIN_ROW_ID=422
 BUILD_WARNINGS_AS_ERRORS_ID=405
@@ -296,24 +296,6 @@ ab_shipped_icon_svg() { # <.icon or .icns path>
     if [ -n "$icons_dir" ] && [ "$source_dir" = "$icons_dir" ] && [ -f "${1%.*}.svg" ]; then
         printf '%s\n' "${1%.*}.svg"
     fi
-    return 0
-}
-
-# Hides the given controls of the current window on Linux, where what they set does not exist
-# (owner's Q6: signing, thinning, Services, the minimum macOS version); nothing on macOS. Called last
-# by the panes' load handlers, after they filled the window, so one set of ActionUI files serves
-# both systems. ActionUI's hidden keeps a view's space (SwiftUI's .hidden()), so the rows leave
-# gaps; omc_remove_element would close them, but ActionUI cannot remove a view inside a
-# LoadableView's loaded content (WindowModel.locateParent searches only the window's own tree),
-# where these panes are.
-ab_hide_macos_only_controls() { # <view id>...
-    if ab_on_macos; then
-        return 0
-    fi
-    local view_id
-    for view_id in "$@"; do
-        "$dialog_tool" "$window_uuid" "$view_id" omc_set_property "hidden" "true"
-    done
     return 0
 }
 

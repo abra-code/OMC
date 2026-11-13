@@ -29,11 +29,13 @@ check "the view ids imported from lib.common.sh" "10 302 303 305 308 501 502 512
 COMMANDS_TAB=1
 SCRIPTS_TAB=2
 BUILD_RUN_TAB=4
-# The macOS-only controls (ab_hide_macos_only_controls): shown on macOS, hidden on Linux.
+# The macOS-only containers: present on macOS, absent on Linux. Their type is given for Apple
+# platforms only ("type:apple" in General.json and BuildRun.json, ActionUI's per-platform key
+# suffix), and ActionUI skips an element with no type on the platform it runs on.
 # OSTYPE is the shell's own, as in omcitest.sh.
 case "${OSTYPE:-}" in
-    linux*) MACOS_ONLY_EXPECTED=hidden ;;
-    *) MACOS_ONLY_EXPECTED=shown ;;
+    linux*) MACOS_ONLY_EXPECTED=absent ;;
+    *) MACOS_ONLY_EXPECTED=present ;;
 esac
 
 rows() { # <window> <view-id> -> the table's rows (JSON)
@@ -42,12 +44,20 @@ rows() { # <window> <view-id> -> the table's rows (JSON)
 property() { # <window> <view-id> <name> -> the view's property (JSON)
     itest_call actionui.getProperty "{\"window\": \"$1\", \"viewID\": $2, \"name\": \"$3\"}"
 }
-shown_or_hidden() { # <window> <view-id> -> "hidden" when its hidden property is true, else "shown"
-    if [ "$(property "$1" "$2" hidden)" = "true" ]; then
-        printf 'hidden'
-    else
-        printf 'shown'
+present_or_absent() { # <window> <view-id> -> "present" when the window has the view, "absent" when not, "unknown" when the call failed
+    # getElementInfo lists every view id of the window as a JSON key ("309": "HStack"). A failed
+    # call is not "absent", or the Linux checks would pass on a broken bridge.
+    local _info
+    _info="$(itest_call actionui.getElementInfo "{\"window\": \"$1\"}")"
+    local _status=$?
+    if [ "$_status" -ne 0 ]; then
+        printf 'unknown'
+        return 0
     fi
+    case "$(printf '%s' "$_info" | /usr/bin/tr -d ' ')" in
+        *"\"$2\":"*) printf 'present' ;;
+        *) printf 'absent' ;;
+    esac
 }
 select_row() { # <window> <view-id> <0-based index>: selects it without firing the table's action
     itest_call actionui.selectRow "{\"window\": \"$1\", \"viewID\": $2, \"index\": $3}" > /dev/null
@@ -121,10 +131,13 @@ itest_wait_idle 60
 check "its name" "Fixture" "$(itest_value "$window" "$GEN_NAME_ID")"
 check "the header shows it too" "Fixture" "$(itest_value "$window" "$GEN_HEADER_NAME_ID")"
 check "its bundle identifier" "com.omc.applet.Fixture" "$(itest_value "$window" "$GEN_BUNDLE_ID_ID")"
-# What only macOS has is hidden on Linux (owner's Q6): the Min macOS row and the Services area
-check "Min macOS: $MACOS_ONLY_EXPECTED" "$MACOS_ONLY_EXPECTED" "$(shown_or_hidden "$window" "$GEN_MIN_OS_ROW_ID")"
+# What only macOS has is absent on Linux (owner's Q6): the Min macOS row and the Services area.
+# First a view of the same pane that is there on both, so "absent" means the element and not a
+# pane whose views the window does not list.
+check "the pane's views are listed (Name)" "present" "$(present_or_absent "$window" "$GEN_NAME_ID")"
+check "Min macOS:$MACOS_ONLY_EXPECTED" "$MACOS_ONLY_EXPECTED" "$(present_or_absent "$window" "$GEN_MIN_OS_ROW_ID")"
 check "the Services area: $MACOS_ONLY_EXPECTED" "$MACOS_ONLY_EXPECTED $MACOS_ONLY_EXPECTED $MACOS_ONLY_EXPECTED" \
-    "$(shown_or_hidden "$window" "$SVC_DIVIDER_ID") $(shown_or_hidden "$window" "$SVC_HEADER_ID") $(shown_or_hidden "$window" "$SVC_SPLIT_ID")"
+    "$(present_or_absent "$window" "$SVC_DIVIDER_ID") $(present_or_absent "$window" "$SVC_HEADER_ID") $(present_or_absent "$window" "$SVC_SPLIT_ID")"
 check "its version" "1.0" "$(itest_value "$window" "$GEN_VERSION_ID")"
 # One file can count more than once (as the run's file and again as its window's), so at least one.
 skipped="$(itest_call omc.test.status | /usr/bin/sed -n 's/.*"skippedRecentDocuments": \([0-9][0-9]*\).*/\1/p')"
@@ -178,11 +191,11 @@ section "Build & Run: the engine line, and the test buttons on a project without
 show_tab "$window" "$BUILD_RUN_TAB"
 wait_until 30 value_is_set "$window" "$BUILD_ENGINE_VERSION_ID"
 check "the pane loaded" "0" "$?"
-# Signing and thinning are macOS's (owner's Q3, Q4): their rows are hidden on Linux, last thing
-# in the load handler (after the engine line this waited for)
-itest_wait_idle 60
+# Signing and thinning are macOS's (owner's Q3, Q4): their rows are absent on Linux (the engine
+# line is there on both, as above)
+check "the pane's views are listed (the engine line)" "present" "$(present_or_absent "$window" "$BUILD_ENGINE_VERSION_ID")"
 check "the Signing Identity and Thin rows: $MACOS_ONLY_EXPECTED" "$MACOS_ONLY_EXPECTED $MACOS_ONLY_EXPECTED" \
-    "$(shown_or_hidden "$window" "$BUILD_IDENTITY_ROW_ID") $(shown_or_hidden "$window" "$BUILD_THIN_ROW_ID")"
+    "$(present_or_absent "$window" "$BUILD_IDENTITY_ROW_ID") $(present_or_absent "$window" "$BUILD_THIN_ROW_ID")"
 # The template carries no engine of its own; Build would put AppletBuilder's in.
 check_contains "the project has no engine yet" "Not installed - Build installs" "$(itest_value "$window" "$BUILD_ENGINE_VERSION_ID")"
 check "Test runs the test handler" "AppletBuilder.test" "$(itest_click "$window" "$BUILD_TEST_BTN_ID")"
