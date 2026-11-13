@@ -20,7 +20,8 @@
 #       <lang>.lproj/Private.strings  the engine's own texts (AbracodeFramework/*.lproj)
 #       Support/                    the support tools (omc_dialog_control, omc_next_command, ...,
 #                                   the defaults script from defaults/, the pasteboard script
-#                                   from pasteboard/linux/, the open script from open/)
+#                                   from pasteboard/linux/, the open script from open/, and
+#                                   ActionUI's linux-app-entry.py from ../ActionUI/Scripts)
 #
 # Usage: make-applet-bundle.sh [--python <Python folder>] <products folder> <applet sources>
 #                              <output folder>/<Name>.app
@@ -351,4 +352,16 @@ if [ "$status" -ne 0 ]; then
     exit 1
 fi
 /bin/chmod 755 "$framework/Support/open"
+# The desktop's app list: ActionUI's linux-app-entry.py, from the ActionUI checkout beside OMC that
+# the Linux build links (build-linux.sh). It writes an applet's desktop entry and installs its icon
+# from Contents/Info.plist; AppletBuilder runs it after a build, as macOS registers the applet
+# with Launch Services.
+app_entry_source="$omc_root/../ActionUI/Scripts/linux-app-entry.py"
+/bin/cp -- "$app_entry_source" "$framework/Support/linux-app-entry.py"
+status=$?
+if [ "$status" -ne 0 ]; then
+    printf 'Cannot copy %s into the framework (ActionUI is expected beside OMC)\n' "$app_entry_source" >&2
+    exit 1
+fi
+/bin/chmod 755 "$framework/Support/linux-app-entry.py"
 exit 0

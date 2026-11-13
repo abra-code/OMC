@@ -25,6 +25,8 @@
 here="$(CDPATH= cd -P -- "$(/usr/bin/dirname "$0")" && pwd)"
 repo="$(CDPATH= cd -P -- "$here/../.." && pwd)"
 appletbuilder="$repo/Distribution/AppletBuilder.app/Contents/Resources/Agents/appletbuilder"
+# The fixture applets are temporary: on Linux they stay out of the desktop's app list
+export AB_NO_DESKTOP_ENTRY=1
 codesign_applet="$repo/Distribution/Scripts/codesign_applet.sh"
 
 framework=""

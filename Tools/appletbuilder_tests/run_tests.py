@@ -47,7 +47,9 @@ _failed = 0
 
 def run(*args: str, cwd: str | None = None):
     """Invoke the CLI; return (returncode, stdout, stderr)."""
-    p = subprocess.run([str(CLI), *args], capture_output=True, text=True, cwd=cwd)
+    # The test applets are temporary: on Linux they stay out of the desktop's app list
+    environment = dict(os.environ, AB_NO_DESKTOP_ENTRY="1")
+    p = subprocess.run([str(CLI), *args], capture_output=True, text=True, cwd=cwd, env=environment)
     return p.returncode, p.stdout, p.stderr
 
 

@@ -14,6 +14,8 @@
 #   AB_FORCE_UPDATE        "1" = force Abracode.framework/executable refresh
 #   AB_WARNINGS_AS_ERRORS  "1" = treat validation warnings as build-halting errors
 #   AB_ASSUME_YES          "1" = answer ab_confirm prompts "yes" (e.g. Python upgrade)
+#   AB_NO_DESKTOP_ENTRY    "1" = Linux: do not add the applet to the desktop's app list
+#                          (test runners, whose applets are temporary)
 #   AB_UPDATE_PYTHON       "1" = allow replacing an existing, working embedded Python
 #                          with AppletBuilder's runtime (off by default; a missing or
 #                          broken runtime is always (re)installed regardless). Replacing
@@ -163,14 +165,42 @@ applet_install_icon() {
     return $( [ $success -eq 1 ] && echo 0 || echo 1 )
 }
 
-# Finalize: touch + register with Launch Services (macOS; Linux has no such registry)
+# Finalize: touch + register with Launch Services (macOS), or on Linux add the applet to the
+# desktop's app list for the current user: a desktop entry named by CFBundleIdentifier, with the
+# applet's PNG or SVG icon (the framework's linux-app-entry.py, from ActionUI), so the dock shows
+# its name and icon. A failure there is a warning: the applet itself is built.
 applet_finalize() {
     local app_path="$1"
     /usr/bin/touch -c "$app_path"
     if ab_on_macos; then
         /System/Library/Frameworks/CoreServices.framework/Versions/Current/Frameworks/LaunchServices.framework/Versions/Current/Support/lsregister \
             -f -R -trusted "$app_path" 2>/dev/null
+        return 0
     fi
+    if [ "$AB_NO_DESKTOP_ENTRY" = "1" ]; then
+        return 0
+    fi
+    local entry_tool="$support_tools/linux-app-entry.py"
+    if [ ! -f "$entry_tool" ]; then
+        entry_tool="$own_support_tools/linux-app-entry.py"
+    fi
+    local entry_python="$python3"
+    if [ ! -x "$entry_python" ]; then
+        entry_python="/usr/bin/python3"
+    fi
+    if [ ! -f "$entry_tool" ] || [ ! -x "$entry_python" ]; then
+        ab_log "  Warning: not added to the desktop's app list (no linux-app-entry.py in the framework, or no python3)"
+        return 0
+    fi
+    local entry_output
+    entry_output="$("$entry_python" "$entry_tool" install "$app_path" 2>&1)"
+    local entry_status=$?
+    if [ "$entry_status" -ne 0 ]; then
+        ab_log "  Warning: not added to the desktop's app list: ${entry_output}"
+    else
+        ab_log "  Added to the desktop's app list: ${entry_output}"
+    fi
+    return 0
 }
 
 # Rename scripts to match new applet name
@@ -1377,6 +1407,11 @@ do_codesign() {
     ab_log ""
     ab_log "$log_output"
     ab_log ""
+    # Linux: the desktop entry again, now with the icon the build made (a new applet has none
+    # when it is created); macOS registers with Launch Services on create and save, as before
+    if [ $status -eq 0 ] && ! ab_on_macos; then
+        applet_finalize "$target_path"
+    fi
     if [ $status -eq 0 ]; then
         ab_log "Build succeeded. (${timestamp})"
     else
