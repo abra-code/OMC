@@ -52,7 +52,7 @@ Abracode AbracodeFramework/Platform/Linux/OMCInvoke.cpp
 Abracode AbracodeFramework/Platform/Linux/OMCLog.cpp
 Abracode AbracodeFramework/Platform/Linux/OMCMainThreadSignal.cpp
 Abracode AbracodeFramework/Platform/Linux/OMCMessagePortListener.cpp
-Abracode AbracodeFramework/Platform/Linux/OMCPlatformStubs.cpp
+Abracode AbracodeFramework/Platform/Linux/OMCTerminalLauncher.cpp
 Abracode AbracodeFramework/Platform/Linux/OMCProcessEnvironment.c
 Abracode AbracodeFramework/Platform/Linux/OMCPlatformAlerts.cpp
 Abracode AbracodeFramework/Platform/Linux/OMCPlatformFilePanels.cpp

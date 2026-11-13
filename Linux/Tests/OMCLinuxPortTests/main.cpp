@@ -17,6 +17,8 @@
 #include "OMCEngineTempDir.h"
 #include "CFObj.h"
 #include "ACFPropertyList.h"
+#include "OMCTerminalLauncher.h"
+#include "Linux/OMCLinuxTerminal.h"
 #include <glib.h>
 #include <fcntl.h>
 #include <ftw.h>
@@ -394,7 +396,106 @@ main(int argc, char **argv)
 		Check("an existing file keeps its mode", wroteKept && (mode == "640"), mode);
 	}
 
-	// The folder the last two blocks made in the home folder
+	{
+		// EXECUTION_MODE exe_terminal (Platform/Linux/OMCTerminalLauncher.cpp): the first terminal
+		// program on PATH, given the command its own way, runs the user's shell, which runs the
+		// command and then stays open. Fake terminals in a folder of their own stand in for real ones.
+		std::string folder = std::string(g_get_home_dir()) + "/.omc-port-test-" + std::to_string(getpid()) + "/terminal";
+		std::string bin = folder + "/bin";
+		g_mkdir_with_parents(bin.c_str(), 0700);
+		auto MakeTerminal = [&](const char *inName, const std::string &inScript) {
+			std::string path = bin + "/" + inName;
+			(void)g_file_set_contents(path.c_str(), inScript.c_str(), -1, nullptr);
+			(void)chmod(path.c_str(), 0755);
+		};
+		const char *oldPathValue = getenv("PATH");
+		std::string oldPath = (oldPathValue != nullptr) ? oldPathValue : "";
+		setenv("PATH", bin.c_str(), 1);
+
+		Check("no terminal program on PATH gives no command line", OMCLinuxTerminalArguments("true", "/bin/sh").empty());
+
+		MakeTerminal("xterm", "#!/bin/sh\n");
+		MakeTerminal("x-terminal-emulator", "#!/bin/sh\n");
+		std::vector<std::string> arguments = OMCLinuxTerminalArguments("echo 'a b'", "/bin/my shell");
+		std::vector<std::string> expected { bin + "/x-terminal-emulator", "-e", "/bin/my shell", "-c", "echo 'a b'\nexec '/bin/my shell' -i" };
+		Check("x-terminal-emulator before xterm, with -e, the shell quoted after exec", arguments == expected, Joined(arguments));
+
+		// xdg-terminal-exec comes first and takes the command as its arguments. This one runs it with
+		// no input, so the interactive shell that follows ends at once.
+		std::string marker = folder + "/ran";
+		MakeTerminal("xdg-terminal-exec", "#!/bin/sh\nexec \"$@\" < /dev/null > /dev/null 2>&1\n");
+		arguments = OMCLinuxTerminalArguments("true", "/bin/sh");
+		Check("xdg-terminal-exec first, the command right after it", (arguments.size() == 4) && (arguments[0] == bin + "/xdg-terminal-exec") && (arguments[1] == "/bin/sh"), Joined(arguments));
+
+		const char *oldShellValue = getenv("SHELL");
+		std::string oldShell = (oldShellValue != nullptr) ? oldShellValue : "";
+		setenv("SHELL", "/bin/sh", 1);
+		std::string command = "echo \"ran in $0\" > '" + marker + "'";
+		CFObj<CFStringRef> commandString(CFStringCreateWithCString(kCFAllocatorDefault, command.c_str(), kCFStringEncodingUTF8));
+		OMCExecuteInTerminal(commandString, true, true);
+		// The redirection makes the file before echo writes to it: wait for the whole line
+		bool ran = false;
+		std::string text;
+		for(int i = 0; (i < 50) && !ran; i++)
+		{
+			gchar *contents = nullptr;
+			(void)g_file_get_contents(marker.c_str(), &contents, nullptr, nullptr);
+			text = (contents != nullptr) ? contents : "";
+			g_free(contents);
+			ran = !text.empty() && (text.back() == '\n');
+			if(!ran)
+				g_usleep(100 * 1000);
+		}
+		Check("OMCExecuteInTerminal runs the command in the user's shell through the terminal", ran && (text == "ran in /bin/sh\n"), text);
+
+		(void)remove(marker.c_str());
+		// A shell that does not exist: the command runs all the same, in the user's shell
+		OMCExecuteInITerm(commandString, CFSTR("/nonexistent/csh"), true, true);
+		text.clear();
+		for(int i = 0; (i < 50) && (text.empty() || (text.back() != '\n')); i++)
+		{
+			gchar *written = nullptr;
+			if(g_file_get_contents(marker.c_str(), &written, nullptr, nullptr))
+				text = written;
+			g_free(written);
+			if(text.empty() || (text.back() != '\n'))
+				g_usleep(100 * 1000);
+		}
+		Check("OMCExecuteInITerm runs it the same way, not in ITERM_SHELL_PATH", text == "ran in /bin/sh\n", text);
+
+		// The terminal starts in the home folder, as a new Terminal window does on macOS
+		std::string folderMarker = folder + "/folder";
+		std::string pwdCommand = "pwd > '" + folderMarker + "'";
+		CFObj<CFStringRef> pwdString(CFStringCreateWithCString(kCFAllocatorDefault, pwdCommand.c_str(), kCFStringEncodingUTF8));
+		OMCExecuteInTerminal(pwdString, true, true);
+		text.clear();
+		for(int i = 0; (i < 50) && (text.empty() || (text.back() != '\n')); i++)
+		{
+			gchar *written = nullptr;
+			if(g_file_get_contents(folderMarker.c_str(), &written, nullptr, nullptr))
+				text = written;
+			g_free(written);
+			if(text.empty() || (text.back() != '\n'))
+				g_usleep(100 * 1000);
+		}
+		Check("the terminal starts in the home folder", text == std::string(g_get_home_dir()) + "\n", text);
+
+		// The environment setup's syntax follows the shell the command runs in
+		Check("sh syntax for /bin/sh", OMCIsShDefaultInTerminal() && OMCIsShDefaultInITerm());
+		setenv("SHELL", "/bin/tcsh", 1);
+		Check("csh syntax for a tcsh user", !OMCIsShDefaultInTerminal() && !OMCIsShDefaultInITerm());
+
+		if(oldShellValue != nullptr)
+			setenv("SHELL", oldShell.c_str(), 1);
+		else
+			unsetenv("SHELL");
+		if(oldPathValue != nullptr)
+			setenv("PATH", oldPath.c_str(), 1);
+		else
+			unsetenv("PATH");
+	}
+
+	// The folder the blocks above made in the home folder
 	RemoveTree(std::string(g_get_home_dir()) + "/.omc-port-test-" + std::to_string(getpid()));
 
 	printf("%d passed, %d failed\n", sPassed, sFailed);
