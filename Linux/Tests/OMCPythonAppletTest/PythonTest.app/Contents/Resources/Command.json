@@ -1,0 +1,17 @@
+{
+  "VERSION": 2,
+  "COMMAND_LIST": [
+    { "NAME": "PythonTest", "ACTIVATION_MODE": "act_always", "EXECUTION_MODE": "exe_script_file" },
+    { "NAME": "PythonTest", "COMMAND_ID": "pt.python", "ACTIVATION_MODE": "act_always", "EXECUTION_MODE": "exe_script_file",
+      "URL_INVOCABLE": true },
+    { "NAME": "PythonTest", "COMMAND_ID": "pt.shell", "ACTIVATION_MODE": "act_always", "EXECUTION_MODE": "exe_script_file",
+      "URL_INVOCABLE": true },
+    { "NAME": "PythonTest", "COMMAND_ID": "pt.window", "ACTIVATION_MODE": "act_always", "EXECUTION_MODE": "exe_script_file",
+      "URL_INVOCABLE": true,
+      "ACTIONUI_WINDOW": { "JSON_NAME": "Window", "IS_BLOCKING": false,
+                           "INIT_SUBCOMMAND_ID": "pt.window.init", "END_OK_SUBCOMMAND_ID": "pt.window.ok" } },
+    { "NAME": "PythonTest", "COMMAND_ID": "pt.window.init", "EXECUTION_MODE": "exe_script_file" },
+    { "NAME": "PythonTest", "COMMAND_ID": "pt.window.ok", "EXECUTION_MODE": "exe_script_file",
+      "ENVIRONMENT_VARIABLES": { "OMC_ACTIONUI_VIEW_2_VALUE": "" } }
+  ]
+}

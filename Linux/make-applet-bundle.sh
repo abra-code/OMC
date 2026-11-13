@@ -11,6 +11,9 @@
 #     Linux/<Name>                  the CommandApplet executable, renamed (the engine linked in)
 #     Resources/                    Command.json, MainMenu.json, Base.lproj/..., Scripts/..., ...
 #     Library/...                   an applet's own, as on macOS (not its macOS Python)
+#     Library/Python/               with --python: a Linux Python (Python-Embedding's Linux build),
+#                                   where the engine looks for the embedded interpreter
+#                                   (Library/Python/bin/python3, as on macOS)
 #     Frameworks/Abracode.framework/
 #       Info.plist                  Linux/AbracodeFramework-Info.plist
 #       omc_*.json                  the engine's built-in windows (AbracodeFramework/BuiltInDocuments)
@@ -19,12 +22,17 @@
 #                                   the defaults script from defaults/, the pasteboard script
 #                                   from pasteboard/linux/, the open script from open/)
 #
-# Usage: make-applet-bundle.sh <products folder> <applet sources> <output folder>/<Name>.app
+# Usage: make-applet-bundle.sh [--python <Python folder>] <products folder> <applet sources>
+#                              <output folder>/<Name>.app
 #   The products folder is the build's (build-linux.sh), holding CommandApplet and the tools.
+#   --python copies a relocatable Linux Python (the folder holding bin/python3, as
+#   Python-Embedding's build-embedded-python.sh makes it on Linux) into Contents/Library/Python.
+#   It must be an ELF build for CommandApplet's architecture, and replaces any Library/Python the
+#   applet sources have.
 #   The applet sources are either
 #   - a macOS applet bundle (a folder with Contents, e.g. one AppletBuilder made): everything in
 #     its Contents is copied except what is macOS's: MacOS, Frameworks, _CodeSignature,
-#     CodeResources, Library/Python (a macOS Python; a Linux one is not made yet) and a Linux
+#     CodeResources, Library/Python (a macOS Python; --python gives a Linux one) and a Linux
 #     folder from an earlier run;
 #   - or a source folder with no Contents: its Info.plist goes to Contents, a Library folder to
 #     Contents/Library, everything else to Contents/Resources, except C and C++ sources and a
@@ -33,11 +41,20 @@
 #   output path is replaced.
 # Exit status: 0 made, 1 failed, 2 bad arguments.
 
+python_folder=""
+if [ "$1" = "--python" ]; then
+    if [ $# -lt 2 ] || [ -z "$2" ]; then
+        printf -- '--python needs the Python folder\n' >&2
+        exit 2
+    fi
+    python_folder="$2"
+    shift 2
+fi
 products="$1"
 source_folder="$2"
 bundle="$3"
-if [ -z "$products" ] || [ -z "$source_folder" ] || [ -z "$bundle" ]; then
-    printf 'Usage: %s <products folder> <applet source folder> <output>/<Name>.app\n' "$0" >&2
+if [ -z "$products" ] || [ -z "$source_folder" ] || [ -z "$bundle" ] || [ $# -gt 3 ]; then
+    printf 'Usage: %s [--python <Python folder>] <products folder> <applet source folder> <output>/<Name>.app\n' "$0" >&2
     exit 2
 fi
 case "$bundle" in
@@ -90,6 +107,46 @@ esac
 case "$source_physical/" in
     "$bundle_physical/"*) printf 'The applet source folder is in the output: %s\n' "$source_folder" >&2; exit 2 ;;
 esac
+
+# The Linux Python, checked before anything is removed: an ELF interpreter for the architecture of
+# CommandApplet (bytes 0-3 the ELF magic, bytes 18-19 the machine; od reads through bin/python3's
+# symbolic link), not inside the output, which is removed first, and not holding the output, which
+# it is copied into
+if [ -n "$python_folder" ]; then
+    if [ ! -d "$python_folder" ] || [ ! -x "$python_folder/bin/python3" ]; then
+        printf 'No Python at: %s (no executable bin/python3)\n' "$python_folder" >&2
+        exit 2
+    fi
+    python_physical="$(CDPATH= cd -P -- "$python_folder" && pwd)"
+    if [ -z "$python_physical" ]; then
+        printf 'Cannot resolve the Python folder: %s\n' "$python_folder" >&2
+        exit 1
+    fi
+    case "$python_physical/" in
+        "$bundle_physical/"*) printf 'The Python folder is in the output: %s\n' "$python_folder" >&2; exit 2 ;;
+    esac
+    case "$bundle_physical/" in
+        "$python_physical/"*) printf 'The output is in the Python folder: %s\n' "$bundle" >&2; exit 2 ;;
+    esac
+    # The interpreter itself must be inside the folder: a virtual environment's bin/python3 links
+    # to the system's, and the bundle would not carry a Python of its own
+    python_binary="$(/usr/bin/readlink -f -- "$python_folder/bin/python3")"
+    case "$python_binary" in
+        "$python_physical/"*) ;;
+        *) printf 'The Python folder does not hold its interpreter: bin/python3 leads to %s, outside %s (a virtual environment?)\n' "$python_binary" "$python_physical" >&2; exit 1 ;;
+    esac
+    python_magic="$(/usr/bin/od -An -tx1 -N4 -- "$python_folder/bin/python3" | /usr/bin/tr -d ' \n')"
+    if [ "$python_magic" != "7f454c46" ]; then
+        printf 'The Python is not a Linux (ELF) build: %s\n' "$python_folder/bin/python3" >&2
+        exit 1
+    fi
+    python_machine="$(/usr/bin/od -An -tx1 -j18 -N2 -- "$python_folder/bin/python3" | /usr/bin/tr -d ' \n')"
+    applet_machine="$(/usr/bin/od -An -tx1 -j18 -N2 -- "$executable" | /usr/bin/tr -d ' \n')"
+    if [ -z "$python_machine" ] || [ "$python_machine" != "$applet_machine" ]; then
+        printf 'The Python is for another architecture than CommandApplet (ELF machine %s, not %s): %s\n' "$python_machine" "$applet_machine" "$python_folder" >&2
+        exit 1
+    fi
+fi
 
 # The applet's Info.plist must name the bundle's name as its executable, which CoreFoundation finds
 # by that name. Checked before anything is removed or made, and read with the build's plister
@@ -192,6 +249,27 @@ fi
 if [ ! -f "$contents/Info.plist" ]; then
     printf 'The applet sources have no Info.plist: %s\n' "$source_folder" >&2
     exit 1
+fi
+
+# The Linux Python, in place of any the sources had (a source folder's Library is copied whole).
+# cp -R copies symbolic links as links (bin/python3 -> python3.N).
+if [ -n "$python_folder" ]; then
+    if [ -e "$contents/Library/Python" ]; then
+        /bin/rm -rf -- "$contents/Library/Python"
+        status=$?
+        if [ "$status" -ne 0 ] || [ -e "$contents/Library/Python" ]; then
+            printf 'Cannot replace the Library/Python of the applet sources\n' >&2
+            exit 1
+        fi
+    fi
+    /bin/mkdir -p "$contents/Library"
+    status=$?
+    if [ "$status" -ne 0 ]; then
+        printf 'Cannot make %s\n' "$contents/Library" >&2
+        exit 1
+    fi
+    # From the resolved folder: given a link to the folder, cp -R would copy the link
+    copy_item "$python_physical" "$contents/Library/Python"
 fi
 
 # The executable, under the applet's name

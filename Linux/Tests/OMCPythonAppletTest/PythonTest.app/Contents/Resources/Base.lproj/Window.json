@@ -1,0 +1,8 @@
+{
+  "type": "VStack",
+  "properties": { "spacing": 10.0, "padding": "default", "frame": { "minWidth": 320.0, "minHeight": 140.0 } },
+  "children": [
+    { "type": "Text", "id": 1, "properties": { "text": "PythonTest window" } },
+    { "type": "TextField", "id": 2, "properties": { "placeholder": "Value", "text": "initial" } }
+  ]
+}
