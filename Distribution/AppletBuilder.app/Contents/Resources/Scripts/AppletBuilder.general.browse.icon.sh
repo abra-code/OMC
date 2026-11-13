@@ -28,8 +28,14 @@ if [ $? -eq 0 ]; then
         fi
     done
 
-    # Update header icon preview
+    # Update header icon preview: the .icns on macOS, the PNG (or SVG) on Linux
     icns_path="$project_path/Contents/Resources/${icon_base}.icns"
+    if ! ab_on_macos; then
+        icns_path="$project_path/Contents/Resources/${icon_base}.png"
+        if [ ! -f "$icns_path" ]; then
+            icns_path="$project_path/Contents/Resources/${icon_base}.svg"
+        fi
+    fi
     if [ -f "$icns_path" ]; then
         set_value "$GEN_ICON_IMAGE_ID" "$icns_path"
     fi

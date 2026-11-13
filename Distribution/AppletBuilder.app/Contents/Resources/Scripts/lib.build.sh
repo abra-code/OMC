@@ -59,39 +59,88 @@ applet_install_icon() {
     local icon_base=$(/usr/bin/basename "${icon_source%.*}")
 
     local resources_dir="$app_path/Contents/Resources"
+    local plist="$app_path/Contents/Info.plist"
     local temp_dir
     temp_dir=$(/usr/bin/mktemp -d)
     if [ $? -ne 0 ] || [ -z "$temp_dir" ]; then
         return 1
     fi
-
-    /usr/bin/xcrun actool "$icon_source" \
-        --compile "$temp_dir" \
-        --app-icon "$icon_base" \
-        --platform macosx \
-        --target-device mac \
-        --output-format human-readable-text \
-        --minimum-deployment-target 14.6 \
-        --output-partial-info-plist "$temp_dir/partial.plist" \
-        > "$temp_dir/actool.log" 2>&1
-
     local success=0
+    local source_extension="${icon_source##*.}"
 
-    if [ -f "$temp_dir/Assets.car" ]; then
-        /bin/cp "$temp_dir/Assets.car" "$resources_dir/Assets.car"
-        success=1
+    # macOS: the asset catalog and the .icns, compiled by Xcode's actool (from an .icon)
+    if ab_on_macos && [ "$source_extension" != "png" ] && [ "$source_extension" != "svg" ]; then
+        /usr/bin/xcrun actool "$icon_source" \
+            --compile "$temp_dir" \
+            --app-icon "$icon_base" \
+            --platform macosx \
+            --target-device mac \
+            --output-format human-readable-text \
+            --minimum-deployment-target 14.6 \
+            --output-partial-info-plist "$temp_dir/partial.plist" \
+            > "$temp_dir/actool.log" 2>&1
+
+        if [ -f "$temp_dir/Assets.car" ]; then
+            /bin/cp "$temp_dir/Assets.car" "$resources_dir/Assets.car"
+            success=1
+        fi
+
+        if [ -f "$temp_dir/$icon_base.icns" ]; then
+            /bin/cp "$temp_dir/$icon_base.icns" "$resources_dir/$icon_base.icns"
+            success=1
+        fi
     fi
 
-    if [ -f "$temp_dir/$icon_base.icns" ]; then
-        /bin/cp "$temp_dir/$icon_base.icns" "$resources_dir/$icon_base.icns"
-        success=1
+    # Both systems: the icon a Linux applet carries (owner's Q5), Resources/<icon>.png, or the
+    # SVG as given. Made on macOS too, as one bundle source serves both systems. From the .icns
+    # just compiled where there is one, else from the source (icon_png.py takes an .icns, an
+    # .icon with its .icns beside it, or a .png)
+    if [ "$source_extension" = "svg" ]; then
+        /bin/cp "$icon_source" "$resources_dir/$icon_base.svg"
+        local svg_status=$?
+        # On macOS an SVG is not the applet's icon (actool makes nothing from it), so it does
+        # not count as installed there: the callers would delete the applet's .icns
+        if [ "$svg_status" -eq 0 ] && ! ab_on_macos; then
+            success=1
+        fi
+    else
+        local png_source="$icon_source"
+        if [ -f "$temp_dir/$icon_base.icns" ]; then
+            png_source="$temp_dir/$icon_base.icns"
+        fi
+        local png_output
+        png_output=$("$python3" "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/icon_png.py" "$png_source" "$resources_dir/$icon_base.png" 2>&1)
+        local png_status=$?
+        if [ "$png_status" -eq 0 ]; then
+            if ! ab_on_macos; then
+                success=1
+            fi
+        else
+            ab_log "Icon PNG not made: ${png_output}"
+        fi
+        # Linux: the .icns that comes with the source goes in too (an .icon's sibling, or the
+        # .icns itself), so the bundle keeps a macOS icon: the callers remove .icns files of
+        # other names, and Linux has no actool to make one
+        if ! ab_on_macos && [ "$success" -eq 1 ]; then
+            local icns_source=""
+            case "$icon_source" in
+                *.icon) icns_source="${icon_source%.icon}.icns" ;;
+                *.icns) icns_source="$icon_source" ;;
+            esac
+            if [ -n "$icns_source" ] && [ -f "$icns_source" ]; then
+                /bin/cp "$icns_source" "$resources_dir/$icon_base.icns"
+            fi
+        fi
     fi
 
-    local plist="$app_path/Contents/Info.plist"
-    if [ -f "$plist" ]; then
+    # On macOS the keys are written as they always were; on Linux only for an icon that was
+    # installed, so a failed one does not leave the applet pointing at a missing file
+    if [ -f "$plist" ] && { ab_on_macos || [ "$success" -eq 1 ]; }; then
         plist_write "$plist" "CFBundleIconFile" "$icon_base"
         plist_write "$plist" "CFBundleIconName" "$icon_base"
     fi
+    # The previous icon's PNG or SVG is left in place: Resources may hold images of the applet's
+    # own under the same name, and a stale icon file costs only its size
 
     /bin/rm -rf "$temp_dir"
     return $( [ $success -eq 1 ] && echo 0 || echo 1 )
@@ -1180,9 +1229,23 @@ validate_info_content() {
         ab_log "  Menu source: standard bar (programmatic; no MainMenu.json overrides)"
     fi
 
-    # CFBundleIconFile → Resources/<icon>.icns should exist (warning only).
+    # CFBundleIconFile -> Resources/<icon>.icns should exist (warning only). On Linux the icon is
+    # Resources/<icon>.png or .svg (owner's Q5), and there is no asset catalog to check.
     local iconfile
     iconfile=$(plist_read "$info_plist" CFBundleIconFile)
+    if [ -n "$iconfile" ] && ! ab_on_macos; then
+        local linux_icon_base="${iconfile%.icns}"
+        if [ -f "$resources_dir/${linux_icon_base}.png" ] || [ -f "$resources_dir/${linux_icon_base}.svg" ]; then
+            ab_log "  CFBundleIconFile '${iconfile}': OK (${linux_icon_base}.png or .svg)"
+        else
+            ab_log "  CFBundleIconFile '${iconfile}': missing .png or .svg"
+            warning_count=$((warning_count + 1))
+            report="${report}CFBundleIconFile '${iconfile}' (warning): neither ${linux_icon_base}.png nor ${linux_icon_base}.svg found in Resources (set the icon again in AppletBuilder: it writes the PNG on either system)
+
+"
+        fi
+        iconfile=""
+    fi
     if [ -n "$iconfile" ]; then
         local icon_base="${iconfile%.icns}"
         if [ -f "$resources_dir/${icon_base}.icns" ]; then
@@ -1200,7 +1263,7 @@ validate_info_content() {
     # is available we confirm the named asset is actually inside it (warning only).
     local iconname
     iconname=$(plist_read "$info_plist" CFBundleIconName)
-    if [ -n "$iconname" ]; then
+    if [ -n "$iconname" ] && ab_on_macos; then
         local assets="$resources_dir/Assets.car"
         if [ ! -f "$assets" ]; then
             ab_log "  CFBundleIconName '${iconname}': Assets.car missing"
