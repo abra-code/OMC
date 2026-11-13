@@ -8,8 +8,11 @@ source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.build.sh"
 # Always include ad-hoc signing as first option
 options='[{"title":"Sign to Run Locally (ad-hoc)","tag":"-"}'
 
-# Query available codesigning identities
-identities=$(/usr/bin/security find-identity -v -p codesigning 2>/dev/null)
+# Query available codesigning identities (macOS; Linux has no keychain)
+identities=""
+if ab_on_macos; then
+    identities=$(/usr/bin/security find-identity -v -p codesigning 2>/dev/null)
+fi
 
 while IFS= read -r line; do
     # Each line looks like:  1) HASH "Name (ID)"
@@ -40,6 +43,9 @@ options="${options}]"
 # operation that can install a runtime into an applet that had none.
 ab_thin_python_availability "$(load_project_path)"
 ab_applet_versions "$(load_project_path)"
+
+# Linux: an applet is neither signed nor thinned there (owner's Q3, Q4), so those rows go
+ab_hide_macos_only_controls "$BUILD_IDENTITY_ROW_ID" "$BUILD_THIN_ROW_ID"
 
 # Its answer is the group's state, not this handler's verdict: it returns 1 for an
 # applet with no embedded Python, which is an ordinary applet, and the pane loaded

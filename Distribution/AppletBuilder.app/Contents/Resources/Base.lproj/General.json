@@ -116,6 +116,7 @@
                 },
                 {
                   "type": "HStack",
+                  "id": 309,
                   "properties": { "spacing": 8 },
                   "children": [
                     {
@@ -173,12 +174,14 @@
     },
     {
       "type": "Divider",
+      "id": 339,
       "properties": {
         "padding": { "leading": 16, "trailing": 16, "top": 16 }
       }
     },
     {
       "type": "VStack",
+      "id": 340,
       "properties": {
         "spacing": 4,
         "alignment": "leading",
@@ -215,6 +218,7 @@
     },
     {
       "type": "HSplitView",
+      "id": 341,
       "properties": {
         "frame": {
           "maxWidth": "infinity",
