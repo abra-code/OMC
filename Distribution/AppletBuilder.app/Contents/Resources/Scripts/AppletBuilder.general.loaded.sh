@@ -30,9 +30,9 @@ if [ -n "$project_path" ] && [ -f "$project_path/Contents/Info.plist" ]; then
 
     # Set header icon
     icon_name=$(plist_read "$plist" CFBundleIconFile)
-    icns_path="$project_path/Contents/Resources/${icon_name}.icns"
-    if [ -f "$icns_path" ]; then
-        set_value "$GEN_ICON_IMAGE_ID" "$icns_path"
+    icon_preview="$(applet_icon_preview "$project_path" "$icon_name")"
+    if [ -n "$icon_preview" ]; then
+        set_value "$GEN_ICON_IMAGE_ID" "$icon_preview"
     fi
 
     # Populate command ID picker from Command.plist

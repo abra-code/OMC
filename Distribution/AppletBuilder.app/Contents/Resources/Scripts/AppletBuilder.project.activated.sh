@@ -43,9 +43,9 @@ if [ -f "$plist" ]; then
             set_value "$GEN_BUNDLE_ID_ID" "$(plist_read "$plist" CFBundleIdentifier)"
             set_value "$GEN_VERSION_ID" "$(plist_read "$plist" CFBundleVersion)"
             icon_name=$(plist_read "$plist" CFBundleIconFile)
-            icns_path="$project_path/Contents/Resources/${icon_name}.icns"
-            if [ -f "$icns_path" ]; then
-                set_value "$GEN_ICON_IMAGE_ID" "$icns_path"
+            icon_preview="$(applet_icon_preview "$project_path" "$icon_name")"
+            if [ -n "$icon_preview" ]; then
+                set_value "$GEN_ICON_IMAGE_ID" "$icon_preview"
             fi
             pb_set "$PB_PLIST_HASH" "$current"
             set_value "$GEN_STATUS_ID" "Reloaded (Info.plist changed externally)"

@@ -299,6 +299,26 @@ ab_shipped_icon_svg() { # <.icon or .icns path>
     return 0
 }
 
+# The file that shows an applet's icon in AppletBuilder's windows, or nothing: Resources/<name>.icns
+# on macOS; on Linux, whose GTK reads no .icns, the SVG, else the PNG (the SVG first, as an earlier
+# install may have left a PNG of the same name beside the SVG installed now; applet_install_icon)
+applet_icon_preview() { # <applet bundle> <CFBundleIconFile>
+    local resources="$1/Contents/Resources"
+    local candidate
+    if ab_on_macos; then
+        candidate="$resources/$2.icns"
+        [ -f "$candidate" ] && printf '%s\n' "$candidate"
+        return 0
+    fi
+    for candidate in "$resources/$2.svg" "$resources/$2.png"; do
+        if [ -f "$candidate" ]; then
+            printf '%s\n' "$candidate"
+            return 0
+        fi
+    done
+    return 0
+}
+
 # The folder of an applet bundle's executable: the bundle layout is the same on both systems,
 # the executable is in Contents/MacOS on macOS and in Contents/Linux on Linux (as omcitest.sh's
 # _omcitest_executable_folder)

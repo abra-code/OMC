@@ -93,6 +93,19 @@ if [ -z "$ACTIONUI_ROOT" ] || [ ! -f "$ACTIONUI_ROOT/ActionUICAdapter/include/Ac
     exit 1
 fi
 
+# ActionUI shows SF Symbols on Linux as Material Symbols icons compiled into it (a GResource of
+# symbolic SVGs and the name map, ActionUIAdwaita/CSymbolResource/generated, which git does not
+# keep). ActionUI's own script makes them, downloading the font once (GitHub); it rewrites nothing
+# that is current. Without it ActionUI builds with no icons, and every symbol in an applet's
+# windows shows the missing-icon picture: that is said loudly, and the build goes on.
+if [ "$PRINT_ONLY" -eq 0 ]; then
+    /bin/bash "$ACTIONUI_ROOT/Scripts/prepare-linux-symbols.sh"
+    status=$?
+    if [ "$status" -ne 0 ]; then
+        echo "Warning: ActionUI's Scripts/prepare-linux-symbols.sh failed (status $status): the applets will show no SF Symbols (see its messages above)." >&2
+    fi
+fi
+
 # libadwaita's flags include GTK 4's and GLib's (the main-thread signal, the applet's app shell)
 GLIB_CFLAGS="$(/usr/bin/pkg-config --cflags libadwaita-1)"
 status=$?
