@@ -157,7 +157,9 @@ applet_create_from_template() {
         return 1
     fi
     /bin/rm -rf "$new_app_path/Contents/_CodeSignature" 2>/dev/null
-    /usr/bin/xattr -dr com.apple.quarantine "$new_app_path" 2>/dev/null
+    if ab_on_macos; then
+        /usr/bin/xattr -dr com.apple.quarantine "$new_app_path" 2>/dev/null
+    fi
 
     # Install runtime binaries
     applet_install_binaries "$new_app_path" "$applet_name"

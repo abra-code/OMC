@@ -97,12 +97,14 @@ applet_install_icon() {
     return $( [ $success -eq 1 ] && echo 0 || echo 1 )
 }
 
-# Finalize: touch + register with Launch Services
+# Finalize: touch + register with Launch Services (macOS; Linux has no such registry)
 applet_finalize() {
     local app_path="$1"
     /usr/bin/touch -c "$app_path"
-    /System/Library/Frameworks/CoreServices.framework/Versions/Current/Frameworks/LaunchServices.framework/Versions/Current/Support/lsregister \
-        -f -R -trusted "$app_path" 2>/dev/null
+    if ab_on_macos; then
+        /System/Library/Frameworks/CoreServices.framework/Versions/Current/Frameworks/LaunchServices.framework/Versions/Current/Support/lsregister \
+            -f -R -trusted "$app_path" 2>/dev/null
+    fi
 }
 
 # Rename scripts to match new applet name
@@ -307,11 +309,16 @@ applet_stamp_executable_uuid() {
     return 0
 }
 
-# Codesign using the standalone script, after giving the executable its own UUID
+# Codesign using the standalone script, after giving the executable its own UUID. On Linux an
+# applet is not signed and its ELF executable has no Mach-O UUID: nothing to do (owner's Q3).
 applet_codesign() {
     local app_path="$1"
     local identity="$2"
     AB_UUID_WRITTEN=""
+    if ! ab_on_macos; then
+        ab_log "Not code signed: Linux applets carry no signature."
+        return 0
+    fi
     applet_stamp_executable_uuid "$app_path"
     /bin/sh "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/codesign_applet.sh" "$app_path" "$identity"
     local sign_status=$?
@@ -369,6 +376,10 @@ compare_versions() {
 # and recursive over the whole bundle; runs before anything else.
 strip_quarantine() {
     local target_path="$1"
+    # macOS's download quarantine; Linux has none
+    if ! ab_on_macos; then
+        return 0
+    fi
     ab_log "Stripping quarantine attribute..."
     /usr/bin/xattr -r -d com.apple.quarantine "$target_path" 2>/dev/null
     return 0
@@ -877,6 +888,13 @@ thin_binaries() {
     if [ -z "$arch" ] || [ "$arch" = "none" ]; then
         return
     fi
+    # A Linux applet holds one executable for one architecture, as the Linux build makes it, and
+    # its Python is single-architecture too: nothing to slice (owner's Q4)
+    if ! ab_on_macos; then
+        ab_log ""
+        ab_log "Thinning to ${arch} skipped: a Linux applet already holds one architecture."
+        return 0
+    fi
 
     ab_log ""
     ab_log "Thinning universal executables to ${arch}..."
@@ -1257,7 +1275,9 @@ do_codesign() {
         identity="-"
     fi
 
-    if [ "$identity" = "-" ]; then
+    if ! ab_on_macos; then
+        : # applet_codesign says the applet is not signed
+    elif [ "$identity" = "-" ]; then
         ab_log "Codesigning (ad-hoc)..."
     else
         ab_log "Codesigning with \"${identity}\"..."
@@ -1424,6 +1444,10 @@ applet_running_instances() { # <App.app>
     local bundle_id
     bundle_id=$("$plister_tool" get value "$1/Contents/Info.plist" /CFBundleIdentifier 2>/dev/null)
     [ -n "$bundle_id" ] || return 0
+    if ! ab_on_macos; then
+        applet_running_instances_linux "$bundle_id"
+        return 0
+    fi
     local found
     found=$(/usr/bin/lsappinfo find bundleid="$bundle_id" 2>/dev/null)
     # One full "info" per entry, read for its "pid = " and "bundle path=" lines,
@@ -1442,16 +1466,58 @@ applet_running_instances() { # <App.app>
     return 0
 }
 
+# applet_running_instances on Linux (owner's Q7): no registry of running applications, so every
+# process of this user whose executable lies in an applet bundle (<bundle>/Contents/Linux/<name>)
+# is asked for that bundle's identifier, so a copy at another path counts too, as on macOS (it
+# shares the settings). An executable replaced while it runs (a build copies a new one) reads
+# "<path> (deleted)" in /proc; the bundle path is still right.
+applet_running_instances_linux() { # <bundle identifier>
+    local proc_exe pid exe_path bundle_path running_id
+    for proc_exe in /proc/[0-9]*/exe; do
+        pid="${proc_exe#/proc/}"
+        pid="${pid%/exe}"
+        # This user's processes only: as root, readlink would succeed for every user's
+        [ -O "/proc/$pid" ] || continue
+        exe_path="$(/usr/bin/readlink -- "$proc_exe" 2>/dev/null)"
+        exe_path="${exe_path% (deleted)}"
+        case "$exe_path" in
+            */Contents/Linux/*) ;;
+            *) continue ;;
+        esac
+        bundle_path="${exe_path%/Contents/Linux/*}"
+        # The applet's executable itself, not a helper in a folder below Contents/Linux
+        case "${exe_path#"$bundle_path/Contents/Linux/"}" in
+            */*) continue ;;
+        esac
+        running_id=$("$plister_tool" get value "$bundle_path/Contents/Info.plist" /CFBundleIdentifier 2>/dev/null)
+        if [ "$running_id" = "$1" ]; then
+            printf '%s %s\n' "$pid" "$bundle_path"
+        fi
+    done
+    return 0
+}
+
 # Ask the application with <pid> to quit, as its Quit menu item would (it may
 # ask about unsaved work, or decline), and wait up to <seconds> for it to end.
-# Returns 0 once it is gone, 1 if it is still running.
+# On Linux the request is SIGTERM, which a Linux applet takes as Quit (it runs
+# app.will.terminate). Returns 0 once it is gone, 1 if it is still running.
 applet_quit_instance() { # <pid> <seconds>
     local pid="$1" seconds="$2"
     case "$seconds" in
         ''|*[!0-9]*) seconds=60 ;;
     esac
     local reply
-    reply=$(/usr/bin/osascript -l JavaScript "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/ab_quit_application.js" "$pid" 2>&1)
+    if ab_on_macos; then
+        reply=$(/usr/bin/osascript -l JavaScript "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/ab_quit_application.js" "$pid" 2>&1)
+    else
+        kill -TERM "$pid" 2>/dev/null
+        local kill_status=$?
+        if [ "$kill_status" -eq 0 ]; then
+            reply="sent (SIGTERM)"
+        else
+            reply="gone"
+        fi
+    fi
     ab_log "  Quit request for process $pid: ${reply:-no reply}"
     local waited=0
     while kill -0 "$pid" 2>/dev/null; do

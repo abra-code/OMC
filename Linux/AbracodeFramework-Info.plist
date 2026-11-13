@@ -14,5 +14,7 @@
 	<string>FMWK</string>
 	<key>CFBundleShortVersionString</key>
 	<string>6.0</string>
+	<key>CFBundleVersion</key>
+	<string>${OMC_BUNDLE_VERSION}</string>
 </dict>
 </plist>

@@ -284,11 +284,18 @@ if [ -d "$contents/Resources/Scripts" ]; then
     /usr/bin/find "$contents/Resources/Scripts" -type f -exec /bin/chmod 755 {} +
 fi
 
-# The engine's framework: its Info.plist, built-in windows, texts and support tools
-/bin/cp -- "$script_folder/AbracodeFramework-Info.plist" "$framework/Info.plist"
+# The engine's framework: its Info.plist, built-in windows, texts and support tools. The Info.plist
+# gets the engine's version (CFBundleVersion) from Common/OmcVersion.xcconfig, as the macOS
+# framework's does: AppletBuilder compares it to update an applet's framework on a build.
+omc_version="$(/usr/bin/sed -n 's/^OMC_BUNDLE_VERSION *= *\([0-9][0-9.]*\) *$/\1/p' "$omc_root/Common/OmcVersion.xcconfig")"
+if [ -z "$omc_version" ]; then
+    printf 'Cannot read OMC_BUNDLE_VERSION from %s\n' "$omc_root/Common/OmcVersion.xcconfig" >&2
+    exit 1
+fi
+/usr/bin/sed "s/\${OMC_BUNDLE_VERSION}/$omc_version/" "$script_folder/AbracodeFramework-Info.plist" > "$framework/Info.plist"
 status=$?
 if [ "$status" -ne 0 ]; then
-    printf 'Cannot copy the framework Info.plist\n' >&2
+    printf 'Cannot write the framework Info.plist\n' >&2
     exit 1
 fi
 for document in "$omc_root/AbracodeFramework/BuiltInDocuments"/*.json; do

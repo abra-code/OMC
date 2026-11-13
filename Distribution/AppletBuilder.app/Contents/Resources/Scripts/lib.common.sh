@@ -262,6 +262,16 @@ command_file_path() {
     fi
 }
 
+# True on macOS, where an applet is code signed, thinned with lipo and registered with Launch
+# Services; none of that exists on Linux (owner's Q3, Q4: skipped there). The same test as
+# applet_executable_folder: Linux by OSTYPE (the shell's own, no tool needed), macOS otherwise.
+ab_on_macos() {
+    case "${OSTYPE:-}" in
+        linux*) return 1 ;;
+    esac
+    return 0
+}
+
 # The folder of an applet bundle's executable: the bundle layout is the same on both systems,
 # the executable is in Contents/MacOS on macOS and in Contents/Linux on Linux (as omcitest.sh's
 # _omcitest_executable_folder)
