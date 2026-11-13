@@ -82,10 +82,12 @@
               "id": 714,
               "properties": {
                 "systemImage": "finder",
+                "systemImage:linux": "folder",
                 "imageScale": "medium",
                 "buttonStyle": "plain",
                 "actionID": "AppletBuilder.uifiles.reveal",
                 "help": "Show the selected UI file in Finder",
+                "help:linux": "Show the selected UI file in the file manager",
                 "disabled": true,
                 "frame": { "width": 32, "height": 28 }
               }

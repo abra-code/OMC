@@ -295,6 +295,7 @@
                                             "leading": 30
                                         },
                                         "systemImage": "finder",
+                                        "systemImage:linux": "folder",
                                         "buttonStyle": "bordered",
                                         "actionID": "AppletBuilder.reveal"
                                     }

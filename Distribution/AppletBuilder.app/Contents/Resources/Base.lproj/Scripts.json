@@ -82,10 +82,12 @@
               "id": 614,
               "properties": {
                 "systemImage": "finder",
+                "systemImage:linux": "folder",
                 "imageScale": "medium",
                 "buttonStyle": "plain",
                 "actionID": "AppletBuilder.scripts.reveal",
                 "help": "Show the selected script in Finder",
+                "help:linux": "Show the selected script in the file manager",
                 "disabled": true,
                 "frame": { "width": 32, "height": 28 }
               }

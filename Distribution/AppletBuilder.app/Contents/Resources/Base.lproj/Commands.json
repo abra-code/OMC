@@ -82,10 +82,12 @@
               "id": 514,
               "properties": {
                 "systemImage": "finder",
+                "systemImage:linux": "folder",
                 "imageScale": "medium",
                 "buttonStyle": "plain",
                 "actionID": "AppletBuilder.commands.reveal",
                 "help": "Show the command file in Finder",
+                "help:linux": "Show the command file in the file manager",
                 "disabled": true,
                 "frame": { "width": 32, "height": 28 }
               }
