@@ -115,6 +115,22 @@ Resolution rules:
 
 The suffix works on any key at any depth — top-level properties, nested objects, even Canvas operation entries — and the key is split on its **last** colon, so base names may themselves contain colons.
 
+#### Elements present on some platforms only
+
+The suffix also works on an element's `type`. An element whose `type` is given **only** for some platforms, with no unsuffixed `type`, is left out everywhere else: it is not built and takes no space, and its `id` is free there.
+
+```json
+{
+  "type": "VStack",
+  "children": [
+    { "type": "Text", "properties": { "text": "Build" } },
+    { "type:apple": "Toggle", "id": 12, "properties": { "title": "Show in the menu bar" } }
+  ]
+}
+```
+
+On Apple platforms the `Toggle` follows the `Text`; on Android, Web and Linux the stack holds the `Text` alone. Unlike `hidden`, which keeps the element's space, nothing is left behind. The root element must have a `type` on every platform the document is loaded on: a document whose root has none does not load there (Android shows an empty window). The verifier deployed to one platform (`--platform <p>`) skips such an element there without a message, as it drops other platforms' properties.
+
 ## Layout Containers
 
 Layout follows SwiftUI stacking rules:

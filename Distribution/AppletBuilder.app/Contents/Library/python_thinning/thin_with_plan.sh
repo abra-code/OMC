@@ -118,8 +118,7 @@ calc_size() { fmt_mb "$(size_kb "$1")"; }
 # top-level module paths, none inside another, so nothing is counted twice; xargs
 # chunks a long list and the sum survives the split.
 paths_kb() { # <newline-separated paths>
-    local total
-    total=$(printf '%s\n' "$1" | /usr/bin/grep . | /usr/bin/tr '\n' '\0' \
+    local total=$(printf '%s\n' "$1" | /usr/bin/grep . | /usr/bin/tr '\n' '\0' \
         | /usr/bin/xargs -0 /usr/bin/du -sk 2>/dev/null \
         | /usr/bin/awk '{ sum += $1 } END { printf "%d", sum }')
     printf '%s' "${total:-0}"
