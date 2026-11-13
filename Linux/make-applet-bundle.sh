@@ -34,7 +34,10 @@
 #   - a macOS applet bundle (a folder with Contents, e.g. one AppletBuilder made): everything in
 #     its Contents is copied except what is macOS's: MacOS, Frameworks, _CodeSignature,
 #     CodeResources, Library/Python (a macOS Python; --python gives a Linux one) and a Linux
-#     folder from an earlier run;
+#     folder from an earlier run; each helper program in Contents/Helpers is replaced by its
+#     Linux build of the same name from the products folder (build-linux.sh puts ActionUI's
+#     ActionUIViewer and actionui-verify there), or left out when there is none (a file there
+#     that is not a program is copied as it is);
 #   - or a source folder with no Contents: its Info.plist goes to Contents, a Library folder to
 #     Contents/Library, everything else to Contents/Resources, except C and C++ sources and a
 #     Frameworks folder.
@@ -206,6 +209,39 @@ if [ -d "$source_folder/Contents" ]; then
         item_name="$(/usr/bin/basename -- "$item")"
         case "$item_name" in
             MacOS|Frameworks|_CodeSignature|CodeResources|Linux) continue ;;
+            Helpers)
+                # A macOS helper program gets its Linux build from the products, by name
+                # (build-linux.sh puts ActionUI's viewer and verifier there); one with none is
+                # left out, as a macOS program cannot run here
+                for helper in "$item"/* ; do
+                    if [ ! -e "$helper" ]; then
+                        continue
+                    fi
+                    helper_name="$(/usr/bin/basename -- "$helper")"
+                    # A file that is not a program (a license beside a helper) is copied as it is
+                    if [ -f "$helper" ] && [ ! -x "$helper" ]; then
+                        /bin/mkdir -p "$contents/Helpers"
+                        status=$?
+                        if [ "$status" -ne 0 ]; then
+                            printf 'Cannot make %s\n' "$contents/Helpers" >&2
+                            exit 1
+                        fi
+                        copy_item "$helper" "$contents/Helpers/$helper_name"
+                        continue
+                    fi
+                    if [ ! -f "$products/$helper_name" ] || [ ! -x "$products/$helper_name" ]; then
+                        printf 'Note: no Linux build of the helper %s in %s: the Linux applet has none\n' "$helper_name" "$products" >&2
+                        continue
+                    fi
+                    /bin/mkdir -p "$contents/Helpers"
+                    status=$?
+                    if [ "$status" -ne 0 ]; then
+                        printf 'Cannot make %s\n' "$contents/Helpers" >&2
+                        exit 1
+                    fi
+                    copy_item "$products/$helper_name" "$contents/Helpers/$helper_name"
+                done
+                ;;
             Resources)
                 for resource in "$item"/* ; do
                     if [ -e "$resource" ]; then

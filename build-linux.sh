@@ -10,10 +10,13 @@
 #   --product        build one product (default: all)
 #   --print-command  print the swift build command and exit
 #   SWIFT=/path/to/swift overrides the toolchain (default /usr/bin/swift)
-# After a build of all products it makes the master applet, CommandApplet.app, in the build's
-# products folder (Linux/make-applet-bundle.sh); not after a build of one product, which may lack
-# the support tools the bundle carries.
-# Exit status: 0 built, 1 setup failure, 2 bad arguments; a failed swift build exits with its status.
+# Before the build it makes ActionUI's Material Symbols icons (its Scripts/prepare-linux-symbols.sh).
+# After a build of all products it builds ActionUI's ActionUIViewer and actionui-verify for Linux
+# into the products folder (the helpers AppletBuilder carries), then makes the master applet,
+# CommandApplet.app, there (Linux/make-applet-bundle.sh); not after a build of one product, which may
+# lack the support tools the bundle carries.
+# Exit status: 0 built, 1 setup failure or a helper that did not build, 2 bad arguments; a failed
+# swift build of OMC exits with its status.
 
 SCRIPT_DIR="$(CDPATH= cd -P -- "$(/usr/bin/dirname "$0")" && pwd)"
 CONFIG="debug"
@@ -200,6 +203,42 @@ if [ "$status" -ne 0 ] || [ -z "$PRODUCTS_PATH" ] || [ ! -d "$PRODUCTS_PATH" ]; 
     echo "Error: the build's products folder could not be found (swift build --show-bin-path status $status)." >&2
     exit 1
 fi
+
+# ActionUI's own programs that applets carry as helpers (AppletBuilder's Contents/Helpers: the
+# viewer for previews, the Swift verifier), built for Linux from their packages in the ActionUI
+# checkout, each in a scratch folder of its own, and put beside the products:
+# Linux/make-applet-bundle.sh gives an applet the Linux build of each macOS helper it carries.
+for helper in ActionUIViewer:ActionUIViewer ActionUIVerifier:actionui-verify; do
+    helper_package="$ACTIONUI_ROOT/Apps/${helper%%:*}"
+    helper_product="${helper#*:}"
+    helper_args=(build -c "$CONFIG" --package-path "$helper_package" --scratch-path "$SCRATCH_PATH/actionui-apps/${helper%%:*}" --product "$helper_product" --manifest-cache none)
+    # As ActionUI builds them on Linux (Apps/ActionUIViewer/Package.swift): the root package's
+    # file list is read anew (no manifest cache), and a tracked Package.resolved, which also pins
+    # packages only macOS uses, is kept as it is
+    if [ -f "$helper_package/Package.resolved" ]; then
+        helper_args+=(--only-use-versions-from-resolved-file)
+    fi
+    echo "Building ActionUI's $helper_product for Linux"
+    "$SWIFT" "${helper_args[@]}"
+    status=$?
+    if [ "$status" -ne 0 ]; then
+        echo "Error: ActionUI's $helper_product did not build (swift build status $status, package $helper_package)." >&2
+        exit 1
+    fi
+    helper_bin="$("$SWIFT" "${helper_args[@]}" --show-bin-path 2>/dev/null)"
+    status=$?
+    if [ "$status" -ne 0 ] || [ ! -x "$helper_bin/$helper_product" ]; then
+        echo "Error: ActionUI's $helper_product was built but is not in its products folder ($helper_bin)." >&2
+        exit 1
+    fi
+    /bin/cp -f -- "$helper_bin/$helper_product" "$PRODUCTS_PATH/$helper_product"
+    status=$?
+    if [ "$status" -ne 0 ]; then
+        echo "Error: cannot copy $helper_product into $PRODUCTS_PATH." >&2
+        exit 1
+    fi
+done
+
 /bin/bash "$SCRIPT_DIR/Linux/make-applet-bundle.sh" "$PRODUCTS_PATH" "$SCRIPT_DIR/CommandApplet/Linux" "$PRODUCTS_PATH/CommandApplet.app"
 status=$?
 if [ "$status" -ne 0 ]; then
