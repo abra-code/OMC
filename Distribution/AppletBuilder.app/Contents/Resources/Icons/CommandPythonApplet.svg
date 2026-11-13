@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- CommandPythonApplet.svg: AppletBuilder's CommandPythonApplet.icon as a flat Linux icon on the rounded tile (icedit/templates/rounded-tile.svg) -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="face-fill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#43656a"/>
+      <stop offset="1" stop-color="#1a4349"/>
+    </linearGradient>
+    <linearGradient id="glyph-fill" gradientUnits="userSpaceOnUse" x1="600" y1="0" x2="600" y2="840"><stop offset="0" stop-color="#ea3424"/><stop offset="1" stop-color="#9b1f15"/></linearGradient>
+  </defs>
+  <rect id="tile-side" x="40" y="56" width="944" height="944" rx="189" fill="#0e2528"/>
+  <rect id="tile-face" x="40" y="24" width="944" height="944" rx="189" fill="url(#face-fill)"/>
+  <g id="layers" transform="translate(40, 24) scale(0.921875)">
+    <g transform="translate(512, 512) scale(1.33333) translate(-384, -384)"><g transform="scale(0.64)" fill="url(#glyph-fill)" fill-rule="evenodd"><path d="M 388 350 L 388 250 C 388 170 420 140 600 124 C 700 124 789 170 789 250 L 789 465 C 789 525 730 575 663 575 L 483 575 C 410 575 340 645 340 720 L 340 850 L 247 850 C 170 850 130 780 120 680 C 108 600 114 560 130 500 C 150 430 200 400 270 400 L 614 400 L 614 350 Z M 513 262 A 37 37 0 1 0 439 262 A 37 37 0 1 0 513 262 Z"/><path d="M 812 850 L 812 950 C 812 1030 780 1060 600 1076 C 500 1076 411 1030 411 950 L 411 735 C 411 675 470 625 537 625 L 717 625 C 790 625 860 555 860 480 L 860 350 L 953 350 C 1030 350 1070 420 1080 520 C 1092 600 1086 640 1070 700 C 1050 770 1000 800 930 800 L 586 800 L 586 850 Z M 687 938 A 37 37 0 1 0 761 938 A 37 37 0 1 0 687 938 Z"/></g></g>
+  </g>
+</svg>

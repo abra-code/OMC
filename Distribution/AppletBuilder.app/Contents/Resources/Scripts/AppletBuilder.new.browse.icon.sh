@@ -9,10 +9,23 @@ if [ -n "$OMC_DLG_CHOOSE_OBJECT_PATH" ]; then
 
     icon_base=$(/usr/bin/basename "${OMC_DLG_CHOOSE_OBJECT_PATH%.*}")
     temp_dir=$(/usr/bin/mktemp -d)
-    # Linux: no actool; the preview is the icon's PNG (icon_png.py), or the SVG as chosen
+    # Linux: no actool; the preview is the SVG as chosen, the flat SVG AppletBuilder ships for one
+    # of its own icons (what applet_install_icon installs), or else the icon's PNG (icon_png.py)
     if ! ab_on_macos; then
         case "$OMC_DLG_CHOOSE_OBJECT_PATH" in
             *.svg) set_value "$NEW_HEADER_IMAGE_ID" "$OMC_DLG_CHOOSE_OBJECT_PATH" ;;
+            *.icon|*.icns)
+                shipped_svg="$(ab_shipped_icon_svg "$OMC_DLG_CHOOSE_OBJECT_PATH")"
+                if [ -n "$shipped_svg" ]; then
+                    set_value "$NEW_HEADER_IMAGE_ID" "$shipped_svg"
+                else
+                    "$python3" "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/icon_png.py" "$OMC_DLG_CHOOSE_OBJECT_PATH" "$temp_dir/${icon_base}.png" > /dev/null 2>&1
+                    png_status=$?
+                    if [ "$png_status" -eq 0 ]; then
+                        set_value "$NEW_HEADER_IMAGE_ID" "$temp_dir/${icon_base}.png"
+                    fi
+                fi
+                ;;
             *)
                 "$python3" "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/icon_png.py" "$OMC_DLG_CHOOSE_OBJECT_PATH" "$temp_dir/${icon_base}.png" > /dev/null 2>&1
                 png_status=$?

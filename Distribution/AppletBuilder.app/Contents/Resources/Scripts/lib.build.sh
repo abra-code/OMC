@@ -91,10 +91,10 @@ applet_install_icon() {
         fi
     fi
 
-    # Both systems: the icon a Linux applet carries (owner's Q5), Resources/<icon>.png, or the
-    # SVG as given. Made on macOS too, as one bundle source serves both systems. From the .icns
-    # just compiled where there is one, else from the source (icon_png.py takes an .icns, an
-    # .icon with its .icns beside it, or a .png)
+    # Both systems: the icon a Linux applet carries (owner's Q5): an SVG as given; for one of
+    # AppletBuilder's own icons the flat SVG it ships; else Resources/<icon>.png, from the .icns
+    # just compiled where there is one, or from the source (icon_png.py takes an .icns, an .icon
+    # with its .icns beside it, or a .png). Made on macOS too, as one bundle source serves both.
     if [ "$source_extension" = "svg" ]; then
         /bin/cp "$icon_source" "$resources_dir/$icon_base.svg"
         local svg_status=$?
@@ -104,19 +104,36 @@ applet_install_icon() {
             success=1
         fi
     else
-        local png_source="$icon_source"
-        if [ -f "$temp_dir/$icon_base.icns" ]; then
-            png_source="$temp_dir/$icon_base.icns"
-        fi
-        local png_output
-        png_output=$("$python3" "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/icon_png.py" "$png_source" "$resources_dir/$icon_base.png" 2>&1)
-        local png_status=$?
-        if [ "$png_status" -eq 0 ]; then
-            if ! ab_on_macos; then
-                success=1
+        # The flat Linux icon shipped beside an .icon or .icns: AppletBuilder's Icons carry one
+        # per icon, the rounded tile with the glyph on top (hand-composed until icedit makes
+        # them, owner 2026-11-12). Without one, a PNG taken from the .icns.
+        local flat_svg
+        flat_svg="$(ab_shipped_icon_svg "$icon_source")"
+        if [ -n "$flat_svg" ]; then
+            /bin/cp "$flat_svg" "$resources_dir/$icon_base.svg"
+            local flat_status=$?
+            if [ "$flat_status" -eq 0 ]; then
+                if ! ab_on_macos; then
+                    success=1
+                fi
+            else
+                ab_log "Icon SVG not copied: $flat_svg"
             fi
         else
-            ab_log "Icon PNG not made: ${png_output}"
+            local png_source="$icon_source"
+            if [ -f "$temp_dir/$icon_base.icns" ]; then
+                png_source="$temp_dir/$icon_base.icns"
+            fi
+            local png_output
+            png_output=$("$python3" "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/icon_png.py" "$png_source" "$resources_dir/$icon_base.png" 2>&1)
+            local png_status=$?
+            if [ "$png_status" -eq 0 ]; then
+                if ! ab_on_macos; then
+                    success=1
+                fi
+            else
+                ab_log "Icon PNG not made: ${png_output}"
+            fi
         fi
         # Linux: the .icns that comes with the source goes in too (an .icon's sibling, or the
         # .icns itself), so the bundle keeps a macOS icon: the callers remove .icns files of
@@ -1240,7 +1257,7 @@ validate_info_content() {
         else
             ab_log "  CFBundleIconFile '${iconfile}': missing .png or .svg"
             warning_count=$((warning_count + 1))
-            report="${report}CFBundleIconFile '${iconfile}' (warning): neither ${linux_icon_base}.png nor ${linux_icon_base}.svg found in Resources (set the icon again in AppletBuilder: it writes the PNG on either system)
+            report="${report}CFBundleIconFile '${iconfile}' (warning): neither ${linux_icon_base}.png nor ${linux_icon_base}.svg found in Resources (set the icon again in AppletBuilder: it writes one on either system)
 
 "
         fi

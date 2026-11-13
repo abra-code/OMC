@@ -57,6 +57,10 @@ icon_json="${icon_json},{\"title\": \"Custom\u2026\", \"tag\": \"__custom__\"}]"
 # ── Set default header icon ──
 
 default_icns="${icons_dir}/CommandApplet.icns"
+# Linux: the flat SVG beside it, the icon the applet gets there (applet_install_icon)
+if ! ab_on_macos && [ -f "${icons_dir}/CommandApplet.svg" ]; then
+    default_icns="${icons_dir}/CommandApplet.svg"
+fi
 if [ -f "$default_icns" ]; then
     set_value "$NEW_HEADER_IMAGE_ID" "$default_icns"
 fi

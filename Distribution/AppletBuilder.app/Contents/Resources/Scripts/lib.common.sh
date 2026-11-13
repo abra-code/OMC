@@ -282,6 +282,23 @@ ab_on_macos() {
     return 0
 }
 
+# The flat Linux SVG that AppletBuilder ships for one of its own icons (Icons/<Name>.svg beside
+# Icons/<Name>.icon and .icns), or nothing. Only AppletBuilder's Icons folder: beside a user's own
+# .icon, an SVG of the same name is more likely the glyph's source than a finished Linux icon.
+ab_shipped_icon_svg() { # <.icon or .icns path>
+    case "$1" in
+        *.icon|*.icns) ;;
+        *) return 0 ;;
+    esac
+    local icons_dir source_dir
+    icons_dir="$(CDPATH= cd -P -- "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Icons" 2>/dev/null && pwd)"
+    source_dir="$(CDPATH= cd -P -- "$(/usr/bin/dirname -- "$1")" 2>/dev/null && pwd)"
+    if [ -n "$icons_dir" ] && [ "$source_dir" = "$icons_dir" ] && [ -f "${1%.*}.svg" ]; then
+        printf '%s\n' "${1%.*}.svg"
+    fi
+    return 0
+}
+
 # Hides the given controls of the current window on Linux, where what they set does not exist
 # (owner's Q6: signing, thinning, Services, the minimum macOS version); nothing on macOS. Called last
 # by the panes' load handlers, after they filled the window, so one set of ActionUI files serves

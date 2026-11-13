@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Terminal.svg: AppletBuilder's Terminal.icon as a flat Linux icon on the rounded tile (icedit/templates/rounded-tile.svg) -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="face-fill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2ea22e"/>
+      <stop offset="1" stop-color="#008e00"/>
+    </linearGradient>
+    
+  </defs>
+  <rect id="tile-side" x="40" y="56" width="944" height="944" rx="189" fill="#004e00"/>
+  <rect id="tile-face" x="40" y="24" width="944" height="944" rx="189" fill="url(#face-fill)"/>
+  <g id="layers" transform="translate(40, 24) scale(0.921875)">
+    <g transform="translate(512, 512) scale(1) translate(-384, -384)"><svg width="768" height="768" viewBox="0.00 37.86 768.00 692.28"><path d="M692.28,652.62 L692.28,191.10 L75.72,191.10 L75.72,652.62 Z M692.28,37.86 Q722.93,37.86 745.46,60.39 Q768.00,82.93 768.00,115.38 L768.00,652.62 Q768.00,685.07 745.46,707.61 Q722.93,730.14 692.28,730.14 L75.72,730.14 Q45.07,730.14 22.54,707.61 Q0.00,685.07 0.00,652.62 L0.00,115.38 Q0.00,82.93 22.54,60.39 Q45.07,37.86 75.72,37.86 Z M421.86,576.90 L421.86,499.38 L614.76,499.38 L614.76,576.90 Z M290.25,421.86 L137.01,268.62 L245.18,268.62 L373.18,394.82 Q384.00,407.44 384.00,422.76 Q384.00,438.08 373.18,450.70 L246.99,576.90 L137.01,576.90 Z " fill="#ffffff"/></svg></g>
+  </g>
+</svg>

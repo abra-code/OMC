@@ -19,6 +19,10 @@ else
 
     # Update header icon from precompiled .icns
     icns_path="${icons_dir}/${selected}.icns"
+    # Linux: the flat SVG beside it, the icon the applet gets there (applet_install_icon)
+    if ! ab_on_macos && [ -f "${icons_dir}/${selected}.svg" ]; then
+        icns_path="${icons_dir}/${selected}.svg"
+    fi
     if [ -f "$icns_path" ]; then
         set_value "$NEW_HEADER_IMAGE_ID" "$icns_path"
     fi

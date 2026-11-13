@@ -28,12 +28,13 @@ if [ $? -eq 0 ]; then
         fi
     done
 
-    # Update header icon preview: the .icns on macOS, the PNG (or SVG) on Linux
+    # Update header icon preview: the .icns on macOS, on Linux the SVG (or PNG): the SVG first, as
+    # an earlier install may have left a PNG of the same name beside the SVG installed now
     icns_path="$project_path/Contents/Resources/${icon_base}.icns"
     if ! ab_on_macos; then
-        icns_path="$project_path/Contents/Resources/${icon_base}.png"
+        icns_path="$project_path/Contents/Resources/${icon_base}.svg"
         if [ ! -f "$icns_path" ]; then
-            icns_path="$project_path/Contents/Resources/${icon_base}.svg"
+            icns_path="$project_path/Contents/Resources/${icon_base}.png"
         fi
     fi
     if [ -f "$icns_path" ]; then

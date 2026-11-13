@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- CommandApplet.svg: AppletBuilder's CommandApplet.icon as a flat Linux icon on the rounded tile (icedit/templates/rounded-tile.svg) -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="face-fill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#43656a"/>
+      <stop offset="1" stop-color="#1a4349"/>
+    </linearGradient>
+    <linearGradient id="glyph-fill" gradientUnits="userSpaceOnUse" x1="384" y1="0" x2="384" y2="768"><stop offset="0" stop-color="#ea3424"/><stop offset="1" stop-color="#9b1f15"/></linearGradient>
+  </defs>
+  <rect id="tile-side" x="40" y="56" width="944" height="944" rx="189" fill="#0e2528"/>
+  <rect id="tile-face" x="40" y="24" width="944" height="944" rx="189" fill="url(#face-fill)"/>
+  <g id="layers" transform="translate(40, 24) scale(0.921875)">
+    <g transform="translate(512, 512) scale(1.33333) translate(-384, -384)"><rect x="118" y="118" width="532" height="532" rx="54" fill="none" stroke="url(#glyph-fill)" stroke-width="68"/><circle cx="384" cy="384" r="168" fill="none" stroke="url(#glyph-fill)" stroke-width="72"/></g>
+  </g>
+</svg>
