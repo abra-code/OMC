@@ -58,6 +58,18 @@ class CommandServicesTests(unittest.TestCase):
         os.chmod(program, 0o755)
         return folder
 
+    def flat_applet(self, name, info):
+        """An applet folder in the flat layout: Info.plist and the program at its top."""
+        folder = os.path.join(self.apps, name)
+        os.makedirs(os.path.join(folder, "Scripts"))
+        with open(os.path.join(folder, "Info.plist"), "wb") as file:
+            plistlib.dump(info, file)
+        program = os.path.join(folder, name[:-4] if name.endswith(".app") else name)
+        with open(program, "w") as file:
+            file.write("#!/bin/sh\n")
+        os.chmod(program, 0o755)
+        return folder
+
     def run_script(self, *arguments):
         environment = dict(os.environ, XDG_DATA_HOME=self.data_home, PYTHONDONTWRITEBYTECODE="1")
         return subprocess.run([sys.executable, SCRIPT] + list(arguments), env=environment, capture_output=True, text=True)
@@ -102,6 +114,18 @@ class CommandServicesTests(unittest.TestCase):
                          "one type for both folder identifiers; the text service is not there")
         self.assertEqual([name for name in os.listdir(os.path.dirname(self.listing_path("x.y"))) if name.startswith(".")], [],
                          "no temporary file left")
+
+    def test_a_flat_applet_is_listed_with_its_program_at_the_top(self):
+        folder = self.flat_applet("Find.app", {"CFBundleIdentifier": "com.example.Find", "CFBundleName": "Find",
+                                               "NSServices": [FIND_SERVICE, TEXT_SERVICE]})
+        result = self.run_script("install", folder)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        listing = self.listing("com.example.Find")
+        self.assertEqual(listing["program"], os.path.join(folder, "Find"))
+        self.assertEqual(listing["services"], [{"title": "Search Here with Find", "command": "find.new", "mimeTypes": ["inode/directory"]}])
+        result = self.run_script("uninstall", folder)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertFalse(os.path.exists(self.listing_path("com.example.Find")))
 
     def test_files_the_older_way_are_any_file_or_folder(self):
         # As AppletBuilder writes a file service (plist_edit.py)
