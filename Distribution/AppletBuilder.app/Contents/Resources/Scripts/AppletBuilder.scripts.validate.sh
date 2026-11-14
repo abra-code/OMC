@@ -24,15 +24,15 @@ fi
 
 if [ "$rc" -eq 0 ]; then
     if [ -n "$SCRIPT_VALIDATE_WARNINGS" ]; then
-        set_value "$SCRIPTS_EDITED_LABEL_ID" "⚠️ bash 4+ syntax"
+        set_value "$SCRIPTS_EDITED_LABEL_ID" "$(ab_mark warning)bash 4+ syntax"
         show_errors "Warnings in ${filename} — macOS ships bash 3.2, these constructs fail at runtime:
 
 $SCRIPT_VALIDATE_WARNINGS"
     else
-        set_value "$SCRIPTS_EDITED_LABEL_ID" "✅ Valid"
+        set_value "$SCRIPTS_EDITED_LABEL_ID" "$(ab_mark ok)Valid"
     fi
 else
-    set_value "$SCRIPTS_EDITED_LABEL_ID" "🛑 Syntax errors"
+    set_value "$SCRIPTS_EDITED_LABEL_ID" "$(ab_mark error)Syntax errors"
     show_errors "Syntax errors in ${filename}:
 
 $SCRIPT_VALIDATE_OUTPUT"

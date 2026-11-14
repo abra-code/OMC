@@ -66,7 +66,7 @@ if [ -n "$scripts_path" ] && [ -f "$scripts_path" ]; then
         if [ "$stored" != "$current" ]; then
             dirty=$(pb_get "$PB_SCRIPTS_DIRTY")
             if [ "$dirty" = "1" ]; then
-                set_value "$SCRIPTS_EDITED_LABEL_ID" "⚠️ File changed externally (you have unsaved edits)"
+                set_value "$SCRIPTS_EDITED_LABEL_ID" "$(ab_mark warning)File changed externally (you have unsaved edits)"
             else
                 # Not dirty — silently reload
                 content=$(/bin/cat "$scripts_path")
@@ -87,7 +87,7 @@ if [ -f "$cmd_plist" ]; then
         if [ "$stored" != "$current" ]; then
             dirty=$(pb_get "$PB_CMD_DIRTY")
             if [ "$dirty" = "1" ]; then
-                set_value "$CMD_EDITED_LABEL_ID" "⚠️ File changed externally (you have unsaved edits)"
+                set_value "$CMD_EDITED_LABEL_ID" "$(ab_mark warning)File changed externally (you have unsaved edits)"
             else
                 # Not dirty — silently reload the selected command
                 cmd_index=$(pb_get "$PB_CMD_SELECTED")
@@ -112,7 +112,7 @@ if [ -n "$uifiles_path" ] && [ -f "$uifiles_path" ]; then
         if [ "$stored" != "$current" ]; then
             dirty=$(pb_get "$PB_UIFILES_DIRTY")
             if [ "$dirty" = "1" ]; then
-                set_value "$UI_EDITED_LABEL_ID" "⚠️ File changed externally (you have unsaved edits)"
+                set_value "$UI_EDITED_LABEL_ID" "$(ab_mark warning)File changed externally (you have unsaved edits)"
             else
                 # Not dirty — silently reload
                 content=$(/bin/cat "$uifiles_path")

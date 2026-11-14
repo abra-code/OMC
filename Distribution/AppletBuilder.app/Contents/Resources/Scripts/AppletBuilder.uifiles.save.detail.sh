@@ -35,7 +35,7 @@ if [ "$?" -eq 0 ]; then
     pb_set "$PB_UIFILES_HASH" "$(file_hash "$selected_path")"
     pb_set "$PB_UIFILES_DIRTY" ""
     set_enabled "$UI_SAVE_BTN_ID" false
-    set_value "$UI_EDITED_LABEL_ID" "✅ Saved"
+    set_value "$UI_EDITED_LABEL_ID" "$(ab_mark ok)Saved"
 else
     set_value "$UI_EDITED_LABEL_ID" "Error: failed to save"
 fi

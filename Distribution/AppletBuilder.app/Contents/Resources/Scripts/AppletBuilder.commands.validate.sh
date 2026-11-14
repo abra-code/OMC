@@ -16,16 +16,16 @@ rc=$?
 
 case "$rc" in
     0)
-        set_value "$CMD_EDITED_LABEL_ID" "✅ Valid"
+        set_value "$CMD_EDITED_LABEL_ID" "$(ab_mark ok)Valid"
         ;;
     2)
-        set_value "$CMD_EDITED_LABEL_ID" "⚠️ Warnings"
+        set_value "$CMD_EDITED_LABEL_ID" "$(ab_mark warning)Warnings"
         show_errors "$cmd_file_label validation warnings:
 
 $COMMAND_VALIDATE_OUTPUT"
         ;;
     3)
-        set_value "$CMD_EDITED_LABEL_ID" "🛑 Invalid $cmd_file_label"
+        set_value "$CMD_EDITED_LABEL_ID" "$(ab_mark error)Invalid $cmd_file_label"
         show_errors "Syntax error in $cmd_file_label:
 
 $COMMAND_VALIDATE_OUTPUT"
@@ -34,7 +34,7 @@ $COMMAND_VALIDATE_OUTPUT"
         set_value "$CMD_EDITED_LABEL_ID" "No command file found"
         ;;
     *)
-        set_value "$CMD_EDITED_LABEL_ID" "🛑 Validation errors"
+        set_value "$CMD_EDITED_LABEL_ID" "$(ab_mark error)Validation errors"
         show_errors "$cmd_file_label validation errors:
 
 $COMMAND_VALIDATE_OUTPUT"

@@ -18,10 +18,10 @@ rc=$?
 
 case "$rc" in
     0)
-        set_value "$UI_EDITED_LABEL_ID" "✅ Valid"
+        set_value "$UI_EDITED_LABEL_ID" "$(ab_mark ok)Valid"
         ;;
     2)
-        set_value "$UI_EDITED_LABEL_ID" "⚠️ Warnings"
+        set_value "$UI_EDITED_LABEL_ID" "$(ab_mark warning)Warnings"
         show_errors "ActionUI validation warnings in $(/usr/bin/basename "$selected_path"):
 
 $ACTIONUI_VALIDATE_OUTPUT"
@@ -30,7 +30,7 @@ $ACTIONUI_VALIDATE_OUTPUT"
         set_value "$UI_EDITED_LABEL_ID" "Verifier not found"
         ;;
     *)
-        set_value "$UI_EDITED_LABEL_ID" "🛑 Validation errors"
+        set_value "$UI_EDITED_LABEL_ID" "$(ab_mark error)Validation errors"
         show_errors "ActionUI validation errors in $(/usr/bin/basename "$selected_path"):
 
 $ACTIONUI_VALIDATE_OUTPUT"

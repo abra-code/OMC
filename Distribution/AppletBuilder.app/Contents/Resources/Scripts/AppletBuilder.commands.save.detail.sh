@@ -93,7 +93,7 @@ if [ "$result" -eq 0 ]; then
     pb_set "$PB_CMD_HASH" "$(file_hash "$cmd_plist")"
     pb_set "$PB_CMD_DIRTY" ""
     set_enabled "$CMD_SAVE_BTN_ID" false
-    set_value "$CMD_EDITED_LABEL_ID" "✅ Saved"
+    set_value "$CMD_EDITED_LABEL_ID" "$(ab_mark ok)Saved"
     "$next_cmd" "${OMC_CURRENT_COMMAND_GUID}" "AppletBuilder.commands.loaded"
 else
     set_value "$CMD_EDITED_LABEL_ID" "Error: failed to save"

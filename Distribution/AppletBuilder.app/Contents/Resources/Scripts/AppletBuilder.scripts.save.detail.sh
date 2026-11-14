@@ -35,7 +35,7 @@ if [ "$?" -eq 0 ]; then
     pb_set "$PB_SCRIPTS_HASH" "$(file_hash "$selected_path")"
     pb_set "$PB_SCRIPTS_DIRTY" ""
     set_enabled "$SCRIPTS_SAVE_BTN_ID" false
-    set_value "$SCRIPTS_EDITED_LABEL_ID" "✅ Saved"
+    set_value "$SCRIPTS_EDITED_LABEL_ID" "$(ab_mark ok)Saved"
 else
     set_value "$SCRIPTS_EDITED_LABEL_ID" "Error: failed to save"
 fi

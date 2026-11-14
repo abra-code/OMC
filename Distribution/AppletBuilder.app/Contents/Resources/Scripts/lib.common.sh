@@ -107,7 +107,7 @@ GEN_NAME_ID=302
 GEN_BUNDLE_ID_ID=303
 GEN_VERSION_ID=305
 GEN_MIN_OS_ID=306
-# The Min macOS row, absent on Linux ("type:apple" in General.json; owner's Q6)
+# The Min macOS row, absent on Linux ("type:apple" in General.json)
 GEN_MIN_OS_ROW_ID=309
 GEN_ICON_IMAGE_ID=307
 GEN_HEADER_NAME_ID=308
@@ -162,7 +162,7 @@ SVC_REMOVE_BTN_ID=335
 SVC_SAVE_BTN_ID=336
 SVC_STATUS_ID=337
 # The Services area's three parts (divider, header, split view), absent on Linux ("type:apple"): NSServices is
-# macOS's (owner's Q6; the keys stay in Info.plist untouched)
+# macOS's (the keys stay in Info.plist untouched)
 SVC_DIVIDER_ID=339
 SVC_HEADER_ID=340
 SVC_SPLIT_ID=341
@@ -199,7 +199,7 @@ HELP_WEBVIEW_ID=910
 # Build & Run
 BUILD_IDENTITY_PICKER_ID=402
 BUILD_THIN_PICKER_ID=404
-# The Signing Identity and Thin Universal Executables rows, absent on Linux ("type:apple" in BuildRun.json; owner's Q3, Q4)
+# The Signing Identity and Thin Universal Executables rows, absent on Linux ("type:apple" in BuildRun.json)
 BUILD_IDENTITY_ROW_ID=421
 BUILD_THIN_ROW_ID=422
 BUILD_WARNINGS_AS_ERRORS_ID=405
@@ -275,11 +275,34 @@ command_file_path() {
 }
 
 # True on macOS, where an applet is code signed, thinned with lipo and registered with Launch
-# Services; none of that exists on Linux (owner's Q3, Q4: skipped there). The same test as
+# Services; none of that exists on Linux (skipped there). The same test as
 # applet_executable_folder: Linux by OSTYPE (the shell's own, no tool needed), macOS otherwise.
 ab_on_macos() {
     case "${OSTYPE:-}" in
         linux*) return 1 ;;
+    esac
+    return 0
+}
+
+# The mark in front of an editor's state label ("$(ab_mark ok)Valid"), with its space: an emoji on
+# macOS; on Linux a plain text symbol, since a desktop without a color emoji font draws an emoji
+# as a box. Adwaita Sans (GNOME 48+, Fedora, Ubuntu) has all four; Cantarell (Debian 13's GNOME)
+# has the circle, and GTK takes the check mark, warning sign and ballot X from DejaVu Sans there.
+ab_mark() { # <ok|modified|warning|error>
+    if ab_on_macos; then
+        case "$1" in
+            ok) printf '%s' "✅ " ;;
+            modified) printf '%s' "🔴 " ;;
+            warning) printf '%s' "⚠️ " ;;
+            error) printf '%s' "🛑 " ;;
+        esac
+        return 0
+    fi
+    case "$1" in
+        ok) printf '%s' "✓ " ;;
+        modified) printf '%s' "● " ;;
+        warning) printf '%s' "⚠ " ;;
+        error) printf '%s' "✗ " ;;
     esac
     return 0
 }
