@@ -27,7 +27,7 @@
         "INIT_SUBCOMMAND_ID": "AppletBuilder.welcome.init",
         "IS_BLOCKING": false,
         "JSON_NAME": "Welcome",
-        "WINDOW_TITLE": "Welcome to AppletBuilder"
+        "WINDOW_TITLE": "Command Workshop"
       },
       "COMMAND_ID": "AppletBuilder.welcome",
       "EXECUTION_MODE": "exe_script_file",
