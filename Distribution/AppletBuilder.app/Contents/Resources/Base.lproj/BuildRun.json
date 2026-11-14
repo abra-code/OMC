@@ -31,7 +31,7 @@
                         {
                             "type": "LabeledContent",
                             "properties": {
-                                "title": "Engine:"
+                                "title": "Command Engine:"
                             },
                             "children": [
                                 {
@@ -298,6 +298,17 @@
                                         "systemImage:linux": "folder",
                                         "buttonStyle": "bordered",
                                         "actionID": "AppletBuilder.reveal"
+                                    }
+                                },
+                                {
+                                    "type:linux": "Button",
+                                    "id": 424,
+                                    "properties": {
+                                        "title": "Add To Desktop",
+                                        "systemImage": "plus.app",
+                                        "buttonStyle": "bordered",
+                                        "actionID": "AppletBuilder.desktop.toggle",
+                                        "help": "Add the applet to the desktop's app list, with its name and icon, or take it off"
                                     }
                                 },
                                 {

@@ -43,6 +43,8 @@ options="${options}]"
 # operation that can install a runtime into an applet that had none.
 ab_thin_python_availability "$(load_project_path)"
 ab_applet_versions "$(load_project_path)"
+# Linux: Add To Desktop or Remove From Desktop, as the applet is on the app list or not
+ab_desktop_button "$(load_project_path)"
 
 # Its answer is the group's state, not this handler's verdict: it returns 1 for an
 # applet with no embedded Python, which is an ordinary applet, and the pane loaded

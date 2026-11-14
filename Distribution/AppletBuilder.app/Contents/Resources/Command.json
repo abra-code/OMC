@@ -591,6 +591,12 @@
       "COMMAND_ID": "AppletBuilder.reveal",
       "EXECUTION_MODE": "exe_script_file",
       "NAME": "AppletBuilder"
+    },
+    {
+      "NOTES": "Linux: adds the loaded applet to the desktop's app list, or takes it off when it is there (linux-app-entry.py)",
+      "COMMAND_ID": "AppletBuilder.desktop.toggle",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
     }
   ],
   "VERSION": 2

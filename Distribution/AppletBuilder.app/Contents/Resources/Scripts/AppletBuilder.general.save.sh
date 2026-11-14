@@ -40,6 +40,12 @@ old_name=$(plist_read "$plist" CFBundleName)
 old_exe=$(plist_read "$plist" CFBundleExecutable)
 old_icon=$(plist_read "$plist" CFBundleIconFile)
 name_changed=0
+# Linux: the applet's desktop entry before the save; a rename or a new identifier names another
+# one, and the old one would be left on the app list pointing at the old name and path
+old_desktop_entry=""
+if ! ab_on_macos; then
+    old_desktop_entry="$(applet_desktop_entry_file "$project_path")"
+fi
 
 # ── Handle name change (full rename) ──
 
@@ -85,6 +91,25 @@ fi
 
 # Finalize
 applet_finalize "$project_path"
+# Linux: an entry the user added moves to the new identifier (install, then the old one off)
+if [ -n "$old_desktop_entry" ] && [ "$AB_NO_DESKTOP_ENTRY" != "1" ]; then
+    new_desktop_entry="$(applet_desktop_entry_file "$project_path")"
+    if [ "$new_desktop_entry" != "$old_desktop_entry" ]; then
+        entry_output="$(applet_desktop_entry install "$project_path")"
+        entry_status=$?
+        if [ "$entry_status" -ne 0 ]; then
+            ab_log "  Warning: the desktop entry was not moved to the new identifier: ${entry_output}"
+        else
+            entry_output="$(applet_desktop_entry uninstall "$(/usr/bin/basename "$old_desktop_entry" .desktop)")"
+            entry_status=$?
+            if [ "$entry_status" -ne 0 ]; then
+                ab_log "  Warning: the old desktop entry was not removed: ${entry_output}"
+            fi
+        fi
+    fi
+fi
+# Linux: a new identifier names another desktop entry, so the desktop button may change
+ab_desktop_button "$project_path"
 
 pb_set "$PB_PLIST_HASH" "$(file_hash "$project_path/Contents/Info.plist")"
 

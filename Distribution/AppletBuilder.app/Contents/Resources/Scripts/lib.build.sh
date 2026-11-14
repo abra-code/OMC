@@ -165,10 +165,70 @@ applet_install_icon() {
     return $( [ $success -eq 1 ] && echo 0 || echo 1 )
 }
 
-# Finalize: touch + register with Launch Services (macOS), or on Linux add the applet to the
-# desktop's app list for the current user: a desktop entry named by CFBundleIdentifier, with the
-# applet's PNG or SVG icon (the framework's linux-app-entry.py, from ActionUI), so the dock shows
-# its name and icon. A failure there is a warning: the applet itself is built.
+# Linux: adds the applet to the desktop's app list for the current user, or takes it off
+# (<install|uninstall> <applet path>), with the framework's linux-app-entry.py (from ActionUI)
+# run by AppletBuilder's Python, else the system's. Prints the tool's output and returns its
+# status, or prints why and returns 2 when there is no tool or no python3 to run it.
+applet_desktop_entry() {
+    local action="$1"
+    local app_path="$2"
+    local entry_tool="$support_tools/linux-app-entry.py"
+    if [ ! -f "$entry_tool" ]; then
+        entry_tool="$own_support_tools/linux-app-entry.py"
+    fi
+    local entry_python="$python3"
+    if [ ! -x "$entry_python" ]; then
+        entry_python="/usr/bin/python3"
+    fi
+    if [ ! -f "$entry_tool" ] || [ ! -x "$entry_python" ]; then
+        printf 'no linux-app-entry.py in the framework, or no python3\n'
+        return 2
+    fi
+    "$entry_python" "$entry_tool" "$action" "$app_path" 2>&1
+}
+
+# Linux: prints the applet's desktop entry file and returns 0 when it is on the desktop's app list
+# (<data home>/applications/<CFBundleIdentifier>.desktop, the data home as linux-app-entry.py
+# takes it: an absolute $XDG_DATA_HOME, else ~/.local/share); returns 1, printing nothing, when not.
+applet_desktop_entry_file() {
+    local app_path="$1"
+    local identifier="$(plist_read "$app_path/Contents/Info.plist" CFBundleIdentifier)"
+    if [ -z "$identifier" ]; then
+        return 1
+    fi
+    local data_home="$HOME/.local/share"
+    case "$XDG_DATA_HOME" in
+        /*) data_home="$XDG_DATA_HOME" ;;
+    esac
+    local entry_file="$data_home/applications/${identifier}.desktop"
+    if [ ! -f "$entry_file" ]; then
+        return 1
+    fi
+    printf '%s\n' "$entry_file"
+    return 0
+}
+
+# Build & Run's Linux button (after Show): "Remove From Desktop" when the applet is on the
+# desktop's app list, else "Add To Desktop". macOS has no such button ("type:linux").
+ab_desktop_button() { # <project-path>
+    if ab_on_macos || [ -z "$1" ]; then
+        return 0
+    fi
+    local entry_file
+    entry_file="$(applet_desktop_entry_file "$1")"
+    if [ -n "$entry_file" ]; then
+        "$dialog_tool" "$window_uuid" "$BUILD_DESKTOP_BTN_ID" omc_set_property "title" "Remove From Desktop"
+        "$dialog_tool" "$window_uuid" "$BUILD_DESKTOP_BTN_ID" omc_set_property "systemImage" "minus.square"
+    else
+        "$dialog_tool" "$window_uuid" "$BUILD_DESKTOP_BTN_ID" omc_set_property "title" "Add To Desktop"
+        "$dialog_tool" "$window_uuid" "$BUILD_DESKTOP_BTN_ID" omc_set_property "systemImage" "plus.app"
+    fi
+}
+
+# Finalize: touch + register with Launch Services (macOS). On Linux an applet that is on the
+# desktop's app list (Build & Run's Add To Desktop) gets its entry written again, so the entry
+# follows the applet's name and icon; one that is not is left off: builds and saves never add it.
+# A failure there is a warning: the applet itself is built.
 applet_finalize() {
     local app_path="$1"
     /usr/bin/touch -c "$app_path"
@@ -180,25 +240,18 @@ applet_finalize() {
     if [ "$AB_NO_DESKTOP_ENTRY" = "1" ]; then
         return 0
     fi
-    local entry_tool="$support_tools/linux-app-entry.py"
-    if [ ! -f "$entry_tool" ]; then
-        entry_tool="$own_support_tools/linux-app-entry.py"
-    fi
-    local entry_python="$python3"
-    if [ ! -x "$entry_python" ]; then
-        entry_python="/usr/bin/python3"
-    fi
-    if [ ! -f "$entry_tool" ] || [ ! -x "$entry_python" ]; then
-        ab_log "  Warning: not added to the desktop's app list (no linux-app-entry.py in the framework, or no python3)"
+    local existing_entry
+    existing_entry="$(applet_desktop_entry_file "$app_path")"
+    if [ -z "$existing_entry" ]; then
         return 0
     fi
     local entry_output
-    entry_output="$("$entry_python" "$entry_tool" install "$app_path" 2>&1)"
+    entry_output="$(applet_desktop_entry install "$app_path")"
     local entry_status=$?
     if [ "$entry_status" -ne 0 ]; then
-        ab_log "  Warning: not added to the desktop's app list: ${entry_output}"
+        ab_log "  Warning: the desktop entry was not updated: ${entry_output}"
     else
-        ab_log "  Added to the desktop's app list: ${entry_output}"
+        ab_log "  Desktop entry updated: ${entry_output}"
     fi
     return 0
 }
@@ -1407,8 +1460,8 @@ do_codesign() {
     ab_log ""
     ab_log "$log_output"
     ab_log ""
-    # Linux: the desktop entry again, now with the icon the build made (a new applet has none
-    # when it is created); macOS registers with Launch Services on create and save, as before
+    # Linux: the desktop entry again, when the applet has one, now with the icon the build made;
+    # macOS registers with Launch Services on create and save, as before
     if [ $status -eq 0 ] && ! ab_on_macos; then
         applet_finalize "$target_path"
     fi

@@ -218,6 +218,8 @@ BUILD_THIN_NOTE_ID=416
 BUILD_THIN_GROUP_ID=417
 BUILD_ENGINE_VERSION_ID=418
 BUILD_PYTHON_VERSION_ID=419
+# Linux's Add To Desktop / Remove From Desktop button, after Show ("type:linux" in BuildRun.json)
+BUILD_DESKTOP_BTN_ID=424
 
 # ──────────────────────────────────────────────────────────────
 # State management (private pasteboards keyed by window UUID)
@@ -635,6 +637,11 @@ ab_actions_enabled() { # <true|false>
     set_enabled "$BUILD_TEST_BTN_ID" "$1"
     set_enabled "$BUILD_RUN_BTN_ID" "$1"
     set_enabled "$BUILD_ITEST_BTN_ID" "$1"
+    # Linux's Add To Desktop / Remove From Desktop too: a click during a build would
+    # report over the build's status. macOS has no such button ("type:linux").
+    if ! ab_on_macos; then
+        set_enabled "$BUILD_DESKTOP_BTN_ID" "$1"
+    fi
     # The thinning checkboxes go with the buttons. They are live controls with a
     # handler of their own (AppletBuilder.thin.python.changed), which re-enables
     # Execute - so leaving them clickable during a run means a click on Write
