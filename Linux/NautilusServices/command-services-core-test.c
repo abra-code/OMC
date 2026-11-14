@@ -162,6 +162,111 @@ test_the_command_line_asks_the_applet(Fixture *inFixture, gconstpointer inData)
 	g_assert_cmpstr(commandLine[4], ==, "file:///home/me/c");
 }
 
+static void
+remove_tree(const char *inPath)
+{
+	if(g_file_test(inPath, G_FILE_TEST_IS_DIR) && !g_file_test(inPath, G_FILE_TEST_IS_SYMLINK))
+	{
+		g_autoptr(GDir) folder = g_dir_open(inPath, 0, NULL);
+		const char *name = NULL;
+		while((folder != NULL) && ((name = g_dir_read_name(folder)) != NULL))
+		{
+			g_autofree char *path = g_build_filename(inPath, name, NULL);
+			remove_tree(path);
+		}
+		g_rmdir(inPath);
+	}
+	else
+		g_unlink(inPath);
+}
+
+// inRoot/<inBundle>/Contents with an Info.plist (unless inInfo is FALSE) and the given files
+// (relative to Contents, each made with mode inModes[i])
+static char *
+make_bundle(const char *inRoot, const char *inBundle, gboolean inInfo, const char *const *inFiles, const int *inModes)
+{
+	char *bundle = g_build_filename(inRoot, inBundle, NULL);
+	g_autofree char *contents = g_build_filename(bundle, "Contents", NULL);
+	g_assert_cmpint(g_mkdir_with_parents(contents, 0755), ==, 0);
+	if(inInfo)
+	{
+		g_autofree char *info = g_build_filename(contents, "Info.plist", NULL);
+		write_file(info, "<plist/>\n");
+	}
+	for(gsize i = 0; (inFiles != NULL) && (inFiles[i] != NULL); i++)
+	{
+		g_autofree char *path = g_build_filename(contents, inFiles[i], NULL);
+		g_autofree char *folder = g_path_get_dirname(path);
+		g_assert_cmpint(g_mkdir_with_parents(folder, 0755), ==, 0);
+		write_file(path, "#!/bin/sh\n");
+		g_assert_cmpint(g_chmod(path, inModes[i]), ==, 0);
+	}
+	return bundle;
+}
+
+// Whether command_applet_program finds inExpected (relative to the bundle; NULL: no program), and
+// names the applet inName
+static void
+assert_program(const char *inBundle, const char *inExpected, const char *inName)
+{
+	g_autofree char *name = NULL;
+	g_autofree char *program = command_applet_program(inBundle, &name);
+	if(inExpected == NULL)
+	{
+		g_assert_null(program);
+		g_assert_null(name);
+		return;
+	}
+	g_autofree char *expected = g_build_filename(inBundle, inExpected, NULL);
+	g_assert_cmpstr(program, ==, expected);
+	g_assert_cmpstr(name, ==, inName);
+}
+
+static void
+test_an_applet_bundle_has_a_program(void)
+{
+	g_autofree char *root = g_dir_make_tmp("command-applet-test-XXXXXX", NULL);
+	g_assert_nonnull(root);
+	const char *one[] = { "Linux/Example", NULL };
+	const int executable[] = { 0755, 0755 };
+	const int plain[] = { 0644 };
+	g_autofree char *example = make_bundle(root, "Example.app", TRUE, one, executable);
+	assert_program(example, "Contents/Linux/Example", "Example");
+
+	// Renamed after it was made: the one executable in Contents/Linux
+	g_autofree char *renamed = make_bundle(root, "Example (copy).app", TRUE, one, executable);
+	assert_program(renamed, "Contents/Linux/Example", "Example (copy)");
+	const char *two[] = { "Linux/A", "Linux/B", NULL };
+	g_autofree char *ambiguous = make_bundle(root, "Renamed.app", TRUE, two, executable);
+	assert_program(ambiguous, NULL, NULL);
+	const char *named[] = { "Linux/Named", "Linux/Helper", NULL };
+	g_autofree char *helper = make_bundle(root, "Named.app", TRUE, named, executable);
+	assert_program(helper, "Contents/Linux/Named", "Named"); // its own name first, other files aside
+
+	// Not an applet with a Linux program
+	const char *plainOne[] = { "Linux/Plain", NULL };
+	g_autofree char *notExecutable = make_bundle(root, "Plain.app", TRUE, plainOne, plain);
+	assert_program(notExecutable, NULL, NULL);
+	const char *noInfo[] = { "Linux/NoInfo", NULL };
+	g_autofree char *noInfoBundle = make_bundle(root, "NoInfo.app", FALSE, noInfo, executable);
+	assert_program(noInfoBundle, NULL, NULL);
+	const char *mac[] = { "MacOS/Mac", NULL };
+	g_autofree char *macOnly = make_bundle(root, "Mac.app", TRUE, mac, executable);
+	assert_program(macOnly, NULL, NULL);
+	const char *folderOne[] = { "Linux/Folder", NULL };
+	g_autofree char *noSuffix = make_bundle(root, "Folder", TRUE, folderOne, executable);
+	assert_program(noSuffix, NULL, NULL);
+	g_autofree char *bare = make_bundle(root, ".app", TRUE, NULL, NULL);
+	assert_program(bare, NULL, NULL);
+	g_autofree char *fileApp = g_build_filename(root, "File.app", NULL);
+	write_file(fileApp, "not a folder\n");
+	assert_program(fileApp, NULL, NULL);
+	assert_program("Example.app", NULL, NULL); // a relative path
+	g_assert_null(command_applet_program(NULL, NULL));
+
+	remove_tree(root);
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -170,5 +275,6 @@ main(int argc, char *argv[])
 	g_test_add("/services/load/unusable", Fixture, NULL, fixture_set_up, test_unusable_lists_and_services_are_left_out, fixture_tear_down);
 	g_test_add("/services/fits", Fixture, NULL, fixture_set_up, test_a_service_fits_when_every_file_does, fixture_tear_down);
 	g_test_add("/services/command-line", Fixture, NULL, fixture_set_up, test_the_command_line_asks_the_applet, fixture_tear_down);
+	g_test_add_func("/applet/program", test_an_applet_bundle_has_a_program);
 	return g_test_run();
 }

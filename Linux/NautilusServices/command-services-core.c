@@ -142,3 +142,62 @@ command_service_command_line(const CommandService *inService, const char *const 
 		g_strv_builder_add(builder, inFileURIs[i]);
 	return g_strv_builder_end(builder);
 }
+
+static gboolean
+is_executable_file(const char *inPath)
+{
+	return g_file_test(inPath, G_FILE_TEST_IS_REGULAR) && g_file_test(inPath, G_FILE_TEST_IS_EXECUTABLE);
+}
+
+// The one executable file in inFolder, or NULL when there is none or more than one
+static char *
+only_executable_in(const char *inFolder)
+{
+	g_autoptr(GDir) folder = g_dir_open(inFolder, 0, NULL);
+	if(folder == NULL)
+		return NULL;
+	char *found = NULL;
+	const char *name = NULL;
+	while((name = g_dir_read_name(folder)) != NULL)
+	{
+		g_autofree char *path = g_build_filename(inFolder, name, NULL);
+		if(!is_executable_file(path))
+			continue;
+		if(found != NULL)
+		{
+			g_free(found);
+			return NULL;
+		}
+		found = g_steal_pointer(&path);
+	}
+	return found;
+}
+
+char *
+command_applet_program(const char *inPath, char **outName)
+{
+	if(outName != NULL)
+		*outName = NULL;
+	if((inPath == NULL) || !g_path_is_absolute(inPath))
+		return NULL;
+	g_autofree char *base = g_path_get_basename(inPath);
+	gsize baseLength = strlen(base);
+	if((baseLength <= 4) || !g_str_has_suffix(base, ".app") || !g_file_test(inPath, G_FILE_TEST_IS_DIR))
+		return NULL;
+	g_autofree char *info = g_build_filename(inPath, "Contents", "Info.plist", NULL);
+	if(!g_file_test(info, G_FILE_TEST_IS_REGULAR))
+		return NULL;
+	g_autofree char *name = g_strndup(base, baseLength - 4);
+	g_autofree char *linuxFolder = g_build_filename(inPath, "Contents", "Linux", NULL);
+	char *program = g_build_filename(linuxFolder, name, NULL);
+	if(!is_executable_file(program))
+	{
+		g_free(program);
+		program = only_executable_in(linuxFolder);
+		if(program == NULL)
+			return NULL;
+	}
+	if(outName != NULL)
+		*outName = g_steal_pointer(&name);
+	return program;
+}

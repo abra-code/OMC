@@ -10,6 +10,9 @@
 //  Nautilus makes the menu (it remakes extension menus, throttled, as the selection or the folder's
 //  files change): a few small files, and nothing to watch.
 //
+//  A selected applet bundle (a <Name>.app folder with a Linux program) also gets "Launch <Name>"
+//  in the menu itself, ahead of "Services": it starts the applet as its desktop entry would.
+//
 //  Installed as root into Nautilus's extension folder (/usr/lib/<arch>/nautilus/extensions-4),
 //  which Nautilus loads at its start (nautilus -q to restart it).
 //
@@ -49,9 +52,19 @@ command_services_provider_init(CommandServicesProvider *inProvider)
 	(void)inProvider;
 }
 
-// A chosen service: its command line, kept on the menu item
+// A menu item's label for inText: Nautilus gives an extension's labels to GTK as they are, and GTK
+// reads "_" as the mark of a keyboard shortcut (Nautilus 48.3's nautilus-files-view.c doubles them
+// in its own file names, escape_underscores), so each "_" is doubled to be shown
+static char *
+menu_label(const char *inText)
+{
+	g_auto(GStrv) parts = g_strsplit(inText, "_", -1);
+	return g_strjoinv("__", parts);
+}
+
+// A chosen service or launch: its command line, kept on the menu item
 static void
-on_service_activate(NautilusMenuItem *inItem, gpointer inData)
+on_item_activate(NautilusMenuItem *inItem, gpointer inData)
 {
 	(void)inData;
 	char **commandLine = g_object_get_data(G_OBJECT(inItem), "command-line");
@@ -102,10 +115,11 @@ services_items(GList *inFiles)
 		if(submenu == NULL)
 			submenu = nautilus_menu_new();
 		g_autofree char *name = g_strdup_printf("CommandServices::%s::%s", service->application, service->command);
-		NautilusMenuItem *item = nautilus_menu_item_new(name, service->title, service->applet_name, NULL);
+		g_autofree char *label = menu_label(service->title);
+		NautilusMenuItem *item = nautilus_menu_item_new(name, label, service->applet_name, NULL);
 		char **commandLine = command_service_command_line(service, (const char *const *)uris->pdata, uris->len);
 		g_object_set_data_full(G_OBJECT(item), "command-line", commandLine, (GDestroyNotify)g_strfreev);
-		g_signal_connect(item, "activate", G_CALLBACK(on_service_activate), NULL);
+		g_signal_connect(item, "activate", G_CALLBACK(on_item_activate), NULL);
 		nautilus_menu_append_item(submenu, item);
 		g_object_unref(item);
 	}
@@ -117,11 +131,45 @@ services_items(GList *inFiles)
 	return g_list_append(NULL, servicesItem);
 }
 
+// "Launch <Name>" when the one selected file is an applet bundle with a Linux program
+// (command_applet_program), or NULL. It starts the program as the desktop entry does, with no
+// arguments; a running applet takes the launch over and comes to the front.
+static NautilusMenuItem *
+launch_item(GList *inFiles)
+{
+	if((inFiles == NULL) || (inFiles->next != NULL))
+		return NULL;
+	NautilusFileInfo *info = NAUTILUS_FILE_INFO(inFiles->data);
+	if(nautilus_file_info_is_gone(info) || !nautilus_file_info_is_directory(info))
+		return NULL;
+	g_autoptr(GFile) location = nautilus_file_info_get_location(info);
+	g_autofree char *path = (location != NULL) ? g_file_get_path(location) : NULL;
+	g_autofree char *name = NULL;
+	char *program = command_applet_program(path, &name);
+	if(program == NULL)
+		return NULL;
+	// A file name need not be UTF-8, and Nautilus puts the label in a GMenu (a UTF-8 GVariant)
+	g_autofree char *displayName = g_filename_display_name(name);
+	g_autofree char *text = g_strdup_printf("Launch %s", displayName);
+	g_autofree char *label = menu_label(text);
+	NautilusMenuItem *item = nautilus_menu_item_new("CommandServices::Launch", label, NULL, NULL);
+	char **commandLine = g_new0(char *, 2);
+	commandLine[0] = program;
+	g_object_set_data_full(G_OBJECT(item), "command-line", commandLine, (GDestroyNotify)g_strfreev);
+	g_signal_connect(item, "activate", G_CALLBACK(on_item_activate), NULL);
+	return item;
+}
+
+// The selection's items: "Launch <Name>" for an applet bundle, then "Services"
 static GList *
 get_file_items(NautilusMenuProvider *inProvider, GList *inFiles)
 {
 	(void)inProvider;
-	return services_items(inFiles);
+	GList *items = services_items(inFiles);
+	NautilusMenuItem *launch = launch_item(inFiles);
+	if(launch != NULL)
+		items = g_list_prepend(items, launch);
+	return items;
 }
 
 // A click on the folder's background: the folder shown is the one file

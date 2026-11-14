@@ -4,9 +4,9 @@
 //
 //  The GNOME Files plug-in (libcommand-services-nautilus.so) loaded as Nautilus loads it
 //  (nautilus_module_initialize, nautilus_module_list_types) and asked for its menu with stand-in
-//  files, so its menu building and its activation are tested without Nautilus or root. The
-//  services list is written into a temporary data folder (XDG_DATA_HOME), its program a script
-//  that writes its arguments to a file.
+//  files, so its menu building and its activation (a service, and the launch of a selected applet
+//  bundle) are tested without Nautilus or root. The services list is written into a temporary
+//  data folder (XDG_DATA_HOME), its program a script that writes its arguments to a file.
 //
 //  Usage: command-services-nautilus-test <path of libcommand-services-nautilus.so>
 //
@@ -146,7 +146,7 @@ test_items_for_the_selection(void)
 	GList *oneText = g_list_append(NULL, text);
 	items = nautilus_menu_provider_get_file_items(sProvider, oneText);
 	g_autofree char *textLabels = services_labels(items);
-	g_assert_cmpstr(textLabels, ==, "Any File Or Folder|Text Tool");
+	g_assert_cmpstr(textLabels, ==, "Any File Or Folder|Text__Tool"); // "_" doubled: GTK reads one as a shortcut mark
 	nautilus_menu_item_list_free(items);
 	g_list_free(oneText);
 
@@ -210,6 +210,94 @@ test_choosing_a_service_starts_the_applet(void)
 	nautilus_menu_item_list_free(items);
 }
 
+static char *
+item_label(gpointer inItem)
+{
+	char *label = NULL;
+	g_object_get(inItem, "label", &label, NULL);
+	return label;
+}
+
+static void
+test_an_applet_bundle_gets_a_launch_item(void)
+{
+	// Demo.app in the applets' layout, its program a script noting how it was started
+	g_autofree char *bundlePath = g_build_filename(sWork, "Demo.app", NULL);
+	g_autofree char *linuxFolder = g_build_filename(bundlePath, "Contents", "Linux", NULL);
+	g_assert_cmpint(g_mkdir_with_parents(linuxFolder, 0755), ==, 0);
+	g_autofree char *infoPath = g_build_filename(bundlePath, "Contents", "Info.plist", NULL);
+	write_file(infoPath, "<plist/>\n");
+	g_autofree char *program = g_build_filename(linuxFolder, "Demo", NULL);
+	g_autofree char *launched = g_build_filename(sWork, "launched", NULL);
+	g_autofree char *script = g_strdup_printf("#!/bin/sh\nprintf 'arguments:%%s\\n' \"$#\" > '%s.part' && mv '%s.part' '%s'\n", launched, launched, launched);
+	write_file(program, script);
+	g_assert_cmpint(g_chmod(program, 0755), ==, 0);
+	g_autoptr(NautilusFileInfo) bundle = make_file(bundlePath, "inode/directory", TRUE);
+
+	// The one selected file: "Launch Demo" in the menu itself, then the folder's services
+	GList *oneBundle = g_list_append(NULL, bundle);
+	GList *items = nautilus_menu_provider_get_file_items(sProvider, oneBundle);
+	g_list_free(oneBundle);
+	g_assert_cmpuint(g_list_length(items), ==, 2);
+	g_autofree char *launchLabel = item_label(items->data);
+	g_assert_cmpstr(launchLabel, ==, "Launch Demo");
+	GList *servicesItem = g_list_append(NULL, items->next->data);
+	g_autofree char *labels = services_labels(servicesItem);
+	g_assert_cmpstr(labels, ==, "Any File Or Folder|Search Here");
+	g_list_free(servicesItem);
+
+	g_unlink(launched);
+	nautilus_menu_item_activate(NAUTILUS_MENU_ITEM(items->data));
+	g_autofree char *started = NULL;
+	for(int tenths = 0; (tenths < 50) && !g_file_get_contents(launched, &started, NULL, NULL); tenths++)
+		g_usleep(100000);
+	g_assert_cmpstr(started, ==, "arguments:0\n");
+	nautilus_menu_item_list_free(items);
+
+	// With another file selected, or on the bundle's own background: no launch item
+	g_autofree char *folderPath = g_build_filename(sWork, "a folder", NULL);
+	g_autoptr(NautilusFileInfo) folder = make_file(folderPath, "inode/directory", TRUE);
+	GList *two = g_list_append(g_list_append(NULL, bundle), folder);
+	items = nautilus_menu_provider_get_file_items(sProvider, two);
+	g_list_free(two);
+	g_autofree char *twoLabels = services_labels(items);
+	g_assert_cmpstr(twoLabels, ==, "Any File Or Folder|Search Here");
+	nautilus_menu_item_list_free(items);
+	items = nautilus_menu_provider_get_background_items(sProvider, bundle);
+	g_autofree char *backgroundLabels = services_labels(items);
+	g_assert_cmpstr(backgroundLabels, ==, "Any File Or Folder|Search Here");
+	nautilus_menu_item_list_free(items);
+
+	// A name with "_": doubled in the label, as GTK reads one as a shortcut mark
+	g_autofree char *toolPath = g_build_filename(sWork, "My_Tool.app", NULL);
+	g_autofree char *toolLinux = g_build_filename(toolPath, "Contents", "Linux", NULL);
+	g_assert_cmpint(g_mkdir_with_parents(toolLinux, 0755), ==, 0);
+	g_autofree char *toolInfo = g_build_filename(toolPath, "Contents", "Info.plist", NULL);
+	write_file(toolInfo, "<plist/>\n");
+	g_autofree char *toolProgram = g_build_filename(toolLinux, "My_Tool", NULL);
+	write_file(toolProgram, "#!/bin/sh\n");
+	g_assert_cmpint(g_chmod(toolProgram, 0755), ==, 0);
+	g_autoptr(NautilusFileInfo) tool = make_file(toolPath, "inode/directory", TRUE);
+	GList *oneTool = g_list_append(NULL, tool);
+	items = nautilus_menu_provider_get_file_items(sProvider, oneTool);
+	g_list_free(oneTool);
+	g_assert_nonnull(items);
+	g_autofree char *toolLabel = item_label(items->data);
+	g_assert_cmpstr(toolLabel, ==, "Launch My__Tool");
+	nautilus_menu_item_list_free(items);
+
+	// A folder named .app without a Linux program: no launch item
+	g_autofree char *macPath = g_build_filename(sWork, "MacOnly.app", NULL);
+	g_assert_cmpint(g_mkdir_with_parents(macPath, 0755), ==, 0);
+	g_autoptr(NautilusFileInfo) mac = make_file(macPath, "inode/directory", TRUE);
+	GList *oneMac = g_list_append(NULL, mac);
+	items = nautilus_menu_provider_get_file_items(sProvider, oneMac);
+	g_list_free(oneMac);
+	g_autofree char *macLabels = services_labels(items);
+	g_assert_cmpstr(macLabels, ==, "Any File Or Folder|Search Here");
+	nautilus_menu_item_list_free(items);
+}
+
 static void
 write_lists(void)
 {
@@ -224,7 +312,7 @@ write_lists(void)
 											"[Service 0]\nTitle=Search Here\nCommand=find.new\nMimeTypes=inode/directory;\n", program);
 	g_autofree char *any = g_strdup_printf("[Applet]\nVersion=1\nApplication=com.example.Any\nName=Any\nProgram=%s\n\n"
 										   "[Service 0]\nTitle=Any File Or Folder\nCommand=any.run\nMimeTypes=application/octet-stream;inode/directory;\n"
-										   "[Service 1]\nTitle=Text Tool\nCommand=text.run\nMimeTypes=text/plain;\n", program);
+										   "[Service 1]\nTitle=Text_Tool\nCommand=text.run\nMimeTypes=text/plain;\n", program);
 	g_autofree char *findPath = g_build_filename(folder, "com.example.Find.services", NULL);
 	g_autofree char *anyPath = g_build_filename(folder, "com.example.Any.services", NULL);
 	write_file(findPath, find);
@@ -268,5 +356,6 @@ main(int argc, char *argv[])
 
 	g_test_add_func("/plugin/items", test_items_for_the_selection);
 	g_test_add_func("/plugin/activate", test_choosing_a_service_starts_the_applet);
+	g_test_add_func("/plugin/launch", test_an_applet_bundle_gets_a_launch_item);
 	return g_test_run();
 }
