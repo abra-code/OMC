@@ -97,3 +97,24 @@ save_thinning_plan() { # <plan key, from applet_plan_key> <plan path>
     # fails with "Could not parse" rather than being stored.
     "$defaults_tool" write "$prefs_domain" "ThinningPlan:$1" -string "$2"
 }
+
+# The recent applets, most recent first, one bundle path per line: the ones opened in a project
+# window, made or cloned here. Kept by AppletBuilder (the Welcome window lists them), the same on
+# both systems. A path no longer there is dropped from the next list written.
+AB_RECENT_LIMIT=12
+
+recent_applets() {
+    "$defaults_tool" read "$prefs_domain" RecentApplets 2>/dev/null
+    return 0
+}
+
+# Puts an applet first on the list; with an empty path it only drops the paths no longer there
+recent_applets_add() { # <applet bundle, or "">
+    local path="${1%/}"
+    local list
+    list="$( { printf '%s\n' "$path"; recent_applets; } \
+        | while IFS= read -r line; do [ -d "$line" ] && printf '%s\n' "$line"; done \
+        | /usr/bin/awk -v limit="$AB_RECENT_LIMIT" '!seen[$0]++ && n < limit { print; n++ }' )"
+    # -string: an untyped value is parsed, and a path with {, ( or " would fail to store
+    "$defaults_tool" write "$prefs_domain" RecentApplets -string "$list"
+}

@@ -24,6 +24,22 @@
   },
   {
     "type": "CommandGroup",
+    "properties": { "placement": "replacing", "placementTarget": "open" },
+    "children": [
+      { "type": "Button", "properties": {
+          "title": "Open…",
+          "actionID": "AppletBuilder.open",
+          "keyboardShortcut": { "key": "o" }
+      } },
+      { "type": "Button", "properties": {
+          "title": "Welcome to AppletBuilder",
+          "actionID": "AppletBuilder.welcome",
+          "keyboardShortcut": { "key": "1", "modifiers": ["command", "shift"] }
+      } }
+    ]
+  },
+  {
+    "type": "CommandGroup",
     "properties": { "placement": "after", "placementTarget": "saveItem" },
     "children": [
       { "type": "Button", "properties": {

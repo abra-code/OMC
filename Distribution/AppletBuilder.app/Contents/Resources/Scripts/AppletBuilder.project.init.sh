@@ -4,7 +4,7 @@
 # echo "[$(/usr/bin/basename "$0")]"
 # env | sort
 
-source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.common.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.prefs.sh"
 
 # Read the pending project path stashed by the main dispatch script
 # general.loaded may have already consumed it (race), so
@@ -23,3 +23,8 @@ fi
 
 # Store project path (now keyed to this window's UUID)
 save_project_path "$app_path"
+
+# First on the Welcome window's recent applets; the Welcome window closes, its job done (this
+# window is open, so a Linux AppletBuilder does not quit for having none)
+recent_applets_add "$app_path"
+ab_welcome_close

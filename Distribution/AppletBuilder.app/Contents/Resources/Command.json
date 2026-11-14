@@ -13,15 +13,59 @@
       "NAME": "AppletBuilder"
     },
     {
+      "NOTES": "Main command: an applet given at launch (dropped, opened with AppletBuilder) opens its project window; with none, the Welcome window (no file chooser at launch)",
       "ACTIVATION_MODE": "act_folder",
       "EXECUTION_MODE": "exe_script_file",
       "NAME": "AppletBuilder",
-      "OPEN_OBJECT_DIALOG": {
-        "BUTTON_PROMPT": "Open",
-        "MESSAGE": "Select an applet (.app) to open"
-      },
+      "USE_NAV_DIALOG_FOR_MISSING_FILE_CONTEXT": false,
       "REQUIRED_MAC_OS_MIN_VERSION": "14.6",
       "REQUIRED_OMC_VERSION": "5.1"
+    },
+    {
+      "NOTES": "Welcome window: Open, Clone, New Applet and the recent applets",
+      "ACTIONUI_WINDOW": {
+        "INIT_SUBCOMMAND_ID": "AppletBuilder.welcome.init",
+        "IS_BLOCKING": false,
+        "JSON_NAME": "Welcome",
+        "WINDOW_TITLE": "Welcome to AppletBuilder"
+      },
+      "COMMAND_ID": "AppletBuilder.welcome",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "COMMAND_ID": "AppletBuilder.welcome.init",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "NOTES": "Welcome window's New Applet button: the New Applet dialog with a template chosen",
+      "COMMAND_ID": "AppletBuilder.welcome.new",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "NOTES": "Welcome window's Clone button: the New Applet dialog set to clone, asking for the applet to copy",
+      "COMMAND_ID": "AppletBuilder.welcome.clone",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "NOTES": "Welcome window: a double-clicked recent applet opens in its project window",
+      "COMMAND_ID": "AppletBuilder.welcome.recent.open",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
+    },
+    {
+      "NOTES": "Open (File menu, Welcome window): choose an applet and open its project window; a cancel leaves everything as it was. A folder chooser: an applet is a folder on Linux, and macOS's panel opens packages as folders",
+      "CHOOSE_FOLDER_DIALOG": {
+        "BUTTON_PROMPT": "Open",
+        "MESSAGE": "Select an applet (.app) to open",
+        "USE_PATH_CACHING": false
+      },
+      "COMMAND_ID": "AppletBuilder.open",
+      "EXECUTION_MODE": "exe_script_file",
+      "NAME": "AppletBuilder"
     },
     {
       "NOTES": "New Applet dialog — opens the New Applet dialog window",
@@ -66,9 +110,10 @@
       "NAME": "AppletBuilder"
     },
     {
-      "CHOOSE_OBJECT_DIALOG": {
-        "ALLOW_MULTIPLE_ITEMS": false,
-        "MESSAGE": "Select a template applet (.app)"
+      "CHOOSE_FOLDER_DIALOG": {
+        "BUTTON_PROMPT": "Choose",
+        "MESSAGE": "Select the applet (.app) to clone",
+        "USE_PATH_CACHING": false
       },
       "COMMAND_ID": "AppletBuilder.new.browse.template",
       "EXECUTION_MODE": "exe_script_file",
@@ -77,7 +122,8 @@
     {
       "CHOOSE_OBJECT_DIALOG": {
         "ALLOW_MULTIPLE_ITEMS": false,
-        "MESSAGE": "Select an .icon file"
+        "MESSAGE": "Select an .icon file",
+        "USE_PATH_CACHING": false
       },
       "COMMAND_ID": "AppletBuilder.new.browse.icon",
       "EXECUTION_MODE": "exe_script_file",
@@ -86,7 +132,8 @@
     {
       "CHOOSE_FOLDER_DIALOG": {
         "BUTTON_PROMPT": "Create Here",
-        "MESSAGE": "Select destination folder for the new applet"
+        "MESSAGE": "Select destination folder for the new applet",
+        "USE_PATH_CACHING": false
       },
       "COMMAND_ID": "AppletBuilder.new.create",
       "EXECUTION_MODE": "exe_script_file",
@@ -128,7 +175,8 @@
     {
       "CHOOSE_OBJECT_DIALOG": {
         "ALLOW_MULTIPLE_ITEMS": false,
-        "MESSAGE": "Select an .icon file"
+        "MESSAGE": "Select an .icon file",
+        "USE_PATH_CACHING": false
       },
       "COMMAND_ID": "AppletBuilder.general.browse.icon",
       "EXECUTION_MODE": "exe_script_file",
@@ -461,7 +509,8 @@
         "DEFAULT_LOCATION": [
           "/Applications"
         ],
-        "MESSAGE": "Select an application"
+        "MESSAGE": "Select an application",
+        "USE_PATH_CACHING": false
       },
       "COMMAND_ID": "AppletBuilder.settings.browse.editor",
       "EXECUTION_MODE": "exe_script_file",

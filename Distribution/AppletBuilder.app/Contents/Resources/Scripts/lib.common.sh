@@ -102,6 +102,17 @@ NEW_HEADER_NAME_ID=212
 NEW_STATUS_ID=220
 NEW_CREATE_BTN_ID=221
 
+# Welcome window (Welcome.json)
+WELCOME_ICON_ID=1001
+WELCOME_NAME_ID=1002
+WELCOME_VERSION_ID=1003
+WELCOME_RECENT_LIST_ID=1020
+WELCOME_NOTE_ID=1021
+# The open Welcome window's UUID (one at a time; a project window closes it), and how the next
+# New Applet dialog starts ("clone": set to clone, asking for the applet to copy)
+PB_WELCOME_WINDOW="appletbuilder_welcome_window"
+PB_NEW_MODE="appletbuilder_new_mode"
+
 # General form
 GEN_NAME_ID=302
 GEN_BUNDLE_ID_ID=303
@@ -255,6 +266,26 @@ save_project_path() {
 
 load_project_path() {
     pb_get "$PB_PROJECT_PATH"
+}
+
+# Open an applet in a project window once this handler ends (main.sh's way: the path waits on the
+# pending pasteboard for project.init)
+ab_open_project() { # <applet bundle>
+    "$pasteboard_tool" "appletbuilder_pending_project" set "$1"
+    "$next_cmd" "$cmd_guid" "AppletBuilder.project"
+}
+
+# Close the Welcome window if one is open (a project window has opened). Its UUID may name a
+# window the user already closed; the tool then fails, quietly.
+ab_welcome_close() {
+    local welcome
+    welcome="$(pb_get "$PB_WELCOME_WINDOW")"
+    if [ -z "$welcome" ]; then
+        return 0
+    fi
+    pb_set "$PB_WELCOME_WINDOW" ""
+    "$dialog_tool" "$welcome" omc_window omc_terminate_cancel > /dev/null 2>&1
+    return 0
 }
 
 # Resolve a project's command description file.

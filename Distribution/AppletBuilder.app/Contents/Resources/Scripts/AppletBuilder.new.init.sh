@@ -64,3 +64,16 @@ fi
 if [ -f "$default_icns" ]; then
     set_value "$NEW_HEADER_IMAGE_ID" "$default_icns"
 fi
+
+# ── Opened by the Welcome window's Clone button: set to clone, asking for the applet to copy ──
+
+new_mode="$(pb_get "$PB_NEW_MODE")"
+if [ -n "$new_mode" ]; then
+    pb_set "$PB_NEW_MODE" ""
+fi
+if [ "$new_mode" = "clone" ]; then
+    set_value "$NEW_TYPE_PICKER_ID" "__clone__"
+    set_value "$NEW_TEMPLATE_PATH_ID" ""
+    "$dialog_tool" "$window_uuid" "$NEW_CLONE_SOURCE_ROW_ID" omc_set_property "hidden" "false"
+    "$next_cmd" "$cmd_guid" "AppletBuilder.new.browse.template"
+fi

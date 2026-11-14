@@ -1,0 +1,115 @@
+{
+  "type": "VStack",
+  "properties": {
+    "spacing": 14,
+    "padding": 24,
+    "frame": { "minWidth": 440, "idealWidth": 460, "minHeight": 520, "idealHeight": 600 }
+  },
+  "children": [
+    {
+      "type": "Image",
+      "id": 1001,
+      "properties": {
+        "resizable": true,
+        "contentMode": "fit",
+        "frame": { "width": 112, "height": 112 }
+      }
+    },
+    {
+      "type": "VStack",
+      "properties": { "spacing": 2 },
+      "children": [
+        {
+          "type": "Text",
+          "id": 1002,
+          "properties": { "text": "AppletBuilder", "font": "title" }
+        },
+        {
+          "type": "Text",
+          "id": 1003,
+          "properties": { "text": "", "foregroundStyle": "secondary" }
+        }
+      ]
+    },
+    {
+      "type": "HStack",
+      "properties": { "spacing": 12, "padding": { "top": 6, "leading": 0, "bottom": 6, "trailing": 0 } },
+      "children": [
+        {
+          "type": "Button",
+          "id": 1011,
+          "properties": {
+            "title": "Open\u2026",
+            "systemImage": "folder",
+            "controlSize": "large",
+            "buttonStyle": "bordered",
+            "help": "Open an applet you made, or any OMC applet, to edit it",
+            "actionID": "AppletBuilder.open"
+          }
+        },
+        {
+          "type": "Button",
+          "id": 1012,
+          "properties": {
+            "title": "Clone\u2026",
+            "systemImage": "doc.on.doc",
+            "controlSize": "large",
+            "buttonStyle": "bordered",
+            "help": "Make a new applet as a copy of an existing one, with its own name and identifier",
+            "actionID": "AppletBuilder.welcome.clone"
+          }
+        },
+        {
+          "type": "Button",
+          "id": 1013,
+          "properties": {
+            "title": "New Applet",
+            "systemImage": "plus.app",
+            "controlSize": "large",
+            "buttonStyle": "bordered",
+            "help": "Make a new applet from a template",
+            "actionID": "AppletBuilder.welcome.new"
+          }
+        }
+      ]
+    },
+    {
+      "type": "List",
+      "id": 1020,
+      "properties": {
+        "doubleClickActionID": "AppletBuilder.welcome.recent.open",
+        "help": "Recent applets: double-click one to open it",
+        "frame": { "maxWidth": "infinity", "minHeight": 180, "maxHeight": "infinity" }
+      },
+      "template": {
+        "type": "HStack",
+        "properties": { "spacing": 10 },
+        "children": [
+          {
+            "type": "Image",
+            "properties": { "filePath": "$2", "resizable": true, "contentMode": "fit", "frame": { "width": 36, "height": 36 } }
+          },
+          {
+            "type": "VStack",
+            "properties": { "alignment": "leading", "spacing": 1 },
+            "children": [
+              { "type": "Text", "properties": { "text": "$3", "font": "headline" } },
+              { "type": "Text", "properties": { "text": "$4", "font": "caption", "foregroundStyle": "secondary" } }
+            ]
+          },
+          { "type": "Spacer" }
+        ]
+      }
+    },
+    {
+      "type": "Text",
+      "id": 1021,
+      "properties": {
+        "text": "Applets you open or make here are listed above.",
+        "font": "caption",
+        "foregroundStyle": "secondary",
+        "hidden": true
+      }
+    }
+  ]
+}
