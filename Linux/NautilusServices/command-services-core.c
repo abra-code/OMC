@@ -173,6 +173,38 @@ only_executable_in(const char *inFolder)
 	return found;
 }
 
+// Whether inFolder holds a folder or symbolic link (to anything) named Contents, Resources or
+// Support Files, in any case: Linux CoreFoundation then takes the bundle for an old-style one and
+// does not read a top-level Info.plist (~/git/AppleCoreLibrariesForLinux/build/probe/cfbundle-layout,
+// layout B; CF's _CFBundleGetBundleVersionForURL counts DT_DIR and DT_LNK entries by these names)
+static gboolean
+has_layout_folder(const char *inFolder)
+{
+	g_autoptr(GDir) folder = g_dir_open(inFolder, 0, NULL);
+	const char *name = NULL;
+	while((folder != NULL) && ((name = g_dir_read_name(folder)) != NULL))
+	{
+		if((g_ascii_strcasecmp(name, "Contents") != 0) && (g_ascii_strcasecmp(name, "Resources") != 0)
+			&& (g_ascii_strcasecmp(name, "Support Files") != 0))
+			continue;
+		g_autofree char *path = g_build_filename(inFolder, name, NULL);
+		if(g_file_test(path, G_FILE_TEST_IS_DIR | G_FILE_TEST_IS_SYMLINK))
+			return TRUE;
+	}
+	return FALSE;
+}
+
+// The program in inFolder: <inName>, else the one executable file there (a renamed bundle)
+static char *
+program_in(const char *inFolder, const char *inName)
+{
+	char *program = g_build_filename(inFolder, inName, NULL);
+	if(is_executable_file(program))
+		return program;
+	g_free(program);
+	return only_executable_in(inFolder);
+}
+
 char *
 command_applet_program(const char *inPath, char **outName)
 {
@@ -184,20 +216,18 @@ command_applet_program(const char *inPath, char **outName)
 	gsize baseLength = strlen(base);
 	if((baseLength <= 4) || !g_str_has_suffix(base, ".app") || !g_file_test(inPath, G_FILE_TEST_IS_DIR))
 		return NULL;
-	g_autofree char *info = g_build_filename(inPath, "Contents", "Info.plist", NULL);
-	if(!g_file_test(info, G_FILE_TEST_IS_REGULAR))
-		return NULL;
 	g_autofree char *name = g_strndup(base, baseLength - 4);
-	g_autofree char *linuxFolder = g_build_filename(inPath, "Contents", "Linux", NULL);
-	char *program = g_build_filename(linuxFolder, name, NULL);
-	if(!is_executable_file(program))
+	char *program = NULL;
+	g_autofree char *contentsInfo = g_build_filename(inPath, "Contents", "Info.plist", NULL);
+	g_autofree char *flatInfo = g_build_filename(inPath, "Info.plist", NULL);
+	if(g_file_test(contentsInfo, G_FILE_TEST_IS_REGULAR))
 	{
-		g_free(program);
-		program = only_executable_in(linuxFolder);
-		if(program == NULL)
-			return NULL;
+		g_autofree char *linuxFolder = g_build_filename(inPath, "Contents", "Linux", NULL);
+		program = program_in(linuxFolder, name);
 	}
-	if(outName != NULL)
+	else if(g_file_test(flatInfo, G_FILE_TEST_IS_REGULAR) && !has_layout_folder(inPath))
+		program = program_in(inPath, name);
+	if((program != NULL) && (outName != NULL))
 		*outName = g_steal_pointer(&name);
 	return program;
 }

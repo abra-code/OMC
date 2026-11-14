@@ -286,6 +286,23 @@ test_an_applet_bundle_gets_a_launch_item(void)
 	g_assert_cmpstr(toolLabel, ==, "Launch My__Tool");
 	nautilus_menu_item_list_free(items);
 
+	// The flat layout: Info.plist and the program at the top
+	g_autofree char *flatPath = g_build_filename(sWork, "Flat.app", NULL);
+	g_assert_cmpint(g_mkdir_with_parents(flatPath, 0755), ==, 0);
+	g_autofree char *flatInfo = g_build_filename(flatPath, "Info.plist", NULL);
+	write_file(flatInfo, "<plist/>\n");
+	g_autofree char *flatProgram = g_build_filename(flatPath, "Flat", NULL);
+	write_file(flatProgram, "#!/bin/sh\n");
+	g_assert_cmpint(g_chmod(flatProgram, 0755), ==, 0);
+	g_autoptr(NautilusFileInfo) flat = make_file(flatPath, "inode/directory", TRUE);
+	GList *oneFlat = g_list_append(NULL, flat);
+	items = nautilus_menu_provider_get_file_items(sProvider, oneFlat);
+	g_list_free(oneFlat);
+	g_assert_cmpuint(g_list_length(items), ==, 2);
+	g_autofree char *flatLabel = item_label(items->data);
+	g_assert_cmpstr(flatLabel, ==, "Launch Flat");
+	nautilus_menu_item_list_free(items);
+
 	// A folder named .app without a Linux program: no launch item
 	g_autofree char *macPath = g_build_filename(sWork, "MacOnly.app", NULL);
 	g_assert_cmpint(g_mkdir_with_parents(macPath, 0755), ==, 0);

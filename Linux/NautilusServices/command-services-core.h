@@ -43,9 +43,14 @@ gboolean	command_service_fits(const CommandService *inService, const char *const
 // { program, "--command-service", command, uri... , NULL }. Free with g_strfreev.
 char		**command_service_command_line(const CommandService *inService, const char *const *inFileURIs, gsize inCount);
 
-// The Linux program of the applet bundle at inPath, a folder <Name>.app in the applets' layout
-// (Linux/make-applet-bundle.sh): Contents/Info.plist and the executable Contents/Linux/<Name>, or,
-// in a bundle renamed after it was made, the one executable file in Contents/Linux. NULL for
+// The Linux program of the applet bundle at inPath, a folder <Name>.app in one of the two layouts
+// Linux CoreFoundation takes:
+// - the Contents layout (Linux/make-applet-bundle.sh's): Contents/Info.plist and the executable
+//   Contents/Linux/<Name>;
+// - the flat layout: Info.plist and the executable <Name> at the top, and no top-level folder (or
+//   symbolic link) named Contents, Resources or Support Files (in any case), with which CF would
+//   not read that Info.plist.
+// In a bundle renamed after it was made, the one executable file in that folder instead. NULL for
 // anything else (a macOS-only app has no Contents/Linux). outName, when not NULL, gets <Name> (the
 // folder's name without ".app") for a program found. Free both with g_free.
 char		*command_applet_program(const char *inPath, char **outName);

@@ -10,6 +10,7 @@
 #include <gio/gio.h>
 #include <glib/gstdio.h>
 #include <string.h>
+#include <unistd.h>
 
 typedef struct
 {
@@ -204,6 +205,33 @@ make_bundle(const char *inRoot, const char *inBundle, gboolean inInfo, const cha
 	return bundle;
 }
 
+// inRoot/<inBundle> in the flat layout: an Info.plist at the top (unless inInfo is FALSE) and the
+// given files or, for a name ending in "/", folders (relative to the bundle, each file made with
+// mode inModes[i])
+static char *
+make_flat_bundle(const char *inRoot, const char *inBundle, gboolean inInfo, const char *const *inFiles, const int *inModes)
+{
+	char *bundle = g_build_filename(inRoot, inBundle, NULL);
+	g_assert_cmpint(g_mkdir_with_parents(bundle, 0755), ==, 0);
+	if(inInfo)
+	{
+		g_autofree char *info = g_build_filename(bundle, "Info.plist", NULL);
+		write_file(info, "<plist/>\n");
+	}
+	for(gsize i = 0; (inFiles != NULL) && (inFiles[i] != NULL); i++)
+	{
+		g_autofree char *path = g_build_filename(bundle, inFiles[i], NULL);
+		if(g_str_has_suffix(inFiles[i], "/"))
+		{
+			g_assert_cmpint(g_mkdir_with_parents(path, 0755), ==, 0);
+			continue;
+		}
+		write_file(path, "#!/bin/sh\n");
+		g_assert_cmpint(g_chmod(path, inModes[i]), ==, 0);
+	}
+	return bundle;
+}
+
 // Whether command_applet_program finds inExpected (relative to the bundle; NULL: no program), and
 // names the applet inName
 static void
@@ -258,6 +286,47 @@ test_an_applet_bundle_has_a_program(void)
 	assert_program(noSuffix, NULL, NULL);
 	g_autofree char *bare = make_bundle(root, ".app", TRUE, NULL, NULL);
 	assert_program(bare, NULL, NULL);
+	// The flat layout: Info.plist and the program at the top
+	const int flatModes[] = { 0755, 0755, 0755 };
+	const char *flatFiles[] = { "Flat", "Scripts/", NULL };
+	g_autofree char *flat = make_flat_bundle(root, "Flat.app", TRUE, flatFiles, flatModes);
+	assert_program(flat, "Flat", "Flat");
+	g_autofree char *flatCopy = make_flat_bundle(root, "Flat (copy).app", TRUE, flatFiles, flatModes);
+	assert_program(flatCopy, "Flat", "Flat (copy)"); // renamed: the one executable at the top
+	const char *flatTwo[] = { "A", "B", NULL };
+	g_autofree char *flatAmbiguous = make_flat_bundle(root, "FlatTwo.app", TRUE, flatTwo, flatModes);
+	assert_program(flatAmbiguous, NULL, NULL);
+	const char *flatPlain[] = { "FlatPlain", NULL };
+	g_autofree char *flatNotExecutable = make_flat_bundle(root, "FlatPlain.app", TRUE, flatPlain, plain);
+	assert_program(flatNotExecutable, NULL, NULL);
+	const char *flatNoInfo[] = { "FlatNoInfo", NULL };
+	g_autofree char *flatNoInfoBundle = make_flat_bundle(root, "FlatNoInfo.app", FALSE, flatNoInfo, flatModes);
+	assert_program(flatNoInfoBundle, NULL, NULL);
+	// A top-level Resources, Contents or Support Files folder, in any case: CF does not read the top
+	// Info.plist
+	const char *withResources[] = { "WithResources", "Resources/", NULL };
+	g_autofree char *flatResources = make_flat_bundle(root, "WithResources.app", TRUE, withResources, flatModes);
+	assert_program(flatResources, NULL, NULL);
+	const char *withContents[] = { "WithContents", "contents/", NULL };
+	g_autofree char *flatContents = make_flat_bundle(root, "WithContents.app", TRUE, withContents, flatModes);
+	assert_program(flatContents, NULL, NULL);
+	const char *withSupport[] = { "WithSupport", "support files/", NULL };
+	g_autofree char *flatSupport = make_flat_bundle(root, "WithSupport.app", TRUE, withSupport, flatModes);
+	assert_program(flatSupport, NULL, NULL);
+	const char *withLink[] = { "WithLink", NULL };
+	g_autofree char *flatLink = make_flat_bundle(root, "WithLink.app", TRUE, withLink, flatModes);
+	g_autofree char *linkPath = g_build_filename(flatLink, "Resources", NULL);
+	g_assert_cmpint(symlink("missing", linkPath), ==, 0);
+	assert_program(flatLink, NULL, NULL); // CF counts a link by that name, whatever it points to
+	const char *resourcesFile[] = { "ResourcesFile", "Resources", NULL };
+	g_autofree char *flatResourcesFile = make_flat_bundle(root, "ResourcesFile.app", TRUE, resourcesFile, (const int[]){ 0755, 0644 });
+	assert_program(flatResourcesFile, "ResourcesFile", "ResourcesFile"); // a file named Resources is no folder
+	// Both layouts' Info.plist: the Contents layout's program
+	g_autofree char *both = make_bundle(root, "Both.app", TRUE, one, executable);
+	g_autofree char *bothTop = g_build_filename(both, "Info.plist", NULL);
+	write_file(bothTop, "<plist/>\n");
+	assert_program(both, "Contents/Linux/Example", "Both");
+
 	g_autofree char *fileApp = g_build_filename(root, "File.app", NULL);
 	write_file(fileApp, "not a folder\n");
 	assert_program(fileApp, NULL, NULL);
