@@ -246,4 +246,33 @@ if [ "$status" -ne 0 ]; then
     exit 1
 fi
 echo "The master applet: $PRODUCTS_PATH/CommandApplet.app"
+
+# The GNOME Files plug-in for applet services (Linux/NautilusServices: the Services submenu), when
+# this machine has GNOME Files (libnautilus-extension.so.4) and its extension headers: the
+# libnautilus-extension-dev package, or NAUTILUS_HEADERS=<folder holding libnautilus-extension/>
+# (the installed version's headers from its source). Skipped, and said so, otherwise: a build
+# machine need not have GNOME Files.
+nautilus_library="$(/bin/ls /usr/lib/*/libnautilus-extension.so.4 /usr/lib64/libnautilus-extension.so.4 2>/dev/null | /usr/bin/head -n 1)"
+if [ -z "$nautilus_library" ]; then
+    echo "The GNOME Files plug-in is not built: GNOME Files is not installed here."
+    exit 0
+fi
+nautilus_args=("$PRODUCTS_PATH/nautilus")
+if [ -n "$NAUTILUS_HEADERS" ]; then
+    nautilus_args+=(--nautilus-headers "$NAUTILUS_HEADERS")
+else
+    /usr/bin/pkg-config --exists libnautilus-extension-4 2>/dev/null
+    status=$?
+    if [ "$status" -ne 0 ]; then
+        echo "The GNOME Files plug-in is not built: no extension headers (install libnautilus-extension-dev, or set NAUTILUS_HEADERS)."
+        exit 0
+    fi
+fi
+/bin/bash "$SCRIPT_DIR/Linux/NautilusServices/build.sh" "${nautilus_args[@]}"
+status=$?
+if [ "$status" -ne 0 ]; then
+    echo "Error: the GNOME Files plug-in did not build or its tests failed (Linux/NautilusServices/build.sh status $status; for its headers install libnautilus-extension-dev or set NAUTILUS_HEADERS)." >&2
+    exit 1
+fi
+echo "The GNOME Files plug-in: $PRODUCTS_PATH/nautilus/libcommand-services-nautilus.so (Linux/NautilusServices/install.sh installs it)"
 exit 0

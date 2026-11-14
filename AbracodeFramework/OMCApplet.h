@@ -85,7 +85,7 @@ public:
 	void				HandleURL(CFStringRef inURL);
 
 	// A service request (on Linux, the file manager's Services menu: the applet started with
-	// --omc-service): runs inCommandID with the file URLs among inURLs (each with an absolute path),
+	// --command-service): runs inCommandID with the file URLs among inURLs (each with an absolute path),
 	// when inInfo (the applet's Info.plist) offers it as a file service (OMCAppletFileServiceRefusal)
 	// and there is a file. Otherwise nothing runs, *outRefusal says why (a static string) and
 	// errAEEventNotPermitted is returned. No files are noted as recent: a service is not an open.

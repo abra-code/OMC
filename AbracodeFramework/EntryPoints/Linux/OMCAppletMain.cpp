@@ -232,10 +232,10 @@ OnOpen(GApplication *inApp, GFile **inFiles, gint inFileCount, const gchar *inHi
 	FinishLaunching();
 }
 
-// The file manager's request to run one of the applet's services (the OMC file manager plug-in):
-// --omc-service <command id> <file or file URI>... The applet runs only a command its Info.plist
+// The file manager's request to run one of the applet's services (the Command Workshop file manager plug-in):
+// --command-service <command id> <file or file URI>... The applet runs only a command its Info.plist
 // offers as a file service (OMCApplet::RunService).
-const char *kServiceOption = "--omc-service";
+const char *kServiceOption = "--command-service";
 
 // The command line's files (from inFirst on), each a path relative to the launching shell's folder
 // or a file:// URI, as file URLs; an argument on another scheme is no file and is left out
@@ -262,7 +262,7 @@ CreateFileURLsFromArguments(GApplicationCommandLine *inCommandLine, gchar **inAr
 	return fileURLs;
 }
 
-// --omc-service <command id> <files>: the service runs, or the refusal is logged (the id cut short:
+// --command-service <command id> <files>: the service runs, or the refusal is logged (the id cut short:
 // it is the sender's)
 void
 RunServiceRequest(GApplicationCommandLine *inCommandLine, gchar **inArguments, gint inCount)
@@ -282,12 +282,12 @@ RunServiceRequest(GApplicationCommandLine *inCommandLine, gchar **inArguments, g
 			loggedID.Adopt(CFStringCreateWithSubstring(kCFAllocatorDefault, commandID, CFRangeMake(0, 128)));
 		else
 			loggedID.Adopt(commandID.Get(), kCFObjRetain);
-		OMCLogMessage("OMC: service refused for command id \"%s\": %s", OMCLogCString(loggedID).c_str(), refusal);
+		OMCLogMessage("service refused for command id \"%s\": %s", OMCLogCString(loggedID).c_str(), refusal);
 	}
 }
 
 // The applet's command line, its own or a second launch's handed over: no arguments is an
-// activate; --omc-service first is a service request (RunServiceRequest); otherwise a URL on a
+// activate; --command-service first is a service request (RunServiceRequest); otherwise a URL on a
 // scheme other than file (the applet's own) goes to HandleURL exactly as given, and anything else
 // is a file, relative to the launching shell's folder. GApplication's own open would pass every
 // argument through GFile, which rewrites a URL ("app://host?q" becomes "app://host/?q"); open stays

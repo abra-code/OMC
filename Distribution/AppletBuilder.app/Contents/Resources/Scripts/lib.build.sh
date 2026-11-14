@@ -187,9 +187,9 @@ applet_desktop_entry() {
     "$entry_python" "$entry_tool" "$action" "$app_path" 2>&1
     local entry_status=$?
     # The applet's file services for the file manager's Services menu go on and off with its entry
-    # (omc-services.py beside linux-app-entry.py; a framework from before it has none). A services
+    # (command-services.py beside linux-app-entry.py; a framework from before it has none). A services
     # error is said, the entry's status stands: the applet is on the app list either way.
-    local services_tool="${entry_tool%/*}/omc-services.py"
+    local services_tool="${entry_tool%/*}/command-services.py"
     if [ "$entry_status" -eq 0 ] && [ -f "$services_tool" ]; then
         local services_output
         services_output="$("$entry_python" "$services_tool" "$action" "$app_path" 2>&1)"

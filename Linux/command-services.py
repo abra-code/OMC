@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Lists an OMC applet's file services for the Linux file managers' Services menu, or takes the list
+"""Lists a Command applet's file services for the Linux file managers' Services menu, or takes the list
 away, for the current user.
 
 The applet's Info.plist declares its services as on macOS (NSServices): each item's NSUserData is
@@ -7,10 +7,10 @@ the command it runs, NSMenuItem's "default" its title, and NSSendFileTypes the f
 type identifiers such as public.folder). A service for text only (NSSendTypes) is left out: a file
 manager has files, not text.
 
-install writes $XDG_DATA_HOME/omc/services/<CFBundleIdentifier>.services (XDG_DATA_HOME defaults
-to ~/.local/share), which the OMC file manager plug-ins read: the applet's name, its program, and
+install writes $XDG_DATA_HOME/command/services/<CFBundleIdentifier>.services (XDG_DATA_HOME defaults
+to ~/.local/share), which the Command Workshop file manager plug-ins read: the applet's name, its program, and
 per service its title, command id and MIME types, as a key file (the desktop entry format, which
-GLib reads with no other library; Linux/NautilusServices/omc-services-core.c):
+GLib reads with no other library; Linux/NautilusServices/command-services-core.c):
 
     [Applet]
     Version=1
@@ -24,7 +24,7 @@ GLib reads with no other library; Linux/NautilusServices/omc-services-core.c):
     MimeTypes=inode/directory;
 
 The plug-in starts the program with
-"--omc-service <command id> <file URIs>"; the applet runs only a command it declares so. An applet
+"--command-service <command id> <file URIs>"; the applet runs only a command it declares so. An applet
 with no file service gets no file (an earlier one is removed). AppletBuilder runs this beside
 linux-app-entry.py when the applet is added to the desktop, and uninstall when it is taken off.
 
@@ -32,8 +32,8 @@ The Info.plist reading, the program and the type table are linux-app-entry.py's 
 beside this file (the framework's Support folder) or in the ActionUI checkout beside OMC.
 
 Usage:
-    omc-services.py install <applet folder>
-    omc-services.py uninstall <applet folder | application ID>
+    command-services.py install <applet folder>
+    command-services.py uninstall <applet folder | application ID>
 
 Exit status: 0 done, 1 a step failed, 64 bad arguments or Info.plist.
 """
@@ -58,7 +58,7 @@ def load_app_entry():
             module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(module)
             return module
-    print("omc-services: no linux-app-entry.py beside " + here + " or in the ActionUI checkout", file=sys.stderr)
+    print("command-services: no linux-app-entry.py beside " + here + " or in the ActionUI checkout", file=sys.stderr)
     sys.exit(1)
 
 
@@ -67,7 +67,7 @@ UsageError = app_entry.UsageError
 
 
 def services_folder():
-    return os.path.join(app_entry.data_home(), "omc", "services")
+    return os.path.join(app_entry.data_home(), "command", "services")
 
 
 def services_file(application_id):
@@ -134,7 +134,7 @@ def file_services(info, plist_path):
             else:
                 unknown.append(identifier)
         if not mime_types:
-            print("omc-services: " + where + " (" + title + "): no MIME type known for " + ", ".join(unknown)
+            print("command-services: " + where + " (" + title + "): no MIME type known for " + ", ".join(unknown)
                   + "; the service is not listed", file=sys.stderr)
             continue
         result.append({"title": title.strip(), "command": command, "mimeTypes": mime_types})
@@ -145,7 +145,7 @@ def write_atomically(path, text):
     """The file whole or not at all: a plug-in reading it meanwhile never sees half of it."""
     folder = os.path.dirname(path)
     os.makedirs(folder, exist_ok=True)
-    descriptor, temporary = tempfile.mkstemp(prefix=".omc-services-", dir=folder)
+    descriptor, temporary = tempfile.mkstemp(prefix=".command-services-", dir=folder)
     try:
         with os.fdopen(descriptor, "w", encoding="utf-8") as file:
             file.write(text)
@@ -186,7 +186,7 @@ def uninstall(application_id):
 
 def main(arguments):
     if len(arguments) != 2 or arguments[0] not in ("install", "uninstall"):
-        raise UsageError("usage: omc-services.py install <applet folder> | uninstall <applet folder | application ID>")
+        raise UsageError("usage: command-services.py install <applet folder> | uninstall <applet folder | application ID>")
     command, folder = arguments[0], os.path.abspath(arguments[1])
     if command == "uninstall" and not os.path.isdir(folder) and app_entry.is_valid_application_id(arguments[1]):
         uninstall(arguments[1])
@@ -203,8 +203,8 @@ if __name__ == "__main__":
     try:
         main(sys.argv[1:])
     except UsageError as error:
-        print("omc-services: " + str(error), file=sys.stderr)
+        print("command-services: " + str(error), file=sys.stderr)
         sys.exit(64)
     except OSError as error:
-        print("omc-services: " + str(error), file=sys.stderr)
+        print("command-services: " + str(error), file=sys.stderr)
         sys.exit(1)

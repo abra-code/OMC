@@ -147,10 +147,10 @@ check "and the applet quits once idle" "$([ "$result" = "0" ] && echo 1 || echo 
 mains="$(/usr/bin/grep -c '^main:' "$LAUNCHTEST_LOG")"
 check "without running the main command" "$([ "$mains" = "0" ] && echo 1 || echo 0)" "$(log_text)"
 
-printf '== a service request (--omc-service) runs only a file service the applet declares ==\n'
+printf '== a service request (--command-service) runs only a file service the applet declares ==\n'
 : > "$LAUNCHTEST_LOG"
 /bin/mkdir -p "$work/service folder"
-"$applet" --omc-service lt.service "$work/service folder" > "$work/service.err" 2>&1 &
+"$applet" --command-service lt.service "$work/service folder" > "$work/service.err" 2>&1 &
 pid=$!
 ran="$(wait_for_line "service:$work/service folder" 10)"
 check "the declared file service runs with the folder" "$([ "$ran" = "yes" ] && echo 1 || echo 0)" "$(log_text)"
@@ -167,9 +167,9 @@ for refused in "lt.notservice|notservice|$work/service folder" "lt.textservice|t
     refused_file="${refused_rest#*|}"
     : > "$LAUNCHTEST_LOG"
     if [ -n "$refused_file" ]; then
-        "$applet" --omc-service "$refused_id" "$refused_file" > "$work/refused.err" 2>&1 &
+        "$applet" --command-service "$refused_id" "$refused_file" > "$work/refused.err" 2>&1 &
     else
-        "$applet" --omc-service "$refused_id" > "$work/refused.err" 2>&1 &
+        "$applet" --command-service "$refused_id" > "$work/refused.err" 2>&1 &
     fi
     pid=$!
     wait_for_exit "$pid" 20
@@ -185,7 +185,7 @@ export LAUNCHTEST_MAIN_SECONDS=4
 "$applet" &
 first=$!
 started="$(wait_for_line "did.launch" 10)"
-"$applet" --omc-service lt.service "file://$work/service%20folder" &
+"$applet" --command-service lt.service "file://$work/service%20folder" &
 second=$!
 wait_for_exit "$second" 10
 ran="$(wait_for_line "service:$work/service folder" 10)"

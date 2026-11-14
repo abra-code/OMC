@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Tests for Linux/omc-services.py, run as a program with XDG_DATA_HOME in a temporary folder, so
+"""Tests for Linux/command-services.py, run as a program with XDG_DATA_HOME in a temporary folder, so
 nothing reaches the user's own desktop. Runs on Linux and macOS; needs ActionUI's
-Scripts/linux-app-entry.py in the checkout beside OMC (or beside omc-services.py).
+Scripts/linux-app-entry.py in the checkout beside OMC (or beside command-services.py).
 
-Usage: python3 Linux/Tests/test-omc-services.py
+Usage: python3 Linux/Tests/test-command-services.py
 """
 
 import os
@@ -13,11 +13,11 @@ import sys
 import tempfile
 import unittest
 
-SCRIPT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "omc-services.py")
+SCRIPT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "command-services.py")
 
-FIND_SERVICE = {"NSMenuItem": {"default": "Search Here with Find"}, "NSMessage": "runOMCService", "NSPortName": "OMCService",
+FIND_SERVICE = {"NSMenuItem": {"default": "Search Here with Find"}, "NSMessage": "runCommandService", "NSPortName": "CommandService",
                 "NSUserData": "find.new", "NSSendFileTypes": ["public.folder", "com.apple.package"]}
-TEXT_SERVICE = {"NSMenuItem": {"default": "Upper Case"}, "NSMessage": "runOMCService", "NSPortName": "OMCService",
+TEXT_SERVICE = {"NSMenuItem": {"default": "Upper Case"}, "NSMessage": "runCommandService", "NSPortName": "CommandService",
                 "NSUserData": "text.upper", "NSSendTypes": ["NSStringPboardType"], "NSReturnTypes": ["NSStringPboardType"]}
 
 
@@ -36,7 +36,7 @@ def unescape(value):
     return "".join(result)
 
 
-class OMCServicesTests(unittest.TestCase):
+class CommandServicesTests(unittest.TestCase):
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory()
         self.data_home = os.path.join(self.temporary.name, "share")
@@ -63,7 +63,7 @@ class OMCServicesTests(unittest.TestCase):
         return subprocess.run([sys.executable, SCRIPT] + list(arguments), env=environment, capture_output=True, text=True)
 
     def listing_path(self, application_id):
-        return os.path.join(self.data_home, "omc", "services", application_id + ".services")
+        return os.path.join(self.data_home, "command", "services", application_id + ".services")
 
     def listing(self, application_id):
         """The key file read back, GKeyFile's way: {"version", "application", "name", "program",
@@ -105,7 +105,7 @@ class OMCServicesTests(unittest.TestCase):
 
     def test_files_the_older_way_are_any_file_or_folder(self):
         # As AppletBuilder writes a file service (plist_edit.py)
-        older = {"NSMenuItem": {"default": "Show Attributes"}, "NSMessage": "runOMCService", "NSPortName": "OMCService",
+        older = {"NSMenuItem": {"default": "Show Attributes"}, "NSMessage": "runCommandService", "NSPortName": "CommandService",
                  "NSUserData": "xattr.show", "NSSendTypes": ["NSFilenamesPboardType"], "NSReturnTypes": [], "NSRequiredContext": {}}
         folder = self.applet("Xattr.app", {"CFBundleIdentifier": "com.example.Xattr", "NSServices": [older, TEXT_SERVICE]})
         result = self.run_script("install", folder)
