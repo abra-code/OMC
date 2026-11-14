@@ -147,6 +147,53 @@ check "and the applet quits once idle" "$([ "$result" = "0" ] && echo 1 || echo 
 mains="$(/usr/bin/grep -c '^main:' "$LAUNCHTEST_LOG")"
 check "without running the main command" "$([ "$mains" = "0" ] && echo 1 || echo 0)" "$(log_text)"
 
+printf '== a service request (--omc-service) runs only a file service the applet declares ==\n'
+: > "$LAUNCHTEST_LOG"
+/bin/mkdir -p "$work/service folder"
+"$applet" --omc-service lt.service "$work/service folder" > "$work/service.err" 2>&1 &
+pid=$!
+ran="$(wait_for_line "service:$work/service folder" 10)"
+check "the declared file service runs with the folder" "$([ "$ran" = "yes" ] && echo 1 || echo 0)" "$(log_text)"
+wait_for_exit "$pid" 20
+check "and the applet quits once idle" "$([ "$result" = "0" ] && echo 1 || echo 0)" "exit: $result"
+mains="$(/usr/bin/grep -c '^main:' "$LAUNCHTEST_LOG")"
+check "without running the main command" "$([ "$mains" = "0" ] && echo 1 || echo 0)" "$(log_text)"
+# Refused: not declared, declared for text only, no file, only a URL on another scheme (never handed
+# to omc.app.handle-url); nothing runs and the reason is logged
+for refused in "lt.notservice|notservice|$work/service folder" "lt.textservice|textservice|$work/service folder" "lt.service|no file|" "lt.service|a URL on another scheme|launchtest://hello"; do
+    refused_id="${refused%%|*}"
+    refused_rest="${refused#*|}"
+    refused_name="${refused_rest%%|*}"
+    refused_file="${refused_rest#*|}"
+    : > "$LAUNCHTEST_LOG"
+    if [ -n "$refused_file" ]; then
+        "$applet" --omc-service "$refused_id" "$refused_file" > "$work/refused.err" 2>&1 &
+    else
+        "$applet" --omc-service "$refused_id" > "$work/refused.err" 2>&1 &
+    fi
+    pid=$!
+    wait_for_exit "$pid" 20
+    logged="$(/usr/bin/grep -c -F "service refused for command id \"$refused_id\"" "$work/refused.err")"
+    ran_lines="$(/bin/cat "$LAUNCHTEST_LOG" 2>/dev/null | /usr/bin/grep -c -E '^(service|notservice|textservice|main|url):')"
+    check "refused ($refused_name): logged, nothing run, the applet quits" \
+        "$([ "$logged" = "1" ] && [ "$ran_lines" = "0" ] && [ "$result" = "0" ] && echo 1 || echo 0)" \
+        "logged $logged, ran $ran_lines, exit $result: $(/usr/bin/grep -F 'service refused' "$work/refused.err" | /usr/bin/head -1)"
+done
+# A request to the applet already running is handed over to it, as a file is
+: > "$LAUNCHTEST_LOG"
+export LAUNCHTEST_MAIN_SECONDS=4
+"$applet" &
+first=$!
+started="$(wait_for_line "did.launch" 10)"
+"$applet" --omc-service lt.service "file://$work/service%20folder" &
+second=$!
+wait_for_exit "$second" 10
+ran="$(wait_for_line "service:$work/service folder" 10)"
+check "the running applet runs the service a second launch asks for (a file URI)" \
+    "$([ "$started" = "yes" ] && [ "$ran" = "yes" ] && echo 1 || echo 0)" "$(log_text)"
+wait_for_exit "$first" 20
+check "and quits once idle" "$([ "$result" = "0" ] && echo 1 || echo 0)" "exit: $result"
+
 printf '== a command'"'"'s ActionUI window: init, a value set with omc_dialog_control, OK ==\n'
 : > "$LAUNCHTEST_LOG"
 "$applet" 'launchtest://exe?commandID=lt.window' &

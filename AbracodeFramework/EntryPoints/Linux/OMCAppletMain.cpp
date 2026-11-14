@@ -82,6 +82,14 @@ AppletRunURL(void *inActionContext, CFStringRef inURL)
 	(void)err;
 }
 
+OSStatus
+AppletRunService(void *inActionContext, CFStringRef inCommandID, CFArrayRef inFileURLs)
+{
+	(void)inActionContext;
+	// As macOS Services run it (OMCService.m): the command by its id, the files as its context
+	return OMCRunCommandFromFile(inCommandID, CommandFile(), inFileURLs, false /*nav dialog*/, false /*key window*/, nullptr, false, nullptr);
+}
+
 void
 AppletNoteRecentDocument(void *inActionContext, CFURLRef inFileURL)
 {
@@ -155,6 +163,7 @@ OnStartup(GApplication *inApp, gpointer)
 	actions.runURL = AppletRunURL;
 	actions.noteRecentDocument = AppletNoteRecentDocument;
 	actions.didOpenGatheredFiles = AppletDidOpenGatheredFiles;
+	actions.runService = AppletRunService;
 	actions.context = nullptr;
 	sHost->applet.reset(new OMCApplet(actions));
 	// The menu in every window's header bar: New, Open, the applet's MainMenu.json, Quit
@@ -223,11 +232,66 @@ OnOpen(GApplication *inApp, GFile **inFiles, gint inFileCount, const gchar *inHi
 	FinishLaunching();
 }
 
+// The file manager's request to run one of the applet's services (the OMC file manager plug-in):
+// --omc-service <command id> <file or file URI>... The applet runs only a command its Info.plist
+// offers as a file service (OMCApplet::RunService).
+const char *kServiceOption = "--omc-service";
+
+// The command line's files (from inFirst on), each a path relative to the launching shell's folder
+// or a file:// URI, as file URLs; an argument on another scheme is no file and is left out
+CFMutableArrayRef
+CreateFileURLsFromArguments(GApplicationCommandLine *inCommandLine, gchar **inArguments, gint inFirst, gint inCount)
+{
+	CFMutableArrayRef fileURLs = CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks);
+	for(gint i = inFirst; (fileURLs != nullptr) && (i < inCount); i++)
+	{
+		const char *scheme = g_uri_peek_scheme(inArguments[i]); // interned, lowercase; not freed
+		if( (scheme != nullptr) && (strcmp(scheme, "file") != 0) )
+			continue;
+		GFile *file = g_application_command_line_create_file_for_arg(inCommandLine, inArguments[i]);
+		gchar *uri = g_file_get_uri(file);
+		if(uri != nullptr)
+		{
+			CFObj<CFURLRef> url(CFURLCreateWithBytes(kCFAllocatorDefault, (const UInt8 *)uri, (CFIndex)strlen(uri), kCFStringEncodingUTF8, nullptr));
+			if(url != nullptr)
+				CFArrayAppendValue(fileURLs, url);
+			g_free(uri);
+		}
+		g_object_unref(file);
+	}
+	return fileURLs;
+}
+
+// --omc-service <command id> <files>: the service runs, or the refusal is logged (the id cut short:
+// it is the sender's)
+void
+RunServiceRequest(GApplicationCommandLine *inCommandLine, gchar **inArguments, gint inCount)
+{
+	CFObj<CFStringRef> commandID;
+	if(inCount > 2)
+		commandID.Adopt(CFStringCreateWithCString(kCFAllocatorDefault, inArguments[2], kCFStringEncodingUTF8));
+	CFObj<CFMutableArrayRef> fileURLs(CreateFileURLsFromArguments(inCommandLine, inArguments, 3, inCount));
+	CFBundleRef mainBundle = CFBundleGetMainBundle();
+	CFDictionaryRef info = (mainBundle != nullptr) ? CFBundleGetInfoDictionary(mainBundle) : nullptr;
+	const char *refusal = nullptr;
+	(void)sHost->applet->RunService(commandID, fileURLs, info, &refusal);
+	if(refusal != nullptr)
+	{
+		CFObj<CFStringRef> loggedID;
+		if((commandID != nullptr) && (CFStringGetLength(commandID) > 128))
+			loggedID.Adopt(CFStringCreateWithSubstring(kCFAllocatorDefault, commandID, CFRangeMake(0, 128)));
+		else
+			loggedID.Adopt(commandID.Get(), kCFObjRetain);
+		OMCLogMessage("OMC: service refused for command id \"%s\": %s", OMCLogCString(loggedID).c_str(), refusal);
+	}
+}
+
 // The applet's command line, its own or a second launch's handed over: no arguments is an
-// activate; a URL on a scheme other than file (the applet's own) goes to HandleURL exactly as
-// given; anything else is a file, relative to the launching shell's folder. GApplication's own
-// open would pass every argument through GFile, which rewrites a URL ("app://host?q" becomes
-// "app://host/?q"); open stays connected for file managers that open files over D-Bus.
+// activate; --omc-service first is a service request (RunServiceRequest); otherwise a URL on a
+// scheme other than file (the applet's own) goes to HandleURL exactly as given, and anything else
+// is a file, relative to the launching shell's folder. GApplication's own open would pass every
+// argument through GFile, which rewrites a URL ("app://host?q" becomes "app://host/?q"); open stays
+// connected for file managers that open files over D-Bus.
 int
 OnCommandLine(GApplication *inApp, GApplicationCommandLine *inCommandLine, gpointer)
 {
@@ -240,6 +304,13 @@ OnCommandLine(GApplication *inApp, GApplicationCommandLine *inCommandLine, gpoin
 	{
 		g_strfreev(arguments);
 		OnActivate(inApp, nullptr);
+		return 0;
+	}
+	if(strcmp(arguments[1], kServiceOption) == 0)
+	{
+		RunServiceRequest(inCommandLine, arguments, argumentCount);
+		g_strfreev(arguments);
+		FinishLaunching();
 		return 0;
 	}
 	CFObj<CFMutableArrayRef> fileURLs(CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks));

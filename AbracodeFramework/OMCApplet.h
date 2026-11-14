@@ -32,8 +32,21 @@ struct OMCAppletActions
 	// Gathered files were opened (OpenURLs): the system may be told the open succeeded.
 	void (*didOpenGatheredFiles)(void *inActionContext);
 
+	// Runs the command inCommandID with inFileURLs (a CFArray of file URLs) as its context, no open
+	// panel, no key-window routing: a service request the applet allowed (RunService). Returns its
+	// status. NULL where the platform makes no such request (macOS: Services call OMCService.m).
+	OSStatus (*runService)(void *inActionContext, CFStringRef inCommandID, CFArrayRef inFileURLs) {nullptr};
+
 	void *context;
 };
+
+// Why the applet's Info.plist (inInfo) does not offer inCommandID as a service for files, or NULL
+// when it does: an NSServices item whose NSUserData is the command id and whose NSSendFileTypes is
+// a non-empty array, or whose NSSendTypes names files the older way ("NSFilenamesPboardType", as
+// AppletBuilder writes it, or "public.file-url"). Only a command an applet declares so is run for a
+// service request, as macOS Services call only the commands an applet declares. The reason is a
+// static string.
+const char *OMCAppletFileServiceRefusal(CFDictionaryRef inInfo, CFStringRef inCommandID);
 
 class OMCApplet
 {
@@ -70,6 +83,13 @@ public:
 
 	// A URL sent to the applet: runs what it asks for.
 	void				HandleURL(CFStringRef inURL);
+
+	// A service request (on Linux, the file manager's Services menu: the applet started with
+	// --omc-service): runs inCommandID with the file URLs among inURLs (each with an absolute path),
+	// when inInfo (the applet's Info.plist) offers it as a file service (OMCAppletFileServiceRefusal)
+	// and there is a file. Otherwise nothing runs, *outRefusal says why (a static string) and
+	// errAEEventNotPermitted is returned. No files are noted as recent: a service is not an open.
+	OSStatus			RunService(CFStringRef inCommandID, CFArrayRef inURLs, CFDictionaryRef inInfo, const char **outRefusal);
 
 	// The app was asked to reopen (a click on its Dock icon): true when the main command should run
 	// again. Never while a command is starting; otherwise only when the system sees no visible

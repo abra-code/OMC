@@ -26,6 +26,9 @@
       "COMMAND": ["if [[ -n \"$BASH_VERSION\" ]]; then printf 'shell.command.bash\\n' >> \"$LAUNCHTEST_LOG\"; fi"] },
     { "NAME": "LaunchTest", "COMMAND_ID": "lt.shell.script", "EXECUTION_MODE": "exe_script_file" },
     { "NAME": "LaunchTest", "COMMAND_ID": "lt.defaults", "ACTIVATION_MODE": "act_always", "EXECUTION_MODE": "exe_script_file",
-      "URL_INVOCABLE": true }
+      "URL_INVOCABLE": true },
+    { "NAME": "LaunchTest", "COMMAND_ID": "lt.service", "ACTIVATION_MODE": "act_always", "EXECUTION_MODE": "exe_script_file" },
+    { "NAME": "LaunchTest", "COMMAND_ID": "lt.notservice", "ACTIVATION_MODE": "act_always", "EXECUTION_MODE": "exe_script_file" },
+    { "NAME": "LaunchTest", "COMMAND_ID": "lt.textservice", "ACTIVATION_MODE": "act_always", "EXECUTION_MODE": "exe_script_file" }
   ]
 }

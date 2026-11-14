@@ -37,7 +37,69 @@ IsFileURL(CFTypeRef inValue)
 	return (scheme != nullptr) && (::CFStringCompare(scheme, CFSTR("file"), kCFCompareCaseInsensitive) == kCFCompareEqualTo);
 }
 
+// A file URL with an absolute path: "file:name" is a file URL with no path at all (GLib passes such
+// an argument through as given), which no command could use as a file
+bool
+IsFileURLWithAbsolutePath(CFTypeRef inValue)
+{
+	if(!IsFileURL(inValue))
+		return false;
+	CFObj<CFURLRef> absoluteURL( ::CFURLCopyAbsoluteURL((CFURLRef)inValue) );
+	CFObj<CFStringRef> path( (absoluteURL != nullptr) ? ::CFURLCopyFileSystemPath(absoluteURL, kCFURLPOSIXPathStyle) : nullptr );
+	return (path != nullptr) && ::CFStringHasPrefix(path, CFSTR("/"));
+}
+
+// A service's NSSendTypes declaring files in the older way, by pasteboard type: AppletBuilder writes
+// "NSFilenamesPboardType" (plist_edit.py), and macOS's OMCService.m takes any service that is not
+// for text as one for files
+bool
+SendsFilesTheOlderWay(CFTypeRef inSendTypes)
+{
+	if( (inSendTypes == nullptr) || (::CFGetTypeID(inSendTypes) != ::CFArrayGetTypeID()) )
+		return false;
+	CFIndex typeCount = ::CFArrayGetCount((CFArrayRef)inSendTypes);
+	for(CFIndex i = 0; i < typeCount; i++)
+	{
+		CFTypeRef oneType = ::CFArrayGetValueAtIndex((CFArrayRef)inSendTypes, i);
+		if( (oneType != nullptr) && (::CFGetTypeID(oneType) == ::CFStringGetTypeID()) &&
+			( (::CFStringCompare((CFStringRef)oneType, CFSTR("NSFilenamesPboardType"), 0) == kCFCompareEqualTo) ||
+			  (::CFStringCompare((CFStringRef)oneType, CFSTR("public.file-url"), 0) == kCFCompareEqualTo) ) )
+			return true;
+	}
+	return false;
+}
+
 } // namespace
+
+const char *
+OMCAppletFileServiceRefusal(CFDictionaryRef inInfo, CFStringRef inCommandID)
+{
+	if( (inCommandID == nullptr) || (::CFStringGetLength(inCommandID) == 0) )
+		return "no command id";
+	CFTypeRef services = (inInfo != nullptr) ? ::CFDictionaryGetValue(inInfo, CFSTR("NSServices")) : nullptr;
+	if( (services == nullptr) || (::CFGetTypeID(services) != ::CFArrayGetTypeID()) )
+		return "the applet declares no services (NSServices in its Info.plist)";
+	bool declaredForText = false;
+	CFIndex serviceCount = ::CFArrayGetCount((CFArrayRef)services);
+	for(CFIndex i = 0; i < serviceCount; i++)
+	{
+		CFTypeRef service = ::CFArrayGetValueAtIndex((CFArrayRef)services, i);
+		if( (service == nullptr) || (::CFGetTypeID(service) != ::CFDictionaryGetTypeID()) )
+			continue;
+		CFTypeRef userData = ::CFDictionaryGetValue((CFDictionaryRef)service, CFSTR("NSUserData"));
+		if( (userData == nullptr) || (::CFGetTypeID(userData) != ::CFStringGetTypeID()) ||
+			(::CFStringCompare((CFStringRef)userData, inCommandID, 0) != kCFCompareEqualTo) )
+			continue;
+		CFTypeRef fileTypes = ::CFDictionaryGetValue((CFDictionaryRef)service, CFSTR("NSSendFileTypes"));
+		if( (fileTypes != nullptr) && (::CFGetTypeID(fileTypes) == ::CFArrayGetTypeID()) && (::CFArrayGetCount((CFArrayRef)fileTypes) > 0) )
+			return nullptr;
+		if(SendsFilesTheOlderWay(::CFDictionaryGetValue((CFDictionaryRef)service, CFSTR("NSSendTypes"))))
+			return nullptr;
+		declaredForText = true;
+	}
+	return declaredForText ? "the command is a service for text, not files (no NSSendFileTypes)"
+						   : "the applet does not declare the command as a service (NSServices, NSUserData)";
+}
 
 OMCApplet::OMCApplet(const OMCAppletActions &inActions)
 	: mActions(inActions)
@@ -182,6 +244,42 @@ OMCApplet::HandleURL(CFStringRef inURL)
 	// OMCRunCommandForURL applies the rules: which commands a URL may run and with what context.
 	RunningCommand running(mRunningCommandCount);
 	mActions.runURL(mActions.context, inURL);
+}
+
+OSStatus
+OMCApplet::RunService(CFStringRef inCommandID, CFArrayRef inURLs, CFDictionaryRef inInfo, const char **outRefusal)
+{
+	const char *refusal = nullptr;
+	CFObj<CFMutableArrayRef> fileURLs;
+	if(mActions.runService == nullptr)
+	{
+		refusal = "this platform makes no service requests";
+	}
+	else
+	{
+		refusal = OMCAppletFileServiceRefusal(inInfo, inCommandID);
+	}
+	if(refusal == nullptr)
+	{
+		// Only files: a service on files is never handed a URL on another scheme as a file
+		fileURLs.Adopt( ::CFArrayCreateMutable(kCFAllocatorDefault, 0, &kCFTypeArrayCallBacks) );
+		CFIndex urlCount = (inURLs != nullptr) ? ::CFArrayGetCount(inURLs) : 0;
+		for(CFIndex i = 0; i < urlCount; i++)
+		{
+			CFTypeRef oneURL = ::CFArrayGetValueAtIndex(inURLs, i);
+			if( (fileURLs != nullptr) && IsFileURLWithAbsolutePath(oneURL) )
+				::CFArrayAppendValue(fileURLs, oneURL);
+		}
+		if( (fileURLs == nullptr) || (::CFArrayGetCount(fileURLs) == 0) )
+			refusal = "a service runs with files, and none were given";
+	}
+	if(outRefusal != nullptr)
+		*outRefusal = refusal;
+	if(refusal != nullptr)
+		return errAEEventNotPermitted;
+
+	RunningCommand running(mRunningCommandCount);
+	return mActions.runService(mActions.context, inCommandID, fileURLs);
 }
 
 bool

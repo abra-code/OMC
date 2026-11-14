@@ -90,6 +90,29 @@ void RecordOpened(void *inContext)
 	((RecordedActions *)inContext)->calls.push_back("opened");
 }
 
+OSStatus RecordService(void *inContext, CFStringRef inCommandID, CFArrayRef inFileURLs)
+{
+	RecordedActions *actions = (RecordedActions *)inContext;
+	actions->calls.push_back("service:" + Describe(inCommandID) + ":" + Describe(inFileURLs));
+	if(actions->applet != nullptr)
+		actions->reopenAnswersDuringRun.push_back(actions->applet->ShouldHandleReopen(false, 0, 0));
+	return actions->mainStatus;
+}
+
+// An Info.plist with Find.app's kind of NSServices: a file service, plus a text service
+NSDictionary *ServicesInfo()
+{
+	return @{ @"NSServices": @[
+		@{ @"NSMenuItem": @{ @"default": @"Search Here" }, @"NSMessage": @"runOMCService", @"NSPortName": @"OMCService",
+		   @"NSUserData": @"find.new", @"NSSendFileTypes": @[ @"public.folder", @"com.apple.package" ] },
+		@{ @"NSMenuItem": @{ @"default": @"Upper Case" }, @"NSMessage": @"runOMCService", @"NSPortName": @"OMCService",
+		   @"NSUserData": @"text.upper", @"NSSendTypes": @[ @"NSStringPboardType" ], @"NSReturnTypes": @[ @"NSStringPboardType" ] },
+		// As AppletBuilder writes a file service (plist_edit.py): files by their older pasteboard type
+		@{ @"NSMenuItem": @{ @"default": @"Show Attributes" }, @"NSMessage": @"runOMCService", @"NSPortName": @"OMCService",
+		   @"NSUserData": @"xattr.show", @"NSSendTypes": @[ @"NSFilenamesPboardType" ], @"NSReturnTypes": @[], @"NSRequiredContext": @{} },
+		@{ @"NSMenuItem": @{ @"default": @"File URL" }, @"NSUserData": @"file.url", @"NSSendTypes": @[ @"public.utf8-plain-text", @"public.file-url" ] } ] };
+}
+
 OMCAppletActions MakeActions(RecordedActions &ioRecorded)
 {
 	OMCAppletActions actions;
@@ -97,6 +120,7 @@ OMCAppletActions MakeActions(RecordedActions &ioRecorded)
 	actions.runURL = RecordURL;
 	actions.noteRecentDocument = RecordRecent;
 	actions.didOpenGatheredFiles = RecordOpened;
+	actions.runService = RecordService;
 	actions.context = &ioRecorded;
 	return actions;
 }
@@ -272,6 +296,81 @@ CFArrayRef URLs(NSArray<NSURL *> *inURLs)
 	for(bool answer : recorded.reopenAnswersDuringRun)
 		XCTAssertFalse(answer);
 	XCTAssertTrue(applet.ShouldHandleReopen(false, 0, 0), @"and again once the calls returned");
+}
+
+- (void)testOnlyADeclaredFileServiceIsOffered
+{
+	CFDictionaryRef info = (__bridge CFDictionaryRef)ServicesInfo();
+	XCTAssertTrue(OMCAppletFileServiceRefusal(info, CFSTR("find.new")) == nullptr);
+	XCTAssertTrue(OMCAppletFileServiceRefusal(info, CFSTR("xattr.show")) == nullptr, @"files the older way, as AppletBuilder writes them");
+	XCTAssertTrue(OMCAppletFileServiceRefusal(info, CFSTR("file.url")) == nullptr, @"a file URL among the send types");
+	const char *refusal = OMCAppletFileServiceRefusal(info, CFSTR("text.upper"));
+	XCTAssertTrue((refusal != nullptr) && (strstr(refusal, "text") != nullptr), @"a text service is no file service: %s", refusal);
+	refusal = OMCAppletFileServiceRefusal(info, CFSTR("find.other"));
+	XCTAssertTrue((refusal != nullptr) && (strstr(refusal, "does not declare") != nullptr), @"%s", refusal);
+	XCTAssertTrue(OMCAppletFileServiceRefusal(info, CFSTR("FIND.NEW")) != nullptr, @"the id as declared, case and all");
+	XCTAssertTrue(OMCAppletFileServiceRefusal(info, CFSTR("")) != nullptr);
+	XCTAssertTrue(OMCAppletFileServiceRefusal(info, nullptr) != nullptr);
+	XCTAssertTrue(OMCAppletFileServiceRefusal(nullptr, CFSTR("find.new")) != nullptr);
+	NSArray *malformed = @[ @{}, @{ @"NSServices": @"find.new" }, @{ @"NSServices": @[ @"find.new" ] },
+							@{ @"NSServices": @[ @{ @"NSUserData": @"find.new", @"NSSendFileTypes": @[] } ] },
+							@{ @"NSServices": @[ @{ @"NSUserData": @"find.new", @"NSSendFileTypes": @"public.folder" } ] },
+							@{ @"NSServices": @[ @{ @"NSUserData": @7, @"NSSendFileTypes": @[ @"public.folder" ] } ] } ];
+	for(NSDictionary *oneInfo in malformed)
+		XCTAssertTrue(OMCAppletFileServiceRefusal((__bridge CFDictionaryRef)oneInfo, CFSTR("find.new")) != nullptr, @"%@", oneInfo);
+}
+
+- (void)testRunServiceRunsADeclaredServiceWithItsFilesOnly
+{
+	RecordedActions recorded;
+	OMCApplet applet(MakeActions(recorded));
+	recorded.applet = &applet;
+	CFDictionaryRef info = (__bridge CFDictionaryRef)ServicesInfo();
+	const char *refusal = "not set";
+	NSArray *urls = @[ [NSURL fileURLWithPath:@"/tmp/a folder"], [NSURL URLWithString:@"https://example.com/x"], [NSURL fileURLWithPath:@"/tmp/b"] ];
+	XCTAssertEqual(applet.RunService(CFSTR("find.new"), URLs(urls), info, &refusal), noErr);
+	XCTAssertTrue(refusal == nullptr);
+	XCTAssertEqualObjects(CallList(recorded), (@[ @"service:find.new:/tmp/a folder,/tmp/b" ]), @"a URL on another scheme is no file; nothing is noted as recent");
+	XCTAssertEqual(recorded.reopenAnswersDuringRun.size(), 1u);
+	XCTAssertFalse(recorded.reopenAnswersDuringRun[0], @"no reopen while the service runs");
+
+	recorded.mainStatus = paramErr;
+	XCTAssertEqual(applet.RunService(CFSTR("find.new"), URLs(@[ [NSURL fileURLWithPath:@"/tmp/c"] ]), info, nullptr), paramErr, @"the command's status");
+}
+
+- (void)testRunServiceRefusesAndRunsNothing
+{
+	RecordedActions recorded;
+	OMCApplet applet(MakeActions(recorded));
+	CFDictionaryRef info = (__bridge CFDictionaryRef)ServicesInfo();
+	CFArrayRef files = URLs(@[ [NSURL fileURLWithPath:@"/tmp/a"] ]);
+	const char *refusal = nullptr;
+	XCTAssertEqual(applet.RunService(CFSTR("other.command"), files, info, &refusal), errAEEventNotPermitted);
+	XCTAssertTrue(refusal != nullptr);
+	refusal = nullptr;
+	XCTAssertEqual(applet.RunService(CFSTR("text.upper"), files, info, &refusal), errAEEventNotPermitted);
+	XCTAssertTrue(refusal != nullptr);
+	refusal = nullptr;
+	XCTAssertEqual(applet.RunService(CFSTR("find.new"), URLs(@[]), info, &refusal), errAEEventNotPermitted);
+	XCTAssertTrue((refusal != nullptr) && (strstr(refusal, "files") != nullptr), @"%s", refusal);
+	refusal = nullptr;
+	XCTAssertEqual(applet.RunService(CFSTR("find.new"), URLs(@[ [NSURL URLWithString:@"launchtest://x"] ]), info, &refusal), errAEEventNotPermitted);
+	XCTAssertTrue(refusal != nullptr, @"only URLs on another scheme: no files");
+	refusal = nullptr;
+	XCTAssertEqual(applet.RunService(CFSTR("find.new"), URLs(@[ [NSURL URLWithString:@"file:relative"] ]), info, &refusal), errAEEventNotPermitted);
+	XCTAssertTrue(refusal != nullptr, @"a file URL with no absolute path is no file");
+	XCTAssertEqual(applet.RunService(CFSTR("find.new"), nullptr, info, nullptr), errAEEventNotPermitted);
+	XCTAssertEqualObjects(CallList(recorded), (@[]));
+
+	// A platform with no service requests (macOS: Services go through OMCService.m)
+	RecordedActions macRecorded;
+	OMCAppletActions macActions = MakeActions(macRecorded);
+	macActions.runService = nullptr;
+	OMCApplet macApplet(macActions);
+	refusal = nullptr;
+	XCTAssertEqual(macApplet.RunService(CFSTR("find.new"), files, info, &refusal), errAEEventNotPermitted);
+	XCTAssertTrue(refusal != nullptr);
+	XCTAssertEqualObjects(CallList(macRecorded), (@[]));
 }
 
 @end
