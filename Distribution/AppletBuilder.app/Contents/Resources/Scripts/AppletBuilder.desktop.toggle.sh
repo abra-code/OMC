@@ -32,6 +32,16 @@ if [ "$entry_status" -ne 0 ]; then
     fi
     exit 1
 fi
+# The entry is done; its services (the file manager's Services menu) may not be: said, not hidden
+services_error="$(printf '%s\n' "$entry_output" | /usr/bin/grep -m 1 '^Services not listed: ')"
+if [ -n "$services_error" ]; then
+    if [ "$action" = "install" ]; then
+        ab_status_set "exclamationmark.triangle.fill" "orange" "Added to the desktop's app list. ${services_error}"
+    else
+        ab_status_set "exclamationmark.triangle.fill" "orange" "Removed from the desktop's app list. ${services_error}"
+    fi
+    exit 0
+fi
 if [ "$action" = "install" ]; then
     ab_status_set "checkmark.circle.fill" "green" "Added to the desktop's app list"
 else

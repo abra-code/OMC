@@ -20,8 +20,9 @@
 #       <lang>.lproj/Private.strings  the engine's own texts (AbracodeFramework/*.lproj)
 #       Support/                    the support tools (omc_dialog_control, omc_next_command, ...,
 #                                   the defaults script from defaults/, the pasteboard script
-#                                   from pasteboard/linux/, the open script from open/, and
-#                                   ActionUI's linux-app-entry.py from ../ActionUI/Scripts)
+#                                   from pasteboard/linux/, the open script from open/,
+#                                   ActionUI's linux-app-entry.py from ../ActionUI/Scripts, and
+#                                   omc-services.py from Linux/)
 #
 # Usage: make-applet-bundle.sh [--python <Python folder>] <products folder> <applet sources>
 #                              <output folder>/<Name>.app
@@ -400,4 +401,14 @@ if [ "$status" -ne 0 ]; then
     exit 1
 fi
 /bin/chmod 755 "$framework/Support/linux-app-entry.py"
+# The file managers' Services menu: omc-services.py lists an applet's file services (NSServices)
+# for the OMC file manager plug-ins; AppletBuilder runs it beside linux-app-entry.py, whose
+# Info.plist reading and type table it uses (it finds that file beside itself)
+/bin/cp -- "$script_folder/omc-services.py" "$framework/Support/omc-services.py"
+status=$?
+if [ "$status" -ne 0 ]; then
+    printf 'Cannot copy %s into the framework\n' "$script_folder/omc-services.py" >&2
+    exit 1
+fi
+/bin/chmod 755 "$framework/Support/omc-services.py"
 exit 0
