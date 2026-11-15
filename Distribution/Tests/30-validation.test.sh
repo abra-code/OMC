@@ -343,6 +343,14 @@ info_plist="$info_dir/Info.plist"
 			<key>NSUserData</key>
 			<string>text.upper</string>
 		</dict>
+		<dict>
+			<key>NSMenuItem</key>
+			<dict><key>default</key><string>Images</string></dict>
+			<key>NSSendFileTypes</key>
+			<array><string>public.image</string></array>
+			<key>NSUserData</key>
+			<string>demo.images</string>
+		</dict>
 	</array>
 </dict>
 </plist>
@@ -360,18 +368,54 @@ check "a key with no value is refused" "1" \
 check "and leaves the file as it was" "1.0" "$(info_value CFBundleVersion)"
 check "the Info.plist keeps its mode" "644" "$(/usr/bin/stat -f '%Lp' "$info_plist")"
 
+# The pane's Input kind of each service (the picker shows it; a save is compared with it)
+check "the Input kinds: public.item, public.folder, a modern text type, NSStringPboardType" "files folders text text" \
+    "$(ab_call lib.plist.sh info_plist_service_kind "$info_plist" 0) $(ab_call lib.plist.sh info_plist_service_kind "$info_plist" 1) $(ab_call lib.plist.sh info_plist_service_kind "$info_plist" 2) $(ab_call lib.plist.sh info_plist_service_kind "$info_plist" 3)"
+# File types make a file service whatever NSSendTypes says (the engine and command-services.py),
+# so file types with a text type are other; an entry that is not a string does not end the scan
+kinds_plist="$info_dir/Kinds.plist"
+/bin/cat > "$kinds_plist" <<'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>NSServices</key>
+	<array>
+		<dict>
+			<key>NSSendFileTypes</key>
+			<array><string>public.folder</string></array>
+			<key>NSSendTypes</key>
+			<array><string>NSStringPboardType</string></array>
+		</dict>
+		<dict>
+			<key>NSSendTypes</key>
+			<array><dict/><string>NSStringPboardType</string></array>
+		</dict>
+		<dict>
+			<key>NSSendFileTypes</key>
+			<array/>
+			<key>NSSendTypes</key>
+			<array><string>NSStringPboardType</string></array>
+		</dict>
+	</array>
+</dict>
+</plist>
+EOF
+check "the Input kinds: folder and text types, text after a dict, empty file types and text" "other text text" \
+    "$(ab_call lib.plist.sh info_plist_service_kind "$kinds_plist" 0) $(ab_call lib.plist.sh info_plist_service_kind "$kinds_plist" 1) $(ab_call lib.plist.sh info_plist_service_kind "$kinds_plist" 2)"
+
 # The pane saves a service at every field change, the title at each keystroke:
 # with the Input picker as shown, the service's own types must stay as they are
-ab_call lib.plist.sh plist_edit "$info_plist" update_service 1 "Folders Only, Renamed" demo.other files >/dev/null 2>&1
+ab_call lib.plist.sh plist_edit "$info_plist" update_service 1 "Folders Only, Renamed" demo.other folders >/dev/null 2>&1
 check "a title save sets the title" "Folders Only, Renamed" "$(info_value NSServices/1/NSMenuItem/default)"
 check "and the command" "demo.other" "$(info_value NSServices/1/NSUserData)"
 check "and a folders-only service stays one" "public.folder" "$(info_value NSServices/1/NSSendFileTypes/0)"
 ab_call lib.plist.sh plist_edit "$info_plist" update_service 0 "Show Path" demo.show files >/dev/null 2>&1
 check "a service with file types only is not given send types" "" "$(info_value NSServices/0/NSSendTypes/0)"
 check "and keeps its file types" "public.item" "$(info_value NSServices/0/NSSendFileTypes/0)"
-# The picker shows "files" for a modern text type (only NSStringPboardType first reads as text)
-ab_call lib.plist.sh plist_edit "$info_plist" update_service 2 "Modern Text" text.modern files >/dev/null 2>&1
-check "types the picker cannot show are kept" "public.utf8-plain-text" "$(info_value NSServices/2/NSSendTypes/0)"
+# A modern text type shows as text, and a text save keeps it
+ab_call lib.plist.sh plist_edit "$info_plist" update_service 2 "Modern Text" text.modern text >/dev/null 2>&1
+check "types the picker cannot write are kept" "public.utf8-plain-text" "$(info_value NSServices/2/NSSendTypes/0)"
 ab_call lib.plist.sh plist_edit "$info_plist" update_service 3 "Upper Case" text.upper text >/dev/null 2>&1
 check "a text service saved as text stays text" "NSStringPboardType" "$(info_value NSServices/3/NSSendTypes/0)"
 ab_call lib.plist.sh plist_edit "$info_plist" update_service 0 "Show Path" demo.show text >/dev/null 2>&1
@@ -382,19 +426,37 @@ check "and back to files" "NSFilenamesPboardType" "$(info_value NSServices/0/NSS
 ab_call lib.plist.sh plist_edit "$info_plist" update_service 1 "Folders Only, Renamed" demo.other "" >/dev/null 2>&1
 check "a save with no Input value keeps the types" "public.folder|" \
     "$(info_value NSServices/1/NSSendFileTypes/0)|$(info_value NSServices/1/NSSendTypes/1)"
+# Through Text and back to Folders (the owner's ServiceDemo lost its folders-only type going through
+# Text and back to Files / Folders, when the picker had no Folders choice)
+ab_call lib.plist.sh plist_edit "$info_plist" update_service 1 "Folders Only, Renamed" demo.other text >/dev/null 2>&1
+check "a folders service changed to text" "NSStringPboardType|" \
+    "$(info_value NSServices/1/NSSendTypes/0)|$(info_value NSServices/1/NSSendFileTypes/0)"
+ab_call lib.plist.sh plist_edit "$info_plist" update_service 1 "Folders Only, Renamed" demo.other folders >/dev/null 2>&1
+check "and back to folders" "public.folder||folders" \
+    "$(info_value NSServices/1/NSSendFileTypes/0)|$(info_value NSServices/1/NSSendTypes/0)|$(ab_call lib.plist.sh info_plist_service_kind "$info_plist" 1)"
+# File types the pane cannot write show as other, and a save, other or not, keeps them unless a
+# writable kind is chosen
+ab_call lib.plist.sh plist_edit "$info_plist" update_service 0 "Show Path" demo.show other >/dev/null 2>&1
+check "other on a files service changes nothing" "NSFilenamesPboardType" "$(info_value NSServices/0/NSSendTypes/0)"
+check "a service for images is other" "other" "$(ab_call lib.plist.sh info_plist_service_kind "$info_plist" 4)"
+ab_call lib.plist.sh plist_edit "$info_plist" update_service 4 "Images" demo.images other >/dev/null 2>&1
+check "and keeps its types at a save" "public.image" "$(info_value NSServices/4/NSSendFileTypes/0)"
+ab_call lib.plist.sh plist_edit "$info_plist" update_service 4 "Images" demo.images folders >/dev/null 2>&1
+check "until Folders is chosen" "public.folder||folders" \
+    "$(info_value NSServices/4/NSSendFileTypes/0)|$(info_value NSServices/4/NSSendFileTypes/1)|$(ab_call lib.plist.sh info_plist_service_kind "$info_plist" 4)"
 check "an update of a service that is not there fails" "1" \
     "$(ab_call_rc lib.plist.sh plist_edit "$info_plist" update_service 9 "Nothing" demo.show files)"
 check "as does one with no index" "1" \
     "$(ab_call_rc lib.plist.sh plist_edit "$info_plist" update_service "" "Nothing" demo.show files)"
 
 ab_call lib.plist.sh plist_edit "$info_plist" append_service "New Service" demo.new >/dev/null 2>&1
-check "a new service goes at the end" "New Service" "$(info_value NSServices/4/NSMenuItem/default)"
-check "for files and folders" "NSFilenamesPboardType" "$(info_value NSServices/4/NSSendTypes/0)"
+check "a new service goes at the end" "New Service" "$(info_value NSServices/5/NSMenuItem/default)"
+check "for files and folders" "NSFilenamesPboardType" "$(info_value NSServices/5/NSSendTypes/0)"
 check "with the engine's service entry point" "runOMCService|OMCService|demo.new" \
-    "$(info_value NSServices/4/NSMessage)|$(info_value NSServices/4/NSPortName)|$(info_value NSServices/4/NSUserData)"
+    "$(info_value NSServices/5/NSMessage)|$(info_value NSServices/5/NSPortName)|$(info_value NSServices/5/NSUserData)"
 ab_call lib.plist.sh plist_edit "$info_plist" remove_service 0 >/dev/null 2>&1
 check "removing a service removes exactly that one" "Folders Only, Renamed|New Service" \
-    "$(info_value NSServices/0/NSMenuItem/default)|$(info_value NSServices/3/NSMenuItem/default)"
+    "$(info_value NSServices/0/NSMenuItem/default)|$(info_value NSServices/4/NSMenuItem/default)"
 check "removing one that is not there is a no-op" "0" \
     "$(ab_call_rc lib.plist.sh plist_edit "$info_plist" remove_service 7)"
 

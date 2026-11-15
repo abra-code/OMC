@@ -99,14 +99,16 @@ check "the fixture project was copied from the template" "0" "$?"
 /bin/mv "$FIXTURE/Contents/Resources/Scripts/ActionUI Window.main.sh" "$FIXTURE/Contents/Resources/Scripts/Fixture.main.sh"
 check "and named Fixture" "Fixture" "$(/usr/bin/plutil -extract CFBundleName raw -o - "$FIXTURE/Contents/Info.plist")"
 
-section "A bare launch asks for an applet to open"
-# AppletBuilder's main command takes a folder (an applet); with none the engine asks, and with no
-# answer queued the harness cancels the panel, so no window opens.
+section "A bare launch opens the Welcome window"
+# AppletBuilder's main command takes a folder (an applet); with none it opens the Welcome window
+# (Open, Clone, New Applet, recent applets) and asks for nothing (AppletBuilder.main.sh: no file
+# chooser at launch, USE_NAV_DIALOG_FOR_MISSING_FILE_CONTEXT false)
 itest_wait_idle 60
-check "an open panel" "open" "$(itest_panel last kind)"
-check "asking for an applet" "Select an applet (.app) to open" "$(itest_panel last message)"
-check "canceled" "true" "$(itest_panel last canceled)"
-check "so no window opened" "" "$(itest_windows)"
+check "no open panel" "0" "$(itest_panel_count)"
+# On macOS the window can come a moment after the launch has gone idle
+one_window() { [ "$(itest_windows | /usr/bin/grep -c .)" = "1" ]; }
+wait_until 15 one_window
+check "one window, the Welcome window" "1" "$(itest_windows | /usr/bin/grep -c .)"
 
 section "Opening an applet opens its project window on the General tab"
 # A test launch keeps the project out of the developer's Open Recent and Recent Items. An engine
@@ -131,12 +133,14 @@ itest_wait_idle 60
 check "its name" "Fixture" "$(itest_value "$window" "$GEN_NAME_ID")"
 check "the header shows it too" "Fixture" "$(itest_value "$window" "$GEN_HEADER_NAME_ID")"
 check "its bundle identifier" "com.omc.applet.Fixture" "$(itest_value "$window" "$GEN_BUNDLE_ID_ID")"
-# What only macOS has is absent on Linux (owner's Q6): the Min macOS row and the Services area.
+# What only macOS has is absent on Linux (owner's Q6): the Min macOS row.
 # First a view of the same pane that is there on both, so "absent" means the element and not a
 # pane whose views the window does not list.
 check "the pane's views are listed (Name)" "present" "$(present_or_absent "$window" "$GEN_NAME_ID")"
 check "Min macOS:$MACOS_ONLY_EXPECTED" "$MACOS_ONLY_EXPECTED" "$(present_or_absent "$window" "$GEN_MIN_OS_ROW_ID")"
-check "the Services area: $MACOS_ONLY_EXPECTED" "$MACOS_ONLY_EXPECTED $MACOS_ONLY_EXPECTED $MACOS_ONLY_EXPECTED" \
+# The Services area is on both since Linux has file manager services (the plug-ins in
+# Linux/FileManagerServices)
+check "the Services area: present" "present present present" \
     "$(present_or_absent "$window" "$SVC_DIVIDER_ID") $(present_or_absent "$window" "$SVC_HEADER_ID") $(present_or_absent "$window" "$SVC_SPLIT_ID")"
 check "its version" "1.0" "$(itest_value "$window" "$GEN_VERSION_ID")"
 # One file can count more than once (as the run's file and again as its window's), so at least one.

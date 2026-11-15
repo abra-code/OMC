@@ -27,7 +27,16 @@ if [ "$edit_status" -ne 0 ]; then
     exit 1
 fi
 
-if [ "$input_type" = "text" ] && ! ab_on_macos; then
+# The picker shows the kind the service has now: "Other File Types" chosen for a service with no
+# other types keeps it as it was (update_service changes nothing), and the picker goes back to it
+saved_kind="$(info_plist_service_kind "$plist" "$svc_index")"
+if [ -n "$saved_kind" ] && [ "$saved_kind" != "$input_type" ]; then
+    set_value "$SVC_INPUT_PICKER_ID" "$saved_kind"
+fi
+
+if [ "$input_type" = "other" ] && [ "$saved_kind" != "other" ]; then
+    set_value "$SVC_STATUS_ID" "Other File Types keeps types a service declares; this one has none to keep"
+elif [ "$saved_kind" = "text" ] && ! ab_on_macos; then
     # Linux file managers pass files: a text service is offered on macOS only
     set_value "$SVC_STATUS_ID" "Service saved; text input: a macOS Services menu item only"
 else

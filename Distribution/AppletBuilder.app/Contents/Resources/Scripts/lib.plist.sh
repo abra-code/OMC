@@ -120,13 +120,73 @@ info_plist_append_service() {
     return 0
 }
 
+# The Services pane's Input kind of the service at an index, the value its Input picker shows
+# (AppletBuilder.services.selected.sh) and the one update_service compares a save with:
+#   text     no file types, and NSSendTypes names a text type (NSStringPboardType,
+#            public.utf8-plain-text, public.plain-text, public.text, NSPasteboardTypeString)
+#   folders  NSSendFileTypes is exactly public.folder, and NSSendTypes names no text type
+#   files    NSSendFileTypes is exactly public.item (and no text type), or no file types and
+#            NSSendTypes names NSFilenamesPboardType or public.file-url, or nothing at all
+#   other    any other NSSendFileTypes (public.image, public.folder with more, ...), or file types
+#            together with a text type: the picker shows it and a save keeps it, since the pane
+#            cannot write such a list
+# A non-empty NSSendFileTypes makes a file service whatever NSSendTypes says, as the engine
+# (OMCService.m, OMCApplet.cpp) and Linux/command-services.py take it.
+#   info_plist_service_kind <file> <index>
+info_plist_service_kind() {
+    local file="$1"
+    local item="/NSServices/$2"
+    # A count of an entry that is not an array is 0, of one that is not there empty
+    local send_count="$("$plister_tool" get count "$file" "$item/NSSendTypes" 2> /dev/null)"
+    case "$send_count" in
+        ''|*[!0-9]*) send_count=0 ;;
+    esac
+    local has_text=false
+    local send_type
+    local i=0
+    # By the count: an entry that is not a string reads as nothing and must not end the scan
+    while [ "$i" -lt "$send_count" ]; do
+        send_type="$("$plister_tool" get value "$file" "$item/NSSendTypes/$i" 2> /dev/null)"
+        case "$send_type" in
+            NSStringPboardType|public.utf8-plain-text|public.plain-text|public.text|NSPasteboardTypeString)
+                has_text=true
+                break
+                ;;
+        esac
+        i=$((i + 1))
+    done
+    local file_type_count="$("$plister_tool" get count "$file" "$item/NSSendFileTypes" 2> /dev/null)"
+    case "$file_type_count" in
+        ''|*[!0-9]*) file_type_count=0 ;;
+    esac
+    if [ "$file_type_count" -eq 0 ]; then
+        if [ "$has_text" = true ]; then
+            printf 'text'
+        else
+            printf 'files'
+        fi
+        return 0
+    fi
+    local first_file_type="$("$plister_tool" get value "$file" "$item/NSSendFileTypes/0" 2> /dev/null)"
+    if [ "$has_text" = true ] || [ "$file_type_count" -ne 1 ]; then
+        printf 'other'
+    elif [ "$first_file_type" = "public.folder" ]; then
+        printf 'folders'
+    elif [ "$first_file_type" = "public.item" ]; then
+        printf 'files'
+    else
+        printf 'other'
+    fi
+    return 0
+}
+
 # Saves the Services pane's fields into the service at an index: its title and command, and its
-# send types only when the Input picker changed from what the pane showed. The pane saves at
-# every field change, so rewriting the types each time turned a folders-only service
-# (NSSendFileTypes public.folder, which the picker cannot show) into one for any file or folder
-# at a title edit. The kind is read by the pane's own rule (AppletBuilder.services.selected.sh):
-# "text" when the first NSSendTypes entry is NSStringPboardType, else "files".
-#   info_plist_update_service <file> <index> <menu title> <command id> <files|text>
+# send types only when the Input picker changed from the kind the service has
+# (info_plist_service_kind, the value the pane shows). The pane saves at every field change, so
+# the types are rewritten only for a different kind the pane can write: "files" (NSSendTypes
+# NSFilenamesPboardType), "folders" (NSSendFileTypes public.folder) or "text" (NSSendTypes
+# NSStringPboardType). "other" and anything else (a save with no Input value) keep them.
+#   info_plist_update_service <file> <index> <menu title> <command id> <files|folders|text|other>
 info_plist_update_service() {
     local file="$1"
     local index="$2"
@@ -144,24 +204,26 @@ info_plist_update_service() {
     "$plister_tool" insert NSMenuItem dict "$file" "$item" > /dev/null || return 1
     "$plister_tool" insert default string "$title" "$file" "$item/NSMenuItem" > /dev/null || return 1
     "$plister_tool" insert NSUserData string "$command_id" "$file" "$item" > /dev/null || return 1
-    local first_type="$("$plister_tool" get value "$file" "$item/NSSendTypes/0" 2> /dev/null)"
-    local shown_kind="files"
-    if [ "$first_type" = "NSStringPboardType" ]; then
-        shown_kind="text"
-    fi
-    # Only a picker value the pane has ("files", "text") changes the types: a save that came with
-    # no value (in the Linux test box a folders-only service lost its types this way) keeps them
-    local send_type
+    local shown_kind="$(info_plist_service_kind "$file" "$index")"
     case "$input_kind" in
         "$shown_kind") return 0 ;;
-        text) send_type="NSStringPboardType" ;;
-        files) send_type="NSFilenamesPboardType" ;;
+        files|text)
+            local send_type="NSFilenamesPboardType"
+            if [ "$input_kind" = "text" ]; then
+                send_type="NSStringPboardType"
+            fi
+            # remove succeeds when the key is not there
+            "$plister_tool" remove "$file" "$item/NSSendFileTypes" > /dev/null || return 1
+            "$plister_tool" insert NSSendTypes array "$file" "$item" > /dev/null || return 1
+            "$plister_tool" append string "$send_type" "$file" "$item/NSSendTypes" > /dev/null || return 1
+            ;;
+        folders)
+            "$plister_tool" remove "$file" "$item/NSSendTypes" > /dev/null || return 1
+            "$plister_tool" insert NSSendFileTypes array "$file" "$item" > /dev/null || return 1
+            "$plister_tool" append string public.folder "$file" "$item/NSSendFileTypes" > /dev/null || return 1
+            ;;
         *) return 0 ;;
     esac
-    # remove succeeds when the key is not there
-    "$plister_tool" remove "$file" "$item/NSSendFileTypes" > /dev/null || return 1
-    "$plister_tool" insert NSSendTypes array "$file" "$item" > /dev/null || return 1
-    "$plister_tool" append string "$send_type" "$file" "$item/NSSendTypes" > /dev/null || return 1
     return 0
 }
 

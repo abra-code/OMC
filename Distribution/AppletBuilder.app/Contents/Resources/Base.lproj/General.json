@@ -362,7 +362,9 @@
                     "pickerStyle": "menu",
                     "options": [
                       {"title": "Files / Folders", "tag": "files"},
-                      {"title": "Text", "tag": "text"}
+                      {"title": "Folders", "tag": "folders"},
+                      {"title": "Text", "tag": "text"},
+                      {"title": "Other File Types", "tag": "other"}
                     ],
                     "disabled": true,
                     "actionID": "AppletBuilder.services.save"
