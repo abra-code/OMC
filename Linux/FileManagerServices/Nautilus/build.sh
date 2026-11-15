@@ -1,7 +1,7 @@
 #!/bin/bash
-# Linux/NautilusServices/build.sh - builds the GNOME Files plug-in for Command applet services
-# (libcommand-services-nautilus.so) and its core's test program (command-services-core-test), then runs
-# the tests.
+# Linux/FileManagerServices/Nautilus/build.sh - builds the GNOME Files plug-in for Command applet
+# services (libcommand-services-nautilus.so, with the shared core in ..) and its test program, then
+# runs the test. ../build.sh runs it after the core's own test, when the machine has GNOME Files.
 #
 # Usage: build.sh <output folder> [--nautilus-headers <folder holding libnautilus-extension/>]
 #
@@ -22,6 +22,7 @@ if [ -z "$out" ] || { [ "$2" = "--nautilus-headers" ] && [ -z "$headers" ]; }; t
     exit 2
 fi
 here="$(CDPATH= cd -P -- "$(/usr/bin/dirname -- "$0")" && pwd)"
+core="$here/.."
 /bin/mkdir -p "$out"
 status=$?
 if [ "$status" -ne 0 ]; then
@@ -68,24 +69,10 @@ cc=/usr/bin/cc
 warnings="-Wall -Wextra -Werror -Wno-unused-parameter"
 # shellcheck disable=SC2086
 "$cc" -std=gnu11 $warnings -O2 -fPIC -fvisibility=hidden -shared -o "$out/libcommand-services-nautilus.so" \
-    "$here/command-services-nautilus.c" "$here/command-services-core.c" $nautilus_flags $glib_flags
+    -I"$core" "$here/command-services-nautilus.c" "$core/command-services-core.c" $nautilus_flags $glib_flags
 status=$?
 if [ "$status" -ne 0 ]; then
     printf 'the plug-in did not build\n' >&2
-    exit 1
-fi
-# shellcheck disable=SC2086
-"$cc" -std=gnu11 $warnings -O0 -g -o "$out/command-services-core-test" \
-    "$here/command-services-core-test.c" "$here/command-services-core.c" $glib_flags
-status=$?
-if [ "$status" -ne 0 ]; then
-    printf 'the core test did not build\n' >&2
-    exit 1
-fi
-"$out/command-services-core-test"
-status=$?
-if [ "$status" -ne 0 ]; then
-    printf 'the core tests failed\n' >&2
     exit 1
 fi
 # The plug-in loaded as Nautilus loads it, asked for its menu with stand-in files

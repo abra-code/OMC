@@ -10,7 +10,7 @@ manager has files, not text.
 install writes $XDG_DATA_HOME/command/services/<CFBundleIdentifier>.services (XDG_DATA_HOME defaults
 to ~/.local/share), which the Command Workshop file manager plug-ins read: the applet's name, its program, and
 per service its title, command id and MIME types, as a key file (the desktop entry format, which
-GLib reads with no other library; Linux/NautilusServices/command-services-core.c):
+GLib reads with no other library; Linux/FileManagerServices/command-services-core.c):
 
     [Applet]
     Version=1

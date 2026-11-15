@@ -1,5 +1,5 @@
 #!/bin/bash
-# Linux/NautilusServices/install.sh - installs the GNOME Files plug-in for applet services
+# Linux/FileManagerServices/Nautilus/install.sh - installs the GNOME Files plug-in for applet services
 # (libcommand-services-nautilus.so) into Nautilus's extension folder, or removes it. Run as root
 # (sudo): Nautilus loads plug-ins only from that system folder. GNOME Files then needs a restart
 # (nautilus -q, as the user; it starts again with the next window).
