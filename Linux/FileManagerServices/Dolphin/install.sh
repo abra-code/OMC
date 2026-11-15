@@ -27,6 +27,16 @@ if [ -z "$folder" ] || [ ! -d "$folder" ]; then
     exit 1
 fi
 
+# A plug-in a package installed (command-engine-files-dolphin) is the package's: installed over, the
+# package's next upgrade would undo it; removed, dpkg's records would be wrong. Use apt for it.
+if [ -x /usr/bin/dpkg-query ]; then
+    owner="$(/usr/bin/dpkg-query -S "$folder/$plugin_name" 2>/dev/null | /usr/bin/sed -n '1s/: .*//p')"
+    if [ -n "$owner" ]; then
+        printf '%s belongs to the %s package: use apt (apt install or apt remove %s), not this script\n' "$folder/$plugin_name" "$owner" "$owner" >&2
+        exit 1
+    fi
+fi
+
 if [ "$1" = "--uninstall" ]; then
     if [ -f "$folder/$plugin_name" ]; then
         /bin/rm -f -- "$folder/$plugin_name"
