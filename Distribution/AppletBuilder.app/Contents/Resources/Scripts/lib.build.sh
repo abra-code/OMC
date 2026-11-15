@@ -638,6 +638,73 @@ update_linux_installer() {
     return 0
 }
 
+# The libraries ActionUI loads by name for the elements an applet's documents use, which the applet
+# lists in its Info.plist (CommandEngineLinuxRequires, sonames) for its Linux install script
+# (install-applet.sh --check, --install-packages): a WebView needs WebKitGTK, a Map libshumate. Found
+# from every ActionUI document in the bundle's Resources (any *.json, also in *.lproj; not in a
+# Documentation folder, whose element documents are examples) and added to the list, so a library
+# the author lists by hand stays (one the author no longer needs is not taken away). On both
+# systems: the list must be right when an applet built on a Mac is made into a Linux bundle.
+update_linux_requires() {
+    local target_path="$1"
+    local resources="$target_path/Contents/Resources"
+    local info_plist="$target_path/Contents/Info.plist"
+    if [ ! -d "$resources" ] || [ ! -f "$info_plist" ]; then
+        return 0
+    fi
+    local wanted=""
+    local element
+    local soname
+    local found
+    # "type:linux" too: ActionUI's platform filter makes it the element's type on Linux
+    for element in WebView:libwebkitgtk-6.0.so.4 Map:libshumate-1.0.so.1; do
+        found="$(/usr/bin/grep -rlE --include='*.json' --exclude-dir=Documentation "\"type(:linux)?\"[[:space:]]*:[[:space:]]*\"${element%%:*}\"" "$resources" 2>/dev/null | /usr/bin/head -n 1)"
+        if [ -n "$found" ]; then
+            wanted="$wanted ${element#*:}:${element%%:*}"
+        fi
+    done
+    if [ -z "$wanted" ]; then
+        return 0
+    fi
+    local key_type="$("$plister_tool" get type "$info_plist" /CommandEngineLinuxRequires 2> /dev/null)"
+    if [ -z "$key_type" ]; then
+        "$plister_tool" insert CommandEngineLinuxRequires array "$info_plist" / > /dev/null
+        local insert_status=$?
+        if [ "$insert_status" -ne 0 ]; then
+            ab_log "Cannot add CommandEngineLinuxRequires to the Info.plist"
+            return 1
+        fi
+    elif [ "$key_type" != "array" ]; then
+        ab_log "CommandEngineLinuxRequires in the Info.plist is not a list: left as it is"
+        return 0
+    fi
+    local listed=" "
+    local count="$("$plister_tool" get count "$info_plist" /CommandEngineLinuxRequires 2> /dev/null)"
+    case "$count" in
+        ''|*[!0-9]*) count=0 ;;
+    esac
+    local index=0
+    while [ "$index" -lt "$count" ]; do
+        listed="$listed$("$plister_tool" get value "$info_plist" "/CommandEngineLinuxRequires/$index" 2> /dev/null) "
+        index=$((index + 1))
+    done
+    local pair
+    for pair in $wanted; do
+        soname="${pair%%:*}"
+        case "$listed" in
+            *" $soname "*) continue ;;
+        esac
+        "$plister_tool" append string "$soname" "$info_plist" /CommandEngineLinuxRequires > /dev/null
+        local append_status=$?
+        if [ "$append_status" -ne 0 ]; then
+            ab_log "Cannot add $soname to CommandEngineLinuxRequires"
+            return 1
+        fi
+        ab_log "Linux: the applet needs $soname (a ${pair#*:}); listed in CommandEngineLinuxRequires"
+    done
+    return 0
+}
+
 # Install or update Abracode.framework and executable
 update_framework() {
     local target_path="$1"
@@ -1575,6 +1642,7 @@ applet_build() {
 
     update_framework "$project_path"
     update_linux_installer "$project_path"
+    update_linux_requires "$project_path"
     update_python "$project_path"
 
     update_python_packages "$project_path"

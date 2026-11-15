@@ -305,4 +305,41 @@ check "an inherited prefix is left exactly alone" "/harness/scratch/pyc" \
 /usr/bin/find "$OMC_APP_BUNDLE_PATH/Contents/Library" -type d -name __pycache__ -prune \
     -exec /bin/rm -rf {} + 2>/dev/null
 
+section "10. the build lists the Linux libraries the applet's documents need"
+# update_linux_requires: a WebView document means WebKitGTK, a Map libshumate, in the Info.plist's
+# CommandEngineLinuxRequires, which the applet's Linux install script checks and installs.
+requires_value() { ab_call lib.plist.sh plist_read "$1/Contents/Info.plist" "CommandEngineLinuxRequires/$2"; }
+plain="$(ab_make_project PlainDocs)"
+ab_call $BUILD update_linux_requires "$plain" > /dev/null 2>&1
+check "an applet with neither element gets no list" "" "$(requires_value "$plain" 0)"
+
+web="$(ab_make_project WebDocs)"
+/usr/bin/printf '{"type": "VStack", "children": [{"type": "WebView", "id": 2, "properties": {}}]}\n' \
+    > "$web/Contents/Resources/Base.lproj/Browser.json"
+ab_call $BUILD update_linux_requires "$web" > /dev/null 2>&1
+check "a WebView document lists WebKitGTK" "libwebkitgtk-6.0.so.4" "$(requires_value "$web" 0)"
+ab_call $BUILD update_linux_requires "$web" > /dev/null 2>&1
+check "and a second build does not list it twice" "" "$(requires_value "$web" 1)"
+/usr/bin/printf '{"type": "Map", "id": 3, "properties": {}}\n' > "$web/Contents/Resources/Places.json"
+ab_call $BUILD update_linux_requires "$web" > /dev/null 2>&1
+check "a Map document adds libshumate after it" "libwebkitgtk-6.0.so.4|libshumate-1.0.so.1" \
+    "$(requires_value "$web" 0)|$(requires_value "$web" 1)"
+
+hand="$(ab_make_project HandDocs)"
+ab_call lib.plist.sh plist_edit "$hand/Contents/Info.plist" set_keys CommandEngineLinuxRequires notalist > /dev/null 2>&1
+/usr/bin/printf '{"type": "WebView", "id": 1}\n' > "$hand/Contents/Resources/Web.json"
+ab_call $BUILD update_linux_requires "$hand" > /dev/null 2>&1
+check "a key that is not a list is left as it is" "notalist" \
+    "$(ab_call lib.plist.sh plist_read "$hand/Contents/Info.plist" CommandEngineLinuxRequires)"
+
+linuxonly="$(ab_make_project LinuxOnlyDocs)"
+/usr/bin/printf '{"type:apple": "Text", "type:linux": "Map", "id": 1}\n' > "$linuxonly/Contents/Resources/Places.json"
+ab_call $BUILD update_linux_requires "$linuxonly" > /dev/null 2>&1
+check "a Map only on Linux (type:linux) lists libshumate" "libshumate-1.0.so.1" "$(requires_value "$linuxonly" 0)"
+docs="$(ab_make_project DocsOnly)"
+/bin/mkdir -p "$docs/Contents/Resources/Documentation/Elements"
+/usr/bin/printf '{"type": "Map", "id": 1}\n' > "$docs/Contents/Resources/Documentation/Elements/Map.json"
+ab_call $BUILD update_linux_requires "$docs" > /dev/null 2>&1
+check "an element document under Documentation lists nothing (an example, not the applet's UI)" "" "$(requires_value "$docs" 0)"
+
 omctest_end
