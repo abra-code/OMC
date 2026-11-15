@@ -1,10 +1,13 @@
 #!/bin/bash
-# Linux/Packaging/make-swift-runtime-deb.sh - makes the command-engine-swift-<version> package (.deb):
+# Linux/Packaging/make-swift-runtime-deb.sh - makes the command-engine-swift-<line> package (.deb):
 # the Swift runtime libraries the Command Engine's programs need, from the toolchain they were built
-# with, in /usr/lib/command-engine/swift-<version>/, where every applet bundle of that Swift release
-# looks for them (Linux/make-applet-bundle.sh sets that runtime path; design in
-# Private/linux-applet-install-design.md). One package per Swift release, so applets built with an
-# older Swift keep their runtime beside a newer one.
+# with, in /usr/lib/command-engine/swift-<line>/, where every applet bundle of that runtime line looks
+# for them (Linux/make-applet-bundle.sh sets that runtime path; design in
+# Private/linux-applet-install-design.md, "Swift runtime lines"). The line is build-linux.sh's choice
+# from Linux/Packaging/swift-runtime-lines: the minor release (6.4) while its line is rolling, so apt
+# upgrades the one package in place across patch releases (its version is the toolchain's, 6.4.2-1),
+# or an exact release (6.4.3) once the minor's line is frozen. A rolling package gets a new patch
+# release only after check-swift-runtime-abi.sh passed against the one it replaces.
 #
 # The libraries are what the products need, found from the products themselves: the libraries each
 # program names (readelf -d NEEDED) that are in the toolchain's runtime folder, and what those name in
@@ -13,7 +16,7 @@
 #
 # Usage: make-swift-runtime-deb.sh <products folder> <output folder>
 #   The products folder is build-linux.sh's (with its command-engine-runtime file); the package is
-#   written to <output folder>/command-engine-swift-<version>_<version>-1_<architecture>.deb.
+#   written to <output folder>/command-engine-swift-<line>_<Swift version>-1_<architecture>.deb.
 # Needs dpkg-deb, dpkg and readelf (Debian, Ubuntu). Exit status: 0 made, 1 failed, 2 bad arguments.
 
 # The package's folders and files must be readable by everyone (dpkg-deb also refuses a DEBIAN
@@ -27,9 +30,15 @@ if [ -z "$products" ] || [ -z "$output" ] || [ $# -ne 2 ]; then
 fi
 runtime_file="$products/command-engine-runtime"
 swift_version="$(/usr/bin/sed -n 's/^swift_version=//p' "$runtime_file" 2>/dev/null)"
+runtime_line="$(/usr/bin/sed -n 's/^runtime_line=//p' "$runtime_file" 2>/dev/null)"
+swift_release="$(/usr/bin/sed -n 's/^swift_release=//p' "$runtime_file" 2>/dev/null)"
+if [ "$swift_release" != "1" ]; then
+    printf 'The products were built with a Swift snapshot, not a release (%s): no runtime package from them\n' "$runtime_file" >&2
+    exit 1
+fi
 runtime_folder="$(/usr/bin/sed -n 's/^runtime_folder=//p' "$runtime_file" 2>/dev/null)"
-if [ -z "$swift_version" ] || [ -z "$runtime_folder" ]; then
-    printf 'No swift_version or runtime_folder in %s: build the products with build-linux.sh\n' "$runtime_file" >&2
+if [ -z "$swift_version" ] || [ -z "$runtime_line" ] || [ -z "$runtime_folder" ]; then
+    printf 'No swift_version, runtime_line or runtime_folder in %s: build the products with build-linux.sh\n' "$runtime_file" >&2
     exit 1
 fi
 if [ ! -d "$runtime_folder" ]; then
@@ -115,9 +124,9 @@ if [ "$status" -ne 0 ] || [ -z "$work" ]; then
     printf 'Cannot make a work folder in %s\n' "$output" >&2
     exit 1
 fi
-package="command-engine-swift-$swift_version"
+package="command-engine-swift-$runtime_line"
 root="$work/$package"
-library_folder="$root/usr/lib/command-engine/swift-$swift_version"
+library_folder="$root/usr/lib/command-engine/swift-$runtime_line"
 /bin/mkdir -p "$root/DEBIAN" "$library_folder"
 status=$?
 if [ "$status" -ne 0 ]; then
@@ -153,9 +162,9 @@ library_count="$(printf '%s\n' $libraries | /usr/bin/wc -l | /usr/bin/tr -d ' ')
     printf 'Depends: libc6 (>= %s), libstdc++6, libgcc-s1\n' "$glibc_version"
     printf 'Section: libs\n'
     printf 'Priority: optional\n'
-    printf 'Description: Swift %s runtime for Command Engine applets\n' "$swift_version"
-    printf ' The %s Swift runtime libraries that Command Engine applets built with Swift %s\n' "$library_count" "$swift_version"
-    printf ' need, in /usr/lib/command-engine/swift-%s, where the applets look for them.\n' "$swift_version"
+    printf 'Description: Swift %s runtime for Command Engine applets\n' "$runtime_line"
+    printf ' The %s Swift runtime libraries (from Swift %s) that Command Engine applets of the\n' "$library_count" "$swift_version"
+    printf ' Swift %s runtime line need, in /usr/lib/command-engine/swift-%s, where they look.\n' "$runtime_line" "$runtime_line"
 } > "$root/DEBIAN/control"
 status=$?
 if [ "$status" -ne 0 ]; then

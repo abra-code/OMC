@@ -29,7 +29,7 @@
 #   The products folder is the build's (build-linux.sh), holding CommandApplet and the tools, and
 #   the command-engine-runtime file build-linux.sh writes: every engine program copied into the
 #   bundle (the executable, the support tools, the helpers) gets its bundle_runpath as its library
-#   search path (/usr/lib/command-engine/swift-<version>, the Swift runtime package's folder).
+#   search path (/usr/lib/command-engine/swift-<line>, the Swift runtime package's folder).
 #   --python copies a relocatable Linux Python (the folder holding bin/python3, as
 #   Python-Embedding's build-embedded-python.sh makes it on Linux) into Contents/Library/Python.
 #   It must be an ELF build for CommandApplet's architecture, and replaces any Library/Python the
@@ -94,7 +94,7 @@ for tool in $tools; do
     fi
 done
 # Where the bundle's programs find the Swift runtime: build-linux.sh writes it beside the products
-# (the command-engine-swift-<version> package's folder, and in a debug build the toolchain's after
+# (the command-engine-swift-<line> package's folder, and in a debug build the toolchain's after
 # it). Each engine program copied into the bundle gets it in place of the folders the build left in
 # it, which are the toolchain's and the build machine's own (set-elf-runpath.py).
 bundle_runpath="$(/usr/bin/sed -n 's/^bundle_runpath=//p' "$products/command-engine-runtime" 2>/dev/null)"

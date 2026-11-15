@@ -168,9 +168,11 @@ fi
 export OMC_SWIFT_RUNTIME_LIB="$RUNTIME_LIB_PATH"
 SWIFT_ARGS+=(--manifest-cache none)
 
-# The Swift runtime an installed applet uses: exactly this toolchain's release, which the
-# command-engine-swift-<version> package installs in /usr/lib/command-engine/swift-<version>
-# (Private/linux-applet-install-design.md). Every program is linked to look there first, then in the
+# The Swift runtime an installed applet uses (Private/linux-applet-install-design.md, "Swift runtime
+# lines"): the folder of this toolchain's runtime line, /usr/lib/command-engine/swift-<line>, which the
+# command-engine-swift-<line> package installs. The line is the minor release (6.4) while
+# Linux/Packaging/swift-runtime-lines says it is rolling, or frozen and this patch is not past the one
+# it froze at; else the exact release (6.4.3). Every program is linked to look there first, then in the
 # toolchain's folder (so the products run here); Linux/make-applet-bundle.sh then trims what a bundle's
 # programs keep to BUNDLE_RUNPATH, written beside the products: the package's folder, and in a debug
 # build the toolchain's after it, so a debug bundle also runs on a build machine without the package.
@@ -178,11 +180,76 @@ SWIFT_ARGS+=(--manifest-cache none)
 # since it holds the bundle's whole path. Package.swift reads the folder for clang's links;
 # -Xlinker gives it to swiftc's (CommandApplet, ActionUI's helpers).
 SWIFT_RUNTIME_VERSION="$("$SWIFT" --version 2>&1 | /usr/bin/sed -n 's/^Swift version \([0-9][0-9.]*\).*/\1/p' | /usr/bin/head -n 1)"
-if [ -z "$SWIFT_RUNTIME_VERSION" ]; then
-    echo "Error: the Swift toolchain's version could not be read ($SWIFT --version)." >&2
+# A release toolchain says "(swift-6.4.2-RELEASE)"; a snapshot's runtime has no stable ABI of its own,
+# so the runtime packages refuse to be made from it (it may not go into a shared runtime line)
+SWIFT_VERSION_TEXT="$("$SWIFT" --version 2>&1 | /usr/bin/grep -v backtrac | /usr/bin/head -n 1)"
+case "$SWIFT_VERSION_TEXT" in
+    *-RELEASE\)*) SWIFT_IS_RELEASE=1 ;;
+    *) SWIFT_IS_RELEASE=0 ;;
+esac
+case "$SWIFT_RUNTIME_VERSION" in
+    [0-9]*.[0-9]*.[0-9]*) ;;
+    [0-9]*.[0-9]*) SWIFT_RUNTIME_VERSION="$SWIFT_RUNTIME_VERSION.0" ;; # "Swift version 6.4" is 6.4.0
+    *)
+        echo "Error: the Swift toolchain's version could not be read ($SWIFT --version: '$SWIFT_RUNTIME_VERSION')." >&2
+        exit 1
+        ;;
+esac
+SWIFT_MINOR="${SWIFT_RUNTIME_VERSION%.*}"
+SWIFT_PATCH="${SWIFT_RUNTIME_VERSION##*.}"
+case "$SWIFT_PATCH" in
+    ""|*[!0-9]*)
+        echo "Error: the Swift toolchain's version '$SWIFT_RUNTIME_VERSION' does not end in a patch number." >&2
+        exit 1
+        ;;
+esac
+RUNTIME_LINES_FILE="$SCRIPT_DIR/Linux/Packaging/swift-runtime-lines"
+if [ ! -r "$RUNTIME_LINES_FILE" ]; then
+    echo "Error: cannot read $RUNTIME_LINES_FILE." >&2
     exit 1
 fi
-ENGINE_SWIFT_FOLDER="/usr/lib/command-engine/swift-$SWIFT_RUNTIME_VERSION"
+RUNTIME_LINE=""
+# The table without comments, blank lines or carriage returns; "|| [ -n ... ]" keeps a last line
+# that has no newline.
+while read -r line_minor line_mode line_frozen_at line_rest || [ -n "$line_minor" ]; do
+    if [ "$line_minor" != "$SWIFT_MINOR" ]; then
+        continue
+    fi
+    if [ -n "$RUNTIME_LINE" ]; then
+        echo "Error: $RUNTIME_LINES_FILE: more than one line for Swift $SWIFT_MINOR." >&2
+        exit 1
+    fi
+    case "$line_mode" in
+        rolling) RUNTIME_LINE="$SWIFT_MINOR" ;;
+        frozen)
+            frozen_patch="${line_frozen_at##*.}"
+            case "$frozen_patch" in
+                ""|*[!0-9]*)
+                    echo "Error: $RUNTIME_LINES_FILE: '$SWIFT_MINOR frozen' needs the patch release it froze at (such as $SWIFT_MINOR.2)." >&2
+                    exit 1
+                    ;;
+            esac
+            if [ "${line_frozen_at%.*}" != "$SWIFT_MINOR" ]; then
+                echo "Error: $RUNTIME_LINES_FILE: '$SWIFT_MINOR frozen $line_frozen_at' names another minor release." >&2
+                exit 1
+            fi
+            if [ "$SWIFT_PATCH" -le "$frozen_patch" ]; then
+                RUNTIME_LINE="$SWIFT_MINOR"
+            else
+                RUNTIME_LINE="$SWIFT_RUNTIME_VERSION"
+            fi
+            ;;
+        *)
+            echo "Error: $RUNTIME_LINES_FILE: '$SWIFT_MINOR $line_mode' is neither rolling nor frozen." >&2
+            exit 1
+            ;;
+    esac
+done < <(/usr/bin/tr -d '\r' < "$RUNTIME_LINES_FILE" | /usr/bin/sed -e 's/#.*//' -e '/^[[:space:]]*$/d')
+if [ -z "$RUNTIME_LINE" ]; then
+    echo "Error: Swift $SWIFT_MINOR has no line in $RUNTIME_LINES_FILE: add '$SWIFT_MINOR rolling' to start its runtime line." >&2
+    exit 1
+fi
+ENGINE_SWIFT_FOLDER="/usr/lib/command-engine/swift-$RUNTIME_LINE"
 BUNDLE_RUNPATH="$ENGINE_SWIFT_FOLDER"
 if [ "$CONFIG" = "debug" ]; then
     BUNDLE_RUNPATH="$BUNDLE_RUNPATH:$RUNTIME_LIB_PATH"
@@ -228,7 +295,7 @@ fi
 
 # The Swift runtime the products need (see ENGINE_SWIFT_FOLDER above), for the bundles made from them
 # (Linux/make-applet-bundle.sh) and the runtime package (Linux/Packaging/make-swift-runtime-deb.sh)
-printf 'swift_version=%s\nruntime_folder=%s\nbundle_runpath=%s\n' "$SWIFT_RUNTIME_VERSION" "$RUNTIME_LIB_PATH" "$BUNDLE_RUNPATH" > "$PRODUCTS_PATH/command-engine-runtime"
+printf 'swift_version=%s\nswift_release=%s\nruntime_line=%s\nruntime_folder=%s\nbundle_runpath=%s\n' "$SWIFT_RUNTIME_VERSION" "$SWIFT_IS_RELEASE" "$RUNTIME_LINE" "$RUNTIME_LIB_PATH" "$BUNDLE_RUNPATH" > "$PRODUCTS_PATH/command-engine-runtime"
 status=$?
 if [ "$status" -ne 0 ]; then
     echo "Error: cannot write $PRODUCTS_PATH/command-engine-runtime." >&2

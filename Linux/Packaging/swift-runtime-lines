@@ -1,0 +1,21 @@
+# Linux/Packaging/swift-runtime-lines - which Swift runtime folder Command Engine applets of each Swift
+# minor release use (design: Private/linux-applet-install-design.md, "Swift runtime lines").
+#
+# One line per minor release:
+#
+#   <minor> rolling
+#       Every patch release of that minor shares /usr/lib/command-engine/swift-<minor>, the
+#       command-engine-swift-<minor> package, which apt upgrades in place to the newest patch. A new
+#       patch goes in only after check-swift-runtime-abi.sh finds no symbol removed or changed against
+#       the previous one and the previous engine releases' tests pass against it.
+#
+#   <minor> frozen <patch release>
+#       A later patch broke the runtime's ABI: /usr/lib/command-engine/swift-<minor> stays at
+#       <patch release> for good (applets built until then keep using it), and the engine built with
+#       any later patch of that minor uses its exact release's folder and package
+#       (/usr/lib/command-engine/swift-<minor>.<patch>, command-engine-swift-<minor>.<patch>).
+#
+# build-linux.sh reads it; a toolchain whose minor release has no line is refused, so that each new
+# minor release is entered here on purpose.
+
+6.4 rolling

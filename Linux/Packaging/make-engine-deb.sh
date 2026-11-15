@@ -13,7 +13,7 @@
 #   desktop, linux-app-entry.py and command-services.py, which an applet's install-applet.sh runs; a
 #   minimal Debian has no python3);
 # - the Swift runtime package of the toolchain the programs were built with,
-#   command-engine-swift-<version> (make-swift-runtime-deb.sh).
+#   command-engine-swift-<line> (make-swift-runtime-deb.sh; the line is in the products' command-engine-runtime).
 #
 # What one applet needs beyond that (WebKitGTK for a WebView, libshumate for a map, what its bundled
 # tools need) is the applet's own list, not this package's.
@@ -45,9 +45,15 @@ script_folder="$(CDPATH= cd -P -- "$(/usr/bin/dirname -- "$0")" && pwd)"
 omc_root="$(CDPATH= cd -P -- "$script_folder/../.." && pwd)"
 runtime_file="$products/command-engine-runtime"
 swift_version="$(/usr/bin/sed -n 's/^swift_version=//p' "$runtime_file" 2>/dev/null)"
+runtime_line="$(/usr/bin/sed -n 's/^runtime_line=//p' "$runtime_file" 2>/dev/null)"
+swift_release="$(/usr/bin/sed -n 's/^swift_release=//p' "$runtime_file" 2>/dev/null)"
+if [ "$swift_release" != "1" ]; then
+    printf 'The products were built with a Swift snapshot, not a release (%s): no runtime package from them\n' "$runtime_file" >&2
+    exit 1
+fi
 runtime_folder="$(/usr/bin/sed -n 's/^runtime_folder=//p' "$runtime_file" 2>/dev/null)"
-if [ -z "$swift_version" ] || [ -z "$runtime_folder" ]; then
-    printf 'No swift_version or runtime_folder in %s: build the products with build-linux.sh\n' "$runtime_file" >&2
+if [ -z "$swift_version" ] || [ -z "$runtime_line" ] || [ -z "$runtime_folder" ]; then
+    printf 'No swift_version, runtime_line or runtime_folder in %s: build the products with build-linux.sh\n' "$runtime_file" >&2
     exit 1
 fi
 engine_version="$(/usr/bin/sed -n 's/^OMC_BUNDLE_VERSION *= *\([0-9][0-9.]*\) *$/\1/p' "$omc_root/Common/OmcVersion.xcconfig")"
@@ -144,7 +150,7 @@ fi
     printf 'This package brings what every Command Engine applet needs from the system: the GTK and\n'
     printf 'libadwaita libraries, SVG icon support (librsvg2-common), https (glib-networking), the\n'
     printf 'symbolic icons (adwaita-icon-theme), python3 (adding an applet to the desktop), and the\n'
-    printf 'Swift %s runtime (command-engine-swift-%s).\n' "$swift_version" "$swift_version"
+    printf 'Swift %s runtime (command-engine-swift-%s).\n' "$swift_version" "$runtime_line"
     printf 'An applet that needs more (WebKitGTK for web pages, for one) says so itself.\n'
 } > "$root/usr/share/doc/$package/README"
 status=$?
@@ -160,7 +166,7 @@ installed_size="$(/usr/bin/du -sk "$root/usr" | /usr/bin/cut -f1)"
     printf 'Architecture: %s\n' "$architecture"
     printf 'Maintainer: Command Engine maintainers <maintainer@invalid>\n'
     printf 'Installed-Size: %s\n' "$installed_size"
-    printf 'Depends: %s, librsvg2-common, glib-networking, adwaita-icon-theme, python3, command-engine-swift-%s\n' "$library_depends" "$swift_version"
+    printf 'Depends: %s, librsvg2-common, glib-networking, adwaita-icon-theme, python3, command-engine-swift-%s (>= %s-1)\n' "$library_depends" "$runtime_line" "$swift_version"
     printf 'Suggests: command-engine-files-nautilus | command-engine-files-thunar | command-engine-files-dolphin\n'
     printf 'Section: misc\n'
     printf 'Priority: optional\n'
