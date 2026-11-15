@@ -840,6 +840,44 @@ check "a key with a dot and a percent sign is literal" "v" get value "$TMP/keys.
 # and an exit of 255 - a misleading way to say "not implemented".
 ok "batch reports unimplemented without a save error" batch "$TMP/utf8.json"
 
+# --- an empty string is not a conversion failure ------------------------------
+#
+# CreateUTF8StringFromCFString took a zero-length string for a failed UTF-8
+# conversion, so "get value" of an empty string and "get keys" of an empty
+# dictionary printed "problem converting UTF-16 string to UTF-8" (exit 0, empty
+# output). A script that keeps stderr, as AppletBuilder's edits do, showed it.
+
+# Run plister: exit 0, stdout as expected, and nothing at all on stderr
+check_quiet() { # <description> <expected stdout> <plister arguments...>
+    local desc="$1" expected="$2"
+    shift 2
+    local stderr_file="$TMP/stderr.txt"
+    local actual
+    actual=$("$PLISTER" "$@" 2> "$stderr_file")
+    local rc=$?
+    local stderr_text="$(/bin/cat "$stderr_file")"
+    if [ "$rc" = "0" ] && [ "$actual" = "$expected" ] && [ -z "$stderr_text" ]; then
+        echo "PASS: $desc"
+        PASS=$((PASS + 1))
+    else
+        echo "FAIL: $desc"
+        printf '      exit %s, stdout [%s], stderr [%s]\n' "$rc" "$actual" "$stderr_text"
+        FAIL=$((FAIL + 1))
+    fi
+}
+
+for empty_doc in "$TMP/empties.plist" "$TMP/empties.json"; do
+    ok "a document to read empties from ($empty_doc)" set dict "$empty_doc" /
+    ok "with an empty string in it"                  insert Empty string "" "$empty_doc" /
+    ok "and an empty dictionary"                     insert Nothing dict "$empty_doc" /
+    check_quiet "an empty string's value is empty, quietly"  "" get value "$empty_doc" /Empty
+    check_quiet "and its string form too"                   "" get string "$empty_doc" /Empty
+    check_quiet "an empty dictionary has no keys, quietly"  "" get keys "$empty_doc" /Nothing
+    check_quiet "and a count of 0"                          "0" get count "$empty_doc" /Nothing
+    ok "and a word"                                  insert Word string "word" "$empty_doc" /
+    check_quiet "a non-empty value still reads"             "word" get value "$empty_doc" /Word
+done
+
 # ─── Summary ─────────────────────────────────────────────────────────────────
 
 echo

@@ -784,9 +784,12 @@ std::string
 CreateUTF8StringFromCFString(CFStringRef inStrRef)
 {
     if(inStrRef == nullptr)
-    return std::string();
+        return std::string();
     
     CFIndex uniCount = ::CFStringGetLength(inStrRef);
+    //an empty string (an empty value, the keys of an empty dictionary) is not a conversion failure
+    if(uniCount == 0)
+        return std::string();
     if(uniCount > 0)
     {
         CFIndex maxCount = ::CFStringGetMaximumSizeForEncoding(uniCount, kCFStringEncodingUTF8 );
