@@ -9,7 +9,9 @@
 # - what the engine loads by name rather than links: librsvg2-common (GTK draws SVG icons, the
 #   applet's own and its buttons', through it; a KDE Plasma install lacks it), glib-networking (https
 #   for libsoup), adwaita-icon-theme (the symbolic icons the engine's windows use, absent outside GNOME
-#   unless something pulls it in);
+#   unless something pulls it in), python3 (the engine's Support scripts that add an applet to the
+#   desktop, linux-app-entry.py and command-services.py, which an applet's install-applet.sh runs; a
+#   minimal Debian has no python3);
 # - the Swift runtime package of the toolchain the programs were built with,
 #   command-engine-swift-<version> (make-swift-runtime-deb.sh).
 #
@@ -141,7 +143,8 @@ fi
     printf 'Command Engine %s\n\n' "$engine_version"
     printf 'This package brings what every Command Engine applet needs from the system: the GTK and\n'
     printf 'libadwaita libraries, SVG icon support (librsvg2-common), https (glib-networking), the\n'
-    printf 'symbolic icons (adwaita-icon-theme), and the Swift %s runtime (command-engine-swift-%s).\n' "$swift_version" "$swift_version"
+    printf 'symbolic icons (adwaita-icon-theme), python3 (adding an applet to the desktop), and the\n'
+    printf 'Swift %s runtime (command-engine-swift-%s).\n' "$swift_version" "$swift_version"
     printf 'An applet that needs more (WebKitGTK for web pages, for one) says so itself.\n'
 } > "$root/usr/share/doc/$package/README"
 status=$?
@@ -157,7 +160,7 @@ installed_size="$(/usr/bin/du -sk "$root/usr" | /usr/bin/cut -f1)"
     printf 'Architecture: %s\n' "$architecture"
     printf 'Maintainer: Command Engine maintainers <maintainer@invalid>\n'
     printf 'Installed-Size: %s\n' "$installed_size"
-    printf 'Depends: %s, librsvg2-common, glib-networking, adwaita-icon-theme, command-engine-swift-%s\n' "$library_depends" "$swift_version"
+    printf 'Depends: %s, librsvg2-common, glib-networking, adwaita-icon-theme, python3, command-engine-swift-%s\n' "$library_depends" "$swift_version"
     printf 'Suggests: command-engine-files-nautilus | command-engine-files-thunar | command-engine-files-dolphin\n'
     printf 'Section: misc\n'
     printf 'Priority: optional\n'

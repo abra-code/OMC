@@ -612,6 +612,32 @@ copy_executable() {
     ab_log "Executable updated: $dst_exe_name"
 }
 
+# Linux: the applet's install script, Contents/Linux/install-applet.sh (it checks what the applet
+# needs from the system and adds it to the desktop, also before the applet can start), copied from
+# AppletBuilder's own Resources/Linux on every build, so an applet always has the newest. Nothing on
+# macOS.
+update_linux_installer() {
+    local target_path="$1"
+    if ab_on_macos; then
+        return 0
+    fi
+    local installer_source="${OMC_APP_BUNDLE_PATH}/Contents/Resources/Linux/install-applet.sh"
+    local exe_folder="$(applet_executable_folder "$target_path")"
+    if [ ! -f "$installer_source" ]; then
+        ab_log "No install script in AppletBuilder ($installer_source): the applet gets none"
+        return 0
+    fi
+    /bin/mkdir -p "$exe_folder"
+    /bin/cp -- "$installer_source" "$exe_folder/install-applet.sh"
+    local copy_status=$?
+    if [ "$copy_status" -ne 0 ]; then
+        ab_log "Cannot copy the install script into $exe_folder"
+        return 1
+    fi
+    /bin/chmod 755 "$exe_folder/install-applet.sh"
+    return 0
+}
+
 # Install or update Abracode.framework and executable
 update_framework() {
     local target_path="$1"
@@ -1548,6 +1574,7 @@ applet_build() {
     fi
 
     update_framework "$project_path"
+    update_linux_installer "$project_path"
     update_python "$project_path"
 
     update_python_packages "$project_path"

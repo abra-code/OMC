@@ -347,6 +347,16 @@ if [ "$status" -ne 0 ]; then
 fi
 set_engine_runpath "$contents/Linux/$name"
 /bin/chmod 755 "$contents/Linux/$name"
+# The applet's install script (checks what it needs, adds it to the desktop): AppletBuilder's, which
+# AppletBuilder's own build copies into the applets it makes the same way (lib.build.sh)
+installer_source="$omc_root/Distribution/AppletBuilder.app/Contents/Resources/Linux/install-applet.sh"
+/bin/cp -- "$installer_source" "$contents/Linux/install-applet.sh"
+status=$?
+if [ "$status" -ne 0 ]; then
+    printf 'Cannot copy %s into the bundle\n' "$installer_source" >&2
+    exit 1
+fi
+/bin/chmod 755 "$contents/Linux/install-applet.sh"
 if [ -d "$contents/Resources/Scripts" ]; then
     /usr/bin/find "$contents/Resources/Scripts" -type f -exec /bin/chmod 755 {} +
 fi

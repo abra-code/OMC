@@ -51,6 +51,8 @@ applet_install_binaries() {
     /bin/mkdir -p "$exe_folder"
     /bin/cp "$builder_exe" "$exe_folder/$app_name"
     /bin/chmod +x "$exe_folder/$app_name"
+    # Linux: the applet's install script beside it (lib.build.sh; nothing on macOS)
+    update_linux_installer "$app_path"
 
     # Copy framework if AppletBuilder's is newer or destination doesn't have one
     local dest_fw="$app_path/Contents/Frameworks/Abracode.framework"

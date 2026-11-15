@@ -65,6 +65,10 @@
 	</array>
 	<key>CFBundleVersion</key>
 	<string>6.0.0</string>
+	<key>CommandEngineLinuxRequires</key>
+	<array>
+		<string>libwebkitgtk-6.0.so.4</string>
+	</array>
 	<key>DTCompiler</key>
 	<string>com.apple.compilers.llvm.clang.1_0</string>
 	<key>DTPlatformBuild</key>
