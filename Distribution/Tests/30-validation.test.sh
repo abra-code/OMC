@@ -291,6 +291,32 @@ check "test --filter"                          "2" "$(cli_capped 10 test --filte
 # the same argv typo one token longer.
 check "and an option is not a value"           "2" "$(cli_capped 10 create --name --python)"
 
+section "13c. create: a bare name is a template's, and only an applet is copied"
+# A bare --template name that was also a folder in the current directory took the folder,
+# so "ActionUI" run from ~/git copied the ActionUI repository and then failed on its missing
+# Info.plist with a message about the URL scheme. Now the template comes first, and anything
+# that is not an applet stops the command before a copy.
+tpl_work="$OMCTEST_WORK/template-lookup"
+/bin/mkdir -p "$tpl_work/cwd/Empty/inside" "$tpl_work/cwd/NotATemplate" "$tpl_work/dest"
+tpl_status="$(cd "$tpl_work/cwd" && "$AB_AGENTS/appletbuilder" create --template Empty --name FromTemplate --dest "$tpl_work/dest" >/dev/null 2>&1; printf '%s' "$?")"
+check "a bare name beside a folder of that name takes the template" "0|yes" \
+    "$tpl_status|$([ -f "$tpl_work/dest/FromTemplate.app/Contents/Info.plist" ] && echo yes || echo no)"
+tpl_status="$(cd "$tpl_work/cwd" && "$AB_AGENTS/appletbuilder" create --template NotATemplate --name FromFolder --dest "$tpl_work/dest" >/dev/null 2>&1; printf '%s' "$?")"
+check "a folder that is not an applet is a usage error, nothing copied" "2|no" \
+    "$tpl_status|$([ -e "$tpl_work/dest/FromFolder.app" ] && echo yes || echo no)"
+tpl_message="$(cd "$tpl_work/cwd" && "$AB_AGENTS/appletbuilder" create --template NoSuchTemplate --name Missing --dest "$tpl_work/dest" 2>&1 >/dev/null)"
+tpl_found="no: $tpl_message"
+case "$tpl_message" in
+    *"no template named 'NoSuchTemplate'"*) tpl_found="yes" ;;
+esac
+check "an unknown name says there is no such template" "yes" "$tpl_found"
+"$AB_AGENTS/appletbuilder" create --clone "$tpl_work/cwd/NotATemplate" --name Cloned --dest "$tpl_work/dest" >/dev/null 2>&1
+check "a clone of a folder that is not an applet is a usage error" "2" "$?"
+/bin/mkdir -p "$tpl_work/cwd/Mine.app/Contents"
+/bin/cp "$tpl_work/dest/FromTemplate.app/Contents/Info.plist" "$tpl_work/cwd/Mine.app/Contents/Info.plist"
+tpl_status="$(cd "$tpl_work/cwd" && "$AB_AGENTS/appletbuilder" create --template Mine.app --name FromCwd --dest "$tpl_work/dest" >/dev/null 2>&1; printf '%s' "$?")"
+check "an applet folder in the current directory is still taken by bare name" "0" "$tpl_status"
+
 section "14. the manifest editor's operations, called directly"
 # plist_edit.py holds the rules for what a new command looks like. Its op_*
 # functions take a dict and mutate it with no I/O, so they can be called
