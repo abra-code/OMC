@@ -1,0 +1,11 @@
+{
+    "KPlugin": {
+        "Name": "Command applet services",
+        "Description": "Services of the Command applets for the selected files, and Launch for an applet bundle",
+        "Icon": "system-run",
+        "MimeTypes": [
+            "application/octet-stream",
+            "inode/directory"
+        ]
+    }
+}

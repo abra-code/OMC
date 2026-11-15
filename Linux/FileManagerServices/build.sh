@@ -8,6 +8,11 @@
 # - GNOME Files (Nautilus/): libcommand-services-nautilus.so, when libnautilus-extension.so.4 is
 #   installed and its headers are: the libnautilus-extension-dev package, or --nautilus-headers
 #   <folder holding libnautilus-extension/> (the installed version's headers from its source).
+# - Thunar, Xfce's (Thunar/): libcommand-services-thunar.so, when libthunarx-3.so.0 is installed
+#   and its development files are (libthunarx-3-dev: pkg-config thunarx-3).
+# - Dolphin, KDE Plasma's (Dolphin/): command-services-dolphin.so, a KIO file item action, when
+#   KIO 6 (libKF6KIOWidgets.so.6) is installed and CMake, extra-cmake-modules and KIO's and Qt's
+#   development files are (cmake extra-cmake-modules libkf6kio-dev qt6-base-dev).
 #
 # Usage: build.sh <output folder> [--nautilus-headers <folder>]
 #        (the core test in <output folder>/core, each plug-in in <output folder>/<file manager>)
@@ -80,6 +85,46 @@ else
             exit 1
         fi
         printf 'The GNOME Files plug-in: %s (Nautilus/install.sh installs it)\n' "$out/nautilus/libcommand-services-nautilus.so"
+    fi
+fi
+
+# Thunar
+thunar_library="$(/bin/ls /usr/lib/*/libthunarx-3.so.0 /usr/lib64/libthunarx-3.so.0 /usr/lib/libthunarx-3.so.0 2>/dev/null | /usr/bin/head -n 1)"
+if [ -z "$thunar_library" ]; then
+    printf 'The Thunar plug-in is not built: Thunar is not installed here.\n'
+else
+    /usr/bin/pkg-config --exists thunarx-3 2>/dev/null
+    status=$?
+    if [ "$status" -ne 0 ]; then
+        printf 'The Thunar plug-in is not built: no extension headers (install libthunarx-3-dev).\n'
+    else
+        /bin/bash "$here/Thunar/build.sh" "$out/thunar"
+        status=$?
+        if [ "$status" -ne 0 ]; then
+            printf 'the Thunar plug-in did not build or its tests failed (Thunar/build.sh status %s)\n' "$status" >&2
+            exit 1
+        fi
+        printf 'The Thunar plug-in: %s (Thunar/install.sh installs it)\n' "$out/thunar/libcommand-services-thunar.so"
+    fi
+fi
+
+# Dolphin (KIO)
+kio_library="$(/bin/ls /usr/lib/*/libKF6KIOWidgets.so.6 /usr/lib64/libKF6KIOWidgets.so.6 /usr/lib/libKF6KIOWidgets.so.6 2>/dev/null | /usr/bin/head -n 1)"
+if [ -z "$kio_library" ]; then
+    printf 'The Dolphin plug-in is not built: KIO 6 (KDE Plasma 6) is not installed here.\n'
+else
+    kio_config="$(/bin/ls /usr/lib/*/cmake/KF6KIO/KF6KIOConfig.cmake /usr/lib64/cmake/KF6KIO/KF6KIOConfig.cmake /usr/lib/cmake/KF6KIO/KF6KIOConfig.cmake 2>/dev/null | /usr/bin/head -n 1)"
+    ecm_config="$(/bin/ls /usr/share/ECM/cmake/ECMConfig.cmake 2>/dev/null | /usr/bin/head -n 1)"
+    if [ ! -x /usr/bin/cmake ] || [ -z "$kio_config" ] || [ -z "$ecm_config" ]; then
+        printf 'The Dolphin plug-in is not built: no CMake, KIO or ECM development files (install cmake extra-cmake-modules libkf6kio-dev qt6-base-dev).\n'
+    else
+        /bin/bash "$here/Dolphin/build.sh" "$out/dolphin"
+        status=$?
+        if [ "$status" -ne 0 ]; then
+            printf 'the Dolphin plug-in did not build or its tests failed (Dolphin/build.sh status %s)\n' "$status" >&2
+            exit 1
+        fi
+        printf 'The Dolphin plug-in: %s (Dolphin/install.sh installs it)\n' "$out/dolphin/command-services-dolphin.so"
     fi
 fi
 exit 0
