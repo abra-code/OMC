@@ -20,6 +20,11 @@
 #                 - for an applet with file services: their list, and whether this desktop's file
 #                   manager has the plug-in that shows them (GNOME Files, Dolphin, Thunar), or that
 #                   this desktop has none.
+#   --install-packages [--yes]
+#                 installs the distribution packages of the libraries the applet lists that are
+#                 missing, for the ones the script knows a package of (apt on Debian and Ubuntu,
+#                 dnf on Fedora), after the user agrees: asked in a terminal, or --yes. As root
+#                 directly, else with sudo in a terminal or pkexec without one.
 #   --register    adds this copy to the desktop's app list and lists its file services (the engine's
 #                 linux-app-entry.py and command-services.py, with the system's python3), then
 #                 checks the file manager plug-in.
@@ -38,13 +43,16 @@
 # 2 bad arguments or not inside an applet bundle.
 
 mode="$1"
-if [ $# -ne 1 ]; then
+assume_yes=0
+if [ $# -eq 2 ] && [ "$1" = "--install-packages" ] && [ "$2" = "--yes" ]; then
+    assume_yes=1
+elif [ $# -ne 1 ]; then
     mode=""
 fi
 case "$mode" in
-    --check|--register|--unregister|--status|--decline) ;;
+    --check|--register|--unregister|--status|--decline|--install-packages) ;;
     *)
-        printf 'Usage: %s --check | --register | --unregister | --status | --decline\n' "$0" >&2
+        printf 'Usage: %s --check | --install-packages [--yes] | --register | --unregister | --status | --decline\n' "$0" >&2
         exit 2
         ;;
 esac
@@ -75,27 +83,84 @@ missing_linked_libraries() { # <ELF file>
         -e "s/^.*[[:space:]/]\([^[:space:]/]*\): version \`\([^']*\)' not found.*/\2 (\1 is older)/p"
 }
 
+# The family of this distribution for package names and the package manager: "debian" (Debian,
+# Ubuntu and their derivatives), "fedora", or nothing (from /etc/os-release, ID and ID_LIKE)
+distribution_family() {
+    local ids=""
+    if [ -f /etc/os-release ]; then
+        ids="$(/usr/bin/sed -n 's/^ID=//p; s/^ID_LIKE=//p' /etc/os-release | /usr/bin/tr -d '"' | /usr/bin/tr '\n' ' ')"
+    fi
+    case " $ids " in
+        *" debian "*|*" ubuntu "*) printf 'debian' ;;
+        *" fedora "*) printf 'fedora' ;;
+    esac
+}
+
 # The package that has <soname> on this distribution, for the libraries Command Engine applets load by
 # name; empty for one it does not know
 library_package() { # <soname>
-    local family=""
-    if [ -f /etc/os-release ]; then
-        family="$(/usr/bin/sed -n 's/^ID=//p; s/^ID_LIKE=//p' /etc/os-release | /usr/bin/tr -d '"' | /usr/bin/tr '\n' ' ')"
-    fi
-    case " $family " in
-        *" debian "*|*" ubuntu "*)
+    case "$(distribution_family)" in
+        debian)
             case "$1" in
                 libwebkitgtk-6.0.so.4) printf 'libwebkitgtk-6.0-4' ;;
                 libshumate-1.0.so.1) printf 'libshumate-1.0-1' ;;
             esac
             ;;
-        *" fedora "*)
+        fedora)
             case "$1" in
                 libwebkitgtk-6.0.so.4) printf 'webkitgtk6.0' ;;
                 libshumate-1.0.so.1) printf 'libshumate' ;;
             esac
             ;;
     esac
+}
+
+# The shared library cache (ldconfig -p), for soname_found
+library_cache() {
+    local ldconfig=/usr/sbin/ldconfig
+    if [ ! -x "$ldconfig" ]; then
+        ldconfig=/sbin/ldconfig
+    fi
+    "$ldconfig" -p 2>/dev/null
+}
+
+# Whether <soname> is in <cache> (library_cache). A cache line is "<tab><soname> (<flags>) =>
+# <path>": anchored on both sides, so that libfoo.so.1 is neither libfoo.so.10 nor libxfoo.so.1.
+soname_found() { # <cache> <soname>
+    case "$1" in
+        *$'\t'"$2 ("*) return 0 ;;
+    esac
+    return 1
+}
+
+# The libraries the applet loads by name, from its Info.plist (CommandEngineLinuxRequires), one
+# per line
+required_sonames() {
+    local index=0
+    local soname
+    while true; do
+        soname="$("$plister" get value "$info_plist" "/CommandEngineLinuxRequires/$index" 2>/dev/null)"
+        local get_status=$?
+        if [ "$get_status" -ne 0 ] || [ -z "$soname" ]; then
+            break
+        fi
+        printf '%s\n' "$soname"
+        index=$((index + 1))
+    done
+}
+
+# Whether Command Engine runs here: the bundle's plister loads (status 126 or 127 when its
+# libraries are missing)
+engine_runs() {
+    if [ ! -x "$plister" ]; then
+        return 1
+    fi
+    "$plister" get value "$info_plist" /CFBundleIdentifier > /dev/null 2>&1
+    local engine_status=$?
+    if [ "$engine_status" -eq 127 ] || [ "$engine_status" -eq 126 ]; then
+        return 1
+    fi
+    return 0
 }
 
 # The data home desktop entries and services lists go to (as linux-app-entry.py takes it)
@@ -222,9 +287,7 @@ check() {
         missing_count=$((missing_count + 1))
         return
     fi
-    "$plister" get value "$info_plist" /CFBundleIdentifier > /dev/null 2>&1
-    local engine_status=$?
-    if [ "$engine_status" -eq 127 ] || [ "$engine_status" -eq 126 ]; then
+    if ! engine_runs; then
         printf 'Command Engine is not installed here: install the command-engine package (with its Swift\n'
         printf 'runtime package) first; it brings everything the applet needs to start.\n'
         missing_count=$((missing_count + 1))
@@ -232,37 +295,26 @@ check() {
     fi
 
     # Libraries loaded by name, from the applet's own list
-    local ldconfig=/usr/sbin/ldconfig
-    if [ ! -x "$ldconfig" ]; then
-        ldconfig=/sbin/ldconfig
-    fi
     local cache
-    cache="$("$ldconfig" -p 2>/dev/null)"
-    local index=0
+    cache="$(library_cache)"
     local soname
-    while true; do
-        soname="$("$plister" get value "$info_plist" "/CommandEngineLinuxRequires/$index" 2>/dev/null)"
-        local get_status=$?
-        if [ "$get_status" -ne 0 ] || [ -z "$soname" ]; then
-            break
+    while IFS= read -r soname; do
+        if [ -z "$soname" ]; then
+            continue
         fi
-        # A cache line is "<tab><soname> (<flags>) => <path>": anchored on both sides, so that
-        # libfoo.so.1 is neither libfoo.so.10 nor libxfoo.so.1
-        case "$cache" in
-            *$'\t'"$soname ("*) printf 'Required library %s: found\n' "$soname" ;;
-            *)
-                local package
-                package="$(library_package "$soname")"
-                if [ -n "$package" ]; then
-                    printf 'Required library %s: MISSING (package %s)\n' "$soname" "$package"
-                else
-                    printf 'Required library %s: MISSING (no package known here; on Debian, apt-file search %s)\n' "$soname" "$soname"
-                fi
-                missing_count=$((missing_count + 1))
-                ;;
-        esac
-        index=$((index + 1))
-    done
+        if soname_found "$cache" "$soname"; then
+            printf 'Required library %s: found\n' "$soname"
+            continue
+        fi
+        local package
+        package="$(library_package "$soname")"
+        if [ -n "$package" ]; then
+            printf 'Required library %s: MISSING (package %s; install-applet.sh --install-packages installs it)\n' "$soname" "$package"
+        else
+            printf 'Required library %s: MISSING (no package known here; on Debian, apt-file search %s)\n' "$soname" "$soname"
+        fi
+        missing_count=$((missing_count + 1))
+    done < <(required_sonames)
 
     # The applet's own programs and libraries: everything in the bundle but the engine's
     # (Contents/Linux, Contents/Frameworks) that is an ELF file: a program (executable) or a shared
@@ -351,6 +403,119 @@ check() {
     esac
 }
 
+# --install-packages: the distribution packages of the libraries the applet lists
+# (CommandEngineLinuxRequires) that are not installed, for the ones this script knows a package of
+# (library_package), with apt (Debian, Ubuntu) or dnf (Fedora), after the user agrees: asked in a
+# terminal, or --yes (the engine passes it once the user said so in its own window). Run as root it
+# installs directly; else through sudo in a terminal, pkexec without one. The file manager plug-in
+# packages are not in any distribution's archive: --check names the one this desktop needs.
+# Returns 0 when nothing is missing or everything missing was installed; 1 while a library no
+# package is known for is missing.
+install_packages() {
+    if ! engine_runs; then
+        printf 'Command Engine is not installed here: install the command-engine package (with its Swift\n'
+        printf 'runtime package) first.\n'
+        return 1
+    fi
+    local cache
+    cache="$(library_cache)"
+    local packages=()
+    local unknown=""
+    local soname
+    while IFS= read -r soname; do
+        if [ -z "$soname" ]; then
+            continue
+        fi
+        if soname_found "$cache" "$soname"; then
+            continue
+        fi
+        local package
+        package="$(library_package "$soname")"
+        if [ -n "$package" ]; then
+            packages+=("$package")
+        else
+            unknown="$unknown $soname"
+        fi
+    done < <(required_sonames)
+    if [ -n "$unknown" ]; then
+        printf 'No package known here for:%s (on Debian, apt-file search <library> finds it)\n' "$unknown"
+    fi
+    if [ ${#packages[@]} -eq 0 ]; then
+        if [ -n "$unknown" ]; then
+            return 1
+        fi
+        printf 'Every library %s lists is installed.\n' "$name"
+        return 0
+    fi
+
+    # The package manager of the distribution the package names are for (library_package)
+    local manager=()
+    local family
+    family="$(distribution_family)"
+    if [ "$family" = "debian" ] && [ -x /usr/bin/apt-get ]; then
+        manager=(/usr/bin/apt-get install -y)
+    elif [ "$family" = "fedora" ] && [ -x /usr/bin/dnf ]; then
+        manager=(/usr/bin/dnf install -y)
+    else
+        printf 'No apt-get (Debian, Ubuntu) or dnf (Fedora) here: install these with the system'"'"'s package manager: %s\n' "${packages[*]}"
+        return 1
+    fi
+    printf '%s needs: %s\n' "$name" "${packages[*]}"
+
+    if [ "$assume_yes" -ne 1 ]; then
+        if [ ! -t 0 ]; then
+            printf 'Not installed: run this in a terminal to be asked, or with --yes.\n'
+            return 1
+        fi
+        local answer=""
+        printf 'Install them now (%s)? [y/N] ' "${manager[0]##*/}"
+        read -r answer
+        local read_status=$?
+        if [ "$read_status" -ne 0 ]; then
+            printf '\n' # the end of input: the prompt's line is ended
+        fi
+        case "$answer" in
+            y|Y|yes|Yes) ;;
+            *)
+                printf 'Not installed.\n'
+                return 1
+                ;;
+        esac
+    fi
+
+    local uid
+    uid="$(/usr/bin/id -u)"
+    local runner=()
+    if [ "$uid" = "0" ]; then
+        runner=()
+    elif [ -t 0 ] && [ -x /usr/bin/sudo ]; then
+        runner=(/usr/bin/sudo)
+    elif [ -x /usr/bin/pkexec ]; then
+        runner=(/usr/bin/pkexec)
+    else
+        printf 'Installing needs root: run as root: %s %s\n' "${manager[*]}" "${packages[*]}"
+        return 1
+    fi
+    "${runner[@]}" "${manager[@]}" "${packages[@]}"
+    local install_status=$?
+    if [ "$install_status" -ne 0 ]; then
+        # sudo (a user not in sudoers) and pkexec (no authentication agent: 127, dismissed: 126)
+        # fail with their own status, before the package manager runs
+        if [ ${#runner[@]} -ne 0 ]; then
+            printf 'The installation failed (%s %s status %s). As root: %s %s\n' "${runner[0]##*/}" "${manager[0]##*/}" "$install_status" "${manager[*]}" "${packages[*]}"
+        else
+            printf 'The installation failed (%s status %s).\n' "${manager[0]##*/}" "$install_status"
+        fi
+        return 1
+    fi
+    printf 'Installed: %s\n' "${packages[*]}"
+    # The libraries no package is known for are still missing
+    if [ -n "$unknown" ]; then
+        return 1
+    fi
+    return 0
+}
+
 # Runs <script> <action> on the bundle with the system's python3, printing its output; returns its status
 run_support_script() { # <script> <install|uninstall>
     if [ ! -x /usr/bin/python3 ]; then
@@ -368,6 +533,10 @@ case "$mode" in
             exit 1
         fi
         exit 0
+        ;;
+    --install-packages)
+        install_packages
+        exit $?
         ;;
     --register)
         run_support_script linux-app-entry.py install
