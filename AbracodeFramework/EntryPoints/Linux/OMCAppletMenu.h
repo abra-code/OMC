@@ -14,6 +14,9 @@
 //  - the applet's MainMenu.json: its Buttons run the command their actionID names, a CommandMenu
 //    with "autoPopulate" is the Commands menu (every command of the command file, in submenus by
 //    SUBMENU_NAME, OMCMenuModel.h);
+//  - Add to Desktop / Remove from Desktop, before About: this copy's place on the desktop's app list
+//    and in the file managers' Services (Platform/Linux/OMCDesktopRegistration.h), shown once the
+//    applet's install script has told it (actionUIReplaceMenuBarJSON);
 //  - Quit (Ctrl+Q).
 //  A MainMenu.json CommandGroup "replacing" New, Open, their group (newItem), the File menu, or Quit
 //  (quit, appTermination) takes OMC's item away, as it takes the standard item away on macOS.

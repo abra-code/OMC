@@ -10,6 +10,7 @@
 #include "OMCCommandRunner.h"
 #include "OMCActionUIWindow.h"
 #include "OMCAppShell.h"
+#include "Linux/OMCDesktopRegistration.h"
 #include "OMCLog.h"
 #include "ACFString.h"
 #include "ACFJSON.h"
@@ -30,7 +31,7 @@ namespace
 // What a chosen item does: run a command (by id or name), or one of OMC's own items
 struct MenuCommand
 {
-	enum class Kind { Command, MainCommand, Quit, RecentFile, ClearRecent };
+	enum class Kind { Command, MainCommand, Quit, RecentFile, ClearRecent, Desktop };
 	Kind kind {Kind::Command};
 	CFObj<CFStringRef> command;
 	size_t recentIndex {0}; // RecentFile: which of MenuState::recentURIs
@@ -46,6 +47,8 @@ struct MenuState
 	std::vector<std::string> recentURIs; // the files Open Recent shows now, in its order
 	std::string recentJSON; // what Open Recent was last loaded from (see RebuildOpenRecent)
 	gint64 recentClearedAt {0}; // Clear Menu's time (microseconds since 1970), from the applet's state file
+	OMCDesktopState desktopState {kOMCDesktopStateUnknown}; // the Add/Remove from Desktop item's (OMCDesktopRegistration.h)
+	std::string desktopJSON; // what that item was last loaded from
 };
 
 MenuState *sMenu = nullptr; // made once, for the life of the app
@@ -56,6 +59,8 @@ const char *kQuitActionID = "omc.menu.quit";
 const char *kRecentKey = "omc.open-recent"; // the menu part actionUIReplaceMenuBarJSON keeps current
 const char *kClearRecentActionID = "omc.menu.recent.clear";
 const size_t kRecentLimit = 10; // as macOS's Open Recent
+const char *kDesktopKey = "omc.desktop"; // the menu part with Add to Desktop / Remove from Desktop
+const char *kDesktopActionID = "omc.menu.desktop";
 
 void RebuildOpenRecent();
 void ClearRecentFiles();
@@ -123,6 +128,15 @@ HandleMenuAction(const char *inActionID, const char *inWindowUUID, int64_t inVie
 
 		case MenuCommand::Kind::ClearRecent:
 			ClearRecentFiles();
+			break;
+
+		case MenuCommand::Kind::Desktop:
+			// The item says what it does for the state it shows; the listener changes its title once
+			// the script has done it
+			if(sMenu->desktopState == kOMCDesktopStateOnDesktop)
+				OMCRemoveFromDesktop();
+			else
+				OMCAddToDesktop();
 			break;
 
 		case MenuCommand::Kind::Command:
@@ -509,6 +523,41 @@ RebuildOpenRecent()
 	sMenu->recentJSON = text;
 }
 
+// The desktop part of the menu, before About (appInfo), as GNOME's primary menu ends with the app's
+// own items: Add to Desktop when this copy is not on the desktop's app list, Remove from Desktop when
+// it is (OMCDesktopRegistration.h)
+void
+DesktopStateChanged(OMCDesktopState inState, void *inContext)
+{
+	(void)inContext;
+	if((sMenu == nullptr) || (inState == kOMCDesktopStateUnknown))
+		return;
+	sMenu->desktopState = inState;
+	CFObj<CFMutableArrayRef> items(CreateMutableArray());
+	CFObj<CFDictionaryRef> button(CreateButton((inState == kOMCDesktopStateOnDesktop) ? CFSTR("Remove from Desktop") : CFSTR("Add to Desktop"),
+												CFSTR("omc.menu.desktop"), nullptr));
+	CFArrayAppendValue(items, button);
+	CFObj<CFDictionaryRef> group(CreateCommandGroup(CFSTR("before"), CFSTR("appInfo"), items));
+	CFObj<CFMutableArrayRef> elements(CreateMutableArray());
+	CFArrayAppendValue(elements, group);
+	ACFJSONWriteStatus status = kACFJSONWriteOK;
+	CFObj<CFDataRef> json(ACFJSONCreateData(elements, &status));
+	if(json == nullptr)
+	{
+		OMCLogMessage("the desktop menu item could not be written as JSON (status %d)", (int)status);
+		return;
+	}
+	std::string text((const char *)CFDataGetBytePtr(json), (size_t)CFDataGetLength(json));
+	if(text == sMenu->desktopJSON)
+		return;
+	if(!actionUIReplaceMenuBarJSON(kDesktopKey, text.c_str()))
+	{
+		OMCLogMessage("ActionUI did not load the desktop menu item");
+		return;
+	}
+	sMenu->desktopJSON = text;
+}
+
 // The applet's own state file, where Clear Menu's time is kept: the user's state folder
 // ($XDG_STATE_HOME, else ~/.local/state), in a folder named by the applet's bundle identifier
 std::string
@@ -703,6 +752,11 @@ OMCInstallAppletMenu(CFArrayRef inMainMenuElements, CFStringRef inCommandFile, c
 		}
 		sMenu->items.emplace(kClearRecentActionID, MenuCommand{MenuCommand::Kind::ClearRecent, nullptr});
 	}
+
+	// Add to Desktop / Remove from Desktop: shown once the applet's install script has told the
+	// state (OMCOfferDesktopRegistration, at the end of the launch)
+	sMenu->items.emplace(kDesktopActionID, MenuCommand{MenuCommand::Kind::Desktop, nullptr});
+	OMCSetDesktopStateListener(DesktopStateChanged, nullptr);
 
 	for(const auto &item : sMenu->items)
 		(void)actionUIRegisterActionHandler(item.first.c_str(), HandleMenuAction);
