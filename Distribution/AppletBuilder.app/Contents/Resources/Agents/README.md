@@ -35,6 +35,9 @@ appletbuilder create (--template <name|path> | --clone <App.app>) \
 
 - `--template <name|path>` — a template name from `list-templates` (e.g.
   `"ActionUI Window"`) or a path to a `.applet`/`.app` to copy.
+  A bare name means a bundled template; a folder of that name in the current
+  directory is used only when no template has that name. Either way it must be an applet (with
+  `Contents/Info.plist`), or `create` stops with exit 2 before copying anything.
 - `--clone <App.app>` — clone an existing applet instead of a template (Python use
   is auto-detected from its scripts).
 - `--name` — the applet name; also becomes the executable name and script prefix.

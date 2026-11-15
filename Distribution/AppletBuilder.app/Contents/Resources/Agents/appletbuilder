@@ -152,18 +152,35 @@ cmd_create() {
     if [ -n "$clone" ]; then
         template_path="$clone"; is_clone="1"
     elif [ -n "$template" ]; then
+        # A bare name is a bundled template's; a folder of that name in the current directory
+        # only when no template has it (a bare "ActionUI" run from a folder holding a repository
+        # of that name copied the whole repository as the template).
         case "$template" in
             */*) template_path="$template" ;;
             *)
-                if [ -d "$template" ]; then
+                template_path="$APP_BUNDLE/Contents/Resources/Templates/${template}.applet"
+                if [ ! -d "$template_path" ] && [ -d "$template" ]; then
                     template_path="$template"
-                else
-                    template_path="$APP_BUNDLE/Contents/Resources/Templates/${template}.applet"
                 fi
                 ;;
         esac
     else
         echo "create: --template <name|path> or --clone <App.app> is required" >&2
+        return 2
+    fi
+    # Checked before anything is copied: an applet has its Info.plist.
+    if [ ! -f "$template_path/Contents/Info.plist" ]; then
+        local given="${clone:-$template}"
+        if [ -d "$template_path" ]; then
+            echo "create: '$given' is not an applet (no Contents/Info.plist)" >&2
+        elif [ -n "$is_clone" ]; then
+            echo "create: '$clone' not found" >&2
+        else
+            case "$template" in
+                */*) echo "create: '$template' not found" >&2 ;;
+                *) echo "create: no template named '$template' (see 'appletbuilder list-templates'), and no folder of that name here" >&2 ;;
+            esac
+        fi
         return 2
     fi
 
