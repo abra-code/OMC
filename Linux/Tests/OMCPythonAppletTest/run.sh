@@ -43,6 +43,9 @@ if [ -z "$WAYLAND_DISPLAY" ] && [ -z "$DISPLAY" ]; then
     export DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$uid/bus"
 fi
 export SWIFT_BACKTRACE=enable=no
+# The applet under test is not on the desktop's app list: no first-launch question, which would keep
+# it from quitting once idle (Platform/Linux/OMCDesktopRegistration.h)
+export COMMAND_ENGINE_NO_DESKTOP_PROMPT=1
 
 passed=0
 failed=0
