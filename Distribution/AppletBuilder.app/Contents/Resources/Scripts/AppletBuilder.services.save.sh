@@ -21,6 +21,16 @@ if [ -z "$menu_title" ] || [ -z "$command_id" ]; then
 fi
 
 plist_edit "$plist" update_service "$svc_index" "$menu_title" "$command_id" "$input_type"
+edit_status=$?
+if [ "$edit_status" -ne 0 ]; then
+    set_value "$SVC_STATUS_ID" "Error saving service"
+    exit 1
+fi
 
-set_value "$SVC_STATUS_ID" "Service saved"
+if [ "$input_type" = "text" ] && ! ab_on_macos; then
+    # Linux file managers pass files: a text service is offered on macOS only
+    set_value "$SVC_STATUS_ID" "Service saved; text input: a macOS Services menu item only"
+else
+    set_value "$SVC_STATUS_ID" "Service saved"
+fi
 "$next_cmd" "${OMC_CURRENT_COMMAND_GUID}" "AppletBuilder.services.reload"

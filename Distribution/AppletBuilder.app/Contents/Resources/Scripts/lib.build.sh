@@ -202,6 +202,40 @@ applet_desktop_entry() {
     return "$entry_status"
 }
 
+# Linux: brings the file managers' Services list of an applet on the desktop up to date with its
+# Info.plist (command-services.py install, which also removes the list when no file service is
+# left), after the General pane's Services were edited. Nothing on macOS or for an applet with no
+# desktop entry: adding it to the desktop lists its services. Prints the tool's last line and
+# returns its status; 0 when there is nothing to do.
+applet_services_update() {
+    local app_path="$1"
+    if ab_on_macos; then
+        return 0
+    fi
+    local existing_entry
+    existing_entry="$(applet_desktop_entry_file "$app_path")"
+    if [ -z "$existing_entry" ]; then
+        return 0
+    fi
+    local services_tool="$support_tools/command-services.py"
+    if [ ! -f "$services_tool" ]; then
+        services_tool="$own_support_tools/command-services.py"
+    fi
+    local services_python="$python3"
+    if [ ! -x "$services_python" ]; then
+        services_python="/usr/bin/python3"
+    fi
+    if [ ! -f "$services_tool" ] || [ ! -x "$services_python" ]; then
+        printf 'no command-services.py in the framework, or no python3\n'
+        return 2
+    fi
+    local services_output
+    services_output="$("$services_python" "$services_tool" install "$app_path" 2>&1)"
+    local services_status=$?
+    printf '%s\n' "$services_output" | /usr/bin/tail -n 1
+    return "$services_status"
+}
+
 # Linux: prints the applet's desktop entry file and returns 0 when it is on the desktop's app list
 # (<data home>/applications/<CFBundleIdentifier>.desktop, the data home as linux-app-entry.py
 # takes it: an absolute $XDG_DATA_HOME, else ~/.local/share); returns 1, printing nothing, when not.

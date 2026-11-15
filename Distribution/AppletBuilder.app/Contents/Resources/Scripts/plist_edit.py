@@ -5,7 +5,10 @@ Called by the plist_edit() shell function in lib.plist.sh.
 The shell function handles plist <-> JSON conversion.
 This script operates on the JSON file directly.
 
-Usage: plist_edit.py <json_file> <operation> [args...]
+Usage: plist_edit.py [--plist] <json_file> <operation> [args...]
+
+With --plist the file is a property list (XML or binary) instead, read and written in place with
+plistlib in the format it has: Linux has no plutil for the JSON round trip.
 
 Read-only operations (the file is not written; command_text() in lib.plist.sh):
   print_command <index>   the command at <index> of COMMAND_LIST as indented JSON
@@ -13,20 +16,35 @@ Read-only operations (the file is not written; command_text() in lib.plist.sh):
 """
 
 import json
+import plistlib
 import sys
 
 
 def main():
-    if len(sys.argv) < 3:
-        print("Usage: plist_edit.py <json_file> <operation> [args...]", file=sys.stderr)
+    arguments = sys.argv[1:]
+    # --plist: the file is a property list (XML or binary), read and written with plistlib in the
+    # format it has; for Linux, which has no plutil to convert it to JSON and back
+    plist_format = None
+    is_plist = len(arguments) > 0 and arguments[0] == '--plist'
+    if is_plist:
+        arguments = arguments[1:]
+    if len(arguments) < 2:
+        print("Usage: plist_edit.py [--plist] <json_file> <operation> [args...]", file=sys.stderr)
         sys.exit(1)
 
-    json_path = sys.argv[1]
-    operation = sys.argv[2]
-    args = sys.argv[3:]
+    json_path = arguments[0]
+    operation = arguments[1]
+    args = arguments[2:]
 
-    with open(json_path) as f:
-        data = json.load(f)
+    if is_plist:
+        with open(json_path, 'rb') as f:
+            header = f.read(8)
+            f.seek(0)
+            plist_format = plistlib.FMT_BINARY if header.startswith(b'bplist') else plistlib.FMT_XML
+            data = plistlib.load(f)
+    else:
+        with open(json_path) as f:
+            data = json.load(f)
 
     read_only_ops = {
         'print_command': op_print_command,
@@ -52,6 +70,11 @@ def main():
         sys.exit(1)
 
     func(data, args)
+
+    if is_plist:
+        with open(json_path, 'wb') as f:
+            plistlib.dump(data, f, fmt=plist_format, sort_keys=False)
+        return
 
     with open(json_path, 'w') as f:
         # Pretty-print: for a JSON command file this is the on-disk format the user
@@ -89,12 +112,21 @@ def op_update_service(data, args):
     svc = data['NSServices'][idx]
     svc['NSMenuItem'] = {'default': title}
     svc['NSUserData'] = cmd
-    svc.pop('NSSendTypes', None)
-    svc.pop('NSSendFileTypes', None)
-    if inp == 'text':
-        svc['NSSendTypes'] = ['NSStringPboardType']
-    else:
-        svc['NSSendTypes'] = ['NSFilenamesPboardType']
+    # The send types change only when the Input picker does: the pane saves at every field change,
+    # so rewriting them each time turned a folders-only service (NSSendFileTypes public.folder,
+    # which the picker cannot show) into one for any file or folder at a title edit. The service's
+    # kind is read as the pane shows it (shown_input_kind), so a save from the pane that keeps the
+    # picker as it was keeps the types as they were, whatever they are.
+    if inp != shown_input_kind(svc):
+        svc.pop('NSSendFileTypes', None)
+        svc['NSSendTypes'] = ['NSStringPboardType'] if inp == 'text' else ['NSFilenamesPboardType']
+
+
+def shown_input_kind(svc):
+    """The Input picker's value for an NSServices item, by AppletBuilder.services.selected.sh's
+    rule: "text" when its first NSSendTypes entry is NSStringPboardType, else "files"."""
+    send_types = svc.get('NSSendTypes') or []
+    return 'text' if send_types and send_types[0] == 'NSStringPboardType' else 'files'
 
 
 def op_remove_service(data, args):

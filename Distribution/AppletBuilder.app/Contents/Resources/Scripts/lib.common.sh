@@ -172,8 +172,9 @@ SVC_ADD_BTN_ID=334
 SVC_REMOVE_BTN_ID=335
 SVC_SAVE_BTN_ID=336
 SVC_STATUS_ID=337
-# The Services area's three parts (divider, header, split view), absent on Linux ("type:apple"): NSServices is
-# macOS's (the keys stay in Info.plist untouched)
+# The Services area's three parts (divider, header, split view), on both systems: NSServices is macOS's
+# Services menu, and on Linux its file services go to the file managers' Services menu
+# (command-services.py, when the applet is on the desktop); text services are macOS's only
 SVC_DIVIDER_ID=339
 SVC_HEADER_ID=340
 SVC_SPLIT_ID=341

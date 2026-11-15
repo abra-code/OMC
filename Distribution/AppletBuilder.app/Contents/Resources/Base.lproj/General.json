@@ -173,14 +173,14 @@
       ]
     },
     {
-      "type:apple": "Divider",
+      "type": "Divider",
       "id": 339,
       "properties": {
         "padding": { "leading": 16, "trailing": 16, "top": 16 }
       }
     },
     {
-      "type:apple": "VStack",
+      "type": "VStack",
       "id": 340,
       "properties": {
         "spacing": 4,
@@ -217,7 +217,7 @@
       ]
     },
     {
-      "type:apple": "HSplitView",
+      "type": "HSplitView",
       "id": 341,
       "properties": {
         "frame": {

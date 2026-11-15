@@ -24,6 +24,11 @@ if [ "$result" -ne 0 ]; then
 fi
 
 plist_edit "$plist" remove_service "$svc_index"
+edit_status=$?
+if [ "$edit_status" -ne 0 ]; then
+    set_value "$SVC_STATUS_ID" "Error removing service"
+    exit 1
+fi
 
 # Clear detail fields
 set_enabled "$SVC_REMOVE_BTN_ID" false

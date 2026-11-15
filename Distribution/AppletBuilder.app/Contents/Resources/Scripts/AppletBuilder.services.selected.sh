@@ -49,6 +49,10 @@ set_value "$SVC_COMMAND_PICKER_ID" "$user_data"
 
 if [ "$send_type" = "NSStringPboardType" ]; then
     set_value "$SVC_INPUT_PICKER_ID" "text"
+    # Linux file managers pass files: a text service is offered on macOS only
+    if ! ab_on_macos; then
+        set_value "$SVC_STATUS_ID" "Text input: a macOS Services menu item only"
+    fi
 else
     set_value "$SVC_INPUT_PICKER_ID" "files"
 fi

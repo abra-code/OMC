@@ -58,7 +58,8 @@ unique_command_id() {
 #
 # A .json file (e.g. Command.json) is edited in place — plist_edit.py already
 # operates on JSON, so no format conversion is needed. Any other file (Info.plist,
-# Command.plist) is round-tripped through JSON: plist -> json -> edit -> xml1.
+# Command.plist) is round-tripped through JSON on macOS: plist -> json -> edit -> xml1;
+# on Linux (no plutil) plist_edit.py edits it as a plist with plistlib (--plist).
 # Both paths edit a temp copy and only replace the original on success, so a
 # failed edit never corrupts the file.
 #
@@ -107,7 +108,21 @@ plist_edit() {
         return $?
     fi
 
-    # A legacy Command.plist (macOS only: plutil)
+    # A property list on Linux (an applet's Info.plist): no plutil there, so plist_edit.py reads and
+    # writes it with plistlib (--plist), in the format it has; replaced as the JSON file above
+    if ! ab_on_macos; then
+        /bin/cp "$plist" "$tmp" || { /bin/rm -f "$tmp"; return 1; }
+        "$python3" "$editor" --plist "$tmp" "$operation" "$@" || { /bin/rm -f "$tmp"; return 1; }
+        local plist_mode
+        plist_mode=$(/usr/bin/stat -c '%a' "$plist" 2>/dev/null)
+        if [ -n "$plist_mode" ]; then
+            /bin/chmod "$plist_mode" "$tmp"
+        fi
+        /bin/mv "$tmp" "$plist"
+        return $?
+    fi
+
+    # A plist on macOS (an Info.plist, a legacy Command.plist): plutil
     /usr/bin/plutil -convert json -o "$tmp" "$plist" || { /bin/rm -f "$tmp"; return 1; }
     "$python3" "$editor" "$tmp" "$operation" "$@" || { /bin/rm -f "$tmp"; return 1; }
     /usr/bin/plutil -convert xml1 -o "$plist" "$tmp"

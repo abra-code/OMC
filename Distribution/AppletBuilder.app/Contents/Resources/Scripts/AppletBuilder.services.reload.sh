@@ -1,7 +1,8 @@
 #!/bin/bash
-# AppletBuilder.services.reload - Refresh just the services table
+# AppletBuilder.services.reload - Refresh just the services table, after an add, remove or save;
+# on Linux also the file managers' Services list of an applet on the desktop (applet_services_update)
 
-source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.common.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.build.sh"
 
 project_path=$(load_project_path)
 plist="$project_path/Contents/Info.plist"
@@ -28,4 +29,10 @@ if [ -n "$svc_count" ] && [ "$svc_count" -gt 0 ]; then
     printf "%s" "$buffer" | "$dialog_tool" "$window_uuid" "$SVC_TABLE_ID" omc_table_set_rows_from_stdin
 else
     printf "" | "$dialog_tool" "$window_uuid" "$SVC_TABLE_ID" omc_table_set_rows_from_stdin
+fi
+
+services_output="$(applet_services_update "$project_path")"
+services_status=$?
+if [ "$services_status" -ne 0 ]; then
+    set_value "$SVC_STATUS_ID" "Not listed for the file manager: $services_output"
 fi
