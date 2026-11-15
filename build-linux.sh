@@ -156,8 +156,8 @@ for flag in "-isystem$RESOURCE_PATH" -fblocks -fcf-runtime-abi=swift -DDEPLOYMEN
 done
 
 # Link: C and C++ executables are linked by clang, which does not know the Swift runtime's library
-# folder (Foundation with CoreFoundation, dispatch, BlocksRuntime). The runtime path points there too
-# until the packaging is decided (Private/linux-applet-packaging-analysis.md).
+# folder (Foundation with CoreFoundation, dispatch, BlocksRuntime). The runtime path points there too,
+# after the installed runtime's folder (below).
 RUNTIME_LIB_PATH="$RESOURCE_PATH/linux"
 if [ ! -d "$RUNTIME_LIB_PATH" ]; then
     echo "Error: the Swift runtime's library folder '$RUNTIME_LIB_PATH' does not exist." >&2
@@ -167,6 +167,28 @@ fi
 # clang's. The manifest is evaluated every time (no cache), so a changed toolchain is picked up.
 export OMC_SWIFT_RUNTIME_LIB="$RUNTIME_LIB_PATH"
 SWIFT_ARGS+=(--manifest-cache none)
+
+# The Swift runtime an installed applet uses: exactly this toolchain's release, which the
+# command-engine-swift-<version> package installs in /usr/lib/command-engine/swift-<version>
+# (Private/linux-applet-install-design.md). Every program is linked to look there first, then in the
+# toolchain's folder (so the products run here); Linux/make-applet-bundle.sh then trims what a bundle's
+# programs keep to BUNDLE_RUNPATH, written beside the products: the package's folder, and in a debug
+# build the toolchain's after it, so a debug bundle also runs on a build machine without the package.
+# The trim rewrites the path in place, which needs the linked path to be at least as long: it is,
+# since it holds the bundle's whole path. Package.swift reads the folder for clang's links;
+# -Xlinker gives it to swiftc's (CommandApplet, ActionUI's helpers).
+SWIFT_RUNTIME_VERSION="$("$SWIFT" --version 2>&1 | /usr/bin/sed -n 's/^Swift version \([0-9][0-9.]*\).*/\1/p' | /usr/bin/head -n 1)"
+if [ -z "$SWIFT_RUNTIME_VERSION" ]; then
+    echo "Error: the Swift toolchain's version could not be read ($SWIFT --version)." >&2
+    exit 1
+fi
+ENGINE_SWIFT_FOLDER="/usr/lib/command-engine/swift-$SWIFT_RUNTIME_VERSION"
+BUNDLE_RUNPATH="$ENGINE_SWIFT_FOLDER"
+if [ "$CONFIG" = "debug" ]; then
+    BUNDLE_RUNPATH="$BUNDLE_RUNPATH:$RUNTIME_LIB_PATH"
+fi
+export COMMAND_ENGINE_SWIFT_FOLDER="$ENGINE_SWIFT_FOLDER"
+SWIFT_ARGS+=(-Xlinker -rpath -Xlinker "$ENGINE_SWIFT_FOLDER")
 
 # C++ only: SwiftPM passes -fmodule-map-file without -fmodules on Linux, and clang then treats the
 # headers those maps cover as modules nobody built (replay's plan, fact 6).
@@ -204,6 +226,15 @@ if [ "$status" -ne 0 ] || [ -z "$PRODUCTS_PATH" ] || [ ! -d "$PRODUCTS_PATH" ]; 
     exit 1
 fi
 
+# The Swift runtime the products need (see ENGINE_SWIFT_FOLDER above), for the bundles made from them
+# (Linux/make-applet-bundle.sh) and the runtime package (Linux/Packaging/make-swift-runtime-deb.sh)
+printf 'swift_version=%s\nruntime_folder=%s\nbundle_runpath=%s\n' "$SWIFT_RUNTIME_VERSION" "$RUNTIME_LIB_PATH" "$BUNDLE_RUNPATH" > "$PRODUCTS_PATH/command-engine-runtime"
+status=$?
+if [ "$status" -ne 0 ]; then
+    echo "Error: cannot write $PRODUCTS_PATH/command-engine-runtime." >&2
+    exit 1
+fi
+
 # ActionUI's own programs that applets carry as helpers (AppletBuilder's Contents/Helpers: the
 # viewer for previews, the Swift verifier), built for Linux from their packages in the ActionUI
 # checkout, each in a scratch folder of its own, and put beside the products:
@@ -211,7 +242,7 @@ fi
 for helper in ActionUIViewer:ActionUIViewer ActionUIVerifier:actionui-verify; do
     helper_package="$ACTIONUI_ROOT/Apps/${helper%%:*}"
     helper_product="${helper#*:}"
-    helper_args=(build -c "$CONFIG" --package-path "$helper_package" --scratch-path "$SCRATCH_PATH/actionui-apps/${helper%%:*}" --product "$helper_product" --manifest-cache none)
+    helper_args=(build -c "$CONFIG" --package-path "$helper_package" --scratch-path "$SCRATCH_PATH/actionui-apps/${helper%%:*}" --product "$helper_product" --manifest-cache none -Xlinker -rpath -Xlinker "$ENGINE_SWIFT_FOLDER")
     # As ActionUI builds them on Linux (Apps/ActionUIViewer/Package.swift): the root package's
     # file list is read anew (no manifest cache), and a tracked Package.resolved, which also pins
     # packages only macOS uses, is kept as it is

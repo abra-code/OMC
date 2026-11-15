@@ -26,7 +26,10 @@
 #
 # Usage: make-applet-bundle.sh [--python <Python folder>] <products folder> <applet sources>
 #                              <output folder>/<Name>.app
-#   The products folder is the build's (build-linux.sh), holding CommandApplet and the tools.
+#   The products folder is the build's (build-linux.sh), holding CommandApplet and the tools, and
+#   the command-engine-runtime file build-linux.sh writes: every engine program copied into the
+#   bundle (the executable, the support tools, the helpers) gets its bundle_runpath as its library
+#   search path (/usr/lib/command-engine/swift-<version>, the Swift runtime package's folder).
 #   --python copies a relocatable Linux Python (the folder holding bin/python3, as
 #   Python-Embedding's build-embedded-python.sh makes it on Linux) into Contents/Library/Python.
 #   It must be an ELF build for CommandApplet's architecture, and replaces any Library/Python the
@@ -90,6 +93,30 @@ for tool in $tools; do
         exit 1
     fi
 done
+# Where the bundle's programs find the Swift runtime: build-linux.sh writes it beside the products
+# (the command-engine-swift-<version> package's folder, and in a debug build the toolchain's after
+# it). Each engine program copied into the bundle gets it in place of the folders the build left in
+# it, which are the toolchain's and the build machine's own (set-elf-runpath.py).
+bundle_runpath="$(/usr/bin/sed -n 's/^bundle_runpath=//p' "$products/command-engine-runtime" 2>/dev/null)"
+if [ -z "$bundle_runpath" ]; then
+    printf 'No bundle_runpath in %s: build the products with build-linux.sh\n' "$products/command-engine-runtime" >&2
+    exit 1
+fi
+if [ ! -x /usr/bin/python3 ]; then
+    printf 'No /usr/bin/python3, which set-elf-runpath.py needs\n' >&2
+    exit 1
+fi
+
+# Gives the engine program at <file> (copied into the bundle) the bundle's runtime path, or fails
+# the script
+set_engine_runpath() { # <file>
+    /usr/bin/python3 -I "$script_folder/set-elf-runpath.py" set "$1" "$bundle_runpath"
+    local runpath_status=$?
+    if [ "$runpath_status" -ne 0 ]; then
+        printf 'Cannot set the runtime path of %s\n' "$1" >&2
+        exit 1
+    fi
+}
 
 # The output is removed and then filled from the source folder, so neither may hold the other
 bundle_parent="$(/usr/bin/dirname -- "$bundle")"
@@ -241,6 +268,7 @@ if [ -d "$source_folder/Contents" ]; then
                         exit 1
                     fi
                     copy_item "$products/$helper_name" "$contents/Helpers/$helper_name"
+                    set_engine_runpath "$contents/Helpers/$helper_name"
                 done
                 ;;
             Resources)
@@ -317,6 +345,7 @@ if [ "$status" -ne 0 ]; then
     printf 'Cannot copy the executable into the bundle\n' >&2
     exit 1
 fi
+set_engine_runpath "$contents/Linux/$name"
 /bin/chmod 755 "$contents/Linux/$name"
 if [ -d "$contents/Resources/Scripts" ]; then
     /usr/bin/find "$contents/Resources/Scripts" -type f -exec /bin/chmod 755 {} +
@@ -364,6 +393,7 @@ for tool in $tools; do
         printf 'Cannot copy the tool %s into the framework\n' "$tool" >&2
         exit 1
     fi
+    set_engine_runpath "$framework/Support/$tool"
 done
 # The applets' settings tool, a script (defaults/defaults), as on macOS
 /bin/cp -- "$omc_root/defaults/defaults" "$framework/Support/defaults"

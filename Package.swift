@@ -58,12 +58,15 @@ let cxxSettings: [CXXSetting] = headerFolders.map { .headerSearchPath($0) } + [
 // C and C++ programs are linked by clang, which does not know where the Swift runtime is:
 // build-linux.sh passes its folder (OMC_SWIFT_RUNTIME_LIB) for the -L and the runtime path.
 let runtimeLibraryFolder = ProcessInfo.processInfo.environment["OMC_SWIFT_RUNTIME_LIB"] ?? "/usr/lib/swift/linux"
+// The installed runtime's folder (the command-engine-swift-<version> package's), searched first:
+// build-linux.sh gives it, and Linux/make-applet-bundle.sh trims a bundle's programs to it.
+let engineRuntimeFolders = (ProcessInfo.processInfo.environment["COMMAND_ENGINE_SWIFT_FOLDER"].map { [$0] } ?? []) + [runtimeLibraryFolder]
 let foundationLibraries: [LinkerSetting] = [
     .linkedLibrary("Foundation"),
     .linkedLibrary("dispatch"),
     .linkedLibrary("BlocksRuntime"),
     .linkedLibrary("m"),
-    .unsafeFlags(["-L\(runtimeLibraryFolder)", "-Xlinker", "-rpath", "-Xlinker", runtimeLibraryFolder]),
+    .unsafeFlags(["-L\(runtimeLibraryFolder)"] + engineRuntimeFolders.flatMap { ["-Xlinker", "-rpath", "-Xlinker", $0] }),
 ]
 
 func tool(_ name: String, _ dependencies: [Target.Dependency]) -> Target {
