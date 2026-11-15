@@ -23,7 +23,7 @@
 #import "OMCTestExecutionObserver.h"
 #import "OMCTestCase.h"
 
-// The adapter is linked into Abracode.framework, not into this bundle: look the class up
+// The adapter is linked into Command.framework, not into this bundle: look the class up
 static id ActionUIObjCClass(void)
 {
     return NSClassFromString(@"_TtC19ActionUIObjCAdapter12ActionUIObjC");

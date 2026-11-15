@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		1D63C3452F1F19100003586D /* Abracode.framework in Copy Abracode.framework */ = {isa = PBXBuildFile; fileRef = 1D63C3402F1F18F60003586D /* Abracode.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		1D63C3452F1F19100003586D /* Command.framework in Copy Command.framework */ = {isa = PBXBuildFile; fileRef = 1D63C3402F1F18F60003586D /* Command.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		1DCFB24C231FACC800D1C62E /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1DCFB248231FACC800D1C62E /* MainMenu.xib */; };
 		1DEE0B1A2EB35B0200729DAE /* OMCService.icon in Resources */ = {isa = PBXBuildFile; fileRef = 1DEE0B192EB35B0200729DAE /* OMCService.icon */; };
 		8D11072D0486CEB800E47090 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
@@ -39,15 +39,15 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		1D039DCA2E168EEF00D4924A /* Copy Abracode.framework */ = {
+		1D039DCA2E168EEF00D4924A /* Copy Command.framework */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				1D63C3452F1F19100003586D /* Abracode.framework in Copy Abracode.framework */,
+				1D63C3452F1F19100003586D /* Command.framework in Copy Command.framework */,
 			);
-			name = "Copy Abracode.framework";
+			name = "Copy Command.framework";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
@@ -113,7 +113,7 @@
 		1D63C33B2F1F18F60003586D /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				1D63C3402F1F18F60003586D /* Abracode.framework */,
+				1D63C3402F1F18F60003586D /* Command.framework */,
 				1D63C3422F1F18F60003586D /* AbracodeTests.xctest */,
 			);
 			name = Products;
@@ -175,7 +175,7 @@
 				8D1107290486CEB800E47090 /* Resources */,
 				8D11072C0486CEB800E47090 /* Sources */,
 				8D11072E0486CEB800E47090 /* Frameworks */,
-				1D039DCA2E168EEF00D4924A /* Copy Abracode.framework */,
+				1D039DCA2E168EEF00D4924A /* Copy Command.framework */,
 			);
 			buildRules = (
 			);
@@ -221,10 +221,10 @@
 /* End PBXProject section */
 
 /* Begin PBXReferenceProxy section */
-		1D63C3402F1F18F60003586D /* Abracode.framework */ = {
+		1D63C3402F1F18F60003586D /* Command.framework */ = {
 			isa = PBXReferenceProxy;
 			fileType = wrapper.framework;
-			path = Abracode.framework;
+			path = Command.framework;
 			remoteRef = 1D63C33F2F1F18F60003586D /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};

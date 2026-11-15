@@ -1,6 +1,6 @@
 #!/bin/sh
 # pasteboard (Linux) - set or get a named pasteboard string: the macOS tool's command line, for
-# the applets' scripts on Linux. It is in Abracode.framework's Support folder
+# the applets' scripts on Linux. It is in Command.framework's Support folder
 # ($OMC_OMC_SUPPORT_PATH/pasteboard), so every applet has it.
 #
 #   pasteboard <name> put|set [<string>]   store <string>, or stdin when there is none

@@ -15,7 +15,7 @@
 #include <vector>
 
 // Plain CF and POSIX: this file used NSData, NSJSONSerialization and NSString before, and is
-// shared by Abracode.framework and plister. JSON goes through ACFJSON (see ACFJSON.h for how
+// shared by Command.framework and plister. JSON goes through ACFJSON (see ACFJSON.h for how
 // closely it follows NSJSONSerialization); file reading and the atomic write reproduce NSData.
 
 // What the file name extension says about the format. Only ".json" and ".plist" are

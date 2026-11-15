@@ -6,7 +6,7 @@ Command Workshop (formerly OMC) is a low-code macOS app development engine that 
 
 ### Key Concepts
 
-- **Applet**: A standalone mini-app (`.app` bundle) built on Abracode.framework
+- **Applet**: A standalone mini-app (`.app` bundle) built on Command.framework
 - **Command**: An action handler defined in `Command.plist` that executes a script
 - **Command Group**: Multiple commands sharing the same `NAME` with unique `COMMAND_ID`s
 - **ActionUI window**: a JSON document (in `Base.lproj`) describing a window's views
@@ -54,7 +54,7 @@ Command Workshop (formerly OMC) is a low-code macOS app development engine that 
 > **For AI Agents**: When assisting with applet development:
 > - **New applet**: Ask the user to create it via `AppletBuilder.app` (GUI-only workflow). You then edit the generated `Command.plist`, scripts, and UI files.
 > - **Existing applet**: Edit `Command.plist`, `Scripts/`, and ActionUI JSON files in place.
-> - **After editing**: Ask the user to click Build in AppletBuilder's Build & Run pane — it updates the runtime and re-signs. Do NOT manually copy runtime binaries or Abracode.framework.
+> - **After editing**: Ask the user to click Build in AppletBuilder's Build & Run pane — it updates the runtime and re-signs. Do NOT manually copy runtime binaries or Command.framework.
 
 ### Codesign for Local Execution
 
@@ -70,7 +70,7 @@ Codesigning is handled by the **Build & Run** pane inside AppletBuilder. For scr
 ```
 MyApp.app/
 ├── Contents/
-│   ├── Frameworks/Abracode.framework  (OMC engine)
+│   ├── Frameworks/Command.framework  (OMC engine)
 │   ├── MacOS/MyApp                    (app binary)
 │   ├── Resources/
 │   │   ├── Command.plist              (command definitions)
@@ -580,7 +580,7 @@ For commands that show results:
 MyApp.app/
 └── Contents/
     ├── Frameworks/
-    │   └── Abracode.framework/
+    │   └── Command.framework/
     ├── MacOS/
     │   └── MyApp
     ├── Resources/

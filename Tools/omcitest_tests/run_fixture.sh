@@ -7,12 +7,12 @@
 # - with --app, any applet: a copy of it, so the applet in its repository is never re-signed or
 #   changed, with the *.itest.sh files of the Tests folder beside it (or --tests).
 #
-# Usage: run_fixture.sh [--app <App.app> [--tests <dir>]] [--framework <Abracode.framework>]
+# Usage: run_fixture.sh [--app <App.app> [--tests <dir>]] [--framework <Command.framework>]
 #                       [--filter <glob>] [--keep] [--verbose]
 #   --app        test a copy of this applet instead of the fixture
 #   --tests      the folder of *.itest.sh files (default: the Tests folder beside --app)
 #   --framework  put this engine into the applet instead of the one it carries (an engine you just
-#                built, e.g. DerivedData/.../Build/Products/Release/Abracode.framework; build it with
+#                built, e.g. DerivedData/.../Build/Products/Release/Command.framework; build it with
 #                the "OMC Distribution" scheme, the others link the undefined-behavior sanitizer)
 #   --filter     run only the test files whose name matches the glob
 #   --keep       keep the applet copy and each test's private folder, and print where they are
@@ -55,12 +55,18 @@ while [ $# -gt 0 ]; do
         *) printf 'run_fixture: unknown argument %s\n' "$1" >&2; exit 2 ;;
     esac
 done
-if [ -n "$framework" ] && [ ! -f "$framework/Versions/A/Abracode" ]; then
-    printf 'run_fixture: not an Abracode.framework: %s\n' "$framework" >&2
+if [ -n "$framework" ] && [ ! -f "$framework/Versions/A/Command" ]; then
+    printf 'run_fixture: not a Command.framework: %s\n' "$framework" >&2
     exit 2
 fi
 if [ -n "$source_app" ] && [ ! -d "$source_app/Contents" ]; then
     printf 'run_fixture: not an applet bundle: %s\n' "$source_app" >&2
+    exit 2
+fi
+# An applet built before 6.0 carries Abracode.framework, and its executable links that one: with
+# --framework it would still run on its old engine, not on the one given
+if [ -n "$framework" ] && [ -n "$source_app" ] && [ -d "$source_app/Contents/Frameworks/Abracode.framework" ]; then
+    printf 'run_fixture: %s was built before 6.0 (Abracode.framework): rebuild it with AppletBuilder first\n' "$source_app" >&2
     exit 2
 fi
 if [ -z "$source_app" ] && [ -n "$tests" ]; then
@@ -128,8 +134,8 @@ fi
 
 if [ -n "$framework" ]; then
     # Moved aside, not merged into: the engine has to be exactly the one given.
-    if [ -d "$app/Contents/Frameworks/Abracode.framework" ]; then
-        /bin/mv "$app/Contents/Frameworks/Abracode.framework" "$work/Abracode.framework.from-applet"
+    if [ -d "$app/Contents/Frameworks/Command.framework" ]; then
+        /bin/mv "$app/Contents/Frameworks/Command.framework" "$work/Command.framework.from-applet"
         status=$?
         if [ "$status" -ne 0 ]; then
             printf 'run_fixture: cannot move the applet'"'"'s own engine aside\n' >&2
@@ -137,7 +143,7 @@ if [ -n "$framework" ]; then
         fi
     fi
     /bin/mkdir -p "$app/Contents/Frameworks"
-    /usr/bin/ditto "$framework" "$app/Contents/Frameworks/Abracode.framework"
+    /usr/bin/ditto "$framework" "$app/Contents/Frameworks/Command.framework"
     status=$?
     if [ "$status" -ne 0 ]; then
         printf 'run_fixture: cannot copy %s\n' "$framework" >&2

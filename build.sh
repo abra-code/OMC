@@ -2,7 +2,7 @@
 #
 # Build OMC by building the "OMC Distribution" scheme of OMC.xcworkspace.
 #
-# This scheme builds Abracode.framework, CommandApplet, OMCService and OnMyCommandCM
+# This scheme builds Command.framework, CommandApplet, OMCService and OnMyCommandCM
 # together with their implicit dependencies, replacing the old loop that built
 # every sub-project individually (which had become hard to maintain).
 #
@@ -17,7 +17,7 @@ usage() {
 	cat <<'EOF'
 Usage: ./build.sh [debug|ship] [action] [--python]
 
-Builds the "OMC Distribution" scheme of OMC.xcworkspace (Abracode.framework,
+Builds the "OMC Distribution" scheme of OMC.xcworkspace (Command.framework,
 CommandApplet, OMCService and OnMyCommandCM, with their implicit dependencies).
 
 Arguments (positional, both optional):

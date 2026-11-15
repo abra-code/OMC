@@ -6,7 +6,7 @@
 # scratch folder, and only when the preferences daemon can be reached (not from a sandboxed run).
 #
 # Usage: test_defaults.sh <plister>
-#   <plister> is a built plister: on macOS e.g. .../Abracode.framework/Versions/A/Support/plister,
+#   <plister> is a built plister: on macOS e.g. .../Command.framework/Versions/A/Support/plister,
 #   on Linux the build's products folder's plister.
 # Exit status: 0 all passed, 1 a check failed, 2 bad arguments.
 

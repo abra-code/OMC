@@ -7,8 +7,8 @@
 //
 
 #import <Cocoa/Cocoa.h>
-#import <Abracode/OMCMainMenuController.h>
-#import <Abracode/OMCAppletController.h>
+#import <Command/OMCMainMenuController.h>
+#import <Command/OMCAppletController.h>
 
 UInt32 GetAbracodeFrameworkVersion(void);
 

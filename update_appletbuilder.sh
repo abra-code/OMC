@@ -5,7 +5,7 @@
 #   0a. ActionUI checkout next to OMC (../ActionUI) - when missing, offers to clone the latest
 #      tagged release from GitHub; a checkout this script cloned is moved to a newer tag when one
 #      exists; any other checkout is used as is
-#   0. CommandApplet — builds universal (arm64 + x86_64) Release binary and Abracode.framework
+#   0. CommandApplet — builds universal (arm64 + x86_64) Release binary and Command.framework
 #   0b. Embedded Python - when Contents/Library/Python is missing (a fresh clone), offers to build
 #      the CommandPythonApplet target and copy its Python in; an existing Python is left as is
 #      unless --update-python is given
@@ -336,7 +336,7 @@ fi
 echo ""
 
 # ════════════════════════════════════════════════════════════
-# 0. Build CommandApplet — Abracode.framework + binary (universal)
+# 0. Build CommandApplet — Command.framework + binary (universal)
 # ════════════════════════════════════════════════════════════
 
 echo "── Building CommandApplet (universal) ──"
@@ -372,28 +372,30 @@ if [ ! -d "$COMMANDAPPLET_APP" ]; then
     exit 1
 fi
 
-# Copy Abracode.framework (built standalone alongside the app)
-src_fw="$COMMANDAPPLET_BUILD/Build/Products/Release/Abracode.framework"
+# Copy Command.framework (built standalone alongside the app)
+src_fw="$COMMANDAPPLET_BUILD/Build/Products/Release/Command.framework"
 # Fall back to the copy embedded inside the app if the standalone isn't present
 if [ ! -d "$src_fw" ]; then
-    src_fw="$COMMANDAPPLET_APP/Contents/Frameworks/Abracode.framework"
+    src_fw="$COMMANDAPPLET_APP/Contents/Frameworks/Command.framework"
 fi
-dst_fw="$APPLET_BUILDER/Contents/Frameworks/Abracode.framework"
+dst_fw="$APPLET_BUILDER/Contents/Frameworks/Command.framework"
 
 if [ ! -d "$src_fw" ]; then
-    echo -e "  ${RED}Abracode.framework not found in build output: $src_fw${NC}"
+    echo -e "  ${RED}Command.framework not found in build output: $src_fw${NC}"
     exit 1
 fi
 
 /bin/mkdir -p "$(/usr/bin/dirname "$dst_fw")"
-/bin/rm -rf "$dst_fw"
+# Before 6.0 the engine was Abracode.framework: a checkout updated then still has it (Frameworks is
+# not in git), and nothing links it any more
+/bin/rm -rf "$dst_fw" "$APPLET_BUILDER/Contents/Frameworks/Abracode.framework"
 /bin/cp -Rp "$src_fw" "$dst_fw"
 cp_rc=$?
 if [ "$cp_rc" -ne 0 ]; then
-    echo -e "  ${RED}Failed to copy Abracode.framework to: $dst_fw${NC}"
+    echo -e "  ${RED}Failed to copy Command.framework to: $dst_fw${NC}"
     exit 1
 fi
-echo -e "  ${GREEN}Updated: Abracode.framework${NC}"
+echo -e "  ${GREEN}Updated: Command.framework${NC}"
 updated=1
 
 # Copy CommandApplet binary → AppletBuilder binary

@@ -37,7 +37,7 @@ REPO = Path(__file__).resolve().parents[2]
 AB = REPO / "Distribution" / "AppletBuilder.app"
 CLI = AB / "Contents" / "Resources" / "Agents" / "appletbuilder"
 OMCTEST = AB / "Contents" / "Resources" / "Agents" / "omctest.sh"
-AB_SUPPORT = AB / "Contents" / "Frameworks" / "Abracode.framework" / "Versions" / "A" / "Support"
+AB_SUPPORT = AB / "Contents" / "Frameworks" / "Command.framework" / "Versions" / "A" / "Support"
 AB_PACKAGES = AB / "Contents" / "Library" / "Packages"
 
 # The engine's installed-python candidate chain, in order (OmcExecutor.cpp:55-78).
@@ -464,7 +464,7 @@ def make_applet(root: Path, *, name: str = "Fixture", broken_manifest: bool = Fa
     }
     # The engine hands handlers the framework's real Resources directory; the
     # fixture needs one to exist or the assertion about it cannot fail.
-    (contents / "Frameworks" / "Abracode.framework" / "Versions" / "A" / "Resources").mkdir(
+    (contents / "Frameworks" / "Command.framework" / "Versions" / "A" / "Resources").mkdir(
         parents=True, exist_ok=True)
     with open(contents / "Info.plist", "wb") as f:
         plistlib.dump(info, f)
@@ -514,7 +514,7 @@ def make_applet(root: Path, *, name: str = "Fixture", broken_manifest: bool = Fa
     # harness stubs get replaced anyway; plister stays real. pasteboard is still
     # copied because the meta-tests reach for the real one to prove the stub
     # never touches it.
-    support = contents / "Frameworks" / "Abracode.framework" / "Versions" / "A" / "Support"
+    support = contents / "Frameworks" / "Command.framework" / "Versions" / "A" / "Support"
     support.mkdir(parents=True, exist_ok=True)
     for tool in AB_SUPPORT.iterdir():
         shutil.copy2(tool, support / tool.name)

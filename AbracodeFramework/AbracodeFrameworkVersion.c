@@ -1,7 +1,7 @@
 /*
  *  AbracodeFrameworkVersion.c
  *  
- *  Weak linking support for Abracode.framework
+ *  Weak linking support for Command.framework
  *	Compile this file in your project and then call GetAbracodeFrameworkVersion to find out if the framework is installed
  *  
  *
@@ -16,6 +16,7 @@ UInt32 GetAbracodeFrameworkVersion(void)
 	if(OMCGetCurrentVersion != NULL)
 		return OMCGetCurrentVersion();
 
+	// The framework travels inside the applet: the fix is a rebuild, not a download
 	CFOptionFlags responseFlags = 0;
 	/*SInt32 isSuccessfull = */(void)CFUserNotificationDisplayAlert (
 										0.0, //timeout
@@ -23,17 +24,12 @@ UInt32 GetAbracodeFrameworkVersion(void)
 										NULL, //iconURL
 										NULL, //soundURL
 										NULL, //localizationURL
-										CFSTR("Missing Abracode.framework"), //alertHeader
-										CFSTR("This app requires Abracode.framework installed by OnMyCommand. Please go to abracode.com to download it."),
-										CFSTR("Go"),
-										CFSTR("Cancel"),
+										CFSTR("Missing Command.framework"), //alertHeader
+										CFSTR("This applet requires Command.framework, the Command Engine. Rebuild it with AppletBuilder."),
+										CFSTR("OK"),
+										NULL, //alternateButtonTitle
 										NULL, //otherButtonTitle,
 										&responseFlags );
-
-	if( (responseFlags & 0x03) == kCFUserNotificationDefaultResponse )//Go online button
-	{
-		system("/usr/bin/open 'http://www.abracode.com/free/cmworkshop/on_my_command.html'");
-	}
 
 	return 0;
 }

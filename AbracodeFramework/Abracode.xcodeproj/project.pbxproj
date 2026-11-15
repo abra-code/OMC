@@ -78,7 +78,7 @@
 		1D560A1B2F80000000000044 /* OMCAppShell.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1D560A1B2F80000000000043 /* OMCAppShell.mm */; };
 		1D560A1B2F80000000000047 /* OMCProcessEnvironment.c in Sources */ = {isa = PBXBuildFile; fileRef = 1D560A1B2F80000000000046 /* OMCProcessEnvironment.c */; };
 		1D560A1B2F8000000000004A /* OMCEngineBundle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1D560A1B2F80000000000049 /* OMCEngineBundle.cpp */; };
-		1DCBC0D92F15FCE40002B8AB /* Abracode.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8DC2EF5B0486A6940098B216 /* Abracode.framework */; };
+		1DCBC0D92F15FCE40002B8AB /* Command.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8DC2EF5B0486A6940098B216 /* Command.framework */; };
 		1DCBC16E2F176A9D0002B8AB /* TestBundles in CopyFiles */ = {isa = PBXBuildFile; fileRef = 1DCBC16D2F176A9D0002B8AB /* TestBundles */; };
 		1DED3637232258A40086266F /* OMCScriptsManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1DED3635232258A40086266F /* OMCScriptsManager.cpp */; };
 		1DED8E572222BD8E00A2CAF7 /* MoreAppleEvents.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E29ED19F0D09528600C9D5E8 /* MoreAppleEvents.cpp */; };
@@ -491,7 +491,7 @@
 		1DF2B4002F45A2110069BD26 /* OmcProjectCommon.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectCommon.xcconfig; path = ../Common/OmcProjectCommon.xcconfig; sourceTree = SOURCE_ROOT; };
 		32DBCF5E0370ADEE00C91783 /* Abracode_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Abracode_Prefix.pch; sourceTree = "<group>"; };
 		8DC2EF5A0486A6940098B216 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		8DC2EF5B0486A6940098B216 /* Abracode.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Abracode.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		8DC2EF5B0486A6940098B216 /* Command.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Command.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		D2F7E79907B2D74100F64583 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = /System/Library/Frameworks/CoreData.framework; sourceTree = "<absolute>"; };
 		E204EB7E0D7FD8A900595D15 /* OMCConstants.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCConstants.h; sourceTree = "<group>"; };
 		E20F1F68130BBE5100882872 /* alert */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = alert; sourceTree = "<group>"; };
@@ -583,7 +583,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1DCBC0D92F15FCE40002B8AB /* Abracode.framework in Frameworks */,
+				1DCBC0D92F15FCE40002B8AB /* Command.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -627,7 +627,7 @@
 		034768DFFF38A50411DB9C8B /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				8DC2EF5B0486A6940098B216 /* Abracode.framework */,
+				8DC2EF5B0486A6940098B216 /* Command.framework */,
 				1DCBC0D52F15FCE40002B8AB /* AbracodeTests.xctest */,
 			);
 			name = Products;
@@ -1137,7 +1137,7 @@
 			name = AbracodeFramework;
 			productInstallPath = "$(HOME)/Library/Frameworks";
 			productName = Abracode;
-			productReference = 8DC2EF5B0486A6940098B216 /* Abracode.framework */;
+			productReference = 8DC2EF5B0486A6940098B216 /* Command.framework */;
 			productType = "com.apple.product-type.framework";
 		};
 /* End PBXNativeTarget section */
@@ -1325,7 +1325,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "/bin/mkdir -p \"$BUILT_PRODUCTS_DIR/Frameworks\"\ncd \"$BUILT_PRODUCTS_DIR/Frameworks\"\n/bin/ln -f -s ../Abracode.framework .\n";
+			shellScript = "/bin/mkdir -p \"$BUILT_PRODUCTS_DIR/Frameworks\"\ncd \"$BUILT_PRODUCTS_DIR/Frameworks\"\n/bin/ln -f -s ../Command.framework .\n";
 			showEnvVarsInLog = 0;
 		};
 		E2A8326F0D147C7300117643 /* Create Support symlink */ = {
@@ -1340,7 +1340,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "echo \"Creating additional symbolic links - relative, so the framework is movable\";\n\ncd \"$BUILT_PRODUCTS_DIR/Abracode.framework\";\nrm -f \"Support\";\nln -s \"Versions/Current/Support\" \"Support\";\n";
+			shellScript = "echo \"Creating additional symbolic links - relative, so the framework is movable\";\n\ncd \"$BUILT_PRODUCTS_DIR/Command.framework\";\nrm -f \"Support\";\nln -s \"Versions/Current/Support\" \"Support\";\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */

@@ -13,7 +13,7 @@ Run:   python3 Tools/appletbuilder_tests/run_tests.py
 Exit:  0 = all passed, 1 = one or more failures.
 
 Notes:
-  * create/build invoke the real toolchain (cp of Abracode.framework, codesign,
+  * create/build invoke the real toolchain (cp of Command.framework, codesign,
     lsregister). They are skipped with a note if `codesign` is unavailable.
   * create persists a BundleIDPrefix in the com.abracode.applet-builder defaults
     domain (as the GUI does); the harness snapshots and restores it.

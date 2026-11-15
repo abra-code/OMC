@@ -7,7 +7,7 @@
 //  NSData writeToURL:options:NSDataWritingAtomic did (modes, links, failures), so each test sets
 //  up the same situation twice and lets NSData write one copy and WritePropertyList the other.
 //
-//  The functions are not exported from Abracode.framework, so the source compiles into this
+//  The functions are not exported from Command.framework, so the source compiles into this
 //  bundle (ACFJSON.cpp comes in through OMCJSONFoundationParityTests, ACFPath.cpp through
 //  OMCTestsACFPath.cpp).
 //

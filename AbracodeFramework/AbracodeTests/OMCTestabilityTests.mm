@@ -6,7 +6,7 @@
 //  own, and the reading of real signatures, made here with codesign on copies of a system binary,
 //  one for each way an applet can be signed.
 //
-//  The functions are not exported from Abracode.framework, so the macOS source compiles into this
+//  The functions are not exported from Command.framework, so the macOS source compiles into this
 //  bundle, as the other tests of internal code do.
 //
 

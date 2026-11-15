@@ -8,7 +8,7 @@
 //  +[NSURLComponents componentsWithString:], its host and its queryItems with OMCParseURL, over fixed
 //  cases (the rules in OMCURLParse.h) and strings generated from the characters that matter.
 //
-//  OMCURLParse is not exported from Abracode.framework, so it compiles into this bundle.
+//  OMCURLParse is not exported from Command.framework, so it compiles into this bundle.
 //
 
 #import <XCTest/XCTest.h>

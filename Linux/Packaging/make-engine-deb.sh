@@ -78,7 +78,7 @@ fi
 master="$products/CommandApplet.app/Contents"
 programs=("$master/Linux/CommandApplet")
 for tool in omc_dialog_control omc_next_command plister b64 filt loco; do
-    programs+=("$master/Frameworks/Abracode.framework/Support/$tool")
+    programs+=("$master/Frameworks/Command.framework/Support/$tool")
 done
 for program in "${programs[@]}"; do
     if [ ! -f "$program" ]; then

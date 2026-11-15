@@ -23,7 +23,7 @@ static const NSInteger kStatusTextID = 2;
 static const NSInteger kProgressBarID = 3;
 static const NSInteger kStopButtonID = 4;
 
-// The adapter is linked into Abracode.framework, not into this bundle: look the class up
+// The adapter is linked into Command.framework, not into this bundle: look the class up
 static id ActionUIObjCClass(void)
 {
     return NSClassFromString(@"_TtC19ActionUIObjCAdapter12ActionUIObjC");

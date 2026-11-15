@@ -3,7 +3,7 @@
 //  AbracodeTests
 //
 //  Integration tests that drive OMCCommandExecutor with real Command.plist commands which
-//  invoke the bundled helper CLI tools (in Abracode.framework/Versions/A/Support, exported to
+//  invoke the bundled helper CLI tools (in Command.framework/Versions/A/Support, exported to
 //  scripts as $OMC_OMC_SUPPORT_PATH) and observe the effects of their execution.
 //
 //  Coverage target = the code paths touched by the 2026-06 security/correctness review:

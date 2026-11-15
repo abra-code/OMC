@@ -11,7 +11,7 @@
 //  - The engine is libAbracode.so: the folder holding it, up to the one named *.framework
 //    (a flat framework, or Versions/A in a versioned one), found with dladdr on the engine's code.
 //  - The engine is linked into the applet's executable: the applet's
-//    Frameworks/Abracode.framework, which then holds only resources and support tools.
+//    Frameworks/Command.framework, which then holds only resources and support tools.
 //
 
 #include "OMCEngineBundle.h"
@@ -41,7 +41,7 @@ FrameworkFolderAbove(const char *inPath)
 	return std::string();
 }
 
-// The bundle at `inURL` when it is Abracode.framework (by its identifier), else NULL: a framework
+// The bundle at `inURL` when it is Command.framework (by its identifier), else NULL: a framework
 // found above the engine's code may be another one (the engine linked into some other framework's
 // executable)
 static CFBundleRef
@@ -77,7 +77,7 @@ CreateEngineBundle()
 	}
 
 	// The engine linked into the applet (or the framework above was not the engine's): the
-	// applet's Frameworks/Abracode.framework
+	// applet's Frameworks/Command.framework
 	CFBundleRef mainBundle = CFBundleGetMainBundle();
 	if(mainBundle == nullptr)
 		return nullptr;
@@ -85,7 +85,7 @@ CreateEngineBundle()
 	if(frameworks == nullptr)
 		return nullptr;
 	CFObj<CFURLRef> framework( CFURLCreateCopyAppendingPathComponent(kCFAllocatorDefault, frameworks,
-								CFSTR("Abracode.framework"), true) );
+								CFSTR("Command.framework"), true) );
 	return CreateEngineBundleAtURL(framework);
 }
 

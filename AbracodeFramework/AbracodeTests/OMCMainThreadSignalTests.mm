@@ -6,7 +6,7 @@
 //  a signal that runs a callback on the main thread, a delayed call, and the drain before the next
 //  command. The macOS implementation is a run loop source and a run loop timer.
 //
-//  OMCMainThreadSignal is not exported from Abracode.framework, so its macOS source compiles into this
+//  OMCMainThreadSignal is not exported from Command.framework, so its macOS source compiles into this
 //  bundle, as the other tests of internal C++ do.
 //
 

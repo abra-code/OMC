@@ -36,7 +36,7 @@ static const NSInteger kTableID = 5;
 static const NSInteger kContainerID = 6;
 static const NSInteger kRemovableTextID = 7;
 
-// The adapter is linked into Abracode.framework, not into this bundle: look the class up
+// The adapter is linked into Command.framework, not into this bundle: look the class up
 static id ActionUIObjCClass(void)
 {
     return NSClassFromString(@"_TtC19ActionUIObjCAdapter12ActionUIObjC");

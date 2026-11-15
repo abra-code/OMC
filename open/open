@@ -1,6 +1,6 @@
 #!/bin/bash
 # open - opens files, folders, URLs and applications for applets' scripts: the part of macOS's
-# `open` that applets use, on macOS and Linux alike. It is in Abracode.framework's Support folder
+# `open` that applets use, on macOS and Linux alike. It is in Command.framework's Support folder
 # beside plister ($OMC_OMC_SUPPORT_PATH/open), so every applet has it.
 #
 #   open <file, folder or URL>...        each in its default application (an applet bundle runs)

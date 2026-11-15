@@ -2,7 +2,7 @@
 //  OMCEngineTempDir.h
 //
 //  Single source of truth for the engine's private IPC directory and the file paths used to
-//  pass data between Abracode.framework (running inside the OMC app) and the helper tools it
+//  pass data between Command.framework (running inside the OMC app) and the helper tools it
 //  spawns as descendants: omc_dialog_control and omc_next_command.
 //
 //  These files are an INTERNAL engine contract. User command scripts must not read, write or

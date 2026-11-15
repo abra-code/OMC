@@ -16,7 +16,7 @@ the same after every build and every engine update: macOS keeps the user's answe
 Nothing else in the file changes, and a file that already has its UUID is not written.
 
 The change invalidates the code signature, so this runs just before signing.
-Abracode.framework is left alone: it is the same code in every applet.
+Command.framework is left alone: it is the same code in every applet.
 
 Exit: 0 on success (prints one line per slice), 1 when the file is not a Mach-O
 executable this tool understands or has no LC_UUID, 2 for a usage error.

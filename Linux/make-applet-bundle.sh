@@ -14,7 +14,7 @@
 #     Library/Python/               with --python: a Linux Python (Python-Embedding's Linux build),
 #                                   where the engine looks for the embedded interpreter
 #                                   (Library/Python/bin/python3, as on macOS)
-#     Frameworks/Abracode.framework/
+#     Frameworks/Command.framework/
 #       Info.plist                  Linux/AbracodeFramework-Info.plist
 #       omc_*.json                  the engine's built-in windows (AbracodeFramework/BuiltInDocuments)
 #       <lang>.lproj/Private.strings  the engine's own texts (AbracodeFramework/*.lproj)
@@ -210,7 +210,7 @@ if [ -e "$bundle" ]; then
     fi
 fi
 contents="$bundle/Contents"
-framework="$contents/Frameworks/Abracode.framework"
+framework="$contents/Frameworks/Command.framework"
 /bin/mkdir -p "$framework/Support" "$contents/Linux" "$contents/Resources"
 status=$?
 if [ "$status" -ne 0 ]; then

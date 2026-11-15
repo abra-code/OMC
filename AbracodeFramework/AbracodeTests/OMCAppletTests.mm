@@ -6,7 +6,7 @@
 //  what is suppressed. OMCAppletControllerTests drives the macOS controller around it; this file
 //  covers what that one cannot reach, such as Option held at startup.
 //
-//  OMCApplet is not exported from Abracode.framework, so it compiles into this bundle. Its
+//  OMCApplet is not exported from Command.framework, so it compiles into this bundle. Its
 //  OMCMainThreadSignal (the 0.25 s gathering) is the bundle's copy compiled by
 //  OMCMainThreadSignalTests.mm.
 //

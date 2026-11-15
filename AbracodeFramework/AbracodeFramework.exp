@@ -1,4 +1,4 @@
-# Public APIs visible in Abracode.framework
+# Public APIs visible in Command.framework
 
 _OMCGetCurrentVersion
 _OMCRunCommand

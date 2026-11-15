@@ -64,7 +64,7 @@ if [ -z "$here" ] || [ "$bundle" = "$here" ] || [ ! -f "$bundle/Contents/Info.pl
     exit 2
 fi
 info_plist="$bundle/Contents/Info.plist"
-support="$bundle/Contents/Frameworks/Abracode.framework/Support"
+support="$bundle/Contents/Frameworks/Command.framework/Support"
 plister="$support/plister"
 # The applet's setting that stops the engine's first-launch question (--decline)
 prompt_key="CommandEngineDesktopPrompt"

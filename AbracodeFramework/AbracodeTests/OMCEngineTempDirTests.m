@@ -3,7 +3,7 @@
 //  AbracodeTests
 //
 //  Unit tests for Common/OMCEngineTempDir.h - the single source of truth for the engine's
-//  private IPC directory and file paths shared between Abracode.framework and the helper
+//  private IPC directory and file paths shared between Command.framework and the helper
 //  tools (omc_dialog_control, omc_next_command). This is the H2 security fix: the engine's
 //  IPC files moved off the world-writable /tmp/OMC (0777, no sticky bit) to the per-user
 //  temp dir ($TMPDIR/OMC, 0700).

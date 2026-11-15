@@ -2,7 +2,7 @@
 //  OMCEngineBundle.cpp
 //  Abracode
 //
-//  The macOS implementation of Platform/OMCEngineBundle.h: Abracode.framework is loaded by dyld,
+//  The macOS implementation of Platform/OMCEngineBundle.h: Command.framework is loaded by dyld,
 //  so CoreFoundation finds it by its bundle identifier.
 //
 

@@ -29,7 +29,7 @@ static const NSInteger kCancelButtonID = 5;
 static const NSInteger kOKButtonID = 6;
 static const NSInteger kFirstMenuItemID = 100;
 
-// The adapter is linked into Abracode.framework, not into this bundle: look the class up
+// The adapter is linked into Command.framework, not into this bundle: look the class up
 static id ActionUIObjCClass(void)
 {
     return NSClassFromString(@"_TtC19ActionUIObjCAdapter12ActionUIObjC");

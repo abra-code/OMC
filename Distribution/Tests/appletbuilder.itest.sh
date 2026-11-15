@@ -227,7 +227,7 @@ section "Linux: opening a project from outside hands it to the running AppletBui
 case "${OSTYPE:-}" in
     linux*)
         before="$(itest_windows)"
-        "$ITEST_APP/Contents/Frameworks/Abracode.framework/Support/open" -a "$ITEST_APP" "$FIXTURE"
+        "$ITEST_APP/Contents/Frameworks/Command.framework/Support/open" -a "$ITEST_APP" "$FIXTURE"
         check "open -a starts AppletBuilder with the project" "0" "$?"
         reopened=""
         tries=0

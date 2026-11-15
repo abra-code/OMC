@@ -38,13 +38,13 @@ applet_set_creator_code() {
     fi
 }
 
-# Install runtime binaries (executable + Abracode.framework) from AppletBuilder
+# Install runtime binaries (executable + Command.framework) from AppletBuilder
 applet_install_binaries() {
     local app_path="$1"
     local app_name="$2"
 
     local builder_exe="$(applet_executable_folder "$OMC_APP_BUNDLE_PATH")/$(/usr/bin/basename "${OMC_APP_BUNDLE_PATH%.app}")"
-    local builder_fw="${OMC_APP_BUNDLE_PATH}/Contents/Frameworks/Abracode.framework"
+    local builder_fw="${OMC_APP_BUNDLE_PATH}/Contents/Frameworks/Command.framework"
 
     # Copy executable, renamed to match the applet
     local exe_folder="$(applet_executable_folder "$app_path")"
@@ -55,7 +55,7 @@ applet_install_binaries() {
     update_linux_installer "$app_path"
 
     # Copy framework if AppletBuilder's is newer or destination doesn't have one
-    local dest_fw="$app_path/Contents/Frameworks/Abracode.framework"
+    local dest_fw="$app_path/Contents/Frameworks/Command.framework"
     if [ -d "$builder_fw" ]; then
         local need_copy=0
         if [ ! -d "$dest_fw" ]; then
@@ -161,6 +161,14 @@ applet_create_from_template() {
     /bin/rm -rf "$new_app_path/Contents/_CodeSignature" 2>/dev/null
     if ab_on_macos; then
         /usr/bin/xattr -dr com.apple.quarantine "$new_app_path" 2>/dev/null
+    fi
+
+    # A clone of an applet built before 6.0: its Abracode.framework goes, and so does its
+    # executable, which links that framework by name. Left in place, the executable would be
+    # renamed over the new one below and the clone would keep running on the old engine.
+    if [ -d "$new_app_path/Contents/Frameworks/Abracode.framework" ]; then
+        /bin/rm -rf "$new_app_path/Contents/Frameworks/Abracode.framework" \
+            "$(applet_executable_folder "$new_app_path")/$original_name"
     fi
 
     # Install runtime binaries

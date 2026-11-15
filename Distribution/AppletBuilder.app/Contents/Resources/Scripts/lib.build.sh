@@ -11,7 +11,7 @@
 #
 #   AB_IDENTITY            codesigning identity (default "-" ad-hoc)
 #   AB_THIN_ARCH           thin universal binaries to this arch ("none"/empty = skip)
-#   AB_FORCE_UPDATE        "1" = force Abracode.framework/executable refresh
+#   AB_FORCE_UPDATE        "1" = force Command.framework/executable refresh
 #   AB_WARNINGS_AS_ERRORS  "1" = treat validation warnings as build-halting errors
 #   AB_ASSUME_YES          "1" = answer ab_confirm prompts "yes" (e.g. Python upgrade)
 #   AB_NO_DESKTOP_ENTRY    "1" = Linux: do not add the applet to the desktop's app list
@@ -705,15 +705,30 @@ update_linux_requires() {
     return 0
 }
 
-# Install or update Abracode.framework and executable
+# Install or update Command.framework and executable
 update_framework() {
     local target_path="$1"
-    local src_fw="${OMC_APP_BUNDLE_PATH}/Contents/Frameworks/Abracode.framework"
-    local dst_fw="$target_path/Contents/Frameworks/Abracode.framework"
+    local src_fw="${OMC_APP_BUNDLE_PATH}/Contents/Frameworks/Command.framework"
+    local dst_fw="$target_path/Contents/Frameworks/Command.framework"
     local src_version=$(plist_read "$(framework_info_plist "$src_fw")" CFBundleVersion)
 
+    # Before 6.0 the engine was Abracode.framework, and the applet's executable links that name: the
+    # old framework goes, and the new one and a new executable come in below (the executable's
+    # signature and the Linux install script follow in the rest of the build). A Command.framework
+    # beside the old one goes too, so the install below always brings the new executable: the
+    # version check would otherwise keep the old executable, which then finds no engine.
+    local old_fw="$target_path/Contents/Frameworks/Abracode.framework"
+    if [ -d "$old_fw" ]; then
+        ab_log "Replacing Abracode.framework (before 6.0) with Command.framework v${src_version}"
+        /bin/rm -rf "$old_fw" "$dst_fw"
+        local old_status=$?
+        if [ "$old_status" -ne 0 ]; then
+            ab_log "Cannot remove $old_fw"
+        fi
+    fi
+
     if [ ! -d "$dst_fw" ]; then
-        ab_log "Abracode.framework missing — installing v${src_version}"
+        ab_log "Command.framework missing — installing v${src_version}"
         /bin/mkdir -p "$target_path/Contents/Frameworks"
         /bin/cp -Rp "$src_fw" "$dst_fw"
         copy_executable "$target_path"
@@ -724,7 +739,7 @@ update_framework() {
     local force_update="$AB_FORCE_UPDATE"
 
     if [ "$force_update" = "1" ] || [ "$force_update" = "true" ]; then
-        ab_log "Updating Abracode.framework: v${dst_version} -> v${src_version} (forced)"
+        ab_log "Updating Command.framework: v${dst_version} -> v${src_version} (forced)"
         /bin/rm -rf "$dst_fw"
         /bin/cp -Rp "$src_fw" "$dst_fw"
         copy_executable "$target_path"
@@ -734,12 +749,12 @@ update_framework() {
     local cmp=$(compare_versions "$src_version" "$dst_version")
 
     if [ "$cmp" = "newer" ]; then
-        ab_log "Updating Abracode.framework: v${dst_version} -> v${src_version}"
+        ab_log "Updating Command.framework: v${dst_version} -> v${src_version}"
         /bin/rm -rf "$dst_fw"
         /bin/cp -Rp "$src_fw" "$dst_fw"
         copy_executable "$target_path"
     else
-        ab_log "Abracode.framework v${dst_version} is current"
+        ab_log "Command.framework v${dst_version} is current"
     fi
 }
 
@@ -2369,7 +2384,7 @@ applet_python_version() { # <project-path>
 }
 
 # What the applet runs on, in the Build & Run pane: its OMC engine (the version of
-# its Abracode.framework) and its embedded Python. Refreshed wherever the Embedded
+# its Command.framework) and its embedded Python. Refreshed wherever the Embedded
 # Python group is, because a build changes both: it updates an older framework and
 # installs a missing runtime. The engine line says what Build will do about it, since
 # that is the reason to look; the Python line does not, because Build replaces a
@@ -2381,13 +2396,18 @@ ab_applet_versions() { # <project-path>
         return 0
     fi
 
-    local _ab_fw="$1/Contents/Frameworks/Abracode.framework"
+    local _ab_fw="$1/Contents/Frameworks/Command.framework"
     local _ab_engine="$(plist_read "$(framework_info_plist "$_ab_fw")" CFBundleVersion)"
-    local _ab_own_engine="$(plist_read "$(framework_info_plist "${OMC_APP_BUNDLE_PATH}/Contents/Frameworks/Abracode.framework")" CFBundleVersion)"
+    local _ab_own_engine="$(plist_read "$(framework_info_plist "${OMC_APP_BUNDLE_PATH}/Contents/Frameworks/Command.framework")" CFBundleVersion)"
     local _ab_engine_cmp="$(compare_versions "$_ab_own_engine" "$_ab_engine")"
     # update_framework's three outcomes: install when the folder is missing, update
     # when ours compares newer (which an unreadable version always does), else keep.
-    if [ ! -d "$_ab_fw" ]; then
+    # An applet built before 6.0 carries the engine as Abracode.framework: Build replaces it
+    local _ab_old_fw="$1/Contents/Frameworks/Abracode.framework"
+    if [ ! -d "$_ab_fw" ] && [ -d "$_ab_old_fw" ]; then
+        local _ab_old_engine="$(plist_read "$(framework_info_plist "$_ab_old_fw")" CFBundleVersion)"
+        set_value "$BUILD_ENGINE_VERSION_ID" "${_ab_old_engine:-Unknown} (Abracode.framework) - Build replaces it with Command.framework ${_ab_own_engine}"
+    elif [ ! -d "$_ab_fw" ]; then
         set_value "$BUILD_ENGINE_VERSION_ID" "Not installed - Build installs ${_ab_own_engine}"
     elif [ -z "$_ab_engine" ]; then
         set_value "$BUILD_ENGINE_VERSION_ID" "Version unknown - Build updates it to ${_ab_own_engine}"

@@ -1024,11 +1024,11 @@ static const char * const kTestTokenLabel = "AbracodeTests";
     XCTAssertTrue([windows containsObject:uuid],
                   @"hello should list the window the engine just opened; got %@", windows);
 
-    // The version must be the ENGINE's, from Abracode.framework's own Info.plist. Asserting only
+    // The version must be the ENGINE's, from Command.framework's own Info.plist. Asserting only
     // that it is non-empty would pass if CopyHostVersion were deleted, because ActionUIRemote falls
     // back to the main bundle's version on its own.
     NSDictionary *host = result[@"host"];
-    NSString *engineVersion = [[NSBundle bundleWithIdentifier:@"com.abracode.AbracodeFramework"]
+    NSString *engineVersion = [[NSBundle bundleWithIdentifier:@"com.abracode.Command"]
                                objectForInfoDictionaryKey:@"CFBundleVersion"];
     XCTAssertTrue([engineVersion length] > 0, @"the framework should report a version");
     XCTAssertEqualObjects(host[@"version"], engineVersion,

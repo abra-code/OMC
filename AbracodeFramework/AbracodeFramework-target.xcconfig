@@ -3,8 +3,8 @@ GCC_PREFIX_HEADER = Abracode_Prefix.pch
 
 INFOPLIST_FILE = Info.plist
 INSTALL_PATH = @rpath
-PRODUCT_BUNDLE_IDENTIFIER = com.abracode.AbracodeFramework
-PRODUCT_NAME = Abracode
+PRODUCT_BUNDLE_IDENTIFIER = com.abracode.Command
+PRODUCT_NAME = Command
 WRAPPER_EXTENSION = framework
 
 DYLIB_COMPATIBILITY_VERSION = 1

@@ -31,9 +31,9 @@ pasteboard_tool="$OMC_OMC_SUPPORT_PATH/pasteboard"
 # line sets no support folder) the one in AppletBuilder's own framework, versioned on macOS, not on
 # Linux. plister reads and writes plists and JSON; defaults keeps settings (lib.prefs.sh), in the
 # test's private home when a test runner sets OMC_DEFAULTS_PATH.
-own_support_tools="${OMC_APP_BUNDLE_PATH}/Contents/Frameworks/Abracode.framework/Versions/A/Support"
+own_support_tools="${OMC_APP_BUNDLE_PATH}/Contents/Frameworks/Command.framework/Versions/A/Support"
 if [ ! -d "$own_support_tools" ]; then
-    own_support_tools="${OMC_APP_BUNDLE_PATH}/Contents/Frameworks/Abracode.framework/Support"
+    own_support_tools="${OMC_APP_BUNDLE_PATH}/Contents/Frameworks/Command.framework/Support"
 fi
 support_tools="${OMC_OMC_SUPPORT_PATH:-$own_support_tools}"
 plister_tool="$support_tools/plister"
@@ -386,7 +386,7 @@ applet_executable_folder() { # <applet bundle>
     esac
 }
 
-# Abracode.framework's Info.plist: Resources/Info.plist in the versioned macOS framework, at the
+# Command.framework's Info.plist: Resources/Info.plist in the versioned macOS framework, at the
 # framework's top in the flat one on Linux
 framework_info_plist() { # <framework folder>
     if [ -f "$1/Resources/Info.plist" ]; then

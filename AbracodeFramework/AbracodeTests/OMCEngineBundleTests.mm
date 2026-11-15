@@ -3,8 +3,8 @@
 //  AbracodeTests
 //
 //  OMCGetEngineBundle (Platform/OMCEngineBundle.h): the engine's own bundle, the one way the engine
-//  finds Abracode.framework's Info.plist, localized strings and built-in documents. The macOS source
-//  is compiled into the test bundle (it is not exported from Abracode.framework).
+//  finds Command.framework's Info.plist, localized strings and built-in documents. The macOS source
+//  is compiled into the test bundle (it is not exported from Command.framework).
 //
 
 #import <XCTest/XCTest.h>

@@ -406,16 +406,29 @@ omctest_isolation_lint() { # <app>
     return 0
 }
 
+# The applet's engine framework: Command.framework, or Abracode.framework in an applet built
+# before 6.0 and not rebuilt since (AppletBuilder's build replaces it). Prints nothing when there
+# is neither.
+omctest_engine_framework() { # <app>
+    local fw_name
+    for fw_name in Command Abracode; do
+        if [ -d "$1/Contents/Frameworks/$fw_name.framework" ]; then
+            printf '%s' "$1/Contents/Frameworks/$fw_name.framework"
+            return 0
+        fi
+    done
+    return 1
+}
+
 # Resolve the applet's own embedded Support directory - the tools that ship with
 # the app, not AppletBuilder's.
 omctest_real_support_dir() { # <app>
-    local app_path="$1" versioned flat
-    versioned="$app_path/Contents/Frameworks/Abracode.framework/Versions/A/Support"
-    flat="$app_path/Contents/Frameworks/Abracode.framework/Support"
-    if [ -d "$versioned" ]; then
-        printf '%s' "$versioned"
-    elif [ -d "$flat" ]; then
-        printf '%s' "$flat"
+    local framework
+    framework="$(omctest_engine_framework "$1")" || return 1
+    if [ -d "$framework/Versions/A/Support" ]; then
+        printf '%s' "$framework/Versions/A/Support"
+    elif [ -d "$framework/Support" ]; then
+        printf '%s' "$framework/Support"
     else
         return 1
     fi
@@ -721,9 +734,11 @@ omctest_prepare_env() { # <app> <label>
     omctest_unset_matching 'OMC_[A-Za-z0-9_]*'
     OMC_APP_BUNDLE_PATH="$OMCTEST_APP"
     OMC_OMC_SUPPORT_PATH="$OMCTEST_SUPPORT"
-    OMC_OMC_RESOURCES_PATH="$OMCTEST_APP/Contents/Frameworks/Abracode.framework/Versions/A/Resources"
+    omctest_fw_dir="$(omctest_engine_framework "$OMCTEST_APP")"
+    [ -n "$omctest_fw_dir" ] || omctest_fw_dir="$OMCTEST_APP/Contents/Frameworks/Command.framework"
+    OMC_OMC_RESOURCES_PATH="$omctest_fw_dir/Versions/A/Resources"
     [ -d "$OMC_OMC_RESOURCES_PATH" ] || \
-        OMC_OMC_RESOURCES_PATH="$OMCTEST_APP/Contents/Frameworks/Abracode.framework/Resources"
+        OMC_OMC_RESOURCES_PATH="$omctest_fw_dir/Resources"
     # The engine always exports the host application's own pid. Nothing here is an app,
     # so the harness stands in for it. Be precise about what $$ is: POSIX expands it to
     # the pid of the ORIGINAL shell, never of a subshell, and omctest_run_file wraps each
@@ -841,7 +856,7 @@ omctest_build_support() { # <app> <dest>
     local app_path="$1" dest_dir="$2" real_dir tool stub_name
     real_dir=$(omctest_real_support_dir "$app_path")
     if [ -z "$real_dir" ]; then
-        printf 'omctest: no Abracode.framework Support directory in %s\n' "$app_path" >&2
+        printf 'omctest: no Command.framework (or, before 6.0, Abracode.framework) Support directory in %s\n' "$app_path" >&2
         return 1
     fi
     OMCTEST_REAL_SUPPORT="$real_dir"

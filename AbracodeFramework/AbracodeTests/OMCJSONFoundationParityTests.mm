@@ -8,7 +8,7 @@
 //  NSJSONWritingSortedKeys. Foundation is the oracle: each test compares both over the same
 //  inputs. The rules and the deliberate differences are in ACFJSON.h.
 //
-//  ACFJSON and yyjson are not exported from Abracode.framework, so they compile into this bundle
+//  ACFJSON and yyjson are not exported from Command.framework, so they compile into this bundle
 //  (ACFJSON.cpp here, yyjson.c through OMCTestsYYJSON.c).
 //
 

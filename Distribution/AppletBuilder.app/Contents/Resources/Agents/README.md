@@ -84,7 +84,7 @@ appletbuilder build <App.app> [--identity <id>] [--thin arm64|x86_64|none] \
                     [--warnings-as-errors] [--force]
 ```
 
-Runs full validation, then refreshes `Abracode.framework` + the executable (and the
+Runs full validation, then refreshes `Command.framework` + the executable (and the
 embedded Python runtime for Python applets) from this AppletBuilder, removes
 `__pycache__`, optionally thins universal binaries, and codesigns. The build halts
 (exit `1`) before signing if validation finds errors, or if `--thin` was asked for and

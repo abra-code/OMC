@@ -48,7 +48,7 @@ For Command Engine development, `Tools/omcitest_tests/run_fixture.sh` runs the s
 
 ```bash
 Tools/omcitest_tests/run_fixture.sh --app ~/git/MyAppApp/MyApp.app \
-    --framework ~/Library/Developer/Xcode/DerivedData/OMC-*/Build/Products/Release/Abracode.framework \
+    --framework ~/Library/Developer/Xcode/DerivedData/OMC-*/Build/Products/Release/Command.framework \
     [--filter <glob>] [--keep] [--verbose]
 ```
 

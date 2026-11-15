@@ -1,6 +1,6 @@
 /*
  *  OMC.h
- *  Abracode.framework
+ *  Command.framework
  *
  *  Copyright 2002-2008 Abracode. All rights reserved.
  *
@@ -12,11 +12,11 @@
 #include <CoreFoundation/CoreFoundation.h>
 
 // The platform's part of this header, one per platform, chosen by the header search path (Common/Apple,
-// Common/Linux): its error codes here, its own entry points at the end. Inside Abracode.framework (where
+// Common/Linux): its error codes here, its own entry points at the end. Inside Command.framework (where
 // the Apple ones are public headers beside this one) a framework header includes them by the framework's
 // name; elsewhere (the Linux build) by their own.
-#if __has_include(<Abracode/OMCPlatformTypes.h>)
-	#include <Abracode/OMCPlatformTypes.h>
+#if __has_include(<Command/OMCPlatformTypes.h>)
+	#include <Command/OMCPlatformTypes.h>
 #else
 	#include "OMCPlatformTypes.h"
 #endif
@@ -192,8 +192,8 @@ void			OMCUnregisterObserver( OMCObserverRef inObserver );
 #endif //__cplusplus
 
 // The entry points one platform has (Common/Apple: the Apple event forms; Common/Linux: none yet)
-#if __has_include(<Abracode/OMCPlatformAPI.h>)
-	#include <Abracode/OMCPlatformAPI.h>
+#if __has_include(<Command/OMCPlatformAPI.h>)
+	#include <Command/OMCPlatformAPI.h>
 #else
 	#include "OMCPlatformAPI.h"
 #endif

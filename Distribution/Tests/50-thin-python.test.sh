@@ -817,11 +817,11 @@ section "12i. the pane shows the applet's engine and Python versions"
 
 # What this AppletBuilder would install, read the way the applet reads it.
 own_engine="$(/usr/bin/plutil -extract CFBundleVersion raw \
-    "$OMC_APP_BUNDLE_PATH/Contents/Frameworks/Abracode.framework/Resources/Info.plist")"
-[ -n "$own_engine" ] || ab_fatal "AppletBuilder under test has no Abracode.framework version"
+    "$OMC_APP_BUNDLE_PATH/Contents/Frameworks/Command.framework/Resources/Info.plist")"
+[ -n "$own_engine" ] || ab_fatal "AppletBuilder under test has no Command.framework version"
 
 add_engine() { # <app> <version>
-    _ae_res="$1/Contents/Frameworks/Abracode.framework/Resources"
+    _ae_res="$1/Contents/Frameworks/Command.framework/Resources"
     /bin/mkdir -p "$_ae_res"
     /usr/bin/plutil -create xml1 "$_ae_res/Info.plist"
     /usr/bin/plutil -insert CFBundleVersion -string "$2" "$_ae_res/Info.plist"
@@ -884,7 +884,7 @@ check "without the vars, patchlevel.h answers" "3.14.8" "$(ui_value "$BUILD_PYTH
 
 ui_reset
 stripped="$(ab_make_project Stripped)"
-/bin/mkdir -p "$stripped/Contents/Frameworks/Abracode.framework/Resources"   # no Info.plist
+/bin/mkdir -p "$stripped/Contents/Frameworks/Command.framework/Resources"   # no Info.plist
 add_versioned_python "$stripped" "3.13.5" dirname
 ab_open_project "$stripped"
 omc_run AppletBuilder.buildrun.loaded

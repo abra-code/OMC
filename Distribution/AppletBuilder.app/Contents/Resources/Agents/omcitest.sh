@@ -387,7 +387,7 @@ _omcitest_build_support() { # <App.app> <dest>
     local _real
     _real="$(_omcitest_support_folder "$1")"
     if [ -z "$_real" ]; then
-        printf 'omcitest: no Abracode.framework Support folder in %s\n' "$1" >&2
+        printf 'omcitest: no Command.framework (or, before 6.0, Abracode.framework) Support folder in %s\n' "$1" >&2
         return 1
     fi
     local _lib="${OMCITEST_RPC%/*}/omctest.sh"
@@ -413,14 +413,20 @@ _omcitest_build_support() { # <App.app> <dest>
 }
 
 # The applet's framework Support folder: Versions/A in macOS's versioned framework, the top of
-# Linux's (Linux/make-applet-bundle.sh). Prints nothing when there is none.
+# Linux's (Linux/make-applet-bundle.sh); Command.framework, or Abracode.framework in an applet
+# built before 6.0 and not rebuilt since. Prints nothing when there is none.
 _omcitest_support_folder() { # <App.app>
-    local _framework="$1/Contents/Frameworks/Abracode.framework"
-    if [ -d "$_framework/Versions/A/Support" ]; then
-        printf '%s\n' "$_framework/Versions/A/Support"
-    elif [ -d "$_framework/Support" ]; then
-        printf '%s\n' "$_framework/Support"
-    fi
+    local _name
+    for _name in Command Abracode; do
+        local _framework="$1/Contents/Frameworks/$_name.framework"
+        if [ -d "$_framework/Versions/A/Support" ]; then
+            printf '%s\n' "$_framework/Versions/A/Support"
+            return 0
+        elif [ -d "$_framework/Support" ]; then
+            printf '%s\n' "$_framework/Support"
+            return 0
+        fi
+    done
 }
 
 # The executable folder of this system's applets: the same bundle layout on both, the executable in

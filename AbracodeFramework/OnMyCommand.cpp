@@ -98,7 +98,7 @@ bool OnMyCommand::sChecksMacOSVersion = true;
 
 OnMyCommand::OnMyCommand(CFPropertyListRef inPlistRef)
 {
-	mBundleRef.Adopt( OMCGetEngineBundle(), kCFObjRetain ); //Abracode.framework
+	mBundleRef.Adopt( OMCGetEngineBundle(), kCFObjRetain ); //Command.framework
 	TRACE_CSTR( "OnMyCommand::OnMyCommand\n" );
 
 	if(inPlistRef != NULL)
@@ -216,14 +216,14 @@ void
 OnMyCommand::InitOmcBundlePaths()
 {
 	// The helper tools' folder, "Support" in the framework's support files folder: on macOS the
-	// framework's top folder, so "Abracode.framework/Support" (a link to the current version's, as
+	// framework's top folder, so "Command.framework/Support" (a link to the current version's, as
 	// "Resources" is); on Linux wherever the bundle's layout puts it. Scripts get it as
 	// OMC_OMC_SUPPORT_PATH and assume nothing about where it is.
-	// No engine bundle (on Linux an applet without Frameworks/Abracode.framework,
+	// No engine bundle (on Linux an applet without Frameworks/Command.framework,
 	// Platform/Linux/OMCEngineBundle.cpp): no support or resources path, rather than a crash in CF
 	if(mBundleRef == nullptr)
 	{
-		OMCLogMessage("the engine's bundle (Abracode.framework) was not found: no support tools or engine resources");
+		OMCLogMessage("the engine's bundle (Command.framework) was not found: no support tools or engine resources");
 		return;
 	}
 	CFObj<CFURLRef> supportFilesURL( ::CFBundleCopySupportFilesDirectoryURL(mBundleRef) );
@@ -2861,7 +2861,7 @@ OnMyCommand::AppendTextToCommand(CFMutableStringRef inCommandRef, CFStringRef in
 			newStrRef = CreateEscapedStringCopy(commandRuntimeData.inputText, escSpecialCharsMode);
 		break;
 		
-		// this is deprecated. Abracode.framework paths as below are preferred since version 2.0
+		// this is deprecated. The engine framework's paths as below are preferred since version 2.0
 		case MY_BUNDLE_PATH:
 		{
 			if(mBundleRef != nullptr)
@@ -3229,7 +3229,7 @@ OnMyCommand::PopulateEnvironList(CFMutableDictionaryRef ioEnvironList, CommandRu
 				releaseNewString = false;
 			break;
 			
-			// this is deprecated. Abracode.framework paths as below are preferred since version 2.0
+			// this is deprecated. The engine framework's paths as below are preferred since version 2.0
 			case MY_BUNDLE_PATH:
 			{
 				if(mBundleRef != NULL)

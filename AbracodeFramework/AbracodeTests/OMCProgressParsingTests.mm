@@ -3,7 +3,7 @@
 //  AbracodeTests
 //
 //  Unit tests for SplitStringIntoLines in OMCProgressParsing.cpp, the portable half of PROGRESS
-//  (the window half is covered by OMCProgressTests). Not exported from Abracode.framework, so the
+//  (the window half is covered by OMCProgressTests). Not exported from Command.framework, so the
 //  source compiles into this bundle.
 //
 

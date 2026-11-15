@@ -83,7 +83,7 @@ func tool(_ name: String, _ dependencies: [Target.Dependency]) -> Target {
 let package = Package(
     name: "OMC",
     products: [
-        // The engine: the counterpart of Abracode.framework's binary. Linked with -z defs, so a
+        // The engine: the counterpart of Command.framework's binary. Linked with -z defs, so a
         // platform function with no Linux implementation yet is a link error.
         .library(name: "Abracode", type: .dynamic, targets: ["Abracode"]),
         .executable(name: "plister", targets: ["plister"]),

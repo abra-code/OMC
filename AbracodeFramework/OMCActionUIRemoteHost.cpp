@@ -109,7 +109,7 @@ CopyHostName()
 	return "OMC";
 }
 
-// The engine version, taken from Abracode.framework's own Info.plist, where CFBundleVersion is
+// The engine version, taken from Command.framework's own Info.plist, where CFBundleVersion is
 // substituted from OMC_BUNDLE_VERSION in Common/OmcVersion.xcconfig. A client asking what it is
 // talking to wants the OMC version, not the applet's, which it already has from the name.
 static std::string

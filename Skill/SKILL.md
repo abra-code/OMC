@@ -12,7 +12,7 @@ version: "1.0"
 
 Command Workshop (formerly OMC) is a macOS low-code app builder engine. Command Workshop **applets** are GUI `.app` bundles, with optional macOS Services menu items. Each applet combines a declarative command manifest (`Command.plist`) with shell scripts, Python scripts, or AppleScript files that implement the actions.
 
-The Command Engine (`Abracode.framework`) handles app runtime, input routing, UI presentation, and script execution. A developer writes only the application-specific logic.
+The Command Engine (`Command.framework`) handles app runtime, input routing, UI presentation, and script execution. A developer writes only the application-specific logic.
 
 **User should start a new applet using AppletBuilder** (`Distribution/AppletBuilder.app`) — it creates the correct bundle structure, installs the framework, and generates the initial `Command.plist` and starter scripts.
 
@@ -22,7 +22,7 @@ The Command Engine (`Abracode.framework`) handles app runtime, input routing, UI
 MyApp.app/
 ├── Contents/
 │   ├── Frameworks/
-│   │   └── Abracode.framework       ← OMC engine (copied from AppletBuilder template)
+│   │   └── Command.framework       ← OMC engine (copied from AppletBuilder template)
 │   ├── MacOS/
 │   │   └── MyApp                    ← executable (renamed copy of OMC binary)
 │   ├── Resources/

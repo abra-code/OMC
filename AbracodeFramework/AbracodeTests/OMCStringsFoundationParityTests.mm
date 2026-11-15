@@ -10,7 +10,7 @@
 //  returning exactly what Foundation returns on macOS. Foundation is the oracle here: every test
 //  compares the C++ function with the NSString call it replaced, over exhaustive inputs.
 //
-//  The functions are not exported from Abracode.framework, so the sources compile directly into
+//  The functions are not exported from Command.framework, so the sources compile directly into
 //  this test bundle, as OMCEngineTempDir.h does for its tests.
 //
 #import <XCTest/XCTest.h>

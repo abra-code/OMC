@@ -54,7 +54,7 @@ public:
 	// Fills outMenu when it is not NULL; activation is always enforced.
 	OSStatus			ExamineHostSelection( const OMCHostSelection &inSelection, SInt32 inCommandRef, OMCMenuModel *outMenu );
 	void				PostMenuCleanup();
-	CFBundleRef			GetBundleRef() const { return mBundleRef; } // Abracode.framework
+	CFBundleRef			GetBundleRef() const { return mBundleRef; } // Command.framework
 
 	OSStatus			CommonContextCheck( CFTypeRef inContext, const OMCHostSelection *inHostSelection, const OMCContextData *inParentContext, OMCMenuModel *outMenu, SInt32 inCmdIndex, bool inEnforceActivationMatch = true );
     // internal API to execute a command, with the context the last CommonContextCheck examined
@@ -198,7 +198,7 @@ protected:
     static SInt32				sMacOSVersion;
     static bool					sChecksMacOSVersion; // false where the system is not macOS (OMCGetMacOSVersion)
 
-	CFObj<CFBundleRef>			mBundleRef; // Abracode.framework
+	CFObj<CFBundleRef>			mBundleRef; // Command.framework
 
 	CFObj<CFURLRef>				mPlistURL;
 	CFObj<CFURLRef>				mExternBundleOverrideURL;

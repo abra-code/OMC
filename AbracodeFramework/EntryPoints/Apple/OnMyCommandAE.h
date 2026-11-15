@@ -22,7 +22,7 @@ public:
 	OSStatus			ExamineContext( const AEDesc *inAEContext, AEDescList *outCommandPairs ) override;
 	OSStatus			HandleSelection( AEDesc *inAEContext, SInt32 inCommandID ) override;
 	void				PostMenuCleanup() override;
-	CFBundleRef			GetBundleRef() const override; // Abracode.framework, the engine's
+	CFBundleRef			GetBundleRef() const override; // Command.framework, the engine's
 
 private:
 	ARefCountedObj<OnMyCommand>	mEngine;
