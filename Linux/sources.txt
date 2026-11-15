@@ -62,6 +62,7 @@ Abracode AbracodeFramework/Platform/Linux/OMCActionUIModels.cpp
 Abracode AbracodeFramework/Platform/Linux/OMCActionUIAddOns.cpp
 Abracode AbracodeFramework/Platform/Linux/OMCTestPlatform.cpp
 Abracode AbracodeFramework/Platform/Linux/OMCAppShell.cpp
+Abracode AbracodeFramework/Platform/Linux/OMCDesktopRegistration.cpp
 Abracode AbracodeFramework/Platform/Linux/OMCModalLoop.cpp
 Abracode AbracodeFramework/Platform/Linux/OMCWindowHost.cpp
 Abracode AbracodeFramework/Platform/Linux/OMCPythonCachePrefix.cpp

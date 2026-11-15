@@ -34,6 +34,7 @@
 #include "OMCTestHost.h"
 #include "ActionUIC.h"
 #include "OMCWindowHost.h"
+#include "Linux/OMCDesktopRegistration.h"
 #include "OMCLog.h"
 #include "ACFString.h"
 #include "CFObj.h"
@@ -141,6 +142,8 @@ FinishLaunching()
 	sHost->launchFinished = true;
 	sHost->applet->DidFinishLaunching();
 	OMCHandleAppLifecycleEvent(OMCAppLifecycleEvent::DidLaunch);
+	// Whether this copy is on the desktop's app list, and the question if not (in the background)
+	OMCOfferDesktopRegistration();
 }
 
 long

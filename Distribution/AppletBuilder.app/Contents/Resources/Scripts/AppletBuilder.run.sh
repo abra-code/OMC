@@ -20,4 +20,8 @@ done
 # echo "env vars after scrubbing:"
 # env | sort
 
+# Linux: the project under development is not asked at launch whether to go on the desktop's app list
+# (Platform/Linux/OMCDesktopRegistration.h); Build & Run's own button adds it. No effect on macOS.
+export COMMAND_ENGINE_NO_DESKTOP_PROMPT=1
+
 "$open_tool" "$project_path"

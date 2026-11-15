@@ -24,6 +24,15 @@
 #                 linux-app-entry.py and command-services.py, with the system's python3), then
 #                 checks the file manager plug-in.
 #   --unregister  takes it off again.
+#   --status      for the engine's first-launch check (EntryPoints/Linux/OMCAppletMain.cpp,
+#                 Platform/Linux/OMCDesktopRegistration.cpp): one word on standard output:
+#                 "this" (this copy is on the app list), "moved" (the entry runs a program that is
+#                 no longer there: the engine registers this copy without asking), "other" (another
+#                 copy that is there owns it: nothing is done), "none" (not on the app list: the
+#                 engine asks), or "declined" (not on it, and the user answered Never).
+#   --decline     remembers the answer Never (do not ask again): the applet's setting CommandEngineDesktopPrompt =
+#                 never, in its own settings domain (its bundle identifier; the Support folder's
+#                 defaults tool). --register still works; the setting only stops the question.
 #
 # Exit status: 0 everything is there (--check) or done, 1 something is missing or a step failed,
 # 2 bad arguments or not inside an applet bundle.
@@ -33,9 +42,9 @@ if [ $# -ne 1 ]; then
     mode=""
 fi
 case "$mode" in
-    --check|--register|--unregister) ;;
+    --check|--register|--unregister|--status|--decline) ;;
     *)
-        printf 'Usage: %s --check | --register | --unregister\n' "$0" >&2
+        printf 'Usage: %s --check | --register | --unregister | --status | --decline\n' "$0" >&2
         exit 2
         ;;
 esac
@@ -49,6 +58,8 @@ fi
 info_plist="$bundle/Contents/Info.plist"
 support="$bundle/Contents/Frameworks/Abracode.framework/Support"
 plister="$support/plister"
+# The applet's setting that stops the engine's first-launch question (--decline)
+prompt_key="CommandEngineDesktopPrompt"
 missing_count=0
 
 name="$(/usr/bin/basename -- "$bundle" .app)"
@@ -163,6 +174,45 @@ file_manager_plugin() {
     return 1
 }
 
+# Whose the desktop entry for <identifier> is: sets entry_file, entry_exec (its Exec line) and
+# entry_state: "none" (no entry), "this" (it runs this copy), "moved" (it runs a program that is no
+# longer there: this applet was moved or renamed) or "other" (another copy that is there).
+# The entry is this copy's when the program it runs is in this bundle: its TryExec is the program's
+# path (linux-app-entry.py writes it as it is, but for a backslash doubled), and its Exec starts with
+# that path, in double quotes when the path has a space (escaped further when it has a $, `, " or
+# backslash, which only TryExec then matches). Matched from the start: a copy at /a/Find.app is not
+# one at /b/a/Find.app.
+entry_owner() { # <identifier>
+    entry_file="$data_home/applications/$1.desktop"
+    entry_exec=""
+    entry_state="none"
+    local try_exec=""
+    if [ -f "$entry_file" ]; then
+        entry_exec="$(/usr/bin/sed -n 's/^Exec=//p' "$entry_file" | /usr/bin/head -n 1)"
+        try_exec="$(/usr/bin/sed -n 's/^TryExec=//p' "$entry_file" | /usr/bin/head -n 1)"
+    fi
+    if [ -z "$entry_exec" ]; then
+        return
+    fi
+    local program_folder="$bundle/Contents/Linux/"
+    case "$try_exec" in
+        "$program_folder"*) entry_state="this"; return ;;
+    esac
+    case "$entry_exec" in
+        "$program_folder"*|"\"$program_folder"*) entry_state="this"; return ;;
+    esac
+    entry_state="other"
+    # Only a TryExec names the program plainly: with a backslash doubled in it, it is not tested
+    case "$try_exec" in
+        /*\\*) ;;
+        /*)
+            if [ ! -e "$try_exec" ]; then
+                entry_state="moved"
+            fi
+            ;;
+    esac
+}
+
 check() {
     printf '%s (%s)\n' "$name" "$bundle"
 
@@ -258,35 +308,22 @@ check() {
         missing_count=$((missing_count + 1))
         return
     fi
-    local entry="$data_home/applications/$identifier.desktop"
-    local exec_line=""
-    local try_exec=""
-    if [ -f "$entry" ]; then
-        exec_line="$(/usr/bin/sed -n 's/^Exec=//p' "$entry" | /usr/bin/head -n 1)"
-        try_exec="$(/usr/bin/sed -n 's/^TryExec=//p' "$entry" | /usr/bin/head -n 1)"
-    fi
-    # The entry is this copy's when the program it runs is in this bundle: its TryExec is the
-    # program's path (linux-app-entry.py writes it as it is, but for a backslash doubled), and its
-    # Exec starts with that path, in double quotes when the path has a space (escaped further when
-    # it has a $, `, " or backslash, which only TryExec then matches). Matched from the start: a
-    # copy at /a/Find.app is not one at /b/a/Find.app.
-    local program_folder="$bundle/Contents/Linux/"
-    local this_copy=0
-    case "$try_exec" in
-        "$program_folder"*) this_copy=1 ;;
+    entry_owner "$identifier"
+    case "$entry_state" in
+        none)
+            printf 'App list: not added (install-applet.sh --register adds it)\n'
+            missing_count=$((missing_count + 1))
+            ;;
+        this) printf 'App list: added (%s)\n' "$entry_file" ;;
+        moved)
+            printf 'App list: added for a copy that is no longer there (%s); --register adds this one\n' "$entry_exec"
+            missing_count=$((missing_count + 1))
+            ;;
+        *)
+            printf 'App list: added for another copy (%s)\n' "$entry_exec"
+            missing_count=$((missing_count + 1))
+            ;;
     esac
-    case "$exec_line" in
-        "$program_folder"*|"\"$program_folder"*) this_copy=1 ;;
-    esac
-    if [ -z "$exec_line" ]; then
-        printf 'App list: not added (install-applet.sh --register adds it)\n'
-        missing_count=$((missing_count + 1))
-    elif [ "$this_copy" -eq 1 ]; then
-        printf 'App list: added (%s)\n' "$entry"
-    else
-        printf 'App list: added for another copy (%s)\n' "$exec_line"
-        missing_count=$((missing_count + 1))
-    fi
 
     # File services: only for an applet that has any
     has_file_services
@@ -365,6 +402,27 @@ case "$mode" in
         if [ "$services_status" -ne 0 ] || [ "$entry_status" -ne 0 ]; then
             exit 1
         fi
+        exit 0
+        ;;
+    --status|--decline)
+        identifier="$("$plister" get value "$info_plist" /CFBundleIdentifier 2>/dev/null)"
+        id_status=$?
+        if [ "$id_status" -ne 0 ] || [ -z "$identifier" ]; then
+            printf 'No CFBundleIdentifier in %s (or Command Engine is not installed)\n' "$info_plist" >&2
+            exit 1
+        fi
+        if [ "$mode" = "--decline" ]; then
+            "$support/defaults" write "$identifier" "$prompt_key" -string never
+            exit $?
+        fi
+        entry_owner "$identifier"
+        if [ "$entry_state" = "none" ]; then
+            declined="$("$support/defaults" read "$identifier" "$prompt_key" 2>/dev/null)"
+            if [ "$declined" = "never" ]; then
+                entry_state="declined"
+            fi
+        fi
+        printf '%s\n' "$entry_state"
         exit 0
         ;;
 esac
