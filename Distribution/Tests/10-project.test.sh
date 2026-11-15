@@ -19,10 +19,10 @@ omc_object "$project"
 omc_run AppletBuilder.main
 check_status "main succeeded"                    0
 check "it opened the project window"        "1"  "$(chain_asked AppletBuilder.project)"
-check "and not the New Applet dialog"       "0"  "$(chain_asked AppletBuilder.new.applet)"
+check "and not the Welcome window"          "0"  "$(chain_asked AppletBuilder.welcome)"
 check "the dropped applet was stashed"  "$project" "$(ab_pending_get)"
 
-section "2. anything that is not an applet opens New Applet instead"
+section "2. anything that is not an applet opens the Welcome window instead"
 
 chains_reset
 ab_reset_state
@@ -31,7 +31,7 @@ printf 'hello\n' > "$notapp"
 omc_object "$notapp"
 omc_run AppletBuilder.main
 check_status "main succeeded"                    0
-check "it opened the New Applet dialog"     "1"  "$(chain_asked AppletBuilder.new.applet)"
+check "it opened the Welcome window"        "1"  "$(chain_asked AppletBuilder.welcome)"
 check "and not the project window"          "0"  "$(chain_asked AppletBuilder.project)"
 check "nothing was stashed"                 ""   "$(ab_pending_get)"
 
@@ -45,7 +45,7 @@ hollow="$OMCTEST_WORK/Hollow.app"
 /bin/mkdir -p "$hollow/Contents"
 omc_object "$hollow"
 omc_run AppletBuilder.main
-check "it fell through to New Applet"       "1"  "$(chain_asked AppletBuilder.new.applet)"
+check "it fell through to the Welcome window" "1" "$(chain_asked AppletBuilder.welcome)"
 check "and did not open a project window"   "0"  "$(chain_asked AppletBuilder.project)"
 
 section "4. project.init takes the stashed applet and makes it the window's own"
