@@ -1,12 +1,13 @@
 #!/bin/bash
 # lib.validate.sh - Script syntax validation for AppletBuilder
 #
-# Sources lib.common.sh for: python3
+# Sources lib.common.sh for: python3; lib.plist.sh for: command_plist_lint
 
 [ -n "$__LIB_VALIDATE_SH" ] && return 0
 __LIB_VALIDATE_SH=1
 
 source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.common.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.plist.sh"
 
 # Heuristic scan for bash 4+ features that do not exist in macOS bash 3.2
 # (/bin/bash AND /bin/sh are both bash 3.2 — there is no bash 4/5 on a stock
@@ -166,12 +167,13 @@ validate_command_file() {
         return 99
     fi
 
-    # 1) Fast syntax gate — JSON via json.tool, classic plist via plutil -lint.
+    # 1) Fast syntax gate — JSON via json.tool, classic plist via command_plist_lint (plutil -lint
+    #    on macOS, plistlib on Linux).
     local lint_output
     if is_json_command_file "$cmd_file"; then
         lint_output=$("$python3" -m json.tool "$cmd_file" 2>&1 >/dev/null)
     else
-        lint_output=$(/usr/bin/plutil -lint "$cmd_file" 2>&1)
+        lint_output=$(command_plist_lint "$cmd_file" 2>&1)
     fi
     if [ "$?" -ne 0 ]; then
         COMMAND_VALIDATE_OUTPUT="$lint_output"

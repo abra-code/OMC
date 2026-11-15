@@ -427,6 +427,111 @@ check "removing an out-of-range index is a no-op, not a crash" "1" \
 check "removing a valid index removes exactly one" "0" \
     "$(ab_py plist_edit 'len((op_append_command(d, ["A"]), op_remove_command(d, ["0"]), d["COMMAND_LIST"])[2])')"
 
+section "14b. a legacy Command.plist on Linux: plist_convert.py does what plutil does"
+# A legacy Command.plist is edited as JSON: plutil converts it on macOS, and on
+# Linux (no plutil) plist_convert.py with plistlib. lib.plist.sh picks by OSTYPE,
+# so setting it to linux-gnu runs the Linux branch here, and every result is
+# compared with plutil's, byte for byte.
+
+legacy_dir="$(/usr/bin/mktemp -d "${TMPDIR:-/tmp}/ab_legacy_plist_XXXXXX")"
+/bin/cat > "$legacy_dir/Command.plist" <<'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>VERSION</key>
+	<integer>2</integer>
+	<key>COMMAND_LIST</key>
+	<array>
+		<dict>
+			<key>NAME</key>
+			<string>Show "Path" &amp; More</string>
+			<key>COMMAND_ID</key>
+			<string>widget.show</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_shell_script</string>
+			<key>COMMAND</key>
+			<array>
+				<string>echo "caf&#233; &lt;ok&gt;"</string>
+			</array>
+			<key>OUTPUT_WINDOW_SETTINGS</key>
+			<dict>
+				<key>TEXT_SIZE</key>
+				<integer>11</integer>
+				<key>WINDOW_ALPHA</key>
+				<real>0.95</real>
+				<key>WINDOW_LARGE</key>
+				<real>1e+20</real>
+			</dict>
+			<key>REFRESH_PATHS</key>
+			<true/>
+		</dict>
+		<dict>
+			<key>NAME</key>
+			<string>Second</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+	</array>
+</dict>
+</plist>
+EOF
+# lib.plist.sh run as on Linux: OSTYPE set before it is sourced (bash sets it at start-up)
+as_linux() {
+    /bin/bash -c 'OSTYPE=linux-gnu; . "$1" >/dev/null 2>&1; shift; "$@"' _ "$AB_SCRIPTS/lib.plist.sh" "$@"
+}
+legacy="$legacy_dir/Command.plist"
+
+check "the editor's text of a command is plutil's" \
+    "$(ab_call lib.plist.sh command_text "$legacy" 0)" "$(as_linux command_text "$legacy" 0)"
+check "and it is the command's dict" "<dict>" "$(as_linux command_text "$legacy" 0 | /usr/bin/head -1)"
+check "a command that is not there shows nothing" "" "$(as_linux command_text "$legacy" 5)"
+
+/usr/bin/plutil -convert json -o "$legacy_dir/plutil.json" "$legacy"
+as_linux command_plist_to_json "$legacy" "$legacy_dir/linux.json"
+check "converted to JSON" "0" "$?"
+/usr/bin/plutil -convert xml1 -o "$legacy_dir/from-plutil-json.plist" "$legacy_dir/plutil.json"
+/usr/bin/plutil -convert xml1 -o "$legacy_dir/from-linux-json.plist" "$legacy_dir/linux.json"
+check "with the values plutil's JSON has" "same" \
+    "$(/usr/bin/cmp -s "$legacy_dir/from-plutil-json.plist" "$legacy_dir/from-linux-json.plist" && echo same || echo different)"
+as_linux command_plist_from_json "$legacy_dir/plutil.json" "$legacy_dir/linux-xml1.plist"
+check "and back to XML as plutil writes it" "same" \
+    "$(/usr/bin/cmp -s "$legacy_dir/from-plutil-json.plist" "$legacy_dir/linux-xml1.plist" && echo same || echo different)"
+
+check "a valid plist passes the lint" "0" "$(as_linux command_plist_lint "$legacy" >/dev/null 2>&1; echo $?)"
+printf '<plist><dict><key>A</key></dict>' > "$legacy_dir/broken.plist"
+check "a broken one does not" "1" "$(as_linux command_plist_lint "$legacy_dir/broken.plist" >/dev/null 2>&1; echo $?)"
+check "and says why" "yes" \
+    "$([ -n "$(as_linux command_plist_lint "$legacy_dir/broken.plist" 2>&1)" ] && echo yes || echo no)"
+
+# A whole edit through plist_edit, once by each branch, from the same file
+/bin/cp "$legacy" "$legacy_dir/mac.plist"
+/bin/cp "$legacy" "$legacy_dir/linux.plist"
+ab_call lib.plist.sh plist_edit "$legacy_dir/mac.plist" append_command_full New new.cmd exe_shell_script act_always >/dev/null 2>&1
+as_linux plist_edit "$legacy_dir/linux.plist" append_command_full New new.cmd exe_shell_script act_always >/dev/null 2>&1
+check "an edit on Linux succeeds" "0" "$?"
+check "and writes what the plutil branch writes" "same" \
+    "$(/usr/bin/cmp -s "$legacy_dir/mac.plist" "$legacy_dir/linux.plist" && echo same || echo different)"
+check "the new command is there" "New" "$(ab_call lib.plist.sh plist_read "$legacy_dir/linux.plist" COMMAND_LIST/2/NAME)"
+
+# One difference, on purpose: plutil's JSON writes a whole-number real as 1, which
+# comes back an integer; plistlib's JSON keeps it a real (1.0)
+printf '<plist version="1.0"><dict><key>COMMAND_LIST</key><array><dict><key>NAME</key><string>A</string><key>SCALE</key><real>1</real></dict></array></dict></plist>' > "$legacy_dir/real.plist"
+as_linux plist_edit "$legacy_dir/real.plist" remove_command 5 >/dev/null 2>&1
+check "a whole-number real stays a real on Linux" "1" "$(/usr/bin/grep -c '<real>1</real>' "$legacy_dir/real.plist")"
+
+# A carriage return would come back a line feed through plistlib: refused, file untouched
+printf '<plist version="1.0"><dict><key>COMMAND_LIST</key><array><dict><key>NAME</key><string>A</string><key>COMMAND</key><array><string>echo a\r\necho b</string></array></dict></array></dict></plist>' > "$legacy_dir/crlf.plist"
+/bin/cp "$legacy_dir/crlf.plist" "$legacy_dir/crlf-before.plist"
+as_linux plist_edit "$legacy_dir/crlf.plist" remove_command 5 >/dev/null 2>&1
+check "a Command.plist with a carriage return is refused on Linux" "1" "$?"
+check "and left as it was" "same" \
+    "$(/usr/bin/cmp -s "$legacy_dir/crlf.plist" "$legacy_dir/crlf-before.plist" && echo same || echo different)"
+printf '<plist version="1.0"><dict><key>COMMAND_LIST</key><array><dict><key>NAME</key><string>A&#13;</string></dict></array></dict></plist>' > "$legacy_dir/cr-ref.plist"
+check "so is one written as a character reference" "1" \
+    "$(as_linux command_plist_lint "$legacy_dir/cr-ref.plist" >/dev/null 2>&1; echo $?)"
+/bin/rm -rf "$legacy_dir"
+
 section "15. renaming values inside a JSON manifest"
 # json_rename_value.walk is what carries an applet's new name through its command
 # file. It must replace whole scalar VALUES only - never keys, never substrings,

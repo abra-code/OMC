@@ -72,16 +72,24 @@ ${edited_text}
 </plist>
 EOF
 
-    # Validate the XML is a valid plist
-    if ! /usr/bin/plutil -lint "$temp_plist" > /dev/null 2>&1; then
+    # Validate the XML is a valid plist (plutil on macOS, plist_convert.py on Linux)
+    command_plist_lint "$temp_plist" > /dev/null 2>&1
+    lint_status=$?
+    if [ "$lint_status" -ne 0 ]; then
         set_value "$CMD_EDITED_LABEL_ID" "Error: invalid plist XML"
         /bin/rm -f "$temp_plist" "$temp_json"
         exit 1
     fi
 
     # Convert edited dict to JSON
-    /usr/bin/plutil -convert json -o "$temp_json" "$temp_plist"
+    command_plist_to_json "$temp_plist" "$temp_json"
+    convert_status=$?
     /bin/rm -f "$temp_plist"
+    if [ "$convert_status" -ne 0 ]; then
+        set_value "$CMD_EDITED_LABEL_ID" "Error: the plist XML could not be converted"
+        /bin/rm -f "$temp_json"
+        exit 1
+    fi
 fi
 
 # Replace the command entry (plist_edit handles json/plist output format)

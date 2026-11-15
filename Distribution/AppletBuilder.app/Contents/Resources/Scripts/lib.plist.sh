@@ -210,9 +210,11 @@ plist_edit_replace() {
 # The Info.plist operations (set_keys, append_service, update_service, remove_service) are
 # made with plister (the info_plist_* functions above), on macOS and Linux. The command file
 # operations are plist_edit.py's: a .json file (Command.json) is edited as it is; a legacy
-# Command.plist is round-tripped through JSON with plutil (plist -> json -> edit -> xml1), on
-# macOS only. Every path edits a temp copy and only replaces the original on success, so a
-# failed edit never corrupts the file.
+# Command.plist is round-tripped through JSON (plist -> json -> edit -> xml1; plutil on macOS,
+# plist_convert.py on Linux). Every path edits a temp copy: the Info.plist and Command.json
+# paths replace the original only on success; the Command.plist path writes its last step, the
+# conversion back to XML, onto the original (plist_convert.py builds the whole result before it
+# opens the file, so a failed conversion leaves it as it was).
 #
 # Usage:
 #   plist_edit "$plist" set_keys CFBundleName "$name"
@@ -256,27 +258,63 @@ plist_edit() {
         return $?
     fi
 
-    # A legacy Command.plist: plutil, macOS only (a Linux applet's command file is Command.json)
-    if ! ab_on_macos; then
-        echo "plist_edit: $operation on a Command.plist needs macOS (plutil)" >&2
-        /bin/rm -f "$tmp"
-        return 1
-    fi
-    /usr/bin/plutil -convert json -o "$tmp" "$plist" || { /bin/rm -f "$tmp"; return 1; }
+    # A legacy Command.plist: round-tripped through JSON (plist -> json -> edit -> xml1)
+    command_plist_to_json "$plist" "$tmp" || { /bin/rm -f "$tmp"; return 1; }
     "$python3" "$editor" "$tmp" "$operation" "$@" || { /bin/rm -f "$tmp"; return 1; }
-    /usr/bin/plutil -convert xml1 -o "$plist" "$tmp"
+    command_plist_from_json "$tmp" "$plist"
     local rc=$?
     /bin/rm -f "$tmp"
     return $rc
 }
 
+# A legacy Command.plist's conversions, which its editing is built on: plutil on macOS; on Linux,
+# which has no plutil, plist_convert.py does the same with Python's plistlib.
+command_plist_convert_tool="${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/plist_convert.py"
+
+# The plist as JSON, in a file
+#   command_plist_to_json <plist> <json out>
+command_plist_to_json() {
+    if ab_on_macos; then
+        /usr/bin/plutil -convert json -o "$2" "$1"
+        return $?
+    fi
+    "$python3" "$command_plist_convert_tool" to-json "$1" "$2"
+    return $?
+}
+
+# JSON back to an XML plist
+#   command_plist_from_json <json> <plist out>
+command_plist_from_json() {
+    if ab_on_macos; then
+        /usr/bin/plutil -convert xml1 -o "$2" "$1"
+        return $?
+    fi
+    "$python3" "$command_plist_convert_tool" to-xml "$1" "$2"
+    return $?
+}
+
+# Whether a file is a valid plist; what is wrong with it is printed (plutil's text on macOS)
+#   command_plist_lint <plist>
+command_plist_lint() {
+    if ab_on_macos; then
+        /usr/bin/plutil -lint "$1"
+        return $?
+    fi
+    "$python3" "$command_plist_convert_tool" lint "$1"
+    return $?
+}
+
 # One command of a command file as the command editor shows it: indented JSON (keys in file
-# order) for a Command.json, read with Python, so it works on Linux too; the <dict> fragment of
-# the XML for a legacy Command.plist (macOS only: plutil). Nothing when the file or the command
-# is not there.
+# order) for a Command.json, read with Python; the <dict> fragment of the XML for a legacy
+# Command.plist (plutil on macOS, plist_convert.py on Linux). Nothing when the file or the
+# command is not there.
 command_text() { # <command file> <index>
     if is_json_command_file "$1"; then
         "$python3" "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/plist_edit.py" "$1" print_command "$2" 2>/dev/null
+        return $?
+    fi
+    if ! ab_on_macos; then
+        "$python3" "$command_plist_convert_tool" extract-command "$1" "$2" 2>/dev/null
         return $?
     fi
     /usr/bin/plutil -extract "COMMAND_LIST.$2" xml1 -o - "$1" 2>/dev/null | /usr/bin/sed '1,3d; $d'

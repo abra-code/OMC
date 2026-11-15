@@ -2,8 +2,9 @@
 """plist_edit.py - Edit a command file's data in JSON.
 
 Called by the plist_edit() shell function in lib.plist.sh, for the command file operations: on
-a Command.json directly, on a legacy Command.plist (macOS only) through the JSON plutil makes of
-it. The Info.plist operations are not here: lib.plist.sh makes them with plister.
+a Command.json directly, on a legacy Command.plist through the JSON made of it (plutil on macOS,
+plist_convert.py on Linux). The Info.plist operations are not here: lib.plist.sh makes them with
+plister.
 
 Usage: plist_edit.py <json_file> <operation> [args...]
 
