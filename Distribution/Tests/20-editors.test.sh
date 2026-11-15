@@ -407,9 +407,8 @@ omc_fire AppletBuilder.commands.save.detail "$CMD_DETAIL_ID" '{"NAME": "Readable
 check_status "the save succeeded"          0
 check "and the manifest is still world-readable" "644" "$(/usr/bin/stat -f '%Lp' "$mode_cmd")"
 
-# The Info.plist path replaces in place rather than by rename, so it has never
-# had the problem - asserted so that a future refactor onto one shared code path
-# cannot regress it unnoticed.
+# The Info.plist path (plister on a temp copy) replaces by rename too, through
+# the same mode-carrying step.
 mode_plist="$mode_project/Contents/Info.plist"
 /bin/chmod 644 "$mode_plist"
 ab_call lib.plist.sh plist_edit "$mode_plist" set_keys CFBundleVersion "9.9" >/dev/null 2>&1
