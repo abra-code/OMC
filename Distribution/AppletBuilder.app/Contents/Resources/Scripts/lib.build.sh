@@ -638,13 +638,15 @@ update_linux_installer() {
     return 0
 }
 
-# The libraries ActionUI loads by name for the elements an applet's documents use, which the applet
-# lists in its Info.plist (CommandEngineLinuxRequires, sonames) for its Linux install script
-# (install-applet.sh --check, --install-packages): a WebView needs WebKitGTK, a Map libshumate. Found
-# from every ActionUI document in the bundle's Resources (any *.json, also in *.lproj; not in a
-# Documentation folder, whose element documents are examples) and added to the list, so a library
-# the author lists by hand stays (one the author no longer needs is not taken away). On both
-# systems: the list must be right when an applet built on a Mac is made into a Linux bundle.
+# What an applet needs from a Linux system beyond the command-engine and Swift runtime packages,
+# which it lists in its Info.plist (CommandEngineLinuxRequires, sonames) for its Linux install script
+# (install-applet.sh --check, --install-packages), added to the list, so a library the author lists by
+# hand stays (one the author no longer needs is not taken away):
+# - the libraries ActionUI loads by name for the elements its documents use: a WebView needs
+#   WebKitGTK, a Map libshumate. Found from every ActionUI document in the bundle's Resources (any
+#   *.json, also in *.lproj; not in a Documentation folder, whose element documents are examples). On
+#   both systems: the list must be right when an applet built on a Mac is made into a Linux bundle.
+# - on Linux, what the applet's own programs link (linux_program_requires).
 update_linux_requires() {
     local target_path="$1"
     local resources="$target_path/Contents/Resources"
@@ -652,6 +654,8 @@ update_linux_requires() {
     if [ ! -d "$resources" ] || [ ! -f "$info_plist" ]; then
         return 0
     fi
+    # One "<soname><TAB><why>" line per library
+    local tab="$(printf '\t')"
     local wanted=""
     local element
     local soname
@@ -660,9 +664,13 @@ update_linux_requires() {
     for element in WebView:libwebkitgtk-6.0.so.4 Map:libshumate-1.0.so.1; do
         found="$(/usr/bin/grep -rlE --include='*.json' --exclude-dir=Documentation "\"type(:linux)?\"[[:space:]]*:[[:space:]]*\"${element%%:*}\"" "$resources" 2>/dev/null | /usr/bin/head -n 1)"
         if [ -n "$found" ]; then
-            wanted="$wanted ${element#*:}:${element%%:*}"
+            wanted="$wanted${element#*:}${tab}a ${element%%:*}
+"
         fi
     done
+    if ! ab_on_macos; then
+        wanted="$wanted$(linux_program_requires "$target_path")"
+    fi
     if [ -z "$wanted" ]; then
         return 0
     fi
@@ -688,19 +696,115 @@ update_linux_requires() {
         listed="$listed$("$plister_tool" get value "$info_plist" "/CommandEngineLinuxRequires/$index" 2> /dev/null) "
         index=$((index + 1))
     done
-    local pair
-    for pair in $wanted; do
-        soname="${pair%%:*}"
+    local why
+    local line
+    local append_status
+    # A pipe, not process substitution, which bash in POSIX mode refuses when it reads this file;
+    # the loop's subshell reports a failed append through its exit status. The lines come on
+    # descriptor 3 and the loop's standard input is /dev/null: plister reads its standard input,
+    # and would take the rest of the lines
+    printf '%s\n' "$wanted" | while IFS= read -r line <&3; do
+        if [ -z "$line" ]; then
+            continue
+        fi
+        soname="${line%%"$tab"*}"
+        why="${line#*"$tab"}"
         case "$listed" in
             *" $soname "*) continue ;;
         esac
         "$plister_tool" append string "$soname" "$info_plist" /CommandEngineLinuxRequires > /dev/null
-        local append_status=$?
+        append_status=$?
         if [ "$append_status" -ne 0 ]; then
             ab_log "Cannot add $soname to CommandEngineLinuxRequires"
-            return 1
+            exit 1
         fi
-        ab_log "Linux: the applet needs $soname (a ${pair#*:}); listed in CommandEngineLinuxRequires"
+        listed="$listed$soname "
+        ab_log "Linux: the applet needs $soname ($why); listed in CommandEngineLinuxRequires"
+    done 3<&0 < /dev/null
+    local loop_status="${PIPESTATUS[1]}"
+    if [ "$loop_status" != "0" ]; then
+        return 1
+    fi
+    return 0
+}
+
+# Linux only: what the applet's own programs and libraries link (ELF NEEDED) that neither the bundle
+# nor the command-engine and Swift runtime packages provide, one "<soname><TAB><why>" line each. Its
+# own: every file outside the engine's (Contents/Linux, Contents/Frameworks/Command.framework) and
+# the macOS folders that is executable or named *.so*: its helpers (Contents/Helpers), programs and
+# libraries in Resources and Library, an embedded Python's modules. Those packages provide what the
+# engine programs link (the command-engine package depends on exactly those) and the Swift runtime
+# libraries (in the folders on the engine programs' library search path); a library inside the
+# bundle needs nothing from the system, and glibc's own libraries are on every system. Read with
+# Resources/Linux/elf-needed.py (python3, which the command-engine package brings; no readelf on a
+# user's machine).
+linux_program_requires() { # <applet bundle>
+    local contents="$1/Contents"
+    local reader="${OMC_APP_BUNDLE_PATH}/Contents/Resources/Linux/elf-needed.py"
+    if [ ! -f "$reader" ] || [ ! -x /usr/bin/python3 ]; then
+        ab_log "Linux: no $reader or /usr/bin/python3: the applet's programs' libraries are not listed"
+        return 0
+    fi
+    local file
+    local needed
+    needed="$(/usr/bin/find "$contents" \( -path "$contents/Linux" -o -path "$contents/Frameworks/Command.framework" -o -path "$contents/MacOS" -o -path "$contents/_CodeSignature" \) -prune -o -type f \( -perm -u+x -o -name '*.so' -o -name '*.so.*' \) -exec /usr/bin/python3 -I "$reader" needed {} +)"
+    local read_status=$?
+    if [ "$read_status" -ne 0 ]; then
+        ab_log "Linux: some of the applet's programs could not be read (above); their libraries may be missing from the list"
+    fi
+    if [ -z "$needed" ]; then
+        return 0
+    fi
+
+    # What is there without the applet's list: glibc's, the bundle's own, the engine's, the runtime's
+    local provided=" libc.so.6 libm.so.6 libpthread.so.0 libdl.so.2 librt.so.1 libutil.so.1 libresolv.so.2 libanl.so.1 libmvec.so.1 ld-linux-aarch64.so.1 ld-linux-x86-64.so.2 "
+    provided="$provided$(/usr/bin/find "$contents" \( -name '*.so' -o -name '*.so.*' \) -printf '%f ' 2>/dev/null) "
+    local engine_programs=()
+    for file in "$contents/Linux"/* "$contents/Frameworks/Command.framework/Support"/*; do
+        if [ -f "$file" ]; then
+            engine_programs+=("$file")
+        fi
+    done
+    local engine_needed=""
+    local runpath=""
+    if [ ${#engine_programs[@]} -gt 0 ]; then
+        engine_needed="$(/usr/bin/python3 -I "$reader" needed "${engine_programs[@]}" | /usr/bin/cut -f 1 | /usr/bin/sort -u | /usr/bin/tr '\n' ' ')"
+        for file in "${engine_programs[@]}"; do
+            runpath="$(/usr/bin/python3 -I "$reader" runpath "$file")"
+            if [ -n "$runpath" ]; then
+                break
+            fi
+        done
+    fi
+    provided="$provided$engine_needed "
+    local folder
+    local old_ifs="$IFS"
+    IFS=":"
+    local folders=($runpath)
+    IFS="$old_ifs"
+    for folder in "${folders[@]}"; do
+        if [ -d "$folder" ]; then
+            for file in "$folder"/*.so*; do
+                if [ -f "$file" ]; then
+                    provided="$provided${file##*/} "
+                fi
+            done
+        fi
+    done
+
+    local tab="$(printf '\t')"
+    local bundle="$1"
+    local line
+    local soname
+    local listed=" "
+    printf '%s\n' "$needed" | while IFS= read -r line; do
+        soname="${line%%"$tab"*}"
+        file="${line#*"$tab"}"
+        case "$provided$listed" in
+            *" $soname "*) continue ;;
+        esac
+        listed="$listed$soname "
+        printf '%s\t%s\n' "$soname" "needed by ${file#"$bundle/"}"
     done
     return 0
 }
