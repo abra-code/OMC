@@ -1,5 +1,5 @@
 /*
- *  AbracodeFrameworkVersion.c
+ *  CommandFrameworkVersion.c
  *  
  *  Weak linking support for Command.framework
  *	Compile this file in your project and then call GetAbracodeFrameworkVersion to find out if the framework is installed

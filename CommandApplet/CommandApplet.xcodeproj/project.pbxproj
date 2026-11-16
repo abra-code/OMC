@@ -10,7 +10,7 @@
 		1D63C38C2F1F194F0003586D /* Command.framework in Copy Command.framework */ = {isa = PBXBuildFile; fileRef = 1D63C3852F1F192B0003586D /* Command.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		1D63C38D2F1F19580003586D /* Command.framework in Copy Command.framework */ = {isa = PBXBuildFile; fileRef = 1D63C3852F1F192B0003586D /* Command.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		1D80D5302F12E81400E3B4FB /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
-		1D80D5312F12E81400E3B4FB /* AbracodeFrameworkVersion.c in Sources */ = {isa = PBXBuildFile; fileRef = E2ACB28C12EAE02700A8ACF6 /* AbracodeFrameworkVersion.c */; };
+		1D80D5312F12E81400E3B4FB /* CommandFrameworkVersion.c in Sources */ = {isa = PBXBuildFile; fileRef = E2ACB28C12EAE02700A8ACF6 /* CommandFrameworkVersion.c */; };
 		1D80D5332F12E81400E3B4FB /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
 		1D80D5342F12E81400E3B4FB /* Command.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E23EA1640DFB026E0070E63F /* Command.framework */; settings = {ATTRIBUTES = (Required, ); }; };
 		1DC32A862F1F34C100B4CE84 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 1DC32A852F1F34C100B4CE84 /* Credits.rtf */; };
@@ -21,7 +21,7 @@
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
 		C14245B31502331500E6E946 /* Command.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E23EA1640DFB026E0070E63F /* Command.framework */; settings = {ATTRIBUTES = (Required, ); }; };
 		E23EA2030DFB9B7C0070E63F /* Command.json in Resources */ = {isa = PBXBuildFile; fileRef = E23EA2010DFB9B7C0070E63F /* Command.json */; };
-		E2ACB28D12EAE02800A8ACF6 /* AbracodeFrameworkVersion.c in Sources */ = {isa = PBXBuildFile; fileRef = E2ACB28C12EAE02700A8ACF6 /* AbracodeFrameworkVersion.c */; };
+		E2ACB28D12EAE02800A8ACF6 /* CommandFrameworkVersion.c in Sources */ = {isa = PBXBuildFile; fileRef = E2ACB28C12EAE02700A8ACF6 /* CommandFrameworkVersion.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -30,28 +30,28 @@
 			containerPortal = 1D039DB62E168DAF00D4924A /* Abracode.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = 8DC2EF5B0486A6940098B216;
-			remoteInfo = AbracodeFramework;
+			remoteInfo = CommandFramework;
 		};
 		1D63C3862F1F192B0003586D /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 1D039DB62E168DAF00D4924A /* Abracode.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = 1DCBC0D52F15FCE40002B8AB;
-			remoteInfo = AbracodeTests;
+			remoteInfo = CommandTests;
 		};
 		1D63C3882F1F193B0003586D /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 1D039DB62E168DAF00D4924A /* Abracode.xcodeproj */;
 			proxyType = 1;
 			remoteGlobalIDString = 8DC2EF4F0486A6940098B216;
-			remoteInfo = AbracodeFramework;
+			remoteInfo = CommandFramework;
 		};
 		1D63C38A2F1F19410003586D /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 1D039DB62E168DAF00D4924A /* Abracode.xcodeproj */;
 			proxyType = 1;
 			remoteGlobalIDString = 8DC2EF4F0486A6940098B216;
-			remoteInfo = AbracodeFramework;
+			remoteInfo = CommandFramework;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -122,7 +122,7 @@
 		E2269AC60EB6D8FB0029CCF5 /* OmcProjectCommon.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = OmcProjectCommon.xcconfig; path = ../Common/OmcProjectCommon.xcconfig; sourceTree = SOURCE_ROOT; };
 		E23EA1640DFB026E0070E63F /* Command.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Command.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		E23EA2010DFB9B7C0070E63F /* Command.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = Command.json; sourceTree = SOURCE_ROOT; };
-		E2ACB28C12EAE02700A8ACF6 /* AbracodeFrameworkVersion.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = AbracodeFrameworkVersion.c; path = generated/AbracodeFrameworkVersion.c; sourceTree = BUILT_PRODUCTS_DIR; };
+		E2ACB28C12EAE02700A8ACF6 /* CommandFrameworkVersion.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = CommandFrameworkVersion.c; path = generated/CommandFrameworkVersion.c; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -236,7 +236,7 @@
 			isa = PBXGroup;
 			children = (
 				1D63C3852F1F192B0003586D /* Command.framework */,
-				1D63C3872F1F192B0003586D /* AbracodeTests.xctest */,
+				1D63C3872F1F192B0003586D /* CommandTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -265,7 +265,7 @@
 			children = (
 				32CA4F630368D1EE00C91783 /* CommandApplet_Prefix.pch */,
 				29B97316FDCFA39411CA2CEA /* main.m */,
-				E2ACB28C12EAE02700A8ACF6 /* AbracodeFrameworkVersion.c */,
+				E2ACB28C12EAE02700A8ACF6 /* CommandFrameworkVersion.c */,
 			);
 			name = "Other Sources";
 			sourceTree = "<group>";
@@ -390,10 +390,10 @@
 			remoteRef = 1D63C3842F1F192B0003586D /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		1D63C3872F1F192B0003586D /* AbracodeTests.xctest */ = {
+		1D63C3872F1F192B0003586D /* CommandTests.xctest */ = {
 			isa = PBXReferenceProxy;
 			fileType = wrapper.cfbundle;
-			path = AbracodeTests.xctest;
+			path = CommandTests.xctest;
 			remoteRef = 1D63C3862F1F192B0003586D /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
@@ -479,7 +479,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				1D80D5302F12E81400E3B4FB /* main.m in Sources */,
-				1D80D5312F12E81400E3B4FB /* AbracodeFrameworkVersion.c in Sources */,
+				1D80D5312F12E81400E3B4FB /* CommandFrameworkVersion.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -488,7 +488,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				8D11072D0486CEB800E47090 /* main.m in Sources */,
-				E2ACB28D12EAE02800A8ACF6 /* AbracodeFrameworkVersion.c in Sources */,
+				E2ACB28D12EAE02800A8ACF6 /* CommandFrameworkVersion.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -497,12 +497,12 @@
 /* Begin PBXTargetDependency section */
 		1D63C3892F1F193B0003586D /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			name = AbracodeFramework;
+			name = CommandFramework;
 			targetProxy = 1D63C3882F1F193B0003586D /* PBXContainerItemProxy */;
 		};
 		1D63C38B2F1F19410003586D /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			name = AbracodeFramework;
+			name = CommandFramework;
 			targetProxy = 1D63C38A2F1F19410003586D /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */

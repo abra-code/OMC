@@ -16,7 +16,7 @@
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "8DC2EF4F0486A6940098B216"
                BuildableName = "Command.framework"
-               BlueprintName = "AbracodeFramework"
+               BlueprintName = "CommandFramework"
                ReferencedContainer = "container:Abracode.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -57,7 +57,7 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "8DC2EF4F0486A6940098B216"
             BuildableName = "Command.framework"
-            BlueprintName = "AbracodeFramework"
+            BlueprintName = "CommandFramework"
             ReferencedContainer = "container:Abracode.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -80,7 +80,7 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "8DC2EF4F0486A6940098B216"
             BuildableName = "Command.framework"
-            BlueprintName = "AbracodeFramework"
+            BlueprintName = "CommandFramework"
             ReferencedContainer = "container:Abracode.xcodeproj">
          </BuildableReference>
       </MacroExpansion>

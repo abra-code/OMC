@@ -58,7 +58,7 @@
 }
 
 /// The label this test case's own grant is registered under, so tearDown can withdraw exactly it.
-static const char * const kTestTokenLabel = "AbracodeTests";
+static const char * const kTestTokenLabel = "CommandTests";
 
 /// A token this test process may present. The host requires one - that is the whole point of the
 /// bridge's access control - and the test process is NOT a process the host spawned, so it has no

@@ -20,8 +20,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "1DCBC0D42F15FCE30002B8AB"
-               BuildableName = "AbracodeTests.xctest"
-               BlueprintName = "AbracodeTests"
+               BuildableName = "CommandTests.xctest"
+               BlueprintName = "CommandTests"
                ReferencedContainer = "container:Abracode.xcodeproj">
             </BuildableReference>
          </TestableReference>

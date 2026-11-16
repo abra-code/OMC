@@ -16,7 +16,7 @@
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "8DC2EF4F0486A6940098B216"
                BuildableName = "Command.framework"
-               BlueprintName = "AbracodeFramework"
+               BlueprintName = "CommandFramework"
                ReferencedContainer = "container:AbracodeFramework/Abracode.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -94,6 +94,9 @@
             ReferencedContainer = "container:CommandApplet/CommandApplet.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
+      <MetalAPIValidationSettings
+         isEnabled = "No">
+      </MetalAPIValidationSettings>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release"
@@ -106,7 +109,7 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "8DC2EF4F0486A6940098B216"
             BuildableName = "Command.framework"
-            BlueprintName = "AbracodeFramework"
+            BlueprintName = "CommandFramework"
             ReferencedContainer = "container:AbracodeFramework/Abracode.xcodeproj">
          </BuildableReference>
       </MacroExpansion>

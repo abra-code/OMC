@@ -23,7 +23,7 @@
       "target" : {
         "containerPath" : "container:Abracode.xcodeproj",
         "identifier" : "1DCBC0D42F15FCE30002B8AB",
-        "name" : "AbracodeTests"
+        "name" : "CommandTests"
       }
     }
   ],

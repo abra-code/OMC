@@ -1,5 +1,5 @@
 GCC_PRECOMPILE_PREFIX_HEADER = YES
-GCC_PREFIX_HEADER = Abracode_Prefix.pch
+GCC_PREFIX_HEADER = Command_Prefix.pch
 
 INFOPLIST_FILE = Info.plist
 INSTALL_PATH = @rpath
@@ -9,7 +9,7 @@ WRAPPER_EXTENSION = framework
 
 DYLIB_COMPATIBILITY_VERSION = 1
 DYLIB_CURRENT_VERSION = 1
-EXPORTED_SYMBOLS_FILE = AbracodeFramework.exp
+EXPORTED_SYMBOLS_FILE = CommandFramework.exp
 FRAMEWORK_VERSION = A
 // GENERATED_MODULEMAP_DIR holds the Swift packages' generated headers: OMCActionUIRemoteHost.cpp
 // includes ActionUIRemote-Swift.h by name, as C++ cannot @import the module.

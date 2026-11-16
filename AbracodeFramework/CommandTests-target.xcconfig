@@ -1,5 +1,5 @@
 
-PRODUCT_BUNDLE_IDENTIFIER = com.abracode.AbracodeTests
+PRODUCT_BUNDLE_IDENTIFIER = com.abracode.CommandTests
 PRODUCT_NAME = $(TARGET_NAME)
 
 // Common/ holds shared header-only code (e.g. OMCEngineTempDir.h) that unit tests compile

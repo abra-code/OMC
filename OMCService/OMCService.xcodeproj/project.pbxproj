@@ -20,21 +20,21 @@
 			containerPortal = 1D63C30B2F1F188C0003586D /* Abracode.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = 8DC2EF5B0486A6940098B216;
-			remoteInfo = AbracodeFramework;
+			remoteInfo = CommandFramework;
 		};
 		1D63C3412F1F18F60003586D /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 1D63C30B2F1F188C0003586D /* Abracode.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = 1DCBC0D52F15FCE40002B8AB;
-			remoteInfo = AbracodeTests;
+			remoteInfo = CommandTests;
 		};
 		1D63C3432F1F19030003586D /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 1D63C30B2F1F188C0003586D /* Abracode.xcodeproj */;
 			proxyType = 1;
 			remoteGlobalIDString = 8DC2EF4F0486A6940098B216;
-			remoteInfo = AbracodeFramework;
+			remoteInfo = CommandFramework;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -114,7 +114,7 @@
 			isa = PBXGroup;
 			children = (
 				1D63C3402F1F18F60003586D /* Command.framework */,
-				1D63C3422F1F18F60003586D /* AbracodeTests.xctest */,
+				1D63C3422F1F18F60003586D /* CommandTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -228,10 +228,10 @@
 			remoteRef = 1D63C33F2F1F18F60003586D /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		1D63C3422F1F18F60003586D /* AbracodeTests.xctest */ = {
+		1D63C3422F1F18F60003586D /* CommandTests.xctest */ = {
 			isa = PBXReferenceProxy;
 			fileType = wrapper.cfbundle;
-			path = AbracodeTests.xctest;
+			path = CommandTests.xctest;
 			remoteRef = 1D63C3412F1F18F60003586D /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
@@ -263,7 +263,7 @@
 /* Begin PBXTargetDependency section */
 		1D63C3442F1F19030003586D /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			name = AbracodeFramework;
+			name = CommandFramework;
 			targetProxy = 1D63C3432F1F19030003586D /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
