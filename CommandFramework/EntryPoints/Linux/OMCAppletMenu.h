@@ -17,9 +17,12 @@
 //  - Add to Desktop / Remove from Desktop, before About: this copy's place on the desktop's app list
 //    and in the file managers' Services (Platform/Linux/OMCDesktopRegistration.h), shown once the
 //    applet's install script has told it (actionUIReplaceMenuBarJSON);
+//  - About <name>, in the place of ActionUI's own About (appInfo): the engine's About window
+//    (OMCAboutWindow.h), with the applet's version and Credits.md, as on macOS;
 //  - Quit (Ctrl+Q).
-//  A MainMenu.json CommandGroup "replacing" New, Open, their group (newItem), the File menu, or Quit
-//  (quit, appTermination) takes OMC's item away, as it takes the standard item away on macOS.
+//  A MainMenu.json CommandGroup "replacing" New, Open, their group (newItem), the File menu, About
+//  (about, appInfo) or Quit (quit, appTermination) takes OMC's item away, as it takes the standard
+//  item away on macOS.
 //  Every item gets an action id of OMC's own ("omc.menu.<n>") with a handler for it: the ids the
 //  JSON gives are command ids, and through ActionUI's default handler a chosen item would reach the
 //  active command window as one of its subcommands. A chosen command runs as from the macOS menu:

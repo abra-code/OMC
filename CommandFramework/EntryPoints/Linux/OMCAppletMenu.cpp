@@ -10,6 +10,8 @@
 #include "OMCCommandRunner.h"
 #include "OMCActionUIWindow.h"
 #include "OMCAppShell.h"
+#include "OMCAboutWindow.h"
+#include "OMCHostInfo.h"
 #include "Linux/OMCDesktopRegistration.h"
 #include "OMCLog.h"
 #include "ACFString.h"
@@ -31,7 +33,7 @@ namespace
 // What a chosen item does: run a command (by id or name), or one of OMC's own items
 struct MenuCommand
 {
-	enum class Kind { Command, MainCommand, Quit, RecentFile, ClearRecent, Desktop };
+	enum class Kind { Command, MainCommand, Quit, RecentFile, ClearRecent, Desktop, About };
 	Kind kind {Kind::Command};
 	CFObj<CFStringRef> command;
 	size_t recentIndex {0}; // RecentFile: which of MenuState::recentURIs
@@ -61,6 +63,7 @@ const char *kClearRecentActionID = "omc.menu.recent.clear";
 const size_t kRecentLimit = 10; // as macOS's Open Recent
 const char *kDesktopKey = "omc.desktop"; // the menu part with Add to Desktop / Remove from Desktop
 const char *kDesktopActionID = "omc.menu.desktop";
+const char *kAboutActionID = "omc.menu.about";
 
 void RebuildOpenRecent();
 void ClearRecentFiles();
@@ -137,6 +140,10 @@ HandleMenuAction(const char *inActionID, const char *inWindowUUID, int64_t inVie
 				OMCRemoveFromDesktop();
 			else
 				OMCAddToDesktop();
+			break;
+
+		case MenuCommand::Kind::About:
+			OMCShowAboutWindow(nullptr);
 			break;
 
 		case MenuCommand::Kind::Command:
@@ -679,6 +686,20 @@ CreateMenuElements(CFArrayRef inMainMenuElements)
 			CFDictionarySetValue(newElement, CFSTR("children"), children);
 			CFArrayAppendValue(elements, newElement);
 		}
+	}
+
+	// About, in the place of ActionUI's (libadwaita's About dialog shows no version or credits): the
+	// engine's About window (OMCAboutWindow.h), as on macOS
+	if(!IsReplaced(inMainMenuElements, {"about", "appInfo"}))
+	{
+		sMenu->items.emplace(kAboutActionID, MenuCommand{MenuCommand::Kind::About, nullptr});
+		CFObj<CFStringRef> name(OMCCopyHostAppName());
+		CFObj<CFStringRef> title(CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("About %@"), (name != nullptr) ? (CFStringRef)name : CFSTR("")));
+		CFObj<CFMutableArrayRef> aboutItems(CreateMutableArray());
+		CFObj<CFDictionaryRef> button(CreateButton(title, CFSTR("omc.menu.about"), nullptr));
+		CFArrayAppendValue(aboutItems, button);
+		CFObj<CFDictionaryRef> group(CreateCommandGroup(CFSTR("replacing"), CFSTR("appInfo"), aboutItems));
+		CFArrayAppendValue(elements, group);
 	}
 
 	// Quit, where GNOME's primary menu ends; Ctrl+Q

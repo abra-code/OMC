@@ -14,6 +14,9 @@
 
 - (void)executeCommand:(id)sender;
 
+// The About item's action: the applet's About window (OMCAboutWindow.h), with its Credits.md
+- (void)showAbout:(id)sender;
+
 // Builds the main menu bar programmatically using the shared ActionUIMenuBar
 // engine.  The standard macOS bar (App/File/Edit/Window/Help) is always
 // installed; an optional MainMenu.json resource layers the applet's CommandMenu

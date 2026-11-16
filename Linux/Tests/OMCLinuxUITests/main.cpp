@@ -6,7 +6,8 @@
 //  Platform/Linux/OMCPlatformAlerts.cpp and the file panels of OMCPlatformFilePanels.cpp, and the
 //  applet's menu (EntryPoints/Linux/OMCAppletMenu.cpp), chosen as a click would, and the
 //  clipboard and host info (OMCClipboard.cpp, OMCHostInfo.cpp), forgetting a closed window's
-//  ActionUI model (OMCActionUIModels.cpp), and the ActionUI add-ons (OMCActionUIAddOns.cpp). The
+//  ActionUI model (OMCActionUIModels.cpp), the ActionUI add-ons (OMCActionUIAddOns.cpp), and the
+//  About window (OMCAboutWindow.cpp), opened from the menu and from app bundles made for it. The
 //  program runs its own AdwApplication in the desktop session and answers each one itself, as a
 //  person would: it finds the dialog among the application's windows and clicks a button (or
 //  closes it, or picks files in GTK's file chooser), from a timer set before the call, which
@@ -17,7 +18,12 @@
 //  only that a quit ends a panel waiting in the portal.
 //
 //  Needs a desktop session (on the agent-vm box: XDG_RUNTIME_DIR, WAYLAND_DISPLAY,
-//  DBUS_SESSION_BUS_ADDRESS of its GNOME session). Exit status: 0 all passed, 1 a check failed.
+//  DBUS_SESSION_BUS_ADDRESS of its GNOME session). The About window is one of the engine's built-in
+//  documents, which the engine finds in its bundle; this program links the engine in, so it looks for
+//  Frameworks/Command.framework beside itself, as an applet does: run a copy from a folder holding
+//  a link Frameworks/Command.framework to the built CommandApplet.app's
+//  (Contents/Frameworks/Command.framework), else the About checks fail.
+//  Exit status: 0 all passed, 1 a check failed.
 //
 
 #include "OMCAlerts.h"
@@ -27,6 +33,8 @@
 #include "OMCActionUIModels.h"
 #include "OMCActionUIAddOns.h"
 #include "OMCHostInfo.h"
+#include "OMCAboutWindow.h"
+#include "OMCEngineBundle.h"
 #include "OMCConstants.h"
 #include "ACFString.h"
 #include "ACFJSON.h"
@@ -671,6 +679,7 @@ WaitForFile(const std::string &inPath)
 
 std::string Joined(const std::vector<std::string> &inItems); // below, with the add-on checks
 
+std::string sAboutAction; // the menu's About item, chosen by RunAboutChecks (after the add-on checks, which need RichText unregistered)
 int sMainCommandRuns = 0;
 int sQuits = 0;
 std::vector<std::string> sOpenedRecentFiles;
@@ -797,6 +806,8 @@ RunMenuChecks(GApplication *inApp)
 		"[Tools>[Run Static, More>[Run Top]], Commands>[Main, Top Command, Images>[Resize>[Half]], Named, Static Target]], "
 		"[About OMCLinuxUITests], [Quit]";
 	Check("the menu: New and Open, the applet's menus with the Commands menu in submenus, About, Quit", outline == expected, outline);
+	sAboutAction = MenuItemAction(menu, {"About OMCLinuxUITests"});
+	Check("the menu has About", !sAboutAction.empty());
 
 	struct Choice { std::vector<std::string> path; const char *mark; const char *name; };
 	for(const Choice &choice : {
@@ -1097,6 +1108,162 @@ RunAddOnChecks(GApplication *inApp)
 	Check("registered: RichText, Diff, CachedImage and HostSurface render", loaded && after.empty(), loaded ? Joined(after) : "not loaded");
 }
 
+#pragma mark - About window
+
+// The About window's document (BuiltInDocuments/command_about.json)
+const int64_t kAboutIconID = 1;
+const int64_t kAboutNameID = 2;
+const int64_t kAboutVersionID = 3;
+const int64_t kAboutCreditsID = 5;
+const int64_t kAboutCopyrightID = 6;
+
+std::string
+AboutUUID()
+{
+	CFObj<CFStringRef> uuid(OMCCopyAboutWindowUUID());
+	return (uuid != nullptr) ? ACFStringToUTF8(uuid) : "";
+}
+
+// An element's value as a string; "(none)" when it has none (taken out of the document)
+std::string
+AboutValue(const std::string &inUUID, int64_t inViewID)
+{
+	char *value = actionUIGetElementValueString(inUUID.c_str(), inViewID, 0, nullptr);
+	std::string text = (value != nullptr) ? value : "(none)";
+	actionUIFreeString(value);
+	return text;
+}
+
+// The top-level window titled inTitle, or nullptr
+GtkWidget *
+WindowTitled(const char *inTitle)
+{
+	GListModel *toplevels = gtk_window_get_toplevels();
+	GtkWidget *found = nullptr;
+	for(guint i = 0; (found == nullptr) && (i < g_list_model_get_n_items(toplevels)); i++)
+	{
+		GtkWindow *window = GTK_WINDOW(g_list_model_get_item(toplevels, i));
+		const char *title = gtk_window_get_title(window);
+		if((title != nullptr) && (strcmp(title, inTitle) == 0) && gtk_widget_get_visible(GTK_WIDGET(window)))
+			found = GTK_WIDGET(window);
+		g_object_unref(window);
+	}
+	return found;
+}
+
+// An app bundle in inFolder: Contents/Info.plist (inInfoEntries, plist XML), and the resources given
+CFBundleRef
+CreateAboutBundle(const std::string &inFolder, const char *inName, const std::string &inInfoEntries,
+					const char *inCredits, const char *inSVGIcon)
+{
+	std::string bundlePath = inFolder + "/" + inName + ".app";
+	std::string resources = bundlePath + "/Contents/Resources";
+	(void)g_mkdir_with_parents(resources.c_str(), 0700);
+	std::string info = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" "
+		"\"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n<plist version=\"1.0\"><dict>" + inInfoEntries + "</dict></plist>\n";
+	(void)g_file_set_contents((bundlePath + "/Contents/Info.plist").c_str(), info.c_str(), -1, nullptr);
+	if(inCredits != nullptr)
+		(void)g_file_set_contents((resources + "/Credits.md").c_str(), inCredits, -1, nullptr);
+	if(inSVGIcon != nullptr)
+		(void)g_file_set_contents((resources + "/" + inSVGIcon).c_str(),
+			"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"64\" height=\"64\"><rect width=\"64\" height=\"64\" rx=\"12\" fill=\"#3584e4\"/></svg>", -1, nullptr);
+	CFObj<CFURLRef> url(CFURLCreateFromFileSystemRepresentation(kCFAllocatorDefault, (const UInt8 *)bundlePath.c_str(), (CFIndex)bundlePath.size(), true));
+	return (url != nullptr) ? CFBundleCreate(kCFAllocatorDefault, url) : nullptr;
+}
+
+void
+RunAboutChecks(GApplication *inApp)
+{
+	// The window is a built-in document of the engine's bundle: see the header for how to run
+	if(OMCGetEngineBundle() == nullptr)
+	{
+		Check("the About window: the engine's bundle is found (Frameworks/Command.framework beside this program)", false);
+		return;
+	}
+	char *made = g_dir_make_tmp("omc-about-test-XXXXXX", nullptr);
+	if(made == nullptr)
+	{
+		Check("a folder for the About bundles", false);
+		return;
+	}
+	std::string folder = made;
+	g_free(made);
+
+	// The menu's About item opens the engine's About window (of this program: no bundle, GLib's name)
+	if(!sAboutAction.empty())
+		g_action_group_activate_action(G_ACTION_GROUP(inApp), sAboutAction.c_str(), nullptr);
+	Pump(400);
+	std::string menuUUID = AboutUUID();
+	Check("the menu's About opens the engine's About window", !menuUUID.empty(), sAboutAction);
+	OMCCloseAboutWindow();
+	Pump(200);
+
+	const char *credits = "# Thanks\n\nBuilt with **Command Engine**.\n";
+	CFObj<CFBundleRef> full(CreateAboutBundle(folder, "Sample",
+		"<key>CFBundleIdentifier</key><string>com.abracode.test.about-full</string>"
+		"<key>CFBundleName</key><string>Sample Applet</string>"
+		"<key>CFBundleShortVersionString</key><string>2.1</string>"
+		"<key>CFBundleVersion</key><string>2105</string>"
+		"<key>CFBundleIconFile</key><string>SampleIcon</string>"
+		"<key>NSHumanReadableCopyright</key><string>Copyright 2026 Sample Maker</string>",
+		credits, "SampleIcon.svg"));
+	Check("an app bundle for About", full != nullptr);
+	if(full != nullptr)
+	{
+		OMCShowAboutWindow(full);
+		Pump(600);
+		std::string uuid = AboutUUID();
+		GtkWidget *window = WindowTitled("About Sample Applet");
+		Check("About shows a window titled About <name>", !uuid.empty() && (window != nullptr), uuid);
+		Check("not resizable", (window != nullptr) && !gtk_window_get_resizable(GTK_WINDOW(window)));
+		Check("its name", AboutValue(uuid, kAboutNameID) == "Sample Applet", AboutValue(uuid, kAboutNameID));
+		Check("its version and build", AboutValue(uuid, kAboutVersionID) == "Version 2.1 (2105)", AboutValue(uuid, kAboutVersionID));
+		Check("its Credits.md", AboutValue(uuid, kAboutCreditsID) == credits, AboutValue(uuid, kAboutCreditsID));
+		Check("its copyright", AboutValue(uuid, kAboutCopyrightID) == "Copyright 2026 Sample Maker", AboutValue(uuid, kAboutCopyrightID));
+		char *iconJSON = actionUIGetElementPropertyJSON(uuid.c_str(), kAboutIconID, "filePath");
+		std::string icon = (iconJSON != nullptr) ? iconJSON : "(none)";
+		actionUIFreeString(iconJSON);
+		Check("its icon, the SVG CFBundleIconFile names", icon.find("SampleIcon.svg\"") != std::string::npos, icon);
+		Capture(window, "about-full");
+
+		OMCShowAboutWindow(full);
+		Pump(200);
+		Check("one at a time: About again keeps the same window", AboutUUID() == uuid, AboutUUID());
+		if(window != nullptr)
+			gtk_window_close(GTK_WINDOW(window));
+		Pump(400);
+		Check("closed by the user, it is gone", AboutUUID().empty(), AboutUUID());
+		OMCShowAboutWindow(full);
+		Pump(400);
+		std::string again = AboutUUID();
+		Check("and About makes a new one", !again.empty() && (again != uuid), again);
+		OMCCloseAboutWindow();
+		Pump(200);
+	}
+
+	CFObj<CFBundleRef> bare(CreateAboutBundle(folder, "Bare",
+		"<key>CFBundleIdentifier</key><string>com.abracode.test.about-bare</string>"
+		"<key>CFBundleName</key><string>Bare Applet</string>"
+		"<key>CFBundleVersion</key><string>7</string>", nullptr, nullptr));
+	if(bare != nullptr)
+	{
+		OMCShowAboutWindow(bare);
+		Pump(600);
+		std::string uuid = AboutUUID();
+		Check("a bundle with a build version alone shows it", AboutValue(uuid, kAboutVersionID) == "Version 7", AboutValue(uuid, kAboutVersionID));
+		Check("no Credits.md, copyright or icon: they are taken out",
+				(AboutValue(uuid, kAboutCreditsID) == "(none)") && (AboutValue(uuid, kAboutCopyrightID) == "(none)"),
+				AboutValue(uuid, kAboutCreditsID) + " / " + AboutValue(uuid, kAboutCopyrightID));
+		Capture(WindowTitled("About Bare Applet"), "about-bare");
+		OMCCloseAboutWindow();
+		Pump(200);
+	}
+
+	char *removeCommand = g_strdup_printf("/bin/rm -rf '%s'", folder.c_str());
+	(void)g_spawn_command_line_sync(removeCommand, nullptr, nullptr, nullptr, nullptr);
+	g_free(removeCommand);
+}
+
 } // namespace
 
 int
@@ -1130,6 +1297,7 @@ main(int argc, char *argv[])
 			RunClipboardAndHostChecks(inApp);
 			RunModelChecks(inApp);
 			RunAddOnChecks(inApp);
+			RunAboutChecks(inApp);
 		}
 		g_application_release(inApp);
 		g_application_quit(inApp);

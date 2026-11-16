@@ -16,3 +16,8 @@
 
 /* Progress window: the Stop button's accessibility label and help tag */
 "Stop" = "Stoppen";
+
+/* About window: its title, and the version line (short version, build) */
+"About %@" = "Über %@";
+"Version %@" = "Version %@";
+"Version %@ (%@)" = "Version %@ (%@)";

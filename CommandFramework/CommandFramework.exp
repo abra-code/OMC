@@ -44,6 +44,9 @@ _omc_popen_with_token
 _OMCMintActionUIRemoteToken
 _OMCStopActionUIRemoteBridge
 _OMCRevokeActionUIRemoteTokens
+_OMCShowAboutWindow
+_OMCCopyAboutWindowUUID
+_OMCCloseAboutWindow
 _omc_pclose
 _omc_pclose_write
 

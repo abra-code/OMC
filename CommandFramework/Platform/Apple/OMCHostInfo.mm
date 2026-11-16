@@ -26,6 +26,17 @@ CFStringRef OMCCopyHostAppName()
     return (CFStringRef)CFBridgingRetain(appName);
 }
 
+CFURLRef OMCCopyBundleIconURL(CFBundleRef inBundle)
+{
+    if(inBundle == nullptr)
+        return nullptr;
+    CFTypeRef iconFile = CFBundleGetValueForInfoDictionaryKey(inBundle, CFSTR("CFBundleIconFile"));
+    if((iconFile == nullptr) || (CFGetTypeID(iconFile) != CFStringGetTypeID()) || (CFStringGetLength((CFStringRef)iconFile) == 0))
+        return nullptr;
+    NSString *name = [(__bridge NSString *)iconFile stringByDeletingPathExtension]; // "AppIcon" or "AppIcon.icns"
+    return CFBundleCopyResourceURL(inBundle, (__bridge CFStringRef)name, CFSTR("icns"), nullptr);
+}
+
 CFStringRef OMCCopyFrontAppBundleIdentifier()
 {
     NSRunningApplication *frontmostApplication = [[NSWorkspace sharedWorkspace] frontmostApplication];

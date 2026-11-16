@@ -18,6 +18,10 @@ extern "C" void ActionUIHostSurface_register(void);
 
 extern "C" void OMCRegisterActionUIAddOns(void)
 {
+	static bool sRegistered = false; // main thread only
+	if(sRegistered)
+		return;
+	sRegistered = true;
 	ActionUIQuickLook_register();
 	ActionUICachedImage_register();
 	ActionUIRichText_register();

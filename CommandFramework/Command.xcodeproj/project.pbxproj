@@ -40,6 +40,8 @@
 		1D560A1B2F80000000000002 /* ActionUICAdapter in Frameworks */ = {isa = PBXBuildFile; productRef = 1D560A1B2F80000000000001 /* ActionUICAdapter */; };
 		1D560A1B2F80000000000005 /* OMCWindowHost.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1D560A1B2F80000000000004 /* OMCWindowHost.mm */; };
 		1D560A1B2F80000000000008 /* OMCProgressWindow.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1D560A1B2F80000000000007 /* OMCProgressWindow.cpp */; };
+		AB0A7B0C2F90000000000003 /* OMCAboutWindow.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AB0A7B0C2F90000000000002 /* OMCAboutWindow.cpp */; };
+		AB0A7B0C2F90000000000005 /* BuiltInDocuments/command_about.json in Resources */ = {isa = PBXBuildFile; fileRef = AB0A7B0C2F90000000000004 /* BuiltInDocuments/command_about.json */; };
 		1D560A1B2F8000000000000B /* BuiltInDocuments/omc_progress.json in Resources */ = {isa = PBXBuildFile; fileRef = 1D560A1B2F8000000000000A /* BuiltInDocuments/omc_progress.json */; };
 		1D560A1B2F8000000000000D /* BuiltInDocuments/omc_output.json in Resources */ = {isa = PBXBuildFile; fileRef = 1D560A1B2F8000000000000C /* BuiltInDocuments/omc_output.json */; };
 		1D560A1B2F8000000000000F /* BuiltInDocuments/omc_input_text.json in Resources */ = {isa = PBXBuildFile; fileRef = 1D560A1B2F8000000000000E /* BuiltInDocuments/omc_input_text.json */; };
@@ -398,6 +400,9 @@
 		1D560A1B2F80000000000004 /* OMCWindowHost.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OMCWindowHost.mm; sourceTree = "<group>"; };
 		1D560A1B2F80000000000006 /* OMCProgressWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCProgressWindow.h; sourceTree = "<group>"; };
 		1D560A1B2F80000000000007 /* OMCProgressWindow.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCProgressWindow.cpp; sourceTree = "<group>"; };
+		AB0A7B0C2F90000000000001 /* OMCAboutWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OMCAboutWindow.h; sourceTree = "<group>"; };
+		AB0A7B0C2F90000000000002 /* OMCAboutWindow.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OMCAboutWindow.cpp; sourceTree = "<group>"; };
+		AB0A7B0C2F90000000000004 /* BuiltInDocuments/command_about.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = BuiltInDocuments/command_about.json; sourceTree = "<group>"; };
 		1D560A1B2F8000000000000A /* BuiltInDocuments/omc_progress.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = BuiltInDocuments/omc_progress.json; sourceTree = "<group>"; };
 		1D560A1B2F8000000000000C /* BuiltInDocuments/omc_output.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = BuiltInDocuments/omc_output.json; sourceTree = "<group>"; };
 		1D560A1B2F8000000000000E /* BuiltInDocuments/omc_input_text.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = BuiltInDocuments/omc_input_text.json; sourceTree = "<group>"; };
@@ -988,6 +993,9 @@
 				1D0A1B2C2F74000000000101 /* OMCAlerts.cpp */,
 				1D560A1B2F80000000000006 /* OMCProgressWindow.h */,
 				1D560A1B2F80000000000007 /* OMCProgressWindow.cpp */,
+				AB0A7B0C2F90000000000001 /* OMCAboutWindow.h */,
+				AB0A7B0C2F90000000000002 /* OMCAboutWindow.cpp */,
+				AB0A7B0C2F90000000000004 /* BuiltInDocuments/command_about.json */,
 				1D560A1B2F8000000000000A /* BuiltInDocuments/omc_progress.json */,
 				1D560A1B2F8000000000000E /* BuiltInDocuments/omc_input_text.json */,
 				1D560A1B2F80000000000010 /* BuiltInDocuments/omc_input_password.json */,
@@ -1296,6 +1304,7 @@
 			files = (
 				E234F9FA0D0FC431001A7780 /* Private.strings in Resources */,
 				1D560A1B2F8000000000000B /* BuiltInDocuments/omc_progress.json in Resources */,
+				AB0A7B0C2F90000000000005 /* BuiltInDocuments/command_about.json in Resources */,
 				1D560A1B2F8000000000000F /* BuiltInDocuments/omc_input_text.json in Resources */,
 				1D560A1B2F80000000000011 /* BuiltInDocuments/omc_input_password.json in Resources */,
 				1D560A1B2F80000000000013 /* BuiltInDocuments/omc_input_popup.json in Resources */,
@@ -1396,6 +1405,7 @@
 				1D560A1B2F8000000000001D /* OMCAppleScriptRunner.cpp in Sources */,
 				1D560A1B2F80000000000026 /* OMCActionUIAddOns.cpp in Sources */,
 				1D560A1B2F80000000000008 /* OMCProgressWindow.cpp in Sources */,
+				AB0A7B0C2F90000000000003 /* OMCAboutWindow.cpp in Sources */,
 				1D0A1B2C2F74000000000105 /* OMCAlerts.mm in Sources */,
 				1DED8E572222BD8E00A2CAF7 /* MoreAppleEvents.cpp in Sources */,
 				E2ED3BC10D0B293E00481D8F /* ACMPlugin.cpp in Sources */,

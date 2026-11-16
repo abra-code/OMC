@@ -10,6 +10,7 @@
 #import "OMCMenuItem.h"
 #import "OMCCommandMenu.h"
 #import "OMCCommandExecutor.h"
+#include "OMCAboutWindow.h"
 
 @import ActionUIMenuBar;
 
@@ -46,6 +47,11 @@ static NSString *OMCMenuStringValue(NSDictionary *properties, NSString *key)
 }
 
 
+- (void)showAbout:(id)sender
+{
+	OMCShowAboutWindow(NULL);
+}
+
 - (void)executeCommand:(id)sender
 {
 	if( (sender == NULL) || ![sender respondsToSelector:@selector(commandID)] )
@@ -57,8 +63,10 @@ static NSString *OMCMenuStringValue(NSDictionary *properties, NSString *key)
 
 - (BOOL)installMenuBar
 {
-	// Standard macOS menu bar (App/File/Edit/Window/Help) is always installed.
-	[ActionUIMenuBar installDefaultMenuBarWithAppName:nil];
+	// Standard macOS menu bar (App/File/Edit/Window/Help) is always installed. Its About item
+	// opens the engine's own About window (OMCAboutWindow.h), which shows Credits.md, not the
+	// standard panel, which reads only Credits.rtf, .rtfd or .html.
+	[ActionUIMenuBar installDefaultMenuBarWithAppName:nil aboutTarget:self aboutAction:@selector(showAbout:)];
 
 	// MainMenu.json is optional: when present it layers additions/mutations
 	// (command menus, command groups) on top of the standard bar.  When absent,

@@ -71,6 +71,25 @@ OMCCopyHostAppName()
 	return name;
 }
 
+CFURLRef
+OMCCopyBundleIconURL(CFBundleRef inBundle)
+{
+	if(inBundle == nullptr)
+		return nullptr;
+	CFTypeRef iconFile = CFBundleGetValueForInfoDictionaryKey(inBundle, CFSTR("CFBundleIconFile"));
+	if((iconFile == nullptr) || (CFGetTypeID(iconFile) != CFStringGetTypeID()) || (CFStringGetLength((CFStringRef)iconFile) == 0))
+		return nullptr;
+	// "AppIcon" or "AppIcon.icns": the name without its extension
+	CFObj<CFStringRef> name((CFStringRef)CFRetain(iconFile));
+	CFRange dot = CFStringFind(name, CFSTR("."), kCFCompareBackwards);
+	if((dot.location != kCFNotFound) && (dot.location > 0))
+		name.Adopt(CFStringCreateWithSubstring(kCFAllocatorDefault, name, CFRangeMake(0, dot.location)));
+	CFURLRef url = CFBundleCopyResourceURL(inBundle, name, CFSTR("svg"), nullptr);
+	if(url == nullptr)
+		url = CFBundleCopyResourceURL(inBundle, name, CFSTR("png"), nullptr);
+	return url;
+}
+
 CFStringRef
 OMCCopyFrontAppName()
 {

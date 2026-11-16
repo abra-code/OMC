@@ -36,6 +36,7 @@ Command CommandFramework/OMCNavigationDialogs.cpp
 Command CommandFramework/OMCObjectList.cpp
 Command CommandFramework/OMCObserver.cpp
 Command CommandFramework/OMCProgressParsing.cpp
+Command CommandFramework/OMCAboutWindow.cpp
 Command CommandFramework/OMCProgressWindow.cpp
 Command CommandFramework/OMCScriptsManager.cpp
 Command CommandFramework/OMCStrings.cpp

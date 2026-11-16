@@ -16,3 +16,8 @@
 
 /* Progress window: the Stop button's accessibility label and help tag */
 "Stop" = "停止";
+
+/* About window: its title, and the version line (short version, build) */
+"About %@" = "%@について";
+"Version %@" = "バージョン %@";
+"Version %@ (%@)" = "バージョン %@ (%@)";

@@ -23,6 +23,11 @@ extern "C" {
 // The host app's display name (CFBundleDisplayName, else CFBundleName); NULL when unknown
 CFStringRef OMCCopyHostAppName();
 
+// The icon file of the app in inBundle that an ActionUI Image shows, the one CFBundleIconFile names
+// (with or without its extension) in the bundle's resources: macOS, its .icns; Linux, its .svg, else
+// its .png (as AppletBuilder's applet_icon_preview picks it). NULL when the bundle has none.
+CFURLRef OMCCopyBundleIconURL(CFBundleRef inBundle);
+
 // The front app's name, bundle identifier and process ID; NULL or 0 when unknown
 CFStringRef OMCCopyFrontAppName();
 CFStringRef OMCCopyFrontAppBundleIdentifier();
