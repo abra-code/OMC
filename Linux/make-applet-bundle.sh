@@ -16,6 +16,11 @@
 #                                   (Library/Python/bin/python3, as on macOS)
 #     Frameworks/Command.framework/
 #       Info.plist                  Linux/CommandFramework-Info.plist
+#       command-engine-runtime      the Swift runtime the engine programs need, copied from the
+#                                   products: the Swift release they were built with (6.4.2), the
+#                                   runtime version they load (6.4: the runtime package and folder
+#                                   that take compatible 6.4.x releases; Linux/Packaging/
+#                                   swift-runtime-lines) and that folder
 #       omc_*.json                  the engine's built-in windows (CommandFramework/BuiltInDocuments)
 #       <lang>.lproj/Private.strings  the engine's own texts (CommandFramework/*.lproj)
 #       Support/                    the support tools (omc_dialog_control, omc_next_command, ...,
@@ -373,6 +378,15 @@ fi
 status=$?
 if [ "$status" -ne 0 ]; then
     printf 'Cannot write the framework Info.plist\n' >&2
+    exit 1
+fi
+# The Swift runtime the engine programs need (swift_version, runtime_line, bundle_runpath), so that
+# make-applet-archive.sh can name the Swift runtime package the applet needs. Applets AppletBuilder
+# builds on Linux get it with the framework it copies in.
+/bin/cp -- "$products/command-engine-runtime" "$framework/command-engine-runtime"
+status=$?
+if [ "$status" -ne 0 ]; then
+    printf 'Cannot copy %s into the framework\n' "$products/command-engine-runtime" >&2
     exit 1
 fi
 for document in "$omc_root/CommandFramework/BuiltInDocuments"/*.json; do
