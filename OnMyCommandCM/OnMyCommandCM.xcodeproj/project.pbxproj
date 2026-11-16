@@ -57,7 +57,7 @@
 /* Begin PBXFileReference section */
 		0AA1909FFE8422F4C02AAC07 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = /System/Library/Frameworks/CoreFoundation.framework; sourceTree = "<absolute>"; };
 		1D039D792E1683C700D4924A /* OnMyCommandCM-target.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "OnMyCommandCM-target.xcconfig"; sourceTree = "<group>"; };
-		1D039DAE2E168D9C00D4924A /* Command.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Command.xcodeproj; path = ../AbracodeFramework/Command.xcodeproj; sourceTree = SOURCE_ROOT; };
+		1D039DAE2E168D9C00D4924A /* Command.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Command.xcodeproj; path = ../CommandFramework/Command.xcodeproj; sourceTree = SOURCE_ROOT; };
 		1D3BB166229BEB5900542933 /* AUniquePtr.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AUniquePtr.h; sourceTree = "<group>"; };
 		1D4971A62575A66A00F7131C /* OmcProjectRelease.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectRelease.xcconfig; path = ../Common/OmcProjectRelease.xcconfig; sourceTree = "<group>"; };
 		1D4971A72575A66A00F7131C /* OmcProjectDebug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectDebug.xcconfig; path = ../Common/OmcProjectDebug.xcconfig; sourceTree = "<group>"; };
@@ -67,8 +67,8 @@
 		1DED8E502222AFA800A2CAF7 /* ACMPlugin.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ACMPlugin.h; path = Apple/ACMPlugin.h; sourceTree = "<group>"; };
 		1DED8E512222AFEA00A2CAF7 /* DebugSettings.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DebugSettings.h; sourceTree = "<group>"; };
 		E2269B9D0EB6DBF90029CCF5 /* OmcProjectCommon.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = OmcProjectCommon.xcconfig; path = ../Common/OmcProjectCommon.xcconfig; sourceTree = SOURCE_ROOT; };
-		1D560A1B2F80000000000023 /* OnMyCommandAE.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OnMyCommandAE.h; path = ../AbracodeFramework/EntryPoints/Apple/OnMyCommandAE.h; sourceTree = SOURCE_ROOT; };
-		E242355D0B2E8F1A00D1E25A /* OnMyCommand.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = OnMyCommand.h; path = ../AbracodeFramework/OnMyCommand.h; sourceTree = SOURCE_ROOT; };
+		1D560A1B2F80000000000023 /* OnMyCommandAE.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OnMyCommandAE.h; path = ../CommandFramework/EntryPoints/Apple/OnMyCommandAE.h; sourceTree = SOURCE_ROOT; };
+		E242355D0B2E8F1A00D1E25A /* OnMyCommand.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = OnMyCommand.h; path = ../CommandFramework/OnMyCommand.h; sourceTree = SOURCE_ROOT; };
 		E24977430B18C1DC00D1A1DA /* ACFType.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ACFType.h; sourceTree = "<group>"; };
 		E24977440B18C1DC00D1A1DA /* ACFArr.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ACFArr.h; sourceTree = "<group>"; };
 		E24977460B18C1DC00D1A1DA /* ACFDict.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ACFDict.h; sourceTree = "<group>"; };

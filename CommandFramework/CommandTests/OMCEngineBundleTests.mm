@@ -16,7 +16,7 @@
 
 @implementation OMCEngineBundleTests
 
-- (void)testTheEngineBundleIsAbracodeFramework
+- (void)testTheEngineBundleIsCommandFramework
 {
     CFBundleRef bundle = OMCGetEngineBundle();
     XCTAssertTrue(bundle != NULL);

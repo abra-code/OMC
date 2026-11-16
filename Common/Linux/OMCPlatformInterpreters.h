@@ -2,7 +2,7 @@
 //  OMCPlatformInterpreters.h (Linux)
 //
 //  Which interpreter runs a command's script file, by the file's extension, and where an
-//  installed Python may be: the platform half of the lookup in AbracodeFramework/OmcExecutor.cpp.
+//  installed Python may be: the platform half of the lookup in CommandFramework/OmcExecutor.cpp.
 //  Header-only C++, as the macOS file of the same name in Common/Apple.
 //
 //  C++, not C: the tables are function-local statics of CFSTR strings, and on Linux CFSTR is a

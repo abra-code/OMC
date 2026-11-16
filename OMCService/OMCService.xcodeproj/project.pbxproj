@@ -58,7 +58,7 @@
 		1D039D772E1680B200D4924A /* OMCService-target.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "OMCService-target.xcconfig"; sourceTree = "<group>"; };
 		1D4971AA2575A68000F7131C /* OmcProjectDebug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectDebug.xcconfig; path = ../Common/OmcProjectDebug.xcconfig; sourceTree = "<group>"; };
 		1D4971AB2575A68000F7131C /* OmcProjectRelease.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectRelease.xcconfig; path = ../Common/OmcProjectRelease.xcconfig; sourceTree = "<group>"; };
-		1D63C30B2F1F188C0003586D /* Command.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Command.xcodeproj; path = ../AbracodeFramework/Command.xcodeproj; sourceTree = SOURCE_ROOT; };
+		1D63C30B2F1F188C0003586D /* Command.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Command.xcodeproj; path = ../CommandFramework/Command.xcodeproj; sourceTree = SOURCE_ROOT; };
 		1D7618BF231CEF80005F4AEB /* OMCService.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = OMCService.entitlements; sourceTree = "<group>"; };
 		1D942E3515CD26D500A08D55 /* OmcProjectCommon.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectCommon.xcconfig; path = ../Common/OmcProjectCommon.xcconfig; sourceTree = "<group>"; };
 		1DCFB249231FACC800D1C62E /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };

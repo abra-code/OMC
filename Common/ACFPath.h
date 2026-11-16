@@ -2,7 +2,7 @@
 //  ACFPath.h
 //
 //  Path string rules as NSString applied them on macOS, in plain CF so they build on Linux.
-//  Shared by AbracodeFramework (OMCStrings) and the command line tools (ACFPropertyList).
+//  Shared by CommandFramework (OMCStrings) and the command line tools (ACFPropertyList).
 //  OMCStringsFoundationParityTests compares each with the NSString method it replaces.
 //
 

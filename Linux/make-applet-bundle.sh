@@ -16,8 +16,8 @@
 #                                   (Library/Python/bin/python3, as on macOS)
 #     Frameworks/Command.framework/
 #       Info.plist                  Linux/AbracodeFramework-Info.plist
-#       omc_*.json                  the engine's built-in windows (AbracodeFramework/BuiltInDocuments)
-#       <lang>.lproj/Private.strings  the engine's own texts (AbracodeFramework/*.lproj)
+#       omc_*.json                  the engine's built-in windows (CommandFramework/BuiltInDocuments)
+#       <lang>.lproj/Private.strings  the engine's own texts (CommandFramework/*.lproj)
 #       Support/                    the support tools (omc_dialog_control, omc_next_command, ...,
 #                                   the defaults script from defaults/, the pasteboard script
 #                                   from pasteboard/linux/, the open script from open/,
@@ -375,7 +375,7 @@ if [ "$status" -ne 0 ]; then
     printf 'Cannot write the framework Info.plist\n' >&2
     exit 1
 fi
-for document in "$omc_root/AbracodeFramework/BuiltInDocuments"/*.json; do
+for document in "$omc_root/CommandFramework/BuiltInDocuments"/*.json; do
     /bin/cp -- "$document" "$framework/"
     status=$?
     if [ "$status" -ne 0 ]; then
@@ -383,7 +383,7 @@ for document in "$omc_root/AbracodeFramework/BuiltInDocuments"/*.json; do
         exit 1
     fi
 done
-for strings_folder in "$omc_root/AbracodeFramework"/*.lproj; do
+for strings_folder in "$omc_root/CommandFramework"/*.lproj; do
     if [ ! -f "$strings_folder/Private.strings" ]; then
         continue
     fi

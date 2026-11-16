@@ -848,7 +848,7 @@ static const char * const kTestTokenLabel = "CommandTests";
 - (NSString *)shippedPackagesDirectory {
     NSString *thisFile = [NSString stringWithUTF8String:__FILE__];
     NSString *repo = [[[thisFile stringByDeletingLastPathComponent]     // CommandTests
-                       stringByDeletingLastPathComponent]               // AbracodeFramework
+                       stringByDeletingLastPathComponent]               // CommandFramework
                       stringByDeletingLastPathComponent];               // repo root
     return [repo stringByAppendingPathComponent:
             @"Distribution/AppletBuilder.app/Contents/Library/Packages"];

@@ -1,6 +1,6 @@
 #!/bin/bash
 # Linux/Tests/OMCAppletLaunchTest/run.sh - the Linux applet's app shell end to end
-# (AbracodeFramework/EntryPoints/Linux/OMCAppletMain.cpp): the fixture LaunchTest.app made into a
+# (CommandFramework/EntryPoints/Linux/OMCAppletMain.cpp): the fixture LaunchTest.app made into a
 # bundle as every Linux applet is (Linux/make-applet-bundle.sh: the built CommandApplet executable,
 # the engine's framework with its built-in windows, texts and support tools), launched in the
 # desktop session, with its commands logging what ran to a file.

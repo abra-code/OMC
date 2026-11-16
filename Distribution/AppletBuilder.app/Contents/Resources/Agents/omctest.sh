@@ -98,7 +98,7 @@ OMCTEST_DEFAULT_STUBS="alert notify omc_dialog_control omc_next_command pasteboa
 # read out of the source rather than remembered. Recorded here with sources so a
 # future reader can re-verify rather than re-guess:
 #
-#   Interpreter map          AbracodeFramework/OmcExecutor.cpp:881-896
+#   Interpreter map          CommandFramework/OmcExecutor.cpp:881-896
 #                            (sExtensionToShellMap). .sh -> /bin/sh, .zsh ->
 #                            /bin/zsh, .bash -> /bin/bash, .py -> see below.
 #                            An unknown or absent extension gets kDefaultShell,

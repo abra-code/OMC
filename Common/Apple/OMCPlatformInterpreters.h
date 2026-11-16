@@ -2,7 +2,7 @@
 //  OMCPlatformInterpreters.h (Apple)
 //
 //  Which interpreter runs a command's script file, by the file's extension, and where an
-//  installed Python may be: the platform half of the lookup in AbracodeFramework/OmcExecutor.cpp.
+//  installed Python may be: the platform half of the lookup in CommandFramework/OmcExecutor.cpp.
 //  Header-only C++, chosen by the header search path (Common/Apple or Common/Linux), as
 //  OMCUserTempDirPlatform.h is.
 //

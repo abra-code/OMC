@@ -29,7 +29,7 @@
       location = "group:plister/plister.xcodeproj">
    </FileRef>
    <FileRef
-      location = "group:AbracodeFramework/Command.xcodeproj">
+      location = "group:CommandFramework/Command.xcodeproj">
    </FileRef>
    <FileRef
       location = "group:OMCService/OMCService.xcodeproj">

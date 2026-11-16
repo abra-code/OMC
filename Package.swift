@@ -15,9 +15,9 @@ import Foundation
 // Where OMC's headers are: sources include them by bare name, as Xcode's header map lets them.
 // Relative to a target folder, Linux/Targets/<target>/.
 let headerFolders = [
-    "../../../AbracodeFramework",
-    "../../../AbracodeFramework/Platform",
-    "../../../AbracodeFramework/EntryPoints/Linux",
+    "../../../CommandFramework",
+    "../../../CommandFramework/Platform",
+    "../../../CommandFramework/EntryPoints/Linux",
     "../../../Common",
     "../../../Common/Linux",
     "../../../ThirdParty/yyjson",
