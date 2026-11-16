@@ -190,6 +190,41 @@ static id ActionUIObjCClass(void)
     CFRelease(bundle);
 }
 
+/// The content height of the About window for credits of this many paragraphs
+- (CGFloat)windowHeightForParagraphs:(int)count
+{
+    NSMutableString *credits = [NSMutableString stringWithString:@"# Credits\n\n"];
+    for (int i = 1; i <= count; i++)
+        [credits appendFormat:@"Paragraph %d of the credits, long enough to wrap onto a second line in the window.\n\n", i];
+    NSString *name = [NSString stringWithFormat:@"Credits%d", count];
+    NSDictionary *info = @{
+        @"CFBundleIdentifier": [@"com.abracode.test.about-" stringByAppendingString:name],
+        @"CFBundleName": name,
+        @"CFBundleVersion": @"1",
+    };
+    CFBundleRef bundle = [self createBundleNamed:name info:info credits:credits];
+    XCTAssertTrue(bundle != NULL);
+    if (bundle == NULL)
+        return 0;
+    OMCShowAboutWindow(bundle);
+    NSWindow *window = [self windowWithUUID:[self aboutWindowUUID]];
+    XCTAssertNotNil(window);
+    CGFloat height = window.contentView.frame.size.height;
+    OMCCloseAboutWindow();
+    CFRelease(bundle);
+    return height;
+}
+
+- (void)testCreditsAreaFitsShortCreditsAndScrollsLongOnes
+{
+    CGFloat shortHeight = [self windowHeightForParagraphs:1];
+    CGFloat longHeight = [self windowHeightForParagraphs:15];
+    CGFloat longerHeight = [self windowHeightForParagraphs:40];
+    XCTAssertGreaterThan(shortHeight, 0);
+    XCTAssertLessThan(shortHeight, longHeight, @"the area fits short credits");
+    XCTAssertEqualWithAccuracy(longHeight, longerHeight, 0.5, @"long credits scroll in an area of capped height");
+}
+
 - (void)testMenuBarAboutItemOpensTheWindow
 {
     OMCMainMenuController *controller = [[OMCMainMenuController alloc] init];

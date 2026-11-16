@@ -679,7 +679,21 @@ WaitForFile(const std::string &inPath)
 
 std::string Joined(const std::vector<std::string> &inItems); // below, with the add-on checks
 
-std::string sAboutAction; // the menu's About item, chosen by RunAboutChecks (after the add-on checks, which need RichText unregistered)
+// ActionUI's primary menu: the menu button with a menu model in inWidget (a header bar may hold others)
+GtkWidget *
+FindMenuButton(GtkWidget *inWidget)
+{
+	if(GTK_IS_MENU_BUTTON(inWidget) && (gtk_menu_button_get_menu_model(GTK_MENU_BUTTON(inWidget)) != nullptr))
+		return inWidget;
+	for(GtkWidget *child = gtk_widget_get_first_child(inWidget); child != nullptr; child = gtk_widget_get_next_sibling(child))
+	{
+		GtkWidget *found = FindMenuButton(child);
+		if(found != nullptr)
+			return found;
+	}
+	return nullptr;
+}
+
 int sMainCommandRuns = 0;
 int sQuits = 0;
 std::vector<std::string> sOpenedRecentFiles;
@@ -773,19 +787,7 @@ RunMenuChecks(GApplication *inApp)
 														"5B4C3D2E-0000-4000-8000-00000000AA01", nullptr);
 	gtk_window_present(GTK_WINDOW(window));
 	Pump(500);
-	// ActionUI's primary menu: the menu button with a menu model (a header bar may hold others)
-	std::function<GtkWidget *(GtkWidget *)> findMenuButton = [&findMenuButton](GtkWidget *inWidget) -> GtkWidget * {
-		if(GTK_IS_MENU_BUTTON(inWidget) && (gtk_menu_button_get_menu_model(GTK_MENU_BUTTON(inWidget)) != nullptr))
-			return inWidget;
-		for(GtkWidget *child = gtk_widget_get_first_child(inWidget); child != nullptr; child = gtk_widget_get_next_sibling(child))
-		{
-			GtkWidget *found = findMenuButton(child);
-			if(found != nullptr)
-				return found;
-		}
-		return nullptr;
-	};
-	GtkWidget *button = filled ? findMenuButton(window) : nullptr;
+	GtkWidget *button = filled ? FindMenuButton(window) : nullptr;
 	GMenuModel *menu = (button != nullptr) ? gtk_menu_button_get_menu_model(GTK_MENU_BUTTON(button)) : nullptr;
 	std::string fillDetail = filled ? "no menu button with a menu" : "not filled";
 	if(!filled)
@@ -806,8 +808,7 @@ RunMenuChecks(GApplication *inApp)
 		"[Tools>[Run Static, More>[Run Top]], Commands>[Main, Top Command, Images>[Resize>[Half]], Named, Static Target]], "
 		"[About OMCLinuxUITests], [Quit]";
 	Check("the menu: New and Open, the applet's menus with the Commands menu in submenus, About, Quit", outline == expected, outline);
-	sAboutAction = MenuItemAction(menu, {"About OMCLinuxUITests"});
-	Check("the menu has About", !sAboutAction.empty());
+	Check("the menu has About", !MenuItemAction(menu, {"About OMCLinuxUITests"}).empty());
 
 	struct Choice { std::vector<std::string> path; const char *mark; const char *name; };
 	for(const Choice &choice : {
@@ -1189,12 +1190,27 @@ RunAboutChecks(GApplication *inApp)
 	std::string folder = made;
 	g_free(made);
 
-	// The menu's About item opens the engine's About window (of this program: no bundle, GLib's name)
-	if(!sAboutAction.empty())
-		g_action_group_activate_action(G_ACTION_GROUP(inApp), sAboutAction.c_str(), nullptr);
+	// The menu's About item opens the engine's About window (of this program: no bundle, GLib's name).
+	// The item's action is looked up in the menu as it is now: ActionUI names the menu's actions from
+	// a counter that never restarts, so a menu rebuilt since the menu checks has new names.
+	std::string aboutAction;
+	GtkWidget *probe = adw_application_window_new(GTK_APPLICATION(inApp));
+	if(actionUILoadIntoHostWindowFromJSON(probe, R"({"type": "Text", "properties": {"text": "About probe"}})",
+											"5B4C3D2E-0000-4000-8000-00000000AA05", nullptr))
+	{
+		GtkWidget *button = FindMenuButton(probe);
+		GMenuModel *menu = (button != nullptr) ? gtk_menu_button_get_menu_model(GTK_MENU_BUTTON(button)) : nullptr;
+		if(menu != nullptr)
+			aboutAction = MenuItemAction(menu, {"About OMCLinuxUITests"});
+	}
+	gtk_window_destroy(GTK_WINDOW(probe));
+	actionUIRemoveWindow("5B4C3D2E-0000-4000-8000-00000000AA05");
+	Pump(200);
+	if(!aboutAction.empty())
+		g_action_group_activate_action(G_ACTION_GROUP(inApp), aboutAction.c_str(), nullptr);
 	Pump(400);
 	std::string menuUUID = AboutUUID();
-	Check("the menu's About opens the engine's About window", !menuUUID.empty(), sAboutAction);
+	Check("the menu's About opens the engine's About window", !menuUUID.empty(), aboutAction);
 	OMCCloseAboutWindow();
 	Pump(200);
 
@@ -1240,6 +1256,36 @@ RunAboutChecks(GApplication *inApp)
 		OMCCloseAboutWindow();
 		Pump(200);
 	}
+
+	// The credits area fits short credits and scrolls long ones: a window with long credits is taller
+	// than one with short credits, and one with longer credits still is no taller (the area's cap)
+	int heights[3] = {0, 0, 0};
+	const int paragraphs[3] = {1, 15, 40};
+	for(int i = 0; i < 3; i++)
+	{
+		std::string text = "# Credits\n\n";
+		for(int p = 1; p <= paragraphs[i]; p++)
+			text += "Paragraph " + std::to_string(p) + " of the credits, long enough to wrap onto a second line in the window.\n\n";
+		std::string name = "Credits" + std::to_string(paragraphs[i]);
+		CFObj<CFBundleRef> bundle(CreateAboutBundle(folder, name.c_str(),
+			"<key>CFBundleIdentifier</key><string>com.abracode.test.about-" + name + "</string>"
+			"<key>CFBundleName</key><string>" + name + "</string>"
+			"<key>CFBundleVersion</key><string>1</string>", text.c_str(), nullptr));
+		if(bundle == nullptr)
+			continue;
+		OMCShowAboutWindow(bundle);
+		Pump(600);
+		std::string title = "About " + name;
+		GtkWidget *window = WindowTitled(title.c_str());
+		heights[i] = (window != nullptr) ? gtk_widget_get_height(window) : 0;
+		if(i == 1)
+			Capture(window, "about-long");
+		OMCCloseAboutWindow();
+		Pump(200);
+	}
+	std::string measured = std::to_string(heights[0]) + " / " + std::to_string(heights[1]) + " / " + std::to_string(heights[2]);
+	Check("short credits make a shorter window than long ones", (heights[0] > 0) && (heights[0] < heights[1]), measured);
+	Check("long credits scroll: longer ones make the window no taller", (heights[1] > 0) && (heights[1] == heights[2]), measured);
 
 	CFObj<CFBundleRef> bare(CreateAboutBundle(folder, "Bare",
 		"<key>CFBundleIdentifier</key><string>com.abracode.test.about-bare</string>"

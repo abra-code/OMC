@@ -4,7 +4,7 @@
     "alignment": "center",
     "spacing": 6,
     "padding": 20,
-    "frame": { "width": 380 }
+    "frame": { "width": 284 }
   },
   "children": [
     { "type": "Image", "id": 1, "properties": { "resizable": true, "contentMode": "fit", "frame": { "width": 64, "height": 64 }, "accessibilityHidden": true } },
@@ -13,7 +13,7 @@
     {
       "type": "ScrollView",
       "id": 4,
-      "properties": { "frame": { "height": 180 }, "padding": { "top": 8 } },
+      "properties": { "frame": { "maxHeight": 200 }, "padding": { "top": 8 } },
       "content": { "type": "RichText", "id": 5, "properties": { "markdown": "", "baseFontSize": 11, "remoteImages": "on-click" } }
     },
     { "type": "Text", "id": 6, "properties": { "text": "", "font": { "size": 10 }, "foregroundStyle": "secondary", "multilineTextAlignment": "center", "padding": { "top": 8 } } }
