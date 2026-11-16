@@ -1,8 +1,7 @@
 #!/bin/bash
 # Linux/Packaging/make-tests-archive.sh - makes the tests archive of an engine build: the Linux test
 # programs and test runners with everything they read, so that a later Swift runtime can be checked
-# against this release's engine without its source tree or toolchain (design:
-# Private/linux-applet-install-design.md, "Decisions, 2026-11-16", item 8: the second runtime gate).
+# against this release's engine without its source tree or toolchain.
 # The release process publishes the archive beside the release; check-swift-runtime-tests.sh runs the
 # archives of earlier releases against a candidate runtime.
 #
@@ -10,7 +9,7 @@
 # folder of the same name:
 #   products/   the build's programs as the tests use them: CommandApplet and its support tools,
 #               ActionUI's helpers, OMCLinuxUITests, OMCLinuxPortTests, the master applet
-#               CommandApplet.app, command-engine-runtime; each loose program's library search path is
+#               CommandApplet.app, swift-runtime-info; each loose program's library search path is
 #               the bundles' (bundle_runpath: the runtime package's folder), not the build folder's;
 #               Frameworks/Command.framework is a link into CommandApplet.app (OMCLinuxUITests looks
 #               for it beside itself)
@@ -56,7 +55,7 @@ case "${products##*/}" in
         exit 1
         ;;
 esac
-runtime_file="$products/command-engine-runtime"
+runtime_file="$products/swift-runtime-info"
 bundle_runpath="$(/usr/bin/sed -n 's/^bundle_runpath=//p' "$runtime_file" 2>/dev/null)"
 if [ -z "$bundle_runpath" ]; then
     printf 'No bundle_runpath in %s: build the products with build-linux.sh\n' "$runtime_file" >&2
@@ -162,7 +161,7 @@ for program in $programs $helpers; do
         exit 1
     fi
 done
-/bin/cp -- "$runtime_file" "$kit/products/command-engine-runtime"
+/bin/cp -- "$runtime_file" "$kit/products/swift-runtime-info"
 status=$?
 if [ "$status" -ne 0 ]; then
     printf 'Cannot copy %s\n' "$runtime_file" >&2

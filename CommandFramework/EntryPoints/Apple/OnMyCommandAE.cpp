@@ -7,7 +7,7 @@
 //  OMCExecuteCommandAE) reach OnMyCommand here. The Apple event descriptor of the selection is
 //  turned into an OMCHostSelection (CF) and the engine's menu model into the Menu Manager's
 //  AEDescList; the engine itself takes no Apple event types.
-//  macOS only. Phase 5 step 6 (Private/phase5-interfaces-design.md).
+//  macOS only.
 //
 
 #include "OnMyCommandAE.h"

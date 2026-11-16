@@ -3,13 +3,12 @@
 //  Abracode
 //
 //  A window around one of the framework's built-in ActionUI documents (BuiltInDocuments/): the
-//  progress window, the output window and the input dialog (Private/phase2-builtin-actionui-
-//  windows-design.md). Each window's logic is portable C++ over ActionUI's C interface
-//  (ActionUIC.h), addressing the document by its window UUID; the host only makes the platform's
-//  window around it, places it, shows it and closes it. The ActionUI command windows use it too
-//  (Phase 5, OMCActionUIWindow.cpp): a document found by the command, a window UUID the
-//  dialog already has, content under the titlebar, size limits from the document, and the frame
-//  saved under the window's name.
+//  progress window, the output window and the input dialog. Each window's logic is portable C++
+//  over ActionUI's C interface (ActionUIC.h), addressing the document by its window UUID; the host
+//  only makes the platform's window around it, places it, shows it and closes it. The ActionUI
+//  command windows use it too (OMCActionUIWindow.cpp): a document found by the command, a window
+//  UUID the dialog already has, content under the titlebar, size limits from the document, and the
+//  frame saved under the window's name.
 //
 //  macOS: an NSWindow (an NSPanel for the floating levels) around the ObjC adapter's hosting view
 //  (Platform/Apple/OMCWindowHost.mm), as OMC's other ActionUI windows are made. Linux: ActionUIApp's

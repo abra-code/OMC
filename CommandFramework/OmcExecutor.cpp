@@ -211,7 +211,7 @@ OmcExecutor::ReceiveNotification(void *ioData)
 
 #pragma mark -
 
-// Pipe I/O for one child process (Phase 3 step 4, Private/phase3-run-loop-design.md). The two
+// Pipe I/O for one child process. The two
 // dispatch sources run on a private serial queue and only move bytes: output into pendingOutput,
 // input from a copy of the input string. Observers, Finish and everything else run on the main
 // thread. The I/O queue never touches the executor, whose reference count is not atomic; each

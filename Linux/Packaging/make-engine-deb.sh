@@ -1,11 +1,12 @@
 #!/bin/bash
-# Linux/Packaging/make-engine-deb.sh - makes the command-engine package (.deb): what every Command
-# Engine applet needs from the system, installed once per machine (design:
-# Private/linux-applet-install-design.md, "Decisions, 2026-11-15" and "2026-11-16"). It holds no engine
-# code (the engine is linked into each applet), only its dependencies, a short README, and the Swift
-# runtime cleanup (item 7): /usr/sbin/command-engine-cleanup (command-engine-cleanup beside this script)
-# and the folder every user's applets record their runtime in, /var/lib/command-engine/applets (mode
-# 1777, sticky, like /tmp), with a note at installation when an older runtime is still installed.
+# Linux/Packaging/make-engine-deb.sh - makes the command-engine package (.deb): the system libraries
+# every Command Engine applet needs, installed once per machine. It holds no engine code (the engine
+# is linked into each applet's executable and its tools come in the applet's Command.framework),
+# only its dependencies, a short README, and the Swift runtime cleanup:
+# /usr/sbin/command-engine-cleanup (command-engine-cleanup beside this script) and the folder every
+# user's applets record their Swift runtime version in, /var/lib/command-engine/applets (mode 1777,
+# sticky, like /tmp), with a note at installation when an older Swift runtime version is still
+# installed.
 # Its dependencies:
 #
 # - the system libraries the engine's programs load (the master applet's executable and its support
@@ -17,13 +18,14 @@
 #   desktop, linux-app-entry.py and command-services.py, which an applet's install-applet.sh runs; a
 #   minimal Debian has no python3);
 # - the Swift runtime package of the toolchain the programs were built with,
-#   command-engine-swift-<line> (make-swift-runtime-deb.sh; the line is in the products' command-engine-runtime).
+#   command-engine-swift-<runtime version> (make-swift-runtime-deb.sh; the runtime version is in the
+#   products' swift-runtime-info file).
 #
 # What one applet needs beyond that (WebKitGTK for a WebView, libshumate for a map, what its bundled
 # tools need) is the applet's own list, not this package's.
 #
 # Usage: make-engine-deb.sh <products folder> <output folder>
-#   The products folder is build-linux.sh's, with its command-engine-runtime file and the master
+#   The products folder is build-linux.sh's, with its swift-runtime-info file and the master
 #   applet, CommandApplet.app; the package is written to
 #   <output folder>/command-engine_<engine version>-1_<architecture>.deb.
 # Needs dpkg-dev (dpkg-shlibdeps) and dpkg-deb (Debian, Ubuntu). Exit status: 0 made, 1 failed,
@@ -47,17 +49,17 @@ if [ -z "$products" ]; then
 fi
 script_folder="$(CDPATH= cd -P -- "$(/usr/bin/dirname -- "$0")" && pwd)"
 omc_root="$(CDPATH= cd -P -- "$script_folder/../.." && pwd)"
-runtime_file="$products/command-engine-runtime"
+runtime_file="$products/swift-runtime-info"
 swift_version="$(/usr/bin/sed -n 's/^swift_version=//p' "$runtime_file" 2>/dev/null)"
-runtime_line="$(/usr/bin/sed -n 's/^runtime_line=//p' "$runtime_file" 2>/dev/null)"
+runtime_version="$(/usr/bin/sed -n 's/^runtime_version=//p' "$runtime_file" 2>/dev/null)"
 swift_release="$(/usr/bin/sed -n 's/^swift_release=//p' "$runtime_file" 2>/dev/null)"
 if [ "$swift_release" != "1" ]; then
     printf 'The products were built with a Swift snapshot, not a release (%s): no runtime package from them\n' "$runtime_file" >&2
     exit 1
 fi
 runtime_folder="$(/usr/bin/sed -n 's/^runtime_folder=//p' "$runtime_file" 2>/dev/null)"
-if [ -z "$swift_version" ] || [ -z "$runtime_line" ] || [ -z "$runtime_folder" ]; then
-    printf 'No swift_version, runtime_line or runtime_folder in %s: build the products with build-linux.sh\n' "$runtime_file" >&2
+if [ -z "$swift_version" ] || [ -z "$runtime_version" ] || [ -z "$runtime_folder" ]; then
+    printf 'No swift_version, runtime_version or runtime_folder in %s: build the products with build-linux.sh\n' "$runtime_file" >&2
     exit 1
 fi
 engine_version="$(/usr/bin/sed -n 's/^OMC_BUNDLE_VERSION *= *\([0-9][0-9.]*\) *$/\1/p' "$omc_root/Common/OmcVersion.xcconfig")"
@@ -169,7 +171,7 @@ if [ "$status" -ne 0 ]; then
     printf 'Cannot set the mode of %s\n' "$root/usr/sbin/command-engine-cleanup" >&2
     exit 1
 fi
-# The note at installation when an older runtime line is still installed
+# The note at installation when an older Swift runtime version is still installed
 /bin/cp -- "$script_folder/command-engine.postinst" "$root/DEBIAN/postinst"
 status=$?
 if [ "$status" -ne 0 ]; then
@@ -183,14 +185,15 @@ if [ "$status" -ne 0 ]; then
     exit 1
 fi
 {
-    printf 'Command Engine %s\n\n' "$engine_version"
-    printf 'This package brings what every Command Engine applet needs from the system: the GTK and\n'
+    printf 'command-engine %s\n\n' "$engine_version"
+    printf 'This package brings the system libraries every Command Engine applet needs: the GTK and\n'
     printf 'libadwaita libraries, SVG icon support (librsvg2-common), https (glib-networking), the\n'
     printf 'symbolic icons (adwaita-icon-theme), python3 (adding an applet to the desktop), and the\n'
-    printf 'Swift %s runtime (command-engine-swift-%s).\n' "$swift_version" "$runtime_line"
+    printf 'Swift %s runtime libraries (command-engine-swift-%s).\n' "$swift_version" "$runtime_version"
     printf 'An applet that needs more (WebKitGTK for web pages, for one) says so itself.\n'
     printf '\nEach applet launch records the Swift runtime it uses in /var/lib/command-engine/applets;\n'
-    printf '"sudo command-engine-cleanup" removes the runtimes no applet uses (--list shows them).\n'
+    printf '"sudo command-engine-cleanup" removes the Swift runtime packages no applet uses (--list\n'
+    printf 'shows them).\n'
 } > "$root/usr/share/doc/$package/README"
 status=$?
 if [ "$status" -ne 0 ]; then
@@ -205,13 +208,13 @@ installed_size="$(/usr/bin/du -sk "$root/usr" | /usr/bin/cut -f1)"
     printf 'Architecture: %s\n' "$architecture"
     printf 'Maintainer: Command Engine maintainers <maintainer@invalid>\n'
     printf 'Installed-Size: %s\n' "$installed_size"
-    printf 'Depends: %s, librsvg2-common, glib-networking, adwaita-icon-theme, python3, command-engine-swift-%s (>= %s-1)\n' "$library_depends" "$runtime_line" "$swift_version"
+    printf 'Depends: %s, librsvg2-common, glib-networking, adwaita-icon-theme, python3, command-engine-swift-%s (>= %s-1)\n' "$library_depends" "$runtime_version" "$swift_version"
     printf 'Suggests: command-engine-files-nautilus | command-engine-files-thunar | command-engine-files-dolphin\n'
     printf 'Section: misc\n'
     printf 'Priority: optional\n'
-    printf 'Description: Command Engine: what Command Engine applets need from the system\n'
-    printf ' Installs the libraries every Command Engine applet uses (GTK 4, libadwaita, SVG icon\n'
-    printf ' support, https) and the Swift %s runtime they are built with. Applets themselves are\n' "$swift_version"
+    printf 'Description: the system libraries Command Engine applets need\n'
+    printf ' Installs the system libraries every Command Engine applet uses (GTK 4, libadwaita, SVG\n'
+    printf ' icon support, https) and the Swift %s runtime libraries they load. Applets themselves are\n' "$swift_version"
     printf ' bundles that run from any folder.\n'
 } > "$root/DEBIAN/control"
 status=$?

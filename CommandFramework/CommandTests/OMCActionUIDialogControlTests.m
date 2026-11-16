@@ -3,7 +3,7 @@
 //  CommandTests
 //
 //  Pin tests for what omc_dialog_control's verbs do to an ActionUI command window, before the
-//  window's logic moves to C++ (Phase 5 step 8, Private/phase5-step8a-pin-test-gaps.md, gap 8).
+//  window's logic moves to C++.
 //  Each test sends a verb through the window's message port, as a handler would, and reads the
 //  effect back from ActionUI's model or from the NSWindow: enable/disable, show/hide, properties
 //  and states (with the string-or-JSON parsing of their values), list items, an emptied table,

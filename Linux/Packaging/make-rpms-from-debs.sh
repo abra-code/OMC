@@ -18,7 +18,7 @@
 #   cleanup when more than one Swift runtime version is installed.
 #
 # Usage: make-rpms-from-debs.sh <products folder> <deb folder> <output folder>
-#   The products folder is build-linux.sh's (command-engine-runtime, CommandApplet.app); the deb folder
+#   The products folder is build-linux.sh's (swift-runtime-info, CommandApplet.app); the deb folder
 #   holds the packages make-swift-runtime-deb.sh and make-engine-deb.sh made from those products.
 #   Writes <output>/command-engine-swift-<runtime version>-<swift version>-1.<arch>.rpm and
 #   <output>/command-engine-<engine version>-1.<arch>.rpm (the names install.sh looks for).
@@ -42,11 +42,11 @@ for tool in /usr/bin/rpmbuild /usr/bin/dpkg-deb /usr/bin/readelf /usr/bin/dpkg; 
 done
 script_folder="$(CDPATH= cd -P -- "$(/usr/bin/dirname -- "$0")" && pwd)"
 omc_root="$(CDPATH= cd -P -- "$script_folder/../.." && pwd)"
-runtime_info="$products/command-engine-runtime"
+runtime_info="$products/swift-runtime-info"
 swift_version="$(/usr/bin/sed -n 's/^swift_version=//p' "$runtime_info" 2>/dev/null)"
-runtime_version="$(/usr/bin/sed -n 's/^runtime_line=//p' "$runtime_info" 2>/dev/null)"
+runtime_version="$(/usr/bin/sed -n 's/^runtime_version=//p' "$runtime_info" 2>/dev/null)"
 if [ -z "$swift_version" ] || [ -z "$runtime_version" ]; then
-    printf 'No swift_version or runtime_line (the Swift runtime version) in %s: build the products with build-linux.sh\n' "$runtime_info" >&2
+    printf 'No swift_version or runtime_version in %s: build the products with build-linux.sh\n' "$runtime_info" >&2
     exit 1
 fi
 engine_version="$(/usr/bin/sed -n 's/^OMC_BUNDLE_VERSION *= *\([0-9][0-9.]*\) *$/\1/p' "$omc_root/Common/OmcVersion.xcconfig")"

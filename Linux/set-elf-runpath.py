@@ -3,9 +3,9 @@
 little-endian ELF file (Linux on aarch64 or x86_64), in place.
 
 Linux/make-applet-bundle.sh uses it on the engine programs it puts in a bundle: the build leaves the
-toolchain's Swift folder and the build machine's own folders there; a bundle gets the Command Engine's
-versioned Swift runtime folder instead (/usr/lib/command-engine/swift-<line>, the
-command-engine-swift-<line> package; see Private/linux-applet-install-design.md).
+toolchain's Swift folder and the build machine's own folders there; a bundle gets the folder of the
+engine programs' Swift runtime version instead (/usr/lib/command-engine/swift-<runtime version>, the
+command-engine-swift-<runtime version> package; see Linux/Packaging/swift-runtime-versions).
 
 The new path is written over the old one in the dynamic string table, padded with zero bytes, as
 chrpath does: nothing else in the file moves, so it must not be longer than the old path. The file is

@@ -1,5 +1,5 @@
 // swift-tools-version:6.0
-// OMC's Linux build (OMC 6.0 Phase 6, Private/phase6-linux-build-design.md). Build with
+// OMC's Linux build. Build with
 // ./build-linux.sh, which adds the CoreFoundation, blocks and module flags this manifest cannot
 // express. On macOS this is an empty package: Xcode (CommandWorkshop.xcworkspace) is the build there.
 //
@@ -58,8 +58,9 @@ let cxxSettings: [CXXSetting] = headerFolders.map { .headerSearchPath($0) } + [
 // C and C++ programs are linked by clang, which does not know where the Swift runtime is:
 // build-linux.sh passes its folder (OMC_SWIFT_RUNTIME_LIB) for the -L and the runtime path.
 let runtimeLibraryFolder = ProcessInfo.processInfo.environment["OMC_SWIFT_RUNTIME_LIB"] ?? "/usr/lib/swift/linux"
-// The installed runtime's folder (the command-engine-swift-<line> package's), searched first:
-// build-linux.sh gives it, and Linux/make-applet-bundle.sh trims a bundle's programs to it.
+// The installed Swift runtime's folder (the command-engine-swift-<runtime version> package's),
+// searched first: build-linux.sh gives it, and Linux/make-applet-bundle.sh trims a bundle's
+// programs to it.
 let engineRuntimeFolders = (ProcessInfo.processInfo.environment["COMMAND_ENGINE_SWIFT_FOLDER"].map { [$0] } ?? []) + [runtimeLibraryFolder]
 let foundationLibraries: [LinkerSetting] = [
     .linkedLibrary("Foundation"),

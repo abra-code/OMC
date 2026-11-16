@@ -1,13 +1,13 @@
 #!/bin/bash
-# Linux/Packaging/check-swift-runtime-tests.sh - the second gate before a new Swift patch release goes
-# into a rolling runtime line (Linux/Packaging/swift-runtime-lines; design:
-# Private/linux-applet-install-design.md, "Swift runtime lines" and "Decisions, 2026-11-16", item 8):
-# runs the tests of earlier engine releases, from their tests archives (make-tests-archive.sh,
+# Linux/Packaging/check-swift-runtime-tests.sh - the second check before a new Swift patch release
+# goes into the folder of its minor release (Linux/Packaging/swift-runtime-versions, "rolling"): runs
+# the tests of earlier engine releases, from their tests archives (make-tests-archive.sh,
 # published beside each release), on the candidate runtime.
 #
 # The first gate, check-swift-runtime-abi.sh, finds removed symbols; this one finds what keeps every
-# symbol and still breaks (a changed type layout, changed behavior). Failing either means the line
-# freezes at its current release ("<minor> frozen <current release>" in swift-runtime-lines).
+# symbol and still breaks (a changed type layout, changed behavior). Failing either means the minor
+# release's folder stays at its current release for good ("<minor> frozen <current release>" in
+# swift-runtime-versions).
 #
 # Usage: check-swift-runtime-tests.sh [--python <Linux Python folder>] <candidate runtime folder>
 #                                      <tests archive>...
@@ -92,7 +92,7 @@ done
 
 printf '\n======== The candidate runtime %s ========\n%s' "$candidate" "$summary"
 if [ "$failed" -ne 0 ]; then
-    printf 'Do not take this release into the line: freeze it (swift-runtime-lines) or find the cause.\n'
+    printf 'Do not put this release into the minor release'"'"'s folder: freeze it (swift-runtime-versions) or find the cause.\n'
     exit 1
 fi
 exit 0

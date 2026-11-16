@@ -2,9 +2,8 @@
 //  OMCDesktopRegistration.h
 //  Abracode
 //
-//  The Linux applet's place on the desktop (design: Private/linux-applet-install-design.md,
-//  "Piece 3 plan"): whether this copy of the applet is on the desktop's app list, asked of its own
-//  install script (Contents/Linux/install-applet.sh --status), and then:
+//  The Linux applet's place on the desktop: whether this copy of the applet is on the desktop's app
+//  list, asked of its own install script (Contents/Linux/install-applet.sh --status), and then:
 //  - not on it: an alert offers to add it (the app list and the file managers' Services menu), with
 //    Add, Not Now and Never (do not ask again);
 //  - on it for a copy that is no longer there (the applet was moved): this copy is added without

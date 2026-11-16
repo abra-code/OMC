@@ -5,7 +5,7 @@
 //  Header-only, as the macOS file of the same name in Common/Apple. Not built yet: the Linux
 //  port has no build.
 //
-//  Never /tmp (decided 2026-11-09, OMC/Private/linux_port_plan_review.md D5): it is shared by
+//  Never /tmp: it is shared by
 //  every user, so a folder someone else made there first could stand in for ours. $TMPDIR is not
 //  used either: on Linux it is usually unset, or /tmp.
 //

@@ -3,7 +3,7 @@
 //  Abracode
 //
 //  Whether this process may serve the integration-test surface: the omc.test.* bridge methods
-//  that `appletbuilder itest` uses to drive a real applet (Private/applet-integration-testing-design.md).
+//  that `appletbuilder itest` uses to drive a real applet.
 //  The surface lets another process run the applet's commands and answer its panels without the
 //  Accessibility permission, so it must not exist in a build that is distributed. The rule is that
 //  it exists only where a process of the same user can already run its own code inside the applet,

@@ -2,7 +2,7 @@
 //  OMCHostInfo.cpp (Linux)
 //  Abracode
 //
-//  The Linux implementation of Platform/OMCHostInfo.h (Private/phase7-applet-host-design.md, piece 5),
+//  The Linux implementation of Platform/OMCHostInfo.h,
 //  for an applet, the one host the engine has on Linux:
 //  - The host app is the applet: its bundle's display name (CFBundleDisplayName, else CFBundleName),
 //    as on macOS, else GLib's application name.

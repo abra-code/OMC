@@ -2,8 +2,7 @@
 //  OMCOutputWindowTests.m
 //  CommandTests
 //
-//  OMC 5.6, Phase 2 (Private/phase2-builtin-actionui-windows-design.md, steps 2 and 4): what an
-//  output window (EXECUTION_MODE *_with_output_window, OUTPUT_WINDOW_SETTINGS) shows. Written
+//  What an output window (EXECUTION_MODE *_with_output_window, OUTPUT_WINDOW_SETTINGS) shows. Written
 //  against the 5.5 nib windows and kept for the built-in ActionUI document that replaced them
 //  (BuiltInDocuments/omc_output.json): the tests read the window the user sees, through the probe
 //  methods at the top. Changed with the document, by the owner's decisions: the default font is

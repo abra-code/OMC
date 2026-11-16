@@ -1,13 +1,12 @@
 #!/bin/bash
-# command-engine-cleanup - removes the Swift runtime packages (command-engine-swift-<line>) that no
-# Command Engine applet on this machine still uses. The command-engine package installs it as
-# /usr/sbin/command-engine-cleanup (Linux/Packaging/make-engine-deb.sh). Design: OMC's
-# Private/linux-applet-install-design.md, "Decisions, 2026-11-16", item 7.
+# command-engine-cleanup - removes the Swift runtime packages (command-engine-swift-<runtime version>)
+# that no Command Engine applet on this machine still uses. The command-engine package installs it as
+# /usr/sbin/command-engine-cleanup (Linux/Packaging/make-engine-deb.sh).
 #
-# Each launch of an applet adds "<runtime line><TAB><bundle path>" to
+# Each launch of an applet adds "swift-<runtime version><TAB><bundle path>" to
 # /var/lib/command-engine/applets/<uid>.list (CommandFramework/Platform/Linux/OMCRuntimeRecord.cpp),
-# for every user, whether or not the applet is on the desktop. A runtime line is kept when:
-#   - the installed command-engine package depends on it (the current engine's line);
+# for every user, whether or not the applet is on the desktop. A Swift runtime version is kept when:
+#   - the installed command-engine package depends on its package (the current engine's);
 #   - a record names it and that applet is still there, or cannot be checked: the folder it was in is
 #     not there either or cannot be entered (a home folder that is encrypted or not mounted, a
 #     removable disk, an NFS home closed to root).
@@ -77,11 +76,12 @@ if [ -z "$current_package" ]; then
     printf 'Cannot tell which Swift runtime package command-engine depends on: nothing is removed\n' >&2
     exit 1
 fi
-current_line="${current_package#command-engine-}"
+current_runtime="${current_package#command-engine-}"
 
-# The records: lines in use (space separated, with spaces around), what uses them (for --list), and
-# whether a file was not to be trusted. Names and paths come from other users: control characters are
-# shown as "?" so that they cannot drive the terminal.
+# The records: the Swift runtime folders in use (swift-<runtime version>, space separated, with
+# spaces around), what uses them (for --list), and whether a file was not to be trusted. Names and
+# paths come from other users: control characters are shown as "?" so that they cannot drive the
+# terminal.
 in_use=" "
 uses=""
 untrusted=0
@@ -128,12 +128,12 @@ else
             untrusted=1
             continue
         fi
-        while IFS="$(printf '\t')" read -r line path <&3; do
-            case "$line" in
+        while IFS="$(printf '\t')" read -r runtime path <&3; do
+            case "$runtime" in
                 swift-[0-9]*) ;;
                 *) continue ;;
             esac
-            case "$line" in
+            case "$runtime" in
                 *[!0-9a-z.-]*) continue ;;
             esac
             case "$path" in
@@ -161,10 +161,10 @@ else
                 continue
             fi
             case "$in_use" in
-                *" $line "*) ;;
-                *) in_use="$in_use$line " ;;
+                *" $runtime "*) ;;
+                *) in_use="$in_use$runtime " ;;
             esac
-            uses="$uses  $line: ${path//[[:cntrl:]]/?} (user $uid, $state)
+            uses="$uses  $runtime: ${path//[[:cntrl:]]/?} (user $uid, $state)
 "
         done
         exec 3<&-
@@ -173,12 +173,12 @@ fi
 
 removable=""
 for package in $installed; do
-    line="${package#command-engine-}"
-    if [ "$line" = "$current_line" ]; then
+    runtime="${package#command-engine-}"
+    if [ "$runtime" = "$current_runtime" ]; then
         continue
     fi
     case "$in_use" in
-        *" $line "*) continue ;;
+        *" $runtime "*) continue ;;
     esac
     removable="$removable $package"
 done

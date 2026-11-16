@@ -2,7 +2,7 @@
 //  OMCRunLoopBehaviorTests.m
 //  CommandTests
 //
-//  Phase 3 (run-loop independence, Private/phase3-run-loop-design.md, step 1): tests that pin
+//  Run-loop independence: tests that pin
 //  today's behavior before the engine stops depending on CFRunLoop. They pass on the CFSocket and
 //  nested-run-loop engine, and must keep passing when pipe I/O moves to libdispatch and
 //  WAIT_FOR_TASK_COMPLETION gets its own wait.

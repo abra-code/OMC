@@ -1,9 +1,8 @@
 #!/bin/bash
 # Linux/Packaging/run-engine-tests.sh - runs the Linux tests of an engine build from its tests archive
 # (make-tests-archive.sh copies this script into the archive as run-tests.sh), optionally on another
-# Swift runtime than the one the programs were built with: the second runtime gate (design:
-# Private/linux-applet-install-design.md, "Decisions, 2026-11-16", item 8; check-swift-runtime-tests.sh
-# runs it for each earlier release).
+# Swift runtime than the one the programs were built with (check-swift-runtime-tests.sh runs it for
+# each earlier release, against a candidate runtime).
 #
 # Runs, from the archive's folder: OMCLinuxPortTests, OMCLinuxUITests, the applet launch test, the
 # embedded Python applet test (with --python), and the integration tests (debug builds only: release
@@ -12,8 +11,8 @@
 # loads the Swift runtime from there; the script checks that CommandApplet does.
 #
 # Usage: run-tests.sh [--runtime <folder holding libswiftCore.so>] [--python <Linux Python folder>]
-#   Without --runtime the programs use the runtime package of their own line
-#   (/usr/lib/command-engine/swift-<line>), or a toolchain's /usr/lib/swift/linux after it.
+#   Without --runtime the programs use the runtime package of their own Swift runtime version
+#   (/usr/lib/command-engine/swift-<runtime version>), or a toolchain's /usr/lib/swift/linux after it.
 #   Needs a desktop session (on an agent-vm box: GNOME's Wayland socket, set up below when
 #   WAYLAND_DISPLAY is unset), python3, and for the integration tests OpenBSD netcat and timeout.
 # Exit status: 0 all passed, 1 a test failed, 2 bad arguments.

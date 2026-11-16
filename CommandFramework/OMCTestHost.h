@@ -3,7 +3,7 @@
 //  Abracode
 //
 //  The integration-test surface: what lets `appletbuilder itest` drive a real applet through the
-//  real engine (Private/applet-integration-testing-design.md). Dormant unless the applet is
+//  real engine. Dormant unless the applet is
 //  launched for a test, which means both of these in its environment:
 //
 //    OMC_TEST_TOKEN_FD     a descriptor (3 or above) to read the test's bridge token from: up to

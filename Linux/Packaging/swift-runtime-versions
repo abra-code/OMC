@@ -1,0 +1,33 @@
+# Linux/Packaging/swift-runtime-versions - which Swift runtime version the Command Engine programs
+# built with each Swift minor release load.
+#
+# Swift on Linux promises no binary compatibility between releases, so the engine programs (each
+# applet's executable and the support tools) are linked to the Swift runtime libraries of one Swift
+# runtime version, kept in its own folder, /usr/lib/command-engine/swift-<version>, which the package
+# command-engine-swift-<version> installs. Usually that version is the minor release (6.4): its folder
+# takes each later patch release (6.4.1, 6.4.2, ...) that is still compatible, and apt or dnf
+# upgrades it in place, so applets built with an earlier patch release run on the newer libraries
+# without a rebuild. When a patch release breaks compatibility, the minor release's folder keeps the
+# last compatible release for good, and programs built with that patch release or a later one use a
+# folder of their exact release (swift-6.4.3).
+#
+# One line per minor release:
+#
+#   <minor> rolling
+#       Every patch release of that minor release so far is compatible: programs built with any of
+#       them use /usr/lib/command-engine/swift-<minor> and the package command-engine-swift-<minor>,
+#       which carries the newest patch release. A new patch release goes in only after
+#       check-swift-runtime-abi.sh finds no symbol removed or changed against the previous one, and
+#       the tests of the previous engine releases pass against it (check-swift-runtime-tests.sh, with
+#       the tests archives make-tests-archive.sh makes).
+#
+#   <minor> frozen <patch release>
+#       A later patch release broke compatibility: /usr/lib/command-engine/swift-<minor> stays at
+#       <patch release> for good (applets built until then keep using it), and programs built with
+#       any later patch release of that minor release use the folder and package of their exact
+#       release (/usr/lib/command-engine/swift-<minor>.<patch>, command-engine-swift-<minor>.<patch>).
+#
+# build-linux.sh reads this file; a toolchain whose minor release has no line here is refused, so that
+# each new minor release is entered on purpose.
+
+6.4 rolling

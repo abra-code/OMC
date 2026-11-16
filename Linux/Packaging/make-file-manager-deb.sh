@@ -4,7 +4,7 @@
 # for an applet bundle): command-engine-files-nautilus (GNOME Files), command-engine-files-thunar
 # (Xfce) or command-engine-files-dolphin (KDE Plasma). Each is its own package, so a machine gets only
 # its file manager's plug-in and the libraries that one links (a GNOME machine does not pull KIO in);
-# the command-engine package suggests them (design: Private/linux-applet-install-design.md).
+# the command-engine package suggests them.
 #
 # The plug-in goes where the file manager loads plug-ins from on Debian and Ubuntu, under
 # /usr/lib/<multiarch>/ (the folder each plug-in's install.sh finds on such a system):

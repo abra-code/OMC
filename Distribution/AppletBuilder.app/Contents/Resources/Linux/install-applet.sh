@@ -1,14 +1,12 @@
 #!/bin/bash
 # install-applet.sh - checks and sets up, on this Linux machine and for the current user, what a
-# Command Engine applet needs beyond Command Engine itself. AppletBuilder copies it into every applet
-# it builds, as <Name>.app/Contents/Linux/install-applet.sh. Design: OMC's
-# Private/linux-applet-install-design.md.
+# Command Engine applet needs beyond the command-engine and Swift runtime packages. AppletBuilder
+# copies it into every applet it builds, as <Name>.app/Contents/Linux/install-applet.sh.
 #
-# Command Engine is assumed installed: the command-engine package and its Swift runtime package bring
-# everything the engine's own programs need (Contents/Linux, Contents/Frameworks), so the applet starts.
-# This script covers only what is the applet's own (owner, 2026-11-15: "it may cover ONLY optional
-# libraries, not libraries required for launching the applet itself"); where Command Engine is not
-# installed it says so and stops.
+# Those packages are assumed installed: they bring everything the engine programs in the bundle need
+# (Contents/Linux, Contents/Frameworks), so the applet starts. This script covers only what is the
+# applet's own (owner, 2026-11-15: "it may cover ONLY optional libraries, not libraries required for
+# launching the applet itself"); where those packages are not installed it says so and stops.
 #
 #   --check       says what the applet needs and whether it is there, changing nothing:
 #                 - the libraries it loads by name and lists in its Info.plist
@@ -149,7 +147,7 @@ required_sonames() {
     done
 }
 
-# Whether Command Engine runs here: the bundle's plister loads (status 126 or 127 when its
+# Whether the engine programs run here: the bundle's plister loads (status 126 or 127 when its
 # libraries are missing)
 engine_runs() {
     if [ ! -x "$plister" ]; then
@@ -281,15 +279,17 @@ entry_owner() { # <identifier>
 check() {
     printf '%s (%s)\n' "$name" "$bundle"
 
-    # Command Engine itself: its tools run only when its packages are installed
+    # The engine programs: they run only when the command-engine and Swift runtime packages are
+    # installed
     if [ ! -x "$plister" ]; then
         printf 'No plister in %s: the engine framework is incomplete (an AppletBuilder build puts it back)\n' "$support"
         missing_count=$((missing_count + 1))
         return
     fi
     if ! engine_runs; then
-        printf 'Command Engine is not installed here: install the command-engine package (with its Swift\n'
-        printf 'runtime package) first; it brings everything the applet needs to start.\n'
+        printf 'The command-engine and Swift runtime packages are not installed here: install the\n'
+        printf 'command-engine package (it brings its Swift runtime package) first; they bring everything\n'
+        printf 'the applet needs to start.\n'
         missing_count=$((missing_count + 1))
         return
     fi
@@ -413,8 +413,8 @@ check() {
 # package is known for is missing.
 install_packages() {
     if ! engine_runs; then
-        printf 'Command Engine is not installed here: install the command-engine package (with its Swift\n'
-        printf 'runtime package) first.\n'
+        printf 'The command-engine and Swift runtime packages are not installed here: install the\n'
+        printf 'command-engine package (it brings its Swift runtime package) first.\n'
         return 1
     fi
     local cache
@@ -577,7 +577,7 @@ case "$mode" in
         identifier="$("$plister" get value "$info_plist" /CFBundleIdentifier 2>/dev/null)"
         id_status=$?
         if [ "$id_status" -ne 0 ] || [ -z "$identifier" ]; then
-            printf 'No CFBundleIdentifier in %s (or Command Engine is not installed)\n' "$info_plist" >&2
+            printf 'No CFBundleIdentifier in %s (or the command-engine and Swift runtime packages are not installed)\n' "$info_plist" >&2
             exit 1
         fi
         if [ "$mode" = "--decline" ]; then

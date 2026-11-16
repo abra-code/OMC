@@ -22,9 +22,8 @@
 //  Where that folder is depends on the platform: OMCUserTempDirPlatform.h, in Common/Apple and
 //  Common/Linux (each target's USER_HEADER_SEARCH_PATHS names one). Neither falls back to /tmp.
 //  The engine's own "OMC" folder in it is used only when it is a folder (not a symbolic link)
-//  owned by the current user that no one else may enter (decided 2026-11-09,
-//  OMC/Private/linux_port_plan_review.md D5): one that another user made first, or replaced with
-//  a link, is refused, and the engine's files are not written or read there.
+//  owned by the current user that no one else may enter: one that another user made first, or
+//  replaced with a link, is refused, and the engine's files are not written or read there.
 //
 #pragma once
 

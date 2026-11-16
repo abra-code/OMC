@@ -5,7 +5,7 @@
 //  The contextual menu plugin's object (OnMyCommandCM.plugin, loaded by Shortcuts.app): the Menu
 //  Manager's ExamineContext, HandleSelection and PostMenuCleanup over Apple event descriptors, on an
 //  engine (OnMyCommand) of its own. The plugin creates it in CreateNewCMPlugin(), once per menu.
-//  macOS only. Phase 5 step 6 (Private/phase5-interfaces-design.md).
+//  macOS only.
 //
 
 #pragma once

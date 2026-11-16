@@ -50,22 +50,22 @@ FindSwiftCore(struct dl_phdr_info *inInfo, size_t inSize, void *outPath)
 
 // "swift-6.4" when libswiftCore.so was loaded from /usr/lib/command-engine/swift-6.4/, else empty
 std::string
-RuntimeLine()
+RuntimeFolderName()
 {
 	std::string swiftCore;
 	dl_iterate_phdr(FindSwiftCore, &swiftCore);
 	size_t prefixLength = strlen(kRuntimesFolder);
 	if((swiftCore.size() <= prefixLength) || (swiftCore.compare(0, prefixLength, kRuntimesFolder) != 0))
 		return std::string();
-	std::string line = swiftCore.substr(prefixLength);
-	size_t slash = line.find('/');
-	if((slash == std::string::npos) || (line.compare(slash + 1, std::string::npos, kSwiftCoreName) != 0))
+	std::string folderName = swiftCore.substr(prefixLength);
+	size_t slash = folderName.find('/');
+	if((slash == std::string::npos) || (folderName.compare(slash + 1, std::string::npos, kSwiftCoreName) != 0))
 		return std::string();
-	line.resize(slash);
+	folderName.resize(slash);
 	// As the packages name it: swift-<minor> or swift-<minor>.<patch>
-	if((line.size() <= 6) || (line.compare(0, 6, "swift-") != 0) || (line.find_first_not_of("0123456789.", 6) != std::string::npos))
+	if((folderName.size() <= 6) || (folderName.compare(0, 6, "swift-") != 0) || (folderName.find_first_not_of("0123456789.", 6) != std::string::npos))
 		return std::string();
-	return line;
+	return folderName;
 }
 
 // The applet bundle's path, or empty
@@ -120,14 +120,14 @@ OMCRecordRuntimeUse()
 {
 	if(OMCTestHostIsActive())
 		return;
-	std::string line = RuntimeLine();
-	if(line.empty())
+	std::string folderName = RuntimeFolderName();
+	if(folderName.empty())
 		return; // the toolchain's runtime (a development build), not a command-engine package's
 	std::string bundlePath = BundlePath();
 	// A tab or newline in the path would break the line format: such an applet is not recorded
 	if(bundlePath.empty() || (bundlePath[0] != '/') || (bundlePath.find_first_of("\t\n") != std::string::npos))
 		return;
-	std::string record = line + "\t" + bundlePath + "\n";
+	std::string record = folderName + "\t" + bundlePath + "\n";
 	uid_t user = getuid();
 	std::string path = std::string(kRecordsFolder) + "/" + std::to_string((unsigned long)user) + ".list";
 	int file = open(path.c_str(), O_RDWR | O_CREAT | O_APPEND | O_NOFOLLOW | O_CLOEXEC, 0644);

@@ -2,10 +2,10 @@
 //  OMCPlatformAlerts.cpp (Linux)
 //  Abracode
 //
-//  The Linux implementation of OMCPlatformShowAlert and OMCPlatformShowNotice (Platform/OMCAlerts.h,
-//  Private/phase7-applet-host-design.md, piece 4; named apart from the portable OMCAlerts.cpp, as the
-//  Linux build's shims share one folder): libadwaita's AdwAlertDialog, over the
-//  application's active window, or as a window of its own when there is none.
+//  The Linux implementation of OMCPlatformShowAlert and OMCPlatformShowNotice (Platform/OMCAlerts.h;
+//  named apart from the portable OMCAlerts.cpp, as the Linux build's shims share one folder):
+//  libadwaita's AdwAlertDialog, over the application's active window, or as a window of its own
+//  when there is none.
 //  - An alert waits for its answer in a nested GLib main loop (OMCModalLoop.h, so a quit ends the
 //    wait: no answer; so does the window it is over going away). Its buttons are, left to right,
 //    the other, the alternate and the default, as on macOS, when they fit side by side; when they

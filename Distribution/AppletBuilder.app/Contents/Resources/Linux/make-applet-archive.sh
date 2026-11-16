@@ -81,7 +81,7 @@ applet_name="$(/usr/bin/basename -- "$bundle" .app)"
 info_plist="$bundle/Contents/Info.plist"
 framework="$bundle/Contents/Frameworks/Command.framework"
 plister="$framework/Support/plister"
-runtime_file="$framework/command-engine-runtime"
+runtime_file="$framework/swift-runtime-info"
 executable="$bundle/Contents/Linux/$applet_name"
 if [ ! -x "$bundle/Contents/Linux/install-applet.sh" ]; then
     printf 'No Contents/Linux/install-applet.sh in %s: build it for Linux with AppletBuilder\n' "$bundle" >&2
@@ -131,7 +131,7 @@ case "$applet_version" in
 esac
 engine_version="$("$plister" get value "$framework/Info.plist" /CFBundleVersion 2>/dev/null)"
 swift_version="$(/usr/bin/sed -n 's/^swift_version=//p' "$runtime_file")"
-runtime_version="$(/usr/bin/sed -n 's/^runtime_line=//p' "$runtime_file")"
+runtime_version="$(/usr/bin/sed -n 's/^runtime_version=//p' "$runtime_file")"
 case "$engine_version" in
     ''|*[!0-9.]*)
         printf 'Cannot read the engine version (CFBundleVersion) from %s\n' "$framework/Info.plist" >&2
@@ -140,12 +140,12 @@ case "$engine_version" in
 esac
 case "$swift_version$runtime_version" in
     *[!0-9.]*)
-        printf 'Unexpected swift_version or runtime_line (the Swift runtime version) in %s\n' "$runtime_file" >&2
+        printf 'Unexpected swift_version or runtime_version in %s\n' "$runtime_file" >&2
         exit 1
         ;;
 esac
 if [ -z "$swift_version" ] || [ -z "$runtime_version" ]; then
-    printf 'No swift_version or runtime_line (the Swift runtime version) in %s\n' "$runtime_file" >&2
+    printf 'No swift_version or runtime_version in %s\n' "$runtime_file" >&2
     exit 1
 fi
 

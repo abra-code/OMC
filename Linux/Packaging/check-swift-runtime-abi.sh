@@ -1,22 +1,23 @@
 #!/bin/bash
-# Linux/Packaging/check-swift-runtime-abi.sh - the first gate before a new Swift patch release goes into
-# a rolling runtime line (Linux/Packaging/swift-runtime-lines; design: Private/linux-applet-install-design.md,
-# "Swift runtime lines"): compares the symbols each runtime library exports in the line's current
-# folder with the candidate's, library by library.
+# Linux/Packaging/check-swift-runtime-abi.sh - the first check before a new Swift patch release goes
+# into the folder of its minor release (Linux/Packaging/swift-runtime-versions, "rolling"): compares
+# the symbols each runtime library exports in that folder now with the candidate's, library by
+# library.
 #
 # A library of the current runtime missing from the candidate, or a symbol it exports that the
 # candidate does not (same name and kind: function, data, ...), is a break: applets built with the
 # current release may call it. Symbols the candidate adds are fine. Passing is necessary, not
 # sufficient: a changed type layout keeps every symbol, so the previous engine releases' tests must
 # also pass against the candidate (check-swift-runtime-tests.sh, with each release's tests archive
-# from make-tests-archive.sh) before it replaces the line's package; failing either means the
-# line freezes at the current release (swift-runtime-lines: "<minor> frozen <current release>").
+# from make-tests-archive.sh) before it replaces the minor release's package; failing either means
+# the minor release's folder stays at the current release for good (swift-runtime-versions:
+# "<minor> frozen <current release>").
 #
 # Usage: check-swift-runtime-abi.sh <current runtime folder> <candidate runtime folder>
-#   Each folder holds the runtime libraries: an installed line (/usr/lib/command-engine/swift-6.4), a
-#   package unpacked with "dpkg-deb -x <package>.deb <folder>" (then <folder>/usr/lib/command-engine/
-#   swift-<line>), or a toolchain's /usr/lib/swift/linux (only the current folder's libraries are
-#   compared).
+#   Each folder holds the runtime libraries: an installed one (/usr/lib/command-engine/swift-6.4), a
+#   package unpacked with "dpkg-deb -x <package>.deb <folder>" (then
+#   <folder>/usr/lib/command-engine/swift-<runtime version>), or a toolchain's /usr/lib/swift/linux
+#   (only the current folder's libraries are compared).
 # Needs nm (binutils). Exit status: 0 no break found, 1 a break found or a step failed, 2 bad arguments.
 
 current="$1"
@@ -108,7 +109,7 @@ if [ "$libraries" -eq 0 ]; then
     exit 1
 fi
 if [ "$breaks" -ne 0 ]; then
-    printf '%s of %s libraries break: freeze the line at the current release (swift-runtime-lines).\n' "$breaks" "$libraries"
+    printf '%s of %s libraries break: freeze the minor release at the current release (swift-runtime-versions).\n' "$breaks" "$libraries"
     exit 1
 fi
 printf 'No symbol break in %s libraries. Next: check-swift-runtime-tests.sh, the previous engine releases'"'"' tests against the candidate.\n' "$libraries"

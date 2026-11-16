@@ -2,14 +2,14 @@
 //  OMCWindowHost.cpp (Linux)
 //  Abracode
 //
-//  The Linux implementation of Platform/OMCWindowHost.h (Private/phase7-applet-host-design.md,
-//  piece 2): an AdwApplicationWindow of the applet's application (EntryPoints/Linux/
-//  OMCAppletMain.cpp), filled with the ActionUI document by actionUILoadIntoHostWindowFromURL, which
-//  builds its header bar, toasts and the document's modals and registers the window under its UUID.
-//  The rules are the macOS host's (Platform/Apple/OMCWindowHost.mm): a window is counted once it
-//  is shown until it closes; Close() and the destructor do not run the closed-by-user callback; a
-//  callback runs from a copy, since it may delete the window object; the document's model stays
-//  until the destructor removes it (unless the spec keeps it).
+//  The Linux implementation of Platform/OMCWindowHost.h: an AdwApplicationWindow of the applet's
+//  application (EntryPoints/Linux/OMCAppletMain.cpp), filled with the ActionUI document by
+//  actionUILoadIntoHostWindowFromURL, which builds its header bar, toasts and the document's modals
+//  and registers the window under its UUID. The rules are the macOS host's
+//  (Platform/Apple/OMCWindowHost.mm): a window is counted once it is shown until it closes; Close()
+//  and the destructor do not run the closed-by-user callback; a callback runs from a copy, since it
+//  may delete the window object; the document's model stays until the destructor removes it (unless
+//  the spec keeps it).
 //  Where Linux differs:
 //  - placement, cascading, levels: a Wayland desktop places windows itself; a floating window is
 //    kept above the app's active window (transient), nothing more;

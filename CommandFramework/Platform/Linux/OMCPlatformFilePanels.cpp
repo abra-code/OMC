@@ -3,8 +3,8 @@
 //  Abracode
 //
 //  The Linux implementation of OMCPlatformRunSavePanel and OMCPlatformRunOpenPanel
-//  (Platform/OMCFilePanels.h, Private/phase7-applet-host-design.md, piece 4; named apart from the
-//  portable OMCFilePanels.cpp, as the Linux build's shims share one folder): GTK's GtkFileDialog,
+//  (Platform/OMCFilePanels.h; named apart from the portable OMCFilePanels.cpp, as the Linux build's
+//  shims share one folder): GTK's GtkFileDialog,
 //  over the application's active window, or as a window of its own when there is none. GTK shows
 //  the desktop's file chooser through its portal when the desktop has one (GNOME does), else its own.
 //  Each call waits for the answer in a nested GLib main loop (OMCModalLoop.h, so a quit ends the

@@ -2,8 +2,8 @@
 //  OMCClipboard.cpp (Linux)
 //  Abracode
 //
-//  The Linux implementation of Platform/OMCClipboard.h (Private/phase7-applet-host-design.md,
-//  piece 5): the desktop's clipboard through GDK (the default display's GdkClipboard).
+//  The Linux implementation of Platform/OMCClipboard.h: the desktop's clipboard through GDK (the
+//  default display's GdkClipboard).
 //  - Plain text only, as on macOS: the text a command gets as its clipboard context.
 //  - GDK reads a clipboard another app owns asynchronously, so the read waits in a nested GLib
 //    main loop (OMCModalLoop.h, so a quit ends it: no text), for at most 2 seconds: a clipboard

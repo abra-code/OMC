@@ -2,7 +2,7 @@
 //  OMCAppletMain.cpp
 //  Abracode
 //
-//  The Linux applet's app shell (Private/phase7-applet-host-design.md, piece 1): an AdwApplication
+//  The Linux applet's app shell: an AdwApplication
 //  that reports the app's events to the portable applet (OMCApplet.h) and lifecycle
 //  (OMCAppLifecycle.h), as EntryPoints/Apple/OMCAppletController.mm does on macOS.
 //  - startup: the app will launch (app.will.launch); the applet and its menu are made (OMCAppletMenu.h).

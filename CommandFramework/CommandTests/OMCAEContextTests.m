@@ -3,8 +3,8 @@
 //  CommandTests
 //
 //  Pin tests for the Apple event context API in OMC.h (OMCExamineContextAE, OMCRunCommandAE), the path
-//  the contextual menu plugin uses (loaded by Shortcuts.app) and that Phase 5 step 6 moves to
-//  EntryPoints/Apple (Private/phase5-interfaces-design.md). Written against the code before the move:
+//  the contextual menu plugin uses (loaded by Shortcuts.app) and that moved to EntryPoints/Apple.
+//  Written against the code before the move:
 //  which commands a file, text or null context offers in the menu, how the menu nests submenus, and
 //  what a command receives from a file or text context.
 //

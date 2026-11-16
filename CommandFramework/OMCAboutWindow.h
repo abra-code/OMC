@@ -2,7 +2,7 @@
 //  OMCAboutWindow.h
 //  Abracode
 //
-//  The applet's About window, the same on macOS and Linux (Private/about-box-design.md): a built-in
+//  The applet's About window, the same on macOS and Linux: a built-in
 //  ActionUI document (BuiltInDocuments/command_about.json) in a window of the window host
 //  (Platform/OMCWindowHost.h), showing from the app's bundle:
 //  - its icon: the file CFBundleIconFile names (OMCCopyBundleIconURL, Platform/OMCHostInfo.h);
