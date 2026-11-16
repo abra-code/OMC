@@ -27,28 +27,28 @@
 /* Begin PBXContainerItemProxy section */
 		1D63C3842F1F192B0003586D /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 1D039DB62E168DAF00D4924A /* Abracode.xcodeproj */;
+			containerPortal = 1D039DB62E168DAF00D4924A /* Command.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = 8DC2EF5B0486A6940098B216;
 			remoteInfo = CommandFramework;
 		};
 		1D63C3862F1F192B0003586D /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 1D039DB62E168DAF00D4924A /* Abracode.xcodeproj */;
+			containerPortal = 1D039DB62E168DAF00D4924A /* Command.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = 1DCBC0D52F15FCE40002B8AB;
 			remoteInfo = CommandTests;
 		};
 		1D63C3882F1F193B0003586D /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 1D039DB62E168DAF00D4924A /* Abracode.xcodeproj */;
+			containerPortal = 1D039DB62E168DAF00D4924A /* Command.xcodeproj */;
 			proxyType = 1;
 			remoteGlobalIDString = 8DC2EF4F0486A6940098B216;
 			remoteInfo = CommandFramework;
 		};
 		1D63C38A2F1F19410003586D /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 1D039DB62E168DAF00D4924A /* Abracode.xcodeproj */;
+			containerPortal = 1D039DB62E168DAF00D4924A /* Command.xcodeproj */;
 			proxyType = 1;
 			remoteGlobalIDString = 8DC2EF4F0486A6940098B216;
 			remoteInfo = CommandFramework;
@@ -104,7 +104,7 @@
 		1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		13E42FB307B3F0F600E4EEF1 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = /System/Library/Frameworks/CoreData.framework; sourceTree = "<absolute>"; };
 		1D039D762E167EC300D4924A /* CommandApplet-target.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "CommandApplet-target.xcconfig"; sourceTree = "<group>"; };
-		1D039DB62E168DAF00D4924A /* Abracode.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Abracode.xcodeproj; path = ../AbracodeFramework/Abracode.xcodeproj; sourceTree = SOURCE_ROOT; };
+		1D039DB62E168DAF00D4924A /* Command.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Command.xcodeproj; path = ../AbracodeFramework/Command.xcodeproj; sourceTree = SOURCE_ROOT; };
 		1D4971A82575A67700F7131C /* OmcProjectRelease.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectRelease.xcconfig; path = ../Common/OmcProjectRelease.xcconfig; sourceTree = "<group>"; };
 		1D4971A92575A67700F7131C /* OmcProjectDebug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectDebug.xcconfig; path = ../Common/OmcProjectDebug.xcconfig; sourceTree = "<group>"; };
 		1D7618BE231CEE28005F4AEB /* CommandApplet.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = CommandApplet.entitlements; sourceTree = "<group>"; };
@@ -255,7 +255,7 @@
 				E2269AC60EB6D8FB0029CCF5 /* OmcProjectCommon.xcconfig */,
 				29B97323FDCFA39411CA2CEA /* Frameworks */,
 				19C28FACFE9D520D11CA2CBB /* Products */,
-				1D039DB62E168DAF00D4924A /* Abracode.xcodeproj */,
+				1D039DB62E168DAF00D4924A /* Command.xcodeproj */,
 			);
 			name = CommandApplet;
 			sourceTree = "<group>";
@@ -371,7 +371,7 @@
 			projectReferences = (
 				{
 					ProductGroup = 1D63C3802F1F192B0003586D /* Products */;
-					ProjectRef = 1D039DB62E168DAF00D4924A /* Abracode.xcodeproj */;
+					ProjectRef = 1D039DB62E168DAF00D4924A /* Command.xcodeproj */;
 				},
 			);
 			projectRoot = "";

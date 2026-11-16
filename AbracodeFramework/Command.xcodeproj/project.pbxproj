@@ -623,7 +623,7 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		0867D691FE84028FC02AAC07 /* Abracode */ = {
+		0867D691FE84028FC02AAC07 /* Command */ = {
 			isa = PBXGroup;
 			children = (
 				E29ED1B10D09531300C9D5E8 /* Common */,
@@ -647,7 +647,7 @@
 				E2F5C9020DD10F5300B4D4EC /* CommandFramework.exp */,
 				1D80D4582F12C69A00E3B4FB /* Tool Dependencies */,
 			);
-			name = Abracode;
+			name = Command;
 			sourceTree = "<group>";
 		};
 		0867D69AFE84028FC02AAC07 /* External Frameworks and Libraries */ = {
@@ -1154,7 +1154,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 1DEB91B108733DA50010E9CD /* Build configuration list for PBXProject "Abracode" */;
+			buildConfigurationList = 1DEB91B108733DA50010E9CD /* Build configuration list for PBXProject "Command" */;
 			compatibilityVersion = "Xcode 10.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 1;
@@ -1165,7 +1165,7 @@
 				Base,
 				en,
 			);
-			mainGroup = 0867D691FE84028FC02AAC07 /* Abracode */;
+			mainGroup = 0867D691FE84028FC02AAC07 /* Command */;
 			packageReferences = (
 				1D91BD0B2F98A13A00F59950 /* XCLocalSwiftPackageReference "../../ActionUI" */,
 				1D39A8912FF1E47900909493 /* XCLocalSwiftPackageReference "../../ActionUI/Add-ons/ActionUIQuickLook" */,
@@ -1575,7 +1575,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		1DEB91B108733DA50010E9CD /* Build configuration list for PBXProject "Abracode" */ = {
+		1DEB91B108733DA50010E9CD /* Build configuration list for PBXProject "Command" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				1DEB91B208733DA50010E9CD /* Debug */,

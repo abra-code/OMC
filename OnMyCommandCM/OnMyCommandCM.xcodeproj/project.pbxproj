@@ -19,21 +19,21 @@
 /* Begin PBXContainerItemProxy section */
 		1D63C3AC2F1F196C0003586D /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 1D039DAE2E168D9C00D4924A /* Abracode.xcodeproj */;
+			containerPortal = 1D039DAE2E168D9C00D4924A /* Command.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = 8DC2EF5B0486A6940098B216;
 			remoteInfo = CommandFramework;
 		};
 		1D63C3AE2F1F196C0003586D /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 1D039DAE2E168D9C00D4924A /* Abracode.xcodeproj */;
+			containerPortal = 1D039DAE2E168D9C00D4924A /* Command.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = 1DCBC0D52F15FCE40002B8AB;
 			remoteInfo = CommandTests;
 		};
 		1D63C3B02F1F19770003586D /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 1D039DAE2E168D9C00D4924A /* Abracode.xcodeproj */;
+			containerPortal = 1D039DAE2E168D9C00D4924A /* Command.xcodeproj */;
 			proxyType = 1;
 			remoteGlobalIDString = 8DC2EF4F0486A6940098B216;
 			remoteInfo = CommandFramework;
@@ -57,7 +57,7 @@
 /* Begin PBXFileReference section */
 		0AA1909FFE8422F4C02AAC07 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = /System/Library/Frameworks/CoreFoundation.framework; sourceTree = "<absolute>"; };
 		1D039D792E1683C700D4924A /* OnMyCommandCM-target.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "OnMyCommandCM-target.xcconfig"; sourceTree = "<group>"; };
-		1D039DAE2E168D9C00D4924A /* Abracode.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Abracode.xcodeproj; path = ../AbracodeFramework/Abracode.xcodeproj; sourceTree = SOURCE_ROOT; };
+		1D039DAE2E168D9C00D4924A /* Command.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Command.xcodeproj; path = ../AbracodeFramework/Command.xcodeproj; sourceTree = SOURCE_ROOT; };
 		1D3BB166229BEB5900542933 /* AUniquePtr.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AUniquePtr.h; sourceTree = "<group>"; };
 		1D4971A62575A66A00F7131C /* OmcProjectRelease.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectRelease.xcconfig; path = ../Common/OmcProjectRelease.xcconfig; sourceTree = "<group>"; };
 		1D4971A72575A66A00F7131C /* OmcProjectDebug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectDebug.xcconfig; path = ../Common/OmcProjectDebug.xcconfig; sourceTree = "<group>"; };
@@ -110,7 +110,7 @@
 				E2269B9D0EB6DBF90029CCF5 /* OmcProjectCommon.xcconfig */,
 				089C1671FE841209C02AAC07 /* External Frameworks and Libraries */,
 				19C28FB6FE9D52B211CA2CBB /* Products */,
-				1D039DAE2E168D9C00D4924A /* Abracode.xcodeproj */,
+				1D039DAE2E168D9C00D4924A /* Command.xcodeproj */,
 				1D63C5652F1F1EB40003586D /* Frameworks */,
 			);
 			name = OnMyCommandCM;
@@ -244,7 +244,7 @@
 			projectReferences = (
 				{
 					ProductGroup = 1D63C3A82F1F196C0003586D /* Products */;
-					ProjectRef = 1D039DAE2E168D9C00D4924A /* Abracode.xcodeproj */;
+					ProjectRef = 1D039DAE2E168D9C00D4924A /* Command.xcodeproj */;
 				},
 			);
 			projectRoot = "";

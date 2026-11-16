@@ -79,7 +79,7 @@ DEST_PACKAGES="$APPLET_BUILDER/Contents/Library/Packages"
 DEST_HELPERS="$APPLET_BUILDER/Contents/Helpers"
 ACTIONUI_BUILD="$OMC_ROOT/.build/ActionUI"
 
-# Checkout next to OMC: Abracode.xcodeproj refers to it by this relative path, so it cannot live
+# Checkout next to OMC: Command.xcodeproj refers to it by this relative path, so it cannot live
 # anywhere else. Section 0a clones it when missing.
 ACTIONUI_ROOT="$OMC_ROOT/../ActionUI"
 ACTIONUI_URL="https://github.com/abra-code/ActionUI.git"
@@ -219,7 +219,7 @@ echo ""
 # ════════════════════════════════════════════════════════════
 # 0a. ActionUI checkout next to OMC
 # ════════════════════════════════════════════════════════════
-# Abracode.xcodeproj (step 0) and the ActionUI tools (step 1) both build from ../ActionUI. When it
+# Command.xcodeproj (step 0) and the ActionUI tools (step 1) both build from ../ActionUI. When it
 # is missing, offer to clone the latest tagged release there; it is a permanent folder outside
 # this repository, so only after a prompt. A checkout this script cloned is recognized by being
 # clean, detached exactly at a version tag, with GitHub's ActionUI as origin; it is moved to a
