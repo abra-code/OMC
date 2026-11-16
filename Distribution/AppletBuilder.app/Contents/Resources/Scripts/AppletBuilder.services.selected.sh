@@ -1,7 +1,7 @@
 #!/bin/bash
 # AppletBuilder.services.selected - Show selected service details
 
-source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.common.sh"
+source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.plist.sh"
 
 # Get selected index from hidden column 2
 svc_index="$OMC_ACTIONUI_TABLE_330_COLUMN_2_VALUE"
@@ -36,19 +36,15 @@ set_value "$SVC_STATUS_ID" ""
 # Read service details
 menu_title=$(/usr/bin/plutil -extract "NSServices.${svc_index}.NSMenuItem.default" raw "$plist" 2>/dev/null)
 user_data=$(/usr/bin/plutil -extract "NSServices.${svc_index}.NSUserData" raw "$plist" 2>/dev/null)
-send_type=$(/usr/bin/plutil -extract "NSServices.${svc_index}.NSSendTypes.0" raw "$plist" 2>/dev/null)
-
-# Also check NSSendFileTypes (modern UTI-based format used by some applets)
-if [ -z "$send_type" ]; then
-    send_file_type=$(/usr/bin/plutil -extract "NSServices.${svc_index}.NSSendFileTypes.0" raw "$plist" 2>/dev/null)
-fi
+# The Input kind by the rule update_service compares a save with (lib.plist.sh): files, folders,
+# text, or other (types the pane cannot write, which a save keeps)
+input_kind="$(info_plist_service_kind "$plist" "$svc_index")"
 
 # Populate fields
 set_value "$SVC_MENU_TITLE_ID" "$menu_title"
 set_value "$SVC_COMMAND_PICKER_ID" "$user_data"
+set_value "$SVC_INPUT_PICKER_ID" "$input_kind"
 
-if [ "$send_type" = "NSStringPboardType" ]; then
-    set_value "$SVC_INPUT_PICKER_ID" "text"
-else
-    set_value "$SVC_INPUT_PICKER_ID" "files"
+if [ "$input_kind" = "other" ]; then
+    set_value "$SVC_STATUS_ID" "Input: the types this service declares, kept as they are"
 fi

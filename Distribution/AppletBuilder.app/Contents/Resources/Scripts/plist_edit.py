@@ -10,6 +10,10 @@ Usage: plist_edit.py <json_file> <operation> [args...]
 Read-only operations (the file is not written; command_text() in lib.plist.sh):
   print_command <index>   the command at <index> of COMMAND_LIST as indented JSON
                           on stdout; exit 1 when there is no such command
+  print_service_kind <index>
+                          the Services pane's Input kind of NSServices entry <index>
+                          (files, folders, text or other; info_plist_service_kind() in
+                          lib.plist.sh); exit 1 when there is no such service
 """
 
 import json
@@ -30,6 +34,7 @@ def main():
 
     read_only_ops = {
         'print_command': op_print_command,
+        'print_service_kind': op_print_service_kind,
     }
     read_only = read_only_ops.get(operation)
     if read_only:
@@ -82,19 +87,80 @@ def op_append_service(data, args):
     })
 
 
+# NSSendTypes entries that make a service a text service
+TEXT_SEND_TYPES = {
+    'NSStringPboardType',
+    'public.utf8-plain-text',
+    'public.plain-text',
+    'public.text',
+    'NSPasteboardTypeString',
+}
+
+
+def service_kind(svc):
+    """The Services pane's Input kind of one NSServices entry, the value its Input picker shows
+    (AppletBuilder.services.selected.sh) and the one op_update_service compares a save with:
+      text     no file types, and NSSendTypes names a text type (TEXT_SEND_TYPES)
+      folders  NSSendFileTypes is exactly public.folder, and NSSendTypes names no text type
+      files    NSSendFileTypes is exactly public.item (and no text type), or no file types and
+               NSSendTypes names NSFilenamesPboardType or public.file-url, or nothing at all
+      other    any other NSSendFileTypes (public.image, public.folder with more, ...), or file
+               types together with a text type: the picker shows it and a save keeps it, since
+               the pane cannot write such a list
+    A non-empty NSSendFileTypes makes a file service whatever NSSendTypes says, as the engine
+    (OMCService.m, OMCApplet.cpp) takes it. An entry that is not an array counts as empty."""
+    send_types = svc.get('NSSendTypes')
+    if not isinstance(send_types, list):
+        send_types = []
+    has_text = any(isinstance(t, str) and t in TEXT_SEND_TYPES for t in send_types)
+    file_types = svc.get('NSSendFileTypes')
+    if not isinstance(file_types, list):
+        file_types = []
+    if not file_types:
+        return 'text' if has_text else 'files'
+    if has_text or len(file_types) != 1:
+        return 'other'
+    if file_types[0] == 'public.folder':
+        return 'folders'
+    if file_types[0] == 'public.item':
+        return 'files'
+    return 'other'
+
+
+def op_print_service_kind(data, args):
+    """Print the Input kind (service_kind) of the service at index. Args: index.
+    Returns the exit status: 1 when the index names no service."""
+    idx = int(args[0])
+    services = data.get('NSServices', [])
+    if not isinstance(services, list) or not 0 <= idx < len(services) \
+            or not isinstance(services[idx], dict):
+        return 1
+    print(service_kind(services[idx]))
+    return 0
+
+
 def op_update_service(data, args):
-    """Update service fields at index. Args: index menu_title command_id input_type"""
+    """Update service fields at index. Args: index menu_title command_id input_type
+
+    The send types change only when input_type differs from the kind the service has
+    (service_kind, the value the pane shows) and is one the pane can write: "files"
+    (NSSendTypes NSFilenamesPboardType), "folders" (NSSendFileTypes public.folder) or "text"
+    (NSSendTypes NSStringPboardType). The pane saves at every field change, the title at each
+    keystroke, so rewriting the types each time turned a folders-only service into one for any
+    file at a title edit. "other", an empty value or anything else keeps them."""
     idx = int(args[0])
     title, cmd, inp = args[1], args[2], args[3]
     svc = data['NSServices'][idx]
     svc['NSMenuItem'] = {'default': title}
     svc['NSUserData'] = cmd
-    svc.pop('NSSendTypes', None)
-    svc.pop('NSSendFileTypes', None)
-    if inp == 'text':
-        svc['NSSendTypes'] = ['NSStringPboardType']
-    else:
-        svc['NSSendTypes'] = ['NSFilenamesPboardType']
+    if inp == service_kind(svc):
+        return
+    if inp in ('files', 'text'):
+        svc.pop('NSSendFileTypes', None)
+        svc['NSSendTypes'] = ['NSStringPboardType' if inp == 'text' else 'NSFilenamesPboardType']
+    elif inp == 'folders':
+        svc.pop('NSSendTypes', None)
+        svc['NSSendFileTypes'] = ['public.folder']
 
 
 def op_remove_service(data, args):

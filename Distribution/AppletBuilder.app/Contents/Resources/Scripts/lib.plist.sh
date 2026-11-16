@@ -124,3 +124,16 @@ command_text() { # <command file> <index>
     fi
     /usr/bin/plutil -extract "COMMAND_LIST.$2" xml1 -o - "$1" 2>/dev/null | /usr/bin/sed '1,3d; $d'
 }
+
+# The Services pane's Input kind of the service at an index of an Info.plist: files, folders,
+# text or other, by the rule update_service compares a save with (service_kind in
+# plist_edit.py). The value the Input picker shows. Nothing, and status 1, when the file does not
+# read or has no such service.
+info_plist_service_kind() { # <Info.plist> <index>
+    local json
+    json="$(/usr/bin/plutil -convert json -o - "$1" 2>/dev/null)"
+    if [ $? -ne 0 ] || [ -z "$json" ]; then
+        return 1
+    fi
+    printf '%s' "$json" | "$python3" "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/plist_edit.py" /dev/stdin print_service_kind "$2" 2>/dev/null
+}
