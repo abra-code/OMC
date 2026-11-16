@@ -8,7 +8,8 @@
 # candidate does not (same name and kind: function, data, ...), is a break: applets built with the
 # current release may call it. Symbols the candidate adds are fine. Passing is necessary, not
 # sufficient: a changed type layout keeps every symbol, so the previous engine releases' tests must
-# also pass against the candidate before it replaces the line's package; failing either means the
+# also pass against the candidate (check-swift-runtime-tests.sh, with each release's tests archive
+# from make-tests-archive.sh) before it replaces the line's package; failing either means the
 # line freezes at the current release (swift-runtime-lines: "<minor> frozen <current release>").
 #
 # Usage: check-swift-runtime-abi.sh <current runtime folder> <candidate runtime folder>
@@ -110,5 +111,5 @@ if [ "$breaks" -ne 0 ]; then
     printf '%s of %s libraries break: freeze the line at the current release (swift-runtime-lines).\n' "$breaks" "$libraries"
     exit 1
 fi
-printf 'No symbol break in %s libraries. Next: the previous engine releases'"'"' tests against the candidate.\n' "$libraries"
+printf 'No symbol break in %s libraries. Next: check-swift-runtime-tests.sh, the previous engine releases'"'"' tests against the candidate.\n' "$libraries"
 exit 0

@@ -7,7 +7,8 @@
 #       Every patch release of that minor shares /usr/lib/command-engine/swift-<minor>, the
 #       command-engine-swift-<minor> package, which apt upgrades in place to the newest patch. A new
 #       patch goes in only after check-swift-runtime-abi.sh finds no symbol removed or changed against
-#       the previous one and the previous engine releases' tests pass against it.
+#       the previous one and the previous engine releases' tests pass against it
+#       (check-swift-runtime-tests.sh, with the tests archives make-tests-archive.sh makes).
 #
 #   <minor> frozen <patch release>
 #       A later patch broke the runtime's ABI: /usr/lib/command-engine/swift-<minor> stays at
