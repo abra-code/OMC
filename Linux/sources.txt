@@ -64,6 +64,7 @@ Command CommandFramework/Platform/Linux/OMCActionUIAddOns.cpp
 Command CommandFramework/Platform/Linux/OMCTestPlatform.cpp
 Command CommandFramework/Platform/Linux/OMCAppShell.cpp
 Command CommandFramework/Platform/Linux/OMCDesktopRegistration.cpp
+Command CommandFramework/Platform/Linux/OMCRuntimeRecord.cpp
 Command CommandFramework/Platform/Linux/OMCModalLoop.cpp
 Command CommandFramework/Platform/Linux/OMCWindowHost.cpp
 Command CommandFramework/Platform/Linux/OMCPythonCachePrefix.cpp

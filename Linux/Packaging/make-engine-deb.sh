@@ -1,8 +1,12 @@
 #!/bin/bash
 # Linux/Packaging/make-engine-deb.sh - makes the command-engine package (.deb): what every Command
 # Engine applet needs from the system, installed once per machine (design:
-# Private/linux-applet-install-design.md, "Decisions, 2026-11-15"). For now it holds no program, only
-# its dependencies and a short README:
+# Private/linux-applet-install-design.md, "Decisions, 2026-11-15" and "2026-11-16"). It holds no engine
+# code (the engine is linked into each applet), only its dependencies, a short README, and the Swift
+# runtime cleanup (item 7): /usr/sbin/command-engine-cleanup (command-engine-cleanup beside this script)
+# and the folder every user's applets record their runtime in, /var/lib/command-engine/applets (mode
+# 1777, sticky, like /tmp), with a note at installation when an older runtime is still installed.
+# Its dependencies:
 #
 # - the system libraries the engine's programs load (the master applet's executable and its support
 #   tools), with the versions they need, as dpkg-shlibdeps finds them from the programs;
@@ -139,10 +143,43 @@ fi
 
 package="command-engine"
 root="$work/$package"
-/bin/mkdir -p "$root/DEBIAN" "$root/usr/share/doc/$package"
+/bin/mkdir -p "$root/DEBIAN" "$root/usr/share/doc/$package" "$root/usr/sbin" "$root/var/lib/command-engine/applets"
 status=$?
 if [ "$status" -ne 0 ]; then
     printf 'Cannot make the package folders in %s\n' "$work" >&2
+    exit 1
+fi
+# Every user's applets add their own <uid>.list to it, so everyone may write there, and the sticky bit
+# keeps each user's file from the others (dpkg-deb keeps the mode)
+/bin/chmod 1777 "$root/var/lib/command-engine/applets"
+status=$?
+if [ "$status" -ne 0 ]; then
+    printf 'Cannot set the mode of %s\n' "$root/var/lib/command-engine/applets" >&2
+    exit 1
+fi
+/bin/cp -- "$script_folder/command-engine-cleanup" "$root/usr/sbin/command-engine-cleanup"
+status=$?
+if [ "$status" -ne 0 ]; then
+    printf 'Cannot copy %s\n' "$script_folder/command-engine-cleanup" >&2
+    exit 1
+fi
+/bin/chmod 755 "$root/usr/sbin/command-engine-cleanup"
+status=$?
+if [ "$status" -ne 0 ]; then
+    printf 'Cannot set the mode of %s\n' "$root/usr/sbin/command-engine-cleanup" >&2
+    exit 1
+fi
+# The note at installation when an older runtime line is still installed
+/bin/cp -- "$script_folder/command-engine.postinst" "$root/DEBIAN/postinst"
+status=$?
+if [ "$status" -ne 0 ]; then
+    printf 'Cannot copy %s\n' "$script_folder/command-engine.postinst" >&2
+    exit 1
+fi
+/bin/chmod 755 "$root/DEBIAN/postinst"
+status=$?
+if [ "$status" -ne 0 ]; then
+    printf 'Cannot set the mode of %s\n' "$root/DEBIAN/postinst" >&2
     exit 1
 fi
 {
@@ -152,6 +189,8 @@ fi
     printf 'symbolic icons (adwaita-icon-theme), python3 (adding an applet to the desktop), and the\n'
     printf 'Swift %s runtime (command-engine-swift-%s).\n' "$swift_version" "$runtime_line"
     printf 'An applet that needs more (WebKitGTK for web pages, for one) says so itself.\n'
+    printf '\nEach applet launch records the Swift runtime it uses in /var/lib/command-engine/applets;\n'
+    printf '"sudo command-engine-cleanup" removes the runtimes no applet uses (--list shows them).\n'
 } > "$root/usr/share/doc/$package/README"
 status=$?
 if [ "$status" -ne 0 ]; then

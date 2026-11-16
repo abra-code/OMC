@@ -1,0 +1,16 @@
+#!/bin/sh
+# command-engine.postinst - the command-engine package's postinst (Linux/Packaging/make-engine-deb.sh
+# copies it in as DEBIAN/postinst). After an upgrade to an engine on a new Swift runtime line the old
+# line stays installed (an applet may still use it): say how to remove the ones no applet uses. dpkg
+# holds its lock here, so command-engine-cleanup itself cannot run from this script.
+
+if [ "$1" = "configure" ]; then
+    count="$(/usr/bin/dpkg-query -W -f='${db:Status-Abbrev}\n' 'command-engine-swift-*' 2>/dev/null | /usr/bin/grep -c '^ii')"
+    case "$count" in
+        ''|*[!0-9]*) count=0 ;;
+    esac
+    if [ "$count" -gt 1 ]; then
+        printf 'More than one Swift runtime for Command Engine applets is installed; "sudo command-engine-cleanup" removes the ones no applet uses (--list shows them).\n'
+    fi
+fi
+exit 0

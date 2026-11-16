@@ -1,0 +1,252 @@
+#!/bin/bash
+# command-engine-cleanup - removes the Swift runtime packages (command-engine-swift-<line>) that no
+# Command Engine applet on this machine still uses. The command-engine package installs it as
+# /usr/sbin/command-engine-cleanup (Linux/Packaging/make-engine-deb.sh). Design: OMC's
+# Private/linux-applet-install-design.md, "Decisions, 2026-11-16", item 7.
+#
+# Each launch of an applet adds "<runtime line><TAB><bundle path>" to
+# /var/lib/command-engine/applets/<uid>.list (CommandFramework/Platform/Linux/OMCRuntimeRecord.cpp),
+# for every user, whether or not the applet is on the desktop. A runtime line is kept when:
+#   - the installed command-engine package depends on it (the current engine's line);
+#   - a record names it and that applet is still there, or cannot be checked: the folder it was in is
+#     not there either or cannot be entered (a home folder that is encrypted or not mounted, a
+#     removable disk, an NFS home closed to root).
+# An applet counts as gone only when the folder it was in can be entered and the applet is not there.
+# The folder is writable by everyone, so a records file that is not a plain file owned by the user
+# its name gives (another user put it there) stops the cleanup: nothing is removed while it is there.
+# Without the records folder nothing is removed either.
+# A runtime removed while an applet that was never launched still needs it comes back from that
+# applet's install script (Contents/Linux/install-applet.sh --install-packages).
+#
+# Usage: command-engine-cleanup [--list | --yes]
+#   --list   says which runtimes are installed, which applets use them, and which would be removed;
+#            changes nothing; any user can run it.
+#   --yes    removes without asking.
+#   (none)   asks in the terminal before removing.
+# Removing needs root (sudo command-engine-cleanup). It uses dpkg --remove (Debian, Ubuntu) or
+# rpm -e (Fedora), which refuse to remove a package something else installed depends on.
+# Exit status: 0 done or nothing to remove, 1 a step failed or removal was refused, 2 bad arguments.
+
+records_folder="/var/lib/command-engine/applets"
+
+mode="ask"
+if [ $# -gt 1 ]; then
+    mode=""
+elif [ $# -eq 1 ]; then
+    case "$1" in
+        --list) mode="list" ;;
+        --yes) mode="yes" ;;
+        *) mode="" ;;
+    esac
+fi
+if [ -z "$mode" ]; then
+    printf 'Usage: %s [--list | --yes]\n' "$0" >&2
+    exit 2
+fi
+
+# Which package manager installed command-engine (a Debian machine may have rpm too)
+family=""
+if [ -x /usr/bin/dpkg-query ]; then
+    engine_status="$(/usr/bin/dpkg-query -W -f='${db:Status-Abbrev}' command-engine 2>/dev/null)"
+    case "$engine_status" in
+        ii*) family="deb" ;;
+    esac
+fi
+if [ -z "$family" ] && [ -x /usr/bin/rpm ]; then
+    /usr/bin/rpm -q --quiet command-engine 2>/dev/null
+    status=$?
+    if [ "$status" -eq 0 ]; then
+        family="rpm"
+    fi
+fi
+if [ -z "$family" ]; then
+    printf 'The command-engine package is not installed: nothing tells which Swift runtime is current, so nothing is removed\n' >&2
+    exit 1
+fi
+
+# The installed runtime packages, one name per line
+if [ "$family" = "deb" ]; then
+    installed="$(/usr/bin/dpkg-query -W -f='${Package}\t${db:Status-Abbrev}\n' 'command-engine-swift-*' 2>/dev/null | /usr/bin/awk -F '\t' '$2 ~ /^ii/ { print $1 }')"
+    engine_depends="$(/usr/bin/dpkg-query -W -f='${Depends}' command-engine 2>/dev/null)"
+else
+    installed="$(/usr/bin/rpm -qa --qf '%{NAME}\n' 'command-engine-swift-*' 2>/dev/null)"
+    engine_depends="$(/usr/bin/rpm -q --requires command-engine 2>/dev/null)"
+fi
+current_package="$(printf '%s\n' "$engine_depends" | /usr/bin/grep -o 'command-engine-swift-[0-9][0-9.]*' | /usr/bin/head -n 1)"
+if [ -z "$current_package" ]; then
+    printf 'Cannot tell which Swift runtime package command-engine depends on: nothing is removed\n' >&2
+    exit 1
+fi
+current_line="${current_package#command-engine-}"
+
+# The records: lines in use (space separated, with spaces around), what uses them (for --list), and
+# whether a file was not to be trusted. Names and paths come from other users: control characters are
+# shown as "?" so that they cannot drive the terminal.
+in_use=" "
+uses=""
+untrusted=0
+blocked="while the files named above are in $records_folder"
+if [ ! -d "$records_folder" ] || [ -L "$records_folder" ]; then
+    # The command-engine package makes it: without it no applet recorded anything
+    printf 'No records folder %s: which runtimes applets use is unknown\n' "$records_folder" >&2
+    untrusted=1
+    blocked="without the records folder $records_folder"
+else
+    for records in "$records_folder"/*; do
+        # No file at all leaves the pattern itself
+        if [ ! -e "$records" ] && [ ! -L "$records" ]; then
+            continue
+        fi
+        shown_records="${records//[[:cntrl:]]/?}"
+        name="${records##*/}"
+        uid="${name%.list}"
+        case "$uid" in
+            ''|*[!0-9]*)
+                printf 'Not a records file: %s (a records file is named <user id>.list): nothing is removed while it is there\n' "$shown_records" >&2
+                untrusted=1
+                continue
+                ;;
+        esac
+        if [ "$uid.list" != "$name" ] || [ -L "$records" ] || [ ! -f "$records" ]; then
+            printf 'Not a plain records file: %s: nothing is removed while it is there\n' "$shown_records" >&2
+            untrusted=1
+            continue
+        fi
+        # Opened once, then checked and read through the same descriptor, so the file cannot be swapped
+        # between the check and the read
+        exec 3< "$records"
+        status=$?
+        if [ "$status" -ne 0 ]; then
+            printf 'Cannot read %s: nothing is removed\n' "$records" >&2
+            untrusted=1
+            continue
+        fi
+        owner_links="$(/usr/bin/stat -L -c '%u %h %F' /dev/fd/3 2>/dev/null)"
+        if [ "$owner_links" != "$uid 1 regular file" ] && [ "$owner_links" != "$uid 1 regular empty file" ]; then
+            printf '%s is not a plain file owned by user %s alone (%s): nothing is removed while it is there\n' "$records" "$uid" "$owner_links" >&2
+            exec 3<&-
+            untrusted=1
+            continue
+        fi
+        while IFS="$(printf '\t')" read -r line path <&3; do
+            case "$line" in
+                swift-[0-9]*) ;;
+                *) continue ;;
+            esac
+            case "$line" in
+                *[!0-9a-z.-]*) continue ;;
+            esac
+            case "$path" in
+                /*) ;;
+                *) continue ;;
+            esac
+            folder="${path%/*}"
+            if [ -z "$folder" ]; then
+                folder="/"
+            fi
+            state="there"
+            if [ ! -e "$path" ]; then
+                # Gone only when its folder can be entered, so that a miss means no such applet: a
+                # folder that is missing or closed to this user (an unmounted home, an NFS home that
+                # maps root to nobody) cannot be checked
+                ( CDPATH= cd -P -- "$folder" ) 2>/dev/null
+                status=$?
+                if [ "$status" -eq 0 ]; then
+                    state="gone"
+                else
+                    state="cannot be checked"
+                fi
+            fi
+            if [ "$state" = "gone" ]; then
+                continue
+            fi
+            case "$in_use" in
+                *" $line "*) ;;
+                *) in_use="$in_use$line " ;;
+            esac
+            uses="$uses  $line: ${path//[[:cntrl:]]/?} (user $uid, $state)
+"
+        done
+        exec 3<&-
+    done
+fi
+
+removable=""
+for package in $installed; do
+    line="${package#command-engine-}"
+    if [ "$line" = "$current_line" ]; then
+        continue
+    fi
+    case "$in_use" in
+        *" $line "*) continue ;;
+    esac
+    removable="$removable $package"
+done
+removable="${removable# }"
+
+if [ "$mode" = "list" ]; then
+    printf 'Installed Swift runtimes:\n'
+    for package in $installed; do
+        printf '  %s\n' "$package"
+    done
+    printf 'Current (command-engine depends on it): %s\n' "$current_package"
+    if [ -n "$uses" ]; then
+        printf 'Used by applets:\n%s' "$uses"
+    else
+        printf 'Used by applets: none recorded\n'
+    fi
+    if [ "$untrusted" -ne 0 ]; then
+        printf 'Would remove: nothing, %s\n' "$blocked"
+    elif [ -n "$removable" ]; then
+        printf 'Would remove: %s\n' "$removable"
+    else
+        printf 'Would remove: nothing\n'
+    fi
+    exit 0
+fi
+
+if [ "$untrusted" -ne 0 ]; then
+    printf 'Nothing removed, %s\n' "$blocked" >&2
+    exit 1
+fi
+if [ -z "$removable" ]; then
+    printf 'Every installed Swift runtime is in use; nothing to remove\n'
+    exit 0
+fi
+user_id="$(/usr/bin/id -u)"
+if [ "$user_id" != "0" ]; then
+    printf 'Removing needs root: sudo %s\n' "$0" >&2
+    printf 'No applet uses: %s\n' "$removable" >&2
+    exit 1
+fi
+if [ "$mode" = "ask" ]; then
+    if [ ! -t 0 ]; then
+        printf 'Not a terminal: pass --yes to remove %s\n' "$removable" >&2
+        exit 1
+    fi
+    printf 'No applet uses: %s\nRemove? [y/N] ' "$removable"
+    answer=""
+    read -r answer
+    case "$answer" in
+        y|Y|yes|Yes) ;;
+        *)
+            printf 'Nothing removed\n'
+            exit 0
+            ;;
+    esac
+fi
+# Unquoted on purpose: one argument per package (package names hold no spaces). dpkg looks for
+# ldconfig and its other helpers on PATH, which may lack the sbin folders when not run through sudo.
+if [ "$family" = "deb" ]; then
+    PATH=/usr/sbin:/usr/bin:/sbin:/bin /usr/bin/dpkg --remove $removable
+    status=$?
+else
+    PATH=/usr/sbin:/usr/bin:/sbin:/bin /usr/bin/rpm -e $removable
+    status=$?
+fi
+if [ "$status" -ne 0 ]; then
+    printf 'Removing %s failed (status %s)\n' "$removable" "$status" >&2
+    exit 1
+fi
+printf 'Removed: %s\n' "$removable"
+exit 0
