@@ -2,7 +2,7 @@
  *  CommandFrameworkVersion.c
  *  
  *  Weak linking support for Command.framework
- *	Compile this file in your project and then call GetAbracodeFrameworkVersion to find out if the framework is installed
+ *	Compile this file in your project and then call GetCommandFrameworkVersion to find out if the framework is installed
  *  
  *
  */
@@ -11,7 +11,7 @@
 
 extern UInt32 OMCGetCurrentVersion(void) __attribute__((weak_import));
 
-UInt32 GetAbracodeFrameworkVersion(void)
+UInt32 GetCommandFrameworkVersion(void)
 {
 	if(OMCGetCurrentVersion != NULL)
 		return OMCGetCurrentVersion();

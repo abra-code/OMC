@@ -8,7 +8,7 @@
 //  identifier find it afterwards. Probed: ~/git/AppleCoreLibrariesForLinux/build/probe/
 //  cfbundle-framework/REPORT.md.
 //
-//  - The engine is libAbracode.so: the folder holding it, up to the one named *.framework
+//  - The engine is libCommand.so: the folder holding it, up to the one named *.framework
 //    (a flat framework, or Versions/A in a versioned one), found with dladdr on the engine's code.
 //  - The engine is linked into the applet's executable: the applet's
 //    Frameworks/Command.framework, which then holds only resources and support tools.

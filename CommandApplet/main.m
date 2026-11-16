@@ -10,13 +10,13 @@
 #import <Command/OMCMainMenuController.h>
 #import <Command/OMCAppletController.h>
 
-UInt32 GetAbracodeFrameworkVersion(void);
+UInt32 GetCommandFrameworkVersion(void);
 
 #define MINIMUM_OMC_VERSION 20000
 
 int main(int argc, char *argv[])
 {
-	if(GetAbracodeFrameworkVersion() < MINIMUM_OMC_VERSION)
+	if(GetCommandFrameworkVersion() < MINIMUM_OMC_VERSION)
 		return 1;
 
 	@autoreleasepool

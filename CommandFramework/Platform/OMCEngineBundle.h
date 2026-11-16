@@ -21,7 +21,7 @@ extern "C" {
 // The engine's bundle, found once on first use (from any thread) and kept for the life of the
 // process: do not release it. NULL when it cannot be found. macOS: the loaded framework, by its
 // bundle identifier. Linux: CoreFoundation knows only the main bundle and the bundles created, so
-// the engine creates its framework's bundle: the folder holding libAbracode.so when the engine is a
+// the engine creates its framework's bundle: the folder holding libCommand.so when the engine is a
 // shared library, else the applet's Frameworks/Command.framework.
 CFBundleRef OMCGetEngineBundle(void);
 

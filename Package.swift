@@ -85,7 +85,7 @@ let package = Package(
     products: [
         // The engine: the counterpart of Command.framework's binary. Linked with -z defs, so a
         // platform function with no Linux implementation yet is a link error.
-        .library(name: "Abracode", type: .dynamic, targets: ["Abracode"]),
+        .library(name: "Command", type: .dynamic, targets: ["Command"]),
         .executable(name: "plister", targets: ["plister"]),
         .executable(name: "b64", targets: ["b64"]),
         .executable(name: "filt", targets: ["filt"]),
@@ -119,7 +119,7 @@ let package = Package(
             linkerSettings: foundationLibraries
         ),
         .target(
-            name: "Abracode",
+            name: "Command",
             dependencies: [
                 "OMCCommon",
                 .product(name: "ActionUICAdapter", package: "ActionUI"),
@@ -129,7 +129,7 @@ let package = Package(
                 .product(name: "ActionUIDiff", package: "ActionUIDiff"),
                 .product(name: "ActionUIHostSurface", package: "ActionUIHostSurface"),
             ],
-            path: "Linux/Targets/Abracode",
+            path: "Linux/Targets/Command",
             publicHeadersPath: ".",
             cSettings: cSettings,
             cxxSettings: cxxSettings,
@@ -148,13 +148,13 @@ let package = Package(
         tool("loco", []),
         tool("omc_next_command", ["OMCCommon"]),
         tool("omc_dialog_control", ["OMCCommon"]),
-        tool("CommandApplet", ["Abracode"]),
+        tool("CommandApplet", ["Command"]),
 
         // Linux checks of what macOS covers with the XCTest suite: run each with its arguments
         // (build-linux.sh does not run them). Not shims: these exist only for Linux.
         .executableTarget(
             name: "OMCLinuxPortTests",
-            dependencies: ["Abracode"],
+            dependencies: ["Command"],
             path: "Linux/Tests/OMCLinuxPortTests",
             cSettings: cSettings,
             cxxSettings: cxxSettings,
@@ -162,7 +162,7 @@ let package = Package(
         ),
         .executableTarget(
             name: "OMCLinuxUITests",
-            dependencies: ["Abracode"],
+            dependencies: ["Command"],
             path: "Linux/Tests/OMCLinuxUITests",
             cSettings: cSettings,
             cxxSettings: cxxSettings,

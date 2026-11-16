@@ -15,7 +15,7 @@
 #                                   where the engine looks for the embedded interpreter
 #                                   (Library/Python/bin/python3, as on macOS)
 #     Frameworks/Command.framework/
-#       Info.plist                  Linux/AbracodeFramework-Info.plist
+#       Info.plist                  Linux/CommandFramework-Info.plist
 #       omc_*.json                  the engine's built-in windows (CommandFramework/BuiltInDocuments)
 #       <lang>.lproj/Private.strings  the engine's own texts (CommandFramework/*.lproj)
 #       Support/                    the support tools (omc_dialog_control, omc_next_command, ...,
@@ -369,7 +369,7 @@ if [ -z "$omc_version" ]; then
     printf 'Cannot read OMC_BUNDLE_VERSION from %s\n' "$omc_root/Common/OmcVersion.xcconfig" >&2
     exit 1
 fi
-/usr/bin/sed "s/\${OMC_BUNDLE_VERSION}/$omc_version/" "$script_folder/AbracodeFramework-Info.plist" > "$framework/Info.plist"
+/usr/bin/sed "s/\${OMC_BUNDLE_VERSION}/$omc_version/" "$script_folder/CommandFramework-Info.plist" > "$framework/Info.plist"
 status=$?
 if [ "$status" -ne 0 ]; then
     printf 'Cannot write the framework Info.plist\n' >&2
