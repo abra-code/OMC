@@ -115,6 +115,32 @@ bundle_resources_dir() {
     fi
 }
 
+# Helper: run "xcrun swift build" with the given arguments, quietly. On success nothing is printed.
+# On failure prints "Failed to build $1", then the build's output (stdout and stderr, where SwiftPM
+# puts dependency-resolution errors) without the progress lines, and returns the build's status.
+# The remaining arguments go to swift build. Progress lines come in two forms: the native engine's
+# "[n/m] Compiling ..." and the Swift Build engine's (the default under Xcode 27) bare "[n / m]",
+# whose spaces are U+2009 thin spaces, so the pattern allows anything between the numbers.
+quiet_swift_build() {
+    local _label="$1"
+    shift
+    local _log
+    _log="$(/usr/bin/mktemp)"
+    local _mktemp_rc=$?
+    if [ "$_mktemp_rc" -ne 0 ] || [ -z "$_log" ]; then
+        echo -e "  ${RED}Cannot create a temporary file for the $_label build log${NC}"
+        return 1
+    fi
+    /usr/bin/xcrun swift build "$@" > "$_log" 2>&1
+    local _rc=$?
+    if [ "$_rc" -ne 0 ]; then
+        echo -e "  ${RED}Failed to build $_label:${NC}"
+        /usr/bin/grep -v -E '^\[[0-9]+[^]]*/[^]]*[0-9]+\]( |$)' "$_log" | /usr/bin/sed 's/^/    /'
+    fi
+    /bin/rm -f "$_log"
+    return "$_rc"
+}
+
 # Helper: download mistune $1 from PyPI and install it into $DEST_MISTUNE.
 # Returns 0 on success (and sets the global 'updated'), non-zero on failure. A missing
 # LICENSE returns non-zero after the code is installed, so 'updated' is set then too.
@@ -609,21 +635,19 @@ else
         echo "  Building $product (universal)..."
 
         # Build for arm64
-        /usr/bin/xcrun swift build --package-path "$ACTIONUI_VIEWER_PKG" --scratch-path "$ACTIONUI_BUILD_ARM64" \
-            --product "$product" --configuration release --arch arm64 2>/dev/null
+        quiet_swift_build "$product (arm64)" --package-path "$ACTIONUI_VIEWER_PKG" --scratch-path "$ACTIONUI_BUILD_ARM64" \
+            --product "$product" --configuration release --arch arm64
         rc=$?
         if [ "$rc" -ne 0 ]; then
-            echo -e "  ${RED}Failed to build $product (arm64)${NC}"
             build_failed=1
             continue
         fi
 
         # Build for x86_64
-        /usr/bin/xcrun swift build --package-path "$ACTIONUI_VIEWER_PKG" --scratch-path "$ACTIONUI_BUILD_X86" \
-            --product "$product" --configuration release --arch x86_64 2>/dev/null
+        quiet_swift_build "$product (x86_64)" --package-path "$ACTIONUI_VIEWER_PKG" --scratch-path "$ACTIONUI_BUILD_X86" \
+            --product "$product" --configuration release --arch x86_64
         rc=$?
         if [ "$rc" -ne 0 ]; then
-            echo -e "  ${RED}Failed to build $product (x86_64)${NC}"
             build_failed=1
             continue
         fi
@@ -692,22 +716,20 @@ else
 
     if [ "$verify_ok" -eq 1 ]; then
         echo "  Building $verify_product (universal)..."
-        /usr/bin/xcrun swift build --package-path "$ACTIONUI_VERIFY_PKG" --scratch-path "$ACTIONUI_VERIFY_BUILD_ARM64" \
-            --product "$verify_product" --configuration release --arch arm64 2>/dev/null
+        quiet_swift_build "$verify_product (arm64)" --package-path "$ACTIONUI_VERIFY_PKG" --scratch-path "$ACTIONUI_VERIFY_BUILD_ARM64" \
+            --product "$verify_product" --configuration release --arch arm64
         rc=$?
         if [ "$rc" -ne 0 ]; then
-            echo -e "  ${RED}Failed to build $verify_product (arm64)${NC}"
             build_failed=1
             verify_ok=0
         fi
     fi
 
     if [ "$verify_ok" -eq 1 ]; then
-        /usr/bin/xcrun swift build --package-path "$ACTIONUI_VERIFY_PKG" --scratch-path "$ACTIONUI_VERIFY_BUILD_X86" \
-            --product "$verify_product" --configuration release --arch x86_64 2>/dev/null
+        quiet_swift_build "$verify_product (x86_64)" --package-path "$ACTIONUI_VERIFY_PKG" --scratch-path "$ACTIONUI_VERIFY_BUILD_X86" \
+            --product "$verify_product" --configuration release --arch x86_64
         rc=$?
         if [ "$rc" -ne 0 ]; then
-            echo -e "  ${RED}Failed to build $verify_product (x86_64)${NC}"
             build_failed=1
             verify_ok=0
         fi
