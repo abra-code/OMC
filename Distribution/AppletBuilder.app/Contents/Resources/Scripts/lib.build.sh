@@ -342,13 +342,13 @@ applet_rename_scripts() {
     done
 }
 
-# Update Credits.rtf with new name
+# Update Credits.md with new name
 applet_update_credits() {
     local app_path="$1"
     local old_name="$2"
     local new_name="$3"
 
-    local credits="$app_path/Contents/Resources/Credits.rtf"
+    local credits="$app_path/Contents/Resources/Credits.md"
     if [ -f "$credits" ]; then
         sed_in_place "s/${old_name}/${new_name}/g" "$credits"
         local old_lower=$(echo "$old_name" | /usr/bin/tr '[:upper:]' '[:lower:]')
@@ -462,7 +462,7 @@ applet_rename_contents() {
     # Rename and update scripts
     applet_rename_scripts "$app_path/Contents/Resources/Scripts" "$old_name" "$new_name"
 
-    # Update Credits.rtf
+    # Update Credits.md
     applet_update_credits "$app_path" "$old_name" "$new_name"
 
     # Only the URL scheme step is checked. Its failure (already reported) is returned
@@ -1269,6 +1269,34 @@ ${info_out}
         ab_log "  Info.plist: MISSING"
         error_count=$((error_count + 1))
         report="${report}Info.plist: missing (Contents/Info.plist not found)
+
+"
+    fi
+
+    # Credits.md: the engine's About window shows it, as Markdown, on macOS and Linux. It is
+    # required: the About window has nothing else to tell who made the applet. Credits.rtf (what
+    # macOS's standard About panel read) is not shown any more.
+    local credits_md="$resources_dir/Credits.md"
+    local credits_rtf="$resources_dir/Credits.rtf"
+    if [ -f "$credits_md" ]; then
+        ab_log "  Credits.md: OK"
+        if [ -f "$credits_rtf" ]; then
+            ab_log "  Credits.rtf: warning (not shown)"
+            warning_count=$((warning_count + 1))
+            report="${report}Credits.rtf: no longer shown; the About window shows Credits.md. Delete Contents/Resources/Credits.rtf.
+
+"
+        fi
+    elif [ -f "$credits_rtf" ]; then
+        ab_log "  Credits.md: MISSING (Credits.rtf is no longer shown)"
+        error_count=$((error_count + 1))
+        report="${report}Credits.md: missing. The About window shows Contents/Resources/Credits.md (Markdown); Credits.rtf is no longer shown. Convert Credits.rtf to Markdown (for example with DocToDoc, which embeds pandoc, or ask your coding agent), save it as Credits.md, and delete Credits.rtf.
+
+"
+    else
+        ab_log "  Credits.md: MISSING"
+        error_count=$((error_count + 1))
+        report="${report}Credits.md: missing. The About window shows Contents/Resources/Credits.md (Markdown): who made the applet, its license, and what it uses. Add one.
 
 "
     fi

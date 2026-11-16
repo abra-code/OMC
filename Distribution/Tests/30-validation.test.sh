@@ -636,4 +636,40 @@ check "a matching KEY is left alone" "{'Old': 'New'}" \
 check "it recurses into lists" "['New', 'keep']" \
     "$(ab_py json_rename_value 'walk(["Old", "keep"], "Old", "New")')"
 
+section "16. Credits.md is required: the About window shows it"
+# The engine's About window shows Contents/Resources/Credits.md, on macOS and on
+# Linux; Credits.rtf, which macOS's standard panel read, is not shown any more.
+# A project without Credits.md does not build, and one that still has only
+# Credits.rtf is told how to convert it. A leftover Credits.rtf beside a
+# Credits.md is a warning.
+
+credits_ok="$(ab_make_project CreditsOK)"
+check "a template has Credits.md" "yes" \
+    "$([ -f "$credits_ok/Contents/Resources/Credits.md" ] && echo yes || echo no)"
+check "and validates" "0" "$(ab_call_rc lib.build.sh validate_project "$credits_ok")"
+check "saying so" "1" \
+    "$(ab_call_log lib.build.sh validate_project "$credits_ok" | /usr/bin/grep -c 'Credits.md: OK')"
+
+credits_none="$(ab_make_project CreditsNone)"
+/bin/rm -f "$credits_none/Contents/Resources/Credits.md"
+check "no Credits.md is an error" "1" "$(ab_call_rc lib.build.sh validate_project "$credits_none")"
+check "named as missing" "1" \
+    "$(ab_call_log lib.build.sh validate_project "$credits_none" | /usr/bin/grep -c 'Credits.md: MISSING$')"
+
+credits_rtf="$(ab_make_project CreditsRTF)"
+/bin/mv "$credits_rtf/Contents/Resources/Credits.md" "$credits_rtf/Contents/Resources/Credits.rtf"
+check "Credits.rtf alone is an error" "1" "$(ab_call_rc lib.build.sh validate_project "$credits_rtf")"
+rtf_log="$(ab_call_log lib.build.sh validate_project "$credits_rtf")"
+check "that says the RTF is no longer shown" "1" \
+    "$(printf '%s\n' "$rtf_log" | /usr/bin/grep -c 'Credits.md: MISSING (Credits.rtf is no longer shown)')"
+check "and how to convert it" "1" \
+    "$(printf '%s\n' "$rtf_log" | /usr/bin/grep -c 'Convert Credits.rtf to Markdown')"
+
+credits_both="$(ab_make_project CreditsBoth)"
+printf '{\\rtf1 old}' > "$credits_both/Contents/Resources/Credits.rtf"
+check "a leftover Credits.rtf beside Credits.md still builds" "0" \
+    "$(ab_call_rc lib.build.sh validate_project "$credits_both")"
+check "with a warning to delete it" "1" \
+    "$(ab_call_log lib.build.sh validate_project "$credits_both" | /usr/bin/grep -c 'Credits.rtf: warning (not shown)')"
+
 omctest_end

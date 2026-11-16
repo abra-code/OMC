@@ -13,8 +13,8 @@
 		1D80D5312F12E81400E3B4FB /* CommandFrameworkVersion.c in Sources */ = {isa = PBXBuildFile; fileRef = E2ACB28C12EAE02700A8ACF6 /* CommandFrameworkVersion.c */; };
 		1D80D5332F12E81400E3B4FB /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
 		1D80D5342F12E81400E3B4FB /* Command.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E23EA1640DFB026E0070E63F /* Command.framework */; settings = {ATTRIBUTES = (Required, ); }; };
-		1DC32A862F1F34C100B4CE84 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 1DC32A852F1F34C100B4CE84 /* Credits.rtf */; };
-		1DC32A872F1F34C100B4CE84 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 1DC32A852F1F34C100B4CE84 /* Credits.rtf */; };
+		1DC32A862F1F34C100B4CE84 /* Credits.md in Resources */ = {isa = PBXBuildFile; fileRef = 1DC32A852F1F34C100B4CE84 /* Credits.md */; };
+		1DC32A872F1F34C100B4CE84 /* Credits.md in Resources */ = {isa = PBXBuildFile; fileRef = 1DC32A852F1F34C100B4CE84 /* Credits.md */; };
 		1DEE0AF62EB2261900729DAE /* CommandApplet.icon in Resources */ = {isa = PBXBuildFile; fileRef = 1DEE0AF52EB2261900729DAE /* CommandApplet.icon */; };
 		1DF2B44D2F46E88D0069BD26 /* Form.json in Resources */ = {isa = PBXBuildFile; fileRef = 1DF2B44B2F46E88D0069BD26 /* Form.json */; };
 		8D11072D0486CEB800E47090 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
@@ -109,7 +109,7 @@
 		1D4971A92575A67700F7131C /* OmcProjectDebug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcProjectDebug.xcconfig; path = ../Common/OmcProjectDebug.xcconfig; sourceTree = "<group>"; };
 		1D7618BE231CEE28005F4AEB /* CommandApplet.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = CommandApplet.entitlements; sourceTree = "<group>"; };
 		1D80D53C2F12E81400E3B4FB /* CommandPythonApplet.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CommandPythonApplet.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		1DC32A852F1F34C100B4CE84 /* Credits.rtf */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; path = Credits.rtf; sourceTree = "<group>"; };
+		1DC32A852F1F34C100B4CE84 /* Credits.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = Credits.md; sourceTree = "<group>"; };
 		1DD21130259F43C90041BB8F /* OmcVersion.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = OmcVersion.xcconfig; path = ../Common/OmcVersion.xcconfig; sourceTree = "<group>"; };
 		1DEE0AF52EB2261900729DAE /* CommandApplet.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = CommandApplet.icon; sourceTree = "<group>"; };
 		1DF2B44C2F46E88D0069BD26 /* Base */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = Base; path = Base.lproj/Form.json; sourceTree = "<group>"; };
@@ -274,7 +274,7 @@
 			isa = PBXGroup;
 			children = (
 				1DEE0AF52EB2261900729DAE /* CommandApplet.icon */,
-				1DC32A852F1F34C100B4CE84 /* Credits.rtf */,
+				1DC32A852F1F34C100B4CE84 /* Credits.md */,
 				1DA51CBE2EACE01000BFF670 /* Scripts */,
 				E23EA2010DFB9B7C0070E63F /* Command.json */,
 				8D1107310486CEB800E47090 /* Info.plist */,
@@ -404,7 +404,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1DC32A862F1F34C100B4CE84 /* Credits.rtf in Resources */,
+				1DC32A862F1F34C100B4CE84 /* Credits.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -414,7 +414,7 @@
 			files = (
 				E23EA2030DFB9B7C0070E63F /* Command.json in Resources */,
 				1DEE0AF62EB2261900729DAE /* CommandApplet.icon in Resources */,
-				1DC32A872F1F34C100B4CE84 /* Credits.rtf in Resources */,
+				1DC32A872F1F34C100B4CE84 /* Credits.md in Resources */,
 				1DF2B44D2F46E88D0069BD26 /* Form.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

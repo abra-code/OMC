@@ -28,6 +28,7 @@ MyApp.app/
 │   │   ├── Scripts/
 │   │   │   ├── lib.myapp.sh         ← shared library: tool paths + control IDs
 │   │   │   └── MyApp.*.sh / *.py    ← action handler scripts
+│   │   ├── Credits.md               ← required: Markdown the About window shows (no Credits.rtf)
 │   │   └── Command.plist            ← command definitions
 │   └── Info.plist
 ```
