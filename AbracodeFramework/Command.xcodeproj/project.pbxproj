@@ -575,7 +575,7 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		1DCBC0D62F15FCE40002B8AB /* AbracodeTests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = AbracodeTests; sourceTree = "<group>"; };
+		1DCBC0D62F15FCE40002B8AB /* CommandTests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = CommandTests; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -641,7 +641,7 @@
 				1DDC44152F34284600604C66 /* CommandTests.xctestplan */,
 				E234FA9D0D0FD06B001A7780 /* Support Tools */,
 				0867D69AFE84028FC02AAC07 /* External Frameworks and Libraries */,
-				1DCBC0D62F15FCE40002B8AB /* AbracodeTests */,
+				1DCBC0D62F15FCE40002B8AB /* CommandTests */,
 				1DCBC16D2F176A9D0002B8AB /* TestBundles */,
 				034768DFFF38A50411DB9C8B /* Products */,
 				E2F5C9020DD10F5300B4D4EC /* CommandFramework.exp */,
@@ -1099,7 +1099,7 @@
 				1DCBC0DB2F15FCE40002B8AB /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				1DCBC0D62F15FCE40002B8AB /* AbracodeTests */,
+				1DCBC0D62F15FCE40002B8AB /* CommandTests */,
 			);
 			name = CommandTests;
 			packageProductDependencies = (

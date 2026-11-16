@@ -121,7 +121,7 @@ fi
 # (replay's plan, fact 20). Reject such literals in the sources this build compiles.
 NON_ASCII_CFSTR="$(LC_ALL=C /usr/bin/grep -rnE \
     --include='*.c' --include='*.cpp' --include='*.h' --include='*.mm' \
-    --exclude-dir=Apple --exclude-dir=AbracodeTests --exclude-dir=.build --exclude-dir=.build-linux \
+    --exclude-dir=Apple --exclude-dir=CommandTests --exclude-dir=.build --exclude-dir=.build-linux \
     'CFSTR\("([^"\\]|\\[^uUx])*([^ -~]|\\[uUx])' \
     "$SCRIPT_DIR/AbracodeFramework" "$SCRIPT_DIR/Common" "$SCRIPT_DIR/plister" "$SCRIPT_DIR/b64" \
     "$SCRIPT_DIR/filt" "$SCRIPT_DIR/loco" "$SCRIPT_DIR/omc_next_command" "$SCRIPT_DIR/omc_dialog_control")"
