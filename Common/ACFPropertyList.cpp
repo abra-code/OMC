@@ -2,6 +2,7 @@
 #include "ACFJSON.h"
 #include "ACFPath.h"
 #include "CFObj.h"
+#include "OMCFileModePlatform.h"
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
@@ -150,8 +151,10 @@ static CFDataRef CreateDataWithContentsOfFile(CFURLRef url)
 // As NSData writeToURL:options:NSDataWritingAtomic: the bytes go to a new file beside the target,
 // which then replaces it by rename(). As there:
 //  - a new file gets mode 0666 less the umask;
-//  - an existing file keeps its mode (taken with lstat, so a symbolic link's own mode), set
-//    after writing, since a write clears the set-user-ID and set-group-ID bits;
+//  - an existing file keeps its mode (OMCFileModePlatform.h: on macOS taken with lstat, so a
+//    symbolic link's own mode; on Linux a link gives its target's read and write bits, never
+//    looser than a new file), used from the file's creation and set exactly after writing, since
+//    a write clears the set-user-ID and set-group-ID bits;
 //  - a symbolic link at the path is replaced by the file, and its target is left alone;
 //  - a hard link is broken (the other names keep the old content);
 //  - a folder that is not writable, or missing, makes the write fail, and nothing is left behind;
@@ -168,12 +171,11 @@ static bool WriteDataAtomically(CFDataRef data, CFURLRef url)
     std::string folderPrefix = (slash == std::string::npos) ? std::string() : target.substr(0, slash + 1);
     std::string name = (slash == std::string::npos) ? target : target.substr(slash + 1);
 
-    // lstat, as NSData: a symbolic link at the path gives the link's own mode, 0755 on macOS.
-    // LINUX PORT: a symbolic link's mode is 0777 there, which would make the new file
-    // world-writable; the Linux build must take the mode with stat (the target's) or not keep it
-    // for a link (Private/linux_port_plan.md, Phase 7).
-    struct stat existing;
-    bool hasExisting = (::lstat(path, &existing) == 0);
+    // The mode to create with and the mode to keep, if any: macOS takes a symbolic link's own mode,
+    // as NSData does; Linux, where a link's mode is 0777, takes the target's (OMCFileModePlatform.h)
+    mode_t createMode = 0666;
+    mode_t keptMode = 0;
+    bool keepsMode = OMCPlatformAtomicWriteModes(path, &createMode, &keptMode);
 
     // ".<name>.omc-<8 hex digits>", with the name cut on a UTF-8 character boundary when the
     // whole would be longer than a file name may be
@@ -194,7 +196,9 @@ static bool WriteDataAtomically(CFDataRef data, CFURLRef url)
         char suffix[16];
         snprintf(suffix, sizeof(suffix), "%08x", (unsigned)::arc4random());
         temporary = folderPrefix + "." + stem + ".omc-" + suffix;
-        fd = ::open(temporary.c_str(), O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC, 0666);//the umask applies
+        // The umask applies. The creation mode is the kept one from the start, so the bytes of a
+        // 0600 file are never in a file others may open; the fchmod below then sets it exactly
+        fd = ::open(temporary.c_str(), O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC, createMode);
         if ((fd < 0) && (errno != EEXIST))
             return false;
     }
@@ -222,8 +226,8 @@ static bool WriteDataAtomically(CFDataRef data, CFURLRef url)
         }
     }
 
-    if (isOK && hasExisting)
-        isOK = (::fchmod(fd, existing.st_mode & 07777) == 0);
+    if (isOK && keepsMode)
+        isOK = (::fchmod(fd, keptMode) == 0);
     if (::close(fd) != 0)
         isOK = false;
     if (isOK)
