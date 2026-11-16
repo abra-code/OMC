@@ -89,7 +89,7 @@ ACTIONUI_DOCS="$ACTIONUI_ROOT/Documentation"
 # also builds the core + add-on documentation bundles, so OMC gets the viewer and all docs in one build.
 ACTIONUI_VIEWER_PKG="$ACTIONUI_ROOT/Apps/ActionUIViewer"
 OMC_DOCS="$OMC_ROOT/Documentation"
-OMC_WORKSPACE="$OMC_ROOT/OMC.xcworkspace"
+OMC_WORKSPACE="$OMC_ROOT/CommandWorkshop.xcworkspace"
 COMMANDAPPLET_BUILD="$OMC_ROOT/.build/CommandApplet"
 CODESIGN_SCRIPT="$OMC_ROOT/Distribution/Scripts/codesign_applet.sh"
 
@@ -544,7 +544,7 @@ else
         else
             echo -e "  ${YELLOW}Skipped. AppletBuilder.app will not work fully, and mistune cannot be installed.${NC}"
             echo "  Run this script again and answer y (or pass --update-python), or build the"
-            echo "  CommandPythonApplet scheme in OMC.xcworkspace and copy its Contents/Library/Python into:"
+            echo "  CommandPythonApplet scheme in CommandWorkshop.xcworkspace and copy its Contents/Library/Python into:"
             echo "  $DEST_PYTHON"
         fi
     fi

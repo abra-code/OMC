@@ -1,6 +1,6 @@
 #! /bin/sh
 #
-# Build OMC by building the "OMC Distribution" scheme of OMC.xcworkspace.
+# Build OMC by building the "OMC Distribution" scheme of CommandWorkshop.xcworkspace.
 #
 # This scheme builds Command.framework, CommandApplet, OMCService and OnMyCommandCM
 # together with their implicit dependencies, replacing the old loop that built
@@ -9,7 +9,7 @@
 # Usage: ./build.sh [debug|ship] [action] [--python]
 #   See usage() below or run ./build.sh --help for details.
 
-WORKSPACE="OMC.xcworkspace"
+WORKSPACE="CommandWorkshop.xcworkspace"
 SCHEME="OMC Distribution"
 PYTHON_SCHEME="CommandPythonApplet"
 
@@ -17,7 +17,7 @@ usage() {
 	cat <<'EOF'
 Usage: ./build.sh [debug|ship] [action] [--python]
 
-Builds the "OMC Distribution" scheme of OMC.xcworkspace (Command.framework,
+Builds the "OMC Distribution" scheme of CommandWorkshop.xcworkspace (Command.framework,
 CommandApplet, OMCService and OnMyCommandCM, with their implicit dependencies).
 
 Arguments (positional, both optional):

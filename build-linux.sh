@@ -57,7 +57,7 @@ done
 
 OS_NAME="$(/usr/bin/uname -s)"
 if [ "$OS_NAME" != "Linux" ]; then
-    echo "Error: build-linux.sh builds OMC for Linux; on macOS use the Xcode workspace (OMC.xcworkspace)." >&2
+    echo "Error: build-linux.sh builds OMC for Linux; on macOS use the Xcode workspace (CommandWorkshop.xcworkspace)." >&2
     exit 1
 fi
 
