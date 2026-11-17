@@ -1377,9 +1377,10 @@ ${info_out}
 "
     fi
 
-    # Credits.md: the engine's About window shows it, as Markdown, on macOS and Linux. It is
-    # required: the About window has nothing else to tell who made the applet. Credits.rtf (what
-    # macOS's standard About panel read) is not shown any more.
+    # Credits.md: the engine's About window shows it, as Markdown, on macOS and Linux. Without it
+    # the About window has nothing to tell who made the applet, so a missing one is a warning (not
+    # an error: it does not stop a build). Credits.rtf (what macOS's standard About panel read) is
+    # not shown any more.
     local credits_md="$resources_dir/Credits.md"
     local credits_rtf="$resources_dir/Credits.rtf"
     if [ -f "$credits_md" ]; then
@@ -1392,14 +1393,14 @@ ${info_out}
 "
         fi
     elif [ -f "$credits_rtf" ]; then
-        ab_log "  Credits.md: MISSING (Credits.rtf is no longer shown)"
-        error_count=$((error_count + 1))
+        ab_log "  Credits.md: warning (missing; Credits.rtf is no longer shown)"
+        warning_count=$((warning_count + 1))
         report="${report}Credits.md: missing. The About window shows Contents/Resources/Credits.md (Markdown); Credits.rtf is no longer shown. Convert Credits.rtf to Markdown (for example with DocToDoc, which embeds pandoc, or ask your coding agent), save it as Credits.md, and delete Credits.rtf.
 
 "
     else
-        ab_log "  Credits.md: MISSING"
-        error_count=$((error_count + 1))
+        ab_log "  Credits.md: warning (missing)"
+        warning_count=$((warning_count + 1))
         report="${report}Credits.md: missing. The About window shows Contents/Resources/Credits.md (Markdown): who made the applet, its license, and what it uses. Add one.
 
 "

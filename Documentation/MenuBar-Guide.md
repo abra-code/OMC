@@ -21,8 +21,8 @@ when it builds), so convert its custom items as below.
 Linux: the applet's icon, name, version (`CFBundleShortVersionString` and
 `CFBundleVersion`), the Markdown of `Contents/Resources/Credits.md`, and
 `NSHumanReadableCopyright`. Put everything else you want to say (authors, license,
-website, what the applet uses) in `Credits.md`; AppletBuilder will not build an
-applet without one. `Credits.rtf`, which macOS's standard About panel read, is no
+website, what the applet uses) in `Credits.md`; AppletBuilder warns about an applet
+without one. `Credits.rtf`, which macOS's standard About panel read, is no
 longer shown: convert it to Markdown (DocToDoc, which embeds pandoc, does it, or
 ask your coding agent). On Linux the item is the last of the header bar's menu. A
 `CommandGroup` replacing `appInfo` (or `about`) takes the item away on both

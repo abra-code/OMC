@@ -636,12 +636,12 @@ check "a matching KEY is left alone" "{'Old': 'New'}" \
 check "it recurses into lists" "['New', 'keep']" \
     "$(ab_py json_rename_value 'walk(["Old", "keep"], "Old", "New")')"
 
-section "16. Credits.md is required: the About window shows it"
+section "16. Credits.md: the About window shows it; a missing one is a warning"
 # The engine's About window shows Contents/Resources/Credits.md, on macOS and on
 # Linux; Credits.rtf, which macOS's standard panel read, is not shown any more.
-# A project without Credits.md does not build, and one that still has only
-# Credits.rtf is told how to convert it. A leftover Credits.rtf beside a
-# Credits.md is a warning.
+# A project without Credits.md gets a warning but still builds, and one that
+# still has only Credits.rtf is told how to convert it. A leftover Credits.rtf
+# beside a Credits.md is a warning too.
 
 credits_ok="$(ab_make_project CreditsOK)"
 check "a template has Credits.md" "yes" \
@@ -652,16 +652,16 @@ check "saying so" "1" \
 
 credits_none="$(ab_make_project CreditsNone)"
 /bin/rm -f "$credits_none/Contents/Resources/Credits.md"
-check "no Credits.md is an error" "1" "$(ab_call_rc lib.build.sh validate_project "$credits_none")"
-check "named as missing" "1" \
-    "$(ab_call_log lib.build.sh validate_project "$credits_none" | /usr/bin/grep -c 'Credits.md: MISSING$')"
+check "no Credits.md still builds" "0" "$(ab_call_rc lib.build.sh validate_project "$credits_none")"
+check "with a warning naming it as missing" "1" \
+    "$(ab_call_log lib.build.sh validate_project "$credits_none" | /usr/bin/grep -c 'Credits.md: warning (missing)$')"
 
 credits_rtf="$(ab_make_project CreditsRTF)"
 /bin/mv "$credits_rtf/Contents/Resources/Credits.md" "$credits_rtf/Contents/Resources/Credits.rtf"
-check "Credits.rtf alone is an error" "1" "$(ab_call_rc lib.build.sh validate_project "$credits_rtf")"
+check "Credits.rtf alone still builds" "0" "$(ab_call_rc lib.build.sh validate_project "$credits_rtf")"
 rtf_log="$(ab_call_log lib.build.sh validate_project "$credits_rtf")"
 check "that says the RTF is no longer shown" "1" \
-    "$(printf '%s\n' "$rtf_log" | /usr/bin/grep -c 'Credits.md: MISSING (Credits.rtf is no longer shown)')"
+    "$(printf '%s\n' "$rtf_log" | /usr/bin/grep -c 'Credits.md: warning (missing; Credits.rtf is no longer shown)')"
 check "and how to convert it" "1" \
     "$(printf '%s\n' "$rtf_log" | /usr/bin/grep -c 'Convert Credits.rtf to Markdown')"
 

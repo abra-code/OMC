@@ -32,7 +32,7 @@ MyApp.app/
 │   │   ├── Scripts/
 │   │   │   ├── lib.myapp.sh         ← shared library: tool paths + control IDs
 │   │   │   └── MyApp.*.sh / *.py    ← action handler scripts
-│   │   ├── Credits.md               ← required: Markdown the About window shows (no Credits.rtf)
+│   │   ├── Credits.md               ← expected: Markdown the About window shows (no Credits.rtf)
 │   │   └── Command.plist            ← command definitions
 │   └── Info.plist
 ```
@@ -493,7 +493,7 @@ Edit the bundle's files directly:
 - `Contents/Resources/Command.json` (or `Command.plist` — the Command Engine reads either, preferring `Command.json` when both exist)
 - `Contents/Resources/Scripts/*`
 - `Contents/Resources/Base.lproj/*.json` (ActionUI windows and `MainMenu.json`)
-- `Contents/Resources/Credits.md` (required: who made the applet, license, what it uses; the engine's About window shows it as Markdown, on macOS and Linux. A `Credits.rtf` is no longer shown: convert it to Markdown and delete it)
+- `Contents/Resources/Credits.md` (expected - AppletBuilder warns without it: who made the applet, license, what it uses; the engine's About window shows it as Markdown, on macOS and Linux. A `Credits.rtf` is no longer shown: convert it to Markdown and delete it)
 
 After editing, run `appletbuilder validate <App.app>` to catch problems.
 
