@@ -6,11 +6,11 @@ flavors: [claude, capable, lite]
 
 ## What is Command Workshop
 
-Command Workshop (formerly OMC) is a macOS low-code app builder engine. Command Workshop **applets** are GUI `.app` bundles, with optional macOS Services menu items. Each applet combines a declarative command manifest (`Command.plist`) with shell scripts, Python scripts, or AppleScript files that implement the actions.
+Command Workshop (formerly OMC) is a macOS low-code app builder engine. Command Workshop **applets** are GUI `.app` bundles, with optional macOS Services menu items. Each applet combines a declarative command manifest (`Command.json`) with shell scripts, Python scripts, or AppleScript files that implement the actions.
 
 The Command Engine (`Command.framework`) handles app runtime, input routing, UI presentation, and script execution. A developer writes only the application-specific logic.
 
-**User should start a new applet using AppletBuilder** (`Distribution/AppletBuilder.app`) — it creates the correct bundle structure, installs the framework, and generates the initial `Command.plist` and starter scripts.
+**User should start a new applet using AppletBuilder** (`Distribution/AppletBuilder.app`) — it creates the correct bundle structure, installs the framework, and generates the initial `Command.json` and starter scripts.
 
 ## Command Workshop App Bundle Structure
 
@@ -29,30 +29,17 @@ MyApp.app/
 │   │   │   ├── lib.myapp.sh         ← shared library: tool paths + control IDs
 │   │   │   └── MyApp.*.sh / *.py    ← action handler scripts
 │   │   ├── Credits.md               ← expected: Markdown the About window shows (no Credits.rtf)
-│   │   └── Command.plist            ← command definitions
+│   │   └── Command.json             ← command definitions (legacy applets: Command.plist)
 │   └── Info.plist
 ```
 
-## Command.plist
+## Command.json
 
-The command manifest lives at `Contents/Resources/Command.plist` (XML/binary plist) **or** `Contents/Resources/Command.json` (JSON). The Command Engine reads either, preferring `Command.json` when both are present; AppletBuilder creates new applets with `Command.json`. The two formats are structurally identical — the same keys, value types, and `VERSION == 2` rule apply (a JSON number `2` for `VERSION`, JSON `true`/`false` for booleans). This guide shows plist XML, but every example maps directly to JSON.
+The command manifest is `Contents/Resources/Command.json`. AppletBuilder creates new applets with it; write every new command file as `Command.json`, and this guide shows JSON throughout.
 
-**Root structure (plist):**
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<plist version="1.0">
-<dict>
-    <key>COMMAND_LIST</key>
-    <array>
-        <!-- one <dict> per command -->
-    </array>
-    <key>VERSION</key>
-    <integer>2</integer>
-</dict>
-</plist>
-```
+Applets made before 6.0 may have a legacy `Command.plist` (XML or binary plist) instead, with the same keys and value types (`<integer>2</integer>` for `VERSION`, `<true/>`/`<false/>` for booleans). The Command Engine still reads it, but prefers `Command.json` when both exist, so never leave both: edits to the `Command.plist` would be silently ignored. To move a legacy applet to JSON (on macOS): `plutil -convert json -r -o Command.json Command.plist` (`-r` writes it indented), validate the result, then delete `Command.plist`. Without converting, edit the `Command.plist` in its own format.
 
-**Root structure (JSON equivalent):**
+**Root structure:**
 ```json
 {
   "COMMAND_LIST": [
@@ -61,6 +48,8 @@ The command manifest lives at `Contents/Resources/Command.plist` (XML/binary pli
   "VERSION": 2
 }
 ```
+
+`VERSION` must be the number `2`; booleans are JSON `true`/`false`.
 
 ### Command Identity Keys
 
@@ -73,15 +62,12 @@ The command manifest lives at `Contents/Resources/Command.plist` (XML/binary pli
 
 ### Minimal command
 
-```xml
-<dict>
-    <key>NAME</key>
-    <string>MyApp</string>
-    <key>EXECUTION_MODE</key>
-    <string>exe_script_file</string>
-    <key>ACTIVATION_MODE</key>
-    <string>act_file_or_folder</string>
-</dict>
+```json
+{
+  "NAME": "MyApp",
+  "EXECUTION_MODE": "exe_script_file",
+  "ACTIVATION_MODE": "act_file_or_folder"
+}
 ```
 
 ## Script Naming Convention

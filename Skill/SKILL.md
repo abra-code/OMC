@@ -1,7 +1,7 @@
 ---
 name: omc
 description: >
-  Create, edit, debug, rebuild, or codesign Command Workshop (formerly OMC) applets for macOS. Use when the user asks to build/rebuild or codesign an applet, add a command, write an action script, configure Command.plist or Command.json, use omc_dialog_control, chain commands, or work with AppletBuilder (incl. the appletbuilder CLI / Build & Run). For ActionUI JSON UI design, also activate the actionui skill.
+  Create, edit, debug, rebuild, or codesign Command Workshop (formerly OMC) applets for macOS. Use when the user asks to build/rebuild or codesign an applet, add a command, write an action script, configure Command.json (or a legacy Command.plist), use omc_dialog_control, chain commands, or work with AppletBuilder (incl. the appletbuilder CLI / Build & Run). For ActionUI JSON UI design, also activate the actionui skill.
 version: "1.0"
 ---
 
@@ -10,11 +10,11 @@ version: "1.0"
 
 ## What is Command Workshop
 
-Command Workshop (formerly OMC) is a macOS low-code app builder engine. Command Workshop **applets** are GUI `.app` bundles, with optional macOS Services menu items. Each applet combines a declarative command manifest (`Command.plist`) with shell scripts, Python scripts, or AppleScript files that implement the actions.
+Command Workshop (formerly OMC) is a macOS low-code app builder engine. Command Workshop **applets** are GUI `.app` bundles, with optional macOS Services menu items. Each applet combines a declarative command manifest (`Command.json`) with shell scripts, Python scripts, or AppleScript files that implement the actions.
 
 The Command Engine (`Command.framework`) handles app runtime, input routing, UI presentation, and script execution. A developer writes only the application-specific logic.
 
-**User should start a new applet using AppletBuilder** (`Distribution/AppletBuilder.app`) — it creates the correct bundle structure, installs the framework, and generates the initial `Command.plist` and starter scripts.
+**User should start a new applet using AppletBuilder** (`Distribution/AppletBuilder.app`) — it creates the correct bundle structure, installs the framework, and generates the initial `Command.json` and starter scripts.
 
 ## Command Workshop App Bundle Structure
 
@@ -33,30 +33,17 @@ MyApp.app/
 │   │   │   ├── lib.myapp.sh         ← shared library: tool paths + control IDs
 │   │   │   └── MyApp.*.sh / *.py    ← action handler scripts
 │   │   ├── Credits.md               ← expected: Markdown the About window shows (no Credits.rtf)
-│   │   └── Command.plist            ← command definitions
+│   │   └── Command.json             ← command definitions (legacy applets: Command.plist)
 │   └── Info.plist
 ```
 
-## Command.plist
+## Command.json
 
-The command manifest lives at `Contents/Resources/Command.plist` (XML/binary plist) **or** `Contents/Resources/Command.json` (JSON). The Command Engine reads either, preferring `Command.json` when both are present; AppletBuilder creates new applets with `Command.json`. The two formats are structurally identical — the same keys, value types, and `VERSION == 2` rule apply (a JSON number `2` for `VERSION`, JSON `true`/`false` for booleans). This guide shows plist XML, but every example maps directly to JSON.
+The command manifest is `Contents/Resources/Command.json`. AppletBuilder creates new applets with it; write every new command file as `Command.json`, and this guide shows JSON throughout.
 
-**Root structure (plist):**
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<plist version="1.0">
-<dict>
-    <key>COMMAND_LIST</key>
-    <array>
-        <!-- one <dict> per command -->
-    </array>
-    <key>VERSION</key>
-    <integer>2</integer>
-</dict>
-</plist>
-```
+Applets made before 6.0 may have a legacy `Command.plist` (XML or binary plist) instead, with the same keys and value types (`<integer>2</integer>` for `VERSION`, `<true/>`/`<false/>` for booleans). The Command Engine still reads it, but prefers `Command.json` when both exist, so never leave both: edits to the `Command.plist` would be silently ignored. To move a legacy applet to JSON (on macOS): `plutil -convert json -r -o Command.json Command.plist` (`-r` writes it indented), validate the result, then delete `Command.plist`. Without converting, edit the `Command.plist` in its own format.
 
-**Root structure (JSON equivalent):**
+**Root structure:**
 ```json
 {
   "COMMAND_LIST": [
@@ -65,6 +52,8 @@ The command manifest lives at `Contents/Resources/Command.plist` (XML/binary pli
   "VERSION": 2
 }
 ```
+
+`VERSION` must be the number `2`; booleans are JSON `true`/`false`.
 
 ### Command Identity Keys
 
@@ -77,15 +66,12 @@ The command manifest lives at `Contents/Resources/Command.plist` (XML/binary pli
 
 ### Minimal command
 
-```xml
-<dict>
-    <key>NAME</key>
-    <string>MyApp</string>
-    <key>EXECUTION_MODE</key>
-    <string>exe_script_file</string>
-    <key>ACTIVATION_MODE</key>
-    <string>act_file_or_folder</string>
-</dict>
+```json
+{
+  "NAME": "MyApp",
+  "EXECUTION_MODE": "exe_script_file",
+  "ACTIVATION_MODE": "act_file_or_folder"
+}
 ```
 
 ## Script Naming Convention
@@ -337,23 +323,20 @@ Set via `ACTIVATION_MODE`. Controls when the command is visible in contextual me
 
 ## Dialog Integration Keys
 
-Attach a dialog to a command by adding one of these keys to the command dict:
+Attach a dialog to a command by adding this key to the command object:
 
 ### ACTIONUI_WINDOW
 
-```xml
-<key>ACTIONUI_WINDOW</key>
-<dict>
-    <key>JSON_NAME</key>
-    <string>MainWindow</string>          <!-- filename without .json, in Base.lproj/ -->
-    <key>INIT_SUBCOMMAND_ID</key>
-    <string>MyApp.main.init</string>     <!-- fires when window loads; populate tables here -->
-    <key>WINDOW_DID_ACTIVATE_SUBCOMMAND_ID</key>
-    <string>MyApp.main.activated</string>
-    <key>WINDOW_DID_DEACTIVATE_SUBCOMMAND_ID</key>
-    <string>MyApp.main.deactivated</string>
-</dict>
+```json
+"ACTIONUI_WINDOW": {
+  "JSON_NAME": "MainWindow",
+  "INIT_SUBCOMMAND_ID": "MyApp.main.init",
+  "WINDOW_DID_ACTIVATE_SUBCOMMAND_ID": "MyApp.main.activated",
+  "WINDOW_DID_DEACTIVATE_SUBCOMMAND_ID": "MyApp.main.deactivated"
+}
 ```
+
+`JSON_NAME` is the filename without `.json`, in `Base.lproj/`.
 
 The JSON file `Contents/Resources/Base.lproj/MainWindow.json` defines the UI (see ActionUI skill).
 
@@ -397,14 +380,13 @@ Command Workshop applets have two dialog paradigms. Most new applets should use 
 
 ### ActionUI JSON (recommended, version 5.0+, macOS 14.6+)
 
-A JSON file in `Contents/Resources/Base.lproj/` defines the UI using the ActionUI framework. Connect it to a command via `ACTIONUI_WINDOW` in `Command.plist`:
+A JSON file in `Contents/Resources/Base.lproj/` defines the UI using the ActionUI framework. Connect it to a command via `ACTIONUI_WINDOW` in `Command.json`:
 
-```xml
-<key>ACTIONUI_WINDOW</key>
-<dict>
-    <key>JSON_NAME</key><string>MainWindow</string>
-    <key>INIT_SUBCOMMAND_ID</key><string>MyApp.main.init</string>
-</dict>
+```json
+"ACTIONUI_WINDOW": {
+  "JSON_NAME": "MainWindow",
+  "INIT_SUBCOMMAND_ID": "MyApp.main.init"
+}
 ```
 
 **For ActionUI JSON format** (element types, properties, layout patterns) — read the ActionUI skill. The Command Workshop-specific concerns are:
@@ -490,7 +472,7 @@ Applet panel.
 ### For an existing applet
 
 Edit the bundle's files directly:
-- `Contents/Resources/Command.json` (or `Command.plist` — the Command Engine reads either, preferring `Command.json` when both exist)
+- `Contents/Resources/Command.json` (a legacy applet may have `Command.plist` instead: edit it in its own format, or convert it, see "Command.json" above; never keep both)
 - `Contents/Resources/Scripts/*`
 - `Contents/Resources/Base.lproj/*.json` (ActionUI windows and `MainMenu.json`)
 - `Contents/Resources/Credits.md` (expected - AppletBuilder warns without it: who made the applet, license, what it uses; the engine's About window shows it as Markdown, on macOS and Linux. A `Credits.rtf` is no longer shown: on macOS, Build writes `Credits.md` from it once; check it and delete the RTF)
@@ -614,7 +596,7 @@ Use `omc_next_command` when one script needs to trigger another after finishing 
 
 The chained command runs in its own script invocation with the same window context. Chain depth is not limited, but avoid circular chains.
 
-For static always-chain (every execution), use `NEXT_COMMAND_ID` in `Command.plist` instead.
+For static always-chain (every execution), use `NEXT_COMMAND_ID` in `Command.json` instead.
 
 ### Enabling/Disabling Controls Based on Selection
 
@@ -880,12 +862,12 @@ Rules that bite:
 
 
 
-## Validating Command.plist
+## Validating Command.json
 
-After creating or editing a command manifest, validate it before building. The verifier handles both formats — `Command.plist` and `Command.json` — transparently (by extension):
+After creating or editing a command manifest, validate it before building. The verifier also reads a legacy `Command.plist` (by extension):
 
 ```bash
-python3 Skill/scripts/validate_command_plist.py <App.app | Command.plist | Command.json>
+python3 Skill/scripts/validate_command_plist.py <App.app | Command.json | Command.plist>
 ```
 
 Pass the **applet bundle** (`.app` / `.omc`) rather than the bare file to also run bundle cross-checks (Layer 2); for a bundle the verifier resolves the command file itself, preferring `Command.json` when both exist (as the Command Engine does): every `exe_script_file` command has a matching `Scripts/<COMMAND_ID>.*`, the `ACTIONUI_WINDOW` JSON resources exist, subcommand IDs (`INIT_SUBCOMMAND_ID`, `END_OK_SUBCOMMAND_ID`, `NEXT_COMMAND_ID`, …) resolve, and every `actionID` in the bundle's JSON UI documents points at a command that exists.
@@ -918,7 +900,7 @@ Full Command Workshop reference is in the `docs/` folder (also bundled in `Apple
 | `docs/building_omc_applet.md` | Step-by-step applet creation guide with all details |
 | `docs/omc_applet_catalog.md` | **Before building a new applet**: a classified inventory of every working applet in the collection - which one to clone for a batch converter, document editor, inspector, query builder, pipeline, or local-AI app, which are NIB-based (they need converting to run on 6.0), and where to find each UI technique |
 | `docs/appletbuilder_user_guide.md` | UI navigation reference for the AppletBuilder GUI app (for human users) |
-| `docs/omc_command_reference.md` | Complete `Command.plist` key reference — all execution modes, dialog keys, output window settings, progress dialogs, input dialogs, services |
+| `docs/omc_command_reference.md` | Complete `Command.json` key reference (the same keys in a legacy `Command.plist`) — all execution modes, dialog keys, output window settings, progress dialogs, input dialogs, services |
 | `docs/omc_runtime_context_reference.md` | Every `$OMC_*` environment variable and `__SPECIAL_WORD__` substitution |
 | `docs/omctest_guide.md` | **Writing tests**: the `Tests/` layout, the full helper API (driving the window, dispatching handlers, asserting on the virtual window), which `omc_dialog_control` verbs replay, the seam contract for binaries the harness cannot intercept, and how to write checks that can actually fail |
 | `docs/omcitest_guide.md` | **Writing integration tests** (`*.itest.sh`, version 5.5): the real applet through the real engine, its requirements (a 5.5 engine, a local signature, the sandbox off), the API for commands, windows, panels and alerts, what a test launch isolates and what it cannot, the patterns (launch, open, wait, tabs, guards) and the traps |

@@ -79,8 +79,8 @@ def apply_transforms(body: str, content_id: str, flavor: str, flavor_cfg: dict) 
     # Validation section: adapt the script-execution instruction for non-script flavors.
     if content_id == "validation" and not flavor_cfg.get("script_execution", True):
         body = body.replace(
-            "```bash\npython3 Skill/scripts/validate_command_plist.py <App.app | Command.plist>\n```",
-            "```bash\n# If you have Python available:\npython3 validate_command_plist.py <App.app | Command.plist>\n```\n\n"
+            "```bash\npython3 Skill/scripts/validate_command_plist.py <App.app | Command.json | Command.plist>\n```",
+            "```bash\n# If you have Python available:\npython3 validate_command_plist.py <App.app | Command.json | Command.plist>\n```\n\n"
             "If you cannot run scripts, manually verify: root VERSION is 2; no unknown keys; "
             "value types match (DEFAULT_LOCATION / DEFAULT_FILE_NAME are arrays); EXECUTION_MODE "
             "is a current value; and every referenced script file and COMMAND_ID exists in the bundle."
@@ -189,7 +189,7 @@ def _copy_docs(meta: dict, docs_out: Path) -> None:
 
 
 def _copy_verifier(meta: dict, scripts_out: Path) -> None:
-    """Copy the Command.plist verifier into scripts/ inside the dist flavor.
+    """Copy the command file verifier into scripts/ inside the dist flavor.
 
     Source is meta.build.verifier_source (the AppletBuilder bundle copy, which is the
     single source of truth). Skips dev-only / generated artifacts.

@@ -4,12 +4,12 @@ level: 1
 flavors: [claude, capable, lite]
 ---
 
-## Validating Command.plist
+## Validating Command.json
 
-After creating or editing a command manifest, validate it before building. The verifier handles both formats — `Command.plist` and `Command.json` — transparently (by extension):
+After creating or editing a command manifest, validate it before building. The verifier also reads a legacy `Command.plist` (by extension):
 
 ```bash
-python3 Skill/scripts/validate_command_plist.py <App.app | Command.plist | Command.json>
+python3 Skill/scripts/validate_command_plist.py <App.app | Command.json | Command.plist>
 ```
 
 Pass the **applet bundle** (`.app` / `.omc`) rather than the bare file to also run bundle cross-checks (Layer 2); for a bundle the verifier resolves the command file itself, preferring `Command.json` when both exist (as the Command Engine does): every `exe_script_file` command has a matching `Scripts/<COMMAND_ID>.*`, the `ACTIONUI_WINDOW` JSON resources exist, subcommand IDs (`INIT_SUBCOMMAND_ID`, `END_OK_SUBCOMMAND_ID`, `NEXT_COMMAND_ID`, …) resolve, and every `actionID` in the bundle's JSON UI documents points at a command that exists.

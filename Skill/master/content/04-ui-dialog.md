@@ -10,14 +10,13 @@ Command Workshop applets have two dialog paradigms. Most new applets should use 
 
 ### ActionUI JSON (recommended, version 5.0+, macOS 14.6+)
 
-A JSON file in `Contents/Resources/Base.lproj/` defines the UI using the ActionUI framework. Connect it to a command via `ACTIONUI_WINDOW` in `Command.plist`:
+A JSON file in `Contents/Resources/Base.lproj/` defines the UI using the ActionUI framework. Connect it to a command via `ACTIONUI_WINDOW` in `Command.json`:
 
-```xml
-<key>ACTIONUI_WINDOW</key>
-<dict>
-    <key>JSON_NAME</key><string>MainWindow</string>
-    <key>INIT_SUBCOMMAND_ID</key><string>MyApp.main.init</string>
-</dict>
+```json
+"ACTIONUI_WINDOW": {
+  "JSON_NAME": "MainWindow",
+  "INIT_SUBCOMMAND_ID": "MyApp.main.init"
+}
 ```
 
 **For ActionUI JSON format** (element types, properties, layout patterns) — read the ActionUI skill. The Command Workshop-specific concerns are:

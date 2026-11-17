@@ -33,23 +33,20 @@ Set via `ACTIVATION_MODE`. Controls when the command is visible in contextual me
 
 ## Dialog Integration Keys
 
-Attach a dialog to a command by adding one of these keys to the command dict:
+Attach a dialog to a command by adding this key to the command object:
 
 ### ACTIONUI_WINDOW
 
-```xml
-<key>ACTIONUI_WINDOW</key>
-<dict>
-    <key>JSON_NAME</key>
-    <string>MainWindow</string>          <!-- filename without .json, in Base.lproj/ -->
-    <key>INIT_SUBCOMMAND_ID</key>
-    <string>MyApp.main.init</string>     <!-- fires when window loads; populate tables here -->
-    <key>WINDOW_DID_ACTIVATE_SUBCOMMAND_ID</key>
-    <string>MyApp.main.activated</string>
-    <key>WINDOW_DID_DEACTIVATE_SUBCOMMAND_ID</key>
-    <string>MyApp.main.deactivated</string>
-</dict>
+```json
+"ACTIONUI_WINDOW": {
+  "JSON_NAME": "MainWindow",
+  "INIT_SUBCOMMAND_ID": "MyApp.main.init",
+  "WINDOW_DID_ACTIVATE_SUBCOMMAND_ID": "MyApp.main.activated",
+  "WINDOW_DID_DEACTIVATE_SUBCOMMAND_ID": "MyApp.main.deactivated"
+}
 ```
+
+`JSON_NAME` is the filename without `.json`, in `Base.lproj/`.
 
 The JSON file `Contents/Resources/Base.lproj/MainWindow.json` defines the UI (see ActionUI skill).
 

@@ -11,7 +11,7 @@ Skill/
 ├── master/                       canonical source of truth
 │   ├── skill.meta.json           flavor definitions + content manifest
 │   └── content/                  modular Markdown content pieces (level 1 = core, level 2 = reference)
-│       ├── 01-core.md            what Command Workshop is + applet bundle structure + Command.plist format
+│       ├── 01-core.md            what Command Workshop is + applet bundle structure + Command.json format
 │       ├── 02-env-tools.md       key environment variables + six runtime tools
 │       ├── 03-execution-modes.md all execution/activation modes, dialog keys, app lifetime events
 │       ├── 04-ui-dialog.md       NIB + ActionUI dialog integration overview

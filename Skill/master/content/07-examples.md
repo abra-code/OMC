@@ -10,14 +10,14 @@ flavors: [lite]
 
 A command that shows file info when right-clicking a file in Finder.
 
-`Command.plist` entry:
-```xml
-<dict>
-    <key>NAME</key><string>ShowInfo</string>
-    <key>COMMAND_ID</key><string>ShowInfo.main</string>
-    <key>EXECUTION_MODE</key><string>exe_script_file_with_output_window</string>
-    <key>ACTIVATION_MODE</key><string>act_file_or_folder</string>
-</dict>
+`Command.json` entry:
+```json
+{
+  "NAME": "ShowInfo",
+  "COMMAND_ID": "ShowInfo.main",
+  "EXECUTION_MODE": "exe_script_file_with_output_window",
+  "ACTIVATION_MODE": "act_file_or_folder"
+}
 ```
 
 `Scripts/ShowInfo.main.sh`:
@@ -35,25 +35,27 @@ The Command Engine sets `$OMC_OBJ_PATH` to the right-clicked file's path. The ou
 
 An applet with a persistent window containing a text field and button.
 
-`Command.plist`:
-```xml
-<!-- Main command: opens the window when the app launches. No COMMAND_ID. -->
-<dict>
-    <key>NAME</key><string>MyTool</string>
-    <key>EXECUTION_MODE</key><string>exe_script_file</string>
-    <key>ACTIONUI_WINDOW</key>
-    <dict>
-        <key>JSON_NAME</key><string>MainWindow</string>
-        <key>IS_BLOCKING</key><false/>
-        <key>INIT_SUBCOMMAND_ID</key><string>MyTool.main.init</string>
-    </dict>
-</dict>
-<!-- Subcommand: fires when the button or text field actionID is triggered. -->
-<dict>
-    <key>NAME</key><string>MyTool</string>
-    <key>COMMAND_ID</key><string>MyTool.go</string>
-    <key>EXECUTION_MODE</key><string>exe_script_file</string>
-</dict>
+`Command.json` (the first command is the main command: no `COMMAND_ID`, it opens the window when the app launches; the second is the subcommand the button and the text field fire):
+```json
+{
+  "COMMAND_LIST": [
+    {
+      "NAME": "MyTool",
+      "EXECUTION_MODE": "exe_script_file",
+      "ACTIONUI_WINDOW": {
+        "JSON_NAME": "MainWindow",
+        "IS_BLOCKING": false,
+        "INIT_SUBCOMMAND_ID": "MyTool.main.init"
+      }
+    },
+    {
+      "NAME": "MyTool",
+      "COMMAND_ID": "MyTool.go",
+      "EXECUTION_MODE": "exe_script_file"
+    }
+  ],
+  "VERSION": 2
+}
 ```
 
 `Resources/Base.lproj/MainWindow.json` (ActionUI JSON — see ActionUI skill for format):

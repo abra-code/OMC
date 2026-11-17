@@ -113,7 +113,7 @@ Use `omc_next_command` when one script needs to trigger another after finishing 
 
 The chained command runs in its own script invocation with the same window context. Chain depth is not limited, but avoid circular chains.
 
-For static always-chain (every execution), use `NEXT_COMMAND_ID` in `Command.plist` instead.
+For static always-chain (every execution), use `NEXT_COMMAND_ID` in `Command.json` instead.
 
 ### Enabling/Disabling Controls Based on Selection
 
