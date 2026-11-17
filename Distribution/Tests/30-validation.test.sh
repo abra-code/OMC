@@ -640,8 +640,9 @@ section "16. Credits.md: the About window shows it; a missing one is a warning"
 # The engine's About window shows Contents/Resources/Credits.md, on macOS and on
 # Linux; Credits.rtf, which macOS's standard panel read, is not shown any more.
 # A project without Credits.md gets a warning but still builds, and one that
-# still has only Credits.rtf is told how to convert it. A leftover Credits.rtf
-# beside a Credits.md is a warning too.
+# still has only Credits.rtf is told that Build writes Credits.md from it (on
+# macOS, section 17). A leftover Credits.rtf beside a Credits.md is a warning
+# too.
 
 credits_ok="$(ab_make_project CreditsOK)"
 check "a template has Credits.md" "yes" \
@@ -662,8 +663,8 @@ check "Credits.rtf alone still builds" "0" "$(ab_call_rc lib.build.sh validate_p
 rtf_log="$(ab_call_log lib.build.sh validate_project "$credits_rtf")"
 check "that says the RTF is no longer shown" "1" \
     "$(printf '%s\n' "$rtf_log" | /usr/bin/grep -c 'Credits.md: warning (missing; Credits.rtf is no longer shown)')"
-check "and how to convert it" "1" \
-    "$(printf '%s\n' "$rtf_log" | /usr/bin/grep -c 'Convert Credits.rtf to Markdown')"
+check "and that Build converts it" "1" \
+    "$(printf '%s\n' "$rtf_log" | /usr/bin/grep -c 'Build writes Credits.md from Credits.rtf')"
 
 credits_both="$(ab_make_project CreditsBoth)"
 printf '{\\rtf1 old}' > "$credits_both/Contents/Resources/Credits.rtf"
@@ -671,5 +672,55 @@ check "a leftover Credits.rtf beside Credits.md still builds" "0" \
     "$(ab_call_rc lib.build.sh validate_project "$credits_both")"
 check "with a warning to delete it" "1" \
     "$(ab_call_log lib.build.sh validate_project "$credits_both" | /usr/bin/grep -c 'Credits.rtf: warning (not shown)')"
+
+section "17. Build writes Credits.md from Credits.rtf (macOS)"
+# An applet made before 6.0 has only Credits.rtf. Build (applet_build) runs
+# convert_credits_rtf before validating: textutil reads the RTF and
+# credits_rtf_to_md.py writes the Markdown beside it. Credits.rtf stays, so
+# validation then warns that it can be deleted. An existing Credits.md is never
+# overwritten. Linux has no textutil: nothing is converted there.
+case "${OSTYPE:-}" in
+    linux*)
+        printf '  (not checked on Linux: converting Credits.rtf needs macOS textutil)\n' >&2 ;;
+    *)
+        credits_conv="$(ab_make_project CreditsConvert)"
+        conv_res="$credits_conv/Contents/Resources"
+        /bin/rm -f "$conv_res/Credits.md"
+        printf '%s\n' '{\rtf1\ansi{\fonttbl\f0 Helvetica;}\f0 Built with OMC:\par' \
+            '{\field{\*\fldinst{HYPERLINK "https://github.com/abra-code/OMC"}}{\fldrslt https://github.com/abra-code/OMC}}\par' \
+            '{\i A low-code app builder}\par' \
+            '\par' \
+            'See {\field{\*\fldinst{HYPERLINK "https://example.com/docs"}}{\fldrslt the docs}} and {\b more_info}.\par}' \
+            > "$conv_res/Credits.rtf"
+        check "the conversion succeeds" "0" "$(ab_call_rc lib.build.sh convert_credits_rtf "$credits_conv")"
+        check "Credits.md is written" "yes" "$([ -f "$conv_res/Credits.md" ] && echo yes || echo no)"
+        conv_md="$(/bin/cat "$conv_res/Credits.md" 2>/dev/null)"
+        conv_expected='Built with OMC:\
+<https://github.com/abra-code/OMC>\
+*A low-code app builder*
+
+See [the docs](https://example.com/docs) and **more\_info**.'
+        check "with the lines, the link, the emphasis and an escaped underscore" "$conv_expected" "$conv_md"
+        check "Credits.rtf stays" "yes" "$([ -f "$conv_res/Credits.rtf" ] && echo yes || echo no)"
+        conv_log="$(ab_call_log lib.build.sh validate_project "$credits_conv")"
+        check "the project then validates with Credits.md" "1" \
+            "$(printf '%s\n' "$conv_log" | /usr/bin/grep -c 'Credits.md: OK')"
+        check "and a warning to delete the RTF" "1" \
+            "$(printf '%s\n' "$conv_log" | /usr/bin/grep -c 'Credits.rtf: warning (not shown)')"
+        printf 'Edited by hand\n' > "$conv_res/Credits.md"
+        check "a second run leaves it alone" "0" "$(ab_call_rc lib.build.sh convert_credits_rtf "$credits_conv")"
+        check "an existing Credits.md is not overwritten" "Edited by hand" "$(/bin/cat "$conv_res/Credits.md")"
+
+        credits_bad="$(ab_make_project CreditsBadRTF)"
+        /bin/rm -f "$credits_bad/Contents/Resources/Credits.md"
+        printf 'not rtf at all {' > "$credits_bad/Contents/Resources/Credits.rtf"
+        check "an RTF textutil cannot read fails the conversion" "1" \
+            "$(ab_call_rc lib.build.sh convert_credits_rtf "$credits_bad")"
+        check "and says why" "1" \
+            "$(ab_call_log lib.build.sh convert_credits_rtf "$credits_bad" | /usr/bin/grep -c 'Credits.md not made from Credits.rtf')"
+        check "writing no Credits.md" "no" \
+            "$([ -f "$credits_bad/Contents/Resources/Credits.md" ] && echo yes || echo no)"
+        ;;
+esac
 
 omctest_end

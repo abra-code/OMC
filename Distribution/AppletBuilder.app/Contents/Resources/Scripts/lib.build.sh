@@ -1395,7 +1395,7 @@ ${info_out}
     elif [ -f "$credits_rtf" ]; then
         ab_log "  Credits.md: warning (missing; Credits.rtf is no longer shown)"
         warning_count=$((warning_count + 1))
-        report="${report}Credits.md: missing. The About window shows Contents/Resources/Credits.md (Markdown); Credits.rtf is no longer shown. Convert Credits.rtf to Markdown (for example with DocToDoc, which embeds pandoc, or ask your coding agent), save it as Credits.md, and delete Credits.rtf.
+        report="${report}Credits.md: missing. The About window shows Contents/Resources/Credits.md (Markdown); Credits.rtf is no longer shown. On macOS, Build writes Credits.md from Credits.rtf; check it, then delete Credits.rtf.
 
 "
     else
@@ -1767,6 +1767,34 @@ do_codesign() {
 # codesigns.
 # Reads the AB_* options documented at the top of this file. Returns 0 on success,
 # 1 if the build is halted by validation or fails to codesign.
+# Credits.md from Credits.rtf, once, on macOS. An applet made before 6.0 has only Credits.rtf, which
+# the About window no longer shows: textutil reads it and credits_rtf_to_md.py writes the Markdown
+# beside it (links, italic and bold kept; alignment, fonts and colors dropped). Credits.rtf stays, and
+# validation then warns that it can be deleted. An existing Credits.md is never touched. Not on Linux,
+# which has no textutil: validation warns about the missing Credits.md there.
+# Returns 0 when there was nothing to do or Credits.md was written, 1 when the conversion failed.
+convert_credits_rtf() {
+    local target_path="$1"
+    local resources_dir="$target_path/Contents/Resources"
+    local credits_md="$resources_dir/Credits.md"
+    local credits_rtf="$resources_dir/Credits.rtf"
+    if [ -f "$credits_md" ] || [ ! -f "$credits_rtf" ]; then
+        return 0
+    fi
+    if ! ab_on_macos; then
+        return 0
+    fi
+    local convert_output
+    convert_output=$("$python3" "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/credits_rtf_to_md.py" "$credits_rtf" "$credits_md" 2>&1)
+    local convert_status=$?
+    if [ "$convert_status" -ne 0 ]; then
+        ab_log "Credits.md not made from Credits.rtf: ${convert_output}"
+        return 1
+    fi
+    ab_log "Credits.md made from Credits.rtf: check it, then delete Credits.rtf"
+    return 0
+}
+
 applet_build() {
     local project_path="$1"
 
@@ -1780,6 +1808,7 @@ applet_build() {
     ab_log "Building ${app_name}..."
 
     strip_quarantine "$project_path"
+    convert_credits_rtf "$project_path"
 
     if ! validate_project "$project_path"; then
         local ts=$(/bin/date "+%Y-%m-%d %H:%M:%S")

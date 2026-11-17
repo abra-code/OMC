@@ -23,8 +23,9 @@ Linux: the applet's icon, name, version (`CFBundleShortVersionString` and
 `NSHumanReadableCopyright`. Put everything else you want to say (authors, license,
 website, what the applet uses) in `Credits.md`; AppletBuilder warns about an applet
 without one. `Credits.rtf`, which macOS's standard About panel read, is no
-longer shown: convert it to Markdown (DocToDoc, which embeds pandoc, does it, or
-ask your coding agent). On Linux the item is the last of the header bar's menu. A
+longer shown: on macOS, AppletBuilder's Build writes `Credits.md` from it once
+(links, italic and bold kept; alignment, fonts and colors dropped), so check the
+result and delete `Credits.rtf`. On Linux the item is the last of the header bar's menu. A
 `CommandGroup` replacing `appInfo` (or `about`) takes the item away on both
 systems, as for any standard item.
 
