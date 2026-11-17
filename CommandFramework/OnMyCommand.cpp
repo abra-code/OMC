@@ -378,11 +378,7 @@ OnMyCommand::CommonContextCheck( CFTypeRef inContext, const OMCHostSelection *in
 	CFStringRef hostAppBundleID = CFBundleGetIdentifier(CFBundleGetMainBundle());
 	if(hostAppBundleID != nullptr)
 	{
-        if(kCFCompareEqualTo == ::CFStringCompare(hostAppBundleID, CFSTR("com.abracode.OMCService"), 0))
-        {
-            mHostApp = kOMCHostApp_OMCService;
-        }
-		else if(kCFCompareEqualTo == ::CFStringCompare(hostAppBundleID, CFSTR("com.abracode.ShortcutObserver"), 0))
+		if(kCFCompareEqualTo == ::CFStringCompare(hostAppBundleID, CFSTR("com.abracode.ShortcutObserver"), 0))
 		{
             mHostApp = kOMCHostApp_ShortcutsObserver;
             runningInShortcutsObserver = true;
@@ -394,7 +390,7 @@ OnMyCommand::CommonContextCheck( CFTypeRef inContext, const OMCHostSelection *in
         }
 	}
 	
-    if((mHostApp == kOMCHostApp_OMCService) || (mHostApp == kOMCHostApp_ShortcutsObserver))
+    if(mHostApp == kOMCHostApp_ShortcutsObserver)
     {
         //remember front process pid at the moment of context check
         //in case it gets changed later, we need to keep it

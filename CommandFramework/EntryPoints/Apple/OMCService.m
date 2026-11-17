@@ -43,25 +43,16 @@ void OMCServiceObserverCallback( OmcObserverMessage inMessage, CFIndex inTaskID,
 - (void)runOMCService:(NSPasteboard *)pboard userData:(NSString *)userData error:(NSString **)error
 {
 	NSBundle *appBundle = [NSBundle mainBundle];
-    NSURL *commandURL = nil;
 
-    BOOL runningInOMCServiceApp = [appBundle.bundleIdentifier isEqualToString:@"com.abracode.OMCService"];
-    // if we are running in OMCService.service app we call OMCCreateExecutor() with commandURL = nil
-    // and that will read the command list from
-    // "com.abracode.OnMyCommandCMPrefs.plist" in ~/Library/Preferences/
-    // otherwise we find Command.plist in the applet bundle here:
-    if(!runningInOMCServiceApp)
+    // The applet's own command file: Command.json, or Command.plist in an older applet
+    CFURLRef resolvedURL = CopyCommandFileURLInBundle(CFBundleGetMainBundle(), CFSTR("Command"));
+    if(resolvedURL == NULL)
     {
-        // Prefer Command.json over Command.plist in the applet bundle.
-        CFURLRef resolvedURL = CopyCommandFileURLInBundle(CFBundleGetMainBundle(), CFSTR("Command"));
-        if(resolvedURL == NULL)
-        {
-            if(error != NULL)
-                *error = @"Could not find Command.json or Command.plist in app bundle";
-            return;
-        }
-        commandURL = CFBridgingRelease(resolvedURL);
+        if(error != NULL)
+            *error = @"Could not find Command.json or Command.plist in app bundle";
+        return;
     }
+    NSURL *commandURL = CFBridgingRelease(resolvedURL);
 
     OMCExecutorRef omcExec = OMCCreateExecutor( (__bridge CFURLRef)commandURL );
 	if(omcExec == NULL)

@@ -9,8 +9,8 @@
 #import <Cocoa/Cocoa.h>
 #import "OMCObserverDelegate.h"
 
-//responds to applicationDidFinishLaunching: but in case of OMC applet it is not the app delegate - OMCAppletController is and forwards applicationDidFinishLaunching:
-//in case of standalone service OMCService is an app controller and receives the applicationDidFinishLaunching: directly
+// An applet's Services provider. Not the app delegate: OMCAppletController is, and forwards
+// applicationDidFinishLaunching: to it when the applet's Info.plist declares NSServices.
 @interface OMCService : NSObject <NSApplicationDelegate>
 
 - (void)runOMCService:(NSPasteboard *)pboard userData:(NSString *)userData error:(NSString **)error;

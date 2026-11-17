@@ -27,7 +27,6 @@ enum
 typedef enum
 {
     kOMCHostApp_Unknown = 0,
-    kOMCHostApp_OMCService,
     kOMCHostApp_Shortcuts,
     kOMCHostApp_ShortcutsObserver
 } OMCHostApp;

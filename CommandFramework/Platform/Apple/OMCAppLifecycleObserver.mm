@@ -18,7 +18,7 @@
 // directory launchd creates per uid, mode 0700. It does NOT consult $TMPDIR - checking the
 // variable first is swift-corelibs-foundation's behavior, not Apple's - and the difference is in
 // our favor. Every process of this uid computes the same path whatever the environment says, so
-// the app, OMCService and the contextual menu plugin share one cache, and no environment variable
+// the applet and the contextual menu plugin share one cache, and no environment variable
 // can redirect where an applet loads bytecode from.
 //
 // For a sandboxed host it resolves to that container's own tmp, writable where the old fixed
