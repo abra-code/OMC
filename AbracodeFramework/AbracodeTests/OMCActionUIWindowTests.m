@@ -6,7 +6,8 @@
 //  written before its logic moved to C++ (Phase 5 step 8, Private/phase5-step8a-pin-test-gaps.md,
 //  gaps 6 and 7): where
 //  the title comes from, the size limits taken from the content, a fixed-size window, a floating
-//  panel, and the frame: centered the first time, restored from its autosave name after that.
+//  panel, and the frame: centered the first time, restored from its autosave name after that. Also
+//  the window's toolbar for a TabView and NavigationSplitView root (a regression of OMC 5.6.0).
 //
 //  The fixture is TestBundles/ActionUI-Window.omc. Each window is found by its frame autosave name,
 //  "OMC.<JSON_NAME>". The window opened on a file (title from the file) is not tested here: in an
@@ -30,6 +31,7 @@
 static NSString * const kFixedAutosaveName = @"OMC.WindowFixed";
 static NSString * const kFlexibleAutosaveName = @"OMC.WindowFlexible";
 static NSString * const kFloatingAutosaveName = @"OMC.WindowFloating";
+static NSString * const kSplitTabsAutosaveName = @"OMC.WindowSplitTabs";
 
 // What the INVOKE test's messages recorded (see the categories at the end of the file)
 static NSMutableArray<NSString *> *sRecordedInvokes = nil;
@@ -53,7 +55,7 @@ static NSString *FrameDefaultsKey(NSString *name) {
 
 - (void)removeSavedFrames {
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    for (NSString *name in @[kFixedAutosaveName, kFlexibleAutosaveName, kFloatingAutosaveName])
+    for (NSString *name in @[kFixedAutosaveName, kFlexibleAutosaveName, kFloatingAutosaveName, kSplitTabsAutosaveName])
         [defaults removeObjectForKey:FrameDefaultsKey(name)];
 }
 
@@ -189,6 +191,26 @@ static CGFloat TitlebarHeight(NSWindow *window) {
     XCTAssertTrue((window.styleMask & NSWindowStyleMaskUtilityWindow) != 0, @"a utility window");
     XCTAssertTrue((window.styleMask & NSWindowStyleMaskMiniaturizable) == 0, @"panels do not minimize");
     [self closeWindowWithUUID:uuid autosaveName:kFloatingAutosaveName];
+}
+
+#pragma mark - Toolbar
+
+// SwiftUI builds the window's toolbar from a TabView and NavigationSplitView root only when its
+// first layout runs with the view already in the window. The window host measured the view before
+// the window existed (OMC 5.6.0), and SwiftUI then treated it as plain content: no sidebar button,
+// the tabs in a segmented control below the titlebar, the title shown, every tab's toolbar items at
+// once. The sidebar button's toolbar item is what tells the two apart.
+- (void)testASplitViewInATabViewGetsTheWindowsToolbar {
+    NSString *uuid = nil;
+    NSWindow *window = [self openWindowWithCommand:@"Window Split Tabs" autosaveName:kSplitTabsAutosaveName uuid:&uuid];
+    __block NSArray<NSString *> *identifiers = @[];
+    [self spinUntil:^BOOL{
+        identifiers = [window.toolbar.items valueForKey:@"itemIdentifier"] ?: @[];
+        return [identifiers containsObject:@"com.apple.SwiftUI.navigationSplitView.toggleSidebar"];
+    } timeout:5.0];
+    XCTAssertTrue([identifiers containsObject:@"com.apple.SwiftUI.navigationSplitView.toggleSidebar"],
+                  @"the window's toolbar should have the split view's sidebar button; it has %@", identifiers);
+    [self closeWindowWithUUID:uuid autosaveName:kSplitTabsAutosaveName];
 }
 
 #pragma mark - Frame
