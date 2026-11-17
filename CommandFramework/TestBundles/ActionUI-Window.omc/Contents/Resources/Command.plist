@@ -262,6 +262,30 @@ fi
 			<key>NOTES</key>
 			<string>Its text context is a request: the first line is the arguments for omc_dialog_control (the window UUID first), in shell syntax; any further lines go to its standard input</string>
 		</dict>
+		<dict>
+			<key>ACTIONUI_WINDOW</key>
+			<dict>
+				<key>IS_BLOCKING</key>
+				<false/>
+				<key>JSON_NAME</key>
+				<string>WindowSplitTabs</string>
+			</dict>
+			<key>ACTIVATION_MODE</key>
+			<string>act_always</string>
+			<key>COMMAND</key>
+			<array>
+				<string>echo "${OMC_ACTIONUI_WINDOW_UUID}"
+</string>
+			</array>
+			<key>EXECUTION_MODE</key>
+			<string>exe_shell_script</string>
+			<key>NAME</key>
+			<string>Window Split Tabs</string>
+			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
+			<string>14.6</string>
+			<key>REQUIRED_OMC_VERSION</key>
+			<string>5.0</string>
+		</dict>
 	</array>
 	<key>VERSION</key>
 	<integer>2</integer>

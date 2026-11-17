@@ -487,13 +487,17 @@ OMCCreateHostedWindow(const OMCHostedWindowSpec &inSpec, std::function<void()> i
 	if(inSpec.contentSpansTitlebar)
 		style |= NSWindowStyleMaskFullSizeContentView;
 
-	NSSize contentSize = controller.view.fittingSize;
+	// The window starts at a placeholder size and is sized to the document only once the hosting view
+	// is in it. Measuring the view (fittingSize) before it has a window runs SwiftUI's first layout
+	// outside any window, and SwiftUI then never treats the view as the root of one: a TabView shows
+	// its tabs as a segmented control below the titlebar instead of in the toolbar, the
+	// NavigationSplitView sidebar button is missing, the window title shows, and the toolbar items of
+	// every tab appear at once (OMC 5.6.0; measured with AgentVM.app's main window).
+	NSRect contentRect = NSMakeRect(0, 0, 480, 320);
 	if(inSpec.contentWidth > 0)
-		contentSize.width = inSpec.contentWidth;
+		contentRect.size.width = inSpec.contentWidth;
 	if(inSpec.contentHeight > 0)
-		contentSize.height = inSpec.contentHeight;
-
-	NSRect contentRect = NSMakeRect(0, 0, contentSize.width, contentSize.height);
+		contentRect.size.height = inSpec.contentHeight;
 	NSWindow *window = nil;
 	if(isPanel)
 	{
@@ -508,6 +512,11 @@ OMCCreateHostedWindow(const OMCHostedWindowSpec &inSpec, std::function<void()> i
 	window.releasedWhenClosed = NO;
 	window.identifier = windowUUID; // the document's window UUID: tests read the document through it
 	window.contentViewController = controller;
+	NSSize contentSize = controller.view.fittingSize; // in the window now: see the placeholder above
+	if(inSpec.contentWidth > 0)
+		contentSize.width = inSpec.contentWidth;
+	if(inSpec.contentHeight > 0)
+		contentSize.height = inSpec.contentHeight;
 	[window setContentSize:contentSize];
 	// after the hosting controller is installed: it resets the title (NSHostingView)
 	if(inSpec.title != nullptr)

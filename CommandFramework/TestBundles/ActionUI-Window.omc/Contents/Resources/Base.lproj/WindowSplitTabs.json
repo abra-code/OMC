@@ -1,0 +1,68 @@
+{
+  "type": "TabView",
+  "children": [
+    {
+      "type": "Tab",
+      "properties": {
+        "title": "First",
+        "systemImage": "square"
+      },
+      "content": {
+        "type": "NavigationSplitView",
+        "properties": {
+          "columnVisibility": "all",
+          "style": "balanced"
+        },
+        "sidebar": {
+          "type": "VStack",
+          "children": [
+            {
+              "type": "Text",
+              "id": 2,
+              "properties": {
+                "text": "Sidebar"
+              },
+              "toolbar": [
+                {
+                  "type": "ToolbarItem",
+                  "properties": {
+                    "placement": "primaryAction"
+                  },
+                  "content": {
+                    "type": "Button",
+                    "id": 3,
+                    "properties": {
+                      "systemImage": "plus",
+                      "help": "Add"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "detail": {
+          "type": "Text",
+          "id": 4,
+          "properties": {
+            "text": "Detail"
+          }
+        }
+      }
+    },
+    {
+      "type": "Tab",
+      "properties": {
+        "title": "Second",
+        "systemImage": "circle"
+      },
+      "content": {
+        "type": "Text",
+        "id": 5,
+        "properties": {
+          "text": "Second"
+        }
+      }
+    }
+  ]
+}
