@@ -99,10 +99,12 @@ OMCTEST_DEFAULT_STUBS="alert notify omc_dialog_control omc_next_command pasteboa
 # future reader can re-verify rather than re-guess:
 #
 #   Interpreter map          CommandFramework/OmcExecutor.cpp:881-896
-#                            (sExtensionToShellMap). .sh -> /bin/sh, .zsh ->
-#                            /bin/zsh, .bash -> /bin/bash, .py -> see below.
-#                            An unknown or absent extension gets kDefaultShell,
-#                            /bin/sh.
+#                            (sExtensionToShellMap). .sh -> the platform's
+#                            shell (/bin/sh on macOS, /bin/bash on Linux), .zsh
+#                            -> /bin/zsh, .bash -> /bin/bash, .py -> see below.
+#                            An unknown or absent extension gets the platform's
+#                            shell too, as do .applescript/.scpt/.js/.mjs on
+#                            Linux (omctest_interpreter_for).
 #   Python resolution        OmcExecutor.cpp:925-964. The map's /usr/bin/python3
 #                            for .py is a placeholder that is always overridden.
 #                            GetEmbeddedPythonPath() accepts
@@ -1757,6 +1759,12 @@ omctest_interpreter_for() { # <script-path>
     local base=$(/usr/bin/basename "$script_path")
     local ext=$(omctest_extension_of "$base" | LC_ALL=C /usr/bin/tr 'A-Z' 'a-z')
     local shell_path=$(omctest_platform_shell)
+    # Linux has no osascript and no jsc, so its engine table does not list these four and
+    # runs them with the platform's shell (Common/Linux/OMCPlatformInterpreters.h).
+    case "${OSTYPE:-}" in
+        darwin*) ;;
+        *) case "$ext" in applescript|scpt|js|mjs) ext='' ;; esac ;;
+    esac
     case "$ext" in
         sh) printf '%s' "$shell_path" ;;
         py) printf '%s' "$OMCTEST_PYTHON" ;;
@@ -1991,8 +1999,10 @@ omc_wait_for() { # '<predicate command>' [timeout-seconds, default 5]
     local predicate="$1" timeout_s="${2:-5}"
     local limit=$(/usr/bin/awk -v t="$timeout_s" 'BEGIN { printf "%d", (t * 10) + 0.5 }')
     local ticks=0
+    # The predicate is test code, so it runs with the shell the test file runs with.
+    local shell_path=$(omctest_platform_shell)
     while [ "$ticks" -le "$limit" ]; do
-        if /bin/sh -c "$predicate" >/dev/null 2>&1; then
+        if "$shell_path" -c "$predicate" >/dev/null 2>&1; then
             return 0
         fi
         /bin/sleep 0.1
