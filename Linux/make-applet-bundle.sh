@@ -322,14 +322,23 @@ if [ ! -f "$contents/Info.plist" ]; then
     exit 1
 fi
 # The bundle's Info.plist as XML: the file manager plug-ins read it with GLib's XML parser
-# (Linux/FileManagerServices) and cannot read a binary one. AppletBuilder's converter does it, as
-# its own build does (lib.build.sh, ensure_xml_info_plist); -B so that no bytecode is written next
-# to it in AppletBuilder's bundle. An XML Info.plist is left as it is.
-/usr/bin/python3 -I -B "$omc_root/Distribution/AppletBuilder.app/Contents/Resources/Scripts/plist_convert.py" to-xml-in-place "$contents/Info.plist"
-status=$?
-if [ "$status" -ne 0 ]; then
-    printf 'Cannot write the applet'"'"'s Info.plist as XML (it is a binary property list): %s\n' "$contents/Info.plist" >&2
-    exit 1
+# (Linux/FileManagerServices) and cannot read a binary one. Only a binary one is converted, with
+# AppletBuilder's converter as its own build does (lib.build.sh, ensure_xml_info_plist), so an XML
+# Info.plist needs nothing beyond this script; -B so that no bytecode is written next to the
+# converter in AppletBuilder's bundle.
+info_magic="$(/usr/bin/head -c 6 -- "$contents/Info.plist" 2>/dev/null)"
+if [ "$info_magic" = "bplist" ]; then
+    plist_converter="$omc_root/Distribution/AppletBuilder.app/Contents/Resources/Scripts/plist_convert.py"
+    if [ ! -f "$plist_converter" ]; then
+        printf 'The applet'"'"'s Info.plist is a binary property list, and the converter to XML is not here: %s\n' "$plist_converter" >&2
+        exit 1
+    fi
+    /usr/bin/python3 -I -B "$plist_converter" to-xml-in-place "$contents/Info.plist"
+    status=$?
+    if [ "$status" -ne 0 ]; then
+        printf 'Cannot write the applet'"'"'s binary Info.plist as XML: %s\n' "$contents/Info.plist" >&2
+        exit 1
+    fi
 fi
 
 # The Linux Python, in place of any the sources had (a source folder's Library is copied whole).
