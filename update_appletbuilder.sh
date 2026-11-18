@@ -1459,8 +1459,9 @@ echo ""
 # Where the junk comes from: Finder (.DS_Store), the embedded Python
 # interpreter byte-compiling the bundled verifier (__pycache__), tool caches
 # that ride along when a repo tree is copied wholesale into the bundle
-# (Tools/verifier brings .pytest_cache and .gitignore), and agent scratch
-# directories (.claude/.cc-writes).
+# (Tools/verifier brings .pytest_cache and .gitignore), agent scratch
+# directories (.claude/.cc-writes), and KDE's .directory, which AppletBuilder
+# writes at its own bundle root when it runs on Linux (its Dolphin folder icon).
 
 echo "── Removing build junk ──"
 
@@ -1470,7 +1471,7 @@ echo "── Removing build junk ──"
 # Container directories are listed before __pycache__ so nested junk inside a
 # swept container is not counted a second time.
 JUNK_DIRS=( ".claude" ".idea" ".vscode" ".git" ".svn" ".pytest_cache" ".mypy_cache" ".ruff_cache" "__pycache__" )
-JUNK_FILES=( ".DS_Store" "._*" "*.pyc" "*.pyo" "*.thin.tmp" ".gitignore" ".gitattributes" "Thumbs.db" )
+JUNK_FILES=( ".DS_Store" "._*" "*.pyc" "*.pyo" "*.thin.tmp" ".gitignore" ".gitattributes" "Thumbs.db" ".directory" )
 
 junk_count=0
 junk_stuck=0

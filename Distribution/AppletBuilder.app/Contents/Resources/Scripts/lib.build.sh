@@ -1146,7 +1146,7 @@ update_shell_clients() {
 # An OMC applet is edited in place - the .app bundle IS the project - and the
 # copy that gets signed and notarized is made from it. So junk left here does
 # not just clutter a working directory, it ships. Editor and agent config
-# (.claude, .idea, .vscode), tool caches and Finder droppings are all removed
+# (.claude, .idea, .vscode), tool caches and Finder, Windows and KDE droppings are all removed
 # outright; anything worth keeping belongs outside the bundle.
 #
 # .git is deliberately NOT swept: deleting a versioned applet's history during
@@ -1188,8 +1188,13 @@ clean_build_junk() {
     # inside a swept container is not counted twice.
     local junk_dirs=( ".claude" ".idea" ".vscode" ".pytest_cache" ".mypy_cache" ".ruff_cache" "__pycache__" )
     # *.thin.tmp is thin_distribution.sh's scratch file, left beside a real
-    # Mach-O if lipo is interrupted rather than merely failing.
-    local junk_files=( ".DS_Store" "._*" "*.pyc" "*.pyo" "*.thin.tmp" "Thumbs.db" )
+    # Mach-O if lipo is interrupted rather than merely failing. .directory is
+    # KDE's folder settings file: a Linux applet writes one at its bundle root
+    # for its Dolphin folder icon (Linux/install-applet.sh), and a file there,
+    # outside Contents, makes codesign refuse the bundle ("unsealed contents
+    # present in the bundle root"). Removing it costs nothing on Linux, where
+    # the applet's next launch writes it again.
+    local junk_files=( ".DS_Store" "._*" "*.pyc" "*.pyo" "*.thin.tmp" "Thumbs.db" ".directory" )
     # Losing one of these costs developer config rather than a regenerable
     # cache, and rm does not use the Trash, so name each path instead of
     # folding it into a count.

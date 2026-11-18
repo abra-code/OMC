@@ -68,6 +68,17 @@ check "a lowercase thumbs.db was swept" "1" \
 check_absent "and is gone"        "$dirty/Contents/Resources/thumbs.db"
 check_absent "as is an uppercase .PYC" "$dirty/Contents/Resources/Scripts/STALE.PYC"
 
+section "3c. KDE's .directory at the bundle root is swept"
+# A Linux applet writes it for its Dolphin folder icon (install-applet.sh). At the
+# bundle root, outside Contents, codesign refuses the whole bundle, so a Linux
+# copy brought back to a Mac must lose it before signing.
+
+printf '[Desktop Entry]\nIcon=./Contents/Resources/AppIcon.svg\n' > "$dirty/.directory"
+log="$(sweep "$dirty")"
+check "the .directory was reported" "1" \
+    "$(printf '%s\n' "$log" | /usr/bin/grep -c 'Removed 1 \.directory file')"
+check_absent "and is gone"        "$dirty/.directory"
+
 section "4. a config directory is named individually, not folded into a count"
 # Deleting one of these costs a developer their own settings, and rm does not use
 # the Trash. A bare "removed 1 directory" would not tell them what they lost.

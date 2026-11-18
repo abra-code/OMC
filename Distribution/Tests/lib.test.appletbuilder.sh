@@ -222,7 +222,7 @@ ab_make_project() {
         -prune -exec /bin/rm -rf {} + 2>/dev/null
     /usr/bin/find "$_ab_dst" \( -type f -o -type l \) \
         \( -name '.DS_Store' -o -name '._*' -o -name '*.pyc' -o -name '*.pyo' \
-           -o -name '*.thin.tmp' -o -name 'Thumbs.db' \) -delete 2>/dev/null
+           -o -name '*.thin.tmp' -o -name 'Thumbs.db' -o -name '.directory' \) -delete 2>/dev/null
 
     _ab_plist="$_ab_dst/Contents/Info.plist"
     /usr/bin/plutil -replace CFBundleName -string "$_ab_name" "$_ab_plist" || ab_fatal "could not name the fixture"
