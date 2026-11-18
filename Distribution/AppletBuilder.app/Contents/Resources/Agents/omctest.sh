@@ -1733,6 +1733,19 @@ omctest_resolve_script_scan() { # <command-id>
     return 1
 }
 
+# The engine's shell for .sh and for an extension it has no interpreter for, which also runs
+# each test file: /bin/sh on macOS (bash 3.2 in POSIX mode), bash on Linux
+# (Common/Linux/OMCPlatformInterpreters.h, OMC_PLATFORM_SHELL_PATH), where /bin/sh is dash, which
+# has no "source", no [[ ]] and no $'\t'. Tests are written against macOS's /bin/sh, so on Linux
+# they get bash too. Tested by OSTYPE as omctest_script_index does: under dash it is empty, which
+# means Linux.
+omctest_platform_shell() {
+    case "${OSTYPE:-}" in
+        darwin*) printf '/bin/sh' ;;
+        *) printf '/bin/bash' ;;
+    esac
+}
+
 # The engine's whole table (sExtensionToShellMap, OmcExecutor.cpp:881-896),
 # matched case-insensitively as GetShellFromScriptExtension does, so "X.PY" runs
 # under Python there and must here. Every extension the table lists is mapped:
@@ -1743,8 +1756,9 @@ omctest_interpreter_for() { # <script-path>
     local script_path="$1"
     local base=$(/usr/bin/basename "$script_path")
     local ext=$(omctest_extension_of "$base" | LC_ALL=C /usr/bin/tr 'A-Z' 'a-z')
+    local shell_path=$(omctest_platform_shell)
     case "$ext" in
-        sh) printf '/bin/sh' ;;
+        sh) printf '%s' "$shell_path" ;;
         py) printf '%s' "$OMCTEST_PYTHON" ;;
         pl) printf '/usr/bin/perl' ;;
         applescript|scpt) printf '/usr/bin/osascript' ;;
@@ -1755,8 +1769,8 @@ omctest_interpreter_for() { # <script-path>
         dash) printf '/bin/dash' ;;
         rb) printf '/usr/bin/ruby' ;;
         js|mjs) printf '/System/Library/Frameworks/JavaScriptCore.framework/Versions/Current/Helpers/jsc' ;;
-        # kDefaultShell: an unknown or absent extension runs under /bin/sh.
-        *) printf '/bin/sh' ;;
+        # kDefaultShell: an unknown or absent extension runs under the platform's shell.
+        *) printf '%s' "$shell_path" ;;
     esac
 }
 
@@ -2469,8 +2483,9 @@ omctest_run_file() { # <app> <testfile>
         fi
         OMCTEST_PREPARED=1
         export OMCTEST_PREPARED
-        # stdout only - stderr carries the ok/FAIL lines and must keep streaming.
-        /bin/sh "$test_file" >> "$OMCTEST_UI/handlers.log"
+        # stdout only - stderr carries the ok/FAIL lines and must keep streaming. The platform's
+        # shell, as the engine runs a .sh handler (omctest_platform_shell).
+        "$(omctest_platform_shell)" "$test_file" >> "$OMCTEST_UI/handlers.log"
         file_rc=$?
         exit "$file_rc"   # the EXIT trap above stops the bridge, on this path and every other
     )
