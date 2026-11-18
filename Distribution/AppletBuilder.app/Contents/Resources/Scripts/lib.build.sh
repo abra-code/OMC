@@ -606,6 +606,37 @@ copy_executable() {
     ab_log "Executable updated: $dst_exe_name"
 }
 
+# The applet's Info.plist as an XML property list: a binary one is rewritten as XML, on both
+# systems, since a bundle built on a Mac may be run on Linux. The Linux file manager plug-ins read
+# Info.plist with GLib's XML parser (Linux/FileManagerServices, command_applet_icon: the Launch
+# item's icon) and cannot read a binary one; everything else reads both (CoreFoundation, plister,
+# Python's plistlib). macOS converts with plutil, Linux with plist_convert.py. A failure is logged
+# and the build goes on: the applet still works, and its Launch item shows the theme's icon.
+ensure_xml_info_plist() {
+    local info_plist="$1/Contents/Info.plist"
+    if [ ! -f "$info_plist" ]; then
+        return 0
+    fi
+    local magic="$(/usr/bin/head -c 6 -- "$info_plist" 2>/dev/null)"
+    if [ "$magic" != "bplist" ]; then
+        return 0
+    fi
+    local convert_output
+    if ab_on_macos; then
+        convert_output="$(/usr/bin/plutil -convert xml1 "$info_plist" 2>&1)"
+    else
+        convert_output="$("$python3" "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/plist_convert.py" to-xml-in-place "$info_plist" 2>&1)"
+    fi
+    local convert_status=$?
+    if [ "$convert_status" -ne 0 ]; then
+        ab_log "WARNING: Info.plist is a binary property list and could not be written as XML: $convert_output"
+        ab_log "  On Linux the file manager's Launch item then shows no icon of the applet's own."
+        return 0
+    fi
+    ab_log "Info.plist was a binary property list: written as XML (the Linux file manager plug-ins read only XML)"
+    return 0
+}
+
 # Linux: the applet's install script, Contents/Linux/install-applet.sh (it checks what the applet
 # needs from the system and adds it to the desktop, also before the applet can start), copied from
 # AppletBuilder's own Resources/Linux on every build, so an applet always has the newest. Nothing on
@@ -1790,6 +1821,7 @@ applet_build() {
 
     strip_quarantine "$project_path"
     convert_credits_rtf "$project_path"
+    ensure_xml_info_plist "$project_path"
 
     if ! validate_project "$project_path"; then
         local ts=$(/bin/date "+%Y-%m-%d %H:%M:%S")

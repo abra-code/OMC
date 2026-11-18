@@ -60,7 +60,10 @@ char		*command_applet_program(const char *inPath, char **outName);
 // CFBundleIconFile names in the layout's resources folder (Contents/Resources, or the top folder of
 // the flat layout) when it is an SVG or a PNG, else that name with .svg, then .png. NULL when the
 // bundle has no program, its Info.plist is not an XML property list with that key, or there is no
-// such file (a macOS bundle names only its .icns). Free with g_free.
+// such file (a macOS bundle names only its .icns). A binary Info.plist is not read: these plug-ins
+// load into the file manager's own process and use GLib alone, not CoreFoundation, which would bring
+// the Swift runtime package into it; AppletBuilder's Build writes Info.plist as XML instead
+// (ensure_xml_info_plist in lib.build.sh). Free with g_free.
 char		*command_applet_icon(const char *inPath);
 
 G_END_DECLS

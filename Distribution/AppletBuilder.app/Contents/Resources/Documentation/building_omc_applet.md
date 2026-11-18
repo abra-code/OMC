@@ -81,6 +81,8 @@ MyApp.app/
 └── Library/                           (Python runtime, if Python was enabled)
 ```
 
+`Contents/Info.plist` stays an XML property list. On Linux the file manager plug-ins read it with an XML parser (for the icon of their "Launch <Name>" item) and cannot read a binary one; Build rewrites a binary `Info.plist` as XML.
+
 ---
 
 ## Step 2: Define Commands in Command.json

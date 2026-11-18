@@ -353,4 +353,19 @@ docs="$(ab_make_project DocsOnly)"
 ab_call $BUILD update_linux_requires "$docs" > /dev/null 2>&1
 check "an element document under Documentation lists nothing (an example, not the applet's UI)" "" "$(requires_value "$docs" 0)"
 
+section "11. a binary Info.plist is written as XML"
+# ensure_xml_info_plist: the Linux file manager plug-ins read Info.plist with an XML parser, so a
+# build never ships a binary one (plutil here; plist_convert.py on Linux).
+binary="$(ab_make_project BinaryInfo)"
+/usr/bin/plutil -convert binary1 "$binary/Contents/Info.plist"
+check "the fixture really is binary" "bplist" "$(/usr/bin/head -c 6 "$binary/Contents/Info.plist")"
+log="$(ab_call_log $BUILD ensure_xml_info_plist "$binary")"
+check "it is XML now" "<?xml" "$(/usr/bin/head -c 5 "$binary/Contents/Info.plist")"
+check "and the build says so" "1" "$(printf '%s\n' "$log" | /usr/bin/grep -c 'written as XML')"
+check "with its contents kept" "com.omc.applet.BinaryInfo" \
+    "$(ab_call lib.plist.sh plist_read "$binary/Contents/Info.plist" CFBundleIdentifier)"
+xml="$(ab_make_project XmlInfo)"
+log="$(ab_call_log $BUILD ensure_xml_info_plist "$xml")"
+check "an XML Info.plist is left alone, in silence" "0" "$(printf '%s\n' "$log" | /usr/bin/grep -c 'written as XML')"
+
 omctest_end

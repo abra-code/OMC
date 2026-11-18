@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""plist_convert.py - plutil's conversions of a legacy Command.plist, for Linux (no plutil there).
+"""plist_convert.py - plutil's conversions of a legacy Command.plist, and of a binary Info.plist to
+XML, for Linux (no plutil there).
 
 Called by lib.plist.sh (command_plist_*) on Linux; macOS uses plutil for the same steps. A legacy
 Command.plist is edited as JSON (plist_edit.py), so it goes to JSON and back as with plutil:
@@ -10,6 +11,8 @@ Command.plist is edited as JSON (plist_edit.py), so it goes to JSON and back as 
   extract-command <plist> <index>     the <dict> of COMMAND_LIST item <index> as XML lines,
                                       as `plutil -extract COMMAND_LIST.<index> xml1 -o -`
                                       with the XML header, DOCTYPE and <plist> lines taken off
+  to-xml-in-place <plist>             plutil -convert xml1 <plist>, for a binary one only (an
+                                      XML one is left untouched); the build's Info.plist step
 
 Keys are written sorted and reals in %.17g form, as plutil writes them. A value JSON cannot hold
 (a date, data) fails the conversion to JSON, as with plutil. Two things plutil takes that this
@@ -21,9 +24,11 @@ Exit 0 on success, 1 on any error (a message on stderr).
 """
 
 import json
+import os
 import plistlib
 import re
 import sys
+import tempfile
 
 REAL = re.compile(rb'<real>([^<]+)</real>')
 CARRIAGE_RETURN_MESSAGE = ("a carriage return, which plistlib would turn into a line feed: "
@@ -47,8 +52,10 @@ def refuse_carriage_returns(value):
 def load_plist(path):
     with open(path, 'rb') as source:
         raw = source.read()
-    # A raw one is read as a line feed (XML line-end handling), a &#13; as itself: both refused
-    if b'\r' in raw:
+    # A raw one is read as a line feed (XML line-end handling), a &#13; as itself: both refused. In a
+    # binary property list a 0x0D byte is just a byte of an offset or a number; its strings are
+    # checked below like any other.
+    if not raw.startswith(b'bplist') and b'\r' in raw:
         raise ValueError(CARRIAGE_RETURN_MESSAGE)
     value = plistlib.loads(raw)
     refuse_carriage_returns(value)
@@ -89,6 +96,28 @@ def lint(arguments):
     load_plist(arguments[0])
 
 
+def to_xml_in_place(arguments):
+    """A binary property list rewritten as XML in its place (an XML one is left as it is): the Linux
+    file manager plug-ins read Info.plist with an XML parser. Written beside it first and then moved
+    over it, so a failure leaves the original whole. A symbolic link is followed, as plutil does:
+    the file it names is rewritten and the link stays."""
+    path = os.path.realpath(arguments[0])
+    with open(path, 'rb') as source:
+        if source.read(6) != b'bplist':
+            return
+    payload = xml_plist(load_plist(path))
+    folder = os.path.dirname(os.path.abspath(path))
+    handle, temporary = tempfile.mkstemp(prefix='.plist_convert.', dir=folder)
+    try:
+        with os.fdopen(handle, 'wb') as target:
+            target.write(payload)
+        os.chmod(temporary, os.stat(path).st_mode & 0o7777)
+        os.replace(temporary, path)
+    except BaseException:
+        os.unlink(temporary)
+        raise
+
+
 def extract_command(arguments):
     data = load_plist(arguments[0])
     commands = data.get('COMMAND_LIST') if isinstance(data, dict) else None
@@ -105,6 +134,7 @@ OPERATIONS = {
     'to-xml': (to_xml, 2),
     'lint': (lint, 1),
     'extract-command': (extract_command, 2),
+    'to-xml-in-place': (to_xml_in_place, 1),
 }
 
 
@@ -112,7 +142,7 @@ def main():
     arguments = sys.argv[1:]
     operation = OPERATIONS.get(arguments[0]) if arguments else None
     if operation is None or len(arguments) - 1 != operation[1]:
-        print("Usage: plist_convert.py to-json <plist> <json> | to-xml <json> <plist> | lint <plist> | extract-command <plist> <index>", file=sys.stderr)
+        print("Usage: plist_convert.py to-json <plist> <json> | to-xml <json> <plist> | lint <plist> | extract-command <plist> <index> | to-xml-in-place <plist>", file=sys.stderr)
         return 1
     function = operation[0]
     try:
