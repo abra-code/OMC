@@ -126,6 +126,26 @@ services_labels(GList *inItems)
 	return g_string_free(g_steal_pointer(&labels), FALSE);
 }
 
+// The names of inItems and of the items of their submenus, added to outNames
+static void
+collect_names(GList *inItems, GPtrArray *outNames)
+{
+	for(GList *item = inItems; item != NULL; item = item->next)
+	{
+		char *name = NULL;
+		NautilusMenu *menu = NULL;
+		g_object_get(item->data, "name", &name, "menu", &menu, NULL);
+		g_ptr_array_add(outNames, name);
+		if(menu != NULL)
+		{
+			GList *children = nautilus_menu_get_items(menu);
+			collect_names(children, outNames);
+			nautilus_menu_item_list_free(children);
+			g_object_unref(menu);
+		}
+	}
+}
+
 static void
 test_items_for_the_selection(void)
 {
@@ -162,6 +182,24 @@ test_items_for_the_selection(void)
 	g_autofree char *backgroundLabels = services_labels(items);
 	g_assert_cmpstr(backgroundLabels, ==, "Any File Or Folder|Search Here");
 	nautilus_menu_item_list_free(items);
+
+	// The background's items are named apart from the selection's: Nautilus gives both menus' items
+	// one action group, so a shared name let the background's action run for a selected folder
+	GList *oneFolderAgain = g_list_append(NULL, folder);
+	GList *selectionItems = nautilus_menu_provider_get_file_items(sProvider, oneFolderAgain);
+	g_list_free(oneFolderAgain);
+	GList *backgroundItems = nautilus_menu_provider_get_background_items(sProvider, folder);
+	g_autoptr(GPtrArray) selectionNames = g_ptr_array_new_with_free_func(g_free);
+	g_autoptr(GPtrArray) backgroundNames = g_ptr_array_new_with_free_func(g_free);
+	collect_names(selectionItems, selectionNames);
+	collect_names(backgroundItems, backgroundNames);
+	g_assert_cmpuint(selectionNames->len, ==, 3); // Services and its two services
+	g_assert_cmpuint(backgroundNames->len, ==, 3);
+	for(guint i = 0; i < selectionNames->len; i++)
+		for(guint j = 0; j < backgroundNames->len; j++)
+			g_assert_cmpstr(g_ptr_array_index(selectionNames, i), !=, g_ptr_array_index(backgroundNames, j));
+	nautilus_menu_item_list_free(selectionItems);
+	nautilus_menu_item_list_free(backgroundItems);
 
 	// Nothing fits: no Services item at all
 	g_autofree char *listPath = g_build_filename(sData, "command", "services", "com.example.Any.services", NULL);

@@ -78,8 +78,13 @@ on_item_activate(NautilusMenuItem *inItem, gpointer inData)
 
 // The "Services" item with a submenu of the services that fit the files, or NULL when none does.
 // inFiles: NautilusFileInfo, each a local file or folder (anything else: no services).
+// inNamePrefix: the start of each item's name, different for the selection's menu and the
+// background's: Nautilus names an item's action after its menu's prefix, its position and its name,
+// with one prefix for both menus, and adds both menus' actions to one group, so a background item
+// named as the selection's took its action over (Nautilus 48.3: a service chosen for a selected
+// folder ran for the folder shown).
 static GList *
-services_items(GList *inFiles)
+services_items(GList *inFiles, const char *inNamePrefix)
 {
 	guint fileCount = g_list_length(inFiles);
 	if(fileCount == 0)
@@ -115,7 +120,7 @@ services_items(GList *inFiles)
 			continue;
 		if(submenu == NULL)
 			submenu = nautilus_menu_new();
-		g_autofree char *name = g_strdup_printf("CommandServices::%s::%s", service->application, service->command);
+		g_autofree char *name = g_strdup_printf("%s::%s::%s", inNamePrefix, service->application, service->command);
 		g_autofree char *label = menu_label(service->title);
 		NautilusMenuItem *item = nautilus_menu_item_new(name, label, service->applet_name, NULL);
 		char **commandLine = command_service_command_line(service, (const char *const *)uris->pdata, uris->len);
@@ -126,7 +131,8 @@ services_items(GList *inFiles)
 	}
 	if(submenu == NULL)
 		return NULL;
-	NautilusMenuItem *servicesItem = nautilus_menu_item_new("CommandServices::Services", "Services", NULL, NULL);
+	g_autofree char *servicesName = g_strdup_printf("%s::Services", inNamePrefix);
+	NautilusMenuItem *servicesItem = nautilus_menu_item_new(servicesName, "Services", NULL, NULL);
 	nautilus_menu_item_set_submenu(servicesItem, submenu); // takes a reference of its own
 	g_object_unref(submenu);
 	return g_list_append(NULL, servicesItem);
@@ -166,7 +172,7 @@ static GList *
 get_file_items(NautilusMenuProvider *inProvider, GList *inFiles)
 {
 	(void)inProvider;
-	GList *items = services_items(inFiles);
+	GList *items = services_items(inFiles, "CommandServices");
 	NautilusMenuItem *launch = launch_item(inFiles);
 	if(launch != NULL)
 		items = g_list_prepend(items, launch);
@@ -181,7 +187,7 @@ get_background_items(NautilusMenuProvider *inProvider, NautilusFileInfo *inCurre
 	if(inCurrentFolder == NULL)
 		return NULL;
 	GList folder = { inCurrentFolder, NULL, NULL };
-	return services_items(&folder);
+	return services_items(&folder, "CommandServices::Background");
 }
 
 static void
