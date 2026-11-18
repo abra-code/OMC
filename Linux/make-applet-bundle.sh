@@ -321,6 +321,16 @@ if [ ! -f "$contents/Info.plist" ]; then
     printf 'The applet sources have no Info.plist: %s\n' "$source_folder" >&2
     exit 1
 fi
+# The bundle's Info.plist as XML: the file manager plug-ins read it with GLib's XML parser
+# (Linux/FileManagerServices) and cannot read a binary one. AppletBuilder's converter does it, as
+# its own build does (lib.build.sh, ensure_xml_info_plist); -B so that no bytecode is written next
+# to it in AppletBuilder's bundle. An XML Info.plist is left as it is.
+/usr/bin/python3 -I -B "$omc_root/Distribution/AppletBuilder.app/Contents/Resources/Scripts/plist_convert.py" to-xml-in-place "$contents/Info.plist"
+status=$?
+if [ "$status" -ne 0 ]; then
+    printf 'Cannot write the applet'"'"'s Info.plist as XML (it is a binary property list): %s\n' "$contents/Info.plist" >&2
+    exit 1
+fi
 
 # The Linux Python, in place of any the sources had (a source folder's Library is copied whole).
 # cp -R copies symbolic links as links (bin/python3 -> python3.N).
