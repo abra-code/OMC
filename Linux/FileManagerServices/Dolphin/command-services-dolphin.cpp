@@ -11,7 +11,8 @@
 //  time Dolphin makes the menu: a few small files, and nothing to watch.
 //
 //  A selected applet bundle (a <Name>.app folder with a Linux program) also gets "Launch <Name>",
-//  ahead of "Services": it starts the applet as its desktop entry would.
+//  ahead of "Services": it starts the applet as its desktop entry would. The item shows the applet's
+//  own icon (command_applet_icon), else the icon theme's system-run.
 //
 //  Installed as root into KIO's plug-in folder (<Qt plug-in folder>/kf6/kfileitemaction), which
 //  Dolphin reads each time it makes a menu; Dolphin's Settings, Context Menu, lists it by its name
@@ -37,6 +38,7 @@
 #include <KPluginFactory>
 #include <QAction>
 #include <QFile>
+#include <QIcon>
 #include <QMenu>
 #include <QWidget>
 #include <memory>
@@ -199,6 +201,11 @@ private:
 		commandLine[0] = program;
 		QAction *action = start_action(menu_text(text), adopt_command_line(commandLine), inParentWidget);
 		g_free(text);
+		// The applet's own icon, as Open With shows an application's; the theme's "run" icon for an
+		// applet with no PNG or SVG one
+		char *icon = command_applet_icon(path.constData());
+		action->setIcon((icon != nullptr) ? QIcon(QFile::decodeName(icon)) : QIcon::fromTheme(QStringLiteral("system-run")));
+		g_free(icon);
 		return action;
 	}
 };

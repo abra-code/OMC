@@ -55,4 +55,12 @@ char		**command_service_command_line(const CommandService *inService, const char
 // folder's name without ".app") for a program found. Free both with g_free.
 char		*command_applet_program(const char *inPath, char **outName);
 
+// The icon file of the applet bundle at inPath (one command_applet_program finds a program in), an
+// absolute path, as the applet's desktop entry gets it (linux-app-entry.py's icon_path): the file
+// CFBundleIconFile names in the layout's resources folder (Contents/Resources, or the top folder of
+// the flat layout) when it is an SVG or a PNG, else that name with .svg, then .png. NULL when the
+// bundle has no program, its Info.plist is not an XML property list with that key, or there is no
+// such file (a macOS bundle names only its .icns). Free with g_free.
+char		*command_applet_icon(const char *inPath);
+
 G_END_DECLS

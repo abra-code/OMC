@@ -18,6 +18,7 @@
 
 #include "command-services-core.h"
 #include <gio/gio.h>
+#include <glib/gstdio.h>
 #include <string.h>
 
 void
@@ -230,4 +231,134 @@ command_applet_program(const char *inPath, char **outName)
 	if((program != NULL) && (outName != NULL))
 		*outName = g_steal_pointer(&name);
 	return program;
+}
+
+// What read_icon_key's parser tracks: the depth of the element it is in (1: plist, 2: the top
+// dictionary, 3: an item of it), the text of the element at depth 3, and whether the last key read
+// at depth 3 was CFBundleIconFile, so that the element after it is the value
+typedef struct
+{
+	int		depth;
+	GString	*text;
+	gboolean	keyMatched;
+	gboolean	inTopDict;
+	char	*value;
+} IconKeyParse;
+
+static void
+icon_key_start(GMarkupParseContext *inContext, const char *inElement, const char **inNames,
+			   const char **inValues, gpointer inData, GError **outError)
+{
+	IconKeyParse *parse = inData;
+	parse->depth++;
+	if(parse->depth == 2)
+		parse->inTopDict = (strcmp(inElement, "dict") == 0);
+	if(parse->depth == 3)
+		g_string_truncate(parse->text, 0);
+}
+
+static void
+icon_key_end(GMarkupParseContext *inContext, const char *inElement, gpointer inData, GError **outError)
+{
+	IconKeyParse *parse = inData;
+	if((parse->depth == 3) && parse->inTopDict)
+	{
+		if(strcmp(inElement, "key") == 0)
+			parse->keyMatched = (strcmp(parse->text->str, "CFBundleIconFile") == 0);
+		else
+		{
+			// The value that follows the key: a string, or nothing usable
+			if(parse->keyMatched && (parse->value == NULL) && (strcmp(inElement, "string") == 0))
+				parse->value = g_strdup(parse->text->str);
+			parse->keyMatched = FALSE;
+		}
+	}
+	parse->depth--;
+}
+
+static void
+icon_key_text(GMarkupParseContext *inContext, const char *inText, gsize inLength, gpointer inData, GError **outError)
+{
+	IconKeyParse *parse = inData;
+	if(parse->depth == 3)
+		g_string_append_len(parse->text, inText, (gssize)inLength);
+}
+
+// CFBundleIconFile of the XML property list at inPath (a top-level key of its top dictionary), or
+// NULL: no such key, not a string, or a file that is not an XML property list (a binary one too,
+// which Linux bundles are not written as; the caller then shows no icon of the applet's own)
+static char *
+read_icon_key(const char *inPath)
+{
+	// A regular file (opening a named pipe would block the file manager until a writer came) of at
+	// most 1 MiB, checked before the read: g_file_get_contents reads the whole file, so a huge (or
+	// sparse) Info.plist would otherwise be read into memory first. The length is checked again
+	// after it, for a file that grew meanwhile.
+	GStatBuf status;
+	if((g_stat(inPath, &status) != 0) || !S_ISREG(status.st_mode) || (status.st_size > 1024 * 1024))
+		return NULL;
+	g_autofree char *contents = NULL;
+	gsize length = 0;
+	if(!g_file_get_contents(inPath, &contents, &length, NULL) || (length > 1024 * 1024) || g_str_has_prefix(contents, "bplist"))
+		return NULL;
+	GMarkupParser parser = { icon_key_start, icon_key_end, icon_key_text, NULL, NULL };
+	IconKeyParse parse = { 0, g_string_new(NULL), FALSE, FALSE, NULL };
+	GMarkupParseContext *context = g_markup_parse_context_new(&parser, G_MARKUP_TREAT_CDATA_AS_TEXT, &parse, NULL);
+	gboolean parsed = g_markup_parse_context_parse(context, contents, (gssize)length, NULL) &&
+					  g_markup_parse_context_end_parse(context, NULL);
+	g_markup_parse_context_free(context);
+	g_string_free(parse.text, TRUE);
+	if(!parsed)
+	{
+		g_free(parse.value);
+		return NULL;
+	}
+	return parse.value;
+}
+
+// inFolder/inName when it is a regular file, else NULL
+static char *
+regular_file_in(const char *inFolder, const char *inName)
+{
+	char *path = g_build_filename(inFolder, inName, NULL);
+	if(g_file_test(path, G_FILE_TEST_IS_REGULAR))
+		return path;
+	g_free(path);
+	return NULL;
+}
+
+char *
+command_applet_icon(const char *inPath)
+{
+	g_autofree char *program = command_applet_program(inPath, NULL);
+	if(program == NULL)
+		return NULL;
+	// The layout command_applet_program took the program from: the Contents layout when it has
+	// its Info.plist, else the flat one
+	g_autofree char *contentsInfo = g_build_filename(inPath, "Contents", "Info.plist", NULL);
+	gboolean contentsLayout = g_file_test(contentsInfo, G_FILE_TEST_IS_REGULAR);
+	g_autofree char *infoPath = contentsLayout ? g_strdup(contentsInfo) : g_build_filename(inPath, "Info.plist", NULL);
+	g_autofree char *resources = contentsLayout ? g_build_filename(inPath, "Contents", "Resources", NULL) : g_strdup(inPath);
+	g_autofree char *iconFile = read_icon_key(infoPath);
+	if((iconFile == NULL) || (iconFile[0] == '\0') || (strchr(iconFile, '/') != NULL))
+		return NULL;
+
+	// linux-app-entry.py's icon_path: the file itself when it is an SVG or a PNG, else its name
+	// with .svg, then .png. The extension is what follows the last dot, leading dots aside (Python's
+	// os.path.splitext), so ".png" has none.
+	const char *afterDots = iconFile + strspn(iconFile, ".");
+	const char *dot = strrchr(afterDots, '.');
+	g_autofree char *base = (dot != NULL) ? g_strndup(iconFile, (gsize)(dot - iconFile)) : g_strdup(iconFile);
+	if((dot != NULL) && ((g_ascii_strcasecmp(dot, ".svg") == 0) || (g_ascii_strcasecmp(dot, ".png") == 0)))
+	{
+		char *named = regular_file_in(resources, iconFile);
+		if(named != NULL)
+			return named;
+	}
+	g_autofree char *svgName = g_strconcat(base, ".svg", NULL);
+	char *found = regular_file_in(resources, svgName);
+	if(found != NULL)
+		return found;
+	g_autofree char *pngName = g_strconcat(base, ".png", NULL);
+	return regular_file_in(resources, pngName);
 }

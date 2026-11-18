@@ -11,7 +11,8 @@
 //  files change): a few small files, and nothing to watch.
 //
 //  A selected applet bundle (a <Name>.app folder with a Linux program) also gets "Launch <Name>"
-//  in the menu itself, ahead of "Services": it starts the applet as its desktop entry would.
+//  in the menu itself, ahead of "Services": it starts the applet as its desktop entry would. It has
+//  no icon: GNOME Files shows none on extension items (Dolphin's and Thunar's show the applet's).
 //
 //  Installed as root into Nautilus's extension folder (/usr/lib/<arch>/nautilus/extensions-4),
 //  which Nautilus loads at its start (nautilus -q to restart it).

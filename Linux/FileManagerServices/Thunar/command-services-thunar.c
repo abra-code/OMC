@@ -11,7 +11,8 @@
 //  lists are read again each time Thunar makes the menu: a few small files, and nothing to watch.
 //
 //  A selected applet bundle (a <Name>.app folder with a Linux program) also gets "Launch <Name>"
-//  in the menu itself, ahead of "Services": it starts the applet as its desktop entry would.
+//  in the menu itself, ahead of "Services": it starts the applet as its desktop entry would. The item
+//  shows the applet's own icon (command_applet_icon), else the icon theme's system-run.
 //
 //  Installed as root into Thunar's extension folder (/usr/lib/<arch>/thunarx-3), which Thunar
 //  loads at its start (thunar -q to restart it).
@@ -153,7 +154,10 @@ launch_item(GList *inFiles)
 	g_autofree char *displayName = g_filename_display_name(name);
 	g_autofree char *text = g_strdup_printf("Launch %s", displayName);
 	g_autofree char *label = menu_label(text);
-	ThunarxMenuItem *item = thunarx_menu_item_new("CommandServices::Launch", label, NULL, NULL);
+	// The applet's own icon, as Open With shows an application's; the theme's "run" icon for an
+	// applet with no PNG or SVG one. Thunar takes the icon as an icon name or an absolute path.
+	g_autofree char *icon = command_applet_icon(path);
+	ThunarxMenuItem *item = thunarx_menu_item_new("CommandServices::Launch", label, NULL, (icon != NULL) ? icon : "system-run");
 	char **commandLine = g_new0(char *, 2);
 	commandLine[0] = program;
 	g_object_set_data_full(G_OBJECT(item), "command-line", commandLine, (GDestroyNotify)g_strfreev);

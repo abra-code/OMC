@@ -201,6 +201,8 @@ test_an_applet_bundle_gets_a_launch_item()
 		  actions.isEmpty() ? QString() : actions.first()->text());
 	const QString labels = services_labels(actions);
 	check(labels == QStringLiteral("Any File Or Folder|Search Here"), "then its services as a folder's", labels);
+	check(!actions.isEmpty() && (actions.first()->icon().name() == QStringLiteral("system-run")),
+		  "no icon of its own: the theme's system-run", actions.isEmpty() ? QString() : actions.first()->icon().name());
 	if(!actions.isEmpty())
 	{
 		QFile::remove(launched);
@@ -221,11 +223,16 @@ test_an_applet_bundle_gets_a_launch_item()
 	check(!actions.isEmpty() && (actions.first()->text() == QStringLiteral("Launch My_Tool && Co")), "a name with \"_\" and \"&\"",
 		  actions.isEmpty() ? QString() : actions.first()->text());
 
-	// The flat layout: Info.plist and the program at the top
+	// The flat layout: Info.plist, the program and the icon at the top
 	const QString flatPath = sWork + QStringLiteral("/Flat.app");
 	make_bundle(flatPath, QStringLiteral("Flat"), true, "#!/bin/sh\n");
+	write_file(flatPath + QStringLiteral("/Info.plist"), "<plist version=\"1.0\"><dict><key>CFBundleIconFile</key><string>AppIcon</string></dict></plist>\n");
+	write_file(flatPath + QStringLiteral("/AppIcon.svg"),
+			   "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\"><rect width=\"16\" height=\"16\" fill=\"#ffa640\"/></svg>\n");
 	actions = actions_for({ folder_item(flatPath) });
 	check((actions.count() == 2) && (actions.first()->text() == QStringLiteral("Launch Flat")), "the flat layout");
+	check(!actions.isEmpty() && actions.first()->icon().name().isEmpty() && !actions.first()->icon().pixmap(16, 16).isNull(),
+		  "its own icon, drawn from its SVG file");
 
 	// A folder named .app without a Linux program: no launch action
 	actions = actions_for({ folder_item(sWork + QStringLiteral("/MacOnly.app")) });

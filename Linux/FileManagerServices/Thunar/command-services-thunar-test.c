@@ -295,6 +295,14 @@ item_label(gpointer inItem)
 	return label;
 }
 
+static char *
+item_icon(gpointer inItem)
+{
+	char *icon = NULL;
+	g_object_get(inItem, "icon", &icon, NULL);
+	return icon;
+}
+
 static void
 test_an_applet_bundle_gets_a_launch_item(void)
 {
@@ -318,6 +326,9 @@ test_an_applet_bundle_gets_a_launch_item(void)
 	g_assert_cmpuint(g_list_length(items), ==, 2);
 	g_autofree char *launchLabel = item_label(items->data);
 	g_assert_cmpstr(launchLabel, ==, "Launch Demo");
+	// No icon of its own: the theme's run icon
+	g_autofree char *launchIcon = item_icon(items->data);
+	g_assert_cmpstr(launchIcon, ==, "system-run");
 	GList *servicesItem = g_list_append(NULL, items->next->data);
 	g_autofree char *labels = services_labels(servicesItem);
 	g_assert_cmpstr(labels, ==, "Any File Or Folder|Search Here");
@@ -363,11 +374,13 @@ test_an_applet_bundle_gets_a_launch_item(void)
 	g_assert_cmpstr(toolLabel, ==, "Launch My__Tool");
 	thunarx_menu_item_list_free(items);
 
-	// The flat layout: Info.plist and the program at the top
+	// The flat layout: Info.plist, the program and the icon at the top
 	g_autofree char *flatPath = g_build_filename(sWork, "Flat.app", NULL);
 	g_assert_cmpint(g_mkdir_with_parents(flatPath, 0755), ==, 0);
 	g_autofree char *flatInfo = g_build_filename(flatPath, "Info.plist", NULL);
-	write_file(flatInfo, "<plist/>\n");
+	write_file(flatInfo, "<plist version=\"1.0\"><dict><key>CFBundleIconFile</key><string>AppIcon</string></dict></plist>\n");
+	g_autofree char *flatIcon = g_build_filename(flatPath, "AppIcon.png", NULL);
+	write_file(flatIcon, "");
 	g_autofree char *flatProgram = g_build_filename(flatPath, "Flat", NULL);
 	write_file(flatProgram, "#!/bin/sh\n");
 	g_assert_cmpint(g_chmod(flatProgram, 0755), ==, 0);
@@ -378,6 +391,9 @@ test_an_applet_bundle_gets_a_launch_item(void)
 	g_assert_cmpuint(g_list_length(items), ==, 2);
 	g_autofree char *flatLabel = item_label(items->data);
 	g_assert_cmpstr(flatLabel, ==, "Launch Flat");
+	// Its own icon, by its path
+	g_autofree char *flatItemIcon = item_icon(items->data);
+	g_assert_cmpstr(flatItemIcon, ==, flatIcon);
 	thunarx_menu_item_list_free(items);
 
 	// A folder named .app without a Linux program: no launch item

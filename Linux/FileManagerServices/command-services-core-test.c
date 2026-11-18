@@ -336,6 +336,128 @@ test_an_applet_bundle_has_a_program(void)
 	remove_tree(root);
 }
 
+// An XML property list whose top dictionary holds inEntries (key and value elements)
+static char *
+plist_text(const char *inEntries)
+{
+	return g_strdup_printf("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+						   "<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n"
+						   "<plist version=\"1.0\">\n<dict>\n%s</dict>\n</plist>\n", inEntries);
+}
+
+// A Contents-layout applet <inBundle> with a program, inInfo as its Info.plist and the given empty
+// files in Contents/Resources
+static char *
+make_icon_bundle(const char *inRoot, const char *inBundle, const char *inInfo, const char *const *inResources)
+{
+	const char *program[] = { "Linux/Program", NULL };
+	const int modes[] = { 0755 };
+	char *bundle = make_bundle(inRoot, inBundle, TRUE, program, modes);
+	g_autofree char *info = g_build_filename(bundle, "Contents", "Info.plist", NULL);
+	write_file(info, inInfo);
+	g_autofree char *resources = g_build_filename(bundle, "Contents", "Resources", NULL);
+	g_assert_cmpint(g_mkdir_with_parents(resources, 0755), ==, 0);
+	for(gsize i = 0; (inResources != NULL) && (inResources[i] != NULL); i++)
+	{
+		g_autofree char *path = g_build_filename(resources, inResources[i], NULL);
+		write_file(path, "");
+	}
+	return bundle;
+}
+
+// Whether command_applet_icon finds inExpected (relative to the bundle; NULL: none)
+static void
+assert_icon(const char *inBundle, const char *inExpected)
+{
+	g_autofree char *icon = command_applet_icon(inBundle);
+	if(inExpected == NULL)
+	{
+		g_assert_null(icon);
+		return;
+	}
+	g_autofree char *expected = g_build_filename(inBundle, inExpected, NULL);
+	g_assert_cmpstr(icon, ==, expected);
+}
+
+static void
+test_an_applet_bundle_has_an_icon(void)
+{
+	g_autofree char *root = g_dir_make_tmp("command-icon-test-XXXXXX", NULL);
+	g_assert_nonnull(root);
+	g_autofree char *named = plist_text("\t<key>CFBundleIconFile</key>\n\t<string>AppIcon</string>\n");
+	const char *both[] = { "AppIcon.svg", "AppIcon.png", NULL };
+	const char *pngOnly[] = { "AppIcon.png", NULL };
+	const char *icnsOnly[] = { "AppIcon.icns", NULL };
+
+	// The name with .svg, then .png
+	g_autofree char *svg = make_icon_bundle(root, "Svg.app", named, both);
+	assert_icon(svg, "Contents/Resources/AppIcon.svg");
+	g_autofree char *png = make_icon_bundle(root, "Png.app", named, pngOnly);
+	assert_icon(png, "Contents/Resources/AppIcon.png");
+	g_autofree char *icns = make_icon_bundle(root, "Icns.app", named, icnsOnly);
+	assert_icon(icns, NULL); // a macOS icon only
+
+	// A name with its extension: itself when it is an SVG or a PNG (in any case), else the base name's
+	g_autofree char *pngNamed = plist_text("<key>CFBundleIconFile</key><string>AppIcon.PNG</string>");
+	const char *upper[] = { "AppIcon.PNG", "AppIcon.svg", NULL };
+	g_autofree char *itself = make_icon_bundle(root, "Itself.app", pngNamed, upper);
+	assert_icon(itself, "Contents/Resources/AppIcon.PNG");
+	g_autofree char *icnsNamed = plist_text("<key>CFBundleIconFile</key><string>AppIcon.icns</string>");
+	g_autofree char *fromIcns = make_icon_bundle(root, "FromIcns.app", icnsNamed, both);
+	assert_icon(fromIcns, "Contents/Resources/AppIcon.svg");
+	g_autofree char *dotted = plist_text("<key>CFBundleIconFile</key><string>My.App</string>");
+	const char *dottedFiles[] = { "My.png", NULL };
+	g_autofree char *dottedBundle = make_icon_bundle(root, "Dotted.app", dotted, dottedFiles);
+	assert_icon(dottedBundle, "Contents/Resources/My.png"); // ".App" is its extension, as in Python
+
+	// Only the top dictionary's key, and only a string value
+	g_autofree char *nested = plist_text("<key>Other</key><dict><key>CFBundleIconFile</key><string>AppIcon</string></dict>");
+	g_autofree char *nestedBundle = make_icon_bundle(root, "Nested.app", nested, both);
+	assert_icon(nestedBundle, NULL);
+	g_autofree char *notString = plist_text("<key>CFBundleIconFile</key><array><string>AppIcon</string></array>");
+	g_autofree char *notStringBundle = make_icon_bundle(root, "NotString.app", notString, both);
+	assert_icon(notStringBundle, NULL);
+	g_autofree char *later = plist_text("<key>CFBundleName</key><string>Later</string>\n"
+										"<key>Flags</key><array><string>CFBundleIconFile</string></array>\n"
+										"<key>CFBundleIconFile</key><string>AppIcon</string>\n");
+	g_autofree char *laterBundle = make_icon_bundle(root, "Later.app", later, both);
+	assert_icon(laterBundle, "Contents/Resources/AppIcon.svg");
+	g_autofree char *cdata = plist_text("<key>CFBundleIconFile</key><string><![CDATA[AppIcon]]></string>");
+	g_autofree char *cdataBundle = make_icon_bundle(root, "Cdata.app", cdata, both);
+	assert_icon(cdataBundle, "Contents/Resources/AppIcon.svg"); // as plistlib reads it
+
+	// Not usable: no key, a path, an empty name, a binary or broken property list, no program
+	g_autofree char *noKey = plist_text("<key>CFBundleName</key><string>NoKey</string>");
+	g_autofree char *noKeyBundle = make_icon_bundle(root, "NoKey.app", noKey, both);
+	assert_icon(noKeyBundle, NULL);
+	g_autofree char *path = plist_text("<key>CFBundleIconFile</key><string>../AppIcon</string>");
+	g_autofree char *pathBundle = make_icon_bundle(root, "Path.app", path, both);
+	assert_icon(pathBundle, NULL);
+	g_autofree char *empty = plist_text("<key>CFBundleIconFile</key><string></string>");
+	g_autofree char *emptyBundle = make_icon_bundle(root, "Empty.app", empty, both);
+	assert_icon(emptyBundle, NULL);
+	g_autofree char *binary = make_icon_bundle(root, "Binary.app", "bplist00 CFBundleIconFile AppIcon", both);
+	assert_icon(binary, NULL);
+	g_autofree char *broken = make_icon_bundle(root, "Broken.app", "<plist><dict><key>CFBundleIconFile</key><string>AppIcon", both);
+	assert_icon(broken, NULL);
+	g_autofree char *noProgram = make_icon_bundle(root, "NoProgram.app", named, both);
+	g_autofree char *programPath = g_build_filename(noProgram, "Contents", "Linux", "Program", NULL);
+	g_assert_cmpint(g_chmod(programPath, 0644), ==, 0);
+	assert_icon(noProgram, NULL);
+
+	// The flat layout: Info.plist, program and icon at the top
+	const char *flatFiles[] = { "Flat", "AppIcon.svg", NULL };
+	const int flatModes[] = { 0755, 0644 };
+	g_autofree char *flat = make_flat_bundle(root, "Flat.app", TRUE, flatFiles, flatModes);
+	g_autofree char *flatInfo = g_build_filename(flat, "Info.plist", NULL);
+	write_file(flatInfo, named);
+	assert_icon(flat, "AppIcon.svg");
+
+	g_assert_null(command_applet_icon(NULL));
+	assert_icon("Svg.app", NULL); // a relative path
+	remove_tree(root);
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -345,5 +467,6 @@ main(int argc, char *argv[])
 	g_test_add("/services/fits", Fixture, NULL, fixture_set_up, test_a_service_fits_when_every_file_does, fixture_tear_down);
 	g_test_add("/services/command-line", Fixture, NULL, fixture_set_up, test_the_command_line_asks_the_applet, fixture_tear_down);
 	g_test_add_func("/applet/program", test_an_applet_bundle_has_a_program);
+	g_test_add_func("/applet/icon", test_an_applet_bundle_has_an_icon);
 	return g_test_run();
 }
