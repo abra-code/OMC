@@ -9,11 +9,28 @@ writing into the void, and the window would show nothing.
 
 The union across all documents is the known masking limitation - an id declared
 in one window is accepted as known while a handler is driving another.
+
+Only the elements the window has on THIS system count. ActionUI gives an element a
+type per platform ("type:apple", "type:macos", "type:linux"); one whose type is given
+only for other platforms is left out of the window there, with everything inside it,
+so a handler that writes to its id on this system writes into the void.
 """
 
 import json
 import os
 import sys
+
+# The platform suffixes ActionUI's renderer on this system answers to: macOS takes
+# "macos" and "apple", Linux "linux" (ActionUI's JSON guide, platform-specific keys)
+PLATFORM_TOKENS = ("macos", "apple") if sys.platform == "darwin" else ("linux",)
+
+
+def element_is_here(node):
+    """False for an element whose type is given only for other platforms."""
+    type_keys = [key for key in node if key == "type" or key.startswith("type:")]
+    if not type_keys or "type" in type_keys:
+        return True
+    return any(("type:" + token) in node for token in PLATFORM_TOKENS)
 
 
 def collect(app_path):
@@ -22,6 +39,8 @@ def collect(app_path):
 
     def walk(node):
         if isinstance(node, dict):
+            if not element_is_here(node):
+                return
             for key, value in node.items():
                 if key == "id" and isinstance(value, (str, int)) \
                         and not isinstance(value, bool):
