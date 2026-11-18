@@ -116,8 +116,7 @@ POSIX-compatible, or rename the script to .zsh to get a modern shell."
             if [ ! -x /usr/bin/osacompile ]; then
                 return 99
             fi
-            local tmp
-            tmp=$(/usr/bin/mktemp -d "${TMPDIR:-/tmp}/ab_validate_XXXXXX")
+            local tmp=$(/usr/bin/mktemp -d "${TMPDIR:-/tmp}/ab_validate_XXXXXX")
             SCRIPT_VALIDATE_OUTPUT=$(/usr/bin/osacompile -o "$tmp/out.scpt" "$path" 2>&1)
             rc=$?
             /bin/rm -rf "$tmp"

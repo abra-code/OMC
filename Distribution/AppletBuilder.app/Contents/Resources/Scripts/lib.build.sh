@@ -109,8 +109,7 @@ applet_install_icon() {
         # The flat Linux icon shipped beside an .icon or .icns: AppletBuilder's Icons carry one
         # per icon, the rounded tile with the glyph on top (hand-composed until icedit makes
         # them, owner 2026-11-12). Without one, a PNG taken from the .icns.
-        local flat_svg
-        flat_svg="$(ab_shipped_icon_svg "$icon_source")"
+        local flat_svg="$(ab_shipped_icon_svg "$icon_source")"
         if [ -n "$flat_svg" ]; then
             /bin/cp "$flat_svg" "$resources_dir/$icon_base.svg"
             local flat_status=$?
@@ -212,8 +211,7 @@ applet_services_update() {
     if ab_on_macos; then
         return 0
     fi
-    local existing_entry
-    existing_entry="$(applet_desktop_entry_file "$app_path")"
+    local existing_entry="$(applet_desktop_entry_file "$app_path")"
     if [ -z "$existing_entry" ]; then
         return 0
     fi
@@ -263,8 +261,7 @@ ab_desktop_button() { # <project-path>
     if ab_on_macos || [ -z "$1" ]; then
         return 0
     fi
-    local entry_file
-    entry_file="$(applet_desktop_entry_file "$1")"
+    local entry_file="$(applet_desktop_entry_file "$1")"
     if [ -n "$entry_file" ]; then
         "$dialog_tool" "$window_uuid" "$BUILD_DESKTOP_BTN_ID" omc_set_property "title" "Remove From Desktop"
         "$dialog_tool" "$window_uuid" "$BUILD_DESKTOP_BTN_ID" omc_set_property "systemImage" "minus.square"
@@ -289,8 +286,7 @@ applet_finalize() {
     if [ "$AB_NO_DESKTOP_ENTRY" = "1" ]; then
         return 0
     fi
-    local existing_entry
-    existing_entry="$(applet_desktop_entry_file "$app_path")"
+    local existing_entry="$(applet_desktop_entry_file "$app_path")"
     if [ -z "$existing_entry" ]; then
         return 0
     fi
@@ -400,8 +396,7 @@ applet_update_url_scheme() {
         return 1
     fi
 
-    local url_type
-    url_type=$("$plister_tool" get type "$plist" /CFBundleURLTypes/0 2>/dev/null)
+    local url_type=$("$plister_tool" get type "$plist" /CFBundleURLTypes/0 2>/dev/null)
     if [ "$url_type" != "dict" ]; then
         return 0
     fi
@@ -970,8 +965,7 @@ update_python_packages() {
     local src_packages="${OMC_APP_BUNDLE_PATH}/Contents/Library/Packages"
     local dst_packages="$target_path/Contents/Library/Packages"
 
-    local _py_handlers
-    _py_handlers=$(/usr/bin/find "$target_path/Contents/Resources/Scripts" -name "*.py" -print -quit 2>/dev/null)
+    local _py_handlers=$(/usr/bin/find "$target_path/Contents/Resources/Scripts" -name "*.py" -print -quit 2>/dev/null)
     if [ -z "$_py_handlers" ]; then
         return
     fi
@@ -1048,8 +1042,7 @@ update_shell_clients() {
     # lists that have to agree are a list that eventually will not.
     local clients="actionui_remote.sh actionui_remote.zsh actionui_remote_escape.awk actionui_remote_walk.awk"
 
-    local _sh_handlers
-    _sh_handlers=$(/usr/bin/find "$target_path/Contents/Resources/Scripts" \
+    local _sh_handlers=$(/usr/bin/find "$target_path/Contents/Resources/Scripts" \
                    \( -name "*.sh" -o -name "*.zsh" \) -print -quit 2>/dev/null)
     if [ -z "$_sh_handlers" ]; then
         return 0
@@ -1413,10 +1406,8 @@ ${info_out}
 
     # Command file (Command.json or Command.plist) — shared validator: fast syntax
     # gate, then the advanced command_verifier (Layer 1 + bundle Layer 2).
-    local cmd_plist
-    cmd_plist=$(command_file_path "$target_path")
-    local cmd_label
-    cmd_label=$(/usr/bin/basename "$cmd_plist")
+    local cmd_plist=$(command_file_path "$target_path")
+    local cmd_label=$(/usr/bin/basename "$cmd_plist")
     if [ -f "$cmd_plist" ]; then
         validate_command_file "$target_path"
         local cmd_vrc=$?
@@ -1521,8 +1512,7 @@ ${ACTIONUI_VALIDATE_OUTPUT}
     # into its CWD at exit, so running one with CWD inside the bundle (a build script's verify
     # step, say) plants the file IN the bundle; ship nothing of the kind. Warned, not errored:
     # the applet still runs, it is just carrying dead weight.
-    local droppings
-    droppings=$(/usr/bin/find "$target_path" \( -name "*.profraw" -o -name "*.profdata" \) 2>/dev/null)
+    local droppings=$(/usr/bin/find "$target_path" \( -name "*.profraw" -o -name "*.profdata" \) 2>/dev/null)
     if [ -n "$droppings" ]; then
         ab_log "  Profiling droppings: warning"
         warning_count=$((warning_count + 1))
@@ -1538,8 +1528,7 @@ ${droppings}
     # during a plain build of a test-less applet too - accepted, because one
     # advisory line is cheap and keeping the check in the shared path is what
     # makes the CLI and the GUI say the same thing.
-    local tests_dir
-    tests_dir=$(applet_tests_dir "$target_path")
+    local tests_dir=$(applet_tests_dir "$target_path")
     if [ -z "$tests_dir" ] || [ ! -d "$tests_dir" ]; then
         ab_log "  [INFO] no Tests/ directory - consider the Test button or 'appletbuilder test' (see omctest_guide.md)"
     fi
@@ -1594,8 +1583,7 @@ validate_info_content() {
     # standard macOS menu bar (App/File/Edit/Format/Window/Help) in code, and an optional
     # MainMenu.json layers additions/mutations/removals on top. An applet made before 6.0
     # still has the key and a MainMenu.nib: a warning, as both are ignored.
-    local nib
-    nib=$(plist_read "$info_plist" NSMainNibFile)
+    local nib=$(plist_read "$info_plist" NSMainNibFile)
     if [ -n "$nib" ]; then
         ab_log "  NSMainNibFile '${nib}': ignored since 6.0"
         warning_count=$((warning_count + 1))
@@ -1626,8 +1614,7 @@ validate_info_content() {
 
     # CFBundleIconFile -> Resources/<icon>.icns should exist (warning only). On Linux the icon is
     # Resources/<icon>.png or .svg (owner's Q5), and there is no asset catalog to check.
-    local iconfile
-    iconfile=$(plist_read "$info_plist" CFBundleIconFile)
+    local iconfile=$(plist_read "$info_plist" CFBundleIconFile)
     if [ -n "$iconfile" ] && ! ab_on_macos; then
         local linux_icon_base="${iconfile%.icns}"
         if [ -f "$resources_dir/${linux_icon_base}.png" ] || [ -f "$resources_dir/${linux_icon_base}.svg" ]; then
@@ -1656,8 +1643,7 @@ validate_info_content() {
 
     # CFBundleIconName → asset-catalog icon; requires Assets.car. When assetutil
     # is available we confirm the named asset is actually inside it (warning only).
-    local iconname
-    iconname=$(plist_read "$info_plist" CFBundleIconName)
+    local iconname=$(plist_read "$info_plist" CFBundleIconName)
     if [ -n "$iconname" ] && ab_on_macos; then
         local assets="$resources_dir/Assets.car"
         if [ ! -f "$assets" ]; then
@@ -1808,8 +1794,7 @@ applet_build() {
         return 1
     fi
 
-    local app_name
-    app_name=$(/usr/bin/basename "$project_path")
+    local app_name=$(/usr/bin/basename "$project_path")
     ab_log "Building ${app_name}..."
 
     strip_quarantine "$project_path"
@@ -1935,15 +1920,13 @@ applet_itest_files() { # <project-path>
 # runs. Asked of Launch Services (lsappinfo), where every applet checks in at
 # launch, so a copy at another path counts too: it shares the preferences.
 applet_running_instances() { # <App.app>
-    local bundle_id
-    bundle_id=$("$plister_tool" get value "$1/Contents/Info.plist" /CFBundleIdentifier 2>/dev/null)
+    local bundle_id=$("$plister_tool" get value "$1/Contents/Info.plist" /CFBundleIdentifier 2>/dev/null)
     [ -n "$bundle_id" ] || return 0
     if ! ab_on_macos; then
         applet_running_instances_linux "$bundle_id"
         return 0
     fi
-    local found
-    found=$(/usr/bin/lsappinfo find bundleid="$bundle_id" 2>/dev/null)
+    local found=$(/usr/bin/lsappinfo find bundleid="$bundle_id" 2>/dev/null)
     # One full "info" per entry, read for its "pid = " and "bundle path=" lines,
     # instead of "-only pid" and "-only bundlepath": what -only prints has not
     # stayed the same across macOS releases.
@@ -2115,8 +2098,7 @@ thin_python_tool="${AB_THIN_PYTHON_TOOL:-${OMC_APP_BUNDLE_PATH}/Contents/Library
 # The bundle name without its extension - what the plan and keep files are named
 # after.
 applet_short_name() { # <project-path>
-    local base
-    base=$(/usr/bin/basename "$1")
+    local base=$(/usr/bin/basename "$1")
     printf '%s' "${base%.app}"
 }
 
@@ -2127,8 +2109,7 @@ applet_short_name() { # <project-path>
 # or which build it was written for, so a mistaken match is not caught later.
 # Falls back to the name, prefixed apart so the two spaces cannot collide.
 applet_plan_key() { # <project-path>
-    local bundle_id
-    bundle_id=$(plist_read "$1/Contents/Info.plist" "CFBundleIdentifier")
+    local bundle_id=$(plist_read "$1/Contents/Info.plist" "CFBundleIdentifier")
     if [ -n "$bundle_id" ]; then
         printf 'id:%s' "$bundle_id"
     else
@@ -2151,15 +2132,13 @@ applet_python_bin() { # <project-path>
 # it against ITS working directory, where a same-named plan for an entirely
 # different applet may well be sitting. Confirmed by reproduction, not theory.
 applet_plan_dir() { # <project-path>
-    local dir
-    dir=$(/usr/bin/dirname "$1")
+    local dir=$(/usr/bin/dirname "$1")
     # CDPATH= and --, not a bare cd: `cd` searches $CDPATH for any operand that
     # does not begin with /, ./ or ../, so an exported CDPATH silently resolves
     # "sub/MyApp.app" somewhere else entirely - and this path is then written to,
     # remembered, and applied from. The same guard is on update_shell_clients
     # above, for the same reason.
-    local abs
-    abs=$(CDPATH= cd -P -- "$dir" >/dev/null 2>&1 && pwd -P)
+    local abs=$(CDPATH= cd -P -- "$dir" >/dev/null 2>&1 && pwd -P)
     if [ -n "$abs" ]; then
         printf '%s' "$abs"
     else
@@ -2215,16 +2194,14 @@ applet_resolve_plan() { # <project-path>
         return 0
     fi
 
-    local beside
-    beside=$(applet_plan_path "$1")
+    local beside=$(applet_plan_path "$1")
     if [ -f "$beside" ]; then
         THIN_PLAN_PATH="$beside"
         THIN_PLAN_SOURCE="beside"
         return 0
     fi
 
-    local remembered
-    remembered=$(get_thinning_plan "$(applet_plan_key "$1")")
+    local remembered=$(get_thinning_plan "$(applet_plan_key "$1")")
     # Absolute only. A relative entry can only have come from a version of this
     # code that stored one, and resolving it here would mean resolving it against
     # whatever directory this run happens to start in.
@@ -2279,8 +2256,7 @@ thin_python_plan() { # <project-path>
         arm64|x86_64) set -- "$@" --arch "$AB_THIN_ARCH" ;;
     esac
 
-    local keep_file
-    keep_file=$(applet_keep_file "$project_path")
+    local keep_file=$(applet_keep_file "$project_path")
     if [ -f "$keep_file" ]; then
         ab_log "Force-keeping the modules listed in $(/usr/bin/basename "$keep_file")"
         set -- "$@" --keep-file "$keep_file"
@@ -2387,14 +2363,10 @@ thin_python_apply() { # <project-path> <dry-run: 0|1>
         ab_log "  afterwards: a plan written for a different build verifies against itself."
     fi
 
-    local pkg_check
-    pkg_check=$(thin_python_packages_check "$THIN_PLAN_PATH" "$project_path")
-    local pkg_where
-    pkg_where=$(printf '%s' "$pkg_check" | /usr/bin/cut -f1)
-    local pkg_count
-    pkg_count=$(printf '%s' "$pkg_check" | /usr/bin/cut -f2)
-    local pkg_dir
-    pkg_dir=$(printf '%s' "$pkg_check" | /usr/bin/cut -f3)
+    local pkg_check=$(thin_python_packages_check "$THIN_PLAN_PATH" "$project_path")
+    local pkg_where=$(printf '%s' "$pkg_check" | /usr/bin/cut -f1)
+    local pkg_count=$(printf '%s' "$pkg_check" | /usr/bin/cut -f2)
+    local pkg_dir=$(printf '%s' "$pkg_check" | /usr/bin/cut -f3)
 
     case "$pkg_where" in
         inside|none|unreadable)
@@ -2612,8 +2584,7 @@ applet_thin_python() { # <project-path>
         return 1
     fi
 
-    local app_name
-    app_name=$(/usr/bin/basename "$project_path")
+    local app_name=$(/usr/bin/basename "$project_path")
 
     # Before the guards, not after them. This is the first ab_log of the run, and
     # in the GUI it is what replaces the previous run's transcript in the log
@@ -2673,10 +2644,8 @@ Rerun update_appletbuilder.sh to vendor it back in."
             # CDPATH that resolves a relative "AppletBuilder.app" to some other
             # bundle: the two sides then differ and the guard waves through the
             # one case it exists to stop. Reproduced.
-            local target_real
-            target_real=$(CDPATH= cd -P -- "$project_path" >/dev/null 2>&1 && pwd -P)
-            local self_real
-            self_real=$(CDPATH= cd -P -- "$OMC_APP_BUNDLE_PATH" >/dev/null 2>&1 && pwd -P)
+            local target_real=$(CDPATH= cd -P -- "$project_path" >/dev/null 2>&1 && pwd -P)
+            local self_real=$(CDPATH= cd -P -- "$OMC_APP_BUNDLE_PATH" >/dev/null 2>&1 && pwd -P)
             if [ -n "$target_real" ] && [ "$target_real" = "$self_real" ]; then
                 ab_report "This is AppletBuilder itself, and the thinning runs under its interpreter -
 applying here would remove modules from the Python that is doing the removing.

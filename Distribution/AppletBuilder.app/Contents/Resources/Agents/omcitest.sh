@@ -244,8 +244,7 @@ itest_close() { # <window>
 
 itest_new_window() { # <before: output of itest_windows>
     local _before="$1"
-    local _now
-    _now="$(itest_windows)"
+    local _now="$(itest_windows)"
     local _window
     for _window in $_now; do
         case "$_before" in
@@ -285,8 +284,7 @@ itest_output() { # <run>
 }
 
 itest_run_finished() { # <run>
-    local _record
-    _record="$(_omcitest_rpc run-record "$1")"
+    local _record="$(_omcitest_rpc run-record "$1")"
     case "$_record" in
         *'"finished": true'*) printf 'yes\n' ;;
         *) printf 'no\n' ;;
@@ -384,8 +382,7 @@ _omcitest_wait_exit() { # <seconds>
 # and open, which are omctest's recording stand-ins (written by omctest.sh's own emitters, so both harnesses
 # answer and log alike). The applet hands this folder to its handlers as OMC_OMC_SUPPORT_PATH.
 _omcitest_build_support() { # <App.app> <dest>
-    local _real
-    _real="$(_omcitest_support_folder "$1")"
+    local _real="$(_omcitest_support_folder "$1")"
     if [ -z "$_real" ]; then
         printf 'omcitest: no Command.framework (or, before 6.0, Abracode.framework) Support folder in %s\n' "$1" >&2
         return 1
@@ -443,13 +440,11 @@ _omcitest_executable_folder() {
 # name is read with the plister every applet carries in its framework (Linux has no plutil).
 _omcitest_executable() { # <App.app>
     local _bundle="${1%/}" # a path typed with a trailing slash names the same bundle
-    local _support
-    _support="$(_omcitest_support_folder "$_bundle")"
+    local _support="$(_omcitest_support_folder "$_bundle")"
     if [ -z "$_support" ] || [ ! -x "$_support/plister" ]; then
         return 1
     fi
-    local _name
-    _name="$("$_support/plister" get string "$_bundle/Contents/Info.plist" /CFBundleExecutable 2>/dev/null)"
+    local _name="$("$_support/plister" get string "$_bundle/Contents/Info.plist" /CFBundleExecutable 2>/dev/null)"
     if [ -z "$_name" ]; then
         return 1
     fi
@@ -485,8 +480,7 @@ _omcitest_unset_host_environment() {
 omcitest_launch() { # <App.app>
     local _app="$1"
     _omcitest_unset_host_environment
-    local _exe
-    _exe="$(_omcitest_executable "$_app")"
+    local _exe="$(_omcitest_executable "$_app")"
     if [ -z "$_exe" ] || [ ! -x "$_exe" ]; then
         printf 'omcitest: no executable in %s\n' "$_app" >&2
         return 1
@@ -505,8 +499,7 @@ omcitest_launch() { # <App.app>
     _OMCITEST_MADE_WORK="$_work"
     export ITEST_WORK
 
-    local _token
-    _token="$(/usr/bin/openssl rand -hex 32)"
+    local _token="$(/usr/bin/openssl rand -hex 32)"
     if [ -z "$_token" ]; then
         printf 'omcitest: cannot make a token\n' >&2
         return 1
@@ -585,8 +578,7 @@ omcitest_launch() { # <App.app>
 
     # The applet's pasteboard tool, only once its engine reports the run's prefix: an older tool
     # ignores OMC_TEST_PASTEBOARD_PREFIX and would read, write and clear the user's pasteboards.
-    local _status_reply
-    _status_reply="$(itest_call omc.test.status)"
+    local _status_reply="$(itest_call omc.test.status)"
     case "$_status_reply" in
         *"\"pasteboardPrefix\": \"$ITEST_PASTEBOARD_PREFIX\""*)
             OMCITEST_PASTEBOARD_TOOL="$(_omcitest_support_folder "$_app")"
@@ -651,8 +643,7 @@ omcitest_run_file() { # <App.app> <test-file>
     local _file="$2"
     ITEST_APP="$_app"
     export ITEST_APP
-    local _name
-    _name="$(/usr/bin/basename "$_file")"
+    local _name="$(/usr/bin/basename "$_file")"
     printf '\n## %s\n' "$_name" >&2
 
     omcitest_launch "$_app"

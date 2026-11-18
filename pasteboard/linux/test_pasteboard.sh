@@ -29,8 +29,7 @@ boards="$XDG_RUNTIME_DIR/omc-pasteboards"
 
 # Run the tool, keeping stdout exactly (a trailing newline included) and the status
 run() { # <args...>; sets out (with an "x" sentinel removed), err, rc
-    local result
-    result=$("$tool" "$@" 2>"$scratch/err"; printf 'x%s' "$?")
+    local result=$("$tool" "$@" 2>"$scratch/err"; printf 'x%s' "$?")
     rc="${result##*x}"
     out="${result%x*}"
     err=$(/bin/cat "$scratch/err")

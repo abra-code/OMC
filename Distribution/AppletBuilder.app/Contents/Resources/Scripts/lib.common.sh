@@ -279,8 +279,7 @@ ab_open_project() { # <applet bundle>
 # Close the Welcome window if one is open (a project window has opened). Its UUID may name a
 # window the user already closed; the tool then fails, quietly.
 ab_welcome_close() {
-    local welcome
-    welcome="$(pb_get "$PB_WELCOME_WINDOW")"
+    local welcome="$(pb_get "$PB_WELCOME_WINDOW")"
     if [ -z "$welcome" ]; then
         return 0
     fi

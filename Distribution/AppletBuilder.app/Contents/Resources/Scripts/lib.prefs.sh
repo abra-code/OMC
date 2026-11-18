@@ -111,8 +111,7 @@ recent_applets() {
 # Puts an applet first on the list; with an empty path it only drops the paths no longer there
 recent_applets_add() { # <applet bundle, or "">
     local path="${1%/}"
-    local list
-    list="$( { printf '%s\n' "$path"; recent_applets; } \
+    local list="$( { printf '%s\n' "$path"; recent_applets; } \
         | while IFS= read -r line; do [ -d "$line" ] && printf '%s\n' "$line"; done \
         | /usr/bin/awk -v limit="$AB_RECENT_LIMIT" '!seen[$0]++ && n < limit { print; n++ }' )"
     # -string: an untyped value is parsed, and a path with {, ( or " would fail to store

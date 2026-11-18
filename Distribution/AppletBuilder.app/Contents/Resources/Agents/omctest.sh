@@ -506,8 +506,7 @@ omctest_start_bridge() { # <app> <label>
     # per-user temp directory is the same place the engine binds its own socket, it is
     # mode 0700, and it is short. The log and the state stay under the scratch, where
     # they belong; only the socket moves, and it is unlinked on stop.
-    local socket_dir
-    socket_dir=$(/usr/bin/getconf DARWIN_USER_TEMP_DIR 2>/dev/null)
+    local socket_dir=$(/usr/bin/getconf DARWIN_USER_TEMP_DIR 2>/dev/null)
     [ -d "$socket_dir" ] || socket_dir="/tmp"
     socket_path="${socket_dir%/}/omcb-$$-$label.sock"
     if [ "${#socket_path}" -gt 103 ]; then
@@ -2132,8 +2131,7 @@ ui_rows() { # <view-id> [window-uuid]
 }
 
 ui_row_count() { # <view-id> [window-uuid]
-    local rows_file
-    rows_file="$(omctest_win_dir "$2")/v$1.rows"
+    local rows_file="$(omctest_win_dir "$2")/v$1.rows"
     if [ -f "$rows_file" ]; then
         /usr/bin/awk 'END { print NR }' "$rows_file"
     else

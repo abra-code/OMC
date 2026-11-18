@@ -24,8 +24,7 @@ FAIL=0
 check() {
     local desc="$1" expected="$2"
     shift 2
-    local actual
-    actual=$("$PLISTER" "$@" 2>/dev/null)
+    local actual=$("$PLISTER" "$@" 2>/dev/null)
     if [ "$actual" = "$expected" ]; then
         echo "PASS: $desc"
         PASS=$((PASS + 1))
@@ -467,8 +466,7 @@ echo "=== Format detection by content ==="
 # Assert a file's leading bytes, which is how we tell the written format apart.
 check_head() {
     local desc="$1" expected="$2" file="$3"
-    local actual
-    actual=$(head -c ${#expected} "$file")
+    local actual=$(head -c ${#expected} "$file")
     if [ "$actual" = "$expected" ]; then
         echo "PASS: $desc"
         PASS=$((PASS + 1))

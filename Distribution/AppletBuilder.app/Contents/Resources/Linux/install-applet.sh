@@ -78,8 +78,7 @@ name="$(/usr/bin/basename -- "$bundle" .app)"
 # version a system library is too old for ("GLIBC_2.42 (libc.so.6 is older)"). ldd's own output and
 # its messages are read together.
 missing_linked_libraries() { # <ELF file>
-    local linked
-    linked="$(/usr/bin/ldd -- "$1" 2>&1)"
+    local linked="$(/usr/bin/ldd -- "$1" 2>&1)"
     printf '%s\n' "$linked" | /usr/bin/sed -n \
         -e 's/^[[:space:]]*\([^[:space:]]*\) => not found.*/\1/p' \
         -e "s/^.*[[:space:]/]\([^[:space:]/]*\): version \`\([^']*\)' not found.*/\2 (\1 is older)/p"
@@ -479,8 +478,7 @@ check() {
     fi
 
     # Libraries loaded by name, from the applet's own list
-    local cache
-    cache="$(library_cache)"
+    local cache="$(library_cache)"
     local soname
     while IFS= read -r soname; do
         if [ -z "$soname" ]; then
@@ -490,8 +488,7 @@ check() {
             printf 'Required library %s: found\n' "$soname"
             continue
         fi
-        local package
-        package="$(library_package "$soname")"
+        local package="$(library_package "$soname")"
         if [ -n "$package" ]; then
             printf 'Required library %s: MISSING (package %s; install-applet.sh --install-packages installs it)\n' "$soname" "$package"
         else
@@ -505,18 +502,15 @@ check() {
     # library (*.so, *.so.<n>), such as a helper tool or an embedded Python's modules
     # A library the bundle carries itself is not missing, though ldd alone may not find it (an
     # embedded Python's libpython3.so names libpython3.<minor>.so beside it, which Python has loaded)
-    local bundle_libraries
-    bundle_libraries=" $(/usr/bin/find "$bundle/Contents" -name '*.so*' -exec /usr/bin/basename {} \; 2>/dev/null | /usr/bin/tr '\n' ' ')"
+    local bundle_libraries=" $(/usr/bin/find "$bundle/Contents" -name '*.so*' -exec /usr/bin/basename {} \; 2>/dev/null | /usr/bin/tr '\n' ' ')"
     local missing=""
     local file
     while IFS= read -r -d '' file; do
-        local magic
-        magic="$(/usr/bin/head -c 4 -- "$file" 2>/dev/null | /usr/bin/od -An -c | /usr/bin/tr -d ' \n')"
+        local magic="$(/usr/bin/head -c 4 -- "$file" 2>/dev/null | /usr/bin/od -An -c | /usr/bin/tr -d ' \n')"
         if [ "$magic" != "177ELF" ]; then
             continue
         fi
-        local file_missing
-        file_missing="$(missing_linked_libraries "$file")"
+        local file_missing="$(missing_linked_libraries "$file")"
         local item
         while IFS= read -r item; do
             if [ -z "$item" ]; then
@@ -614,8 +608,7 @@ install_packages() {
         printf 'command-engine package (it brings its Swift runtime package) first.\n'
         return 1
     fi
-    local cache
-    cache="$(library_cache)"
+    local cache="$(library_cache)"
     local packages=()
     local unknown=""
     local soname
@@ -626,8 +619,7 @@ install_packages() {
         if soname_found "$cache" "$soname"; then
             continue
         fi
-        local package
-        package="$(library_package "$soname")"
+        local package="$(library_package "$soname")"
         if [ -n "$package" ]; then
             packages+=("$package")
         else
@@ -647,8 +639,7 @@ install_packages() {
 
     # The package manager of the distribution the package names are for (library_package)
     local manager=()
-    local family
-    family="$(distribution_family)"
+    local family="$(distribution_family)"
     if [ "$family" = "debian" ] && [ -x /usr/bin/apt-get ]; then
         manager=(/usr/bin/apt-get install -y)
     elif [ "$family" = "fedora" ] && [ -x /usr/bin/dnf ]; then
@@ -680,8 +671,7 @@ install_packages() {
         esac
     fi
 
-    local uid
-    uid="$(/usr/bin/id -u)"
+    local uid="$(/usr/bin/id -u)"
     local runner=()
     if [ "$uid" = "0" ]; then
         runner=()

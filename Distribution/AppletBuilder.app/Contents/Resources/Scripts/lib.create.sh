@@ -143,8 +143,7 @@ applet_create_from_template() {
     fi
 
     # ── Detect original name from template ──
-    local original_name
-    original_name=$(plist_read "$template_path/Contents/Info.plist" CFBundleExecutable)
+    local original_name=$(plist_read "$template_path/Contents/Info.plist" CFBundleExecutable)
     if [ -z "$original_name" ]; then
         original_name=$(/usr/bin/basename "${template_path%.app}")
     fi
@@ -181,8 +180,7 @@ applet_create_from_template() {
     if [ -n "$icon_path" ] && [ -e "$icon_path" ]; then
         applet_install_icon "$icon_path" "$new_app_path"
         if [ $? -eq 0 ]; then
-            local icon_base
-            icon_base=$(/usr/bin/basename "${icon_path%.*}")
+            local icon_base=$(/usr/bin/basename "${icon_path%.*}")
             applet_cleanup_icons "$new_app_path" "$icon_base"
         fi
     fi
@@ -204,8 +202,7 @@ applet_create_from_template() {
 
     # Update bundle ID and remember prefix
     if [ -z "$bundle_id" ]; then
-        local prefix
-        prefix=$(get_bundle_id_prefix)
+        local prefix=$(get_bundle_id_prefix)
         bundle_id="${prefix}${applet_name}"
     fi
     applet_set_bundle_id "$new_app_path" "$bundle_id"
