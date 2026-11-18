@@ -11,8 +11,10 @@ open as a project in itself. `Documentation/omctest_guide.md` is the reference f
 writing the files; this README is the map of what AppletBuilder does and how much
 of it is covered.
 
-Current state: **471 checks across 5 files, all passing** (458 where `defaults`
-cannot reach cfprefsd - see section 4 - which skips two sections and says so).
+Current state: **615 checks across 6 files, all passing** when run on a copy of
+the bundle (the self-guard checks of `50-thin-python` fail on the bundle in place
+in the repository; fewer where `defaults` cannot reach cfprefsd - see section 4 -
+which skips two sections and says so).
 
 ---
 
@@ -68,6 +70,7 @@ a build phase can be tested by reading its transcript instead of a window
 | K | Settings | `settings.*` (3) | - | **not covered** |
 | L | Error/reference windows | `show.errors`, `show.reference` | indirectly, via `chain_asked` | thin |
 | M | Embedded-Python thinning | `thin.python`, `applet_thin_python` | `50-thin-python` | good |
+| N | Linux PNG icon | `icon_png.py` | `60-icon-png` | good |
 
 ### What each test file establishes
 
@@ -186,6 +189,13 @@ silent no-op.
 The remembered-plan section is guarded by `ab_prefs_usable`: that record lives in
 a `defaults` domain, and cfprefsd is unreachable from a sandboxed run, where
 `defaults write` exits 0 having written nothing.
+
+**`60-icon-png.test.sh`** (5 checks) - the PNG icon a Linux applet carries,
+which the build writes from the applet's .icns with `icon_png.py`. Linux icon
+themes stop at 512 pixels, so the PNG is the largest image of at most 512, else
+the smallest larger one; an .icns with no PNG is refused and nothing is written.
+`helpers/make_icns.py` writes the fixtures: each entry a PNG signature and IHDR
+with its size, tagged so a check can tell which entry was copied.
 
 ---
 
