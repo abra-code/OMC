@@ -152,18 +152,17 @@ quiet_swift_build() {
 install_mistune() {
     local version="$1"
     local bundled_python="$DEST_PYTHON/bin/python3"
-    local tmp_dir cp_rc pip_output license_src license_rc
     if [ ! -x "$bundled_python" ]; then
         echo -e "  ${RED}Embedded Python not found at: $bundled_python (see section 0b)${NC}"
         return 1
     fi
-    tmp_dir=$(/usr/bin/mktemp -d)
+    local tmp_dir=$(/usr/bin/mktemp -d)
     # An empty --target makes pip install into the embedded Python's own site-packages.
     if [ -z "$tmp_dir" ] || [ ! -d "$tmp_dir" ]; then
         echo -e "  ${RED}Failed to create a temporary directory for mistune${NC}"
         return 1
     fi
-    pip_output=$("$bundled_python" -I -B -m pip install --disable-pip-version-check --no-compile \
+    local pip_output=$("$bundled_python" -I -B -m pip install --disable-pip-version-check --no-compile \
         --target="$tmp_dir" --no-deps mistune=="$version" 2>&1)
     if [ ! -d "$tmp_dir/mistune" ]; then
         echo -e "  ${RED}Failed to download mistune $version${NC}"
@@ -174,9 +173,11 @@ install_mistune() {
     /bin/mkdir -p "$(/usr/bin/dirname "$DEST_MISTUNE")"
     /bin/rm -rf "$DEST_MISTUNE"
     /bin/cp -R "$tmp_dir/mistune" "$DEST_MISTUNE"
-    cp_rc=$?
+    local cp_rc=$?
     # mistune's BSD license has to ship with its code, but pip keeps it in the dist-info
     # folder, which is not copied above. Carry it into the package folder, where git tracks it.
+    local license_src
+    local license_rc
     if [ "$cp_rc" -eq 0 ]; then
         license_src=$(/usr/bin/find "$tmp_dir" -maxdepth 3 -path '*.dist-info/*' -type f -name 'LICENSE*' | /usr/bin/head -n 1)
         if [ -n "$license_src" ]; then
@@ -463,7 +464,6 @@ build_embedded_python() {
     local built_python="$built_app/Contents/Library/Python"
     local python_build_log="$COMMANDAPPLET_BUILD/CommandPythonApplet-build.log"
     local staged_python="$DEST_PYTHON.new"
-    local new_version
 
     /bin/mkdir -p "$COMMANDAPPLET_BUILD"
     # The build phase declares this folder as its output, so Xcode skips the phase while an
@@ -525,6 +525,7 @@ build_embedded_python() {
         exit 1
     fi
 
+    local new_version
     new_version=$("$DEST_PYTHON/bin/python3" -B -V 2>&1)
     local new_rc=$?
     if [ "$new_rc" -ne 0 ]; then
@@ -1186,7 +1187,8 @@ echo "── Checking ActionUI documentation ──"
 # merged into the same Schemas/ and Elements/ dirs as core, so the core prune below must not
 # delete them just because they are absent from the core Documentation source.
 addon_provides_doc() {
-    local subdir="$1" name="$2" d
+    local subdir="$1" name="$2"
+    local d
     for d in "$ACTIONUI_ROOT/Add-ons"/*/Documentation/"$subdir"/"$name"; do
         [ -f "$d" ] && return 0
     done

@@ -215,17 +215,19 @@ _seal_relative_path() {
     local absolute_path="$app_to_sign/Contents"
     local remaining_path="$seal_path"
     local consumed_prefix=""
-    local component rest_of_path version_name component_seal_path crossed_boundary
+    local component
+    local rest_of_path
     while : ; do
         case "$remaining_path" in
             */*) component="${remaining_path%%/*}"; rest_of_path="${remaining_path#*/}" ;;
             *) break ;;
         esac
         absolute_path="$absolute_path/$component"
-        component_seal_path="$consumed_prefix$component"
-        crossed_boundary="no"
+        local component_seal_path="$consumed_prefix$component"
+        local crossed_boundary="no"
         # A versioned framework roots each version's resources at Versions/<v>/
         # and is sealed one version at a time.
+        local version_name
         case "$rest_of_path" in
             Versions/*/*)
                 version_name="${rest_of_path#Versions/}"

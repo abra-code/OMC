@@ -346,9 +346,8 @@ ab_shipped_icon_svg() { # <.icon or .icns path>
         *.icon|*.icns) ;;
         *) return 0 ;;
     esac
-    local icons_dir source_dir
-    icons_dir="$(CDPATH= cd -P -- "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Icons" 2>/dev/null && pwd)"
-    source_dir="$(CDPATH= cd -P -- "$(/usr/bin/dirname -- "$1")" 2>/dev/null && pwd)"
+    local icons_dir="$(CDPATH= cd -P -- "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Icons" 2>/dev/null && pwd)"
+    local source_dir="$(CDPATH= cd -P -- "$(/usr/bin/dirname -- "$1")" 2>/dev/null && pwd)"
     if [ -n "$icons_dir" ] && [ "$source_dir" = "$icons_dir" ] && [ -f "${1%.*}.svg" ]; then
         printf '%s\n' "${1%.*}.svg"
     fi

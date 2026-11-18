@@ -16,20 +16,20 @@ compare_versions() {
     local v1="$1"
     local v2="$2"
     local IFS='.'
-    local i nv1 nv2 max n1 n2
+    local nv1=($v1)
+    local nv2=($v2)
 
-    nv1=($v1)
-    nv2=($v2)
-
+    local max
     if [ ${#nv1[@]} -gt ${#nv2[@]} ]; then
         max=${#nv1[@]}
     else
         max=${#nv2[@]}
     fi
 
+    local i
     for ((i=0; i<max; i++)); do
-        n1="${nv1[$i]:-0}"
-        n2="${nv2[$i]:-0}"
+        local n1="${nv1[$i]:-0}"
+        local n2="${nv2[$i]:-0}"
         if [ "$n1" -gt "$n2" ] 2>/dev/null; then
             echo 1
             return

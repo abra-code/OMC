@@ -54,9 +54,8 @@ validate_script_file() {
     local path="$1"
     SCRIPT_VALIDATE_OUTPUT=""
     SCRIPT_VALIDATE_WARNINGS=""
-    local filename ext rc
-    filename=$(/usr/bin/basename "$path")
-    ext=$(echo "${filename##*.}" | /usr/bin/tr '[:upper:]' '[:lower:]')
+    local filename=$(/usr/bin/basename "$path")
+    local ext=$(echo "${filename##*.}" | /usr/bin/tr '[:upper:]' '[:lower:]')
 
     # On Linux the Command Engine runs .sh files with /bin/bash (its /bin/sh is dash), so they
     # are checked as bash there
@@ -68,6 +67,7 @@ validate_script_file() {
             ;;
     esac
 
+    local rc
     case "$ext" in
         sh)
             SCRIPT_VALIDATE_OUTPUT=$(/bin/sh -n "$path" 2>&1)

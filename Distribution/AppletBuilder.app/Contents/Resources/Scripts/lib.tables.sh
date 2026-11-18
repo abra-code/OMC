@@ -62,8 +62,9 @@ refresh_uifiles_table() {
     local resources_dir="$project_path/Contents/Resources"
     local lproj_dir="$resources_dir/Base.lproj"
     local buffer=""
-    local nib json
+    local json
     if [ -d "$lproj_dir" ]; then
+        local nib
         for nib in "$lproj_dir"/*.nib; do
             [ ! -d "$nib" ] && continue
             local nib_name=$(/usr/bin/basename "$nib")

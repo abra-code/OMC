@@ -410,9 +410,8 @@ applet_update_url_scheme() {
     # Replace the whole array, so the template's scheme does not stay behind: a new empty
     # array (insert replaces the old one), then the one scheme
     local url_scheme=$(applet_url_scheme_for_name "$new_name")
-    local plister_status
     plister_out=$("$plister_tool" insert CFBundleURLSchemes array "$plist" /CFBundleURLTypes/0 2>&1)
-    plister_status=$?
+    local plister_status=$?
     if [ "$plister_status" -eq 0 ]; then
         plister_out=$("$plister_tool" add string "$url_scheme" "$plist" /CFBundleURLTypes/0/CFBundleURLSchemes 2>&1)
         plister_status=$?
@@ -653,11 +652,9 @@ update_linux_requires() {
     local tab="$(printf '\t')"
     local wanted=""
     local element
-    local soname
-    local found
     # "type:linux" too: ActionUI's platform filter makes it the element's type on Linux
     for element in WebView:libwebkitgtk-6.0.so.4 Map:libshumate-1.0.so.1; do
-        found="$(/usr/bin/grep -rlE --include='*.json' --exclude-dir=Documentation "\"type(:linux)?\"[[:space:]]*:[[:space:]]*\"${element%%:*}\"" "$resources" 2>/dev/null | /usr/bin/head -n 1)"
+        local found="$(/usr/bin/grep -rlE --include='*.json' --exclude-dir=Documentation "\"type(:linux)?\"[[:space:]]*:[[:space:]]*\"${element%%:*}\"" "$resources" 2>/dev/null | /usr/bin/head -n 1)"
         if [ -n "$found" ]; then
             wanted="$wanted${element#*:}${tab}a ${element%%:*}
 "
@@ -691,9 +688,7 @@ update_linux_requires() {
         listed="$listed$("$plister_tool" get value "$info_plist" "/CommandEngineLinuxRequires/$index" 2> /dev/null) "
         index=$((index + 1))
     done
-    local why
     local line
-    local append_status
     # A pipe, not process substitution, which bash in POSIX mode refuses when it reads this file;
     # the loop's subshell reports a failed append through its exit status. The lines come on
     # descriptor 3 and the loop's standard input is /dev/null: plister reads its standard input,
@@ -702,13 +697,13 @@ update_linux_requires() {
         if [ -z "$line" ]; then
             continue
         fi
-        soname="${line%%"$tab"*}"
-        why="${line#*"$tab"}"
+        local soname="${line%%"$tab"*}"
+        local why="${line#*"$tab"}"
         case "$listed" in
             *" $soname "*) continue ;;
         esac
         "$plister_tool" append string "$soname" "$info_plist" /CommandEngineLinuxRequires > /dev/null
-        append_status=$?
+        local append_status=$?
         if [ "$append_status" -ne 0 ]; then
             ab_log "Cannot add $soname to CommandEngineLinuxRequires"
             exit 1
@@ -740,7 +735,6 @@ linux_program_requires() { # <applet bundle>
         ab_log "Linux: no $reader or /usr/bin/python3: the applet's programs' libraries are not listed"
         return 0
     fi
-    local file
     local needed
     needed="$(/usr/bin/find "$contents" \( -path "$contents/Linux" -o -path "$contents/Frameworks/Command.framework" -o -path "$contents/MacOS" -o -path "$contents/_CodeSignature" \) -prune -o -type f \( -perm -u+x -o -name '*.so' -o -name '*.so.*' \) -exec /usr/bin/python3 -I "$reader" needed {} +)"
     local read_status=$?
@@ -755,6 +749,7 @@ linux_program_requires() { # <applet bundle>
     local provided=" libc.so.6 libm.so.6 libpthread.so.0 libdl.so.2 librt.so.1 libutil.so.1 libresolv.so.2 libanl.so.1 libmvec.so.1 ld-linux-aarch64.so.1 ld-linux-x86-64.so.2 "
     provided="$provided$(/usr/bin/find "$contents" \( -name '*.so' -o -name '*.so.*' \) -printf '%f ' 2>/dev/null) "
     local engine_programs=()
+    local file
     for file in "$contents/Linux"/* "$contents/Frameworks/Command.framework/Support"/*; do
         if [ -f "$file" ]; then
             engine_programs+=("$file")
@@ -772,11 +767,11 @@ linux_program_requires() { # <applet bundle>
         done
     fi
     provided="$provided$engine_needed "
-    local folder
     local old_ifs="$IFS"
     IFS=":"
     local folders=($runpath)
     IFS="$old_ifs"
+    local folder
     for folder in "${folders[@]}"; do
         if [ -d "$folder" ]; then
             for file in "$folder"/*.so*; do
@@ -789,11 +784,10 @@ linux_program_requires() { # <applet bundle>
 
     local tab="$(printf '\t')"
     local bundle="$1"
-    local line
-    local soname
     local listed=" "
+    local line
     printf '%s\n' "$needed" | while IFS= read -r line; do
-        soname="${line%%"$tab"*}"
+        local soname="${line%%"$tab"*}"
         file="${line#*"$tab"}"
         case "$provided$listed" in
             *" $soname "*) continue ;;
@@ -990,10 +984,9 @@ update_python_packages() {
         return 1
     fi
 
-    local module
     local copied=0
     local failed=0
-    local _cp_rc
+    local module
     for module in actionui_remote.py omc.py; do
         if [ ! -f "$src_packages/$module" ]; then
             ab_report "Error: $module is missing from AppletBuilder; rerun update_appletbuilder.sh"
@@ -1002,7 +995,7 @@ update_python_packages() {
         fi
 
         /bin/cp "$src_packages/$module" "$dst_packages/$module"
-        _cp_rc=$?
+        local _cp_rc=$?
         if [ "$_cp_rc" -ne 0 ]; then
             ab_report "Error: could not copy $module to $dst_packages"
             failed=$((failed + 1))
@@ -1060,8 +1053,8 @@ update_shell_clients() {
         return 0
     fi
 
-    local client
     local missing=0
+    local client
     for client in $clients; do
         if [ ! -f "$src_packages/$client" ]; then
             missing=$((missing + 1))
@@ -1081,12 +1074,9 @@ update_shell_clients() {
 
     local copied=0
     local incomplete=0
-    local _cp_rc
-    local _chmod_rc
-    local _mode
     for client in $clients; do
         /bin/cp "$src_packages/$client" "$dst_packages/$client"
-        _cp_rc=$?
+        local _cp_rc=$?
         if [ "$_cp_rc" -ne 0 ]; then
             ab_log "Could not copy $client to $dst_packages"
             incomplete=1
@@ -1095,12 +1085,13 @@ update_shell_clients() {
 
         # A client is sourced, and may also be run as a command; an awk program is read by awk
         # and never run, so it stays data.
+        local _mode
         case "$client" in
             *.awk) _mode=644 ;;
             *)     _mode=755 ;;
         esac
         /bin/chmod "$_mode" "$dst_packages/$client"
-        _chmod_rc=$?
+        local _chmod_rc=$?
         if [ "$_chmod_rc" -ne 0 ]; then
             ab_log "Could not set mode $_mode on $client in $dst_packages"
             incomplete=1
@@ -1193,7 +1184,6 @@ clean_build_junk() {
     # folding it into a count.
     local loud_dirs=" .claude .idea .vscode "
 
-    local junk before after removed path
     local stuck=0
     local header=0
 
@@ -1201,6 +1191,7 @@ clean_build_junk() {
     # delete, never the pre-scan alone: rm and -delete have their errors
     # discarded here, so a sweep that fails on a locked or root-owned path
     # would otherwise report success and let the junk be signed in anyway.
+    local junk
     for junk in "${junk_dirs[@]}"; do
         # -prune keeps find from descending into a directory it is about to
         # delete and then complaining about the paths that just vanished.
@@ -1208,7 +1199,7 @@ clean_build_junk() {
         # a symlink named __pycache__ or .claude is sealed just like a real
         # directory, and -type d walks straight past it. rm -rf on a symlink
         # removes the link, never the target.
-        before=$(/usr/bin/find "$target_path" \( -type d -o -type l \) -name "$junk" -prune 2>/dev/null | /usr/bin/wc -l | /usr/bin/tr -d ' ')
+        local before=$(/usr/bin/find "$target_path" \( -type d -o -type l \) -name "$junk" -prune 2>/dev/null | /usr/bin/wc -l | /usr/bin/tr -d ' ')
         [ "$before" -eq 0 ] && continue
         if [ "$header" -eq 0 ]; then
             ab_log ""
@@ -1217,14 +1208,15 @@ clean_build_junk() {
         fi
         case "$loud_dirs" in
             *" $junk "*)
+                local path
                 /usr/bin/find "$target_path" \( -type d -o -type l \) -name "$junk" -prune 2>/dev/null | while read -r path; do
                     ab_log "  removing ${path#"$target_path"/}"
                 done
                 ;;
         esac
         /usr/bin/find "$target_path" \( -type d -o -type l \) -name "$junk" -prune -exec /bin/rm -rf {} + 2>/dev/null
-        after=$(/usr/bin/find "$target_path" \( -type d -o -type l \) -name "$junk" -prune 2>/dev/null | /usr/bin/wc -l | /usr/bin/tr -d ' ')
-        removed=$((before - after))
+        local after=$(/usr/bin/find "$target_path" \( -type d -o -type l \) -name "$junk" -prune 2>/dev/null | /usr/bin/wc -l | /usr/bin/tr -d ' ')
+        local removed=$((before - after))
         if [ "$removed" -gt 0 ]; then
             ab_log "Removed ${removed} ${junk} director$([ "$removed" -eq 1 ] && echo "y" || echo "ies")"
         fi
@@ -1441,12 +1433,12 @@ ${COMMAND_VALIDATE_OUTPUT}
     local scripts_dir="$resources_dir/Scripts"
     if [ -d "$scripts_dir" ]; then
         local script_ok=0
-        local sf sname srci
+        local sf
         for sf in "$scripts_dir"/*; do
             [ ! -f "$sf" ] && continue
-            sname=$(/usr/bin/basename "$sf")
+            local sname=$(/usr/bin/basename "$sf")
             validate_script_file "$sf"
-            srci=$?
+            local srci=$?
             if [ "$srci" -eq 0 ]; then
                 script_ok=$((script_ok + 1))
                 if [ -n "$SCRIPT_VALIDATE_WARNINGS" ]; then
@@ -1473,18 +1465,18 @@ ${SCRIPT_VALIDATE_OUTPUT}
     # Only files matching the ActionUI heuristic (root dict with "type" elements)
     # are validated; unrelated JSON is skipped.
     if actionui_verifier_available; then
-        local jf jname vrc
         local ui_ok=0
         # Scan every localized .lproj (Base.lproj / English.lproj / en.lproj / …)
         # plus the Resources root.
+        local jf
         for jf in "$resources_dir"/*.lproj/*.json "$resources_dir"/*.json; do
             [ ! -f "$jf" ] && continue
             if ! is_actionui_json "$jf"; then
                 continue
             fi
-            jname=$(/usr/bin/basename "$jf")
+            local jname=$(/usr/bin/basename "$jf")
             validate_actionui_file "$jf"
-            vrc=$?
+            local vrc=$?
             if [ "$vrc" -eq 0 ]; then
                 ab_log "  UI ${jname}: OK"
                 ui_ok=$((ui_ok + 1))
@@ -1560,9 +1552,8 @@ validate_info_content() {
 
     # CFBundleExecutable: <executable folder>/<exe> must exist (checked post-copy); the folder is
     # Contents/MacOS on macOS, Contents/Linux on Linux.
-    local exe
     local exe_folder="$(applet_executable_folder "$target_path")"
-    exe=$(plist_read "$info_plist" CFBundleExecutable)
+    local exe=$(plist_read "$info_plist" CFBundleExecutable)
     if [ -z "$exe" ]; then
         ab_log "  CFBundleExecutable: NOT SET"
         error_count=$((error_count + 1))
@@ -1906,9 +1897,9 @@ applet_tests_dir() { # <project-path>
 # The integration test files (*.itest.sh) in the applet's Tests/ directory, one
 # path per line; nothing when there are none.
 applet_itest_files() { # <project-path>
-    local tests_dir test_file
-    tests_dir=$(applet_tests_dir "$1")
+    local tests_dir=$(applet_tests_dir "$1")
     [ -n "$tests_dir" ] && [ -d "$tests_dir" ] || return 0
+    local test_file
     for test_file in "$tests_dir"/*.itest.sh; do
         [ -f "$test_file" ] && printf '%s\n' "$test_file"
     done
@@ -1930,14 +1921,14 @@ applet_running_instances() { # <App.app>
     # One full "info" per entry, read for its "pid = " and "bundle path=" lines,
     # instead of "-only pid" and "-only bundlepath": what -only prints has not
     # stayed the same across macOS releases.
-    local asn info pid bundle_path
+    local asn
     for asn in $(printf '%s\n' "$found" | /usr/bin/grep -oE 'ASN:0x[0-9a-fA-F]+-0x[0-9a-fA-F]+'); do
-        info=$(/usr/bin/lsappinfo info "$asn" 2>/dev/null)
-        pid=$(printf '%s\n' "$info" | /usr/bin/sed -nE 's/^ *pid = ([0-9]+).*/\1/p' | /usr/bin/head -1)
+        local info=$(/usr/bin/lsappinfo info "$asn" 2>/dev/null)
+        local pid=$(printf '%s\n' "$info" | /usr/bin/sed -nE 's/^ *pid = ([0-9]+).*/\1/p' | /usr/bin/head -1)
         case "$pid" in
             ''|*[!0-9]*|0) continue ;;
         esac
-        bundle_path=$(printf '%s\n' "$info" | /usr/bin/sed -nE 's/^ *bundle path="(.*)" *$/\1/p' | /usr/bin/head -1)
+        local bundle_path=$(printf '%s\n' "$info" | /usr/bin/sed -nE 's/^ *bundle path="(.*)" *$/\1/p' | /usr/bin/head -1)
         printf '%s %s\n' "$pid" "${bundle_path:-?}"
     done
     return 0
@@ -1949,24 +1940,24 @@ applet_running_instances() { # <App.app>
 # shares the settings). An executable replaced while it runs (a build copies a new one) reads
 # "<path> (deleted)" in /proc; the bundle path is still right.
 applet_running_instances_linux() { # <bundle identifier>
-    local proc_exe pid exe_path bundle_path running_id
+    local proc_exe
     for proc_exe in /proc/[0-9]*/exe; do
-        pid="${proc_exe#/proc/}"
+        local pid="${proc_exe#/proc/}"
         pid="${pid%/exe}"
         # This user's processes only: as root, readlink would succeed for every user's
         [ -O "/proc/$pid" ] || continue
-        exe_path="$(/usr/bin/readlink -- "$proc_exe" 2>/dev/null)"
+        local exe_path="$(/usr/bin/readlink -- "$proc_exe" 2>/dev/null)"
         exe_path="${exe_path% (deleted)}"
         case "$exe_path" in
             */Contents/Linux/*) ;;
             *) continue ;;
         esac
-        bundle_path="${exe_path%/Contents/Linux/*}"
+        local bundle_path="${exe_path%/Contents/Linux/*}"
         # The applet's executable itself, not a helper in a folder below Contents/Linux
         case "${exe_path#"$bundle_path/Contents/Linux/"}" in
             */*) continue ;;
         esac
-        running_id=$("$plister_tool" get value "$bundle_path/Contents/Info.plist" /CFBundleIdentifier 2>/dev/null)
+        local running_id=$("$plister_tool" get value "$bundle_path/Contents/Info.plist" /CFBundleIdentifier 2>/dev/null)
         if [ "$running_id" = "$1" ]; then
             printf '%s %s\n' "$pid" "$bundle_path"
         fi
@@ -2011,9 +2002,8 @@ applet_quit_instance() { # <pid> <seconds>
 # it was asked for and there is nothing to run.
 applet_run_tests() {
     local project_path="$1"
-    local tests_dir omctest_lib rc
 
-    tests_dir=$(applet_tests_dir "$project_path")
+    local tests_dir=$(applet_tests_dir "$project_path")
     if [ -z "$tests_dir" ] || [ ! -d "$tests_dir" ]; then
         # Running tests is always an explicit request - the --test flag or the
         # Test button. Failing loudly beats a silent skip, which would let a
@@ -2022,7 +2012,7 @@ applet_run_tests() {
         return 1
     fi
 
-    omctest_lib="${OMC_APP_BUNDLE_PATH}/Contents/Resources/Agents/omctest.sh"
+    local omctest_lib="${OMC_APP_BUNDLE_PATH}/Contents/Resources/Agents/omctest.sh"
     if [ ! -f "$omctest_lib" ]; then
         ab_report "The omctest harness is missing at $omctest_lib"
         return 1
@@ -2047,6 +2037,7 @@ applet_run_tests() {
     # support/ directory and a copy of every fixture, per test file). zsh runs
     # the trap in both shapes, so this does not reproduce in an interactive
     # shell.
+    local rc
     ( omctest_run_suite "$project_path" "$tests_dir" 2>&1 ) | ab_log_stream
     # Read on the very next line: any command in between overwrites PIPESTATUS,
     # and plain $? here is the reader's status, not the suite's.
@@ -2222,12 +2213,12 @@ applet_resolve_plan() { # <project-path>
 # ITS status. The subshell and the PIPESTATUS read on the very next line are the
 # same requirements applet_run_tests documents.
 thin_python_exec() { # <front-end args...>
-    local rc
     # -u because this output is a PIPE. Python block-buffers stdout when it is
     # not a terminal, so without it the front end's whole progress transcript -
     # which phase is running, which entry point is being traced - arrives in one
     # burst when the run ends, minutes after it would have been useful, and out
     # of order against the stderr it is merged with here.
+    local rc
     ( "$python3" -u "$thin_python_tool" "$@" 2>&1 ) | ab_log_stream
     rc=${PIPESTATUS[0]}
     case "$rc" in
@@ -2265,9 +2256,8 @@ thin_python_plan() { # <project-path>
     ab_log ""
     ab_log "Writing a thinning plan (the applet itself is not modified)..."
 
-    local rc
     thin_python_exec "$@"
-    rc=$?
+    local rc=$?
     if [ "$rc" -ne 0 ]; then
         ab_report "Writing the thinning plan failed. The analyzer's output is in the log."
         return "$rc"
@@ -2433,9 +2423,8 @@ that AppletBuilder's own Python is working."
 
     ab_log ""
 
-    local rc
     thin_python_exec "$@"
-    rc=$?
+    local rc=$?
     if [ "$rc" -ne 0 ]; then
         # Deliberately not promising a restore. The applier does restore the
         # interpreter it backed up when verification fails, but it is not the
@@ -2489,8 +2478,8 @@ ab_thin_python_availability() { # <project-path>
 #   the lib/pythonX.Y directory name      3.15
 # Prints nothing when the runtime has no lib/python3.* at all.
 applet_python_version() { # <project-path>
-    local _ab_stdlib _ab_vars _ab_header
     local _ab_found=""
+    local _ab_stdlib
     for _ab_stdlib in "$1"/Contents/Library/Python/lib/python3.*; do
         if [ -d "$_ab_stdlib" ]; then
             _ab_found="$_ab_stdlib"
@@ -2502,6 +2491,7 @@ applet_python_version() { # <project-path>
     fi
 
     local _ab_version=""
+    local _ab_vars
     for _ab_vars in "$_ab_found"/_sysconfig_vars_*.json; do
         if [ -f "$_ab_vars" ]; then
             # sed, not jq: /usr/bin/jq ships with macOS 15, and AppletBuilder runs on
@@ -2510,6 +2500,7 @@ applet_python_version() { # <project-path>
             break
         fi
     done
+    local _ab_header
     if [ -z "$_ab_version" ]; then
         _ab_header="$1/Contents/Library/Python/include/${_ab_found##*/}/patchlevel.h"
         if [ -f "$_ab_header" ]; then

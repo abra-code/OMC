@@ -142,11 +142,10 @@ info_plist_service_kind() {
         ''|*[!0-9]*) send_count=0 ;;
     esac
     local has_text=false
-    local send_type
     local i=0
     # By the count: an entry that is not a string reads as nothing and must not end the scan
     while [ "$i" -lt "$send_count" ]; do
-        send_type="$("$plister_tool" get value "$file" "$item/NSSendTypes/$i" 2> /dev/null)"
+        local send_type="$("$plister_tool" get value "$file" "$item/NSSendTypes/$i" 2> /dev/null)"
         case "$send_type" in
             NSStringPboardType|public.utf8-plain-text|public.plain-text|public.text|NSPasteboardTypeString)
                 has_text=true

@@ -456,7 +456,8 @@ _omcitest_executable() { # <App.app>
 }
 
 _omcitest_unset_matching() { # <ere-matching-the-whole-name>
-    local _pattern="$1" _name
+    local _pattern="$1"
+    local _name
     for _name in $(/usr/bin/env | LC_ALL=C /usr/bin/sed -nE "s/^($_pattern)=.*/\\1/p"); do
         unset "$_name"
     done
@@ -670,9 +671,8 @@ omcitest_run_file() { # <App.app> <test-file>
 
     _omcitest_clear_pasteboards
 
-    local _passed _failed
-    _passed="$(_omcitest_count pass)"
-    _failed="$(_omcitest_count fail)"
+    local _passed="$(_omcitest_count pass)"
+    local _failed="$(_omcitest_count fail)"
     printf '%s %s %s\n' "$_passed" "$_failed" "$_name" >> "$OMCITEST_RESULTS"
     # Kept when asked, and whenever the file failed: the applet's output (applet.log), its home and
     # temporary folder, and the test's own files are what explains a failure. A passing file's

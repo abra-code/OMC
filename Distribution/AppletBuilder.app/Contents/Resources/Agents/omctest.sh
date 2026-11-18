@@ -192,7 +192,8 @@ omctest_setvar() { # <name> <value>
 # limitation: a value containing a newline defeats the env scan; unsetting a
 # variable by name always works.
 omctest_unset_matching() { # <ere-matching-the-whole-name>
-    local pattern="$1" name
+    local pattern="$1"
+    local name
     for name in $(env | LC_ALL=C /usr/bin/sed -nE "s/^($pattern)=.*/\\1/p"); do
         unset "$name"
     done
@@ -205,8 +206,8 @@ omctest_slug() { # <text>
 
 # The label a test file runs under: its basename with .test.sh (or .sh) removed.
 omctest_label_for() { # <testfile>
-    local file_path="$1" base
-    base=$(/usr/bin/basename "$file_path")
+    local file_path="$1"
+    local base=$(/usr/bin/basename "$file_path")
     case "$base" in
         *.test.sh) base=${base%.test.sh} ;;
         *.sh) base=${base%.sh} ;;
@@ -217,7 +218,8 @@ omctest_label_for() { # <testfile>
 # Split a basename into stem and extension the way macOS displays it: a leading
 # dot does not start an extension, and a name with no dot has none.
 omctest_stem_of() { # <basename>
-    local base="$1" stem
+    local base="$1"
+    local stem
     case "$base" in
         *.*) stem=${base%.*} ;;
         *) printf '%s' "$base"; return 0 ;;
@@ -312,23 +314,23 @@ omctest_lint_report() { # <line> <prefix>
 # a variable whose every assignment in <scripts dir> is a "$<variable>/.../defaults" path. A
 # variable assigned /usr/bin/defaults anywhere, or never assigned there, stays reported.
 omctest_lint_drop_support_defaults() { # <scripts dir>
-    local line variable assignments other exempt rest
+    local line
     while IFS= read -r line; do
         [ -z "$line" ] && continue
-        exempt=""
+        local exempt=""
         case "$line" in
             *'OMC_OMC_SUPPORT_PATH/defaults'*|*'OMC_OMC_SUPPORT_PATH}/defaults'*)
                 exempt='"?\$\{?OMC_OMC_SUPPORT_PATH\}?/defaults"?' ;;
         esac
         if [ -z "$exempt" ]; then
             # The variable the line calls `defaults` through, if any: "$name" read, ${name} write
-            variable=$(printf '%s\n' "$line" | /usr/bin/sed -nE 's/^.*(^|[^[:alnum:]_.-])"?\$\{?([A-Za-z_][A-Za-z0-9_]*)\}?"?[[:space:]]+(-[A-Za-z]+[[:space:]]+)*(read|read-type|write|delete|rename|export|import|find|domains)([[:space:]].*)?$/\2/p')
+            local variable=$(printf '%s\n' "$line" | /usr/bin/sed -nE 's/^.*(^|[^[:alnum:]_.-])"?\$\{?([A-Za-z_][A-Za-z0-9_]*)\}?"?[[:space:]]+(-[A-Za-z]+[[:space:]]+)*(read|read-type|write|delete|rename|export|import|find|domains)([[:space:]].*)?$/\2/p')
             if [ -n "$variable" ]; then
                 # Its values, quotes removed: name="value", name='value', name=value, ${name:=value}
-                assignments=$(/usr/bin/grep -rhoE "(^|[^[:alnum:]_])${variable}:?=(\"[^\"]*\"|'[^']*'|[^[:space:];]+)" "$1" 2>/dev/null \
+                local assignments=$(/usr/bin/grep -rhoE "(^|[^[:alnum:]_])${variable}:?=(\"[^\"]*\"|'[^']*'|[^[:space:];]+)" "$1" 2>/dev/null \
                               | /usr/bin/sed -E "s/^[^=]*=//; s/^[\"']//; s/[\"']\$//")
                 if [ -n "$assignments" ]; then
-                    other=$(printf '%s\n' "$assignments" | /usr/bin/grep -vE '^\$[{]?[A-Za-z_][A-Za-z0-9_]*[}]?/(.*/)?defaults$')
+                    local other=$(printf '%s\n' "$assignments" | /usr/bin/grep -vE '^\$[{]?[A-Za-z_][A-Za-z0-9_]*[}]?/(.*/)?defaults$')
                     if [ -z "$other" ]; then
                         exempt="\"?\\\$\\{?${variable}\\}?\"?([^[:alnum:]_]|\$)"
                     fi
@@ -338,7 +340,7 @@ omctest_lint_drop_support_defaults() { # <scripts dir>
         if [ -n "$exempt" ]; then
             # Dropped only when no other `defaults` call is left on the line once the exempt one is
             # removed: `"$OMC_OMC_SUPPORT_PATH/defaults" read ... || /usr/bin/defaults read ...`
-            rest=$(printf '%s\n' "$line" | /usr/bin/sed -E "s#${exempt}# #g" \
+            local rest=$(printf '%s\n' "$line" | /usr/bin/sed -E "s#${exempt}# #g" \
                    | /usr/bin/grep -E '(^|[^[:alnum:]_.-])(defaults|"?\$\{?[A-Za-z_][A-Za-z0-9_]*\}?"?)[[:space:]]+(-[A-Za-z]+[[:space:]]+)*(read|read-type|write|delete|rename|export|import|find|domains)([[:space:]]|$)' \
                    | /usr/bin/grep -E 'defaults')
             if [ -z "$rest" ]; then
@@ -351,17 +353,18 @@ omctest_lint_drop_support_defaults() { # <scripts dir>
 }
 
 omctest_isolation_lint() { # <app>
-    local app_path="$1" scripts_dir hits prefix line
+    local app_path="$1"
     [ "$OMCTEST_NO_LINT" = "1" ] && return 0
-    scripts_dir="$app_path/Contents/Resources/Scripts"
+    local scripts_dir="$app_path/Contents/Resources/Scripts"
     [ -d "$scripts_dir" ] || return 0
-    prefix="$app_path/Contents/Resources/"
+    local prefix="$app_path/Contents/Resources/"
 
     # -F, because "$USER" is a literal here and every regex dialect disagrees
     # about "$". The second grep drops whole-line comments - this file's own
     # documentation of the hazard should not be reported as the hazard.
-    hits=$(/usr/bin/grep -rnF -e '/Users/$USER' -e '/Users/${USER}' "$scripts_dir" 2>/dev/null \
+    local hits=$(/usr/bin/grep -rnF -e '/Users/$USER' -e '/Users/${USER}' "$scripts_dir" 2>/dev/null \
            | /usr/bin/grep -vE ':[0-9]+:[[:space:]]*#[^#]*$')
+    local line
     if [ -n "$hits" ]; then
         printf 'omctest: ISOLATION - these build a path from /Users/$USER, which $HOME isolation cannot reach.\n' >&2
         printf 'omctest:   A test that reaches them reads and writes the REAL home of whoever runs the suite.\n' >&2
@@ -447,10 +450,9 @@ omctest_real_support_dir() { # <app>
 # Located relative to omctest.sh itself: OMC_APP_BUNDLE_PATH is the applet being
 # tested, not AppletBuilder, so it is no help here.
 omctest_helper_python() { # -> prints the interpreter path, or fails
-    local agents_dir contents python_bin
-    agents_dir="$(/usr/bin/dirname "$OMCTEST_LIB")"
-    contents="$agents_dir/../.."
-    python_bin="$contents/Library/Python/bin/python3"
+    local agents_dir="$(/usr/bin/dirname "$OMCTEST_LIB")"
+    local contents="$agents_dir/../.."
+    local python_bin="$contents/Library/Python/bin/python3"
     if [ ! -x "$python_bin" ] || [ ! -f "$python_bin" ]; then
         printf 'omctest: AppletBuilder has no embedded python3 at %s - the harness needs it for its own helpers\n' \
             "$python_bin" >&2
@@ -474,9 +476,9 @@ omctest_helper_script() { # <name> -> prints the path
 # applet that cannot reach it would be a background process serving nobody - and
 # worse, it would let a test pass where production has no client to import.
 omctest_applet_uses_bridge() { # <app> -> 0 if it does
-    local app_path="$1" found
+    local app_path="$1"
     [ -f "$app_path/Contents/Library/Packages/actionui_remote.py" ] || return 1
-    found=$(/usr/bin/find "$app_path/Contents/Resources/Scripts" -iname '*.py' -print -quit 2>/dev/null)
+    local found=$(/usr/bin/find "$app_path/Contents/Resources/Scripts" -iname '*.py' -print -quit 2>/dev/null)
     [ -n "$found" ]
 }
 
@@ -488,16 +490,17 @@ omctest_applet_uses_bridge() { # <app> -> 0 if it does
 # one that does will fail its own assertions with the fake's absence named in the
 # log rather than being silently skipped.
 omctest_start_bridge() { # <app> <label>
-    local app_path="$1" label="$2" fake helper socket_path
+    local app_path="$1" label="$2"
     omctest_applet_uses_bridge "$app_path" || return 0
 
-    fake="$(/usr/bin/dirname "$OMCTEST_LIB")/../../Library/actionui_remote_testing.py"
+    local fake="$(/usr/bin/dirname "$OMCTEST_LIB")/../../Library/actionui_remote_testing.py"
     if [ ! -f "$fake" ]; then
         printf 'omctest: no fake ActionUI host at %s - omc.window() will fail in this file\n' \
             "$fake" >&2
         return 1
     fi
 
+    local helper
     helper="$(omctest_helper_python)" || return 1
 
     # NOT under the scratch. sun_path holds 103 bytes, and the scratch root is already
@@ -508,7 +511,7 @@ omctest_start_bridge() { # <app> <label>
     # they belong; only the socket moves, and it is unlinked on stop.
     local socket_dir=$(/usr/bin/getconf DARWIN_USER_TEMP_DIR 2>/dev/null)
     [ -d "$socket_dir" ] || socket_dir="/tmp"
-    socket_path="${socket_dir%/}/omcb-$$-$label.sock"
+    local socket_path="${socket_dir%/}/omcb-$$-$label.sock"
     if [ "${#socket_path}" -gt 103 ]; then
         printf 'omctest: bridge socket path is %d bytes, over the 103 a unix socket allows: %s\n' \
             "${#socket_path}" "$socket_path" >&2
@@ -523,7 +526,7 @@ omctest_start_bridge() { # <app> <label>
     # and a real window's elements come from its ActionUI JSON - without them every
     # write answers 1002 (unknown view) and no handler can do anything. Same set of
     # documents omctest_extract_known_ids reads, so the two cannot disagree.
-    local _elements _windows
+    local _elements
     _elements=$("$helper" "$(omctest_helper_script omctest_bridge.py)" elements "$app_path")
     if [ $? -ne 0 ]; then
         printf 'omctest: could not read the elements of %s - every bridge write would answer 1002\n' \
@@ -531,7 +534,7 @@ omctest_start_bridge() { # <app> <label>
         omctest_stop_bridge
         return 1
     fi
-    _windows=$("$helper" "$(omctest_helper_script omctest_bridge.py)" windows "$app_path")
+    local _windows=$("$helper" "$(omctest_helper_script omctest_bridge.py)" windows "$app_path")
 
     # The default window, plus one per ActionUI document. omc_window_switch mints
     # "OMCTEST-<slug of name>-$$" and the documented convention is to name the document,
@@ -541,12 +544,14 @@ omctest_start_bridge() { # <app> <label>
     OMCTEST_BRIDGE_ELEMENTS="$OMCTEST_UI/bridge.elements"
     printf '%s\n' $_elements > "$OMCTEST_BRIDGE_ELEMENTS"
 
-    local element_args="" pair window uuid
+    local element_args=""
+    local pair
     for pair in $_elements; do
         element_args="$element_args --element $OMC_ACTIONUI_WINDOW_UUID:$pair"
     done
+    local window
     for window in $_windows; do
-        uuid="OMCTEST-$(omctest_slug "$window")-$$"
+        local uuid="OMCTEST-$(omctest_slug "$window")-$$"
         [ "$uuid" = "$OMC_ACTIONUI_WINDOW_UUID" ] && continue
         for pair in $_elements; do
             element_args="$element_args --element $uuid:$pair"
@@ -621,14 +626,15 @@ omctest_stop_bridge() {
 # Mirror the engine's Python resolution (see the contract block above) and apply
 # the resulting environment once for this test file.
 omctest_setup_python() { # <app>
-    local app_path="$1" embedded candidate
-    embedded="$app_path/Contents/Library/Python/bin/python3"
+    local app_path="$1"
+    local embedded="$app_path/Contents/Library/Python/bin/python3"
     OMCTEST_PYTHON=""
     OMCTEST_PYTHON_EMBEDDED=0
     if [ -x "$embedded" ] && [ -f "$embedded" ]; then
         OMCTEST_PYTHON="$embedded"
         OMCTEST_PYTHON_EMBEDDED=1
     else
+        local candidate
         for candidate in \
             /Library/Frameworks/Python.framework/Versions/Current/bin/python3 \
             /opt/homebrew/bin/python3 \
@@ -681,16 +687,16 @@ omctest_setup_python() { # <app>
 # only this file's subtree. Only standalone mode creates a scratch, and only
 # standalone mode installs the cleanup trap.
 omctest_prepare_env() { # <app> <label>
-    local app_path="$1" label="$2" resolved own_scratch
+    local app_path="$1" label="$2"
 
-    resolved=$(cd "$app_path" >/dev/null 2>&1 && pwd)
+    local resolved=$(cd "$app_path" >/dev/null 2>&1 && pwd)
     if [ -z "$resolved" ] || [ ! -d "$resolved/Contents" ]; then
         printf 'omctest: not an app bundle: %s\n' "$app_path" >&2
         return 1
     fi
     OMCTEST_APP="$resolved"
 
-    own_scratch=0
+    local own_scratch=0
     if [ -z "$OMCTEST_SCRATCH" ] || [ ! -d "$OMCTEST_SCRATCH" ]; then
         OMCTEST_SCRATCH=$(/usr/bin/mktemp -d "${TMPDIR:-/tmp}/omctest.XXXXXX") || return 1
         own_scratch=1
@@ -852,8 +858,8 @@ omctest_prepare_env() { # <app> <label>
 # makes this language-neutral - a Python handler building its tool paths from
 # $OMC_OMC_SUPPORT_PATH hits the same stubs as a shell handler.
 omctest_build_support() { # <app> <dest>
-    local app_path="$1" dest_dir="$2" real_dir tool stub_name
-    real_dir=$(omctest_real_support_dir "$app_path")
+    local app_path="$1" dest_dir="$2"
+    local real_dir=$(omctest_real_support_dir "$app_path")
     if [ -z "$real_dir" ]; then
         printf 'omctest: no Command.framework (or, before 6.0, Abracode.framework) Support directory in %s\n' "$app_path" >&2
         return 1
@@ -862,11 +868,13 @@ omctest_build_support() { # <app> <dest>
     export OMCTEST_REAL_SUPPORT
 
     /bin/mkdir -p "$dest_dir" || return 1
+    local tool
     for tool in "$real_dir"/*; do
         [ -e "$tool" ] || continue
         /bin/ln -sf "$tool" "$dest_dir/$(/usr/bin/basename "$tool")" 2>/dev/null
     done
 
+    local stub_name
     for stub_name in $OMCTEST_DEFAULT_STUBS; do
         omctest_install_default_stub "$stub_name" "$dest_dir" || return 1
     done
@@ -1314,11 +1322,12 @@ omc_stub() { # <tool>   (body on stdin)
 # means the default recording stub, not the real tool - running the real alert
 # would hang the suite.
 omc_unstub() { # <tool>
-    local tool_name="$1" stub_name
+    local tool_name="$1"
     if [ -z "$tool_name" ]; then
         printf 'omctest: omc_unstub needs a tool name\n' >&2
         return 1
     fi
+    local stub_name
     for stub_name in $OMCTEST_DEFAULT_STUBS; do
         if [ "$stub_name" = "$tool_name" ]; then
             omctest_install_default_stub "$tool_name" "$OMC_OMC_SUPPORT_PATH"
@@ -1367,8 +1376,9 @@ omc_trigger() { # <view-id> [part-id] [context]
 # {"items":[String],"location":{"x":Double,"y":Double}}. python3 is used only to
 # quote the paths correctly.
 omc_drop() { # <path> [path ...]
-    local context helper_python
+    local helper_python
     helper_python="$(omctest_helper_python)" || return 1
+    local context
     context=$("$helper_python" -c 'import json,sys; print(json.dumps({"items": sys.argv[1:], "location": {"x": 0.0, "y": 0.0}}))' "$@") || return 1
     omctest_setvar "OMC_ACTIONUI_TRIGGER_CONTEXT" "$context" || return 1
     # A drop without a preceding omc_trigger still needs a view id.
@@ -1381,7 +1391,7 @@ omc_drop() { # <path> [path ...]
 # empty value simulates Cancel: the family is unset, which is what the engine
 # leaves behind.
 omc_dialog_answer() { # <save_as|choose_file|choose_folder|choose_object|input_text> <value>
-    local channel="$1" value="$2" prefix base
+    local channel="$1" value="$2"
 
     if [ "$channel" = "input_text" ]; then
         if [ -n "$value" ]; then
@@ -1392,6 +1402,7 @@ omc_dialog_answer() { # <save_as|choose_file|choose_folder|choose_object|input_t
         return 0
     fi
 
+    local prefix
     case "$channel" in
         save_as) prefix="OMC_DLG_SAVE_AS" ;;
         choose_file) prefix="OMC_DLG_CHOOSE_FILE" ;;
@@ -1409,7 +1420,7 @@ omc_dialog_answer() { # <save_as|choose_file|choose_folder|choose_object|input_t
         return 0
     fi
 
-    base=$(/usr/bin/basename "$value")
+    local base=$(/usr/bin/basename "$value")
     omctest_setvar "${prefix}_PATH" "$value"
     omctest_setvar "${prefix}_PARENT_PATH" "$(/usr/bin/dirname "$value")"
     omctest_setvar "${prefix}_NAME" "$base"
@@ -1421,7 +1432,7 @@ omc_dialog_answer() { # <save_as|choose_file|choose_folder|choose_object|input_t
 # engine's always-exported set, so it persists across handlers until changed;
 # omc_object "" clears the family.
 omc_object() { # <path>
-    local object_path="$1" base parent
+    local object_path="$1"
     if [ -z "$object_path" ]; then
         unset OMC_OBJ_PATH OMC_OBJ_PARENT_PATH OMC_OBJ_NAME OMC_OBJ_NAME_NO_EXTENSION \
               OMC_OBJ_EXTENSION_ONLY OMC_OBJ_PATH_NO_EXTENSION OMC_OBJ_DISPLAY_NAME
@@ -1429,8 +1440,8 @@ omc_object() { # <path>
         export OMC_OBJ_PATH
         return 0
     fi
-    base=$(/usr/bin/basename "$object_path")
-    parent=$(/usr/bin/dirname "$object_path")
+    local base=$(/usr/bin/basename "$object_path")
+    local parent=$(/usr/bin/dirname "$object_path")
     omctest_setvar "OMC_OBJ_PATH" "$object_path"
     omctest_setvar "OMC_OBJ_PARENT_PATH" "$parent"
     omctest_setvar "OMC_OBJ_NAME" "$base"
@@ -1474,7 +1485,7 @@ omc_reset_controls() {
 # silently inert when it matches nothing. It is 0 whenever this returns nonzero,
 # so the count is only ever trustworthy after a zero return.
 omc_control_defaults() { # <actionui-document-name>
-    local document_name="$1" doc_path assignments
+    local document_name="$1"
 
     # Zeroed before anything can fail, including the argument check, so the
     # documented invariant - the count is 0 whenever this returns nonzero -
@@ -1489,6 +1500,7 @@ omc_control_defaults() { # <actionui-document-name>
 
     omc_reset_controls
 
+    local doc_path
     doc_path=$(omctest_find_actionui_document "$document_name") || {
         printf 'omctest: no ActionUI document named [%s] in %s\n' \
             "$document_name" "$OMC_APP_BUNDLE_PATH/Contents/Resources" >&2
@@ -1499,6 +1511,7 @@ omc_control_defaults() { # <actionui-document-name>
     # "id value" pairs: a declared default may contain a space, a quote or a
     # newline, and this is the code path whose whole job is fidelity to what
     # the document says.
+    local assignments
     assignments=$(omctest_extract_control_defaults "$doc_path") || {
         printf 'omctest: reading control defaults from %s failed\n' "$doc_path" >&2
         return 1
@@ -1536,13 +1549,14 @@ omc_control_defaults() { # <actionui-document-name>
 # ran it. Base.lproj first is deterministic, which is what a test needs. For a
 # single-localization applet - both PDF applets today - the two agree anyway.
 omctest_find_actionui_document() { # <name> -> prints the path
-    local document_name="$1" resources candidate lproj
-    resources="$OMC_APP_BUNDLE_PATH/Contents/Resources"
-    candidate="$resources/Base.lproj/$document_name.json"
+    local document_name="$1"
+    local resources="$OMC_APP_BUNDLE_PATH/Contents/Resources"
+    local candidate="$resources/Base.lproj/$document_name.json"
     if [ -f "$candidate" ]; then
         printf '%s' "$candidate"
         return 0
     fi
+    local lproj
     for lproj in "$resources"/*.lproj; do
         candidate="$lproj/$document_name.json"
         if [ -f "$candidate" ]; then
@@ -1568,13 +1582,14 @@ omctest_find_actionui_document() { # <name> -> prints the path
 # is observable as a value, and the property it holds that value in is one of a
 # small stable set whose conversion rules are the only thing hardcoded below.
 omctest_extract_control_defaults() { # <document-path> -> prints shell assignments
-    local doc_path="$1" schemas_dir helper_python
-    schemas_dir="$(/usr/bin/dirname "$OMCTEST_LIB")/../../Library/actionui_verifier/schemas"
+    local doc_path="$1"
+    local schemas_dir="$(/usr/bin/dirname "$OMCTEST_LIB")/../../Library/actionui_verifier/schemas"
     if [ ! -d "$schemas_dir" ]; then
         printf 'omctest: no ActionUI element schemas at %s - omc_control_defaults needs them to know which elements carry a value\n' \
             "$schemas_dir" >&2
         return 1
     fi
+    local helper_python
     helper_python="$(omctest_helper_python)" || return 1
     "$helper_python" "$(omctest_helper_script omctest_control_defaults.py)" \
         "$doc_path" "$schemas_dir"
@@ -1618,13 +1633,14 @@ omctest_script_index() {
     fi
     local listing=''
     local odd=0
-    local candidate base stem
+    local candidate
     for candidate in "$scripts_dir"/*; do
         [ -f "$candidate" ] || continue
-        base=${candidate##*/}
+        local base=${candidate##*/}
         case "$base" in
             *"$omctest_index_tab"*|*"$omctest_index_newline"*) odd=1; continue ;;
         esac
+        local stem
         # The rule of omctest_stem_of, inline so the loop starts no subshell: a
         # leading dot does not start an extension, so ".zshrc" is its own stem.
         case "$base" in
@@ -1656,10 +1672,10 @@ omctest_resolve_script() { # <command-id>
     local matches="$(printf '%s' "$OMCTEST_SCRIPT_INDEX" \
         | OMCTEST_WANTED_ID="$1" LC_ALL=C /usr/bin/awk -F '\t' 'tolower($1) == tolower(ENVIRON["OMCTEST_WANTED_ID"]) { print substr($0, length($1) + 2) }')"
     local found_sh='' found_py='' found_zsh='' found_bash='' found_other=''
-    local path base
+    local path
     while IFS= read -r path; do
         [ -n "$path" ] || continue
-        base=${path##*/}
+        local base=${path##*/}
         case "$base" in
             *.sh) [ -n "$found_sh" ] || found_sh=$path ;;
             *.py) [ -n "$found_py" ] || found_py=$path ;;
@@ -1682,18 +1698,20 @@ MATCHES
 # The same answer by scanning the folder: three processes per file it passes. Kept
 # for the names the index cannot hold.
 omctest_resolve_script_scan() { # <command-id>
-    local command_id="$1" scripts_dir wanted ext candidate stem base
-    scripts_dir="$OMC_APP_BUNDLE_PATH/Contents/Resources/Scripts"
-    wanted=$(printf '%s' "$command_id" | LC_ALL=C /usr/bin/tr 'A-Z' 'a-z')
+    local command_id="$1"
+    local scripts_dir="$OMC_APP_BUNDLE_PATH/Contents/Resources/Scripts"
+    local wanted=$(printf '%s' "$command_id" | LC_ALL=C /usr/bin/tr 'A-Z' 'a-z')
     # The documented precedence first, then everything else. The engine keys on
     # the lowercased stem with ANY extension stripped and leaves duplicate-stem
     # precedence undefined, so the four below are this harness's deterministic
     # choice - but a .pl, .rb, .applescript or extensionless handler must still
     # resolve, and used to read as "no script for command id".
+    local ext
     for ext in sh py zsh bash ''; do
+        local candidate
         for candidate in "$scripts_dir"/*; do
             [ -f "$candidate" ] || continue
-            base=$(/usr/bin/basename "$candidate")
+            local base=$(/usr/bin/basename "$candidate")
             case "$ext" in
                 '')
                     # The catch-all pass: skip the four already tried.
@@ -1705,7 +1723,7 @@ omctest_resolve_script_scan() { # <command-id>
             esac
             # omctest_stem_of, not basename -s: it implements the macOS dotfile
             # rule, so ".zshrc" keeps its whole name as the stem.
-            stem=$(omctest_stem_of "$base" | LC_ALL=C /usr/bin/tr 'A-Z' 'a-z')
+            local stem=$(omctest_stem_of "$base" | LC_ALL=C /usr/bin/tr 'A-Z' 'a-z')
             if [ "$stem" = "$wanted" ]; then
                 printf '%s' "$candidate"
                 return 0
@@ -1722,9 +1740,9 @@ omctest_resolve_script_scan() { # <command-id>
 # a .js or .csh handler under /bin/sh and reported its syntax errors as the
 # applet's.
 omctest_interpreter_for() { # <script-path>
-    local script_path="$1" base ext
-    base=$(/usr/bin/basename "$script_path")
-    ext=$(omctest_extension_of "$base" | LC_ALL=C /usr/bin/tr 'A-Z' 'a-z')
+    local script_path="$1"
+    local base=$(/usr/bin/basename "$script_path")
+    local ext=$(omctest_extension_of "$base" | LC_ALL=C /usr/bin/tr 'A-Z' 'a-z')
     case "$ext" in
         sh) printf '/bin/sh' ;;
         py) printf '%s' "$OMCTEST_PYTHON" ;;
@@ -1764,7 +1782,7 @@ omctest_dispatch() { # <command-id> <interpreter> <script> <status-file>
 }
 
 omc_run() { # <command-id>
-    local command_id="$1" script_path interpreter status_file
+    local command_id="$1"
     if [ -z "$command_id" ]; then
         printf 'omctest: omc_run needs a command id\n' >&2
         return 127
@@ -1772,7 +1790,7 @@ omc_run() { # <command-id>
 
     # Here, not in the resolver: it runs in the command substitution below.
     omctest_script_index
-    script_path=$(omctest_resolve_script "$command_id")
+    local script_path=$(omctest_resolve_script "$command_id")
     if [ -z "$script_path" ]; then
         printf 'omctest: no script for command id [%s] in %s\n' \
             "$command_id" "$OMC_APP_BUNDLE_PATH/Contents/Resources/Scripts" >&2
@@ -1790,8 +1808,8 @@ omc_run() { # <command-id>
         omc_clear_event
         return 127
     fi
-    interpreter=$(omctest_interpreter_for "$script_path")
-    status_file="$OMCTEST_UI/.last_status"
+    local interpreter=$(omctest_interpreter_for "$script_path")
+    local status_file="$OMCTEST_UI/.last_status"
 
     if [ "$OMCTEST_VERBOSE" = "1" ]; then
         omctest_dispatch "$command_id" "$interpreter" "$script_path" "$status_file" 2>&1 \
@@ -1897,17 +1915,17 @@ chains_reset() {
 # exits - rather than the tempting-but-wrong recursive dispatch. The depth limit
 # turns a circular chain into a named failure instead of a hung run.
 omc_drain_chain() { # [max-depth, default 25]
-    local max_depth="${1:-25}" depth=0 next_id chain_rc worst_rc=0
+    local max_depth="${1:-25}" depth=0 worst_rc=0
     while [ -s "$OMCTEST_UI/chain.queue" ]; do
         if [ "$depth" -ge "$max_depth" ]; then
             printf 'omctest: chain depth %s exceeded (circular chain?)\n' "$max_depth" >&2
             return 1
         fi
-        next_id=$(/usr/bin/head -n 1 "$OMCTEST_UI/chain.queue")
+        local next_id=$(/usr/bin/head -n 1 "$OMCTEST_UI/chain.queue")
         /usr/bin/tail -n +2 "$OMCTEST_UI/chain.queue" > "$OMCTEST_UI/chain.tmp"
         /bin/mv "$OMCTEST_UI/chain.tmp" "$OMCTEST_UI/chain.queue"
         omc_run "$next_id"
-        chain_rc=$?
+        local chain_rc=$?
         # The worst status across the whole chain, not just the last link's: a
         # handler that failed in the middle was invisible, because only the final
         # omc_run's status survived in OMCTEST_STATUS.
@@ -1956,9 +1974,9 @@ omc_leave_sheet() {
 # Poll a predicate at 10 Hz - for handlers that background a pipeline or
 # debounce. Returns 0 as soon as the predicate succeeds, 1 on timeout.
 omc_wait_for() { # '<predicate command>' [timeout-seconds, default 5]
-    local predicate="$1" timeout_s="${2:-5}" ticks limit
-    limit=$(/usr/bin/awk -v t="$timeout_s" 'BEGIN { printf "%d", (t * 10) + 0.5 }')
-    ticks=0
+    local predicate="$1" timeout_s="${2:-5}"
+    local limit=$(/usr/bin/awk -v t="$timeout_s" 'BEGIN { printf "%d", (t * 10) + 0.5 }')
+    local ticks=0
     while [ "$ticks" -le "$limit" ]; do
         if /bin/sh -c "$predicate" >/dev/null 2>&1; then
             return 0
@@ -2004,12 +2022,12 @@ check() { # <description> <expected> <actual>
 # How many checks of one kind have been counted. Prints 0 rather than nothing
 # when none have, so a caller can do arithmetic on it.
 omctest_count() { # <pass|fail>
-    local kind="$1" counted
+    local kind="$1"
     if [ ! -f "$OMCTEST_UI/counts.$kind" ]; then
         printf '0'
         return 0
     fi
-    counted=$(/usr/bin/wc -c < "$OMCTEST_UI/counts.$kind" | /usr/bin/tr -d ' ')
+    local counted=$(/usr/bin/wc -c < "$OMCTEST_UI/counts.$kind" | /usr/bin/tr -d ' ')
     printf '%s' "${counted:-0}"
 }
 
@@ -2069,9 +2087,8 @@ check_status() { # <description> <expected-rc>
 # by the marker. Measured, not assumed - an "exit 0" planted partway through a
 # 159-line file is reported identically with and without a declared count.
 omctest_end() {
-    local passed failed
-    passed=$(omctest_count pass)
-    failed=$(omctest_count fail)
+    local passed=$(omctest_count pass)
+    local failed=$(omctest_count fail)
     # A file that reached the end having asserted nothing is a broken file, not
     # a passing one - a mis-set filter, a fixture that vanished, a whole suite
     # commented out. Left alone it reports "0 passed, 0 failed" and is green.
@@ -2239,7 +2256,7 @@ omctest_read_diagnostic() { # <log-stem>
 # Prints 0 rather than failing when no bridge ran, so an assertion of 0 is meaningful
 # in an applet that does not ship the bridge at all.
 bridge_called() { # <method> [json-params-subset]
-    local method="$1" subset="$2" helper
+    local method="$1" subset="$2"
     if [ -z "$method" ]; then
         printf 'omctest: bridge_called needs a method name\n' >&2
         return 1
@@ -2248,6 +2265,7 @@ bridge_called() { # <method> [json-params-subset]
         printf '0\n'
         return 0
     fi
+    local helper
     helper="$(omctest_helper_python)" || return 1
     "$helper" "$(omctest_helper_script omctest_bridge.py)" \
         called "$OMCTEST_BRIDGE_LOG" "$method" ${subset:+"$subset"}
@@ -2260,7 +2278,7 @@ bridge_called() { # <method> [json-params-subset]
 # be a request, and then bridge_called actionui.getValue would count the harness's own
 # reads alongside the applet's. It also means this keeps working after the host stops.
 bridge_value() { # <view-id> [window-uuid]
-    local view_id="$1" window="${2:-$OMC_ACTIONUI_WINDOW_UUID}" helper
+    local view_id="$1" window="${2:-$OMC_ACTIONUI_WINDOW_UUID}"
     case "$view_id" in
         ''|*[!0-9]*)
             printf 'omctest: bridge_value: not a view id: [%s]\n' "$view_id" >&2
@@ -2270,17 +2288,18 @@ bridge_value() { # <view-id> [window-uuid]
         printf 'omctest: bridge_value: no bridge ran - this applet has no Python handlers, or no actionui_remote.py in Contents/Library/Packages\n' >&2
         return 1
     fi
+    local helper
     helper="$(omctest_helper_python)" || return 1
     "$helper" "$(omctest_helper_script omctest_bridge.py)" \
         value "$OMCTEST_BRIDGE_LOG" "$window" "$view_id" "$OMCTEST_BRIDGE_ELEMENTS"
 }
 
 ui_declare_ids() { # <view-id> [view-id ...]
-    local view_id
     if [ ! -s "$OMCTEST_UI/known_ids.txt" ]; then
         printf 'omctest: ui_declare_ids ignored - no ids were extracted, so the check is already off\n' >&2
         return 1
     fi
+    local view_id
     for view_id; do
         case "$view_id" in
             ''|*[!0-9]*)
@@ -2296,9 +2315,9 @@ ui_declare_ids() { # <view-id> [view-id ...]
 
 # Make subsequent writes to these ids fail, so a handler's error path runs.
 ui_fail() { # <view-id> [view-id ...]
-    local win_dir view_id
-    win_dir=$(omctest_win_dir)
+    local win_dir=$(omctest_win_dir)
     /bin/mkdir -p "$win_dir"
+    local view_id
     for view_id; do
         printf '%s\n' "$view_id" >> "$win_dir/fail_ids"
     done
@@ -2340,12 +2359,13 @@ ui_alert_message() { # [window-uuid]
 # A test that has just PROVOKED an error on purpose and wants a clean slate says
 # so with ui_reset_diagnostics.
 ui_reset() {
-    local win_dir log
+    local win_dir
     for win_dir in "$OMCTEST_UI"/win-*; do
         [ -d "$win_dir" ] || continue
         /bin/rm -rf "$win_dir"
     done
     : > "$OMCTEST_UI/journal.tsv"
+    local log
     for log in unknown_ids suspect_writes errors; do
         if [ -s "$OMCTEST_UI/$log.log" ]; then
             /bin/cat "$OMCTEST_UI/$log.log" >> "$OMCTEST_UI/$log.carried" 2>/dev/null
@@ -2382,11 +2402,12 @@ fixture() { # <name>
 }
 
 fixture_copy() { # <name> [dest-dir, default $OMCTEST_WORK]
-    local name="$1" dest_dir="${2:-$OMCTEST_WORK}" source_path base
+    local name="$1" dest_dir="${2:-$OMCTEST_WORK}"
+    local source_path
     source_path=$(fixture "$name") || return 1
     /bin/mkdir -p "$dest_dir" || return 1
     /bin/cp -R "$source_path" "$dest_dir/" || return 1
-    base=$(/usr/bin/basename "$name")
+    local base=$(/usr/bin/basename "$name")
     /bin/chmod -R u+w "$dest_dir/$base" 2>/dev/null
     printf '%s' "$dest_dir/$base"
 }
@@ -2401,7 +2422,8 @@ fixture_copy() { # <name> [dest-dir, default $OMCTEST_WORK]
 # Every "id" in every ActionUI document in the bundle, deduped, one per line.
 # The union is v1's admitted masking limitation (see ui_unknown_writes).
 omctest_extract_known_ids() { # <app> <out-file>
-    local app_path="$1" out_file="$2" helper_python
+    local app_path="$1" out_file="$2"
+    local helper_python
     helper_python="$(omctest_helper_python)" || return 1
     "$helper_python" "$(omctest_helper_script omctest_known_ids.py)" \
         "$app_path" "$out_file"
@@ -2421,11 +2443,11 @@ omctest_extract_known_ids() { # <app> <out-file>
 # that miscounts because of it is worse than no harness. The test file's stdout
 # now goes to the handler log; its ok/FAIL lines were always on stderr.
 omctest_run_file() { # <app> <testfile>
-    local app_path="$1" test_file="$2" label counts_file rc_file rc
-    label=$(omctest_label_for "$test_file")
+    local app_path="$1" test_file="$2"
+    local label=$(omctest_label_for "$test_file")
     /bin/mkdir -p "$OMCTEST_SCRATCH/$label" || return 1
-    counts_file="$OMCTEST_SCRATCH/$label/counts"
-    rc_file="$OMCTEST_SCRATCH/$label/rc"
+    local counts_file="$OMCTEST_SCRATCH/$label/counts"
+    local rc_file="$OMCTEST_SCRATCH/$label/rc"
     /bin/rm -f "$counts_file" "$rc_file"
 
     (
@@ -2452,7 +2474,7 @@ omctest_run_file() { # <app> <testfile>
         file_rc=$?
         exit "$file_rc"   # the EXIT trap above stops the bridge, on this path and every other
     )
-    rc=$?
+    local rc=$?
     # The caller reads this function through a command substitution, which is
     # itself a subshell - so a variable set here would never reach it. The exit
     # code of a crashed file travels by file instead.
@@ -2467,7 +2489,6 @@ omctest_run_file() { # <app> <testfile>
 omctest_run_suite() { # <app> <tests-dir> [filter-glob]
     local app_path="$1" tests_dir="$2" filter="$3"
     local own_scratch=0 total_pass=0 total_fail=0 file_count=0
-    local test_file base label counts pass_n fail_n crash_rc
 
     if [ ! -d "$tests_dir" ]; then
         printf 'omctest: no tests directory at %s\n' "$tests_dir" >&2
@@ -2494,16 +2515,17 @@ omctest_run_suite() { # <app> <tests-dir> [filter-glob]
     OMCTEST_TESTS="$tests_dir"
     export OMCTEST_TESTS
 
+    local test_file
     for test_file in "$tests_dir"/*.test.sh; do
         [ -f "$test_file" ] || continue
-        base=$(/usr/bin/basename "$test_file")
+        local base=$(/usr/bin/basename "$test_file")
         if [ -n "$filter" ]; then
             case "$base" in
                 $filter) ;;
                 *) continue ;;
             esac
         fi
-        label=$(omctest_label_for "$test_file")
+        local label=$(omctest_label_for "$test_file")
         if [ -d "$OMCTEST_SCRATCH/$label" ]; then
             # Two matched files slug to one label, so they would share a scratch
             # subtree and a window uuid. Refused rather than run: the second one
@@ -2524,7 +2546,7 @@ omctest_run_suite() { # <app> <tests-dir> [filter-glob]
             # because "CRASH (exit 0)" reads like a contradiction - a file that
             # stopped early with a success status is the quiet one, and the one
             # worth spelling out.
-            crash_rc=$(/bin/cat "$OMCTEST_SCRATCH/$label/rc" 2>/dev/null)
+            local crash_rc=$(/bin/cat "$OMCTEST_SCRATCH/$label/rc" 2>/dev/null)
             if [ "${crash_rc:-1}" = "0" ]; then
                 printf 'INCOMPLETE %s (exited 0 before reaching omctest_end - whatever ran after that point did not run)\n' "$base" >&2
             else
@@ -2533,9 +2555,9 @@ omctest_run_suite() { # <app> <tests-dir> [filter-glob]
             total_fail=$((total_fail + 1))
             continue
         fi
-        counts=$(/bin/cat "$OMCTEST_SCRATCH/$label/counts" 2>/dev/null)
-        pass_n=$(printf '%s' "$counts" | /usr/bin/cut -f 1)
-        fail_n=$(printf '%s' "$counts" | /usr/bin/cut -f 2)
+        local counts=$(/bin/cat "$OMCTEST_SCRATCH/$label/counts" 2>/dev/null)
+        local pass_n=$(printf '%s' "$counts" | /usr/bin/cut -f 1)
+        local fail_n=$(printf '%s' "$counts" | /usr/bin/cut -f 2)
         # Guarded before the arithmetic: a non-numeric field would be a shell
         # syntax error, which is fatal in a non-interactive shell and would take
         # the rest of the suite with it.
@@ -2570,18 +2592,18 @@ omctest_run_suite() { # <app> <tests-dir> [filter-glob]
 # from $OMCTEST_APP, or from the single *.app beside the test file's Tests/
 # directory.
 omctest_standalone_init() {
-    local test_file test_dir project_dir candidate app_path count
-
-    test_file="$0"
-    test_dir=$(cd "$(/usr/bin/dirname "$test_file")" >/dev/null 2>&1 && pwd)
+    local test_file="$0"
+    local test_dir=$(cd "$(/usr/bin/dirname "$test_file")" >/dev/null 2>&1 && pwd)
     [ -n "$test_dir" ] || test_dir=$(pwd)
 
+    local app_path
     if [ -n "$OMCTEST_APP" ]; then
         app_path="$OMCTEST_APP"
     else
-        project_dir=$(/usr/bin/dirname "$test_dir")
+        local project_dir=$(/usr/bin/dirname "$test_dir")
         app_path=""
-        count=0
+        local count=0
+        local candidate
         for candidate in "$project_dir"/*.app; do
             [ -d "$candidate" ] || continue
             app_path="$candidate"
