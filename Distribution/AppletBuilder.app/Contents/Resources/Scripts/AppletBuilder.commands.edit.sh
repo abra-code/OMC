@@ -1,5 +1,5 @@
 #!/bin/bash
-# AppletBuilder.commands.edit - Open Command.plist in external editor
+# AppletBuilder.commands.edit - Open the project's command file in the external editor
 
 source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.prefs.sh"
 

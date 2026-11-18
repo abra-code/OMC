@@ -68,9 +68,9 @@ Control values are available as environment variables:
 | `esc_for_applescript` | Escape for AppleScript strings |
 | `esc_wrap_with_single_quotes_for_shell` | Wrap in single quotes for shell |
 
-## Command.plist Integration
+## Command File Integration
 
-Nib dialogs are connected via `NIB_DIALOG` dictionary in Command.plist:
+Nib dialogs are connected via a `NIB_DIALOG` dictionary in the command file (`Command.json`, or `Command.plist` in an older applet; shown here as property list XML):
 
 ```xml
 <key>NIB_DIALOG</key>

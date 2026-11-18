@@ -216,7 +216,7 @@ if [ -f "$target_file" ]; then
 fi
 ```
 
-**Output window** — for detailed multi-line output (error logs, build results). Set up a command with `EXECUTION_MODE=exe_script_file_with_output_window` in Command.plist.
+**Output window** — for detailed multi-line output (error logs, build results). Set up a command with `EXECUTION_MODE=exe_script_file_with_output_window` in Command.json.
 
 ## Handling Table Selection
 
@@ -299,7 +299,7 @@ temp=$(/usr/bin/mktemp "${TMPDIR:-/tmp}/edit_XXXXXX")
 
 ## Naming Conventions
 
-Script files follow the pattern `AppName.area.action.sh`, matching the `COMMAND_ID` in Command.plist (prefixed by `NAME`):
+Script files follow the pattern `AppName.area.action.sh`, matching the `COMMAND_ID` in Command.json (prefixed by `NAME`):
 
 | File | COMMAND_ID |
 |------|-----------|
@@ -320,7 +320,7 @@ A few approaches that can help when things aren't working as expected:
 ## Related Documentation
 
 - [Python Scripting Guide](omc_python_scripting_guide.md) — Python-specific patterns for Command Workshop applets
-- [Command Workshop Command Reference](omc_command_reference.md) — Command.plist format and all configuration keys
+- [Command Workshop Command Reference](omc_command_reference.md) — the command file format (Command.json) and all configuration keys
 - [Command Workshop Runtime Context Reference](omc_runtime_context_reference.md) — All environment variables and special words
 - [omc_dialog_control](omc_dialog_control--help.md) — Full command reference for UI manipulation
 - [omc_next_command](omc_next_command--help.md) — Command chaining

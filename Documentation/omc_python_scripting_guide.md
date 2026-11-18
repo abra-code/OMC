@@ -441,7 +441,7 @@ See the Python-Embedding README for the underlying `analyze_python_deps.py` / `t
 
 ## Naming Conventions
 
-Script files follow the same pattern as shell scripts — `AppName.area.action.py`, matching the `COMMAND_ID` in Command.plist:
+Script files follow the same pattern as shell scripts — `AppName.area.action.py`, matching the `COMMAND_ID` in Command.json:
 
 | File | COMMAND_ID |
 |------|-----------|
@@ -461,7 +461,7 @@ The Command Engine determines the interpreter from the file extension, so a comm
 ## Related Documentation
 
 - [Shell Scripting Guide](omc_scripting_guide.md) — Shell-specific patterns for Command Workshop applets
-- [Command Workshop Command Reference](omc_command_reference.md) — Command.plist format and all configuration keys
+- [Command Workshop Command Reference](omc_command_reference.md) — the command file format (Command.json) and all configuration keys
 - [Python Bridge Guide](omc_python_bridge_guide.md) — Reading an ActionUI window from a Python handler: the full `omc` module reference
 - [Command Workshop Runtime Context Reference](omc_runtime_context_reference.md) — All environment variables and special words
 - [omc_dialog_control](omc_dialog_control--help.md) — Full command reference for UI manipulation

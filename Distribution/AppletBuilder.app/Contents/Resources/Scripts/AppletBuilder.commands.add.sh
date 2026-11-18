@@ -10,7 +10,7 @@ project_path=$(load_project_path)
 cmd_plist=$(command_file_path "$project_path")
 
 if [ ! -f "$cmd_plist" ]; then
-    set_value "$CMD_DETAIL_ID" "No Command.plist found"
+    set_value "$CMD_DETAIL_ID" "No command file found"
     exit 0
 fi
 

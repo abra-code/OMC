@@ -1,5 +1,5 @@
 #!/bin/bash
-# AppletBuilder.commands.remove - Remove selected command from Command.plist
+# AppletBuilder.commands.remove - Remove selected command from the command file
 
 source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.tables.sh"
 source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.plist.sh"
@@ -64,7 +64,7 @@ Script \"${script_name}\" was found. Remove it too?"
 else
     "$alert_tool" --level caution --title "AppletBuilder" \
         --ok "Remove" --cancel "Cancel" \
-        "Remove command \"${cmd_label}\" from Command.plist?"
+        "Remove command \"${cmd_label}\" from $(/usr/bin/basename "$cmd_plist")?"
     result=$?
     if [ "$result" -ne 0 ]; then
         exit 0

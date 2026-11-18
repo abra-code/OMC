@@ -35,7 +35,7 @@ if [ -n "$project_path" ] && [ -f "$project_path/Contents/Info.plist" ]; then
         set_value "$GEN_ICON_IMAGE_ID" "$icon_preview"
     fi
 
-    # Populate command ID picker from Command.plist
+    # Populate the command ID picker from the command file
     cmd_plist=$(command_file_path "$project_path")
     plister="$plister_tool"
     cmd_options='['

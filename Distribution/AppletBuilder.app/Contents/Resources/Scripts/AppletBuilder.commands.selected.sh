@@ -36,7 +36,7 @@ fi
 # Store selected index for save/validate handlers
 pb_set "$PB_CMD_SELECTED" "$cmd_index"
 
-# Store hash of Command.plist for external modification detection
+# Store the command file's hash for external modification detection
 pb_set "$PB_CMD_HASH" "$(file_hash "$cmd_plist")"
 
 # Show the selected command for editing. For a JSON command file we show a

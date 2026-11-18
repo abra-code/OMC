@@ -7,7 +7,7 @@ Command Workshop (formerly OMC) is a low-code macOS app development engine that 
 ### Key Concepts
 
 - **Applet**: A standalone mini-app (`.app` bundle) built on Command.framework
-- **Command**: An action handler defined in `Command.plist` that executes a script
+- **Command**: An action handler defined in `Command.json` (or a legacy `Command.plist`) that executes a script
 - **Command Group**: Multiple commands sharing the same `NAME` with unique `COMMAND_ID`s
 - **ActionUI window**: a JSON document (in `Base.lproj`) describing a window's views
 - **Subcommand**: A command triggered by UI events (button click, dialog init, table selection)
@@ -45,15 +45,15 @@ Command Workshop (formerly OMC) is a low-code macOS app development engine that 
 
 | Template | Description |
 |----------|-------------|
-| `Empty` | Bare-bones applet — only Command.plist and a main script |
+| `Empty` | Bare-bones applet — only Command.json and a main script |
 | `ActionUI Window` | Pre-wired with an ActionUI JSON window (requires macOS 14.6+) |
 | `ActionUI Web` | ActionUI window with an embedded WebView for web-based UI |
 
 **Python**: Check "Include Python" in the New Applet dialog to embed a Python 3 runtime — there is no separate Python template.
 
 > **For AI Agents**: When assisting with applet development:
-> - **New applet**: Ask the user to create it via `AppletBuilder.app` (GUI-only workflow). You then edit the generated `Command.plist`, scripts, and UI files.
-> - **Existing applet**: Edit `Command.plist`, `Scripts/`, and ActionUI JSON files in place.
+> - **New applet**: Ask the user to create it via `AppletBuilder.app` (GUI-only workflow). You then edit the generated `Command.json`, scripts, and UI files.
+> - **Existing applet**: Edit its command file (`Command.json`, or `Command.plist` in an older applet), `Scripts/`, and ActionUI JSON files in place.
 > - **After editing**: Ask the user to click Build in AppletBuilder's Build & Run pane — it updates the runtime and re-signs. Do NOT manually copy runtime binaries or Command.framework.
 
 ### Codesign for Local Execution
@@ -73,7 +73,7 @@ MyApp.app/
 │   ├── Frameworks/Command.framework  (OMC engine)
 │   ├── MacOS/MyApp                    (app binary)
 │   ├── Resources/
-│   │   ├── Command.plist              (command definitions)
+│   │   ├── Command.json               (command definitions)
 │   │   ├── Scripts/                   (action handler scripts)
 │   │   └── Base.lproj/
 │   │       └── *.json                 (ActionUI window definitions)
@@ -83,7 +83,9 @@ MyApp.app/
 
 ---
 
-## Step 2: Define Commands in Command.plist
+## Step 2: Define Commands in Command.json
+
+AppletBuilder creates `Command.json`. The Command Engine also reads a legacy `Command.plist`, and reads `Command.json` when both are there. The examples in this guide are written as property list XML, which maps one to one onto JSON: the same keys and values, `VERSION` as the number `2`, booleans as `true`/`false`.
 
 ### Root Structure
 
@@ -584,7 +586,7 @@ MyApp.app/
     ├── MacOS/
     │   └── MyApp
     ├── Resources/
-    │   ├── Command.plist           <- Command definitions
+    │   ├── Command.json            <- Command definitions
     │   ├── Scripts/
     │   │   ├── MyApp.main.sh       <- Main launch script
     │   │   ├── MyApp.window.init   <- Window init handler
@@ -644,7 +646,7 @@ MyApp.app/
 
 ## Example: Complete Mini Applet
 
-### Command.plist
+### Command.json (shown as property list XML)
 ```xml
 <dict>
     <key>NAME</key>

@@ -24,7 +24,7 @@ if [ -z "$name" ]; then
 fi
 
 if [ ! -f "$cmd_plist" ]; then
-    set_value "$NEWCMD_STATUS_ID" "No Command.plist found"
+    set_value "$NEWCMD_STATUS_ID" "No command file found"
     exit 1
 fi
 
@@ -50,7 +50,7 @@ if [ -n "$command_id" ]; then
     fi
 fi
 
-# Add command entry to Command.plist
+# Add the command entry to the command file
 plist_edit "$cmd_plist" append_command_full "$name" "$command_id" "$execution" "$activation"
 if [ $? -ne 0 ]; then
     set_value "$NEWCMD_STATUS_ID" "Error adding command"

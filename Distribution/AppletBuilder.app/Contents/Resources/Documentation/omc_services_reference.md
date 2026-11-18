@@ -68,7 +68,7 @@ The Command Engine listens on the `OMCService` port upon applet launch. When a s
 ## Real-World Examples
 
 ### Find.app at [FindApp](https://github.com/abra-code/FindApp)
-- `NSUserData`: `find.new` (corresponding to `COMMAND_ID` in Command.plist)
+- `NSUserData`: `find.new` (corresponding to `COMMAND_ID` in Command.json)
 - `NSSendTypes`: `NSFilenamesPboardType`
 - Input: `$OMC_OBJ_PATH` as a directory to search
 

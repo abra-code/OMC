@@ -1,5 +1,5 @@
 #!/bin/bash
-# AppletBuilder.commands.reveal - Reveal Command.plist in Finder
+# AppletBuilder.commands.reveal - Reveal the project's command file in Finder
 
 source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/lib.common.sh"
 

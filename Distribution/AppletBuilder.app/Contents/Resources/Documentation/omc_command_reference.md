@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This reference documents the **plist command format** for **Command Workshop (formerly OMC)**, a low-code engine for building macOS **applets** (standalone mini-apps) and contextual menu items. Commands are defined as dictionaries within command plist file, enabling shell scripts, AppleScripts, or command-line tools to execute in response to user actions via UI triggers such as buttons, menus, or file drops.
+This reference documents the **command format** (`Command.json`, or a legacy `Command.plist`) of **Command Workshop (formerly OMC)**, a low-code engine for building macOS **applets** (standalone mini-apps) and contextual menu items. Commands are defined as dictionaries in the command file, enabling shell scripts, AppleScripts, or command-line tools to execute in response to user actions via UI triggers such as buttons, menus, or file drops.
 
 This document reorganizes and updates the legacy [Command Description Manual](https://www.abracode.com/free/cmworkshop/Command_Description_Manual.html) by:
 - Grouping keys **logically**.
@@ -10,7 +10,7 @@ This document reorganizes and updates the legacy [Command Description Manual](ht
 - Marking **deprecated patterns**.
 
 > **Terminology**:
-> - **Command** = A description of action to execute in form of a dictionary in the plist.
+> - **Command** = A description of action to execute in form of a dictionary in the command file.
 > - **Action Handler** = A command triggered by a user action (e.g., button click, file drop, dialog init).
 > - **Command Group** = Multiple action handlers sharing the same `NAME` but with unique `COMMAND_ID`s (e.g., one group for a dialog: init, OK, cancel, table selection).
 > - **Applet** = A standalone mini-app (formerly "droplet").
@@ -19,16 +19,16 @@ This document reorganizes and updates the legacy [Command Description Manual](ht
 ---
 
 
-## 0. Plist Root Structure
+## 0. Root Structure
 
-The starting point for the Command Engine is a `Command.plist` file in applet's bundle in `MyApp.app/Contents/Resources/` or a file in `/Users/<username>/Library/Preferences/com.abracode.OnMyCommandCMPrefs.plist` for `OnMyCommandCM.plugin`. The file is a **property list** containing a root dictionary with two required keys:
+The starting point for the Command Engine is the applet's command file in `MyApp.app/Contents/Resources/`: `Command.json`, which AppletBuilder creates, or a legacy `Command.plist` (when both are there, `Command.json` is read). For `OnMyCommandCM.plugin` it is `/Users/<username>/Library/Preferences/com.abracode.OnMyCommandCMPrefs.plist`. Either format holds the same root dictionary, with two required keys. The examples in this reference are written as property list XML; in `Command.json` the same keys hold the same values as JSON (`VERSION` the number `2`, booleans `true`/`false`).
 
 | Key | Type | Required | Description |
 |-----|------|----------|-------------|
 | `COMMAND_LIST` | Array of Dictionaries | Yes | Contains all **action handlers** (commands). Each dictionary follows the format described in subsequent sections. |
-| `VERSION` | Integer | Yes | **Command format version** – indicates the plist schema version understood by the Command Engine. **Current value: `2`**. This is **not** the same as the optional `VERSION` inside individual commands (which is ignored by the Command Engine). |
+| `VERSION` | Integer | Yes | **Command format version** – indicates the command file schema version understood by the Command Engine. **Current value: `2`**. This is **not** the same as the optional `VERSION` inside individual commands (which is ignored by the Command Engine). |
 
-### Command Plist Root Structure
+### Root Structure (property list XML)
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -59,7 +59,7 @@ The starting point for the Command Engine is a `Command.plist` file in applet's 
 | Key | Type | Required | Description & Best Practice | Example |
 |-----|------|----------|-------------------------------|----------|
 | `NAME` | String or Array<String> | Yes | Visible label in menus. Use array for dynamic labels. Shared across a **command group**. | `["Set Xattr: ", "__OBJ_NAME__"]` (only `__FOO__` form works here) |
-| `COMMAND_ID` | String | Recommended | **Unique identifier** for the action handler. **Unique readable strings are recommended**. Used to name script files and for subcommand chaining. If omitted, the engine assigns the internal ID `top!` (valid only for a single top-level command per group). The **main command** may instead set this explicitly to `<NAME>.main` (or bare `main`); the engine normalizes either form to the same `top!` sentinel, so it behaves identically to omitting `COMMAND_ID`. References to the main command — launch, `NEXT_COMMAND_ID`, `omc_next_command`, subcommand chaining — resolve it by `<NAME>.main`, `main`, or `top!`. For `exe_script_file` action handlers, a matching script file in `Scripts/` without a plist entry is auto-synthesized — see note below. | `"my.action.handler"` |
+| `COMMAND_ID` | String | Recommended | **Unique identifier** for the action handler. **Unique readable strings are recommended**. Used to name script files and for subcommand chaining. If omitted, the engine assigns the internal ID `top!` (valid only for a single top-level command per group). The **main command** may instead set this explicitly to `<NAME>.main` (or bare `main`); the engine normalizes either form to the same `top!` sentinel, so it behaves identically to omitting `COMMAND_ID`. References to the main command — launch, `NEXT_COMMAND_ID`, `omc_next_command`, subcommand chaining — resolve it by `<NAME>.main`, `main`, or `top!`. For `exe_script_file` action handlers, a matching script file in `Scripts/` without a command file entry is auto-synthesized — see note below. | `"my.action.handler"` |
 | `VERSION` | Integer or String | No | Semantic version for your reference (ignored by the Command Engine). | `"1.0"` |
 | `NOTES` | String | No | Developer comments (ignored by the Command Engine). | `"Removes quarantine bit"` |
 | `DISABLED` | Boolean | No | `<true/>` disables the action handler. | — |
@@ -72,7 +72,7 @@ The starting point for the Command Engine is a `Command.plist` file in applet's 
 
 > **Automatic synthesis of undeclared `exe_script_file` action handlers (applets only)**
 >
-> When the Command Engine loads `Command.plist` for an applet, it scans the bundle's `Scripts/` directory and automatically creates command entries for any script file whose name-without-extension has no matching `COMMAND_ID` in the plist. This means an ActionUI `actionID` (e.g. `onDropActionID: "MyApp.layer.drop"`) will dispatch correctly even if the corresponding `Command.plist` entry was accidentally omitted, as long as the script file exists.
+> When the Command Engine loads an applet's command file (`Command.json`, or a legacy `Command.plist`), it scans the bundle's `Scripts/` directory and automatically creates command entries for any script file whose name-without-extension has no matching `COMMAND_ID` in the file. This means an ActionUI `actionID` (e.g. `onDropActionID: "MyApp.layer.drop"`) will dispatch correctly even if the corresponding command entry was accidentally omitted, as long as the script file exists.
 >
 > **Naming convention for group assignment.** The synthesized command is assigned to the command group whose `NAME` matches the prefix of the script filename — the segment before the first `.` or `_`. For example, `MyApp.layer.drop.py` is assigned to the group named `MyApp`. If no group name matches the prefix, the first command group is used as a fallback.
 >
@@ -345,7 +345,7 @@ Nib (Interface Builder) dialogs are no longer supported: since 6.0 a command wit
 }
 ```
 
-**Command.plist**:
+**The command** (property list XML, as elsewhere in this reference):
 ```xml
 <dict>
   <key>NAME</key>
