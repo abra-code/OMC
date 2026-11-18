@@ -114,6 +114,12 @@ check "the applet quits by itself once idle" "$([ "$result" = "0" ] && echo 1 ||
 lines="$(log_text)"
 check "the main command ran with no file, then app.did.launch, then app.will.terminate" \
     "$([ "$lines" = "main: did.launch will.terminate " ] && echo 1 || echo 0)" "$lines"
+# OMC_APP_DATA_PATH: $XDG_DATA_HOME (set above) and the applet's CFBundleName, not created
+data_path="$(/bin/cat "$LAUNCHTEST_LOG.data" 2>/dev/null)"
+check "a handler gets OMC_APP_DATA_PATH in XDG_DATA_HOME, named for the applet" \
+    "$([ "$data_path" = "$XDG_DATA_HOME/LaunchTest" ] && echo 1 || echo 0)" "$data_path"
+check "and the engine does not make the folder" \
+    "$([ ! -e "$XDG_DATA_HOME/LaunchTest" ] && echo 1 || echo 0)"
 
 printf '== a second launch with a file hands it to the running applet ==\n'
 : > "$LAUNCHTEST_LOG"

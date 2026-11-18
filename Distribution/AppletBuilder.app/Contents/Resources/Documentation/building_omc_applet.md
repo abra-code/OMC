@@ -191,6 +191,7 @@ Scripts for `exe_script_file` execution mode live in `MyApp.app/Contents/Resourc
 | `$OMC_OBJ_NAME` | Base name |
 | `$OMC_APP_BUNDLE_PATH` | Applet bundle path |
 | `$OMC_APP_PROCESS_ID` | PID of the Command Engine host process (the applet itself here, not the frontmost app) |
+| `$OMC_APP_DATA_PATH` | The applet's folder for per-user data (settings, recent items): `~/Library/Application Support/<CFBundleName>` on macOS, `$XDG_DATA_HOME/<CFBundleName>` (else `~/.local/share/...`) on Linux. Not created: `mkdir -p` it before the first write |
 | `$OMC_OMC_SUPPORT_PATH` | Command Engine support tools |
 | `$OMC_ACTIONUI_WINDOW_UUID` | Window instance ID (`$OMC_NIB_DLG_GUID` is the same value under its older name) |
 | `$OMC_CURRENT_COMMAND_GUID` | Command execution ID |

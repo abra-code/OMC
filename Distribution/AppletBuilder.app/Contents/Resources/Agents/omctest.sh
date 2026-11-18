@@ -84,7 +84,13 @@
 # settings there, as JSON, instead of in the user's preferences, which cfprefsd
 # keys by uid and not by $HOME. A GUARANTEE a test file may assert. Settings a
 # handler writes with /usr/bin/defaults itself still reach the user's.
-OMCTEST_API_VERSION=8
+# 9 exports OMC_APP_DATA_PATH, which the engine added to its always-exported set:
+# the applet's per-user data folder, computed as the engine does but inside the
+# per-file home (Library/Application Support/<CFBundleName> on macOS,
+# $XDG_DATA_HOME/<CFBundleName> on Linux, with XDG_DATA_HOME pointed into that
+# home). Not created, as the engine does not create it. A GUARANTEE a test file
+# may assert.
+OMCTEST_API_VERSION=9
 export OMCTEST_API_VERSION
 
 # The tools this harness always replaces with recording stubs.
@@ -827,6 +833,31 @@ omctest_prepare_env() { # <app> <label>
 
     omctest_setup_python "$OMCTEST_APP"
     omctest_build_support "$OMCTEST_APP" "$OMCTEST_SUPPORT" || return 1
+
+    # OMC_APP_DATA_PATH, the applet's per-user data folder, as the engine computes it
+    # (OnMyCommand.cpp, CreateAppDataPath): the application support folder and the
+    # applet's CFBundleName (else the bundle's name without .app), a "/" in it made "-".
+    # Inside the per-file home, so a test that saves settings never writes the real
+    # one's: ~/Library/Application Support on macOS, $XDG_DATA_HOME (pointed into the
+    # per-file home here) on Linux. Not created, as the engine does not create it.
+    local data_name
+    data_name="$("$OMCTEST_SUPPORT/plister" get value "$OMCTEST_APP/Contents/Info.plist" /CFBundleName 2>/dev/null)"
+    local data_status=$?
+    if [ "$data_status" -ne 0 ] || [ -z "$data_name" ]; then
+        data_name="$(/usr/bin/basename "$OMCTEST_APP")"
+        data_name="${data_name%.*}"
+    fi
+    data_name="$(printf '%s' "$data_name" | /usr/bin/tr '/' '-')"
+    case "${OSTYPE:-}" in
+        darwin*) OMC_APP_DATA_PATH="$OMCTEST_HOME/Library/Application Support/$data_name" ;;
+        *)
+            XDG_DATA_HOME="$OMCTEST_HOME/.local/share"
+            /bin/mkdir -p "$XDG_DATA_HOME" || return 1
+            export XDG_DATA_HOME
+            OMC_APP_DATA_PATH="$XDG_DATA_HOME/$data_name"
+            ;;
+    esac
+    export OMC_APP_DATA_PATH
 
     # Pre-created so the count helpers report 0 rather than empty on a clean run.
     : > "$OMCTEST_UI/journal.tsv"

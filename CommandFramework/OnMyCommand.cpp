@@ -140,6 +140,53 @@ OnMyCommand::~OnMyCommand()
 	}
 }
 
+// The host application's folder for its per-user data, OMC_APP_DATA_PATH: the platform's
+// application support folder (StandardDirectories.h: ~/Library/Application Support on macOS,
+// $XDG_DATA_HOME or ~/.local/share on Linux) and the application's name in it. The name is
+// CFBundleName as the Info.plist has it, not its localized value, so the folder does not move with
+// the user's language; else the bundle's file name without its extension. A "/" in it would make a
+// deeper path, so it becomes "-". The folder is not made here: an applet that keeps nothing gets no
+// folder, and one that does makes it (mkdir -p) before its first write. Null when there is no
+// application support folder or no name.
+static CFStringRef
+CreateAppDataPath()
+{
+	CFObj<CFURLRef> supportURL( OMCCopyApplicationSupportDirURL() );
+	if(supportURL == nullptr)
+		return nullptr;
+
+	CFBundleRef mainBundle = CFBundleGetMainBundle();
+	CFDictionaryRef info = (mainBundle != nullptr) ? CFBundleGetInfoDictionary(mainBundle) : nullptr;
+	CFTypeRef nameValue = (info != nullptr) ? CFDictionaryGetValue(info, kCFBundleNameKey) : nullptr;
+	CFObj<CFStringRef> name;
+	if((nameValue != nullptr) && (CFGetTypeID(nameValue) == CFStringGetTypeID()) && (CFStringGetLength((CFStringRef)nameValue) > 0))
+	{
+		name.Adopt((CFStringRef)nameValue, kCFObjRetain);
+	}
+	else if(mainBundle != nullptr)
+	{
+		CFObj<CFURLRef> bundleURL( CFBundleCopyBundleURL(mainBundle) );
+		CFObj<CFURLRef> withoutExtension( (bundleURL != nullptr) ? CFURLCreateCopyDeletingPathExtension(kCFAllocatorDefault, bundleURL) : nullptr );
+		if(withoutExtension != nullptr)
+			name.Adopt(CFURLCopyLastPathComponent(withoutExtension));
+	}
+	// "." or ".." would name the application support folder itself or the folder above it, which
+	// a script resetting its data with rm -rf would then remove
+	if((name == nullptr) || (CFStringGetLength(name) == 0) ||
+	   (CFStringCompare(name, CFSTR("."), 0) == kCFCompareEqualTo) || (CFStringCompare(name, CFSTR(".."), 0) == kCFCompareEqualTo))
+		return nullptr;
+
+	CFObj<CFMutableStringRef> folderName( CFStringCreateMutableCopy(kCFAllocatorDefault, 0, name) );
+	if(folderName == nullptr)
+		return nullptr;
+	CFStringFindAndReplace(folderName, CFSTR("/"), CFSTR("-"), CFRangeMake(0, CFStringGetLength(folderName)), 0);
+
+	CFObj<CFURLRef> dataURL( CFURLCreateCopyAppendingPathComponent(kCFAllocatorDefault, supportURL, folderName, true /*isDirectory*/) );
+	if(dataURL == nullptr)
+		return nullptr;
+	return CreatePathFromCFURL(dataURL, kEscapeNone);
+}
+
 OSStatus
 OnMyCommand::Init()
 {
@@ -201,6 +248,7 @@ OnMyCommand::Init()
 
 	CFObj<CFURLRef> myHostBundleURL = CFBundleCopyBundleURL(CFBundleGetMainBundle());
 	mMyHostBundlePath.Adopt(CreatePathFromCFURL(myHostBundleURL, kEscapeNone), kCFObjDontRetain);
+	mAppDataPath.Adopt(CreateAppDataPath(), kCFObjDontRetain);
 	mMyHostAppName.Adopt(OMCCopyHostAppName(), kCFObjDontRetain);
 
 	InitOmcBundlePaths();
@@ -2904,6 +2952,11 @@ OnMyCommand::AppendTextToCommand(CFMutableStringRef inCommandRef, CFStringRef in
 			newStrRef = CFStringCreateWithFormat( kCFAllocatorDefault, nullptr, CFSTR("%d"), getpid() );
 		break;
 
+		case APP_DATA_PATH:
+			if(mAppDataPath != nullptr)
+				newStrRef = CreateEscapedStringCopy(mAppDataPath, escSpecialCharsMode);
+		break;
+
 		case FRONT_PROCESS_ID:
 		{
 			pid_t frontPID = 0;
@@ -3277,6 +3330,11 @@ OnMyCommand::PopulateEnvironList(CFMutableDictionaryRef ioEnvironList, CommandRu
 
 			case APP_PROCESS_ID: //always exported
 				newStrRef = CFStringCreateWithFormat( kCFAllocatorDefault, nullptr, CFSTR("%d"), getpid() );
+			break;
+
+			case APP_DATA_PATH: //always exported
+				newStrRef = mAppDataPath;
+				releaseNewString = false;
 			break;
 
 			case FRONT_PROCESS_ID:

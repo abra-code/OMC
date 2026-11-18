@@ -203,7 +203,7 @@ out="${TMPDIR}env.txt"
 for name in OMC_APP_BUNDLE_PATH OMC_APP_PROCESS_ID OMC_OMC_SUPPORT_PATH OMC_OMC_RESOURCES_PATH \
             OMC_ACTIONUI_WINDOW_UUID OMC_PARENT_DIALOG_GUID OMC_CURRENT_COMMAND_GUID \
             OMC_NIB_DLG_GUID TMPDIR OMCTEST_WORK OMCTEST_UI OMCTEST_FIXTURES \
-            OMC_ACTIONUI_VIEW_405_VALUE OMC_ACTIONUI_TRIGGER_VIEW_ID OMC_OBJ_NAME OMC_DEFAULTS_PATH; do
+            OMC_ACTIONUI_VIEW_405_VALUE OMC_ACTIONUI_TRIGGER_VIEW_ID OMC_OBJ_NAME OMC_DEFAULTS_PATH OMC_APP_DATA_PATH; do
     eval "value=\${$name-<<UNSET>>}"
     printf '%s=%s\n' "$name" "$value" >> "$out"
 done
@@ -571,6 +571,18 @@ check "api is at least 8" "yes" \
     "$([ "${OMCTEST_API_VERSION:-0}" -ge 8 ] && echo yes || echo no)"
 check "the handler gets OMC_DEFAULTS_PATH" "$OMCTEST_HOME/Library/Preferences" "$(field OMC_DEFAULTS_PATH)"
 check "a folder in the per-file home" "yes" "$([ -d "$OMC_DEFAULTS_PATH" ] && echo yes || echo no)"
+
+section "the applet's data folder is in the per-file home, named as the engine names it"
+# API 9: OMC_APP_DATA_PATH is <application support>/<CFBundleName>, here the fixture's
+# "Fixture", and the harness does not create it, as the engine does not.
+check "api is at least 9" "yes" \
+    "$([ "${OMCTEST_API_VERSION:-0}" -ge 9 ] && echo yes || echo no)"
+case "${OSTYPE:-}" in
+    (darwin*) expected_data="$OMCTEST_HOME/Library/Application Support/Fixture" ;;
+    (*) expected_data="$OMCTEST_HOME/.local/share/Fixture" ;;
+esac
+check "the handler gets OMC_APP_DATA_PATH" "$expected_data" "$(field OMC_APP_DATA_PATH)"
+check "and it is not made for the applet" "no" "$([ -e "$OMC_APP_DATA_PATH" ] && echo yes || echo no)"
 
 section "the window uuid is unique per run"
 check "it embeds a pid" "yes" "$(case "$OMC_ACTIONUI_WINDOW_UUID" in (OMCTEST-10-environment-*[0-9]) echo yes ;; (*) echo no ;; esac)"
@@ -1334,7 +1346,7 @@ omctest_end
 
 
 EXPECTED_COUNTS = {
-    "10-environment.test.sh": (22, 0),
+    "10-environment.test.sh": (25, 0),
     "20-lifetime.test.sh": (36, 0),
     "30-omcrun.test.sh": (16, 0),
     "40-alerts.test.sh": (16, 0),

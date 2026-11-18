@@ -116,6 +116,94 @@
                   @"Should substitute __APP_PROCESS_ID__ with %@. Output: %@", expectedProcessID, output);
 }
 
+#pragma mark - OMC_APP_DATA_PATH
+
+// The folder the engine names for the host's per-user data (OnMyCommand.cpp, CreateAppDataPath):
+// the user's Application Support folder and the host's CFBundleName as its Info.plist has it (not
+// localized), else the bundle's name without its extension, a "/" in it made "-". Under XCTest the
+// host is the test runner.
+- (NSString *)expectedAppDataPath {
+    NSURL *support = [[NSFileManager defaultManager] URLForDirectory:NSApplicationSupportDirectory
+                                                            inDomain:NSUserDomainMask
+                                                   appropriateForURL:nil
+                                                              create:YES
+                                                               error:nil];
+    NSString *name = [[NSBundle mainBundle] infoDictionary][@"CFBundleName"];
+    if (![name isKindOfClass:[NSString class]] || [name length] == 0)
+        name = [[[[NSBundle mainBundle] bundleURL] URLByDeletingPathExtension] lastPathComponent];
+    name = [name stringByReplacingOccurrencesOfString:@"/" withString:@"-"];
+    return [[support URLByAppendingPathComponent:name isDirectory:YES] path];
+}
+
+- (void)testAppDataPathExported {
+    // Only the per-command dictionary delivers this variable (it is not put into the process's
+    // own environment), so clearing it here first makes the test fail if the engine stops adding
+    // it: an inherited value cannot stand in.
+    unsetenv("OMC_APP_DATA_PATH");
+    NSDictionary *command = @{
+        @"NAME": @"App Data Path Test",
+        @"COMMAND_ID": @"app_data_path_test",
+        @"EXECUTION_MODE": @"exe_script_file"
+    };
+    NSString *script = @"#!/bin/bash\n"
+                       @"printf 'OMC_APP_DATA_PATH=%s\\n' \"${OMC_APP_DATA_PATH-<<UNSET>>}\"\n";
+
+    NSURL *bundleURL = [OMCBundleTestHelper createTestBundle:@"AppDataPathTest"
+                                                withCommands:@[command]
+                                                     scripts:@{@"app_data_path_test.sh": script}];
+    XCTAssertNotNil(bundleURL);
+    [self.bundlesToCleanup addObject:bundleURL];
+
+    OMCTestExecutionObserver *executionObserver = OMCTestExecutionObserver.new;
+    OSStatus err = [OMCCommandExecutor runCommand:@"app_data_path_test"
+                                   forCommandFile:[bundleURL path]
+                                      withContext:nil
+                                     useNavDialog:NO
+                                         allowKeyWindowSubcommand:NO
+                                         delegate:executionObserver];
+    XCTAssertEqual(err, noErr, @"Should execute script");
+    BOOL completed = [executionObserver waitForCompletionWithTimeout:kDefaultExecutionTimeout];
+    XCTAssertTrue(completed, @"Task should complete");
+
+    NSString *expected = [NSString stringWithFormat:@"OMC_APP_DATA_PATH=%@\n", [self expectedAppDataPath]];
+    NSString *output = executionObserver.capturedOutput;
+    XCTAssertTrue([output containsString:expected],
+                  @"Should export %@. Output: %@", expected, output);
+}
+
+- (void)testAppDataPathSpecialWord {
+    // __APP_DATA_PATH__ in the command text: escaped for the shell, so the space in
+    // "Application Support" stays inside one argument.
+    NSDictionary *command = @{
+        @"NAME": @"App Data Path Word Test",
+        @"COMMAND_ID": @"app_data_path_word_test",
+        @"EXECUTION_MODE": @"exe_shell_script",
+        @"COMMAND": @[@"printf 'data=%s\\n' ", @"__APP_DATA_PATH__"]
+    };
+
+    NSURL *bundleURL = [OMCBundleTestHelper createTestBundle:@"AppDataPathWordTest"
+                                                withCommands:@[command]
+                                                     scripts:@{}];
+    XCTAssertNotNil(bundleURL);
+    [self.bundlesToCleanup addObject:bundleURL];
+
+    OMCTestExecutionObserver *executionObserver = OMCTestExecutionObserver.new;
+    OSStatus err = [OMCCommandExecutor runCommand:@"app_data_path_word_test"
+                                   forCommandFile:[bundleURL path]
+                                      withContext:nil
+                                     useNavDialog:NO
+                                         allowKeyWindowSubcommand:NO
+                                         delegate:executionObserver];
+    XCTAssertEqual(err, noErr, @"Should execute command");
+    BOOL completed = [executionObserver waitForCompletionWithTimeout:kDefaultExecutionTimeout];
+    XCTAssertTrue(completed, @"Task should complete");
+
+    NSString *expected = [NSString stringWithFormat:@"data=%@\n", [self expectedAppDataPath]];
+    NSString *output = executionObserver.capturedOutput;
+    XCTAssertTrue([output containsString:expected],
+                  @"Should substitute __APP_DATA_PATH__ as one argument: %@. Output: %@", expected, output);
+}
+
 #pragma mark - Execution Modes That Get No Environment Dictionary
 
 // kExecSilentSystem runs a bare system() and the AppleScript modes hand their text to OSA.

@@ -157,7 +157,7 @@ Variables a test file can read:
 | `OMCTEST_STATUS` | exit code of the last `omc_run`; the string `-` before any dispatch, so `check_status "..." 0` cannot pass vacuously |
 | `OMCTEST_ALERT_RC` | the alert stub's answer when the scripted queue is empty (default `0`) |
 | `OMCTEST_PYTHON`, `OMCTEST_PYTHON_EMBEDDED` | the resolved interpreter, and whether it is the bundle's own |
-| `OMCTEST_API_VERSION` | `8` - assert a minimum if you use something new. `2` added `omc_control_defaults`; `3` isolates `$HOME`; `4` isolates named pasteboards and stops `ui_reset` dropping the diagnostic logs; `5` exports `OMC_APP_PROCESS_ID`; `6` makes named pasteboards files in the scratch instead of boards in the pasteboard server, and drops `OMCTEST_PB_PREFIX`; `7` stands up the ActionUI remote bridge for a Python applet and adds `bridge_called` / `bridge_value`; `8` exports `OMC_DEFAULTS_PATH` (the per-file home's `Library/Preferences`), where the applets' `defaults` tool then keeps its settings. |
+| `OMCTEST_API_VERSION` | `9` - assert a minimum if you use something new. `2` added `omc_control_defaults`; `3` isolates `$HOME`; `4` isolates named pasteboards and stops `ui_reset` dropping the diagnostic logs; `5` exports `OMC_APP_PROCESS_ID`; `6` makes named pasteboards files in the scratch instead of boards in the pasteboard server, and drops `OMCTEST_PB_PREFIX`; `7` stands up the ActionUI remote bridge for a Python applet and adds `bridge_called` / `bridge_value`; `8` exports `OMC_DEFAULTS_PATH` (the per-file home's `Library/Preferences`), where the applets' `defaults` tool then keeps its settings; `9` exports `OMC_APP_DATA_PATH` inside the per-file home. |
 | `ACTIONUI_REMOTE_ENDPOINT`, `OMC_ACTIONUI_REMOTE_ENDPOINT`, `ACTIONUI_WINDOW_UUID` | the bridge's socket and window, when one is running - see 4.11 |
 
 What the harness exports into every handler:
@@ -166,6 +166,7 @@ What the harness exports into every handler:
 |---|---|---|
 | `OMC_APP_BUNDLE_PATH` | the `.app` under test | handlers locate their own Scripts/ and libs through it |
 | `OMC_APP_PROCESS_ID` | the suite runner's pid - POSIX `$$` is the original shell, not the per-file subshell, so every file in a run sees the same one | the engine exports the host app's own pid. It is alive for the whole run, so `kill -0` answers truthfully - but the harness cannot stage the case the variable exists for, an owner that has DIED, so a cleanup-after-death test must mint and kill its own process and record that pid |
+| `OMC_APP_DATA_PATH` | the per-file home's `Library/Application Support/<CFBundleName>` on macOS, `$XDG_DATA_HOME/<CFBundleName>` on Linux (with `XDG_DATA_HOME` pointed into that home); not created | the engine names the applet's per-user data folder the same way; a test that saves settings must not write the real one |
 | `OMC_OMC_SUPPORT_PATH` | the interposition directory | the single interception point for every runtime tool |
 | `OMC_OMC_RESOURCES_PATH` | the real framework Resources | some handlers read framework resources; kept real |
 | `OMC_ACTIONUI_WINDOW_UUID` | `OMCTEST-<label>-<pid>` | unique per file and per run: isolates state directories and pasteboard keys |

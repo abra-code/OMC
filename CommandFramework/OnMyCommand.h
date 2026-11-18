@@ -222,6 +222,7 @@ protected:
     CFObj<CFStringRef>			mTriggerURL;
 
 	CFObj<CFStringRef>			mMyHostBundlePath;
+	CFObj<CFStringRef>			mAppDataPath; // OMC_APP_DATA_PATH (CreateAppDataPath); null when there is no application support folder or no usable name
 	CFObj<CFStringRef>			mMyHostAppName;
 	CFObj<CFStringRef>			mOmcSupportPath;
 	CFObj<CFStringRef>			mOmcResourcesPath;

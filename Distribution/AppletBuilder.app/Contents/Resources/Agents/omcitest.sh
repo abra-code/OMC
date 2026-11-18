@@ -553,10 +553,15 @@ omcitest_launch() { # <App.app>
     # Nor a host's PYTHONPATH (see _omcitest_unset_host_environment): an applet with its own Python
     # puts its Packages in front of the one it inherits, so AppletBuilder's would follow them. The
     # byte-code cache prefix does go in: it keeps the applet's caches out of its bundle.
+    # The home is the test's for the engine as well as for the handlers: macOS's NSFileManager
+    # ignores HOME and honors CFFIXED_USER_HOME, and the engine names the applet's data folder
+    # (OMC_APP_DATA_PATH) with it; on Linux the engine reads XDG_DATA_HOME first, which a desktop
+    # session may set, so it is pointed into the test's home too.
     /usr/bin/env -u OMCITEST_TOKEN_FILE -u OMCITEST_SOCKET -u OMCITEST_RESULTS -u OMCITEST_RPC -u OMCITEST_PYTHON \
         -u PYTHONPATH \
         OMC_TEST_BRIDGE_PATH="$OMCITEST_SOCKET" OMC_TEST_TOKEN_FD=3 OMC_TEST_PASTEBOARD_PREFIX="$ITEST_PASTEBOARD_PREFIX" \
         OMC_TEST_SUPPORT_PATH="$_work/support" OMCTEST_UI="$OMCTEST_UI" HOME="$ITEST_HOME" TMPDIR="$ITEST_TMPDIR" \
+        CFFIXED_USER_HOME="$ITEST_HOME" XDG_DATA_HOME="$ITEST_HOME/.local/share" \
         OMC_DEFAULTS_PATH="$ITEST_HOME/Library/Preferences" OMC_PASTEBOARD_PATH="$ITEST_PASTEBOARD_PATH" \
         "$_exe" 3< "$OMCITEST_TOKEN_FILE" > "$_work/applet.log" 2>&1 &
     OMCITEST_PID=$!
