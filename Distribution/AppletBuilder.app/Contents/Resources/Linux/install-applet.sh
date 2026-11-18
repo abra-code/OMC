@@ -17,18 +17,22 @@
 #                 - whether it is on the desktop's app list (its desktop entry), for this copy;
 #                 - for an applet with file services: their list, and whether this desktop's file
 #                   manager has the plug-in that shows them (GNOME Files, Dolphin, Thunar), or that
-#                   this desktop has none.
+#                   this desktop has none;
+#                 - whether the applet's folder shows its icon in GNOME Files and Dolphin.
 #   --install-packages [--yes]
 #                 installs the distribution packages of the libraries the applet lists that are
 #                 missing, for the ones the script knows a package of (apt on Debian and Ubuntu,
 #                 dnf on Fedora), after the user agrees: asked in a terminal, or --yes. As root
 #                 directly, else with sudo in a terminal or pkexec without one.
 #   --register    adds this copy to the desktop's app list and lists its file services (the engine's
-#                 linux-app-entry.py and command-services.py, with the system's python3), then
-#                 checks the file manager plug-in.
-#   --unregister  takes it off again.
-#   --status      for the engine's first-launch check (EntryPoints/Linux/OMCAppletMain.cpp,
-#                 Platform/Linux/OMCDesktopRegistration.cpp): one word on standard output:
+#                 linux-app-entry.py and command-services.py, with the system's python3), gives the
+#                 applet's folder its icon in the file managers (update_folder_icon), then checks
+#                 the file manager plug-in.
+#   --unregister  takes it off again (the folder keeps its icon).
+#   --status      for the engine's check at every launch (EntryPoints/Linux/OMCAppletMain.cpp,
+#                 Platform/Linux/OMCDesktopRegistration.cpp): first puts the folder's icon right
+#                 again (update_folder_icon: the folder may have been moved where GNOME Files did
+#                 not see it), then prints one word on standard output:
 #                 "this" (this copy is on the app list), "moved" (the entry runs a program that is
 #                 no longer there: the engine registers this copy without asking), "other" (another
 #                 copy that is there owns it: nothing is done), "none" (not on the app list: the
@@ -276,6 +280,186 @@ entry_owner() { # <identifier>
     esac
 }
 
+# The applet's icon file in Contents/Resources, as linux-app-entry.py's icon_path finds it: the file
+# CFBundleIconFile names when it is an SVG or a PNG, else that name with .svg, then with .png. Prints
+# its name; nothing when there is none (a bundle made on macOS may name only its .icns).
+icon_file_name() {
+    local icon_file
+    icon_file="$("$plister" get value "$info_plist" /CFBundleIconFile 2>/dev/null)"
+    local get_status=$?
+    if [ "$get_status" -ne 0 ] || [ -z "$icon_file" ]; then
+        return
+    fi
+    case "$icon_file" in
+        */*) return ;;
+    esac
+    local candidates=()
+    case "$icon_file" in
+        *.[sS][vV][gG]|*.[pP][nN][gG]) candidates+=("$icon_file") ;;
+    esac
+    candidates+=("${icon_file%.*}.svg" "${icon_file%.*}.png")
+    local candidate
+    for candidate in "${candidates[@]}"; do
+        if [ -f "$bundle/Contents/Resources/$candidate" ]; then
+            printf '%s' "$candidate"
+            return
+        fi
+    done
+}
+
+# Whether a folder icon set before may be replaced by the applet's own: <path> is the file it names,
+# empty when none is set or the file is not there (the applet was moved or renamed). One in an applet's
+# Contents/Resources (an earlier place of this applet, or the copy it was copied from) is replaced; an
+# icon the user chose (a theme icon name, or another file that is there) is kept.
+replaceable_icon() { # <path, or empty>
+    case "$1" in
+        "") return 0 ;;
+        *.app/Contents/Resources/*) return 0 ;;
+    esac
+    return 1
+}
+
+# Dolphin's (KDE) folder icon: the Icon key of the folder's .directory file, with a path relative to
+# the folder (./Contents/Resources/<icon>), so a moved or copied applet keeps it. <action> check only
+# tells; update also writes it. Returns 0 the applet's icon (set now, for update), 1 not set (or the
+# update failed), 2 an icon the user chose (kept), 3 cannot be set (the folder is read-only).
+directory_icon() { # <icon name> <check|update>
+    local file="$bundle/.directory"
+    local wanted="./Contents/Resources/$1"
+    local current=""
+    if [ -f "$file" ]; then
+        current="$(/usr/bin/sed -n 's/^Icon=//p' "$file" | /usr/bin/head -n 1)"
+    fi
+    if [ "$current" = "$wanted" ]; then
+        return 0
+    fi
+    local current_path=""
+    case "$current" in
+        ./*) current_path="$bundle/${current#./}" ;;
+        /*) current_path="$current" ;;
+        "") ;;
+        *) return 2 ;; # a theme icon name
+    esac
+    if [ -n "$current_path" ] && [ ! -e "$current_path" ]; then
+        current_path=""
+    fi
+    if ! replaceable_icon "$current_path"; then
+        return 2
+    fi
+    if [ ! -w "$bundle" ] || { [ -f "$file" ] && [ ! -w "$file" ]; }; then
+        return 3
+    fi
+    if [ "$2" != "update" ]; then
+        return 1
+    fi
+    # A .directory may hold Dolphin's own settings for the folder: only its Icon line changes. The
+    # value is escaped for sed (an icon file name may have a & or a backslash).
+    local sed_value="$(printf '%s' "$wanted" | /usr/bin/sed 's/[&|\\]/\\&/g')"
+    local section=""
+    if [ -f "$file" ]; then
+        section="$(/usr/bin/sed -n '/^\[Desktop Entry\]/p' "$file")"
+    fi
+    if [ -n "$current" ]; then
+        /usr/bin/sed -i "s|^Icon=.*|Icon=$sed_value|" "$file"
+    elif [ -n "$section" ]; then
+        /usr/bin/sed -i "/^\[Desktop Entry\]/a Icon=$sed_value" "$file"
+    else
+        # A last line without its newline would run into the section header
+        local last_byte
+        if [ -s "$file" ]; then
+            last_byte="$(/usr/bin/tail -c 1 -- "$file")"
+        fi
+        local separator=""
+        if [ -n "$last_byte" ]; then
+            separator=$'\n'
+        fi
+        printf '%s[Desktop Entry]\nIcon=%s\n' "$separator" "$wanted" >> "$file"
+    fi
+    local write_status=$?
+    if [ "$write_status" -ne 0 ]; then
+        printf 'Cannot write the folder icon into %s\n' "$file" >&2
+        return 1
+    fi
+    return 0
+}
+
+# The value of the metadata <attribute> GNOME keeps for <file or URI> (GIO, gvfs), or nothing
+gio_metadata() { # <file or URI> <attribute>
+    LC_ALL=C /usr/bin/gio info -a "$2" -- "$1" 2>/dev/null | /usr/bin/sed -n "s/^[[:space:]]*$2: //p"
+}
+
+# GNOME Files' folder icon: the user's metadata for the folder, metadata::custom-icon (a file URI),
+# which GNOME keeps outside it, by its path. A folder moved or copied (mv, cp, tar, even gio move)
+# has none at its new place, or one that names the icon in the old place.
+# Returns as directory_icon does; 3 also when this machine keeps no such metadata (no gio, or no
+# gvfs metadata service: KDE and Xfce may have none).
+gnome_folder_icon() { # <icon name> <check|update>
+    if [ ! -x /usr/bin/gio ]; then
+        return 3
+    fi
+    local namespaces="$(LC_ALL=C /usr/bin/gio info -w -- "$bundle" 2>/dev/null)"
+    case "$namespaces" in
+        *$'\n'" metadata ("*) ;;
+        *) return 3 ;;
+    esac
+    local wanted="$(LC_ALL=C /usr/bin/gio info -a standard::type -- "$bundle/Contents/Resources/$1" 2>/dev/null | /usr/bin/sed -n 's/^uri: //p')"
+    if [ -z "$wanted" ]; then
+        return 3
+    fi
+    local current="$(gio_metadata "$bundle" metadata::custom-icon)"
+    if [ "$current" = "$wanted" ]; then
+        return 0
+    fi
+    # A theme icon the user chose (Files reads custom-icon before it)
+    local current_name="$(gio_metadata "$bundle" metadata::custom-icon-name)"
+    if [ -z "$current" ] && [ -n "$current_name" ]; then
+        return 2
+    fi
+    local current_path=""
+    if [ -n "$current" ]; then
+        current_path="$(LC_ALL=C /usr/bin/gio info -a standard::type -- "$current" 2>/dev/null | /usr/bin/sed -n 's/^local path: //p')"
+    fi
+    if ! replaceable_icon "$current_path"; then
+        return 2
+    fi
+    if [ "$2" != "update" ]; then
+        return 1
+    fi
+    local result
+    result="$(LC_ALL=C /usr/bin/gio set -- "$bundle" metadata::custom-icon "$wanted" 2>&1)"
+    local set_status=$?
+    if [ "$set_status" -ne 0 ]; then
+        case "$result" in
+            *"not supported"*) return 3 ;;
+        esac
+        printf 'Cannot set the folder icon of %s: %s\n' "$bundle" "$result" >&2
+        return 1
+    fi
+    return 0
+}
+
+# Gives the applet's folder its icon, or puts it right again, in GNOME Files and Dolphin (Thunar shows
+# no folder icons). Quiet: --status runs it at every launch, and what fails is said on standard error.
+update_folder_icon() {
+    local icon_name="$(icon_file_name)"
+    if [ -z "$icon_name" ]; then
+        return 0
+    fi
+    directory_icon "$icon_name" update
+    gnome_folder_icon "$icon_name" update
+    return 0
+}
+
+# The words --check uses for directory_icon's and gnome_folder_icon's status
+folder_icon_state() { # <status>
+    case "$1" in
+        0) printf 'the applet'"'"'s icon' ;;
+        1) printf 'not set (install-applet.sh --register sets it)' ;;
+        2) printf 'an icon the user chose' ;;
+        *) printf 'cannot be set here' ;;
+    esac
+}
+
 check() {
     printf '%s (%s)\n' "$name" "$bundle"
 
@@ -376,6 +560,19 @@ check() {
             missing_count=$((missing_count + 1))
             ;;
     esac
+
+    # The folder's icon in the file managers: not counted as missing, the applet works without it
+    local icon_name="$(icon_file_name)"
+    if [ -z "$icon_name" ]; then
+        printf 'Folder icon: none (no PNG or SVG icon file for CFBundleIconFile in Contents/Resources)\n'
+    else
+        gnome_folder_icon "$icon_name" check
+        local gnome_status=$?
+        directory_icon "$icon_name" check
+        local directory_status=$?
+        printf 'Folder icon in GNOME Files: %s\n' "$(folder_icon_state "$gnome_status")"
+        printf 'Folder icon in Dolphin: %s\n' "$(folder_icon_state "$directory_status")"
+    fi
 
     # File services: only for an applet that has any
     has_file_services
@@ -549,6 +746,7 @@ case "$mode" in
         if [ "$status" -ne 0 ]; then
             exit 1
         fi
+        update_folder_icon
         # The plug-in matters only to an applet with file services
         has_file_services
         services_status=$?
@@ -584,6 +782,8 @@ case "$mode" in
             "$support/defaults" write "$identifier" "$prompt_key" -string never
             exit $?
         fi
+        # Only the one word goes to standard output
+        update_folder_icon >&2
         entry_owner "$identifier"
         if [ "$entry_state" = "none" ]; then
             declined="$("$support/defaults" read "$identifier" "$prompt_key" 2>/dev/null)"
