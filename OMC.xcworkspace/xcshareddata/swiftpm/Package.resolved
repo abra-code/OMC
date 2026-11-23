@@ -6,8 +6,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/abra-code/AsyncImageCache",
       "state" : {
-        "revision" : "0c8ec0ac33eee134c25b2f97cb04c86f8130e1be",
-        "version" : "0.2.5"
+        "revision" : "407070573762ebfe615179b77066ce850fa2052b",
+        "version" : "0.2.6"
       }
     },
     {
