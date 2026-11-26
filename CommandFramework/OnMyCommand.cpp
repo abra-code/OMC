@@ -1011,6 +1011,14 @@ CreateTerminalCommandWithEnvironmentSetup(CFStringRef inCommand,
                                           CFDictionaryRef environList,
                                           bool isSh)
 {
+	// The command is typed into an interactive shell, which takes control characters as editing
+	// keys, so a file name or text with them could run a command of its own: remove them
+	CFObj<CFStringRef> typedCommand( CreateCopyWithoutTerminalControlCharacters(inCommand) );
+	if(typedCommand == nullptr)
+		return nullptr;
+	if(::CFStringCompare(typedCommand, inCommand, 0) != kCFCompareEqualTo)
+		OMCLogMessage("OMC: control characters were removed from a command sent to the terminal (tabs became spaces)");
+
 	CFStringRef commandUUID = commandRuntimeData.GetCommandUUID();
 	bool written = WriteEnvironmentSetupScriptToTmp(environList, commandUUID, isSh);
 	CFObj<CFStringRef> envSetupCommand( written ? CreateEnvironmentSetupCommandForShell(commandUUID, isSh) : nullptr );
@@ -1019,10 +1027,10 @@ CreateTerminalCommandWithEnvironmentSetup(CFStringRef inCommand,
 		// No private per-user temporary folder to put the script in (OMCEngineTempDir.h): the
 		// command runs in the terminal without OMC's environment variables
 		OMCLogMessage("OMC: the terminal environment setup script could not be written; the command runs without it");
-		return ::CFStringCreateCopy(kCFAllocatorDefault, inCommand);
+		return typedCommand.Detach();
 	}
 	CFObj<CFMutableStringRef> commandWithEnvSetup = CFStringCreateMutableCopy(kCFAllocatorDefault, 0, envSetupCommand);
-	CFStringAppend(commandWithEnvSetup, inCommand);
+	CFStringAppend(commandWithEnvSetup, typedCommand);
 	return commandWithEnvSetup.Detach();
 }
 

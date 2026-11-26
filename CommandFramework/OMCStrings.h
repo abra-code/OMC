@@ -20,6 +20,11 @@ void		   ReplaceWhitespaceCharactersWithEscapes(CFMutableStringRef ioStrRef);
 
 CFStringRef    CreateEscapedStringCopy(CFStringRef inStrRef, UInt16 escSpecialCharsMode);
 
+// For text typed into an interactive shell (Terminal, iTerm): a copy without the control
+// characters a terminal and a line editor take as editing keys, tab turned into a space
+// (see OMCStrings.cpp)
+CFStringRef    CreateCopyWithoutTerminalControlCharacters(CFStringRef inStr);
+
 
 CFStringRef    CreateCombinedString(CFArrayRef inStringsArray, CFStringRef inSeparator, CFStringRef inPrefix, CFStringRef inSuffix, UInt16 escSpecialCharsMode);
 
