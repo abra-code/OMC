@@ -34,6 +34,8 @@ Standard AppKit controls (NSButton, NSTextField, etc.) inserted in Interface Bui
 
 **OMCWebKitView note:** Do not insert a WKWebView in Interface Builder. Apple's WKWebView cannot be reconfigured after instantiation from a nib. Instead, insert a **Custom View** (NSView) and change its class to `OMCWebKitView`. The OMC class creates and manages the WKWebView internally.
 
+**Which pages may run commands:** `OMC.execute()` (the `OMC` script message) and `window.omc_env` work only in pages from where the applet loaded its page: any local file (`file://`), or the same scheme, host and port as the web address the applet set (in the nib or with `omc_dialog_control`), including where the server redirected that address. A frame from another site inside the page, or a page of another site reached through a link, cannot run commands and does not see `omc_env`; the engine logs "ignored a command request" when one tries.
+
 ## Connecting Controls to Commands
 
 After renaming a control to its OMC class, add **User Defined Runtime Attributes** in Xcode's Identity Inspector:
