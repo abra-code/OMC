@@ -813,6 +813,150 @@ def test_output_window_custom_type() -> None:
         check("#RRGGBB color accepted", "not a 6-digit hex" not in out, out.strip())
 
 
+def _nib_bundle_plist(command_xml: str, mode: str = "exe_shell_script") -> str:
+    """A dialog command plus one handler in its group whose inline COMMAND is command_xml."""
+    return f"""<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+  <key>COMMAND_LIST</key><array>
+    <dict>
+      <key>NAME</key><string>MyApp</string>
+      <key>COMMAND_ID</key><string>myapp.show</string>
+      <key>NIB_DIALOG</key><dict>
+        <key>NIB_NAME</key><string>MyDialog</string>
+      </dict>
+    </dict>
+    <dict>
+      <key>NAME</key><string>MyApp</string>
+      <key>COMMAND_ID</key><string>myapp.run</string>
+      <key>EXECUTION_MODE</key><string>{mode}</string>
+      <key>COMMAND</key><array>{command_xml}</array>
+    </dict>
+  </array>
+  <key>VERSION</key><integer>2</integer>
+</dict></plist>
+"""
+
+
+def _nib_xml(controls: str) -> str:
+    return f"""<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0">
+  <objects>
+    <window id="w1"><view key="contentView" id="v1"><subviews>{controls}</subviews></view></window>
+  </objects>
+</document>
+"""
+
+
+_NIB_FIELD = '<textField tag="1" customClass="OMCTextField" id="t1">{attrs}</textField>'
+_ESC = '<userDefinedRuntimeAttributes><userDefinedRuntimeAttribute type="string" keyPath="escapingMode" value="{v}"/></userDefinedRuntimeAttributes>'
+
+
+def test_nib_placeholder_escaping() -> None:
+    """Nib control placeholders default to no escaping (the control's escapingMode is
+    esc_none and replaces ESCAPE_SPECIAL_CHARS): warn unless the nib sets escapingMode."""
+    print("Layer 2 nib control placeholder escaping:")
+    placeholder = "<string>echo </string><string>__NIB_DIALOG_CONTROL_1_VALUE__</string>"
+    with tempfile.TemporaryDirectory() as d:
+        def bundle(label: str, controls: str | None, command_xml: str = placeholder,
+                   mode: str = "exe_shell_script") -> tuple[int, str]:
+            resources = {}
+            if controls is not None:
+                resources["Base.lproj/MyDialog.nib/designable.nib"] = (
+                    controls if controls.startswith("<?xml") else _nib_xml(controls))
+            else:
+                resources["Base.lproj/MyDialog.nib/keyedobjects.nib"] = "compiled"
+            root = _make_bundle(Path(d) / f"{label}.app", _nib_bundle_plist(command_xml, mode), [], resources)
+            return run(str(root))
+
+        rc, out = bundle("NoEscaping", _NIB_FIELD.format(attrs=""))
+        check("control without escapingMode -> exit 2 (warning)", rc == 2, f"got {rc}: {out.strip()}")
+        check("warning names the placeholder, the control and the env variable",
+              "'__NIB_DIALOG_CONTROL_1_VALUE__'" in out and "control 1" in out
+              and "$OMC_NIB_DIALOG_CONTROL_1_VALUE" in out and "esc_wrap_with_single_quotes_for_shell" in out,
+              out.strip())
+
+        rc, out = bundle("Quoted", _NIB_FIELD.format(attrs=_ESC.format(v="esc_wrap_with_single_quotes_for_shell")))
+        check("escapingMode set on the control -> exit 0", rc == 0, f"got {rc}: {out.strip()}")
+
+        rc, out = bundle("ExplicitNone", _NIB_FIELD.format(attrs=_ESC.format(v="esc_none")))
+        check("explicit esc_none (author's decision) -> exit 0", rc == 0, f"got {rc}: {out.strip()}")
+
+        runtime_tag = ('<customView customClass="OMCTextView" id="t2"><userDefinedRuntimeAttributes>'
+                       '<userDefinedRuntimeAttribute type="number" keyPath="tag"><integer key="value" value="1"/></userDefinedRuntimeAttribute>'
+                       '<userDefinedRuntimeAttribute type="string" keyPath="escapingMode" value="esc_with_backslash"/>'
+                       '</userDefinedRuntimeAttributes></customView>')
+        rc, out = bundle("RuntimeTag", runtime_tag)
+        check("tag given as a runtime attribute is found -> exit 0", rc == 0, f"got {rc}: {out.strip()}")
+
+        popup = ('<popUpButton tag="1" customClass="OMCPopUpButton" id="p1"><popUpButtonCell key="cell" id="c1">'
+                 '<menu key="menu" id="m1"><items><menuItem title="A" customClass="OMCMenuItem" id="i1">'
+                 + _ESC.format(v="esc_wrap_with_single_quotes_for_shell") +
+                 '</menuItem></items></menu></popUpButtonCell></popUpButton>')
+        rc, out = bundle("Popup", popup)
+        check("escapingMode on a popup's menu item counts -> exit 0", rc == 0, f"got {rc}: {out.strip()}")
+
+        rc, out = bundle("Compiled", None)
+        check("compiled nib only (no designable.nib) -> warning", rc == 2 and "control 1" in out, f"got {rc}: {out.strip()}")
+
+        table = '<tableView tag="2" customClass="OMCTableView" id="tb1"/>'
+        rc, out = bundle("Table", table, "<string>echo </string><string>__NIB_TABLE_2_COLUMN_1_VALUE__</string>")
+        check("table placeholder without escapingMode -> warning", rc == 2 and "control 2" in out, f"got {rc}: {out.strip()}")
+
+        rc, out = bundle("AllRows", table, "<string>echo </string><string>__NIB_TABLE_2_COLUMN_0_ALL_ROWS__</string>")
+        check("all-rows placeholder -> warning naming its env variable",
+              rc == 2 and "$OMC_NIB_TABLE_2_COLUMN_0_ALL_ROWS" in out, f"got {rc}: {out.strip()}")
+
+        rc, out = bundle("AppleScript", _NIB_FIELD.format(attrs=""),
+                         "<string>display dialog \"</string><string>__NIB_DIALOG_CONTROL_1_VALUE__</string><string>\"</string>",
+                         mode="exe_applescript")
+        check("AppleScript mode suggests esc_for_applescript", rc == 2 and "esc_for_applescript" in out, f"got {rc}: {out.strip()}")
+
+        rc, out = bundle("NotWhole", _NIB_FIELD.format(attrs=""), "<string>echo __NIB_DIALOG_CONTROL_1_VALUE__</string>")
+        check("placeholder inside a longer fragment (never substituted) -> no warning", rc == 0, f"got {rc}: {out.strip()}")
+
+        rc, out = bundle("WebView", '<customView customClass="OMCWebKitView" id="wv"/>',
+                         "<string>echo </string><string>__NIB_WEBVIEW_3_ELEMENT_NAME_VALUE__</string>")
+        check("web view placeholder (follows the command's mode) -> no warning", rc == 0, f"got {rc}: {out.strip()}")
+
+        rc, out = bundle("ScriptFile", _NIB_FIELD.format(attrs=""), "<string>__NIB_DIALOG_CONTROL_1_VALUE__</string>",
+                         mode="exe_script_file")
+        check("script-file mode (no inline text) -> no escaping warning",
+              "escapingMode" not in out, f"got {rc}: {out.strip()}")
+
+        rc, out = bundle("PlainField", '<textField tag="1" id="t1"/>')
+        check("plain Cocoa control (no escapingMode, the command's mode applies) -> exit 0", rc == 0, f"got {rc}: {out.strip()}")
+
+        rc, out = bundle("Slider", '<slider tag="1" customClass="OMCSlider" id="s1"/>')
+        check("OMC class without an escapingMode default -> exit 0", rc == 0, f"got {rc}: {out.strip()}")
+
+        ident = '<textField identifier="userName" customClass="OMCTextField" id="t1">{attrs}</textField>'
+        rc, out = bundle("Identifier", ident.format(attrs=""),
+                         "<string>echo </string><string>__NIB_DIALOG_CONTROL_userName_VALUE__</string>")
+        check("control found by identifier, no escapingMode -> warning", rc == 2 and "control userName" in out, f"got {rc}: {out.strip()}")
+        rc, out = bundle("IdentifierSet", ident.format(attrs=_ESC.format(v="esc_none")),
+                         "<string>echo </string><string>__NIB_DIALOG_CONTROL_userName_VALUE__</string>")
+        check("control found by identifier, escapingMode set -> exit 0", rc == 0, f"got {rc}: {out.strip()}")
+
+        item_tag = (_NIB_FIELD.format(attrs="") + '<popUpButton tag="5" customClass="OMCPopUpButton" id="p1"><popUpButtonCell key="cell" id="c1">'
+                    '<menu key="menu" id="m1"><items><menuItem title="A" tag="1" customClass="OMCMenuItem" id="i1">'
+                    + _ESC.format(v="esc_none") + '</menuItem></items></menu></popUpButtonCell></popUpButton>')
+        rc, out = bundle("MenuItemTag", item_tag)
+        check("a menu item's tag is not a control tag -> still a warning", rc == 2 and "control 1" in out, f"got {rc}: {out.strip()}")
+
+        rc, out = bundle("Doctype", _nib_xml(_NIB_FIELD.format(attrs=_ESC.format(v="esc_none"))).replace(
+            "<document", '<!DOCTYPE d [<!ENTITY a "x">]>\n<document', 1))
+        check("nib with a DOCTYPE is not parsed (treated as unreadable) -> warning", rc == 2, f"got {rc}: {out.strip()}")
+
+        rc, out = bundle("TooLong", _NIB_FIELD.format(attrs=""),
+                         "<string>echo </string><string>__NIB_DIALOG_CONTROL_12345678901_VALUE__</string>")
+        check("fragment longer than the engine's 39-character limit -> no warning", rc == 0, f"got {rc}: {out.strip()}")
+
+        rc, out = bundle("DialogAllRows", _NIB_FIELD.format(attrs=""),
+                         "<string>echo </string><string>__NIB_DIALOG_CONTROL_1_ALL_ROWS__</string>")
+        check("__NIB_DIALOG_CONTROL_..._ALL_ROWS__ is no placeholder -> no warning", rc == 0, f"got {rc}: {out.strip()}")
+
+
 def main() -> int:
     if not VERIFIER.exists():
         print(f"verifier not found: {VERIFIER}", file=sys.stderr)
@@ -823,6 +967,7 @@ def main() -> int:
     test_url_invocable()
     test_input_menu()
     test_output_window_custom_type()
+    test_nib_placeholder_escaping()
     print(f"\n{_passed} passed, {_failed} failed.")
     return 1 if _failed else 0
 

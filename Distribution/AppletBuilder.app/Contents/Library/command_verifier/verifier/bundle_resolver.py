@@ -21,6 +21,8 @@ from __future__ import annotations
 
 import json
 import plistlib
+import re
+import xml.etree.ElementTree as ElementTree
 from pathlib import Path
 
 from .errors import ValidationIssue
@@ -86,6 +88,88 @@ _HANDLE_URL_COMMAND_ID = "omc.app.handle-url"
 # The bundle's own command description: a JSON sibling of the UI documents but not
 # one of them, and already validated in full by Layer 1.
 _COMMAND_FILE_NAMES_LC = frozenset({"command.json", "command.plist"})
+
+# Nib control placeholders in an inline COMMAND: __NIB_DIALOG_CONTROL_<tag>_VALUE__,
+# __NIB_TABLE_<tag>_COLUMN_<n>_VALUE__ and __NIB_TABLE_<tag>_COLUMN_<n>_ALL_ROWS__
+# (CommandDescription.cp GetSpecialWordID). The engine recognizes a placeholder only
+# as a whole COMMAND fragment of 12 to 39 characters (kMinSpecialWordLen,
+# kMaxSpecialWordLen), so fragments are matched whole. The control id is what the
+# engine takes: all of the text before _VALUE__, or for a table the text before the
+# first _COLUMN_ (OMCDialogControlHelpers.cp). Group "id" is that control id.
+# Their value is escaped with the control's own escapingMode (OMCDialog.cpp
+# CreateControlValueString). The classes in _ESC_NONE_DEFAULT_CLASSES set it to
+# esc_none, so it replaces the command's ESCAPE_SPECIAL_CHARS with no escaping.
+# Other controls (a plain Cocoa control, the web view, a slider) have none, so their
+# placeholders follow the command's mode.
+_NIB_PLACEHOLDER_RE = re.compile(
+    r"^(?:__NIB_DIALOG_CONTROL_(?P<id>.+)_VALUE__"
+    r"|__NIB_TABLE_(?P<table_id>.+?)_COLUMN_.+(?:_VALUE|_ALL_ROWS)__)$")
+_SPECIAL_WORD_MAX_LEN = 39
+_ESC_NONE_DEFAULT_CLASSES = frozenset({
+    "OMCButton", "OMCComboBox", "OMCIKImageView", "OMCImageView", "OMCPDFView",
+    "OMCPopUpButton", "OMCSearchField", "OMCSecureTextField", "OMCTableView",
+    "OMCTextField", "OMCTextView"})
+_APPLESCRIPT_MODES = frozenset({"exe_applescript", "exe_applescript_with_output_window"})
+
+
+def _runtime_attributes(element) -> dict[str, str]:
+    """The User Defined Runtime Attributes of one designable.nib element, by keyPath.
+
+    A string attribute carries its value in a value= attribute; a number keeps it in
+    a child element with key="value" (<integer key="value" value="2"/>).
+    """
+    found: dict[str, str] = {}
+    for group in element.findall("userDefinedRuntimeAttributes"):
+        for attr in group.findall("userDefinedRuntimeAttribute"):
+            key = attr.get("keyPath")
+            if not key:
+                continue
+            value = attr.get("value")
+            if value is None:
+                for child in attr:
+                    if child.get("key") == "value":
+                        value = child.get("value", child.text)
+                        break
+            found[key] = value if value is not None else ""
+    return found
+
+
+def _nib_escaping_by_tag(nib_path: Path) -> dict[str, bool] | None:
+    """For one .nib bundle: control id of each control whose escapingMode defaults to
+    esc_none -> whether the nib sets escapingMode on it.
+
+    The control id is the tag when it is above 0, else an all-letters-and-digits
+    identifier, as the engine reads it (OMCNibWindowController allControlValues).
+    None when the nib cannot be read (a compiled nib has no designable.nib).
+    An OMCPopUpButton takes the escapingMode of its selected item, so an escapingMode
+    on any of its menu items counts as set.
+    """
+    designable = nib_path / "designable.nib"
+    if not designable.is_file():
+        return None
+    try:
+        data = designable.read_bytes()
+        # A nib has no DOCTYPE. This expat expands nested entities without limit, so a
+        # few hundred bytes could take all memory: such a file counts as unreadable.
+        if b"<!DOCTYPE" in data or b"<!ENTITY" in data:
+            return None
+        root = ElementTree.fromstring(data)
+    except (ElementTree.ParseError, OSError):
+        return None
+    result: dict[str, bool] = {}
+    for element in root.iter():
+        if element.get("customClass") not in _ESC_NONE_DEFAULT_CLASSES:
+            continue
+        attrs = _runtime_attributes(element)
+        tag = attrs.get("tag") or element.get("tag") or ""
+        if not (tag.isdigit() and int(tag) > 0):
+            tag = element.get("identifier") or ""
+            if not tag.isalnum():
+                continue
+        explicit = "escapingMode" in attrs or any(
+            "escapingMode" in _runtime_attributes(item) for item in element.iter("menuItem"))
+        result[tag] = result.get(tag, False) or explicit
+    return result
 
 
 def _strip_trailing_commas(text: str) -> str:
@@ -163,6 +247,7 @@ class BundleResolver:
         self._scripts_orig: set[str] | None = None
         self._json_lc: set[str] | None = None
         self._nib_lc: set[str] | None = None
+        self._nib_escaping: dict[str, dict[str, bool] | None] = {}
 
     # ── index builders (lazy) ─────────────────────────────────────────────────
     def _scan_scripts(self) -> None:
@@ -248,6 +333,14 @@ class BundleResolver:
         # URL scheme against the commands a URL can reach - once per bundle
         issues += self._check_url_scheme(commands)
 
+        # Nibs of each command group (NAME), for the placeholder escaping check
+        group_nibs: dict[str, set[str]] = {}
+        for cmd in commands:
+            if isinstance(cmd, dict) and isinstance(cmd.get("NIB_DIALOG"), dict):
+                name = cmd["NIB_DIALOG"].get("NIB_NAME")
+                if isinstance(name, str) and name:
+                    group_nibs.setdefault(self._group_key(cmd), set()).add(name.lower())
+
         for i, cmd in enumerate(commands):
             if not isinstance(cmd, dict):
                 continue
@@ -255,6 +348,80 @@ class BundleResolver:
             issues += self._check_executable(cmd, path)
             issues += self._check_dialog_resources(cmd, path)
             issues += self._check_subcommand_refs(cmd, path, resolvable)
+            issues += self._check_nib_placeholder_escaping(cmd, path, group_nibs.get(self._group_key(cmd)))
+        return issues
+
+    # -- nib control placeholders --
+    def _escaping_for_nib(self, name_lc: str) -> dict[str, bool] | None:
+        """Merged tag map of every .nib bundle named name_lc (localized copies too)."""
+        if name_lc in self._nib_escaping:
+            return self._nib_escaping[name_lc]
+        merged: dict[str, bool] | None = None
+        if self.resources.is_dir():
+            for nib in self.resources.rglob("*.nib"):
+                if nib.stem.lower() != name_lc or not nib.is_dir():
+                    continue
+                one = _nib_escaping_by_tag(nib)
+                if one is None:
+                    continue
+                if merged is None:
+                    merged = {}
+                for tag, explicit in one.items():
+                    merged[tag] = merged.get(tag, False) or explicit
+        self._nib_escaping[name_lc] = merged
+        return merged
+
+    def _check_nib_placeholder_escaping(self, cmd: dict, path: str, nibs_lc: set[str] | None) -> list[ValidationIssue]:
+        """Warn when a nib control placeholder goes into inline command text unescaped.
+
+        The control's escapingMode decides, and it defaults to esc_none whatever the
+        command's ESCAPE_SPECIAL_CHARS says, so a value with a quote, ';' or '$(...)'
+        becomes part of the command. Quoting in the command text can be enough for the
+        values a control can hold; that is the author's call, so an escapingMode set on
+        the control in the nib (esc_none included) silences the warning. Without a
+        readable designable.nib the warning is given.
+        """
+        mode = effective_execution_mode(cmd)
+        if mode not in INLINE_COMMAND_MODES:
+            return []
+        command = cmd.get("COMMAND")
+        if isinstance(command, str):
+            fragments = [command]
+        elif isinstance(command, list):
+            fragments = [f for f in command if isinstance(f, str)]
+        else:
+            return []
+
+        if nibs_lc is None:
+            nibs_lc = self._nib_names()  # no NIB_DIALOG in this group: any nib may hold the control
+        tag_maps = [m for m in (self._escaping_for_nib(n) for n in sorted(nibs_lc)) if m is not None]
+
+        issues: list[ValidationIssue] = []
+        seen: set[str] = set()
+        for fragment in fragments:
+            if len(fragment) > _SPECIAL_WORD_MAX_LEN:
+                continue  # too long for the engine to take it as a placeholder
+            match = _NIB_PLACEHOLDER_RE.match(fragment)
+            if match is None or fragment in seen:
+                continue
+            seen.add(fragment)
+            tag = match.group("id") or match.group("table_id")
+            found = [m[tag] for m in tag_maps if tag in m]
+            if any(found):
+                continue  # escapingMode set on the control: the author decided
+            if tag_maps and not found:
+                continue  # no control with an esc_none default: the command's mode applies
+            suggestion = "esc_for_applescript" if mode in _APPLESCRIPT_MODES else "esc_wrap_with_single_quotes_for_shell"
+            issues.append(ValidationIssue(
+                "warning", f"{path}.COMMAND",
+                f"'{fragment}' is inserted with the nib control's escapingMode, which defaults to "
+                f"esc_none (no escaping) and replaces this command's ESCAPE_SPECIAL_CHARS; a value "
+                f"with quotes, ';' or '$(...)' becomes part of the command. Set escapingMode on "
+                f"control {tag} in the nib (for example {suggestion}), or read "
+                f"$OMC_{fragment[2:-2]} in a script instead. If the text around the placeholder "
+                f"already makes every possible value safe, set escapingMode to esc_none on the "
+                f"control to say so."
+            ))
         return issues
 
     # ── individual checks ─────────────────────────────────────────────────────
