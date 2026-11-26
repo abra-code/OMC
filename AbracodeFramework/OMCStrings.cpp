@@ -680,3 +680,44 @@ CreateStringFromCFURLArray(CFArrayRef inURLArray, CFURLToStringProc inProc,
     return CreateCombinedString(stringArray, inSeparator, inPrefix, inSuffix, escSpecialCharsMode);
 }
 
+
+// Text sent to Terminal or iTerm is typed into an interactive shell. The terminal driver (for text
+// that arrives before the shell starts) and the shell's line editor take control characters as
+// editing keys: Ctrl-U erases the line, Ctrl-B and Ctrl-H move back and delete (the backslash an
+// escaping mode put in, too), Ctrl-O runs the line. A file name or a text with such characters
+// could then run a command of its own. No escaping mode helps, since a backslash does not stop an
+// editing key. Tab is one too: it starts completion, whose "show all N possibilities?" question
+// swallows the next typed character (a guarding backslash, say). This removes every character
+// below U+0020 except line feed and carriage return, and U+007F to U+009F, and turns tab into a
+// space, so a tab used as whitespace between words keeps its meaning. A typed tab was never
+// inserted as a tab, so nothing that worked changes.
+CFStringRef
+CreateCopyWithoutTerminalControlCharacters(CFStringRef inStr)
+{
+	if(inStr == nullptr)
+		return nullptr;
+
+	std::vector<UniChar> chars = CopyCharacters(inStr);
+	std::vector<UniChar> kept;
+	kept.reserve(chars.size());
+	bool changed = false;
+	for(UniChar oneChar : chars)
+	{
+		if(oneChar == '\t')
+		{
+			kept.push_back(' ');
+			changed = true;
+			continue;
+		}
+		bool isEditingKey = ((oneChar < 0x20) && (oneChar != '\n') && (oneChar != '\r'))
+							|| ((oneChar >= 0x7F) && (oneChar <= 0x9F));
+		if(isEditingKey)
+			changed = true;
+		else
+			kept.push_back(oneChar);
+	}
+
+	if(!changed)
+		return ::CFStringCreateCopy(kCFAllocatorDefault, inStr);
+	return ::CFStringCreateWithCharacters(kCFAllocatorDefault, kept.data(), (CFIndex)kept.size());
+}

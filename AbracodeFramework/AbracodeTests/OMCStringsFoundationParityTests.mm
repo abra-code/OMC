@@ -218,4 +218,51 @@ static CFStringRef CreateFromCharacters(const std::vector<UniChar> &chars)
     [self assertNoMismatches];
 }
 
+// Not a Foundation parity check, but OMCStrings.cpp compiles into this bundle. Text for Terminal
+// and iTerm is typed into a shell, where control characters are editing keys: a file name
+// "a<Ctrl-U>id<Ctrl-O>" erased the command and ran "id".
+- (void)testTerminalTextLosesEditingKeysOnly
+{
+    XCTAssertTrue(CreateCopyWithoutTerminalControlCharacters(NULL) == NULL);
+
+    // Each code unit from 0 to 0xFFFF alone: removed if it is an editing key, a space if it is a
+    // tab, kept as it is otherwise
+    for(UInt32 code = 0; code <= 0xFFFF; code++)
+    {
+        UniChar oneChar = (UniChar)code;
+        CFObj<CFStringRef> str( ::CFStringCreateWithCharacters(kCFAllocatorDefault, &oneChar, 1) );
+        CFObj<CFStringRef> result( CreateCopyWithoutTerminalControlCharacters(str) );
+        bool isEditingKey = ((code < 0x20) && (code != '\t') && (code != '\n') && (code != '\r')) || ((code >= 0x7F) && (code <= 0x9F));
+        CFIndex expectedLength = isEditingKey ? 0 : 1;
+        UniChar expectedChar = (code == '\t') ? ' ' : oneChar;
+        bool ok = (::CFStringGetLength(result) == expectedLength)
+                  && ((expectedLength == 0) || (::CFStringGetCharacterAtIndex(result, 0) == expectedChar));
+        if(!ok)
+        {
+            XCTFail(@"U+%04X: got length %ld, expected %ld", (unsigned)code, (long)::CFStringGetLength(result), (long)expectedLength);
+            break;
+        }
+    }
+
+    // The two names that ran commands in Terminal (runtime test, 2026-11-26), as the default
+    // escaping hands them over, and ordinary text, which must come through unchanged
+    // Built from code points with %C, so the source holds no control or non-ASCII characters
+    NSString *japanese = [NSString stringWithFormat:@"%C%C%C", (unichar)0x65E5, (unichar)0x672C, (unichar)0x8A9E];
+    NSString *plainText = [NSString stringWithFormat:@"/Users/me/Report\\ final.pdf %@ %Cnbsp %Cte", japanese, (unichar)0x00A0, (unichar)0x00E9];
+    NSDictionary<NSString *, NSString *> *cases = @{
+        [NSString stringWithFormat:@"cd /tmp/a%Cid%C", (unichar)0x15, (unichar)0x0F] : @"cd /tmp/aid",
+        [NSString stringWithFormat:@"/bin/echo a%Cecho\\ %C%C%CMARKER%C", (unichar)0x15, (unichar)0x02, (unichar)0x08, (unichar)0x05, (unichar)0x0F] : @"/bin/echo aecho\\ MARKER",
+        [NSString stringWithFormat:@"x%C[2Ky%C%Cz", (unichar)0x1B, (unichar)0x7F, (unichar)0x85] : @"x[2Kyz",
+        @"echo one\ttwo\nthree\r" : @"echo one two\nthree\r",
+        @"a\\\t\\;id" : @"a\\ \\;id", // a tab escaped by the default mode: completion could swallow the next backslash
+        plainText : plainText,
+        @"" : @"",
+    };
+    for(NSString *input in cases)
+    {
+        CFObj<CFStringRef> result( CreateCopyWithoutTerminalControlCharacters((__bridge CFStringRef)input) );
+        XCTAssertEqualObjects((__bridge NSString *)(CFStringRef)result, cases[input], @"input %@", input);
+    }
+}
+
 @end
