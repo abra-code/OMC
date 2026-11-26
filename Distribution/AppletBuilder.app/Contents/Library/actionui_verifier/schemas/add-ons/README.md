@@ -5,9 +5,9 @@ separate from the built-in element schemas in the parent directory (`ActionUIVer
 the repo, `schemas/` in a packaged Python verifier).
 
 Both verifiers (`Tools/verifier/validate_actionui.py` and the Swift `ActionUIVerifier` library,
-which bundles this directory) auto-discover every `add-ons/<AddOn>/*.json` here, so documents that use
+which bundles this directory) auto-discover every `add-ons/<AddOn>/*.json` here, so ActionUI JSON that uses
 an add-on element type (for example the `QuickLook` element from the ActionUIQuickLook add-on)
-validate without passing `--schema-dir`. Built-in schemas win on a name collision, so an add-on
+validates without passing `--schema-dir`. Built-in schemas win on a name collision, so an add-on
 cannot shadow a core element.
 
 ## How it is populated

@@ -200,6 +200,51 @@ _aui_endpoint() {
     return 0
 }
 
+# Refuses an endpoint whose listener could be another user's: the token goes to whoever listens.
+# Each transport calls it before it connects, so a connection kept open is not checked again.
+# The path must be absolute and name a socket (not a link) of this user's, in a folder owned by
+# this user or root that nobody else can change (or sticky, so nobody else can rename the socket).
+# A process of the same user can still put its own socket there; no file check stops that, and nc
+# cannot ask the kernel who the peer is.
+_aui_check_endpoint() {
+    case $_aui_ep in
+        /*) ;;
+        *)
+            _aui_error="socket path is not absolute: $_aui_ep"
+            return "$ACTIONUI_EXIT_NO_HOST" ;;
+    esac
+    if [ -L "$_aui_ep" ]; then
+        _aui_error="$_aui_ep is not a socket"
+        return "$ACTIONUI_EXIT_NO_HOST"
+    fi
+    if [ ! -e "$_aui_ep" ]; then
+        _aui_error="no ActionUI host is listening at $_aui_ep (No such file or directory)"
+        return "$ACTIONUI_EXIT_NO_HOST"
+    fi
+    if [ ! -S "$_aui_ep" ]; then
+        _aui_error="$_aui_ep is not a socket"
+        return "$ACTIONUI_EXIT_NO_HOST"
+    fi
+    if [ ! -O "$_aui_ep" ]; then
+        _aui_error="$_aui_ep belongs to another user"
+        return "$ACTIONUI_EXIT_NO_HOST"
+    fi
+    _aui_ep_dir=${_aui_ep%/*}
+    if [ -z "$_aui_ep_dir" ]; then
+        _aui_ep_dir=/
+    fi
+    # find prints the folder only when it matches: owned by root, or writable by group or others
+    # without the sticky bit. The same test on macOS and Linux, where stat's flags differ.
+    # -H judges a folder that is a link by what it points to, as the test -O beside it does.
+    _aui_ep_root=$(/usr/bin/find -H "$_aui_ep_dir" -maxdepth 0 -user 0 2>/dev/null)
+    _aui_ep_open=$(/usr/bin/find -H "$_aui_ep_dir" -maxdepth 0 \( -perm -0020 -o -perm -0002 \) ! -perm -1000 2>/dev/null)
+    if { [ ! -O "$_aui_ep_dir" ] && [ -z "$_aui_ep_root" ]; } || [ -n "$_aui_ep_open" ]; then
+        _aui_error="the folder of $_aui_ep can be changed by another user"
+        return "$ACTIONUI_EXIT_NO_HOST"
+    fi
+    return 0
+}
+
 # Is $1 a positive number of seconds? Digits and at most one dot, with a nonzero digit somewhere,
 # so that 0, 00, 0.0 and .000 are all rejected the same way.
 _aui_positive_seconds() {
@@ -490,6 +535,7 @@ _aui_send_receive() {
         eval 'setopt localoptions no_bg_nice'
     fi
     _aui_endpoint || return $?
+    _aui_check_endpoint || return $?
     _aui_timeout
     _aui_to_nc=${_aui_to%%.*}
     _aui_to_nc=${_aui_to_nc#"${_aui_to_nc%%[!0]*}"}
@@ -651,6 +697,16 @@ _aui_request() {
         _aui_envelope="$_aui_envelope,\"params\":{$_aui_members}"
     fi
     _aui_envelope="$_aui_envelope}"
+    # Arguments typed as JSON are placed as given. A raw newline ends the request line, and what
+    # follows it would go to the host as a request of its own, carrying this script's token: a
+    # script that builds such an argument from outside text could be made to send any request.
+    # JSON allows a raw newline or carriage return only as whitespace between tokens (never inside
+    # a string), so folding both into spaces leaves every valid request as it was.
+    case $_aui_envelope in
+        *"$_AUI_NL"*|*"$_AUI_CR"*)
+            _aui_envelope=$(printf '%s' "$_aui_envelope" | /usr/bin/tr '\r\n' '  ')
+            ;;
+    esac
     if [ "$_AUI_BATCH_ACTIVE" -eq 1 ]; then
         if [ -n "$_AUI_BATCH" ]; then
             _AUI_BATCH="$_AUI_BATCH,$_aui_envelope"
@@ -1072,7 +1128,7 @@ actionui_append_rows() {
 actionui_append_text() {
     if [ "$#" -lt 2 ]; then _aui_need 0 "actionui_append_text VIEWID TEXT"; return $?; fi
     _aui_json_string "$2"
-    _aui_element_set "actionui.appendText" "$1" "" "\"text\":$_aui_json"
+    _aui_element_call "actionui.appendText" "$1" "" "\"text\":$_aui_json"
 }
 
 actionui_clear_rows() {

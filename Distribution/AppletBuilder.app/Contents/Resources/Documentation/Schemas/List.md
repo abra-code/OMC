@@ -98,6 +98,9 @@ JSON schema and usage documentation for `List`.
     //   3. Template-based list: homogeneous rows of ActionUI views based on pre-declared template
     //      Column text values are assigned to specific sub-view values by index
     //      Column indexes are 1-based: $1 (col 0), $2 (col 1), $N (col N-1), $0 (all)
+    //      Row text placed into an address ("url": "$1" on a Link, AsyncImage, VideoPlayer, WebView
+    //      or LoadableView) opens or loads with the trust of the content the List is in: a host that
+    //      sets rows from text it got elsewhere checks the addresses in it first.
     //      Data set via setElementRows/appendElementRows/clearElementRows.
     //      Selection and doubleClickActionID work the same as Form 1.
     //

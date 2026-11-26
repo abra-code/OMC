@@ -79,10 +79,10 @@ class ElementValidator:
         self._loader = loader
         self._known_types = loader.known_types()
         self._view_props = loader.view_schema().get("properties", {})
-        # When set, validate as if the document were deployed to this single
+        # When set, validate as if the JSON were deployed to this single
         # platform: variants suffixed for other platforms are dropped (as they
         # are at runtime) and platform-restricted properties used here are
-        # flagged. When None, validate as a cross-platform authoring document.
+        # flagged. When None, validate as cross-platform ActionUI JSON.
         self._target_platform = target_platform
 
     def validate(self, node: dict, path: str, seen_ids: set, _is_root: bool = True,
@@ -400,6 +400,39 @@ class ElementValidator:
                         "such as \"$1\"; the Toggle cannot keep its state and is display-only"
                     ))
 
+        # An Image's contentMode keeps the aspect ratio of a resizable image and does
+        # nothing otherwise, as SwiftUI's .aspectRatio(contentMode:) on an image that is
+        # not resizable.
+        if element_type == "Image":
+            modes = expanded.get("contentMode", [])
+            sizing = expanded.get("resizable", [])
+            # Each contentMode in effect, with the resizable the runtime picks beside it:
+            # deployed, the variants that survive for the target; cross-platform, for each
+            # contentMode the resizable picked on that variant's platforms (the unsuffixed
+            # one for an unsuffixed contentMode).
+            pairs = []
+            if self._target_platform is not None:
+                mode = select_variant(modes, self._target_platform)
+                if mode is not None:
+                    picked = select_variant(sizing, self._target_platform)
+                    pairs.append((mode[0], picked[1] if picked else None))
+            else:
+                for suffix, _ in modes:
+                    if suffix is not None:
+                        picked = select_variant(sizing, suffix)
+                        pairs.append((suffix, picked[1] if picked else None))
+                    else:
+                        plain = [v for s, v in sizing if s is None]
+                        pairs.append((None, plain[0] if plain else None))
+            for suffix, resizable in pairs:
+                if resizable is not True:
+                    label = format_suffix_label("contentMode", suffix)
+                    issues.append(ValidationIssue(
+                        "warning", f"{path}.{label}",
+                        f"'{label}' has no effect unless 'resizable' is true, as in SwiftUI; "
+                        "add \"resizable\": true to scale the image"
+                    ))
+
         return issues
 
     def _check_property_platform(
@@ -433,8 +466,8 @@ class ElementValidator:
         if suffix is None:
             return [ValidationIssue(
                 "warning", f"{path}.{label}",
-                f"'{base}' is platform-specific (available on: {plats}); in a "
-                f"cross-platform document suffix it (e.g. '{base}:{plats[0]}') so it "
+                f"'{base}' is platform-specific (available on: {plats}); in "
+                f"cross-platform JSON, suffix it (e.g. '{base}:{plats[0]}') so it "
                 f"is applied only where supported"
             )]
         if suffix in ALL_PLATFORMS and not platforms_include(plats, suffix):

@@ -5,6 +5,9 @@ JSON schema and usage documentation for `NavigationSplitView`.
 ```jsonc
 // Sources/Views/NavigationSplitView.swift
 // JSON specification for ActionUI.NavigationSplitView:
+// Nesting: a NavigationSplitView inside another one (directly or through a LoadableView) is refused
+// on Apple platforms and shows an error in its place (AppKit crashes on it). A sheet, fullScreenCover or
+// popover starts outside any split view, so its content may hold one of its own.
 // Form 1: Static panes (no destination switching)
  {
    "type": "NavigationSplitView",

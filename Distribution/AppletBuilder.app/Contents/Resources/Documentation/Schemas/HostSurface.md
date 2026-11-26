@@ -39,6 +39,11 @@ JSON schema and usage documentation for `HostSurface` (ActionUIHostSurface add-o
 //
 // No observable value (valueType Void).
 //
+// Trust: the element binds to the host's surface only when the trust policy allows
+// .hostSurface(surfaceName) for its content. ActionUI's default policy refuses it for less-trusted
+// content (a LoadableView's JSON from a server or from outside the app's resources), which gets the
+// placeholder drawn for a kind the platform lacks, and the client gets no events for it.
+//
 // Baseline View properties (padding, hidden, frame, opacity, cornerRadius, disabled, accessibilityLabel,
 // etc.) are inherited from base View. "hidden" is applied by the element itself, on the native view, so
 // hiding never destroys the client's surface; a hidden surface is suspended and takes no input.

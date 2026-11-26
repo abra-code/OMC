@@ -2,7 +2,7 @@
 """
 Heuristic check: is a JSON file an ActionUI declaration?
 
-An ActionUI document's root is a single element object carrying a `type`
+The root of ActionUI JSON is a single element object carrying a `type`
 (optionally platform-suffixed, e.g. "type:macos") that names the element. This
 mirrors the verifier, which treats the root as a bare element and requires a
 `type` field. Files without a top-level `type` — Command.json, Info.plist-style
