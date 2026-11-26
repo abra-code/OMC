@@ -63,6 +63,7 @@ _aui_zsh_connect() {
         return 0
     fi
     actionui_disconnect
+    _aui_check_endpoint || return $?
     local REPLY=""      # zsocket's out-parameter; local, so the caller's REPLY is untouched
     zsocket "$_aui_ep" 2>/dev/null
     if [[ $? -ne 0 || -z $REPLY ]]; then

@@ -1,6 +1,6 @@
 {
   "type": "Chart",
-  "description": "A Swift Charts surface. What it shows is one 'chart' description (columns, optional inline data, marks and chart modifiers) that a host replaces whole with setElementProperty; data rows are also set through the rows API. Column references, their types and one type per axis are checked by the Chart element when the document loads.",
+  "description": "A Swift Charts surface. What it shows is one 'chart' description (columns, optional inline data, marks and chart modifiers) that a host replaces whole with setElementProperty; data rows are also set through the rows API. Column references, their types and one type per axis are checked by the Chart element when the ActionUI JSON loads.",
   "id": { "policy": "optional" },
   "inheritsViewProperties": true,
   "topLevelKeys": [],

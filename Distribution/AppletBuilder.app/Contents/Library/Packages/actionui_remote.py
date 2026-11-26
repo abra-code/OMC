@@ -45,6 +45,7 @@ import json
 import os
 import select
 import socket
+import stat
 import sys
 import weakref
 
@@ -102,7 +103,37 @@ class RemoteError(Exception):
 
 
 class EndpointError(ConnectionError):
-    """The socket could not be reached: no endpoint configured, path too long, nothing listening."""
+    """The socket could not be reached: no endpoint configured, path too long, nothing listening,
+    or a path another user could have put there."""
+
+
+def _check_endpoint(path):
+    """Refuses an endpoint whose listener could be another user's: the token goes to whoever
+    listens. The path must be absolute and name a socket (not a link) of this user's, in a folder
+    owned by this user or root that nobody else can change (or sticky, so nobody else can rename
+    the socket). A process of the same user can still put its own socket there; no file check
+    stops that."""
+    if not os.path.isabs(path):
+        raise EndpointError("socket path is not absolute: %s" % path)
+    try:
+        status = os.lstat(path)
+    except FileNotFoundError:
+        raise EndpointError("no ActionUI host is listening at %s (No such file or directory)" % path) from None
+    except OSError as error:
+        raise EndpointError("cannot check %s: %s" % (path, error.strerror)) from None
+    if not stat.S_ISSOCK(status.st_mode):
+        raise EndpointError("%s is not a socket" % path)
+    uid = os.getuid()
+    if status.st_uid != uid:
+        raise EndpointError("%s belongs to another user (uid %d)" % (path, status.st_uid))
+    folder = os.path.dirname(path) or "/"
+    try:
+        folder_status = os.stat(folder)
+    except OSError as error:
+        raise EndpointError("cannot check the folder of %s: %s" % (path, error.strerror)) from None
+    others_write = folder_status.st_mode & (stat.S_IWGRP | stat.S_IWOTH)
+    if folder_status.st_uid not in (uid, 0) or (others_write and not folder_status.st_mode & stat.S_ISVTX):
+        raise EndpointError("the folder of %s can be changed by another user" % path)
 
 
 class ProtocolError(ConnectionError):
@@ -396,6 +427,8 @@ class Connection:
         if len(os.fsencode(self.endpoint)) > SUN_PATH_LIMIT:
             raise EndpointError("socket path is too long for sun_path (limit %d bytes): %s"
                                 % (SUN_PATH_LIMIT, self.endpoint))
+        # Before the token is sent anywhere: the listener must be this user's.
+        _check_endpoint(self.endpoint)
         sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         sock.settimeout(self.timeout)
         try:

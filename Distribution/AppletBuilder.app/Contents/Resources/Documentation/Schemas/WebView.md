@@ -23,7 +23,7 @@ JSON schema and usage documentation for `WebView`.
          "injectionTime": "documentStart", // Required: "documentStart" or "documentEnd"
          "source": "window.myFlag = true;", // One of source / filePath / resourceName is required:
          // "filePath": "/absolute/path/to/script.js",   absolute path to .js file on disk
-         // "resourceName": "MyScript.js",               .js resource in the app's main bundle (.js extension optional)
+         // "resourceName": "MyScript.js",               .js resource in the app's main bundle (.js extension optional; a name with "/" is not found)
          "forMainFrameOnly": false          // Optional Bool; false = inject into all frames; default false
        }
      ],

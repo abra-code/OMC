@@ -24,14 +24,21 @@ JSON schema and usage documentation for `RichText` (ActionUIRichText add-on).
                                              //           to close, options for case / whole word / diacritics).
                                              //           Matches are painted behind the text without re-laying it
                                              //           out. Off, states["search"] still highlights (see below).
-     "remoteImages": "on-click"              // Optional (default "automatic"): when http / https images are fetched.
+     "remoteImages": "on-click",             // Optional (default "automatic"): when http / https images are fetched.
                                              //           "automatic": as soon as the document renders. "on-click": a
                                              //           placeholder shows the alt text and the image's host until
                                              //           the reader clicks it. "never": not fetched. data: images
                                              //           always show. Use "on-click" or "never" for Markdown a model
                                              //           or an agent wrote: an image URL can carry data out.
+     "baseURL": "/path/to/README.md"         // Optional: where the Markdown lives, so relative image paths
+                                             //           (logo.png, img/a.png, ../logo.png) are found: the
+                                             //           absolute path of the Markdown file or of its folder, or a file:,
+                                             //           http: or https: address (a folder's ends in "/").
+                                             //           Without it a relative image path cannot load.
    }
  }
+// Local file: images show as the host's trust policy allows a local file read, as for an Image's filePath; a
+// refused one shows its alt text as an image that cannot load.
 // A rich-text DISPLAY element backed by the RichText package, implemented as an ActionUI add-on
 // (registered via ActionUIRichText.register()):
 //   macOS / iOS / visionOS - RichText.RichText (a SwiftUI View; RichText's platforms).

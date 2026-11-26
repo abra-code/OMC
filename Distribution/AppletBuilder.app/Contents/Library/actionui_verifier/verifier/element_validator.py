@@ -79,10 +79,10 @@ class ElementValidator:
         self._loader = loader
         self._known_types = loader.known_types()
         self._view_props = loader.view_schema().get("properties", {})
-        # When set, validate as if the document were deployed to this single
+        # When set, validate as if the JSON were deployed to this single
         # platform: variants suffixed for other platforms are dropped (as they
         # are at runtime) and platform-restricted properties used here are
-        # flagged. When None, validate as a cross-platform authoring document.
+        # flagged. When None, validate as cross-platform ActionUI JSON.
         self._target_platform = target_platform
 
     def validate(self, node: dict, path: str, seen_ids: set, _is_root: bool = True,
@@ -433,8 +433,8 @@ class ElementValidator:
         if suffix is None:
             return [ValidationIssue(
                 "warning", f"{path}.{label}",
-                f"'{base}' is platform-specific (available on: {plats}); in a "
-                f"cross-platform document suffix it (e.g. '{base}:{plats[0]}') so it "
+                f"'{base}' is platform-specific (available on: {plats}); in "
+                f"cross-platform JSON, suffix it (e.g. '{base}:{plats[0]}') so it "
                 f"is applied only where supported"
             )]
         if suffix in ALL_PLATFORMS and not platforms_include(plats, suffix):

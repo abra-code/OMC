@@ -38,7 +38,8 @@ Behavior of the fake, by design:
 - Insert assigns the element's own `id` when it has one, otherwise the next free negative id.
 - Authentication follows PROTOCOL.md section 10 as the real host implements it. `tokens=[...]`
   makes one required, and a request without a valid one is refused with 1006; a connection that
-  presents a valid token once is remembered for the rest of its life; and `token` is removed from
+  presents a valid token once is remembered for the rest of its life (this fake has no revocation;
+  the real host also forgets the connection when its token is revoked); and `token` is removed from
   `params` before dispatch whether or not one is required, so no handler tested here ever sees a
   key the real host would have taken away. The request log keeps it, redacted.
 - Not modeled, on purpose: rendering. `contentSizeLimits` is always null, `getValueString` is
@@ -310,7 +311,8 @@ class FakeServer:
                 self._log_file.flush()
             if self.tokens:
                 # A token presented once authenticates the connection for the rest of its life,
-                # exactly as the real server does (ActionUIRemoteServer.authenticate): a
+                # as the real server does until that token is revoked, which this fake does not
+                # model (ActionUIRemoteServer.authenticate): a
                 # long-lived client that sends it once must pass here too, or this fake would
                 # refuse what the host it stands in for accepts.
                 authenticated = connection is not None and connection in self._authenticated
