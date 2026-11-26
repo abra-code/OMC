@@ -5,7 +5,9 @@
 #
 # Usage: ./build-linux.sh [debug|release] [--jobs N] [--scratch-path DIR] [--product NAME]
 #                         [--print-command] [-- swift-build-args...]
-#   debug|release    configuration (default debug)
+#   debug|release    configuration (default release; debug adds the integration-test surface,
+#                    OMC_TEST_SURFACE, which Linux/Tests/OMCITest needs, and the toolchain's
+#                    library folder to the programs' search path, so it is for this machine only)
 #   --scratch-path   build folder (default .build-linux/<machine>)
 #   --product        build one product (default: all)
 #   --print-command  print the swift build command and exit
@@ -19,7 +21,7 @@
 # swift build of OMC exits with its status.
 
 SCRIPT_DIR="$(CDPATH= cd -P -- "$(/usr/bin/dirname "$0")" && pwd)"
-CONFIG="debug"
+CONFIG="release"
 SCRATCH_PATH=""
 JOBS=""
 PRODUCT=""

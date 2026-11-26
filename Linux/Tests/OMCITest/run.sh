@@ -6,8 +6,8 @@
 # process, as `appletbuilder itest` runs them on macOS.
 #
 # Usage: run.sh <the build's products folder> [--filter <glob>] [--keep] [--verbose]
-#   The products folder is a debug build's (build-linux.sh): only a debug build has the test
-#   surface (OMC_TEST_SURFACE). Needs python3 (the harness's bridge client) and a desktop session
+#   The products folder is a debug build's (./build-linux.sh debug; release is its default): only
+#   a debug build has the test surface (OMC_TEST_SURFACE). Needs python3 (the harness's bridge client) and a desktop session
 #   (on the agent-vm box: GNOME's Wayland socket, set up below when WAYLAND_DISPLAY is unset).
 #   The pasteboard tests drive the Linux pasteboard tool (pasteboard/linux/pasteboard, in the
 #   bundle's Support folder), with the run's pasteboard prefix.
