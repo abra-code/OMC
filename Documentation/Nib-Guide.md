@@ -34,12 +34,16 @@ Standard AppKit controls (NSButton, NSTextField, etc.) inserted in Interface Bui
 
 **OMCWebKitView note:** Do not insert a WKWebView in Interface Builder. Apple's WKWebView cannot be reconfigured after instantiation from a nib. Instead, insert a **Custom View** (NSView) and change its class to `OMCWebKitView`. The OMC class creates and manages the WKWebView internally.
 
+**Which pages may run commands:** `OMC.execute()` (the `OMC` script message) and `window.omc_env` work only in pages from where the applet loaded its page: any local file (`file://`), or the same scheme, host and port as the web address the applet set (in the nib or with `omc_dialog_control`), including where the server redirected that address. A frame from another site inside the page, or a page of another site reached through a link, cannot run commands and does not see `omc_env`; the engine logs "ignored a command request" when one tries.
+
+**Web page values:** when a command runs from the window, the text of every page element with the class `OMC` and an `id` is exported as `$OMC_NIB_WEBVIEW_<TAG>_ELEMENT_<ID>_VALUE` (the id in uppercase, other characters than A-Z and 0-9 turned into `_`), only while the shown page is one that may run commands. In command text, `__NIB_WEBVIEW_<TAG>_ELEMENT_<ID>_VALUE__` is escaped with the command's `ESCAPE_SPECIAL_CHARS` mode unless the web view sets its own `escapingMode`.
+
 ## Connecting Controls to Commands
 
 After renaming a control to its OMC class, add **User Defined Runtime Attributes** in Xcode's Identity Inspector:
 
 - **commandID** (String) — the command identifier to execute when the control is activated. Tables use **selectionCommandID** and **doubleClickCommandID** instead.
-- **escapingMode** (String) — how to escape the control's value for the script
+- **escapingMode** (String) - how to escape the control's value for the script. It applies to the control's placeholder in command text (`__NIB_DIALOG_CONTROL_<TAG>_VALUE__`, `__NIB_TABLE_<TAG>_COLUMN_<N>_VALUE__`) and replaces the command's `ESCAPE_SPECIAL_CHARS` there. The default is `esc_none`: the value goes into the command exactly as typed or set, so a quote, `;` or `$(...)` in it becomes part of the command. Set `esc_wrap_with_single_quotes_for_shell` (or `esc_for_applescript`) when the value can hold such characters, or read the `$OMC_NIB_...` environment variable in a script, which is never escaped and needs none. Validate in AppletBuilder warns about a placeholder whose control does not set escapingMode; set it to `esc_none` explicitly when the text around the placeholder already makes every value safe.
 - **tag** (Number) — numeric identifier for reading/writing control values from scripts. Most controls can use the native Tag field (Identity Inspector → View → Tag) instead; classes without a native tag attribute (`OMCBox`, `OMCIKImageView`, `OMCPDFView`, `OMCProgressIndicator`, `OMCTextView`, `OMCView`, `OMCWebKitView`) must set it as this runtime attribute.
 
 **When is a tag needed?** Only when your script needs to interact with the control — reading its value via environment variables or setting its value/state via `omc_dialog_control`. An OMCButton that simply triggers a command but is never enabled/disabled/hidden from a script does not need a unique tag.
