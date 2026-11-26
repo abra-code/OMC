@@ -639,6 +639,22 @@ OnMyCommand::ExecuteCommand(SInt32 inCommandIndex, const CommandRuntimeData *par
 		
 		//take original command by reference, not copy
 		PrescanCommandDescription( currCommand );
+
+		// A command started from a dialog (an ActionUI window's action, or a subcommand run by the
+		// window) shows its input and file dialogs before it runs, and their settings may
+		// name the dialog's values (a panel's DEFAULT_LOCATION as __ACTIONUI_VIEW_N_VALUE__). The
+		// values are copied here, as the dialog has them now, so those dialogs do not see the values
+		// copied for an earlier command. ExecuteCommandWithObjects copies them again for the command
+		// itself, after these dialogs closed.
+		const UInt32 kPreRunDialogs = kOmcCommandContainsInputText | kOmcCommandContainsSaveAsDialog |
+										kOmcCommandContainsChooseFileDialog | kOmcCommandContainsChooseFolderDialog |
+										kOmcCommandContainsChooseObjectDialog;
+		if( (currCommand.prescannedCommandInfo & kPreRunDialogs) != 0 )
+		{
+			ARefCountedObj<OMCDialog> parentDialog = OMCDialog::FindDialogByUUID(commandRuntimeData->GetAssociatedDialogUUID());
+			if(parentDialog != nullptr)
+				parentDialog->CopyAllControlValues(currCommand.specialRequestedNibControls, parentDialog->GetSelectionIterator());
+		}
 		
 		CFBundleRef localizationBundle = NULL;
 		if(currCommand.localizationTableName != NULL)//client wants to be localized

@@ -933,6 +933,7 @@ The dialog type (files only, folders only, or both) is automatically determined 
 
 > ### Best Practices:
 > - **Dynamic Paths**: Use `__OBJ_PARENT_PATH__` or `~` in `DEFAULT_LOCATION`.
+> - **A Window's Values**: In a command run from an ActionUI window (a view's `actionID`), `DEFAULT_LOCATION` and `DEFAULT_FILE_NAME` (and an `INPUT_DIALOG` default) may name the window's values, such as `__ACTIONUI_VIEW_12_VALUE__`. They are read as the window has them when the command starts, before the panel opens, so a value the window's handlers set earlier is there.
 > - **Caching**: Enable `USE_PATH_CACHING` for consistent user experience.
 > - **Panel Identity**: Use `DIALOG_IDENTIFIER` to share panel state across commands, or leave unset to default to `COMMAND_ID`.
 > - **Button Labels**: Use `BUTTON_PROMPT` to clarify action (e.g., "Import" instead of "Open").
