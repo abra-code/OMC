@@ -68,8 +68,9 @@ this print" - the inline pattern still works:
 ```bash
 export OMC_APP_BUNDLE_PATH=/path/to/MyApp.app
 export OMC_OMC_SUPPORT_PATH="$OMC_APP_BUNDLE_PATH/Contents/Frameworks/Command.framework/Versions/A/Support"
-export OMC_ACTIONUI_WINDOW_UUID=TESTWIN
-export OMC_CURRENT_COMMAND_GUID=TESTGUID
+# omc_dialog_control and omc_next_command take only ids written like a UUID (hex digits and dashes)
+export OMC_ACTIONUI_WINDOW_UUID=00000000-0000-0000-0000-000000000001
+export OMC_CURRENT_COMMAND_GUID=00000000-0000-0000-0000-000000000002
 export OMC_OBJ_PATH=/path/to/test/input
 sh "$OMC_APP_BUNDLE_PATH/Contents/Resources/Scripts/MyApp.some.handler.sh"
 ```

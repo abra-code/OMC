@@ -69,6 +69,24 @@ static inline bool OMCGetUserTempDir(char *outBuf, size_t bufSize)
     return true;
 }
 
+// Whether inID can be an id the engine gives its helper tools (a command's OMC_CURRENT_COMMAND_GUID,
+// a window's OMC_ACTIONUI_WINDOW_UUID): 1 to 64 hex digits and dashes, as a UUID is written. The
+// tools build their file and port names from it, so anything else is refused before it is used.
+static inline bool OMCIsEngineID(const char *inID)
+{
+    if(inID == NULL)
+        return false;
+    size_t length = 0;
+    for(const char *oneChar = inID; *oneChar != '\0'; oneChar++, length++)
+    {
+        char c = *oneChar;
+        bool isHexOrDash = ((c >= '0') && (c <= '9')) || ((c >= 'A') && (c <= 'F')) || ((c >= 'a') && (c <= 'f')) || (c == '-');
+        if(!isHexOrDash || (length >= 64))
+            return false;
+    }
+    return (length > 0);
+}
+
 // Builds "<per-user temp dir>/OMC/<leafName>" into outBuf. Engine files are grouped under an
 // "OMC" subdirectory for tidiness/debuggability. If inCreateDir is true the OMC subdirectory
 // is created with mode 0700 (private to the current user - never world-writable). Readers pass
@@ -78,6 +96,11 @@ static inline bool OMCGetUserTempDir(char *outBuf, size_t bufSize)
 static inline bool OMCGetEngineTempFilePath(const char *leafName, bool inCreateDir, char *outBuf, size_t bufSize)
 {
     if((leafName == NULL) || (outBuf == NULL) || (bufSize == 0))
+        return false;
+
+    // One file name in the OMC folder, never a path: a leaf built from a caller's id must not
+    // reach another folder ("../x", "a/b") or name a hidden file
+    if((leafName[0] == '\0') || (leafName[0] == '.') || (strchr(leafName, '/') != NULL))
         return false;
 
     char dir[PATH_MAX];

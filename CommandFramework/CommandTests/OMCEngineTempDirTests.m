@@ -126,6 +126,39 @@
     XCTAssertEqualObjects(@(path), expected, @"Path must be <tmpdir>/OMC/<leaf>");
 }
 
+// A leaf is one file name in the OMC folder: the tools build it from their first argument, so a
+// path or a hidden name must be refused (omc_next_command "../x" used to write outside the folder)
+- (void)testEngineTempFilePathRefusesPathsAndHiddenNames {
+    setenv("TMPDIR", self.sandboxDir.UTF8String, 1);
+
+    char path[PATH_MAX] = {0};
+    NSArray<NSString *> *refused = @[ @"", @".id", @"..", @"../x.id", @"a/b.id", @"/abs.id", @"x/..", @".hidden" ];
+    for(NSString *leaf in refused)
+        XCTAssertFalse(OMCGetEngineTempFilePath(leaf.UTF8String, true, path, sizeof(path)), @"leaf %@ must be refused", leaf);
+
+    NSArray<NSString *> *accepted = @[ @"6F9619FF-8B86-D011-B42D-00C04FC964FF.id", @"OMCDialogControlPort-6F9619FF-8B86-D011-B42D-00C04FC964FF",
+                                       @"aui-123.sock", @"x.plist" ];
+    for(NSString *leaf in accepted)
+        XCTAssertTrue(OMCGetEngineTempFilePath(leaf.UTF8String, true, path, sizeof(path)), @"leaf %@ must be accepted", leaf);
+}
+
+- (void)testEngineIDIsHexDigitsAndDashes {
+    XCTAssertTrue(OMCIsEngineID("6F9619FF-8B86-D011-B42D-00C04FC964FF"));
+    XCTAssertTrue(OMCIsEngineID("6f9619ff-8b86-d011-b42d-00c04fc964ff"));
+    XCTAssertTrue(OMCIsEngineID("A"));
+    XCTAssertTrue(OMCIsEngineID([@"" stringByPaddingToLength:64 withString:@"F" startingAtIndex:0].UTF8String));
+
+    XCTAssertFalse(OMCIsEngineID(NULL));
+    XCTAssertFalse(OMCIsEngineID(""));
+    XCTAssertFalse(OMCIsEngineID([@"" stringByPaddingToLength:65 withString:@"F" startingAtIndex:0].UTF8String));
+    XCTAssertFalse(OMCIsEngineID("../6F9619FF"));
+    XCTAssertFalse(OMCIsEngineID("6F9619FF/x"));
+    XCTAssertFalse(OMCIsEngineID("6F9619FF.id"));
+    XCTAssertFalse(OMCIsEngineID("6F9619FF 8B86"));
+    XCTAssertFalse(OMCIsEngineID("__ACTIONUI_WINDOW_UUID__"));
+    XCTAssertFalse(OMCIsEngineID("G"));
+}
+
 - (void)testReaderDoesNotCreateDir {
     setenv("TMPDIR", self.sandboxDir.UTF8String, 1);
 

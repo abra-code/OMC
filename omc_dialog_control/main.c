@@ -300,6 +300,14 @@ int main (int argc, const char * argv[])
 		goto error_exit;
 	}
 
+	// The window id names the window's port and its value file: only an id the engine gives
+	if(!OMCIsEngineID(argv[1]))
+	{
+		fprintf(stderr, "omc_dialog_control: '%s' is not a window id: pass $OMC_ACTIONUI_WINDOW_UUID\n", argv[1]);
+		result = -1;
+		goto error_exit;
+	}
+
 //read control_ID
 	if(argv[2] != NULL)
 	{

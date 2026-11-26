@@ -16,6 +16,12 @@ int main (int argc, const char * argv[])
 		return -1;
 	}
 
+	if(!OMCIsEngineID(argv[1]))
+	{
+		fprintf(stderr, "omc_next_command: '%s' is not a command id: pass $OMC_CURRENT_COMMAND_GUID\n", argv[1]);
+		return -1;
+	}
+
 	const char *theNextID = argv[2];
 	size_t theIDLen = strlen(theNextID);
 	if(theIDLen == 0)
