@@ -40,7 +40,7 @@ JSON schema and usage documentation for `Chart`.
            "annotation": { "position": "top", "alignment": "leading",  // A view drawn next to the mark (below)
              "content": { "type": "Text", "properties": { "text": "Goal", "font": "caption" } } } }
        ],
-       "chartXScale": { "domain": [0, 100] },  // Optional: "domain": two numbers or two dates (a range), a list of strings
+       "chartXScale": { "domain": [0, 100] },  // Optional: "domain": two numbers or two dates (a range; a date with no time of day is the start of that day), a list of strings
                                               //   (categories), or {"automatic": {"includesZero": false, "reversed": true}};
                                               //   "range": {"startPadding", "endPadding"}, {"padding"} or two numbers (points);
                                               //   "type": "linear" | "log" | "date" | "category" | "squareRoot" | "symmetricLog" |
@@ -63,7 +63,7 @@ JSON schema and usage documentation for `Chart`.
          { "type": "AxisMarks", "preset": "automatic", "position": "leading",
            "values": [0, 500, 1000, 1500],    // "automatic", {"automatic": {"desiredCount" (1 to 100), "roundLowerBound",
                                               //   "roundUpperBound"}}, {"stride": {"by": "month", "count": 1}} (a calendar unit but quarter or weekOfMonth, dates),
-                                              //   {"stride": {"by": 10}} (numbers), or a list of numbers or dates (a list of names on a category axis changes nothing). A stride
+                                              //   {"stride": {"by": 10}} (numbers), or a list of numbers or dates (a date with no time of day is the start of that day; a list of names on a category axis changes nothing). A stride
                                               //   that would draw more than 1000 marks over the axis falls back to "automatic"
            "format": "decimal", "fractionLength": 0, // Without "content" only: labels' format (below); "stroke" likewise
            "content": [                       // Optional: up to 4 marks; absent = Swift's default marks, [] = none
@@ -94,7 +94,7 @@ JSON schema and usage documentation for `Chart`.
                                               //   chartYVisibleDomain. A length so short that the axis would lay out more than
                                               //   100 automatic marks is lengthened to the shortest that does not, with a warning
        "chartScrollPosition": { "initialX": "2026-09-01" } // Optional: where a scrolling axis starts, a value of the axis's
-                                              //   type; also "initialY"
+                                              //   type (a date with no time of day starts at the start of that day); also "initialY"
      }
    }
    // Marks: every argument is a key named like Swift's initializer argument. A plottable value is an object

@@ -400,6 +400,39 @@ class ElementValidator:
                         "such as \"$1\"; the Toggle cannot keep its state and is display-only"
                     ))
 
+        # An Image's contentMode keeps the aspect ratio of a resizable image and does
+        # nothing otherwise, as SwiftUI's .aspectRatio(contentMode:) on an image that is
+        # not resizable.
+        if element_type == "Image":
+            modes = expanded.get("contentMode", [])
+            sizing = expanded.get("resizable", [])
+            # Each contentMode in effect, with the resizable the runtime picks beside it:
+            # deployed, the variants that survive for the target; cross-platform, for each
+            # contentMode the resizable picked on that variant's platforms (the unsuffixed
+            # one for an unsuffixed contentMode).
+            pairs = []
+            if self._target_platform is not None:
+                mode = select_variant(modes, self._target_platform)
+                if mode is not None:
+                    picked = select_variant(sizing, self._target_platform)
+                    pairs.append((mode[0], picked[1] if picked else None))
+            else:
+                for suffix, _ in modes:
+                    if suffix is not None:
+                        picked = select_variant(sizing, suffix)
+                        pairs.append((suffix, picked[1] if picked else None))
+                    else:
+                        plain = [v for s, v in sizing if s is None]
+                        pairs.append((None, plain[0] if plain else None))
+            for suffix, resizable in pairs:
+                if resizable is not True:
+                    label = format_suffix_label("contentMode", suffix)
+                    issues.append(ValidationIssue(
+                        "warning", f"{path}.{label}",
+                        f"'{label}' has no effect unless 'resizable' is true, as in SwiftUI; "
+                        "add \"resizable\": true to scale the image"
+                    ))
+
         return issues
 
     def _check_property_platform(
