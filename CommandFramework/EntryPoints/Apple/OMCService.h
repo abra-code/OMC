@@ -15,6 +15,10 @@
 
 - (void)runOMCService:(NSPasteboard *)pboard userData:(NSString *)userData error:(NSString **)error;
 
+// The entry of inServices (an Info.plist NSServices array) whose NSUserData is inUserData, the command a
+// Services request names; nil when the applet declares no such service, and the request is refused
++ (NSDictionary *)declaredServiceForUserData:(NSString *)inUserData inServices:(id)inServices;
+
 @end
 
 // One Services request's command run: its observer, the text it returns and whether it has ended. Each

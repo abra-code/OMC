@@ -21,6 +21,8 @@ The Command Engine listens on the `OMCService` port upon applet launch. When a s
 
 > **Recommendation**: Use `COMMAND_ID` to avoid ambiguity and ensure the exact handler is executed.
 
+The engine runs a service request only when its `NSUserData` is exactly the `NSUserData` of an entry in the applet's own `NSServices`, and takes that entry's `NSSendTypes`, `NSSendFileTypes` and `NSReturnTypes` for the request. A request for any other command is refused, and an entry without `NSUserData` runs nothing (before 6.0 it ran the main command).
+
 ## Input Environment Variables
 
 | Pasteboard Type         | Environment Variable | Description |

@@ -205,4 +205,28 @@ static OMCServiceRequest *StartRequest(NSURL *inBundleURL, NSString *inCommandID
     XCTAssertEqualObjects(watcher.resultString, @"later\n");
 }
 
+/// A Services request names its command by userData, which its sender chooses: only a command the applet
+/// declares as a service runs, and the request gets that service's own entry (its kinds of context and
+/// result), not the first one's.
+- (void)testOnlyADeclaredServiceIsFound
+{
+    NSArray *services = @[
+        @{ @"NSUserData": @"find.new", @"NSSendFileTypes": @[ @"public.folder" ] },
+        @"not a dictionary",
+        @{ @"NSMenuItem": @{ @"default": @"no user data" } },
+        @{ @"NSUserData": @42 },
+        @{ @"NSUserData": @"text.upper", @"NSSendTypes": @[ @"NSStringPboardType" ], @"NSReturnTypes": @[ @"NSStringPboardType" ] } ];
+
+    NSDictionary *upper = [OMCService declaredServiceForUserData:@"text.upper" inServices:services];
+    XCTAssertEqualObjects(upper[@"NSReturnTypes"], @[ @"NSStringPboardType" ], @"the entry of the service asked for, not the first");
+    XCTAssertEqualObjects([OMCService declaredServiceForUserData:@"find.new" inServices:services][@"NSUserData"], @"find.new");
+
+    XCTAssertNil([OMCService declaredServiceForUserData:@"app.will.terminate" inServices:services], @"a command that is no service");
+    XCTAssertNil([OMCService declaredServiceForUserData:@"TEXT.UPPER" inServices:services], @"matched exactly, as the system sends it");
+    XCTAssertNil([OMCService declaredServiceForUserData:@"" inServices:services]);
+    XCTAssertNil([OMCService declaredServiceForUserData:nil inServices:services]);
+    XCTAssertNil([OMCService declaredServiceForUserData:@"text.upper" inServices:nil], @"an applet that declares no services");
+    XCTAssertNil([OMCService declaredServiceForUserData:@"text.upper" inServices:@{ @"NSUserData": @"text.upper" }], @"NSServices must be an array");
+}
+
 @end

@@ -39,10 +39,37 @@ void OMCServiceObserverCallback( OmcObserverMessage inMessage, CFIndex inTaskID,
 	[omcServiceApp setServicesProvider:self];
 }
 
-//userData is command name
++ (NSDictionary *)declaredServiceForUserData:(NSString *)inUserData inServices:(id)inServices
+{
+	if(![inUserData isKindOfClass:NSString.class] || (inUserData.length == 0) || ![inServices isKindOfClass:NSArray.class])
+		return nil;
+	for(id oneService in (NSArray *)inServices)
+	{
+		if(![oneService isKindOfClass:NSDictionary.class])
+			continue;
+		id serviceUserData = [(NSDictionary *)oneService objectForKey:@"NSUserData"];
+		if([serviceUserData isKindOfClass:NSString.class] && [(NSString *)serviceUserData isEqualToString:inUserData])
+			return (NSDictionary *)oneService;
+	}
+	return nil;
+}
+
+//userData is the command id (the service's NSUserData)
 - (void)runOMCService:(NSPasteboard *)pboard userData:(NSString *)userData error:(NSString **)error
 {
 	NSBundle *appBundle = [NSBundle mainBundle];
+
+	// Run only a service the applet declares: the request names its command by userData, and whoever
+	// sends the request chooses it, so without this any command of the applet could be run by name,
+	// past its URL_INVOCABLE setting. The declared entry also says which kind of context it takes.
+	NSDictionary *omcServiceDict = [OMCService declaredServiceForUserData:userData
+															  inServices:[[appBundle infoDictionary] objectForKey:@"NSServices"]];
+	if(omcServiceDict == nil)
+	{
+		if(error != NULL)
+			*error = [NSString stringWithFormat:@"\"%@\" is not a service this applet offers", userData];
+		return;
+	}
 
     // The applet's own command file: Command.json, or Command.plist in an older applet
     CFURLRef resolvedURL = CopyCommandFileURLInBundle(CFBundleGetMainBundle(), CFSTR("Command"));
@@ -65,46 +92,36 @@ void OMCServiceObserverCallback( OmcObserverMessage inMessage, CFIndex inTaskID,
 	BOOL prefersTextContext = NO;
 	BOOL wantsToReturnText = NO;
 
-	NSDictionary *infoDictionary = [appBundle infoDictionary];
-	NSArray *servicesArray = (NSArray *)[infoDictionary objectForKey:@"NSServices"];
-	if( (servicesArray != NULL) &&
-		[servicesArray isKindOfClass:NSArray.class] &&
-		([servicesArray count] > 0) )
+	// The kind of context and result come from this request's own service entry (it used to be the
+	// first entry's, whichever service was asked for)
+	NSArray *sendFileTypesArray = (NSArray *)[omcServiceDict objectForKey:@"NSSendFileTypes"];
+	if( [sendFileTypesArray isKindOfClass:NSArray.class] && (sendFileTypesArray.count > 0))
 	{
-		NSDictionary *omcServiceDict = (NSDictionary *)[servicesArray objectAtIndex:0];
-		if( (omcServiceDict != NULL) &&
-			[omcServiceDict isKindOfClass:NSDictionary.class] )
+		prefersTextContext = NO;
+	}
+	else
+	{
+		NSArray *sendTypesArray = (NSArray *)[omcServiceDict objectForKey:@"NSSendTypes"];
+		if( [sendTypesArray isKindOfClass:NSArray.class] && (sendTypesArray.count > 0))
 		{
-            NSArray *sendFileTypesArray = (NSArray *)[omcServiceDict objectForKey:@"NSSendFileTypes"];
-            if( [sendFileTypesArray isKindOfClass:NSArray.class] && (sendFileTypesArray.count > 0))
-            {
-                prefersTextContext = NO;
-            }
-            else
-            {
-                NSArray *sendTypesArray = (NSArray *)[omcServiceDict objectForKey:@"NSSendTypes"];
-                if( [sendTypesArray isKindOfClass:NSArray.class] && (sendTypesArray.count > 0))
-                {
-                    NSString *oneType = (NSString *)[sendTypesArray objectAtIndex:0];
-                    if( [oneType isKindOfClass:NSString.class] &&
-                       ([oneType isEqualToString:kOMCLegacyStringPboardTypeName] || [oneType isEqualToString:NSPasteboardTypeString]) )
-                    {
-                        prefersTextContext = YES;
-                    }
-                }
-            }
-            
-			NSArray *returnTypesArray = (NSArray *)[omcServiceDict objectForKey:@"NSReturnTypes"];
-			if([returnTypesArray isKindOfClass:NSArray.class] && (returnTypesArray.count > 0))
+			NSString *oneType = (NSString *)[sendTypesArray objectAtIndex:0];
+			if( [oneType isKindOfClass:NSString.class] &&
+			   ([oneType isEqualToString:kOMCLegacyStringPboardTypeName] || [oneType isEqualToString:NSPasteboardTypeString]) )
 			{
-                NSString *oneType = (NSString *)[returnTypesArray objectAtIndex:0];
-                if( (oneType != NULL) &&
-                    [oneType isKindOfClass:NSString.class] &&
-                    ([oneType isEqualToString:kOMCLegacyStringPboardTypeName] || [oneType isEqualToString:NSPasteboardTypeString]) )
-                {
-                    wantsToReturnText = YES;
-                }
+				prefersTextContext = YES;
 			}
+		}
+	}
+
+	NSArray *returnTypesArray = (NSArray *)[omcServiceDict objectForKey:@"NSReturnTypes"];
+	if([returnTypesArray isKindOfClass:NSArray.class] && (returnTypesArray.count > 0))
+	{
+		NSString *oneType = (NSString *)[returnTypesArray objectAtIndex:0];
+		if( (oneType != NULL) &&
+			[oneType isKindOfClass:NSString.class] &&
+			([oneType isEqualToString:kOMCLegacyStringPboardTypeName] || [oneType isEqualToString:NSPasteboardTypeString]) )
+		{
+			wantsToReturnText = YES;
 		}
 	}
 	
