@@ -295,8 +295,11 @@ if [ "$status" -ne 0 ] || [ -z "$PRODUCTS_PATH" ] || [ ! -d "$PRODUCTS_PATH" ]; 
 fi
 
 # The Swift runtime the products need (see ENGINE_SWIFT_FOLDER above), for the bundles made from them
-# (Linux/make-applet-bundle.sh) and the runtime package (Linux/Packaging/make-swift-runtime-deb.sh)
-printf 'swift_version=%s\nswift_release=%s\nruntime_version=%s\nruntime_folder=%s\nbundle_runpath=%s\n' "$SWIFT_TOOLCHAIN_VERSION" "$SWIFT_IS_RELEASE" "$RUNTIME_VERSION" "$RUNTIME_LIB_PATH" "$BUNDLE_RUNPATH" > "$PRODUCTS_PATH/swift-runtime-info"
+# (Linux/make-applet-bundle.sh) and the runtime package (Linux/Packaging/make-swift-runtime-deb.sh),
+# and the configuration: a debug engine has the integration-test surface built in (OMC_TEST_SURFACE,
+# Package.swift) and the toolchain's folder on its library path, so make-applet-archive.sh refuses
+# to make an archive for others from it
+printf 'swift_version=%s\nswift_release=%s\nruntime_version=%s\nruntime_folder=%s\nbundle_runpath=%s\nconfiguration=%s\n' "$SWIFT_TOOLCHAIN_VERSION" "$SWIFT_IS_RELEASE" "$RUNTIME_VERSION" "$RUNTIME_LIB_PATH" "$BUNDLE_RUNPATH" "$CONFIG" > "$PRODUCTS_PATH/swift-runtime-info"
 status=$?
 if [ "$status" -ne 0 ]; then
     echo "Error: cannot write $PRODUCTS_PATH/swift-runtime-info." >&2

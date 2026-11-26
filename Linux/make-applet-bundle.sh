@@ -20,7 +20,9 @@
 #                                   products: the Swift release they were built with (6.4.2), the
 #                                   Swift runtime version they load (6.4: the runtime package and
 #                                   folder that take compatible 6.4.x releases; Linux/Packaging/
-#                                   swift-runtime-versions) and that folder
+#                                   swift-runtime-versions), that folder, and the build's
+#                                   configuration (debug or release; make-applet-archive.sh
+#                                   makes archives for others from release engines only)
 #       omc_*.json                  the engine's built-in windows (CommandFramework/BuiltInDocuments)
 #       <lang>.lproj/Private.strings  the engine's own texts (CommandFramework/*.lproj)
 #       Support/                    the support tools (omc_dialog_control, omc_next_command, ...,

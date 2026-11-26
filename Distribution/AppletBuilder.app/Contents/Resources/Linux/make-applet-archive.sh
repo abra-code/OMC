@@ -19,13 +19,18 @@
 #   README.txt       how to install
 #
 # Usage: make-applet-archive.sh [--packages <folder>] [--include-packages] [--release-url <url>]
-#                               <applet>.app <output folder>
+#                               [--allow-debug-engine] <applet>.app <output folder>
 #   --packages          a folder holding the packages of the applet's engine release (command-engine
 #                       and command-engine-swift-<runtime version>, .deb and/or .rpm, as OMC's
 #                       release publishes them); their checksums go into the archive
 #   --include-packages  also copies those packages into the archive (needs --packages)
 #   --release-url       where install.sh downloads the packages from (default: OMC's GitHub release
 #                       of the engine version, https://github.com/abra-code/OMC/releases/download/v<version>)
+#   --allow-debug-engine  makes the archive even when the applet's engine is a debug build (for
+#                       testing on your own machines only). Without it the script refuses one: a
+#                       debug engine has the integration-test surface built in, which lets a process
+#                       that starts the applet drive it, and the build machine's toolchain folder on
+#                       its library search path.
 # Exit status: 0 made, 1 failed, 2 bad arguments.
 
 umask 022
@@ -33,6 +38,7 @@ umask 022
 packages_folder=""
 include_packages=0
 release_url=""
+allow_debug_engine=0
 arguments=()
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -49,6 +55,7 @@ while [ $# -gt 0 ]; do
             shift 2
             ;;
         --include-packages) include_packages=1; shift ;;
+        --allow-debug-engine) allow_debug_engine=1; shift ;;
         -*)
             printf 'make-applet-archive.sh: unknown option %s\n' "$1" >&2
             exit 2
@@ -57,7 +64,7 @@ while [ $# -gt 0 ]; do
     esac
 done
 if [ ${#arguments[@]} -ne 2 ]; then
-    printf 'Usage: %s [--packages <folder>] [--include-packages] [--release-url <url>] <applet>.app <output folder>\n' "$0" >&2
+    printf 'Usage: %s [--packages <folder>] [--include-packages] [--release-url <url>] [--allow-debug-engine] <applet>.app <output folder>\n' "$0" >&2
     exit 2
 fi
 if [ "$include_packages" -eq 1 ] && [ -z "$packages_folder" ]; then
@@ -90,6 +97,19 @@ fi
 if [ ! -f "$runtime_file" ]; then
     printf 'No %s: the applet'"'"'s engine is older than this script; rebuild the applet with a current AppletBuilder, forcing the framework update (appletbuilder build --force: a build of the same engine version keeps the old framework)\n' "$runtime_file" >&2
     exit 1
+fi
+# An archive is for other people's machines: only a release engine (see --allow-debug-engine)
+engine_configuration="$(/usr/bin/sed -n 's/^configuration=//p' "$runtime_file")"
+if [ "$engine_configuration" != "release" ]; then
+    if [ "$allow_debug_engine" -eq 1 ]; then
+        printf 'Warning: the applet'"'"'s engine is a %s build (--allow-debug-engine): this archive is for testing on your own machines only\n' "${engine_configuration:-debug or older}" >&2
+    elif [ -z "$engine_configuration" ]; then
+        printf 'Cannot tell whether the applet'"'"'s engine is a release build: %s has no configuration line (made by an older build-linux.sh). Build the engine with ./build-linux.sh release and rebuild the applet with a current AppletBuilder (appletbuilder build --force), or pass --allow-debug-engine for an archive you only test yourself\n' "$runtime_file" >&2
+        exit 1
+    else
+        printf 'The applet'"'"'s engine is a %s build: it has the integration-test surface built in and the build machine'"'"'s toolchain on its library path, so it is not for other people'"'"'s machines. Build the engine with ./build-linux.sh release and rebuild the applet (appletbuilder build --force), or pass --allow-debug-engine for an archive you only test yourself\n' "$engine_configuration" >&2
+        exit 1
+    fi
 fi
 if [ ! -x "$plister" ]; then
     printf 'No plister in %s\n' "$framework/Support" >&2
