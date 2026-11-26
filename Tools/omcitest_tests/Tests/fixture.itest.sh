@@ -39,6 +39,19 @@ check_contains "and fails, as from the menu" '"status": -128' "$log"
 check_contains "an unknown window is refused" "-32602" "$(itest_run fixture.greet --window NOT-A-WINDOW 2>&1)"
 check_contains "and so is --window with --key-window" "-32602" "$(itest_run fixture.greet --window "$window" --key-window 2>&1)"
 
+section "A file panel of a window's command starts from the window's values"
+# fixture.pick's folder panel names the field (view 2) in its DEFAULT_LOCATION. The panel opens
+# before the command runs, so the engine takes the window's values for it as they are then, not as
+# an earlier command of the window found them: the field is set without running a command.
+/bin/mkdir -p "$ITEST_WORK/start" "$ITEST_WORK/start/chosen"
+itest_set_value "$window" 2 "$ITEST_WORK/start"
+itest_answer_open "$ITEST_WORK/start/chosen"
+itest_run fixture.pick --window "$window" > /dev/null
+itest_wait_idle
+check "the panel started where the field says" "$ITEST_WORK/start" "$(itest_panel last defaultDirectory)"
+check "and the command got the same value and the chosen folder" "pick:$ITEST_WORK/start:$ITEST_WORK/start/chosen" "$(/usr/bin/tail -n 1 "$ITEST_WORK/pick.txt" 2>/dev/null)"
+itest_set_value "$window" 2 "Window"
+
 section "What a window's action hands its handler: the trigger variables"
 # The Trigger button's handler (fixture.trigger.sh) records OMC_ACTIONUI_TRIGGER_VIEW_ID, _PART_ID
 # and _CONTEXT as id|part|context. actionui.performAction hands the action handler a context as a
