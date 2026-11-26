@@ -10,6 +10,7 @@
 #include "DefaultExternBundle.h"
 #include "CFObj.h"
 #include "StandardDirectories.h"
+#include "ACFPropertyList.h"
 
 
 extern "C"
@@ -61,6 +62,21 @@ CreateDefaultExternBundleString(CFArrayRef inCommandName)
 		return NULL;
 
 	return ::CFURLCopyFileSystemPath(externBundleURL, kCFURLPOSIXPathStyle);
+}
+
+// The implicit bundle is for commands that have no bundle of their own: the contextual menu host's,
+// whose commands come from a command file outside any applet. An applet's commands come with the
+// applet; a folder of the same name that anything able to write the user's Application Support
+// folder can create must not replace their scripts and windows (an applet keeps its code signature
+// while running someone else's script under its privacy grants). An applet that wants an external
+// bundle names it with EXTERNAL_BUNDLE_PATH.
+bool
+OMCHostUsesDefaultExternBundles(CFBundleRef inMainBundle)
+{
+	if(inMainBundle == NULL)
+		return true;
+	CFObj<CFURLRef> ownCommandFile( CopyCommandFileURLInBundle(inMainBundle, CFSTR("Command")) );
+	return (ownCommandFile == NULL);
 }
 
 };//extern "C"

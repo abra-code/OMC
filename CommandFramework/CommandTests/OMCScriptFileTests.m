@@ -600,4 +600,43 @@
     }
 }
 
+// DefaultExternBundle.h is C++ only; the function is plain C (CommandFramework.exp)
+extern bool OMCHostUsesDefaultExternBundles(CFBundleRef inMainBundle);
+
+/// The implicit ~/Library/Application Support/OnMyCommand/<NAME>.omc bundle is for a host whose main
+/// bundle has no command file (the contextual menu host). In an applet, which has its own, a folder of
+/// that name must not replace the applet's scripts and windows.
+- (void)testOnlyAHostWithoutItsOwnCommandFileUsesTheImplicitExternBundle
+{
+    // An applet-like bundle: its own Command.plist in Contents/Resources
+    NSURL *appletURL = [OMCBundleTestHelper createTestBundle:@"ImplicitExternApplet"
+                                                withCommands:@[ @{ @"NAME": @"ImplicitExternApplet", @"COMMAND_ID": @"x", @"COMMAND": @[ @"true" ] } ]
+                                                     scripts:@{}];
+    XCTAssertNotNil(appletURL);
+    if(appletURL == nil)
+        return;
+    [self.bundlesToCleanup addObject:appletURL];
+    CFBundleRef applet = CFBundleCreate(kCFAllocatorDefault, (__bridge CFURLRef)appletURL);
+    XCTAssertTrue(applet != NULL);
+    XCTAssertFalse(OMCHostUsesDefaultExternBundles(applet), @"an applet never takes the implicit bundle");
+    if(applet != NULL)
+        CFRelease(applet);
+
+    // A host-like bundle: an Info.plist and no command file
+    NSURL *hostURL = [[NSURL fileURLWithPath:NSTemporaryDirectory()] URLByAppendingPathComponent:[NSString stringWithFormat:@"ImplicitExternHost-%@.app", [NSUUID UUID].UUIDString]];
+    NSURL *contentsURL = [hostURL URLByAppendingPathComponent:@"Contents"];
+    NSError *error = nil;
+    XCTAssertTrue([[NSFileManager defaultManager] createDirectoryAtURL:[contentsURL URLByAppendingPathComponent:@"Resources"] withIntermediateDirectories:YES attributes:nil error:&error], @"%@", error);
+    NSDictionary *info = @{ @"CFBundleIdentifier": @"com.abracode.test.implicit-extern-host", @"CFBundlePackageType": @"APPL" };
+    XCTAssertTrue([info writeToURL:[contentsURL URLByAppendingPathComponent:@"Info.plist"] error:&error], @"%@", error);
+    [self.bundlesToCleanup addObject:hostURL];
+    CFBundleRef host = CFBundleCreate(kCFAllocatorDefault, (__bridge CFURLRef)hostURL);
+    XCTAssertTrue(host != NULL);
+    XCTAssertTrue(OMCHostUsesDefaultExternBundles(host), @"a host without its own command file keeps the implicit bundle");
+    if(host != NULL)
+        CFRelease(host);
+
+    XCTAssertTrue(OMCHostUsesDefaultExternBundles(NULL));
+}
+
 @end

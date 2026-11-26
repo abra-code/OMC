@@ -3778,7 +3778,11 @@ OnMyCommand::GetCurrentCommandExternBundle()
 		}
 	}
 
-	//not explicitly set but might exist - so check it now
+	//not explicitly set but might exist - so check it now, unless this is an applet, whose own
+	//commands never come from the implicit Application Support bundle (OMCHostUsesDefaultExternBundles)
+	static const bool sUsesDefaultExternBundles = OMCHostUsesDefaultExternBundles(::CFBundleGetMainBundle());
+	if( !sUsesDefaultExternBundles )
+		return currCommand.externBundle; //NULL
 	currCommand.externBundle.Adopt( CreateDefaultExternBundleRef(currCommand.name) );
 	
 	return currCommand.externBundle;
