@@ -683,6 +683,17 @@ omc_dialog_control "$OMC_ACTIONUI_WINDOW_UUID" 11 omc_remove_element
 
 ---
 
+### Chat Windows with ACP Agents (`CommandChatEnablesACP`)
+
+The `Chat` element's `acp` protocol starts an Agent Client Protocol (ACP) agent as a local process, and `acp-remote` reaches an agent on another machine through a bridge. The engine makes these two transports available only to an applet whose `Info.plist` asks for them:
+
+```xml
+<key>CommandChatEnablesACP</key>
+<true/>
+```
+
+Without the key, a `Chat` window that asks for `acp` or `acp-remote` falls back to the `local` transport and logs it; the `local`, `local-p2p` and OpenAI-compatible transports are always available. The key exists because a `Chat` window's configuration, including the agent command it starts, can be set at run time, so only applets that use agents should carry that ability. The engine reads it once, at launch.
+
 ### Best Practices
 
 - **Prefer `exe_script_file`** for subcommands/action handlers.
