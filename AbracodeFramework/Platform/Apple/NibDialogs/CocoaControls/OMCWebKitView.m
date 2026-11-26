@@ -90,7 +90,9 @@ static NSString *OMCWebOriginKeyForURL(NSURL *inURL)
 	if(self == nil)
 		return nil;
 
-	self.escapingMode = @"esc_none";
+	// No escapingMode by default: page element values in command text are escaped with the
+	// command's own ESCAPE_SPECIAL_CHARS mode, since they often hold text from outside the applet.
+	// An escapingMode set in the nib still applies.
 
 	return self;
 }
@@ -101,7 +103,7 @@ static NSString *OMCWebOriginKeyForURL(NSURL *inURL)
 	if(self == nil)
 		return nil;
 
-	self.escapingMode = @"esc_none";
+	// No escapingMode by default (see initWithFrame:)
 
     return self;
 }
@@ -336,6 +338,10 @@ static NSString *OMCWebOriginKeyForURL(NSURL *inURL)
 			{
 				NSLog(@"evaluateJavaScript error : %@", error.localizedDescription);
 			}
+			else
+			{
+				outResult = result;
+			}
 		}];
 	}
 	@catch (NSException *localException)
@@ -444,19 +450,52 @@ static NSString *OMCWebOriginKeyForURL(NSURL *inURL)
 
 - (void)storeElementValuesIn:(NSMutableDictionary *)ioDict
 {
+	// Only a page from where the applet loaded its page supplies values; a page of another site,
+	// reached through a link, supplies none (the same rule as for running commands)
+	NSString *shownKey = OMCWebOriginKeyForURL(self.wkWebView.URL);
+	if((shownKey == nil) || ![self.trustedOriginKeys containsObject:shownKey])
+		return;
+
+	// WKWebView.URL already names a page that is still loading, while the script below runs in the
+	// page still shown. So the script checks its own document again, with the same test as the
+	// omc_env script, before it calls any page code, and reports the origin it checked.
+	NSData *trustedJSONData = [NSJSONSerialization dataWithJSONObject:self.trustedOriginKeys options:0 error:nil];
+	if(trustedJSONData == nil)
+		return;
+	NSString *trustedJSONString = [[NSString alloc] initWithData:trustedJSONData encoding:NSUTF8StringEncoding];
+
 	// Obtain values from all elements of class OMC
 	// OMC.getAllElementValues() is a function injected by our custom JavaScript on WKWebView creation
-	id theResult = [self executeJavaScript:@"OMC.getAllElementValues();"];
+	NSString *valuesScript = [NSString stringWithFormat:
+		@"(function() {"
+		 "var trusted = %@;"
+		 "var key = (window.location.protocol === 'file:') ? 'file:' : window.location.origin;"
+		 "for (var i = 0; i < trusted.length; i++) {"
+		 "if (trusted[i] === key) { return { origin: key, values: OMC.getAllElementValues() }; }"
+		 "}"
+		 "return null;"
+		 "})();",
+		trustedJSONString];
+	id theResult = [self executeJavaScript:valuesScript];
+	if(![theResult isKindOfClass:[NSDictionary class]])
+		return;
+	id checkedKey = ((NSDictionary *)theResult)[@"origin"];
+	if(![checkedKey isKindOfClass:[NSString class]] || ![self.trustedOriginKeys containsObject:checkedKey])
+		return;
+	theResult = ((NSDictionary *)theResult)[@"values"];
 	if([theResult isKindOfClass:[NSDictionary class]]) //we expect dictionary result from that function
 	{
-		NSDictionary<NSString*, NSString*> *elementValuesDict = (NSDictionary<NSString*, NSString*> *)theResult;
+		NSDictionary *elementValuesDict = (NSDictionary *)theResult;
 		// all element values will be exported as OMC_NIB_WEBVIEW_XXX_ELEMENT_YYY_VALUE
 		// HTML element id names are normalized to a set [A-Z0-9_]
-		//NSLog(@"result = %@", elementValuesDict);
-		
 		[elementValuesDict enumerateKeysAndObjectsUsingBlock: ^(id inKey, id inObj, BOOL *stop)
 		{
+			// The page's script can return anything; only text is a value
+			if(![inKey isKindOfClass:[NSString class]] || ![inObj isKindOfClass:[NSString class]])
+				return;
 			NSString *omcID = NormalizeOMCVariableIDFromElementID((NSString *)inKey);
+			if(omcID.length == 0)
+				return;
 			[ioDict setValue:inObj forKey:omcID];
 		}];
 	}

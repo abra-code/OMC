@@ -36,6 +36,8 @@ Standard AppKit controls (NSButton, NSTextField, etc.) inserted in Interface Bui
 
 **Which pages may run commands:** `OMC.execute()` (the `OMC` script message) and `window.omc_env` work only in pages from where the applet loaded its page: any local file (`file://`), or the same scheme, host and port as the web address the applet set (in the nib or with `omc_dialog_control`), including where the server redirected that address. A frame from another site inside the page, or a page of another site reached through a link, cannot run commands and does not see `omc_env`; the engine logs "ignored a command request" when one tries.
 
+**Web page values:** when a command runs from the window, the text of every page element with the class `OMC` and an `id` is exported as `$OMC_NIB_WEBVIEW_<TAG>_ELEMENT_<ID>_VALUE` (the id in uppercase, other characters than A-Z and 0-9 turned into `_`), only while the shown page is one that may run commands. In command text, `__NIB_WEBVIEW_<TAG>_ELEMENT_<ID>_VALUE__` is escaped with the command's `ESCAPE_SPECIAL_CHARS` mode unless the web view sets its own `escapingMode`.
+
 ## Connecting Controls to Commands
 
 After renaming a control to its OMC class, add **User Defined Runtime Attributes** in Xcode's Identity Inspector:
